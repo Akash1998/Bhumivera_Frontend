@@ -1,29 +1,29 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
-import viteCompression from 'vite-plugin-compression';
 
 export default defineConfig({
   plugins: [
-    react(),
-    viteCompression({
-      algorithm: 'gzip',
-      ext: '.gz',
-    }),
-    viteCompression({
-      algorithm: 'brotliCompress',
-      ext: '.br',
-    })
+    react()
   ],
   server: {
     port: 3000,
   },
   build: {
-    // Increased to prevent warnings without breaking the module graph
-    chunkSizeWarningLimit: 3000, 
+    chunkSizeWarningLimit: 1000, 
     rollupOptions: {
       output: {
-        // We rely on Vite's native, smart chunking to prevent CommonJS/ESM conflicts
-        manualChunks: undefined 
+        // Smart chunking algorithm to prevent Virtual DOM crashes and massive bundle loads
+        manualChunks(id) {
+          if (id.includes('node_modules')) {
+            if (id.includes('react') || id.includes('react-dom') || id.includes('react-router')) {
+              return 'vendor-react'; // Isolates core react framework
+            }
+            if (id.includes('axios') || id.includes('framer-motion') || id.includes('lucide')) {
+              return 'vendor-utils'; // Isolates heavy utilities
+            }
+            return 'vendor-core'; // Catches remaining node_modules
+          }
+        }
       }
     }
   }
