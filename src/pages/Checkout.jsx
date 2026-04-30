@@ -28,7 +28,13 @@ export default function Checkout() {
     });
   }, []);
 
-  const handlePlaceOrder = async (isOneClick = false) => {
+const handlePlaceOrder = async (isOneClick = false) => {
+    if (!selectedAddress) {
+      alert("Please select or add a shipping address before proceeding.");
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+
     setLoading(true);
     try {
       const payload = {
@@ -36,11 +42,18 @@ export default function Checkout() {
         paymentMode: isOneClick ? 'WALLET' : paymentMode,
         deliveryType: 'standard'
       };
+
       const res = await ordersApi.create(payload);
       clearCart();
-      navigate('/order-success', { state: { orderId: res.data.orderId } });
+      
+
+      navigate('/order-success', { 
+        state: { orderId: res.data.orderId || res.data.id } 
+      });
     } catch (err) {
-      alert(err.response?.data?.message || "Checkout failed");
+  
+      const errMsg = err.response?.data?.message || "Checkout failed. Please try again.";
+      alert(errMsg);
     } finally {
       setLoading(false);
     }
