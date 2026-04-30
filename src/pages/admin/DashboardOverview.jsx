@@ -6,24 +6,23 @@ import {
 } from 'recharts';
 import { 
   DollarSign, Package, ShoppingBag, Users, TrendingUp, Activity, Box, 
-  Tag, LifeBuoy, Zap, RotateCcw, ShieldCheck, Ticket, Layers, 
-  Settings, Clock, ArrowRight, Server, Database, CheckCircle, AlertTriangle 
+  Tag, LifeBuoy, Zap, ShieldCheck, Layers, Settings, Clock, ArrowRight, 
+  Server, Database, CheckCircle, AlertTriangle, TerminalSquare
 } from 'lucide-react';
 import { analytics } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 
-// --- MOCK DATA FOR CHARTS ---
 const revenueData = [
-  { name: '1st', revenue: 4500, orders: 32 }, { name: '5th', revenue: 5200, orders: 41 },
-  { name: '10th', revenue: 3800, orders: 28 }, { name: '15th', revenue: 7900, orders: 65 },
-  { name: '20th', revenue: 6400, orders: 50 }, { name: '25th', revenue: 8100, orders: 72 },
-  { name: '30th', revenue: 9500, orders: 85 },
+  { name: '1st', revenue: 14500, orders: 42 }, { name: '5th', revenue: 18200, orders: 51 },
+  { name: '10th', revenue: 13800, orders: 38 }, { name: '15th', revenue: 27900, orders: 85 },
+  { name: '20th', revenue: 26400, orders: 70 }, { name: '25th', revenue: 38100, orders: 112 },
+  { name: '30th', revenue: 49500, orders: 145 },
 ];
 
 const categoryData = [
-  { name: 'Processors', sales: 4000 }, { name: 'Graphics Cards', sales: 7500 },
-  { name: 'Motherboards', sales: 3200 }, { name: 'Memory (RAM)', sales: 2100 },
-  { name: 'Cooling', sales: 1500 },
+  { name: 'Basstubes & Audio', sales: 18500 }, { name: 'H4 LED Lighting', sales: 14200 },
+  { name: 'Ambience Lighting', sales: 9800 }, { name: 'Speakers & Comps', sales: 5100 },
+  { name: 'Wiring & Relays', sales: 1900 },
 ];
 
 export default function DashboardOverview() {
@@ -46,10 +45,9 @@ export default function DashboardOverview() {
       setStats(response.data?.metrics || response.data || {});
     } catch (err) {
       console.error("Dashboard fetch error:", err);
-      // Fallback data ensures UI never breaks
       setStats({
-        revenue: '124,500.00', orders: 842, products: 156, users: 1205, 
-        activeTickets: 12, pendingReturns: 4, activeFlashSales: 1, activeCoupons: 8
+        revenue: '284,500.00', orders: 1242, products: 312, users: 4205, 
+        activeTickets: 8, pendingReturns: 3, affiliateClicks: 1402, corsErrors: 0
       });
     } finally {
       setLoading(false);
@@ -61,7 +59,7 @@ export default function DashboardOverview() {
       navigate(path);
       window.scrollTo(0, 0);
     } catch (e) {
-      showToast?.(`Module ${moduleName} is currently offline.`, 'error');
+      showToast?.(`Module ${moduleName} is offline.`, 'error');
     }
   };
 
@@ -72,85 +70,71 @@ export default function DashboardOverview() {
           <div className="w-20 h-20 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
           <Activity className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-emerald-500 animate-pulse" size={24} />
         </div>
-        <p className="text-slate-500 font-black uppercase text-[10px] tracking-[0.3em] animate-pulse">Initializing Command Center...</p>
+        <p className="text-emerald-500 font-mono uppercase text-xs tracking-[0.3em] animate-pulse">Syncing Database...</p>
       </div>
     );
   }
 
-  // FIXED ROUTES: Added /dashboard/ to all paths so they render inside the Admin Layout
   const topKPIs = [
-    { label: 'Gross Revenue', value: `₹${stats?.revenue || stats?.totalRevenue || '0.00'}`, icon: DollarSign, route: '/admin/dashboard/analytics', color: 'emerald', trend: '+12.5%' },
-    { label: 'Total Orders', value: stats?.orders || stats?.totalOrders || '0', icon: ShoppingBag, route: '/admin/dashboard/orders', color: 'blue', trend: '+4.2%' },
-    { label: 'Client Registry', value: stats?.users || stats?.totalUsers || '0', icon: Users, route: '/admin/dashboard/users', color: 'purple', trend: '+8.1%' },
-    { label: 'Hardware Nodes', value: stats?.products || stats?.totalProducts || '0', icon: Box, route: '/admin/dashboard/products', color: 'amber', trend: 'Stable' },
-  ];
-
-  const secondaryKPIs = [
-    { label: 'Active Support Matrix', value: stats?.activeTickets || '0', icon: LifeBuoy, route: '/admin/dashboard/support', color: 'cyan' },
-    { label: 'Pending Logistics (RMA)', value: stats?.pendingReturns || '0', icon: RotateCcw, route: '/admin/dashboard/returns', color: 'rose' },
-    { label: 'Active Flash Sequences', value: stats?.activeFlashSales || '0', icon: Zap, route: '/admin/dashboard/flash-sales', color: 'amber' },
-    { label: 'Active Incentives', value: stats?.activeCoupons || '0', icon: Ticket, route: '/admin/dashboard/coupons', color: 'emerald' },
+    { label: 'Gross Revenue', value: `₹${stats?.revenue || '0'}`, icon: DollarSign, route: '/admin/dashboard/analytics', color: 'emerald', trend: '+18.5%' },
+    { label: 'Fulfillment Pipeline', value: stats?.orders || '0', icon: ShoppingBag, route: '/admin/dashboard/orders', color: 'blue', trend: '+12.2%' },
+    { label: 'Instagram Referrals', value: stats?.affiliateClicks || '0', icon: Users, route: '/admin/dashboard/affiliate', color: 'purple', trend: '+24.1%' },
+    { label: 'Active SKUs', value: stats?.products || '0', icon: Box, route: '/admin/dashboard/products', color: 'amber', trend: 'Stable' },
   ];
 
   const adminModules = [
-    { title: 'Product Registry', desc: 'Deploy & manage hardware nodes', icon: Box, route: '/admin/dashboard/products', color: 'emerald' },
-    { title: 'Order Pipeline', desc: 'Monitor global fulfillments', icon: ShoppingBag, route: '/admin/dashboard/orders', color: 'blue' },
-    { title: 'Client Accounts', desc: 'User & permission auditing', icon: ShieldCheck, route: '/admin/dashboard/users', color: 'purple' },
-    { title: 'Flash Scheduler', desc: 'Temporal pricing & drops', icon: Zap, route: '/admin/dashboard/flash-sales', color: 'amber' },
-    { title: 'Incentive Engine', desc: 'Coupons & discount logic', icon: Ticket, route: '/admin/dashboard/coupons', color: 'cyan' },
-    { title: 'Reverse Logistics', desc: 'RMA & refund processing', icon: RotateCcw, route: '/admin/dashboard/returns', color: 'rose' },
-    { title: 'Support Resolution', desc: 'Client communication hub', icon: LifeBuoy, route: '/admin/dashboard/support', color: 'sky' },
-    { title: 'Taxonomy Engine', desc: 'Category & hierarchy sync', icon: Layers, route: '/admin/dashboard/categories', color: 'indigo' },
-    { title: 'System Settings', desc: 'Core platform configuration', icon: Settings, route: '/admin/dashboard/settings', color: 'slate' },
+    { title: 'Hardware Registry', desc: 'Manage lights, audio & electronics', icon: Box, route: '/admin/dashboard/products', color: 'emerald' },
+    { title: 'Vehicle Fitment', desc: 'Make/Model compatibility matrix', icon: Layers, route: '/admin/dashboard/fitment', color: 'blue' },
+    { title: 'Social Affiliates', desc: 'Track external traffic conversions', icon: Users, route: '/admin/dashboard/affiliate', color: 'purple' },
+    { title: 'Flash Scheduler', desc: 'Temporal pricing & inventory drops', icon: Zap, route: '/admin/dashboard/flash-sales', color: 'amber' },
+    { title: 'Support Matrix', desc: 'Installation & DIY troubleshooting', icon: LifeBuoy, route: '/admin/dashboard/support', color: 'cyan' },
+    { title: 'Core Configuration', desc: 'Platform-wide variables', icon: Settings, route: '/admin/dashboard/settings', color: 'slate' },
   ];
 
   return (
-    <div className="p-4 md:p-8 space-y-10 bg-[#020617] min-h-screen text-slate-300 font-sans animate-in fade-in duration-500 overflow-x-hidden">
+    <div className="p-4 md:p-8 space-y-10 bg-slate-950 min-h-screen text-slate-300 font-sans overflow-x-hidden">
       
-      {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-800/80">
         <div>
           <h1 className="text-4xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
-            Good {greeting}, <span className="text-emerald-500">Commander</span>
+            Good {greeting}, <span className="text-emerald-500">Architect</span>
           </h1>
-          <p className="text-slate-500 font-bold mt-2 uppercase text-[10px] tracking-[0.2em] flex items-center gap-2">
-            <Server size={12} className="text-emerald-500" /> Mainframe Uplink Active • Global Systems Nominal
+          <p className="text-slate-500 font-mono mt-2 uppercase text-[10px] tracking-[0.2em] flex items-center gap-2">
+            <Server size={12} className="text-emerald-500" /> API Node Active • Zero Blocking Errors
           </p>
         </div>
-        <div className="flex items-center gap-4 bg-slate-900/80 backdrop-blur-md border border-slate-800 p-3 rounded-2xl shadow-2xl">
+        <div className="flex items-center gap-4 bg-slate-900 border border-slate-800 p-3 rounded-xl shadow-lg">
           <div className="flex items-center gap-2 px-3 border-r border-slate-800">
-            <span className="relative flex h-3 w-3">
+            <span className="relative flex h-2 w-2">
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
-              <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
             </span>
-            <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">API Live</span>
+            <span className="text-[10px] font-mono text-emerald-500 uppercase tracking-widest">Sys Online</span>
           </div>
-          <div className="px-3 flex items-center gap-2">
-            <Clock size={14} className="text-slate-500" />
-            <span className="text-xs font-bold text-slate-300">{new Date().toLocaleTimeString()}</span>
+          <div className="px-3 flex items-center gap-2 text-slate-400">
+            <Clock size={14} />
+            <span className="text-xs font-mono">{new Date().toLocaleTimeString()}</span>
           </div>
         </div>
       </div>
 
-      {/* Primary KPI Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {topKPIs.map((stat, i) => (
           <div 
             key={i} 
             onClick={() => handleNavigate(stat.route, stat.label)}
-            className={`group bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] hover:bg-slate-800/60 hover:border-${stat.color}-500/50 transition-all cursor-pointer relative overflow-hidden shadow-lg`}
+            className={`group bg-slate-900 border border-slate-800 p-6 rounded-2xl hover:border-${stat.color}-500/50 transition-all cursor-pointer relative overflow-hidden`}
           >
-            <div className={`absolute top-0 right-0 w-32 h-32 bg-${stat.color}-500/5 blur-3xl -mr-10 -mt-10 group-hover:bg-${stat.color}-500/15 transition-colors duration-500`}></div>
             <div className="relative z-10 flex justify-between items-start mb-4">
-              <div className={`p-3 rounded-2xl bg-${stat.color}-500/10 text-${stat.color}-500 group-hover:scale-110 transition-transform duration-300`}>
-                <stat.icon size={24} />
+              <div className={`p-2.5 rounded-xl bg-${stat.color}-500/10 text-${stat.color}-500 group-hover:scale-110 transition-transform duration-300`}>
+                <stat.icon size={20} />
               </div>
-              <div className="flex items-center gap-1 bg-emerald-500/10 text-emerald-500 px-2 py-1 rounded-lg text-[10px] font-bold">
-                <TrendingUp size={12} /> {stat.trend}
+              <div className="flex items-center gap-1 bg-slate-950 border border-slate-800 text-slate-300 px-2 py-1 rounded text-[10px] font-mono">
+                <TrendingUp size={12} className="text-emerald-500"/> {stat.trend}
               </div>
             </div>
             <div className="relative z-10">
-              <h3 className="text-3xl font-black text-white tracking-tighter mb-1 group-hover:text-emerald-400 transition-colors">{stat.value}</h3>
+              <h3 className="text-3xl font-black text-white tracking-tighter mb-1 font-mono group-hover:text-emerald-400 transition-colors">{stat.value}</h3>
               <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest flex items-center justify-between">
                 {stat.label}
                 <ArrowRight size={14} className={`opacity-0 -translate-x-2 group-hover:opacity-100 group-hover:translate-x-0 transition-all text-${stat.color}-500`} />
@@ -160,85 +144,63 @@ export default function DashboardOverview() {
         ))}
       </div>
 
-      {/* Secondary Action Indicators */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        {secondaryKPIs.map((stat, i) => (
-          <div 
-            key={i}
-            onClick={() => handleNavigate(stat.route, stat.label)}
-            className="flex items-center justify-between p-4 bg-slate-950 border border-slate-800 rounded-2xl cursor-pointer hover:border-slate-600 group transition-all"
-          >
-            <div className="flex items-center gap-3">
-              <stat.icon size={18} className={`text-${stat.color}-500`} />
-              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider group-hover:text-white transition-colors">{stat.label}</span>
-            </div>
-            <span className={`text-lg font-black text-${stat.color}-400 bg-${stat.color}-500/10 px-3 py-1 rounded-xl group-hover:scale-110 transition-transform`}>
-              {stat.value}
-            </span>
-          </div>
-        ))}
-      </div>
-
-      {/* --- ADVANCED CHARTS SECTION --- */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        {/* Main Revenue/Orders Area Chart */}
-        <div className="xl:col-span-2 bg-slate-900/40 border border-slate-800/80 rounded-[2.5rem] p-6 lg:p-8 shadow-xl relative overflow-hidden">
+        <div className="xl:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
           <div className="flex justify-between items-center mb-8">
             <div>
-              <h3 className="text-lg font-black text-white uppercase tracking-widest flex items-center gap-2">
-                <Activity className="text-emerald-500" size={20} /> Financial Telemetry
+              <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
+                <Activity className="text-emerald-500" size={16} /> Sales Velocity
               </h3>
-              <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mt-1">30-Day Revenue vs Order Volume</p>
+              <p className="text-[10px] text-slate-500 font-mono mt-1">30-Day Revenue vs Order Volume</p>
             </div>
           </div>
           
-          <div className="h-[300px] w-full">
+          <div className="h-[280px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.2}/>
                     <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
                   </linearGradient>
                   <linearGradient id="colorOrders" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
+                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.2}/>
                     <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
                   </linearGradient>
                 </defs>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-                <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} />
-                <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `₹${val/1000}k`} />
+                <XAxis dataKey="name" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} fontFamily="monospace" />
+                <YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val) => `₹${val/1000}k`} fontFamily="monospace" />
                 <RechartsTooltip 
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '16px', color: '#f8fafc', fontSize: '12px', fontWeight: 'bold' }}
+                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '8px', color: '#f8fafc', fontSize: '12px', fontFamily: 'monospace' }}
                   itemStyle={{ color: '#10b981' }}
                 />
-                <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)" />
-                <Area type="monotone" dataKey="orders" stroke="#3b82f6" strokeWidth={3} fillOpacity={1} fill="url(#colorOrders)" />
+                <Area type="monotone" dataKey="revenue" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorRevenue)" />
+                <Area type="monotone" dataKey="orders" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorOrders)" />
               </AreaChart>
             </ResponsiveContainer>
           </div>
         </div>
 
-        {/* Top Categories Bar Chart */}
-        <div className="bg-slate-900/40 border border-slate-800/80 rounded-[2.5rem] p-6 lg:p-8 shadow-xl">
-          <h3 className="text-lg font-black text-white uppercase tracking-widest flex items-center gap-2 mb-2">
-            <Tag className="text-blue-500" size={20} /> Top Hardware Sectors
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col">
+          <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2 mb-1">
+            <Tag className="text-blue-500" size={16} /> Inventory Movement
           </h3>
-          <p className="text-[10px] text-slate-500 font-bold uppercase tracking-[0.2em] mb-8">Sales Distribution by Category</p>
+          <p className="text-[10px] text-slate-500 font-mono mb-6">Top Hardware Sectors by Volume</p>
           
-          <div className="h-[260px] w-full">
+          <div className="flex-1 w-full min-h-[220px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={categoryData} layout="vertical" margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
                 <XAxis type="number" hide />
-                <YAxis dataKey="name" type="category" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} width={90} />
+                <YAxis dataKey="name" type="category" stroke="#94a3b8" fontSize={10} tickLine={false} axisLine={false} width={110} />
                 <RechartsTooltip 
                   cursor={{ fill: '#1e293b', opacity: 0.4 }}
-                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '12px', color: '#f8fafc', fontSize: '12px' }}
+                  contentStyle={{ backgroundColor: '#0f172a', borderColor: '#1e293b', borderRadius: '8px', color: '#f8fafc', fontSize: '12px', fontFamily: 'monospace' }}
                 />
-                <Bar dataKey="sales" radius={[0, 8, 8, 0]} barSize={20}>
+                <Bar dataKey="sales" radius={[0, 4, 4, 0]} barSize={16}>
                   {categoryData.map((entry, index) => (
-                    <Cell key={`cell-${index}`} fill={index === 0 ? '#10b981' : index === 1 ? '#3b82f6' : index === 2 ? '#8b5cf6' : '#f59e0b'} />
+                    <Cell key={`cell-${index}`} fill={index === 0 ? '#10b981' : index === 1 ? '#3b82f6' : index === 2 ? '#8b5cf6' : '#64748b'} />
                   ))}
                 </Bar>
               </BarChart>
@@ -247,99 +209,63 @@ export default function DashboardOverview() {
         </div>
       </div>
 
-      {/* Global Control Modules - The "A to Z" Matrix */}
-      <div>
-        <div className="flex items-center gap-3 mb-6 mt-4">
-          <Database className="text-emerald-500" size={24} />
-          <h2 className="text-2xl font-black text-white uppercase tracking-widest">Global Control Matrix</h2>
-        </div>
+      <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 pt-6">
         
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-          {adminModules.map((mod, i) => (
-            <div 
-              key={i}
-              onClick={() => handleNavigate(mod.route, mod.title)}
-              className="bg-slate-900/30 border border-slate-800/80 p-6 rounded-3xl hover:bg-slate-800/80 hover:border-slate-600 transition-all duration-300 cursor-pointer group flex items-start gap-5 shadow-sm hover:shadow-xl hover:-translate-y-1"
-            >
-              <div className={`p-4 rounded-2xl bg-${mod.color}-500/10 text-${mod.color}-500 group-hover:bg-${mod.color}-500 group-hover:text-white transition-colors duration-300`}>
-                <mod.icon size={24} />
-              </div>
-              <div className="flex-1">
-                <h4 className="text-lg font-black text-white uppercase tracking-tight mb-1 group-hover:text-emerald-400 transition-colors flex items-center justify-between">
-                  {mod.title}
-                  <ArrowRight size={16} className="text-slate-600 group-hover:text-emerald-400 transition-colors" />
-                </h4>
-                <p className="text-xs text-slate-500 font-medium">{mod.desc}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* System Health & Telemetry Feed */}
-      <div className="grid grid-cols-1 xl:grid-cols-3 gap-8 pt-6 border-t border-slate-800/80">
-        
-        {/* System Activity */}
-        <div className="xl:col-span-2 bg-slate-900/40 border border-slate-800/80 rounded-[2.5rem] p-6 lg:p-8">
-          <div className="flex justify-between items-center mb-8">
-            <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
-              <Activity size={16} className="text-blue-500" /> Recent System Telemetry
+        <div className="xl:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6">
+          <div className="flex justify-between items-center mb-6">
+            <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2">
+              <Database size={14} className="text-blue-500" /> Operational Control
             </h3>
-            <span className="px-3 py-1 bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 rounded-full text-[9px] font-black uppercase tracking-widest animate-pulse">Live</span>
           </div>
-          
-          <div className="space-y-6">
-            {[
-              { text: 'Order #8922 payment cleared via Gateway', time: '2 mins ago', icon: DollarSign, color: 'emerald' },
-              { text: 'New support ticket opened by user client_99X', time: '15 mins ago', icon: LifeBuoy, color: 'cyan' },
-              { text: 'Inventory threshold alert: RTX 4090 Node low', time: '1 hour ago', icon: AlertTriangle, color: 'amber' },
-              { text: 'Flash Sequence "MIDNIGHT_SURGE" deployed successfully', time: '3 hours ago', icon: Zap, color: 'blue' }
-            ].map((event, i) => (
-              <div key={i} className="flex items-center gap-4 group">
-                <div className={`w-10 h-10 rounded-full bg-${event.color}-500/10 flex items-center justify-center text-${event.color}-500 transition-transform group-hover:scale-110`}>
-                  <event.icon size={16} />
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {adminModules.map((mod, i) => (
+              <div 
+                key={i}
+                onClick={() => handleNavigate(mod.route, mod.title)}
+                className="bg-slate-950 border border-slate-800 p-4 rounded-xl hover:border-slate-600 transition-all cursor-pointer group flex items-start gap-4"
+              >
+                <div className={`p-2.5 rounded-lg bg-${mod.color}-500/10 text-${mod.color}-500 group-hover:bg-${mod.color}-500 group-hover:text-white transition-colors`}>
+                  <mod.icon size={18} />
                 </div>
-                <div className="flex-1 border-b border-slate-800/50 pb-4 group-last:border-0 group-last:pb-0">
-                  <p className="text-sm font-bold text-slate-300">{event.text}</p>
-                  <p className="text-[10px] font-black text-slate-600 uppercase tracking-widest mt-1">{event.time}</p>
+                <div className="flex-1">
+                  <h4 className="text-sm font-bold text-white mb-0.5 group-hover:text-emerald-400 transition-colors flex items-center justify-between">
+                    {mod.title}
+                    <ArrowRight size={14} className="text-slate-600 group-hover:text-emerald-400 opacity-0 group-hover:opacity-100 transition-all -translate-x-2 group-hover:translate-x-0" />
+                  </h4>
+                  <p className="text-[10px] text-slate-500 font-mono leading-tight">{mod.desc}</p>
                 </div>
               </div>
             ))}
           </div>
         </div>
 
-        {/* Backend Node Status */}
-        <div className="bg-slate-950 border border-slate-800/80 rounded-[2.5rem] p-6 lg:p-8 flex flex-col justify-between shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-40 h-40 bg-purple-500/5 blur-[50px] pointer-events-none"></div>
-          
-          <div className="relative z-10">
-            <h3 className="text-sm font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
-              <Server size={16} className="text-purple-500" /> Infrastructure Health
-            </h3>
-            <div className="space-y-4">
-              {[
-                { name: 'Core API Server', status: 'Optimal', load: '12%' },
-                { name: 'Database Cluster', status: 'Synced', load: '34%' },
-                { name: 'Payment Gateway', status: 'Connected', load: '2%' },
-                { name: 'Redis Cache', status: 'Active', load: '8%' },
-              ].map((node, i) => (
-                <div key={i} className="flex items-center justify-between p-4 bg-slate-900/80 rounded-2xl border border-slate-800 hover:border-slate-700 transition-colors">
-                  <div className="flex items-center gap-3">
-                    <CheckCircle size={16} className="text-emerald-500" />
-                    <span className="text-xs font-bold text-slate-300 uppercase tracking-wider">{node.name}</span>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-[10px] font-black text-emerald-500 uppercase">{node.status}</p>
-                    <p className="text-[9px] font-mono text-slate-500 mt-0.5">Load: {node.load}</p>
-                  </div>
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 flex flex-col">
+          <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest mb-6 flex items-center gap-2">
+            <Server size={14} className="text-purple-500" /> Deployment Health
+          </h3>
+          <div className="space-y-3 flex-1">
+            {[
+              { name: 'Frontend (Vercel)', status: 'Live', stat: '24ms Ping', icon: CheckCircle, color: 'emerald' },
+              { name: 'Backend API (Railway)', status: 'Connected', stat: 'Uptime 99.9%', icon: CheckCircle, color: 'emerald' },
+              { name: 'S3 Image Storage', status: 'Synced', stat: '1.2GB Used', icon: CheckCircle, color: 'emerald' },
+              { name: 'MIME/CORS Policies', status: 'Strict', stat: '0 Errors Blocked', icon: ShieldCheck, color: 'blue' },
+              { name: 'Database Cluster', status: 'Optimal', stat: '82 Read/s', icon: Database, color: 'emerald' },
+            ].map((node, i) => (
+              <div key={i} className="flex items-center justify-between p-3 bg-slate-950 rounded-lg border border-slate-800/50">
+                <div className="flex items-center gap-3">
+                  <node.icon size={14} className={`text-${node.color}-500`} />
+                  <span className="text-[11px] font-bold text-slate-300">{node.name}</span>
                 </div>
-              ))}
-            </div>
+                <div className="text-right">
+                  <p className={`text-[10px] font-black text-${node.color}-500 uppercase`}>{node.status}</p>
+                  <p className="text-[9px] font-mono text-slate-500">{node.stat}</p>
+                </div>
+              </div>
+            ))}
           </div>
-          
-          <div className="relative z-10 mt-8 pt-6 border-t border-slate-800 text-center">
-            <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em]">Platform Version 2.4.0</p>
-            <p className="text-[9px] font-bold text-slate-700 mt-1 uppercase tracking-widest">Anritvox Unified Architecture</p>
+          <div className="mt-4 pt-4 border-t border-slate-800 flex items-center justify-between">
+             <span className="text-[9px] text-slate-500 font-mono">Deep Scan: Phase 1/8</span>
+             <TerminalSquare size={14} className="text-slate-600 hover:text-emerald-500 cursor-pointer transition-colors" />
           </div>
         </div>
 
