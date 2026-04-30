@@ -38,6 +38,13 @@ api.interceptors.response.use(
   }
 );
 
+// --- NEW: AI Search Service ---
+export const search = {
+  query: (q, limit = 5) => api.get("/search", { params: { q, limit } }),
+  syncAll: () => api.post("/search/sync-all")
+};
+// ------------------------------
+
 export const auth = {
   login: (data) => api.post('/auth/login', data),
   adminLogin: (data) => api.post('/auth/admin/login', data), 
