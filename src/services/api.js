@@ -41,11 +41,36 @@ export const auth = {
     mobileLoginRequest: (mobile) => api.post('/auth/mobile/request-otp', { mobile }),
     mobileLoginVerify: (data) => api.post('/auth/mobile/verify-otp', data),
     adminLogin: (data) => api.post('/auth/admin/login', data),
+    getAdminProfile: () => api.get('/auth/profile'),
     register: (data) => api.post('/auth/register', data),
+    verifyEmail: (data) => api.post('/auth/verify-email', data),
+    getProfile: () => api.get('/auth/profile'),
+    updateProfile: (data) => api.put('/auth/profile', data),
     verify2FA: (data) => api.post('/auth/2fa/verify', data),
     requestPasswordReset: (data) => api.post('/auth/forgot-password', data),
     verifyResetOtp: (data) => api.post('/auth/verify-otp', data),
     resetPassword: (data) => api.post('/auth/reset-password', data),
+    verifySecurityQuestion: (data) => api.post('/auth/security-question/verify', data),
+};
+
+export const users = {
+    updateProfile: (data) => api.put('/users/profile', data),
+    changePassword: (data) => api.put('/users/change-password', data),
+    getProfile: () => api.get('/users/profile'),
+    updateSecurityQuestion: (data) => api.put('/users/security-question', data),
+    generate2FA: () => api.post('/users/2fa/generate'),
+    verifyAndEnable2FA: (data) => api.post('/users/2fa/enable', data),
+    disable2FA: (data) => api.post('/users/2fa/disable', data),
+};
+
+export const products = {
+    getAllActive: (params) => api.get("/products/active", { params }),
+    getAllAdmin: () => api.get("/products"),
+    getById: (id) => api.get(`/products/${id}`),
+    getBySlug: (slug) => api.get(`/products/slug/${slug}`),
+    create: (data) => api.post("/products", data),
+    update: (id, data) => api.put(`/products/${id}`, data),
+    toggleStatus: (id, status) => api.patch(`/products/${id}/status`, { status }),
 };
 
 export const wallet = {
@@ -61,12 +86,6 @@ export const loyalty = {
     getHistory: () => api.get('/loyalty/history'),
 };
 
-export const products = {
-    getAllActive: (params) => api.get("/products/active", { params }),
-    getById: (id) => api.get(`/products/${id}`),
-    getBySlug: (slug) => api.get(`/products/slug/${slug}`),
-};
-
 export const cart = {
     get: () => api.get("/cart"),
     add: (data) => api.post("/cart", data),
@@ -80,6 +99,8 @@ export const orders = {
     getById: (id) => api.get(`/orders/${id}`),
     create: (data) => api.post("/orders", data),
     fastCheckout: (data) => api.post("/orders/fast-checkout", data),
+    getAllAdmin: () => api.get("/orders"),
+    updateStatus: (id, status) => api.patch(`/orders/${id}/status`, { status }),
 };
 
 export const addresses = {
@@ -88,6 +109,32 @@ export const addresses = {
     update: (id, data) => api.put(`/addresses/${id}`, data),
     delete: (id) => api.delete(`/addresses/${id}`),
     setDefault: (id) => api.patch(`/addresses/${id}/default`),
+};
+
+export const affiliate = {
+    getAllPartners: () => api.get("/affiliate/partners"),
+    getAllWithdrawals: () => api.get("/affiliate/withdrawals"),
+    getConfig: () => api.get("/affiliate/config"),
+    updatePartnerStatus: (id, status) => api.patch(`/affiliate/partners/${id}/status`, { status }),
+    approveWithdrawal: (id) => api.patch(`/affiliate/withdrawals/${id}/approve`, { id }),
+    updateConfig: (data) => api.put("/affiliate/config", data),
+};
+
+export const support = {
+    getAllAdmin: () => api.get("/contact"),
+    updateStatus: (id, status) => api.patch(`/contact/${id}/status`, { status }),
+    delete: (id) => api.delete(`/contact/${id}`),
+};
+
+export const settings = {
+    get: () => api.get("/settings"),
+    getPublic: () => api.get("/settings/public"),
+    update: (data) => api.put("/settings", data),
+};
+
+export const search = {
+    query: (q, limit = 5) => api.get("/search", { params: { q, limit } }),
+    syncAll: () => api.post("/search/sync-all")
 };
 
 export default api;
