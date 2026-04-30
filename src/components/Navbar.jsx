@@ -3,11 +3,11 @@ import { Link, useNavigate } from 'react-router-dom';
 import { 
   ShoppingCart, User, Search, Menu, X, Mic, Camera, 
   Car, Heart, Bell, ChevronDown, Package, Zap, Gift,
-  LogOut, Settings, Award, ShieldCheck, MapPin
+  LogOut, Settings, Award, ShieldCheck, MapPin, Sparkles
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import api from '../services/api';
+import api, { search } from '../services/api';
 
 export default function Navbar() {
   const { user, logout } = useAuth();
@@ -15,9 +15,14 @@ export default function Navbar() {
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
+  const [isAiPowered, setIsAiPowered] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
+  
   const [isGarageActive, setGarageActive] = useState(false);
   const [garageData, setGarageData] = useState(null);
   const [isListening, setIsListening] = useState(false);
+  
+  const searchTimeout = useRef(null);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -36,15 +41,33 @@ export default function Navbar() {
   const handleSearch = (e) => {
     const query = e.target.value;
     setSearchQuery(query);
+
+    // Clear previous timeout to debounce the API call
+    if (searchTimeout.current) {
+      clearTimeout(searchTimeout.current);
+    }
+
     if (query.length > 2) {
-      // Mock Predictive Search thumbnail
-      setSuggestions([
-        { id: 1, name: 'Pro LED Headlight H4', price: 2499, img: 'https://via.placeholder.com/50' },
-        { id: 2, name: 'Ambient Light Strip RGB', price: 899, img: 'https://via.placeholder.com/50' },
-        { id: 3, name: 'Premium Subwoofer 12"', price: 12500, img: 'https://via.placeholder.com/50' }
-      ]);
+      setIsSearching(true);
+      
+      // Ping the AI Search endpoint after user stops typing for 400ms
+      searchTimeout.current = setTimeout(async () => {
+        try {
+          const res = await search.query(query, 5); // Limit to top 5 results for dropdown
+          if (res.data.success) {
+            setSuggestions(res.data.data);
+            setIsAiPowered(res.data.isAiPowered);
+          }
+        } catch (error) {
+          console.error("Search failed:", error);
+          setSuggestions([]);
+        } finally {
+          setIsSearching(false);
+        }
+      }, 400); 
     } else {
       setSuggestions([]);
+      setIsAiPowered(false);
     }
   };
 
@@ -75,7 +98,7 @@ export default function Navbar() {
           <span className="text-xl font-black tracking-tighter italic uppercase text-white">Anritvox</span>
         </Link>
 
-        {/* SEARCH BAR (Predictive + Voice + Visual) */}
+        {/* SEARCH BAR (Predictive AI + Voice + Visual) */}
         <div className="hidden md:flex flex-1 max-w-2xl mx-12 relative group">
           <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-emerald-500 transition-colors">
             <Search size={18} />
@@ -96,12 +119,25 @@ export default function Navbar() {
             </button>
           </div>
 
-          {/* PREDICTIVE DROPDOWN */}
+          {/* PREDICTIVE AI DROPDOWN */}
           {suggestions.length > 0 && (
             <div className="absolute top-full left-0 right-0 mt-2 bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl overflow-hidden animate-in fade-in slide-in-from-top-2 duration-300">
+               
+               {/* AI Badge Indicator */}
+               {isAiPowered && (
+                 <div className="bg-emerald-500/10 px-4 py-2 border-b border-slate-800 flex items-center text-[10px] font-black uppercase text-emerald-500 tracking-wider">
+                   <Sparkles size={12} className="mr-2 animate-pulse" />
+                   Semantic AI Results
+                 </div>
+               )}
+
                {suggestions.map(s => (
-                 <Link key={s.id} to={`/product/${s.id}`} className="flex items-center p-4 hover:bg-slate-800 transition-colors border-b border-slate-800/50 last:border-none">
-                    <img src={s.img} className="w-10 h-10 rounded-lg object-cover mr-4" alt={s.name} />
+                 <Link key={s.id} to={`/product/${s.slug || s.id}`} className="flex items-center p-4 hover:bg-slate-800 transition-colors border-b border-slate-800/50 last:border-none">
+                    <img 
+                      src={s.images?.[0] || 'https://via.placeholder.com/50'} 
+                      className="w-10 h-10 rounded-lg object-cover mr-4" 
+                      alt={s.name} 
+                    />
                     <div className="flex-1">
                        <div className="text-xs font-black uppercase text-white">{s.name}</div>
                        <div className="text-[10px] font-bold text-emerald-500">₹{s.price}</div>
@@ -109,6 +145,13 @@ export default function Navbar() {
                     <ChevronDown size={14} className="-rotate-90 text-slate-700" />
                  </Link>
                ))}
+               
+               {/* Loading State Overlay */}
+               {isSearching && (
+                 <div className="absolute inset-0 bg-slate-900/50 backdrop-blur-sm flex items-center justify-center">
+                    <div className="w-4 h-4 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                 </div>
+               )}
             </div>
           )}
         </div>
@@ -140,7 +183,7 @@ export default function Navbar() {
             <Link to="/login" className="text-xs font-black uppercase tracking-tighter text-slate-400 hover:text-white transition-colors">Login</Link>
           )}
 
-          {/* CART (AJAX Mini-Cart Trigger) */}
+          {/* CART */}
           <Link to="/cart" className="relative p-2 text-white hover:text-emerald-500 transition-colors">
             <ShoppingCart size={22} />
             {cartItems?.length > 0 && (
