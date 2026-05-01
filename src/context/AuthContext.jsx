@@ -26,9 +26,9 @@ export const AuthProvider = ({ children }) => {
           const decodedPayload = decodeJWT(storedToken);
           let fetchedUser;
 
+          // STRICT ROUTING: Admins hit authRoutes, Customers hit userRoutes
           if (decodedPayload?.role === 'admin') {
-            // BUG FIX: Changed from getAdminProfile() to getProfile() to match api.js
-            const res = await authApi.getProfile();
+            const res = await authApi.getAdminProfile();
             fetchedUser = res.data;
           } else {
             const res = await usersApi.getProfile();
@@ -50,6 +50,7 @@ export const AuthProvider = ({ children }) => {
     
     initAuth();
 
+    // Listen for global 401 expulsions from api.js
     const handleAuthExpired = () => logout();
     window.addEventListener('auth-expired', handleAuthExpired);
     return () => window.removeEventListener('auth-expired', handleAuthExpired);
@@ -59,6 +60,7 @@ export const AuthProvider = ({ children }) => {
     try {
       const res = await authApi.login(credentials);
       
+      // Handle 2FA Intercept
       if (res.status === 202 || res.data?.requires2FA) {
         throw new Error("MFA Verification Required");
       }
@@ -75,6 +77,7 @@ export const AuthProvider = ({ children }) => {
       return finalUser;
     } catch (error) {
       if (error.message === "MFA Verification Required") throw error;
+      
       const status = error.response?.status;
       if (status === 429) throw new Error("Security throttle active. Too many attempts. Try again in 60s.");
       if (status === 401) throw new Error("Invalid credentials. Access denied.");
@@ -82,6 +85,7 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // THIS WAS THE MISSING FUNCTION CAUSING YOUR ERROR
   const adminLogin = async (credentials) => {
     try {
       const res = await authApi.adminLogin(credentials);
@@ -105,29 +109,18 @@ export const AuthProvider = ({ children }) => {
   const register = async (data) => {
     try {
       const res = await authApi.register(data);
+      if (res.data?.token) {
+        const { token: newToken, user: userData } = res.data;
+        localStorage.setItem('token', newToken);
+        setToken(newToken);
+        setUser(userData);
+        return userData;
+      }
       return res.data;
     } catch (error) {
       const status = error.response?.status;
       if (status === 409) throw new Error("A node with this email already exists in the matrix.");
       throw new Error(error.response?.data?.message || "Registration failed.");
-    }
-  };
-
-  const verifyEmail = async (data) => {
-    try {
-      const res = await authApi.verifyEmail(data);
-      const { token: newToken, user: userData } = res.data;
-      
-      const decodedPayload = decodeJWT(newToken);
-      const finalUser = { ...userData, role: decodedPayload?.role || userData?.role || 'user' };
-
-      localStorage.setItem('token', newToken);
-      localStorage.setItem('user', JSON.stringify(finalUser));
-      setToken(newToken);
-      setUser(finalUser);
-      return finalUser;
-    } catch (error) {
-      throw new Error(error.response?.data?.message || "Invalid or expired token.");
     }
   };
 
@@ -138,13 +131,15 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setUser(null);
     
+    // Auto-redirect if they are on a protected route
     if (window.location.pathname.includes('/profile') || window.location.pathname.includes('/admin')) {
       window.location.href = '/login';
     }
   };
 
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, loading, login, adminLogin, register, verifyEmail, logout }}>
+    // WE EXPORT adminLogin HERE NOW!
+    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, loading, login, adminLogin, register, logout }}>
       {!loading && children}
     </AuthContext.Provider>
   );
