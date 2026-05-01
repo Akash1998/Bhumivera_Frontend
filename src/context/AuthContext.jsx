@@ -27,7 +27,8 @@ export const AuthProvider = ({ children }) => {
           let fetchedUser;
 
           if (decodedPayload?.role === 'admin') {
-            const res = await authApi.getAdminProfile();
+            // BUG FIX: Changed from getAdminProfile() to getProfile() to match api.js
+            const res = await authApi.getProfile();
             fetchedUser = res.data;
           } else {
             const res = await usersApi.getProfile();
@@ -49,7 +50,6 @@ export const AuthProvider = ({ children }) => {
     
     initAuth();
 
-    // Listen for global 401 expulsions from api.js
     const handleAuthExpired = () => logout();
     window.addEventListener('auth-expired', handleAuthExpired);
     return () => window.removeEventListener('auth-expired', handleAuthExpired);
@@ -105,7 +105,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (data) => {
     try {
       const res = await authApi.register(data);
-      return res.data; // Just returns success to move to the OTP screen in Register.jsx
+      return res.data;
     } catch (error) {
       const status = error.response?.status;
       if (status === 409) throw new Error("A node with this email already exists in the matrix.");
@@ -144,7 +144,6 @@ export const AuthProvider = ({ children }) => {
   };
 
   return (
-    // CRITICAL FIX: verifyEmail is exported right here!
     <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, loading, login, adminLogin, register, verifyEmail, logout }}>
       {!loading && children}
     </AuthContext.Provider>
