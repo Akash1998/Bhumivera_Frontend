@@ -54,7 +54,12 @@ export const auth = {
   verifySecurityQuestion: (data) => api.post('/auth/security-question/verify', data),
 };
 
-// FIX: Added the missing users export for the Profile component
+// --- NAVBAR SEARCH ENDPOINT ---
+export const search = {
+  query: (searchTerm) => api.get('/products/active', { params: { search: searchTerm } }),
+  global: (searchTerm) => api.get('/products', { params: { search: searchTerm } })
+};
+
 export const users = {
   updateProfile: (data) => api.put('/users/profile', data),
   changePassword: (data) => api.put('/users/change-password', data),
