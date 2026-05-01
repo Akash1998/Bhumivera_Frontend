@@ -159,6 +159,13 @@ export const analytics = {
   getRevenue: () => api.get("/analytics/revenue"),
 };
 
+export const wallet = {
+  getBalance: () => api.get('/wallet/balance'),
+  getHistory: () => api.get('/wallet/history'),
+  addFunds: (data) => api.post('/wallet/add', data),
+  pay: (data) => api.post('/wallet/pay', data)
+};
+
 export const settings = {
   get: () => api.get("/settings"),
   getPublic: () => api.get("/settings/public"),
