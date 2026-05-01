@@ -51,7 +51,7 @@ export const auth = {
   requestPasswordReset: (data) => api.post('/auth/forgot-password', data),
   verifyResetOtp: (data) => api.post('/auth/verify-otp', data),
   resetPassword: (data) => api.post('/auth/reset-password', data),
-  verifySecurityQuestion: (data) => api.post('/auth/security-question/verify', data),   adminLogin: (data) => api.post('/auth/admin/login', data),   getAdminProfile: () => api.get('/auth/admin/profile'),
+  verifySecurityQuestion: (data) => api.post('/auth/security-question/verify', data),   adminLogin: (data) => api.post('/auth/admin/login', data),   getAdminProfile: () => api.get('/auth/profile'),
 };
 
 // --- NAVBAR SEARCH ENDPOINT ---
