@@ -42,8 +42,8 @@ const Placeholder = ({ name }) => (
     </div>
     <div className="space-y-4 font-mono text-xs text-slate-400">
       <p className="animate-pulse">Loading dependencies...</p>
-      <p className="text-emerald-500/50">> establishing secure connection to service.anritvox.com</p>
-      <p className="text-emerald-500/50">> fetching real-time telemetry data</p>
+     <p className="text-emerald-500/50">&gt; establishing secure connection to service.anritvox.com</p>
+      <p className="text-emerald-500/50">&gt; fetching real-time telemetry data</p>
       <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
         <div className="h-full bg-emerald-500 w-1/3 animate-ping" />
       </div>
