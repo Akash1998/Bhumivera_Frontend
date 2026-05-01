@@ -4,7 +4,8 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { addresses as addressesApi, orders as ordersApi, wallet as walletApi } from '../services/api';
-import { FiMapPin, FiTruck, FiCreditCard, FiCheckCircle, FiZap, FiPlus, FiWallet } from 'react-icons/fi';
+import { FiMapPin, FiTruck, FiCreditCard, FiCheckCircle, FiZap, FiPlus } from 'react-icons/fi';
+import { Wallet } from 'lucide-react';
 
 export default function Checkout() {
   const { user } = useAuth();
