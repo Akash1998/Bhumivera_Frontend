@@ -171,6 +171,12 @@ export const serials = {
     generate: (data) => api.post("/serials/generate", data),
 };
 
+// --- 9. SEARCH SERVICE (BUG FIX ADDED HERE) ---
+export const search = (query) => api.get('/search', { params: { q: query } });
+// Note: If your Navbar.jsx code calls it using an object structure like `search.query(params)` 
+// instead of a direct function call like `search(params)`, replace the line above with this:
+// export const search = { query: (params) => api.get('/search', { params }) };
+
 // --- LEGACY HELPERS (Backward Compatibility) ---
 export const fetchProducts = () => products.getAllActive();
 export const fetchCategories = () => categories.getAll();
