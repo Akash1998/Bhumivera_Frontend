@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { 
-  Search, Filter, Download, MoreVertical, Truck, Package, 
-  CheckCircle, Clock, XCircle, ChevronRight, X, DollarSign, Calendar
+  ShoppingBag, Search, Filter, Download, Truck, CheckCircle, 
+  Clock, XCircle, AlertCircle, Package, ArrowRight, X 
 } from 'lucide-react';
-import api from '../../services/api';
+import { adminManagement } from '../../services/api';
 
-const STATUS_CONFIG = {
-  pending: { color: 'text-amber-400', bg: 'bg-amber-400/10', border: 'border-amber-400/20', icon: Clock },
-  confirmed: { color: 'text-blue-400', bg: 'bg-blue-400/10', border: 'border-blue-400/20', icon: CheckCircle },
-  packed: { color: 'text-indigo-400', bg: 'bg-indigo-400/10', border: 'border-indigo-400/20', icon: Package },
-  shipped: { color: 'text-purple-400', bg: 'bg-purple-400/10', border: 'border-purple-400/20', icon: Truck },
-  delivered: { color: 'text-emerald-400', bg: 'bg-emerald-400/10', border: 'border-emerald-400/20', icon: CheckCircle },
-  cancelled: { color: 'text-rose-400', bg: 'bg-rose-400/10', border: 'border-rose-400/20', icon: XCircle },
-  returned: { color: 'text-orange-400', bg: 'bg-orange-400/10', border: 'border-orange-400/20', icon: RefreshCw }
+const STATUS_COLORS = {
+  pending: 'bg-amber-500/10 text-amber-500 border-amber-500/20',
+  confirmed: 'bg-blue-500/10 text-blue-500 border-blue-500/20',
+  packed: 'bg-purple-500/10 text-purple-500 border-purple-500/20',
+  shipped: 'bg-cyan-500/10 text-cyan-500 border-cyan-500/20',
+  delivered: 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20',
+  cancelled: 'bg-rose-500/10 text-rose-500 border-rose-500/20',
+  returned: 'bg-slate-500/10 text-slate-500 border-slate-500/20'
 };
 
 export default function OrderManagement() {
@@ -20,11 +20,11 @@ export default function OrderManagement() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [selectedOrder, setSelectedOrder] = useState(null);
+  
+  // Dispatch Modal State
+  const [dispatchModal, setDispatchModal] = useState({ isOpen: false, order: null });
+  const [dispatchData, setDispatchData] = useState({ courier: '', tracking_number: '' });
   const [updating, setUpdating] = useState(false);
-
-  // Form State for the Side Panel
-  const [updateForm, setUpdateForm] = useState({ status: '', tracking_number: '', courier: '' });
 
   useEffect(() => {
     fetchOrders();
@@ -33,8 +33,8 @@ export default function OrderManagement() {
   const fetchOrders = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/admin/orders');
-      setOrders(res.data || []);
+      const res = await adminManagement.getAllOrders();
+      setOrders(res.data);
     } catch (err) {
       console.error("Failed to fetch orders:", err);
     } finally {
@@ -42,270 +42,249 @@ export default function OrderManagement() {
     }
   };
 
-  const handleExportCSV = async () => {
-    try {
-      const res = await api.get('/admin/orders/export/csv', { responseType: 'blob' });
-      const url = window.URL.createObjectURL(new Blob([res.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `orders_${new Date().toISOString().split('T')[0]}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-    } catch (err) {
-      console.error("Export failed:", err);
+  const handleStatusUpdate = async (orderId, newStatus) => {
+    if (newStatus === 'shipped') {
+      const order = orders.find(o => o.id === orderId);
+      setDispatchModal({ isOpen: true, order });
+      return;
     }
-  };
 
-  const openPanel = async (order) => {
-    setUpdateForm({
-      status: order.status || 'pending',
-      tracking_number: order.tracking_number || '',
-      courier: order.courier || ''
-    });
-    
     try {
-      const res = await api.get(`/admin/orders/${order.id}`);
-      setSelectedOrder(res.data);
-    } catch (err) {
-      setSelectedOrder(order); 
-    }
-  };
-
-  const handleUpdateOrder = async (e) => {
-    e.preventDefault();
-    setUpdating(true);
-    try {
-      await api.put(`/admin/orders/${selectedOrder.id}/status`, updateForm);
+      setUpdating(true);
+      await adminManagement.updateOrderStatus(orderId, { status: newStatus });
       await fetchOrders();
-      setSelectedOrder(null);
     } catch (err) {
-      console.error("Update failed:", err);
+      console.error("Failed to update status:", err);
     } finally {
       setUpdating(false);
     }
   };
 
+  const handleDispatchSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setUpdating(true);
+      await adminManagement.updateOrderStatus(dispatchModal.order.id, {
+        status: 'shipped',
+        courier: dispatchData.courier,
+        tracking_number: dispatchData.tracking_number
+      });
+      setDispatchModal({ isOpen: false, order: null });
+      setDispatchData({ courier: '', tracking_number: '' });
+      await fetchOrders();
+    } catch (err) {
+      console.error("Dispatch failed:", err);
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const exportCSV = () => {
+    window.location.href = `${import.meta.env.VITE_BASE_URL}/api/admin/orders/export/csv`;
+  };
+
   const filteredOrders = useMemo(() => {
-    return orders.filter(o => {
-      const matchesSearch = o.id?.toString().includes(search) || o.user_email?.toLowerCase().includes(search.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || o.status === statusFilter;
+    return orders.filter(order => {
+      const matchesSearch = 
+        order.id.toString().includes(search) || 
+        order.user_email?.toLowerCase().includes(search.toLowerCase());
+      const matchesStatus = statusFilter === 'all' || order.status === statusFilter;
       return matchesSearch && matchesStatus;
     });
   }, [orders, search, statusFilter]);
 
   const metrics = useMemo(() => {
     return {
-      total: orders.length,
       pending: orders.filter(o => o.status === 'pending').length,
-      revenue: orders.filter(o => o.status !== 'cancelled').reduce((sum, o) => sum + (Number(o.total) || 0), 0),
-      shipped: orders.filter(o => o.status === 'shipped' || o.status === 'delivered').length
+      shipped: orders.filter(o => o.status === 'shipped').length,
+      delivered: orders.filter(o => o.status === 'delivered').length,
+      totalRevenue: orders.reduce((acc, curr) => curr.status !== 'cancelled' ? acc + Number(curr.total || 0) : acc, 0)
     };
   }, [orders]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-full">
-        <div className="w-12 h-12 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin" />
-      </div>
-    );
-  }
-
   return (
-    <div className="space-y-6 relative h-full flex flex-col">
-      {/* Metrics Row */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 flex-shrink-0">
-        {[
-          { label: 'Total Orders', value: metrics.total, icon: Package, color: 'text-cyan-400', bg: 'bg-cyan-500/10' },
-          { label: 'Pending Fulfillment', value: metrics.pending, icon: Clock, color: 'text-amber-400', bg: 'bg-amber-500/10' },
-          { label: 'Gross Revenue', value: `₹${metrics.revenue.toLocaleString()}`, icon: DollarSign, color: 'text-emerald-400', bg: 'bg-emerald-500/10' },
-          { label: 'Shipped/Delivered', value: metrics.shipped, icon: Truck, color: 'text-purple-400', bg: 'bg-purple-500/10' },
-        ].map((m, i) => (
-          <div key={i} className="bg-slate-900/40 backdrop-blur-md border border-slate-800/50 p-5 rounded-2xl flex items-center gap-4">
-            <div className={`p-3 rounded-xl ${m.bg} ${m.color}`}>
-              <m.icon size={24} />
-            </div>
-            <div>
-              <p className="text-xs font-mono text-slate-500 uppercase tracking-widest">{m.label}</p>
-              <h3 className="text-2xl font-black text-white">{m.value}</h3>
-            </div>
+    <div className="space-y-6">
+      {/* KPI Header */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/50 p-5 rounded-2xl flex items-center gap-4 shadow-lg">
+          <div className="p-3 bg-amber-500/10 rounded-xl"><Clock className="text-amber-500" size={24} /></div>
+          <div>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Pending Fulfillment</p>
+            <p className="text-2xl font-black text-white">{metrics.pending}</p>
           </div>
-        ))}
+        </div>
+        <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/50 p-5 rounded-2xl flex items-center gap-4 shadow-lg">
+          <div className="p-3 bg-cyan-500/10 rounded-xl"><Truck className="text-cyan-500" size={24} /></div>
+          <div>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">In Transit</p>
+            <p className="text-2xl font-black text-white">{metrics.shipped}</p>
+          </div>
+        </div>
+        <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/50 p-5 rounded-2xl flex items-center gap-4 shadow-lg">
+          <div className="p-3 bg-emerald-500/10 rounded-xl"><CheckCircle className="text-emerald-500" size={24} /></div>
+          <div>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Delivered</p>
+            <p className="text-2xl font-black text-white">{metrics.delivered}</p>
+          </div>
+        </div>
+        <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/50 p-5 rounded-2xl flex items-center gap-4 shadow-lg">
+          <div className="p-3 bg-emerald-500/10 rounded-xl"><ShoppingBag className="text-emerald-500" size={24} /></div>
+          <div>
+            <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest">Gross Revenue</p>
+            <p className="text-2xl font-black text-white font-mono">₹{metrics.totalRevenue.toLocaleString()}</p>
+          </div>
+        </div>
       </div>
 
       {/* Toolbar */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-between items-center bg-slate-900/40 backdrop-blur-md border border-slate-800/50 p-4 rounded-2xl flex-shrink-0">
-        <div className="flex items-center gap-4 w-full sm:w-auto">
-          <div className="relative w-full sm:w-64">
-            <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
+      <div className="flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-900/50 backdrop-blur-md border border-slate-800/50 p-4 rounded-2xl">
+        <div className="flex items-center gap-4 w-full md:w-auto">
+          <div className="relative w-full md:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
             <input 
-              type="text" placeholder="Search ID or Email..." 
-              value={search} onChange={(e) => setSearch(e.target.value)}
-              className="w-full bg-slate-950/50 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-colors"
+              type="text" 
+              placeholder="Search ID or Email..." 
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="w-full bg-slate-950 border border-slate-800 text-sm text-white rounded-xl pl-10 pr-4 py-2 focus:outline-none focus:border-emerald-500/50 transition-colors"
             />
           </div>
           <div className="relative">
-            <Filter size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
-            <select 
-              value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-              className="appearance-none bg-slate-950/50 border border-slate-800 rounded-xl pl-10 pr-8 py-2 text-sm text-white focus:outline-none focus:border-cyan-500/50 transition-colors cursor-pointer"
+            <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="bg-slate-950 border border-slate-800 text-sm text-white rounded-xl pl-10 pr-8 py-2 focus:outline-none focus:border-emerald-500/50 appearance-none cursor-pointer"
             >
               <option value="all">All Statuses</option>
-              {Object.keys(STATUS_CONFIG).map(s => <option key={s} value={s}>{s.toUpperCase()}</option>)}
+              {Object.keys(STATUS_COLORS).map(status => (
+                <option key={status} value={status}>{status.charAt(0).toUpperCase() + status.slice(1)}</option>
+              ))}
             </select>
           </div>
         </div>
-        <button 
-          onClick={handleExportCSV}
-          className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white text-sm font-bold rounded-xl transition-colors border border-slate-700 hover:border-slate-600 w-full sm:w-auto justify-center"
-        >
-          <Download size={16} /> Export CSV
+        <button onClick={exportCSV} className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 text-white px-4 py-2 rounded-xl text-sm font-bold transition-all w-full md:w-auto justify-center">
+          <Download size={16} /> Export Data
         </button>
       </div>
 
-      {/* Data Grid */}
-      <div className="flex-1 bg-slate-900/40 backdrop-blur-md border border-slate-800/50 rounded-2xl overflow-hidden flex flex-col min-h-0">
-        <div className="overflow-auto flex-1 content-scroll">
-          <table className="w-full text-left border-collapse">
-            <thead className="bg-slate-950/80 backdrop-blur-xl sticky top-0 z-10 border-b border-slate-800/50">
+      {/* Data Table */}
+      <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/50 rounded-2xl overflow-hidden shadow-xl">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left text-sm text-slate-300">
+            <thead className="bg-slate-950/80 text-slate-500 font-bold uppercase tracking-wider text-[10px]">
               <tr>
-                <th className="p-4 text-xs font-mono text-slate-500 uppercase tracking-widest">Order ID</th>
-                <th className="p-4 text-xs font-mono text-slate-500 uppercase tracking-widest">Customer</th>
-                <th className="p-4 text-xs font-mono text-slate-500 uppercase tracking-widest">Date</th>
-                <th className="p-4 text-xs font-mono text-slate-500 uppercase tracking-widest">Total</th>
-                <th className="p-4 text-xs font-mono text-slate-500 uppercase tracking-widest">Status</th>
-                <th className="p-4 text-xs font-mono text-slate-500 uppercase tracking-widest text-right">Action</th>
+                <th className="px-6 py-4">Order ID</th>
+                <th className="px-6 py-4">Date</th>
+                <th className="px-6 py-4">Customer</th>
+                <th className="px-6 py-4">Total</th>
+                <th className="px-6 py-4">Status</th>
+                <th className="px-6 py-4">Logistics</th>
+                <th className="px-6 py-4 text-right">Action</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50">
-              {filteredOrders.length === 0 ? (
-                <tr><td colSpan="6" className="p-8 text-center text-slate-500 font-mono">No orders found matching criteria.</td></tr>
+              {loading ? (
+                <tr><td colSpan="7" className="text-center py-12 text-slate-500 animate-pulse">Syncing Fulfillment Pipeline...</td></tr>
+              ) : filteredOrders.length === 0 ? (
+                <tr><td colSpan="7" className="text-center py-12 text-slate-500">No orders found matching criteria.</td></tr>
               ) : (
-                filteredOrders.map(order => {
-                  const conf = STATUS_CONFIG[order.status] || STATUS_CONFIG.pending;
-                  const StatusIcon = conf.icon;
-                  return (
-                    <tr key={order.id} className="hover:bg-slate-800/20 transition-colors group cursor-pointer" onClick={() => openPanel(order)}>
-                      <td className="p-4">
-                        <span className="font-mono text-cyan-400 bg-cyan-500/10 px-2 py-1 rounded text-xs border border-cyan-500/20">
-                          #{order.id}
-                        </span>
-                      </td>
-                      <td className="p-4">
-                        <p className="text-sm font-bold text-white">{order.user_email?.split('@')[0] || 'Guest'}</p>
-                        <p className="text-xs text-slate-500">{order.user_email}</p>
-                      </td>
-                      <td className="p-4 text-sm text-slate-400">
-                        {new Date(order.created_at).toLocaleDateString()}
-                      </td>
-                      <td className="p-4 text-sm font-bold text-white">
-                        ₹{Number(order.total).toLocaleString()}
-                      </td>
-                      <td className="p-4">
-                        <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${conf.bg} ${conf.color} ${conf.border}`}>
-                          <StatusIcon size={12} />
-                          {order.status.toUpperCase()}
+                filteredOrders.map((order) => (
+                  <tr key={order.id} className="hover:bg-slate-800/20 transition-colors">
+                    <td className="px-6 py-4 font-mono font-bold text-white">#{order.id}</td>
+                    <td className="px-6 py-4">{new Date(order.created_at).toLocaleDateString()}</td>
+                    <td className="px-6 py-4">{order.user_email}</td>
+                    <td className="px-6 py-4 font-mono font-bold text-emerald-400">₹{order.total}</td>
+                    <td className="px-6 py-4">
+                      <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${STATUS_COLORS[order.status] || STATUS_COLORS.pending}`}>
+                        {order.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4">
+                      {order.tracking_number ? (
+                        <div className="text-[10px] font-mono">
+                          <span className="text-slate-500 block">VIA {order.courier?.toUpperCase()}</span>
+                          <span className="text-cyan-400">{order.tracking_number}</span>
                         </div>
-                      </td>
-                      <td className="p-4 text-right">
-                        <button className="p-2 text-slate-500 hover:text-cyan-400 hover:bg-cyan-500/10 rounded-lg transition-colors">
-                          <ChevronRight size={18} />
-                        </button>
-                      </td>
-                    </tr>
-                  );
-                })
+                      ) : <span className="text-slate-600 text-[10px] uppercase">Pending Dispatch</span>}
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <select
+                        disabled={updating}
+                        value={order.status}
+                        onChange={(e) => handleStatusUpdate(order.id, e.target.value)}
+                        className="bg-slate-950 border border-slate-700 text-xs text-white rounded-lg px-2 py-1 focus:outline-none focus:border-emerald-500 cursor-pointer disabled:opacity-50"
+                      >
+                        {Object.keys(STATUS_COLORS).map(s => (
+                          <option key={s} value={s}>{s.toUpperCase()}</option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
+                ))
               )}
             </tbody>
           </table>
         </div>
       </div>
 
-      {/* Slide-out Logistics Panel */}
-      {selectedOrder && (
-        <div className="absolute inset-0 z-50 flex justify-end">
-          <div className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm" onClick={() => setSelectedOrder(null)} />
-          <div className="relative w-full max-w-md bg-slate-900 border-l border-slate-800 shadow-2xl flex flex-col animate-[slideIn_0.3s_ease-out]">
+      {/* Dispatch Modal */}
+      {dispatchModal.isOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-sm">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-md p-6 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500 to-blue-500" />
             
-            <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-950/50">
-              <div>
-                <h2 className="text-xl font-black text-white flex items-center gap-2">
-                  Order <span className="text-cyan-400">#{selectedOrder.id}</span>
-                </h2>
-                <p className="text-xs font-mono text-slate-500 mt-1 flex items-center gap-1">
-                  <Calendar size={12} /> {new Date(selectedOrder.created_at).toLocaleString()}
-                </p>
-              </div>
-              <button onClick={() => setSelectedOrder(null)} className="p-2 text-slate-400 hover:text-white hover:bg-slate-800 rounded-xl transition-colors">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="text-xl font-black text-white flex items-center gap-2">
+                <Package className="text-cyan-500" /> Dispatch Order #{dispatchModal.order?.id}
+              </h2>
+              <button onClick={() => setDispatchModal({ isOpen: false, order: null })} className="text-slate-500 hover:text-white transition-colors">
                 <X size={20} />
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 space-y-8 content-scroll">
-              {/* Customer Info */}
-              <section>
-                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Customer Profile</h3>
-                <div className="bg-slate-950/50 border border-slate-800 p-4 rounded-xl">
-                  <p className="text-sm text-white font-bold">{selectedOrder.user_email}</p>
-                  <p className="text-sm text-slate-400 mt-1">Total Value: <span className="text-emerald-400 font-mono font-bold">₹{Number(selectedOrder.total).toLocaleString()}</span></p>
-                </div>
-              </section>
+            <form onSubmit={handleDispatchSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Courier Service</label>
+                <input 
+                  type="text" required
+                  placeholder="e.g., Delhivery, BlueDart, FedEx"
+                  value={dispatchData.courier}
+                  onChange={e => setDispatchData({...dispatchData, courier: e.target.value})}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-cyan-500 transition-colors"
+                />
+              </div>
+              <div>
+                <label className="block text-xs font-bold text-slate-400 uppercase tracking-widest mb-2">Tracking Number</label>
+                <input 
+                  type="text" required
+                  placeholder="Enter tracking ID"
+                  value={dispatchData.tracking_number}
+                  onChange={e => setDispatchData({...dispatchData, tracking_number: e.target.value})}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-white font-mono focus:outline-none focus:border-cyan-500 transition-colors"
+                />
+              </div>
 
-              {/* Logistics Form */}
-              <section>
-                <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest mb-3">Logistics Control</h3>
-                <form id="updateOrderForm" onSubmit={handleUpdateOrder} className="space-y-4">
-                  
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-2">Order Status</label>
-                    <select 
-                      value={updateForm.status} onChange={(e) => setUpdateForm({...updateForm, status: e.target.value})}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500 transition-colors cursor-pointer appearance-none"
-                    >
-                      {Object.keys(STATUS_CONFIG).map(s => <option key={s} value={s}>{s.toUpperCase()}</option>)}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-2">Courier Service</label>
-                    <input 
-                      type="text" placeholder="e.g., Delhivery, BlueDart"
-                      value={updateForm.courier} onChange={(e) => setUpdateForm({...updateForm, courier: e.target.value})}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500 transition-colors"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-xs font-bold text-slate-400 mb-2">Tracking Number</label>
-                    <input 
-                      type="text" placeholder="AWB Number"
-                      value={updateForm.tracking_number} onChange={(e) => setUpdateForm({...updateForm, tracking_number: e.target.value})}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-cyan-500 transition-colors font-mono"
-                    />
-                  </div>
-                </form>
-              </section>
-            </div>
-
-            <div className="p-6 border-t border-slate-800 bg-slate-950/50">
-              <button 
-                type="submit" form="updateOrderForm" disabled={updating}
-                className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white font-black uppercase tracking-widest text-sm rounded-xl transition-all shadow-[0_0_20px_rgba(34,211,238,0.2)] hover:shadow-[0_0_30px_rgba(34,211,238,0.4)] disabled:opacity-50"
-              >
-                {updating ? 'Syncing Matrix...' : 'Update Logistics'}
-              </button>
-            </div>
-
+              <div className="pt-4 flex gap-3">
+                <button 
+                  type="button" 
+                  onClick={() => setDispatchModal({ isOpen: false, order: null })}
+                  className="flex-1 py-3 bg-slate-800 hover:bg-slate-700 text-white rounded-xl font-bold transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  disabled={updating}
+                  className="flex-1 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white rounded-xl font-bold transition-all shadow-[0_0_15px_rgba(6,182,212,0.3)] disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {updating ? 'Processing...' : <><Truck size={18} /> Confirm Dispatch</>}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}
-
-      <style>{`
-        @keyframes slideIn {
-          from { transform: translateX(100%); }
-          to { transform: translateX(0); }
-        }
-      `}</style>
     </div>
   );
 }
