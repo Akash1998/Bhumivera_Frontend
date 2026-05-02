@@ -4,9 +4,9 @@ import {
   Box, Search, RefreshCw, AlertTriangle, 
   CheckCircle, XCircle, ChevronLeft, ChevronRight,
   TrendingDown, TrendingUp, Package, IndianRupee,
-  Save, Download, Filter
+  Save, Download, Filter, Plus, Minus, Layers, CheckSquare, Square
 } from 'lucide-react';
-import { products as productsApi } from '../../services/api';
+import api from '../../services/api'; // Changed from productsApi to raw api for stability
 import { useToast } from '../../context/ToastContext';
 
 export default function InventoryManagement() {
@@ -15,7 +15,7 @@ export default function InventoryManagement() {
   
   // Filtering & Pagination State
   const [searchTerm, setSearchTerm] = useState('');
-  const [stockFilter, setStockFilter] = useState('all'); // all, in-stock, low, out
+  const [stockFilter, setStockFilter] = useState('all'); 
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(12);
 
@@ -23,6 +23,11 @@ export default function InventoryManagement() {
   const [editingId, setEditingId] = useState(null);
   const [editValue, setEditValue] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
+
+  // Bulk Edit State
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [bulkStockValue, setBulkStockValue] = useState('');
 
   const { showToast } = useToast() || {};
 
@@ -33,9 +38,12 @@ export default function InventoryManagement() {
   const fetchInventory = async () => {
     setLoading(true);
     try {
-      const res = await productsApi.getAllAdmin();
-      setProducts(res.data?.products || res.data?.data || res.data || []);
+      // FIX: Hitting the dedicated inventory route instead of productsApi to prevent 401 lockouts
+      const res = await api.get('/api/inventory');
+      setProducts(Array.isArray(res.data) ? res.data : []);
+      setSelectedIds(new Set()); // Reset selections on fetch
     } catch (err) {
+      console.error(err);
       showToast?.('Failed to sync telemetry.', 'error');
     } finally {
       setLoading(false);
@@ -51,26 +59,70 @@ export default function InventoryManagement() {
     return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
   };
 
-  // --- INLINE QUICK UPDATE PROTOCOL ---
-  const handleQuickUpdate = async (productId) => {
-    const newQuantity = parseInt(editValue, 10);
-    if (isNaN(newQuantity) || newQuantity < 0) {
+  // --- INLINE QUICK UPDATE PROTOCOL (Upgraded with Add/Subtract/Set) ---
+  const handleQuickUpdate = async (productId, operation = 'set', overrideValue = null) => {
+    const valueStr = overrideValue !== null ? overrideValue : editValue;
+    const stockDelta = parseInt(valueStr, 10);
+    
+    if (isNaN(stockDelta) || (operation === 'set' && stockDelta < 0)) {
       showToast?.('Invalid stock quantity', 'error');
       return;
     }
 
     setIsUpdating(true);
     try {
-      await productsApi.update(productId, { quantity: newQuantity });
+      const res = await api.put(`/api/inventory/${productId}/stock`, { 
+        stock: stockDelta, 
+        operation 
+      });
+      
       showToast?.('Stock matrix updated', 'success');
       
-      // Optimistic UI update to prevent full reload
+      // Optimistic UI update using backend response
+      const updatedStock = res.data?.product?.stock ?? stockDelta;
       setProducts(products.map(p => 
-        (p.id === productId || p._id === productId) ? { ...p, quantity: newQuantity } : p
+        (p.id === productId || p._id === productId) ? { ...p, stock: updatedStock } : p
       ));
       setEditingId(null);
     } catch (err) {
+      console.error(err);
       showToast?.('Update protocol failed', 'error');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // --- BULK UPDATE PROTOCOL ---
+  const toggleSelection = (id) => {
+    const newSet = new Set(selectedIds);
+    if (newSet.has(id)) newSet.delete(id);
+    else newSet.add(id);
+    setSelectedIds(newSet);
+  };
+
+  const toggleAll = () => {
+    if (selectedIds.size === paginatedProducts.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(paginatedProducts.map(p => p.id || p._id)));
+    }
+  };
+
+  const handleBulkUpdate = async () => {
+    const stock = parseInt(bulkStockValue, 10);
+    if (isNaN(stock) || stock < 0) return showToast?.('Invalid bulk value', 'error');
+
+    setIsUpdating(true);
+    try {
+      const updates = Array.from(selectedIds).map(id => ({ product_id: id, stock }));
+      await api.put('/api/inventory/bulk-update', { updates });
+      showToast?.(`Bulk updated ${selectedIds.size} nodes`, 'success');
+      setIsBulkModalOpen(false);
+      setBulkStockValue('');
+      fetchInventory(); // Full refresh to ensure sync
+    } catch (err) {
+      console.error(err);
+      showToast?.('Bulk update failed', 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -79,13 +131,13 @@ export default function InventoryManagement() {
   // --- EXCEL EXPORT PROTOCOL ---
   const exportToExcel = () => {
     const worksheetData = products.map(p => ({
-      'SKU / ID': p.sku || p.id || p._id,
+      'SKU': p.sku || 'N/A',
       'Hardware Node': p.name,
       'Taxonomy': p.category_name || 'N/A',
-      'Current Stock': p.quantity,
+      'Current Stock': p.stock, // Backend uses 'stock' alias
       'Unit Price (₹)': p.price,
-      'Total Node Valuation (₹)': p.quantity * p.price,
-      'Status': p.status
+      'Total Node Valuation (₹)': p.stock * p.price,
+      'Status': p.is_active
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);
@@ -98,12 +150,15 @@ export default function InventoryManagement() {
   // --- ANALYTICS & FILTERING ---
   const filteredProducts = useMemo(() => {
     return products.filter(p => {
-      const matchesSearch = p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || p.category_name?.toLowerCase().includes(searchTerm.toLowerCase());
+      const matchesSearch = p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                            p.sku?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+                            p.category_name?.toLowerCase().includes(searchTerm.toLowerCase());
       if (!matchesSearch) return false;
 
-      if (stockFilter === 'out') return p.quantity === 0;
-      if (stockFilter === 'low') return p.quantity > 0 && p.quantity <= 10;
-      if (stockFilter === 'in-stock') return p.quantity > 10;
+      const stock = p.stock || 0;
+      if (stockFilter === 'out') return stock === 0;
+      if (stockFilter === 'low') return stock > 0 && stock <= 10;
+      if (stockFilter === 'in-stock') return stock > 10;
       return true;
     });
   }, [products, searchTerm, stockFilter]);
@@ -112,31 +167,31 @@ export default function InventoryManagement() {
   const paginatedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // Telemetry Metrics
-  const totalValuation = products.reduce((acc, p) => acc + (parseFloat(p.price || 0) * parseInt(p.quantity || 0)), 0);
-  const lowStockCount = products.filter(p => p.quantity > 0 && p.quantity <= 10).length;
-  const outOfStockCount = products.filter(p => p.quantity === 0).length;
-  const totalUnits = products.reduce((acc, p) => acc + parseInt(p.quantity || 0), 0);
+  const totalValuation = products.reduce((acc, p) => acc + (parseFloat(p.price || 0) * parseInt(p.stock || 0)), 0);
+  const lowStockCount = products.filter(p => p.stock > 0 && p.stock <= 10).length;
+  const outOfStockCount = products.filter(p => p.stock === 0).length;
+  const totalUnits = products.reduce((acc, p) => acc + parseInt(p.stock || 0), 0);
 
   if (loading && products.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-4">
         <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
-        <p className="text-slate-500 font-black uppercase text-[10px] tracking-[0.3em] animate-pulse">Syncing Telemetry...</p>
+        <p className="text-slate-500 font-black uppercase text-[10px] tracking-[0.3em] animate-pulse">Syncing Matrix...</p>
       </div>
     );
   }
 
   return (
-    <div className="p-4 space-y-6 bg-[#020617] min-h-screen text-slate-300 font-sans animate-in fade-in duration-300">
+    <div className="p-4 space-y-6 bg-[#020617] min-h-screen text-slate-300 font-sans animate-in fade-in duration-300 relative">
       
       {/* HEADER COMMAND CENTER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
         <div>
           <h1 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-2">
-            Inventory <span className="text-emerald-500">Command</span>
+            Inventory <span className="text-emerald-500">Matrix</span>
           </h1>
           <p className="text-slate-500 font-bold uppercase text-[9px] tracking-widest mt-1">
-            Real-time Valuation & Stock Telemetry
+            Real-time Valuation & Supercharged Telemetry
           </p>
         </div>
         <div className="flex gap-2">
@@ -151,28 +206,28 @@ export default function InventoryManagement() {
 
       {/* TELEMETRY KPI DASHBOARD */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4">
+        <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4 hover:border-emerald-500/30 transition-colors">
           <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500"><IndianRupee size={18} /></div>
           <div>
             <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Total Valuation</p>
             <h4 className="text-lg font-black text-white tracking-tight">₹{totalValuation.toLocaleString()}</h4>
           </div>
         </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4">
+        <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4 hover:border-blue-500/30 transition-colors">
           <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500"><Package size={18} /></div>
           <div>
             <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Total Units Banked</p>
             <h4 className="text-lg font-black text-white tracking-tight">{totalUnits.toLocaleString()}</h4>
           </div>
         </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4">
+        <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4 hover:border-amber-500/30 transition-colors">
           <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500"><AlertTriangle size={18} /></div>
           <div>
             <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Critical Alert (&le;10)</p>
             <h4 className="text-lg font-black text-white tracking-tight">{lowStockCount} Nodes</h4>
           </div>
         </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4">
+        <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4 hover:border-rose-500/30 transition-colors">
           <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-500"><TrendingDown size={18} /></div>
           <div>
             <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Depleted (0)</p>
@@ -181,28 +236,45 @@ export default function InventoryManagement() {
         </div>
       </div>
 
-      {/* FILTER & SEARCH BAR */}
-      <div className="flex flex-col md:flex-row gap-3">
-        <div className="relative flex-1 group">
-          <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-          <input 
-            type="text" placeholder="Search hardware node..." 
-            value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full bg-slate-900/40 border border-slate-800 focus:border-emerald-500/50 rounded-xl py-2.5 pl-10 pr-4 text-white font-bold text-xs outline-none transition-all"
-          />
+      {/* FILTER, SEARCH & BULK ACTION BAR */}
+      <div className="flex flex-col md:flex-row gap-3 items-center justify-between bg-slate-900/40 p-3 rounded-2xl border border-slate-800">
+        <div className="flex items-center gap-3 w-full md:w-auto">
+          <div className="relative w-full md:w-64 group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+            <input 
+              type="text" placeholder="Search SKU or Node..." 
+              value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
+              className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-xl py-2 pl-10 pr-4 text-white font-bold text-xs outline-none transition-all"
+            />
+          </div>
+          <div className="relative w-full md:w-48">
+            <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={14} />
+            <select 
+              value={stockFilter} onChange={(e) => { setStockFilter(e.target.value); setCurrentPage(1); }}
+              className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-xl py-2 pl-10 pr-4 text-white font-bold text-xs outline-none transition-all appearance-none cursor-pointer"
+            >
+              <option value="all">All Statuses</option>
+              <option value="in-stock">Healthy (&gt;10)</option>
+              <option value="low">Critical (1-10)</option>
+              <option value="out">Depleted (0)</option>
+            </select>
+          </div>
         </div>
-        <div className="relative w-full md:w-64">
-          <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={14} />
-          <select 
-            value={stockFilter} onChange={(e) => { setStockFilter(e.target.value); setCurrentPage(1); }}
-            className="w-full bg-slate-900/40 border border-slate-800 focus:border-emerald-500/50 rounded-xl py-2.5 pl-10 pr-4 text-white font-bold text-xs outline-none transition-all appearance-none cursor-pointer"
-          >
-            <option value="all">All Stock Statuses</option>
-            <option value="in-stock">Healthy Stock (&gt;10)</option>
-            <option value="low">Critical Stock (1-10)</option>
-            <option value="out">Depleted (0)</option>
-          </select>
-        </div>
+
+        {/* Dynamic Bulk Action Context Menu */}
+        {selectedIds.size > 0 && (
+          <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-4">
+            <span className="text-xs font-bold text-emerald-400 font-mono bg-emerald-500/10 px-3 py-1.5 rounded-lg">
+              {selectedIds.size} Selected
+            </span>
+            <button 
+              onClick={() => setIsBulkModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-slate-950 font-black text-xs rounded-xl hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20"
+            >
+              <Layers size={14} /> Batch Override
+            </button>
+          </div>
+        )}
       </div>
 
       {/* DENSE TELEMETRY TABLE */}
@@ -211,19 +283,29 @@ export default function InventoryManagement() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-950/80 border-b border-slate-800">
-                <th className="p-4 text-[9px] font-black uppercase text-slate-500 tracking-widest">Hardware Node</th>
+                <th className="p-4 w-12 text-center">
+                  <button onClick={toggleAll} className="text-slate-500 hover:text-emerald-400 transition-colors">
+                    {paginatedProducts.length > 0 && selectedIds.size === paginatedProducts.length 
+                      ? <CheckSquare size={16} className="text-emerald-500" /> 
+                      : <Square size={16} />}
+                  </button>
+                </th>
+                <th className="p-4 text-[9px] font-black uppercase text-slate-500 tracking-widest">Hardware Node & SKU</th>
                 <th className="p-4 text-[9px] font-black uppercase text-slate-500 tracking-widest">Health Indicator</th>
                 <th className="p-4 text-[9px] font-black uppercase text-slate-500 tracking-widest">Unit Value</th>
-                <th className="p-4 text-[9px] font-black uppercase text-slate-500 tracking-widest w-48">Live Stock Adjustment</th>
+                <th className="p-4 text-[9px] font-black uppercase text-slate-500 tracking-widest w-64 text-center">Live Logic Controls</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50">
               {paginatedProducts.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="p-8 text-center text-slate-500 font-bold text-xs">No hardware matches current parameters.</td>
+                  <td colSpan={5} className="p-8 text-center text-slate-500 font-bold text-xs">No hardware matches current parameters.</td>
                 </tr>
               ) : paginatedProducts.map(product => {
-                const isEditing = editingId === (product.id || product._id);
+                const pId = product.id || product._id;
+                const isSelected = selectedIds.has(pId);
+                const isEditing = editingId === pId;
+                const stock = product.stock || 0;
                 
                 // Status Logic
                 let StatusIcon = CheckCircle;
@@ -231,14 +313,19 @@ export default function InventoryManagement() {
                 let statusBg = 'bg-emerald-500/10';
                 let statusText = 'Healthy';
 
-                if (product.quantity === 0) {
+                if (stock === 0) {
                   StatusIcon = XCircle; statusColor = 'text-rose-500'; statusBg = 'bg-rose-500/10'; statusText = 'Depleted';
-                } else if (product.quantity <= 10) {
+                } else if (stock <= 10) {
                   StatusIcon = AlertTriangle; statusColor = 'text-amber-500'; statusBg = 'bg-amber-500/10'; statusText = 'Critical';
                 }
 
                 return (
-                  <tr key={product._id || product.id} className="hover:bg-slate-800/30 transition-colors">
+                  <tr key={pId} className={`${isSelected ? 'bg-emerald-500/5' : 'hover:bg-slate-800/30'} transition-colors`}>
+                    <td className="p-3 text-center">
+                      <button onClick={() => toggleSelection(pId)} className="text-slate-500 hover:text-emerald-400 transition-colors mt-1">
+                        {isSelected ? <CheckSquare size={16} className="text-emerald-500" /> : <Square size={16} />}
+                      </button>
+                    </td>
                     <td className="p-3">
                       <div className="flex items-center gap-3">
                         <img 
@@ -248,7 +335,12 @@ export default function InventoryManagement() {
                         />
                         <div>
                           <p className="text-xs font-bold text-white line-clamp-1">{product.name}</p>
-                          <p className="text-[9px] text-slate-500 mt-0.5">{product.category_name || 'N/A'}</p>
+                          <div className="flex items-center gap-2 mt-0.5">
+                            <span className="text-[9px] text-slate-400 font-mono bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">
+                              {product.sku || 'NO-SKU'}
+                            </span>
+                            <span className="text-[9px] text-slate-500">{product.category_name || 'Uncategorized'}</span>
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -262,37 +354,56 @@ export default function InventoryManagement() {
                     </td>
                     <td className="p-3">
                       {isEditing ? (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center justify-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-emerald-500/50">
+                          {/* Delta Subtraction */}
+                          <button 
+                            disabled={isUpdating}
+                            onClick={() => handleQuickUpdate(pId, 'subtract', '1')}
+                            className="p-1.5 bg-rose-500/10 text-rose-500 rounded-lg hover:bg-rose-500 hover:text-black transition-colors"
+                            title="Subtract 1"
+                          ><Minus size={14} /></button>
+                          
                           <input 
                             type="number" min="0" autoFocus
                             value={editValue} onChange={(e) => setEditValue(e.target.value)}
-                            className="w-20 bg-slate-950 border border-emerald-500 rounded-lg p-1.5 text-xs text-white text-center outline-none font-mono"
+                            className="w-16 bg-transparent text-xs text-white text-center outline-none font-mono font-bold"
                           />
+                          
+                          {/* Delta Addition */}
                           <button 
                             disabled={isUpdating}
-                            onClick={() => handleQuickUpdate(product.id || product._id)}
+                            onClick={() => handleQuickUpdate(pId, 'add', '1')}
+                            className="p-1.5 bg-emerald-500/10 text-emerald-500 rounded-lg hover:bg-emerald-500 hover:text-black transition-colors"
+                            title="Add 1"
+                          ><Plus size={14} /></button>
+                          
+                          <div className="w-[1px] h-4 bg-slate-800 mx-1"></div>
+                          
+                          <button 
+                            disabled={isUpdating}
+                            onClick={() => handleQuickUpdate(pId, 'set')}
                             className="p-1.5 bg-emerald-500 text-black rounded-lg hover:bg-emerald-400 disabled:opacity-50 transition-colors"
-                          >
-                            <Save size={14} />
-                          </button>
+                            title="Save Absolute Value"
+                          ><Save size={14} /></button>
+                          
                           <button 
                             disabled={isUpdating}
                             onClick={() => setEditingId(null)}
                             className="p-1.5 bg-slate-900 text-slate-400 rounded-lg hover:bg-slate-800 hover:text-white transition-colors"
-                          >
-                            <XCircle size={14} />
-                          </button>
+                          ><XCircle size={14} /></button>
                         </div>
                       ) : (
-                        <div 
-                          onClick={() => { setEditingId(product.id || product._id); setEditValue(product.quantity.toString()); }}
-                          className="flex items-center justify-between w-24 bg-slate-950 border border-slate-800 rounded-lg p-1.5 cursor-pointer hover:border-emerald-500/50 hover:bg-slate-900 group transition-all"
-                        >
-                          <span className={`text-xs font-black font-mono pl-2 ${product.quantity > 0 ? 'text-white' : 'text-rose-500'}`}>
-                            {product.quantity}
-                          </span>
-                          <div className="opacity-0 group-hover:opacity-100 pr-1 text-emerald-500">
-                            <TrendingUp size={12} />
+                        <div className="flex justify-center">
+                          <div 
+                            onClick={() => { setEditingId(pId); setEditValue(stock.toString()); }}
+                            className="flex items-center justify-between w-28 bg-slate-950 border border-slate-800 rounded-xl p-2 cursor-pointer hover:border-emerald-500/50 hover:bg-slate-900 group transition-all"
+                          >
+                            <span className={`text-sm font-black font-mono pl-2 ${stock > 0 ? 'text-white' : 'text-rose-500'}`}>
+                              {stock}
+                            </span>
+                            <div className="opacity-0 group-hover:opacity-100 pr-1 text-emerald-500 bg-emerald-500/10 p-1 rounded-md">
+                              <TrendingUp size={12} />
+                            </div>
                           </div>
                         </div>
                       )}
@@ -311,13 +422,54 @@ export default function InventoryManagement() {
               Page {currentPage} of {totalPages}
             </span>
             <div className="flex items-center gap-1">
-              <button disabled={currentPage===1} onClick={()=>setCurrentPage(p=>p-1)} className="p-1.5 bg-slate-900 rounded text-slate-400 disabled:opacity-50 hover:bg-slate-800"><ChevronLeft size={14} /></button>
-              <button disabled={currentPage===totalPages} onClick={()=>setCurrentPage(p=>p+1)} className="p-1.5 bg-slate-900 rounded text-slate-400 disabled:opacity-50 hover:bg-slate-800"><ChevronRight size={14} /></button>
+              <button disabled={currentPage===1} onClick={()=>setCurrentPage(p=>p-1)} className="p-1.5 bg-slate-900 rounded-lg text-slate-400 disabled:opacity-50 hover:bg-slate-800 transition-colors"><ChevronLeft size={14} /></button>
+              <button disabled={currentPage===totalPages} onClick={()=>setCurrentPage(p=>p+1)} className="p-1.5 bg-slate-900 rounded-lg text-slate-400 disabled:opacity-50 hover:bg-slate-800 transition-colors"><ChevronRight size={14} /></button>
             </div>
           </div>
         )}
       </div>
 
+      {/* BULK UPDATE MODAL */}
+      {isBulkModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+          <div className="bg-[#020617] border border-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-2xl">
+            <h3 className="text-lg font-black text-white flex items-center gap-2 mb-2">
+              <Layers className="text-emerald-500" size={20} /> Batch Override
+            </h3>
+            <p className="text-xs text-slate-400 mb-6">
+              Force update <strong className="text-emerald-400">{selectedIds.size} selected nodes</strong> to a new absolute stock value.
+            </p>
+            
+            <div className="space-y-4">
+              <div>
+                <label className="block text-[10px] font-black uppercase text-slate-500 tracking-widest mb-2">New Absolute Quantity</label>
+                <input 
+                  type="number" min="0" autoFocus
+                  value={bulkStockValue} onChange={(e) => setBulkStockValue(e.target.value)}
+                  className="w-full bg-slate-900 border border-slate-800 focus:border-emerald-500 rounded-xl py-3 px-4 text-white font-mono font-bold outline-none"
+                  placeholder="e.g., 100"
+                />
+              </div>
+              
+              <div className="flex gap-3 pt-2">
+                <button 
+                  onClick={() => setIsBulkModalOpen(false)}
+                  className="flex-1 py-3 bg-slate-900 text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-800 transition-colors"
+                >
+                  Cancel
+                </button>
+                <button 
+                  onClick={handleBulkUpdate}
+                  disabled={isUpdating || !bulkStockValue}
+                  className="flex-1 py-3 bg-emerald-500 text-slate-950 font-black text-xs rounded-xl hover:bg-emerald-400 disabled:opacity-50 transition-colors shadow-lg shadow-emerald-500/20"
+                >
+                  {isUpdating ? 'Executing...' : 'Force Sync'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
