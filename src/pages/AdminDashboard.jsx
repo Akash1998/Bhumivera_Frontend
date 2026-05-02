@@ -28,7 +28,8 @@ import SupportManagement from './admin/SupportManagement';
 import FlashSalesManagement from './admin/FlashSalesManagement';
 import LoyaltyManagement from './admin/LoyaltyManagement';
 import AffiliateManagement from './admin/AffiliateManagement';
-import WalletManagement from './admin/WalletManagement'; // Imported Wallet Management
+import WalletManagement from './admin/WalletManagement';
+import ShippingManagement from './admin/ShippingManagement'; // Imported Shipping Management
 
 const Placeholder = ({ name }) => (
   <div className="p-8 bg-slate-900/50 rounded-3xl border border-slate-800 backdrop-blur-xl">
@@ -71,10 +72,10 @@ const TAB_COMPONENTS = {
   banners: BannerManagement,
   contact: ContactManagement,
   settings: AdminSettings,
-  wallet: WalletManagement, // Replaced placeholder with real component
+  wallet: WalletManagement,
+  shipping: ShippingManagement, // Replaced placeholder with real component
   mobile: () => <Placeholder name="OTP & SMS Config" />,
   seo: () => <Placeholder name="SEO & Meta Engine" />,
-  shipping: () => <Placeholder name="Shipping Zones" />,
   tax: () => <Placeholder name="Taxation Logic" />,
   notifications: () => <Placeholder name="Global Alerts" />,
   logs: () => <Placeholder name="System Logs" />,
@@ -125,6 +126,7 @@ export default function AdminDashboard() {
         { id: 'categories', label: 'Taxonomy', icon: Grid },
         { id: 'fitment', label: 'Vehicle Matrix', icon: Wrench },
         { id: 'inventory', label: 'Stock Audit', icon: Archive },
+        { id: 'shipping', label: 'Shipping Zones', icon: Truck },
       ]
     },
     {
