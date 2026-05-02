@@ -1,223 +1,151 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { Shield, Mail, Lock, Smartphone, ArrowRight, Loader2, KeyRound } from 'lucide-react';
-import { useAuth } from '../context/AuthContext';
-import { useToast } from '../context/ToastContext';
-import api from '../services/api';
+import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { adminLogin } from "../services/api";
+import { FiEye, FiEyeOff, FiAlertCircle, FiLock, FiMail, FiShield, FiRefreshCw } from "react-icons/fi";
 
 export default function AdminLogin() {
-  const [loginMethod, setLoginMethod] = useState('otp');
-  const [step, setStep] = useState(1);
+  const [credentials, setCredentials] = useState({ email: "", password: "" });
+  const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
-  const [phone, setPhone] = useState('');
-  const [otp, setOtp] = useState(['', '', '', '', '', '']);
-
-  const { login } = useAuth();
-  const { showToast } = useToast() || {};
+  const [showNotification, setShowNotification] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
   const navigate = useNavigate();
 
-  const handleEmailLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      const response = await api.post('/auth/admin/login', { email, password });
-      login(response.data.user, response.data.token);
-      showToast?.('Welcome back, Architect.', 'success');
-      navigate('/admin/dashboard');
-    } catch (err) {
-      showToast?.(err.response?.data?.message || 'Authentication failed', 'error');
-    } finally {
-      setLoading(false);
-    }
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setCredentials((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleSendOtp = async (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (phone.length < 10) return showToast?.('Enter a valid 10-digit number', 'error');
-    
     setLoading(true);
+    setError("");
     try {
-      await api.post('/auth/admin/otp/send', { phone });
-      showToast?.('OTP dispatched. Check server logs.', 'success');
-      setStep(2);
-    } catch (err) {
-      showToast?.(err.response?.data?.message || 'Failed to dispatch OTP', 'error');
+      const { token } = await adminLogin(credentials);
+      localStorage.setItem("ms_token", token);
+      setShowNotification(true);
+      setTimeout(() => {
+        navigate("/admin/dashboard");
+      }, 1500);
+    } catch (e) {
+      setError(e.message || "Access Denied: Invalid Authentication Credentials.");
     } finally {
       setLoading(false);
-    }
-  };
-
-  const handleVerifyOtp = async (e) => {
-    e.preventDefault();
-    const otpString = otp.join('');
-    if (otpString.length < 6) return showToast?.('Enter the complete 6-digit code', 'error');
-
-    setLoading(true);
-    try {
-      const response = await api.post('/auth/admin/otp/verify', { phone, otp: otpString });
-      login(response.data.user, response.data.token);
-      showToast?.('Identity Verified. Access Granted.', 'success');
-      navigate('/admin/dashboard');
-    } catch (err) {
-      showToast?.(err.response?.data?.message || 'Invalid or expired OTP', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleOtpChange = (element, index) => {
-    if (isNaN(element.value)) return false;
-    const newOtp = [...otp];
-    newOtp[index] = element.value;
-    setOtp(newOtp);
-    if (element.nextSibling && element.value) {
-      element.nextSibling.focus();
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden font-sans">
-      <div className="absolute top-[-20%] left-[-10%] w-96 h-96 bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none"></div>
-      <div className="absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-blue-500/10 blur-[120px] rounded-full pointer-events-none"></div>
+    <div className="min-h-screen bg-[#0a0b10] flex items-center justify-center p-6 relative overflow-hidden font-sans">
+      {/* Background Animated Orbs */}
+      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-cyan-500/10 blur-[150px] rounded-full animate-pulse" />
+      <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-purple-500/10 blur-[150px] rounded-full animate-pulse" style={{animationDelay: '700ms'}} />
 
-      <div className="w-full max-w-md bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-[2rem] p-8 shadow-2xl relative z-10">
-        
+      <div className="w-full max-w-[420px] relative z-10">
+        {/* Logo / Title Area */}
         <div className="text-center mb-10">
-          <div className="w-16 h-16 bg-slate-950 border border-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner">
-            <Shield className="text-emerald-500" size={32} />
+          <div className="inline-flex items-center justify-center h-20 w-20 bg-gradient-to-tr from-cyan-400 to-purple-500 rounded-[2rem] shadow-[0_0_30px_rgba(34,211,238,0.3)] mb-6 transform hover:rotate-12 transition-transform duration-500">
+            <FiShield className="h-10 w-10 text-white stroke-[2px]" />
           </div>
-          <h1 className="text-2xl font-black text-white uppercase tracking-widest">System Access</h1>
-          <p className="text-slate-500 font-mono text-[10px] uppercase tracking-[0.2em] mt-2">Anritvox Master Control</p>
+          <h1 className="text-4xl font-black text-white tracking-tighter mb-2">
+            Anritvox<span className="text-cyan-400">OS</span>
+          </h1>
+          <p className="text-gray-500 font-medium uppercase tracking-[0.3em] text-[10px]">Secure Terminal Access</p>
         </div>
 
-        {step === 1 && (
-          <div className="flex bg-slate-950 border border-slate-800 p-1 rounded-xl mb-8">
-            <button
-              type="button"
-              onClick={() => setLoginMethod('otp')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all ${
-                loginMethod === 'otp' ? 'bg-emerald-500/10 text-emerald-400 shadow-lg' : 'text-slate-500 hover:text-white'
-              }`}
-            >
-              <Smartphone size={14} /> Secure OTP
-            </button>
-            <button
-              type="button"
-              onClick={() => setLoginMethod('email')}
-              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all ${
-                loginMethod === 'email' ? 'bg-emerald-500/10 text-emerald-400 shadow-lg' : 'text-slate-500 hover:text-white'
-              }`}
-            >
-              <Mail size={14} /> Email Auth
-            </button>
-          </div>
-        )}
-
-        {loginMethod === 'otp' && (
-          <div>
-            {step === 1 ? (
-              <form onSubmit={handleSendOtp} className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Registered Mobile Number</label>
-                  <div className="relative">
-                    <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-                    <input
-                      type="tel"
-                      value={phone}
-                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
-                      placeholder="Enter 10-digit number"
-                      maxLength="10"
-                      className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-mono"
-                      required
-                    />
-                  </div>
-                </div>
-                <button
-                  type="submit"
-                  disabled={loading || phone.length < 10}
-                  className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {loading ? <Loader2 size={18} className="animate-spin" /> : 'Request Authorization'}
-                </button>
-              </form>
-            ) : (
-              <form onSubmit={handleVerifyOtp} className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
-                <div className="text-center mb-6">
-                  <p className="text-slate-400 text-sm">Check server logs for code sent to <span className="text-white font-mono">{phone}</span></p>
-                  <button type="button" onClick={() => setStep(1)} className="text-emerald-500 text-[10px] uppercase tracking-widest hover:underline mt-2">Change Number</button>
-                </div>
-                
-                <div className="flex justify-between gap-2">
-                  {otp.map((data, index) => (
-                    <input
-                      key={index}
-                      type="text"
-                      maxLength="1"
-                      value={data}
-                      onChange={(e) => handleOtpChange(e.target, index)}
-                      onFocus={(e) => e.target.select()}
-                      className="w-12 h-14 bg-slate-950 border border-slate-800 text-white text-center text-xl font-black rounded-xl focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
-                    />
-                  ))}
-                </div>
-
-                <button
-                  type="submit"
-                  disabled={loading || otp.join('').length < 6}
-                  className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-8"
-                >
-                  {loading ? <Loader2 size={18} className="animate-spin" /> : <><KeyRound size={18} /> Verify Identity</>}
-                </button>
-              </form>
-            )}
-          </div>
-        )}
-
-        {loginMethod === 'email' && (
-          <form onSubmit={handleEmailLogin} className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-500">
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Admin Email</label>
+        {/* Login Card */}
+        <div className="bg-[#0f111a]/80 backdrop-blur-2xl border border-white/5 rounded-[2.5rem] p-10 shadow-2xl">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            {/* Email Field */}
+            <div>
+              <label htmlFor="email" className="block text-xs text-gray-500 font-medium uppercase tracking-[0.2em] mb-3">Identity Vector</label>
               <div className="relative">
-                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 h-4 w-4" />
                 <input
+                  id="email"
+                  name="email"
                   type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  placeholder="architect@anritvox.com"
-                  className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-mono"
                   required
-                />
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Secure Passphrase</label>
-              <div className="relative">
-                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••••••"
-                  className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-mono"
-                  required
+                  placeholder="admin@anritvox.com"
+                  value={credentials.email}
+                  onChange={handleChange}
+                  className="w-full bg-[#161b22]/50 border border-white/10 rounded-2xl py-4 pl-12 pr-4 text-white placeholder:text-gray-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
+                  disabled={loading}
                 />
               </div>
             </div>
 
+            {/* Password Field */}
+            <div>
+              <label htmlFor="password" className="block text-xs text-gray-500 font-medium uppercase tracking-[0.2em] mb-3">Access Protocol</label>
+              <div className="relative">
+                <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-600 h-4 w-4" />
+                <input
+                  id="password"
+                  name="password"
+                  type={showPassword ? "text" : "password"}
+                  required
+                  placeholder="••••••••"
+                  value={credentials.password}
+                  onChange={handleChange}
+                  className="w-full bg-[#161b22]/50 border border-white/10 rounded-2xl py-4 pl-12 pr-12 text-white placeholder:text-gray-700 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500/50 transition-all"
+                  disabled={loading}
+                />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-600 hover:text-white transition-colors"
+                >
+                  {showPassword ? <FiEyeOff /> : <FiEye />}
+                </button>
+              </div>
+            </div>
+
+            {/* Error Notification */}
+            {error && (
+              <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
+                <FiAlertCircle className="text-red-400 h-4 w-4 flex-shrink-0" />
+                <p className="text-red-400 text-sm">{error}</p>
+              </div>
+            )}
+
+            {/* Submit Button */}
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
+              className="w-full py-4 bg-gradient-to-r from-cyan-500 to-purple-600 text-white font-bold rounded-2xl hover:from-cyan-400 hover:to-purple-500 transition-all transform hover:scale-[1.02] active:scale-[0.98] shadow-[0_0_20px_rgba(34,211,238,0.3)] disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? <Loader2 size={18} className="animate-spin" /> : <><ArrowRight size={18} /> Initialize Session</>}
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <FiRefreshCw className="animate-spin h-4 w-4" /> Authenticating...
+                </span>
+              ) : (
+                <span className="flex items-center justify-center gap-2">
+                  <FiShield className="h-4 w-4" /> INITIALIZE ACCESS
+                </span>
+              )}
             </button>
           </form>
-        )}
+
+          {/* Footer links */}
+          <div className="mt-8 text-center">
+            <p className="text-gray-700 text-xs">Request Hardware Key</p>
+            <p className="text-gray-800 text-[10px] mt-4">© 2026 ANRITVOX SECURE SYSTEMS</p>
+          </div>
+        </div>
       </div>
+
+      {/* Login Successful Notification */}
+      {showNotification && (
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50">
+          <div className="bg-[#0f111a] border border-cyan-500/30 rounded-3xl p-10 text-center shadow-2xl">
+            <div className="h-16 w-16 bg-gradient-to-tr from-cyan-400 to-purple-500 rounded-2xl flex items-center justify-center mx-auto mb-6">
+              <FiShield className="h-8 w-8 text-white" />
+            </div>
+            <h2 className="text-2xl font-bold text-white mb-2">Access Granted</h2>
+            <p className="text-gray-400">Handshaking with terminal... redirecting</p>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
