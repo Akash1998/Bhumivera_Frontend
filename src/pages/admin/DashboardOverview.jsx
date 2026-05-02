@@ -25,7 +25,6 @@ const categoryData = [
   { name: 'Wiring & Relays', sales: 1900 },
 ];
 
-// 🚀 FIX: Hardcoded Tailwind dictionaries so the Vite compiler doesn't purge the colors!
 const kpiColors = {
   emerald: { bg: 'bg-emerald-500/10 text-emerald-500', border: 'hover:border-emerald-500/50', arrow: 'group-hover:text-emerald-500' },
   blue: { bg: 'bg-blue-500/10 text-blue-500', border: 'hover:border-blue-500/50', arrow: 'group-hover:text-blue-500' },
@@ -168,7 +167,7 @@ export default function DashboardOverview() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
-        <div className="xl:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+        <div className="xl:col-span-2 bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl overflow-hidden">
           <div className="flex justify-between items-center mb-8">
             <div>
               <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
@@ -178,9 +177,9 @@ export default function DashboardOverview() {
             </div>
           </div>
           
-          <div className="h-[280px] w-full">
-            {/* 🚀 FIX: Applied minWidth={1} to prevent Recharts from throwing substring error on unmount */}
-            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+          <div className="h-[280px] w-full overflow-hidden">
+            {/* 🚀 ULTIMATE FIX: minWidth={400} guarantees the charting area never calculates negative space */}
+            <ResponsiveContainer width="99%" height={280} minWidth={400}>
               <AreaChart data={revenueData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <defs>
                   <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
@@ -206,15 +205,15 @@ export default function DashboardOverview() {
           </div>
         </div>
 
-        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col">
+        <div className="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl flex flex-col overflow-hidden">
           <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2 mb-1">
             <Tag className="text-blue-500" size={16} /> Inventory Movement
           </h3>
           <p className="text-[10px] text-slate-500 font-mono mb-6">Top Hardware Sectors by Volume</p>
           
-          <div className="flex-1 w-full min-h-[220px]">
-             {/* 🚀 FIX: Applied minWidth={1} failsafe here as well */}
-            <ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
+          <div className="flex-1 w-full min-h-[220px] overflow-hidden">
+             {/* 🚀 ULTIMATE FIX: minWidth={400} ensures the 110px Y-Axis never creates a negative drawing area */}
+            <ResponsiveContainer width="99%" height={220} minWidth={400}>
               <BarChart data={categoryData} layout="vertical" margin={{ top: 0, right: 0, left: 0, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
                 <XAxis type="number" hide />
