@@ -301,5 +301,3 @@ export const fitment = {
 };
 
 export default api;
-
-integrate and generate full code without coment line and denser code
