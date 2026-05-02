@@ -1,7 +1,6 @@
 import axios from "axios";
 
 let envBaseUrl = import.meta.env.VITE_BASE_URL || "https://service.anritvox.com";
-
 if (envBaseUrl.startsWith("http://") && !envBaseUrl.includes("localhost")) {
   envBaseUrl = envBaseUrl.replace("http://", "https://");
 }
@@ -38,10 +37,6 @@ api.interceptors.response.use(
   }
 );
 
-// ==========================================
-// --- COMPLETE API MODULE MAP (A-Z FIX) ---
-// ==========================================
-
 export const auth = {
   login: (data) => api.post('/auth/login', data),
   register: (data) => api.post('/auth/register', data),
@@ -51,10 +46,13 @@ export const auth = {
   requestPasswordReset: (data) => api.post('/auth/forgot-password', data),
   verifyResetOtp: (data) => api.post('/auth/verify-otp', data),
   resetPassword: (data) => api.post('/auth/reset-password', data),
-  verifySecurityQuestion: (data) => api.post('/auth/security-question/verify', data),   adminLogin: (data) => api.post('/auth/admin/login', data),   getAdminProfile: () => api.get('/auth/profile'),
+  verifySecurityQuestion: (data) => api.post('/auth/security-question/verify', data),
+  adminLogin: (data) => api.post('/auth/admin/login', data),
+  getAdminProfile: () => api.get('/auth/profile'),
+  sendAdminOtp: (phone) => api.post('/auth/admin/otp/send', { phone }),
+  verifyAdminOtp: (phone, otp) => api.post('/auth/admin/otp/verify', { phone, otp }),
 };
 
-// --- NAVBAR SEARCH ENDPOINT ---
 export const search = {
   query: (searchTerm) => api.get('/products/active', { params: { search: searchTerm } }),
   global: (searchTerm) => api.get('/products', { params: { search: searchTerm } })
@@ -290,14 +288,14 @@ export const placeOrderAPI = async (data) => {
 };
 
 export const fitment = {
-    check: (productId, make, model, year) => api.get('/fitment/check', { params: { productId, make, model, year } }),
-    getByProduct: (productId) => api.get(`/fitment/product/${productId}`),
-    getMakes: () => api.get('/fitment/makes'),
-    getModels: (make) => api.get('/fitment/models', { params: { make } }),
-    uploadExcel: (productId, formData) => api.post('/fitment/upload-excel', formData, { headers: { 'Content-Type': 'multipart/form-data' }, params: { productId } }),
-    addManual: (data) => api.post('/fitment/manual', data),
-    delete: (id) => api.delete(`/fitment/${id}`),
-    clearAll: (productId) => api.delete(`/fitment/product/${productId}/all`),
+  check: (productId, make, model, year) => api.get('/fitment/check', { params: { productId, make, model, year } }),
+  getByProduct: (productId) => api.get(`/fitment/product/${productId}`),
+  getMakes: () => api.get('/fitment/makes'),
+  getModels: (make) => api.get('/fitment/models', { params: { make } }),
+  uploadExcel: (productId, formData) => api.post('/fitment/upload-excel', formData, { headers: { 'Content-Type': 'multipart/form-data' }, params: { productId } }),
+  addManual: (data) => api.post('/fitment/manual', data),
+  delete: (id) => api.delete(`/fitment/${id}`),
+  clearAll: (productId) => api.delete(`/fitment/product/${productId}/all`),
 };
 
 export default api;
