@@ -1,151 +1,222 @@
-import React, { useState, useRef, useCallback } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "../context/AuthContext";
-import { Turnstile } from '@marsidev/react-turnstile';
-import { FiEye, FiEyeOff, FiAlertCircle, FiLock, FiMail, FiShield, FiRefreshCw, FiCheckCircle } from "react-icons/fi";
+import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { Shield, Mail, Lock, Smartphone, ArrowRight, Loader2, KeyRound } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
+import api from '../services/api';
 
 export default function AdminLogin() {
-  const [credentials, setCredentials] = useState({ email: "", password: "" });
-  const [error, setError] = useState("");
+  const [loginMethod, setLoginMethod] = useState('otp');
+  const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
-  const [showNotification, setShowNotification] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
-  const [turnstileToken, setTurnstileToken] = useState("");
   
-  const turnstileRef = useRef(null);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState(['', '', '', '', '', '']);
+
+  const { login } = useAuth();
+  const { showToast } = useToast() || {};
   const navigate = useNavigate();
-  const { adminLogin } = useAuth(); // CRITICAL: Uses specific admin context
 
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setCredentials((prev) => ({ ...prev, [name]: value }));
-  };
-
-  const handleTurnstileSuccess = useCallback((token) => {
-    setError("");
-    setTurnstileToken(token);
-  }, []);
-
-  const handleTurnstileError = useCallback((errorCode) => {
-    setError("Security check failed. Please verify your connection.");
-    setTurnstileToken("");
-  }, []);
-
-  const handleSubmit = async (e) => {
+  const handleEmailLogin = async (e) => {
     e.preventDefault();
-    setError("");
-
-    if (!turnstileToken) {
-      setError("Please complete the security verification.");
-      return;
-    }
-
     setLoading(true);
     try {
-      // Simulate real-world terminal delay for realism
-      await new Promise(resolve => setTimeout(resolve, 800));
-
-      const user = await adminLogin({ ...credentials, turnstileToken });
-      
-      if (!user || user.role !== "admin") {
-        throw new Error("Access Denied: Terminal privileges required.");
-      }
-
-      setShowNotification(true);
-      setTimeout(() => {
-        navigate("/admin/dashboard");
-      }, 1500);
-
-    } catch (e) {
-      // Cleanly output wrong password / missing email errors
-      const errorMessage = e.response?.data?.message || e.message || "Invalid Authentication Credentials.";
-      setError(errorMessage);
-      
-      setTurnstileToken("");
-      if (turnstileRef.current) turnstileRef.current.reset();
+      const response = await api.post('/auth/admin/login', { email, password });
+      login(response.data.user, response.data.token);
+      showToast?.('Welcome back, Architect.', 'success');
+      navigate('/admin/dashboard');
+    } catch (err) {
+      showToast?.(err.response?.data?.message || 'Authentication failed', 'error');
     } finally {
       setLoading(false);
     }
   };
 
-  return (
-    <div className="min-h-screen bg-[#0a0b10] flex items-center justify-center p-6 relative overflow-hidden font-sans">
-      <div className="absolute top-[-20%] left-[-10%] w-[60%] h-[60%] bg-cyan-500/10 blur-[150px] rounded-full animate-pulse" />
-      <div className="absolute bottom-[-20%] right-[-10%] w-[60%] h-[60%] bg-purple-500/10 blur-[150px] rounded-full animate-pulse" style={{animationDelay: '700ms'}} />
+  const handleSendOtp = async (e) => {
+    e.preventDefault();
+    if (phone.length < 10) return showToast?.('Enter a valid 10-digit number', 'error');
+    
+    setLoading(true);
+    try {
+      await api.post('/auth/admin/otp/send', { phone });
+      showToast?.('OTP dispatched. Check server logs.', 'success');
+      setStep(2);
+    } catch (err) {
+      showToast?.(err.response?.data?.message || 'Failed to dispatch OTP', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      <div className="w-full max-w-[420px] relative z-10">
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    const otpString = otp.join('');
+    if (otpString.length < 6) return showToast?.('Enter the complete 6-digit code', 'error');
+
+    setLoading(true);
+    try {
+      const response = await api.post('/auth/admin/otp/verify', { phone, otp: otpString });
+      login(response.data.user, response.data.token);
+      showToast?.('Identity Verified. Access Granted.', 'success');
+      navigate('/admin/dashboard');
+    } catch (err) {
+      showToast?.(err.response?.data?.message || 'Invalid or expired OTP', 'error');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleOtpChange = (element, index) => {
+    if (isNaN(element.value)) return false;
+    const newOtp = [...otp];
+    newOtp[index] = element.value;
+    setOtp(newOtp);
+    if (element.nextSibling && element.value) {
+      element.nextSibling.focus();
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 relative overflow-hidden font-sans">
+      <div className="absolute top-[-20%] left-[-10%] w-96 h-96 bg-emerald-500/10 blur-[120px] rounded-full pointer-events-none"></div>
+      <div className="absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-blue-500/10 blur-[120px] rounded-full pointer-events-none"></div>
+
+      <div className="w-full max-w-md bg-slate-900/40 backdrop-blur-xl border border-slate-800/80 rounded-[2rem] p-8 shadow-2xl relative z-10">
+        
         <div className="text-center mb-10">
-          <div className="inline-flex items-center justify-center h-20 w-20 bg-gradient-to-tr from-cyan-400 to-purple-500 rounded-[2rem] shadow-[0_0_30px_rgba(34,211,238,0.3)] mb-6 transform hover:rotate-12 transition-transform duration-500">
-            <FiShield className="h-10 w-10 text-white stroke-[2px]" />
+          <div className="w-16 h-16 bg-slate-950 border border-slate-800 rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-inner">
+            <Shield className="text-emerald-500" size={32} />
           </div>
-          <h1 className="text-4xl font-black text-white tracking-tighter mb-2">
-            Anritvox<span className="text-cyan-400">OS</span>
-          </h1>
-          <p className="text-gray-500 font-medium uppercase tracking-[0.3em] text-[10px]">Secure Terminal Access</p>
+          <h1 className="text-2xl font-black text-white uppercase tracking-widest">System Access</h1>
+          <p className="text-slate-500 font-mono text-[10px] uppercase tracking-[0.2em] mt-2">Anritvox Master Control</p>
         </div>
 
-        <div className="bg-[#0f111a]/80 backdrop-blur-2xl border border-white/5 rounded-[2.5rem] p-10 shadow-2xl">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Admin Email</label>
-              <div className="relative">
-                <FiMail className="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-500/60 h-4 w-4" />
-                <input
-                  type="email" name="email" value={credentials.email} onChange={handleChange} required
-                  placeholder="admin@anritvox.com"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-4 py-3 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-cyan-500/50 focus:bg-cyan-500/5 transition-all"
-                />
-              </div>
-            </div>
+        {step === 1 && (
+          <div className="flex bg-slate-950 border border-slate-800 p-1 rounded-xl mb-8">
+            <button
+              type="button"
+              onClick={() => setLoginMethod('otp')}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all ${
+                loginMethod === 'otp' ? 'bg-emerald-500/10 text-emerald-400 shadow-lg' : 'text-slate-500 hover:text-white'
+              }`}
+            >
+              <Smartphone size={14} /> Secure OTP
+            </button>
+            <button
+              type="button"
+              onClick={() => setLoginMethod('email')}
+              className={`flex-1 flex items-center justify-center gap-2 py-2.5 text-[11px] font-black uppercase tracking-wider rounded-lg transition-all ${
+                loginMethod === 'email' ? 'bg-emerald-500/10 text-emerald-400 shadow-lg' : 'text-slate-500 hover:text-white'
+              }`}
+            >
+              <Mail size={14} /> Email Auth
+            </button>
+          </div>
+        )}
 
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-widest mb-2">Password</label>
-              <div className="relative">
-                <FiLock className="absolute left-4 top-1/2 -translate-y-1/2 text-cyan-500/60 h-4 w-4" />
-                <input
-                  type={showPassword ? "text" : "password"} name="password" value={credentials.password} onChange={handleChange} required
-                  placeholder="••••••••••••"
-                  className="w-full bg-white/5 border border-white/10 rounded-xl pl-11 pr-12 py-3 text-white placeholder-gray-600 text-sm focus:outline-none focus:border-cyan-500/50 focus:bg-cyan-500/5 transition-all"
-                />
-                <button type="button" onClick={() => setShowPassword(!showPassword)} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-cyan-400 transition-colors">
-                  {showPassword ? <FiEyeOff className="h-4 w-4" /> : <FiEye className="h-4 w-4" />}
+        {loginMethod === 'otp' && (
+          <div>
+            {step === 1 ? (
+              <form onSubmit={handleSendOtp} className="space-y-6">
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Registered Mobile Number</label>
+                  <div className="relative">
+                    <Smartphone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                    <input
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => setPhone(e.target.value.replace(/\D/g, ''))}
+                      placeholder="Enter 10-digit number"
+                      maxLength="10"
+                      className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-mono"
+                      required
+                    />
+                  </div>
+                </div>
+                <button
+                  type="submit"
+                  disabled={loading || phone.length < 10}
+                  className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? <Loader2 size={18} className="animate-spin" /> : 'Request Authorization'}
                 </button>
+              </form>
+            ) : (
+              <form onSubmit={handleVerifyOtp} className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+                <div className="text-center mb-6">
+                  <p className="text-slate-400 text-sm">Check server logs for code sent to <span className="text-white font-mono">{phone}</span></p>
+                  <button type="button" onClick={() => setStep(1)} className="text-emerald-500 text-[10px] uppercase tracking-widest hover:underline mt-2">Change Number</button>
+                </div>
+                
+                <div className="flex justify-between gap-2">
+                  {otp.map((data, index) => (
+                    <input
+                      key={index}
+                      type="text"
+                      maxLength="1"
+                      value={data}
+                      onChange={(e) => handleOtpChange(e.target, index)}
+                      onFocus={(e) => e.target.select()}
+                      className="w-12 h-14 bg-slate-950 border border-slate-800 text-white text-center text-xl font-black rounded-xl focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all"
+                    />
+                  ))}
+                </div>
+
+                <button
+                  type="submit"
+                  disabled={loading || otp.join('').length < 6}
+                  className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-8"
+                >
+                  {loading ? <Loader2 size={18} className="animate-spin" /> : <><KeyRound size={18} /> Verify Identity</>}
+                </button>
+              </form>
+            )}
+          </div>
+        )}
+
+        {loginMethod === 'email' && (
+          <form onSubmit={handleEmailLogin} className="space-y-6 animate-in fade-in slide-in-from-left-4 duration-500">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Admin Email</label>
+              <div className="relative">
+                <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                <input
+                  type="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  placeholder="architect@anritvox.com"
+                  className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-mono"
+                  required
+                />
               </div>
             </div>
-
-            {/* Captcha */}
-            <div className="flex justify-center w-full min-h-[65px] pt-2">
-              <Turnstile
-                ref={turnstileRef}
-                siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'}
-                onSuccess={handleTurnstileSuccess}
-                onError={handleTurnstileError}
-              />
+            
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Secure Passphrase</label>
+              <div className="relative">
+                <Lock className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={18} />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••••••"
+                  className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl py-3 pl-12 pr-4 focus:outline-none focus:border-emerald-500/50 focus:ring-1 focus:ring-emerald-500/50 transition-all font-mono"
+                  required
+                />
+              </div>
             </div>
-
-            {error && (
-              <div className="flex items-center gap-3 bg-red-500/10 border border-red-500/20 rounded-xl p-4">
-                <FiAlertCircle className="text-red-400 h-5 w-5 flex-shrink-0" />
-                <p className="text-red-400 text-sm font-semibold">{error}</p>
-              </div>
-            )}
-
-            {showNotification && (
-              <div className="flex items-center gap-3 bg-emerald-500/10 border border-emerald-500/20 rounded-xl p-4">
-                <FiCheckCircle className="text-emerald-400 h-5 w-5 flex-shrink-0 animate-pulse" />
-                <p className="text-emerald-400 text-sm font-semibold">Decryption successful. Loading modules...</p>
-              </div>
-            )}
 
             <button
-              type="submit" disabled={loading || showNotification}
-              className="w-full py-4 bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-white font-bold rounded-xl text-sm tracking-wider uppercase transition-all shadow-[0_0_20px_rgba(34,211,238,0.3)] hover:shadow-[0_0_30px_rgba(34,211,238,0.5)] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              type="submit"
+              disabled={loading}
+              className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-widest py-3.5 rounded-xl transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed mt-4"
             >
-              {loading ? <FiRefreshCw className="h-4 w-4 animate-spin" /> : <FiShield className="h-4 w-4" />}
-              {loading ? "Authenticating..." : "Access Dashboard"}
+              {loading ? <Loader2 size={18} className="animate-spin" /> : <><ArrowRight size={18} /> Initialize Session</>}
             </button>
           </form>
-        </div>
+        )}
       </div>
     </div>
   );
