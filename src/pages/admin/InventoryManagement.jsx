@@ -3,10 +3,9 @@ import * as XLSX from 'xlsx';
 import { 
   Box, Search, RefreshCw, AlertTriangle, 
   CheckCircle, XCircle, ChevronLeft, ChevronRight,
-  TrendingDown, TrendingUp, Package, IndianRupee,
-  Save, Download, Filter, Plus, Minus, Layers, CheckSquare, Square
+  TrendingDown, TrendingUp, Package, Save, Download, Filter, Plus, Minus
 } from 'lucide-react';
-import api from '../../services/api'; // Changed from productsApi to raw api for stability
+import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 
 export default function InventoryManagement() {
@@ -29,7 +28,9 @@ export default function InventoryManagement() {
   const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
   const [bulkStockValue, setBulkStockValue] = useState('');
 
-  const { showToast } = useToast() || {};
+  // Failsafe for Toast Context
+  const toastContext = useToast() || {};
+  const showToast = toastContext.showToast || (() => {});
 
   useEffect(() => {
     fetchInventory();
@@ -38,13 +39,13 @@ export default function InventoryManagement() {
   const fetchInventory = async () => {
     setLoading(true);
     try {
-      // FIX: Hitting the dedicated inventory route instead of productsApi to prevent 401 lockouts
-      const res = await api.get('/api/inventory');
+      // FIX: Corrected route to prevent /api/api/ 404s and 401 lockouts
+      const res = await api.get('/inventory');
       setProducts(Array.isArray(res.data) ? res.data : []);
-      setSelectedIds(new Set()); // Reset selections on fetch
+      setSelectedIds(new Set()); 
     } catch (err) {
       console.error(err);
-      showToast?.('Failed to sync telemetry.', 'error');
+      showToast('Failed to sync telemetry.', 'error');
     } finally {
       setLoading(false);
     }
@@ -59,34 +60,34 @@ export default function InventoryManagement() {
     return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
   };
 
-  // --- INLINE QUICK UPDATE PROTOCOL (Upgraded with Add/Subtract/Set) ---
+  // --- INLINE QUICK UPDATE PROTOCOL ---
   const handleQuickUpdate = async (productId, operation = 'set', overrideValue = null) => {
     const valueStr = overrideValue !== null ? overrideValue : editValue;
     const stockDelta = parseInt(valueStr, 10);
     
     if (isNaN(stockDelta) || (operation === 'set' && stockDelta < 0)) {
-      showToast?.('Invalid stock quantity', 'error');
+      showToast('Invalid stock quantity', 'error');
       return;
     }
 
     setIsUpdating(true);
     try {
-      const res = await api.put(`/api/inventory/${productId}/stock`, { 
+      // FIX: Corrected routing
+      const res = await api.put(`/inventory/${productId}/stock`, { 
         stock: stockDelta, 
         operation 
       });
       
-      showToast?.('Stock matrix updated', 'success');
+      showToast('Stock matrix updated', 'success');
       
-      // Optimistic UI update using backend response
-      const updatedStock = res.data?.product?.stock ?? stockDelta;
+      const updatedStock = res.data?.product?.stock !== undefined ? res.data.product.stock : stockDelta;
       setProducts(products.map(p => 
         (p.id === productId || p._id === productId) ? { ...p, stock: updatedStock } : p
       ));
       setEditingId(null);
     } catch (err) {
       console.error(err);
-      showToast?.('Update protocol failed', 'error');
+      showToast('Update protocol failed', 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -110,19 +111,19 @@ export default function InventoryManagement() {
 
   const handleBulkUpdate = async () => {
     const stock = parseInt(bulkStockValue, 10);
-    if (isNaN(stock) || stock < 0) return showToast?.('Invalid bulk value', 'error');
+    if (isNaN(stock) || stock < 0) return showToast('Invalid bulk value', 'error');
 
     setIsUpdating(true);
     try {
       const updates = Array.from(selectedIds).map(id => ({ product_id: id, stock }));
-      await api.put('/api/inventory/bulk-update', { updates });
-      showToast?.(`Bulk updated ${selectedIds.size} nodes`, 'success');
+      await api.put('/inventory/bulk-update', { updates });
+      showToast(`Bulk updated ${selectedIds.size} nodes`, 'success');
       setIsBulkModalOpen(false);
       setBulkStockValue('');
-      fetchInventory(); // Full refresh to ensure sync
+      fetchInventory(); 
     } catch (err) {
       console.error(err);
-      showToast?.('Bulk update failed', 'error');
+      showToast('Bulk update failed', 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -134,9 +135,9 @@ export default function InventoryManagement() {
       'SKU': p.sku || 'N/A',
       'Hardware Node': p.name,
       'Taxonomy': p.category_name || 'N/A',
-      'Current Stock': p.stock, // Backend uses 'stock' alias
-      'Unit Price (₹)': p.price,
-      'Total Node Valuation (₹)': p.stock * p.price,
+      'Current Stock': p.stock || 0,
+      'Unit Price (₹)': p.price || 0,
+      'Total Node Valuation (₹)': (p.stock || 0) * (p.price || 0),
       'Status': p.is_active
     }));
 
@@ -144,7 +145,7 @@ export default function InventoryManagement() {
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory Audit");
     XLSX.writeFile(workbook, `Anritvox_Inventory_Telemetry_${new Date().toISOString().split('T')[0]}.xlsx`);
-    showToast?.('XLSX Audit Exported', 'success');
+    showToast('XLSX Audit Exported', 'success');
   };
 
   // --- ANALYTICS & FILTERING ---
@@ -166,7 +167,6 @@ export default function InventoryManagement() {
   const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
   const paginatedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
-  // Telemetry Metrics
   const totalValuation = products.reduce((acc, p) => acc + (parseFloat(p.price || 0) * parseInt(p.stock || 0)), 0);
   const lowStockCount = products.filter(p => p.stock > 0 && p.stock <= 10).length;
   const outOfStockCount = products.filter(p => p.stock === 0).length;
@@ -207,7 +207,7 @@ export default function InventoryManagement() {
       {/* TELEMETRY KPI DASHBOARD */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4 hover:border-emerald-500/30 transition-colors">
-          <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500"><IndianRupee size={18} /></div>
+          <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500"><span className="font-bold">₹</span></div>
           <div>
             <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Total Valuation</p>
             <h4 className="text-lg font-black text-white tracking-tight">₹{totalValuation.toLocaleString()}</h4>
@@ -261,7 +261,6 @@ export default function InventoryManagement() {
           </div>
         </div>
 
-        {/* Dynamic Bulk Action Context Menu */}
         {selectedIds.size > 0 && (
           <div className="flex items-center gap-3 animate-in fade-in slide-in-from-right-4">
             <span className="text-xs font-bold text-emerald-400 font-mono bg-emerald-500/10 px-3 py-1.5 rounded-lg">
@@ -271,7 +270,7 @@ export default function InventoryManagement() {
               onClick={() => setIsBulkModalOpen(true)}
               className="flex items-center gap-2 px-4 py-2 bg-emerald-500 text-slate-950 font-black text-xs rounded-xl hover:bg-emerald-400 transition-all shadow-lg shadow-emerald-500/20"
             >
-              <Layers size={14} /> Batch Override
+              <Box size={14} /> Batch Override
             </button>
           </div>
         )}
@@ -286,8 +285,8 @@ export default function InventoryManagement() {
                 <th className="p-4 w-12 text-center">
                   <button onClick={toggleAll} className="text-slate-500 hover:text-emerald-400 transition-colors">
                     {paginatedProducts.length > 0 && selectedIds.size === paginatedProducts.length 
-                      ? <CheckSquare size={16} className="text-emerald-500" /> 
-                      : <Square size={16} />}
+                      ? <div className="w-4 h-4 bg-emerald-500 rounded flex items-center justify-center"><CheckCircle size={12} className="text-black"/></div> 
+                      : <div className="w-4 h-4 border-2 border-slate-600 rounded"></div>}
                   </button>
                 </th>
                 <th className="p-4 text-[9px] font-black uppercase text-slate-500 tracking-widest">Hardware Node & SKU</th>
@@ -307,7 +306,6 @@ export default function InventoryManagement() {
                 const isEditing = editingId === pId;
                 const stock = product.stock || 0;
                 
-                // Status Logic
                 let StatusIcon = CheckCircle;
                 let statusColor = 'text-emerald-500';
                 let statusBg = 'bg-emerald-500/10';
@@ -323,7 +321,9 @@ export default function InventoryManagement() {
                   <tr key={pId} className={`${isSelected ? 'bg-emerald-500/5' : 'hover:bg-slate-800/30'} transition-colors`}>
                     <td className="p-3 text-center">
                       <button onClick={() => toggleSelection(pId)} className="text-slate-500 hover:text-emerald-400 transition-colors mt-1">
-                        {isSelected ? <CheckSquare size={16} className="text-emerald-500" /> : <Square size={16} />}
+                        {isSelected 
+                          ? <div className="w-4 h-4 bg-emerald-500 rounded flex items-center justify-center"><CheckCircle size={12} className="text-black"/></div> 
+                          : <div className="w-4 h-4 border-2 border-slate-600 rounded"></div>}
                       </button>
                     </td>
                     <td className="p-3">
@@ -355,12 +355,10 @@ export default function InventoryManagement() {
                     <td className="p-3">
                       {isEditing ? (
                         <div className="flex items-center justify-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-emerald-500/50">
-                          {/* Delta Subtraction */}
                           <button 
                             disabled={isUpdating}
                             onClick={() => handleQuickUpdate(pId, 'subtract', '1')}
                             className="p-1.5 bg-rose-500/10 text-rose-500 rounded-lg hover:bg-rose-500 hover:text-black transition-colors"
-                            title="Subtract 1"
                           ><Minus size={14} /></button>
                           
                           <input 
@@ -369,12 +367,10 @@ export default function InventoryManagement() {
                             className="w-16 bg-transparent text-xs text-white text-center outline-none font-mono font-bold"
                           />
                           
-                          {/* Delta Addition */}
                           <button 
                             disabled={isUpdating}
                             onClick={() => handleQuickUpdate(pId, 'add', '1')}
                             className="p-1.5 bg-emerald-500/10 text-emerald-500 rounded-lg hover:bg-emerald-500 hover:text-black transition-colors"
-                            title="Add 1"
                           ><Plus size={14} /></button>
                           
                           <div className="w-[1px] h-4 bg-slate-800 mx-1"></div>
@@ -383,7 +379,6 @@ export default function InventoryManagement() {
                             disabled={isUpdating}
                             onClick={() => handleQuickUpdate(pId, 'set')}
                             className="p-1.5 bg-emerald-500 text-black rounded-lg hover:bg-emerald-400 disabled:opacity-50 transition-colors"
-                            title="Save Absolute Value"
                           ><Save size={14} /></button>
                           
                           <button 
@@ -415,7 +410,6 @@ export default function InventoryManagement() {
           </table>
         </div>
         
-        {/* PAGINATION */}
         {totalPages > 1 && (
           <div className="p-3 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between">
             <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest ml-1">
@@ -429,12 +423,11 @@ export default function InventoryManagement() {
         )}
       </div>
 
-      {/* BULK UPDATE MODAL */}
       {isBulkModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <div className="bg-[#020617] border border-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-2xl">
             <h3 className="text-lg font-black text-white flex items-center gap-2 mb-2">
-              <Layers className="text-emerald-500" size={20} /> Batch Override
+              <Box className="text-emerald-500" size={20} /> Batch Override
             </h3>
             <p className="text-xs text-slate-400 mb-6">
               Force update <strong className="text-emerald-400">{selectedIds.size} selected nodes</strong> to a new absolute stock value.
