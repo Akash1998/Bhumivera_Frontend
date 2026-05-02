@@ -5,7 +5,7 @@ import {
   CheckCircle, XCircle, ChevronLeft, ChevronRight,
   TrendingDown, TrendingUp, Package, Save, Download, Filter, Plus, Minus
 } from 'lucide-react';
-import api from '../../services/api';
+import api, { products as productsApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 
 export default function InventoryManagement() {
@@ -39,9 +39,17 @@ export default function InventoryManagement() {
   const fetchInventory = async () => {
     setLoading(true);
     try {
-      // FIX: Corrected route to prevent /api/api/ 404s and 401 lockouts
-      const res = await api.get('/inventory');
-      setProducts(Array.isArray(res.data) ? res.data : []);
+      // 🚀 FIX: Bypassing the slow database sort by using the highly-indexed products route
+      const res = await productsApi.getAllAdmin();
+      let rawData = res.data?.products || res.data?.data || res.data || [];
+
+      // ⚡ FAST CLIENT-SIDE SORTING: Maps quantity to stock and sorts in milliseconds
+      const mappedData = rawData.map(p => ({
+        ...p,
+        stock: p.quantity !== undefined ? p.quantity : (p.stock || 0)
+      })).sort((a, b) => (a.stock || 0) - (b.stock || 0));
+
+      setProducts(mappedData);
       setSelectedIds(new Set()); 
     } catch (err) {
       console.error(err);
@@ -72,7 +80,6 @@ export default function InventoryManagement() {
 
     setIsUpdating(true);
     try {
-      // FIX: Corrected routing
       const res = await api.put(`/inventory/${productId}/stock`, { 
         stock: stockDelta, 
         operation 
@@ -82,7 +89,7 @@ export default function InventoryManagement() {
       
       const updatedStock = res.data?.product?.stock !== undefined ? res.data.product.stock : stockDelta;
       setProducts(products.map(p => 
-        (p.id === productId || p._id === productId) ? { ...p, stock: updatedStock } : p
+        (p.id === productId || p._id === productId) ? { ...p, stock: updatedStock, quantity: updatedStock } : p
       ));
       setEditingId(null);
     } catch (err) {
@@ -138,7 +145,7 @@ export default function InventoryManagement() {
       'Current Stock': p.stock || 0,
       'Unit Price (₹)': p.price || 0,
       'Total Node Valuation (₹)': (p.stock || 0) * (p.price || 0),
-      'Status': p.is_active
+      'Status': p.status || p.is_active
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);
@@ -207,7 +214,7 @@ export default function InventoryManagement() {
       {/* TELEMETRY KPI DASHBOARD */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4 hover:border-emerald-500/30 transition-colors">
-          <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500"><span className="font-bold">₹</span></div>
+          <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500"><span className="font-bold text-lg">₹</span></div>
           <div>
             <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Total Valuation</p>
             <h4 className="text-lg font-black text-white tracking-tight">₹{totalValuation.toLocaleString()}</h4>
