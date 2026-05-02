@@ -17,7 +17,7 @@ import UserManagement from './admin/UserManagement';
 import EWarrantyManagement from './admin/EWarrantyManagement';
 import AnalyticsManagement from './admin/AnalyticsManagement';
 import InventoryManagement from './admin/InventoryManagement';
-import CouponManagement = from './admin/CouponManagement';
+import CouponManagement from './admin/CouponManagement';
 import ReviewManagement from './admin/ReviewManagement';
 import BannerManagement from './admin/BannerManagement';
 import ContactManagement from './admin/ContactManagement';
