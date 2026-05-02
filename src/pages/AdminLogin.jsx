@@ -100,7 +100,7 @@ export default function AdminLogin() {
               </div>
             </div>
 
-            {/* Error Notification */}
+            {/* Error Notificatin */}
             {error && (
               <div className="flex items-center gap-3 p-4 bg-red-500/10 border border-red-500/20 rounded-2xl">
                 <FiAlertCircle className="text-red-400 h-4 w-4 flex-shrink-0" />
