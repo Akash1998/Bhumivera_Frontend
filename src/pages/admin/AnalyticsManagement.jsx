@@ -1,85 +1,291 @@
-import React,{useState,useEffect,useMemo} from 'react';
-import*as XLSX from 'xlsx';
-import{AreaChart,Area,BarChart,Bar,XAxis,YAxis,CartesianGrid,Tooltip,ResponsiveContainer}from'recharts';
-import{Activity,DollarSign,ShoppingCart,TrendingUp,TrendingDown,Download,Calendar,BrainCircuit,Target,Package,Zap}from'lucide-react';
-import api from'../../services/api';
-import{useToast}from'../../context/ToastContext';
-export default function AnalyticsManagement(){
-const[orders,setOrders]=useState([]);
-const[products,setProducts]=useState([]);
-const[loading,setLoading]=useState(true);
-const[timeframe,setTimeframe]=useState('30');
-const{showToast}=useToast()||{};
-useEffect(()=>{const fetchTelemetry=async()=>{setLoading(true);try{const[orderRes,prodRes]=await Promise.all([api.get('/orders').catch(()=>api.get('/admin/orders')),api.get('/products')]);setOrders(orderRes.data?.orders||orderRes.data?.data||orderRes.data||[]);setProducts(prodRes.data?.products||prodRes.data?.data||prodRes.data||[]);}catch(err){showToast?.('Data Science pipeline synchronization failed.','error');}finally{setLoading(false);}};fetchTelemetry();},[]);
-const analyticsData=useMemo(()=>{const now=new Date();const cutoffDate=new Date();cutoffDate.setDate(now.getDate()-parseInt(timeframe));const validOrders=orders.filter(o=>o.status!=='cancelled'&&o.status!=='returned'&&new Date(o.created_at)>=cutoffDate);const previousCutoff=new Date(cutoffDate);previousCutoff.setDate(cutoffDate.getDate()-parseInt(timeframe));const previousOrders=orders.filter(o=>o.status!=='cancelled'&&new Date(o.created_at)>=previousCutoff&&new Date(o.created_at)<cutoffDate);const totalRevenue=validOrders.reduce((sum,o)=>sum+parseFloat(o.total_amount||o.total||0),0);const prevRevenue=previousOrders.reduce((sum,o)=>sum+parseFloat(o.total_amount||o.total||0),0);const revenueVelocity=prevRevenue?((totalRevenue-prevRevenue)/prevRevenue)*100:0;const totalOrders=validOrders.length;const prevOrdersCount=previousOrders.length;const orderVelocity=prevOrdersCount?((totalOrders-prevOrdersCount)/prevOrdersCount)*100:0;const aov=totalOrders?totalRevenue/totalOrders:0;const prevAov=prevOrdersCount?prevRevenue/prevOrdersCount:0;const aovVelocity=prevAov?((aov-prevAov)/prevAov)*100:0;const timeSeriesMap={};validOrders.forEach(o=>{const dateStr=new Date(o.created_at).toLocaleDateString('en-US',{month:'short',day:'numeric'});if(!timeSeriesMap[dateStr])timeSeriesMap[dateStr]={date:dateStr,revenue:0,orders:0};timeSeriesMap[dateStr].revenue+=parseFloat(o.total_amount||o.total||0);timeSeriesMap[dateStr].orders+=1;});const timeSeriesData=Object.values(timeSeriesMap);const productFrequency={};validOrders.forEach(o=>{if(o.items&&Array.isArray(o.items)){o.items.forEach(item=>{const name=item.name||item.product?.name||'Unknown Node';if(!productFrequency[name])productFrequency[name]={name,revenue:0,units:0};productFrequency[name].revenue+=parseFloat(item.price*item.quantity);productFrequency[name].units+=parseInt(item.quantity);});}});const topProducts=Object.values(productFrequency).sort((a,b)=>b.revenue-a.revenue).slice(0,5);const insights=[];if(revenueVelocity>15)insights.push({type:'positive',text:`Revenue velocity is up ${revenueVelocity.toFixed(1)}%. Current marketing vectors are highly effective.`});else if(revenueVelocity<-10)insights.push({type:'negative',text:`Revenue contraction of ${Math.abs(revenueVelocity).toFixed(1)}% detected. Analyze recent traffic sources.`});if(aovVelocity>5)insights.push({type:'positive',text:`Average Order Value climbed ${aovVelocity.toFixed(1)}%. Cross-selling strategies are yielding results.`});if(topProducts.length>0)insights.push({type:'neutral',text:`Hardware node '${topProducts[0].name}' accounts for the highest revenue density in this temporal window.`});const activeProductNames=Object.keys(productFrequency);const slowMovers=products.filter(p=>!activeProductNames.includes(p.name)).length;if(slowMovers>0)insights.push({type:'warning',text:`${slowMovers} hardware nodes generated zero volume in this timeframe. Consider flash sales or taxonomy repositioning.`});return{totalRevenue,revenueVelocity,totalOrders,orderVelocity,aov,aovVelocity,timeSeriesData,topProducts,insights};},[orders,products,timeframe]);
-const exportAnalytics=()=>{const ws1=XLSX.utils.json_to_sheet([{'Timeframe (Days)':timeframe,'Total Revenue (₹)':analyticsData.totalRevenue,'Total Volume':analyticsData.totalOrders,'AOV (₹)':analyticsData.aov.toFixed(2),'Revenue Velocity (%)':analyticsData.revenueVelocity.toFixed(2)}]);const ws2=XLSX.utils.json_to_sheet(analyticsData.timeSeriesData);const ws3=XLSX.utils.json_to_sheet(analyticsData.topProducts);const workbook=XLSX.utils.book_new();XLSX.utils.book_append_sheet(workbook,ws1,"Macro Overview");XLSX.utils.book_append_sheet(workbook,ws2,"Time-Series Data");XLSX.utils.book_append_sheet(workbook,ws3,"Node Performance");XLSX.writeFile(workbook,`Anritvox_DataScience_Report_${timeframe}D_${new Date().toISOString().split('T')[0]}.xlsx`);showToast?.('Data Science Ledger Extracted','success');};
-const MetricCard=({title,value,velocity,icon:Icon,color,prefix=''})=> (
-<div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] relative overflow-hidden group">
-<div className={`absolute top-0 right-0 w-32 h-32 bg-${color}-500/5 blur-3xl -mr-10 -mt-10 group-hover:bg-${color}-500/10 transition-all`}></div>
-<div className="flex justify-between items-start relative z-10">
-<div>
-<p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{title}</p>
-<h4 className="text-3xl font-black text-white tracking-tighter mt-2">{prefix}{value}</h4>
-<div className="flex items-center gap-2 mt-3">
-<span className={`flex items-center gap-1 text-[10px] font-black ${velocity>=0?'text-emerald-400':'text-rose-400'}`}>
-{velocity>=0?<TrendingUp size={12}/>:<TrendingDown size={12}/>}{Math.abs(velocity).toFixed(1)}%
-</span>
-<span className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">vs previous {timeframe}d</span>
-</div>
-</div>
-<div className={`p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-${color}-500`}><Icon size={20}/></div>
-</div>
-</div>
-);
-if(loading)return(<div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6"><div className="relative"><div className="w-20 h-20 border-4 border-purple-500/20 border-t-purple-500 rounded-full animate-spin"></div><BrainCircuit className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-purple-500 animate-pulse" size={24}/></div><p className="text-slate-500 font-black uppercase text-[10px] tracking-[0.3em] animate-pulse">Compiling Neural Analytics...</p></div>);
-return(
-<div className="p-4 md:p-8 space-y-6 bg-[#020617] min-h-screen text-slate-300 font-sans animate-in fade-in duration-500">
-<div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6 pb-6 border-b border-slate-800/80">
-<div><h1 className="text-3xl font-black text-white uppercase tracking-tight flex items-center gap-3">Data <span className="text-purple-500">Science</span></h1><p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest mt-1 flex items-center gap-2"><Activity size={12} className="text-purple-500"/> Advanced Telemetry & Prediction Engine</p></div>
-<div className="flex flex-wrap items-center gap-3">
-<div className="flex bg-slate-900 border border-slate-800 p-1 rounded-xl">
-{[{v:'7',l:'7D'},{v:'30',l:'30D'},{v:'90',l:'3M'},{v:'365',l:'1Y'}].map(t=>(<button key={t.v} onClick={()=>setTimeframe(t.v)} className={`px-4 py-2 text-[10px] font-black uppercase tracking-widest rounded-lg transition-all ${timeframe===t.v?'bg-purple-500/10 text-purple-400 shadow-lg':'text-slate-500 hover:text-white'}`}>{t.l}</button>))}
-</div>
-<button onClick={exportAnalytics} className="flex items-center gap-2 px-5 py-3 bg-slate-900 border border-slate-800 text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-purple-500/10 hover:border-purple-500/50 hover:text-purple-400 transition-all"><Download size={14}/> Extract Ledger</button>
-</div>
-</div>
-<div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-<MetricCard title="Gross Revenue Volume" value={analyticsData.totalRevenue.toLocaleString()} velocity={analyticsData.revenueVelocity} icon={DollarSign} color="emerald" prefix="₹"/>
-<MetricCard title="Transaction Volume" value={analyticsData.totalOrders.toLocaleString()} velocity={analyticsData.orderVelocity} icon={ShoppingCart} color="blue"/>
-<MetricCard title="Average Node Value (AOV)" value={analyticsData.aov.toFixed(0).toLocaleString()} velocity={analyticsData.aovVelocity} icon={Target} color="purple" prefix="₹"/>
-</div>
-<div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-<div className="lg:col-span-2 bg-slate-900/30 border border-slate-800/80 rounded-[2.5rem] p-6 shadow-2xl">
-<div className="flex items-center justify-between mb-8"><h3 className="text-xs font-black uppercase tracking-widest text-slate-500 flex items-center gap-2"><TrendingUp size={14} className="text-purple-500"/> Revenue Trajectory</h3></div>
-<div className="h-[300px] w-full">
-<ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-<AreaChart data={analyticsData.timeSeriesData} margin={{top:5,right:0,left:-20,bottom:0}}>
-<defs><linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="#a855f7" stopOpacity={0.3}/><stop offset="95%" stopColor="#a855f7" stopOpacity={0}/></linearGradient></defs>
-<CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false}/><XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} dy={10}/><YAxis stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val)=>`₹${val}`}/>
-<Tooltip contentStyle={{backgroundColor:'#020617',border:'1px solid #1e293b',borderRadius:'16px',fontSize:'12px',fontWeight:'bold'}} itemStyle={{color:'#a855f7'}}/>
-<Area type="monotone" dataKey="revenue" stroke="#a855f7" strokeWidth={3} fillOpacity={1} fill="url(#colorRevenue)"/>
-</AreaChart>
-</ResponsiveContainer>
-</div>
-</div>
-<div className="bg-slate-900/30 border border-slate-800/80 rounded-[2.5rem] p-6 shadow-2xl flex flex-col">
-<h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-6 flex items-center gap-2"><BrainCircuit size={14} className="text-blue-500"/> Algorithmic Insights</h3>
-<div className="flex-1 space-y-4 overflow-y-auto custom-scrollbar pr-2">
-{analyticsData.insights.length===0?(<div className="h-full flex items-center justify-center text-slate-500 font-bold text-xs uppercase tracking-widest">Awaiting Data Vectors</div>):analyticsData.insights.map((insight,i)=>{let config={bg:'bg-slate-900',border:'border-slate-800',text:'text-slate-300',icon:Activity};if(insight.type==='positive')config={bg:'bg-emerald-500/5',border:'border-emerald-500/20',text:'text-emerald-400',icon:TrendingUp};if(insight.type==='negative')config={bg:'bg-rose-500/5',border:'border-rose-500/20',text:'text-rose-400',icon:TrendingDown};if(insight.type==='warning')config={bg:'bg-amber-500/5',border:'border-amber-500/20',text:'text-amber-400',icon:Zap};const Icon=config.icon;return(<div key={i} className={`p-4 rounded-2xl border ${config.bg} ${config.border} flex items-start gap-3`}><Icon size={16} className={`mt-0.5 ${config.text} shrink-0`}/><p className="text-xs font-bold leading-relaxed text-slate-300">{insight.text}</p></div>);})}
-</div>
-</div>
-</div>
-<div className="bg-slate-900/30 border border-slate-800/80 rounded-[2.5rem] p-6 shadow-2xl">
-<h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-8 flex items-center gap-2"><Package size={14} className="text-emerald-500"/> Node Performance Matrix (Top 5)</h3>
-<div className="h-[250px] w-full">
-<ResponsiveContainer width="100%" height="100%" minWidth={1} minHeight={1}>
-<BarChart data={analyticsData.topProducts} layout="vertical" margin={{top:0,right:0,left:0,bottom:0}}>
-<CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false}/><XAxis type="number" stroke="#64748b" fontSize={10} tickLine={false} axisLine={false} tickFormatter={(val)=>`₹${val}`}/><YAxis dataKey="name" type="category" stroke="#94a3b8" fontSize={10} width={150} tickLine={false} axisLine={false}/>
-<Tooltip cursor={{fill:'#0f172a'}} contentStyle={{backgroundColor:'#020617',border:'1px solid #1e293b',borderRadius:'16px',fontSize:'12px',fontWeight:'bold'}}/>
-<Bar dataKey="revenue" fill="#10b981" radius={[0,4,4,0]} barSize={24}/>
-</BarChart>
-</ResponsiveContainer>
-</div>
-</div>
-</div>
-);}
+import React, { useState, useEffect } from 'react';
+import { analytics } from '../../services/api';
+import { 
+  TrendingUp, TrendingDown, DollarSign, Users, ShoppingCart, 
+  Activity, Download, Calendar, ArrowUpRight, BarChart2, 
+  PieChart, Globe, Zap, Target
+} from 'lucide-react';
+
+export default function AnalyticsManagement() {
+  const [loading, setLoading] = useState(true);
+  const [timeframe, setTimeframe] = useState('30d');
+  const [data, setData] = useState({
+    kpis: null,
+    revenue: [],
+    sales: [],
+    products: []
+  });
+
+  useEffect(() => {
+    let mounted = true;
+    const fetchIntelligence = async () => {
+      setLoading(true);
+      try {
+        const [kpiRes, revRes, salesRes, prodRes] = await Promise.allSettled([
+          analytics.getKpis(),
+          analytics.getRevenue(),
+          analytics.getSales(),
+          analytics.getProducts()
+        ]);
+
+        if (mounted) {
+          setData({
+            kpis: kpiRes.status === 'fulfilled' && kpiRes.value.data ? kpiRes.value.data : mockKpis,
+            revenue: revRes.status === 'fulfilled' && revRes.value.data?.length ? revRes.value.data : mockRevenue,
+            sales: salesRes.status === 'fulfilled' && salesRes.value.data?.length ? salesRes.value.data : mockCategories,
+            products: prodRes.status === 'fulfilled' && prodRes.value.data?.length ? prodRes.value.data : mockTopProducts
+          });
+        }
+      } catch (err) {
+        console.error(err);
+      } finally {
+        if (mounted) setLoading(false);
+      }
+    };
+
+    fetchIntelligence();
+    return () => { mounted = false; };
+  }, [timeframe]);
+
+  const maxRevenue = Math.max(...(data.revenue.length ? data.revenue.map(d => d.value) : [1]));
+  const maxCategory = Math.max(...(data.sales.length ? data.sales.map(d => d.amount) : [1]));
+
+  if (loading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <div className="relative w-24 h-24">
+          <div className="absolute inset-0 border-y-2 border-cyan-500/20 rounded-full animate-[spin_3s_linear_infinite]" />
+          <div className="absolute inset-2 border-x-2 border-emerald-500/40 rounded-full animate-[spin_2s_linear_infinite_reverse]" />
+          <div className="absolute inset-4 border-y-2 border-purple-500 rounded-full animate-spin" />
+          <Activity className="absolute inset-0 m-auto text-cyan-400 animate-pulse" size={24} />
+        </div>
+        <p className="mt-4 text-xs font-mono text-cyan-500 tracking-[0.3em] uppercase animate-pulse">Compiling Telemetry...</p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-6 max-w-7xl mx-auto pb-12">
+      <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-4">
+        <div>
+          <h2 className="text-3xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
+            <BarChart2 className="text-cyan-400" size={32} />
+            System Intelligence
+          </h2>
+          <p className="text-slate-400 font-mono text-[10px] uppercase tracking-widest mt-1">Real-time Data Aggregation & Telemetry</p>
+        </div>
+        
+        <div className="flex items-center gap-3 w-full lg:w-auto">
+          <div className="flex bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-lg p-1">
+            {['7d', '30d', '90d', '1y'].map((t) => (
+              <button
+                key={t}
+                onClick={() => setTimeframe(t)}
+                className={`px-4 py-1.5 rounded-md text-xs font-bold font-mono tracking-wider transition-all duration-300 ${
+                  timeframe === t 
+                    ? 'bg-cyan-500/20 text-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.2)]' 
+                    : 'text-slate-500 hover:text-slate-300 hover:bg-slate-800'
+                }`}
+              >
+                {t.toUpperCase()}
+              </button>
+            ))}
+          </div>
+          <button className="flex items-center gap-2 px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg transition-colors border border-slate-700 text-sm font-bold">
+            <Download size={16} />
+            <span className="hidden sm:inline">Export Report</span>
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <KpiCard title="Gross Volume" value={`₹${data.kpis?.revenue?.toLocaleString()}`} trend={data.kpis?.revTrend} icon={DollarSign} color="emerald" />
+        <KpiCard title="Active Sessions" value={data.kpis?.sessions?.toLocaleString()} trend={data.kpis?.sessionTrend} icon={Users} color="cyan" />
+        <KpiCard title="Conversion Rate" value={`${data.kpis?.conversion}%`} trend={data.kpis?.convTrend} icon={Target} color="purple" />
+        <KpiCard title="AOV" value={`₹${data.kpis?.aov?.toLocaleString()}`} trend={data.kpis?.aovTrend} icon={ShoppingCart} color="amber" />
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 bg-slate-900/40 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 shadow-2xl relative overflow-hidden group">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500/0 via-cyan-500 to-cyan-500/0 opacity-50" />
+          <div className="flex justify-between items-center mb-8">
+            <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
+              <Activity className="text-cyan-400" size={16} />
+              Revenue Velocity
+            </h3>
+            <span className="text-[10px] font-mono text-cyan-500 bg-cyan-500/10 px-2 py-1 rounded border border-cyan-500/20">LIVE SYNC</span>
+          </div>
+          
+          <div className="h-64 flex items-end gap-2 relative">
+            <div className="absolute inset-0 flex flex-col justify-between pointer-events-none border-l border-b border-slate-800/50">
+              {[100, 75, 50, 25, 0].map(p => (
+                <div key={p} className="w-full border-t border-slate-800/50 relative">
+                  <span className="absolute -left-10 -top-2 text-[9px] font-mono text-slate-600 w-8 text-right">
+                    {p === 0 ? '0' : `${(maxRevenue * (p/100) / 1000).toFixed(0)}k`}
+                  </span>
+                </div>
+              ))}
+            </div>
+            
+            <div className="flex-1 flex items-end justify-between h-full z-10 pl-2">
+              {data.revenue.map((item, idx) => (
+                <div key={idx} className="relative group/bar flex flex-col items-center justify-end h-full w-full px-0.5">
+                  <div 
+                    className="w-full bg-cyan-500/20 hover:bg-cyan-400 border-t-2 border-cyan-400 rounded-t-sm transition-all duration-500 relative"
+                    style={{ height: `${Math.max((item.value / maxRevenue) * 100, 2)}%` }}
+                  >
+                    <div className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 bg-slate-800 text-white text-[10px] font-mono py-1 px-2 rounded opacity-0 group-hover/bar:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-20">
+                      ₹{item.value.toLocaleString()}
+                    </div>
+                  </div>
+                  <span className="text-[8px] font-mono text-slate-500 mt-2 truncate w-full text-center">{item.label}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-slate-900/40 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500/0 via-purple-500 to-purple-500/0 opacity-50" />
+          <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2 mb-6">
+            <PieChart className="text-purple-400" size={16} />
+            Sector Distribution
+          </h3>
+          
+          <div className="space-y-5">
+            {data.sales.map((cat, idx) => (
+              <div key={idx} className="group/cat">
+                <div className="flex justify-between items-end mb-1.5">
+                  <span className="text-xs font-bold text-slate-300 group-hover/cat:text-white transition-colors">{cat.name}</span>
+                  <span className="text-[10px] font-mono text-purple-400">₹{cat.amount.toLocaleString()}</span>
+                </div>
+                <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                  <div 
+                    className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)] transition-all duration-1000"
+                    style={{ width: `${(cat.amount / maxCategory) * 100}%` }}
+                  />
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div className="bg-slate-900/40 backdrop-blur-xl border border-slate-800/50 rounded-2xl shadow-2xl overflow-hidden">
+          <div className="p-6 border-b border-slate-800/50 flex justify-between items-center">
+            <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
+              <Zap className="text-amber-400" size={16} />
+              High-Velocity Assets
+            </h3>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="bg-slate-950/50 text-[10px] uppercase tracking-widest text-slate-500 font-mono">
+                  <th className="p-4 font-normal">Asset ID</th>
+                  <th className="p-4 font-normal">Classification</th>
+                  <th className="p-4 font-normal text-right">Units</th>
+                  <th className="p-4 font-normal text-right">Revenue</th>
+                </tr>
+              </thead>
+              <tbody className="text-sm">
+                {data.products.map((prod, idx) => (
+                  <tr key={idx} className="border-b border-slate-800/30 hover:bg-slate-800/20 transition-colors group">
+                    <td className="p-4">
+                      <div className="font-bold text-slate-200 group-hover:text-white transition-colors">{prod.name}</div>
+                      <div className="text-[10px] font-mono text-slate-500">{prod.sku}</div>
+                    </td>
+                    <td className="p-4 text-slate-400 text-xs">{prod.category}</td>
+                    <td className="p-4 text-right font-mono text-slate-300">{prod.units}</td>
+                    <td className="p-4 text-right font-mono font-bold text-emerald-400">₹{prod.revenue.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="bg-slate-900/40 backdrop-blur-xl border border-slate-800/50 rounded-2xl shadow-2xl p-6 relative overflow-hidden">
+          <div className="absolute -right-10 -bottom-10 opacity-5">
+            <Globe size={200} />
+          </div>
+          <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2 mb-6">
+            <Globe className="text-emerald-400" size={16} />
+            Geographic Telemetry
+          </h3>
+          <div className="space-y-4 relative z-10">
+            {[
+              { region: 'Maharashtra', users: 4205, percentage: 35 },
+              { region: 'Delhi NCR', users: 3102, percentage: 25 },
+              { region: 'Karnataka', users: 2401, percentage: 20 },
+              { region: 'Tamil Nadu', users: 1205, percentage: 10 },
+              { region: 'Other', users: 1200, percentage: 10 },
+            ].map((geo, idx) => (
+              <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-slate-800/50 hover:border-emerald-500/30 transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 font-mono text-xs font-bold">
+                    #{idx + 1}
+                  </div>
+                  <div>
+                    <div className="font-bold text-slate-200 text-sm">{geo.region}</div>
+                    <div className="text-[10px] font-mono text-slate-500">{geo.users.toLocaleString()} Active Nodes</div>
+                  </div>
+                </div>
+                <div className="text-right">
+                  <div className="text-sm font-black text-white">{geo.percentage}%</div>
+                  <div className="w-16 h-1 bg-slate-800 rounded-full mt-1 overflow-hidden">
+                    <div className="h-full bg-emerald-500 rounded-full" style={{ width: `${geo.percentage}%` }} />
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function KpiCard({ title, value, trend, icon: Icon, color }) {
+  const isPositive = trend > 0;
+  const colors = {
+    emerald: 'text-emerald-400 bg-emerald-400/10 border-emerald-400/20 shadow-[0_0_15px_rgba(52,211,153,0.1)]',
+    cyan: 'text-cyan-400 bg-cyan-400/10 border-cyan-400/20 shadow-[0_0_15px_rgba(34,211,238,0.1)]',
+    purple: 'text-purple-400 bg-purple-400/10 border-purple-400/20 shadow-[0_0_15px_rgba(192,132,252,0.1)]',
+    amber: 'text-amber-400 bg-amber-400/10 border-amber-400/20 shadow-[0_0_15px_rgba(251,191,36,0.1)]'
+  };
+
+  return (
+    <div className={`rounded-2xl p-5 bg-slate-900/40 backdrop-blur-xl border border-slate-800/50 transition-all duration-300 hover:bg-slate-800/40 group relative overflow-hidden`}>
+      <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full blur-2xl opacity-20 transition-opacity duration-500 group-hover:opacity-40 ${colors[color].split(' ')[0].replace('text-', 'bg-')}`} />
+      
+      <div className="flex justify-between items-start mb-4 relative z-10">
+        <div className={`p-2.5 rounded-xl ${colors[color]} border`}>
+          <Icon size={20} />
+        </div>
+        <div className={`flex items-center gap-1 px-2 py-1 rounded-md text-[10px] font-mono font-bold border ${isPositive ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' : 'bg-rose-500/10 text-rose-400 border-rose-500/20'}`}>
+          {isPositive ? <TrendingUp size={12} /> : <TrendingDown size={12} />}
+          {Math.abs(trend)}%
+        </div>
+      </div>
+      <div className="relative z-10">
+        <h4 className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-1">{title}</h4>
+        <div className="text-2xl font-mono font-black text-white tracking-tight">{value}</div>
+      </div>
+    </div>
+  );
+}
+
+const mockKpis = { revenue: 845200, revTrend: 12.5, sessions: 24502, sessionTrend: 8.2, conversion: 3.4, convTrend: -1.2, aov: 4250, aovTrend: 5.4 };
+const mockRevenue = Array.from({length: 14}, (_, i) => ({ label: `Day ${i+1}`, value: Math.floor(Math.random() * 50000) + 10000 }));
+const mockCategories = [
+  { name: 'Basstubes', amount: 425000 }, { name: 'LED Lighting', amount: 280000 },
+  { name: 'Ambience Kits', amount: 195000 }, { name: 'Wiring & Relays', amount: 85000 }
+];
+const mockTopProducts = [
+  { name: 'Anritvox Pro Basstube 12"', sku: 'AV-BT-12P', category: 'Audio', units: 142, revenue: 120500 },
+  { name: 'H4 LED Headlight Kit 120W', sku: 'AV-LED-H4', category: 'Lighting', units: 310, revenue: 95000 },
+  { name: 'App Controlled RGB Ambience', sku: 'AV-RGB-APP', category: 'Interior', units: 84, revenue: 65000 },
+  { name: 'Premium Wiring Kit 4 Gauge', sku: 'AV-WK-4G', category: 'Accessories', units: 215, revenue: 45000 },
+];
