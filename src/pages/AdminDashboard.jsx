@@ -28,6 +28,7 @@ import SupportManagement from './admin/SupportManagement';
 import FlashSalesManagement from './admin/FlashSalesManagement';
 import LoyaltyManagement from './admin/LoyaltyManagement';
 import AffiliateManagement from './admin/AffiliateManagement';
+import WalletManagement from './admin/WalletManagement'; // Imported Wallet Management
 
 const Placeholder = ({ name }) => (
   <div className="p-8 bg-slate-900/50 rounded-3xl border border-slate-800 backdrop-blur-xl">
@@ -42,7 +43,7 @@ const Placeholder = ({ name }) => (
     </div>
     <div className="space-y-4 font-mono text-xs text-slate-400">
       <p className="animate-pulse">Loading dependencies...</p>
-     <p className="text-emerald-500/50">&gt; establishing secure connection to service.anritvox.com</p>
+      <p className="text-emerald-500/50">&gt; establishing secure connection to service.anritvox.com</p>
       <p className="text-emerald-500/50">&gt; fetching real-time telemetry data</p>
       <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
         <div className="h-full bg-emerald-500 w-1/3 animate-ping" />
@@ -70,7 +71,7 @@ const TAB_COMPONENTS = {
   banners: BannerManagement,
   contact: ContactManagement,
   settings: AdminSettings,
-  wallet: () => <Placeholder name="Wallet Management" />,
+  wallet: WalletManagement, // Replaced placeholder with real component
   mobile: () => <Placeholder name="OTP & SMS Config" />,
   seo: () => <Placeholder name="SEO & Meta Engine" />,
   shipping: () => <Placeholder name="Shipping Zones" />,
@@ -209,7 +210,7 @@ export default function AdminDashboard() {
             </button>
             <div className="h-4 w-[1px] bg-slate-800 mx-2" />
             <h1 className="text-sm font-medium text-white flex items-center gap-2 capitalize">
-              {activeTab.replace('-', ' ')}
+              {activeTab.replace(/-/g, ' ')}
             </h1>
           </div>
           
