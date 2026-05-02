@@ -28,15 +28,6 @@ import SupportManagement from './admin/SupportManagement';
 import FlashSalesManagement from './admin/FlashSalesManagement';
 import LoyaltyManagement from './admin/LoyaltyManagement';
 import AffiliateManagement from './admin/AffiliateManagement';
-import WalletManagement from './admin/WalletManagement';
-import NotificationManagement from './admin/NotificationManagement';
-
-// New Modules (Step 5a)
-import TaxManagement from './admin/TaxManagement';
-import CMSManagement from './admin/CMSManagement';
-import EmailTemplates from './admin/EmailTemplates';
-import SystemLogs from './admin/SystemLogs';
-import FitmentMatrix from './admin/FitmentMatrix';
 
 const Placeholder = ({ name }) => (
   <div className="p-8 bg-slate-900/50 rounded-3xl border border-slate-800 backdrop-blur-xl">
@@ -79,27 +70,23 @@ const TAB_COMPONENTS = {
   banners: BannerManagement,
   contact: ContactManagement,
   settings: AdminSettings,
-  wallet: WalletManagement,
-  notifications: NotificationManagement,
-  
-  // Newly Bound Modules (Step 5b)
-  tax: TaxManagement,
-  cms: CMSManagement,
-  email: EmailTemplates,
-  logs: SystemLogs,
-  fitment: FitmentMatrix,
-
-  // Future Infrastructure
+  wallet: () => <Placeholder name="Wallet Management" />,
   mobile: () => <Placeholder name="OTP & SMS Config" />,
   seo: () => <Placeholder name="SEO & Meta Engine" />,
   shipping: () => <Placeholder name="Shipping Zones" />,
+  tax: () => <Placeholder name="Taxation Logic" />,
+  notifications: () => <Placeholder name="Global Alerts" />,
+  logs: () => <Placeholder name="System Logs" />,
   database: () => <Placeholder name="DB Maintenance" />,
   api: () => <Placeholder name="API Keys & Webhooks" />,
   security: () => <Placeholder name="Firewall & Security" />,
   backups: () => <Placeholder name="Snapshot Vault" />,
+  cms: () => <Placeholder name="Page Builder" />,
   translations: () => <Placeholder name="i18n Localization" />,
+  email: () => <Placeholder name="SMTP Templates" />,
   ads: () => <Placeholder name="Campaign Manager" />,
   reports: () => <Placeholder name="Export Engine" />,
+  fitment: () => <Placeholder name="Vehicle Matrix" />,
   performance: () => <Placeholder name="Speed Optimization" />,
   terminal: () => <Placeholder name="Remote CLI" />,
 };
@@ -214,7 +201,7 @@ export default function AdminDashboard() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden bg-slate-950 relative">
+      <main className="flex-1 flex flex-col overflow-hidden bg-slate-950 relative min-w-0">
         <header className="h-16 border-b border-slate-800 flex items-center justify-between px-8 bg-slate-900/50 backdrop-blur-md sticky top-0 z-40">
           <div className="flex items-center gap-4">
             <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-all">
@@ -222,7 +209,7 @@ export default function AdminDashboard() {
             </button>
             <div className="h-4 w-[1px] bg-slate-800 mx-2" />
             <h1 className="text-sm font-medium text-white flex items-center gap-2 capitalize">
-              {activeTab.replace(/-/g, ' ')}
+              {activeTab.replace('-', ' ')}
             </h1>
           </div>
           
@@ -243,11 +230,16 @@ export default function AdminDashboard() {
           </div>
         </header>
 
-        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar">
-          <Suspense fallback={<div className="flex items-center justify-center h-full"><RefreshCw className="animate-spin text-emerald-500" /></div>}>
-            <ActiveComponent />
-          </Suspense>
+        {/* 🚀 THE FIX: We added strict minWidth/minHeight to stop the chart container from crushing to zero, 
+            and bound the Suspense block to `key={activeTab}` so React instantly destroys the old chart before it can crash. */}
+        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar" style={{ minWidth: 0, minHeight: 0 }}>
+          <div key={activeTab} className="h-full w-full relative" style={{ minWidth: '1px', minHeight: '1px' }}>
+            <Suspense fallback={<div className="flex items-center justify-center h-full"><RefreshCw className="animate-spin text-emerald-500" /></div>}>
+              <ActiveComponent />
+            </Suspense>
+          </div>
         </div>
+
       </main>
     </div>
   );
