@@ -1,11 +1,11 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, Suspense, Component } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { 
-  LogOut, LayoutDashboard, Package, Grid, Users, Settings, ShoppingBag, Menu, X, 
-  ShieldCheck, RefreshCw, Tag, Archive, Star, Activity, Mail, Terminal, Bell, 
-  Search, Zap, Gift, Share2, Headphones, BarChart3, Wrench, Wallet, Smartphone, 
-  Globe, Shield, Database, Cpu, HardDrive, Layers, Box, Truck, CreditCard, 
+import {
+  LogOut, LayoutDashboard, Package, Grid, Users, Settings, ShoppingBag, Menu, X,
+  ShieldCheck, RefreshCw, Tag, Archive, Star, Activity, Mail, Terminal, Bell, Search,
+  Zap, Gift, Share2, Headphones, BarChart3, Wrench, Wallet, Smartphone,
+  Globe, Shield, Database, Cpu, HardDrive, Layers, Box, Truck, CreditCard,
   FileText, MessageSquare, AlertCircle, TrendingUp, Clock, Monitor
 } from 'lucide-react';
 
@@ -28,26 +28,55 @@ import SupportManagement from './admin/SupportManagement';
 import FlashSalesManagement from './admin/FlashSalesManagement';
 import LoyaltyManagement from './admin/LoyaltyManagement';
 import AffiliateManagement from './admin/AffiliateManagement';
+import WalletManagement from './admin/WalletManagement';
+import NotificationManagement from './admin/NotificationManagement';
+import ShippingManagement from './admin/ShippingManagement';
+import TaxManagement from './admin/TaxManagement';
+import SystemLogs from './admin/SystemLogs';
+import CMSManagement from './admin/CMSManagement';
+import EmailTemplates from './admin/EmailTemplates';
+import FitmentMatrix from './admin/FitmentMatrix';
 
-const Placeholder = ({ name }) => (
-  <div className="p-8 bg-slate-900/50 rounded-3xl border border-slate-800 backdrop-blur-xl">
-    <div className="flex items-center gap-4 mb-6">
-      <div className="w-12 h-12 bg-emerald-500/10 rounded-2xl flex items-center justify-center text-emerald-400">
-        <Cpu size={24} />
-      </div>
-      <div>
-        <h2 className="text-2xl font-black text-white">{name} Module</h2>
-        <p className="text-slate-500 text-sm">System status: Initializing core logic...</p>
-      </div>
+// ErrorBoundary to prevent white screen on module crash
+class ErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  componentDidCatch(error, info) {
+    console.error('[AdminDashboard ErrorBoundary]', error, info);
+  }
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8">
+          <AlertCircle size={48} className="text-rose-400 mb-4" />
+          <h2 className="text-xl font-bold text-white mb-2">Module Load Error</h2>
+          <p className="text-slate-400 mb-4 max-w-md">{this.state.error?.message || 'A module failed to render.'}</p>
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="px-4 py-2 bg-emerald-500 text-black font-bold rounded-lg hover:bg-emerald-400 transition-all"
+          >
+            Retry
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Minimal placeholder for truly unbuilt modules
+const ComingSoon = ({ name }) => (
+  <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8">
+    <div className="w-16 h-16 rounded-2xl bg-emerald-500/10 flex items-center justify-center mb-4">
+      <Settings size={28} className="text-emerald-400" />
     </div>
-    <div className="space-y-4 font-mono text-xs text-slate-400">
-      <p className="animate-pulse">Loading dependencies...</p>
-      <p className="text-emerald-500/50">&gt; establishing secure connection to service.anritvox.com</p>
-      <p className="text-emerald-500/50">&gt; fetching real-time telemetry data</p>
-      <div className="w-full h-2 bg-slate-950 rounded-full overflow-hidden">
-        <div className="h-full bg-emerald-500 w-1/3 animate-ping" />
-      </div>
-    </div>
+    <h2 className="text-2xl font-bold text-white mb-2">{name}</h2>
+    <p className="text-slate-400">This module is under active development and will be available soon.</p>
   </div>
 );
 
@@ -70,25 +99,25 @@ const TAB_COMPONENTS = {
   banners: BannerManagement,
   contact: ContactManagement,
   settings: AdminSettings,
-  wallet: () => <Placeholder name="Wallet Management" />,
-  mobile: () => <Placeholder name="OTP & SMS Config" />,
-  seo: () => <Placeholder name="SEO & Meta Engine" />,
-  shipping: () => <Placeholder name="Shipping Zones" />,
-  tax: () => <Placeholder name="Taxation Logic" />,
-  notifications: () => <Placeholder name="Global Alerts" />,
-  logs: () => <Placeholder name="System Logs" />,
-  database: () => <Placeholder name="DB Maintenance" />,
-  api: () => <Placeholder name="API Keys & Webhooks" />,
-  security: () => <Placeholder name="Firewall & Security" />,
-  backups: () => <Placeholder name="Snapshot Vault" />,
-  cms: () => <Placeholder name="Page Builder" />,
-  translations: () => <Placeholder name="i18n Localization" />,
-  email: () => <Placeholder name="SMTP Templates" />,
-  ads: () => <Placeholder name="Campaign Manager" />,
-  reports: () => <Placeholder name="Export Engine" />,
-  fitment: () => <Placeholder name="Vehicle Matrix" />,
-  performance: () => <Placeholder name="Speed Optimization" />,
-  terminal: () => <Placeholder name="Remote CLI" />,
+  wallet: WalletManagement,
+  notifications: NotificationManagement,
+  shipping: ShippingManagement,
+  tax: TaxManagement,
+  logs: SystemLogs,
+  cms: CMSManagement,
+  email: EmailTemplates,
+  fitment: FitmentMatrix,
+  mobile: () => <ComingSoon name="OTP Gateway" />,
+  seo: () => <ComingSoon name="SEO / Search Optimization" />,
+  database: () => <ComingSoon name="DB Cluster" />,
+  api: () => <ComingSoon name="Webhooks / API Manager" />,
+  security: () => <ComingSoon name="Security / WAF" />,
+  backups: () => <ComingSoon name="Backup Manager" />,
+  translations: () => <ComingSoon name="Translations" />,
+  ads: () => <ComingSoon name="Ads Manager" />,
+  reports: () => <ComingSoon name="Financial Reports" />,
+  performance: () => <ComingSoon name="Performance Monitor" />,
+  terminal: () => <ComingSoon name="Admin Terminal" />,
 };
 
 export default function AdminDashboard() {
@@ -146,12 +175,22 @@ export default function AdminDashboard() {
       ]
     },
     {
+      title: 'Customer Care',
+      items: [
+        { id: 'support', label: 'Support Matrix', icon: Headphones },
+        { id: 'returns', label: 'Returns & Refunds', icon: RefreshCw },
+        { id: 'contact', label: 'Contact Inbox', icon: MessageSquare },
+        { id: 'ewarranty', label: 'E-Warranty', icon: ShieldCheck },
+      ]
+    },
+    {
       title: 'Infrastructure',
       items: [
         { id: 'mobile', label: 'OTP Gateway', icon: Smartphone },
         { id: 'security', label: 'Security/WAF', icon: Shield },
         { id: 'database', label: 'DB Cluster', icon: Database },
         { id: 'api', label: 'Webhooks/API', icon: Cpu },
+        { id: 'shipping', label: 'Shipping Config', icon: Truck },
         { id: 'settings', label: 'Core Config', icon: Settings },
       ]
     }
@@ -160,87 +199,102 @@ export default function AdminDashboard() {
   const ActiveComponent = TAB_COMPONENTS[activeTab] || DashboardOverview;
 
   return (
-    <div className="flex h-screen bg-slate-950 text-slate-300 font-sans overflow-hidden">
+    <div className="flex h-screen bg-slate-950 overflow-hidden">
       {/* Sidebar */}
-      <aside className={`${isSidebarOpen ? 'w-72' : 'w-20'} bg-slate-900 border-r border-slate-800 transition-all duration-300 flex flex-col z-50`}>
-        <div className="p-6 flex items-center gap-3">
-          <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center">
-            <Cpu className="text-slate-950" size={20} />
+      <div className={`${isSidebarOpen ? 'w-64' : 'w-16'} transition-all duration-300 flex-shrink-0 bg-slate-900 border-r border-slate-800 flex flex-col overflow-y-auto`}>
+        {/* Logo */}
+        <div className="flex items-center gap-3 px-4 py-5 border-b border-slate-800">
+          <div className="w-8 h-8 bg-emerald-500 rounded-lg flex items-center justify-center flex-shrink-0">
+            <span className="text-black font-black text-sm">AV</span>
           </div>
-          {isSidebarOpen && <span className="text-white font-black tracking-tighter text-xl">ANRITVOX</span>}
+          {isSidebarOpen && <span className="text-white font-black tracking-wider text-sm">ANRITVOX</span>}
         </div>
 
-        <nav className="flex-1 overflow-y-auto custom-scrollbar px-3 py-4">
+        {/* Nav */}
+        <div className="flex-1 py-4 px-2 space-y-1">
           {menuSections.map((section, idx) => (
-            <div key={idx} className="mb-6">
-              {isSidebarOpen && <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-4 mb-2">{section.title}</p>}
+            <div key={idx} className="mb-2">
+              {isSidebarOpen && (
+                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest px-3 pb-1 pt-2">
+                  {section.title}
+                </p>
+              )}
               {section.items.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => navigate(`/admin/dashboard/${item.id}`)}
-                  className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl transition-all mb-1 ${
-                    activeTab === item.id 
-                    ? 'bg-emerald-500/10 text-emerald-400 font-bold' 
-                    : 'text-slate-400 hover:bg-slate-800 hover:text-white'
+                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl transition-all mb-0.5 ${
+                    activeTab === item.id
+                      ? 'bg-emerald-500/10 text-emerald-400 font-bold'
+                      : 'text-slate-400 hover:bg-slate-800 hover:text-white'
                   }`}
                 >
-                  <item.icon size={20} />
+                  <item.icon size={18} className="flex-shrink-0" />
                   {isSidebarOpen && <span className="text-sm">{item.label}</span>}
                 </button>
               ))}
             </div>
           ))}
-        </nav>
+        </div>
 
-        <div className="p-4 border-t border-slate-800">
-          <button onClick={() => { logout(); navigate('/admin/login'); }} className="w-full flex items-center gap-3 px-4 py-3 text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all">
-            <LogOut size={20} />
-            {isSidebarOpen && <span className="text-sm font-bold">Logout</span>}
+        {/* Logout */}
+        <div className="p-2 border-t border-slate-800">
+          <button
+            onClick={() => { logout(); navigate('/admin/login'); }}
+            className="w-full flex items-center gap-3 px-3 py-3 text-rose-400 hover:bg-rose-500/10 rounded-xl transition-all"
+          >
+            <LogOut size={18} className="flex-shrink-0" />
+            {isSidebarOpen && <span className="text-sm">Logout</span>}
           </button>
         </div>
-      </aside>
+      </div>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden bg-slate-950 relative min-w-0">
-        <header className="h-16 border-b border-slate-800 flex items-center justify-between px-8 bg-slate-900/50 backdrop-blur-md sticky top-0 z-40">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Topbar */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-800 bg-slate-900">
           <div className="flex items-center gap-4">
-            <button onClick={() => setSidebarOpen(!isSidebarOpen)} className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-all">
-              {isSidebarOpen ? <X size={20} /> : <Menu size={20} />}
+            <button
+              onClick={() => setSidebarOpen(!isSidebarOpen)}
+              className="p-2 hover:bg-slate-800 rounded-lg text-slate-400 transition-all"
+            >
+              {isSidebarOpen ? <X size={18} /> : <Menu size={18} />}
             </button>
-            <div className="h-4 w-[1px] bg-slate-800 mx-2" />
-            <h1 className="text-sm font-medium text-white flex items-center gap-2 capitalize">
-              {activeTab.replace('-', ' ')}
+            <h1 className="text-white font-bold capitalize">
+              {activeTab.replace(/-/g, ' ')}
             </h1>
           </div>
-          
-          <div className="flex items-center gap-4">
-            <div className="hidden md:flex items-center gap-2 bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-lg">
-              <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse" />
-              <span className="text-[10px] font-bold text-emerald-500 font-mono tracking-widest">SYSTEM ONLINE</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="text-right hidden sm:block">
-                <p className="text-xs font-bold text-white leading-none">{user?.name || 'ADMIN'}</p>
-                <p className="text-[10px] text-slate-500 font-mono mt-1">ROOT_ACCESS</p>
-              </div>
-              <div className="w-10 h-10 bg-gradient-to-br from-emerald-500 to-cyan-500 rounded-xl flex items-center justify-center text-slate-950 font-black shadow-lg shadow-emerald-500/20">
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-mono bg-emerald-500/10 text-emerald-400 px-2 py-1 rounded-full border border-emerald-500/20">
+              SYSTEM ONLINE
+            </span>
+            <div className="flex items-center gap-2">
+              <div className="w-8 h-8 rounded-full bg-emerald-500 flex items-center justify-center text-black font-black text-sm">
                 {user?.name?.[0] || 'A'}
               </div>
+              {isSidebarOpen && (
+                <div className="hidden md:block">
+                  <p className="text-sm font-bold text-white">{user?.name || 'ADMIN'}</p>
+                  <p className="text-xs text-slate-500">ROOT_ACCESS</p>
+                </div>
+              )}
             </div>
-          </div>
-        </header>
-
-        {/* 🚀 THE FIX: We added strict minWidth/minHeight to stop the chart container from crushing to zero, 
-            and bound the Suspense block to `key={activeTab}` so React instantly destroys the old chart before it can crash. */}
-        <div className="flex-1 overflow-y-auto p-8 custom-scrollbar" style={{ minWidth: 0, minHeight: 0 }}>
-          <div key={activeTab} className="h-full w-full relative" style={{ minWidth: '1px', minHeight: '1px' }}>
-            <Suspense fallback={<div className="flex items-center justify-center h-full"><RefreshCw className="animate-spin text-emerald-500" /></div>}>
-              <ActiveComponent />
-            </Suspense>
           </div>
         </div>
 
-      </main>
+        {/* Module Content */}
+        <div className="flex-1 overflow-auto bg-slate-950" style={{ minWidth: 0, minHeight: 0 }}>
+          <ErrorBoundary key={activeTab}>
+            <Suspense fallback={
+              <div className="flex items-center justify-center min-h-[60vh]">
+                <div className="w-8 h-8 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
+              </div>
+            }>
+              <ActiveComponent key={activeTab} />
+            </Suspense>
+          </ErrorBoundary>
+        </div>
+      </div>
     </div>
   );
 }
