@@ -1,4 +1,3 @@
-// anritvox-frontend/src/pages/admin/TaxManagement.jsx
 import React, { useState, useEffect } from 'react';
 import { Receipt, Plus, Edit2, Trash2, X } from 'lucide-react';
 import api from '../../services/api';
@@ -8,28 +7,16 @@ export default function TaxManagement() {
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentTax, setCurrentTax] = useState(null);
-  
-  const [formData, setFormData] = useState({
-    name: '',
-    rate: '',
-    region: '',
-    is_active: 1
-  });
+  const [formData, setFormData] = useState({ name: '', rate: '', region: '', is_active: 1 });
 
-  useEffect(() => {
-    fetchTaxes();
-  }, []);
+  useEffect(() => { fetchTaxes(); }, []);
 
   const fetchTaxes = async () => {
     try {
       setLoading(true);
-      const response = await api.get('/api/tax');
+      const response = await api.get('/tax');
       setTaxes(Array.isArray(response.data) ? response.data : []);
-    } catch (error) {
-      console.error("Error fetching tax rules:", error);
-    } finally {
-      setLoading(false);
-    }
+    } catch (error) { console.error("Error fetching tax rules:", error); } finally { setLoading(false); }
   };
 
   const openModal = (tax = null) => {
@@ -46,26 +33,19 @@ export default function TaxManagement() {
   const handleSave = async (e) => {
     e.preventDefault();
     try {
-      if (currentTax) {
-        await api.put(`/api/tax/${currentTax.id}`, formData);
-      } else {
-        await api.post('/api/tax', formData);
-      }
+      if (currentTax) { await api.put(`/tax/${currentTax.id}`, formData); } 
+      else { await api.post('/tax', formData); }
       setIsModalOpen(false);
       fetchTaxes();
-    } catch (error) {
-      console.error("Error saving tax rule:", error);
-    }
+    } catch (error) { console.error("Error saving tax rule:", error); }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('Are you sure you want to delete this tax rule?')) {
       try {
-        await api.delete(`/api/tax/${id}`);
+        await api.delete(`/tax/${id}`);
         fetchTaxes();
-      } catch (error) {
-        console.error("Error deleting tax rule:", error);
-      }
+      } catch (error) { console.error("Error deleting tax rule:", error); }
     }
   };
 
@@ -82,7 +62,6 @@ export default function TaxManagement() {
           <Plus size={18} /> Add Tax Rule
         </button>
       </div>
-
       <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-400">
@@ -122,7 +101,6 @@ export default function TaxManagement() {
           </table>
         </div>
       </div>
-
       {isModalOpen && (
         <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50">
           <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-full max-w-md relative">
@@ -139,7 +117,7 @@ export default function TaxManagement() {
               </div>
               <div>
                 <label className="block text-xs font-bold text-slate-400 mb-1">Region</label>
-                <input type="text" required placeholder="e.g. West Bengal, National" className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-2 focus:border-emerald-500 focus:outline-none" value={formData.region} onChange={(e) => setFormData({...formData, region: e.target.value})} />
+                <input type="text" required placeholder="e.g. National" className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-2 focus:border-emerald-500 focus:outline-none" value={formData.region} onChange={(e) => setFormData({...formData, region: e.target.value})} />
               </div>
               <div>
                 <label className="flex items-center gap-2 text-sm text-slate-300">
