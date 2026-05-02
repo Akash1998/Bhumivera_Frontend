@@ -237,6 +237,7 @@ export const adminManagement = {
   getUserDetails: (id) => api.get(`/admin/users/${id}`),
   updateUserStatus: (id, status) => api.patch(`/admin/users/${id}/status`, { status }),
   getAllOrders: () => api.get("/admin/orders"),
+  updateOrderStatus: (id, data) => api.put(`/admin/orders/${id}/status`, data),
 };
 
 export const affiliate = {
