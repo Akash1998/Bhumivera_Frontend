@@ -166,7 +166,6 @@ export default function ProductManagement() {
 
       const finalId = savedProduct?.id || savedProduct?._id;
 
-      // PARALLEL IMAGE UPLOAD OPTIMIZATION
       if (images.length > 0 && finalId) {
         setUploadingFileName('Executing Parallel Visual Upload...');
         const filesArray = Array.from(images);
@@ -176,7 +175,6 @@ export default function ProductManagement() {
           await axios.put(urlRes.data.uploadUrl, file, {
             headers: { 'Content-Type': file.type },
             onUploadProgress: (e) => {
-              // Note: Progress tracking for parallel uploads is approximate
               setUploadProgress(prev => Math.min(100, prev + Math.round((e.loaded * 100) / (e.total * filesArray.length))));
             }
           });
@@ -214,7 +212,8 @@ export default function ProductManagement() {
     setSerialTab('generate');
     setSerialForm({ 
       count: 10, 
-      prefix: product.name.substring(0, 3).toUpperCase(), 
+      // 🚀 FIX: Prevented substring crash if product.name is undefined
+      prefix: String(product.name || 'ANR').substring(0, 3).toUpperCase(), 
       format: 'advanced', 
       base_warranty_months: product.warranty_period || 12 
     });
@@ -357,7 +356,10 @@ export default function ProductManagement() {
                     </div>
                     <div>
                       <p className="text-sm font-bold text-white line-clamp-1">{product.name}</p>
-                      <p className="text-[10px] font-mono text-slate-500 mt-1 uppercase tracking-widest">ID: {product.id?.substring(0,8) || product._id?.substring(0,8)}</p>
+                      {/* 🚀 THE FIX: We forced the integer to become a string before substring runs */}
+                      <p className="text-[10px] font-mono text-slate-500 mt-1 uppercase tracking-widest">
+                        ID: {String(product.id || product._id || '').substring(0,8)}
+                      </p>
                     </div>
                   </td>
                   <td className="p-4">
