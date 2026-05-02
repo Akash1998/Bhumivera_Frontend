@@ -29,7 +29,14 @@ import FlashSalesManagement from './admin/FlashSalesManagement';
 import LoyaltyManagement from './admin/LoyaltyManagement';
 import AffiliateManagement from './admin/AffiliateManagement';
 import WalletManagement from './admin/WalletManagement';
-import ShippingManagement from './admin/ShippingManagement'; // Imported Shipping Management
+import NotificationManagement from './admin/NotificationManagement';
+
+// New Modules (Step 5a)
+import TaxManagement from './admin/TaxManagement';
+import CMSManagement from './admin/CMSManagement';
+import EmailTemplates from './admin/EmailTemplates';
+import SystemLogs from './admin/SystemLogs';
+import FitmentMatrix from './admin/FitmentMatrix';
 
 const Placeholder = ({ name }) => (
   <div className="p-8 bg-slate-900/50 rounded-3xl border border-slate-800 backdrop-blur-xl">
@@ -73,22 +80,26 @@ const TAB_COMPONENTS = {
   contact: ContactManagement,
   settings: AdminSettings,
   wallet: WalletManagement,
-  shipping: ShippingManagement, // Replaced placeholder with real component
+  notifications: NotificationManagement,
+  
+  // Newly Bound Modules (Step 5b)
+  tax: TaxManagement,
+  cms: CMSManagement,
+  email: EmailTemplates,
+  logs: SystemLogs,
+  fitment: FitmentMatrix,
+
+  // Future Infrastructure
   mobile: () => <Placeholder name="OTP & SMS Config" />,
   seo: () => <Placeholder name="SEO & Meta Engine" />,
-  tax: () => <Placeholder name="Taxation Logic" />,
-  notifications: () => <Placeholder name="Global Alerts" />,
-  logs: () => <Placeholder name="System Logs" />,
+  shipping: () => <Placeholder name="Shipping Zones" />,
   database: () => <Placeholder name="DB Maintenance" />,
   api: () => <Placeholder name="API Keys & Webhooks" />,
   security: () => <Placeholder name="Firewall & Security" />,
   backups: () => <Placeholder name="Snapshot Vault" />,
-  cms: () => <Placeholder name="Page Builder" />,
   translations: () => <Placeholder name="i18n Localization" />,
-  email: () => <Placeholder name="SMTP Templates" />,
   ads: () => <Placeholder name="Campaign Manager" />,
   reports: () => <Placeholder name="Export Engine" />,
-  fitment: () => <Placeholder name="Vehicle Matrix" />,
   performance: () => <Placeholder name="Speed Optimization" />,
   terminal: () => <Placeholder name="Remote CLI" />,
 };
@@ -126,7 +137,6 @@ export default function AdminDashboard() {
         { id: 'categories', label: 'Taxonomy', icon: Grid },
         { id: 'fitment', label: 'Vehicle Matrix', icon: Wrench },
         { id: 'inventory', label: 'Stock Audit', icon: Archive },
-        { id: 'shipping', label: 'Shipping Zones', icon: Truck },
       ]
     },
     {
