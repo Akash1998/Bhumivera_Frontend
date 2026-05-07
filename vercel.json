@@ -1,14 +1,18 @@
 {
   "version": 2,
   "routes": [
-        {
-                "src": "/warehouse",
-                "dest": "https://service.anritvox.com/warehouse"
-              },
-        {
-                "src": "/warehouse/(.*)",
-                "dest": "https://service.anritvox.com/warehouse/$1"
-              },
+    {
+      "src": "/api/(.*)",
+      "dest": "https://service.anritvox.com/api/$1"
+    },
+    {
+      "src": "/warehouse",
+      "dest": "https://service.anritvox.com/warehouse"
+    },
+    {
+      "src": "/warehouse/(.*)",
+      "dest": "https://service.anritvox.com/warehouse/$1"
+    },
     {
       "src": "/ewarranty",
       "status": 301,
