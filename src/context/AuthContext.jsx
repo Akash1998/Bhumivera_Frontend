@@ -83,6 +83,24 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
+  // FIXED: Added mobileLogin to properly sync global context state
+  const mobileLogin = async (data) => {
+    try {
+      const res = await authApi.mobileLoginVerify(data);
+      const { token: newToken, user: userData } = res.data;
+      const decodedPayload = decodeJWT(newToken);
+      const finalUser = { ...userData, role: decodedPayload?.role || userData?.role || 'user' };
+
+      localStorage.setItem('token', newToken);
+      localStorage.setItem('user', JSON.stringify(finalUser));
+      setToken(newToken);
+      setUser(finalUser);
+      return finalUser;
+    } catch (error) {
+      throw new Error(error.response?.data?.message || "Invalid OTP");
+    }
+  };
+
   const adminLogin = async (credentials) => {
     try {
       const res = await authApi.adminLogin(credentials);
@@ -106,7 +124,7 @@ export const AuthProvider = ({ children }) => {
   const register = async (data) => {
     try {
       const res = await authApi.register(data);
-      return res.data; // Just returns success to move to the OTP screen in Register.jsx
+      return res.data; 
     } catch (error) {
       const status = error.response?.status;
       if (status === 409) throw new Error("A node with this email already exists in the matrix.");
@@ -139,14 +157,13 @@ export const AuthProvider = ({ children }) => {
     setToken(null);
     setUser(null);
     
-    if (window.location.pathname.includes('/profile') || window.location.pathname.includes('/admin')) {
+    if (window.location.pathname.includes('/profile') || window.location.pathname.includes('/admin') || window.location.pathname.includes('/warehouse')) {
       window.location.href = '/login';
     }
   };
 
   return (
-    // CRITICAL FIX: verifyEmail is exported right here!
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, loading, login, adminLogin, register, verifyEmail, logout }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, loading, login, mobileLogin, adminLogin, register, verifyEmail, logout }}>
       {!loading && children}
     </AuthContext.Provider>
   );
