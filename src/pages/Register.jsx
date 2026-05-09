@@ -18,6 +18,9 @@ export default function Register() {
   const { register, verifyEmail } = useAuth();
   const navigate = useNavigate();
 
+  // 1. Create the Ref for the Turnstile widget
+  const turnstileRef = useRef(null);
+
   const [view, setView] = useState('INIT');
   const [formData, setFormData] = useState({
     name: '', email: '', password: '', securityAnswer: ''
@@ -30,7 +33,6 @@ export default function Register() {
   const [successMsg, setSuccessMsg] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
 
-  // HARDCODED PUBLIC KEY - Perfectly safe to expose on the frontend
   const TURNSTILE_SITE_KEY = "0x4AAAAAADBENLaxaG5Y9r6D";
 
   const getPasswordStrength = (pwd) => {
@@ -81,6 +83,13 @@ export default function Register() {
       setSuccessMsg(`Verification code sent to ${formData.email}`);
     } catch (err) {
       setError(err.message || 'Registration failed');
+      
+      // 2. THE FIX: Reset token and widget on failure
+      setTurnstileToken('');
+      if (turnstileRef.current) {
+        turnstileRef.current.reset();
+      }
+
     } finally {
       setLoading(false);
     }
@@ -104,6 +113,8 @@ export default function Register() {
       setTimeout(() => navigate('/profile', { replace: true }), 1500);
     } catch (err) {
       setError(err.message || 'Verification failed');
+      // Note: Turnstile is not usually present in the OTP view, 
+      // but if you add it there later, apply the same reset logic.
     } finally {
       setLoading(false);
     }
@@ -150,7 +161,9 @@ export default function Register() {
                   </div>
 
                   <div className="flex justify-center mb-4">
+                    {/* 3. Attach the ref to the Turnstile component */}
                     <Turnstile
+                      ref={turnstileRef}
                       siteKey={TURNSTILE_SITE_KEY}
                       onSuccess={(token) => setTurnstileToken(token)}
                     />
