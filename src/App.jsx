@@ -13,6 +13,7 @@ import "./index.css";
 
 // Lazy load pages
 const Home = lazy(() => import("./pages/Home.jsx"));
+const WarehouseManagement = lazy(() => import("./pages/admin/WarehouseManagement.jsx"));
 const Shop = lazy(() => import("./pages/Shop.jsx"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail.jsx"));
 const EWarranty = lazy(() => import("./pages/EWarranty.jsx"));
@@ -92,6 +93,7 @@ function AppContent() {
           <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/dashboard/:tab" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/warehouseadmin" element={<AdminRoute><WarehouseManagement /></AdminRoute>} />
 
           {/* Catch-all */}
           <Route path="*" element={<Navigate to="/" />} />
