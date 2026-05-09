@@ -17,15 +17,26 @@ export default function Warehouse() {
   const showToast = toastCtx?.showToast;
   const navigate = useNavigate();
 
+  /**
+   * Clears all session-related storage and forces redirect to login.
+   * Used to nuke ghost sessions or invalid tokens.
+   */
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('ms_token');
+    localStorage.removeItem('user');
+    navigate('/login');
+  };
+
   const init = async () => {
     setLoading(true);
     setError(null);
     try {
       const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
       
-      if (!token) {
-        // Stop execution and redirect immediately
-        navigate('/login');
+      // FIX: Catch ghost sessions where token is the literal string "null" or "undefined"
+      if (!token || token === 'null' || token === 'undefined') {
+        handleLogout();
         return; 
       }
 
@@ -35,6 +46,7 @@ export default function Warehouse() {
       // Check if backend granted clearance
       if (!accessData.hasAccess && !accessData.isAdmin) {
         setAccessDenied(true);
+        setLoading(false);
         return; 
       }
 
@@ -48,17 +60,17 @@ export default function Warehouse() {
     } catch (e) {
       console.error('Warehouse init error:', e);
       
-      if (e?.response?.status === 401) {
-        navigate('/login');
-        return; // Ensure we don't set error state after navigating
+      const status = e?.response?.status;
+
+      // FIX: Force logout on 401 (Unauthorized) OR 403 (Forbidden) 
+      // This prevents the UI from hanging on a dead session.
+      if (status === 401 || status === 403) {
+        handleLogout();
+        return;
       } 
       
-      if (e?.response?.status === 403) {
-        setAccessDenied(true);
-      } else {
-        setError(e?.response?.data?.message || 'Connection failed. Please try again.');
-        showToast?.('Connection failed.', 'error');
-      }
+      setError(e?.response?.data?.message || 'Connection failed. Please try again.');
+      showToast?.('Connection failed.', 'error');
     } finally {
       setLoading(false);
     }
@@ -90,18 +102,14 @@ export default function Warehouse() {
     }
   };
 
-  const handleLogout = () => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('ms_token');
-    localStorage.removeItem('user');
-    navigate('/login');
-  };
-
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-[#020617]">
-      <p className="text-emerald-500 font-black tracking-widest uppercase text-sm animate-pulse">
-        Verifying Clearance...
-      </p>
+      <div className="flex flex-col items-center gap-4">
+        <div className="w-8 h-8 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
+        <p className="text-emerald-500 font-black tracking-widest uppercase text-[10px] animate-pulse">
+          Verifying Clearance...
+        </p>
+      </div>
     </div>
   );
 
