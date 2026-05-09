@@ -6,7 +6,7 @@ import {
   ShieldCheck, RefreshCw, Tag, Archive, Star, Activity, Mail, Terminal, Bell, Search,
   Zap, Gift, Share2, Headphones, BarChart3, Wrench, Wallet, Smartphone, Store,
   Globe, Shield, Database, Cpu, HardDrive, Layers, Box, Truck, CreditCard,
-  FileText, MessageSquare, AlertCircle, TrendingUp, Clock, Monitor, Search as SearchIcon, Download, CheckCircle, XCircle, Truck as TruckIcon
+  FileText, MessageSquare, AlertCircle, TrendingUp, Clock, Monitor, Download, CheckCircle, XCircle
 } from 'lucide-react';
 
 import DashboardOverview from './admin/DashboardOverview';
@@ -87,7 +87,7 @@ const TAB_COMPONENTS = {
   banners: BannerManagement, contact: ContactManagement, settings: AdminSettings,
   wallet: WalletManagement, notifications: NotificationManagement, shipping: ShippingManagement,
   tax: TaxManagement, logs: SystemLogs, cms: CMSManagement, email: EmailTemplates,
-  fitment: FitmentMat warehouse: WarehouseManagement,rix, mobile: () => <ComingSoon name="OTP Gateway" />,
+  fitment: FitmentMatrix, warehouse: WarehouseManagement, mobile: () => <ComingSoon name="OTP Gateway" />,
   seo: () => <ComingSoon name="Search Engine Matrix" />, database: () => <ComingSoon name="Database Cluster" />,
   api: () => <ComingSoon name="API Webhooks" />, security: () => <ComingSoon name="WAF Security" />,
   backups: () => <ComingSoon name="Disaster Recovery" />, translations: () => <ComingSoon name="Global i18n" />,
