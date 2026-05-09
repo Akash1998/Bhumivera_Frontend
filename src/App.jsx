@@ -85,7 +85,7 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/ewarranty" element={<EWarranty />} />
+          <Route path="/ewarranty" element={<EWarranty />} />             <Route path="/warranty" element={<EWarranty />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />
           <Route path="/legal" element={<Legal />} />
