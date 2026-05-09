@@ -52,6 +52,10 @@ export const auth = {
   getAdminProfile: () => api.get('/auth/profile'),
   sendAdminOtp: (phone) => api.post('/auth/admin/otp/send', { phone }),
   verifyAdminOtp: (phone, otp) => api.post('/auth/admin/otp/verify', { phone, otp }),
+  
+  // FIXED: Added missing Mobile OTP routes
+  mobileLoginRequest: (mobile) => api.post('/auth/mobile-login/request', { mobile }),
+  mobileLoginVerify: (data) => api.post('/auth/mobile-login/verify', data),
 };
 
 export const adminLogin = async (credentials) => {
