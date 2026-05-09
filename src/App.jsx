@@ -14,6 +14,7 @@ import "./index.css";
 // Lazy load pages
 const Home = lazy(() => import("./pages/Home.jsx"));
 const Warehouse = lazy(() => import("./pages/Warehouse.jsx"));
+// Warehouse portal - strictly for /warehouse routes only
 const WarehouseAdmin = lazy(() => import("./pages/admin/WarehouseAdmin.jsx"));
 const WarehouseManagement = lazy(() => import("./pages/admin/WarehouseManagement.jsx"));
 const Shop = lazy(() => import("./pages/Shop.jsx"));
@@ -27,6 +28,7 @@ const Login = lazy(() => import("./pages/Login.jsx"));
 const Register = lazy(() => import("./pages/Register.jsx"));
 const Profile = lazy(() => import("./pages/Profile.jsx"));
 const AdminLogin = lazy(() => import("./pages/AdminLogin.jsx"));
+// Admin dashboard - strictly for /admin routes only (superadmin)
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard.jsx"));
 const Wishlist = lazy(() => import("./pages/Wishlist.jsx"));
 const OrderTracking = lazy(() => import("./pages/OrderTracking.jsx"));
@@ -43,6 +45,7 @@ const PageLoader = () => (
   </div>
 );
 
+// Base auth check (any logged-in user)
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth() || { user: null, loading: false };
   if (loading) return <PageLoader />;
@@ -50,62 +53,74 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+// ── STRICT: Superadmin-only portal (anritvox.com/admin) ─────────────────────────
 function AdminRoute({ children }) {
   const { user, loading } = useAuth() || { user: null, loading: false };
   if (loading) return <PageLoader />;
-  if (!user || user.role !== 'admin') return <Navigate to="/admin/login" />;
+  if (!user || (user.role !== 'admin' && user.role !== 'superadmin'))
+    return <Navigate to="/admin-login" />;
+  return children;
+}
+
+// ── STRICT: Warehouse staff + superadmin only (anritvox.com/warehouse) ─────────
+function WarehouseRoute({ children }) {
+  const { user, loading } = useAuth() || { user: null, loading: false };
+  if (loading) return <PageLoader />;
+  if (!user || (user.role !== 'warehouse_admin' && user.role !== 'superadmin' && user.role !== 'admin'))
+    return <Navigate to="/login" />;
   return children;
 }
 
 function AppContent() {
   const location = useLocation();
   const isAdminPath = location.pathname.startsWith("/admin");
+  const isWarehousePath = location.pathname.startsWith("/warehouse");
 
   return (
     <>
-      {!isAdminPath && <Navbar />}
+      {!isAdminPath && !isWarehousePath && <Navbar />}
       <Suspense fallback={<PageLoader />}>
         <Routes>
           {/* Public Routes */}
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/ewarranty" element={<EWarranty />} />
           <Route path="/contact" element={<Contact />} />
+          <Route path="/cart" element={<Cart />} />
           <Route path="/about" element={<About />} />
           <Route path="/legal" element={<Legal />} />
-          <Route path="/order-tracking" element={<OrderTracking />} />
           <Route path="/compare" element={<Compare />} />
-          <Route path="/affiliate" element={<Affiliate />} />
-          <Route path="/warranty" element={<EWarranty />} />
-          
+
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
 
-          {/* User Feature Routes (Protected) */}
-          <Route path="/cart" element={<Cart />} />
+          {/* User Feature Routes (Protected - any logged-in user) */}
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/order-success" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
+          <Route path="/order-tracking" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
           <Route path="/address-book" element={<ProtectedRoute><AddressBook /></ProtectedRoute>} />
           <Route path="/returns" element={<ProtectedRoute><Returns /></ProtectedRoute>} />
-          
-          {/* Warehouse Routes */}
-          <Route path="/warehouse" element={<ProtectedRoute><Warehouse /></ProtectedRoute>} />
-          <Route path="/warehouseadmin" element={<AdminRoute><WarehouseAdmin /></AdminRoute>} />
+          <Route path="/affiliate" element={<ProtectedRoute><Affiliate /></ProtectedRoute>} />
 
-          {/* Admin Routes */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-          <Route path="/admin/dashboard/:tab" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-          <Route path="/admin/warehouse" element={<AdminRoute><WarehouseManagement /></AdminRoute>} />
+          {/* ── WAREHOUSE PORTAL ── Strictly /warehouse/* - warehouse_admin OR superadmin ONLY */}
+          <Route path="/warehouse" element={<WarehouseRoute><Warehouse /></WarehouseRoute>} />
+          <Route path="/warehouse/admin" element={<WarehouseRoute><WarehouseAdmin /></WarehouseRoute>} />
+          <Route path="/warehouse/management" element={<WarehouseRoute><WarehouseManagement /></WarehouseRoute>} />
+
+          {/* ── ADMIN PORTAL ── Strictly /admin/* - superadmin ONLY, NO warehouse components here */}
+          <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/*" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
           {/* Catch-all (Must be at the very bottom) */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Suspense>
-      {!isAdminPath && <Footer />}
+      {!isAdminPath && !isWarehousePath && <Footer />}
     </>
   );
 }
@@ -114,15 +129,15 @@ function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <ToastProvider>
-          <CartProvider>
-            <WishlistProvider>
-              <CompareProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <CompareProvider>
+              <ToastProvider>
                 <AppContent />
-              </CompareProvider>
-            </WishlistProvider>
-          </CartProvider>
-        </ToastProvider>
+              </ToastProvider>
+            </CompareProvider>
+          </WishlistProvider>
+        </CartProvider>
       </AuthProvider>
     </BrowserRouter>
   );
