@@ -1,0 +1,101 @@
+.terminal-wrapper {
+  min-height: 100vh;
+  background-color: #f0f2f5;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  padding: 40px;
+}
+
+.terminal-card {
+  background: #ffffff;
+  padding: 40px;
+  border-radius: 24px;
+  box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+  width: 100%;
+  max-width: 400px;
+  text-align: center;
+}
+
+.terminal-header h1 {
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  color: #1a3a3a;
+  letter-spacing: 2px;
+  margin-bottom: 8px;
+}
+
+.version-badge {
+  background: #e6f4f1;
+  color: #10b981;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 4px 12px;
+  border-radius: 6px;
+  letter-spacing: 1px;
+}
+
+.terminal-form {
+  margin-top: 32px;
+}
+
+.input-group input {
+  width: 100%;
+  padding: 14px 20px;
+  margin-bottom: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 16px;
+  background: #f8fafc;
+  transition: all 0.2s;
+  box-sizing: border-box;
+}
+
+.input-group input:focus {
+  border-color: #10b981;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.turnstile-container {
+  display: flex;
+  justify-content: center;
+  margin: 8px 0 24px 0;
+}
+
+.btn-access {
+  width: 100%;
+  padding: 16px;
+  background: #059669;
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.2s;
+  font-size: 14px;
+  letter-spacing: 1px;
+}
+
+.btn-access:hover {
+  background: #047857;
+}
+
+.btn-access:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.status-msg {
+  margin-top: 20px;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.status-msg.error {
+  color: #ef4444;
+}
+
+.status-msg.success {
+  color: #10b981;
+}
