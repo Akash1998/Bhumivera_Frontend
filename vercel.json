@@ -10,7 +10,7 @@
       "dest": "https://service.anritvox.com/warehouse"
     },
     {
-      "src": "/warehouse/(.*)",
+      "src": "/warehouseadmin",       "dest": "https://service.anritvox.com/warehouseadmin"     },     {       "src": "/warehouse/(.*)",
       "dest": "https://service.anritvox.com/warehouse/$1"
     },
     {
