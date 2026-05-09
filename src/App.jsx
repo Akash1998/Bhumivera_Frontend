@@ -13,7 +13,8 @@ import "./index.css";
 
 // Lazy load page
 const Home = lazy(() => import("./pages/Home.jsx"));
-const WarehouseManagement = lazy(() => import("./pages/admin/WarehouseManagement.jsx"));
+const Warehouse = lazy(() => import("./pages/Warehouse.jsx"));
+const WarehouseAdmin = lazy(() => import("./pages/admin/WarehouseAdmin.jsx"));
 const Shop = lazy(() => import("./pages/Shop.jsx"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail.jsx"));
 const EWarranty = lazy(() => import("./pages/EWarranty.jsx"));
