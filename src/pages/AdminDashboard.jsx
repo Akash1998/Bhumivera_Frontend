@@ -4,7 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import {
   LogOut, LayoutDashboard, Package, Grid, Users, Settings, ShoppingBag, Menu, X,
   ShieldCheck, RefreshCw, Tag, Archive, Star, Activity, Mail, Terminal, Bell, Search,
-  Zap, Gift, Share2, Headphones, BarChart3, Wrench, Wallet, Smartphone,
+  Zap, Gift, Share2, Headphones, BarChart3, Wrench, Wallet, Smartphone, Store,
   Globe, Shield, Database, Cpu, HardDrive, Layers, Box, Truck, CreditCard,
   FileText, MessageSquare, AlertCircle, TrendingUp, Clock, Monitor, Search as SearchIcon, Download, CheckCircle, XCircle, Truck as TruckIcon
 } from 'lucide-react';
@@ -35,6 +35,7 @@ import SystemLogs from './admin/SystemLogs';
 import CMSManagement from './admin/CMSManagement';
 import EmailTemplates from './admin/EmailTemplates';
 import FitmentMatrix from './admin/FitmentMatrix';
+import WarehouseManagement from './admin/WarehouseManagement';
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -86,7 +87,7 @@ const TAB_COMPONENTS = {
   banners: BannerManagement, contact: ContactManagement, settings: AdminSettings,
   wallet: WalletManagement, notifications: NotificationManagement, shipping: ShippingManagement,
   tax: TaxManagement, logs: SystemLogs, cms: CMSManagement, email: EmailTemplates,
-  fitment: FitmentMatrix, mobile: () => <ComingSoon name="OTP Gateway" />,
+  fitment: FitmentMat warehouse: WarehouseManagement,rix, mobile: () => <ComingSoon name="OTP Gateway" />,
   seo: () => <ComingSoon name="Search Engine Matrix" />, database: () => <ComingSoon name="Database Cluster" />,
   api: () => <ComingSoon name="API Webhooks" />, security: () => <ComingSoon name="WAF Security" />,
   backups: () => <ComingSoon name="Disaster Recovery" />, translations: () => <ComingSoon name="Global i18n" />,
@@ -117,7 +118,8 @@ export default function AdminDashboard() {
     {
       title: 'Matrix', items: [
         { id: 'products', label: 'Registry', icon: Package }, { id: 'categories', label: 'Taxonomy', icon: Grid },
-        { id: 'fitment', label: 'Compatibility', icon: Wrench }, { id: 'inventory', label: 'Stock', icon: Archive }
+        { id: 'fitment', label: 'Compatibility', icon: Wrench }, { id: 'inventory', label: 'Stock', icon: Archive },
+          { id: 'warehouse', label: 'Warehouse', icon: Store }
       ]
     },
     {
