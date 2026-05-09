@@ -5,6 +5,7 @@ import {
   Shield, Lock, Mail, AlertTriangle, User, 
   Phone, Key, CheckCircle2 
 } from 'lucide-react';
+import { Turnstile } from '@marsidev/react-turnstile';
 import { useAuth } from '../context/AuthContext';
 
 const viewVariants = {
@@ -27,6 +28,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
+    const [turnstileToken, setTurnstileToken] = useState('');
 
   const getPasswordStrength = (pwd) => {
     let score = 0;
@@ -61,12 +63,15 @@ export default function Register() {
 
   const handleRegisterInit = async (e) => {
     e.preventDefault();
+
+      if (!turnstileToken) return setError('Please complete the bot verification.');
+    
     if (strength < 2) return setError("Please choose a stronger password.");
     if (!formData.securityAnswer) return setError("Security answer is required.");
 
     setLoading(true); setError('');
     try {
-      await register(formData);
+      await register({ ...formData, turnstileToken }
       setView('OTP');
       setSuccessMsg(`Verification code sent to ${formData.email}`);
     } catch (err) {
@@ -140,6 +145,13 @@ export default function Register() {
                     <InputField icon={<Key size={18}/>} type="text" name="securityAnswer" value={formData.securityAnswer} onChange={handleInputChange} placeholder="Your Answer" disabled={loading} />
                   </div>
 
+              <div className="flex justify-center mb-4">
+                                <Turnstile
+                                                    sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+                                                    onVerify={(token) => setTurnstileToken(token)}
+                                                  />
+                              </div>
+                  
                   <SubmitButton loading={loading} text="Sign Up" disabled={strength < 2} />
                 </form>
               </motion.div>
