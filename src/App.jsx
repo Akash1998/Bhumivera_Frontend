@@ -53,7 +53,7 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
-// ── STRICT: Superadmin-only portal (anritvox.com/admin) ─────────────────────────
+// ── STRICT: Superadmin-only portal (anritvox.com/admin) ─────────────────────────────────────────────
 function AdminRoute({ children }) {
   const { user, loading } = useAuth() || { user: null, loading: false };
   if (loading) return <PageLoader />;
@@ -62,7 +62,7 @@ function AdminRoute({ children }) {
   return children;
 }
 
-// ── STRICT: Warehouse staff + superadmin only (anritvox.com/warehouse) ─────────
+// ── STRICT: Warehouse staff + superadmin only (anritvox.com/warehouse) ─────────────────────
 function WarehouseRoute({ children }) {
   const { user, loading } = useAuth() || { user: null, loading: false };
   if (loading) return <PageLoader />;
@@ -87,9 +87,9 @@ function AppContent() {
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/ewarranty" element={<EWarranty />} />
           <Route path="/contact" element={<Contact />} />
-          <Route path="/cart" element={<Cart />} />
           <Route path="/about" element={<About />} />
           <Route path="/legal" element={<Legal />} />
+          <Route path="/order-tracking" element={<OrderTracking />} />
           <Route path="/compare" element={<Compare />} />
 
           {/* Auth Routes */}
@@ -97,23 +97,24 @@ function AppContent() {
           <Route path="/register" element={<Register />} />
 
           {/* User Feature Routes (Protected - any logged-in user) */}
+          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+          <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/order-success" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
-          <Route path="/order-tracking" element={<ProtectedRoute><OrderTracking /></ProtectedRoute>} />
           <Route path="/address-book" element={<ProtectedRoute><AddressBook /></ProtectedRoute>} />
           <Route path="/returns" element={<ProtectedRoute><Returns /></ProtectedRoute>} />
           <Route path="/affiliate" element={<ProtectedRoute><Affiliate /></ProtectedRoute>} />
 
           {/* ── WAREHOUSE PORTAL ── Strictly /warehouse/* - warehouse_admin OR superadmin ONLY */}
-          <Route path="/warehouse" element={<WarehouseRoute><Warehouse /></WarehouseRoute>} />
+          <Route path="/warehouse" element={<Warehouse />} />
           <Route path="/warehouse/admin" element={<WarehouseRoute><WarehouseAdmin /></WarehouseRoute>} />
           <Route path="/warehouse/management" element={<WarehouseRoute><WarehouseManagement /></WarehouseRoute>} />
 
           {/* ── ADMIN PORTAL ── Strictly /admin/* - superadmin ONLY, NO warehouse components here */}
           <Route path="/admin-login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/dashboard/:tab" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/*" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
           {/* Catch-all (Must be at the very bottom) */}
