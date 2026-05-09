@@ -10,22 +10,8 @@
       "dest": "https://service.anritvox.com/warehouse"
     },
     {
-      "src": "/warehouseadmin",       "dest": "https://service.anritvox.com/warehouseadmin"     },     {       "src": "/warehouse/(.*)",
-      "dest": "https://service.anritvox.com/warehouse/$1"
-    },
-    {
-      "src": "/ewarranty",
-      "status": 301,
-      "headers": {
-        "Location": "/warranty"
-      }
-    },
-    {
-      "src": "/ewarranty/(.*)",
-      "status": 301,
-      "headers": {
-        "Location": "/warranty/$1"
-      }
+      "src": "/warehouseadmin",
+      "dest": "https://service.anritvox.com/warehouseadmin"
     },
     {
       "src": "/assets/(.*)",
