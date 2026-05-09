@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, Lock, Mail, AlertTriangle, User, 
-  Phone, Key, CheckCircle2 
+  Key, CheckCircle2 
 } from 'lucide-react';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { useAuth } from '../context/AuthContext';
@@ -20,7 +20,7 @@ export default function Register() {
 
   const [view, setView] = useState('INIT');
   const [formData, setFormData] = useState({
-    name: '', email: '', phone: '', password: '', securityAnswer: ''
+    name: '', email: '', password: '', securityAnswer: ''
   });
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const otpRefs = useRef([]);
@@ -28,7 +28,7 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
-    const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileToken, setTurnstileToken] = useState('');
 
   const getPasswordStrength = (pwd) => {
     let score = 0;
@@ -38,6 +38,7 @@ export default function Register() {
     if (/[^A-Za-z0-9]/.test(pwd)) score++;
     return score; 
   };
+
   const strength = getPasswordStrength(formData.password);
   const strengthColors = ['bg-slate-800', 'bg-red-500', 'bg-amber-500', 'bg-blue-500', 'bg-emerald-500'];
 
@@ -64,18 +65,20 @@ export default function Register() {
   const handleRegisterInit = async (e) => {
     e.preventDefault();
 
-      if (!turnstileToken) return setError('Please complete the bot verification.');
-    
+    if (!turnstileToken) return setError('Please complete the bot verification.');
     if (strength < 2) return setError("Please choose a stronger password.");
     if (!formData.securityAnswer) return setError("Security answer is required.");
 
-    setLoading(true); setError('');
+    setLoading(true); 
+    setError('');
+    
     try {
-      await register({ ...formData, turnstileToken }
+      // FIXED: Added missing closing parenthesis and semicolon
+      await register({ ...formData, turnstileToken }); 
       setView('OTP');
       setSuccessMsg(`Verification code sent to ${formData.email}`);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
@@ -86,7 +89,9 @@ export default function Register() {
     const otpString = otp.join('');
     if (otpString.length < 6) return setError("Please enter the 6-digit code.");
     
-    setLoading(true); setError('');
+    setLoading(true); 
+    setError('');
+    
     try {
       await verifyEmail({ 
         email: formData.email, 
@@ -96,7 +101,7 @@ export default function Register() {
       setSuccessMsg("Account created successfully. Logging you in...");
       setTimeout(() => navigate('/profile', { replace: true }), 1500);
     } catch (err) {
-      setError(err.message);
+      setError(err.message || 'Verification failed');
     } finally {
       setLoading(false);
     }
@@ -123,10 +128,8 @@ export default function Register() {
                 {error && <AlertBox type="error" msg={error} />}
 
                 <form onSubmit={handleRegisterInit} className="space-y-5">
-                  <div className="grid grid-cols-2 gap-4">
-                    <InputField icon={<User size={18}/>} type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Full Name" disabled={loading} />
-                    <InputField icon={<Phone size={18}/>} type="tel" name="phone" value={formData.phone} onChange={handleInputChange} placeholder="Phone Number" disabled={loading} />
-                  </div>
+                  {/* REMOVED: Mobile/Phone inputs. Now Full Name occupies full width */}
+                  <InputField icon={<User size={18}/>} type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Full Name" disabled={loading} />
                   
                   <InputField icon={<Mail size={18}/>} type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email Address" disabled={loading} />
                   
@@ -145,14 +148,14 @@ export default function Register() {
                     <InputField icon={<Key size={18}/>} type="text" name="securityAnswer" value={formData.securityAnswer} onChange={handleInputChange} placeholder="Your Answer" disabled={loading} />
                   </div>
 
-              <div className="flex justify-center mb-4">
-                                <Turnstile
-                                                    sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
-                                                    onVerify={(token) => setTurnstileToken(token)}
-                                                  />
-                              </div>
+                  <div className="flex justify-center mb-4">
+                    <Turnstile
+                      sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+                      onSuccess={(token) => setTurnstileToken(token)}
+                    />
+                  </div>
                   
-                  <SubmitButton loading={loading} text="Sign Up" disabled={strength < 2} />
+                  <SubmitButton loading={loading} text="Sign Up" disabled={strength < 2 || !turnstileToken} />
                 </form>
               </motion.div>
             )}
