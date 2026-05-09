@@ -202,7 +202,7 @@ export default function WarehouseManagement() {
                   <td className="p-5"><p className="text-sm font-bold text-white flex items-center gap-2"><Package size={14} className="text-slate-500"/> {item.product_name}</p></td>
                   <td className="p-5"><p className="text-xs font-bold text-slate-400">{item.store_name}</p></td>
                   <td className="p-5"><p className="text-sm font-black text-cyan-400">{item.total_qty}</p></td>
-                  <td className="p-5"><p className="text-sm font-black text-emerald-400">₹{parseFloat(item.total_revenue).toLocaleString()}</p></td>
+                  <td className="p-5"><p className="text-sm font-black text-emerald-400">₹{parseFloat(item.total_revenue).toLocaleString('en-IN')}</p></td>
                 </tr>
               ))}
             </tbody>
@@ -238,8 +238,8 @@ export default function WarehouseManagement() {
                     <p className="text-[10px] text-slate-500">Qty: {trx.quantity}</p>
                   </td>
                   <td className="p-5 text-right">
-                    <p className="text-sm font-black text-emerald-400">₹{parseFloat(trx.total_value).toLocaleString()}</p>
-                    <p className="text-[10px] text-slate-500">@ ₹{parseFloat(trx.sale_price).toLocaleString()} /ea</p>
+                    <p className="text-sm font-black text-emerald-400">₹{parseFloat(trx.total_value).toLocaleString('en-IN')}</p>
+                    <p className="text-[10px] text-slate-500">@ ₹{parseFloat(trx.sale_price).toLocaleString('en-IN')} /ea</p>
                   </td>
                 </tr>
               ))}
@@ -265,7 +265,7 @@ export default function WarehouseManagement() {
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] text-slate-500 uppercase tracking-widest mb-1">Total Revenue</p>
-                  <p className="text-xl font-black text-emerald-400">₹{parseFloat(day.total_revenue).toLocaleString()}</p>
+                  <p className="text-xl font-black text-emerald-400">₹{parseFloat(day.total_revenue).toLocaleString('en-IN')}</p>
                 </div>
               </div>
             </div>
