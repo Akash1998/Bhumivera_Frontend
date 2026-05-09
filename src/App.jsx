@@ -15,6 +15,7 @@ import "./index.css";
 const Home = lazy(() => import("./pages/Home.jsx"));
 const Warehouse = lazy(() => import("./pages/Warehouse.jsx"));
 const WarehouseAdmin = lazy(() => import("./pages/admin/WarehouseAdmin.jsx"));
+const WarehouseManagement = lazy(() => import("./pages/admin/WarehouseManagement.jsx"));
 const Shop = lazy(() => import("./pages/Shop.jsx"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail.jsx"));
 const EWarranty = lazy(() => import("./pages/EWarranty.jsx"));
@@ -85,6 +86,12 @@ function AppContent() {
           <Route path="/returns" element={<ProtectedRoute><Returns /></ProtectedRoute>} />
           <Route path="/affiliate" element={<Affiliate />} />
           <Route path="/warranty" element={<EWarranty />} />
+          {/* Warehouse Routes */}
+          <Route path="/warehouse" element={<ProtectedRoute><Warehouse /></ProtectedRoute>} />
+          <Route path="/warehouseadmin" element={<AdminRoute><WarehouseAdmin /></AdminRoute>} />
+
+          {/* Catch-all */}
+          <Route path="*" element={<Navigate to="/" />} />
 
           {/* Auth Routes */}
           <Route path="/login" element={<Login />} />
