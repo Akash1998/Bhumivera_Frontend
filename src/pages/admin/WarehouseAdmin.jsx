@@ -12,7 +12,6 @@ export default function WarehouseAdmin() {
   const loadData = async () => {
     setLoading(true);
     try {
-      // Uncoupled fetching to prevent crashes
       const fetchSafe = async (url, fallback) => {
         try { const res = await api.get(url); return res.data; } 
         catch (e) { return fallback; }
