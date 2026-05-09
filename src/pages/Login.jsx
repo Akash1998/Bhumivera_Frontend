@@ -4,6 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Shield, Lock, Mail, ArrowRight, AlertTriangle, Zap, Key, Fingerprint, RefreshCw, CheckCircle2, Eye, EyeOff, ShieldAlert, Phone } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { auth as authApi } from '../services/api';
+import { Turnstile } from '@marsidev/react-turnstile';
 
 const viewVariants = {
   initial: { opacity: 0, x: 30, scale: 0.95 },
@@ -33,6 +34,7 @@ export default function Login() {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+    const [turnstileToken, setTurnstileToken] = useState('');
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -56,10 +58,13 @@ export default function Login() {
 
   const handleLoginSubmit = async (e) => {
     e.preventDefault();
+
+        if (!turnstileToken) return setError('Please complete the bot verification.');
+    
     setLoading(true);
     setError('');
     try {
-      await login({ email: formData.email, password: formData.password });
+      await login({ email: formData.email, password: formData.passwo, turnstileTokenrd });
       navigate(from, { replace: true });
     } catch (err) {
       if (err.message.includes("MFA Verification Required")) {
@@ -122,19 +127,20 @@ export default function Login() {
                     {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
                   </button>
                 </div>
+              <div className="flex justify-center mb-4">
+                                <Turnstile
+                                                    sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+                                                    onVerify={(token) => setTurnstileToken(token)}
+                                                  />
+                              </div>
+                
                 <SubmitButton loading={loading} text="Login with Email" />
               </form>
 
-              <div className="mt-6 pt-6 border-t border-slate-800">
+              <d
                 <button onClick={() => setView('MOBILE_REQ')} className="w-full py-4 rounded-2xl border border-emerald-500/30 text-emerald-400 font-bold hover:bg-emerald-500/5 transition-all flex items-center justify-center gap-2">
                   <Phone size={18} /> Login with Mobile OTP
-                </button>
-              </div>
-            </motion.div>
-          )}
-
-          {view === 'MOBILE_REQ' && (
-            <motion.div variants={viewVariants} initial="initial" animate="animate" exit="exit">
+                </button>ial="initial" animate="animate" exit="exit">
               <button onClick={() => setView('LOGIN')} className="text-slate-500 mb-6 text-sm font-medium">Back to Email</button>
               <h2 className="text-3xl font-black text-white mb-2">Mobile Login</h2>
               <p className="text-slate-400 mb-8">Enter your number to receive an OTP.</p>
