@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Mail, Lock, Eye, EyeOff } from 'lucide-react';
@@ -17,6 +17,9 @@ export default function Login() {
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
 
+  // 2. Create the Ref for the widget
+  const turnstileRef = useRef(null);
+
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -27,7 +30,6 @@ export default function Login() {
   const [showPassword, setShowPassword] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
 
-  // Hardcoded public key to ensure Vercel builds successfully
   const TURNSTILE_SITE_KEY = "0x4AAAAAADBENLaxaG5Y9r6D";
 
   const handleInputChange = (e) => {
@@ -44,11 +46,17 @@ export default function Login() {
     setError('');
     
     try {
-      // Fixed the mangled payload properties here
       await login({ email: formData.email, password: formData.password, turnstileToken });
       navigate(from, { replace: true });
     } catch (err) {
       setError(err.message || 'Invalid email or password');
+      
+      // 4. THE FIX: Reset the token and widget on any failure
+      setTurnstileToken(''); 
+      if (turnstileRef.current) {
+        turnstileRef.current.reset();
+      }
+      
     } finally {
       setLoading(false);
     }
@@ -75,7 +83,9 @@ export default function Login() {
               </div>
               
               <div className="flex justify-center mb-4 pt-2">
+                {/* 3. Attach the ref to the component */}
                 <Turnstile
+                  ref={turnstileRef}
                   siteKey={TURNSTILE_SITE_KEY}
                   onSuccess={(token) => setTurnstileToken(token)}
                 />
