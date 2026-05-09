@@ -17,6 +17,7 @@ const Warehouse = lazy(() => import("./pages/Warehouse.jsx"));
 // Warehouse portal - strictly for /warehouse routes only
 const WarehouseAdmin = lazy(() => import("./pages/admin/WarehouseAdmin.jsx"));
 const WarehouseManagement = lazy(() => import("./pages/admin/WarehouseManagement.jsx"));
+const WarehouseAdminLogin = lazy(() => import("./pages/WarehouseAdminLogin.jsx"));
 const Shop = lazy(() => import("./pages/Shop.jsx"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail.jsx"));
 const EWarranty = lazy(() => import("./pages/EWarranty.jsx"));
@@ -74,7 +75,7 @@ function WarehouseRoute({ children }) {
 function AppContent() {
   const location = useLocation();
   const isAdminPath = location.pathname.startsWith("/admin");
-  const isWarehousePath = location.pathname.startsWith("/warehouse");
+  const isWarehousePath = location.pathname.startsWith("/warehouse") || location.pathname.startsWith("/warehouseadmin");
 
   return (
     <>
@@ -110,6 +111,10 @@ function AppContent() {
           <Route path="/warehouse" element={<Warehouse />} />
           <Route path="/warehouse/admin" element={<WarehouseRoute><WarehouseAdmin /></WarehouseRoute>} />
           <Route path="/warehouse/management" element={<WarehouseRoute><WarehouseManagement /></WarehouseRoute>} />
+                    
+          {/* Warehouse Admin Login - standalone portal */}
+          <Route path="/warehouseadmin" element={<WarehouseAdminLogin />} />
+          <Route path="/warehouseadmin/*" element={<WarehouseAdminLogin />} />
 
           {/* ── ADMIN PORTAL ── Strictly /admin/* - superadmin ONLY, NO warehouse components here */}
           <Route path="/admin-login" element={<AdminLogin />} />
