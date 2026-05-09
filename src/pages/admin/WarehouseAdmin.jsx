@@ -36,7 +36,6 @@ export default function WarehouseAdmin() {
   return (
     <div className="min-h-screen bg-[#020617] p-4 md:p-8 text-slate-300 font-sans">
       <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
         <div className="flex items-center justify-between pb-6 border-b border-slate-800">
           <div>
             <h1 className="text-3xl font-black text-white uppercase tracking-tight flex items-center gap-3">
@@ -50,7 +49,6 @@ export default function WarehouseAdmin() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Live Transaction Ledger */}
           <div className="lg:col-span-2 bg-slate-900/40 border border-slate-800/80 rounded-[2rem] overflow-hidden shadow-2xl">
             <div className="p-6 border-b border-slate-800 bg-slate-950/50 flex items-center justify-between">
               <h3 className="text-xs font-black uppercase tracking-widest text-white flex items-center gap-2">
@@ -95,7 +93,6 @@ export default function WarehouseAdmin() {
             </div>
           </div>
 
-          {/* Active Warehouses Column */}
           <div className="bg-slate-900/40 border border-slate-800/80 rounded-[2rem] p-6 h-fit shadow-2xl">
             <h3 className="text-xs font-black uppercase tracking-widest text-white mb-6 flex items-center gap-2">
               <ShieldCheck className="text-emerald-400 w-4 h-4" /> Authorized Distributors
