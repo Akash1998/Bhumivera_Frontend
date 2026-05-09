@@ -14,6 +14,10 @@
       "dest": "https://service.anritvox.com/warehouseadmin"
     },
     {
+      "src": "/admin/login",
+      "dest": "/admin-login"
+    },
+    {
       "src": "/assets/(.*)",
       "headers": {
         "cache-control": "public, max-age=31536000, immutable"
