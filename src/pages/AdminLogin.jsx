@@ -1,110 +1,112 @@
 import React, { useState, useRef } from 'react';
 import { Turnstile } from '@marsidev/react-turnstile';
-import { adminLogin } from '../services/api'; // Ensure path is correct
-import './AdminLogin.css'; // See CSS below
+import { useNavigate } from 'react-router-dom';
+import './AdminLogin.css';
 
-const WarehouseLogin = () => {
-  const [formData, setFormData] = useState({ email: '', password: '' });
+const API = import.meta.env.VITE_API_URL || 'https://service.anritvox.com';
+
+const AdminLogin = () => {
+  const [step, setStep] = useState(1); // 1=email, 2=otp
+  const [email, setEmail] = useState('');
+  const [otp, setOtp] = useState('');
   const [turnstileToken, setTurnstileToken] = useState(null);
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
-  
   const turnstileRef = useRef();
+  const navigate = useNavigate();
 
-  const handleInputChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
-
-  const handleSubmit = async (e) => {
+  const handleRequestOtp = async (e) => {
     e.preventDefault();
     setStatus({ type: '', message: '' });
-
-    if (!turnstileToken) {
-      setStatus({ type: 'error', message: 'Bot verification required.' });
-      return;
-    }
-
+    if (!turnstileToken) { setStatus({ type: 'error', message: 'Bot verification required.' }); return; }
     setLoading(true);
     try {
-      const response = await adminLogin({
-        ...formData,
-        turnstileToken // This matches the backend "turnstileToken" key
+      const res = await fetch(`${API}/api/auth/admin/request-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, turnstileToken })
       });
-
-      // Save token and redirect
-      localStorage.setItem('token', response.token);
-      localStorage.setItem('user', JSON.stringify(response.admin));
-      window.location.href = '/warehouse/dashboard';
-
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      setStatus({ type: 'success', message: 'OTP sent! Check your email. Valid for 10 minutes.' });
+      setStep(2);
     } catch (err) {
-      const errorMsg = err.response?.data?.message || 'Authentication failed.';
-      setStatus({ type: 'error', message: errorMsg });
-      
-      // CRITICAL: Reset the widget on failure so the user can try again
-      if (turnstileRef.current) {
-        turnstileRef.current.reset();
-        setTurnstileToken(null);
-      }
-    } finally {
-      setLoading(false);
-    }
+      setStatus({ type: 'error', message: err.message || 'Failed to send OTP.' });
+      if (turnstileRef.current) { turnstileRef.current.reset(); setTurnstileToken(null); }
+    } finally { setLoading(false); }
+  };
+
+  const handleVerifyOtp = async (e) => {
+    e.preventDefault();
+    setStatus({ type: '', message: '' });
+    if (!turnstileToken) { setStatus({ type: 'error', message: 'Bot verification required.' }); return; }
+    setLoading(true);
+    try {
+      const res = await fetch(`${API}/api/auth/admin/verify-otp`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, otp, turnstileToken })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message);
+      localStorage.setItem('adminToken', data.token);
+      localStorage.setItem('adminUser', JSON.stringify(data.admin));
+      navigate('/admin');
+    } catch (err) {
+      setStatus({ type: 'error', message: err.message || 'Invalid OTP.' });
+      if (turnstileRef.current) { turnstileRef.current.reset(); setTurnstileToken(null); }
+    } finally { setLoading(false); }
   };
 
   return (
-    <div className="terminal-wrapper">
-      <div className="terminal-card">
-        <header className="terminal-header">
+    <div className="admin-login-wrapper">
+      <div className="admin-login-box">
+        <div className="admin-login-header">
           <h1>ANRITVOX</h1>
-          <span className="version-badge">CLOUD TERMINAL v2.5.1</span>
-        </header>
-
-        <form onSubmit={handleSubmit} className="terminal-form">
-          <div className="input-group">
-            <input 
-              name="email"
-              type="email" 
-              placeholder="gk1912191999@gmail.com" 
-              value={formData.email}
-              onChange={handleInputChange}
-              required 
-            />
-          </div>
-
-          <div className="input-group">
-            <input 
-              name="password"
-              type="password" 
-              placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" 
-              value={formData.password}
-              onChange={handleInputChange}
-              required 
-            />
-          </div>
-
-          {/* TURNSTILE WIDGET CONTAINER */}
-          <div className="turnstile-container">
+          <span className="terminal-tag">ADMIN PORTAL</span>
+        </div>
+        {step === 1 ? (
+          <form onSubmit={handleRequestOtp}>
+            <div className="form-group">
+              <label>Admin Email</label>
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@anritvox.com" required autoComplete="email" />
+            </div>
             <Turnstile
               ref={turnstileRef}
               siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
-              onSuccess={(token) => setTurnstileToken(token)}
+              onSuccess={token => setTurnstileToken(token)}
               onExpire={() => setTurnstileToken(null)}
-              theme="light"
+              theme="dark"
             />
-          </div>
-
-          <button type="submit" disabled={loading} className="btn-access">
-            {loading ? 'SYNCHRONIZING...' : 'ACCESS TERMINAL'}
-          </button>
-
-          {status.message && (
-            <p className={`status-msg ${status.type}`}>
-              {status.message}
-            </p>
-          )}
-        </form>
+            <button type="submit" disabled={loading || !turnstileToken}>
+              {loading ? 'SENDING OTP...' : 'SEND LOGIN OTP'}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyOtp}>
+            <div className="form-group">
+              <label>OTP sent to {email}</label>
+              <input type="text" value={otp} onChange={e => setOtp(e.target.value)} placeholder="6-digit OTP" maxLength={6} required autoComplete="one-time-code" />
+            </div>
+            <Turnstile
+              ref={turnstileRef}
+              siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+              onSuccess={token => setTurnstileToken(token)}
+              onExpire={() => setTurnstileToken(null)}
+              theme="dark"
+            />
+            <button type="submit" disabled={loading || !turnstileToken}>
+              {loading ? 'VERIFYING...' : 'ACCESS ADMIN'}
+            </button>
+            <button type="button" className="back-btn" onClick={() => { setStep(1); setOtp(''); setStatus({ type: '', message: '' }); }}>
+              Back
+            </button>
+          </form>
+        )}
+        {status.message && <p className={`status-msg ${status.type}`}>{status.message}</p>}
       </div>
     </div>
   );
 };
 
-export default WarehouseLogin;
+export default AdminLogin;
