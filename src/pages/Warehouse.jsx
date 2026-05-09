@@ -9,10 +9,8 @@ export default function Warehouse() {
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [accessDenied, setAccessDenied] = useState(false);
-  
   const [formData, setFormData] = useState({ product_name: '', quantity: 1, sale_price: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
   const { showToast } = useToast() || {};
   const navigate = useNavigate();
 
@@ -25,7 +23,6 @@ export default function Warehouse() {
           return;
         }
         setStoreName(accessData.storeName || 'Master Admin Access');
-
         const { data: prodData } = await api.get('/products');
         const pList = prodData.data || prodData.products || prodData || [];
         setProducts(pList);
@@ -86,12 +83,7 @@ export default function Warehouse() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Select Product SKU</label>
-            <select 
-              required 
-              value={formData.product_name}
-              onChange={(e) => setFormData({...formData, product_name: e.target.value})}
-              className="w-full bg-[#0f172a] border border-slate-800 text-white p-3 rounded-xl outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer"
-            >
+            <select required value={formData.product_name} onChange={(e) => setFormData({...formData, product_name: e.target.value})} className="w-full bg-[#0f172a] border border-slate-800 text-white p-3 rounded-xl outline-none focus:border-emerald-500 transition-all appearance-none cursor-pointer">
               <option value="">-- Select Valid Product --</option>
               {products.map(p => <option key={p.id} value={p.name}>{p.name}</option>)}
             </select>
@@ -99,21 +91,11 @@ export default function Warehouse() {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Quantity</label>
-              <input 
-                type="number" min="1" required 
-                value={formData.quantity}
-                onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value)})}
-                className="w-full bg-[#0f172a] border border-slate-800 text-white p-3 rounded-xl outline-none focus:border-emerald-500 transition-all" 
-              />
+              <input type="number" min="1" required value={formData.quantity} onChange={(e) => setFormData({...formData, quantity: parseInt(e.target.value)})} className="w-full bg-[#0f172a] border border-slate-800 text-white p-3 rounded-xl outline-none focus:border-emerald-500 transition-all" />
             </div>
             <div>
               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Sale Price (₹)</label>
-              <input 
-                type="number" min="0" step="0.01" required placeholder="e.g. 1500"
-                value={formData.sale_price}
-                onChange={(e) => setFormData({...formData, sale_price: e.target.value})}
-                className="w-full bg-[#0f172a] border border-slate-800 text-white p-3 rounded-xl outline-none focus:border-emerald-500 transition-all" 
-              />
+              <input type="number" min="0" step="0.01" required placeholder="e.g. 1500" value={formData.sale_price} onChange={(e) => setFormData({...formData, sale_price: e.target.value})} className="w-full bg-[#0f172a] border border-slate-800 text-white p-3 rounded-xl outline-none focus:border-emerald-500 transition-all" />
             </div>
           </div>
           <button disabled={isSubmitting} type="submit" className="w-full py-4 bg-emerald-500 text-slate-950 font-black uppercase text-xs tracking-widest rounded-xl hover:bg-emerald-400 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] mt-4 flex items-center justify-center gap-2">
