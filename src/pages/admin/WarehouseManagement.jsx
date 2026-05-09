@@ -28,20 +28,29 @@ export default function WarehouseManagement() {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const [usersRes, allUsersRes, summaryRes, transRes, trendsRes] = await Promise.all([
-        api.get('/warehouse/admin/users'),
-        api.get('/warehouse/admin/all-users'),
-        api.get('/warehouse/admin/sales-summary'),
-        api.get('/warehouse/admin/sales'),
-        api.get('/warehouse/admin/sales-daily')
-      ]);
-      setWarehouseUsers(usersRes.data.users || []);
-      setAllUsers(allUsersRes.data.users || []);
-      setSalesSummary(summaryRes.data.summary || []);
-      setLiveTransactions(transRes.data.sales || []);
-      setDailyTrends(trendsRes.data.daily || []);
+      const fetchSafe = async (url, fallback) => {
+        try { 
+          const res = await api.get(url); 
+          return res.data; 
+        } catch (e) { 
+          console.error(`Failed to fetch ${url}`, e); 
+          return fallback; 
+        }
+      };
+
+      const usersData = await fetchSafe('/warehouse/admin/users', { users: [] });
+      const allUsersData = await fetchSafe('/warehouse/admin/all-users', { users: [] });
+      const summaryData = await fetchSafe('/warehouse/admin/sales-summary', { summary: [] });
+      const transData = await fetchSafe('/warehouse/admin/sales', { sales: [] });
+      const trendsData = await fetchSafe('/warehouse/admin/sales-daily', { daily: [] });
+
+      setWarehouseUsers(usersData.users || []);
+      setAllUsers(allUsersData.users || []);
+      setSalesSummary(summaryData.summary || []);
+      setLiveTransactions(transData.sales || []);
+      setDailyTrends(trendsData.daily || []);
     } catch (err) {
-      showToast?.('Failed to fetch comprehensive warehouse matrix.', 'error');
+      showToast?.('System Error updating matrices.', 'error');
     } finally {
       setLoading(false);
     }
