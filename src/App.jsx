@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, Component } from "react";
+import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 
 // Components
@@ -11,7 +11,7 @@ import { WishlistProvider } from "./context/WishlistContext.jsx";
 import { CompareProvider } from "./context/CompareContext.jsx";
 import "./index.css";
 
-// Lazy load page
+// Lazy load pages
 const Home = lazy(() => import("./pages/Home.jsx"));
 const Warehouse = lazy(() => import("./pages/Warehouse.jsx"));
 const WarehouseAdmin = lazy(() => import("./pages/admin/WarehouseAdmin.jsx"));
@@ -73,37 +73,35 @@ function AppContent() {
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />
           <Route path="/legal" element={<Legal />} />
+          <Route path="/order-tracking" element={<OrderTracking />} />
+          <Route path="/compare" element={<Compare />} />
+          <Route path="/affiliate" element={<Affiliate />} />
+          <Route path="/warranty" element={<EWarranty />} />
           
-          {/* User Feature Routes */}
+          {/* Auth Routes */}
+          <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
+
+          {/* User Feature Routes (Protected) */}
           <Route path="/cart" element={<Cart />} />
           <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
           <Route path="/order-success" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
-          <Route path="/order-tracking" element={<OrderTracking />} />
-          <Route path="/compare" element={<Compare />} />
           <Route path="/address-book" element={<ProtectedRoute><AddressBook /></ProtectedRoute>} />
           <Route path="/returns" element={<ProtectedRoute><Returns /></ProtectedRoute>} />
-          <Route path="/affiliate" element={<Affiliate />} />
-          <Route path="/warranty" element={<EWarranty />} />
+          
           {/* Warehouse Routes */}
           <Route path="/warehouse" element={<ProtectedRoute><Warehouse /></ProtectedRoute>} />
           <Route path="/warehouseadmin" element={<AdminRoute><WarehouseAdmin /></AdminRoute>} />
 
-          {/* Catch-all */}
-          <Route path="*" element={<Navigate to="/" />} />
-
-          {/* Auth Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
-
           {/* Admin Routes */}
-<Route path="/admin/login" element={<AdminLogin />} />
-<Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-<Route path="/admin/dashboard/:tab" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-<Route path="/admin/warehouse" element={<AdminRoute><WarehouseManagement /></AdminRoute>} />
+          <Route path="/admin/login" element={<AdminLogin />} />
+          <Route path="/admin/dashboard" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/dashboard/:tab" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="/admin/warehouse" element={<AdminRoute><WarehouseManagement /></AdminRoute>} />
 
-          {/* Catch-all */}
+          {/* Catch-all (Must be at the very bottom) */}
           <Route path="*" element={<Navigate to="/" />} />
         </Routes>
       </Suspense>
