@@ -108,7 +108,7 @@ function AppContent() {
           <Route path="/affiliate" element={<ProtectedRoute><Affiliate /></ProtectedRoute>} />
 
           {/* ── WAREHOUSE PORTAL ── Strictly /warehouse/* - warehouse_admin OR superadmin ONLY */}
-          <Route path="/warehouse" element={<Warehouse />} />
+          <Route path="/warehouse" element={<WarehouseRoute><Warehouse /></WarehouseRoute>} />
           <Route path="/warehouse/admin" element={<WarehouseRoute><WarehouseAdmin /></WarehouseRoute>} />
           <Route path="/warehouse/management" element={<WarehouseRoute><WarehouseManagement /></WarehouseRoute>} />
                     
