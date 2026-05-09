@@ -41,6 +41,14 @@ api.interceptors.response.use(
 export const auth = {
   login: (data) => api.post('/auth/login', data),
   register: (data) => api.post('/auth/register', data),
+  
+  // UPDATED: verifyEmail now handles securityAnswer
+  verifyEmail: (data) => api.post('/auth/verify-email', {
+    email: data.email,
+    otp: data.otp,
+    securityAnswer: data.securityAnswer
+  }),
+
   getProfile: () => api.get('/auth/profile'),
   updateProfile: (data) => api.put('/auth/profile', data),
   verify2FA: (data) => api.post('/auth/2fa/verify', data),
@@ -50,11 +58,13 @@ export const auth = {
   verifySecurityQuestion: (data) => api.post('/auth/security-question/verify', data),
   adminLogin: (data) => api.post('/auth/admin/login', data),
   getAdminProfile: () => api.get('/auth/profile'),
-  sendAdminOtp: (phone) => api.post('/auth/admin/otp/send', { phone }),
-  verifyAdminOtp: (phone, otp) => api.post('/auth/admin/otp/verify', { phone, otp }),
   
-  // FIXED: Added missing Mobile OTP routes
-  mobileLoginRequest: (mobile) => api.post('/auth/mobile-login/request', { mobile }),
+  // UPDATED: Email-based Admin OTP (transitioned from phone)
+  sendAdminOtp: (email) => api.post('/auth/admin/otp/send', { email }),
+  verifyAdminOtp: (email, otp) => api.post('/auth/admin/otp/verify', { email, otp }),
+  
+  // Email-only Mobile/Login surrogates
+  mobileLoginRequest: (email) => api.post('/auth/mobile-login/request', { email }),
   mobileLoginVerify: (data) => api.post('/auth/mobile-login/verify', data),
 };
 
