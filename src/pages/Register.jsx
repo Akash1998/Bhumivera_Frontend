@@ -30,6 +30,9 @@ export default function Register() {
   const [successMsg, setSuccessMsg] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
 
+  // HARDCODED PUBLIC KEY - Perfectly safe to expose on the frontend
+  const TURNSTILE_SITE_KEY = "0x4AAAAAADBENLaxaG5Y9r6D";
+
   const getPasswordStrength = (pwd) => {
     let score = 0;
     if (pwd.length > 7) score++;
@@ -73,7 +76,6 @@ export default function Register() {
     setError('');
     
     try {
-      // FIXED: Added missing closing parenthesis and semicolon
       await register({ ...formData, turnstileToken }); 
       setView('OTP');
       setSuccessMsg(`Verification code sent to ${formData.email}`);
@@ -128,7 +130,6 @@ export default function Register() {
                 {error && <AlertBox type="error" msg={error} />}
 
                 <form onSubmit={handleRegisterInit} className="space-y-5">
-                  {/* REMOVED: Mobile/Phone inputs. Now Full Name occupies full width */}
                   <InputField icon={<User size={18}/>} type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Full Name" disabled={loading} />
                   
                   <InputField icon={<Mail size={18}/>} type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email Address" disabled={loading} />
@@ -150,7 +151,7 @@ export default function Register() {
 
                   <div className="flex justify-center mb-4">
                     <Turnstile
-                      sitekey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
+                      siteKey={TURNSTILE_SITE_KEY}
                       onSuccess={(token) => setTurnstileToken(token)}
                     />
                   </div>
