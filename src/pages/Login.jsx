@@ -12,7 +12,7 @@ const viewVariants = {
 };
 
 export default function Login() {
-  const { login } = useAuth();
+  const { login, mobileLogin } = useAuth(); // FIXED: Pulled mobileLogin from context
   const navigate = useNavigate();
   const location = useLocation();
   const from = location.state?.from?.pathname || '/';
@@ -93,12 +93,11 @@ export default function Login() {
     if (otpString.length < 6) return setError("Enter 6-digit OTP");
     setLoading(true);
     try {
-      const res = await authApi.mobileLoginVerify({ mobile: formData.mobile, otp: otpString });
-      localStorage.setItem('token', res.data.token);
-      localStorage.setItem('user', JSON.stringify(res.data.user));
-      window.location.href = from;
+      // FIXED: Used context method and standard router navigation
+      await mobileLogin({ mobile: formData.mobile, otp: otpString });
+      navigate(from, { replace: true });
     } catch (err) {
-      setError(err.response?.data?.message || "Invalid OTP");
+      setError(err.message || "Invalid OTP");
     } finally {
       setLoading(false);
     }
@@ -140,6 +139,9 @@ export default function Login() {
               <h2 className="text-3xl font-black text-white mb-2">Mobile Login</h2>
               <p className="text-slate-400 mb-8">Enter your number to receive an OTP.</p>
               
+              {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-2xl mb-6 text-sm">{error}</div>}
+              {successMsg && <div className="p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 rounded-2xl mb-6 text-sm">{successMsg}</div>}
+              
               <form onSubmit={handleMobileOtpRequest} className="space-y-4">
                 <InputField icon={<Phone />} type="tel" name="mobile" value={formData.mobile} onChange={handleInputChange} placeholder="Mobile Number" />
                 <SubmitButton loading={loading} text="Send OTP" />
@@ -151,6 +153,8 @@ export default function Login() {
             <motion.div variants={viewVariants} initial="initial" animate="animate" exit="exit">
               <h2 className="text-3xl font-black text-white mb-2">Verify OTP</h2>
               <p className="text-slate-400 mb-8">Enter the 6-digit code sent to {formData.mobile}</p>
+              
+              {error && <div className="p-4 bg-rose-500/10 border border-rose-500/20 text-rose-500 rounded-2xl mb-6 text-sm">{error}</div>}
               
               <form onSubmit={handleMobileOtpVerify}>
                 <div className="flex justify-between gap-2 mb-8">
