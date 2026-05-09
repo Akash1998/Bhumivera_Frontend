@@ -12,6 +12,7 @@ export default function Warehouse() {
   const [error, setError] = useState(null);
   const [formData, setFormData] = useState({ product_name: '', quantity: 1, sale_price: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const toastCtx = useToast();
   const showToast = toastCtx?.showToast;
   const navigate = useNavigate();
@@ -21,30 +22,43 @@ export default function Warehouse() {
     setError(null);
     try {
       const token = localStorage.getItem('token') || localStorage.getItem('ms_token');
+      
       if (!token) {
+        // Stop execution and redirect immediately
         navigate('/login');
-        return;
+        return; 
       }
+
       const accessRes = await api.get('/warehouse/check-access');
       const accessData = accessRes.data;
+
+      // Check if backend granted clearance
       if (!accessData.hasAccess && !accessData.isAdmin) {
         setAccessDenied(true);
-        setLoading(false);
-        return;
+        return; 
       }
+
       setStoreName(accessData.storeName || 'Master Admin Access');
+      
       const prodRes = await api.get('/products');
       const prodData = prodRes.data;
       const pList = prodData.data || prodData.products || (Array.isArray(prodData) ? prodData : []);
       setProducts(pList);
+
     } catch (e) {
       console.error('Warehouse init error:', e);
+      
       if (e?.response?.status === 401) {
         navigate('/login');
-        return;
+        return; // Ensure we don't set error state after navigating
+      } 
+      
+      if (e?.response?.status === 403) {
+        setAccessDenied(true);
+      } else {
+        setError(e?.response?.data?.message || 'Connection failed. Please try again.');
+        showToast?.('Connection failed.', 'error');
       }
-      setError(e?.response?.data?.message || 'Connection failed. Please try again.');
-      showToast?.('Connection failed.', 'error');
     } finally {
       setLoading(false);
     }
@@ -58,6 +72,7 @@ export default function Warehouse() {
     e.preventDefault();
     if (!formData.product_name) return showToast?.('Select a product', 'error');
     if (!formData.sale_price || formData.sale_price <= 0) return showToast?.('Enter a valid sale price', 'error');
+    
     setIsSubmitting(true);
     try {
       await api.post('/warehouse/log-sale', {
