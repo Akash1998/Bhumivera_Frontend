@@ -49,8 +49,8 @@ const AdminLogin = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      localStorage.setItem('adminToken', data.token);
-      localStorage.setItem('adminUser', JSON.stringify(data.admin));
+              localStorage.setItem('token', data.token);
+              localStorage.setItem('user', JSON.stringify(data.admin));
       navigate('/admin');
     } catch (err) {
       setStatus({ type: 'error', message: err.message || 'Invalid OTP.' });
