@@ -67,8 +67,9 @@ function AdminRoute({ children }) {
 function WarehouseRoute({ children }) {
   const { user, loading } = useAuth() || { user: null, loading: false };
   if (loading) return <PageLoader />;
-  if (!user || (user.role !== 'warehouse_admin' && user.role !== 'superadmin' && user.role !== 'admin'))
-    return <Navigate to="/login" />;
+  
+  if (!user) return <Navigate to="/login" />;
+  
   return children;
 }
 
