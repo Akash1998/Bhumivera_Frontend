@@ -23,9 +23,12 @@ export const AuthProvider = ({ children }) => {
         try {
           const decodedPayload = decodeJWT(storedToken);
           let fetchedUser;
-          if (decodedPayload?.role === 'admin' || decodedPayload?.role === 'superadmin' || decodedPayload?.role === 'warehouse_admin') {
+          if (decodedPayload?.role === 'admin' || decodedPayload?.role === 'superadmin') {
             const res = await authApi.getAdminProfile();
             fetchedUser = res.data;
+          } else if (decodedPayload?.role === 'warehouse_admin') {
+            const storedUser = localStorage.getItem('user');
+            fetchedUser = storedUser ? JSON.parse(storedUser) : { role: 'warehouse_admin' };
           } else {
             const res = await usersApi.getProfile();
             fetchedUser = res.data.user || res.data;
@@ -86,12 +89,13 @@ export const AuthProvider = ({ children }) => {
     return finalUser;
   };
 
-  // ADDED: Dedicated method to sync warehouse login state globally instantly
   const warehouseLoginVerify = (data) => {
-    const finalUser = { ...data.admin, role: data.admin.role || 'warehouse_admin' };
-    localStorage.setItem('token', data.token);
+    const payloadObj = data.admin || data.user || data;
+    const finalUser = { ...payloadObj, role: payloadObj.role || 'warehouse_admin' };
+    const authToken = data.token || data.warehouseToken || data.ms_token;
+    localStorage.setItem('token', authToken);
     localStorage.setItem('user', JSON.stringify(finalUser));
-    setToken(data.token);
+    setToken(authToken);
     setUser(finalUser);
     return finalUser;
   };
@@ -118,16 +122,16 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem('user');
     setToken(null);
     setUser(null);
-    if (window.location.pathname.includes('/admin') || window.location.pathname.includes('/profile')) {
+    if ((window.location.pathname.includes('/admin') && !window.location.pathname.includes('/warehouseadmin')) || window.location.pathname.includes('/profile')) {
       window.location.href = '/login';
     }
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, token, isAuthenticated: !!token, loading, 
-      login, mobileLogin, adminLogin, adminOtpVerify, warehouseLoginVerify, 
-      register, verifyEmail, logout 
+    <AuthContext.Provider value={{
+      user, token, isAuthenticated: !!token, loading,
+      login, mobileLogin, adminLogin, adminOtpVerify, warehouseLoginVerify,
+      register, verifyEmail, logout
     }}>
       {!loading && children}
     </AuthContext.Provider>
