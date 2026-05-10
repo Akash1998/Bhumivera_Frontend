@@ -1,12 +1,226 @@
-import React,{useState,useEffect}from'react';import{Package,LogOut,Server,AlertTriangle,RefreshCw,Upload,UserPlus}from'lucide-react';import api from'../services/api';import{useToast}from'../context/ToastContext';import{useNavigate}from'react-router-dom';
-export default function Warehouse(){const[storeName,setStoreName]=useState('Connecting...');const[products,setProducts]=useState([]);const[loading,setLoading]=useState(!0);const[accessDenied,setAccessDenied]=useState(!1);const[error,setError]=useState(null);const[formData,setFormData]=useState({product_name:'',quantity:1,sale_price:'',isWalkin:!1});const[isSubmitting,setIsSubmitting]=useState(!1);const toastCtx=useToast(),showToast=toastCtx?.showToast,navigate=useNavigate();
-const handleLogout=()=>{localStorage.removeItem('token');localStorage.removeItem('ms_token');localStorage.removeItem('user');navigate('/login')};
-const init=async()=>{setLoading(!0);setError(null);try{const t=localStorage.getItem('token')||localStorage.getItem('ms_token');if(!t||t==='null'||t==='undefined'){handleLogout();return}const accessRes=await api.get('/warehouse/check-access');if(!accessRes.data.hasAccess&&!accessRes.data.isAdmin){setAccessDenied(!0);setLoading(!1);return}setStoreName(accessRes.data.storeName||'Master Admin Access');const prodRes=await api.get('/products');const pList=prodRes.data.data||prodRes.data.products||(Array.isArray(prodRes.data)?prodRes.data:[]);setProducts(pList)}catch(e){if(e?.response?.status===401||e?.response?.status===403){handleLogout();return}setError(e?.response?.data?.message||'Connection failed.');showToast?.('Connection failed.','error')}finally{setLoading(!1)}};
-useEffect(()=>{init()},[]);
-const handleRestore=async(e)=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=async(ev)=>{try{const d=JSON.parse(ev.target.result);await api.post('/warehouse/restore-legacy',{backupData:d});showToast?.('Legacy Ledger Synced','success')}catch(err){showToast?.('Invalid Backup File','error')}};r.readAsText(f)};
-const handleSubmit=async(e)=>{e.preventDefault();if(!formData.product_name)return showToast?.('Select a product','error');if(!formData.sale_price||formData.sale_price<=0)return showToast?.('Invalid price','error');setIsSubmitting(!0);try{const path=formData.isWalkin?'/warehouse/walkin-sale':'/warehouse/log-sale';await api.post(path,{product_name:formData.product_name,quantity:formData.quantity,sale_price:parseFloat(formData.sale_price)});showToast?.('Transaction secured.','success');setFormData({product_name:'',quantity:1,sale_price:'',isWalkin:!1})}catch(e){showToast?.(e?.response?.data?.message||'Log failed.','error')}finally{setIsSubmitting(!1)}};
-if(loading)return(<div className="min-h-screen flex items-center justify-center bg-[#020617]"><div className="flex flex-col items-center gap-4"><div className="w-8 h-8 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div><p className="text-emerald-500 font-black tracking-widest uppercase text-[10px] animate-pulse">Verifying Clearance...</p></div></div>);
-if(accessDenied)return(<div className="min-h-screen flex flex-col items-center justify-center bg-[#020617] text-center px-4"><AlertTriangle className="w-12 h-12 text-rose-500 mb-4"/><h2 className="text-2xl font-black text-white uppercase tracking-tight mb-2">Access Denied</h2><button onClick={handleLogout} className="px-4 py-2 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded-xl text-sm font-black uppercase hover:bg-rose-500 transition-all">Return to Login</button></div>);
-return(<div className="min-h-screen bg-[#020617] text-[#e2e8f0] p-4 md:p-8"><div className="max-w-2xl mx-auto"><div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-800"><div><h1 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-2"><Package className="text-emerald-500"/>Local <span className="text-emerald-500">Warehouse</span></h1><p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">{storeName}</p></div><div className="flex gap-2"><label className="p-2.5 bg-blue-500/10 text-blue-500 border border-blue-500/20 rounded-xl hover:bg-blue-500 hover:text-white transition-all shadow-md cursor-pointer"><Upload className="w-5 h-5"/><input type="file" className="hidden" accept=".avbak,.json" onChange={handleRestore}/></label><button onClick={handleLogout} className="p-2.5 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-md flex items-center gap-2 text-xs font-black uppercase"><LogOut className="w-5 h-5"/></button></div></div>
-<div className="bg-[#0f172a] border border-slate-800 rounded-2xl p-6 shadow-2xl"><div className="flex items-center justify-between mb-6"><h2 className="text-lg font-black text-white uppercase tracking-tight flex items-center gap-2"><Server className="text-emerald-500 w-5 h-5"/>Log Sale Transaction</h2><button type="button" onClick={()=>setFormData({...formData,isWalkin:!formData.isWalkin})} className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${formData.isWalkin?'bg-amber-500 text-black':'bg-slate-800 text-slate-400'}`}><UserPlus size={14}/> {formData.isWalkin?'Walk-in Mode':'Registered Mode'}</button></div>
-<form onSubmit={handleSubmit} className="space-y-4"><div><label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Select Product SKU</label><select required value={formData.product_name} onChange={e=>setFormData({...formData,product_name:e.target.value})} className="w-full bg-[#0f172a] border border-slate-800 text-white p-3 rounded-xl outline-none focus:border-emerald-500 appearance-none cursor-pointer"><option value="">-- Select Valid Product --</option>{products.map(p=>(<option key={p.id} value={p.name}>{p.name}</option>))}</select></div><div className="grid grid-cols-2 gap-4"><div><label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Quantity</label><input type="number" min="1" required value={formData.quantity} onChange={e=>setFormData({...formData,quantity:parseInt(e.target.value)||1})} className="w-full bg-[#0f172a] border border-slate-800 text-white p-3 rounded-xl outline-none focus:border-emerald-500"/></div><div><label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Sale Price (₹)</label><input type="number" min="0" step="0.01" required value={formData.sale_price} onChange={e=>setFormData({...formData,sale_price:e.target.value})} className="w-full bg-[#0f172a] border border-slate-800 text-white p-3 rounded-xl outline-none focus:border-emerald-500"/></div></div><button type="submit" disabled={isSubmitting} className="w-full py-3 bg-emerald-500 text-slate-950 font-black uppercase tracking-widest rounded-xl hover:bg-emerald-400 transition-all disabled:opacity-50">{isSubmitting?'Syncing to Ledger...':'Secure Transaction'}</button></form></div></div></div>)}
+import React, { useState, useEffect, useCallback } from 'react';
+import { Package, LogOut, Server, AlertTriangle, Upload, UserPlus } from 'lucide-react';
+import api from '../services/api';
+import { useToast } from '../context/ToastContext';
+import { useNavigate } from 'react-router-dom';
+
+export default function Warehouse() {
+  const [storeName, setStoreName] = useState('Connecting...');
+  const [products, setProducts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [accessDenied, setAccessDenied] = useState(false);
+  const [error, setError] = useState(null);
+  const [formData, setFormData] = useState({
+    product_name: '',
+    quantity: 1,
+    sale_price: '',
+    isWalkin: false
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  const toastCtx = useToast();
+  const showToast = toastCtx?.showToast;
+  const navigate = useNavigate();
+
+  const handleLogout = useCallback(() => {
+    // Clear all potential token keys to ensure a clean slate
+    localStorage.removeItem('token');
+    localStorage.removeItem('ms_token');
+    localStorage.removeItem('warehouseToken');
+    localStorage.removeItem('user');
+    localStorage.removeItem('warehouseUser');
+    navigate('/login');
+  }, [navigate]);
+
+  const init = useCallback(async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      // Check for any valid session token
+      const t = localStorage.getItem('token') || 
+                localStorage.getItem('ms_token') || 
+                localStorage.getItem('warehouseToken');
+
+      if (!t || t === 'null' || t === 'undefined') {
+        handleLogout();
+        return;
+      }
+
+      // Verify clearance with the backend
+      const accessRes = await api.get('/warehouse/check-access');
+      
+      if (!accessRes.data.hasAccess && !accessRes.data.isAdmin) {
+        setAccessDenied(true);
+        setLoading(false);
+        return;
+      }
+
+      setStoreName(accessRes.data.storeName || 'Master Admin Access');
+
+      // Fetch Product SKU list
+      const prodRes = await api.get('/products');
+      const pList = prodRes.data.data || prodRes.data.products || (Array.isArray(prodRes.data) ? prodRes.data : []);
+      setProducts(pList);
+    } catch (e) {
+      if (e?.response?.status === 401 || e?.response?.status === 403) {
+        handleLogout();
+        return;
+      }
+      setError(e?.response?.data?.message || 'Connection failed.');
+      showToast?.('Connection failed.', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [handleLogout, showToast]);
+
+  useEffect(() => {
+    init();
+  }, [init]);
+
+  const handleRestore = async (e) => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = async (ev) => {
+      try {
+        const d = JSON.parse(ev.target.result);
+        await api.post('/warehouse/restore-legacy', { backupData: d });
+        showToast?.('Legacy Ledger Synced', 'success');
+      } catch (err) {
+        showToast?.('Invalid Backup File', 'error');
+      }
+    };
+    r.readAsText(f);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!formData.product_name) return showToast?.('Select a product', 'error');
+    if (!formData.sale_price || formData.sale_price <= 0) return showToast?.('Invalid price', 'error');
+    
+    setIsSubmitting(true);
+    try {
+      const path = formData.isWalkin ? '/warehouse/walkin-sale' : '/warehouse/log-sale';
+      await api.post(path, {
+        product_name: formData.product_name,
+        quantity: formData.quantity,
+        sale_price: parseFloat(formData.sale_price)
+      });
+      showToast?.('Transaction secured.', 'success');
+      setFormData({ product_name: '', quantity: 1, sale_price: '', isWalkin: formData.isWalkin });
+    } catch (e) {
+      showToast?.(e?.response?.data?.message || 'Log failed.', 'error');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-[#020617]">
+        <div className="flex flex-col items-center gap-4">
+          <div className="w-8 h-8 border-2 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
+          <p className="text-emerald-500 font-black tracking-widest uppercase text-[10px] animate-pulse">Verifying Clearance...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (accessDenied) {
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-[#020617] text-center px-4">
+        <AlertTriangle className="w-12 h-12 text-rose-500 mb-4" />
+        <h2 className="text-2xl font-black text-white uppercase tracking-tight mb-2">Access Denied</h2>
+        <p className="text-slate-500 text-sm mb-6 uppercase font-bold">You lack distributor clearance for this portal.</p>
+        <button onClick={handleLogout} className="px-6 py-3 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded-xl text-xs font-black uppercase hover:bg-rose-500 hover:text-white transition-all">
+          Return to Login
+        </button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="min-h-screen bg-[#020617] text-[#e2e8f0] p-4 md:p-8 font-sans">
+      <div className="max-w-2xl mx-auto">
+        <div className="flex items-center justify-between mb-8 pb-6 border-b border-slate-800">
+          <div>
+            <h1 className="text-2xl font-black text-white uppercase tracking-tight flex items-center gap-2">
+              <Package className="text-emerald-500" /> Local <span className="text-emerald-500">Warehouse</span>
+            </h1>
+            <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">{storeName}</p>
+          </div>
+          <div className="flex gap-2">
+            <label className="p-2.5 bg-blue-500/10 text-blue-500 border border-blue-500/20 rounded-xl hover:bg-blue-500 hover:text-white transition-all shadow-md cursor-pointer">
+              <Upload className="w-5 h-5" />
+              <input type="file" className="hidden" accept=".avbak,.json" onChange={handleRestore} />
+            </label>
+            <button onClick={handleLogout} className="p-2.5 bg-rose-500/10 text-rose-500 border border-rose-500/20 rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-md">
+              <LogOut className="w-5 h-5" />
+            </button>
+          </div>
+        </div>
+
+        <div className="bg-[#0f172a] border border-slate-800 rounded-2xl p-6 shadow-2xl">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-lg font-black text-white uppercase tracking-tight flex items-center gap-2">
+              <Server className="text-emerald-500 w-5 h-5" /> Log Sale
+            </h2>
+            <button 
+              type="button" 
+              onClick={() => setFormData({ ...formData, isWalkin: !formData.isWalkin })}
+              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase transition-all ${formData.isWalkin ? 'bg-amber-500 text-black' : 'bg-slate-800 text-slate-400'}`}
+            >
+              <UserPlus size={14} /> {formData.isWalkin ? 'Walk-in Mode' : 'Registered Mode'}
+            </button>
+          </div>
+
+          <form onSubmit={handleSubmit} className="space-y-4">
+            <div>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Select Product SKU</label>
+              <select 
+                required 
+                value={formData.product_name} 
+                onChange={e => setFormData({ ...formData, product_name: e.target.value })} 
+                className="w-full bg-[#0f172a] border border-slate-800 text-white p-3 rounded-xl outline-none focus:border-emerald-500 appearance-none cursor-pointer"
+              >
+                <option value="">-- Select Valid Product --</option>
+                {products.map(p => (
+                  <option key={p.id} value={p.name}>{p.name}</option>
+                ))}
+              </select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Quantity</label>
+                <input 
+                  type="number" min="1" required 
+                  value={formData.quantity} 
+                  onChange={e => setFormData({ ...formData, quantity: parseInt(e.target.value) || 1 })} 
+                  className="w-full bg-[#0f172a] border border-slate-800 text-white p-3 rounded-xl outline-none focus:border-emerald-500" 
+                />
+              </div>
+              <div>
+                <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-2">Sale Price (₹)</label>
+                <input 
+                  type="number" min="0" step="0.01" required 
+                  value={formData.sale_price} 
+                  onChange={e => setFormData({ ...formData, sale_price: e.target.value })} 
+                  className="w-full bg-[#0f172a] border border-slate-800 text-white p-3 rounded-xl outline-none focus:border-emerald-500" 
+                />
+              </div>
+            </div>
+
+            <button 
+              type="submit" 
+              disabled={isSubmitting} 
+              className="w-full py-4 bg-emerald-500 text-slate-950 font-black uppercase tracking-widest rounded-xl hover:bg-emerald-400 transition-all disabled:opacity-50 shadow-[0_0_20px_rgba(16,185,129,0.2)]"
+            >
+              {isSubmitting ? 'Syncing to Ledger...' : 'Secure Transaction'}
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  );
+}
