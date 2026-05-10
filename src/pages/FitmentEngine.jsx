@@ -1,131 +1,141 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Car, ChevronRight, Search, Settings, AlertCircle, CheckCircle } from 'lucide-react';
+import { Droplets, ChevronRight, Sparkles, CheckCircle } from 'lucide-react';
 import api from '../services/api';
 
 export default function FitmentEngine() {
-  const [makes, setMakes] = useState(['Maruti Suzuki', 'Hyundai', 'Tata', 'Mahindra', 'Toyota', 'Kia']);
-  const [selectedMake, setSelectedMake] = useState('');
-  const [selectedModel, setSelectedModel] = useState('');
-  const [selectedYear, setSelectedYear] = useState('');
+  // Underlying state variables renamed for clarity, but the final output saves to the exact same DB keys.
+  const [skinTypes, setSkinTypes] = useState(['Normal', 'Oily', 'Dry', 'Combination', 'Sensitive']);
+  const [selectedType, setSelectedType] = useState('');
+  const [selectedConcern, setSelectedConcern] = useState('');
+  const [selectedAge, setSelectedAge] = useState('');
   
-  const [models, setModels] = useState([]);
-  const [years, setYears] = useState(['2024', '2023', '2022', '2021', '2020', '2019', '2018']);
-  const [loading, setLoading] = useState(false);
+  const [concerns, setConcerns] = useState([]);
+  const [ages, setAges] = useState(['Teens', '20s', '30s', '40s', '50s+']);
   const navigate = useNavigate();
 
-  const handleMakeChange = (make) => {
-    setSelectedMake(make);
-    // Dynamic Model
-    const mockModels = {
-      'Maruti Suzuki': ['Swift', 'Baleno', 'Brezza', 'Ertiga'],
-      'Hyundai': ['Creta', 'Verna', 'i20', 'Venue'],
-      'Tata': ['Nexon', 'Harrier', 'Safari', 'Punch'],
-      'Mahindra': ['Thar', 'XUV700', 'Scorpio-N']
+  const handleTypeChange = (type) => {
+    setSelectedType(type);
+    
+    // Dynamically adjust concerns based on skin type (mimicking the old Make/Model logic)
+    const mockConcerns = {
+      'Normal': ['Hydration', 'Glow', 'Maintenance', 'Anti-Pollution'],
+      'Oily': ['Acne Control', 'Pore Minimizing', 'Oil Balancing', 'Blemishes'],
+      'Dry': ['Deep Hydration', 'Flakiness', 'Anti-Aging', 'Dullness'],
+      'Combination': ['T-Zone Oiliness', 'Uneven Texture', 'Balancing', 'Brightening'],
+      'Sensitive': ['Redness', 'Soothing', 'Gentle Cleansing', 'Barrier Repair']
     };
-    setModels(mockModels[make] || []);
-    setSelectedModel('');
+    setConcerns(mockConcerns[type] || []);
+    setSelectedConcern('');
   };
 
-  const handleSaveGarage = () => {
-    if (selectedMake && selectedModel && selectedYear) {
-      const garageData = { make: selectedMake, model: selectedModel, year: selectedYear };
-      localStorage.setItem('Bhumivera_garage', JSON.stringify(garageData));
-      window.dispatchEvent(new Event('storage')); // Trigger update in other components
+  const handleSaveAssessment = () => {
+    if (selectedType && selectedConcern && selectedAge) {
+      // CRITICAL: We retain the exact keys "make", "model", "year" and "Bhumivera_garage" 
+      // so the underlying database and Shop filters continue to work seamlessly.
+      const assessmentData = { make: selectedType, model: selectedConcern, year: selectedAge };
+      localStorage.setItem('Bhumivera_garage', JSON.stringify(assessmentData));
+      window.dispatchEvent(new Event('storage')); 
       navigate('/shop?fitment=active');
     }
   };
 
   return (
-    <div className="min-h-screen bg-slate-950 text-white font-sans py-20 px-6">
+    <div className="min-h-screen bg-[#faf8f5] text-[#2c2c2c] font-sans py-20 px-6">
       <div className="max-w-4xl mx-auto space-y-16">
         <div className="text-center space-y-6">
-          <div className="inline-flex p-4 bg-emerald-500/10 rounded-3xl border border-emerald-500/20 text-emerald-500 mb-4 animate-bounce">
-            <Car size={48} />
+          <div className="inline-flex p-5 bg-[#f4eedc] rounded-full border border-[#e8dcc4] text-[#8b5a2b] mb-4 shadow-sm">
+            <Sparkles size={40} />
           </div>
-          <h1 className="text-7xl font-black uppercase tracking-tighter italic italic leading-none">
-            Bhumivera <br /> <span className="text-emerald-500">Fitment</span> Engine
+          <h1 className="text-5xl md:text-7xl font-serif uppercase tracking-widest leading-tight text-[#1a1a1a]">
+            Personalized <br /> <span className="text-[#8b5a2b]">Skin Profile</span>
           </h1>
-          <p className="text-slate-500 font-bold uppercase tracking-[0.2em] text-sm">
-            Configure your vehicle to see products guaranteed to fit.
+          <p className="text-[#5c4a3d] font-bold uppercase tracking-[0.3em] text-xs">
+            Analyze your skin to discover your perfect botanical regimen.
           </p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-           {/* Make */}
+           {/* Skin Type */}
            <div className="space-y-4">
-             <label className="text-[10px] font-black uppercase text-slate-600 tracking-widest px-4">01 Select Make</label>
-             <div className="grid grid-cols-1 gap-2">
-               {makes.map(m => (
+             <label className="text-[10px] font-bold uppercase text-[#8b5a2b] tracking-[0.2em] px-2 flex items-center gap-2">
+               <Droplets size={12}/> 01 Skin Type
+             </label>
+             <div className="grid grid-cols-1 gap-3">
+               {skinTypes.map(type => (
                  <button 
-                  key={m}
-                  onClick={() => handleMakeChange(m)}
-                  className={`p-6 rounded-3xl border text-left font-black uppercase tracking-tighter transition-all ${
-                    selectedMake === m ? 'bg-emerald-500 text-black border-emerald-500' : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-emerald-500/50'
+                  key={type}
+                  onClick={() => handleTypeChange(type)}
+                  className={`p-5 rounded-2xl border text-left font-bold uppercase tracking-widest text-sm transition-all shadow-sm ${
+                    selectedType === type ? 'bg-[#8b5a2b] text-white border-[#8b5a2b]' : 'bg-white border-[#e8dcc4] text-[#2c2c2c] hover:border-[#8b5a2b] hover:bg-[#f4eedc]'
                   }`}
                  >
-                   {m}
+                   {type}
                  </button>
                ))}
              </div>
            </div>
 
-           {/* Model */}
+           {/* Primary Concern */}
            <div className="space-y-4">
-             <label className="text-[10px] font-black uppercase text-slate-600 tracking-widest px-4">02 Select Model</label>
-             <div className="grid grid-cols-1 gap-2">
-               {models.length > 0 ? models.map(m => (
+             <label className="text-[10px] font-bold uppercase text-[#8b5a2b] tracking-[0.2em] px-2 flex items-center gap-2">
+               <Droplets size={12}/> 02 Primary Concern
+             </label>
+             <div className="grid grid-cols-1 gap-3">
+               {concerns.length > 0 ? concerns.map(c => (
                  <button 
-                  key={m}
-                  onClick={() => setSelectedModel(m)}
-                  className={`p-6 rounded-3xl border text-left font-black uppercase tracking-tighter transition-all ${
-                    selectedModel === m ? 'bg-emerald-500 text-black border-emerald-500' : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-emerald-500/50'
+                  key={c}
+                  onClick={() => setSelectedConcern(c)}
+                  className={`p-5 rounded-2xl border text-left font-bold uppercase tracking-widest text-sm transition-all shadow-sm ${
+                    selectedConcern === c ? 'bg-[#8b5a2b] text-white border-[#8b5a2b]' : 'bg-white border-[#e8dcc4] text-[#2c2c2c] hover:border-[#8b5a2b] hover:bg-[#f4eedc]'
                   }`}
                  >
-                   {m}
+                   {c}
                  </button>
                )) : (
-                 <div className="p-8 text-center text-slate-700 border-2 border-dashed border-slate-900 rounded-3xl font-bold uppercase text-xs">
-                   Select Make First
+                 <div className="p-8 text-center text-[#8b5a2b]/50 border border-dashed border-[#e8dcc4] bg-white/50 rounded-2xl font-bold uppercase text-[10px] tracking-widest">
+                   Select Skin Type First
                  </div>
                )}
              </div>
            </div>
 
-           {/* Year */}
+           {/* Age Group */}
            <div className="space-y-4">
-             <label className="text-[10px] font-black uppercase text-slate-600 tracking-widest px-4">03 Select Year</label>
-             <div className="grid grid-cols-1 gap-2">
-               {selectedModel ? years.map(y => (
+             <label className="text-[10px] font-bold uppercase text-[#8b5a2b] tracking-[0.2em] px-2 flex items-center gap-2">
+               <Droplets size={12}/> 03 Age Group
+             </label>
+             <div className="grid grid-cols-1 gap-3">
+               {selectedConcern ? ages.map(y => (
                  <button 
                   key={y}
-                  onClick={() => setSelectedYear(y)}
-                  className={`p-6 rounded-3xl border text-left font-black uppercase tracking-tighter transition-all ${
-                    selectedYear === y ? 'bg-emerald-500 text-black border-emerald-500' : 'bg-slate-900 border-slate-800 text-slate-400 hover:border-emerald-500/50'
+                  onClick={() => setSelectedAge(y)}
+                  className={`p-5 rounded-2xl border text-left font-bold uppercase tracking-widest text-sm transition-all shadow-sm ${
+                    selectedAge === y ? 'bg-[#8b5a2b] text-white border-[#8b5a2b]' : 'bg-white border-[#e8dcc4] text-[#2c2c2c] hover:border-[#8b5a2b] hover:bg-[#f4eedc]'
                   }`}
                  >
                    {y}
                  </button>
                )) : (
-                 <div className="p-8 text-center text-slate-700 border-2 border-dashed border-slate-900 rounded-3xl font-bold uppercase text-xs">
-                   Select Model First
+                 <div className="p-8 text-center text-[#8b5a2b]/50 border border-dashed border-[#e8dcc4] bg-white/50 rounded-2xl font-bold uppercase text-[10px] tracking-widest">
+                   Select Concern First
                  </div>
                )}
              </div>
            </div>
         </div>
 
-        {selectedYear && (
-          <div className="pt-10 flex flex-col items-center space-y-8 animate-in fade-in zoom-in duration-500">
-            <div className="flex items-center space-x-4 bg-emerald-500/10 px-8 py-4 rounded-full border border-emerald-500/20">
-               <CheckCircle size={20} className="text-emerald-500" />
-               <span className="font-black uppercase tracking-widest text-sm text-emerald-400">Configuration Verified</span>
+        {selectedAge && (
+          <div className="pt-12 flex flex-col items-center space-y-8 animate-in fade-in zoom-in duration-500">
+            <div className="flex items-center space-x-4 bg-[#f4eedc] px-8 py-3 rounded-full border border-[#e8dcc4]">
+               <CheckCircle size={18} className="text-[#8b5a2b]" />
+               <span className="font-bold uppercase tracking-widest text-xs text-[#8b5a2b]">Profile Analyzed</span>
             </div>
             <button 
-              onClick={handleSaveGarage}
-              className="px-20 py-8 bg-emerald-500 text-black font-black text-3xl uppercase tracking-tighter hover:bg-white hover:scale-105 transition-all shadow-[0_0_80px_rgba(16,185,129,0.4)]"
+              onClick={handleSaveAssessment}
+              className="px-16 py-6 bg-[#8b5a2b] text-white font-bold text-xl uppercase tracking-widest rounded-full hover:bg-[#1a1a1a] hover:scale-105 transition-all shadow-xl"
             >
-              Enter My Garage <ChevronRight className="inline ml-2" size={32} />
+              Generate My Regimen <ChevronRight className="inline ml-2" size={24} />
             </button>
           </div>
         )}
