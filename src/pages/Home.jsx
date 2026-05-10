@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Sparkles, Droplets, ShoppingBag, Star, Leaf, Wind, CheckCircle, ShieldCheck, Heart, Feather, Sun, Moon, ArrowDown } from 'lucide-react';
+import { ArrowRight, Sparkles, Droplets, ShoppingBag, Star, Leaf, Wind, CheckCircle, ShieldCheck, Heart, Feather, Sun, Moon, ArrowDown, ChevronRight } from 'lucide-react';
 import { products as productsApi, categories as categoriesApi, flashSales as flashSalesApi, cart as cartApi } from '../services/api';
 import { SkeletonBlock, ProductGridSkeleton } from '../components/SkeletonLoader';
 
