@@ -3,7 +3,7 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Bell, X, CheckCheck, Trash2, Package, Tag, Info, Star, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
-const API = import.meta.env.VITE_API_URL || import.meta.env.VITE_BASE_URL || 'https://service.anritvox.com';
+const API = import.meta.env.VITE_API_URL || import.meta.env.VITE_BASE_URL || 'https://service.Bhumivera.com';
 
 const TYPE_CONFIG = {
   order:   { icon: Package,     color: 'text-cyan-400',   bg: 'bg-cyan-500/10',   border: 'border-cyan-500/30' },

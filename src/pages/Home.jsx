@@ -20,9 +20,9 @@ const CategoryCard = lazy(() => import('../components/CategoryCard')); //
 
 // --- Image URL Resolution Protocol ---[cite: 11]
 const getImageUrl = (img) => {
-  if (!img) return 'https://www.anritvox.com/logo.webp';
+  if (!img) return 'https://www.Bhumivera.com/logo.webp';
   let path = typeof img === 'object' ? (img.file_path || img.url || img.path) : img;
-  if (!path) return 'https://www.anritvox.com/logo.webp';
+  if (!path) return 'https://www.Bhumivera.com/logo.webp';
   if (path.startsWith('http')) return path;
   
   const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-22cd43cce9bc475680ad496e199706c4.r2.dev';
@@ -311,7 +311,7 @@ export default function Home() {
             className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center"
           >
             <div className="relative aspect-video rounded-[3rem] overflow-hidden group cursor-pointer border border-slate-800 shadow-2xl">
-              <img src="https://images.unsplash.com/photo-1600705722908-bab1e61c0b4d?auto=format&fit=crop&q=80" alt="Anritvox Garage" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
+              <img src="https://images.unsplash.com/photo-1600705722908-bab1e61c0b4d?auto=format&fit=crop&q=80" alt="Bhumivera Garage" className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-1000" />
               <div className="absolute inset-0 bg-black/40 group-hover:bg-black/20 transition-colors duration-500 flex items-center justify-center">
                 <div className="w-20 h-20 bg-emerald-500/90 backdrop-blur-md rounded-full flex items-center justify-center text-black shadow-[0_0_40px_rgba(16,185,129,0.5)] group-hover:scale-110 transition-transform duration-300">
                   <PlayCircle size={32} />
@@ -354,7 +354,7 @@ export default function Home() {
               Activate Your <br/> <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-cyan-400">Hardware Node.</span>
             </h3>
             <p className="text-sm md:text-base text-slate-400 font-medium max-w-xl mx-auto mb-10 leading-relaxed">
-              Register your Anritvox E-Warranty today. Experience 100% replacement coverage for any manufacturing defects. Pure peace of mind.
+              Register your Bhumivera E-Warranty today. Experience 100% replacement coverage for any manufacturing defects. Pure peace of mind.
             </p>
             
             <div className="flex flex-col sm:flex-row justify-center gap-4">

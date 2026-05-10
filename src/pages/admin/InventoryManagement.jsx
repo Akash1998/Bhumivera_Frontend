@@ -151,7 +151,7 @@ export default function InventoryManagement() {
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Inventory Audit");
-    XLSX.writeFile(workbook, `Anritvox_Inventory_Telemetry_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.writeFile(workbook, `Bhumivera_Inventory_Telemetry_${new Date().toISOString().split('T')[0]}.xlsx`);
     showToast('XLSX Audit Exported', 'success');
   };
 

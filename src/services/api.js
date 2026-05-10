@@ -1,6 +1,6 @@
 import axios from "axios";
 
-let b = import.meta.env.VITE_BASE_URL || "https://service.anritvox.com";
+let b = import.meta.env.VITE_BASE_URL || "https://service.Bhumivera.com";
 if (b.startsWith("http://") && !b.includes("localhost")) b = b.replace("http://", "https://");
 export const BASE_URL = b;
 

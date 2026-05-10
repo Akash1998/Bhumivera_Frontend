@@ -34,7 +34,7 @@ export default function Navbar() {
   // Synchronize Garage Data from LocalStorage[cite: 12]
   useEffect(() => {
     const checkGarage = () => {
-      const stored = localStorage.getItem('anritvox_garage');
+      const stored = localStorage.getItem('Bhumivera_garage');
       if (stored) {
         setGarageData(JSON.parse(stored));
         setGarageActive(true);
@@ -136,7 +136,7 @@ export default function Navbar() {
           {/* LOGO */}
           <Link to="/" className="flex items-center space-x-3 group shrink-0">
             <div className="w-10 h-10 bg-emerald-500 rounded-xl flex items-center justify-center font-black text-slate-950 text-xl group-hover:rotate-[15deg] transition-transform shadow-[0_0_15px_rgba(16,185,129,0.4)]">A</div>
-            <span className="text-2xl font-black tracking-tighter italic uppercase text-white hidden sm:block">Anritvox</span>
+            <span className="text-2xl font-black tracking-tighter italic uppercase text-white hidden sm:block">Bhumivera</span>
           </Link>
 
           {/* AI-POWERED SEARCH ENGINE */}

@@ -3,15 +3,15 @@
   "routes": [
     {
       "src": "/api/(.*)",
-      "dest": "https://service.anritvox.com/api/$1"
+      "dest": "https://service.Bhumivera.com/api/$1"
     },
     {
       "src": "/warehouse",
-      "dest": "https://service.anritvox.com/warehouse"
+      "dest": "https://service.Bhumivera.com/warehouse"
     },
     {
       "src": "/warehouseadmin",
-      "dest": "https://service.anritvox.com/warehouseadmin"
+      "dest": "https://service.Bhumivera.com/warehouseadmin"
     },
     {
       "src": "/assets/(.*)",

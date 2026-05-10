@@ -3,7 +3,7 @@ import { Turnstile } from '@marsidev/react-turnstile';
 import { useAuth } from '../context/AuthContext';
 import './AdminLogin.css';
 
-const API = import.meta.env.VITE_API_URL || 'https://service.anritvox.com';
+const API = import.meta.env.VITE_API_URL || 'https://service.Bhumivera.com';
 
 const WarehouseAdminLogin = () => {
   const [step, setStep] = useState(1);
@@ -37,7 +37,7 @@ const WarehouseAdminLogin = () => {
   };
 
   return (
-    <div className="admin-login-wrapper"><div className="admin-login-box"><div className="admin-login-header"><h1>ANRITVOX</h1><span className="terminal-tag">WAREHOUSE PORTAL</span></div>{step === 1 ? (<form onSubmit={handleRequestOtp}><div className="form-group"><label>Warehouse Admin Email</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="warehouse@anritvox.com" required autoComplete="email" /></div><Turnstile ref={turnstileRef} siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY} onSuccess={token => setTurnstileToken(token)} onExpire={() => setTurnstileToken(null)} theme="dark" /><button type="submit" disabled={loading || !turnstileToken}>{loading ? 'SENDING OTP...' : 'SEND LOGIN OTP'}</button></form>) : (<form onSubmit={handleVerifyOtp}><div className="form-group"><label>OTP sent to {email}</label><input type="text" value={otp} onChange={e => setOtp(e.target.value)} placeholder="6-digit OTP" maxLength={6} required autoComplete="one-time-code" /></div><Turnstile ref={turnstileRef} siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY} onSuccess={token => setTurnstileToken(token)} onExpire={() => setTurnstileToken(null)} theme="dark" /><button type="submit" disabled={loading || !turnstileToken}>{loading ? 'VERIFYING...' : 'ACCESS WAREHOUSE'}</button><button type="button" className="back-btn" onClick={() => { setStep(1); setOtp(''); setStatus({ type: '', message: '' }); }}>Back</button></form>)}{status.message && <p className={`status-msg ${status.type}`}>{status.message}</p>}</div></div>
+    <div className="admin-login-wrapper"><div className="admin-login-box"><div className="admin-login-header"><h1>Bhumivera</h1><span className="terminal-tag">WAREHOUSE PORTAL</span></div>{step === 1 ? (<form onSubmit={handleRequestOtp}><div className="form-group"><label>Warehouse Admin Email</label><input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="warehouse@Bhumivera.com" required autoComplete="email" /></div><Turnstile ref={turnstileRef} siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY} onSuccess={token => setTurnstileToken(token)} onExpire={() => setTurnstileToken(null)} theme="dark" /><button type="submit" disabled={loading || !turnstileToken}>{loading ? 'SENDING OTP...' : 'SEND LOGIN OTP'}</button></form>) : (<form onSubmit={handleVerifyOtp}><div className="form-group"><label>OTP sent to {email}</label><input type="text" value={otp} onChange={e => setOtp(e.target.value)} placeholder="6-digit OTP" maxLength={6} required autoComplete="one-time-code" /></div><Turnstile ref={turnstileRef} siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY} onSuccess={token => setTurnstileToken(token)} onExpire={() => setTurnstileToken(null)} theme="dark" /><button type="submit" disabled={loading || !turnstileToken}>{loading ? 'VERIFYING...' : 'ACCESS WAREHOUSE'}</button><button type="button" className="back-btn" onClick={() => { setStep(1); setOtp(''); setStatus({ type: '', message: '' }); }}>Back</button></form>)}{status.message && <p className={`status-msg ${status.type}`}>{status.message}</p>}</div></div>
   );
 };
 

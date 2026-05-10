@@ -28,24 +28,24 @@ export default function Footer() {
         <div>
           <h3 className="font-bold text-sm uppercase tracking-wider mb-4 text-slate-200">Get to Know Us</h3>
           <ul className="space-y-3 text-xs md:text-sm text-slate-400">
-            <li><Link to="/about" className="hover:text-cyan-400 transition-colors">About Anritvox</Link></li>
+            <li><Link to="/about" className="hover:text-cyan-400 transition-colors">About Bhumivera</Link></li>
             <li><Link to="/about#careers" className="hover:text-cyan-400 transition-colors">Careers</Link></li>
             <li><Link to="/about" className="hover:text-cyan-400 transition-colors">Press Releases</Link></li>
-            <li><Link to="/about" className="hover:text-cyan-400 transition-colors">Anritvox Science</Link></li>
+            <li><Link to="/about" className="hover:text-cyan-400 transition-colors">Bhumivera Science</Link></li>
           </ul>
         </div>
         <div>
           <h3 className="font-bold text-sm uppercase tracking-wider mb-4 text-slate-200">Connect with Us</h3>
           <ul className="space-y-3 text-xs md:text-sm text-slate-400">
             <li><a href="https://www.instagram.com/the_rsenterprises" target="_blank" rel="noreferrer" className="hover:text-cyan-400 transition-colors">Instagram</a></li>
-            <li><a href="https://facebook.com/anritvox" target="_blank" rel="noreferrer" className="hover:text-cyan-400 transition-colors">Facebook</a></li>
-            <li><a href="https://twitter.com/anritvox" target="_blank" rel="noreferrer" className="hover:text-cyan-400 transition-colors">X (Twitter)</a></li>
+            <li><a href="https://facebook.com/Bhumivera" target="_blank" rel="noreferrer" className="hover:text-cyan-400 transition-colors">Facebook</a></li>
+            <li><a href="https://twitter.com/Bhumivera" target="_blank" rel="noreferrer" className="hover:text-cyan-400 transition-colors">X (Twitter)</a></li>
           </ul>
         </div>
         <div>
           <h3 className="font-bold text-sm uppercase tracking-wider mb-4 text-slate-200">Make Money</h3>
           <ul className="space-y-3 text-xs md:text-sm text-slate-400">
-            <li><Link to="/admin/login" className="hover:text-cyan-400 transition-colors">Sell on Anritvox</Link></li>
+            <li><Link to="/admin/login" className="hover:text-cyan-400 transition-colors">Sell on Bhumivera</Link></li>
             <li><Link to="/contact" className="hover:text-cyan-400 transition-colors">Become an Affiliate</Link></li>
             <li><Link to="/contact" className="hover:text-cyan-400 transition-colors">Advertise Products</Link></li>
           </ul>
@@ -66,7 +66,7 @@ export default function Footer() {
         <Link to="/" className="group">
           {/* Framed App-Icon Style Logo Treatment */}
           <div className="p-2 bg-white/5 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl group-hover:bg-white/10 group-hover:border-cyan-500/50 group-hover:shadow-cyan-500/20 transition-all duration-500 ease-out transform group-active:scale-95">
-             <img src={logo} alt="Anritvox" className="h-10 md:h-12 w-auto object-contain rounded-xl" />
+             <img src={logo} alt="Bhumivera" className="h-10 md:h-12 w-auto object-contain rounded-xl" />
           </div>
         </Link>
         <div className="flex flex-wrap justify-center gap-3 text-[11px] font-bold tracking-widest uppercase text-slate-400 px-4">
@@ -85,7 +85,7 @@ export default function Footer() {
            <Link to="/privacy" className="hover:text-cyan-400 transition-colors">Interest-Based Ads</Link>
         </div>
         <p className="text-[10px] text-slate-600 font-mono tracking-tight">
-          © {currentYear} ANRITVOX. ALL RIGHTS RESERVED. <br className="sm:hidden" /> DEVELOPED BY AKASH PRASAD
+          © {currentYear} Bhumivera. ALL RIGHTS RESERVED. <br className="sm:hidden" /> DEVELOPED BY AKASH PRASAD
         </p>
       </div>
       

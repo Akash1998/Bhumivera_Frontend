@@ -154,7 +154,7 @@ export default function CouponManagement() {
     const worksheet = XLSX.utils.json_to_sheet(worksheetData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Campaign Matrix");
-    XLSX.writeFile(workbook, `Anritvox_Growth_Matrix_${new Date().toISOString().split('T')[0]}.xlsx`);
+    XLSX.writeFile(workbook, `Bhumivera_Growth_Matrix_${new Date().toISOString().split('T')[0]}.xlsx`);
     showToast?.('Telemetry Exported', 'success');
   };
 

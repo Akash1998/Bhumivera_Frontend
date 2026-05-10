@@ -11,7 +11,7 @@ export default function Affiliate() {
     <div className="min-h-screen bg-white font-sans pb-20">
       {/* Hero Section */}
       <div className="bg-gradient-to-b from-slate-900 to-[#232f3e] text-white py-24 px-4 text-center">
-        <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight">Anritvox Partner Program</h1>
+        <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight">Bhumivera Partner Program</h1>
         <p className="text-xl text-gray-300 max-w-2xl mx-auto font-medium">
           Monetize your audience by partnering with the industry leader in premium car audio and automotive accessories.
         </p>
@@ -26,7 +26,7 @@ export default function Affiliate() {
       <div className="max-w-7xl mx-auto px-4 mt-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { icon: DollarSign, title: "High Commissions", desc: "Earn highly competitive rates on every authentic Anritvox product sold through your links." },
+            { icon: DollarSign, title: "High Commissions", desc: "Earn highly competitive rates on every authentic Bhumivera product sold through your links." },
             { icon: Award, title: "Premium Brand", desc: "Promote a brand recognized for uncompromising quality and scientific acoustic engineering." },
             { icon: Target, title: "High Conversion", desc: "Benefit from our optimized checkout process, E-Warranty security, and brand trust." },
             { icon: TrendingUp, title: "Dedicated Support", desc: "Get access to exclusive marketing materials, product sheets, and partner support." }

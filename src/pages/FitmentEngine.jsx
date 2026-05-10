@@ -30,7 +30,7 @@ export default function FitmentEngine() {
   const handleSaveGarage = () => {
     if (selectedMake && selectedModel && selectedYear) {
       const garageData = { make: selectedMake, model: selectedModel, year: selectedYear };
-      localStorage.setItem('anritvox_garage', JSON.stringify(garageData));
+      localStorage.setItem('Bhumivera_garage', JSON.stringify(garageData));
       window.dispatchEvent(new Event('storage')); // Trigger update in other components
       navigate('/shop?fitment=active');
     }
@@ -44,7 +44,7 @@ export default function FitmentEngine() {
             <Car size={48} />
           </div>
           <h1 className="text-7xl font-black uppercase tracking-tighter italic italic leading-none">
-            Anritvox <br /> <span className="text-emerald-500">Fitment</span> Engine
+            Bhumivera <br /> <span className="text-emerald-500">Fitment</span> Engine
           </h1>
           <p className="text-slate-500 font-bold uppercase tracking-[0.2em] text-sm">
             Configure your vehicle to see products guaranteed to fit.

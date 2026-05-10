@@ -13,7 +13,7 @@ const ProductCard = ({ product }) => {
     <div className="group relative flex flex-col bg-slate-900 border border-slate-800 rounded-[2.5rem] overflow-hidden hover:border-emerald-500/30 transition-all duration-500">
       <Link to={`/product/${product.slug || product.id}`} className="relative aspect-square overflow-hidden bg-black/20">
         <img 
-          src={product.image_url || 'https://www.anritvox.com/logo.webp'} 
+          src={product.image_url || 'https://www.Bhumivera.com/logo.webp'} 
           className="w-full h-full object-contain p-8 group-hover:scale-110 transition-transform duration-700" 
           alt={product.name} 
         />

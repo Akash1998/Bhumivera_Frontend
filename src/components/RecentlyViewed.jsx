@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { Clock, Eye, ShoppingCart, Trash2, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const STORAGE_KEY = 'anritvox_recently_viewed';
+const STORAGE_KEY = 'Bhumivera_recently_viewed';
 const MAX_ITEMS = 8;
 
 export function addToRecentlyViewed(product) {

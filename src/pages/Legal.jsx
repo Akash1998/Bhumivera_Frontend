@@ -22,7 +22,7 @@ export default function Legal() {
           {isPrivacy ? (
             <>
               <h2 className="text-2xl font-bold text-gray-900 mt-8">1. Information We Collect</h2>
-              <p>We collect information to provide better services to our users. This includes basic details like your IP address, to more complex things like the Anritvox products you register via our E-Warranty system.</p>
+              <p>We collect information to provide better services to our users. This includes basic details like your IP address, to more complex things like the Bhumivera products you register via our E-Warranty system.</p>
               
               <h2 className="text-2xl font-bold text-gray-900 mt-8">2. How We Use Your Data</h2>
               <p>Your data helps us authenticate your premium hardware, process returns efficiently, and ensure you have 100% purchase protection. We never sell your personal data to third parties.</p>
@@ -30,10 +30,10 @@ export default function Legal() {
           ) : (
             <>
               <h2 className="text-2xl font-bold text-gray-900 mt-8">1. Acceptance of Terms</h2>
-              <p>By using Anritvox services or purchasing our automotive and audio products, you agree to these conditions. Please read them carefully.</p>
+              <p>By using Bhumivera services or purchasing our automotive and audio products, you agree to these conditions. Please read them carefully.</p>
               
               <h2 className="text-2xl font-bold text-gray-900 mt-8">2. E-Warranty & Returns</h2>
-              <p>All authentic Anritvox products come with a manufacturer warranty. Serial numbers must be registered in our nexus to claim 100% purchase protection. Unregistered or tampered serials void this agreement.</p>
+              <p>All authentic Bhumivera products come with a manufacturer warranty. Serial numbers must be registered in our nexus to claim 100% purchase protection. Unregistered or tampered serials void this agreement.</p>
             </>
           )}
           

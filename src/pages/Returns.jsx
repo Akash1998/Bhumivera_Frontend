@@ -14,7 +14,7 @@ export default function Returns() {
         <RefreshCcw className="w-16 h-16 mx-auto mb-6 text-blue-500" />
         <h1 className="text-4xl md:text-5xl font-bold mb-6">Returns & Replacements</h1>
         <p className="text-lg text-gray-300 max-w-2xl mx-auto">
-          We stand by the quality of our premium audio systems. If your Anritvox product doesn't meet your expectations, we are here to make it right.
+          We stand by the quality of our premium audio systems. If your Bhumivera product doesn't meet your expectations, we are here to make it right.
         </p>
       </div>
 

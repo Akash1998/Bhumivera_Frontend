@@ -149,7 +149,7 @@ export default function Contact() {
             <div className="bg-slate-900/40 border border-slate-800 p-6 rounded-[2rem]">
               <Mail className="text-blue-500 mb-4" size={24} />
               <h4 className="text-[10px] font-black uppercase tracking-widest mb-1">Direct Comms</h4>
-              <p className="text-sm font-bold text-white">support@anritvox.com</p>
+              <p className="text-sm font-bold text-white">support@Bhumivera.com</p>
             </div>
             <div className="bg-slate-900/40 border border-slate-800 p-6 rounded-[2rem]">
               <Phone className="text-emerald-500 mb-4" size={24} />

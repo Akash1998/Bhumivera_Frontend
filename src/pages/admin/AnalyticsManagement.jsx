@@ -284,7 +284,7 @@ const mockCategories = [
   { name: 'Ambience Kits', amount: 195000 }, { name: 'Wiring & Relays', amount: 85000 }
 ];
 const mockTopProducts = [
-  { name: 'Anritvox Pro Basstube 12"', sku: 'AV-BT-12P', category: 'Audio', units: 142, revenue: 120500 },
+  { name: 'Bhumivera Pro Basstube 12"', sku: 'AV-BT-12P', category: 'Audio', units: 142, revenue: 120500 },
   { name: 'H4 LED Headlight Kit 120W', sku: 'AV-LED-H4', category: 'Lighting', units: 310, revenue: 95000 },
   { name: 'App Controlled RGB Ambience', sku: 'AV-RGB-APP', category: 'Interior', units: 84, revenue: 65000 },
   { name: 'Premium Wiring Kit 4 Gauge', sku: 'AV-WK-4G', category: 'Accessories', units: 215, revenue: 45000 },

@@ -145,7 +145,7 @@ const QASection = ({ productId }) => {
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xs font-black text-gray-900">Anritvox Expert</span>
+                      <span className="text-xs font-black text-gray-900">Bhumivera Expert</span>
                       <span className="bg-blue-600 text-white text-[8px] px-1.5 py-0.5 rounded-sm font-black uppercase">Official</span>
                     </div>
                     <p className="text-sm font-medium text-gray-600 leading-relaxed">{q.answer}</p>

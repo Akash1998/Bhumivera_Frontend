@@ -25,7 +25,7 @@ export const CartProvider = ({ children }) => {
         setCartLoading(false);
       }
     } else {
-      const saved = localStorage.getItem("anritvox_guest_cart");
+      const saved = localStorage.getItem("Bhumivera_guest_cart");
       if (saved) setCart(JSON.parse(saved));
       else setCart([]);
     }
@@ -46,7 +46,7 @@ export const CartProvider = ({ children }) => {
       else updated.push({ product_id: prodId, id: prodId, product, quantity: qty });
       
       setCart(updated);
-      localStorage.setItem("anritvox_guest_cart", JSON.stringify(updated));
+      localStorage.setItem("Bhumivera_guest_cart", JSON.stringify(updated));
     }
     await loadCart();
     setIsCartOpen(true); 
@@ -68,7 +68,7 @@ export const CartProvider = ({ children }) => {
       const idx = updated.findIndex(i => i.product_id === productId || i.id === productId);
       if (idx > -1) updated[idx].quantity = newQty;
       setCart(updated);
-      localStorage.setItem("anritvox_guest_cart", JSON.stringify(updated));
+      localStorage.setItem("Bhumivera_guest_cart", JSON.stringify(updated));
     }
     await loadCart();
   };
@@ -79,7 +79,7 @@ export const CartProvider = ({ children }) => {
     } else {
       const updated = cart.filter(i => i.product_id !== id && i.id !== id);
       setCart(updated);
-      localStorage.setItem("anritvox_guest_cart", JSON.stringify(updated));
+      localStorage.setItem("Bhumivera_guest_cart", JSON.stringify(updated));
     }
     await loadCart();
   };
@@ -88,7 +88,7 @@ export const CartProvider = ({ children }) => {
     if (isAuthenticated) {
       await cartApi.clear();
     } else {
-      localStorage.removeItem("anritvox_guest_cart");
+      localStorage.removeItem("Bhumivera_guest_cart");
     }
     setCart([]);
   };

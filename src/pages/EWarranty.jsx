@@ -321,7 +321,7 @@ export default function EWarranty() {
 
                 <div>
                   <div className="flex flex-col md:flex-row justify-between items-center md:items-start border-b-2 border-slate-200 pb-8 mb-8 text-center md:text-left relative z-10">
-                    <img src="/logo.webp" alt="Anritvox Logo" className="h-16 md:h-20 mb-4 md:mb-0" />
+                    <img src="/logo.webp" alt="Bhumivera Logo" className="h-16 md:h-20 mb-4 md:mb-0" />
                     <div className="md:text-right">
                       <h1 className="text-3xl md:text-4xl font-serif text-slate-800 tracking-widest font-bold uppercase">E-Warranty</h1>
                       <p className="text-yellow-600 font-bold tracking-widest uppercase text-sm md:text-md mt-1">Certificate of Authenticity</p>
@@ -360,14 +360,14 @@ export default function EWarranty() {
                   <div className="text-left mb-6 md:mb-0">
                     <div className="flex items-center gap-2 text-slate-800 font-bold mb-1">
                       <ExternalLink size={16} className="text-blue-600"/> 
-                      <a href="https://www.anritvox.com" target="_blank" rel="noreferrer" className="hover:underline">www.anritvox.com</a>
+                      <a href="https://www.Bhumivera.com" target="_blank" rel="noreferrer" className="hover:underline">www.Bhumivera.com</a>
                     </div>
                     <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
                       This digital certificate verifies the authenticity of your product. For support, warranty claims, and exclusive accessories, visit our official website.
                     </p>
                   </div>
                   <div className="text-center text-slate-800">
-                    <div className="font-signature text-3xl text-slate-800 mb-2 italic">Anritvox Auth</div>
+                    <div className="font-signature text-3xl text-slate-800 mb-2 italic">Bhumivera Auth</div>
                     <div className="w-48 h-px bg-slate-800 mx-auto mb-2"></div>
                     <p className="text-xs font-bold uppercase tracking-widest">Authorized Signatory</p>
                   </div>

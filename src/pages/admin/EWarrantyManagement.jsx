@@ -110,7 +110,7 @@ export default function EWarrantyManagement() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `Anritvox_Serial_Registry_${new Date().toISOString().split('T')[0]}.csv`;
+    a.download = `Bhumivera_Serial_Registry_${new Date().toISOString().split('T')[0]}.csv`;
     a.click();
   };
 

@@ -3,7 +3,7 @@ import { Turnstile } from '@marsidev/react-turnstile';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AdminLogin.css';
-const API = import.meta.env.VITE_API_URL || 'https://service.anritvox.com';
+const API = import.meta.env.VITE_API_URL || 'https://service.Bhumivera.com';
 const AdminLogin = () => {
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
@@ -58,14 +58,14 @@ const AdminLogin = () => {
     <div className="admin-login-wrapper">
       <div className="admin-login-box">
         <div className="admin-login-header">
-          <h1>ANRITVOX</h1>
+          <h1>Bhumivera</h1>
           <span className="terminal-tag">ADMIN PORTAL</span>
         </div>
         {step === 1 ? (
           <form onSubmit={handleRequestOtp}>
             <div className="form-group">
               <label>Admin Email</label>
-              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@anritvox.com" required autoComplete="email" />
+              <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="admin@Bhumivera.com" required autoComplete="email" />
             </div>
             <Turnstile ref={turnstileRef} siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY} onSuccess={token => setTurnstileToken(token)} onExpire={() => setTurnstileToken(null)} theme="dark" />
             <button type="submit" disabled={loading || !turnstileToken}>{loading ? 'SENDING OTP...' : 'SEND LOGIN OTP'}</button>

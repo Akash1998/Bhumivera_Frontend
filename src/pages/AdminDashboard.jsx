@@ -186,7 +186,7 @@ export default function AdminDashboard() {
               <span className="text-slate-950 font-black text-sm tracking-tighter">AV</span>
             </div>
             <div className={`overflow-hidden transition-all duration-500 ${isSidebarOpen ? 'w-32 opacity-100' : 'w-0 opacity-0'}`}>
-              <span className="text-white font-black tracking-[0.15em] text-sm block">ANRITVOX</span>
+              <span className="text-white font-black tracking-[0.15em] text-sm block">Bhumivera</span>
               <span className="text-emerald-500 font-mono text-[9px] uppercase tracking-widest block">Root Access</span>
             </div>
           </div>

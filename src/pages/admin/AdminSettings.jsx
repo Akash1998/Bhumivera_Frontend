@@ -128,11 +128,11 @@ export default function AdminSettings() {
         <div className="space-y-3 text-gray-400">
           <div className="flex justify-between">
             <span>Site Name:</span>
-            <span className="text-white">Anritvox</span>
+            <span className="text-white">Bhumivera</span>
           </div>
           <div className="flex justify-between">
             <span>Domain:</span>
-            <span className="text-white">anritvox.com</span>
+            <span className="text-white">Bhumivera.com</span>
           </div>
           <div className="flex justify-between">
             <span>Payment Method:</span>

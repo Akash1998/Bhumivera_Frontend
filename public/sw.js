@@ -1,6 +1,6 @@
-// Anritvox Service Worker - PWA Install + Caching
-const CACHE_NAME = 'anritvox-v3';
-const STATIC_CACHE = 'anritvox-static-v3';
+// Bhumivera Service Worker - PWA Install + Caching
+const CACHE_NAME = 'Bhumivera-v3';
+const STATIC_CACHE = 'Bhumivera-static-v3';
 
 // Assets to pre-cache (static shell only)
 const PRECACHE_URLS = [
@@ -74,13 +74,13 @@ self.addEventListener('fetch', (event) => {
 
 // Push notification support
 self.addEventListener('push', (event) => {
-  const data = event.data?.json() || { title: 'Anritvox', body: 'New notification' };
+  const data = event.data?.json() || { title: 'Bhumivera', body: 'New notification' };
   event.waitUntil(
-    self.registration.showNotification(data.title || 'Anritvox', {
+    self.registration.showNotification(data.title || 'Bhumivera', {
       body: data.body || '',
       icon: '/logo.webp',
       badge: '/favicon.ico',
-      tag: data.tag || 'anritvox-notification',
+      tag: data.tag || 'Bhumivera-notification',
       data: data.url ? { url: data.url } : {}
     })
   );

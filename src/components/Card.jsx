@@ -8,11 +8,11 @@ export default function Card({ product }) {
   const [garage, setGarage] = useState(null);
 
   useEffect(() => {
-    const stored = localStorage.getItem('anritvox_garage');
+    const stored = localStorage.getItem('Bhumivera_garage');
     if (stored) setGarage(JSON.parse(stored));
     
     const handleStorage = () => {
-      const updated = localStorage.getItem('anritvox_garage');
+      const updated = localStorage.getItem('Bhumivera_garage');
       setGarage(updated ? JSON.parse(updated) : null);
     };
     window.addEventListener('storage', handleStorage);
