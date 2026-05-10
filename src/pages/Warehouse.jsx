@@ -29,7 +29,7 @@ export default function Warehouse() {
     localStorage.removeItem('warehouseToken');
     localStorage.removeItem('user');
     localStorage.removeItem('warehouseUser');
-    navigate('/login');
+    navigate('/warehouseadmin');
   }, [navigate]);
 
   const init = useCallback(async () => {
