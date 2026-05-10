@@ -188,7 +188,6 @@ export default function Home() {
               <div className="absolute inset-0 bg-black/20" />
             </div>
           ))}
-        </div>
         
         <div className="absolute inset-0 flex flex-col items-center justify-center px-6 z-20 pointer-events-none">
           <AnimatePresence mode="wait">
