@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth as authApi, users as usersApi } from '../services/api';
+
 const AuthContext = createContext(null);
+
 const decodeJWT = (token) => {
   try {
     const base64Url = token.split('.')[1];
@@ -8,10 +10,12 @@ const decodeJWT = (token) => {
     return JSON.parse(window.atob(base64));
   } catch (e) { return null; }
 };
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [token, setToken] = useState(localStorage.getItem('token') || null);
   const [loading, setLoading] = useState(true);
+
   useEffect(() => {
     const initAuth = async () => {
       const storedToken = localStorage.getItem('token');
@@ -37,6 +41,7 @@ export const AuthProvider = ({ children }) => {
     window.addEventListener('auth-expired', handleAuthExpired);
     return () => window.removeEventListener('auth-expired', handleAuthExpired);
   }, []);
+
   const login = async (credentials) => {
     const res = await authApi.login(credentials);
     if (res.status === 202 || res.data?.requires2FA) throw new Error("MFA Verification Required");
@@ -49,6 +54,7 @@ export const AuthProvider = ({ children }) => {
     setUser(finalUser);
     return finalUser;
   };
+
   const mobileLogin = async (data) => {
     const res = await authApi.mobileLoginVerify(data);
     const { token: newToken, user: userData } = res.data;
@@ -60,6 +66,7 @@ export const AuthProvider = ({ children }) => {
     setUser(finalUser);
     return finalUser;
   };
+
   const adminLogin = async (credentials) => {
     const res = await authApi.adminLogin(credentials);
     const { token: newToken, admin: adminData } = res.data;
@@ -69,6 +76,7 @@ export const AuthProvider = ({ children }) => {
     setUser(finalUser);
     return finalUser;
   };
+
   const adminOtpVerify = async (data) => {
     const finalUser = { ...data.admin, role: data.admin.role || 'admin' };
     localStorage.setItem('token', data.token);
@@ -77,10 +85,22 @@ export const AuthProvider = ({ children }) => {
     setUser(finalUser);
     return finalUser;
   };
+
+  // ADDED: Dedicated method to sync warehouse login state globally instantly
+  const warehouseLoginVerify = (data) => {
+    const finalUser = { ...data.admin, role: data.admin.role || 'warehouse_admin' };
+    localStorage.setItem('token', data.token);
+    localStorage.setItem('user', JSON.stringify(finalUser));
+    setToken(data.token);
+    setUser(finalUser);
+    return finalUser;
+  };
+
   const register = async (data) => {
     const res = await authApi.register(data);
     return res.data;
   };
+
   const verifyEmail = async (data) => {
     const res = await authApi.verifyEmail(data);
     const { token: newToken, user: userData } = res.data;
@@ -92,6 +112,7 @@ export const AuthProvider = ({ children }) => {
     setUser(finalUser);
     return finalUser;
   };
+
   const logout = () => {
     localStorage.removeItem('token');
     localStorage.removeItem('user');
@@ -101,10 +122,16 @@ export const AuthProvider = ({ children }) => {
       window.location.href = '/login';
     }
   };
+
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, loading, login, mobileLogin, adminLogin, adminOtpVerify, register, verifyEmail, logout }}>
+    <AuthContext.Provider value={{ 
+      user, token, isAuthenticated: !!token, loading, 
+      login, mobileLogin, adminLogin, adminOtpVerify, warehouseLoginVerify, 
+      register, verifyEmail, logout 
+    }}>
       {!loading && children}
     </AuthContext.Provider>
   );
 };
+
 export const useAuth = () => useContext(AuthContext);
