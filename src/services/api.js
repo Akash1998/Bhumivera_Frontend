@@ -6,11 +6,11 @@ export const BASE_URL = b;
 
 const api = axios.create({ baseURL: `${BASE_URL}/api`, withCredentials: true });
 
-api.interceptors.request.use(c => { const t = localStorage.getItem("token") || localStorage.getItem("ms_token"); if (t) c.headers.Authorization = `Bearer ${t}`; return c; }, e => Promise.reject(e));
+api.interceptors.request.use(c => { const t = localStorage.getItem("token") || localStorage.getItem("warehouseToken") || localStorage.getItem("ms_token"); if (t) c.headers.Authorization = `Bearer ${t}`; return c; }, e => Promise.reject(e));
 
 api.interceptors.response.use(r => r, e => {
-  if (e.response?.status === 401 && !e.config.url.includes('/auth/') && !window.location.pathname.includes('/warehouse')) {
-    ['token', 'ms_token', 'user'].forEach(k => localStorage.removeItem(k));
+  if (e.response?.status === 401 && !e.config.url.includes('/auth/') && !window.location.pathname.startsWith('/warehouse')) {
+    ['token', 'ms_token', 'warehouseToken', 'user'].forEach(k => localStorage.removeItem(k));
     window.dispatchEvent(new Event('auth-expired'));
   }
   return Promise.reject(e);
