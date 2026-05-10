@@ -34,8 +34,10 @@ const Returns = lazy(() => import("./pages/Returns.jsx"));
 const Affiliate = lazy(() => import("./pages/Affiliate.jsx"));
 const About = lazy(() => import("./pages/About.jsx"));
 const Legal = lazy(() => import("./pages/Legal.jsx"));
+// Ensure the FitmentEngine component is properly imported so the route can render it
+const FitmentEngine = lazy(() => import("./pages/FitmentEngine.jsx")); 
 
-const PageLoader = () => <div className="min-h-screen bg-black flex items-center justify-center"><div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div></div>;
+const PageLoader = () => <div className="min-h-screen bg-[#faf8f5] flex items-center justify-center"><div className="w-12 h-12 border-4 border-[#e8dcc4] border-t-[#8b5a2b] rounded-full animate-spin"></div></div>;
 
 function ProtectedRoute({ children }) {
   const a = useAuth() || {}; const u = a.user || JSON.parse(localStorage.getItem('user') || 'null'); const t = localStorage.getItem('token');
@@ -66,6 +68,7 @@ function AppContent() {
           <Route path="/" element={<Home />} />
           <Route path="/shop" element={<Shop />} />
           <Route path="/product/:id" element={<ProductDetail />} />
+          <Route path="/fitment-engine" element={<FitmentEngine />} />
           <Route path="/ewarranty" element={<EWarranty />} />
           <Route path="/warranty" element={<EWarranty />} />
           <Route path="/contact" element={<Contact />} />
