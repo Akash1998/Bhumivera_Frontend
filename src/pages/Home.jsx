@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
-import { ArrowRight, Sparkles, Droplets, ShoppingBag, Star, Leaf, Wind, CheckCircle, ShieldCheck, Heart, Feather, Sun, Moon, ArrowDown, ChevronRight } from 'lucide-react';
+import { ArrowRight, Sparkles, Droplets, ShoppingBag, Star, Leaf, Wind, ShieldCheck, Heart, Feather, Sun, ArrowDown, ChevronRight } from 'lucide-react';
 import { products as productsApi, categories as categoriesApi, flashSales as flashSalesApi, cart as cartApi } from '../services/api';
 import { SkeletonBlock, ProductGridSkeleton } from '../components/SkeletonLoader';
 
@@ -47,19 +47,19 @@ export default function Home() {
   const [currentSlide, setCurrentSlide] = useState(0);
 
   const heroContent = [
-    { img: "AD1.webp", title: "Bhumivera", subtitle: "The Essence of Earth & Water", quote: "Where ancient soil meets the purest hydration." },
-    { img: "AD2.webp", title: "Pure Botanicals", subtitle: "Unearthing Ancient Beauty Secrets", quote: "Nature does not hurry, yet everything is accomplished." },
-    { img: "AD3.webp", title: "Earthy Elegance", subtitle: "100% Natural, 100% You", quote: "Your skin is a garden. Tend to it with truth." }
+    { img: "Promo1.webp", title: "Bhumivera", subtitle: "The Essence of Earth & Water", quote: "Where ancient soil meets the purest hydration." },
+    { img: "Promo2.webp", title: "Pure Botanicals", subtitle: "Unearthing Ancient Beauty Secrets", quote: "Nature does not hurry, yet everything is accomplished." },
+    { img: "Promo3.webp", title: "Earthy Elegance", subtitle: "100% Natural, 100% You", quote: "Your skin is a garden. Tend to it with truth." }
   ];
 
   const editorialGallery = [
-    { img: "AD4.webp", quote: "Nature's Embrace.", span: "col-span-1 md:col-span-2 row-span-2", align: "justify-end" },
-    { img: "AD5.webp", quote: "Glow From Within.", span: "col-span-1 row-span-1", align: "justify-center" },
-    { img: "AD6.webp", quote: "Purified by Clay.", span: "col-span-1 row-span-1", align: "justify-center" },
-    { img: "AD7.webp", quote: "Soothing Aloe.", span: "col-span-1 md:col-span-2 row-span-1", align: "justify-start" },
-    { img: "AD8.webp", quote: "Timeless Radiance.", span: "col-span-1 row-span-2", align: "justify-end" },
-    { img: "AD9.webp", quote: "Unfiltered Beauty.", span: "col-span-1 row-span-1", align: "justify-center" },
-    { img: "AD10.webp", quote: "Earth's Remedy.", span: "col-span-1 md:col-span-2 row-span-1", align: "justify-end" }
+    { img: "Promo4.webp", quote: "Nature's Embrace.", span: "col-span-1 md:col-span-2 row-span-2", align: "justify-end" },
+    { img: "Promo5.webp", quote: "Glow From Within.", span: "col-span-1 row-span-1", align: "justify-center" },
+    { img: "Promo6.webp", quote: "Purified by Clay.", span: "col-span-1 row-span-1", align: "justify-center" },
+    { img: "Promo7.webp", quote: "Soothing Aloe.", span: "col-span-1 md:col-span-2 row-span-1", align: "justify-start" },
+    { img: "Promo8.webp", quote: "Timeless Radiance.", span: "col-span-1 row-span-2", align: "justify-end" },
+    { img: "Promo9.webp", quote: "Unfiltered Beauty.", span: "col-span-1 row-span-1", align: "justify-center" },
+    { img: "Promo10.webp", quote: "Earth's Remedy.", span: "col-span-1 md:col-span-2 row-span-1", align: "justify-end" }
   ];
 
   const ingredientsList = [
@@ -246,7 +246,7 @@ export default function Home() {
             >
               <motion.div variants={idx % 2 !== 0 ? slideInRight : slideInLeft} className="w-full md:w-1/2 aspect-square rounded-full overflow-hidden bg-[#f4eedc] relative p-4 border border-[#e8dcc4] border-dashed">
                 <div className="w-full h-full rounded-full overflow-hidden relative">
-                  <img src={`/assets/images/AD${idx + 1}.webp`} className="w-full h-full object-cover mix-blend-multiply" alt={ing.name} />
+                  <img src={`/assets/images/Promo${idx + 1}.webp`} className="w-full h-full object-cover mix-blend-multiply" alt={ing.name} />
                   <div className="absolute inset-0 bg-[#8b5a2b]/10 mix-blend-overlay" />
                 </div>
               </motion.div>
@@ -316,7 +316,7 @@ export default function Home() {
 
       <section className="py-40 relative overflow-hidden bg-[#1a1a1a] text-center">
         <motion.div style={{ y: yPosParallax }} className="absolute inset-0 opacity-20 pointer-events-none">
-           <img src="/assets/images/AD8.webp" className="w-full h-full object-cover mix-blend-luminosity" alt="Background" />
+           <img src="/assets/images/Promo8.webp" className="w-full h-full object-cover mix-blend-luminosity" alt="Background" />
         </motion.div>
         
         <div className="max-w-4xl mx-auto px-6 relative z-10">
