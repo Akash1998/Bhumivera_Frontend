@@ -49,7 +49,7 @@ const WarehouseAdminLogin = () => {
       const res = await fetch(`${API}/api/auth/warehouse/verify-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp, turnstileToken })
+        body: JSON.stringify({ email, otp })
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
