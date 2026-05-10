@@ -23,7 +23,7 @@ export const AuthProvider = ({ children }) => {
         try {
           const decodedPayload = decodeJWT(storedToken);
           let fetchedUser;
-          if (decodedPayload?.role === 'admin' || decodedPayload?.role === 'superadmin') {
+          if (decodedPayload?.role === 'admin' || decodedPayload?.role === 'superadmin' || decodedPayload?.role === 'warehouse_admin') {
             const res = await authApi.getAdminProfile();
             fetchedUser = res.data;
           } else {
