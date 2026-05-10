@@ -15,8 +15,6 @@ const WarehouseAdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const turnstileRef = useRef();
   const navigate = useNavigate();
-  
-  // Bring in the new Context function
   const { warehouseLoginVerify } = useAuth();
 
   const handleRequestOtp = async (e) => {
@@ -25,11 +23,7 @@ const WarehouseAdminLogin = () => {
     if (!turnstileToken) { setStatus({ type: 'error', message: 'Bot verification required.' }); return; }
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/auth/warehouse/request-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, turnstileToken })
-      });
+      const res = await fetch(`${API}/api/auth/warehouse/request-otp`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, turnstileToken }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
       setStatus({ type: 'success', message: 'OTP sent! Check your email. Valid for 10 minutes.' });
@@ -46,19 +40,11 @@ const WarehouseAdminLogin = () => {
     if (!turnstileToken) { setStatus({ type: 'error', message: 'Bot verification required.' }); return; }
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/auth/warehouse/verify-otp`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, otp })
-      });
+      const res = await fetch(`${API}/api/auth/warehouse/verify-otp`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ email, otp }) });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      
-      // Instantly sync the React Context state
       warehouseLoginVerify(data);
-      
-      // Fixed Route: Navigate to actual warehouse, not the login loop!
-      navigate('/warehouse');
+      setTimeout(() => navigate('/warehouse'), 150);
     } catch (err) {
       setStatus({ type: 'error', message: err.message || 'Invalid OTP.' });
       if (turnstileRef.current) { turnstileRef.current.reset(); setTurnstileToken(null); }
@@ -78,16 +64,8 @@ const WarehouseAdminLogin = () => {
               <label>Warehouse Admin Email</label>
               <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="warehouse@anritvox.com" required autoComplete="email" />
             </div>
-            <Turnstile
-              ref={turnstileRef}
-              siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
-              onSuccess={token => setTurnstileToken(token)}
-              onExpire={() => setTurnstileToken(null)}
-              theme="dark"
-            />
-            <button type="submit" disabled={loading || !turnstileToken}>
-              {loading ? 'SENDING OTP...' : 'SEND LOGIN OTP'}
-            </button>
+            <Turnstile ref={turnstileRef} siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY} onSuccess={token => setTurnstileToken(token)} onExpire={() => setTurnstileToken(null)} theme="dark" />
+            <button type="submit" disabled={loading || !turnstileToken}>{loading ? 'SENDING OTP...' : 'SEND LOGIN OTP'}</button>
           </form>
         ) : (
           <form onSubmit={handleVerifyOtp}>
@@ -95,19 +73,9 @@ const WarehouseAdminLogin = () => {
               <label>OTP sent to {email}</label>
               <input type="text" value={otp} onChange={e => setOtp(e.target.value)} placeholder="6-digit OTP" maxLength={6} required autoComplete="one-time-code" />
             </div>
-            <Turnstile
-              ref={turnstileRef}
-              siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY}
-              onSuccess={token => setTurnstileToken(token)}
-              onExpire={() => setTurnstileToken(null)}
-              theme="dark"
-            />
-            <button type="submit" disabled={loading || !turnstileToken}>
-              {loading ? 'VERIFYING...' : 'ACCESS WAREHOUSE'}
-            </button>
-            <button type="button" className="back-btn" onClick={() => { setStep(1); setOtp(''); setStatus({ type: '', message: '' }); }}>
-              Back
-            </button>
+            <Turnstile ref={turnstileRef} siteKey={import.meta.env.VITE_TURNSTILE_SITE_KEY} onSuccess={token => setTurnstileToken(token)} onExpire={() => setTurnstileToken(null)} theme="dark" />
+            <button type="submit" disabled={loading || !turnstileToken}>{loading ? 'VERIFYING...' : 'ACCESS WAREHOUSE'}</button>
+            <button type="button" className="back-btn" onClick={() => { setStep(1); setOtp(''); setStatus({ type: '', message: '' }); }}>Back</button>
           </form>
         )}
         {status.message && <p className={`status-msg ${status.type}`}>{status.message}</p>}
