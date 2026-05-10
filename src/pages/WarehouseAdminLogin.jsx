@@ -49,8 +49,8 @@ const WarehouseAdminLogin = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      localStorage.setItem('warehouseToken', data.token);
-      localStorage.setItem('warehouseUser', JSON.stringify(data.admin));
+      localStorage.setItem('token', data.token);
+localStorage.setItem('user', JSON.stringify(data.admin));
       navigate('/warehouseadmin/dashboard');
     } catch (err) {
       setStatus({ type: 'error', message: err.message || 'Invalid OTP.' });
