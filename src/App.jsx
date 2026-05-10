@@ -68,10 +68,12 @@ function WarehouseRoute({ children }) {
   const { user, loading } = useAuth() || { user: null, loading: false };
   if (loading) return <PageLoader />;
   
-  if (!user) return <Navigate to="/login" />;
+  if (!user) return <Navigate to="/warehouseadmin" />;
+    if (user.role === 'admin' || user.role === 'superadmin' || user.role === 'warehouse_admin' || user.role === 'customer') return children;
   
   return children;
 }
+
 
 function AppContent() {
   const location = useLocation();
