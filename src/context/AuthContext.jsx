@@ -2,7 +2,6 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { auth as authApi, users as usersApi } from '../services/api';
 
 const AuthContext = createContext(null);
-
 const decodeJWT = t => { try { return JSON.parse(window.atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch (e) { return null; } };
 
 export const AuthProvider = ({ children }) => {
@@ -14,30 +13,27 @@ export const AuthProvider = ({ children }) => {
     const initAuth = async () => {
       const t = localStorage.getItem('token');
       if (t) {
+        const wp = window.location.pathname.includes('/warehouse');
         try {
           const d = decodeJWT(t);
-          const suRaw = localStorage.getItem('user');
-          const su = suRaw ? JSON.parse(suRaw) : {};
-          const r = d?.role || su?.role || 'user';
-          let fu;
-          if (r === 'admin' || r === 'superadmin') fu = (await authApi.getAdminProfile()).data;
-          else if (r === 'warehouse_admin') fu = su?.role === 'warehouse_admin' ? su : { role: 'warehouse_admin' };
-          else fu = (await usersApi.getProfile()).data?.user || (await usersApi.getProfile()).data;
-          const f = { ...fu, role: r };
-          setUser(f);
-          localStorage.setItem('user', JSON.stringify(f));
-          setToken(t);
-        } catch (e) {
           const su = JSON.parse(localStorage.getItem('user') || '{}');
-          if (su?.role === 'warehouse_admin') { setUser(su); setToken(t); } else logout();
+          const r = wp ? 'warehouse_admin' : (d?.role || su?.role || 'user');
+          let fu = su;
+          if (!wp) {
+            if (r === 'admin' || r === 'superadmin') fu = (await authApi.getAdminProfile()).data;
+            else fu = (await usersApi.getProfile()).data?.user || (await usersApi.getProfile()).data;
+          }
+          const f = { ...fu, role: r };
+          setUser(f); localStorage.setItem('user', JSON.stringify(f)); setToken(t);
+        } catch (e) {
+          if (wp) { const su = JSON.parse(localStorage.getItem('user') || '{}'); setUser(su); setToken(t); } 
+          else logout();
         }
       }
       setLoading(false);
     };
     initAuth();
-    const he = () => logout();
-    window.addEventListener('auth-expired', he);
-    return () => window.removeEventListener('auth-expired', he);
+    const he = () => logout(); window.addEventListener('auth-expired', he); return () => window.removeEventListener('auth-expired', he);
   }, []);
 
   const login = async c => { const r = await authApi.login(c); if (r.status === 202 || r.data?.requires2FA) throw new Error("MFA Verification Required"); const { token: nt, user: ud } = r.data; const d = decodeJWT(nt); const f = { ...ud, role: d?.role || ud?.role || 'user' }; localStorage.setItem('token', nt); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
