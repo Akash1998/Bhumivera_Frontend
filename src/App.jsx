@@ -35,32 +35,21 @@ const Affiliate = lazy(() => import("./pages/Affiliate.jsx"));
 const About = lazy(() => import("./pages/About.jsx"));
 const Legal = lazy(() => import("./pages/Legal.jsx"));
 
-const PageLoader = () => (
-  <div className="min-h-screen bg-black flex items-center justify-center">
-    <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
-  </div>
-);
+const PageLoader = () => <div className="min-h-screen bg-black flex items-center justify-center"><div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div></div>;
 
 function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth() || { user: null, loading: false };
-  if (loading) return <PageLoader />;
-  if (!user) return <Navigate to="/login" />;
-  return children;
+  const a = useAuth() || {}; const u = a.user || JSON.parse(localStorage.getItem('user') || 'null'); const t = localStorage.getItem('token');
+  if (a.loading) return <PageLoader />; if (!u || !t) return <Navigate to="/login" />; return children;
 }
 
 function AdminRoute({ children }) {
-  const { user, loading } = useAuth() || { user: null, loading: false };
-  if (loading) return <PageLoader />;
-  if (!user || (user.role !== 'admin' && user.role !== 'superadmin')) return <Navigate to="/admin-login" />;
-  return children;
+  const a = useAuth() || {}; const u = a.user || JSON.parse(localStorage.getItem('user') || 'null'); const t = localStorage.getItem('token');
+  if (a.loading) return <PageLoader />; if (!u || !t || (u.role !== 'admin' && u.role !== 'superadmin')) return <Navigate to="/admin-login" />; return children;
 }
 
 function WarehouseRoute({ children }) {
-  const { user, loading } = useAuth() || { user: null, loading: false };
-  if (loading) return <PageLoader />;
-  if (!user) return <Navigate to="/warehouseadmin" />;
-  if (user.role === 'admin' || user.role === 'superadmin' || user.role === 'warehouse_admin' || user.role === 'customer') return children;
-  return children;
+  const a = useAuth() || {}; const u = a.user || JSON.parse(localStorage.getItem('user') || 'null'); const t = localStorage.getItem('token');
+  if (a.loading) return <PageLoader />; if (!u || !t) return <Navigate to="/warehouseadmin" />; return children;
 }
 
 function AppContent() {
@@ -111,21 +100,7 @@ function AppContent() {
 }
 
 function App() {
-  return (
-    <BrowserRouter>
-      <AuthProvider>
-        <CartProvider>
-          <WishlistProvider>
-            <CompareProvider>
-              <ToastProvider>
-                <AppContent />
-              </ToastProvider>
-            </CompareProvider>
-          </WishlistProvider>
-        </CartProvider>
-      </AuthProvider>
-    </BrowserRouter>
-  );
+  return <BrowserRouter><AuthProvider><CartProvider><WishlistProvider><CompareProvider><ToastProvider><AppContent /></ToastProvider></CompareProvider></WishlistProvider></CartProvider></AuthProvider></BrowserRouter>;
 }
 
 export default App;
