@@ -48,8 +48,9 @@ function AdminRoute({ children }) {
 }
 
 function WarehouseRoute({ children }) {
-  const a = useAuth() || {}; const u = a.user || JSON.parse(localStorage.getItem('user') || 'null'); const t = localStorage.getItem('token');
-  if (a.loading) return <PageLoader />; if (!u || !t) return <Navigate to="/warehouseadmin" />; return children;
+  const t = localStorage.getItem('token') || localStorage.getItem('warehouseToken');
+  if (!t) return <Navigate to="/warehouseadmin" />;
+  return children;
 }
 
 function AppContent() {
