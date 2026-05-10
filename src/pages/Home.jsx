@@ -1,7 +1,7 @@
-import React, { useState, useEffect, Suspense, lazy, useRef } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, useScroll, useTransform, useInView } from 'framer-motion';
-import { ArrowRight, Sparkles, Droplets, ShoppingBag, Star, Leaf, Wind, CheckCircle, ShieldCheck, Heart, Feather, Sun, Moon, ArrowDown, ChevronRight, Quote, Plus, Minus } from 'lucide-react';
+import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { ArrowRight, Sparkles, Droplets, ShoppingBag, Star, Leaf, Wind, ShieldCheck, Heart, Feather, Sun, ArrowDown, ChevronRight, Quote, Plus, Minus } from 'lucide-react';
 import { products as productsApi, categories as categoriesApi, flashSales as flashSalesApi, cart as cartApi } from '../services/api';
 import { SkeletonBlock, ProductGridSkeleton } from '../components/SkeletonLoader';
 
@@ -33,11 +33,22 @@ const fadeScale = {
   show: { opacity: 1, scale: 1, transition: { duration: 1.2, ease: easeFluid } }
 };
 
+const slideInLeft = {
+  hidden: { opacity: 0, x: -60 },
+  show: { opacity: 1, x: 0, transition: { duration: 1.2, ease: easeFluid } }
+};
+
+const slideInRight = {
+  hidden: { opacity: 0, x: 60 },
+  show: { opacity: 1, x: 0, transition: { duration: 1.2, ease: easeFluid } }
+};
+
 export default function Home() {
   const navigate = useNavigate();
   const { scrollYProgress } = useScroll();
   const yPosHero = useTransform(scrollYProgress, [0, 1], [0, 400]);
   const opacityHero = useTransform(scrollYProgress, [0, 0.5], [1, 0]);
+  const yPosParallax = useTransform(scrollYProgress, [0, 1], [0, -150]);
   
   const [loading, setLoading] = useState(true);
   const [data, setData] = useState({ products: [], categories: [], flashSales: [] });
@@ -69,13 +80,13 @@ export default function Home() {
   ];
 
   const editorialGallery = [
-    { img: "Promo4.webp", quote: "Nature’s quiet embrace heals the deepest layers.", author: "The Bhumivera Ethos", span: "col-span-1 md:col-span-2 row-span-2" },
-    { img: "Promo5.webp", quote: "Radiance born from the soil.", author: "Botanical Truth", span: "col-span-1 row-span-1" },
-    { img: "Promo6.webp", quote: "Purified by timeless clays.", author: "Earth's Magnet", span: "col-span-1 row-span-1" },
-    { img: "Promo7.webp", quote: "Hydration mimicking the morning dew.", author: "Liquid Life", span: "col-span-1 md:col-span-2 row-span-1" },
-    { img: "Promo8.webp", quote: "Defy time with earth's resilience.", author: "Eternal Bloom", span: "col-span-1 row-span-2" },
-    { img: "Promo9.webp", quote: "Unfiltered, unmasked, unapologetic.", author: "Raw Beauty", span: "col-span-1 row-span-1" },
-    { img: "Promo10.webp", quote: "A return to the roots of self-care.", author: "The Ritual", span: "col-span-1 md:col-span-2 row-span-1" }
+    { img: "Promo4.webp", quote: "Nature’s quiet embrace heals the deepest layers.", author: "The Bhumivera Ethos", span: "col-span-1 md:col-span-2 row-span-2", align: "justify-end" },
+    { img: "Promo5.webp", quote: "Radiance born from the soil.", author: "Botanical Truth", span: "col-span-1 row-span-1", align: "justify-center" },
+    { img: "Promo6.webp", quote: "Purified by timeless clays.", author: "Earth's Magnet", span: "col-span-1 row-span-1", align: "justify-center" },
+    { img: "Promo7.webp", quote: "Hydration mimicking the morning dew.", author: "Liquid Life", span: "col-span-1 md:col-span-2 row-span-1", align: "justify-start" },
+    { img: "Promo8.webp", quote: "Defy time with earth's resilience.", author: "Eternal Bloom", span: "col-span-1 row-span-2", align: "justify-end" },
+    { img: "Promo9.webp", quote: "Unfiltered, unmasked, unapologetic.", author: "Raw Beauty", span: "col-span-1 row-span-1", align: "justify-center" },
+    { img: "Promo10.webp", quote: "A return to the roots of self-care.", author: "The Ritual", span: "col-span-1 md:col-span-2 row-span-1", align: "justify-end" }
   ];
 
   const ingredientsList = [
@@ -98,7 +109,6 @@ export default function Home() {
       benefits: ["Antioxidant Shield", "Lipid Replenishment", "Glow Enhancing"]
     }
   ];
-
   const philosophicalQuotes = [
     "We believe that the earth has already perfected the art of healing. Our only job is to bottle it without interference. No artificial colors, no synthetic fragrances, just the raw essence of nature.",
     "True luxury is not found in sterile laboratories, but in the untamed, unadulterated purity of the botanical world. It is the feeling of earth melting into your skin.",
@@ -188,6 +198,7 @@ export default function Home() {
               <div className="absolute inset-0 bg-black/20" />
             </div>
           ))}
+        </div>
         
         <div className="absolute inset-0 flex flex-col items-center justify-center px-6 z-20 pointer-events-none">
           <AnimatePresence mode="wait">
@@ -282,114 +293,6 @@ export default function Home() {
           </div>
         </div>
       </section>
-
-      <section className="py-40 px-6 max-w-7xl mx-auto overflow-hidden bg-[#faf8f5]">
-        <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={staggerContainer} className="mb-32 flex flex-col md:flex-row justify-between items-end gap-12">
-          <div className="max-w-2xl">
-            <motion.h2 variants={slideInLeft} className="text-[10px] font-bold text-[#8b5a2b] uppercase tracking-[0.5em] mb-6">Materia Medica</motion.h2>
-            <motion.h3 variants={slideInLeft} className="text-4xl md:text-6xl lg:text-7xl font-serif text-[#1a1a1a] leading-tight">
-              The anatomy of our formulations.
-            </motion.h3>
-          </div>
-          <motion.div variants={slideInRight}>
-            <p className="text-[#5c4a3d] font-light max-w-md text-xl leading-relaxed">We refuse to use filler ingredients. Every single element in a Bhumivera product serves a distinct, scientifically-backed therapeutic purpose.</p>
-          </motion.div>
-        </motion.div>
-
-        <div className="space-y-40">
-          {ingredientsList.map((ing, idx) => (
-            <motion.div 
-              key={idx}
-              initial="hidden" whileInView="show" viewport={{ once: true, margin: "-100px" }} variants={staggerContainer}
-              className={`flex flex-col ${idx % 2 !== 0 ? 'md:flex-row-reverse' : 'md:flex-row'} gap-16 lg:gap-24 items-center`}
-            >
-              <motion.div variants={fadeScale} className="w-full md:w-1/2 aspect-square rounded-[3rem] overflow-hidden bg-white relative p-4 shadow-[0_20px_40px_rgba(0,0,0,0.05)] border border-[#e8dcc4]">
-                <div className="w-full h-full rounded-[2.5rem] overflow-hidden relative group">
-                  <img src={`/assets/images/Promo${idx + 1}.webp`} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[3000ms] ease-out" alt={ing.name} />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-700" />
-                </div>
-              </motion.div>
-              <motion.div variants={idx % 2 !== 0 ? slideInLeft : slideInRight} className="w-full md:w-1/2 space-y-8">
-                <div className="inline-flex items-center justify-center p-5 rounded-2xl bg-[#f4eedc] border border-[#e8dcc4] shadow-sm">
-                  {ing.icon}
-                </div>
-                <h4 className="text-4xl md:text-5xl lg:text-6xl font-serif text-[#1a1a1a]">{ing.name}</h4>
-                <p className="text-[#5c4a3d] font-light text-xl leading-loose">{ing.desc}</p>
-                <div className="flex flex-wrap gap-3 pt-4">
-                  {ing.benefits.map((ben, i) => (
-                    <span key={i} className="px-4 py-2 rounded-full bg-white border border-[#e8dcc4] text-[10px] font-bold uppercase tracking-widest text-[#8b5a2b] shadow-sm">
-                      {ben}
-                    </span>
-                  ))}
-                </div>
-                <div className="pt-8">
-                  <Link to="/shop" className="px-10 py-4 bg-[#8b5a2b] text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-white hover:text-[#1a1a1a] transition-all duration-500 shadow-xl inline-flex items-center gap-3">
-                    Discover Collection <ArrowRight size={14} />
-                  </Link>
-                </div>
-              </div>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-        
-        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 z-30 animate-bounce text-white/50 flex flex-col items-center gap-2">
-          <span className="text-[9px] font-bold uppercase tracking-widest">Explore</span>
-          <ArrowDown size={16} />
-        </div>
-      </section>
-
-      <section className="py-32 px-6 max-w-6xl mx-auto relative z-10 bg-[#faf8f5]">
-        <motion.div initial="hidden" whileInView="show" viewport={{ once: true, margin: "-100px" }} variants={staggerContainer} className="text-center">
-          <motion.h2 variants={fadeUp} className="text-[10px] font-bold text-[#8b5a2b] uppercase tracking-[0.5em] mb-10 flex items-center justify-center gap-4">
-            <div className="w-12 h-px bg-[#8b5a2b]/30" />
-            The Manifesto
-            <div className="w-12 h-px bg-[#8b5a2b]/30" />
-          </motion.h2>
-          <motion.h3 variants={fadeUp} className="text-3xl md:text-5xl lg:text-7xl font-serif text-[#1a1a1a] leading-[1.1] mb-20 max-w-5xl mx-auto">
-            We are redefining the dialogue between human skin and the natural world. No synthetics. No compromises.
-          </motion.h3>
-          <motion.div variants={fadeUp} className="grid grid-cols-1 md:grid-cols-3 gap-16 text-left">
-            {philosophicalQuotes.map((quote, idx) => (
-              <div key={idx} className="space-y-6 relative group">
-                <div className="w-12 h-12 rounded-full bg-[#f4eedc] flex items-center justify-center text-[#8b5a2b] group-hover:bg-[#8b5a2b] group-hover:text-white transition-colors duration-500">
-                  <Leaf size={20} />
-                </div>
-                <p className="text-[#5c4a3d] font-light leading-loose text-lg">{quote}</p>
-              </div>
-            ))}
-          </motion.div>
-        </motion.div>
-      </section>
-
-      <section className="py-32 bg-[#1a1a1a] relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-[800px] h-[800px] bg-[#8b5a2b]/10 rounded-full blur-[150px] pointer-events-none -translate-y-1/2 translate-x-1/3" />
-        <div className="max-w-[100rem] mx-auto px-6 relative z-10">
-          <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={staggerContainer} className="text-center mb-24">
-            <motion.h2 variants={fadeUp} className="text-[10px] font-bold text-[#8b5a2b] uppercase tracking-[0.5em] mb-6">The Lookbook</motion.h2>
-            <motion.h3 variants={fadeUp} className="text-4xl md:text-6xl font-serif text-[#f4eedc]">Botanical Aesthetics.</motion.h3>
-          </motion.div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 auto-rows-[350px] md:auto-rows-[450px]">
-            {editorialGallery.map((item, idx) => (
-              <motion.div 
-                key={idx} 
-                initial={{ opacity: 0, scale: 0.95 }} whileInView={{ opacity: 1, scale: 1 }} viewport={{ once: true, margin: "-50px" }} transition={{ duration: 1.2, delay: (idx % 4) * 0.1, ease: easeFluid }}
-                className={`relative overflow-hidden rounded-[2.5rem] group cursor-pointer ${item.span}`}
-              >
-                <img src={`/assets/images/${item.img}`} className="w-full h-full object-cover transition-transform duration-[5000ms] ease-out group-hover:scale-110" alt="Bhumivera Aesthetic" />
-                <div className={`absolute inset-0 bg-black/20 group-hover:bg-black/40 transition-colors duration-700 flex flex-col ${item.align} p-6 md:p-10`}>
-                  <div className="glass-panel bg-[#1a1a1a]/40 backdrop-blur-md border border-white/10 p-6 md:p-8 rounded-3xl translate-y-8 group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-700 ease-out">
-                    <Quote size={24} className="text-[#8b5a2b] mb-4 opacity-50" />
-                    <p className="text-[#f4eedc] font-serif text-2xl md:text-3xl italic mb-4">"{item.quote}"</p>
-                    <p className="text-[#8b5a2b] text-[10px] font-bold uppercase tracking-widest">— {item.author}</p>
-                  </div>
-                </div>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
       <section className="py-40 px-6 max-w-7xl mx-auto overflow-hidden bg-[#faf8f5]">
         <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={staggerContainer} className="mb-32 flex flex-col md:flex-row justify-between items-end gap-12">
           <div className="max-w-2xl">
@@ -439,7 +342,8 @@ export default function Home() {
           ))}
         </div>
       </section>
-<section className="py-40 bg-white border-y border-[#e8dcc4] relative">
+
+      <section className="py-40 bg-white border-y border-[#e8dcc4] relative">
         <div className="max-w-7xl mx-auto px-6">
           <motion.div initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} className="flex flex-col md:flex-row justify-between items-end mb-24 gap-8">
             <div>
@@ -614,4 +518,4 @@ export default function Home() {
 
     </div>
   );
-)
+}
