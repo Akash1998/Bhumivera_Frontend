@@ -1,6 +1,7 @@
 import React, { useState, useRef } from 'react';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import './AdminLogin.css';
 
 const API = import.meta.env.VITE_API_URL || 'https://service.anritvox.com';
@@ -14,6 +15,9 @@ const WarehouseAdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const turnstileRef = useRef();
   const navigate = useNavigate();
+  
+  // Bring in the new Context function
+  const { warehouseLoginVerify } = useAuth();
 
   const handleRequestOtp = async (e) => {
     e.preventDefault();
@@ -49,9 +53,12 @@ const WarehouseAdminLogin = () => {
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.message);
-      localStorage.setItem('token', data.token);
-localStorage.setItem('user', JSON.stringify(data.admin));
-      navigate('/warehouseadmin/dashboard');
+      
+      // Instantly sync the React Context state
+      warehouseLoginVerify(data);
+      
+      // Fixed Route: Navigate to actual warehouse, not the login loop!
+      navigate('/warehouse');
     } catch (err) {
       setStatus({ type: 'error', message: err.message || 'Invalid OTP.' });
       if (turnstileRef.current) { turnstileRef.current.reset(); setTurnstileToken(null); }
