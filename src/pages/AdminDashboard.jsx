@@ -9,12 +9,12 @@ import {
   FileText, MessageSquare, AlertCircle, TrendingUp, Clock, Monitor, Download, CheckCircle, XCircle
 } from 'lucide-react';
 
+// Admin Module Imports
 import DashboardOverview from './admin/DashboardOverview';
 import ProductManagement from './admin/ProductManagement';
 import CategoryManagement from './admin/CategoryManagement';
 import OrderManagement from './admin/OrderManagement';
 import UserManagement from './admin/UserManagement';
-import Genuine_testManagement from './admin/Genuine_testManagement';
 import AnalyticsManagement from './admin/AnalyticsManagement';
 import InventoryManagement from './admin/InventoryManagement';
 import CouponManagement from './admin/CouponManagement';
@@ -36,6 +36,8 @@ import CMSManagement from './admin/CMSManagement';
 import EmailTemplates from './admin/EmailTemplates';
 import FitmentMatrix from './admin/FitmentMatrix';
 import WarehouseManagement from './admin/WarehouseManagement';
+// Fixed: Using EWarrantyManagement which exists in your file system
+import EWarrantyManagement from './admin/EWarrantyManagement'; 
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -57,7 +59,7 @@ class ErrorBoundary extends Component {
           <p className="text-slate-400 mb-6 max-w-md text-sm font-mono">{this.state.error?.message || 'Module execution halted.'}</p>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
-            className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-cyan-500 text-black font-black uppercase tracking-widest rounded-xl hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all duration-300"
+            className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-cyan-500 text-black font-black uppercase tracking-widest rounded-xl transition-all duration-300"
           >
             Reboot Module
           </button>
@@ -70,7 +72,7 @@ class ErrorBoundary extends Component {
 
 const ComingSoon = ({ name }) => (
   <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8">
-    <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 flex items-center justify-center mb-6 shadow-[0_0_30px_rgba(16,185,129,0.1)]">
+    <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 flex items-center justify-center mb-6">
       <Settings size={32} className="text-emerald-400 animate-[spin_4s_linear_infinite]" />
     </div>
     <h2 className="text-2xl font-black text-white mb-2 tracking-tight">{name}</h2>
@@ -83,7 +85,10 @@ const TAB_COMPONENTS = {
   inventory: InventoryManagement, orders: OrderManagement, returns: ReturnManagement,
   'flash-sales': FlashSalesManagement, coupons: CouponManagement, users: UserManagement,
   support: SupportManagement, reviews: ReviewManagement, loyalty: LoyaltyManagement,
-  affiliate: AffiliateManagement, Genuine_test: Genuine_testManagement, analytics: AnalyticsManagement,
+  affiliate: AffiliateManagement, 
+  // Fixed mapping to use the correct EWarranty component
+  Genuine_test: EWarrantyManagement, 
+  analytics: AnalyticsManagement,
   banners: BannerManagement, contact: ContactManagement, settings: AdminSettings,
   wallet: WalletManagement, notifications: NotificationManagement, shipping: ShippingManagement,
   tax: TaxManagement, logs: SystemLogs, cms: CMSManagement, email: EmailTemplates,
@@ -156,33 +161,20 @@ export default function AdminDashboard() {
     <>
       <style>{`
         .sidebar-scroll::-webkit-scrollbar,
-        .content-scroll::-webkit-scrollbar {
-          width: 8px;
-        }
+        .content-scroll::-webkit-scrollbar { width: 8px; }
         .sidebar-scroll::-webkit-scrollbar-track,
-        .content-scroll::-webkit-scrollbar-track {
-          background: #0a0b10;
-        }
+        .content-scroll::-webkit-scrollbar-track { background: #0a0b10; }
         .sidebar-scroll::-webkit-scrollbar-thumb,
         .content-scroll::-webkit-scrollbar-thumb {
           background-color: rgba(16, 185, 129, 0.4);
           border-radius: 4px;
         }
-        .sidebar-scroll::-webkit-scrollbar-thumb:hover,
-        .content-scroll::-webkit-scrollbar-thumb:hover {
-          background-color: rgba(16, 185, 129, 0.7);
-        }
-        .sidebar-scroll,
-        .content-scroll {
-          scrollbar-width: thin;
-          scrollbar-color: rgba(16, 185, 129, 0.4) #0a0b10;
-        }
       `}</style>
 
       <div className="flex h-screen bg-[#050810] overflow-hidden selection:bg-emerald-500/30">
-        <div className={`${isSidebarOpen ? 'w-64' : 'w-20'} transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] sidebar-scroll flex-shrink-0 bg-slate-950/80 backdrop-blur-2xl border-r border-slate-800/50 flex flex-col overflow-y-auto relative z-20 shadow-[4px_0_24px_rgba(0,0,0,0.4)]`}>
-          <div className="flex items-center gap-4 px-5 py-6 border-b border-slate-800/50 sticky top-0 bg-slate-950/90 backdrop-blur-xl z-10">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-xl flex items-center justify-center flex-shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+        <div className={`${isSidebarOpen ? 'w-64' : 'w-20'} transition-all duration-500 sidebar-scroll flex-shrink-0 bg-slate-950/80 backdrop-blur-2xl border-r border-slate-800/50 flex flex-col overflow-y-auto relative z-20`}>
+          <div className="flex items-center gap-4 px-5 py-6 border-b border-slate-800/50 sticky top-0 bg-slate-950/90 z-10">
+            <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-xl flex items-center justify-center flex-shrink-0">
               <span className="text-slate-950 font-black text-sm tracking-tighter">AV</span>
             </div>
             <div className={`overflow-hidden transition-all duration-500 ${isSidebarOpen ? 'w-32 opacity-100' : 'w-0 opacity-0'}`}>
@@ -195,9 +187,7 @@ export default function AdminDashboard() {
             {menuSections.map((section, idx) => (
               <div key={idx} className="space-y-1 relative group">
                 <div className={`overflow-hidden transition-all duration-500 ${isSidebarOpen ? 'h-6 opacity-100' : 'h-0 opacity-0'}`}>
-                  <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-3">
-                    {section.title}
-                  </p>
+                  <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-3">{section.title}</p>
                 </div>
                 {section.items.map((item) => {
                   const isActive = activeTab === item.id;
@@ -205,14 +195,14 @@ export default function AdminDashboard() {
                     <button
                       key={item.id}
                       onClick={() => navigate(`/admin/dashboard/${item.id}`)}
-                      className={`w-full flex items-center px-3 py-3 rounded-xl transition-all duration-300 group/btn relative overflow-hidden ${
-                        isActive ? 'bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.05)]' : 'hover:bg-slate-800/40 border border-transparent'
+                      className={`w-full flex items-center px-3 py-3 rounded-xl transition-all duration-300 border border-transparent ${
+                        isActive ? 'bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.05)]' : 'hover:bg-slate-800/40'
                       } ${!isSidebarOpen && 'justify-center'}`}
                     >
-                      {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.8)]" />}
-                      <item.icon size={20} className={`flex-shrink-0 transition-colors duration-300 ${isActive ? 'text-emerald-400' : 'text-slate-500 group-hover/btn:text-slate-300'}`} />
+                      {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500" />}
+                      <item.icon size={20} className={`flex-shrink-0 transition-colors duration-300 ${isActive ? 'text-emerald-400' : 'text-slate-500'}`} />
                       <div className={`overflow-hidden transition-all duration-500 whitespace-nowrap ${isSidebarOpen ? 'w-full ml-3 opacity-100' : 'w-0 ml-0 opacity-0'}`}>
-                        <span className={`text-sm font-semibold tracking-wide flex justify-start ${isActive ? 'text-emerald-400' : 'text-slate-400 group-hover/btn:text-white'}`}>
+                        <span className={`text-sm font-semibold tracking-wide flex justify-start ${isActive ? 'text-emerald-400' : 'text-slate-400'}`}>
                           {item.label}
                         </span>
                       </div>
@@ -223,10 +213,10 @@ export default function AdminDashboard() {
             ))}
           </div>
 
-          <div className="p-4 border-t border-slate-800/50 bg-slate-950/90 backdrop-blur-xl sticky bottom-0 z-10">
+          <div className="p-4 border-t border-slate-800/50 bg-slate-950/90 sticky bottom-0 z-10">
             <button
-              onClick={() => { logout(); navigate('/admin/login'); }}
-              className={`w-full flex items-center py-3 rounded-xl transition-all duration-300 hover:bg-rose-500/10 hover:border-rose-500/20 border border-transparent text-slate-500 hover:text-rose-400 ${!isSidebarOpen ? 'justify-center px-0' : 'px-4 gap-3'}`}
+              onClick={() => { logout(); navigate('/admin-login'); }}
+              className={`w-full flex items-center py-3 rounded-xl transition-all duration-300 hover:bg-rose-500/10 border border-transparent text-slate-500 hover:text-rose-400 ${!isSidebarOpen ? 'justify-center px-0' : 'px-4 gap-3'}`}
             >
               <LogOut size={20} className="flex-shrink-0" />
               <div className={`overflow-hidden transition-all duration-500 ${isSidebarOpen ? 'w-full opacity-100' : 'w-0 opacity-0'}`}>
@@ -237,49 +227,35 @@ export default function AdminDashboard() {
         </div>
 
         <div className="flex-1 flex flex-col overflow-hidden relative">
-          <div className="absolute top-[-20%] left-[-10%] w-[50%] h-[50%] bg-emerald-500/5 blur-[120px] rounded-full pointer-events-none" />
-          <div className="absolute bottom-[-20%] right-[-10%] w-[50%] h-[50%] bg-cyan-500/5 blur-[120px] rounded-full pointer-events-none" />
-
           <div className="flex items-center justify-between px-8 py-5 border-b border-slate-800/50 bg-slate-950/40 backdrop-blur-xl relative z-10">
             <div className="flex items-center gap-6">
               <button
                 onClick={() => setSidebarOpen(!isSidebarOpen)}
-                className="p-2.5 bg-slate-900/80 border border-slate-800 hover:border-slate-600 hover:bg-slate-800 rounded-xl text-slate-400 transition-all shadow-sm"
+                className="p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl text-slate-400 transition-all shadow-sm"
               >
                 {isSidebarOpen ? <X size={18} /> : <Menu size={18} />}
               </button>
               <div className="flex items-center gap-3">
-                <h1 className="text-xl text-white font-black uppercase tracking-widest">
-                  {activeTab.replace(/-/g, ' ')}
-                </h1>
+                <h1 className="text-xl text-white font-black uppercase tracking-widest">{activeTab.replace(/-/g, ' ')}</h1>
                 <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-slate-400 uppercase border border-slate-700">Module</span>
               </div>
             </div>
-            <div className="flex items-center gap-6">
-              <div className="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                <div className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.8)]" />
-                <span className="text-[10px] font-mono text-emerald-400 uppercase tracking-widest font-bold">Network Synced</span>
+            <div className="flex items-center gap-3 pl-6 border-l border-slate-800/80">
+              <div className="text-right hidden md:block">
+                <p className="text-sm font-black text-white uppercase tracking-wider">{user?.name || 'SYSADMIN'}</p>
+                <p className="text-[10px] font-mono text-emerald-500 uppercase tracking-widest">Clearance: Level 0</p>
               </div>
-              <div className="flex items-center gap-3 pl-6 border-l border-slate-800/80">
-                <div className="text-right hidden md:block">
-                  <p className="text-sm font-black text-white uppercase tracking-wider">{user?.name || 'SYSADMIN'}</p>
-                  <p className="text-[10px] font-mono text-emerald-500 uppercase">Clearance: Level 0</p>
-                </div>
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 flex items-center justify-center text-white font-black text-sm shadow-inner">
-                  {user?.name?.[0] || 'A'}
-                </div>
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 flex items-center justify-center text-white font-black text-sm">
+                {user?.name?.[0] || 'A'}
               </div>
             </div>
           </div>
 
-          <div className="flex-1 overflow-auto bg-transparent p-6 relative z-10 content-scroll" style={{ minWidth: 0, minHeight: 0 }}>
+          <div className="flex-1 overflow-auto p-6 relative z-10 content-scroll">
             <ErrorBoundary key={activeTab}>
               <Suspense fallback={
                 <div className="flex items-center justify-center min-h-[60vh]">
-                  <div className="relative w-16 h-16">
-                    <div className="absolute inset-0 border-2 border-emerald-500/20 rounded-full" />
-                    <div className="absolute inset-0 border-2 border-emerald-500 border-t-transparent rounded-full animate-spin" />
-                  </div>
+                  <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
                 </div>
               }>
                 <ActiveComponent key={activeTab} />
