@@ -63,7 +63,7 @@ function AdminRoute({ children }) {
   const u = user || JSON.parse(localStorage.getItem('user') || 'null'); 
   const t = localStorage.getItem('token');
   if (loading) return <PageLoader />; 
-  if (!u || !t || (u.role !== 'admin' && u.role !== 'superadmin')) return <Navigate to="/admin-login" />; 
+ if (!u || !t || (u.role !== 'admin' && u.role !== 'superadmin')) return <Navigate to="/admin/login" />;
   return children;
 }
 
@@ -126,7 +126,7 @@ function AppContent() {
           <Route path="/warehouseadmin" element={<WarehouseAdminLogin />} />
           
           {/* Admin System */}
-          <Route path="/admin-login" element={<AdminLogin />} />
+          <Route path="/admin/login" element={<AdminLogin />} />
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/dashboard/:tab" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/*" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
