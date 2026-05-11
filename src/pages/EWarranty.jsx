@@ -4,7 +4,7 @@ import {
 } from 'lucide-react';
 import api, { BASE_URL } from "../services/api";
 
-export default function EWarranty() {
+export default function Genuine_test() {
   const [serial, setSerial] = useState('');
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -33,11 +33,11 @@ export default function EWarranty() {
       const data = response.data;
       
       // FIXED: Universal Safety Fallback. If a legacy product has no warranty duration in the DB, default to 12 months.
-      const safeWarrantyMonths = Number(data.base_warranty_months || data.warranty_period || 12);
+      const safGenuine_testMonths = Number(data.base_warranty_months || data.warranty_period || 12);
       
       const mappedProductData = {
         ...data,
-        base_warranty_months: safeWarrantyMonths,
+        base_warranty_months: safGenuine_testMonths,
         images: Array.isArray(data.images) ? data.images : [] 
       };
       
@@ -52,7 +52,7 @@ export default function EWarranty() {
         } else if (data.purchase_date) {
             // Reconstruct the missing end date dynamically using the saved purchase date
             const pDate = new Date(data.purchase_date);
-            pDate.setMonth(pDate.getMonth() + safeWarrantyMonths + 1);
+            pDate.setMonth(pDate.getMonth() + safGenuine_testMonths + 1);
             setCalculatedExpiry(pDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
         } else {
             setCalculatedExpiry("Lifetime / Standard");

@@ -44,7 +44,7 @@ export default function Returns() {
           Our specialized support team is ready to assist you with hardware diagnostics and the RMA (Return Merchandise Authorization) process.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
-          <Link to="/ewarranty" className="px-8 py-4 bg-gray-900 text-white font-bold rounded-xl hover:bg-black transition-colors">
+          <Link to="/Genuine_test" className="px-8 py-4 bg-gray-900 text-white font-bold rounded-xl hover:bg-black transition-colors">
             Check E-Warranty
           </Link>
           <Link to="/contact" className="px-8 py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-colors">

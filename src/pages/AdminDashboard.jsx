@@ -14,7 +14,7 @@ import ProductManagement from './admin/ProductManagement';
 import CategoryManagement from './admin/CategoryManagement';
 import OrderManagement from './admin/OrderManagement';
 import UserManagement from './admin/UserManagement';
-import EWarrantyManagement from './admin/EWarrantyManagement';
+import Genuine_testManagement from './admin/Genuine_testManagement';
 import AnalyticsManagement from './admin/AnalyticsManagement';
 import InventoryManagement from './admin/InventoryManagement';
 import CouponManagement from './admin/CouponManagement';
@@ -83,7 +83,7 @@ const TAB_COMPONENTS = {
   inventory: InventoryManagement, orders: OrderManagement, returns: ReturnManagement,
   'flash-sales': FlashSalesManagement, coupons: CouponManagement, users: UserManagement,
   support: SupportManagement, reviews: ReviewManagement, loyalty: LoyaltyManagement,
-  affiliate: AffiliateManagement, ewarranty: EWarrantyManagement, analytics: AnalyticsManagement,
+  affiliate: AffiliateManagement, Genuine_test: Genuine_testManagement, analytics: AnalyticsManagement,
   banners: BannerManagement, contact: ContactManagement, settings: AdminSettings,
   wallet: WalletManagement, notifications: NotificationManagement, shipping: ShippingManagement,
   tax: TaxManagement, logs: SystemLogs, cms: CMSManagement, email: EmailTemplates,
@@ -138,7 +138,7 @@ export default function AdminDashboard() {
     {
       title: 'Relations', items: [
         { id: 'support', label: 'Helpdesk', icon: Headphones }, { id: 'returns', label: 'Reversal', icon: RefreshCw },
-        { id: 'contact', label: 'Comms', icon: MessageSquare }, { id: 'ewarranty', label: 'Shield', icon: ShieldCheck }
+        { id: 'contact', label: 'Comms', icon: MessageSquare }, { id: 'Genuine_test', label: 'Shield', icon: ShieldCheck }
       ]
     },
     {

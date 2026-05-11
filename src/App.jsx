@@ -16,7 +16,7 @@ const WarehouseManagement = lazy(() => import("./pages/admin/WarehouseManagement
 const WarehouseAdminLogin = lazy(() => import("./pages/WarehouseAdminLogin.jsx"));
 const Shop = lazy(() => import("./pages/Shop.jsx"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail.jsx"));
-const EWarranty = lazy(() => import("./pages/EWarranty.jsx"));
+const Genuine_test = lazy(() => import("./pages/Genuine_test.jsx"));
 const Contact = lazy(() => import("./pages/Contact.jsx"));
 const Cart = lazy(() => import("./pages/Cart.jsx"));
 const Checkout = lazy(() => import("./pages/Checkout.jsx"));
@@ -69,8 +69,8 @@ function AppContent() {
           <Route path="/shop" element={<Shop />} />
           <Route path="/product/:id" element={<ProductDetail />} />
           <Route path="/fitment-engine" element={<FitmentEngine />} />
-          <Route path="/ewarranty" element={<EWarranty />} />
-          <Route path="/warranty" element={<EWarranty />} />
+          <Route path="/Genuine_test" element={<Genuine_test />} />
+          <Route path="/warranty" element={<Genuine_test />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/about" element={<About />} />
           <Route path="/legal" element={<Legal />} />

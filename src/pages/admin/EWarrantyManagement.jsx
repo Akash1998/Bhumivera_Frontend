@@ -8,7 +8,7 @@ import {
 import api, { warranty as warrantyApi, products as productsApi } from "../../services/api";
 import { useToast } from "../../context/ToastContext";
 
-export default function EWarrantyManagement() {
+export default function Genuine_testManagement() {
   const [activeTab, setActiveTab] = useState('registrations');
   const [warranties, setWarranties] = useState([]);
   const [serialsVault, setSerialsVault] = useState([]);

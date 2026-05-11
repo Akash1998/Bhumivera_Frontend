@@ -49,7 +49,7 @@ export default function Compare({ items = [], onRemove }) {
     
     { label: 'Features & Warranty', type: 'header' },
     { label: 'Warranty Period', key: 'warranty', format: (v) => v || '1 Year Standard' },
-    { label: 'E-Warranty Support', key: 'hasEWarranty', format: (v) => v !== false ? <Check size={18} className="text-emerald-500"/> : <X size={18} className="text-slate-300"/> },
+    { label: 'E-Warranty Support', key: 'hasGenuine_test', format: (v) => v !== false ? <Check size={18} className="text-emerald-500"/> : <X size={18} className="text-slate-300"/> },
     { label: 'Return Policy', key: 'returnPolicy', format: (v) => v || '7 Days Replacement' },
     { label: 'Shipping', key: 'shippingInfo', format: (v) => v || 'Free Delivery' }
   ];
