@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { 
-  ShieldCheck, Search, CheckCircle, AlertCircle, Cpu, ArrowRight, Printer, ExternalLink, Gift, Youtube, BoxSelect
+  ShieldCheck, Search, CheckCircle, AlertCircle, Cpu, ArrowRight, Printer, ExternalLink, Gift, Youtube, BoxSelect, RefreshCcw
 } from 'lucide-react';
 import api, { BASE_URL } from "../services/api";
 
-export default function Genuine_test() {
+export default function EWarranty() {
   const [serial, setSerial] = useState('');
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -32,12 +32,11 @@ export default function Genuine_test() {
       const response = await api.get(`/warranty/validate/${encodeURIComponent(serial)}`);
       const data = response.data;
       
-      // FIXED: Universal Safety Fallback. If a legacy product has no warranty duration in the DB, default to 12 months.
-      const safGenuine_testMonths = Number(data.base_warranty_months || data.warranty_period || 12);
+      const safeWarrantyMonths = Number(data.base_warranty_months || data.warranty_period || 12);
       
       const mappedProductData = {
         ...data,
-        base_warranty_months: safGenuine_testMonths,
+        base_warranty_months: safeWarrantyMonths,
         images: Array.isArray(data.images) ? data.images : [] 
       };
       
@@ -46,13 +45,11 @@ export default function Genuine_test() {
       if (data.status === 'registered') {
         setRegistrationId(data.registration_id || 'VERIFIED-LEGACY');
         
-        // FIXED: Retroactive Date Calculation for older registrations
         if (data.warranty_end_date) {
             setCalculatedExpiry(new Date(data.warranty_end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
         } else if (data.purchase_date) {
-            // Reconstruct the missing end date dynamically using the saved purchase date
             const pDate = new Date(data.purchase_date);
-            pDate.setMonth(pDate.getMonth() + safGenuine_testMonths + 1);
+            pDate.setMonth(pDate.getMonth() + safeWarrantyMonths + 1);
             setCalculatedExpiry(pDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
         } else {
             setCalculatedExpiry("Lifetime / Standard");
@@ -64,12 +61,12 @@ export default function Genuine_test() {
             shopName: data.shop_name || 'Authorized Dealer'
         });
         
-        setStep(3); // Jump straight to Certificate
+        setStep(3);
       } else {
-        setStep(2); // Proceed to Registration Form
+        setStep(2);
       }
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Serial number not found in our database.');
+      setError(err.response?.data?.message || err.message || 'Serial number not found in our database. Product may not be genuine.');
     } finally {
       setLoading(false);
     }
@@ -80,7 +77,6 @@ export default function Genuine_test() {
     setLoading(true);
     setError('');
     try {
-      // Calculate Expiry Date (Base Warranty + 1 Month Bonus)
       const pDate = new Date(formData.purchaseDate);
       const standardMonths = Number(productData.base_warranty_months);
       pDate.setMonth(pDate.getMonth() + standardMonths + 1); 
@@ -88,20 +84,25 @@ export default function Genuine_test() {
       const payload = {
         serialNumber: serial,
         productId: productData.product_id,
-        warrantyEndDate: pDate.toISOString().split('T')[0], // Ensure the backend gets the final date explicitly
+        warrantyEndDate: pDate.toISOString().split('T')[0],
         ...formData
       };
       
       const response = await api.post('/warranty/register', payload);
       
       setCalculatedExpiry(pDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
-      setRegistrationId(response.data.registration_id || Math.floor(100000 + Math.random() * 900000));
+      const newRegId = response.data.registration_id || Math.floor(100000 + Math.random() * 900000);
+      setRegistrationId(newRegId);
       setStep(3);
     } catch (err) {
-      setError(err.response?.data?.message || 'Registration failed. Please try again.');
+      setError(err.response?.data?.message || 'Verification failed. Please try again.');
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSpinRedirect = () => {
+    window.location.href = `https://spin.bhumivera.com/?id=${registrationId || serial}`;
   };
 
   return (
@@ -123,9 +124,9 @@ export default function Genuine_test() {
             <div className="inline-flex items-center justify-center w-16 h-16 bg-blue-600 text-white rounded-2xl shadow-xl shadow-blue-200 mb-6">
               <ShieldCheck size={32} />
             </div>
-            <h1 className="text-4xl font-bold text-slate-900 mb-4 tracking-tight">E-Warranty Gateway</h1>
+            <h1 className="text-4xl font-bold text-slate-900 mb-4 tracking-tight">Product Genuinity Test</h1>
             <p className="text-slate-500 text-lg max-w-xl mx-auto">
-              Activate your new warranty or retrieve the status of an existing registration using your Serial Number.
+              Scan or enter your product Serial Number to verify authenticity and activate your registration benefits.
             </p>
           </div>
         )}
@@ -180,7 +181,7 @@ export default function Genuine_test() {
                 disabled={loading}
                 className="w-full bg-slate-900 hover:bg-black text-white font-bold py-5 rounded-2xl shadow-lg transition-all flex items-center justify-center gap-3 disabled:opacity-50"
               >
-                {loading ? 'Scanning Database...' : 'Validate Serial Number'}
+                {loading ? 'Scanning Database...' : 'Check Genuinity'}
                 <ArrowRight size={20} />
               </button>
             </form>
@@ -192,7 +193,7 @@ export default function Genuine_test() {
             <div className="md:col-span-1 space-y-6">
               <div className="bg-white rounded-3xl p-6 shadow-lg border border-slate-100 relative overflow-hidden">
                 <div className="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg shadow-md flex items-center gap-1">
-                  <Gift size={12}/> +1 Month Bonus
+                  <ShieldCheck size={12}/> Verified Authentic
                 </div>
                 <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-4 mt-2">Available for Registration</p>
                 <img 
@@ -281,7 +282,7 @@ export default function Genuine_test() {
                     {loading ? (
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     ) : (
-                      'Activate Warranty + 1 Month Bonus'
+                      'Register & Verify Authenticity'
                     )}
                   </button>
                 </form>
@@ -297,19 +298,27 @@ export default function Genuine_test() {
                 <CheckCircle className="text-green-600" size={28} />
                 <div>
                   <h3 className="font-bold text-lg">
-                    {productData?.status === 'registered' ? 'Active Warranty Found!' : 'Registration Successful!'}
+                    {productData?.status === 'registered' ? '100% Genuine Product Verified!' : 'Registration & Verification Successful!'}
                   </h3>
                   <p className="text-sm opacity-80">
-                    {productData?.status === 'registered' ? 'Your product is currently protected.' : '1 Month Bonus Extended Warranty Applied.'}
+                    {productData?.status === 'registered' ? 'Your product is authentic and actively protected.' : 'Your product authenticity is confirmed.'}
                   </p>
                 </div>
               </div>
-              <button 
-                onClick={() => window.print()} 
-                className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-bold shadow-lg transition-all whitespace-nowrap"
-              >
-                <Printer size={20} /> Print / Download Certificate
-              </button>
+              <div className="flex gap-2">
+                <button 
+                  onClick={handleSpinRedirect} 
+                  className="bg-purple-600 hover:bg-purple-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-bold shadow-lg transition-all whitespace-nowrap"
+                >
+                  <RefreshCcw size={20} /> Claim Spin Eligibility
+                </button>
+                <button 
+                  onClick={() => window.print()} 
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl flex items-center gap-2 font-bold shadow-lg transition-all whitespace-nowrap"
+                >
+                  <Printer size={20} /> Print Certificate
+                </button>
+              </div>
             </div>
 
             <div id="certificate-area" className="bg-white p-2 md:p-8 print:p-0">
@@ -323,7 +332,7 @@ export default function Genuine_test() {
                   <div className="flex flex-col md:flex-row justify-between items-center md:items-start border-b-2 border-slate-200 pb-8 mb-8 text-center md:text-left relative z-10">
                     <img src="/logo.webp" alt="Bhumivera Logo" className="h-16 md:h-20 mb-4 md:mb-0" />
                     <div className="md:text-right">
-                      <h1 className="text-3xl md:text-4xl font-serif text-slate-800 tracking-widest font-bold uppercase">E-Warranty</h1>
+                      <h1 className="text-3xl md:text-4xl font-serif text-slate-800 tracking-widest font-bold uppercase">Genuinity Verified</h1>
                       <p className="text-yellow-600 font-bold tracking-widest uppercase text-sm md:text-md mt-1">Certificate of Authenticity</p>
                       <p className="text-slate-500 text-xs mt-2 font-mono bg-slate-100 inline-block px-3 py-1 rounded">REG ID: ANR-{registrationId}</p>
                     </div>
@@ -332,7 +341,7 @@ export default function Genuine_test() {
                   <div className="text-center py-6 relative z-10">
                     <p className="text-slate-500 italic text-lg mb-2">This is to certify that the premium product</p>
                     <h2 className="text-3xl font-bold text-slate-800 uppercase tracking-wide">{productData?.product_name}</h2>
-                    <p className="text-slate-500 italic text-lg mt-8 mb-2">is officially registered and protected under warranty for</p>
+                    <p className="text-slate-500 italic text-lg mt-8 mb-2">is officially genuine and registered to</p>
                     <h3 className="text-2xl font-bold text-slate-800 uppercase border-b border-slate-300 inline-block pb-1 px-8">{formData.customerName}</h3>
                   </div>
 
@@ -360,7 +369,7 @@ export default function Genuine_test() {
                   <div className="text-left mb-6 md:mb-0">
                     <div className="flex items-center gap-2 text-slate-800 font-bold mb-1">
                       <ExternalLink size={16} className="text-blue-600"/> 
-                      <a href="https://www.Bhumivera.com" target="_blank" rel="noreferrer" className="hover:underline">www.Bhumivera.com</a>
+                      <a href="https://www.bhumivera.com" target="_blank" rel="noreferrer" className="hover:underline">www.bhumivera.com</a>
                     </div>
                     <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
                       This digital certificate verifies the authenticity of your product. For support, warranty claims, and exclusive accessories, visit our official website.
