@@ -16,7 +16,8 @@ const WarehouseManagement = lazy(() => import("./pages/admin/WarehouseManagement
 const WarehouseAdminLogin = lazy(() => import("./pages/WarehouseAdminLogin.jsx"));
 const Shop = lazy(() => import("./pages/Shop.jsx"));
 const ProductDetail = lazy(() => import("./pages/ProductDetail.jsx"));
-const Genuine_test = lazy(() => import("./pages/Genuine_test.jsx"));
+// Fixed: Importing from EWarranty.jsx where Genuine_test is exported
+const Genuine_test = lazy(() => import("./pages/EWarranty.jsx")); 
 const Contact = lazy(() => import("./pages/Contact.jsx"));
 const Cart = lazy(() => import("./pages/Cart.jsx"));
 const Checkout = lazy(() => import("./pages/Checkout.jsx"));
@@ -34,19 +35,30 @@ const Returns = lazy(() => import("./pages/Returns.jsx"));
 const Affiliate = lazy(() => import("./pages/Affiliate.jsx"));
 const About = lazy(() => import("./pages/About.jsx"));
 const Legal = lazy(() => import("./pages/Legal.jsx"));
-// Ensure the FitmentEngine component is properly imported so the route can render it
 const FitmentEngine = lazy(() => import("./pages/FitmentEngine.jsx")); 
 
-const PageLoader = () => <div className="min-h-screen bg-[#faf8f5] flex items-center justify-center"><div className="w-12 h-12 border-4 border-[#e8dcc4] border-t-[#8b5a2b] rounded-full animate-spin"></div></div>;
+const PageLoader = () => (
+  <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
+    <div className="w-12 h-12 border-4 border-[#D4AF37]/20 border-t-[#0B2419] rounded-full animate-spin"></div>
+  </div>
+);
 
 function ProtectedRoute({ children }) {
-  const a = useAuth() || {}; const u = a.user || JSON.parse(localStorage.getItem('user') || 'null'); const t = localStorage.getItem('token');
-  if (a.loading) return <PageLoader />; if (!u || !t) return <Navigate to="/login" />; return children;
+  const { user, loading } = useAuth() || {}; 
+  const u = user || JSON.parse(localStorage.getItem('user') || 'null'); 
+  const t = localStorage.getItem('token');
+  if (loading) return <PageLoader />; 
+  if (!u || !t) return <Navigate to="/login" />; 
+  return children;
 }
 
 function AdminRoute({ children }) {
-  const a = useAuth() || {}; const u = a.user || JSON.parse(localStorage.getItem('user') || 'null'); const t = localStorage.getItem('token');
-  if (a.loading) return <PageLoader />; if (!u || !t || (u.role !== 'admin' && u.role !== 'superadmin')) return <Navigate to="/admin-login" />; return children;
+  const { user, loading } = useAuth() || {}; 
+  const u = user || JSON.parse(localStorage.getItem('user') || 'null'); 
+  const t = localStorage.getItem('token');
+  if (loading) return <PageLoader />; 
+  if (!u || !t || (u.role !== 'admin' && u.role !== 'superadmin')) return <Navigate to="/admin-login" />; 
+  return children;
 }
 
 function WarehouseRoute({ children }) {
@@ -104,7 +116,21 @@ function AppContent() {
 }
 
 function App() {
-  return <BrowserRouter><AuthProvider><CartProvider><WishlistProvider><CompareProvider><ToastProvider><AppContent /></ToastProvider></CompareProvider></WishlistProvider></CartProvider></AuthProvider></BrowserRouter>;
+  return (
+    <BrowserRouter>
+      <AuthProvider>
+        <CartProvider>
+          <WishlistProvider>
+            <CompareProvider>
+              <ToastProvider>
+                <AppContent />
+              </ToastProvider>
+            </CompareProvider>
+          </WishlistProvider>
+        </CartProvider>
+      </AuthProvider>
+    </BrowserRouter>
+  );
 }
 
 export default App;
