@@ -1,7 +1,6 @@
 import React, { lazy, Suspense } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
-import AdminDashboard from './pages/admin/AdminDashboard';
 import Footer from "./components/Footer.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
@@ -128,7 +127,6 @@ function AppContent() {
           
           {/* Admin System */}
           <Route path="/admin-login" element={<AdminLogin />} />
-          <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/dashboard/:tab" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
           <Route path="/admin/*" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
