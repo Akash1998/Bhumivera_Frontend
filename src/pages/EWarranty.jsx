@@ -4,7 +4,7 @@ import {
 } from 'lucide-react';
 import api, { BASE_URL } from "../services/api";
 
-export default function EWarranty() {
+export default function Genuine_test() {
   const [serial, setSerial] = useState('');
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -32,11 +32,11 @@ export default function EWarranty() {
       const response = await api.get(`/warranty/validate/${encodeURIComponent(serial)}`);
       const data = response.data;
       
-      const safeWarrantyMonths = Number(data.base_warranty_months || data.warranty_period || 12);
+      const safGenuine_testMonths = Number(data.base_warranty_months || data.warranty_period || 12);
       
       const mappedProductData = {
         ...data,
-        base_warranty_months: safeWarrantyMonths,
+        base_warranty_months: safGenuine_testMonths,
         images: Array.isArray(data.images) ? data.images : [] 
       };
       
@@ -49,7 +49,7 @@ export default function EWarranty() {
             setCalculatedExpiry(new Date(data.warranty_end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
         } else if (data.purchase_date) {
             const pDate = new Date(data.purchase_date);
-            pDate.setMonth(pDate.getMonth() + safeWarrantyMonths + 1);
+            pDate.setMonth(pDate.getMonth() + safGenuine_testMonths + 1);
             setCalculatedExpiry(pDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
         } else {
             setCalculatedExpiry("Lifetime / Standard");
