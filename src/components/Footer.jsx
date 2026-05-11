@@ -1,3 +1,4 @@
+import React from "react";
 import { Link } from "react-router-dom";
 import logo from "../assets/images/logo.webp";
 
@@ -23,17 +24,19 @@ export default function Footer() {
         Back to top
       </button>
 
-      {/* Main Footer Links - 2x2 Grid on Mobile for App-like feel */}
+      {/* Main Footer Links */}
       <div className="relative z-10 max-w-7xl mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-10">
         <div>
           <h3 className="font-bold text-sm uppercase tracking-wider mb-4 text-slate-200">Get to Know Us</h3>
           <ul className="space-y-3 text-xs md:text-sm text-slate-400">
             <li><Link to="/about" className="hover:text-cyan-400 transition-colors">About Bhumivera</Link></li>
             <li><Link to="/about#careers" className="hover:text-cyan-400 transition-colors">Careers</Link></li>
-            <li><Link to="/about" className="hover:text-cyan-400 transition-colors">Press Releases</Link></li>
-            <li><Link to="/about" className="hover:text-cyan-400 transition-colors">Bhumivera Science</Link></li>
+            <li><Link to="/about#press" className="hover:text-cyan-400 transition-colors">Press Releases</Link></li>
+            {/* Updated Path */}
+            <li><Link to="/science" className="hover:text-cyan-400 transition-colors font-semibold text-slate-300">Bhumivera Science</Link></li>
           </ul>
         </div>
+
         <div>
           <h3 className="font-bold text-sm uppercase tracking-wider mb-4 text-slate-200">Connect with Us</h3>
           <ul className="space-y-3 text-xs md:text-sm text-slate-400">
@@ -42,20 +45,24 @@ export default function Footer() {
             <li><a href="https://twitter.com/Bhumivera" target="_blank" rel="noreferrer" className="hover:text-cyan-400 transition-colors">X (Twitter)</a></li>
           </ul>
         </div>
+
         <div>
           <h3 className="font-bold text-sm uppercase tracking-wider mb-4 text-slate-200">Make Money</h3>
           <ul className="space-y-3 text-xs md:text-sm text-slate-400">
-            <li><Link to="/admin/login" className="hover:text-cyan-400 transition-colors">Sell on Bhumivera</Link></li>
-            <li><Link to="/contact" className="hover:text-cyan-400 transition-colors">Become an Affiliate</Link></li>
+            <li><Link to="/admin-login" className="hover:text-cyan-400 transition-colors">Sell on Bhumivera</Link></li>
+            <li><Link to="/affiliate" className="hover:text-cyan-400 transition-colors">Become an Affiliate</Link></li>
             <li><Link to="/contact" className="hover:text-cyan-400 transition-colors">Advertise Products</Link></li>
           </ul>
         </div>
+
         <div>
           <h3 className="font-bold text-sm uppercase tracking-wider mb-4 text-slate-200">Let Us Help You</h3>
           <ul className="space-y-3 text-xs md:text-sm text-slate-400">
-            <li><Link to="/Genuine_test" className="hover:text-cyan-400 transition-colors">E-Warranty</Link></li>
-            <li><Link to="/contact" className="hover:text-cyan-400 transition-colors">Returns Centre</Link></li>
-            <li><Link to="/terms" className="hover:text-cyan-400 transition-colors">Purchase Protection</Link></li>
+            <li><Link to="/warranty" className="hover:text-cyan-400 transition-colors">E-Warranty</Link></li>
+            {/* Updated Path */}
+            <li><Link to="/returns-centre" className="hover:text-cyan-400 transition-colors">Returns Centre</Link></li>
+            {/* Updated Path */}
+            <li><Link to="/purchase-protection" className="hover:text-cyan-400 transition-colors">Purchase Protection</Link></li>
             <li><Link to="/contact" className="hover:text-cyan-400 transition-colors">Help & Support</Link></li>
           </ul>
         </div>
@@ -63,8 +70,7 @@ export default function Footer() {
 
       {/* Secondary Footer - App Icon Logo & Settings */}
       <div className="relative z-10 border-t border-white/10 py-10 flex flex-col items-center gap-6">
-        <Link to="/" className="group">
-          {/* Framed App-Icon Style Logo Treatment */}
+        <Link to="/" className="group" onClick={scrollToTop}>
           <div className="p-2 bg-white/5 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl group-hover:bg-white/10 group-hover:border-cyan-500/50 group-hover:shadow-cyan-500/20 transition-all duration-500 ease-out transform group-active:scale-95">
              <img src={logo} alt="Bhumivera" className="h-10 md:h-12 w-auto object-contain rounded-xl" />
           </div>
@@ -78,11 +84,11 @@ export default function Footer() {
       {/* Bottom Legal */}
       <div className="relative z-10 bg-[#050505]/80 py-8 px-4 text-center border-t border-white/5 pb-10 md:pb-8">
         <div className="flex flex-wrap justify-center gap-4 text-xs font-medium mb-4 text-slate-500">
-           <Link to="/terms" className="hover:text-cyan-400 transition-colors">Conditions of Use</Link>
+           <Link to="/legal" className="hover:text-cyan-400 transition-colors">Conditions of Use</Link>
            <span className="hidden sm:inline opacity-30">|</span>
-           <Link to="/privacy" className="hover:text-cyan-400 transition-colors">Privacy Notice</Link>
+           <Link to="/legal" className="hover:text-cyan-400 transition-colors">Privacy Notice</Link>
            <span className="hidden sm:inline opacity-30">|</span>
-           <Link to="/privacy" className="hover:text-cyan-400 transition-colors">Interest-Based Ads</Link>
+           <Link to="/legal" className="hover:text-cyan-400 transition-colors">Interest-Based Ads</Link>
         </div>
         <p className="text-[10px] text-slate-600 font-mono tracking-tight">
           © {currentYear} Bhumivera. ALL RIGHTS RESERVED. <br className="sm:hidden" /> DEVELOPED BY AKASH PRASAD
