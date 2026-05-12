@@ -175,16 +175,7 @@ const BhumiveraScience = () => {
     </footer>
   </blockquote>
 </div>
-  
-  <p className="text-lg md:text-xl text-gray-800 leading-relaxed font-light tracking-wide mb-8 text-justify">
-    True nourishment requires preservation, not destruction. By protecting these raw elements, we deliver uncorrupted, sophisticated care.
-  </p>
-
-  <blockquote className="relative pl-6 py-2 border-l-4 border-gray-400">
-    <p className="text-xl italic font-medium text-gray-700 leading-snug">
-      "Simplicity is the ultimate sophistication."
-    </p>
-    <footer className="mt-3 text-sm font-semibold tracking-wider text-gray-500 uppercase">
+      <footer className="mt-3 text-sm font-semibold tracking-wider text-gray-500 uppercase">
       — Leonardo da Vinci
     </footer>
   </blockquote>
@@ -214,48 +205,63 @@ const BhumiveraScience = () => {
       </section>
 
       {/* SECTION 05: DATA & ANALYTICS (The Spec Table) */}
-      <section className="py-32 bg-[#0a0a0a]">
-        <div className="container mx-auto px-6">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-light mb-12 text-center flex items-center justify-center gap-4">
-              <Beaker className="text-emerald-500" /> Bio-Active Inventory Spec
-            </h2>
-            <div className="overflow-x-auto border border-white/10 rounded-sm">
-              <table className="w-full text-left font-mono text-sm">
-                <thead className="bg-[#111] text-gray-400">
-                  <tr>
-                    <th className="p-6">COMPONENT</th>
-                    <th className="p-6">BIO-FUNCTION</th>
-                    <th className="p-6">VALUE</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  <tr className="hover:bg-emerald-500/5 transition-colors">
-                    <td className="p-6 font-bold text-emerald-400 italic">"Lignins"</td>
-                    <td className="p-6 text-gray-400">Dermal Penetration Logic</td>
-                    <td className="p-6">HIGH (98%)</td>
-                  </tr>
-                  <tr className="hover:bg-emerald-500/5 transition-colors">
-                    <td className="p-6 font-bold text-emerald-400 italic">"Saponins"</td>
-                    <td className="p-6 text-gray-400">Natural Antiseptic/Surfactant</td>
-                    <td className="p-6">9.2mg/g</td>
-                  </tr>
-                  <tr className="hover:bg-emerald-500/5 transition-colors">
-                    <td className="p-6 font-bold text-emerald-400 italic">"Acemannan"</td>
-                    <td className="p-6 text-gray-400">Immune Response Trigger</td>
-                    <td className="p-6">OPTIMIZED</td>
-                  </tr>
-                  <tr className="hover:bg-emerald-500/5 transition-colors">
-                    <td className="p-6 font-bold text-emerald-400 italic">"Amino Acids"</td>
-                    <td className="p-6 text-gray-400">Structural Cell Repair</td>
-                    <td className="p-6">18 PHASES</td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
+    <section className="relative py-32 bg-[#050505] overflow-hidden">
+  {/* Ambient Background Glows */}
+  <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-[400px] bg-emerald-600/10 blur-[120px] rounded-full pointer-events-none"></div>
+
+  <div className="container mx-auto px-6 relative z-10">
+    <div className="max-w-5xl mx-auto">
+      
+      <h2 className="text-4xl md:text-5xl font-extralight mb-16 text-center flex items-center justify-center gap-4 tracking-wide text-white">
+        <Beaker className="w-10 h-10 text-emerald-400 drop-shadow-[0_0_15px_rgba(52,211,153,0.5)]" /> 
+        Bio-Active <span className="font-semibold text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-200">Inventory Spec</span>
+      </h2>
+
+      {/* Advanced Glassmorphism Table Container */}
+      <div className="relative overflow-hidden rounded-2xl bg-[#0a0a0a]/60 backdrop-blur-xl border border-white/10 shadow-[0_0_40px_rgba(16,185,129,0.05)]">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left font-sans text-sm md:text-base">
+            <thead className="bg-white/[0.03] border-b border-white/10">
+              <tr>
+                <th className="p-6 font-mono text-xs tracking-[0.2em] text-emerald-500/70 uppercase">Component</th>
+                <th className="p-6 font-mono text-xs tracking-[0.2em] text-emerald-500/70 uppercase">Bio-Function</th>
+                <th className="p-6 font-mono text-xs tracking-[0.2em] text-emerald-500/70 uppercase text-right">Value Spec</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-white/5">
+              {[
+                { name: "Lignins", func: "Dermal Penetration Logic", val: "HIGH (98%)" },
+                { name: "Saponins", func: "Natural Antiseptic/Surfactant", val: "9.2mg/g" },
+                { name: "Acemannan", func: "Immune Response Trigger", val: "OPTIMIZED" },
+                { name: "Amino Acids", func: "Structural Cell Repair", val: "18 PHASES" },
+                { name: "Botanical Squalane", func: "Lipid Barrier Restoration", val: "BIO-IDENTICAL" },
+                { name: "Madecassoside", func: "Collagen Synthesis Matrix", val: "TYPE I & III" },
+                { name: "Phyto-Hyaluronic", func: "Deep Moisture Retention", val: "1000x BINDING" },
+                { name: "Tetrahexyldecyl Ascorbate", func: "Cellular Antioxidant Defense", val: "MAX STABILITY" },
+                { name: "Botanical Niacinamide", func: "Melanin Synthesis Inhibition", val: "5% ACTIVE" },
+              ].map((item, index) => (
+                <tr key={index} className="group hover:bg-emerald-900/10 transition-all duration-300">
+                  <td className="p-6 font-mono font-medium text-gray-200 group-hover:text-emerald-300 transition-colors">
+                    {item.name}
+                  </td>
+                  <td className="p-6 text-gray-400 font-light group-hover:text-gray-300 transition-colors">
+                    {item.func}
+                  </td>
+                  <td className="p-6 text-right">
+                    <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-mono font-semibold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0)] group-hover:shadow-[0_0_10px_rgba(16,185,129,0.2)] transition-all">
+                      {item.val}
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
-      </section>
+      </div>
+      
+    </div>
+  </div>
+</section>
 
       {/* SECTION 06: GLOBAL COMMITMENT */}
       <section className="py-32 border-t border-white/5">
@@ -265,7 +271,7 @@ const BhumiveraScience = () => {
             <p className="text-gray-500 max-w-2xl mx-auto mb-12 leading-relaxed">
               Every Bhumivera product is "Clean Code" for the environment. 0% Micro-plastics. 100% Biodegradable Logic. Sourced locally in Asansol, engineered for the global stage.
             </p>
-            <div className="flex flex-wrap justify-center gap-12 grayscale opacity-40">
+            <div className="flex flex-wrap justify-center gap-14 grayscale opacity-40">
               <span className="font-mono text-xs uppercase tracking-[0.3em]">Vegan Certified</span>
               <span className="font-mono text-xs uppercase tracking-[0.3em]">Cruelty Free</span>
               <span className="font-mono text-xs uppercase tracking-[0.3em]">Zero Waste Packaging</span>
