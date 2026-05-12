@@ -36,9 +36,6 @@ const BhumiveraScience = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
           >
-            <span className="inline-block px-4 py-1 border border-emerald-500/30 rounded-full text-emerald-400 text-xs font-mono tracking-widest mb-6">
-              PROTOCOL V.1.0 // BOTANICAL INTELLIGENCE
-            </span>
             <h1 className="text-6xl md:text-8xl font-light tracking-tighter mb-8 bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent italic">
               Bhumivera Science
             </h1>
@@ -159,9 +156,39 @@ const BhumiveraScience = () => {
             <div className="lg:w-1/2 flex flex-col justify-center">
               <span className="text-emerald-600 font-mono text-sm tracking-widest block mb-4">SOP 104 // MANUFACTURING LOGIC</span>
               <h2 className="text-5xl font-light tracking-tight mb-8">Zero Logic Deletion. <br />Zero Heat Damage.</h2>
-              <p className="text-lg text-gray-700 leading-relaxed mb-8">
-                In software architecture, logic deletion causes system failure. In skincare, <span className="font-bold">Heat Deletion</span> causes nutrient failure. Traditional soaps use high-heat milling that destroys delicate vitamins. 
-              </p>
+              <div className="relative p-8 mb-8 rounded-2xl bg-white/30 backdrop-blur-lg border border-white/40 shadow-[0_4px_30px_rgba(0,0,0,0.05)]">
+  <div className="relative p-8 mb-8 rounded-2xl bg-white/30 backdrop-blur-lg border border-white/40 shadow-[0_4px_30px_rgba(0,0,0,0.05)]">
+  <p className="text-lg md:text-xl text-gray-800 leading-relaxed font-light tracking-wide mb-6 text-justify">
+    Just as logic deletion in software architecture inevitably triggers systemic failure, <span className="font-semibold text-gray-900 tracking-normal text-transparent bg-clip-text bg-gradient-to-r from-gray-900 to-gray-600">Heat Deletion</span> in skincare drastically compromises product efficacy. Traditional soap manufacturing relies heavily on high-heat milling—a harsh process that eradicates delicate vitamins, active antioxidants, and essential botanical nutrients before they ever reach your skin. 
+  </p>
+  
+  <p className="text-lg md:text-xl text-gray-800 leading-relaxed font-light tracking-wide mb-8 text-justify">
+    True nourishment requires preservation, not destruction. By protecting these raw elements, we deliver uncorrupted, sophisticated care.
+  </p>
+
+  <blockquote className="relative pl-6 py-2 border-l-4 border-gray-400">
+    <p className="text-xl italic font-medium text-gray-700 leading-snug">
+      "Simplicity is the ultimate sophistication."
+    </p>
+    <footer className="mt-3 text-sm font-semibold tracking-wider text-gray-500 uppercase">
+      — Leonardo da Vinci
+    </footer>
+  </blockquote>
+</div>
+  
+  <p className="text-lg md:text-xl text-gray-800 leading-relaxed font-light tracking-wide mb-8 text-justify">
+    True nourishment requires preservation, not destruction. By protecting these raw elements, we deliver uncorrupted, sophisticated care.
+  </p>
+
+  <blockquote className="relative pl-6 py-2 border-l-4 border-gray-400">
+    <p className="text-xl italic font-medium text-gray-700 leading-snug">
+      "Simplicity is the ultimate sophistication."
+    </p>
+    <footer className="mt-3 text-sm font-semibold tracking-wider text-gray-500 uppercase">
+      — Leonardo da Vinci
+    </footer>
+  </blockquote>
+</div>
               <div className="space-y-4">
                 <div className="flex items-start gap-4 p-4 bg-gray-100 border-l-4 border-emerald-600">
                   <div className="font-mono font-bold text-emerald-600 italic">01. AMBIENT INTAKE</div>
