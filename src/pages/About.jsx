@@ -145,25 +145,88 @@ export default function About() {
               </div>
             </motion.div>
 
-            {/* Aloe Vera */}
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="flex flex-col lg:flex-row-reverse gap-16 items-center">
-              <div className="w-full lg:w-1/2 aspect-square rounded-sm overflow-hidden bg-emerald-50 relative group">
-                <img src="/assets/images/aloeveradrop.webp" className="w-full h-full object-cover mix-blend-multiply group-hover:scale-110 transition-transform duration-[3000ms]" alt="Aloe Vera" />
-                <div className="absolute top-4 right-4 font-mono text-[8px] text-emerald-900/40 tracking-[0.5em] uppercase">Element: Bio_Fluid</div>
-              </div>
-              <div className="w-full lg:w-1/2 space-y-6">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-600/10 text-emerald-700 text-[10px] font-bold uppercase tracking-widest rounded-full font-mono"><Droplets size={12} /> ENZYMATIC_SYNC</div>
-                <h4 className="text-4xl font-serif text-[#1a1a1a]">Pure Aloe Extract</h4>
-                <p className="text-gray-500 leading-relaxed font-light text-lg">Cold-pressed polysaccharides that accelerate cellular hydration and repair.</p>
-                <div className="flex gap-10 mt-8 border-t border-gray-100 pt-8">
-                   <div><span className="block text-[8px] text-emerald-600 font-bold uppercase tracking-widest mb-1">Bio-Index</span><span className="text-sm font-mono font-bold">94/100</span></div>
-                   <div><span className="block text-[8px] text-emerald-600 font-bold uppercase tracking-widest mb-1">Status</span><span className="text-sm font-mono font-bold">OPTIMIZED</span></div>
-                </div>
-              </div>
-            </motion.div>
+           {/* --- BHUMIVERA SCIENCE: ALOE VERA COMPONENT --- */}
+<section className="py-32 bg-[#F9F9F7] overflow-hidden">
+  <div className="max-w-7xl mx-auto px-8">
+    <motion.div 
+      initial="hidden" 
+      whileInView="visible" 
+      viewport={{ once: true }} 
+      variants={fadeInUp} 
+      className="flex flex-col lg:flex-row-reverse gap-24 items-center"
+    >
+      {/* Image Side: The High-Resolution Laboratory Narrative */}
+      <div className="w-full lg:w-[55%] aspect-square rounded-sm overflow-hidden bg-white shadow-2xl shadow-emerald-900/5 relative group">
+        <img 
+          src="/assets/images/aloeveradrop.webp" 
+          className="w-full h-full object-cover transition-transform duration-[5000ms] ease-out group-hover:scale-110" 
+          alt="Bhumivera Aloe Extraction" 
+        />
+        
+        {/* Minimalist Tech Overlays */}
+        <div className="absolute top-8 right-8 font-mono text-[9px] text-emerald-900/30 tracking-[0.6em] uppercase vertical-text">
+          Molecular_Hydration_v2.0
+        </div>
+        <div className="absolute bottom-8 left-8">
+          <div className="flex items-center gap-3">
+            <span className="w-8 h-[1px] bg-emerald-900/20"></span>
+            <span className="font-mono text-[8px] text-emerald-900/40 tracking-[0.4em] uppercase">Element: Bio_Fluid</span>
           </div>
         </div>
-      </section>
+      </div>
+
+      {/* Content Side: The Luxury Narrative */}
+      <div className="w-full lg:w-[45%] space-y-10">
+        <div className="space-y-6">
+          {/* Scientific Badge */}
+          <div className="inline-flex items-center gap-3 px-4 py-2 bg-white border border-emerald-900/10 text-emerald-800 text-[10px] font-bold uppercase tracking-[0.3em] rounded-sm shadow-sm font-mono">
+            <Droplets size={14} strokeWidth={1.5} className="text-emerald-500" /> 
+            Enzymatic_Sync
+          </div>
+
+          {/* Premium Headline */}
+          <h4 className="text-6xl font-serif text-[#1a1a1a] leading-[1.1] tracking-tight">
+            Pure Aloe <br />
+            <span className="italic text-emerald-800/90 font-light">Vera Extract</span>
+          </h4>
+
+          {/* Enhanced Description */}
+          <p className="text-gray-500 leading-relaxed font-light text-xl max-w-md">
+            Cold-pressed polysaccharides that accelerate cellular hydration and repair, refined by science to become a masterpiece of self-care.
+          </p>
+        </div>
+
+        {/* The Signature Luxury Quote */}
+        <div className="relative py-6 border-y border-gray-200/60">
+          <p className="text-[#1a1a1a] font-serif italic text-2xl leading-snug">
+            "True luxury is found in the raw intelligence of nature."
+          </p>
+        </div>
+
+        {/* Precision Data Grid */}
+        <div className="grid grid-cols-2 gap-16 pt-4">
+          <div className="space-y-2">
+            <span className="block text-[10px] text-emerald-700 font-bold uppercase tracking-[0.2em]">
+              Bio-Vitality
+            </span>
+            <div className="flex items-baseline gap-1 font-mono">
+              <span className="text-3xl font-light tracking-tighter">94.00</span>
+              <span className="text-xs text-gray-400">/100</span>
+            </div>
+          </div>
+          <div className="space-y-2">
+            <span className="block text-[10px] text-emerald-700 font-bold uppercase tracking-[0.2em]">
+              Status
+            </span>
+            <span className="block text-2xl font-mono font-light tracking-widest uppercase text-emerald-900">
+              Optimized
+            </span>
+          </div>
+        </div>
+      </div>
+    </motion.div>
+  </div>
+</section>
 
       {/* 5. FOUNDER'S NOTE: THE MANIFESTO (Visual Logic Fix) */}
       <section className="relative py-48 bg-[#0a0a0a] overflow-hidden">
