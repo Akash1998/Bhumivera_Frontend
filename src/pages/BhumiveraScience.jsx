@@ -53,12 +53,12 @@ const BhumiveraScience = () => {
           </motion.div>
         </div>
 
-        {/* Hero Image: Replaced with a reliable Macro Green Leaf pattern */}
+        {/* Hero Image (Image 1) - 100% Fit */}
         <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-[#0a0a0a] to-transparent z-20"></div>
         <img 
-          src="https://images.unsplash.com/photo-1533038590840-1c798e221160?auto=format&fit=crop&q=80&w=2000" 
+          src="/assets/images/{0594BFA1-476D-4E8C-A46C-FA698A9740FA}.jpg" 
           alt="Macro Botanical Leaf" 
-          className="absolute bottom-0 left-0 w-full h-[60%] object-cover opacity-30 mix-blend-luminosity"
+          className="absolute bottom-0 left-0 w-full h-full lg:h-[70%] object-cover opacity-30 mix-blend-luminosity"
         />
       </section>
 
@@ -90,18 +90,18 @@ const BhumiveraScience = () => {
               </div>
             </motion.div>
 
-            {/* Replaced with a reliable clean laboratory/extraction image */}
+            {/* Lab Image (Image 2) - 100% Fit */}
             <motion.div 
               initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="relative group"
+              className="relative group h-full min-h-[400px]"
             >
-              <div className="absolute inset-0 bg-emerald-500/10 blur-[100px] group-hover:bg-emerald-500/20 transition-all"></div>
+              <div className="absolute inset-0 bg-emerald-500/10 blur-[100px] group-hover:bg-emerald-500/20 transition-all z-0"></div>
               <img 
-                src="https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&q=80&w=800" 
+                src="/assets/images/{55D6F18C-87E4-4185-AFCC-2D796D1D739F}.png" 
                 alt="Scientific Extraction Lab" 
-                className="rounded-sm border border-white/10 opacity-80 hover:opacity-100 transition-all duration-700 shadow-2xl mix-blend-lighten"
+                className="absolute inset-0 w-full h-full object-cover rounded-sm border border-white/10 opacity-80 hover:opacity-100 transition-all duration-700 shadow-2xl mix-blend-lighten z-10"
               />
             </motion.div>
           </div>
@@ -155,8 +155,8 @@ const BhumiveraScience = () => {
       {/* SECTION 04: THE COLD-PROCESS SOP (Technical Visualization) */}
       <section className="py-32 bg-white text-black relative">
         <div className="container mx-auto px-6">
-          <div className="flex flex-col lg:flex-row gap-16 items-center">
-            <div className="lg:w-1/2">
+          <div className="flex flex-col lg:flex-row gap-16 items-stretch">
+            <div className="lg:w-1/2 flex flex-col justify-center">
               <span className="text-emerald-600 font-mono text-sm tracking-widest block mb-4">SOP 104 // MANUFACTURING LOGIC</span>
               <h2 className="text-5xl font-light tracking-tight mb-8">Zero Logic Deletion. <br />Zero Heat Damage.</h2>
               <p className="text-lg text-gray-700 leading-relaxed mb-8">
@@ -174,17 +174,12 @@ const BhumiveraScience = () => {
               </div>
             </div>
             
-            {/* Replaced with reliable Natural Soap Bar images */}
-            <div className="lg:w-1/2 grid grid-cols-2 gap-4">
+            {/* Manufacturing Image (Image 3) - 100% Fit Full Column */}
+            <div className="lg:w-1/2 relative min-h-[500px] rounded-sm overflow-hidden shadow-xl">
               <img 
-                src="https://images.unsplash.com/photo-1600857062241-98e5dba7f214?auto=format&fit=crop&q=80&w=600" 
-                alt="Cold Process Curing" 
-                className="rounded-sm object-cover h-64 w-full" 
-              />
-              <img 
-                src="https://images.unsplash.com/photo-1584949514123-474cfa705dfe?auto=format&fit=crop&q=80&w=600" 
-                alt="Botanical Soap Matrix" 
-                className="mt-8 rounded-sm shadow-xl object-cover h-64 w-full" 
+                src="/assets/images/{89CB4F1E-952E-4DAB-B3C7-333029F46158}.png" 
+                alt="Cold Process Curing Matrix" 
+                className="absolute inset-0 w-full h-full object-cover" 
               />
             </div>
           </div>
@@ -232,6 +227,24 @@ const BhumiveraScience = () => {
               </table>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* SECTION 06: GLOBAL COMMITMENT */}
+      <section className="py-32 border-t border-white/5">
+        <div className="container mx-auto px-6 text-center">
+          <motion.div {...fadeInUp}>
+            <h2 className="text-4xl font-light mb-8 italic">"Purity is not a goal, it is a constraint."</h2>
+            <p className="text-gray-500 max-w-2xl mx-auto mb-12 leading-relaxed">
+              Every Bhumivera product is "Clean Code" for the environment. 0% Micro-plastics. 100% Biodegradable Logic. Sourced locally in Asansol, engineered for the global stage.
+            </p>
+            <div className="flex flex-wrap justify-center gap-12 grayscale opacity-40">
+              <span className="font-mono text-xs uppercase tracking-[0.3em]">Vegan Certified</span>
+              <span className="font-mono text-xs uppercase tracking-[0.3em]">Cruelty Free</span>
+              <span className="font-mono text-xs uppercase tracking-[0.3em]">Zero Waste Packaging</span>
+              <span className="font-mono text-xs uppercase tracking-[0.3em]">Paraben 0%</span>
+            </div>
+          </motion.div>
         </div>
       </section>
 
