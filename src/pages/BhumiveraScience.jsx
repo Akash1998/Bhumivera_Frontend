@@ -20,18 +20,11 @@ const BhumiveraScience = () => {
     transition: { duration: 0.6 }
   };
 
-  const staggerContainer = {
-    initial: { opacity: 0 },
-    whileInView: { opacity: 1 },
-    transition: { staggerChildren: 0.2 }
-  };
-
   return (
     <div className="bg-[#0a0a0a] text-white font-sans selection:bg-emerald-500/30">
       
       {/* SECTION 01: HERO ARCHITECTURE */}
       <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20">
-        {/* Background Visual: Molecular Grid Overlay */}
         <div className="absolute inset-0 opacity-20 pointer-events-none">
           <div className="absolute inset-0 bg-[url('https://www.transparenttextures.com/patterns/carbon-fibre.png')]"></div>
           <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-emerald-900/20 blur-[120px] rounded-full"></div>
@@ -43,6 +36,9 @@ const BhumiveraScience = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
           >
+            <span className="inline-block px-4 py-1 border border-emerald-500/30 rounded-full text-emerald-400 text-xs font-mono tracking-widest mb-6">
+              PROTOCOL V.1.0 // BOTANICAL INTELLIGENCE
+            </span>
             <h1 className="text-6xl md:text-8xl font-light tracking-tighter mb-8 bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent italic">
               Bhumivera Science
             </h1>
@@ -50,19 +46,19 @@ const BhumiveraScience = () => {
               "Nature is a relentless architect; her designs are perfected over millennia. Our role is not to improve upon them, but to decode them for the modern world."
             </p>
             <div className="flex justify-center gap-4">
-              <button className="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 transition-all rounded-sm font-medium flex items-center gap-2">
-                Explore Lab Data <ArrowRight size={18} />
+              <button className="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-black transition-all rounded-sm font-bold tracking-widest text-xs uppercase flex items-center gap-2">
+                Explore Lab Data <ArrowRight size={14} />
               </button>
             </div>
           </motion.div>
         </div>
 
-        {/* Hero Image: Macro Aloe Vera (Public Asset Placeholder) */}
+        {/* Hero Image: Replaced with a reliable Macro Green Leaf pattern */}
         <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-[#0a0a0a] to-transparent z-20"></div>
         <img 
-          src="https://images.unsplash.com/photo-1596755389378-c31d21fd1273?auto=format&fit=crop&q=80&w=2000" 
-          alt="Macro Aloe Vera" 
-          className="absolute bottom-0 left-0 w-full h-[60%] object-cover opacity-40 grayscale hover:grayscale-0 transition-all duration-1000"
+          src="https://images.unsplash.com/photo-1533038590840-1c798e221160?auto=format&fit=crop&q=80&w=2000" 
+          alt="Macro Botanical Leaf" 
+          className="absolute bottom-0 left-0 w-full h-[60%] object-cover opacity-30 mix-blend-luminosity"
         />
       </section>
 
@@ -94,6 +90,7 @@ const BhumiveraScience = () => {
               </div>
             </motion.div>
 
+            {/* Replaced with a reliable clean laboratory/extraction image */}
             <motion.div 
               initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}
@@ -102,9 +99,9 @@ const BhumiveraScience = () => {
             >
               <div className="absolute inset-0 bg-emerald-500/10 blur-[100px] group-hover:bg-emerald-500/20 transition-all"></div>
               <img 
-                src="https://images.unsplash.com/photo-1596003906949-67221c37965c?auto=format&fit=crop&q=80&w=800" 
-                alt="Scientific Extraction" 
-                className="rounded-sm border border-white/10 grayscale hover:grayscale-0 transition-all duration-700 shadow-2xl"
+                src="https://images.unsplash.com/photo-1532187863486-abf9dbad1b69?auto=format&fit=crop&q=80&w=800" 
+                alt="Scientific Extraction Lab" 
+                className="rounded-sm border border-white/10 opacity-80 hover:opacity-100 transition-all duration-700 shadow-2xl mix-blend-lighten"
               />
             </motion.div>
           </div>
@@ -122,39 +119,27 @@ const BhumiveraScience = () => {
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            {/* Adsorption Card */}
-            <motion.div 
-              whileHover={{ y: -10 }}
-              className="p-8 bg-[#111] border border-white/5 rounded-sm hover:border-emerald-500/40 transition-all group"
-            >
+            <motion.div whileHover={{ y: -10 }} className="p-8 bg-[#111] border border-white/5 rounded-sm hover:border-emerald-500/40 transition-all group">
               <div className="mb-6 p-4 w-fit bg-emerald-500/10 rounded-full group-hover:bg-emerald-500 group-hover:text-black transition-all">
                 <Atom size={32} />
               </div>
               <h3 className="text-xl mb-4">Ion Exchange</h3>
               <p className="text-sm text-gray-500 leading-relaxed">
-                Multani Mitti creates a negative ionic charge that naturally attracts positively charged toxins, pulling them from deep within the dermal layers without abrasive force.
+                Multani Mitti creates a negative ionic charge that naturally attracts positively charged toxins, pulling them from deep within the dermal layers.
               </p>
             </motion.div>
 
-            {/* Thermal Sink Card */}
-            <motion.div 
-              whileHover={{ y: -10 }}
-              className="p-8 bg-[#111] border border-white/5 rounded-sm hover:border-emerald-500/40 transition-all group"
-            >
+            <motion.div whileHover={{ y: -10 }} className="p-8 bg-[#111] border border-white/5 rounded-sm hover:border-emerald-500/40 transition-all group">
               <div className="mb-6 p-4 w-fit bg-emerald-500/10 rounded-full group-hover:bg-emerald-500 group-hover:text-black transition-all">
                 <Cpu size={32} />
               </div>
               <h3 className="text-xl mb-4">Thermal Regulation</h3>
               <p className="text-sm text-gray-500 leading-relaxed">
-                Our mineral structure facilitates a natural heat exchange, cooling inflamed skin and counteracting the "digital stress" caused by prolonged screen-time exposure.
+                Our mineral structure facilitates a natural heat exchange, cooling inflamed skin and counteracting the "digital stress" caused by screens.
               </p>
             </motion.div>
 
-            {/* Barrier Integrity Card */}
-            <motion.div 
-              whileHover={{ y: -10 }}
-              className="p-8 bg-[#111] border border-white/5 rounded-sm hover:border-emerald-500/40 transition-all group"
-            >
+            <motion.div whileHover={{ y: -10 }} className="p-8 bg-[#111] border border-white/5 rounded-sm hover:border-emerald-500/40 transition-all group">
               <div className="mb-6 p-4 w-fit bg-emerald-500/10 rounded-full group-hover:bg-emerald-500 group-hover:text-black transition-all">
                 <Microscope size={32} />
               </div>
@@ -188,9 +173,19 @@ const BhumiveraScience = () => {
                 </div>
               </div>
             </div>
+            
+            {/* Replaced with reliable Natural Soap Bar images */}
             <div className="lg:w-1/2 grid grid-cols-2 gap-4">
-              <img src="https://images.unsplash.com/photo-1600857062241-98e5dba7f214?auto=format&fit=crop&q=80&w=600" alt="Process 1" className="rounded-sm" />
-              <img src="https://images.unsplash.com/photo-1576086213369-97a306dca665?auto=format&fit=crop&q=80&w=600" alt="Process 2" className="mt-8 rounded-sm shadow-xl" />
+              <img 
+                src="https://images.unsplash.com/photo-1600857062241-98e5dba7f214?auto=format&fit=crop&q=80&w=600" 
+                alt="Cold Process Curing" 
+                className="rounded-sm object-cover h-64 w-full" 
+              />
+              <img 
+                src="https://images.unsplash.com/photo-1584949514123-474cfa705dfe?auto=format&fit=crop&q=80&w=600" 
+                alt="Botanical Soap Matrix" 
+                className="mt-8 rounded-sm shadow-xl object-cover h-64 w-full" 
+              />
             </div>
           </div>
         </div>
@@ -240,26 +235,8 @@ const BhumiveraScience = () => {
         </div>
       </section>
 
-      {/* SECTION 06: GLOBAL COMMITMENT */}
-      <section className="py-32 border-t border-white/5">
-        <div className="container mx-auto px-6 text-center">
-          <motion.div {...fadeInUp}>
-            <h2 className="text-4xl font-light mb-8 italic">"Purity is not a goal, it is a constraint."</h2>
-            <p className="text-gray-500 max-w-2xl mx-auto mb-12 leading-relaxed">
-              Every Bhumivera product is "Clean Code" for the environment. 0% Micro-plastics. 100% Biodegradable Logic. Sourced locally in Asansol, engineered for the global stage.
-            </p>
-            <div className="flex flex-wrap justify-center gap-12 grayscale opacity-40">
-              <span className="font-mono text-xs uppercase tracking-[0.3em]">Vegan Certified</span>
-              <span className="font-mono text-xs uppercase tracking-[0.3em]">Cruelty Free</span>
-              <span className="font-mono text-xs uppercase tracking-[0.3em]">Zero Waste Packaging</span>
-              <span className="font-mono text-xs uppercase tracking-[0.3em]">Paraben 0%</span>
-            </div>
-          </motion.div>
-        </div>
-      </section>
-
       {/* FOOTER CALL TO ACTION */}
-      <footer className="py-20 bg-emerald-950/20 text-center">
+      <footer className="py-20 bg-[#050505] text-center border-t border-white/5">
         <div className="container mx-auto px-6">
           <h3 className="text-2xl mb-6">Ready to upgrade your skincare architecture?</h3>
           <button className="px-10 py-4 border border-emerald-500 text-emerald-400 hover:bg-emerald-500 hover:text-black transition-all font-bold tracking-widest uppercase text-xs">
