@@ -91,7 +91,10 @@ export default function About() {
             </motion.h3>
             <motion.div variants={fadeInUp} className="space-y-6 text-gray-500 font-light text-lg leading-relaxed">
               <p>
-                Bhumivera was founded on a simple realization: modern skincare has lost its way. We returned to the base code of nature to bridge the gap between ancient Ayurvedic wisdom and modern molecular precision.
+                The journey of Bhumivera began with a rejection of "legacy errors" in skincare. While aisles were flooded with synthetic preservatives that delete the logic of skin vitality, we looked toward the earth's base code.
+              </p>
+              <p>
+                We asked: Why alter what nature has already perfected? Why introduce toxins when the earth offers remedies trusted for millennia? Bhumivera bridges the gap between ancient Ayurvedic wisdom and modern molecular precision.
               </p>
             </motion.div>
           </motion.div>
@@ -127,110 +130,80 @@ export default function About() {
       {/* 4. MATERIA MEDICA: BOTANICAL MATRIX */}
       <section className="py-32 px-6">
         <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-24 max-w-3xl mx-auto">
+            <h2 className="text-xs font-bold text-emerald-600 uppercase tracking-[0.4em] mb-4">Materia Medica</h2>
+            <h3 className="text-4xl md:text-5xl font-serif text-[#1a1a1a] mb-6">The Extraction Heroes</h3>
+            <p className="text-gray-500 font-light">Biological data sheets for our primary actives. No fillers. Just clinical botanical efficacy.</p>
+          </div>
+
           <div className="space-y-32">
-            {/* Multani Mitti */}
-            <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="flex flex-col lg:flex-row gap-16 items-center">
-              <div className="w-full lg:w-1/2 aspect-square rounded-sm overflow-hidden bg-gray-100 relative group">
-                <img src="/assets/images/multanimittibeaker.webp" className="w-full h-full object-cover mix-blend-multiply opacity-90 group-hover:scale-110 transition-transform duration-[3000ms]" alt="Multani Mitti" />
-                <div className="absolute top-4 left-4 font-mono text-[8px] text-black/40 tracking-[0.5em] uppercase">Element: Earth_Mineral</div>
+            {/* --- MULTANI MITTI --- */}
+            <motion.div 
+              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+              className="flex flex-col lg:flex-row gap-24 items-center"
+            >
+              <div className="w-full lg:w-[55%] aspect-square rounded-sm overflow-hidden bg-white shadow-2xl shadow-stone-900/5 relative group border border-stone-100">
+                <img 
+                  src="/assets/images/multanimittibeaker.webp" 
+                  className="w-full h-full object-cover transition-transform duration-[5000ms] ease-out group-hover:scale-110 opacity-95" 
+                  alt="Bhumivera Multani Mitti Extraction" 
+                />
+                <div className="absolute top-8 left-8 font-mono text-[9px] text-stone-900/40 tracking-[0.6em] uppercase vertical-text">Elemental_Purification_v1.0</div>
               </div>
-              <div className="w-full lg:w-1/2 space-y-6">
-                <div className="inline-flex items-center gap-2 px-3 py-1 bg-emerald-600/10 text-emerald-700 text-[10px] font-bold uppercase tracking-widest rounded-full font-mono"><Sun size={12} /> ION_EXCHANGE_ACTIVE</div>
-                <h4 className="text-4xl font-serif text-[#1a1a1a]">Multani Mitti</h4>
-                <p className="text-gray-500 leading-relaxed font-light text-lg">Finely milled clay that acts as a magnetic adsorber for deep environmental toxins.</p>
-                <div className="flex gap-10 mt-8 border-t border-gray-100 pt-8">
-                   <div><span className="block text-[8px] text-emerald-600 font-bold uppercase tracking-widest mb-1">Density</span><span className="text-sm font-mono font-bold">98.4 μm</span></div>
-                   <div><span className="block text-[8px] text-emerald-600 font-bold uppercase tracking-widest mb-1">Rate</span><span className="text-sm font-mono font-bold">CAT+</span></div>
+
+              <div className="w-full lg:w-[45%] space-y-10">
+                <div className="space-y-6">
+                  <div className="inline-flex items-center gap-3 px-4 py-2 bg-white border border-stone-900/10 text-stone-800 text-[10px] font-bold uppercase tracking-[0.3em] rounded-sm shadow-sm font-mono">
+                    <Sun size={14} strokeWidth={1.5} className="text-amber-600" /> Ion_Exchange_Active
+                  </div>
+                  <h4 className="text-6xl font-serif text-[#1a1a1a] leading-[1.1] tracking-tight">Multani <br /><span className="italic text-stone-500 font-light">Mitti Clay</span></h4>
+                  <p className="text-gray-500 leading-relaxed font-light text-xl max-w-md">Harvested from mineral-rich reserves, this ultra-refined clay operates as a molecular magnet, drawing out impurities while preserving your skin's vital barrier.</p>
+                </div>
+                <div className="relative py-6 border-y border-gray-200/60 text-[#1a1a1a] font-serif italic text-2xl leading-snug">
+                  "Purity is not merely the absence of toxins; it is the absolute calibration of earth's rarest elements."
+                </div>
+                <div className="grid grid-cols-2 gap-16 pt-4">
+                  <div className="space-y-2"><span className="block text-[10px] text-stone-700 font-bold uppercase tracking-[0.2em]">Particle Density</span><div className="flex items-baseline gap-1 font-mono"><span className="text-3xl font-light tracking-tighter">0.45</span><span className="text-xs text-gray-400">μm</span></div></div>
+                  <div className="space-y-2"><span className="block text-[10px] text-stone-700 font-bold uppercase tracking-[0.2em]">Ionic Charge</span><span className="block text-2xl font-mono font-light tracking-widest uppercase text-amber-700">Cationic+</span></div>
                 </div>
               </div>
             </motion.div>
 
-           {/* --- BHUMIVERA SCIENCE: ALOE VERA COMPONENT --- */}
-<section className="py-32 bg-[#F9F9F7] overflow-hidden">
-  <div className="max-w-7xl mx-auto px-8">
-    <motion.div 
-      initial="hidden" 
-      whileInView="visible" 
-      viewport={{ once: true }} 
-      variants={fadeInUp} 
-      className="flex flex-col lg:flex-row-reverse gap-24 items-center"
-    >
-      {/* Image Side: The High-Resolution Laboratory Narrative */}
-      <div className="w-full lg:w-[55%] aspect-square rounded-sm overflow-hidden bg-white shadow-2xl shadow-emerald-900/5 relative group">
-        <img 
-          src="/assets/images/aloeveradrop.webp" 
-          className="w-full h-full object-cover transition-transform duration-[5000ms] ease-out group-hover:scale-110" 
-          alt="Bhumivera Aloe Extraction" 
-        />
-        
-        {/* Minimalist Tech Overlays */}
-        <div className="absolute top-8 right-8 font-mono text-[9px] text-emerald-900/30 tracking-[0.6em] uppercase vertical-text">
-          Molecular_Hydration_v2.0
-        </div>
-        <div className="absolute bottom-8 left-8">
-          <div className="flex items-center gap-3">
-            <span className="w-8 h-[1px] bg-emerald-900/20"></span>
-            <span className="font-mono text-[8px] text-emerald-900/40 tracking-[0.4em] uppercase">Element: Bio_Fluid</span>
+            {/* --- ALOE VERA --- */}
+            <motion.div 
+              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
+              className="flex flex-col lg:flex-row-reverse gap-24 items-center"
+            >
+              <div className="w-full lg:w-[55%] aspect-square rounded-sm overflow-hidden bg-white shadow-2xl shadow-emerald-900/5 relative group">
+                <img 
+                  src="/assets/images/aloeveradrop.webp" 
+                  className="w-full h-full object-cover transition-transform duration-[5000ms] ease-out group-hover:scale-110" 
+                  alt="Bhumivera Aloe Extraction" 
+                />
+                <div className="absolute top-8 right-8 font-mono text-[9px] text-emerald-900/30 tracking-[0.6em] uppercase vertical-text">Molecular_Hydration_v2.0</div>
+              </div>
+
+              <div className="w-full lg:w-[45%] space-y-10">
+                <div className="space-y-6">
+                  <div className="inline-flex items-center gap-3 px-4 py-2 bg-white border border-emerald-900/10 text-emerald-800 text-[10px] font-bold uppercase tracking-[0.3em] rounded-sm shadow-sm font-mono">
+                    <Droplets size={14} strokeWidth={1.5} className="text-emerald-500" /> Enzymatic_Sync
+                  </div>
+                  <h4 className="text-6xl font-serif text-[#1a1a1a] leading-[1.1] tracking-tight">Pure Aloe <br /><span className="italic text-emerald-800/90 font-light">Vera Extract</span></h4>
+                  <p className="text-gray-500 leading-relaxed font-light text-xl max-w-md">Cold-pressed polysaccharides that accelerate cellular hydration and repair, refined by science to become a masterpiece of self-care.</p>
+                </div>
+                <div className="relative py-6 border-y border-gray-200/60 text-[#1a1a1a] font-serif italic text-2xl leading-snug">"True luxury is found in the raw intelligence of nature."</div>
+                <div className="grid grid-cols-2 gap-16 pt-4">
+                  <div className="space-y-2"><span className="block text-[10px] text-emerald-700 font-bold uppercase tracking-[0.2em]">Bio-Vitality</span><div className="flex items-baseline gap-1 font-mono"><span className="text-3xl font-light tracking-tighter">94.00</span><span className="text-xs text-gray-400">/100</span></div></div>
+                  <div className="space-y-2"><span className="block text-[10px] text-emerald-700 font-bold uppercase tracking-[0.2em]">Status</span><span className="block text-2xl font-mono font-light tracking-widest uppercase text-emerald-900">Optimized</span></div>
+                </div>
+              </div>
+            </motion.div>
           </div>
         </div>
-      </div>
+      </section>
 
-      {/* Content Side: The Luxury Narrative */}
-      <div className="w-full lg:w-[45%] space-y-10">
-        <div className="space-y-6">
-          {/* Scientific Badge */}
-          <div className="inline-flex items-center gap-3 px-4 py-2 bg-white border border-emerald-900/10 text-emerald-800 text-[10px] font-bold uppercase tracking-[0.3em] rounded-sm shadow-sm font-mono">
-            <Droplets size={14} strokeWidth={1.5} className="text-emerald-500" /> 
-            Enzymatic_Sync
-          </div>
-
-          {/* Premium Headline */}
-          <h4 className="text-6xl font-serif text-[#1a1a1a] leading-[1.1] tracking-tight">
-            Pure Aloe <br />
-            <span className="italic text-emerald-800/90 font-light">Vera Extract</span>
-          </h4>
-
-          {/* Enhanced Description */}
-          <p className="text-gray-500 leading-relaxed font-light text-xl max-w-md">
-            Cold-pressed polysaccharides that accelerate cellular hydration and repair, refined by science to become a masterpiece of self-care.
-          </p>
-        </div>
-
-        {/* The Signature Luxury Quote */}
-        <div className="relative py-6 border-y border-gray-200/60">
-          <p className="text-[#1a1a1a] font-serif italic text-2xl leading-snug">
-            "True luxury is found in the raw intelligence of nature."
-          </p>
-        </div>
-
-        {/* Precision Data Grid */}
-        <div className="grid grid-cols-2 gap-16 pt-4">
-          <div className="space-y-2">
-            <span className="block text-[10px] text-emerald-700 font-bold uppercase tracking-[0.2em]">
-              Bio-Vitality
-            </span>
-            <div className="flex items-baseline gap-1 font-mono">
-              <span className="text-3xl font-light tracking-tighter">94.00</span>
-              <span className="text-xs text-gray-400">/100</span>
-            </div>
-          </div>
-          <div className="space-y-2">
-            <span className="block text-[10px] text-emerald-700 font-bold uppercase tracking-[0.2em]">
-              Status
-            </span>
-            <span className="block text-2xl font-mono font-light tracking-widest uppercase text-emerald-900">
-              Optimized
-            </span>
-          </div>
-        </div>
-      </div>
-    </motion.div>
-  </div>
-</section>
-
-      {/* 5. FOUNDER'S NOTE: THE MANIFESTO (Visual Logic Fix) */}
+      {/* 5. FOUNDER'S NOTE: THE MANIFESTO */}
       <section className="relative py-48 bg-[#0a0a0a] overflow-hidden">
-        {/* Background Layer (Image 1) */}
         <div className="absolute inset-0 z-0">
           <img 
             src="/assets/images/foundermanifesto.webp" 
@@ -239,37 +212,30 @@ export default function About() {
           />
           <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-transparent to-[#0a0a0a]" />
         </div>
-
         <div className="max-w-4xl mx-auto relative z-10 text-center px-6">
           <div className="inline-flex items-center gap-2 mb-12 text-[10px] font-mono text-emerald-500 tracking-[0.4em] uppercase border-b border-emerald-500/20 pb-2">
             <Terminal size={12} /> Root_Log: Founding_Manifesto
           </div>
-          <h3 className="text-3xl md:text-5xl font-serif text-white mb-10 leading-tight italic">
-            "We aren't just creating skincare. We are reviving a forgotten dialogue between human skin and the natural world."
-          </h3>
+          <h3 className="text-3xl md:text-5xl font-serif text-white mb-10 leading-tight italic">"We aren't just creating skincare. We are reviving a forgotten dialogue between human skin and the natural world."</h3>
           <div className="w-12 h-0.5 bg-emerald-500 mx-auto mb-8" />
           <p className="text-emerald-400 font-bold uppercase tracking-[0.4em] text-sm mb-2">Akash Prasad</p>
           <p className="text-gray-600 font-light text-[10px] uppercase tracking-widest font-mono">Principal Architect // Bhumivera Eco-Labs</p>
         </div>
       </section>
 
-      {/* 6. CALL TO ACTION: INITIALIZATION (Full Frame Fix) */}
+      {/* 6. CALL TO ACTION: INITIALIZATION */}
       <section className="relative py-60 px-6 bg-white overflow-hidden">
-        {/* Background Layer (Image 2) */}
         <div className="absolute inset-0 z-0 opacity-10">
           <img 
-            src="/assets/images/transformationcta.webp" 
+            src="/assets/images/transformation.webp" 
             alt="Transformation CTA Background" 
             className="w-full h-full object-cover"
           />
         </div>
-
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="max-w-5xl mx-auto text-center relative z-10">
           <ShieldCheck size={48} className="text-emerald-600 mx-auto mb-8" />
           <h2 className="text-4xl md:text-6xl font-serif text-[#1a1a1a] mb-8 tracking-tighter">Ready to Synchronize?</h2>
-          <p className="text-lg text-gray-500 font-light max-w-2xl mx-auto mb-12 leading-relaxed italic">
-            "Begin your botanical transformation with a batch audited for molecular purity. Experience the difference of true clinical luxury."
-          </p>
+          <p className="text-lg text-gray-500 font-light max-w-2xl mx-auto mb-12 leading-relaxed italic">"Begin your botanical transformation with a batch audited for molecular purity. Experience the difference of true clinical luxury."</p>
           <motion.a 
             href="/shop" 
             whileHover={{ scale: 1.05, backgroundColor: "#0a0a0a" }}
