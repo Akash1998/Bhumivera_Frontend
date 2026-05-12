@@ -53,20 +53,20 @@ const BhumiveraScience = () => {
           </motion.div>
         </div>
 
-        {/* Hero Image (Image 1) - 100% Fit */}
+        {/* Hero Image (aloeverascience) - 100% Fit */}
         <div className="absolute bottom-0 w-full h-1/2 bg-gradient-to-t from-[#0a0a0a] to-transparent z-20"></div>
         <img 
-          src="/assets/images/{0594BFA1-476D-4E8C-A46C-FA698A9740FA}.jpg" 
-          alt="Macro Botanical Leaf" 
-          className="absolute bottom-0 left-0 w-full h-full lg:h-[70%] object-cover opacity-30 mix-blend-luminosity"
+          src="/assets/images/aloeverascience.webp" 
+          alt="Bhumivera Botanical Science" 
+          className="absolute inset-0 w-full h-full object-cover opacity-30 mix-blend-luminosity"
         />
       </section>
 
       {/* SECTION 02: THE ALOE ALGORITHM (Bio-Code) */}
       <section className="py-32 bg-[#0d0d0d] relative border-y border-white/5">
         <div className="container mx-auto px-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-center">
-            <motion.div {...fadeInUp}>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-20 items-stretch">
+            <motion.div {...fadeInUp} className="flex flex-col justify-center">
               <h2 className="text-4xl font-light mb-8 flex items-center gap-4">
                 <Leaf className="text-emerald-500" /> 01. The Aloe Algorithm
               </h2>
@@ -90,17 +90,17 @@ const BhumiveraScience = () => {
               </div>
             </motion.div>
 
-            {/* Lab Image (Image 2) - 100% Fit */}
+            {/* Beaker Image (aloeverabeaker) - 100% Fit */}
             <motion.div 
               initial={{ opacity: 0, x: 50 }}
               whileInView={{ opacity: 1, x: 0 }}
               viewport={{ once: true }}
-              className="relative group h-full min-h-[400px]"
+              className="relative group min-h-[500px]"
             >
               <div className="absolute inset-0 bg-emerald-500/10 blur-[100px] group-hover:bg-emerald-500/20 transition-all z-0"></div>
               <img 
-                src="/assets/images/{55D6F18C-87E4-4185-AFCC-2D796D1D739F}.png" 
-                alt="Scientific Extraction Lab" 
+                src="/assets/images/aloeverabeaker.webp" 
+                alt="Botanical Laboratory Extraction" 
                 className="absolute inset-0 w-full h-full object-cover rounded-sm border border-white/10 opacity-80 hover:opacity-100 transition-all duration-700 shadow-2xl mix-blend-lighten z-10"
               />
             </motion.div>
@@ -174,11 +174,11 @@ const BhumiveraScience = () => {
               </div>
             </div>
             
-            {/* Manufacturing Image (Image 3) - 100% Fit Full Column */}
-            <div className="lg:w-1/2 relative min-h-[500px] rounded-sm overflow-hidden shadow-xl">
+            {/* Multani Mitti Image (multanimitti) - 100% Fit Full Column */}
+            <div className="lg:w-1/2 relative min-h-[600px] rounded-sm overflow-hidden shadow-2xl">
               <img 
-                src="/assets/images/{89CB4F1E-952E-4DAB-B3C7-333029F46158}.png" 
-                alt="Cold Process Curing Matrix" 
+                src="/assets/images/multanimitti.webp" 
+                alt="Multani Mitti Mineral Curing" 
                 className="absolute inset-0 w-full h-full object-cover" 
               />
             </div>
