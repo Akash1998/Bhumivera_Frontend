@@ -43,9 +43,6 @@ const BhumiveraScience = () => {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.8 }}
           >
-            <span className="inline-block px-4 py-1 border border-emerald-500/30 rounded-full text-emerald-400 text-xs font-mono tracking-widest mb-6">
-              PROTOCOL V.1.0 // BOTANICAL INTELLIGENCE
-            </span>
             <h1 className="text-6xl md:text-8xl font-light tracking-tighter mb-8 bg-gradient-to-b from-white to-gray-500 bg-clip-text text-transparent italic">
               Bhumivera Science
             </h1>
