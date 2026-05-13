@@ -8,7 +8,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#4ade80" />
     
-    <!-- Primary Meta Tags -->
+    <script>
+      if (window.trustedTypes && window.trustedTypes.createPolicy) {
+        if (!window.trustedTypes.defaultPolicy) {
+          window.trustedTypes.createPolicy('default', {
+            createHTML: function(string) { return string; },
+            createScriptURL: function(string) { return string; },
+            createScript: function(string) { return string; }
+          });
+        }
+      }
+    </script>
+    
     <title>Bhumivera | Luxury 100% Natural Skincare & Organic Soap</title>
     <meta name="title" content="Bhumivera | Luxury 100% Natural Skincare & Organic Soap" />
     <meta name="description" content="Discover Bhumivera, the premier luxury skincare brand. Experience 100% natural, organic soaps and skincare products completely free from fragrances and preservatives." />
@@ -16,24 +27,20 @@
     <meta name="author" content="Bhumivera" />
     <link rel="canonical" href="https://bhumivera.com/" />
     
-    <!-- Robots -->
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 
-    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://bhumivera.com/" />
     <meta property="og:title" content="Bhumivera | Luxury 100% Natural Skincare & Organic Soap" />
     <meta property="og:description" content="Experience 100% natural, organic soaps completely free from fragrances and preservatives." />
     <meta property="og:image" content="https://bhumivera.com/assets/images/logo.webp" />
 
-    <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://bhumivera.com/" />
     <meta property="twitter:title" content="Bhumivera | Luxury 100% Natural Skincare & Organic Soap" />
     <meta property="twitter:description" content="Experience 100% natural, organic soaps completely free from fragrances and preservatives." />
     <meta property="twitter:image" content="https://bhumivera.com/assets/images/logo.webp" />
 
-    <!-- JSON-LD Structured Data -->
     <script type="application/ld+json">
     [
       {
