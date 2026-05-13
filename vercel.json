@@ -73,7 +73,7 @@
       "destination": "https://service.bhumivera.com/warehouseadmin"
     },
     {
-      "source": "/((?!api/|warehouse|warehouseadmin|sitemap.xml|robots.txt).*)",
+      "source": "/(.*)",
       "destination": "/index.html"
     }
   ]
