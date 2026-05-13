@@ -83,58 +83,60 @@ function AppContent() {
       {/* Navbar hidden on Admin/Warehouse routes for clean UI */}
       {!isAdminPath && !isWarehousePath && <Navbar />}
       
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          {/* Public Routes */}
-          <Route path="/" element={<Home />} />
-          <Route path="/shop" element={<Shop />} />
-          <Route path="/product/:id" element={<ProductDetail />} />
-          <Route path="/contact" element={<Contact />} />
-          <Route path="/about" element={<About />} />
-          <Route path="/legal" element={<Legal />} />
-          
-          {/* NEW: Bhumivera Brand Routes */}
-          <Route path="/science" element={<BhumiveraScience />} />
-          <Route path="/purchase-protection" element={<PurchaseProtection />} />
-          <Route path="/returns-centre" element={<ReturnsCentre />} />
+      <main id="main-content" className="flex-1 w-full">
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            {/* Public Routes */}
+            <Route path="/" element={<Home />} />
+            <Route path="/shop" element={<Shop />} />
+            <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/contact" element={<Contact />} />
+            <Route path="/about" element={<About />} />
+            <Route path="/legal" element={<Legal />} />
+            
+            {/* NEW: Bhumivera Brand Routes */}
+            <Route path="/science" element={<BhumiveraScience />} />
+            <Route path="/purchase-protection" element={<PurchaseProtection />} />
+            <Route path="/returns-centre" element={<ReturnsCentre />} />
 
-          {/* Tools & Tracking */}
-          <Route path="/fitment-engine" element={<FitmentEngine />} />
-          <Route path="/Genuine_test" element={<Genuine_test />} />
-          <Route path="/warranty" element={<Genuine_test />} />
-          <Route path="/order-tracking" element={<OrderTracking />} />
-          <Route path="/compare" element={<Compare />} />
-          
-          {/* Auth Routes */}
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+            {/* Tools & Tracking */}
+            <Route path="/fitment-engine" element={<FitmentEngine />} />
+            <Route path="/Genuine_test" element={<Genuine_test />} />
+            <Route path="/warranty" element={<Genuine_test />} />
+            <Route path="/order-tracking" element={<OrderTracking />} />
+            <Route path="/compare" element={<Compare />} />
+            
+            {/* Auth Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-          {/* Protected User Routes */}
-          <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-          <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-          <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-          <Route path="/order-success" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
-          <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
-          <Route path="/address-book" element={<ProtectedRoute><AddressBook /></ProtectedRoute>} />
-          <Route path="/returns" element={<ProtectedRoute><Returns /></ProtectedRoute>} />
-          <Route path="/affiliate" element={<ProtectedRoute><Affiliate /></ProtectedRoute>} />
+            {/* Protected User Routes */}
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+            <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+            <Route path="/order-success" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
+            <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
+            <Route path="/address-book" element={<ProtectedRoute><AddressBook /></ProtectedRoute>} />
+            <Route path="/returns" element={<ProtectedRoute><Returns /></ProtectedRoute>} />
+            <Route path="/affiliate" element={<ProtectedRoute><Affiliate /></ProtectedRoute>} />
 
-          {/* Warehouse System */}
-          <Route path="/warehouse" element={<WarehouseRoute><Warehouse /></WarehouseRoute>} />
-          <Route path="/warehouse/admin" element={<WarehouseRoute><WarehouseAdmin /></WarehouseRoute>} />
-          <Route path="/warehouse/management" element={<WarehouseRoute><WarehouseManagement /></WarehouseRoute>} />
-          <Route path="/warehouseadmin" element={<WarehouseAdminLogin />} />
-          
-          {/* Admin System */}
-          <Route path="/admin/login" element={<AdminLogin />} />
-          <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-          <Route path="/admin/dashboard/:tab" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-          <Route path="/admin/*" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            {/* Warehouse System */}
+            <Route path="/warehouse" element={<WarehouseRoute><Warehouse /></WarehouseRoute>} />
+            <Route path="/warehouse/admin" element={<WarehouseRoute><WarehouseAdmin /></WarehouseRoute>} />
+            <Route path="/warehouse/management" element={<WarehouseRoute><WarehouseManagement /></WarehouseRoute>} />
+            <Route path="/warehouseadmin" element={<WarehouseAdminLogin />} />
+            
+            {/* Admin System */}
+            <Route path="/admin/login" element={<AdminLogin />} />
+            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/admin/dashboard/:tab" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/admin/*" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
-          {/* 404 Redirect */}
-          <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </Suspense>
+            {/* 404 Redirect */}
+            <Route path="*" element={<Navigate to="/" />} />
+          </Routes>
+        </Suspense>
+      </main>
 
       {/* Footer hidden on Admin/Warehouse routes */}
       {!isAdminPath && !isWarehousePath && <Footer />}
