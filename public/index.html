@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <!-- Google Tag Manager -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=GT-5NXQTVQG"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -17,12 +16,10 @@
     <meta name="theme-color" content="#1f2937" />
     <link rel="canonical" href="https://bhumivera.com/" />
 
-    <!-- Performance: Preconnects -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link rel="preconnect" href="https://www.googletagmanager.com" />
 
-    <!-- Primary SEO Metadata -->
     <title>Bhumivera | Luxury 100% Natural Skincare & Organic Soap</title>
     <meta name="title" content="Bhumivera | Luxury 100% Natural Skincare & Organic Soap" />
     <meta name="description" content="Discover Bhumivera, the premier luxury skincare brand. Experience 100% natural, organic soaps and skincare products crafted for sensitive skin, free from fragrances and preservatives." />
@@ -30,21 +27,18 @@
     <meta name="author" content="Bhumivera" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 
-    <!-- Open Graph / Facebook -->
     <meta property="og:type" content="website" />
     <meta property="og:url" content="https://bhumivera.com/" />
     <meta property="og:title" content="Bhumivera | Luxury 100% Natural Skincare & Organic Soap" />
     <meta property="og:description" content="Experience 100% natural, organic soaps and skincare solutions. Pure luxury, zero preservatives, crafted for the most sensitive skin." />
     <meta property="og:image" content="https://bhumivera.com/assets/images/logo.webp" />
 
-    <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image" />
     <meta property="twitter:url" content="https://bhumivera.com/" />
     <meta property="twitter:title" content="Bhumivera | Luxury 100% Natural Skincare & Organic Soap" />
     <meta property="twitter:description" content="Luxury 100% natural skincare. Experience the purity of fragrance-free and preservative-free organic beauty." />
     <meta property="twitter:image" content="https://bhumivera.com/assets/images/logo.webp" />
 
-    <!-- Structured Data: Brand & Social Connections -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -63,7 +57,6 @@
     }
     </script>
 
-    <!-- Structured Data: Sitelinks Searchbox -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -83,13 +76,11 @@
   <body class="bg-gray-50 dark:bg-gray-900 text-gray-900 dark:text-gray-100 transition-colors duration-200">
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-    
-    <!-- Service Worker for PWA Performance -->
     <script>
       if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
           navigator.serviceWorker.register('/sw.js').catch(error => {
-            console.log('ServiceWorker registration failed: ', error);
+            console.log('SW registration failed: ', error);
           });
         });
       }
