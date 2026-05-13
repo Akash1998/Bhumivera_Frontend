@@ -1,4 +1,4 @@
-import React, { lazy, Suspense } from "react";
+import React, { lazy, Suspense, useMemo } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import Footer from "./components/Footer.jsx";
@@ -48,42 +48,56 @@ const PageLoader = () => (
   </div>
 );
 
-// Auth Route Wrappers
+// --- Auth Route Wrappers ---
+
 function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth() || {}; 
-  const u = user || JSON.parse(localStorage.getItem('user') || 'null'); 
+  const { user, loading } = useAuth() || {};
   const t = localStorage.getItem('token');
-  if (loading) return <PageLoader />; 
-  if (!u || !t) return <Navigate to="/login" />; 
+  
+  if (loading) return <PageLoader />;
+  if (!user && !t) return <Navigate to="/login" replace />;
   return children;
 }
 
 function AdminRoute({ children }) {
-  const { user, loading } = useAuth() || {}; 
-  const u = user || JSON.parse(localStorage.getItem('user') || 'null'); 
+  const { user, loading } = useAuth() || {};
   const t = localStorage.getItem('token');
-  if (loading) return <PageLoader />; 
- if (!u || !t || (u.role !== 'admin' && u.role !== 'superadmin')) return <Navigate to="/admin/login" />;
+  
+  // Memoize admin check for performance
+  const isAdmin = useMemo(() => {
+    return user?.role === 'admin' || user?.role === 'superadmin';
+  }, [user]);
+
+  if (loading) return <PageLoader />;
+  if (!t || !isAdmin) return <Navigate to="/admin/login" replace />;
   return children;
 }
 
 function WarehouseRoute({ children }) {
+  const { loading } = useAuth() || {};
   const t = localStorage.getItem('token') || localStorage.getItem('warehouseToken');
-  if (!t) return <Navigate to="/warehouseadmin" />;
+  
+  if (loading) return <PageLoader />;
+  if (!t) return <Navigate to="/warehouseadmin" replace />;
   return children;
 }
 
+// --- Layout Engine ---
+
 function AppContent() {
   const location = useLocation();
-  const isAdminPath = location.pathname.startsWith("/admin");
-  const isWarehousePath = location.pathname.startsWith("/warehouse") || location.pathname.startsWith("/warehouseadmin");
+  
+  // Determine if we are in a dashboard/admin environment
+  const isManagementView = useMemo(() => {
+    const path = location.pathname;
+    return path.startsWith("/admin") || path.startsWith("/warehouse") || path === "/warehouseadmin";
+  }, [location.pathname]);
 
   return (
-    <>
-      {/* Navbar hidden on Admin/Warehouse routes for clean UI */}
-      {!isAdminPath && !isWarehousePath && <Navbar />}
+    <div className="flex flex-col min-h-screen">
+      {/* Hide standard UI components on Admin/Warehouse routes */}
+      {!isManagementView && <Navbar />}
       
-      {/* Main Landmark Added to resolve Document Landmark Accessibility rule */}
       <main id="main-content" className="flex-1 w-full flex flex-col">
         <Suspense fallback={<PageLoader />}>
           <Routes>
@@ -95,7 +109,7 @@ function AppContent() {
             <Route path="/about" element={<About />} />
             <Route path="/legal" element={<Legal />} />
             
-            {/* NEW: Bhumivera Brand Routes */}
+            {/* Bhumivera Brand Routes */}
             <Route path="/science" element={<BhumiveraScience />} />
             <Route path="/purchase-protection" element={<PurchaseProtection />} />
             <Route path="/returns-centre" element={<ReturnsCentre />} />
@@ -133,15 +147,14 @@ function AppContent() {
             <Route path="/admin/dashboard/:tab" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/admin/*" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
 
-            {/* 404 Redirect */}
-            <Route path="*" element={<Navigate to="/" />} />
+            {/* Global Redirect */}
+            <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </Suspense>
       </main>
 
-      {/* Footer hidden on Admin/Warehouse routes */}
-      {!isAdminPath && !isWarehousePath && <Footer />}
-    </>
+      {!isManagementView && <Footer />}
+    </div>
   );
 }
 
