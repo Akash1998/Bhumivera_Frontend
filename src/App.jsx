@@ -1,4 +1,4 @@
-import React, { lazy, Suspense, useMemo } from "react";
+import React, { lazy, Suspense, useMemo, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import Footer from "./components/Footer.jsx";
@@ -47,6 +47,18 @@ const PageLoader = () => (
     <div className="w-12 h-12 border-4 border-[#D4AF37]/20 border-t-[#0B2419] rounded-full animate-spin"></div>
   </div>
 );
+
+// --- Scroll Auto-Reset Utility ---
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    // Instantly snaps to the top when navigating to a new page
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
 
 // --- Auth Route Wrappers ---
 
@@ -99,6 +111,9 @@ function AppContent() {
       {!isManagementView && <Navbar />}
       
       <main id="main-content" className="flex-1 w-full flex flex-col">
+        {/* Forces window to top on every route change */}
+        <ScrollToTop /> 
+        
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Public Routes */}
