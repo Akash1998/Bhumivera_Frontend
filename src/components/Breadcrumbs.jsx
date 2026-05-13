@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';
 
@@ -26,7 +26,43 @@ export default function Breadcrumbs({ productName }) {
     let label = isId ? (productName || 'Detail') : (ROUTE_LABELS[seg] || seg.charAt(0).toUpperCase() + seg.slice(1));
     return { path, label, isLast };
   });
-  
+
+  useEffect(() => {
+    if (segments.length === 0) return;
+
+    const breadcrumbSchema = {
+      "@context": "https://schema.org",
+      "@type": "BreadcrumbList",
+      "itemListElement": [
+        {
+          "@type": "ListItem",
+          "position": 1,
+          "name": "Home",
+          "item": "https://bhumivera.com/"
+        },
+        ...crumbs.map((crumb, index) => ({
+          "@type": "ListItem",
+          "position": index + 2,
+          "name": crumb.label,
+          "item": `https://bhumivera.com${crumb.path}`
+        }))
+      ]
+    };
+
+    let scriptTag = document.querySelector('script[data-schema="breadcrumb"]');
+    if (!scriptTag) {
+      scriptTag = document.createElement('script');
+      scriptTag.type = 'application/ld+json';
+      scriptTag.setAttribute('data-schema', 'breadcrumb');
+      document.head.appendChild(scriptTag);
+    }
+    scriptTag.textContent = JSON.stringify(breadcrumbSchema);
+
+    return () => {
+      if (scriptTag) scriptTag.remove();
+    };
+  }, [pathname, productName]);
+
   return (
     <nav aria-label="Breadcrumb" className="bg-white border-b border-gray-100 sticky top-0 z-40">
       <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-2 text-[13px] font-bold text-gray-400 uppercase tracking-wide flex-wrap">
