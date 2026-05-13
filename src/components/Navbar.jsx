@@ -118,7 +118,7 @@ export default function Navbar() {
           <button 
             onClick={() => setMenuOpen(!isMenuOpen)} 
             className="md:hidden text-[#2c2c2c] hover:text-[#8b5a2b] transition-colors"
-            aria-label={isMenuOpen ? "Close Menu" : "Open Menu"}
+            aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={isMenuOpen}
           >
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
@@ -140,10 +140,10 @@ export default function Navbar() {
                 onChange={handleSearch}
                 onFocus={() => { if(searchQuery.length > 2) setShowSearchDropdown(true); }}
                 placeholder="Search natural skincare (e.g., multani mitti soap)..."
-                aria-label="Search products"
+                aria-label="Search natural skincare products"
                 className="w-full bg-white border border-[#e8dcc4] rounded-full pl-12 pr-6 py-3.5 text-sm text-[#2c2c2c] focus:border-[#8b5a2b] transition-all outline-none placeholder:text-[#8b5a2b]/50 shadow-sm"
               />
-              <button type="submit" aria-label="Submit Search" className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#8b5a2b] text-white text-[10px] font-bold uppercase tracking-widest px-5 py-2 rounded-full hover:bg-[#6b4421] transition-colors opacity-0 group-focus-within:opacity-100">
+              <button type="submit" aria-label="Submit search" className="absolute right-2 top-1/2 -translate-y-1/2 bg-[#8b5a2b] text-white text-[10px] font-bold uppercase tracking-widest px-5 py-2 rounded-full hover:bg-[#6b4421] transition-colors opacity-0 group-focus-within:opacity-100">
                 Discover
               </button>
             </form>
@@ -201,7 +201,7 @@ export default function Navbar() {
 
           <div className="flex items-center space-x-4 sm:space-x-6 shrink-0">
             
-            <Link to="/fitment-engine" aria-label="Skin Assessment" className={`hidden xl:flex items-center space-x-3 px-5 py-2.5 rounded-full border transition-all shadow-sm ${
+            <Link to="/fitment-engine" aria-label="Skin Assessment Tool" className={`hidden xl:flex items-center space-x-3 px-5 py-2.5 rounded-full border transition-all shadow-sm ${
               isGarageActive 
                 ? 'bg-[#8b5a2b] border-[#8b5a2b] text-white hover:bg-[#6b4421]' 
                 : 'bg-white border-[#e8dcc4] text-[#8b5a2b] hover:border-[#8b5a2b] hover:bg-[#faf8f5]'
@@ -214,7 +214,7 @@ export default function Navbar() {
             </Link>
 
             {user ? (
-              <Link to="/profile" aria-label="User Profile" className="flex items-center gap-3 group">
+              <Link to="/profile" aria-label="User profile" className="flex items-center gap-3 group">
                 <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center border border-[#e8dcc4] group-hover:border-[#8b5a2b] transition-colors relative shadow-sm">
                    <User size={18} className="text-[#8b5a2b]" />
                    <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-[#8b5a2b] rounded-full border-2 border-white"></span>
@@ -230,7 +230,7 @@ export default function Navbar() {
               </Link>
             )}
 
-            <Link to="/cart" aria-label="Shopping Cart" className="relative p-2.5 text-[#8b5a2b] bg-white border border-[#e8dcc4] rounded-full hover:bg-[#faf8f5] hover:border-[#8b5a2b] transition-all group shadow-sm">
+            <Link to="/cart" aria-label="View shopping cart" className="relative p-2.5 text-[#8b5a2b] bg-white border border-[#e8dcc4] rounded-full hover:bg-[#faf8f5] hover:border-[#8b5a2b] transition-all group shadow-sm">
               <ShoppingCart size={20} className="group-hover:scale-110 transition-transform" />
               {cartItems?.length > 0 && (
                 <span className="absolute -top-2 -right-2 w-5 h-5 bg-[#8b5a2b] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">
@@ -265,7 +265,7 @@ export default function Navbar() {
              value={searchQuery}
              onChange={handleSearch}
              placeholder="Search botanical collections..."
-             aria-label="Search products"
+             aria-label="Search mobile natural skincare products"
              className="w-full bg-white border border-[#e8dcc4] rounded-full pl-10 pr-4 py-3 text-xs text-[#2c2c2c] outline-none focus:border-[#8b5a2b] shadow-sm"
            />
          </form>
