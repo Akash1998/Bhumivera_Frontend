@@ -53,6 +53,10 @@
   ],
   "rewrites": [
     {
+      "source": "/favicon.ico",
+      "destination": "/assets/images/logo.webp"
+    },
+    {
       "source": "/sitemap.xml",
       "destination": "/sitemap.xml"
     },
