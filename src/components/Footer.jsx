@@ -32,7 +32,6 @@ export default function Footer() {
             <li><Link to="/about" className="hover:text-cyan-400 transition-colors">About Bhumivera</Link></li>
             <li><Link to="/about#careers" className="hover:text-cyan-400 transition-colors">Careers</Link></li>
             <li><Link to="/about#press" className="hover:text-cyan-400 transition-colors">Press Releases</Link></li>
-            {/* Updated Path */}
             <li><Link to="/science" className="hover:text-cyan-400 transition-colors font-semibold text-slate-300">Bhumivera Science</Link></li>
           </ul>
         </div>
@@ -59,9 +58,7 @@ export default function Footer() {
           <h3 className="font-bold text-sm uppercase tracking-wider mb-4 text-slate-200">Let Us Help You</h3>
           <ul className="space-y-3 text-xs md:text-sm text-slate-400">
             <li><Link to="/warranty" className="hover:text-cyan-400 transition-colors">E-Warranty</Link></li>
-            {/* Updated Path */}
             <li><Link to="/returns-centre" className="hover:text-cyan-400 transition-colors">Returns Centre</Link></li>
-            {/* Updated Path */}
             <li><Link to="/purchase-protection" className="hover:text-cyan-400 transition-colors">Purchase Protection</Link></li>
             <li><Link to="/contact" className="hover:text-cyan-400 transition-colors">Help & Support</Link></li>
           </ul>
@@ -83,14 +80,14 @@ export default function Footer() {
 
       {/* Bottom Legal */}
       <div className="relative z-10 bg-[#050505]/80 py-8 px-4 text-center border-t border-white/5 pb-10 md:pb-8">
-        <div className="flex flex-wrap justify-center gap-4 text-xs font-medium mb-4 text-slate-500">
+        <div className="flex flex-wrap justify-center gap-4 text-xs font-medium mb-4 text-slate-400">
            <Link to="/legal" className="hover:text-cyan-400 transition-colors">Conditions of Use</Link>
            <span className="hidden sm:inline opacity-30">|</span>
            <Link to="/legal" className="hover:text-cyan-400 transition-colors">Privacy Notice</Link>
            <span className="hidden sm:inline opacity-30">|</span>
            <Link to="/legal" className="hover:text-cyan-400 transition-colors">Interest-Based Ads</Link>
         </div>
-        <p className="text-[10px] text-slate-600 font-mono tracking-tight">
+        <p className="text-[10px] text-slate-400 font-mono tracking-tight">
           © {currentYear} Bhumivera. ALL RIGHTS RESERVED. <br className="sm:hidden" /> DEVELOPED BY AKASH PRASAD
         </p>
       </div>
