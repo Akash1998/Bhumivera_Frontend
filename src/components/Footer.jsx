@@ -12,7 +12,7 @@ export default function Footer() {
   return (
     <footer className="relative bg-[#0a0a0c]/90 backdrop-blur-2xl border-t border-white/10 text-white font-sans antialiased mt-auto overflow-hidden">
       
-      {/* Ambient Glassmorphism Glows - Matches Dark Theme */}
+      {/* Ambient Glassmorphism Glows */}
       <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/10 rounded-full blur-[100px] pointer-events-none -translate-y-1/2"></div>
       <div className="absolute top-0 right-1/4 w-96 h-96 bg-fuchsia-500/10 rounded-full blur-[100px] pointer-events-none -translate-y-1/2"></div>
 
@@ -39,7 +39,7 @@ export default function Footer() {
         <div>
           <h3 className="font-bold text-sm uppercase tracking-wider mb-4 text-slate-200">Connect with Us</h3>
           <ul className="space-y-3 text-xs md:text-sm text-slate-400">
-            <li><a href="https://www.instagram.com/bhumivera" target="_blank" rel="noreferrer" className="hover:text-cyan-400 transition-colors">Instagram</a></li>
+            <li><a href="https://www.instagram.com/the_rsenterprises" target="_blank" rel="noreferrer" className="hover:text-cyan-400 transition-colors">Instagram</a></li>
             <li><a href="https://facebook.com/Bhumivera" target="_blank" rel="noreferrer" className="hover:text-cyan-400 transition-colors">Facebook</a></li>
             <li><a href="https://twitter.com/Bhumivera" target="_blank" rel="noreferrer" className="hover:text-cyan-400 transition-colors">X (Twitter)</a></li>
           </ul>
@@ -48,7 +48,8 @@ export default function Footer() {
         <div>
           <h3 className="font-bold text-sm uppercase tracking-wider mb-4 text-slate-200">Make Money</h3>
           <ul className="space-y-3 text-xs md:text-sm text-slate-400">
-            <li><Link to="/admin-login" className="hover:text-cyan-400 transition-colors">Sell on Bhumivera</Link></li>
+            {/* Fixed Routing to /admin/login */}
+            <li><Link to="/admin/login" className="hover:text-cyan-400 transition-colors">Sell on Bhumivera</Link></li>
             <li><Link to="/affiliate" className="hover:text-cyan-400 transition-colors">Become an Affiliate</Link></li>
             <li><Link to="/contact" className="hover:text-cyan-400 transition-colors">Advertise Products</Link></li>
           </ul>
@@ -78,7 +79,7 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* Bottom Legal - Contrast Fixed and Mobile Responsive */}
+      {/* Bottom Legal */}
       <div className="relative z-10 bg-[#050505]/80 py-8 px-4 text-center border-t border-white/5 pb-10 md:pb-8">
         <div className="flex flex-wrap justify-center gap-4 text-xs font-medium mb-4 text-slate-400">
            <Link to="/legal" className="hover:text-cyan-400 transition-colors">Conditions of Use</Link>
