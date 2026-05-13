@@ -1,3 +1,4 @@
+import SEO from '../components/SEO';
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { 
@@ -71,7 +72,6 @@ export default function Shop() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid');
   
-  // Filters
   const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [isListening, setIsListening] = useState(false);
@@ -121,9 +121,14 @@ export default function Shop() {
 
   return (
     <div className="min-h-screen bg-black text-white pt-32 pb-20">
+      <SEO 
+        title="Shop Organic Natural Skincare"
+        description="Browse Bhumivera's exclusive collection of 200% natural, preservative-free organic soaps and luxury skincare treatments."
+        keywords="buy organic soap, luxury natural skincare shop, fragrance free body wash, buy bhumivera"
+        route="/shop"
+      />
       <div className="max-w-7xl mx-auto px-6">
         
-        {/* Header & Search */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-20">
           <div className="max-w-xl">
             <h1 className="text-7xl font-black uppercase tracking-tighter mb-6 leading-none">
@@ -161,7 +166,6 @@ export default function Shop() {
           </div>
         </div>
 
-        {/* Toolbar */}
         <div className="flex flex-wrap items-center justify-between gap-8 py-8 border-y border-slate-900 mb-12">
           <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide pb-2">
             <button 
@@ -202,7 +206,6 @@ export default function Shop() {
           </div>
         </div>
 
-        {/* Main Content */}
         {loading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
             {[...Array(8)].map((_, i) => (
