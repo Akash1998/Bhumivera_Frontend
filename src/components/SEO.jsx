@@ -5,7 +5,8 @@ export default function SEO({
   description, 
   keywords, 
   ogImage = 'https://bhumivera.com/assets/images/logo.webp', 
-  route 
+  route,
+  schema // NEW: Accepts raw JSON-LD objects
 }) {
   useEffect(() => {
     // 1. Dynamic Title Injection
@@ -34,18 +35,16 @@ export default function SEO({
       setMeta('twitter:description', description);
     }
     
-    // 3. Dynamic Keywords for specific engines
-    if (keywords) {
-      setMeta('keywords', keywords);
-    }
+    // 3. Dynamic Keywords
+    if (keywords) setMeta('keywords', keywords);
 
-    // 4. Dynamic Image for Social Shares & iMessage
+    // 4. Dynamic Image 
     setMeta('og:image', ogImage);
     setMeta('twitter:image', ogImage);
     setMeta('og:title', fullTitle);
     setMeta('twitter:title', fullTitle);
     
-    // 5. Canonical Deep Link Resolution (Prevents Duplicate Content Penalty)
+    // 5. Canonical Deep Link Resolution
     if (route) {
       let link = document.querySelector(`link[rel="canonical"]`);
       if (!link) {
@@ -55,7 +54,24 @@ export default function SEO({
       }
       link.setAttribute('href', `https://bhumivera.com${route}`);
     }
-  }, [title, description, keywords, ogImage, route]);
+
+    // 6. JSON-LD Schema Injection (AI & Google Shopping Hook)
+    if (schema) {
+      let scriptTag = document.querySelector('script[data-schema="dynamic"]');
+      if (!scriptTag) {
+        scriptTag = document.createElement('script');
+        scriptTag.type = 'application/ld+json';
+        scriptTag.setAttribute('data-schema', 'dynamic');
+        document.head.appendChild(scriptTag);
+      }
+      scriptTag.textContent = JSON.stringify(schema);
+    } else {
+      // Cleanup schema if navigating to a page without one
+      const existingScript = document.querySelector('script[data-schema="dynamic"]');
+      if (existingScript) existingScript.remove();
+    }
+
+  }, [title, description, keywords, ogImage, route, schema]);
 
   return null;
 }
