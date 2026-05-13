@@ -33,7 +33,7 @@ export default function Register() {
   const [successMsg, setSuccessMsg] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
 
-  const TURNSTILE_SITE_KEY = "0x4AAAAAADBENLaxaG5Y9r6D";
+    const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || "0x4AAAAAAADBENLaxaG5Y9r6D";
 
   const getPasswordStrength = (pwd) => {
     let score = 0;
