@@ -1,0 +1,26 @@
+User-agent: *
+Allow: /
+
+# Explicitly Allow AI Search Engines and LLM Crawlers
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: GoogleOther
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+Disallow: /admin
+Disallow: /warehouse
+
+Sitemap: https://bhumivera.com/sitemap.xml
