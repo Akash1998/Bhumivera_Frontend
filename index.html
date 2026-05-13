@@ -1,57 +1,62 @@
 <!DOCTYPE html>
-
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-        <link rel="manifest" href="/manifest.json" />
-    <meta name="theme-color" content="#22d3ee" />
-    <meta name="mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Bhumivera" />
-    <link rel="apple-touch-icon" href="/logo.webp" />
+    <link rel="icon" type="image/webp" href="/assets/images/logo.webp" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <title>Bhumivera | Luxury 100% Natural Skincare & Organic Soap</title>
+    <meta name="title" content="Bhumivera | Luxury 100% Natural Skincare & Organic Soap" />
+    <meta name="description" content="Discover Bhumivera, the premier luxury skincare brand. Experience 200% natural, organic soaps and skincare products completely free from fragrances and preservatives. Pure, potent, and safe for sensitive skin." />
+    <meta name="keywords" content="Bhumivera, luxury natural skincare, fragrance-free skincare, preservative-free skincare, organic chemical free soap, best non-irritating skincare, ayurvedic herbs" />
+    <meta name="author" content="Bhumivera" />
+    <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
 
-    <title>Bhumivera</title>
-    <meta
-      name="description"
-      content="Discover the MS111 car stereo at Bhumivera: USB, AUX & FM support, wireless remote control, crystal-clear sound, free shipping on all orders, and dedicated 24/7 support."
-    />
-    <link rel="canonical" href="https://www.Bhumivera.com/" />
-
-    <meta property="og:title" content="Bhumivera - MS111 Car Stereo" />
-    <meta
-      property="og:description"
-      content="Discover the MS111 car stereo at Bhumivera: USB, AUX & FM support, wireless remote control, crystal-clear sound, free shipping on all orders, and dedicated 24/7 support."
-    />
-
-    <meta property="og:image" content="https://www.Bhumivera.com/logo.webp" />
-    <meta property="og:url" content="https://www.Bhumivera.com/" />
     <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://bhumivera.com/" />
+    <meta property="og:title" content="Bhumivera | Luxury 100% Natural Skincare & Organic Soap" />
+    <meta property="og:description" content="Experience 200% natural, organic soaps and skincare products completely free from fragrances and preservatives." />
+    <meta property="og:image" content="https://bhumivera.com/assets/images/logo.webp" />
 
-    <!-- Basic Twitter Card Tags -->
-    <!-- These tags also use 'name' or 'property' as per Twitter Card specifications for Twitter sharing. -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Bhumivera - MS111 Car Stereo" />
-    <meta
-      name="twitter:description"
-      content="Discover the MS111 car stereo at Bhumivera: USB, AUX & FM support, wireless remote control, crystal-clear sound, free shipping on all orders, and dedicated 24/7 support."
-    />
-    <!-- IMPORTANT: Replace 'https://www.yourwebsite.com/pat/to/your-image.jpg' with the actual URL where your image is hosted. -->
-    <meta name="twitter:image" content="https://www.Bhumivera.com/logo.webp" />
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://bhumivera.com/" />
+    <meta property="twitter:title" content="Bhumivera | Luxury 100% Natural Skincare & Organic Soap" />
+    <meta property="twitter:description" content="Experience 200% natural, organic soaps and skincare products completely free from fragrances and preservatives." />
+    <meta property="twitter:image" content="https://bhumivera.com/assets/images/logo.webp" />
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "Brand",
+      "name": "Bhumivera",
+      "url": "https://bhumivera.com",
+      "logo": "https://bhumivera.com/assets/images/logo.webp",
+      "description": "Bhumivera is a luxury beauty and skincare brand specializing in 200% natural, fragrance-free, and preservative-free organic soaps and skincare solutions.",
+      "slogan": "Pure Luxury. Zero Preservatives.",
+      "sameAs": [
+        "https://www.amazon.in/s?k=Bhumivera",
+        "https://www.flipkart.com/search?q=Bhumivera",
+        "https://www.meesho.com/search?q=Bhumivera"
+      ]
+    }
+    </script>
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Bhumivera",
+      "url": "https://bhumivera.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://bhumivera.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
   </head>
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
-        <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('/sw.js')
-            .then(reg => console.log('SW registered:', reg.scope))
-            .catch(err => console.log('SW error:', err));
-        });
-      }
-    </script>
   </body>
 </html>
