@@ -83,7 +83,8 @@ function AppContent() {
       {/* Navbar hidden on Admin/Warehouse routes for clean UI */}
       {!isAdminPath && !isWarehousePath && <Navbar />}
       
-      <main id="main-content" className="flex-1 w-full">
+      {/* Main Landmark Added to resolve Document Landmark Accessibility rule */}
+      <main id="main-content" className="flex-1 w-full flex flex-col">
         <Suspense fallback={<PageLoader />}>
           <Routes>
             {/* Public Routes */}
