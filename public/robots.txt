@@ -1,5 +1,15 @@
 User-agent: *
 Allow: /
+Disallow: /admin
+Disallow: /warehouse
+Disallow: /cart
+Disallow: /checkout
+Disallow: /profile
+Disallow: /wishlist
+Disallow: /order-tracking
+Disallow: /login
+Disallow: /register
+Disallow: /address-book
 
 # Explicitly Allow AI Search Engines and LLM Crawlers
 User-agent: GPTBot
@@ -19,8 +29,5 @@ Allow: /
 
 User-agent: ClaudeBot
 Allow: /
-
-Disallow: /admin
-Disallow: /warehouse
 
 Sitemap: https://bhumivera.com/sitemap.xml
