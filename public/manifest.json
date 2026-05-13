@@ -1,11 +1,11 @@
 {
-  "name": "Bhumivera - Premium Electronics",
+  "name": "Bhumivera - Luxury Natural Skincare",
   "short_name": "Bhumivera",
-  "description": "Shop the latest electronics and gadgets at Bhumivera",
+  "description": "Discover Bhumivera, the premier luxury skincare brand. Experience 200% natural, organic soaps and skincare products.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#030712",
-  "theme_color": "#22d3ee",
+  "background_color": "#ffffff",
+  "theme_color": "#4ade80",
   "orientation": "portrait-primary",
   "scope": "/",
   "lang": "en",
@@ -28,27 +28,20 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["shopping", "electronics"],
+  "categories": ["shopping", "beauty", "health", "lifestyle"],
   "shortcuts": [
     {
-      "name": "Shop Now",
+      "name": "Shop Skincare",
       "short_name": "Shop",
-      "description": "Browse all products",
+      "description": "Browse organic skincare products",
       "url": "/shop",
       "icons": [{"src": "/favicon.ico", "sizes": "64x64"}]
     },
     {
-      "name": "My Cart",
-      "short_name": "Cart",
-      "description": "View your shopping cart",
-      "url": "/cart",
-      "icons": [{"src": "/favicon.ico", "sizes": "64x64"}]
-    },
-    {
-      "name": "Track Order",
-      "short_name": "Track",
-      "description": "Track your orders",
-      "url": "/track",
+      "name": "Bhumivera Science",
+      "short_name": "Science",
+      "description": "Learn about our natural formulations",
+      "url": "/bhumivera-science",
       "icons": [{"src": "/favicon.ico", "sizes": "64x64"}]
     }
   ],
