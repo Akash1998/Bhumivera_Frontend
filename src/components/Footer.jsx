@@ -67,18 +67,18 @@ export default function Footer() {
 
       {/* Secondary Footer - App Icon Logo & Settings */}
       <div className="relative z-10 border-t border-white/10 py-10 flex flex-col items-center gap-6">
-        <Link to="/" className="group" onClick={scrollToTop}>
+        <Link to="/" className="group" onClick={scrollToTop} aria-label="Bhumivera Home">
           <div className="p-2 bg-white/5 border border-white/10 rounded-2xl shadow-2xl backdrop-blur-xl group-hover:bg-white/10 group-hover:border-cyan-500/50 group-hover:shadow-cyan-500/20 transition-all duration-500 ease-out transform group-active:scale-95">
-             <img src={logo} alt="Bhumivera" className="h-10 md:h-12 w-auto object-contain rounded-xl" />
+             <img src={logo} alt="Bhumivera Logo" className="h-10 md:h-12 w-auto object-contain rounded-xl" />
           </div>
         </Link>
         <div className="flex flex-wrap justify-center gap-3 text-[11px] font-bold tracking-widest uppercase text-slate-400 px-4">
-           <span className="border border-white/10 bg-white/5 px-4 py-2 rounded-lg cursor-pointer hover:bg-white/10 hover:text-white transition-all active:scale-95">English</span>
-           <span className="border border-white/10 bg-white/5 px-4 py-2 rounded-lg cursor-pointer hover:bg-white/10 hover:text-white transition-all active:scale-95">🇮🇳 India</span>
+           <button className="border border-white/10 bg-white/5 px-4 py-2 rounded-lg cursor-pointer hover:bg-white/10 hover:text-white transition-all active:scale-95">English</button>
+           <button className="border border-white/10 bg-white/5 px-4 py-2 rounded-lg cursor-pointer hover:bg-white/10 hover:text-white transition-all active:scale-95">🇮🇳 India</button>
         </div>
       </div>
 
-      {/* Bottom Legal */}
+      {/* Bottom Legal - Contrast Fixed Here (text-slate-400 replaces text-slate-500/600) */}
       <div className="relative z-10 bg-[#050505]/80 py-8 px-4 text-center border-t border-white/5 pb-10 md:pb-8">
         <div className="flex flex-wrap justify-center gap-4 text-xs font-medium mb-4 text-slate-400">
            <Link to="/legal" className="hover:text-cyan-400 transition-colors">Conditions of Use</Link>
