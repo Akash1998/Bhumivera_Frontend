@@ -4,7 +4,7 @@ let b = import.meta.env.VITE_BASE_URL || "https://service.Bhumivera.com";
 if (b.startsWith("http://") && !b.includes("localhost")) b = b.replace("http://", "https://");
 export const BASE_URL = b;
 
-const api = axios.create({ baseURL: import.meta.env.PROD ? '/api' : `${BASE_URL}/api`, withCredentials: true });
+const api = axios.create({ baseURL: `${BASE_URL}/api`, withCredentials: true });
 
 api.interceptors.request.use(c => { const t = localStorage.getItem("token") || localStorage.getItem("warehouseToken") || localStorage.getItem("ms_token"); if (t) c.headers.Authorization = `Bearer ${t}`; return c; }, e => Promise.reject(e));
 
