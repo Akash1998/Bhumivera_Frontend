@@ -4,8 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import './AdminLogin.css';
 
 const API = import.meta.env.VITE_API_URL || 'https://service.Bhumivera.com';
-const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '1x00000000000000000000AA'; // Replace with your actual Cloudflare Turnstile Site Key in Vercel
-
+const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || '0x4AAAAAADNYf0RiF63BTJ9fLSSgZKs-XUc'; 
 const AdminLogin = () => {
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
