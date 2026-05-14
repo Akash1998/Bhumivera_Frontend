@@ -16,8 +16,9 @@ export const CartProvider = ({ children }) => {
       setCartLoading(true);
       try {
         const res = await cartApi.get();
-        // Securely handle different backend response structures
-        setCart(res.data?.items || res.data || []);
+        // STRICT ARRAY VALIDATION: Prevents .reduce() crashes if backend returns an object/error
+        const fetchedData = res.data?.items || res.data;
+        setCart(Array.isArray(fetchedData) ? fetchedData : []);
       } catch (err) {
         console.error("Cart sync failed:", err);
         setCart([]);
@@ -25,9 +26,14 @@ export const CartProvider = ({ children }) => {
         setCartLoading(false);
       }
     } else {
-      const saved = localStorage.getItem("Bhumivera_guest_cart");
-      if (saved) setCart(JSON.parse(saved));
-      else setCart([]);
+      try {
+        const saved = localStorage.getItem("Bhumivera_guest_cart");
+        const parsed = saved ? JSON.parse(saved) : [];
+        setCart(Array.isArray(parsed) ? parsed : []);
+      } catch (e) {
+        console.error("Local cart parse failed:", e);
+        setCart([]);
+      }
     }
   }, [isAuthenticated]);
 
@@ -40,7 +46,9 @@ export const CartProvider = ({ children }) => {
     if (isAuthenticated) {
       await cartApi.add({ productId: prodId, quantity: qty });
     } else {
-      const updated = [...cart];
+      // Ensure cart is an array before spreading
+      const safeCart = Array.isArray(cart) ? cart : [];
+      const updated = [...safeCart];
       const idx = updated.findIndex(i => i.product_id === prodId || i.id === prodId);
       if (idx > -1) updated[idx].quantity += qty;
       else updated.push({ product_id: prodId, id: prodId, product, quantity: qty });
@@ -64,7 +72,8 @@ export const CartProvider = ({ children }) => {
     if (isAuthenticated) {
       await cartApi.updateQuantity(productId, newQty);
     } else {
-      const updated = [...cart];
+      const safeCart = Array.isArray(cart) ? cart : [];
+      const updated = [...safeCart];
       const idx = updated.findIndex(i => i.product_id === productId || i.id === productId);
       if (idx > -1) updated[idx].quantity = newQty;
       setCart(updated);
@@ -77,7 +86,8 @@ export const CartProvider = ({ children }) => {
     if (isAuthenticated) {
       await cartApi.remove(id);
     } else {
-      const updated = cart.filter(i => i.product_id !== id && i.id !== id);
+      const safeCart = Array.isArray(cart) ? cart : [];
+      const updated = safeCart.filter(i => i.product_id !== id && i.id !== id);
       setCart(updated);
       localStorage.setItem("Bhumivera_guest_cart", JSON.stringify(updated));
     }
@@ -94,23 +104,28 @@ export const CartProvider = ({ children }) => {
   };
 
   // Highly accurate subtotal calculation referencing discount pricing first
-  const getSubtotal = () => cart.reduce((acc, item) => {
-    const p = item.product || item;
-    const price = p.discount_price || p.price || item.unit_price || 0;
-    return acc + (price * (item.quantity || 1));
-  }, 0);
+  // ULTIMATE FAILSAFE: If cart is somehow mangled, return 0 instead of crashing React
+  const getSubtotal = () => {
+    if (!Array.isArray(cart)) return 0;
+    
+    return cart.reduce((acc, item) => {
+      const p = item.product || item;
+      const price = p.discount_price || p.price || item.unit_price || 0;
+      return acc + (price * (item.quantity || 1));
+    }, 0);
+  };
   
   const freeShippingThreshold = 5000;
   const shippingProgress = Math.min((getSubtotal() / freeShippingThreshold) * 100, 100);
 
   return (
     <CartContext.Provider value={{ 
-      cartItems: cart, // Safe export mapping
+      cartItems: Array.isArray(cart) ? cart : [], // Safe export mapping
       loading: cartLoading, 
       isCartOpen, 
       setIsCartOpen,
       addToCart, 
-      updateQuantity, // Now injected into the ecosystem
+      updateQuantity, 
       removeFromCart,
       clearCart,
       upsells,
