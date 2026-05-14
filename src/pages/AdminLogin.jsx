@@ -64,4 +64,91 @@ const AdminLogin = () => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp })
       });
-      const data
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.message || 'Invalid or expired OTP.');
+      
+      await adminOtpVerify(data);
+      navigate('/admin');
+    } catch (err) {
+      setStatus({ type: 'error', message: err.message || 'Authentication failed.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleBack = () => {
+    setStep(1);
+    setOtp('');
+    setStatus({ type: '', message: '' });
+  };
+
+  return (
+    <div className="admin-login-wrapper">
+      <div className="admin-login-box">
+        <div className="admin-login-header">
+          <h1 className="admin-login-title">BHUMIVERA</h1>
+          <span className="admin-login-badge">SECURE ADMIN PORTAL</span>
+        </div>
+
+        {step === 1 ? (
+          <form onSubmit={handleRequestOtp} className="admin-login-form">
+            <div className="form-group">
+              <label className="admin-login-label">AUTHORIZED EMAIL</label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="admin@bhumivera.com"
+                required
+                autoComplete="email"
+                className="admin-login-input"
+              />
+            </div>
+
+            <button type="submit" disabled={loading} className="admin-login-btn">
+              {loading ? 'DEPLOYING OTP...' : 'REQUEST SECURE ACCESS'}
+            </button>
+          </form>
+        ) : (
+          <form onSubmit={handleVerifyOtp} className="admin-login-form">
+            <div className="form-group">
+              <p className="admin-login-hint">Secure payload sent to:<br/><strong>{email}</strong></p>
+              <label className="admin-login-label">AUTHORIZATION CODE</label>
+              <input
+                type="text"
+                value={otp}
+                onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))} // Force numeric only
+                placeholder="000000"
+                maxLength={6}
+                required
+                autoComplete="one-time-code"
+                className="admin-login-input text-center tracking-widest"
+              />
+            </div>
+
+            <button type="submit" disabled={loading || otp.length !== 6} className="admin-login-btn">
+              {loading ? 'VERIFYING IDENTITY...' : 'CONFIRM & AUTHENTICATE'}
+            </button>
+            
+            <button
+              type="button"
+              className="admin-login-back"
+              onClick={handleBack}
+              disabled={loading}
+            >
+              ← Return to Email Entry
+            </button>
+          </form>
+        )}
+
+        {status.message && (
+          <div className={`admin-login-status ${status.type}`}>
+            {status.message}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+};
+
+export default AdminLogin;
