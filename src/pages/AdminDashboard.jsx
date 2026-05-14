@@ -1,15 +1,8 @@
 import React, { useState, Suspense, Component, lazy } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import {
-  LogOut, LayoutDashboard, Package, Grid, Users, Settings, ShoppingBag, Menu, X,
-  ShieldCheck, RefreshCw, Tag, Archive, Star, Activity, Mail, Terminal, Bell, Search,
-  Zap, Gift, Share2, Headphones, BarChart3, Wrench, Wallet, Smartphone, Store,
-  Globe, Shield, Database, Cpu, HardDrive, Layers, Box, Truck, CreditCard,
-  FileText, MessageSquare, AlertCircle, TrendingUp, Clock, Monitor, Download, CheckCircle, XCircle
-} from 'lucide-react';
 
-// DYNAMIC LAZY IMPORTS to prevent a single broken module from crashing the entire dashboard
+// DYNAMIC LAZY IMPORTS to isolate rendering logic
 const DashboardOverview = lazy(() => import('./admin/DashboardOverview'));
 const ProductManagement = lazy(() => import('./admin/ProductManagement'));
 const CategoryManagement = lazy(() => import('./admin/CategoryManagement'));
@@ -53,8 +46,7 @@ class ErrorBoundary extends Component {
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8 bg-slate-950/50 backdrop-blur-md rounded-2xl border border-rose-500/20">
-          <AlertCircle size={48} className="text-rose-400 mb-4 animate-pulse" />
-          <h2 className="text-xl font-bold text-white mb-2 tracking-wide">Kernel Panic in Module</h2>
+          <h2 className="text-xl font-bold text-rose-400 mb-2 tracking-wide">Kernel Panic in Module</h2>
           <p className="text-slate-400 mb-6 max-w-md text-sm font-mono">{this.state.error?.message || 'Module execution halted.'}</p>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
@@ -71,9 +63,6 @@ class ErrorBoundary extends Component {
 
 const ComingSoon = ({ name }) => (
   <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8">
-    <div className="w-20 h-20 rounded-2xl bg-gradient-to-tr from-emerald-500/10 to-cyan-500/10 border border-emerald-500/20 flex items-center justify-center mb-6">
-      <Settings size={32} className="text-emerald-400 animate-[spin_4s_linear_infinite]" />
-    </div>
     <h2 className="text-2xl font-black text-white mb-2 tracking-tight">{name}</h2>
     <p className="text-slate-500 font-mono text-sm uppercase tracking-widest">Awaiting Deployment</p>
   </div>
@@ -98,6 +87,17 @@ const TAB_COMPONENTS = {
   performance: () => <ComingSoon name="Telemetry" />, terminal: () => <ComingSoon name="Root Terminal" />,
 };
 
+// Safe Generic Icon to bypass Lucide-React `.reduce()` compiler crashes
+const SafeIcon = ({ active }) => (
+  <svg 
+    className={`flex-shrink-0 transition-colors duration-300 ${active ? 'text-emerald-400' : 'text-slate-500'}`} 
+    width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
+  >
+    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+    <line x1="9" y1="3" x2="9" y2="21"></line>
+  </svg>
+);
+
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
@@ -105,50 +105,51 @@ export default function AdminDashboard() {
   const activeTab = tab || 'overview';
   const [isSidebarOpen, setSidebarOpen] = useState(true);
 
+  // Removed direct Lucide references to prevent `.reduce` crash
   const menuSections = [
     {
       title: 'Command', items: [
-        { id: 'overview', label: 'Dashboard', icon: LayoutDashboard }, { id: 'analytics', label: 'Intelligence', icon: BarChart3 },
-        { id: 'notifications', label: 'Alerts', icon: Bell }, { id: 'logs', label: 'Telemetry', icon: Terminal }
+        { id: 'overview', label: 'Dashboard' }, { id: 'analytics', label: 'Intelligence' },
+        { id: 'notifications', label: 'Alerts' }, { id: 'logs', label: 'Telemetry' }
       ]
     },
     {
       title: 'Commerce', items: [
-        { id: 'orders', label: 'Fulfillment', icon: ShoppingBag }, { id: 'wallet', label: 'Vault', icon: Wallet },
-        { id: 'tax', label: 'Taxation', icon: CreditCard }, { id: 'reports', label: 'Ledger', icon: FileText }
+        { id: 'orders', label: 'Fulfillment' }, { id: 'wallet', label: 'Vault' },
+        { id: 'tax', label: 'Taxation' }, { id: 'reports', label: 'Ledger' }
       ]
     },
     {
       title: 'Matrix', items: [
-        { id: 'products', label: 'Registry', icon: Package }, { id: 'categories', label: 'Taxonomy', icon: Grid },
-        { id: 'fitment', label: 'Compatibility', icon: Wrench }, { id: 'inventory', label: 'Stock', icon: Archive },
-          { id: 'warehouse', label: 'Warehouse', icon: Store }
+        { id: 'products', label: 'Registry' }, { id: 'categories', label: 'Taxonomy' },
+        { id: 'fitment', label: 'Compatibility' }, { id: 'inventory', label: 'Stock' },
+        { id: 'warehouse', label: 'Warehouse' }
       ]
     },
     {
       title: 'Growth', items: [
-        { id: 'loyalty', label: 'Loyalty', icon: Gift }, { id: 'affiliate', label: 'Syndicate', icon: Share2 },
-        { id: 'coupons', label: 'Logic Gates', icon: Tag }, { id: 'flash-sales', label: 'Temporal Sales', icon: Zap },
-        { id: 'reviews', label: 'Feedback', icon: Star }
+        { id: 'loyalty', label: 'Loyalty' }, { id: 'affiliate', label: 'Syndicate' },
+        { id: 'coupons', label: 'Logic Gates' }, { id: 'flash-sales', label: 'Temporal Sales' },
+        { id: 'reviews', label: 'Feedback' }
       ]
     },
     {
       title: 'Interface', items: [
-        { id: 'cms', label: 'Frontend Node', icon: Monitor }, { id: 'banners', label: 'Visuals', icon: Activity },
-        { id: 'seo', label: 'SEO Protocol', icon: Search }, { id: 'email', label: 'SMTP Routes', icon: Mail }
+        { id: 'cms', label: 'Frontend Node' }, { id: 'banners', label: 'Visuals' },
+        { id: 'seo', label: 'SEO Protocol' }, { id: 'email', label: 'SMTP Routes' }
       ]
     },
     {
       title: 'Relations', items: [
-        { id: 'support', label: 'Helpdesk', icon: Headphones }, { id: 'returns', label: 'Reversal', icon: RefreshCw },
-        { id: 'contact', label: 'Comms', icon: MessageSquare }, { id: 'Genuine_test', label: 'Shield', icon: ShieldCheck }
+        { id: 'support', label: 'Helpdesk' }, { id: 'returns', label: 'Reversal' },
+        { id: 'contact', label: 'Comms' }, { id: 'Genuine_test', label: 'Shield' }
       ]
     },
     {
       title: 'Core', items: [
-        { id: 'mobile', label: 'Gateway', icon: Smartphone }, { id: 'security', label: 'WAF', icon: Shield },
-        { id: 'database', label: 'Cluster', icon: Database }, { id: 'api', label: 'Webhooks', icon: Cpu },
-        { id: 'shipping', label: 'Logistics', icon: Truck }, { id: 'settings', label: 'Variables', icon: Settings }
+        { id: 'mobile', label: 'Gateway' }, { id: 'security', label: 'WAF' },
+        { id: 'database', label: 'Cluster' }, { id: 'api', label: 'Webhooks' },
+        { id: 'shipping', label: 'Logistics' }, { id: 'settings', label: 'Variables' }
       ]
     }
   ];
@@ -198,7 +199,7 @@ export default function AdminDashboard() {
                       } ${!isSidebarOpen && 'justify-center'}`}
                     >
                       {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500" />}
-                      <item.icon size={20} className={`flex-shrink-0 transition-colors duration-300 ${isActive ? 'text-emerald-400' : 'text-slate-500'}`} />
+                      <SafeIcon active={isActive} />
                       <div className={`overflow-hidden transition-all duration-500 whitespace-nowrap ${isSidebarOpen ? 'w-full ml-3 opacity-100' : 'w-0 ml-0 opacity-0'}`}>
                         <span className={`text-sm font-semibold tracking-wide flex justify-start ${isActive ? 'text-emerald-400' : 'text-slate-400'}`}>
                           {item.label}
@@ -216,8 +217,10 @@ export default function AdminDashboard() {
               onClick={() => { logout(); navigate('/admin-login'); }}
               className={`w-full flex items-center py-3 rounded-xl transition-all duration-300 hover:bg-rose-500/10 border border-transparent text-slate-500 hover:text-rose-400 ${!isSidebarOpen ? 'justify-center px-0' : 'px-4 gap-3'}`}
             >
-              <LogOut size={20} className="flex-shrink-0" />
-              <div className={`overflow-hidden transition-all duration-500 ${isSidebarOpen ? 'w-full opacity-100' : 'w-0 opacity-0'}`}>
+              <svg className="flex-shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>
+              </svg>
+              <div className={`overflow-hidden transition-all duration-500 ${isSidebarOpen ? 'w-full ml-3 opacity-100' : 'w-0 ml-0 opacity-0'}`}>
                 <span className="text-sm font-bold flex justify-start tracking-wide">Disconnect</span>
               </div>
             </button>
@@ -231,7 +234,9 @@ export default function AdminDashboard() {
                 onClick={() => setSidebarOpen(!isSidebarOpen)}
                 className="p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl text-slate-400 transition-all shadow-sm"
               >
-                {isSidebarOpen ? <X size={18} /> : <Menu size={18} />}
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+                </svg>
               </button>
               <div className="flex items-center gap-3">
                 <h1 className="text-xl text-white font-black uppercase tracking-widest">{activeTab.replace(/-/g, ' ')}</h1>
