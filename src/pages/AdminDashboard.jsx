@@ -1,4 +1,4 @@
-import React, { useState, Suspense, Component } from 'react';
+import React, { useState, Suspense, Component, lazy } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import {
@@ -9,35 +9,34 @@ import {
   FileText, MessageSquare, AlertCircle, TrendingUp, Clock, Monitor, Download, CheckCircle, XCircle
 } from 'lucide-react';
 
-// Admin Module Imports
-import DashboardOverview from './admin/DashboardOverview';
-import ProductManagement from './admin/ProductManagement';
-import CategoryManagement from './admin/CategoryManagement';
-import OrderManagement from './admin/OrderManagement';
-import UserManagement from './admin/UserManagement';
-import AnalyticsManagement from './admin/AnalyticsManagement';
-import InventoryManagement from './admin/InventoryManagement';
-import CouponManagement from './admin/CouponManagement';
-import ReviewManagement from './admin/ReviewManagement';
-import BannerManagement from './admin/BannerManagement';
-import ContactManagement from './admin/ContactManagement';
-import ReturnManagement from './admin/ReturnManagement';
-import AdminSettings from './admin/AdminSettings';
-import SupportManagement from './admin/SupportManagement';
-import FlashSalesManagement from './admin/FlashSalesManagement';
-import LoyaltyManagement from './admin/LoyaltyManagement';
-import AffiliateManagement from './admin/AffiliateManagement';
-import WalletManagement from './admin/WalletManagement';
-import NotificationManagement from './admin/NotificationManagement';
-import ShippingManagement from './admin/ShippingManagement';
-import TaxManagement from './admin/TaxManagement';
-import SystemLogs from './admin/SystemLogs';
-import CMSManagement from './admin/CMSManagement';
-import EmailTemplates from './admin/EmailTemplates';
-import FitmentMatrix from './admin/FitmentMatrix';
-import WarehouseManagement from './admin/WarehouseManagement';
-// Fixed: Using EWarrantyManagement which exists in your file system
-import EWarrantyManagement from './admin/EWarrantyManagement'; 
+// DYNAMIC LAZY IMPORTS to prevent a single broken module from crashing the entire dashboard
+const DashboardOverview = lazy(() => import('./admin/DashboardOverview'));
+const ProductManagement = lazy(() => import('./admin/ProductManagement'));
+const CategoryManagement = lazy(() => import('./admin/CategoryManagement'));
+const OrderManagement = lazy(() => import('./admin/OrderManagement'));
+const UserManagement = lazy(() => import('./admin/UserManagement'));
+const AnalyticsManagement = lazy(() => import('./admin/AnalyticsManagement'));
+const InventoryManagement = lazy(() => import('./admin/InventoryManagement'));
+const CouponManagement = lazy(() => import('./admin/CouponManagement'));
+const ReviewManagement = lazy(() => import('./admin/ReviewManagement'));
+const BannerManagement = lazy(() => import('./admin/BannerManagement'));
+const ContactManagement = lazy(() => import('./admin/ContactManagement'));
+const ReturnManagement = lazy(() => import('./admin/ReturnManagement'));
+const AdminSettings = lazy(() => import('./admin/AdminSettings'));
+const SupportManagement = lazy(() => import('./admin/SupportManagement'));
+const FlashSalesManagement = lazy(() => import('./admin/FlashSalesManagement'));
+const LoyaltyManagement = lazy(() => import('./admin/LoyaltyManagement'));
+const AffiliateManagement = lazy(() => import('./admin/AffiliateManagement'));
+const WalletManagement = lazy(() => import('./admin/WalletManagement'));
+const NotificationManagement = lazy(() => import('./admin/NotificationManagement'));
+const ShippingManagement = lazy(() => import('./admin/ShippingManagement'));
+const TaxManagement = lazy(() => import('./admin/TaxManagement'));
+const SystemLogs = lazy(() => import('./admin/SystemLogs'));
+const CMSManagement = lazy(() => import('./admin/CMSManagement'));
+const EmailTemplates = lazy(() => import('./admin/EmailTemplates'));
+const FitmentMatrix = lazy(() => import('./admin/FitmentMatrix'));
+const WarehouseManagement = lazy(() => import('./admin/WarehouseManagement'));
+const EWarrantyManagement = lazy(() => import('./admin/EWarrantyManagement')); 
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -48,14 +47,14 @@ class ErrorBoundary extends Component {
     return { hasError: true, error };
   }
   componentDidCatch(error, info) {
-    console.error(error, info);
+    console.error("Dashboard Module Error:", error, info);
   }
   render() {
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8 bg-slate-950/50 backdrop-blur-md rounded-2xl border border-rose-500/20">
           <AlertCircle size={48} className="text-rose-400 mb-4 animate-pulse" />
-          <h2 className="text-xl font-bold text-white mb-2 tracking-wide">Kernel Panic</h2>
+          <h2 className="text-xl font-bold text-white mb-2 tracking-wide">Kernel Panic in Module</h2>
           <p className="text-slate-400 mb-6 max-w-md text-sm font-mono">{this.state.error?.message || 'Module execution halted.'}</p>
           <button
             onClick={() => this.setState({ hasError: false, error: null })}
@@ -86,7 +85,6 @@ const TAB_COMPONENTS = {
   'flash-sales': FlashSalesManagement, coupons: CouponManagement, users: UserManagement,
   support: SupportManagement, reviews: ReviewManagement, loyalty: LoyaltyManagement,
   affiliate: AffiliateManagement, 
-  // Fixed mapping to use the correct EWarranty component
   Genuine_test: EWarrantyManagement, 
   analytics: AnalyticsManagement,
   banners: BannerManagement, contact: ContactManagement, settings: AdminSettings,
@@ -255,7 +253,10 @@ export default function AdminDashboard() {
             <ErrorBoundary key={activeTab}>
               <Suspense fallback={
                 <div className="flex items-center justify-center min-h-[60vh]">
-                  <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
+                    <span className="text-emerald-500 font-mono text-xs uppercase tracking-[0.3em] animate-pulse">Initializing Subroutine...</span>
+                  </div>
                 </div>
               }>
                 <ActiveComponent key={activeTab} />
