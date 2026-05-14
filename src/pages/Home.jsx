@@ -137,9 +137,9 @@ export default function Home() {
           flashSalesApi.getActive().catch(() => ({ data: [] }))
         ]);
         setData({
-          products: prodRes.data?.data || prodRes.data || [],
-          categories: catRes.data?.data || catRes.data || [],
-          flashSales: flashRes.data?.data || flashRes.data || []
+          products: Array.isArray(prodRes.data?.data) ? prodRes.data.data : (Array.isArray(prodRes.data) ? prodRes.data : (prodRes.data?.products || [])),
+          categories: Array.isArray(catRes.data?.data) ? catRes.data.data : (Array.isArray(catRes.data) ? catRes.data : (catRes.data?.categories || [])),
+          flashSales: Array.isArray(flashRes.data?.data) ? flashRes.data.data : (Array.isArray(flashRes.data) ? flashRes.data : (flashRes.data?.flashSales || []))
         });
       } catch (err) {
         console.error(err);
@@ -355,7 +355,7 @@ export default function Home() {
             </Link>
           </motion.div>
 
-          {data.products.length > 0 && (
+          {Array.isArray(data.products) && data.products.length > 0 && (
             <motion.div variants={staggerContainer} initial="hidden" whileInView="show" viewport={{ once: true }} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
               {data.products.map((prod) => (
                 <motion.div variants={fadeUp} key={prod.id || prod._id} className="group flex flex-col">
@@ -367,7 +367,7 @@ export default function Home() {
                       {prod.is_featured && <span className="bg-[#8b5a2b]/90 backdrop-blur-md text-white text-[8px] font-bold uppercase tracking-widest px-4 py-2 rounded-full border border-[#8b5a2b]">Iconic</span>}
                     </div>
                     <div className="absolute bottom-5 left-5 right-5 translate-y-[150%] group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] z-20">
-                      <button onClick={(e) => handleQuickAdd(e, prod.id || prod._id)} className="w-full glass-panel bg-white/80 backdrop-blur-xl border border-white hover:bg-[#8b5a2b] hover:text-white text-[#1a1a1a] font-bold text-[10px] uppercase tracking-widest py-5 rounded-2xl transition-all shadow-lg flex justify-center items-center gap-3">
+                      <button onClick={(e) => handleQuickAdd(e, prod.id || prod._id)} className="w-full glass-panel bg-white/80 backdrop-blur-xl border border-white hover:bg-[#8b5a2b] hover:text-[#1a1a1a] font-bold text-[10px] uppercase tracking-widest py-5 rounded-2xl transition-all shadow-lg flex justify-center items-center gap-3">
                         <ShoppingBag size={14} /> Add to Bag
                       </button>
                     </div>
