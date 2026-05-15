@@ -83,9 +83,23 @@ export default function Register() {
       setView('OTP');
       setSuccessMsg(`Verification token dispatched to ${formData.email}`);
     } catch (err) {
-      setError(err.message || 'Registration sequence failed');
+      const errorMessage = err.message || 'Registration sequence failed';
       
-      // 2. THE FIX: Reset token and widget on failure
+      // UX UPGRADE: Detect duplicate emails and inject a React Router Link into the Alert Box
+      if (errorMessage.toLowerCase().includes('already registered')) {
+        setError(
+          <span className="flex flex-col gap-1.5">
+            <span>This email is already registered in the registry.</span>
+            <Link to="/login" className="font-bold underline text-[#8B5A2B] hover:text-[#0B2419] transition-colors w-max">
+              Click here to Log In Instead
+            </Link>
+          </span>
+        );
+      } else {
+        setError(errorMessage);
+      }
+      
+      // Reset token and widget on failure to allow retry
       setTurnstileToken('');
       if (turnstileRef.current) {
         turnstileRef.current.reset();
@@ -167,7 +181,7 @@ export default function Register() {
                   </div>
 
                   <div className="flex justify-center pt-2">
-                    {/* 3. Attach the ref to the Turnstile component */}
+                    {/* Attach the ref to the Turnstile component */}
                     <Turnstile
                       ref={turnstileRef}
                       siteKey={TURNSTILE_SITE_KEY}
@@ -270,6 +284,6 @@ const AlertBox = ({ type, msg }) => (
     ) : (
       <CheckCircle2 size={20} className="shrink-0 mt-0.5 opacity-70" />
     )}
-    <span className="text-xs font-medium leading-relaxed tracking-wide">{msg}</span>
+    <span className="text-xs font-medium leading-relaxed tracking-wide w-full">{msg}</span>
   </motion.div>
 );
