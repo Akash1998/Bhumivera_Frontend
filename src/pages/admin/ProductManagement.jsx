@@ -64,7 +64,7 @@ export default function ProductManagement() {
       setProducts(prodRes.data?.products || prodRes.data?.data || prodRes.data || []);
       setCategories(catRes.data?.categories || catRes.data?.data || catRes.data || []);
     } catch (err) { 
-      showToast?.('Failed to sync hardware accesss', 'error'); 
+      showToast?.('Failed to fetch products', 'error'); 
     } finally { 
       setLoading(false); 
     }
@@ -85,21 +85,21 @@ export default function ProductManagement() {
     try {
       const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
       await productsApi.toggleStatus(id, newStatus);
-      showToast?.(`access status updated to ${newStatus}`, 'success');
+      showToast?.(`Product status updated to ${newStatus}`, 'success');
       fetchData();
     } catch (err) { 
-      showToast?.('Status toggle failed', 'error'); 
+      showToast?.('Status update failed', 'error'); 
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('CRITICAL: Permanently purge this hardware access? This action is irreversible.')) return;
+    if (!window.confirm('Are you sure you want to permanently delete this product?')) return;
     try { 
       await productsApi.delete(id); 
-      showToast?.('access purged successfully', 'success'); 
+      showToast?.('Product deleted successfully', 'success'); 
       fetchData(); 
     } catch (err) { 
-      showToast?.('Purge failed', 'error'); 
+      showToast?.('Delete failed', 'error'); 
     }
   };
 
@@ -145,7 +145,7 @@ export default function ProductManagement() {
     e.preventDefault();
     setIsUploading(true); 
     setUploadProgress(0); 
-    setUploadingFileName('Compiling access Data...');
+    setUploadingFileName('Saving Product...');
     
     try {
       const specObj = specs.reduce((acc, { key, value }) => {
@@ -167,7 +167,7 @@ export default function ProductManagement() {
       const finalId = savedProduct?.id || savedProduct?._id;
 
       if (images.length > 0 && finalId) {
-        setUploadingFileName('Executing Parallel Visual Upload...');
+        setUploadingFileName('Uploading Images...');
         const filesArray = Array.from(images);
         
         const uploadPromises = filesArray.map(async (file) => {
@@ -186,34 +186,33 @@ export default function ProductManagement() {
       }
 
       if (fitmentFile && finalId) {
-        setUploadingFileName('Injecting Fitment Matrix...');
+        setUploadingFileName('Uploading Fitment Data...');
         const formData = new FormData();
         formData.append('file', fitmentFile);
         await api.post(`/fitments/upload/${finalId}`, formData, {
           headers: { 'Content-Type': 'multipart/form-data' }
         });
-        showToast?.('Fitment Matrix deployed', 'success');
+        showToast?.('Fitment Data uploaded', 'success');
       }
 
-      showToast?.('Deployment Complete', 'success');
+      showToast?.('Product Saved Successfully', 'success');
       setProductModalOpen(false); 
       fetchData();
     } catch (err) {
-      showToast?.('Deployment Error', 'error');
+      showToast?.(err.response?.data?.message || 'Error saving product', 'error');
     } finally {
       setIsUploading(false); 
       setUploadProgress(0);
     }
   };
 
-  // --- Handlers: Serial Engine ---
+  // --- Handlers: Serial Numbers ---
   const openSerialModal = (product) => {
     setCurrentProduct(product); 
     setSerialTab('generate');
     setSerialForm({ 
       count: 10, 
-      // 🚀 FIX: Prevented substring crash if product.name is undefined
-      prefix: String(product.name || 'ANR').substring(0, 3).toUpperCase(), 
+      prefix: String(product.name || 'PRD').substring(0, 3).toUpperCase(), 
       format: 'advanced', 
       base_warranty_months: product.warranty_period || 12 
     });
@@ -242,21 +241,21 @@ export default function ProductManagement() {
     try {
       const payload = { productId: currentProduct._id || currentProduct.id, ...serialForm };
       await serialsApi.generate(payload);
-      showToast?.(`Generated ${serialForm.count} serial hashes.`, 'success');
+      showToast?.(`Generated ${serialForm.count} serial numbers.`, 'success');
       
       const updatedRes = await serialsApi.getByProduct(payload.productId);
       const fullList = updatedRes.data?.serials || updatedRes.data?.data || updatedRes.data || [];
       
       const worksheetData = fullList.map(s => ({ 
-        'Hardware access': currentProduct.name, 
-        'Serial Hash': s.serial_number || s.serial, 
-        'State': s.status, 
+        'Product': currentProduct.name, 
+        'Serial Number': s.serial_number || s.serial, 
+        'Status': s.status, 
         'Generated Date': new Date(s.created_at).toLocaleString() 
       }));
       
       const worksheet = XLSX.utils.json_to_sheet(worksheetData);
       const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Serial Registry");
+      XLSX.utils.book_append_sheet(workbook, worksheet, "Serial Numbers");
       XLSX.writeFile(workbook, `${currentProduct.name.replace(/\s+/g, '_')}_Serials.xlsx`);
       
       setSerialTab('view'); 
@@ -266,7 +265,7 @@ export default function ProductManagement() {
   };
 
   const handleDeleteSerial = async (serialId) => {
-    if (!window.confirm('Purge this serial hash?')) return;
+    if (!window.confirm('Delete this serial number?')) return;
     try { 
       await serialsApi.delete(currentProduct._id || currentProduct.id, serialId); 
       loadProductSerials(); 
@@ -290,7 +289,7 @@ export default function ProductManagement() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] space-y-4">
         <RefreshCw className="w-8 h-8 text-emerald-500 animate-spin" />
-        <p className="text-emerald-500 font-mono text-xs uppercase tracking-widest animate-pulse">Syncing Inventory Matrix...</p>
+        <p className="text-emerald-500 font-mono text-xs uppercase tracking-widest animate-pulse">Loading Products...</p>
       </div>
     );
   }
@@ -302,10 +301,10 @@ export default function ProductManagement() {
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-800/80">
         <div>
           <h1 className="text-3xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
-            Hardware <span className="text-emerald-500">Registry</span>
+            Product <span className="text-emerald-500">Management</span>
           </h1>
           <p className="text-slate-500 font-mono mt-2 uppercase text-[10px] tracking-[0.2em] flex items-center gap-2">
-            <Box size={12} className="text-emerald-500" /> {filteredProducts.length} accesss Detected
+            <Box size={12} className="text-emerald-500" /> {filteredProducts.length} Products Found
           </p>
         </div>
         
@@ -314,7 +313,7 @@ export default function ProductManagement() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-emerald-500 transition-colors" size={16} />
             <input 
               type="text" 
-              placeholder="Search hardware..." 
+              placeholder="Search products..." 
               value={searchTerm} 
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }} 
               className="w-full sm:w-64 bg-slate-900 border border-slate-800 focus:border-emerald-500/50 rounded-xl py-2.5 pl-10 pr-4 text-white font-mono text-xs outline-none transition-all shadow-inner" 
@@ -324,7 +323,7 @@ export default function ProductManagement() {
             <RefreshCw size={16} />
           </button>
           <button onClick={() => openProductModal()} className="flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-500 text-slate-950 font-black uppercase text-xs tracking-widest rounded-xl hover:bg-emerald-400 hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all">
-            <Plus size={16} /> Deploy access
+            <Plus size={16} /> Add Product
           </button>
         </div>
       </div>
@@ -335,17 +334,17 @@ export default function ProductManagement() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-950 border-b border-slate-800">
-                <th className="p-5 text-[10px] font-black uppercase text-slate-500 tracking-widest">Hardware access</th>
-                <th className="p-5 text-[10px] font-black uppercase text-slate-500 tracking-widest">Taxonomy</th>
-                <th className="p-5 text-[10px] font-black uppercase text-slate-500 tracking-widest">Pricing & Stock</th>
-                <th className="p-5 text-[10px] font-black uppercase text-slate-500 tracking-widest">State</th>
-                <th className="p-5 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right">Operations</th>
+                <th className="p-5 text-[10px] font-black uppercase text-slate-500 tracking-widest">Product</th>
+                <th className="p-5 text-[10px] font-black uppercase text-slate-500 tracking-widest">Category</th>
+                <th className="p-5 text-[10px] font-black uppercase text-slate-500 tracking-widest">Price & Stock</th>
+                <th className="p-5 text-[10px] font-black uppercase text-slate-500 tracking-widest">Status</th>
+                <th className="p-5 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50">
               {paginatedProducts.length === 0 ? (
                 <tr>
-                  <td colSpan="5" className="p-8 text-center text-slate-500 font-mono text-xs">No hardware matches the current query.</td>
+                  <td colSpan="5" className="p-8 text-center text-slate-500 font-mono text-xs">No products match your search.</td>
                 </tr>
               ) : paginatedProducts.map(product => (
                 <tr key={product._id || product.id} className="hover:bg-slate-800/40 transition-colors group">
@@ -356,7 +355,6 @@ export default function ProductManagement() {
                     </div>
                     <div>
                       <p className="text-sm font-bold text-white line-clamp-1">{product.name}</p>
-                      {/* 🚀 THE FIX: We forced the integer to become a string before substring runs */}
                       <p className="text-[10px] font-mono text-slate-500 mt-1 uppercase tracking-widest">
                         ID: {String(product.id || product._id || '').substring(0,8)}
                       </p>
@@ -371,7 +369,7 @@ export default function ProductManagement() {
                     <div className="flex flex-col">
                       <span className="text-emerald-400 text-sm font-black font-mono">₹{product.price}</span>
                       <span className={`text-[10px] font-bold uppercase tracking-widest mt-1 ${product.quantity > 10 ? 'text-slate-500' : 'text-rose-500 animate-pulse'}`}>
-                        {product.quantity} Units
+                        {product.quantity} In Stock
                       </span>
                     </div>
                   </td>
@@ -380,14 +378,14 @@ export default function ProductManagement() {
                       onClick={() => handleToggleStatus(product._id || product.id, product.status)} 
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-widest transition-all ${product.status === 'active' ? 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500/20' : 'bg-rose-500/10 text-rose-500 hover:bg-rose-500/20'}`}
                     >
-                      {product.status === 'active' ? 'Live' : 'Offline'}
+                      {product.status === 'active' ? 'Active' : 'Draft'}
                     </button>
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-40 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openSerialModal(product)} className="p-2 bg-slate-950 border border-slate-700 rounded-lg text-amber-500 hover:bg-amber-500 hover:text-slate-950 transition-colors tooltip-trigger" title="Serial Engine"><QrCode size={16} /></button>
-                      <button onClick={() => openProductModal(product)} className="p-2 bg-slate-950 border border-slate-700 rounded-lg text-blue-500 hover:bg-blue-500 hover:text-slate-950 transition-colors" title="Edit Data"><Edit2 size={16} /></button>
-                      <button onClick={() => handleDelete(product._id || product.id)} className="p-2 bg-slate-950 border border-slate-700 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white transition-colors" title="Purge access"><Trash2 size={16} /></button>
+                      <button onClick={() => openSerialModal(product)} className="p-2 bg-slate-950 border border-slate-700 rounded-lg text-amber-500 hover:bg-amber-500 hover:text-slate-950 transition-colors tooltip-trigger" title="Serial Numbers"><QrCode size={16} /></button>
+                      <button onClick={() => openProductModal(product)} className="p-2 bg-slate-950 border border-slate-700 rounded-lg text-blue-500 hover:bg-blue-500 hover:text-slate-950 transition-colors" title="Edit Product"><Edit2 size={16} /></button>
+                      <button onClick={() => handleDelete(product._id || product.id)} className="p-2 bg-slate-950 border border-slate-700 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white transition-colors" title="Delete Product"><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -408,7 +406,7 @@ export default function ProductManagement() {
         )}
       </div>
 
-      {/* --- DEPLOYMENT MODAL --- */}
+      {/* --- PRODUCT MODAL --- */}
       {isProductModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
           <div className="bg-slate-950 border border-slate-800 w-full max-w-4xl rounded-[2rem] shadow-2xl overflow-hidden relative">
@@ -429,7 +427,7 @@ export default function ProductManagement() {
 
             <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/40">
               <h2 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2">
-                <Cpu className="text-emerald-500" /> {currentProduct ? 'Reconfigure access' : 'Initialize access'}
+                <Cpu className="text-emerald-500" /> {currentProduct ? 'Edit Product' : 'Add Product'}
               </h2>
               <button onClick={() => setProductModalOpen(false)} className="text-slate-500 hover:text-rose-500 transition-colors bg-slate-900 p-2 rounded-full"><XCircle size={20} /></button>
             </div>
@@ -438,10 +436,10 @@ export default function ProductManagement() {
               {/* Tab Navigation */}
               <div className="flex border-b border-slate-800 px-6 bg-slate-900/20 overflow-x-auto custom-scrollbar">
                 {[
-                  {id:'basic', l:'Core Variables', i:BoxSelect}, 
-                  {id:'specs', l:'Dynamic Engine', i:List}, 
-                  {id:'media', l:'Visuals & Fitment', i:Database}, 
-                  {id:'warranty', l:'Policy Logic', i:ShieldCheck}
+                  {id:'basic', l:'Basic Info', i:BoxSelect}, 
+                  {id:'specs', l:'Specifications', i:List}, 
+                  {id:'media', l:'Images & Docs', i:Database}, 
+                  {id:'warranty', l:'Warranty', i:ShieldCheck}
                 ].map(t => (
                   <button 
                     key={t.id} type="button" onClick={() => setActiveTab(t.id)} 
@@ -456,27 +454,27 @@ export default function ProductManagement() {
                 {activeTab === 'basic' && (
                   <div className="grid grid-cols-2 gap-5">
                     <div className="col-span-2">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Hardware Designation (Name)</label>
-                      <input required value={form.name} onChange={e=>setForm({...form, name:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="e.g. Bhumivera 12-inch Basstube" />
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Product Name</label>
+                      <input required value={form.name} onChange={e=>setForm({...form, name:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="e.g. LED Headlight Bulbs" />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Retail Valuation (₹)</label>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Price (₹)</label>
                       <input required type="number" value={form.price} onChange={e=>setForm({...form, price:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-emerald-400 outline-none transition-colors" placeholder="0.00" />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Initial Inventory Count</label>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Stock Quantity</label>
                       <input required type="number" value={form.quantity} onChange={e=>setForm({...form, quantity:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-white outline-none transition-colors" placeholder="0" />
                     </div>
                     <div className="col-span-2">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">System Taxonomy (Category)</label>
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Category</label>
                       <select required value={form.category_id} onChange={e=>setForm({...form, category_id:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors appearance-none">
-                        <option value="" disabled>Select Root Category</option>
+                        <option value="" disabled>Select a Category...</option>
                         {categories.map(c => <option key={c.id || c._id} value={c.id || c._id}>{c.name}</option>)}
                       </select>
                     </div>
                     <div className="col-span-2">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Master Description String</label>
-                      <textarea rows={5} value={form.description} onChange={e=>setForm({...form, description:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-slate-300 resize-y outline-none transition-colors" placeholder="Inject full product specifications, installation notes, and SEO content here..." />
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Description</label>
+                      <textarea rows={5} value={form.description} onChange={e=>setForm({...form, description:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-slate-300 resize-y outline-none transition-colors" placeholder="Enter product details, features, and compatibility..." />
                     </div>
                   </div>
                 )}
@@ -485,20 +483,20 @@ export default function ProductManagement() {
                   <div className="space-y-4">
                     <div className="flex items-center justify-between mb-6 bg-slate-900 border border-slate-800 p-4 rounded-xl">
                       <div>
-                        <h4 className="text-sm font-bold text-white">Dynamic Key-Value Matrix</h4>
-                        <p className="text-[10px] font-mono text-slate-500 mt-1">Inject custom attributes (e.g., Wattage: 55W, Lumens: 8000LM)</p>
+                        <h4 className="text-sm font-bold text-white">Product Specifications</h4>
+                        <p className="text-[10px] font-mono text-slate-500 mt-1">Add details like Wattage, Color, Material</p>
                       </div>
                       <button type="button" onClick={() => setSpecs([...specs, { key: '', value: '' }])} className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-500 hover:text-slate-950 transition-all">
-                        <Plus size={14}/> Inject Row
+                        <Plus size={14}/> Add Row
                       </button>
                     </div>
                     
                     <div className="space-y-3">
                       {specs.map((spec, i) => (
                         <div key={i} className="flex gap-3 items-center group">
-                          <input type="text" placeholder="Attribute Key" value={spec.key} onChange={e => updateSpec(i, 'key', e.target.value)} className="flex-1 bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-white outline-none transition-colors" />
+                          <input type="text" placeholder="Title (e.g. Color)" value={spec.key} onChange={e => updateSpec(i, 'key', e.target.value)} className="flex-1 bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-white outline-none transition-colors" />
                           <span className="text-slate-600 font-bold">:</span>
-                          <input type="text" placeholder="String Value" value={spec.value} onChange={e => updateSpec(i, 'value', e.target.value)} className="flex-[2] bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" />
+                          <input type="text" placeholder="Value (e.g. Red)" value={spec.value} onChange={e => updateSpec(i, 'value', e.target.value)} className="flex-[2] bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" />
                           <button type="button" onClick={() => setSpecs(specs.filter((_, idx) => idx !== i))} className="p-3 text-rose-500 bg-slate-900 border border-slate-700 hover:bg-rose-500 hover:border-rose-500 hover:text-white rounded-xl transition-all opacity-50 group-hover:opacity-100">
                             <Trash2 size={16}/>
                           </button>
@@ -515,9 +513,9 @@ export default function ProductManagement() {
                       <div className="w-16 h-16 bg-slate-950 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                         <ImageIcon size={28} className="text-emerald-500" />
                       </div>
-                      <p className="text-sm font-black text-white uppercase tracking-widest mb-1">Visual Payload</p>
-                      <p className="text-[10px] font-mono text-slate-400">Drag & Drop or Click to browse</p>
-                      {images.length > 0 && <div className="mt-4 inline-block px-3 py-1 bg-emerald-500 text-slate-950 text-[10px] font-black uppercase rounded-full">{images.length} Files Ready</div>}
+                      <p className="text-sm font-black text-white uppercase tracking-widest mb-1">Product Images</p>
+                      <p className="text-[10px] font-mono text-slate-400">Click to upload image files</p>
+                      {images.length > 0 && <div className="mt-4 inline-block px-3 py-1 bg-emerald-500 text-slate-950 text-[10px] font-black uppercase rounded-full">{images.length} Selected</div>}
                     </div>
 
                     <div className="p-6 border-2 border-dashed border-blue-500/30 bg-blue-500/5 rounded-2xl text-center relative hover:bg-blue-500/10 transition-colors group cursor-pointer">
@@ -525,18 +523,18 @@ export default function ProductManagement() {
                       <div className="w-16 h-16 bg-slate-950 border border-blue-500/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                         <Database size={28} className="text-blue-500" />
                       </div>
-                      <p className="text-sm font-black text-white uppercase tracking-widest mb-1">Fitment Matrix</p>
-                      <p className="text-[10px] font-mono text-slate-400">Upload .xlsx compatibility DB</p>
+                      <p className="text-sm font-black text-white uppercase tracking-widest mb-1">Fitment Data</p>
+                      <p className="text-[10px] font-mono text-slate-400">Upload Excel (.xlsx) file</p>
                       {fitmentFile && <div className="mt-4 px-3 py-1 bg-blue-500 text-slate-950 text-[10px] font-black uppercase rounded-full truncate mx-4">{fitmentFile.name}</div>}
                     </div>
 
                     <div className="col-span-2 space-y-4 mt-2">
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2 flex items-center gap-2"><Video size={14}/> YouTube Integrations</label>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2 flex items-center gap-2"><Video size={14}/> YouTube Link</label>
                         <input type="url" placeholder="https://youtube.com/watch?v=..." value={form.video_urls} onChange={e=>setForm({...form, video_urls:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-sm text-blue-400 font-mono outline-none transition-colors" />
                       </div>
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2 flex items-center gap-2"><Box size={14}/> 3D Model Render URL</label>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2 flex items-center gap-2"><Box size={14}/> 3D Model Link</label>
                         <input type="url" placeholder="https://..." value={form.model_3d_url} onChange={e=>setForm({...form, model_3d_url:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-purple-500 rounded-xl p-3 text-sm text-purple-400 font-mono outline-none transition-colors" />
                       </div>
                     </div>
@@ -550,10 +548,10 @@ export default function ProductManagement() {
                         <ShieldCheck size={24} />
                       </div>
                       <div className="flex-1">
-                        <h4 className="text-sm font-bold text-white mb-4">Warranty Horizon Validation</h4>
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Base Coverage Period (Months)</label>
+                        <h4 className="text-sm font-bold text-white mb-4">Warranty Settings</h4>
+                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Warranty Duration (In Months)</label>
                         <input type="number" value={form.warranty_period} onChange={e=>setForm({...form, warranty_period:e.target.value})} className="w-full md:w-1/2 bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-xl p-3 text-sm font-mono text-amber-400 outline-none transition-colors" />
-                        <p className="text-[10px] text-slate-500 mt-3 leading-relaxed">This integer dictates the automatic expiration date calculation when a customer registers their hardware via the E-Warranty portal.</p>
+                        <p className="text-[10px] text-slate-500 mt-3 leading-relaxed">This determines how many months of coverage a customer receives when they register their product.</p>
                       </div>
                     </div>
                   </div>
@@ -561,9 +559,9 @@ export default function ProductManagement() {
               </div>
 
               <div className="p-6 border-t border-slate-800 flex justify-end gap-4 bg-slate-900/40">
-                <button type="button" onClick={() => setProductModalOpen(false)} className="px-6 py-3 text-slate-400 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-colors">Abort</button>
+                <button type="button" onClick={() => setProductModalOpen(false)} className="px-6 py-3 text-slate-400 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-colors">Cancel</button>
                 <button type="submit" className="px-8 py-3 bg-emerald-500 text-slate-950 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all flex items-center gap-2">
-                  <Activity size={16} /> Execute Deployment
+                  <Activity size={16} /> Save Product
                 </button>
               </div>
             </form>
@@ -578,19 +576,19 @@ export default function ProductManagement() {
             <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-amber-500/10">
               <div>
                 <h2 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-3">
-                  <QrCode size={24} className="text-amber-500"/> Hash Generator Engine
+                  <QrCode size={24} className="text-amber-500"/> Serial Number Generator
                 </h2>
-                <p className="text-[10px] font-mono text-slate-400 mt-1 uppercase tracking-widest">Target access: {currentProduct.name}</p>
+                <p className="text-[10px] font-mono text-slate-400 mt-1 uppercase tracking-widest">Product: {currentProduct.name}</p>
               </div>
               <button onClick={() => setSerialModalOpen(false)} className="text-slate-500 hover:text-white bg-slate-900 p-2 rounded-full transition-colors"><XCircle size={20} /></button>
             </div>
             
             <div className="flex border-b border-slate-800 px-6 bg-slate-900/40">
               <button onClick={() => setSerialTab('generate')} className={`flex items-center gap-2 px-6 py-4 text-[10px] font-black uppercase tracking-widest border-b-2 transition-colors ${serialTab === 'generate' ? 'border-amber-500 text-amber-400 bg-amber-500/5' : 'border-transparent text-slate-500 hover:text-slate-300'}`}>
-                <Plus size={16} /> Batch Generation
+                <Plus size={16} /> Generate New
               </button>
               <button onClick={() => setSerialTab('view')} className={`flex items-center gap-2 px-6 py-4 text-[10px] font-black uppercase tracking-widest border-b-2 transition-colors ${serialTab === 'view' ? 'border-amber-500 text-amber-400 bg-amber-500/5' : 'border-transparent text-slate-500 hover:text-slate-300'}`}>
-                <List size={16} /> Hash Registry
+                <List size={16} /> View Saved Numbers
               </button>
             </div>
             
@@ -599,16 +597,15 @@ export default function ProductManagement() {
                 <form onSubmit={handleGenerateSerials} className="p-8 space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
                     <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Batch Output Volume</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Quantity to Generate</label>
                       <input type="number" required min="1" max="1000" value={serialForm.count} onChange={e=>setSerialForm({...serialForm, count: parseInt(e.target.value)})} className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-white font-mono outline-none" />
-                      <p className="text-[9px] text-slate-600 mt-2">Max 1000 per job.</p>
                     </div>
                     <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Alphanumeric Prefix</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Code Prefix</label>
                       <input type="text" required value={serialForm.prefix} onChange={e=>setSerialForm({...serialForm, prefix: e.target.value.toUpperCase()})} className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-amber-500 font-mono outline-none tracking-widest" />
                     </div>
                     <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Warranty Horizon</label>
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Warranty (Months)</label>
                       <select required value={serialForm.base_warranty_months} onChange={e=>setSerialForm({...serialForm, base_warranty_months: parseInt(e.target.value)})} className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-white font-mono outline-none appearance-none">
                         <option value={6}>6 Months</option>
                         <option value={12}>12 Months</option>
@@ -621,7 +618,7 @@ export default function ProductManagement() {
                   
                   <div className="pt-4 border-t border-slate-800">
                     <button type="submit" className="w-full py-4 bg-amber-500 text-slate-950 font-black uppercase tracking-widest text-sm rounded-xl hover:bg-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all flex justify-center items-center gap-3">
-                      <QrCode size={18} /> Execute Batch Generation & Export XLSX
+                      <QrCode size={18} /> Generate & Download Excel
                     </button>
                   </div>
                 </form>
@@ -632,21 +629,21 @@ export default function ProductManagement() {
                   {loadingSerials ? (
                     <div className="flex flex-col items-center justify-center py-20 space-y-4">
                       <RefreshCw className="w-8 h-8 text-amber-500 animate-spin" />
-                      <p className="text-amber-500 font-mono text-xs uppercase tracking-widest animate-pulse">Querying Hash Registry...</p>
+                      <p className="text-amber-500 font-mono text-xs uppercase tracking-widest animate-pulse">Loading Numbers...</p>
                     </div>
                   ) : (
                     <div className="bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden">
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="bg-slate-950 border-b border-slate-800">
-                            <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Cryptographic Hash</th>
-                            <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Status Code</th>
-                            <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Ops</th>
+                            <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Serial Number</th>
+                            <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Status</th>
+                            <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Actions</th>
                           </tr>
                         </thead>
                         <tbody className="divide-y divide-slate-800/50">
                           {productSerials.length === 0 ? (
-                            <tr><td colSpan="3" className="p-6 text-center text-slate-500 font-mono text-xs">No hashes generated for this access.</td></tr>
+                            <tr><td colSpan="3" className="p-6 text-center text-slate-500 font-mono text-xs">No serial numbers found for this product.</td></tr>
                           ) : productSerials.map((s, idx) => (
                             <tr key={idx} className="hover:bg-slate-800/50 transition-colors">
                               <td className="p-3 font-mono text-xs text-amber-400 tracking-wider font-bold">
@@ -658,7 +655,7 @@ export default function ProductManagement() {
                                 </span>
                               </td>
                               <td className="p-3 text-right">
-                                <button onClick={() => handleDeleteSerial(s.id || s._id)} className="text-rose-500 hover:bg-rose-500 hover:text-white border border-transparent hover:border-rose-500 p-2 rounded-lg transition-all" title="Purge Hash">
+                                <button onClick={() => handleDeleteSerial(s.id || s._id)} className="text-rose-500 hover:bg-rose-500 hover:text-white border border-transparent hover:border-rose-500 p-2 rounded-lg transition-all" title="Delete Serial">
                                   <Trash2 size={14} />
                                 </button>
                               </td>
