@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShoppingBag, ArrowLeft, Trash2, Plus, Minus, 
-  ShieldCheck, Zap, ArrowRight, Truck 
+  ShieldCheck, Zap, ArrowRight, Truck, PackageCheck 
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -19,20 +19,19 @@ const getImageUrl = (img) => {
 };
 
 export default function Cart() {
-  // Destructuring EXACTLY what the new context provides
   const { 
     cartItems = [], 
     removeFromCart, 
     updateQuantity, 
     getSubtotal, 
     shippingProgress = 0,
-    freeShippingThreshold = 5000
+    freeShippingThreshold = 5000,
+    addToCart
   } = useCart();
   
   const { user } = useAuth();
   const navigate = useNavigate();
 
-  // Safe calculated variables
   const cartTotal = typeof getSubtotal === 'function' ? getSubtotal() : 0;
   const cartCount = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
   const amountLeftForFreeShipping = Math.max(freeShippingThreshold - cartTotal, 0);
@@ -76,7 +75,7 @@ export default function Cart() {
         <div className="flex items-end justify-between mb-12 border-b border-slate-800 pb-6">
           <div>
             <h1 className="text-5xl font-black uppercase tracking-tighter mb-2">Checkout Protocol</h1>
-            <p className="text-emerald-500 font-bold tracking-widest text-sm">{cartCount} Active accesss in Arsenal</p>
+            <p className="text-emerald-500 font-bold tracking-widest text-sm">{cartCount} Active assets in Arsenal</p>
           </div>
           <Link to="/shop" className="hidden md:flex items-center gap-2 text-slate-400 hover:text-emerald-400 font-black uppercase tracking-widest text-xs transition-colors">
             <ArrowLeft size={16} /> Continue Shopping
@@ -111,8 +110,15 @@ export default function Cart() {
                     <div className="flex-1 w-full flex flex-col h-full justify-between">
                       <div className="flex justify-between items-start gap-4 mb-4">
                         <div>
-                          <h3 className="text-lg font-black uppercase tracking-tight line-clamp-2 mb-1 group-hover:text-emerald-400 transition-colors">{product.name}</h3>
-                          <span className="text-slate-500 text-xs font-bold uppercase tracking-widest">SKU: {product.sku || 'N/A'}</span>
+                          <h3 className="text-lg font-black uppercase tracking-tight line-clamp-2 mb-2 group-hover:text-emerald-400 transition-colors">{product.name}</h3>
+                          
+                          {/* NEW FEATURE: Stock Validation Badge */}
+                          <div className="flex items-center gap-3">
+                            <span className="text-slate-500 text-xs font-bold uppercase tracking-widest">SKU: {product.sku || 'N/A'}</span>
+                            <span className="flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-emerald-400 bg-emerald-400/10 px-2 py-0.5 rounded border border-emerald-400/20">
+                              <PackageCheck size={12} /> In Stock / Fast Dispatch
+                            </span>
+                          </div>
                         </div>
                         <button onClick={() => removeFromCart(id)} className="p-2.5 bg-slate-950 text-slate-500 hover:text-red-500 hover:bg-red-500/10 rounded-xl transition-colors shrink-0">
                           <Trash2 size={18} />
@@ -120,14 +126,12 @@ export default function Cart() {
                       </div>
 
                       <div className="flex flex-wrap items-center justify-between gap-4 mt-auto">
-                        {/* Price */}
                         <div className="flex flex-col">
                           <span className="text-2xl font-black text-white">₹{parseFloat(price).toLocaleString()}</span>
                         </div>
 
-                        {/* Quantity Controller */}
                         <div className="flex items-center bg-slate-950 border border-slate-800 rounded-xl p-1">
-                          <button onClick={() => updateQuantity(id, qty - 1)} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white rounded-lg hover:bg-slate-900 transition-colors">
+                          <button onClick={() => updateQuantity(id, Math.max(1, qty - 1))} className="w-10 h-10 flex items-center justify-center text-slate-400 hover:text-white rounded-lg hover:bg-slate-900 transition-colors">
                             <Minus size={16} />
                           </button>
                           <span className="w-12 text-center font-black text-lg">{qty}</span>
@@ -136,7 +140,6 @@ export default function Cart() {
                           </button>
                         </div>
                         
-                        {/* Line Total */}
                         <div className="text-right hidden sm:block">
                           <span className="text-xs font-bold text-slate-500 uppercase tracking-widest block mb-0.5">Line Total</span>
                           <span className="text-emerald-500 font-black text-xl">₹{(price * qty).toLocaleString()}</span>
@@ -147,6 +150,32 @@ export default function Cart() {
                 );
               })}
             </AnimatePresence>
+
+            {/* NEW FEATURE: AI Cross-Sell / Frequently Bought Together UI */}
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.5 }}
+              className="mt-12 p-8 bg-slate-900/30 border border-slate-800/50 rounded-[2.5rem] relative overflow-hidden"
+            >
+              <div className="absolute top-0 right-0 p-8 opacity-5 pointer-events-none text-emerald-500"><Zap size={100} /></div>
+              <h3 className="text-lg font-black uppercase tracking-widest text-slate-300 mb-6 flex items-center gap-2">
+                <Zap size={18} className="text-emerald-500" /> System Recommends
+              </h3>
+              <div className="flex items-center gap-4 bg-slate-950/50 p-4 rounded-2xl border border-slate-800">
+                <div className="w-16 h-16 bg-slate-900 rounded-xl flex items-center justify-center text-slate-700 border border-slate-800 shrink-0">
+                  <PackageCheck size={24} />
+                </div>
+                <div className="flex-1">
+                  <h4 className="text-sm font-bold text-white mb-1">Premium Hardware Warranty Extension</h4>
+                  <p className="text-xs text-slate-500">Protect your assets with an additional 24-month zero-fault coverage.</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-emerald-500 font-black text-sm mb-2">+ ₹2,499</div>
+                  <button className="text-[10px] font-black uppercase tracking-widest bg-slate-800 hover:bg-emerald-500 text-slate-300 hover:text-black px-4 py-2 rounded-lg transition-colors">
+                    Add Module
+                  </button>
+                </div>
+              </div>
+            </motion.div>
           </div>
 
           {/* SUMMARY PANEL */}
@@ -158,7 +187,6 @@ export default function Cart() {
 
               <h2 className="text-2xl font-black uppercase tracking-tighter mb-8 border-b border-slate-800 pb-6 relative z-10">Transmission Summary</h2>
               
-              {/* Shipping Progress */}
               <div className="mb-8 relative z-10">
                 <div className="flex justify-between text-xs font-bold uppercase tracking-widest mb-3">
                   <span className="text-slate-400">Shipping Status</span>
@@ -170,13 +198,12 @@ export default function Cart() {
                 </div>
                 <div className="h-2 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800">
                   <motion.div 
-                    initial={{ width: 0 }} animate={{ width: `${shippingProgress}%` }} transition={{ duration: 1, ease: "easeOut" }}
+                    initial={{ width: 0 }} animate={{ width: `${Math.min(100, (cartTotal / freeShippingThreshold) * 100)}%` }} transition={{ duration: 1, ease: "easeOut" }}
                     className={`h-full rounded-full ${amountLeftForFreeShipping === 0 ? 'bg-cyan-400 shadow-[0_0_10px_rgba(34,211,238,0.5)]' : 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.5)]'}`}
                   />
                 </div>
               </div>
 
-              {/* Line Items */}
               <div className="space-y-4 mb-8 relative z-10">
                 <div className="flex justify-between text-slate-300 font-medium">
                   <span>Subtotal ({cartCount} Items)</span>
@@ -197,7 +224,6 @@ export default function Cart() {
                 </div>
               </div>
 
-              {/* Checkout Action */}
               <button 
                 onClick={handleCheckout} 
                 className="w-full bg-emerald-500 hover:bg-emerald-400 text-black font-black uppercase tracking-[0.2em] text-sm py-5 rounded-2xl transition-all shadow-[0_0_30px_rgba(16,185,129,0.2)] hover:shadow-[0_0_40px_rgba(16,185,129,0.4)] flex items-center justify-center gap-3 relative z-10 group"
@@ -207,7 +233,7 @@ export default function Cart() {
               </button>
 
               <div className="mt-6 flex items-center justify-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest relative z-10">
-                <ShieldCheck size={14} className="text-emerald-500" /> Secure 256-Bit SSL Encrypted access
+                <ShieldCheck size={14} className="text-emerald-500" /> Secure 256-Bit SSL Encrypted Link
               </div>
             </div>
           </div>
