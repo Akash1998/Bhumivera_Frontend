@@ -260,7 +260,7 @@ export default function WarehouseManagement() {
         <div className="space-y-6 animate-in fade-in">
           
           <div className="flex justify-between items-center bg-slate-900/40 p-4 rounded-2xl border border-slate-800">
-            <p className="text-sm text-slate-400 font-medium">Control which users can deploy local warehouse nodes.</p>
+            <p className="text-sm text-slate-400 font-medium">Control which users can deploy local warehouse accesss.</p>
             <button 
               onClick={() => { fetchAllUsers(); setIsModalOpen(true); }}
               className="px-5 py-2.5 bg-cyan-500 text-slate-950 font-black text-xs uppercase tracking-widest rounded-xl hover:bg-cyan-400 transition-all flex items-center gap-2 shadow-[0_0_15px_rgba(6,182,212,0.3)]"
@@ -289,7 +289,7 @@ export default function WarehouseManagement() {
                       <p className="text-sm font-bold text-white">{dist.name}</p>
                       <p className="text-[10px] font-mono text-slate-500 mt-1">{dist.email}</p>
                     </td>
-                    <td className="p-6 text-sm font-bold text-cyan-400">{dist.store_name || 'Unnamed Node'}</td>
+                    <td className="p-6 text-sm font-bold text-cyan-400">{dist.store_name || 'Unnamed access'}</td>
                     <td className="p-6 text-xs text-slate-400">{dist.total_sales} Recorded Transactions</td>
                     <td className="p-6">
                       {dist.is_active === 1 ? (

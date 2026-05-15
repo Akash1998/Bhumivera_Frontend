@@ -229,7 +229,7 @@ export default function AnalyticsManagement() {
                   </div>
                   <div>
                     <div className="font-bold text-slate-200 text-sm">{geo.region}</div>
-                    <div className="text-[10px] font-mono text-slate-500">{geo.users.toLocaleString()} Active Nodes</div>
+                    <div className="text-[10px] font-mono text-slate-500">{geo.users.toLocaleString()} Active accesss</div>
                   </div>
                 </div>
                 <div className="text-right">

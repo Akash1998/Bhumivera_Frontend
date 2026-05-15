@@ -144,7 +144,7 @@ export default function WalletManagement() {
             <Activity size={64} className="text-emerald-500" />
           </div>
           <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 flex items-center gap-2">
-            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active Nodes
+            <div className="w-1.5 h-1.5 rounded-full bg-emerald-500" /> Active accesss
           </p>
           <p className="text-3xl font-black text-white font-mono tracking-tighter">
             {data.stats.totalActiveWallets || 0}
@@ -203,7 +203,7 @@ export default function WalletManagement() {
             <thead className="bg-slate-950 text-slate-500 font-bold uppercase tracking-widest text-[10px]">
               <tr>
                 <th className="px-6 py-4">TXN Hash</th>
-                <th className="px-6 py-4">Target Node (UID)</th>
+                <th className="px-6 py-4">Target access (UID)</th>
                 <th className="px-6 py-4">Flow</th>
                 <th className="px-6 py-4">Volume</th>
                 <th className="px-6 py-4">Encrypted Memo</th>
@@ -287,7 +287,7 @@ export default function WalletManagement() {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Target Node (User ID)</label>
+                  <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Target access (User ID)</label>
                   <input 
                     type="number" required
                     placeholder="e.g. 42"

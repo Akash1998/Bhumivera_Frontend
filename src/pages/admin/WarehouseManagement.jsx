@@ -80,7 +80,7 @@ export default function WarehouseManagement() {
                 {allUsers.filter(u => !u.has_access).map(u => <option key={u.id} value={u.id}>{u.name} ({u.email})</option>)}
               </select>
               <input type="text" placeholder="Assigned Store Name" value={storeName} onChange={e => setStoreName(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm outline-none" />
-              <button type="submit" className="w-full py-3 bg-emerald-500/10 border border-emerald-500 text-emerald-400 rounded-xl font-bold uppercase text-[10px] hover:bg-emerald-500 hover:text-black transition-all">Authorize Node</button>
+              <button type="submit" className="w-full py-3 bg-emerald-500/10 border border-emerald-500 text-emerald-400 rounded-xl font-bold uppercase text-[10px] hover:bg-emerald-500 hover:text-black transition-all">Authorize access</button>
             </form>
           </div>
 

@@ -60,7 +60,7 @@ export default function WarehouseAdmin() {
                 <thead className="bg-slate-950/80 border-b border-slate-800 sticky top-0 backdrop-blur-md">
                   <tr>
                     <th className="p-5 text-[9px] font-black uppercase text-slate-500 tracking-widest">Timestamp</th>
-                    <th className="p-5 text-[9px] font-black uppercase text-slate-500 tracking-widest">Distributor Node</th>
+                    <th className="p-5 text-[9px] font-black uppercase text-slate-500 tracking-widest">Distributor access</th>
                     <th className="p-5 text-[9px] font-black uppercase text-slate-500 tracking-widest">Product Dispatched</th>
                     <th className="p-5 text-[9px] font-black uppercase text-slate-500 tracking-widest text-right">Financials</th>
                   </tr>
@@ -99,7 +99,7 @@ export default function WarehouseAdmin() {
             </h3>
             <div className="space-y-4">
               {distributors.filter(u => u.is_active === 1).length === 0 ? (
-                <p className="text-slate-500 text-[10px] text-center p-4 font-black uppercase tracking-widest">No active nodes.</p>
+                <p className="text-slate-500 text-[10px] text-center p-4 font-black uppercase tracking-widest">No active accesss.</p>
               ) : distributors.filter(u => u.is_active === 1).map(u => (
                 <div key={u.id} className="p-5 bg-slate-950/60 border border-slate-800 rounded-[1rem] flex justify-between items-center hover:border-emerald-500/50 transition-colors">
                   <div>

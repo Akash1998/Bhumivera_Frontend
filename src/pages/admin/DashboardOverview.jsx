@@ -99,7 +99,7 @@ export default function DashboardOverview() {
             Good {greeting}, <span className="text-emerald-500">Architect</span>
           </h1>
           <p className="text-slate-500 font-mono mt-2 uppercase text-[10px] tracking-[0.2em] flex items-center gap-2">
-            <Server size={12} className="text-emerald-500"/> API Node Active
+            <Server size={12} className="text-emerald-500"/> API access Active
           </p>
         </div>
       </div>

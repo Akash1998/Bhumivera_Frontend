@@ -7,7 +7,7 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-node_modules
+access_modules
 dist
 dist-ssr
 *.local
@@ -22,7 +22,7 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-node_modules/
+access_modules/
 dist/
 .env
 .env.local

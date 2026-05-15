@@ -124,7 +124,7 @@ export default function InventoryManagement() {
     try {
       const updates = Array.from(selectedIds).map(id => ({ product_id: id, stock }));
       await api.put('/inventory/bulk-update', { updates });
-      showToast(`Bulk updated ${selectedIds.size} nodes`, 'success');
+      showToast(`Bulk updated ${selectedIds.size} accesss`, 'success');
       setIsBulkModalOpen(false);
       setBulkStockValue('');
       fetchInventory(); 
@@ -140,11 +140,11 @@ export default function InventoryManagement() {
   const exportToExcel = () => {
     const worksheetData = products.map(p => ({
       'SKU': p.sku || 'N/A',
-      'Hardware Node': p.name,
+      'Hardware access': p.name,
       'Taxonomy': p.category_name || 'N/A',
       'Current Stock': p.stock || 0,
       'Unit Price (₹)': p.price || 0,
-      'Total Node Valuation (₹)': (p.stock || 0) * (p.price || 0),
+      'Total access Valuation (₹)': (p.stock || 0) * (p.price || 0),
       'Status': p.status || p.is_active
     }));
 
@@ -231,14 +231,14 @@ export default function InventoryManagement() {
           <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500"><AlertTriangle size={18} /></div>
           <div>
             <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Critical Alert (&le;10)</p>
-            <h4 className="text-lg font-black text-white tracking-tight">{lowStockCount} Nodes</h4>
+            <h4 className="text-lg font-black text-white tracking-tight">{lowStockCount} accesss</h4>
           </div>
         </div>
         <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4 hover:border-rose-500/30 transition-colors">
           <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-500"><TrendingDown size={18} /></div>
           <div>
             <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Depleted (0)</p>
-            <h4 className="text-lg font-black text-white tracking-tight">{outOfStockCount} Nodes</h4>
+            <h4 className="text-lg font-black text-white tracking-tight">{outOfStockCount} accesss</h4>
           </div>
         </div>
       </div>
@@ -249,7 +249,7 @@ export default function InventoryManagement() {
           <div className="relative w-full md:w-64 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
             <input 
-              type="text" placeholder="Search SKU or Node..." 
+              type="text" placeholder="Search SKU or access..." 
               value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
               className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-xl py-2 pl-10 pr-4 text-white font-bold text-xs outline-none transition-all"
             />
@@ -296,7 +296,7 @@ export default function InventoryManagement() {
                       : <div className="w-4 h-4 border-2 border-slate-600 rounded"></div>}
                   </button>
                 </th>
-                <th className="p-4 text-[9px] font-black uppercase text-slate-500 tracking-widest">Hardware Node & SKU</th>
+                <th className="p-4 text-[9px] font-black uppercase text-slate-500 tracking-widest">Hardware access & SKU</th>
                 <th className="p-4 text-[9px] font-black uppercase text-slate-500 tracking-widest">Health Indicator</th>
                 <th className="p-4 text-[9px] font-black uppercase text-slate-500 tracking-widest">Unit Value</th>
                 <th className="p-4 text-[9px] font-black uppercase text-slate-500 tracking-widest w-64 text-center">Live Logic Controls</th>
@@ -437,7 +437,7 @@ export default function InventoryManagement() {
               <Box className="text-emerald-500" size={20} /> Batch Override
             </h3>
             <p className="text-xs text-slate-400 mb-6">
-              Force update <strong className="text-emerald-400">{selectedIds.size} selected nodes</strong> to a new absolute stock value.
+              Force update <strong className="text-emerald-400">{selectedIds.size} selected accesss</strong> to a new absolute stock value.
             </p>
             
             <div className="space-y-4">

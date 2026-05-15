@@ -10,11 +10,11 @@ import { useToast } from '../context/ToastContext';
 const FAQS = [
   {
     q: "How do I check compatibility for my vehicle?",
-    a: "Navigate to any hardware node page and use our Guaranteed Fit System. Enter your vehicle's Make, Model, and Year to instantly verify matrix compatibility against our live database."
+    a: "Navigate to any hardware access page and use our Guaranteed Fit System. Enter your vehicle's Make, Model, and Year to instantly verify matrix compatibility against our live database."
   },
   {
     q: "What is your warranty policy on LED hardware?",
-    a: "Most of our primary lighting nodes include a standard 12-month comprehensive warranty. Your unique RMA Serial Hash is generated upon purchase and acts as your digital warranty card."
+    a: "Most of our primary lighting accesss include a standard 12-month comprehensive warranty. Your unique RMA Serial Hash is generated upon purchase and acts as your digital warranty card."
   },
   {
     q: "How long does priority shipping take?",

@@ -85,7 +85,7 @@ export default function UserManagement() {
   };
 
   const handleDeleteUser = async (userId) => {
-    if (!window.confirm('CRITICAL WARNING: Permanently purge this identity node from the database? This action is irreversible.')) return;
+    if (!window.confirm('CRITICAL WARNING: Permanently purge this identity access from the database? This action is irreversible.')) return;
     
     try {
       await api.delete(`/users/${userId}`);
@@ -398,7 +398,7 @@ export default function UserManagement() {
                     </div>
                     <div className="flex items-center gap-4 text-sm font-bold text-slate-300">
                       <Calendar size={16} className="text-cyan-500" />
-                      Node Creation: {new Date(selectedUser.created_at).toLocaleString()}
+                      access Creation: {new Date(selectedUser.created_at).toLocaleString()}
                     </div>
                   </div>
                 </div>
@@ -454,7 +454,7 @@ export default function UserManagement() {
 
                   <div className="mt-6 p-4 border border-dashed border-rose-500/30 bg-rose-500/5 rounded-2xl">
                     <p className="text-[9px] font-bold text-rose-400 uppercase tracking-widest leading-relaxed text-center">
-                      Security Notice: Mutating access levels or revoking network access will instantly terminate active sessions for this client node.
+                      Security Notice: Mutating access levels or revoking network access will instantly terminate active sessions for this client access.
                     </p>
                   </div>
 

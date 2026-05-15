@@ -31,7 +31,7 @@ export default function FlashSalesManagement() {
     start_time: '',
     end_time: '',
     status: 'active',
-    product_ids: [] // Array of linked hardware node IDs
+    product_ids: [] // Array of linked hardware access IDs
   });
 
   useEffect(() => {
@@ -341,7 +341,7 @@ export default function FlashSalesManagement() {
                     </td>
                     <td className="p-6">
                       <div className="flex items-center gap-2 text-slate-400 text-xs font-bold bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-lg inline-flex">
-                        <Package size={14} /> {productCount} Nodes Linked
+                        <Package size={14} /> {productCount} accesss Linked
                       </div>
                     </td>
                     <td className="p-6 text-right">
@@ -462,13 +462,13 @@ export default function FlashSalesManagement() {
                 {activeTab === 'products' && (
                   <div className="space-y-4 animate-in fade-in slide-in-from-right-4 duration-300">
                     <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-4 border-b border-slate-800 pb-2">
-                      Select Hardware Nodes to receive the <span className="text-amber-500">{form.discount_percentage || 'X'}%</span> markdown during the validity horizon.
+                      Select Hardware accesss to receive the <span className="text-amber-500">{form.discount_percentage || 'X'}%</span> markdown during the validity horizon.
                     </p>
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
                       {availableProducts.length === 0 ? (
                         <div className="col-span-2 text-center text-slate-600 font-bold text-xs p-8 bg-slate-900/50 rounded-xl border border-dashed border-slate-700">
-                          No hardware nodes found in registry.
+                          No hardware accesss found in registry.
                         </div>
                       ) : availableProducts.map(product => {
                         const isSelected = form.product_ids.includes(product.id || product._id);

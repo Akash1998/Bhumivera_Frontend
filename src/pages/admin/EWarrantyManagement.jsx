@@ -52,7 +52,7 @@ export default function Genuine_testManagement() {
   const handleUpdateStatus = async (id, newStatus) => {
     try {
       await api.patch(`/warranty/${id}/status`, { status: newStatus });
-      showToast?.(`Assurance node status updated to ${newStatus.toUpperCase()}`, "success");
+      showToast?.(`Assurance access status updated to ${newStatus.toUpperCase()}`, "success");
       
       // Optimistic Update
       setWarranties(warranties.map(w => w.id === id ? { ...w, status: newStatus } : w));
@@ -94,11 +94,11 @@ export default function Genuine_testManagement() {
 
   // --- EXPORT PROTOCOL ---
   const exportVault = () => {
-    const headers = ['Hash ID', 'Encrypted Serial', 'Hardware Node', 'SKU', 'Term (Months)', 'Legacy Node', 'State', 'Deployed At'];
+    const headers = ['Hash ID', 'Encrypted Serial', 'Hardware access', 'SKU', 'Term (Months)', 'Legacy access', 'State', 'Deployed At'];
     const csv = serialsVault.map(s => [
       s.id, 
       s.serial_number, 
-      `"${s.product_name || 'Legacy/Orphaned Node'}"`, 
+      `"${s.product_name || 'Legacy/Orphaned access'}"`, 
       s.sku || 'N/A',
       s.base_warranty_months || 12,
       s.is_legacy ? 'YES' : 'NO',
@@ -250,7 +250,7 @@ export default function Genuine_testManagement() {
                 <thead>
                   <tr className="bg-slate-950/80 border-b border-slate-800 backdrop-blur-md">
                     <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest">Client Identity</th>
-                    <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest">Assurance Node</th>
+                    <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest">Assurance access</th>
                     <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest">Status Matrix</th>
                     <th className="p-6 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Operations</th>
                   </tr>
@@ -275,7 +275,7 @@ export default function Genuine_testManagement() {
                         </td>
                         <td className="p-6">
                           <p className="text-purple-400 font-mono font-black tracking-widest text-xs flex items-center gap-1.5"><Hash size={12}/> {w.registered_serial}</p>
-                          <p className="text-[10px] text-slate-500 font-bold uppercase mt-1">Node Reference: #{w.id}</p>
+                          <p className="text-[10px] text-slate-500 font-bold uppercase mt-1">access Reference: #{w.id}</p>
                         </td>
                         <td className="p-6">
                           <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest border ${isRevoked ? 'bg-rose-500/10 text-rose-500 border-rose-500/20' : 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20'}`}>
@@ -350,7 +350,7 @@ export default function Genuine_testManagement() {
                         </div>
                       </td>
                       <td className="p-6">
-                        <p className="text-xs font-bold text-white max-w-[200px] truncate">{s.product_name || 'Orphaned Node'}</p>
+                        <p className="text-xs font-bold text-white max-w-[200px] truncate">{s.product_name || 'Orphaned access'}</p>
                         <p className="text-[9px] text-slate-500 font-bold uppercase mt-0.5 flex items-center gap-1">
                           <ShieldCheck size={10}/> {s.base_warranty_months || 12} Mo Policy
                         </p>
@@ -406,7 +406,7 @@ export default function Genuine_testManagement() {
 
             <div className="p-8 space-y-6">
               <div className="space-y-2">
-                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Target Hardware Node</label>
+                <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Target Hardware access</label>
                 <select 
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-xs font-bold text-white outline-none focus:border-purple-500/50 appearance-none cursor-pointer"
                   value={genData.productId} onChange={e => setGenData({...genData, productId: e.target.value})}

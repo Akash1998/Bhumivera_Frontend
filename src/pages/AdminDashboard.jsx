@@ -135,7 +135,7 @@ export default function AdminDashboard() {
     },
     {
       title: 'Interface', items: [
-        { id: 'cms', label: 'Frontend Node' }, { id: 'banners', label: 'Visuals' },
+        { id: 'cms', label: 'Frontend access' }, { id: 'banners', label: 'Visuals' },
         { id: 'seo', label: 'SEO Protocol' }, { id: 'email', label: 'SMTP Routes' }
       ]
     },

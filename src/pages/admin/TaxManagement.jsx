@@ -317,7 +317,7 @@ export default function TaxManagement() {
                   Cancel
                 </button>
                 <button type="submit" disabled={processing} className="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-cyan-500 hover:from-emerald-400 hover:to-cyan-400 text-slate-950 font-black uppercase tracking-widest rounded-xl transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] disabled:opacity-50 text-sm">
-                  {processing ? 'Compiling...' : currentTax ? 'Update Node' : 'Initialize'}
+                  {processing ? 'Compiling...' : currentTax ? 'Update access' : 'Initialize'}
                 </button>
               </div>
             </form>

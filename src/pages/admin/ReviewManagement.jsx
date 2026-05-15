@@ -184,7 +184,7 @@ export default function ReviewManagement() {
         <div className="relative flex-1 group">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-amber-500 transition-colors" size={18} />
           <input 
-            type="text" placeholder="Scan by content, client identity, or hardware node..." 
+            type="text" placeholder="Scan by content, client identity, or hardware access..." 
             value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
             className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all"
           />
@@ -258,7 +258,7 @@ export default function ReviewManagement() {
                           />
                         </div>
                         <div className="max-w-[150px]">
-                          <p className="text-xs font-bold text-white truncate">{review.product?.name || 'Unknown Node'}</p>
+                          <p className="text-xs font-bold text-white truncate">{review.product?.name || 'Unknown access'}</p>
                           <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">ID: {review.product_id || 'N/A'}</p>
                         </div>
                       </div>
@@ -334,7 +334,7 @@ export default function ReviewManagement() {
               <div className="col-span-1 md:col-span-4 p-6 md:p-8 border-b md:border-b-0 md:border-r border-slate-800 bg-slate-950/30">
                 <div className="space-y-6">
                   <div>
-                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3 flex items-center gap-2"><Box size={14}/> Target Hardware Node</h4>
+                    <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3 flex items-center gap-2"><Box size={14}/> Target Hardware access</h4>
                     <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3 flex gap-3 items-center">
                       <img 
                         src={getImageUrl(selectedReview.product?.images?.[0] || selectedReview.product?.image_url)} 
@@ -408,7 +408,7 @@ export default function ReviewManagement() {
                       onClick={() => handleDelete(selectedReview.id || selectedReview._id)}
                       className="px-6 py-3.5 bg-slate-950 border border-slate-800 text-slate-500 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all shadow-md flex items-center gap-2"
                     >
-                      <Trash2 size={14}/> Purge Node
+                      <Trash2 size={14}/> Purge access
                     </button>
                   </div>
                 </div>

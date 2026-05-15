@@ -64,7 +64,7 @@ export default function ProductManagement() {
       setProducts(prodRes.data?.products || prodRes.data?.data || prodRes.data || []);
       setCategories(catRes.data?.categories || catRes.data?.data || catRes.data || []);
     } catch (err) { 
-      showToast?.('Failed to sync hardware nodes', 'error'); 
+      showToast?.('Failed to sync hardware accesss', 'error'); 
     } finally { 
       setLoading(false); 
     }
@@ -85,7 +85,7 @@ export default function ProductManagement() {
     try {
       const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
       await productsApi.toggleStatus(id, newStatus);
-      showToast?.(`Node status updated to ${newStatus}`, 'success');
+      showToast?.(`access status updated to ${newStatus}`, 'success');
       fetchData();
     } catch (err) { 
       showToast?.('Status toggle failed', 'error'); 
@@ -93,10 +93,10 @@ export default function ProductManagement() {
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('CRITICAL: Permanently purge this hardware node? This action is irreversible.')) return;
+    if (!window.confirm('CRITICAL: Permanently purge this hardware access? This action is irreversible.')) return;
     try { 
       await productsApi.delete(id); 
-      showToast?.('Node purged successfully', 'success'); 
+      showToast?.('access purged successfully', 'success'); 
       fetchData(); 
     } catch (err) { 
       showToast?.('Purge failed', 'error'); 
@@ -145,7 +145,7 @@ export default function ProductManagement() {
     e.preventDefault();
     setIsUploading(true); 
     setUploadProgress(0); 
-    setUploadingFileName('Compiling Node Data...');
+    setUploadingFileName('Compiling access Data...');
     
     try {
       const specObj = specs.reduce((acc, { key, value }) => {
@@ -248,7 +248,7 @@ export default function ProductManagement() {
       const fullList = updatedRes.data?.serials || updatedRes.data?.data || updatedRes.data || [];
       
       const worksheetData = fullList.map(s => ({ 
-        'Hardware Node': currentProduct.name, 
+        'Hardware access': currentProduct.name, 
         'Serial Hash': s.serial_number || s.serial, 
         'State': s.status, 
         'Generated Date': new Date(s.created_at).toLocaleString() 
@@ -305,7 +305,7 @@ export default function ProductManagement() {
             Hardware <span className="text-emerald-500">Registry</span>
           </h1>
           <p className="text-slate-500 font-mono mt-2 uppercase text-[10px] tracking-[0.2em] flex items-center gap-2">
-            <Box size={12} className="text-emerald-500" /> {filteredProducts.length} Nodes Detected
+            <Box size={12} className="text-emerald-500" /> {filteredProducts.length} accesss Detected
           </p>
         </div>
         
@@ -324,7 +324,7 @@ export default function ProductManagement() {
             <RefreshCw size={16} />
           </button>
           <button onClick={() => openProductModal()} className="flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-500 text-slate-950 font-black uppercase text-xs tracking-widest rounded-xl hover:bg-emerald-400 hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all">
-            <Plus size={16} /> Deploy Node
+            <Plus size={16} /> Deploy access
           </button>
         </div>
       </div>
@@ -335,7 +335,7 @@ export default function ProductManagement() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-950 border-b border-slate-800">
-                <th className="p-5 text-[10px] font-black uppercase text-slate-500 tracking-widest">Hardware Node</th>
+                <th className="p-5 text-[10px] font-black uppercase text-slate-500 tracking-widest">Hardware access</th>
                 <th className="p-5 text-[10px] font-black uppercase text-slate-500 tracking-widest">Taxonomy</th>
                 <th className="p-5 text-[10px] font-black uppercase text-slate-500 tracking-widest">Pricing & Stock</th>
                 <th className="p-5 text-[10px] font-black uppercase text-slate-500 tracking-widest">State</th>
@@ -387,7 +387,7 @@ export default function ProductManagement() {
                     <div className="flex items-center justify-end gap-2 opacity-40 group-hover:opacity-100 transition-opacity">
                       <button onClick={() => openSerialModal(product)} className="p-2 bg-slate-950 border border-slate-700 rounded-lg text-amber-500 hover:bg-amber-500 hover:text-slate-950 transition-colors tooltip-trigger" title="Serial Engine"><QrCode size={16} /></button>
                       <button onClick={() => openProductModal(product)} className="p-2 bg-slate-950 border border-slate-700 rounded-lg text-blue-500 hover:bg-blue-500 hover:text-slate-950 transition-colors" title="Edit Data"><Edit2 size={16} /></button>
-                      <button onClick={() => handleDelete(product._id || product.id)} className="p-2 bg-slate-950 border border-slate-700 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white transition-colors" title="Purge Node"><Trash2 size={16} /></button>
+                      <button onClick={() => handleDelete(product._id || product.id)} className="p-2 bg-slate-950 border border-slate-700 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white transition-colors" title="Purge access"><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -429,7 +429,7 @@ export default function ProductManagement() {
 
             <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/40">
               <h2 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2">
-                <Cpu className="text-emerald-500" /> {currentProduct ? 'Reconfigure Node' : 'Initialize Node'}
+                <Cpu className="text-emerald-500" /> {currentProduct ? 'Reconfigure access' : 'Initialize access'}
               </h2>
               <button onClick={() => setProductModalOpen(false)} className="text-slate-500 hover:text-rose-500 transition-colors bg-slate-900 p-2 rounded-full"><XCircle size={20} /></button>
             </div>
@@ -580,7 +580,7 @@ export default function ProductManagement() {
                 <h2 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-3">
                   <QrCode size={24} className="text-amber-500"/> Hash Generator Engine
                 </h2>
-                <p className="text-[10px] font-mono text-slate-400 mt-1 uppercase tracking-widest">Target Node: {currentProduct.name}</p>
+                <p className="text-[10px] font-mono text-slate-400 mt-1 uppercase tracking-widest">Target access: {currentProduct.name}</p>
               </div>
               <button onClick={() => setSerialModalOpen(false)} className="text-slate-500 hover:text-white bg-slate-900 p-2 rounded-full transition-colors"><XCircle size={20} /></button>
             </div>
@@ -646,7 +646,7 @@ export default function ProductManagement() {
                         </thead>
                         <tbody className="divide-y divide-slate-800/50">
                           {productSerials.length === 0 ? (
-                            <tr><td colSpan="3" className="p-6 text-center text-slate-500 font-mono text-xs">No hashes generated for this node.</td></tr>
+                            <tr><td colSpan="3" className="p-6 text-center text-slate-500 font-mono text-xs">No hashes generated for this access.</td></tr>
                           ) : productSerials.map((s, idx) => (
                             <tr key={idx} className="hover:bg-slate-800/50 transition-colors">
                               <td className="p-3 font-mono text-xs text-amber-400 tracking-wider font-bold">

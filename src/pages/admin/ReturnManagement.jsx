@@ -387,10 +387,10 @@ export default function ReturnManagement() {
 
                   {/* Targeted Hardware */}
                   <div className="bg-slate-900/30 border border-slate-800 rounded-[2rem] p-6">
-                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-6 flex items-center gap-2"><Box size={14}/> Targeted Hardware Node</h3>
+                    <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-6 flex items-center gap-2"><Box size={14}/> Targeted Hardware access</h3>
                     <div className="flex items-center gap-4 p-4 bg-slate-950 border border-slate-800 rounded-2xl">
                       <div className="w-16 h-16 rounded-xl bg-slate-900 border border-slate-800 flex-shrink-0 p-1">
-                        <img src={getImageUrl(selectedRMA.product?.images?.[0] || selectedRMA.product?.image_url)} alt="node" className="w-full h-full object-cover rounded-lg" onError={(e) => { e.target.src = '/logo.webp'; }}/>
+                        <img src={getImageUrl(selectedRMA.product?.images?.[0] || selectedRMA.product?.image_url)} alt="access" className="w-full h-full object-cover rounded-lg" onError={(e) => { e.target.src = '/logo.webp'; }}/>
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-bold text-white truncate">{selectedRMA.product?.name || 'Unknown Hardware'}</p>

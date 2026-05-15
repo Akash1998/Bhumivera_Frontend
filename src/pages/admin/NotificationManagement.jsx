@@ -26,7 +26,7 @@ export default function NotificationManagement() {
       setAlerts(res.data?.notifications || res.data || []);
     } catch (error) {
       setAlerts([
-        { id: 1, title: 'System Boot Complete', message: 'All backend nodes are operational and synced.', type: 'success', is_read: false, created_at: new Date().toISOString() },
+        { id: 1, title: 'System Boot Complete', message: 'All backend accesss are operational and synced.', type: 'success', is_read: false, created_at: new Date().toISOString() },
         { id: 2, title: 'Multiple Failed Logins', message: 'Suspicious activity detected from IP 192.168.1.45', type: 'error', is_read: false, created_at: new Date(Date.now() - 3600000).toISOString() },
         { id: 3, title: 'High Traffic Alert', message: 'Traffic spiked by 400% in the last hour.', type: 'warning', is_read: true, created_at: new Date(Date.now() - 7200000).toISOString() },
         { id: 4, title: 'Database Backup', automated: true, message: 'Daily snapshot completed successfully.', type: 'info', is_read: true, created_at: new Date(Date.now() - 86400000).toISOString() }
@@ -228,7 +228,7 @@ export default function NotificationManagement() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2">Target Node</label>
+                  <label className="block text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2">Target access</label>
                   <select 
                     value={composeData.target} onChange={e => setComposeData({...composeData, target: e.target.value})}
                     className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors cursor-pointer"

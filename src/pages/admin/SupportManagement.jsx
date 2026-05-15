@@ -36,7 +36,7 @@ export default function SupportManagement() {
       setTickets(Array.isArray(data) ? data : []);
     } catch (err) {
       console.error("Support fetch error:", err);
-      setError(err.message || "Failed to initialize support node.");
+      setError(err.message || "Failed to initialize support access.");
     } finally {
       setLoading(false);
     }
@@ -83,7 +83,7 @@ export default function SupportManagement() {
         <div className="w-16 h-16 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin"></div>
         <LifeBuoy className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-cyan-500" size={24} />
       </div>
-      <p className="text-slate-400 font-mono text-xs uppercase tracking-widest animate-pulse">Syncing Support Nodes...</p>
+      <p className="text-slate-400 font-mono text-xs uppercase tracking-widest animate-pulse">Syncing Support accesss...</p>
     </div>
   );
 

@@ -59,7 +59,7 @@ export default function Cart() {
             <ShoppingBag size={48} strokeWidth={1.5} />
           </div>
           <h2 className="text-3xl font-black text-white mb-4 uppercase tracking-tighter">Hardware Arsenal Empty</h2>
-          <p className="text-slate-400 mb-10 leading-relaxed font-medium">Your node requires equipment. Explore our high-performance gear to deploy to your cart.</p>
+          <p className="text-slate-400 mb-10 leading-relaxed font-medium">Your access requires equipment. Explore our high-performance gear to deploy to your cart.</p>
           <Link to="/shop" className="bg-emerald-500 hover:bg-emerald-400 text-black px-10 py-5 rounded-full font-black tracking-widest uppercase text-sm transition-all shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:shadow-[0_0_40px_rgba(16,185,129,0.5)] flex items-center gap-3">
             <ArrowLeft size={18} /> Initialize Search
           </Link>
@@ -76,7 +76,7 @@ export default function Cart() {
         <div className="flex items-end justify-between mb-12 border-b border-slate-800 pb-6">
           <div>
             <h1 className="text-5xl font-black uppercase tracking-tighter mb-2">Checkout Protocol</h1>
-            <p className="text-emerald-500 font-bold tracking-widest text-sm">{cartCount} Active Nodes in Arsenal</p>
+            <p className="text-emerald-500 font-bold tracking-widest text-sm">{cartCount} Active accesss in Arsenal</p>
           </div>
           <Link to="/shop" className="hidden md:flex items-center gap-2 text-slate-400 hover:text-emerald-400 font-black uppercase tracking-widest text-xs transition-colors">
             <ArrowLeft size={16} /> Continue Shopping
@@ -207,7 +207,7 @@ export default function Cart() {
               </button>
 
               <div className="mt-6 flex items-center justify-center gap-2 text-[10px] font-bold text-slate-500 uppercase tracking-widest relative z-10">
-                <ShieldCheck size={14} className="text-emerald-500" /> Secure 256-Bit SSL Encrypted Node
+                <ShieldCheck size={14} className="text-emerald-500" /> Secure 256-Bit SSL Encrypted access
               </div>
             </div>
           </div>
