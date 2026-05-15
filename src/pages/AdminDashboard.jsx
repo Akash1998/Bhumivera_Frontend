@@ -15,14 +15,12 @@ const ReviewManagement = lazy(() => import('./admin/ReviewManagement'));
 const BannerManagement = lazy(() => import('./admin/BannerManagement'));
 const ContactManagement = lazy(() => import('./admin/ContactManagement'));
 const ReturnManagement = lazy(() => import('./admin/ReturnManagement'));
-const AdminSettings = lazy(() => import('./admin/AdminSettings'));
 const SupportManagement = lazy(() => import('./admin/SupportManagement'));
 const FlashSalesManagement = lazy(() => import('./admin/FlashSalesManagement'));
 const LoyaltyManagement = lazy(() => import('./admin/LoyaltyManagement'));
 const AffiliateManagement = lazy(() => import('./admin/AffiliateManagement'));
 const WalletManagement = lazy(() => import('./admin/WalletManagement'));
 const NotificationManagement = lazy(() => import('./admin/NotificationManagement'));
-const ShippingManagement = lazy(() => import('./admin/ShippingManagement'));
 const TaxManagement = lazy(() => import('./admin/TaxManagement'));
 const SystemLogs = lazy(() => import('./admin/SystemLogs'));
 const CMSManagement = lazy(() => import('./admin/CMSManagement'));
@@ -76,13 +74,11 @@ const TAB_COMPONENTS = {
   affiliate: AffiliateManagement, 
   Genuine_test: EWarrantyManagement, 
   analytics: AnalyticsManagement,
-  banners: BannerManagement, contact: ContactManagement, settings: AdminSettings,
-  wallet: WalletManagement, notifications: NotificationManagement, shipping: ShippingManagement,
+  banners: BannerManagement, contact: ContactManagement,
+  wallet: WalletManagement, notifications: NotificationManagement,
   tax: TaxManagement, logs: SystemLogs, cms: CMSManagement, email: EmailTemplates,
-  fitment: FitmentMatrix, warehouse: WarehouseManagement, mobile: () => <ComingSoon name="OTP Gateway" />,
-  seo: () => <ComingSoon name="Search Engine Matrix" />, database: () => <ComingSoon name="Database Cluster" />,
-  api: () => <ComingSoon name="API Webhooks" />, security: () => <ComingSoon name="WAF Security" />,
-  backups: () => <ComingSoon name="Disaster Recovery" />, translations: () => <ComingSoon name="Global i18n" />,
+  fitment: FitmentMatrix, warehouse: WarehouseManagement,
+  seo: () => <ComingSoon name="Search Engine Setup" />,
   ads: () => <ComingSoon name="Ad Network" />, reports: () => <ComingSoon name="Financial Ledger" />,
   performance: () => <ComingSoon name="Telemetry" />, terminal: () => <ComingSoon name="Root Terminal" />,
 };
@@ -105,51 +101,44 @@ export default function AdminDashboard() {
   const activeTab = tab || 'overview';
   const [isSidebarOpen, setSidebarOpen] = useState(true);
 
-  // Removed direct Lucide references to prevent `.reduce` crash
+  // Re-written to standard E-Commerce Jargon with requested features removed
   const menuSections = [
     {
-      title: 'Command', items: [
-        { id: 'overview', label: 'Dashboard' }, { id: 'analytics', label: 'Intelligence' },
-        { id: 'notifications', label: 'Alerts' }, { id: 'logs', label: 'Telemetry' }
+      title: 'Overview', items: [
+        { id: 'overview', label: 'Dashboard' }, { id: 'analytics', label: 'Analytics' },
+        { id: 'notifications', label: 'Notifications' }, { id: 'logs', label: 'System Logs' }
       ]
     },
     {
-      title: 'Commerce', items: [
-        { id: 'orders', label: 'Fulfillment' }, { id: 'wallet', label: 'Vault' },
-        { id: 'tax', label: 'Taxation' }, { id: 'reports', label: 'Ledger' }
+      title: 'Sales & Revenue', items: [
+        { id: 'orders', label: 'Orders' }, { id: 'wallet', label: 'Payments' },
+        { id: 'tax', label: 'Taxes' }, { id: 'reports', label: 'Reports' }
       ]
     },
     {
-      title: 'Matrix', items: [
-        { id: 'products', label: 'Registry' }, { id: 'categories', label: 'Taxonomy' },
-        { id: 'fitment', label: 'Compatibility' }, { id: 'inventory', label: 'Stock' },
+      title: 'Catalog', items: [
+        { id: 'products', label: 'Products' }, { id: 'categories', label: 'Categories' },
+        { id: 'fitment', label: 'Fitment Matrix' }, { id: 'inventory', label: 'Inventory' },
         { id: 'warehouse', label: 'Warehouse' }
       ]
     },
     {
-      title: 'Growth', items: [
-        { id: 'loyalty', label: 'Loyalty' }, { id: 'affiliate', label: 'Syndicate' },
-        { id: 'coupons', label: 'Logic Gates' }, { id: 'flash-sales', label: 'Temporal Sales' },
-        { id: 'reviews', label: 'Feedback' }
+      title: 'Marketing', items: [
+        { id: 'loyalty', label: 'Loyalty' }, { id: 'affiliate', label: 'Affiliates' },
+        { id: 'coupons', label: 'Coupons' }, { id: 'flash-sales', label: 'Flash Sales' },
+        { id: 'reviews', label: 'Reviews' }
       ]
     },
     {
-      title: 'Interface', items: [
-        { id: 'cms', label: 'Frontend access' }, { id: 'banners', label: 'Visuals' },
-        { id: 'seo', label: 'SEO Protocol' }, { id: 'email', label: 'SMTP Routes' }
+      title: 'Storefront', items: [
+        { id: 'cms', label: 'Pages' }, { id: 'banners', label: 'Banners' },
+        { id: 'seo', label: 'SEO Settings' }, { id: 'email', label: 'Email Templates' }
       ]
     },
     {
-      title: 'Relations', items: [
-        { id: 'support', label: 'Helpdesk' }, { id: 'returns', label: 'Reversal' },
-        { id: 'contact', label: 'Comms' }, { id: 'Genuine_test', label: 'Shield' }
-      ]
-    },
-    {
-      title: 'Core', items: [
-        { id: 'mobile', label: 'Gateway' }, { id: 'security', label: 'WAF' },
-        { id: 'database', label: 'Cluster' }, { id: 'api', label: 'Webhooks' },
-        { id: 'shipping', label: 'Logistics' }, { id: 'settings', label: 'Variables' }
+      title: 'Customer Service', items: [
+        { id: 'support', label: 'Support Tickets' }, { id: 'returns', label: 'Returns' },
+        { id: 'contact', label: 'Messages' }, { id: 'Genuine_test', label: 'E-Warranty' }
       ]
     }
   ];
@@ -178,7 +167,7 @@ export default function AdminDashboard() {
             </div>
             <div className={`overflow-hidden transition-all duration-500 ${isSidebarOpen ? 'w-32 opacity-100' : 'w-0 opacity-0'}`}>
               <span className="text-white font-black tracking-[0.15em] text-sm block">Bhumivera</span>
-              <span className="text-emerald-500 font-mono text-[9px] uppercase tracking-widest block">Root Access</span>
+              <span className="text-emerald-500 font-mono text-[9px] uppercase tracking-widest block">Admin Panel</span>
             </div>
           </div>
 
@@ -240,13 +229,13 @@ export default function AdminDashboard() {
               </button>
               <div className="flex items-center gap-3">
                 <h1 className="text-xl text-white font-black uppercase tracking-widest">{activeTab.replace(/-/g, ' ')}</h1>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-slate-400 uppercase border border-slate-700">Module</span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-slate-400 uppercase border border-slate-700">Panel</span>
               </div>
             </div>
             <div className="flex items-center gap-3 pl-6 border-l border-slate-800/80">
               <div className="text-right hidden md:block">
                 <p className="text-sm font-black text-white uppercase tracking-wider">{user?.name || 'SYSADMIN'}</p>
-                <p className="text-[10px] font-mono text-emerald-500 uppercase tracking-widest">Clearance: Level 0</p>
+                <p className="text-[10px] font-mono text-emerald-500 uppercase tracking-widest">Role: Admin</p>
               </div>
               <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 flex items-center justify-center text-white font-black text-sm">
                 {user?.name?.[0] || 'A'}
@@ -260,7 +249,7 @@ export default function AdminDashboard() {
                 <div className="flex items-center justify-center min-h-[60vh]">
                   <div className="flex flex-col items-center gap-4">
                     <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-                    <span className="text-emerald-500 font-mono text-xs uppercase tracking-[0.3em] animate-pulse">Initializing Subroutine...</span>
+                    <span className="text-emerald-500 font-mono text-xs uppercase tracking-[0.3em] animate-pulse">Loading View...</span>
                   </div>
                 </div>
               }>
