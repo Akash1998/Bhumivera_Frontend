@@ -13,17 +13,27 @@ import {
 } from 'lucide-react';
 import SkeletonLoader from './SkeletonLoader';
 
-// Helper function to construct absolute Cloudflare R2 URLs safely
+// FIXED: Robust stringified JSON parser
 const getImageUrl = (img) => {
   if (!img) return '/logo.webp';
-  let path = typeof img === 'object' ? (img.file_path || img.url || img.path) : img;
-  if (!path) return '/logo.webp';
-  if (path.startsWith('http')) return path;
+  let parsedImg = img;
+  
+  if (typeof img === 'string') {
+    try {
+      const parsed = JSON.parse(img);
+      parsedImg = Array.isArray(parsed) ? parsed[0] : parsed;
+    } catch (e) {
+      parsedImg = img; // Normal string fallback
+    }
+  }
+
+  let path = typeof parsedImg === 'object' && parsedImg !== null ? (parsedImg.url || parsedImg.file_path || parsedImg.path) : parsedImg;
+  
+  if (!path || typeof path !== 'string') return '/logo.webp';
+  if (path.startsWith('http') || path.startsWith('data:')) return path;
   
   const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-22cd43cce9bc475680ad496e199706c4.r2.dev';
-  const cleanBase = baseUrl.replace(/\/$/, '');
-  const cleanPath = path.replace(/^\//, '');
-  return `${cleanBase}/${cleanPath}`;
+  return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
 };
 
 const ProductGrid = ({ products = [], isLoading = false }) => {
@@ -105,7 +115,7 @@ const ProductGrid = ({ products = [], isLoading = false }) => {
             <div className={`${viewMode === 'list' ? 'md:w-72 shrink-0' : 'w-full'} relative aspect-square overflow-hidden rounded-2xl bg-slate-800`}>
               <img 
                 // Dynamically resolve image path mapping
-                src={getImageUrl(product.images?.[0] || product.image_url || product.image)} 
+                src={getImageUrl(product.images || product.image_url || product.image)} 
                 alt={product.name}
                 onError={(e) => { e.target.src = '/logo.webp'; }}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
@@ -151,7 +161,7 @@ const ProductGrid = ({ products = [], isLoading = false }) => {
                 <span className="text-slate-500 text-xs font-bold">({product.reviews || 0})</span>
               </div>
               
-              <h3 className="text-white font-bold text-lg mb-2 group-hover:text-emerald-500 transition-colors">
+              <h3 className="text-white font-bold text-lg mb-2 group-hover:text-emerald-500 transition-colors line-clamp-1">
                 {product.name}
               </h3>
               
