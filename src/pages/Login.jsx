@@ -31,15 +31,23 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const { data } = await api.post('/auth/verify-otp', { email, otp });
+      // FIXED: Pointing to the correct endpoint that issues the JWT Token
+      const { data } = await api.post('/auth/2fa/verify', { email, otp });
       
       if (data.requires2FA) {
         setStep('2FA');
         toast.info('Please enter your 2FA code');
-      } else {
+      } else if (data.token) {
+        // FIXED: Save both token and user payload so AuthContext hydrates flawlessly
         localStorage.setItem('token', data.token);
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
         toast.success('Welcome back to Bhumivera!');
-        navigate('/dashboard');
+        // FIXED: Hard redirect to trigger AuthContext re-initialization and route to correct path
+        window.location.href = '/profile';
+      } else {
+        toast.error('Verification failed. No token received.');
       }
     } catch (error) {
       toast.error('Invalid OTP. Please try again.');
@@ -54,9 +62,14 @@ const Login = () => {
     setLoading(true);
     try {
       const { data } = await api.post('/auth/verify-2fa', { email, code: twoFactorCode });
-      localStorage.setItem('token', data.token);
-      toast.success('Authenticated successfully');
-      navigate('/dashboard');
+      if (data.token) {
+        localStorage.setItem('token', data.token);
+        if (data.user) {
+          localStorage.setItem('user', JSON.stringify(data.user));
+        }
+        toast.success('Authenticated successfully');
+        window.location.href = '/profile';
+      }
     } catch (error) {
       toast.error('Invalid 2FA code');
     } finally {
