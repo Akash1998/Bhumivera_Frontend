@@ -4,7 +4,7 @@ import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { 
   Star, Leaf, Heart, Shield, Truck, Zap, ChevronRight, 
-  Minus, Plus, CheckCircle2, AlertCircle, Play, Droplet, Microscope
+  Minus, Plus, CheckCircle2, AlertCircle, Play, Droplet, Microscope, Package, Tag
 } from 'lucide-react';
 import { 
   products as productsApi, 
@@ -13,11 +13,25 @@ import {
   cart as cartApi
 } from '../services/api';
 
+// FIXED: Robust parsing for JSON-stringified arrays from MySQL
 const getImageUrl = (img) => {
   if (!img) return '/logo.webp';
-  let path = typeof img === 'object' ? (img.url || img.file_path || img.path) : img;
-  if (!path) return '/logo.webp';
-  if (path.startsWith('http')) return path;
+  let parsedImg = img;
+  
+  if (typeof img === 'string') {
+    try {
+      const parsed = JSON.parse(img);
+      parsedImg = Array.isArray(parsed) ? parsed[0] : parsed;
+    } catch (e) {
+      parsedImg = img; // Normal string fallback
+    }
+  }
+
+  let path = typeof parsedImg === 'object' && parsedImg !== null ? (parsedImg.url || parsedImg.file_path || parsedImg.path) : parsedImg;
+  
+  if (!path || typeof path !== 'string') return '/logo.webp';
+  if (path.startsWith('http') || path.startsWith('data:')) return path;
+  
   const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-22cd43cce9bc475680ad496e199706c4.r2.dev';
   return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
 };
@@ -51,6 +65,19 @@ export default function ProductDetail() {
           fetchedProduct = slugRes.data?.data || slugRes.data;
         }
         
+        // FIXED: Convert MySQL JSON string to workable Array to prevent .map crashes
+        if (fetchedProduct) {
+           let safeImages = [];
+           if (typeof fetchedProduct.images === 'string') {
+             try { safeImages = JSON.parse(fetchedProduct.images); } catch(e) {}
+           } else if (Array.isArray(fetchedProduct.images)) {
+             safeImages = fetchedProduct.images;
+           }
+           
+           if (!safeImages.length && fetchedProduct.image_url) safeImages = [fetchedProduct.image_url];
+           fetchedProduct.images = safeImages;
+        }
+
         setProduct(fetchedProduct);
         if (fetchedProduct?.images?.length > 0) {
           setActiveMedia(fetchedProduct.images[0]);
@@ -107,7 +134,7 @@ export default function ProductDetail() {
     "sku": product.sku || product.id,
     "brand": {
       "@type": "Brand",
-      "name": "Bhumivera"
+      "name": product.brand || "Bhumivera"
     },
     "offers": {
       "@type": "Offer",
@@ -144,43 +171,38 @@ export default function ProductDetail() {
         
         <div className="lg:col-span-7 flex flex-col-reverse md:flex-row gap-6 relative">
           <div className="flex md:flex-col gap-4 overflow-x-auto md:overflow-y-auto md:w-24 shrink-0 no-scrollbar py-1">
-            {product.images?.map((media, idx) => (
-              <button 
-                key={idx} 
-                onClick={() => setActiveMedia(media)}
-                className={`relative w-20 h-20 md:w-24 md:h-24 rounded-none overflow-hidden border-2 transition-all duration-300 shrink-0 ${
-                  activeMedia?.url === media.url ? 'border-olive-600 shadow-[2px_2px_0px_#6b6b00]' : 'border-gray-200 hover:border-gray-300'
-                }`}
-              >
-                {media.type === 'video' ? (
-                  <div className="absolute inset-0 bg-gray-100 flex items-center justify-center"><Play size={24} className="text-olive-600" /></div>
-                ) : (
-                  <img src={getImageUrl(media)} alt="Thumbnail" className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" />
-                )}
-              </button>
-            ))}
+            {product.images?.map((media, idx) => {
+              const url = getImageUrl(media);
+              return (
+                <button 
+                  key={idx} 
+                  onClick={() => setActiveMedia(media)}
+                  className={`relative w-20 h-20 md:w-24 md:h-24 rounded-none overflow-hidden border-2 transition-all duration-300 shrink-0 ${
+                    getImageUrl(activeMedia) === url ? 'border-olive-600 shadow-[2px_2px_0px_#6b6b00]' : 'border-gray-200 hover:border-gray-300'
+                  }`}
+                >
+                  <img src={url} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" />
+                </button>
+              );
+            })}
           </div>
 
           <div className="relative w-full aspect-square md:aspect-auto md:h-[700px] bg-white border border-gray-200 shadow-sm overflow-hidden flex items-center justify-center lg:sticky lg:top-32 group">
             <AnimatePresence mode="wait">
               <motion.div
-                key={activeMedia?.url}
+                key={getImageUrl(activeMedia)}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.8 }}
                 className="w-full h-full p-8"
               >
-                {activeMedia?.type === 'video' ? (
-                  <video src={getImageUrl(activeMedia)} autoPlay loop muted controls className="w-full h-full object-contain" />
-                ) : (
-                  <img src={getImageUrl(activeMedia)} alt={product.name} className="w-full h-full object-contain mix-blend-multiply" />
-                )}
+                <img src={getImageUrl(activeMedia)} alt={product.name} className="w-full h-full object-contain mix-blend-multiply" />
               </motion.div>
             </AnimatePresence>
 
             <div className="absolute top-6 left-6 flex flex-col gap-3 z-10">
-              {product.is_new_arrival === 1 && <span className="bg-olive-600 text-white px-4 py-1.5 text-[10px] font-mono uppercase tracking-widest">SOP-104 Validated</span>}
+              {product.is_featured === 1 && <span className="bg-olive-600 text-white px-4 py-1.5 text-[10px] font-mono uppercase tracking-widest">Premium Selection</span>}
             </div>
             
             <button className="absolute top-6 right-6 w-12 h-12 bg-white border border-gray-200 rounded-full flex items-center justify-center text-gray-400 hover:text-olive-600 hover:border-olive-600 transition-all duration-300 z-10">
@@ -191,9 +213,17 @@ export default function ProductDetail() {
 
         <div className="lg:col-span-5 flex flex-col relative">
           <div className="mb-8 border-b border-gray-200 pb-8">
-            <div className="text-olive-500 font-mono text-[10px] uppercase tracking-[0.3em] mb-2 block">
-              Batch Status: Active // SKU: {product.sku || 'N/A'}
+            <div className="flex items-center gap-3 mb-3">
+               <span className="text-olive-500 font-mono text-[10px] uppercase tracking-[0.3em] block">
+                 SKU: {product.sku || 'N/A'}
+               </span>
+               {product.brand && (
+                  <span className="bg-gray-100 px-3 py-1 text-[10px] font-bold text-gray-600 uppercase tracking-widest rounded-full flex items-center gap-1">
+                    <Tag size={12} /> {product.brand}
+                  </span>
+               )}
             </div>
+            
             <h1 className="text-4xl md:text-5xl font-light tracking-tighter leading-[1.1] mb-6 italic text-[#1A1C18]">
               {product.name}
             </h1>
@@ -215,10 +245,10 @@ export default function ProductDetail() {
           </div>
 
           <div className="bg-white border border-gray-200 p-8 mb-8 relative">
-            <div className="flex items-center gap-4 mb-6">
+            <div className="flex items-center justify-between gap-4 mb-6">
               <span className={`flex items-center gap-2 text-xs font-mono uppercase tracking-widest ${isOutOfStock ? 'text-red-500' : 'text-olive-600'}`}>
-                <Microscope size={16} />
-                {isOutOfStock ? 'Lab Reserves Depleted' : 'In Stock & Ready for Transit'}
+                {isOutOfStock ? <AlertCircle size={16}/> : <Package size={16}/>}
+                {isOutOfStock ? 'Lab Reserves Depleted' : `In Stock: ${product.quantity} Units`}
               </span>
             </div>
 
@@ -228,7 +258,7 @@ export default function ProductDetail() {
                   <Minus size={16} />
                 </button>
                 <span className="font-mono text-lg w-8 text-center">{quantity}</span>
-                <button onClick={() => setQuantity(q => q + 1)} className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-olive-600 transition-colors">
+                <button onClick={() => setQuantity(q => q + 1)} disabled={quantity >= product.quantity} className="w-10 h-10 flex items-center justify-center text-gray-500 hover:text-olive-600 transition-colors disabled:opacity-50">
                   <Plus size={16} />
                 </button>
               </div>
@@ -298,8 +328,10 @@ export default function ProductDetail() {
                   {[
                     { label: 'Formulation Code', value: product.sku },
                     { label: 'Extraction Origin', value: product.brand || 'Bhumivera Asansol' },
+                    { label: 'System Category', value: product.category_name },
                     { label: 'pH Balance', value: 'Buffered to 5.5' },
                     { label: 'Bioavailability', value: 'Maximized via Cold-Process' },
+                    { label: 'Stock Weight/Volume', value: product.weight ? `${product.weight}g` : 'Standard Metric' },
                   ].map((spec, i) => (
                     <div key={i} className="flex justify-between py-2 border-b border-gray-100 border-dashed">
                       <span className="text-gray-400 font-mono uppercase text-[10px] tracking-widest">{spec.label}</span>
@@ -342,8 +374,8 @@ export default function ProductDetail() {
       >
         <div className="max-w-4xl mx-auto bg-white/90 backdrop-blur-xl border border-olive-500/20 p-3 shadow-lg flex items-center justify-between pointer-events-auto">
           <div className="hidden md:flex items-center gap-4 pl-2">
-            <div className="w-10 h-10 border border-gray-200 overflow-hidden">
-              <img src={getImageUrl(activeMedia)} className="w-full h-full object-cover mix-blend-multiply" alt="sticky" />
+            <div className="w-10 h-10 border border-gray-200 overflow-hidden bg-white">
+              <img src={getImageUrl(activeMedia)} className="w-full h-full object-contain mix-blend-multiply" alt="sticky" />
             </div>
             <div>
               <h4 className="text-xs font-medium italic text-gray-800 line-clamp-1">{product.name}</h4>
