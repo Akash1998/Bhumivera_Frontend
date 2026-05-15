@@ -4,7 +4,7 @@ import {
   ChevronRight, ChevronDown, Layers, Link as LinkIcon, 
   AlertTriangle, CheckCircle, Component, XCircle, 
   Activity, BarChart2, Download, Filter, Move, Settings, 
-  ShieldAlert, Eye, Server, Zap, PieChart, Info
+  ShieldAlert, Eye, Server, Zap, PieChart, Info, Database, Terminal
 } from 'lucide-react';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
