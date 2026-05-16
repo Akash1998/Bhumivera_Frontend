@@ -133,7 +133,7 @@ export default function About() {
           <div className="text-center mb-24 max-w-3xl mx-auto">
             <h2 className="text-xs font-bold text-emerald-600 uppercase tracking-[0.4em] mb-4">Materia Medica</h2>
             <h3 className="text-4xl md:text-5xl font-serif text-[#1a1a1a] mb-6">The Extraction Heroes</h3>
-            <p className="text-gray-500 font-light">Biological data sheets for our primary actives. No fillers. Just clinical botanical efficacy.</p>
+            <p className="text-gray-500 font-light">Biological data sheets for our primary actives. No fillers. Just authentic botanical efficacy.</p>
           </div>
 
           <div className="space-y-32">
@@ -235,7 +235,7 @@ export default function About() {
         <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="max-w-5xl mx-auto text-center relative z-10">
           <ShieldCheck size={48} className="text-emerald-600 mx-auto mb-8" />
           <h2 className="text-4xl md:text-6xl font-serif text-[#1a1a1a] mb-8 tracking-tighter">Ready to Synchronize?</h2>
-          <p className="text-lg text-gray-500 font-light max-w-2xl mx-auto mb-12 leading-relaxed italic">"Begin your botanical transformation with a batch audited for molecular purity. Experience the difference of true clinical luxury."</p>
+          <p className="text-lg text-gray-500 font-light max-w-2xl mx-auto mb-12 leading-relaxed italic">"Begin your botanical transformation with a batch audited for molecular purity. Experience the difference of true botanical luxury."</p>
           <motion.a 
             href="/shop" 
             whileHover={{ scale: 1.05, backgroundColor: "#0a0a0a" }}
