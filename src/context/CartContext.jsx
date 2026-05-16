@@ -16,7 +16,6 @@ export const CartProvider = ({ children }) => {
       setCartLoading(true);
       try {
         const res = await cartApi.get();
-        // STRICT ARRAY VALIDATION: Prevents .reduce() crashes if backend returns an object/error
         const fetchedData = res.data?.items || res.data;
         setCart(Array.isArray(fetchedData) ? fetchedData : []);
       } catch (err) {
@@ -41,73 +40,96 @@ export const CartProvider = ({ children }) => {
     loadCart();
   }, [loadCart]);
 
+  // ZERO-LATENCY OPTIMISTIC UPDATE
   const addToCart = async (product, qty = 1) => {
     const prodId = product._id || product.id;
-    if (isAuthenticated) {
-      await cartApi.add({ productId: prodId, quantity: qty });
-    } else {
-      // Ensure cart is an array before spreading
-      const safeCart = Array.isArray(cart) ? cart : [];
+    
+    // 1. Immediately open sidebar
+    setIsCartOpen(true); 
+    
+    // 2. Immediately update local state without waiting for DB
+    setCart(prev => {
+      const safeCart = Array.isArray(prev) ? prev : [];
       const updated = [...safeCart];
       const idx = updated.findIndex(i => i.product_id === prodId || i.id === prodId);
       if (idx > -1) updated[idx].quantity += qty;
       else updated.push({ product_id: prodId, id: prodId, product, quantity: qty });
       
-      setCart(updated);
-      localStorage.setItem("Bhumivera_guest_cart", JSON.stringify(updated));
-    }
-    await loadCart();
-    setIsCartOpen(true); 
-    
-    // Dynamic Upsell Injection based on category
+      if (!isAuthenticated) localStorage.setItem("Bhumivera_guest_cart", JSON.stringify(updated));
+      return updated;
+    });
+
     if (product.category === 'Lights' || product.category_name === 'Lights') {
       setUpsells([{ _id: 'rel_1', name: 'Heavy Duty Wiring Relay', price: 499, img: '/logo.webp' }]);
     }
+
+    // 3. Background DB Sync
+    if (isAuthenticated) {
+      try {
+        await cartApi.add({ productId: prodId, quantity: qty });
+        await loadCart(); // Re-sync to assure accuracy
+      } catch (err) {
+        console.error("Failed to sync cart add to DB, reverting state", err);
+        await loadCart(); // Auto-revert if offline/error
+      }
+    }
   };
 
-  // NEW: Flawless Quantity Updater
   const updateQuantity = async (productId, newQty) => {
     if (newQty < 1) return removeFromCart(productId);
     
-    if (isAuthenticated) {
-      await cartApi.updateQuantity(productId, newQty);
-    } else {
-      const safeCart = Array.isArray(cart) ? cart : [];
+    // Optimistic Update
+    setCart(prev => {
+      const safeCart = Array.isArray(prev) ? prev : [];
       const updated = [...safeCart];
       const idx = updated.findIndex(i => i.product_id === productId || i.id === productId);
       if (idx > -1) updated[idx].quantity = newQty;
-      setCart(updated);
-      localStorage.setItem("Bhumivera_guest_cart", JSON.stringify(updated));
+      if (!isAuthenticated) localStorage.setItem("Bhumivera_guest_cart", JSON.stringify(updated));
+      return updated;
+    });
+    
+    if (isAuthenticated) {
+      try {
+        await cartApi.updateQuantity(productId, newQty);
+        await loadCart();
+      } catch (err) {
+        console.error("Quantity update failed", err);
+        await loadCart();
+      }
     }
-    await loadCart();
   };
 
   const removeFromCart = async (id) => {
-    if (isAuthenticated) {
-      await cartApi.remove(id);
-    } else {
-      const safeCart = Array.isArray(cart) ? cart : [];
+    // Optimistic Update
+    setCart(prev => {
+      const safeCart = Array.isArray(prev) ? prev : [];
       const updated = safeCart.filter(i => i.product_id !== id && i.id !== id);
-      setCart(updated);
-      localStorage.setItem("Bhumivera_guest_cart", JSON.stringify(updated));
+      if (!isAuthenticated) localStorage.setItem("Bhumivera_guest_cart", JSON.stringify(updated));
+      return updated;
+    });
+
+    if (isAuthenticated) {
+      try {
+        await cartApi.remove(id);
+        await loadCart();
+      } catch (err) {
+        console.error("Remove failed", err);
+        await loadCart();
+      }
     }
-    await loadCart();
   };
   
   const clearCart = async () => {
+    setCart([]); // Optimistic
     if (isAuthenticated) {
       await cartApi.clear();
     } else {
       localStorage.removeItem("Bhumivera_guest_cart");
     }
-    setCart([]);
   };
 
-  // Highly accurate subtotal calculation referencing discount pricing first
-  // ULTIMATE FAILSAFE: If cart is somehow mangled, return 0 instead of crashing React
   const getSubtotal = () => {
     if (!Array.isArray(cart)) return 0;
-    
     return cart.reduce((acc, item) => {
       const p = item.product || item;
       const price = p.discount_price || p.price || item.unit_price || 0;
@@ -120,7 +142,7 @@ export const CartProvider = ({ children }) => {
 
   return (
     <CartContext.Provider value={{ 
-      cartItems: Array.isArray(cart) ? cart : [], // Safe export mapping
+      cartItems: Array.isArray(cart) ? cart : [], 
       loading: cartLoading, 
       isCartOpen, 
       setIsCartOpen,
