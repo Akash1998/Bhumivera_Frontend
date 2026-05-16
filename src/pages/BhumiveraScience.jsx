@@ -44,7 +44,7 @@ const BhumiveraScience = () => {
             </p>
             <div className="flex justify-center gap-4">
               <button className="px-8 py-4 bg-emerald-600 hover:bg-emerald-500 text-black transition-all rounded-sm font-bold tracking-widest text-xs uppercase flex items-center gap-2">
-                Explore Lab Data <ArrowRight size={14} />
+                Explore Formulation Details <ArrowRight size={14} />
               </button>
             </div>
           </motion.div>
@@ -74,7 +74,7 @@ const BhumiveraScience = () => {
                   Our extraction process focuses on preserving **Acemannan**, a long-chain polysaccharide that acts as the "logic" for skin cell communication.
                 </p>
                 <blockquote className="pl-6 border-l-2 border-emerald-500 italic py-2 text-white">
-                  "In the lab, as in the garden, patience is the ultimate catalyst for potency."
+                  "In our workspace, as in the garden, patience is the ultimate catalyst for potency."
                 </blockquote>
                 <ul className="grid grid-cols-2 gap-4 pt-4">
                   <li className="flex items-center gap-2 text-sm border border-white/10 p-3 rounded-sm">
@@ -96,7 +96,7 @@ const BhumiveraScience = () => {
               <div className="absolute inset-0 bg-emerald-500/10 blur-[100px] group-hover:bg-emerald-500/20 transition-all z-0"></div>
               <img 
                 src="/assets/images/aloeverabeaker.webp" 
-                alt="Botanical Laboratory Extraction" 
+                alt="Botanical Extraction" 
                 className="absolute inset-0 w-full h-full object-cover rounded-sm border border-white/10 opacity-80 hover:opacity-100 transition-all duration-700 shadow-2xl mix-blend-lighten z-10"
               />
             </motion.div>
@@ -253,7 +253,7 @@ const BhumiveraScience = () => {
               Every Bhumivera product is "Clean Code" for the environment. 0% Micro-plastics. 100% Biodegradable Logic. Sourced locally in Asansol, engineered for the global stage.
             </p>
             <div className="flex flex-wrap justify-center gap-14 grayscale opacity-40">
-              <span className="font-mono text-xs uppercase tracking-[0.3em]">Vegan Certified</span>
+              <span className="font-mono text-xs uppercase tracking-[0.3em]">Vegan Conscious</span>
               <span className="font-mono text-xs uppercase tracking-[0.3em]">Cruelty Free</span>
               <span className="font-mono text-xs uppercase tracking-[0.3em]">Zero Waste Packaging</span>
             </div>
