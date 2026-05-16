@@ -45,8 +45,12 @@ export default function Profile() {
     try {
       if (activeTab === 'dashboard' || activeTab === 'security') {
         const res = await usersApi.getProfile();
-        setProfileData({ name: res.data.name || '', phone: res.data.phone || '' });
-        setTwoFactor(prev => ({ ...prev, isEnabled: res.data.two_factor_enabled === 1 }));
+        // Fallback-friendly extraction
+        const userData = res.data?.data || res.data?.user || res.data || {};
+        const safeName = userData.name || userData.first_name || '';
+        const safePhone = userData.phone || '';
+        setProfileData({ name: safeName, phone: safePhone });
+        setTwoFactor(prev => ({ ...prev, isEnabled: userData.two_factor_enabled === 1 }));
       }
       if (activeTab === 'dashboard' || activeTab === 'orders') {
         const res = await ordersApi.getMyOrders();
@@ -73,7 +77,11 @@ export default function Profile() {
     try {
       await usersApi.updateProfile(profileData);
       showMessage('success', 'Profile updated successfully.');
-    } catch (err) { showMessage('error', 'Failed to update profile.'); }
+      // CRITICAL FIX: Refresh dashboard data so local UI aligns with database state.
+      await fetchDashboardData(); 
+    } catch (err) { 
+      showMessage('error', 'Failed to update profile.'); 
+    }
   };
 
   const handleChangePassword = async (e) => {
