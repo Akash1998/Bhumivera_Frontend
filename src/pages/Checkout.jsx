@@ -35,19 +35,25 @@ export default function Checkout() {
   const finalTotal = subtotal + shippingCost;
 
   const fetchData = useCallback(async () => {
+    // 1. Fetch Addresses Independently
     try {
-      const [addrRes, walletRes] = await Promise.all([
-        addressesApi.getAll(),
-        walletApi.getBalance()
-      ]);
-      const list = addrRes.data.data || addrRes.data;
+      const addrRes = await addressesApi.getAll();
+      const list = addrRes.data.data || addrRes.data || [];
       setAddresses(list);
-      setWalletBalance(walletRes.data.balance);
       
       const def = list.find(a => a.is_default) || list[0];
       if (def) setSelectedAddress(def.id);
     } catch (err) {
-      console.error("Failed to fetch checkout data", err);
+      console.error("Failed to fetch checkout addresses", err);
+    }
+
+    // 2. Fetch Wallet Independently (Prevents a 404 from freezing the address render)
+    try {
+      const walletRes = await walletApi.getBalance();
+      setWalletBalance(walletRes.data.balance || 0);
+    } catch (err) {
+      console.error("Failed to fetch wallet balance, defaulting to 0", err);
+      setWalletBalance(0);
     }
   }, []);
 
@@ -113,14 +119,25 @@ export default function Checkout() {
                 <h2 className="text-xl font-light text-white flex items-center gap-3">
                   <FiMapPin className="text-emerald-500" /> Shipping Destination
                 </h2>
-                <button className="text-emerald-500 hover:text-emerald-400 text-sm font-mono flex items-center gap-1 transition-colors">
+                <button 
+                  onClick={() => navigate('/address-book')}
+                  className="text-emerald-500 hover:text-emerald-400 text-sm font-mono flex items-center gap-1 transition-colors"
+                >
                   <FiPlus /> NEW ADDRESS
                 </button>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {addresses.length === 0 ? (
-                  <p className="text-gray-500 italic text-sm col-span-2">No addresses found. Please add one to continue.</p>
+                  <div className="col-span-2 bg-black/50 border border-white/10 p-6 rounded-xl text-center">
+                    <p className="text-gray-400 mb-4">No shipping addresses found.</p>
+                    <button 
+                      onClick={() => navigate('/address-book')}
+                      className="bg-white text-black px-6 py-2 rounded-lg font-bold text-xs uppercase tracking-widest hover:bg-gray-200 transition-colors"
+                    >
+                      Add Address Now
+                    </button>
+                  </div>
                 ) : (
                   addresses.map(addr => (
                     <div 
