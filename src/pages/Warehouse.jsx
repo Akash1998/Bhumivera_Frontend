@@ -22,7 +22,8 @@ export default function Warehouse() {
       if (!t || t === 'null' || t === 'undefined') { performLogout(); return; }
       const accessRes = await api.get('/warehouse/check-access');
       setStoreName(accessRes.data?.storeName || 'Master Admin Access');
-      const prodRes = await api.get('/products');
+      // [FIX]: Target the active products endpoint to bypass the strict SuperAdmin 403 lock, allowing warehouse staff to load inventory.
+      const prodRes = await api.get('/products/active');
       setProducts(prodRes.data?.data || prodRes.data?.products || (Array.isArray(prodRes.data) ? prodRes.data : []));
     } catch (e) { setError(e?.response?.data?.message || 'Connection failed.'); } finally { setLoading(false); }
   }, []);
