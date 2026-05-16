@@ -45,9 +45,11 @@ export default function AddressBook() {
     setSaving(true);
     
     // Map camelCase form to snake_case for MySQL backend compatibility
+    // Added explicit line1 to satisfy backend validation
     const payload = {
       ...form,
       full_name: form.fullName,
+      line1: form.addressLine1,
       address_line1: form.addressLine1,
       address_line2: form.addressLine2,
       is_default: form.isDefault
@@ -206,7 +208,7 @@ export default function AddressBook() {
               const addrId = addr.id || addr._id;
               const isDefault = addr.isDefault || addr.is_default;
               const fullName = addr.fullName || addr.full_name;
-              const addressLine1 = addr.addressLine1 || addr.address_line1;
+              const addressLine1 = addr.addressLine1 || addr.address_line1 || addr.street_address || addr.line1;
               const addressLine2 = addr.addressLine2 || addr.address_line2;
 
               return (
@@ -225,9 +227,9 @@ export default function AddressBook() {
                     </div>
                   </div>
                   <p className="font-semibold text-white">{fullName}</p>
-                  <p className="text-gray-400 text-sm mt-1">{addr.phone}</p>
+                  <p className="text-gray-400 text-sm mt-1">{addr.phone || addr.phone_number}</p>
                   <p className="text-gray-400 text-sm">{addressLine1}{addressLine2 ? ', ' + addressLine2 : ''}</p>
-                  <p className="text-gray-400 text-sm">{addr.city}, {addr.state} - {addr.pincode}</p>
+                  <p className="text-gray-400 text-sm">{addr.city}, {addr.state} - {addr.pincode || addr.postal_code}</p>
                   <p className="text-gray-400 text-sm">{addr.country || 'India'}</p>
                 </div>
               );
