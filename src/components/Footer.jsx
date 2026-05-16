@@ -45,7 +45,7 @@ export default function Footer() {
         <div>
           <h3 className="font-bold text-xs uppercase tracking-[0.15em] mb-6 text-[#d4af37]">Make Money</h3>
           <ul className="space-y-4 text-sm text-[#a89f91] font-light">
-            <li><Link to="/admin/login" className="hover:text-[#f6f0e4] transition-colors duration-300">Sell on Bhumivera</Link></li>
+            <li><Link to="/contact?topic=sell" className="hover:text-[#f6f0e4] transition-colors duration-300">Sell on Bhumivera</Link></li>
             <li><Link to="/affiliate" className="hover:text-[#f6f0e4] transition-colors duration-300">Become an Affiliate</Link></li>
             <li><Link to="/contact" className="hover:text-[#f6f0e4] transition-colors duration-300">Advertise Products</Link></li>
           </ul>
