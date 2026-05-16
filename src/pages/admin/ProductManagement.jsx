@@ -4,18 +4,20 @@ import * as XLSX from 'xlsx';
 import { 
   Box, Plus, Edit2, Trash2, Search, RefreshCw, AlertTriangle, 
   CheckCircle, XCircle, ChevronLeft, ChevronRight, Image as ImageIcon, 
-  Video, BoxSelect, ShieldCheck, Tag, Activity, Cpu, QrCode, List, Database, UploadCloud
+  Video, BoxSelect, ShieldCheck, Tag, Activity, Cpu, QrCode, List, Database, UploadCloud, Globe
 } from 'lucide-react';
 import api, { products as productsApi, categories as categoriesApi, serials as serialsApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 
+// SEO Upgrade: Added all missing schema and indexing fields to state
 const INITIAL_PRODUCT_STATE = {
-  name: '', description: '', price: '', quantity: '', category_id: '', 
-  video_urls: '', model_3d_url: '', warranty_period: 12, status: 'active'
+  name: '', slug: '', description: '', price: '', discount_price: '', quantity: '', category_id: '', 
+  video_urls: '', model_3d_url: '', warranty_period: 12, status: 'active',
+  meta_title: '', meta_description: '', tags: '', sku: '', brand: 'Bhumivera'
 };
 
 const INITIAL_SERIAL_STATE = {
-  count: 10, prefix: 'ANR', format: 'advanced', base_warranty_months: 12
+  count: 10, prefix: 'BHU', format: 'advanced', base_warranty_months: 12
 };
 
 export default function ProductManagement() {
@@ -108,10 +110,11 @@ export default function ProductManagement() {
     if (product) {
       setCurrentProduct(product);
       setForm({
-        name: product.name || '', description: product.description || '', price: product.price || '',
+        name: product.name || '', slug: product.slug || '', description: product.description || '', price: product.price || '', discount_price: product.discount_price || '',
         quantity: product.quantity || product.stock || '', category_id: product.category_id || '',
         video_urls: product.video_urls || '', model_3d_url: product.model_3d_url || '',
-        warranty_period: product.warranty_period || 12, status: product.status || 'active'
+        warranty_period: product.warranty_period || 12, status: product.status || 'active',
+        meta_title: product.meta_title || '', meta_description: product.meta_description || '', tags: product.tags || '', sku: product.sku || '', brand: product.brand || 'Bhumivera'
       });
       
       let parsedSpecs = [];
@@ -153,7 +156,10 @@ export default function ProductManagement() {
         return acc;
       }, {});
       
-      const payload = { ...form, specifications: specObj };
+      // Auto-generate slug for SEO if empty
+      const finalSlug = form.slug.trim() === '' ? form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : form.slug;
+      
+      const payload = { ...form, slug: finalSlug, specifications: specObj };
       let savedProduct;
       
       if (currentProduct) {
@@ -212,7 +218,7 @@ export default function ProductManagement() {
     setSerialTab('generate');
     setSerialForm({ 
       count: 10, 
-      prefix: String(product.name || 'PRD').substring(0, 3).toUpperCase(), 
+      prefix: String(product.name || 'BHU').substring(0, 3).toUpperCase(), 
       format: 'advanced', 
       base_warranty_months: product.warranty_period || 12 
     });
@@ -278,7 +284,8 @@ export default function ProductManagement() {
   const filteredProducts = useMemo(() => {
     return products.filter(p => 
       p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      p.category_name?.toLowerCase().includes(searchTerm.toLowerCase())
+      p.category_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p.sku?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [products, searchTerm]);
   
@@ -313,7 +320,7 @@ export default function ProductManagement() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-emerald-500 transition-colors" size={16} />
             <input 
               type="text" 
-              placeholder="Search products..." 
+              placeholder="Search products or SKU..." 
               value={searchTerm} 
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }} 
               className="w-full sm:w-64 bg-slate-900 border border-slate-800 focus:border-emerald-500/50 rounded-xl py-2.5 pl-10 pr-4 text-white font-mono text-xs outline-none transition-all shadow-inner" 
@@ -356,7 +363,7 @@ export default function ProductManagement() {
                     <div>
                       <p className="text-sm font-bold text-white line-clamp-1">{product.name}</p>
                       <p className="text-[10px] font-mono text-slate-500 mt-1 uppercase tracking-widest">
-                        ID: {String(product.id || product._id || '').substring(0,8)}
+                        SKU: {product.sku || `BHU-${String(product.id || product._id || '').substring(0,5)}`}
                       </p>
                     </div>
                   </td>
@@ -437,6 +444,7 @@ export default function ProductManagement() {
               <div className="flex border-b border-slate-800 px-6 bg-slate-900/20 overflow-x-auto custom-scrollbar">
                 {[
                   {id:'basic', l:'Basic Info', i:BoxSelect}, 
+                  {id:'seo', l:'SEO & Meta', i:Globe}, // NEW SEO TAB
                   {id:'specs', l:'Specifications', i:List}, 
                   {id:'media', l:'Images & Docs', i:Database}, 
                   {id:'warranty', l:'Warranty', i:ShieldCheck}
@@ -455,17 +463,21 @@ export default function ProductManagement() {
                   <div className="grid grid-cols-2 gap-5">
                     <div className="col-span-2">
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Product Name</label>
-                      <input required value={form.name} onChange={e=>setForm({...form, name:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="e.g. LED Headlight Bulbs" />
+                      <input required value={form.name} onChange={e=>setForm({...form, name:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="e.g. Aloe Vera Glow Serum" />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Price (₹)</label>
-                      <input required type="number" value={form.price} onChange={e=>setForm({...form, price:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-emerald-400 outline-none transition-colors" placeholder="0.00" />
+                      <input required type="number" value={form.price} onChange={e=>setForm({...form, price:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-slate-300 outline-none transition-colors" placeholder="0.00" />
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest block mb-2">Discount Price (₹)</label>
+                      <input type="number" value={form.discount_price} onChange={e=>setForm({...form, discount_price:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-emerald-400 outline-none transition-colors" placeholder="0.00" />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Stock Quantity</label>
                       <input required type="number" value={form.quantity} onChange={e=>setForm({...form, quantity:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-white outline-none transition-colors" placeholder="0" />
                     </div>
-                    <div className="col-span-2">
+                    <div>
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Category</label>
                       <select required value={form.category_id} onChange={e=>setForm({...form, category_id:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors appearance-none">
                         <option value="" disabled>Select a Category...</option>
@@ -474,7 +486,41 @@ export default function ProductManagement() {
                     </div>
                     <div className="col-span-2">
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Description</label>
-                      <textarea rows={5} value={form.description} onChange={e=>setForm({...form, description:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-slate-300 resize-y outline-none transition-colors" placeholder="Enter product details, features, and compatibility..." />
+                      <textarea rows={5} value={form.description} onChange={e=>setForm({...form, description:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-slate-300 resize-y outline-none transition-colors" placeholder="Enter product details, features, and ingredients..." />
+                    </div>
+                  </div>
+                )}
+
+                {/* NEW SEO TAB */}
+                {activeTab === 'seo' && (
+                  <div className="grid grid-cols-2 gap-5">
+                    <div className="col-span-2 bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl mb-2">
+                      <h4 className="text-sm font-bold text-blue-400 flex items-center gap-2"><Globe size={16}/> Schema.org Discovery Engine</h4>
+                      <p className="text-[10px] text-slate-400 font-mono mt-1">These fields are autonomously compiled into Google JSON-LD schema when the public API is queried. Do not leave blank for core products.</p>
+                    </div>
+                    <div className="col-span-2 md:col-span-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2 flex justify-between">URL Slug <span className="text-slate-600 font-mono lowercase">auto-generated if empty</span></label>
+                      <input value={form.slug} onChange={e=>setForm({...form, slug:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-emerald-400 font-mono outline-none transition-colors" placeholder="e.g. aloe-vera-serum" />
+                    </div>
+                    <div className="col-span-2 md:col-span-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">SKU / Item Number</label>
+                      <input value={form.sku} onChange={e=>setForm({...form, sku:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white font-mono outline-none transition-colors" placeholder="e.g. BHU-ALOE-01" />
+                    </div>
+                    <div className="col-span-2 md:col-span-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Brand</label>
+                      <input value={form.brand} onChange={e=>setForm({...form, brand:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="Bhumivera" />
+                    </div>
+                    <div className="col-span-2 md:col-span-1">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Search Tags (Comma separated)</label>
+                      <input value={form.tags} onChange={e=>setForm({...form, tags:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="natural, vegan, skincare" />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Meta Title (Google Search Head)</label>
+                      <input value={form.meta_title} onChange={e=>setForm({...form, meta_title:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="Buy Bhumivera Natural Serum Online" />
+                    </div>
+                    <div className="col-span-2">
+                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Meta Description (Snippet)</label>
+                      <textarea rows={3} value={form.meta_description} onChange={e=>setForm({...form, meta_description:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-slate-300 resize-y outline-none transition-colors" placeholder="100% natural, cruelty-free serum for glowing skin..." />
                     </div>
                   </div>
                 )}
@@ -484,7 +530,7 @@ export default function ProductManagement() {
                     <div className="flex items-center justify-between mb-6 bg-slate-900 border border-slate-800 p-4 rounded-xl">
                       <div>
                         <h4 className="text-sm font-bold text-white">Product Specifications</h4>
-                        <p className="text-[10px] font-mono text-slate-500 mt-1">Add details like Wattage, Color, Material</p>
+                        <p className="text-[10px] font-mono text-slate-500 mt-1">Add details like Volume, Weight, Ingredients</p>
                       </div>
                       <button type="button" onClick={() => setSpecs([...specs, { key: '', value: '' }])} className="px-4 py-2 bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 rounded-lg text-[10px] font-black uppercase tracking-widest flex items-center gap-2 hover:bg-emerald-500 hover:text-slate-950 transition-all">
                         <Plus size={14}/> Add Row
@@ -494,9 +540,9 @@ export default function ProductManagement() {
                     <div className="space-y-3">
                       {specs.map((spec, i) => (
                         <div key={i} className="flex gap-3 items-center group">
-                          <input type="text" placeholder="Title (e.g. Color)" value={spec.key} onChange={e => updateSpec(i, 'key', e.target.value)} className="flex-1 bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-white outline-none transition-colors" />
+                          <input type="text" placeholder="Title (e.g. Weight)" value={spec.key} onChange={e => updateSpec(i, 'key', e.target.value)} className="flex-1 bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-white outline-none transition-colors" />
                           <span className="text-slate-600 font-bold">:</span>
-                          <input type="text" placeholder="Value (e.g. Red)" value={spec.value} onChange={e => updateSpec(i, 'value', e.target.value)} className="flex-[2] bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" />
+                          <input type="text" placeholder="Value (e.g. 50g)" value={spec.value} onChange={e => updateSpec(i, 'value', e.target.value)} className="flex-[2] bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" />
                           <button type="button" onClick={() => setSpecs(specs.filter((_, idx) => idx !== i))} className="p-3 text-rose-500 bg-slate-900 border border-slate-700 hover:bg-rose-500 hover:border-rose-500 hover:text-white rounded-xl transition-all opacity-50 group-hover:opacity-100">
                             <Trash2 size={16}/>
                           </button>
@@ -523,7 +569,7 @@ export default function ProductManagement() {
                       <div className="w-16 h-16 bg-slate-950 border border-blue-500/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                         <Database size={28} className="text-blue-500" />
                       </div>
-                      <p className="text-sm font-black text-white uppercase tracking-widest mb-1">Fitment Data</p>
+                      <p className="text-sm font-black text-white uppercase tracking-widest mb-1">External Data Doc</p>
                       <p className="text-[10px] font-mono text-slate-400">Upload Excel (.xlsx) file</p>
                       {fitmentFile && <div className="mt-4 px-3 py-1 bg-blue-500 text-slate-950 text-[10px] font-black uppercase rounded-full truncate mx-4">{fitmentFile.name}</div>}
                     </div>
