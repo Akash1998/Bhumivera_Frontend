@@ -4,7 +4,19 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { addresses as addressesApi, orders as ordersApi, wallet as walletApi } from '../services/api';
-import { FiMapPin, FiTruck, FiCreditCard, FiCheckCircle, FiZap, FiPlus, FiWallet, FiShield, FiPackage, FiChevronRight } from 'react-icons/fi';
+import { 
+  FiMapPin, 
+  FiTruck, 
+  FiCreditCard, 
+  FiCheckCircle, 
+  FiZap, 
+  FiPlus, 
+  FiShield, 
+  FiPackage, 
+  FiChevronRight,
+  FiInfo 
+} from 'react-icons/fi';
+import { Wallet } from 'lucide-react';
 
 export default function Checkout() {
   const { user } = useAuth();
@@ -178,14 +190,14 @@ export default function Checkout() {
                 <PaymentCard 
                   id="COD" 
                   label="Cash on Delivery" 
-                  icon={<FiTruck />} 
+                  icon={<FiTruck size={24} />} 
                   active={paymentMode} 
                   set={setPaymentMode} 
                 />
                 <PaymentCard 
                   id="WALLET" 
                   label={`Digital Wallet (₹${walletBalance})`} 
-                  icon={<FiWallet />} 
+                  icon={<Wallet size={24} />} 
                   active={paymentMode} 
                   set={setPaymentMode} 
                   disabled={walletBalance < finalTotal} 
@@ -288,7 +300,7 @@ const PaymentCard = ({ id, label, icon, active, set, disabled }) => (
           : 'bg-black/50 border-white/10 text-gray-400 hover:border-white/30 hover:text-white'
     }`}
   >
-    <div className={`text-2xl ${active === id ? 'text-emerald-500' : 'text-gray-500'}`}>
+    <div className={`${active === id ? 'text-emerald-500' : 'text-gray-500'} flex items-center justify-center`}>
       {icon}
     </div>
     <span className="font-medium text-sm">{label}</span>
