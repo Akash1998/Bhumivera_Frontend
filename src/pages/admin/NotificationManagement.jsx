@@ -17,21 +17,24 @@ export default function NotificationManagement() {
 
   const API = import.meta.env.VITE_API_URL || import.meta.env.VITE_BASE_URL || 'https://service.bhumivera.com';
 
+  // ARCHITECT FIX: Hydration Guard implemented. 
+  // Wait for the AuthContext token to initialize before hitting protected Admin endpoints.
   useEffect(() => {
+    if (!token) return;
     fetchAlerts();
-  }, []);
+  }, [token]);
 
   const fetchAlerts = async () => {
     try {
+      setLoading(true);
       const res = await fetch(`${API}/api/notifications/admin/all`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      if (!res.ok) throw new Error('Failed to fetch telemetry');
+      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch telemetry`);
       const data = await res.json();
       setAlerts(data || []);
     } catch (error) {
       console.error('Telemetry Sync Error:', error);
-      // Zero-Fake-Data Constraint Met: We do not push fake data here anymore.
       setAlerts([]);
     } finally {
       setLoading(false);
@@ -72,7 +75,7 @@ export default function NotificationManagement() {
         body: JSON.stringify({ 
           ...composeData, 
           is_global: composeData.target === 'all',
-          user_id: null // Admin global broadcasts do not target a specific user
+          user_id: null
         })
       });
       setIsComposing(false);
@@ -90,12 +93,12 @@ export default function NotificationManagement() {
     if (!matchesSearch) return false;
     if (filter === 'unread') return !a.is_read;
     if (filter === 'system') return a.type === 'info' || a.is_global;
-    if (filter === 'security') return a.type === 'error' || a.type === 'warning' || a.type === 'alert';
+    if (filter === 'security') return a.type === 'error' || a.type === 'warning' || a.type === 'alert' || a.type === 'crash';
     return true;
   });
 
   const unreadCount = alerts.filter(a => !a.is_read).length;
-  const securityCount = alerts.filter(a => a.type === 'error' || a.type === 'warning' || a.type === 'alert').length;
+  const securityCount = alerts.filter(a => a.type === 'error' || a.type === 'warning' || a.type === 'alert' || a.type === 'crash').length;
 
   const getTypeStyles = (type) => {
     switch (type) {
