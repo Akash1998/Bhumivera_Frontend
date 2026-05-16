@@ -16,43 +16,11 @@ api.interceptors.response.use(r => r, e => {
   return Promise.reject(e);
 });
 
-export const auth = { 
-  login: d => api.post('/auth/login', d), 
-  register: d => api.post('/auth/register', d), 
-  verifyEmail: d => api.post('/auth/verify-email', { email: d.email, otp: d.otp, securityAnswer: d.securityAnswer }), 
-  getProfile: () => api.get('/auth/profile'), 
-  updateProfile: d => api.put('/auth/profile', d), 
-  verify2FA: d => api.post('/auth/2fa/verify', d), 
-  requestPasswordReset: d => api.post('/auth/forgot-password', d), 
-  verifyResetOtp: d => api.post('/auth/verify-otp', d), 
-  resetPassword: d => api.post('/auth/reset-password', d), 
-  verifySecurityQuestion: d => api.post('/auth/security-question/verify', d), 
-  adminLogin: d => api.post('/auth/admin/login', d), 
-  getAdminProfile: () => api.get('/auth/profile'), 
-  sendAdminOtp: email => api.post('/auth/admin/request-otp', { email }), 
-  verifyAdminOtp: (email, otp) => api.post('/auth/admin/verify-otp', { email, otp }), 
-  mobileLoginRequest: email => api.post('/auth/login-request-otp', { email }), 
-  mobileLoginVerify: d => api.post('/auth/2fa/verify', d),
-  warehouseRequestOtp: email => api.post('/auth/warehouse/request-otp', { email }),
-  warehouseVerifyOtp: d => api.post('/auth/warehouse/verify-otp', d)
-};
+export const auth = { login: d => api.post('/auth/login', d), register: d => api.post('/auth/register', d), verifyEmail: d => api.post('/auth/verify-email', { email: d.email, otp: d.otp, securityAnswer: d.securityAnswer }), getProfile: () => api.get('/auth/profile'), updateProfile: d => api.put('/auth/profile', d), verify2FA: d => api.post('/auth/2fa/verify', d), requestPasswordReset: d => api.post('/auth/forgot-password', d), verifyResetOtp: d => api.post('/auth/verify-otp', d), resetPassword: d => api.post('/auth/reset-password', d), verifySecurityQuestion: d => api.post('/auth/security-question/verify', d), adminLogin: d => api.post('/auth/admin/login', d), getAdminProfile: () => api.get('/auth/profile'), sendAdminOtp: email => api.post('/auth/admin/otp/send', { email }), verifyAdminOtp: (email, otp) => api.post('/auth/admin/otp/verify', { email, otp }), mobileLoginRequest: email => api.post('/auth/mobile-login/request', { email }), mobileLoginVerify: d => api.post('/auth/mobile-login/verify', d) };
 export const adminLogin = async c => (await api.post("/auth/admin/login", c)).data;
 export const search = { query: q => api.get('/products/active', { params: { search: q } }), global: q => api.get('/products', { params: { search: q } }) };
 export const users = { updateProfile: d => api.put('/users/profile', d), changePassword: d => api.put('/users/change-password', d), getProfile: () => api.get('/users/profile') };
-export const products = { 
-  getAllActive: p => api.get("/products/active", { params: p }), 
-  getAllAdmin: () => api.get("/products"), 
-  getById: id => api.get(`/products/${id}`), 
-  getBySlug: s => api.get(`/products/${s}`), 
-  create: d => api.post("/products", d), 
-  update: (id, d) => api.put(`/products/${id}`, d), 
-  toggleStatus: (id, s) => api.patch(`/products/${id}/status`, { status: s }), 
-  getUploadUrl: (f, t) => api.post("/products/presign", { filename: f, fileType: t }), 
-  saveImageKeys: (id, k) => api.post(`/products/${id}/images/save`, { imageKeys: k }), 
-  deleteImage: (id, i) => api.delete(`/products/${id}/images`, { data: { imageId: i } }), 
-  addSerials: (id, s) => api.post(`/products/${id}/serials`, { serials: s }), 
-  delete: id => api.delete(`/products/${id}`) 
-};
+export const products = { getAllActive: p => api.get("/products/active", { params: p }), getAllAdmin: () => api.get("/products"), getById: id => api.get(`/products/${id}`), getBySlug: s => api.get(`/products/slug/${s}`), create: d => api.post("/products", d), update: (id, d) => api.put(`/products/${id}`, d), toggleStatus: (id, s) => api.patch(`/products/${id}/status`, { status: s }), getUploadUrl: (f, t) => api.post("/products/presign", { filename: f, fileType: t }), saveImageKeys: (id, k) => api.post(`/products/${id}/images/save`, { imageKeys: k }), deleteImage: (id, i) => api.delete(`/products/${id}/images`, { data: { imageId: i } }), addSerials: (id, s) => api.post(`/serials/${id}/add`, { serials: s }), delete: id => api.delete(`/products/${id}`) };
 export const categories = { getAll: () => api.get("/categories"), getById: id => api.get(`/categories/${id}`), create: d => api.post("/categories", d), update: (id, d) => api.put(`/categories/${id}`, d), delete: id => api.delete(`/categories/${id}`) };
 export const subcategories = { getAll: () => api.get("/subcategories"), getById: id => api.get(`/subcategories/${id}`), create: d => api.post("/subcategories", d), update: (id, d) => api.put(`/subcategories/${id}`, d), delete: id => api.delete(`/subcategories/${id}`) };
 export const cart = { get: () => api.get("/cart"), add: d => api.post("/cart", d), updateQuantity: (id, q) => api.put(`/cart/${id}`, { quantity: q }), remove: id => api.delete(`/cart/${id}`), clear: () => api.delete("/cart") };
@@ -78,7 +46,7 @@ export const flashSales = { getAll: () => api.get("/flash-sales"), getAllAdmin: 
 export const support = { getAllAdmin: () => api.get("/contact"), updateStatus: (id, s) => api.patch(`/contact/${id}/status`, { status: s }), delete: id => api.delete(`/contact/${id}`) };
 export const loyalty = { getSystemConfig: () => api.get("/settings"), updateSystemConfig: d => api.put("/settings", d), getMembers: () => api.get("/admin/users"), adjustPoints: (u, d) => api.patch(`/admin/users/${u}/status`, d) };
 export const fetchProductQA = p => api.get(`/products/${p}/qa`);
-export const submitProductQuestion = (p, d) => post(`/products/${p}/qa`, d);
+export const submitProductQuestion = (p, d) => api.post(`/products/${p}/qa`, d);
 export const fetchCart = () => cart.get();
 export const addToCartAPI = (p, q) => cart.add({ productId: p, quantity: q });
 export const removeFromCartAPI = p => cart.remove(p);
@@ -90,5 +58,5 @@ export const submitContact = d => contact.submit(d);
 export const fetchAddressesAPI = async () => (await addresses.getAll()).data;
 export const saveAddressAPI = async d => { const r = await addresses.create(d); return r.data.addresses || r.data; };
 export const placeOrderAPI = async d => (await orders.create(d)).data;
-export const fitment = { check: (p, m, mo, y) => api.get('/fitment/check', { params: { productId: p, make: m, model: mo, year: y } }), getByProduct: p => api.get(`/fitment/product/${p}`), getMakes: () => api.get('/fitment/makes'), getModels: m => api.get('/fitment/models', { params: { make: m } }), uploadExcel: (p, f) => api.post('/fitment/upload-excel', f, { headers: { 'Content-Type': 'multipart/form-data' }, params: { productId: p } }), addManual: d => api.post('/fitment/manual', d), delete: id => api.delete(`/fitment/${id}`), clearAll: p => api.delete(`/fitment/product/${p}/all`) };
+export const fitment = { check: (p, m, mo, y) => api.get('/fitments/check', { params: { productId: p, make: m, model: mo, year: y } }), getByProduct: p => api.get(`/fitments/product/${p}`), getMakes: () => api.get('/fitments/makes'), getModels: m => api.get('/fitments/models', { params: { make: m } }), uploadExcel: (p, f) => api.post('/fitments/upload-excel', f, { headers: { 'Content-Type': 'multipart/form-data' }, params: { productId: p } }), addManual: d => api.post('/fitments/manual', d), delete: id => api.delete(`/fitments/${id}`), clearAll: p => api.delete(`/fitments/product/${p}/all`) };
 export default api;
