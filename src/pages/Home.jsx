@@ -60,7 +60,7 @@ export default function Home() {
       img: "Promo1.webp", 
       title: "Earth to Skin.", 
       subtitle: "The Purest Hydration", 
-      quote: "We don't manufacture beauty. We harvest it. Experience the unfiltered potency of raw, earth-derived botanicals.",
+      quote: "We don't manufacture beauty. We harvest it. Experience the unfiltered potency of raw, earth-sourced botanicals.",
       tag: "Plant-Powered Formulation"
     },
     { 
@@ -68,21 +68,21 @@ export default function Home() {
       title: "Ancient Wisdom.", 
       subtitle: "Modern Elegance", 
       quote: "Ayurvedic secrets preserved in every drop. Let the soil, the sun, and the rain restore your skin's true vitality.",
-      tag: "Botanical Blend Ingredients"
+      tag: "Pure Botanical Extracts"
     },
     { 
       img: "Promo3.webp", 
       title: "Unapologetic Purity.", 
-      subtitle: "Zero Synthetics", 
-      quote: "Your skin is a living, breathing ecosystem. Nourish it with ingredients that come from the earth, not a laboratory.",
-      tag: "Cruelty-Free & Vegan"
+      subtitle: "Consciously Crafted", 
+      quote: "Your skin is a living, breathing ecosystem. Nourish it with ingredients that are naturally derived and wholesome.",
+      tag: "Ethical & Plant-Based"
     }
   ];
 
   const editorialGallery = [
-    { img: "Promo4.webp", quote: "Nature’s quiet embrace heals the deepest layers.", author: "The Bhumivera Ethos", span: "col-span-1 md:col-span-2 row-span-2", align: "justify-end" },
+    { img: "Promo4.webp", quote: "Nature’s quiet embrace nourishes the deepest layers.", author: "The Bhumivera Ethos", span: "col-span-1 md:col-span-2 row-span-2", align: "justify-end" },
     { img: "Promo5.webp", quote: "Radiance born from the soil.", author: "Botanical Truth", span: "col-span-1 row-span-1", align: "justify-center" },
-    { img: "Promo6.webp", quote: "Purified by timeless clays.", author: "Earth's Magnet", span: "col-span-1 row-span-1", align: "justify-center" },
+    { img: "Promo6.webp", quote: "Refined by timeless clays.", author: "Earth's Magnet", span: "col-span-1 row-span-1", align: "justify-center" },
     { img: "Promo7.webp", quote: "Hydration mimicking the morning dew.", author: "Liquid Life", span: "col-span-1 md:col-span-2 row-span-1", align: "justify-start" },
     { img: "Promo8.webp", quote: "Defy time with earth's resilience.", author: "Eternal Bloom", span: "col-span-1 row-span-2", align: "justify-end" },
     { img: "Promo9.webp", quote: "Unfiltered, unmasked, unapologetic.", author: "Raw Beauty", span: "col-span-1 row-span-1", align: "justify-center" },
@@ -92,40 +92,41 @@ export default function Home() {
   const ingredientsList = [
     { 
       name: "Multani Mitti (Fuller's Earth)", 
-      desc: "Sourced from the deep, mineral-rich layers of the earth, this potent therapeutic clay acts as a magnetic exfoliator. It draws out deep-seated impurities, absorbs excess sebum without stripping natural lipids, and refines your pore architecture for a clarified, luminous complexion.", 
+      desc: "Sourced from the deep, mineral-rich layers of the earth, this potent botanical clay acts as a natural exfoliator. It draws out deep-seated impurities, manages excess sebum without stripping essential lipids, and refines your pore architecture for a clarified, luminous complexion.", 
       icon: <Sun size={28} className="text-[#8b5a2b]" />,
-      benefits: ["Deep Pore Cleansing", "Sebum Regulation", "Cellular Renewal"]
+      benefits: ["Deep Pore Cleansing", "Sebum Management", "Glow Enhancing"]
     },
     { 
       name: "Cold-Pressed Aloe Vera", 
-      desc: "Harvested at peak potency and cold-pressed within hours to preserve its enzymatic integrity. Our aloe delivers multi-dimensional cellular hydration, instantly calming inflammation, accelerating micro-healing, and leaving the skin extraordinarily supple.", 
+      desc: "Harvested at peak freshness and cold-pressed within hours to preserve its natural integrity. Our aloe delivers multi-dimensional hydration, instantly calming the skin, providing a refreshing feel, and leaving the skin extraordinarily supple.", 
       icon: <Droplets size={28} className="text-[#8b5a2b]" />,
-      benefits: ["Intense Hydration", "Redness Reduction", "Barrier Repair"]
+      benefits: ["Intense Hydration", "Calming Sensation", "Barrier Support"]
     },
     { 
       name: "Wildcrafted Botanical Oils", 
-      desc: "A proprietary, cold-pressed blend of non-comedogenic seed and nut oils. Designed to biomimic your skin's natural sebum, these oils lock in moisture and deliver a potent dose of antioxidant protection against daily environmental stress and free radicals.", 
+      desc: "A proprietary, cold-pressed blend of plant-based seed and nut oils. Designed to harmonize with your skin's natural moisture, these oils lock in hydration and deliver a potent dose of antioxidant protection against daily environmental stress.", 
       icon: <Sparkles size={28} className="text-[#8b5a2b]" />,
-      benefits: ["Antioxidant Shield", "Lipid Replenishment", "Glow Enhancing"]
+      benefits: ["Antioxidant Shield", "Moisture Replenishment", "Radiance Boosting"]
     }
   ];
+  
   const philosophicalQuotes = [
-    "We believe that the earth has already perfected the art of healing. Our only job is to bottle it without interference. No artificial colors, no synthetic fragrances, just the raw essence of nature.",
+    "We believe that the earth has already perfected the art of self-care. Our only job is to bottle it without interference. No harsh chemicals, no synthetic fragrances, just the raw essence of nature.",
     "True luxury is not found in sterile laboratories, but in the untamed, unadulterated purity of the botanical world. It is the feeling of earth melting into your skin.",
-    "Bhumivera is a profound rejection of modern chemical overload. It is a mindful return to the roots of holistic self-care, honoring the symbiotic relationship between human skin and nature."
+    "Bhumivera is a mindful return to the roots of holistic wellness, honoring the symbiotic relationship between human skin and the natural world around us."
   ];
 
   const testimonials = [
-    { text: "I abandoned my entire 10-step chemical routine for the Multani Mitti and Aloe regimen. My skin has never felt this breathable and balanced.", author: "Elena R.", type: "Combination Skin" },
+    { text: "I abandoned my entire complex routine for the Multani Mitti and Aloe regimen. My skin has never felt this breathable and balanced.", author: "Elena R.", type: "Combination Skin" },
     { text: "You can literally smell the earth and rain in these products. It's not just skincare; it's a grounding daily ritual that brings me back to center.", author: "Priya S.", type: "Sensitive Skin" },
-    { text: "The glass-like glow I get from the botanical oils is unmatched. Finally, a luxury brand that respects the skin's natural intelligence.", author: "Sarah M.", type: "Dry/Mature Skin" }
+    { text: "The glass-like glow I get from the botanical oils is unmatched. Finally, a luxury brand that respects the skin's natural balance.", author: "Sarah M.", type: "Mature Skin" }
   ];
 
   const faqs = [
-    { q: "Are your products naturally derived?", a: "Absolutely. We strictly formulate without parabens, sulfates, silicones, artificial dyes, or synthetic fragrances. Every ingredient is ethically sourced directly from the earth." },
-    { q: "How do I know which regimen is right for my skin?", a: "We recommend using our 'Botanical Assessment' engine below. It analyzes your unique skin type, concerns, and environment to generate a bespoke botanical routine." },
-    { q: "Is the packaging eco-friendly?", a: "Yes. Our commitment to the earth extends to our packaging. We use recyclable glass, biodegradable materials, and minimalistic design to reduce our carbon footprint." },
-    { q: "Do you test on animals?", a: "Never. Bhumivera is fiercely cruelty-free. We believe in compassionate beauty and test our formulations safely on human volunteers." }
+    { q: "Are your products naturally derived?", a: "Absolutely. We consciously craft our formulas without harsh sulfates, silicones, artificial dyes, or synthetic fragrances. We prioritize ingredients ethically sourced directly from the earth." },
+    { q: "How do I know which regimen is right for my skin?", a: "We recommend using our 'Holistic Skin Assessment' below. It reviews your unique skin type, environment, and preferences to suggest a bespoke botanical routine." },
+    { q: "Is the packaging eco-friendly?", a: "Yes. Our commitment to the earth extends to our packaging. We use recyclable materials and minimalistic design to prioritize eco-conscious practices." },
+    { q: "Are your products cruelty-free?", a: "Never tested on animals. Bhumivera believes in compassionate beauty and ethical testing standards exclusively." }
   ];
 
   useEffect(() => {
@@ -250,7 +251,7 @@ export default function Home() {
             <div className="w-12 h-px bg-[#8b5a2b]/30" />
           </motion.h2>
           <motion.h3 variants={fadeUp} className="text-3xl md:text-5xl lg:text-7xl font-serif text-[#1a1a1a] leading-[1.1] mb-20 max-w-5xl mx-auto">
-            We are redefining the dialogue between human skin and the natural world. No synthetics. No compromises.
+            We are redefining the dialogue between human skin and the natural world. Plant-based. Consciously crafted.
           </motion.h3>
           <motion.div variants={fadeUp} className="grid grid-cols-1 md:grid-cols-3 gap-16 text-left">
             {philosophicalQuotes.map((quote, idx) => (
@@ -293,16 +294,17 @@ export default function Home() {
           </div>
         </div>
       </section>
+
       <section className="py-40 px-6 max-w-7xl mx-auto overflow-hidden bg-[#faf8f5]">
         <motion.div initial="hidden" whileInView="show" viewport={{ once: true }} variants={staggerContainer} className="mb-32 flex flex-col md:flex-row justify-between items-end gap-12">
           <div className="max-w-2xl">
-            <motion.h2 variants={slideInLeft} className="text-[10px] font-bold text-[#8b5a2b] uppercase tracking-[0.5em] mb-6">Materia Medica</motion.h2>
+            <motion.h2 variants={slideInLeft} className="text-[10px] font-bold text-[#8b5a2b] uppercase tracking-[0.5em] mb-6">Key Botanicals</motion.h2>
             <motion.h3 variants={slideInLeft} className="text-4xl md:text-6xl lg:text-7xl font-serif text-[#1a1a1a] leading-tight">
               The anatomy of our formulations.
             </motion.h3>
           </div>
           <motion.div variants={slideInRight}>
-            <p className="text-[#5c4a3d] font-light max-w-md text-xl leading-relaxed">We refuse to use filler ingredients. Every single element in a Bhumivera product serves a distinct, scientifically-backed therapeutic purpose.</p>
+            <p className="text-[#5c4a3d] font-light max-w-md text-xl leading-relaxed">We focus on high-impact natural actives. Every single element in a Bhumivera product serves a distinct, holistic purpose for your skin's well-being.</p>
           </motion.div>
         </motion.div>
 
@@ -364,7 +366,7 @@ export default function Home() {
                       <img src={getImageUrl(prod.images?.[0] || prod.image_url)} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-[2000ms] ease-out mix-blend-multiply p-6" alt={prod.name} onError={(e) => { e.target.src = '/logo.webp'; }} />
                     </Link>
                     <div className="absolute top-5 left-5 z-20">
-                      {prod.is_featured && <span className="bg-[#8b5a2b]/90 backdrop-blur-md text-white text-[8px] font-bold uppercase tracking-widest px-4 py-2 rounded-full border border-[#8b5a2b]">Iconic</span>}
+                      {prod.is_featured && <span className="bg-[#8b5a2b]/90 backdrop-blur-md text-white text-[8px] font-bold uppercase tracking-widest px-4 py-2 rounded-full border border-[#8b5a2b]">Signature</span>}
                     </div>
                     <div className="absolute bottom-5 left-5 right-5 translate-y-[150%] group-hover:translate-y-0 opacity-0 group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] z-20">
                       <button onClick={(e) => handleQuickAdd(e, prod.id || prod._id)} className="w-full glass-panel bg-white/80 backdrop-blur-xl border border-white hover:bg-[#8b5a2b] hover:text-[#1a1a1a] font-bold text-[10px] uppercase tracking-widest py-5 rounded-2xl transition-all shadow-lg flex justify-center items-center gap-3">
@@ -439,15 +441,15 @@ export default function Home() {
             <div className="w-24 h-24 mx-auto bg-[#8b5a2b]/20 border border-[#8b5a2b]/50 rounded-full flex items-center justify-center mb-10 text-[#8b5a2b] backdrop-blur-md">
               <ShieldCheck size={36} />
             </div>
-            <h2 className="text-[10px] font-bold text-[#8b5a2b] uppercase tracking-[0.8em] mb-8">Botanical Assessment</h2>
+            <h2 className="text-[10px] font-bold text-[#8b5a2b] uppercase tracking-[0.8em] mb-8">Holistic Skin Assessment</h2>
             <h3 className="text-4xl md:text-6xl font-serif text-[#f4eedc] mb-10 leading-tight">
-              Stop guessing. <br/> Start listening to your skin.
+              Stop guessing. <br/> Start understanding your skin.
             </h3>
             <p className="text-base md:text-xl text-[#f4eedc]/80 font-light mx-auto mb-16 leading-relaxed">
-              Every complexion is a unique ecosystem. Utilize our proprietary Skin Assessment Engine to understand your specific needs and generate a personalized botanical regimen.
+              Every complexion is a unique ecosystem. Utilize our Skin Profile Engine to understand your specific preferences and discover a personalized, plant-based regimen tailored for you.
             </p>
             <button onClick={handleFitmentSearch} className="px-14 py-6 bg-[#8b5a2b] text-white font-bold uppercase tracking-widest text-xs rounded-full hover:bg-white hover:text-[#1a1a1a] transition-all duration-500 shadow-[0_0_40px_rgba(139,90,43,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)] hover:-translate-y-2">
-              Analyze My Skin Profile
+              Analyze My Profile
             </button>
           </motion.div>
         </div>
@@ -495,10 +497,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12">
             {[
-              { icon: <Leaf />, title: "Vegan Formulations", desc: "100% plant-derived ingredients with zero animal byproducts." },
-              { icon: <Feather />, title: "Cruelty Free", desc: "Never tested on animals. We believe in compassionate beauty." },
-              { icon: <Heart />, title: "Mindfully Formulated", desc: "Designed to be safe, gentle, and effective for sensitive skin." },
-              { icon: <Wind />, title: "Carbon Neutral", desc: "Sustainable packaging and eco-conscious manufacturing processes." }
+              { icon: <Leaf />, title: "Plant-Powered", desc: "Formulated entirely from naturally derived botanical ingredients." },
+              { icon: <Feather />, title: "Ethical Sourcing", desc: "We prioritize suppliers who share our commitment to the earth." },
+              { icon: <Heart />, title: "Skin-Loving", desc: "Designed to be gentle and harmonious with your skin's natural state." },
+              { icon: <Wind />, title: "Eco-Minded", desc: "Sustainable packaging and conscious manufacturing processes." }
             ].map((feature, idx) => (
               <motion.div 
                 key={idx}
