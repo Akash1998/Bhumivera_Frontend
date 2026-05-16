@@ -1,14 +1,23 @@
 //Address book
-
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { addresses as addressesApi } from '../services/api';
 
-const API = import.meta.env.VITE_API_URL || 'http://localhost:5000';
-
-const defaultForm = { label: 'Home', fullName: '', phone: '', addressLine1: '', addressLine2: '', city: '', state: '', pincode: '', country: 'India', isDefault: false };
+const defaultForm = { 
+  label: 'Home', 
+  fullName: '', 
+  phone: '', 
+  addressLine1: '', 
+  addressLine2: '', 
+  city: '', 
+  state: '', 
+  pincode: '', 
+  country: 'India', 
+  isDefault: false 
+};
 
 export default function AddressBook() {
-  const { token, user } = useAuth();
+  const { user } = useAuth();
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -17,66 +26,90 @@ export default function AddressBook() {
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState('');
 
-  useEffect(() => { fetchAddresses(); }, []);
+  useEffect(() => { 
+    fetchAddresses(); 
+  }, []);
 
   const fetchAddresses = async () => {
     try {
-      const res = await fetch(`${API}/api/users/addresses`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        setAddresses(data.addresses || []);
-      }
-    } catch (e) { console.error(e); }
+      const res = await addressesApi.getAll();
+      setAddresses(res.data.addresses || res.data.data || res.data || []);
+    } catch (e) { 
+      console.error("Failed to fetch addresses:", e); 
+    }
     setLoading(false);
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
-    const method = editId ? 'PUT' : 'POST';
-    const url = editId ? `${API}/api/users/addresses/${editId}` : `${API}/api/users/addresses`;
+    
+    // Map camelCase form to snake_case for MySQL backend compatibility
+    const payload = {
+      ...form,
+      full_name: form.fullName,
+      address_line1: form.addressLine1,
+      address_line2: form.addressLine2,
+      is_default: form.isDefault
+    };
+
     try {
-      const res = await fetch(url, {
-        method,
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify(form)
-      });
-      if (res.ok) {
-        setMsg(editId ? 'Address updated!' : 'Address added!');
-        setShowForm(false);
-        setEditId(null);
-        setForm(defaultForm);
-        fetchAddresses();
+      if (editId) {
+        await addressesApi.update(editId, payload);
+        setMsg('Address updated successfully!');
       } else {
-        setMsg('Failed to save address');
+        await addressesApi.create(payload);
+        setMsg('Address added successfully!');
       }
-    } catch { setMsg('Network error'); }
+      setShowForm(false);
+      setEditId(null);
+      setForm(defaultForm);
+      fetchAddresses();
+    } catch (err) { 
+      setMsg('Failed to save address. Please try again.'); 
+      console.error(err);
+    }
     setSaving(false);
     setTimeout(() => setMsg(''), 3000);
   };
 
   const deleteAddress = async (id) => {
-    if (!window.confirm('Delete this address?')) return;
-    await fetch(`${API}/api/users/addresses/${id}`, {
-      method: 'DELETE',
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    fetchAddresses();
+    if (!window.confirm('Are you sure you want to delete this address?')) return;
+    try {
+      await addressesApi.delete(id);
+      fetchAddresses();
+    } catch (err) {
+      console.error("Failed to delete address", err);
+    }
   };
 
   const setDefault = async (id) => {
-    await fetch(`${API}/api/users/addresses/${id}/default`, {
-      method: 'PUT',
-      headers: { Authorization: `Bearer ${token}` }
-    });
-    fetchAddresses();
+    try {
+      await addressesApi.setDefault(id);
+      fetchAddresses();
+    } catch (err) {
+      console.error("Failed to set default address", err);
+    }
   };
 
   const startEdit = (addr) => {
-    setEditId(addr._id);
-    setForm({ label: addr.label || 'Home', fullName: addr.fullName || '', phone: addr.phone || '', addressLine1: addr.addressLine1 || '', addressLine2: addr.addressLine2 || '', city: addr.city || '', state: addr.state || '', pincode: addr.pincode || '', country: addr.country || 'India', isDefault: addr.isDefault || false });
+    // Determine the correct ID field (handles both MySQL and old MongoDB objects)
+    const targetId = addr.id || addr._id;
+    setEditId(targetId);
+    
+    // Fallback to snake_case if backend returned MySQL formatted columns
+    setForm({ 
+      label: addr.label || 'Home', 
+      fullName: addr.fullName || addr.full_name || '', 
+      phone: addr.phone || '', 
+      addressLine1: addr.addressLine1 || addr.address_line1 || '', 
+      addressLine2: addr.addressLine2 || addr.address_line2 || '', 
+      city: addr.city || '', 
+      state: addr.state || '', 
+      pincode: addr.pincode || '', 
+      country: addr.country || 'India', 
+      isDefault: addr.isDefault || addr.is_default || false 
+    });
     setShowForm(true);
   };
 
@@ -169,28 +202,36 @@ export default function AddressBook() {
           </div>
         ) : (
           <div className="space-y-4">
-            {addresses.map(addr => (
-              <div key={addr._id} className={`bg-gray-900 border rounded-xl p-5 ${addr.isDefault ? 'border-cyan-500/50' : 'border-gray-800'}`}>
-                <div className="flex justify-between items-start">
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="text-xs px-2 py-0.5 bg-gray-700 text-gray-300 rounded-full">{addr.label || 'Home'}</span>
-                    {addr.isDefault && <span className="text-xs px-2 py-0.5 bg-cyan-500/20 text-cyan-400 rounded-full">Default</span>}
+            {addresses.map(addr => {
+              const addrId = addr.id || addr._id;
+              const isDefault = addr.isDefault || addr.is_default;
+              const fullName = addr.fullName || addr.full_name;
+              const addressLine1 = addr.addressLine1 || addr.address_line1;
+              const addressLine2 = addr.addressLine2 || addr.address_line2;
+
+              return (
+                <div key={addrId} className={`bg-gray-900 border rounded-xl p-5 ${isDefault ? 'border-cyan-500/50' : 'border-gray-800'}`}>
+                  <div className="flex justify-between items-start">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="text-xs px-2 py-0.5 bg-gray-700 text-gray-300 rounded-full">{addr.label || 'Home'}</span>
+                      {isDefault && <span className="text-xs px-2 py-0.5 bg-cyan-500/20 text-cyan-400 rounded-full">Default</span>}
+                    </div>
+                    <div className="flex gap-2">
+                      {!isDefault && (
+                        <button onClick={() => setDefault(addrId)} className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">Set Default</button>
+                      )}
+                      <button onClick={() => startEdit(addr)} className="text-xs text-blue-400 hover:text-blue-300 transition-colors">Edit</button>
+                      <button onClick={() => deleteAddress(addrId)} className="text-xs text-red-400 hover:text-red-300 transition-colors">Delete</button>
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    {!addr.isDefault && (
-                      <button onClick={() => setDefault(addr._id)} className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors">Set Default</button>
-                    )}
-                    <button onClick={() => startEdit(addr)} className="text-xs text-blue-400 hover:text-blue-300 transition-colors">Edit</button>
-                    <button onClick={() => deleteAddress(addr._id)} className="text-xs text-red-400 hover:text-red-300 transition-colors">Delete</button>
-                  </div>
+                  <p className="font-semibold text-white">{fullName}</p>
+                  <p className="text-gray-400 text-sm mt-1">{addr.phone}</p>
+                  <p className="text-gray-400 text-sm">{addressLine1}{addressLine2 ? ', ' + addressLine2 : ''}</p>
+                  <p className="text-gray-400 text-sm">{addr.city}, {addr.state} - {addr.pincode}</p>
+                  <p className="text-gray-400 text-sm">{addr.country || 'India'}</p>
                 </div>
-                <p className="font-semibold text-white">{addr.fullName}</p>
-                <p className="text-gray-400 text-sm mt-1">{addr.phone}</p>
-                <p className="text-gray-400 text-sm">{addr.addressLine1}{addr.addressLine2 ? ', ' + addr.addressLine2 : ''}</p>
-                <p className="text-gray-400 text-sm">{addr.city}, {addr.state} - {addr.pincode}</p>
-                <p className="text-gray-400 text-sm">{addr.country}</p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </div>
