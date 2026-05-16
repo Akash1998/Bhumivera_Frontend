@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Leaf, Droplets, Sparkles, ShieldCheck, Heart, Sun, Feather, RefreshCw, Activity, Zap, Terminal } from 'lucide-react';
+import { Leaf, Droplets, Sparkles, ShieldCheck, Heart, Sun, Feather, RefreshCw, Activity, Zap, Terminal, ArrowRight, Briefcase, Mic } from 'lucide-react';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
@@ -20,6 +21,20 @@ const staggerContainer = {
 export default function About() {
   const { scrollYProgress } = useScroll();
   const yPos = useTransform(scrollYProgress, [0, 1], [0, -150]);
+  const location = useLocation();
+
+  // Scroll to hash logic for footer links
+  useEffect(() => {
+    if (location.hash) {
+      const id = location.hash.replace('#', '');
+      const element = document.getElementById(id);
+      if (element) {
+        setTimeout(() => {
+          element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 300); // small delay to ensure DOM and animations have painted
+      }
+    }
+  }, [location]);
 
   return (
     <div className="bg-[#faf8f5] text-[#2c2c2c] font-sans selection:bg-emerald-500/30 selection:text-white overflow-hidden">
@@ -73,9 +88,10 @@ export default function About() {
             </div>
             <div className="aspect-[4/5] rounded-sm overflow-hidden shadow-2xl relative">
               <img 
-                src="/assets/images/aloeveradna.jpg" 
+                src="/assets/images/aloeveradna.webp" 
                 alt="Biological DNA Origins" 
                 className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
+                onError={(e) => { e.target.src = '/logo.webp'; }}
               />
               <div className="absolute inset-0 bg-emerald-950/10 mix-blend-overlay group-hover:opacity-0 transition-opacity" />
             </div>
@@ -202,7 +218,42 @@ export default function About() {
         </div>
       </section>
 
-      {/* 5. FOUNDER'S NOTE: THE MANIFESTO */}
+      {/* 5. CAREERS & PRESS (TARGET ANCHORS) */}
+      <section className="py-32 px-6 bg-[#ebe1d1] border-y border-[#dccfb8]">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16">
+          
+          {/* CAREERS SECTION */}
+          <div id="careers" className="bg-[#f6f0e4] p-12 rounded-sm border border-[#dccfb8] shadow-sm scroll-mt-32">
+            <div className="w-16 h-16 bg-[#6b4226] text-[#f6f0e4] flex items-center justify-center rounded-full mb-8">
+              <Briefcase size={28} />
+            </div>
+            <h3 className="text-3xl font-serif text-[#1e1510] mb-4">Join the Eco-Lab.</h3>
+            <p className="text-[#4a3628] font-light leading-relaxed mb-8">
+              We are constantly seeking visionary formulators, digital architects, and holistic experts to help us redefine botanical luxury. If you believe in zero-regression ethics and pure formulations, we want to hear from you.
+            </p>
+            <a href="mailto:careers@bhumivera.com" className="inline-flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#6b4226] hover:text-[#1e1510] transition-colors">
+              View Open Roles <ArrowRight size={14} />
+            </a>
+          </div>
+
+          {/* PRESS SECTION */}
+          <div id="press" className="bg-[#f6f0e4] p-12 rounded-sm border border-[#dccfb8] shadow-sm scroll-mt-32">
+            <div className="w-16 h-16 bg-[#1e1510] text-[#f6f0e4] flex items-center justify-center rounded-full mb-8">
+              <Mic size={28} />
+            </div>
+            <h3 className="text-3xl font-serif text-[#1e1510] mb-4">Press & Media.</h3>
+            <p className="text-[#4a3628] font-light leading-relaxed mb-8">
+              For media inquiries, brand kits, and interview requests regarding our unique approach to Ayurvedic molecular science and e-commerce infrastructure, please contact our relations desk.
+            </p>
+            <a href="mailto:press@bhumivera.com" className="inline-flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#6b4226] hover:text-[#1e1510] transition-colors">
+              Download Media Kit <ArrowRight size={14} />
+            </a>
+          </div>
+
+        </div>
+      </section>
+
+      {/* 6. FOUNDER'S NOTE: THE MANIFESTO */}
       <section className="relative py-48 bg-[#0a0a0a] overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img 
@@ -221,30 +272,6 @@ export default function About() {
           <p className="text-emerald-400 font-bold uppercase tracking-[0.4em] text-sm mb-2">Akash Prasad</p>
           <p className="text-gray-600 font-light text-[10px] uppercase tracking-widest font-mono">Principal Architect // Bhumivera Eco-Labs</p>
         </div>
-      </section>
-
-      {/* 6. CALL TO ACTION: INITIALIZATION */}
-      <section className="relative py-60 px-6 bg-white overflow-hidden">
-        <div className="absolute inset-0 z-0 opacity-10">
-          <img 
-            src="/assets/images/transformation.webp" 
-            alt="Transformation CTA Background" 
-            className="w-full h-full object-cover"
-          />
-        </div>
-        <motion.div initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp} className="max-w-5xl mx-auto text-center relative z-10">
-          <ShieldCheck size={48} className="text-emerald-600 mx-auto mb-8" />
-          <h2 className="text-4xl md:text-6xl font-serif text-[#1a1a1a] mb-8 tracking-tighter">Ready to Synchronize?</h2>
-          <p className="text-lg text-gray-500 font-light max-w-2xl mx-auto mb-12 leading-relaxed italic">"Begin your botanical transformation with a batch audited for molecular purity. Experience the difference of true botanical luxury."</p>
-          <motion.a 
-            href="/shop" 
-            whileHover={{ scale: 1.05, backgroundColor: "#0a0a0a" }}
-            whileTap={{ scale: 0.98 }}
-            className="inline-block px-12 py-5 bg-emerald-700 text-white font-bold uppercase tracking-[0.3em] text-[10px] rounded-full shadow-2xl transition-all duration-500"
-          >
-            Initialize Transformation
-          </motion.a>
-        </motion.div>
       </section>
 
     </div>
