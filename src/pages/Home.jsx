@@ -61,14 +61,14 @@ export default function Home() {
       title: "Earth to Skin.", 
       subtitle: "The Purest Hydration", 
       quote: "We don't manufacture beauty. We harvest it. Experience the unfiltered potency of raw, earth-derived botanicals.",
-      tag: "100% Natural Formulation"
+      tag: "Plant-Powered Formulation"
     },
     { 
       img: "Promo2.webp", 
       title: "Ancient Wisdom.", 
       subtitle: "Modern Elegance", 
       quote: "Ayurvedic secrets preserved in every drop. Let the soil, the sun, and the rain restore your skin's true vitality.",
-      tag: "Therapeutic Grade Ingredients"
+      tag: "Botanical Blend Ingredients"
     },
     { 
       img: "Promo3.webp", 
@@ -122,10 +122,10 @@ export default function Home() {
   ];
 
   const faqs = [
-    { q: "Are your products truly 100% natural?", a: "Absolutely. We strictly formulate without parabens, sulfates, silicones, artificial dyes, or synthetic fragrances. Every ingredient is ethically sourced directly from the earth." },
-    { q: "How do I know which regimen is right for my skin?", a: "We recommend using our 'Clinical Assessment' engine below. It analyzes your unique skin type, concerns, and environment to generate a bespoke botanical routine." },
+    { q: "Are your products naturally derived?", a: "Absolutely. We strictly formulate without parabens, sulfates, silicones, artificial dyes, or synthetic fragrances. Every ingredient is ethically sourced directly from the earth." },
+    { q: "How do I know which regimen is right for my skin?", a: "We recommend using our 'Botanical Assessment' engine below. It analyzes your unique skin type, concerns, and environment to generate a bespoke botanical routine." },
     { q: "Is the packaging eco-friendly?", a: "Yes. Our commitment to the earth extends to our packaging. We use recyclable glass, biodegradable materials, and minimalistic design to reduce our carbon footprint." },
-    { q: "Do you test on animals?", a: "Never. Bhumivera is fiercely cruelty-free. We believe in compassionate beauty and test our formulations exclusively on human volunteers in clinical settings." }
+    { q: "Do you test on animals?", a: "Never. Bhumivera is fiercely cruelty-free. We believe in compassionate beauty and test our formulations safely on human volunteers." }
   ];
 
   useEffect(() => {
@@ -439,12 +439,12 @@ export default function Home() {
             <div className="w-24 h-24 mx-auto bg-[#8b5a2b]/20 border border-[#8b5a2b]/50 rounded-full flex items-center justify-center mb-10 text-[#8b5a2b] backdrop-blur-md">
               <ShieldCheck size={36} />
             </div>
-            <h2 className="text-[10px] font-bold text-[#8b5a2b] uppercase tracking-[0.8em] mb-8">Clinical Assessment</h2>
+            <h2 className="text-[10px] font-bold text-[#8b5a2b] uppercase tracking-[0.8em] mb-8">Botanical Assessment</h2>
             <h3 className="text-4xl md:text-6xl font-serif text-[#f4eedc] mb-10 leading-tight">
               Stop guessing. <br/> Start listening to your skin.
             </h3>
             <p className="text-base md:text-xl text-[#f4eedc]/80 font-light mx-auto mb-16 leading-relaxed">
-              Every complexion is a unique ecosystem. Utilize our proprietary Skin Assessment Engine to diagnose your specific needs and generate a personalized, 100% botanical regimen.
+              Every complexion is a unique ecosystem. Utilize our proprietary Skin Assessment Engine to understand your specific needs and generate a personalized botanical regimen.
             </p>
             <button onClick={handleFitmentSearch} className="px-14 py-6 bg-[#8b5a2b] text-white font-bold uppercase tracking-widest text-xs rounded-full hover:bg-white hover:text-[#1a1a1a] transition-all duration-500 shadow-[0_0_40px_rgba(139,90,43,0.3)] hover:shadow-[0_0_60px_rgba(255,255,255,0.5)] hover:-translate-y-2">
               Analyze My Skin Profile
@@ -497,7 +497,7 @@ export default function Home() {
             {[
               { icon: <Leaf />, title: "Vegan Formulations", desc: "100% plant-derived ingredients with zero animal byproducts." },
               { icon: <Feather />, title: "Cruelty Free", desc: "Never tested on animals. We believe in compassionate beauty." },
-              { icon: <Heart />, title: "Dermatologically Tested", desc: "Clinically proven to be safe and effective for sensitive skin." },
+              { icon: <Heart />, title: "Mindfully Formulated", desc: "Designed to be safe, gentle, and effective for sensitive skin." },
               { icon: <Wind />, title: "Carbon Neutral", desc: "Sustainable packaging and eco-conscious manufacturing processes." }
             ].map((feature, idx) => (
               <motion.div 
