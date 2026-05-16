@@ -1,140 +1,149 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'react-router-dom';
 import { 
-  Send, Mail, Phone, MapPin, MessageSquare, 
-  HelpCircle, FileText, AlertCircle, RefreshCw,
-  ShieldCheck, Wrench, Package, ArrowRight, CheckCircle, ChevronDown,
+  Send, Mail, Phone, MessageSquare, 
+  HelpCircle, FileText, RefreshCw,
+  CheckCircle, ChevronDown, ArrowRight, Leaf
 } from 'lucide-react';
 import api from '../services/api';
 import { useToast } from '../context/ToastContext';
 
 const FAQS = [
   {
-    q: "How do I check compatibility for my vehicle?",
-    a: "Navigate to any hardware access page and use our Guaranteed Fit System. Enter your vehicle's Make, Model, and Year to instantly verify matrix compatibility against our live database."
+    q: "Are your formulations 100% natural?",
+    a: "Absolutely. We reject all synthetic preservatives, parabens, and sulfates. Our entire catalog is rooted in pure, earth-derived botanicals sourced directly from trusted cultivators."
   },
   {
-    q: "What is your warranty policy on LED hardware?",
-    a: "Most of our primary lighting accesss include a standard 12-month comprehensive warranty. Your unique RMA Serial Hash is generated upon purchase and acts as your digital warranty card."
+    q: "How can I become an authorized retail partner?",
+    a: "We welcome partnerships with luxury spas, boutiques, and curated digital platforms. Select 'Retail / Wholesale Partnership' in the contact form below and our B2B team will reach out with our wholesale prospectus."
   },
   {
-    q: "How long does priority shipping take?",
-    a: "Orders processed before 14:00 IST are dispatched same-day. Standard transit times are 2-4 business days depending on your regional routing."
+    q: "How long does shipping take?",
+    a: "Orders processed before 14:00 IST are dispatched the same day. Standard transit times are 2-4 business days, wrapped securely in our eco-conscious packaging."
   },
   {
-    q: "Can I return a component if it doesn't fit?",
-    a: "Yes. If the component is uninstalled and in its original packaging, you may initiate a return within 7 days of delivery. Refer to our Returns matrix for full conditions."
+    q: "What is your return policy?",
+    a: "Due to the natural and personal care nature of our products, we accept returns on unopened, sealed items within 7 days of delivery. Refer to our Returns Centre for full details."
   }
 ];
 
 export default function Contact() {
+  const location = useLocation();
   const [form, setForm] = useState({
-    name: '', email: '', phone: '', order_id: '', subject: 'technical_support', message: ''
+    name: '', email: '', phone: '', order_id: '', subject: 'product_inquiry', message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [activeFaq, setActiveFaq] = useState(null);
   const [ticketGenerated, setTicketGenerated] = useState(false);
   const { showToast } = useToast() || {};
 
+  // Parse URL parameters to auto-select "Sell on Bhumivera" routing
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('topic') === 'sell') {
+      setForm(prev => ({ ...prev, subject: 'partnership' }));
+    }
+  }, [location]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
     try {
-      // Pushing to the standard contact endpoint
       await api.post('/contact', form);
       setTicketGenerated(true);
-      showToast?.('Support ticket injected successfully.', 'success');
-      setForm({ name: '', email: '', phone: '', order_id: '', subject: 'technical_support', message: '' });
+      showToast?.('Inquiry submitted successfully.', 'success');
+      setForm({ name: '', email: '', phone: '', order_id: '', subject: 'product_inquiry', message: '' });
     } catch (err) {
-      showToast?.('Failed to transmit support payload.', 'error');
+      showToast?.('Failed to submit your inquiry. Please try again.', 'error');
     } finally {
       setIsSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-black text-white pt-24 pb-20">
+    <div className="min-h-screen bg-[#f6f0e4] text-[#1e1510] pt-32 pb-20 font-sans selection:bg-[#6b4226] selection:text-[#f6f0e4]">
       
       {/* Hero Section */}
-      <div className="max-w-7xl mx-auto px-6 mb-16 text-center">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-500 text-[10px] font-black uppercase tracking-widest mb-6">
-          <HelpCircle size={12} /> Support Matrix Active
+      <div className="max-w-7xl mx-auto px-6 mb-20 text-center">
+        <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full border border-[#6b4226]/30 bg-[#1e1510]/5 text-[#6b4226] text-[10px] font-bold uppercase tracking-[0.2em] mb-8">
+          <Leaf size={14} /> Concierge Active
         </div>
-        <h1 className="text-5xl md:text-7xl font-black uppercase tracking-tighter mb-6">
-          Client <span className="text-blue-500">Support</span>
+        <h1 className="text-5xl md:text-7xl font-serif tracking-tight mb-6 text-[#1e1510]">
+          Connect <span className="italic text-[#6b4226] font-light">With Us.</span>
         </h1>
-        <p className="text-slate-400 font-bold max-w-2xl mx-auto text-sm">
-          Need assistance with your hardware, routing, or telemetry? Our engineering and support team is standing by to resolve your queries.
+        <p className="text-[#4a3628] font-light max-w-2xl mx-auto text-lg leading-relaxed">
+          Whether you need guidance on your botanical regimen, logistics support, or are interested in becoming a retail partner, our dedicated team is here to assist.
         </p>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12">
+      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-16">
         
         {/* Support Ticket Form */}
         <div className="lg:col-span-7">
-          <div className="bg-slate-900/40 border border-slate-800/80 rounded-[3rem] p-8 md:p-12 relative overflow-hidden">
-            <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 blur-3xl rounded-full pointer-events-none"></div>
+          <div className="bg-white border border-[#dccfb8] rounded-[3rem] p-8 md:p-14 relative shadow-sm hover:shadow-xl transition-shadow duration-700">
             
             {ticketGenerated ? (
-              <div className="flex flex-col items-center justify-center text-center py-16 animate-in zoom-in duration-500">
-                <div className="w-24 h-24 bg-emerald-500/10 border border-emerald-500/20 rounded-full flex items-center justify-center text-emerald-500 mb-6">
-                  <CheckCircle size={48} />
+              <div className="flex flex-col items-center justify-center text-center py-20 animate-in zoom-in duration-700">
+                <div className="w-24 h-24 bg-[#6b4226]/10 border border-[#6b4226]/20 rounded-full flex items-center justify-center text-[#6b4226] mb-8">
+                  <CheckCircle size={40} />
                 </div>
-                <h3 className="text-3xl font-black uppercase tracking-tighter mb-4">Ticket Generated</h3>
-                <p className="text-slate-400 font-bold mb-8 max-w-md">
-                  Your support payload has been securely transmitted to our resolution matrix. An agent will contact you shortly.
+                <h3 className="text-3xl font-serif tracking-tight mb-4 text-[#1e1510]">Inquiry Received</h3>
+                <p className="text-[#4a3628] font-light text-lg mb-10 max-w-md leading-relaxed">
+                  Your message has been securely delivered to our concierge team. We will review your request and respond to your email shortly.
                 </p>
-                <button onClick={() => setTicketGenerated(false)} className="px-8 py-3.5 bg-slate-900 border border-slate-800 rounded-xl text-xs font-black uppercase tracking-widest hover:bg-slate-800 transition-all">
-                  Submit Another Request
+                <button onClick={() => setTicketGenerated(false)} className="px-10 py-4 bg-[#1e1510] text-[#f6f0e4] rounded-full text-[10px] font-bold uppercase tracking-[0.2em] hover:bg-[#6b4226] transition-all duration-500">
+                  Send Another Message
                 </button>
               </div>
             ) : (
               <>
-                <h2 className="text-2xl font-black uppercase tracking-tighter mb-2 flex items-center gap-3">
-                  <MessageSquare size={24} className="text-blue-500" /> Transmit Payload
+                <h2 className="text-3xl font-serif tracking-tight mb-2 flex items-center gap-4 text-[#1e1510]">
+                  <MessageSquare size={24} className="text-[#6b4226]" /> Drop us a note
                 </h2>
-                <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mb-8">Generate a secure support ticket</p>
+                <p className="text-[10px] font-bold text-[#6b4226] uppercase tracking-[0.2em] mb-10">We usually reply within 24 hours</p>
                 
-                <form onSubmit={handleSubmit} className="space-y-6 relative z-10">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 block mb-2">Identity (Name)</label>
-                      <input required type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs text-white font-bold outline-none focus:border-blue-500/50 transition-all" />
+                      <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#4a3628] ml-2 block mb-3">Full Name</label>
+                      <input required type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full bg-[#faf8f5] border border-[#dccfb8] rounded-2xl p-5 text-sm text-[#1e1510] outline-none focus:border-[#6b4226] focus:bg-white transition-all shadow-inner" />
                     </div>
                     <div>
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 block mb-2">Comms Channel (Email)</label>
-                      <input required type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs text-white font-bold outline-none focus:border-blue-500/50 transition-all" />
+                      <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#4a3628] ml-2 block mb-3">Email Address</label>
+                      <input required type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="w-full bg-[#faf8f5] border border-[#dccfb8] rounded-2xl p-5 text-sm text-[#1e1510] outline-none focus:border-[#6b4226] focus:bg-white transition-all shadow-inner" />
                     </div>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div>
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 block mb-2">Telemetry (Phone) - Optional</label>
-                      <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs text-white font-bold outline-none focus:border-blue-500/50 transition-all" />
+                      <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#4a3628] ml-2 block mb-3">Phone Number (Optional)</label>
+                      <input type="tel" value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} className="w-full bg-[#faf8f5] border border-[#dccfb8] rounded-2xl p-5 text-sm text-[#1e1510] outline-none focus:border-[#6b4226] focus:bg-white transition-all shadow-inner" />
                     </div>
                     <div>
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 block mb-2">Order Hash - Optional</label>
-                      <input type="text" placeholder="e.g. #001234" value={form.order_id} onChange={e => setForm({...form, order_id: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs text-white font-mono outline-none focus:border-blue-500/50 transition-all" />
+                      <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#4a3628] ml-2 block mb-3">Order ID (Optional)</label>
+                      <input type="text" placeholder="#BHUM..." value={form.order_id} onChange={e => setForm({...form, order_id: e.target.value})} className="w-full bg-[#faf8f5] border border-[#dccfb8] rounded-2xl p-5 text-sm text-[#1e1510] outline-none focus:border-[#6b4226] focus:bg-white transition-all shadow-inner" />
                     </div>
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 block mb-2">Routing Category</label>
-                    <select value={form.subject} onChange={e => setForm({...form, subject: e.target.value})} className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs text-white font-bold outline-none focus:border-blue-500/50 transition-all appearance-none cursor-pointer">
-                      <option value="technical_support">Hardware / Technical Support</option>
-                      <option value="order_status">Logistics / Order Tracking</option>
-                      <option value="returns_rma">Returns / RMA Generation</option>
-                      <option value="general">General Transmission</option>
+                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#4a3628] ml-2 block mb-3">Inquiry Category</label>
+                    <select value={form.subject} onChange={e => setForm({...form, subject: e.target.value})} className="w-full bg-[#faf8f5] border border-[#dccfb8] rounded-2xl p-5 text-sm text-[#1e1510] outline-none focus:border-[#6b4226] focus:bg-white transition-all appearance-none cursor-pointer shadow-inner">
+                      <option value="product_inquiry">Product & Botanical Inquiry</option>
+                      <option value="order_status">Order Tracking & Logistics</option>
+                      <option value="returns">Returns & Exchanges</option>
+                      <option value="partnership">Retail / Wholesale Partnership (Sell on Bhumivera)</option>
+                      <option value="general">General Support</option>
                     </select>
                   </div>
 
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1 block mb-2">Transmission Data</label>
-                    <textarea required rows={5} value={form.message} onChange={e => setForm({...form, message: e.target.value})} placeholder="Describe the anomaly or request in detail..." className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-xs text-slate-300 outline-none focus:border-blue-500/50 transition-all resize-none custom-scrollbar" />
+                    <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#4a3628] ml-2 block mb-3">Your Message</label>
+                    <textarea required rows={5} value={form.message} onChange={e => setForm({...form, message: e.target.value})} placeholder="How can we assist your journey today?" className="w-full bg-[#faf8f5] border border-[#dccfb8] rounded-2xl p-5 text-sm text-[#1e1510] outline-none focus:border-[#6b4226] focus:bg-white transition-all resize-none shadow-inner" />
                   </div>
 
-                  <button type="submit" disabled={isSubmitting} className="w-full py-4 bg-blue-600 text-white font-black uppercase tracking-widest text-xs rounded-2xl hover:bg-blue-500 transition-all shadow-[0_0_20px_rgba(37,99,235,0.2)] disabled:opacity-50 flex items-center justify-center gap-2 group">
-                    {isSubmitting ? <RefreshCw size={18} className="animate-spin" /> : <Send size={18} className="group-hover:translate-x-1 transition-transform" />} 
-                    Execute Transmission
+                  <button type="submit" disabled={isSubmitting} className="w-full py-5 bg-[#1e1510] text-[#f6f0e4] font-bold uppercase tracking-[0.2em] text-[10px] rounded-full hover:bg-[#6b4226] transition-all duration-500 shadow-xl disabled:opacity-50 flex items-center justify-center gap-3 group">
+                    {isSubmitting ? <RefreshCw size={16} className="animate-spin" /> : <Send size={16} className="group-hover:translate-x-1 transition-transform" />} 
+                    Send Message
                   </button>
                 </form>
               </>
@@ -145,35 +154,35 @@ export default function Contact() {
         {/* Info & FAQ Matrix */}
         <div className="lg:col-span-5 space-y-8">
           
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            <div className="bg-slate-900/40 border border-slate-800 p-6 rounded-[2rem]">
-              <Mail className="text-blue-500 mb-4" size={24} />
-              <h4 className="text-[10px] font-black uppercase tracking-widest mb-1">Direct Comms</h4>
-              <p className="text-sm font-bold text-white">support@Bhumivera.com</p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+            <div className="bg-white border border-[#dccfb8] p-8 rounded-[2rem] shadow-sm">
+              <Mail className="text-[#6b4226] mb-5" size={28} />
+              <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2 text-[#4a3628]">Digital Desk</h4>
+              <p className="text-sm font-medium text-[#1e1510]">support@Bhumivera.com</p>
             </div>
-            <div className="bg-slate-900/40 border border-slate-800 p-6 rounded-[2rem]">
-              <Phone className="text-emerald-500 mb-4" size={24} />
-              <h4 className="text-[10px] font-black uppercase tracking-widest mb-1">Voice Matrix</h4>
-              <p className="text-sm font-bold text-white">+91 90000 00000</p>
+            <div className="bg-white border border-[#dccfb8] p-8 rounded-[2rem] shadow-sm">
+              <Phone className="text-[#6b4226] mb-5" size={28} />
+              <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2 text-[#4a3628]">Concierge Line</h4>
+              <p className="text-sm font-medium text-[#1e1510]">+91 90000 00000</p>
             </div>
           </div>
 
-          <div className="bg-slate-900/40 border border-slate-800 p-8 rounded-[2.5rem]">
-            <h3 className="text-lg font-black uppercase tracking-tighter mb-6 flex items-center gap-2">
-              <FileText size={18} className="text-purple-500" /> FAQ Database
+          <div className="bg-white border border-[#dccfb8] p-10 rounded-[2.5rem] shadow-sm">
+            <h3 className="text-2xl font-serif tracking-tight mb-8 flex items-center gap-3 text-[#1e1510]">
+              <HelpCircle size={24} className="text-[#6b4226]" /> Common Queries
             </h3>
             <div className="space-y-4">
               {FAQS.map((faq, i) => (
-                <div key={i} className="border border-slate-800 bg-slate-950/50 rounded-2xl overflow-hidden transition-all">
+                <div key={i} className="border-b border-[#dccfb8] last:border-0 pb-2">
                   <button 
                     onClick={() => setActiveFaq(activeFaq === i ? null : i)}
-                    className="w-full p-4 flex items-center justify-between text-left focus:outline-none"
+                    className="w-full py-4 flex items-center justify-between text-left focus:outline-none group"
                   >
-                    <span className="text-xs font-bold text-slate-300 pr-4">{faq.q}</span>
-                    <ChevronDown size={14} className={`text-slate-500 transition-transform duration-300 ${activeFaq === i ? 'rotate-180 text-blue-500' : ''}`} />
+                    <span className="text-sm font-bold text-[#1e1510] group-hover:text-[#6b4226] transition-colors pr-4">{faq.q}</span>
+                    <ChevronDown size={16} className={`text-[#6b4226] transition-transform duration-300 ${activeFaq === i ? 'rotate-180' : ''}`} />
                   </button>
-                  <div className={`px-4 overflow-hidden transition-all duration-300 ease-in-out ${activeFaq === i ? 'max-h-40 pb-4 opacity-100' : 'max-h-0 opacity-0'}`}>
-                    <p className="text-[11px] text-slate-500 font-medium leading-relaxed border-t border-slate-800/50 pt-3">
+                  <div className={`overflow-hidden transition-all duration-400 ease-in-out ${activeFaq === i ? 'max-h-60 pb-6 opacity-100' : 'max-h-0 opacity-0'}`}>
+                    <p className="text-sm text-[#4a3628] font-light leading-relaxed">
                       {faq.a}
                     </p>
                   </div>
@@ -182,11 +191,12 @@ export default function Contact() {
             </div>
           </div>
 
-          <div className="bg-blue-500/10 border border-blue-500/20 p-8 rounded-[2.5rem]">
-            <h3 className="text-sm font-black uppercase tracking-widest text-blue-400 mb-2">Enterprise Solutions</h3>
-            <p className="text-xs font-bold text-slate-400 mb-6">Looking for bulk hardware acquisitions or B2B dealership matrices? Connect with our wholesale division.</p>
-            <button className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-white hover:text-blue-400 transition-colors">
-              Wholesale Portal <ArrowRight size={12} />
+          <div className="bg-[#1e1510] border border-[#6b4226]/50 p-10 rounded-[2.5rem] relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-40 h-40 bg-[#d4af37]/10 blur-3xl rounded-full" />
+            <h3 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#d4af37] mb-3 relative z-10">B2B & Retail Partners</h3>
+            <p className="text-sm font-light text-[#a89f91] mb-8 leading-relaxed relative z-10">Looking to stock Bhumivera in your boutique or spa? Select 'Retail Partnership' in the form or visit our dedicated dealer portal to begin the onboarding process.</p>
+            <button onClick={() => {setForm(prev => ({ ...prev, subject: 'partnership' })); window.scrollTo({ top: 0, behavior: 'smooth' })}} className="flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#f6f0e4] hover:text-[#d4af37] transition-colors relative z-10 group">
+              Apply to Sell on Bhumivera <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
 
@@ -195,6 +205,3 @@ export default function Contact() {
     </div>
   );
 }
-
-// Ensure you import ChevronDown at the top if it wasn't already in your lucide-react imports:
-// import { ..., ChevronDown } from 'lucide-react';
