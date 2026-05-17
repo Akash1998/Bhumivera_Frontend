@@ -4,7 +4,7 @@ import { Helmet } from 'react-helmet-async';
 export default function SEO({ product }) {
   if (!product) return null;
 
-  const siteUrl = import.meta.env.VITE_SITE_URL || '[https://www.bhumivera.com](https://www.bhumivera.com)';
+  const siteUrl = import.meta.env.VITE_SITE_URL || 'https://www.bhumivera.com';
   const productUrl = `${siteUrl}/product/${product.slug}`;
   
   // Safely extract the first image or default to logo
@@ -14,7 +14,7 @@ export default function SEO({ product }) {
 
   // Compile the exact JSON-LD Schema Google requires for Product Rich Results
   const jsonLdSchema = {
-    "@context": "[https://schema.org/](https://schema.org/)",
+    "@context": "https://schema.org/",
     "@type": "Product",
     "name": product.name,
     "image": [imageUrl],
@@ -29,10 +29,10 @@ export default function SEO({ product }) {
       "url": productUrl,
       "priceCurrency": "INR",
       "price": product.discount_price || product.price,
-      "itemCondition": "[https://schema.org/NewCondition](https://schema.org/NewCondition)",
+      "itemCondition": "https://schema.org/NewCondition",
       "availability": product.status === 'active' && product.quantity > 0 
-        ? "[https://schema.org/InStock](https://schema.org/InStock)" 
-        : "[https://schema.org/OutOfStock](https://schema.org/OutOfStock)",
+        ? "https://schema.org/InStock" 
+        : "https://schema.org/OutOfStock",
       "seller": {
         "@type": "Organization",
         "name": "Bhumivera"
