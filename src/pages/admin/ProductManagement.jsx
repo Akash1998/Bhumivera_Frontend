@@ -9,7 +9,6 @@ import {
 import api, { products as productsApi, categories as categoriesApi, serials as serialsApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 
-// SEO Upgrade: Added all missing schema and indexing fields to state
 const INITIAL_PRODUCT_STATE = {
   name: '', slug: '', description: '', price: '', discount_price: '', quantity: '', category_id: '', 
   video_urls: '', model_3d_url: '', warranty_period: 12, status: 'active',
@@ -105,6 +104,30 @@ export default function ProductManagement() {
     }
   };
 
+  // --- Handlers: AI Content Generator ---
+  const handleAIEnhance = async () => {
+    if (!form.name) return showToast?.('Enter a product name first!', 'error');
+    setUploadingFileName('AI is writing content...');
+    setIsUploading(true);
+    try {
+      const res = await api.post('/ai/generate-product-content', { productName: form.name });
+      const { description, meta_title, meta_description, tags } = res.data.data;
+      
+      setForm(prev => ({
+        ...prev,
+        description,
+        meta_title,
+        meta_description,
+        tags
+      }));
+      showToast?.('AI Content Generated!', 'success');
+    } catch (error) {
+      showToast?.('AI Generation Failed', 'error');
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   // --- Handlers: Modals & Forms ---
   const openProductModal = (product = null) => {
     if (product) {
@@ -156,7 +179,6 @@ export default function ProductManagement() {
         return acc;
       }, {});
       
-      // Auto-generate slug for SEO if empty
       const finalSlug = form.slug.trim() === '' ? form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : form.slug;
       
       const payload = { ...form, slug: finalSlug, specifications: specObj };
@@ -444,7 +466,7 @@ export default function ProductManagement() {
               <div className="flex border-b border-slate-800 px-6 bg-slate-900/20 overflow-x-auto custom-scrollbar">
                 {[
                   {id:'basic', l:'Basic Info', i:BoxSelect}, 
-                  {id:'seo', l:'SEO & Meta', i:Globe}, // NEW SEO TAB
+                  {id:'seo', l:'SEO & Meta', i:Globe}, 
                   {id:'specs', l:'Specifications', i:List}, 
                   {id:'media', l:'Images & Docs', i:Database}, 
                   {id:'warranty', l:'Warranty', i:ShieldCheck}
@@ -462,7 +484,12 @@ export default function ProductManagement() {
                 {activeTab === 'basic' && (
                   <div className="grid grid-cols-2 gap-5">
                     <div className="col-span-2">
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Product Name</label>
+                      <div className="flex justify-between items-center mb-2">
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Product Name</label>
+                        <button type="button" onClick={handleAIEnhance} className="text-[10px] text-emerald-400 font-bold uppercase flex items-center gap-1 hover:text-emerald-300">
+                          ✨ AI Auto-Fill
+                        </button>
+                      </div>
                       <input required value={form.name} onChange={e=>setForm({...form, name:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="e.g. Aloe Vera Glow Serum" />
                     </div>
                     <div>
@@ -491,7 +518,7 @@ export default function ProductManagement() {
                   </div>
                 )}
 
-                {/* NEW SEO TAB */}
+                {/* SEO TAB */}
                 {activeTab === 'seo' && (
                   <div className="grid grid-cols-2 gap-5">
                     <div className="col-span-2 bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl mb-2">
