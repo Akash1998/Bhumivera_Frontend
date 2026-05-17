@@ -1,6 +1,5 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import logo from "../assets/images/logo.webp";
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
@@ -65,7 +64,8 @@ export default function Footer() {
       <div className="relative z-10 border-t border-[#6b4226]/20 py-12 flex flex-col items-center gap-8">
         <Link to="/" className="group" onClick={scrollToTop} aria-label="Bhumivera Home">
           <div className="p-3 bg-[#1e1510]/50 border border-[#6b4226]/30 rounded-2xl shadow-2xl backdrop-blur-xl group-hover:bg-[#6b4226]/20 group-hover:border-[#d4af37]/40 group-hover:shadow-[0_0_30px_rgba(212,175,55,0.1)] transition-all duration-700 ease-out transform group-active:scale-95">
-             <img src={logo} alt="Bhumivera Logo" className="h-10 md:h-12 w-auto object-contain rounded-xl opacity-90 group-hover:opacity-100 transition-opacity" />
+             {/* FIXED: Replaced imported variable with direct static public path */}
+             <img src="/logo.webp" alt="Bhumivera Logo" className="h-10 md:h-12 w-auto object-contain rounded-xl opacity-90 group-hover:opacity-100 transition-opacity" />
           </div>
         </Link>
         <div className="flex flex-wrap justify-center gap-4 text-[10px] font-bold tracking-[0.15em] uppercase text-[#a89f91] px-4">
