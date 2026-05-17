@@ -13,23 +13,36 @@ import {
 } from 'lucide-react';
 import SkeletonLoader from './SkeletonLoader';
 
-// FIXED: Robust stringified JSON parser
+// FIXED: Logic rewritten to correctly extract paths from Arrays before assuming it's an object dictionary
 const getImageUrl = (img) => {
   if (!img) return '/logo.webp';
+  
   let parsedImg = img;
   
+  // 1. If it's a raw JSON string from the database, parse it first
   if (typeof img === 'string') {
     try {
-      const parsed = JSON.parse(img);
-      parsedImg = Array.isArray(parsed) ? parsed[0] : parsed;
+      parsedImg = JSON.parse(img);
     } catch (e) {
-      parsedImg = img; // Normal string fallback
+      parsedImg = img; 
     }
   }
 
-  let path = typeof parsedImg === 'object' && parsedImg !== null ? (parsedImg.url || parsedImg.file_path || parsedImg.path) : parsedImg;
+  // 2. If it's an array (which the backend sends), extract the first item
+  if (Array.isArray(parsedImg)) {
+    parsedImg = parsedImg[0];
+  }
+
+  if (!parsedImg) return '/logo.webp';
+
+  // 3. If it's a dictionary object, extract the path. Otherwise, it's already our string.
+  let path = typeof parsedImg === 'object' && parsedImg !== null 
+    ? (parsedImg.url || parsedImg.file_path || parsedImg.path) 
+    : parsedImg;
   
   if (!path || typeof path !== 'string') return '/logo.webp';
+  
+  // 4. If it already has a domain, use it. Otherwise, attach the Cloudflare R2 domain.
   if (path.startsWith('http') || path.startsWith('data:')) return path;
   
   const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-22cd43cce9bc475680ad496e199706c4.r2.dev';
@@ -114,10 +127,8 @@ const ProductGrid = ({ products = [], isLoading = false }) => {
           >
             <div className={`${viewMode === 'list' ? 'md:w-72 shrink-0' : 'w-full'} relative aspect-square overflow-hidden rounded-2xl bg-slate-800`}>
               <img 
-                // Dynamically resolve image path mapping
                 src={getImageUrl(product.images || product.image_url || product.image)} 
                 alt={product.name}
-                // FIXED: Set target.onerror to null to break the infinite network loop
                 onError={(e) => { 
                   e.target.onerror = null; 
                   e.target.src = '/logo.webp'; 
