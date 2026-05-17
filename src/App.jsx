@@ -9,7 +9,7 @@ import { WishlistProvider } from "./context/WishlistContext.jsx";
 import { CompareProvider } from "./context/CompareContext.jsx";
 import "./index.css";
 
-// Existing Pages
+// Existing Page
 const Home = lazy(() => import("./pages/Home.jsx"));
 const Warehouse = lazy(() => import("./pages/Warehouse.jsx"));
 const WarehouseAdmin = lazy(() => import("./pages/admin/WarehouseAdmin.jsx"));
