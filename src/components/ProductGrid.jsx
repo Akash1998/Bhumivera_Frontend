@@ -117,7 +117,11 @@ const ProductGrid = ({ products = [], isLoading = false }) => {
                 // Dynamically resolve image path mapping
                 src={getImageUrl(product.images || product.image_url || product.image)} 
                 alt={product.name}
-                onError={(e) => { e.target.src = '/logo.webp'; }}
+                // FIXED: Set target.onerror to null to break the infinite network loop
+                onError={(e) => { 
+                  e.target.onerror = null; 
+                  e.target.src = '/logo.webp'; 
+                }}
                 className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
               />
               <div className="absolute top-4 left-4 flex flex-col gap-2">
