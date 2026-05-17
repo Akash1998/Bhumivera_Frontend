@@ -1,49 +1,66 @@
 {
-  "name": "bhumivera-frontend",
-  "private": true,
-  "version": "1.0.0",
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "CI=false vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
-  },
-  "dependencies": {
-    "@marsidev/react-turnstile": "^1.0.2",
-    "axios": "^1.8.2",
-    "browser-image-compression": "^2.0.2",
-    "framer-motion": "^12.4.7",
-    "lucide-react": "^0.475.0",
-    "papaparse": "^5.5.3",
-    "qrcode": "^1.5.4",
-    "react": "18.3.1",
-    "react-dom": "18.3.1",
-    "react-helmet-async": "^2.0.5",
-    "react-hot-toast": "^2.4.1",
-    "react-icons": "^5.5.0",
-    "react-router-dom": "^7.12.0",
-    "recharts": "^3.1.2",
-    "socket.io-client": "^4.8.1",
-    "xlsx": "https://cdn.sheetjs.com/xlsx-0.20.2/xlsx-0.20.2.tgz"
-  },
-  "devDependencies": {
-    "@eslint/js": "^9.21.0",
-    "@types/react": "^18.3.3",
-    "@types/react-dom": "^18.3.0",
-    "@vitejs/plugin-react": "^4.3.4",
-    "autoprefixer": "^10.4.21",
-    "eslint": "^9.21.0",
-    "eslint-plugin-react-hooks": "^5.2.0",
-    "eslint-plugin-react-refresh": "^0.4.22",
-    "globals": "^16.2.0",
-    "postcss": "^8.5.6",
-    "tailwindcss": "^3.4.17",
-    "vite": "^6.1.1",
-    "vite-plugin-compression": "^0.5.1"
-  },
-  "overrides": {
-    "react": "18.3.1",
-    "react-dom": "18.3.1"
-  }
+  "version": 2,
+  "headers": [
+    {
+      "source": "/(.*).(webp|jpg|png|svg|xml|txt|css|js)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://www.google-analytics.com https://ssl.google-analytics.com https://www.googletagmanager.com https://overbridgenet.com blob:; worker-src 'self' blob:; frame-src 'self' https://challenges.cloudflare.com; connect-src 'self' https://challenges.cloudflare.com https://bhumivera-backend.railway.app https://service.bhumivera.com https://www.google-analytics.com https://analytics.google.com https://*.google-analytics.com https://*.analytics.google.com https://*.r2.cloudflarestorage.com https://overbridgenet.com; img-src 'self' data: blob: https: https://*.google-analytics.com https://*.analytics.google.com; style-src 'self' 'unsafe-inline';"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "geolocation=(), microphone=(), camera=()"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
+    { "source": "/robots.txt", "destination": "/robots.txt" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }
