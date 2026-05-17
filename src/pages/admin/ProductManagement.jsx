@@ -62,10 +62,18 @@ export default function ProductManagement() {
     setLoading(true);
     try {
       const [prodRes, catRes] = await Promise.all([productsApi.getAllAdmin(), categoriesApi.getAll()]);
-      setProducts(prodRes.data?.products || prodRes.data?.data || prodRes.data || []);
-      setCategories(catRes.data?.categories || catRes.data?.data || catRes.data || []);
+      
+      // Zero-Regression Typecasting: Enforce strict Array assignments to prevent Kernel Panics
+      const pData = prodRes.data?.products || prodRes.data?.data || prodRes.data;
+      setProducts(Array.isArray(pData) ? pData : []);
+
+      const cData = catRes.data?.categories || catRes.data?.data || catRes.data;
+      setCategories(Array.isArray(cData) ? cData : []);
+
     } catch (err) { 
       showToast?.('Failed to fetch products', 'error'); 
+      setProducts([]); // Failsafe fallback
+      setCategories([]); // Failsafe fallback
     } finally { 
       setLoading(false); 
     }
@@ -252,9 +260,11 @@ export default function ProductManagement() {
     setLoadingSerials(true);
     try {
       const res = await serialsApi.getByProduct(currentProduct.id || currentProduct._id);
-      setProductSerials(res.data?.serials || res.data?.data || res.data || []);
+      const sData = res.data?.serials || res.data?.data || res.data;
+      setProductSerials(Array.isArray(sData) ? sData : []);
     } catch(e) {
       console.error(e);
+      setProductSerials([]); // Typecast failsafe
     } finally { 
       setLoadingSerials(false); 
     }
@@ -272,7 +282,8 @@ export default function ProductManagement() {
       showToast?.(`Generated ${serialForm.count} serial numbers.`, 'success');
       
       const updatedRes = await serialsApi.getByProduct(payload.productId);
-      const fullList = updatedRes.data?.serials || updatedRes.data?.data || updatedRes.data || [];
+      const sData = updatedRes.data?.serials || updatedRes.data?.data || updatedRes.data;
+      const fullList = Array.isArray(sData) ? sData : [];
       
       const worksheetData = fullList.map(s => ({ 
         'Product': currentProduct.name, 
@@ -304,14 +315,17 @@ export default function ProductManagement() {
 
   // --- Render Prep ---
   const filteredProducts = useMemo(() => {
+    // Zero-Regression circuit breaker: prevent .filter() Kernel Panic if products is destroyed
+    if (!Array.isArray(products)) return [];
+    
     return products.filter(p => 
-      p.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
-      p.category_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      p.sku?.toLowerCase().includes(searchTerm.toLowerCase())
+      p?.name?.toLowerCase().includes(searchTerm.toLowerCase()) || 
+      p?.category_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      p?.sku?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   }, [products, searchTerm]);
   
-  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage);
+  const totalPages = Math.ceil(filteredProducts.length / itemsPerPage) || 1;
   const paginatedProducts = filteredProducts.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   if (loading && products.length === 0) {
@@ -428,8 +442,8 @@ export default function ProductManagement() {
           <div className="p-4 border-t border-slate-800 flex items-center justify-between bg-slate-950/50">
             <span className="text-xs font-mono text-slate-500">Page {currentPage} of {totalPages}</span>
             <div className="flex gap-2">
-              <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="p-1.5 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 disabled:opacity-30 hover:text-white"><ChevronLeft size={16} /></button>
-              <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="p-1.5 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 disabled:opacity-30 hover:text-white"><ChevronRight size={16} /></button>
+              <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className="p-1.5 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 disabled:opacity-30 hover:text-white"><ChevronLeft size={16} /></button>
+              <button disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className="p-1.5 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 disabled:opacity-30 hover:text-white"><ChevronRight size={16} /></button>
             </div>
           </div>
         )}
