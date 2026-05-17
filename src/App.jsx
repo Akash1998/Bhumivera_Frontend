@@ -9,38 +9,59 @@ import { WishlistProvider } from "./context/WishlistContext.jsx";
 import { CompareProvider } from "./context/CompareContext.jsx";
 import "./index.css";
 
-// Existing Page
-const Home = lazy(() => import("./pages/Home.jsx"));
-const Warehouse = lazy(() => import("./pages/Warehouse.jsx"));
-const WarehouseAdmin = lazy(() => import("./pages/admin/WarehouseAdmin.jsx"));
-const WarehouseManagement = lazy(() => import("./pages/admin/WarehouseManagement.jsx"));
-const WarehouseAdminLogin = lazy(() => import("./pages/WarehouseAdminLogin.jsx"));
-const Shop = lazy(() => import("./pages/Shop.jsx"));
-const ProductDetail = lazy(() => import("./pages/ProductDetail.jsx"));
-const Genuine_test = lazy(() => import("./pages/EWarranty.jsx")); 
-const Contact = lazy(() => import("./pages/Contact.jsx"));
-const Cart = lazy(() => import("./pages/Cart.jsx"));
-const Checkout = lazy(() => import("./pages/Checkout.jsx"));
-const OrderSuccess = lazy(() => import("./pages/OrderSuccess.jsx"));
-const Login = lazy(() => import("./pages/Login.jsx"));
-const Register = lazy(() => import("./pages/Register.jsx"));
-const Profile = lazy(() => import("./pages/Profile.jsx"));
-const AdminLogin = lazy(() => import("./pages/AdminLogin.jsx"));
-const AdminDashboard = lazy(() => import("./pages/AdminDashboard.jsx"));
-const Wishlist = lazy(() => import("./pages/Wishlist.jsx"));
-const OrderTracking = lazy(() => import("./pages/OrderTracking.jsx"));
-const Compare = lazy(() => import("./pages/Compare.jsx"));
-const AddressBook = lazy(() => import("./pages/AddressBook.jsx"));
-const Returns = lazy(() => import("./pages/Returns.jsx"));
-const Affiliate = lazy(() => import("./pages/Affiliate.jsx"));
-const About = lazy(() => import("./pages/About.jsx"));
-const Legal = lazy(() => import("./pages/Legal.jsx"));
-const FitmentEngine = lazy(() => import("./pages/FitmentEngine.jsx")); 
+const lazyWithRetry = (componentImport) =>
+  lazy(async () => {
+    const pageHasAlreadyBeenForceRefreshed = JSON.parse(
+      window.sessionStorage.getItem('page-has-been-force-refreshed') || 'false'
+    );
 
-// NEW: Bhumivera Specific Pages
-const BhumiveraScience = lazy(() => import("./pages/BhumiveraScience.jsx"));
-const PurchaseProtection = lazy(() => import("./pages/PurchaseProtection.jsx"));
-const ReturnsCentre = lazy(() => import("./pages/ReturnsCentre.jsx"));
+    try {
+      const component = await componentImport();
+      window.sessionStorage.setItem('page-has-been-force-refreshed', 'false');
+      return component;
+    } catch (error) {
+      if (!pageHasAlreadyBeenForceRefreshed) {
+        window.sessionStorage.setItem('page-has-been-force-refreshed', 'true');
+        window.location.reload();
+        // Return a dummy component while the browser reloads
+        return { default: () => <PageLoader /> };
+      }
+      throw error;
+    }
+  });
+
+// Existing Pages using lazyWithRetry
+const Home = lazyWithRetry(() => import("./pages/Home.jsx"));
+const Warehouse = lazyWithRetry(() => import("./pages/Warehouse.jsx"));
+const WarehouseAdmin = lazyWithRetry(() => import("./pages/admin/WarehouseAdmin.jsx"));
+const WarehouseManagement = lazyWithRetry(() => import("./pages/admin/WarehouseManagement.jsx"));
+const WarehouseAdminLogin = lazyWithRetry(() => import("./pages/WarehouseAdminLogin.jsx"));
+const Shop = lazyWithRetry(() => import("./pages/Shop.jsx"));
+const ProductDetail = lazyWithRetry(() => import("./pages/ProductDetail.jsx"));
+const Genuine_test = lazyWithRetry(() => import("./pages/EWarranty.jsx")); 
+const Contact = lazyWithRetry(() => import("./pages/Contact.jsx"));
+const Cart = lazyWithRetry(() => import("./pages/Cart.jsx"));
+const Checkout = lazyWithRetry(() => import("./pages/Checkout.jsx"));
+const OrderSuccess = lazyWithRetry(() => import("./pages/OrderSuccess.jsx"));
+const Login = lazyWithRetry(() => import("./pages/Login.jsx"));
+const Register = lazyWithRetry(() => import("./pages/Register.jsx"));
+const Profile = lazyWithRetry(() => import("./pages/Profile.jsx"));
+const AdminLogin = lazyWithRetry(() => import("./pages/AdminLogin.jsx"));
+const AdminDashboard = lazyWithRetry(() => import("./pages/AdminDashboard.jsx"));
+const Wishlist = lazyWithRetry(() => import("./pages/Wishlist.jsx"));
+const OrderTracking = lazyWithRetry(() => import("./pages/OrderTracking.jsx"));
+const Compare = lazyWithRetry(() => import("./pages/Compare.jsx"));
+const AddressBook = lazyWithRetry(() => import("./pages/AddressBook.jsx"));
+const Returns = lazyWithRetry(() => import("./pages/Returns.jsx"));
+const Affiliate = lazyWithRetry(() => import("./pages/Affiliate.jsx"));
+const About = lazyWithRetry(() => import("./pages/About.jsx"));
+const Legal = lazyWithRetry(() => import("./pages/Legal.jsx"));
+const FitmentEngine = lazyWithRetry(() => import("./pages/FitmentEngine.jsx")); 
+
+// NEW: Bhumivera Specific Pages using lazyWithRetry
+const BhumiveraScience = lazyWithRetry(() => import("./pages/BhumiveraScience.jsx"));
+const PurchaseProtection = lazyWithRetry(() => import("./pages/PurchaseProtection.jsx"));
+const ReturnsCentre = lazyWithRetry(() => import("./pages/ReturnsCentre.jsx"));
 
 const PageLoader = () => (
   <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
