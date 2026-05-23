@@ -31,7 +31,6 @@ const lazyWithRetry = (componentImport) =>
   });
 
 // Existing Pages using lazyWithRetry
-const MPGEBusinessLanding = lazyWithRetry(() => import("./pages/MPGEBusinessLanding.jsx"));
 const Home = lazyWithRetry(() => import("./pages/Home.jsx"));
 const Warehouse = lazyWithRetry(() => import("./pages/Warehouse.jsx"));
 const WarehouseAdmin = lazyWithRetry(() => import("./pages/admin/WarehouseAdmin.jsx"));
@@ -63,6 +62,9 @@ const FitmentEngine = lazyWithRetry(() => import("./pages/FitmentEngine.jsx"));
 const BhumiveraScience = lazyWithRetry(() => import("./pages/BhumiveraScience.jsx"));
 const PurchaseProtection = lazyWithRetry(() => import("./pages/PurchaseProtection.jsx"));
 const ReturnsCentre = lazyWithRetry(() => import("./pages/ReturnsCentre.jsx"));
+
+// NEW: MPGEBusiness Landing Route
+const MPGEBusinessLanding = lazyWithRetry(() => import("./pages/MPGEBusinessLanding.jsx"));
 
 const PageLoader = () => (
   <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
@@ -121,15 +123,21 @@ function WarehouseRoute({ children }) {
 function AppContent() {
   const location = useLocation();
   
-  // Determine if we are in a dashboard/admin environment
+  // Determine if we are in a dashboard/admin environment or ad-landing configuration
   const isManagementView = useMemo(() => {
     const path = location.pathname;
-    return path.startsWith("/admin") || path.startsWith("/warehouse") || path === "/warehouseadmin";
+    return (
+      path.startsWith("/admin") || 
+      path.startsWith("/warehouse") || 
+      path === "/warehouseadmin" || 
+      path === "/earn-from-home" || 
+      path === "/mpgebusiness"
+    );
   }, [location.pathname]);
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Hide standard UI components on Admin/Warehouse routes */}
+      {/* Hide standard UI components on Admin/Warehouse/Ad landing routes */}
       {!isManagementView && <Navbar />}
       
       <main id="main-content" className="flex-1 w-full flex flex-col">
@@ -138,10 +146,6 @@ function AppContent() {
         
         <Suspense fallback={<PageLoader />}>
           <Routes>
-
-            <Route path="/mpgebusiness" element={<MPGEBusinessLanding />} />
-            <Route path="/earn-from-home" element={<MPGEBusinessLanding />} />
-            
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/shop" element={<Shop />} />
@@ -154,6 +158,10 @@ function AppContent() {
             <Route path="/science" element={<BhumiveraScience />} />
             <Route path="/purchase-protection" element={<PurchaseProtection />} />
             <Route path="/returns-centre" element={<ReturnsCentre />} />
+
+            {/* Campaign Inbound Routes */}
+            <Route path="/earn-from-home" element={<MPGEBusinessLanding />} />
+            <Route path="/mpgebusiness" element={<MPGEBusinessLanding />} />
 
             {/* Tools & Tracking */}
             <Route path="/fitment-engine" element={<FitmentEngine />} />
