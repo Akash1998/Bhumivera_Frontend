@@ -31,6 +31,7 @@ const lazyWithRetry = (componentImport) =>
   });
 
 // Existing Pages using lazyWithRetry
+const MPGEBusinessLanding = lazyWithRetry(() => import("./pages/MPGEBusinessLanding.jsx"));
 const Home = lazyWithRetry(() => import("./pages/Home.jsx"));
 const Warehouse = lazyWithRetry(() => import("./pages/Warehouse.jsx"));
 const WarehouseAdmin = lazyWithRetry(() => import("./pages/admin/WarehouseAdmin.jsx"));
@@ -137,6 +138,10 @@ function AppContent() {
         
         <Suspense fallback={<PageLoader />}>
           <Routes>
+
+            <Route path="/mpgebusiness" element={<MPGEBusinessLanding />} />
+            <Route path="/earn-from-home" element={<MPGEBusinessLanding />} />
+            
             {/* Public Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/shop" element={<Shop />} />
