@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, useMemo, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
-import Footer from "./components/Footer.jsx";
+import Footer = from "./components/Footer.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { ToastProvider } from "./context/ToastContext.jsx";
@@ -23,7 +23,6 @@ const lazyWithRetry = (componentImport) =>
       if (!pageHasAlreadyBeenForceRefreshed) {
         window.sessionStorage.setItem('page-has-been-force-refreshed', 'true');
         window.location.reload();
-        // Return a dummy component while the browser reloads
         return { default: () => <PageLoader /> };
       }
       throw error;
@@ -72,19 +71,15 @@ const PageLoader = () => (
   </div>
 );
 
-// --- Scroll Auto-Reset Utility ---
 function ScrollToTop() {
   const { pathname } = useLocation();
 
   useEffect(() => {
-    // Instantly snaps to the top when navigating to a new page
     window.scrollTo(0, 0);
   }, [pathname]);
 
   return null;
 }
-
-// --- Auth Route Wrappers ---
 
 function ProtectedRoute({ children }) {
   const { user, loading } = useAuth() || {};
@@ -99,7 +94,6 @@ function AdminRoute({ children }) {
   const { user, loading } = useAuth() || {};
   const t = localStorage.getItem('token');
   
-  // Memoize admin check for performance
   const isAdmin = useMemo(() => {
     return user?.role === 'admin' || user?.role === 'superadmin';
   }, [user]);
@@ -118,12 +112,9 @@ function WarehouseRoute({ children }) {
   return children;
 }
 
-// --- Layout Engine ---
-
 function AppContent() {
   const location = useLocation();
   
-  // Determine if we are in a dashboard/admin environment or ad-landing configuration
   const isManagementView = useMemo(() => {
     const path = location.pathname;
     return (
@@ -137,11 +128,9 @@ function AppContent() {
 
   return (
     <div className="flex flex-col min-h-screen">
-      {/* Hide standard UI components on Admin/Warehouse/Ad landing routes */}
       {!isManagementView && <Navbar />}
       
       <main id="main-content" className="flex-1 w-full flex flex-col">
-        {/* Forces window to top on every route change */}
         <ScrollToTop /> 
         
         <Suspense fallback={<PageLoader />}>
