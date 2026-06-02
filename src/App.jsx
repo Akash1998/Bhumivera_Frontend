@@ -1,7 +1,7 @@
 import React, { lazy, Suspense, useMemo, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
-import Footer = from "./components/Footer.jsx";
+import Footer from "./components/Footer.jsx";
 import { CartProvider } from "./context/CartContext.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { ToastProvider } from "./context/ToastContext.jsx";
