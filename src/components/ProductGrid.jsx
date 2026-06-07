@@ -45,7 +45,7 @@ const getImageUrl = (img) => {
   // 4. If it already has a domain, use it. Otherwise, attach the Cloudflare R2 domain.
   if (path.startsWith('http') || path.startsWith('data:')) return path;
   
-  const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-22cd43cce9bc475680ad496e199706c4.r2.dev';
+    const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev/bhumivera';
   return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
 };
 
