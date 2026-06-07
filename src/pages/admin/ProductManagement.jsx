@@ -249,7 +249,8 @@ export default function ProductManagement() {
         });
 
         const imageKeys = await Promise.all(uploadPromises);
-        await productsApi.saveImageKeys(finalId, imageKeys);
+        // Direct absolute endpoint transmission for high system resilience
+        await api.post(`/products/${finalId}/images/save`, { imageKeys });
       }
 
       if (fitmentFile && finalId) {
