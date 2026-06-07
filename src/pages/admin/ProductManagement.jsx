@@ -49,6 +49,7 @@ export default function ProductManagement() {
   // --- Form States ---
   const [form, setForm] = useState(INITIAL_PRODUCT_STATE);
   const [images, setImages] = useState([]);
+  const [existingImages, setExistingImages] = useState([]);
   const [specs, setSpecs] = useState([{ key: '', value: '' }]);
   const [fitmentFile, setFitmentFile] = useState(null);
   const [serialForm, setSerialForm] = useState(INITIAL_SERIAL_STATE);
@@ -140,6 +141,7 @@ export default function ProductManagement() {
   const openProductModal = (product = null) => {
     if (product) {
       setCurrentProduct(product);
+      setExistingImages(product.images || []);
       setForm({
         name: product.name || '', slug: product.slug || '', description: product.description || '', price: product.price || '', discount_price: product.discount_price || '',
         quantity: product.quantity || product.stock || '', category_id: product.category_id || '',
@@ -160,6 +162,7 @@ export default function ProductManagement() {
       setSpecs(parsedSpecs.length ? parsedSpecs : [{ key: '', value: '' }]);
     } else {
       setCurrentProduct(null);
+      setExistingImages([]);
       setForm(INITIAL_PRODUCT_STATE);
       setSpecs([{ key: '', value: '' }]);
     }
@@ -173,6 +176,34 @@ export default function ProductManagement() {
     const newSpecs = [...specs];
     newSpecs[index][field] = val;
     setSpecs(newSpecs);
+  };
+
+  const handleImageChange = (e) => {
+    if (e.target.files) {
+      setImages(Array.from(e.target.files));
+    }
+  };
+
+  const handleRemoveNewImage = (index) => {
+    setImages(prev => prev.filter((_, i) => i !== index));
+  };
+
+  const handleDeleteExistingImage = async (imageId) => {
+    if (!window.confirm('Are you sure you want to delete this image permanently from this product?')) return;
+    try {
+      const pId = currentProduct._id || currentProduct.id;
+      await api.delete(`/products/${pId}/images`, { data: { imageId } });
+      setExistingImages(prev => prev.filter(img => img.id !== imageId));
+      showToast?.('Image removed successfully', 'success');
+      setProducts(prev => prev.map(p => {
+        if ((p.id || p._id) === pId) {
+          return { ...p, images: p.images.filter(img => img.id !== imageId) };
+        }
+        return p;
+      }));
+    } catch (err) {
+      showToast?.('Failed to delete image', 'error');
+    }
   };
 
   const handleSaveProduct = async (e) => {
@@ -460,7 +491,7 @@ export default function ProductManagement() {
                 <UploadCloud className="w-12 h-12 text-emerald-500 animate-bounce mb-6" />
                 <h3 className="text-sm font-mono text-emerald-400 uppercase tracking-widest">{uploadingFileName}</h3>
                 <div className="w-72 bg-slate-900 rounded-full h-2 mt-6 border border-slate-800 overflow-hidden">
-                  <div className="bg-emerald-500 h-full rounded-full transition-all duration-300 relative">
+                  <div className="bg-emerald-500 h-full rounded-full transition-all duration-300 relative" style={{ width: `${uploadProgress}%` }}>
                     <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
                   </div>
                 </div>
@@ -596,13 +627,12 @@ export default function ProductManagement() {
                 {activeTab === 'media' && (
                   <div className="grid grid-cols-2 gap-6">
                     <div className="p-6 border-2 border-dashed border-emerald-500/30 bg-emerald-500/5 rounded-2xl text-center relative hover:bg-emerald-500/10 transition-colors group cursor-pointer">
-                      <input type="file" multiple accept="image/*" onChange={e=>setImages(e.target.files)} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                      <input type="file" multiple accept="image/*" onChange={handleImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
                       <div className="w-16 h-16 bg-slate-950 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                         <ImageIcon size={28} className="text-emerald-500" />
                       </div>
                       <p className="text-sm font-black text-white uppercase tracking-widest mb-1">Product Images</p>
-                      <p className="text-[10px] font-mono text-slate-400">Click to upload image files</p>
-                      {images.length > 0 && <div className="mt-4 inline-block px-3 py-1 bg-emerald-500 text-slate-950 text-[10px] font-black uppercase rounded-full">{images.length} Selected</div>}
+                      <p className="text-[10px] font-mono text-slate-400">Click to add premium image files</p>
                     </div>
 
                     <div className="p-6 border-2 border-dashed border-blue-500/30 bg-blue-500/5 rounded-2xl text-center relative hover:bg-blue-500/10 transition-colors group cursor-pointer">
@@ -613,6 +643,54 @@ export default function ProductManagement() {
                       <p className="text-sm font-black text-white uppercase tracking-widest mb-1">External Data Doc</p>
                       <p className="text-[10px] font-mono text-slate-400">Upload Excel (.xlsx) file</p>
                       {fitmentFile && <div className="mt-4 px-3 py-1 bg-blue-500 text-slate-950 text-[10px] font-black uppercase rounded-full truncate mx-4">{fitmentFile.name}</div>}
+                    </div>
+
+                    {/* Integrated Media Gallery Grid Engine */}
+                    <div className="col-span-2 space-y-6">
+                      {/* Section A: Live S3 Connected Assets */}
+                      {existingImages.length > 0 && (
+                        <div className="space-y-2">
+                          <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
+                            <CheckCircle size={12} className="text-emerald-500" /> Active CDN Images ({existingImages.length})
+                          </h4>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4 bg-slate-900/30 p-4 border border-slate-800 rounded-2xl">
+                            {existingImages.map((img) => (
+                              <div key={img.id} className="relative group aspect-square rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-md">
+                                <img src={getImageUrl(img)} alt="Product Live" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                                <div className="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-sm">
+                                  <button type="button" onClick={() => handleDeleteExistingImage(img.id)} className="p-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl transition-all hover:scale-110 shadow-lg" title="Delete From Cloud Server">
+                                    <Trash2 size={16} />
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Section B: Staged Client Previews */}
+                      {images.length > 0 && (
+                        <div className="space-y-2">
+                          <h4 className="text-[10px] font-black uppercase tracking-widest text-emerald-400 flex items-center gap-2">
+                            <UploadCloud size={12} className="text-emerald-400 animate-pulse" /> Staged For Upload Queue ({images.length})
+                          </h4>
+                          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4 bg-emerald-500/5 p-4 border border-emerald-500/20 rounded-2xl">
+                            {images.map((file, idx) => (
+                              <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-emerald-500/30 bg-slate-950 shadow-md">
+                                <img src={URL.createObjectURL(file)} alt="Staged Preview" className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-sm">
+                                  <button type="button" onClick={() => handleRemoveNewImage(idx)} className="p-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl transition-all hover:scale-110 shadow-lg" title="Remove from Queue">
+                                    <XCircle size={16} />
+                                  </button>
+                                </div>
+                                <div className="absolute bottom-1 left-1 right-1 bg-slate-950/90 text-slate-400 text-[8px] font-mono px-2 py-1 rounded border border-slate-800 truncate text-center">
+                                  {file.name}
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
 
                     <div className="col-span-2 space-y-4 mt-2">
