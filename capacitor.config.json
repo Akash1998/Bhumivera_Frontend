@@ -1,0 +1,13 @@
+{
+  "appId": "com.bhumivera.app",
+  "appName": "Bhumivera",
+  "webDir": "dist",
+  "server": {
+    "url": "https://www.bhumivera.com",
+    "cleartext": true
+  },
+  "android": {
+    "allowMixedContent": true,
+    "captureInput": true
+  }
+}
