@@ -51,7 +51,7 @@ import MPGEBusinessLanding from './pages/MPGEBusinessLanding';
 
 // Warehouse Pages
 import Warehouse from './pages/Warehouse';
-import WarehouseManagement from './pages/WarehouseManagement';
+import WarehouseManagement from './WarehouseManagement';
 import WarehouseAdminLogin from './pages/WarehouseAdminLogin';
 
 // Admin Pages
