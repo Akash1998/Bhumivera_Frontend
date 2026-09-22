@@ -29,7 +29,7 @@ const lazyWithRetry = (componentImport) =>
     }
   });
 
-// Existing Pages using lazyWithRet
+// Existing Pages
 const Home = lazyWithRetry(() => import("./pages/Home.jsx"));
 const Warehouse = lazyWithRetry(() => import("./pages/Warehouse.jsx"));
 const WarehouseAdmin = lazyWithRetry(() => import("./pages/admin/WarehouseAdmin.jsx"));
