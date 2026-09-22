@@ -59,7 +59,7 @@ const DELIVERED_STATUSES = ['delivered', 'completed'];
 const faqItems = [
   { q: 'How do I track my order?', a: 'Go to the Orders tab above and click the "Track" button next to your order. You will see live status updates including processing, packed, shipped, out for delivery and delivered timelines.' },
   { q: 'What is your return policy?', a: 'We offer a 7-day return window on most products from the date of delivery. Simply navigate to Returns, choose the delivered order, select a reason and submit. An RMA number will be issued instantly.' },
-  { q: 'How does the wallet work?', a: 'Add funds anytime from the Wallet tab using the demo quick-add chips. Your balance is synced in real-time across your account and can be used during checkout. 10 years warranty redemptions may also credit your wallet.' },
+  { q: 'How does the wallet work?', a: 'Your wallet holds store credits and loyalty rewards automatically applied during returns processing. Balances from 10-year warranty redemptions are credited here and can be used during checkout. No demo add-funds capability is available at this time.' },
   { q: 'How do I register a product warranty?', a: 'Open the Warranty tab, enter the 16-digit serial number found on the product package or certificate. If valid, you can register it to your account to unlock the full 10-year Bhumivera warranty.' },
   { q: 'Is my account secure?', a: 'Yes. We use bcrypt password hashing, signed JWT tokens and optional TOTP-based 2FA. We recommend enabling 2FA from the Security tab and setting a security question for password-recovery fallback.' },
   { q: 'How do I join the affiliate program?', a: 'Your referral link is available on the Affiliate tab. Share it with friends. Every signup and purchase made through your link tracks to your account. See the Affiliate tab for live stats and share buttons.' },
@@ -183,7 +183,6 @@ export default function Profile() {
 
   const [warrantyInput, setWarrantyInput] = useState({ serial: '' });
   const [warrantyCheck, setWarrantyCheck] = useState(null);
-  const [walletAddAmt, setWalletAddAmt] = useState('');
   const [couponValidate, setCouponValidate] = useState({ code:'', result:null });
   const [affiliateCopied, setAffiliateCopied] = useState(false);
 
@@ -355,16 +354,6 @@ export default function Profile() {
   const handleRemoveWishlist = async (productId) => {
     try { await wishlistApi.remove(productId); setWishlist(w => w.filter(x => x.product_id !== productId && x.id !== productId)); toast.success('Removed from wishlist'); }
     catch (_) { toast.error('Could not remove'); }
-  };
-  const handleWalletAdd = async (amt) => {
-    const amount = Number(amt);
-    if (!amount || amount <= 0) { toast.error('Enter a valid amount'); return; }
-    try {
-      await walletApi.addFunds({ amount, payment_method: 'demo' });
-      toast.success(`₹${amount.toFixed(2)} added (demo mode)`);
-      setWalletAddAmt('');
-      await loadWallet();
-    } catch (err) { toast.error(err.response?.data?.message || 'Could not add funds'); }
   };
   const handleSubmitReturn = async (e) => {
     e.preventDefault();
@@ -657,8 +646,8 @@ export default function Profile() {
                       </div>
                       <div className="text-sm text-stone-300 mb-1.5">Available Balance</div>
                       <div className="text-3xl font-bold tracking-tight mb-4">₹{Number(wallet.balance||0).toFixed(2)}</div>
-                      <button onClick={() => setActiveTab('wallet')} className="w-full py-2.5 rounded-xl bg-[#D4AF37] text-[#0B2419] text-sm font-semibold hover:bg-[#e4c255] transition-colors flex items-center justify-center gap-2">
-                        Add Funds <ArrowUpRight className="w-4 h-4"/>
+                      <button onClick={() => setActiveTab('wallet')} className="w-full py-2.5 rounded-xl bg-[#0B2419] text-[#FDFBF7] text-sm font-semibold hover:bg-[#2C3E2D] transition-colors flex items-center justify-center gap-2">
+                        View Ledger <ChevronRight className="w-4 h-4"/>
                       </button>
                     </div>
 
@@ -838,23 +827,8 @@ export default function Profile() {
                         <PiggyBank className="w-7 h-7 text-[#D4AF37]"/>
                       </div>
                     </div>
-                    <div className="mt-8 grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-6">
-                      {[100,500,1000,5000].map(a => (
-                        <button key={a} onClick={() => handleWalletAdd(a)} className="py-3 rounded-xl bg-white/10 hover:bg-[#D4AF37]/20 border border-white/10 hover:border-[#D4AF37]/40 transition-all text-sm font-semibold">
-                          + ₹{a.toLocaleString()}
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <div className="flex-1 flex items-center rounded-xl bg-white/10 border border-white/10 px-4">
-                        <span className="text-[#D4AF37] font-semibold mr-2">₹</span>
-                        <input type="number" min="1" value={walletAddAmt} onChange={e => setWalletAddAmt(e.target.value)}
-                          placeholder="Enter custom amount"
-                          className="flex-1 bg-transparent py-3 text-sm placeholder:text-stone-400 focus:outline-none"/>
-                      </div>
-                      <button onClick={() => handleWalletAdd(walletAddAmt)} className="px-8 py-3 rounded-xl bg-[#D4AF37] text-[#0B2419] font-semibold hover:bg-[#e4c255] transition-colors inline-flex items-center justify-center gap-2 shadow-lg shadow-[#D4AF37]/20">
-                        <ArrowUpRight className="w-4 h-4"/> Add Funds (Demo)
-                      </button>
+                    <div className="mt-6 text-xs text-stone-400 border-t border-white/10 pt-5">
+                      Store credits and loyalty rewards are auto-credited for returns, warranty redemptions and promotional offers. Balances are applied automatically during checkout.
                     </div>
                   </div>
                 </div>
@@ -862,7 +836,7 @@ export default function Profile() {
                 <section className="rounded-2xl bg-white border border-stone-200 p-5 shadow-sm">
                   <h3 className="font-semibold text-[#0B2419] mb-4 text-lg">Transaction History</h3>
                   {wallet.transactions.length === 0 ? (
-                    <EmptyState icon={Clock} title="No transactions yet" subtitle="Your wallet activity will appear here. Top up now to see your first transaction."/>
+                    <EmptyState icon={Clock} title="No transactions yet" subtitle="Wallet activity will appear here as you make purchases, returns, and warranty redemptions."/>
                   ) : (
                     <div className="overflow-x-auto -mx-5 px-5">
                       <table className="w-full min-w-[600px] text-sm">

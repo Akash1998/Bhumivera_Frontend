@@ -55,7 +55,6 @@ const Returns = lazyWithRetry(() => import("./pages/Returns.jsx"));
 const Affiliate = lazyWithRetry(() => import("./pages/Affiliate.jsx"));
 const About = lazyWithRetry(() => import("./pages/About.jsx"));
 const Legal = lazyWithRetry(() => import("./pages/Legal.jsx"));
-const FitmentEngine = lazyWithRetry(() => import("./pages/FitmentEngine.jsx")); 
 
 // NEW: Bhumivera Specific Pages using lazyWithRetry
 const BhumiveraScience = lazyWithRetry(() => import("./pages/BhumiveraScience.jsx"));
@@ -153,7 +152,6 @@ function AppContent() {
             <Route path="/mpgebusiness" element={<MPGEBusinessLanding />} />
 
             {/* Tools & Tracking */}
-            <Route path="/fitment-engine" element={<FitmentEngine />} />
             <Route path="/Genuine_test" element={<Genuine_test />} />
             <Route path="/warranty" element={<Genuine_test />} />
             <Route path="/order-tracking" element={<OrderTracking />} />

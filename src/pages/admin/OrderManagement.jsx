@@ -47,8 +47,8 @@ export default function OrderManagement() {
   const fetchOrders = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/orders/all');
-      setOrders(res.data || []);
+      const res = await api.get('/orders/all', { params: { search: searchTerm || undefined, status: statusFilter || undefined } });
+      setOrders(res.data?.orders || res.data || []);
     } catch (err) {
       showToast?.('Failed to fetch orders.', 'error');
     } finally {

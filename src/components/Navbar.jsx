@@ -171,11 +171,11 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center space-x-4 sm:space-x-6 shrink-0">
-            <Link to="/fitment-engine" aria-label="Skin Assessment" className={`hidden xl:flex items-center space-x-3 px-5 py-2.5 rounded-full border transition-all shadow-sm ${isGarageActive ? 'bg-[#8b5a2b] border-[#8b5a2b] text-white' : 'bg-white border-[#e8dcc4] text-[#8b5a2b]'}`}>
+            <Link to="/science" aria-label="Skin Assessment" className={`hidden xl:flex items-center space-x-3 px-5 py-2.5 rounded-full border transition-all shadow-sm ${isGarageActive ? 'bg-[#8b5a2b] border-[#8b5a2b] text-white' : 'bg-white border-[#e8dcc4] text-[#8b5a2b]'}`}>
               <Sparkles size={18} className={isGarageActive ? 'animate-pulse' : ''} />
               <div className="text-left">
-                <div className="text-[8px] font-bold uppercase tracking-widest leading-none opacity-80">{isGarageActive ? 'Active Regimen' : 'Skin Assessment'}</div>
-                <div className="text-[11px] font-bold uppercase tracking-widest truncate max-w-[100px]">{isGarageActive ? garageData.model : 'Find Your Match'}</div>
+                <div className="text-[8px] font-bold uppercase tracking-widest leading-none opacity-80">{isGarageActive ? 'Active Regimen' : 'Botanical Science'}</div>
+                <div className="text-[11px] font-bold uppercase tracking-widest truncate max-w-[100px]">{isGarageActive ? garageData.model : 'Discover the Science'}</div>
               </div>
             </Link>
 

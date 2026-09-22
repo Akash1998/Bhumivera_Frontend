@@ -167,7 +167,7 @@ export default function Home() {
 
   const handleFitmentSearch = (e) => {
     e.preventDefault();
-    navigate('/fitment-engine');
+    navigate('/science');
   };
 
   const toggleFaq = (idx) => {

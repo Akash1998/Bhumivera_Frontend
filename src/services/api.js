@@ -4,14 +4,67 @@ let b = import.meta.env.VITE_BASE_URL || "https://service.Bhumivera.com";
 if (b.startsWith("http://") && !b.includes("localhost")) b = b.replace("http://", "https://");
 export const BASE_URL = b;
 
-const api = axios.create({ baseURL: `${BASE_URL}/api`, withCredentials: true });
+const api = axios.create({ baseURL: `${BASE_URL}/api`, withCredentials: false });
 
-api.interceptors.request.use(c => { const t = localStorage.getItem("token") || localStorage.getItem("warehouseToken") || localStorage.getItem("ms_token"); if (t) c.headers.Authorization = `Bearer ${t}`; return c; }, e => Promise.reject(e));
+api.interceptors.request.use(c => {
+  const url = c.url || "";
+  const isAdminCall = url.startsWith("/admin/") ||
+    url.startsWith("/orders/all") ||
+    url.startsWith("/orders/") && c.method !== "post" && c.method !== "patch" ||
+    url.startsWith("/analytics/") ||
+    url.startsWith("/inventory/") ||
+    url.startsWith("/notifications/admin/") ||
+    url.startsWith("/serials/admin/") ||
+    url.startsWith("/banners/admin/") ||
+    url.startsWith("/contact") && c.method === "get" ||
+    url.startsWith("/returns") && c.method === "get" && !url.includes("/my") ||
+    url.startsWith("/reviews") && c.method === "get" && !url.includes("/product/") && !url.includes("/my") ||
+    url.startsWith("/warranty") && c.method === "get" && !url.includes("/my") ||
+    url.startsWith("/products") && (c.method === "post" || c.method === "put" || c.method === "delete" || c.method === "patch") ||
+    url.startsWith("/categories") && (c.method === "post" || c.method === "put" || c.method === "delete") ||
+    url.startsWith("/subcategories") && (c.method === "post" || c.method === "put" || c.method === "delete") ||
+    url.startsWith("/coupons") && (c.method === "post" || c.method === "put" || c.method === "delete" || url.includes("/coupons") && c.method === "get" && !url.includes("/public/")) ||
+    url.startsWith("/settings") ||
+    url.startsWith("/shipping") && c.method !== "get" ||
+    url.startsWith("/tax") && c.method !== "get" ||
+    url.startsWith("/flash-sales") && (c.method === "post" || c.method === "put" || c.method === "delete");
+
+  const isWarehouseCall = url.startsWith("/warehouse/") && !url.startsWith("/warehouse/login");
+
+  let token = null;
+  if (isAdminCall) {
+    token = localStorage.getItem("adminToken") || localStorage.getItem("token");
+  } else if (isWarehouseCall) {
+    token = localStorage.getItem("warehouseToken") || localStorage.getItem("token");
+  } else {
+    token = localStorage.getItem("token") || localStorage.getItem("ms_token");
+  }
+  if (token) c.headers.Authorization = `Bearer ${token}`;
+  return c;
+}, e => Promise.reject(e));
 
 api.interceptors.response.use(r => r, e => {
-  if (e.response?.status === 401 && !e.config.url.includes('/auth/') && !window.location.pathname.startsWith('/warehouse')) {
-    ['token', 'ms_token', 'warehouseToken', 'user'].forEach(k => localStorage.removeItem(k));
-    window.dispatchEvent(new Event('auth-expired'));
+  const status = e.response?.status;
+  const url = e.config?.url || "";
+  if (status === 401) {
+    const isAuthUrl = url.includes("/auth/");
+    const isAdminUrl = url.startsWith("/admin/") ||
+      url.startsWith("/orders/all") ||
+      url.startsWith("/analytics/") ||
+      url.startsWith("/settings") ||
+      url.startsWith("/notifications/admin/");
+    const isWarehouseUrl = url.startsWith("/warehouse/");
+
+    if (isAdminUrl || (isAuthUrl && (url.includes("/admin/") || url.includes("/warehouse/")))) {
+      localStorage.removeItem("adminToken");
+    } else if (isWarehouseUrl) {
+      localStorage.removeItem("warehouseToken");
+    } else if (isAuthUrl || url.startsWith("/users/") || url.startsWith("/orders/") || url.startsWith("/cart/") || url.startsWith("/addresses/") || url.startsWith("/wallet/") || url.startsWith("/wishlist/") || url.startsWith("/reviews/my") || url.startsWith("/returns/my") || url.startsWith("/warranty/my") || url.startsWith("/notifications") && !url.includes("/admin/")) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("ms_token");
+      localStorage.removeItem("user");
+      window.dispatchEvent(new Event('auth-expired'));
+    }
   }
   return Promise.reject(e);
 });
@@ -24,23 +77,22 @@ export const products = { getAllActive: p => api.get("/products/active", { param
 export const categories = { getAll: () => api.get("/categories"), getById: id => api.get(`/categories/${id}`), create: d => api.post("/categories", d), update: (id, d) => api.put(`/categories/${id}`, d), delete: id => api.delete(`/categories/${id}`) };
 export const subcategories = { getAll: () => api.get("/subcategories"), getById: id => api.get(`/subcategories/${id}`), create: d => api.post("/subcategories", d), update: (id, d) => api.put(`/subcategories/${id}`, d), delete: id => api.delete(`/subcategories/${id}`) };
 export const cart = { get: () => api.get("/cart"), add: d => api.post("/cart", d), updateQuantity: (id, q) => api.put(`/cart/${id}`, { quantity: q }), remove: id => api.delete(`/cart/${id}`), clear: () => api.delete("/cart") };
-export const orders = { getMyOrders: () => api.get("/orders/my"), getById: id => api.get(`/orders/${id}`), create: d => api.post("/orders", d), getAllAdmin: () => api.get("/orders"), updateStatus: (id, s) => api.patch(`/orders/${id}/status`, { status: s }), delete: id => api.delete(`/orders/${id}`) , fastCheckout: d => api.post('/orders', d), cancel: id => api.post(`/orders/${id}/cancel`, {}), trackOrder: id => api.get(`/orders/${id}`)};
+export const orders = { getMyOrders: () => api.get("/orders/my"), getById: id => api.get(`/orders/${id}`), create: d => api.post("/orders", d), getAllAdmin: () => api.get("/orders/all"), updateStatus: (id, s) => api.put(`/orders/${id}/status`, { status: s }), delete: id => api.delete(`/orders/${id}`), fastCheckout: d => api.post('/orders', d), cancel: id => api.post(`/orders/${id}/cancel`, {}), trackOrder: id => api.get(`/orders/${id}`) };
 export const addresses = { getAll: () => api.get("/addresses"), create: d => api.post("/addresses", d), update: (id, d) => api.put(`/addresses/${id}`, d), delete: id => api.delete(`/addresses/${id}`), setDefault: id => api.patch(`/addresses/${id}/default`) };
 export const wishlist = { get: () => api.get("/wishlist"), add: p => api.post("/wishlist", { productId: p }), remove: p => api.delete(`/wishlist/${p}`) };
 export const coupons = { getPublicActive: () => api.get("/coupons/public/active"), validate: c => api.post("/coupons/validate", { code: c }), getAllAdmin: () => api.get("/coupons"), create: d => api.post("/coupons", d), update: (id, d) => api.put(`/coupons/${id}`, d), delete: id => api.delete(`/coupons/${id}`) };
 export const reviews = { getByProduct: p => api.get(`/reviews/product/${p}`), getMyReviews: () => api.get('/reviews/my'), update: (id, d) => api.put(`/reviews/${id}`, d), deleteOwner: id => api.delete(`/reviews/${id}`), getAllAdmin: () => api.get("/reviews"), submit: d => api.post("/reviews", d), approve: id => api.patch(`/reviews/${id}/approve`), delete: id => api.delete(`/reviews/${id}`) };
 export const notifications = { get: () => api.get("/notifications"), markRead: id => api.patch(`/notifications/${id}/read`), markAllRead: () => api.patch("/notifications/read-all"), send: d => api.post("/notifications", d) };
 export const analytics = { getDashboard: () => api.get("/analytics/dashboard"), getSales: () => api.get("/analytics/sales"), getProducts: () => api.get("/analytics/products"), getKpis: () => api.get("/analytics/kpis"), getRevenue: () => api.get("/analytics/revenue") };
-export const wallet = { getBalance: () => api.get('/wallet/balance'), getHistory: () => api.get('/wallet/history'), addFunds: d => api.post('/wallet/add', d), pay: d => api.post('/wallet/pay', d) };
+export const wallet = { getBalance: () => api.get('/wallet/balance'), getHistory: () => api.get('/wallet/history'), pay: d => api.post('/wallet/pay', d) };
 export const settings = { get: () => api.get("/settings"), getPublic: () => api.get("/settings/public"), update: d => api.put("/settings", d) };
 export const shipping = { getAll: () => api.get("/shipping"), create: d => api.post("/shipping", d), update: (id, d) => api.put(`/shipping/${id}`, d), delete: id => api.delete(`/shipping/${id}`) };
 export const returns = { getMyReturns: () => api.get("/returns/my"), submit: d => api.post("/returns", d), getAllAdmin: () => api.get("/returns"), updateStatus: (id, s) => api.patch(`/returns/${id}/status`, { status: s }) };
 export const inventory = { get: () => api.get("/inventory"), updateStock: (p, q) => api.patch(`/inventory/${p}`, { quantity: q }) };
-export const banners = { getActive: () => api.get("/banners"), getAllAdmin: () => api.get("/banners/admin/all"), create: d => api.post("/banners", d), update: (id, d) => api.put(`/banners/${id}`, d), delete: id => api.delete(`/banners/${id}`) };
 export const warranty = { register: d => api.post("/warranty/register", d), getMyWarranties: () => api.get("/warranty/my"), getAllAdmin: () => api.get("/warranty"), updateStatus: (id, s) => api.patch(`/warranty/${id}/status`, { status: s }) };
 export const serials = { validate: s => api.post("/serials/validate", { serial: s }), getAllAdmin: () => api.get("/serials/admin/all"), getByProduct: p => api.get(`/serials/${p}`), getStats: p => api.get(`/serials/${p}/stats`), generate: d => api.post("/serials/generate", d), addManual: (p, d) => api.post(`/serials/${p}/add`, d), update: (p, s, d) => api.patch(`/serials/${p}/${s}`, d), delete: (p, s) => api.delete(`/serials/${p}/${s}`) };
 export const contact = { submit: d => api.post("/contact", d), getAllAdmin: () => api.get("/contact"), delete: id => api.delete(`/contact/${id}`) };
-export const adminManagement = { getAllUsers: () => api.get("/admin/users"), getUserDetails: id => api.get(`/admin/users/${id}`), updateUserStatus: (id, s) => api.patch(`/admin/users/${id}/status`, { status: s }), getAllOrders: () => api.get("/admin/orders"), updateOrderStatus: (id, d) => api.put(`/admin/orders/${id}/status`, d) };
+export const adminManagement = { getAllUsers: () => api.get("/admin/users"), getUserDetails: id => api.get(`/admin/users/${id}`), updateUserStatus: (id, s) => api.patch(`/admin/users/${id}/status`, { status: s }), getAllOrders: () => api.get("/orders/all"), updateOrderStatus: (id, d) => api.put(`/orders/${id}/status`, d) };
 export const affiliate = { getAllPartners: () => api.get("/affiliate/partners"), getAllWithdrawals: () => api.get("/affiliate/withdrawals"), getConfig: () => api.get("/affiliate/config"), updatePartnerStatus: (id, s) => api.patch(`/affiliate/partners/${id}/status`, { status: s }), approveWithdrawal: id => api.patch(`/affiliate/withdrawals/${id}/approve`), updateConfig: d => api.put("/affiliate/config", d) };
 export const flashSales = { getAll: () => api.get("/flash-sales"), getAllAdmin: () => api.get("/flash-sales"), getActive: () => api.get("/flash-sales/active"), create: d => api.post("/flash-sales", d), update: (id, d) => api.put(`/flash-sales/${id}`, d), delete: id => api.delete(`/flash-sales/${id}`) };
 export const support = { getAllAdmin: () => api.get("/contact"), updateStatus: (id, s) => api.patch(`/contact/${id}/status`, { status: s }), delete: id => api.delete(`/contact/${id}`) };
@@ -58,5 +110,4 @@ export const submitContact = d => contact.submit(d);
 export const fetchAddressesAPI = async () => (await addresses.getAll()).data;
 export const saveAddressAPI = async d => { const r = await addresses.create(d); return r.data.addresses || r.data; };
 export const placeOrderAPI = async d => (await orders.create(d)).data;
-export const fitment = { check: (p, m, mo, y) => api.get('/fitments/check', { params: { productId: p, make: m, model: mo, year: y } }), getByProduct: p => api.get(`/fitments/product/${p}`), getMakes: () => api.get('/fitments/makes'), getModels: m => api.get('/fitments/models', { params: { make: m } }), uploadExcel: (p, f) => api.post('/fitments/upload-excel', f, { headers: { 'Content-Type': 'multipart/form-data' }, params: { productId: p } }), addManual: d => api.post('/fitments/manual', d), delete: id => api.delete(`/fitments/${id}`), clearAll: p => api.delete(`/fitments/product/${p}/all`) };
 export default api;

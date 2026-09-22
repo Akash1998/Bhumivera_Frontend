@@ -12,22 +12,18 @@ const AnalyticsManagement = lazy(() => import('./admin/AnalyticsManagement'));
 const InventoryManagement = lazy(() => import('./admin/InventoryManagement'));
 const CouponManagement = lazy(() => import('./admin/CouponManagement'));
 const ReviewManagement = lazy(() => import('./admin/ReviewManagement'));
-const BannerManagement = lazy(() => import('./admin/BannerManagement'));
 const ContactManagement = lazy(() => import('./admin/ContactManagement'));
 const ReturnManagement = lazy(() => import('./admin/ReturnManagement'));
 const SupportManagement = lazy(() => import('./admin/SupportManagement'));
 const FlashSalesManagement = lazy(() => import('./admin/FlashSalesManagement'));
 const LoyaltyManagement = lazy(() => import('./admin/LoyaltyManagement'));
 const AffiliateManagement = lazy(() => import('./admin/AffiliateManagement'));
-const WalletManagement = lazy(() => import('./admin/WalletManagement'));
 const NotificationManagement = lazy(() => import('./admin/NotificationManagement'));
 const TaxManagement = lazy(() => import('./admin/TaxManagement'));
 const SystemLogs = lazy(() => import('./admin/SystemLogs'));
-const CMSManagement = lazy(() => import('./admin/CMSManagement'));
-const EmailTemplates = lazy(() => import('./admin/EmailTemplates'));
-const FitmentMatrix = lazy(() => import('./admin/FitmentMatrix'));
 const WarehouseManagement = lazy(() => import('./admin/WarehouseManagement'));
-const EWarrantyManagement = lazy(() => import('./admin/EWarrantyManagement')); 
+const EWarrantyManagement = lazy(() => import('./admin/EWarrantyManagement'));
+const ShippingManagement = lazy(() => import('./admin/ShippingManagement')); 
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -74,13 +70,10 @@ const TAB_COMPONENTS = {
   affiliate: AffiliateManagement, 
   Genuine_test: EWarrantyManagement, 
   analytics: AnalyticsManagement,
-  banners: BannerManagement, contact: ContactManagement,
-  wallet: WalletManagement, notifications: NotificationManagement,
-  tax: TaxManagement, logs: SystemLogs, cms: CMSManagement, email: EmailTemplates,
-  fitment: FitmentMatrix, warehouse: WarehouseManagement,
-  seo: () => <ComingSoon name="Search Engine Setup" />,
-  ads: () => <ComingSoon name="Ad Network" />, reports: () => <ComingSoon name="Financial Ledger" />,
-  performance: () => <ComingSoon name="Telemetry" />, terminal: () => <ComingSoon name="Root Terminal" />,
+  contact: ContactManagement,
+  notifications: NotificationManagement,
+  tax: TaxManagement, shipping: ShippingManagement, logs: SystemLogs,
+  warehouse: WarehouseManagement,
 };
 
 // Safe Generic Icon to bypass Lucide-React `.reduce()` compiler crashes
@@ -111,14 +104,14 @@ export default function AdminDashboard() {
     },
     {
       title: 'Sales & Revenue', items: [
-        { id: 'orders', label: 'Orders' }, { id: 'wallet', label: 'Payments' },
-        { id: 'tax', label: 'Taxes' }, { id: 'reports', label: 'Reports' }
+        { id: 'orders', label: 'Orders' }, { id: 'tax', label: 'Taxes' },
+        { id: 'shipping', label: 'Shipping' }
       ]
     },
     {
       title: 'Catalog', items: [
         { id: 'products', label: 'Products' }, { id: 'categories', label: 'Categories' },
-        { id: 'fitment', label: 'Fitment Matrix' }, { id: 'inventory', label: 'Inventory' },
+        { id: 'inventory', label: 'Inventory' },
         { id: 'warehouse', label: 'Warehouse' }
       ]
     },
@@ -127,12 +120,6 @@ export default function AdminDashboard() {
         { id: 'loyalty', label: 'Loyalty' }, { id: 'affiliate', label: 'Affiliates' },
         { id: 'coupons', label: 'Coupons' }, { id: 'flash-sales', label: 'Flash Sales' },
         { id: 'reviews', label: 'Reviews' }
-      ]
-    },
-    {
-      title: 'Storefront', items: [
-        { id: 'cms', label: 'Pages' }, { id: 'banners', label: 'Banners' },
-        { id: 'seo', label: 'SEO Settings' }, { id: 'email', label: 'Email Templates' }
       ]
     },
     {
