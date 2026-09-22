@@ -24,11 +24,7 @@ import {
   QrCode, Smartphone, HelpCircle, MessageSquare, Phone, Mail,
   Filter, Calendar, Hash, Truck, PackageCheck, RotateCcw,
   ChevronDown, ChevronUp, Gift, PiggyBank, ShoppingBag,
-<<<<<<< HEAD
   Leaf, Zap, Users, Coins, ExternalLink, Key,
-=======
-  Leaf, Zap, Users, Coins, ExternalLink,
->>>>>>> 69d37208283c9eb424f32d3c668f8befe72a9867
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
