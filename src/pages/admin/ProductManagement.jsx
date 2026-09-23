@@ -51,7 +51,6 @@ export default function ProductManagement() {
   const [images, setImages] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
   const [specs, setSpecs] = useState([{ key: '', value: '' }]);
-  const [fitmentFile, setFitmentFile] = useState(null);
   const [serialForm, setSerialForm] = useState(INITIAL_SERIAL_STATE);
 
   // --- Lifecycle & Data Fetching ---
@@ -167,7 +166,6 @@ export default function ProductManagement() {
       setSpecs([{ key: '', value: '' }]);
     }
     setImages([]); 
-    setFitmentFile(null); 
     setActiveTab('basic'); 
     setProductModalOpen(true);
   };
@@ -251,16 +249,6 @@ export default function ProductManagement() {
         const imageKeys = await Promise.all(uploadPromises);
         // Direct absolute endpoint transmission for high system resilience
         await api.post(`/products/${finalId}/images/save`, { imageKeys });
-      }
-
-      if (fitmentFile && finalId) {
-        setUploadingFileName('Uploading Fitment Data...');
-        const formData = new FormData();
-        formData.append('file', fitmentFile);
-        await api.post(`/fitments/upload/${finalId}`, formData, {
-          headers: { 'Content-Type': 'multipart/form-data' }
-        });
-        showToast?.('Fitment Data uploaded', 'success');
       }
 
       showToast?.('Product Saved Successfully', 'success');
