@@ -91,7 +91,7 @@ const Login = () => {
     e.preventDefault();
     setLoading(true);
     try {
-      const payload = { email, code: twoFactorCode };
+      const payload = { email, otp: twoFactorCode, twoFactorCode, code: twoFactorCode };
       if (mode === 'PASSWORD') payload.twoFactorCode = twoFactorCode;
       const { data } = await api.post('/auth/2fa/verify', payload);
       if (data.token) {
@@ -100,14 +100,7 @@ const Login = () => {
         toast.error('Authentication failed');
       }
     } catch (err) {
-      try {
-        const { data } = await api.post('/auth/verify-2fa', { email, code: twoFactorCode });
-        if (data.token) {
-          _persistAndRedirect(data, 'Authenticated successfully');
-        }
-      } catch (err2) {
-        toast.error('Invalid 2FA code');
-      }
+      toast.error(err.response?.data?.message || 'Invalid 2FA code');
     } finally {
       setLoading(false);
     }

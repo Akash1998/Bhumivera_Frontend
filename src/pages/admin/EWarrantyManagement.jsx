@@ -32,11 +32,11 @@ export default function Genuine_testManagement() {
     try {
       const [resW, resS, resP] = await Promise.all([
         warrantyApi.getAllAdmin(),
-        api.get("/warranty/serials"), // Critical Fix: Pointing to the SQL JOIN route to recover legacy serials
+        api.get("/serials/admin/all"),
         productsApi.getAllAdmin()
       ]);
       setWarranties(resW.data?.data || resW.data || []);
-      setSerialsVault(resS.data || []);
+      setSerialsVault(resS.data?.serials || resS.data || []);
       setProductList(resP.data?.products || resP.data?.data || resP.data || []);
     } catch (err) {
       console.error(err);
@@ -64,11 +64,11 @@ export default function Genuine_testManagement() {
   const handleDeleteSerial = async (serialId) => {
     if (!window.confirm("CRITICAL WARNING: Purging this serial will permanently invalidate it. Proceed?")) return;
     try {
-      await api.delete(`/warranty/serials/${serialId}`);
+      await api.delete(`/serials/admin/${serialId}`);
       showToast?.("Serial hash purged from registry", "success");
       setSerialsVault(serialsVault.filter(s => s.id !== serialId));
     } catch (err) {
-      showToast?.("Purge protocol failed", "error");
+      showToast?.(err.response?.data?.message || "Purge protocol failed", "error");
     }
   };
 

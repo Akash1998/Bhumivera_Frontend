@@ -17,14 +17,15 @@ api.interceptors.request.use(c => {
     url.startsWith("/serials/admin/") ||
     url.startsWith("/contact") && c.method === "get" ||
     url.startsWith("/returns") && c.method === "get" && !url.includes("/my") ||
-    url.startsWith("/reviews") && c.method === "get" && !url.includes("/product/") && !url.includes("/my") ||
     url.startsWith("/warranty") && c.method === "get" && !url.includes("/my") ||
     url.startsWith("/products") && (c.method === "post" || c.method === "put" || c.method === "delete" || c.method === "patch") ||
+    url.startsWith("/products") && c.method === "get" && !url.startsWith("/products/active") && !url.startsWith("/products/slug/") && !url.includes("/qa") && !/\/products\/\d+/.test(url) && !/\/products\/[a-f0-9]{24}/.test(url) ||
     url.startsWith("/categories") && (c.method === "post" || c.method === "put" || c.method === "delete") ||
     url.startsWith("/subcategories") && (c.method === "post" || c.method === "put" || c.method === "delete") ||
     url.startsWith("/coupons") && (c.method === "post" || c.method === "put" || c.method === "delete" || url.includes("/coupons") && c.method === "get" && !url.includes("/public/")) ||
     url.startsWith("/settings") ||
     url.startsWith("/shipping") && c.method !== "get" ||
+    url.startsWith("/shipping/zones") && c.method === "get" && !url.includes("/active") ||
     url.startsWith("/tax") && c.method !== "get" ||
     url.startsWith("/flash-sales") && (c.method === "post" || c.method === "put" || c.method === "delete");
 
@@ -32,7 +33,7 @@ api.interceptors.request.use(c => {
 
   let token = null;
   if (isAdminCall) {
-    token = localStorage.getItem("adminToken") || localStorage.getItem("token");
+    token = localStorage.getItem("adminToken");
   } else if (isWarehouseCall) {
     token = localStorage.getItem("warehouseToken") || localStorage.getItem("token");
   } else {
@@ -42,28 +43,86 @@ api.interceptors.request.use(c => {
   return c;
 }, e => Promise.reject(e));
 
-api.interceptors.response.use(r => r, e => {
+let _refreshPromise = null;
+
+const _resolveTokenKind = (url = '') => {
+  const isAdminUrl = url.startsWith("/admin/") ||
+    url.startsWith("/orders/all") ||
+    url.startsWith("/analytics/") ||
+    url.startsWith("/settings") ||
+    url.startsWith("/notifications/admin/");
+  const isWarehouseUrl = url.startsWith("/warehouse/");
+  const isAuthUrl = url.includes("/auth/");
+  if (isAdminUrl || (isAuthUrl && (url.includes("/admin/") || url.includes("/warehouse/")))) return 'admin';
+  if (isWarehouseUrl) return 'warehouse';
+  return 'user';
+};
+
+const _attemptRefresh = async () => {
+  if (_refreshPromise) return _refreshPromise;
+  _refreshPromise = (async () => {
+    try {
+      const currentToken = localStorage.getItem("token") || localStorage.getItem("ms_token");
+      if (!currentToken) throw new Error("No token to refresh");
+      const { data } = await axios.post(`${BASE_URL}/api/auth/refresh`, {}, {
+        headers: { Authorization: `Bearer ${currentToken}` }
+      });
+      if (data?.token) {
+        localStorage.setItem("token", data.token);
+        if (localStorage.getItem("ms_token")) localStorage.setItem("ms_token", data.token);
+      }
+      return data?.token || null;
+    } finally {
+      _refreshPromise = null;
+    }
+  })();
+  return _refreshPromise;
+};
+
+api.interceptors.response.use(r => r, async (e) => {
   const status = e.response?.status;
   const url = e.config?.url || "";
   if (status === 401) {
-    const isAuthUrl = url.includes("/auth/");
-    const isAdminUrl = url.startsWith("/admin/") ||
-      url.startsWith("/orders/all") ||
-      url.startsWith("/analytics/") ||
-      url.startsWith("/settings") ||
-      url.startsWith("/notifications/admin/");
-    const isWarehouseUrl = url.startsWith("/warehouse/");
+    const kind = _resolveTokenKind(url);
 
-    if (isAdminUrl || (isAuthUrl && (url.includes("/admin/") || url.includes("/warehouse/")))) {
+    if (kind === 'admin') {
       localStorage.removeItem("adminToken");
-    } else if (isWarehouseUrl) {
-      localStorage.removeItem("warehouseToken");
-    } else if (isAuthUrl || url.startsWith("/users/") || url.startsWith("/orders/") || url.startsWith("/cart/") || url.startsWith("/addresses/") || url.startsWith("/wallet/") || url.startsWith("/wishlist/") || url.startsWith("/reviews/my") || url.startsWith("/returns/my") || url.startsWith("/warranty/my") || url.startsWith("/notifications") && !url.includes("/admin/")) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("ms_token");
-      localStorage.removeItem("user");
-      window.dispatchEvent(new Event('auth-expired'));
+      return Promise.reject(e);
     }
+    if (kind === 'warehouse') {
+      localStorage.removeItem("warehouseToken");
+      return Promise.reject(e);
+    }
+
+    const refreshable = !e.config?._retry &&
+      (url.includes("/users/") ||
+       url.startsWith("/orders/") ||
+       url.startsWith("/cart/") ||
+       url.startsWith("/addresses/") ||
+       url.startsWith("/wallet/") ||
+       url.startsWith("/wishlist/") ||
+       url.startsWith("/reviews/my") ||
+       url.startsWith("/returns/my") ||
+       url.startsWith("/warranty/my") ||
+       (url.startsWith("/notifications") && !url.includes("/admin/")));
+
+    if (refreshable) {
+      try {
+        const newToken = await _attemptRefresh();
+        if (newToken) {
+          e.config._retry = true;
+          e.config.headers.Authorization = `Bearer ${newToken}`;
+          return api.request(e.config);
+        }
+      } catch (_refreshErr) {
+        // fall through to cleanup below
+      }
+    }
+
+    localStorage.removeItem("token");
+    localStorage.removeItem("ms_token");
+    localStorage.removeItem("user");
+    window.dispatchEvent(new Event('auth-expired'));
   }
   return Promise.reject(e);
 });

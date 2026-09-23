@@ -10,7 +10,7 @@ export default function SEO({ product }) {
   // Safely extract the first image or default to logo
   const imageUrl = product.images?.[0] 
     ? (product.images[0].startsWith('http') ? product.images[0] : `${import.meta.env.VITE_IMAGE_BASE_URL}/${product.images[0]}`)
-    : `${siteUrl}/assets/images/logo.webp`;
+    : `${siteUrl}/logo.webp`;
 
   // Compile the exact JSON-LD Schema Google requires for Product Rich Results
   const jsonLdSchema = {
