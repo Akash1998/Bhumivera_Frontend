@@ -82,15 +82,22 @@ const _attemptRefresh = async () => {
 api.interceptors.response.use(r => r, async (e) => {
   const status = e.response?.status;
   const url = e.config?.url || "";
-  if (status === 401) {
+  if (status === 403) {
+    window.dispatchEvent(new CustomEvent('auth-forbidden', {
+      detail: { message: 'Insufficient permissions for this action' }
+    }));
+  }
+  if (status === 401 && url.includes("/auth/")) {
     const kind = _resolveTokenKind(url);
 
     if (kind === 'admin') {
       localStorage.removeItem("adminToken");
+      window.dispatchEvent(new Event('admin-auth-expired'));
       return Promise.reject(e);
     }
     if (kind === 'warehouse') {
       localStorage.removeItem("warehouseToken");
+      window.dispatchEvent(new Event('warehouse-auth-expired'));
       return Promise.reject(e);
     }
 
@@ -114,7 +121,7 @@ api.interceptors.response.use(r => r, async (e) => {
           e.config.headers.Authorization = `Bearer ${newToken}`;
           return api.request(e.config);
         }
-      } catch (_refreshErr) {
+      } catch {
         // fall through to cleanup below
       }
     }
