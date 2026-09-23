@@ -593,7 +593,7 @@ export default function Profile() {
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   <StatCard icon={Package} label="Total Orders" value={orders.length} accent="earth" onClick={() => setActiveTab('orders')}/>
                   <StatCard icon={Heart} label="Wishlist Items" value={wishlist.length} accent="sage" onClick={() => setActiveTab('wishlist')}/>
-                  <StatCard icon={Wallet} label="Wallet Balance" value={`₹${Number(wallet.balance||0).toFixed(2)}`} accent="gold" onClick={() => setActiveTab('wallet')} hint="Add funds anytime"/>
+                  <StatCard icon={Wallet} label="Wallet Balance" value={`₹${Number(wallet.balance||0).toFixed(2)}`} accent="gold" onClick={() => setActiveTab('wallet')}/>
                   <StatCard icon={Bell} label="Unread Notifications" value={unreadCount} accent="sage" onClick={() => setActiveTab('notifications')}/>
                 </div>
 

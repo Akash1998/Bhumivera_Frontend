@@ -68,7 +68,7 @@ const TAB_COMPONENTS = {
   'flash-sales': FlashSalesManagement, coupons: CouponManagement, users: UserManagement,
   support: SupportManagement, reviews: ReviewManagement, loyalty: LoyaltyManagement,
   affiliate: AffiliateManagement, 
-  Genuine_test: EWarrantyManagement, 
+  'e-warranty': EWarrantyManagement, 
   analytics: AnalyticsManagement,
   contact: ContactManagement,
   notifications: NotificationManagement,
@@ -125,7 +125,7 @@ export default function AdminDashboard() {
     {
       title: 'Customer Service', items: [
         { id: 'support', label: 'Support Tickets' }, { id: 'returns', label: 'Returns' },
-        { id: 'contact', label: 'Messages' }, { id: 'Genuine_test', label: 'E-Warranty' }
+        { id: 'contact', label: 'Messages' }, { id: 'e-warranty', label: 'E-Warranty' }
       ]
     }
   ];

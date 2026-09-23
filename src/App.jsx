@@ -37,7 +37,7 @@ const WarehouseManagement = lazyWithRetry(() => import("./pages/admin/WarehouseM
 const WarehouseAdminLogin = lazyWithRetry(() => import("./pages/WarehouseAdminLogin.jsx"));
 const Shop = lazyWithRetry(() => import("./pages/Shop.jsx"));
 const ProductDetail = lazyWithRetry(() => import("./pages/ProductDetail.jsx"));
-const Genuine_test = lazyWithRetry(() => import("./pages/EWarranty.jsx")); 
+const EWarranty = lazyWithRetry(() => import("./pages/EWarranty.jsx"));
 const Contact = lazyWithRetry(() => import("./pages/Contact.jsx"));
 const Cart = lazyWithRetry(() => import("./pages/Cart.jsx"));
 const Checkout = lazyWithRetry(() => import("./pages/Checkout.jsx"));
@@ -152,8 +152,7 @@ function AppContent() {
             <Route path="/mpgebusiness" element={<MPGEBusinessLanding />} />
 
             {/* Tools & Tracking */}
-            <Route path="/Genuine_test" element={<Genuine_test />} />
-            <Route path="/warranty" element={<Genuine_test />} />
+            <Route path="/warranty" element={<EWarranty />} />
             <Route path="/order-tracking" element={<OrderTracking />} />
             <Route path="/compare" element={<Compare />} />
             
