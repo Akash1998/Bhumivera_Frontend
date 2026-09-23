@@ -49,17 +49,20 @@ export default function Breadcrumbs({ productName }) {
       ]
     };
 
+    const schemaText = JSON.stringify(breadcrumbSchema || null);
+    if (!schemaText || schemaText.length < 10) return;
+
     let scriptTag = document.querySelector('script[data-schema="breadcrumb"]');
     if (!scriptTag) {
       scriptTag = document.createElement('script');
       scriptTag.type = 'application/ld+json';
       scriptTag.setAttribute('data-schema', 'breadcrumb');
-      document.head.appendChild(scriptTag);
     }
-    scriptTag.textContent = JSON.stringify(breadcrumbSchema);
+    scriptTag.textContent = schemaText;
+    if (!scriptTag.parentNode) document.head.appendChild(scriptTag);
 
     return () => {
-      if (scriptTag) scriptTag.remove();
+      if (scriptTag && scriptTag.parentNode) scriptTag.parentNode.removeChild(scriptTag);
     };
   }, [pathname, productName]);
 
