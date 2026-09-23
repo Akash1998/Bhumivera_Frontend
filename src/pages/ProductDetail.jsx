@@ -8,8 +8,7 @@ import {
 } from 'lucide-react';
 import { 
   products as productsApi, 
-  reviews as reviewsApi, 
-  fitment as fitmentApi
+  reviews as reviewsApi
 } from '../services/api';
 import { useCart } from '../context/CartContext';
 
