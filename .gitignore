@@ -7,9 +7,16 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
-access_modules
-dist
-dist-ssr
+# Dependencies
+node_modules/
+
+# Build outputs
+dist/
+dist-ssr/
+
+# Environment variables
+.env
+.env.local
 *.local
 
 # Editor directories and files
@@ -22,10 +29,3 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-access_modules/
-dist/
-.env
-.env.local
-.vscode/
-.DS_Store
-*.log
