@@ -31,7 +31,7 @@ export default function About() {
       if (element) {
         setTimeout(() => {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 300); // small delay to ensure DOM and animations have painted
+        }, 300); // small delay to ensure DOM
       }
     }
   }, [location]);
