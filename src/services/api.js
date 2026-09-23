@@ -15,7 +15,6 @@ api.interceptors.request.use(c => {
     url.startsWith("/inventory/") ||
     url.startsWith("/notifications/admin/") ||
     url.startsWith("/serials/admin/") ||
-    url.startsWith("/banners/admin/") ||
     url.startsWith("/contact") && c.method === "get" ||
     url.startsWith("/returns") && c.method === "get" && !url.includes("/my") ||
     url.startsWith("/reviews") && c.method === "get" && !url.includes("/product/") && !url.includes("/my") ||

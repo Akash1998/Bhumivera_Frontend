@@ -615,23 +615,13 @@ export default function ProductManagement() {
 
                 {activeTab === 'media' && (
                   <div className="grid grid-cols-2 gap-6">
-                    <div className="p-6 border-2 border-dashed border-emerald-500/30 bg-emerald-500/5 rounded-2xl text-center relative hover:bg-emerald-500/10 transition-colors group cursor-pointer">
+                    <div className="col-span-2 p-6 border-2 border-dashed border-emerald-500/30 bg-emerald-500/5 rounded-2xl text-center relative hover:bg-emerald-500/10 transition-colors group cursor-pointer">
                       <input type="file" multiple accept="image/*" onChange={handleImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
                       <div className="w-16 h-16 bg-slate-950 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                         <ImageIcon size={28} className="text-emerald-500" />
                       </div>
                       <p className="text-sm font-black text-white uppercase tracking-widest mb-1">Product Images</p>
                       <p className="text-[10px] font-mono text-slate-400">Click to add premium image files</p>
-                    </div>
-
-                    <div className="p-6 border-2 border-dashed border-blue-500/30 bg-blue-500/5 rounded-2xl text-center relative hover:bg-blue-500/10 transition-colors group cursor-pointer">
-                      <input type="file" accept=".xlsx, .xls" onChange={e=>setFitmentFile(e.target.files[0])} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
-                      <div className="w-16 h-16 bg-slate-950 border border-blue-500/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
-                        <Database size={28} className="text-blue-500" />
-                      </div>
-                      <p className="text-sm font-black text-white uppercase tracking-widest mb-1">External Data Doc</p>
-                      <p className="text-[10px] font-mono text-slate-400">Upload Excel (.xlsx) file</p>
-                      {fitmentFile && <div className="mt-4 px-3 py-1 bg-blue-500 text-slate-950 text-[10px] font-black uppercase rounded-full truncate mx-4">{fitmentFile.name}</div>}
                     </div>
 
                     {/* Integrated Media Gallery Grid Engine */}
