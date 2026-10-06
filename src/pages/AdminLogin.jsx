@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AdminLogin.css';
@@ -13,9 +13,30 @@ const AdminLogin = () => {
   const [loading, setLoading] = useState(false);
   const [showLockoutBanner, setShowLockoutBanner] = useState(false);
   const [lockoutMsg, setLockoutMsg] = useState('');
+  const [lockoutSeconds, setLockoutSeconds] = useState(0);
+  const [lockoutExpired, setLockoutExpired] = useState(false);
   
   const navigate = useNavigate();
   const { adminOtpVerify } = useAuth();
+
+  useEffect(() => {
+    if (!showLockoutBanner || lockoutSeconds <= 0) return undefined;
+    const timer = setInterval(() => setLockoutSeconds(seconds => Math.max(0, seconds - 1)), 1000);
+    return () => clearInterval(timer);
+  }, [showLockoutBanner, lockoutSeconds]);
+
+  useEffect(() => {
+    if (!showLockoutBanner) return;
+    if (lockoutSeconds <= 0) {
+      setLockoutExpired(true);
+      setLockoutMsg('Lockout expired. You can try again now.');
+      return;
+    }
+    setLockoutExpired(false);
+    const mins = Math.floor(lockoutSeconds / 60);
+    const secs = lockoutSeconds % 60;
+    setLockoutMsg(`Admin portal locked. Retry in ${mins}m ${secs}s or reset admin password.`);
+  }, [lockoutSeconds, showLockoutBanner]);
 
   const validateEmail = (emailStr) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -24,6 +45,8 @@ const AdminLogin = () => {
 
   const handleRequestOtp = async (e) => {
     e.preventDefault();
+    setShowLockoutBanner(false);
+    setLockoutExpired(false);
     setStatus({ type: '', message: '' });
 
     if (!validateEmail(email)) {
@@ -40,10 +63,7 @@ const AdminLogin = () => {
       });
       const data = await res.json();
       if (res.status === 423) {
-        const secs = data?.secondsRemaining || 0;
-        const mins = Math.floor(secs / 60);
-        const rSecs = secs % 60;
-        setLockoutMsg(`Admin portal locked. Retry in ${mins}m ${rSecs}s or reset admin password.`);
+        setLockoutSeconds(Math.max(0, Number(data?.secondsRemaining) || 0));
         setShowLockoutBanner(true);
         setStatus({ type: 'error', message: data.message || 'Account temporarily locked.' });
         return;
@@ -61,6 +81,8 @@ const AdminLogin = () => {
 
   const handleVerifyOtp = async (e) => {
     e.preventDefault();
+    setShowLockoutBanner(false);
+    setLockoutExpired(false);
     setStatus({ type: '', message: '' });
 
     if (otp.length < 6) {
@@ -77,10 +99,7 @@ const AdminLogin = () => {
       });
       const data = await res.json();
       if (res.status === 423) {
-        const secs = data?.secondsRemaining || 0;
-        const mins = Math.floor(secs / 60);
-        const rSecs = secs % 60;
-        setLockoutMsg(`Admin portal locked. Retry in ${mins}m ${rSecs}s or reset admin password.`);
+        setLockoutSeconds(Math.max(0, Number(data?.secondsRemaining) || 0));
         setShowLockoutBanner(true);
         setStatus({ type: 'error', message: data.message || 'Account temporarily locked.' });
         return;
@@ -166,8 +185,8 @@ const AdminLogin = () => {
             </div>
 
             {showLockoutBanner && (
-              <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-xs">
-                <div className="font-semibold text-red-400 mb-1.5">🔒 {lockoutMsg}</div>
+              <div className={`mt-4 p-3 border rounded-lg text-xs ${lockoutExpired ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
+                <div className={`font-semibold mb-1.5 ${lockoutExpired ? 'text-emerald-300' : 'text-red-400'}`}>{lockoutExpired ? '✓' : '🔒'} {lockoutMsg}</div>
                 <Link to="/admin/forgot-password" className="text-cyan-400 font-bold hover:underline">
                   Reset admin password →
                 </Link>
@@ -177,8 +196,8 @@ const AdminLogin = () => {
         )}
 
         {showLockoutBanner && step === 1 && (
-          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-xs">
-            <div className="font-semibold text-red-400 mb-1.5">🔒 {lockoutMsg}</div>
+          <div className={`mt-4 p-3 border rounded-lg text-xs ${lockoutExpired ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
+            <div className={`font-semibold mb-1.5 ${lockoutExpired ? 'text-emerald-300' : 'text-red-400'}`}>{lockoutExpired ? '✓' : '🔒'} {lockoutMsg}</div>
             <Link to="/admin/forgot-password" className="text-cyan-400 font-bold hover:underline">
               Reset admin password →
             </Link>

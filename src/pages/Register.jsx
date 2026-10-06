@@ -89,7 +89,7 @@ export default function Register() {
       setView('OTP');
       setSuccessMsg(`Verification token dispatched to ${formData.email}`);
     } catch (err) {
-      const errorMessage = err.message || 'Registration sequence failed';
+      const errorMessage = err.normalized?.message || err.response?.data?.message || err.message || 'Registration sequence failed';
       
       // UX UPGRADE: Detect duplicate emails and inject a React Router Link into the Alert Box
       if (errorMessage.toLowerCase().includes('already registered')) {
@@ -133,7 +133,7 @@ export default function Register() {
       setSuccessMsg("Identity verified. Initializing your Bhumivera profile...");
       setTimeout(() => navigate('/profile', { replace: true }), 1500);
     } catch (err) {
-      setError(err.message || 'Verification failed');
+      setError(err.normalized?.message || err.response?.data?.message || err.message || 'Verification failed');
     } finally {
       setLoading(false);
     }

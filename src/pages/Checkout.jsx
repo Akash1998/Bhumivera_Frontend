@@ -3,7 +3,8 @@ import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { addresses as addressesApi, orders as ordersApi, wallet as walletApi } from '../services/api';
+import { useSettings } from '../context/SettingsContext';
+import { addresses as addressesApi, coupons as couponsApi, orders as ordersApi, users as usersApi, wallet as walletApi } from '../services/api';
 import { 
   FiMapPin, 
   FiTruck, 
@@ -18,11 +19,12 @@ import {
   FiTag,
   FiMessageSquare
 } from 'react-icons/fi';
-import { Wallet } from 'lucide-react';
+import { Gift, Wallet } from 'lucide-react';
 
 export default function Checkout() {
   const { user } = useAuth();
-  const { cartItems, getSubtotal, clearCart } = useCart();
+  const { cartItems, getSubtotal, clearCart, rulePreview, rulePreviewLoading } = useCart();
+  const { settings } = useSettings();
   const navigate = useNavigate();
 
   const [addresses, setAddresses] = useState([]);
@@ -31,19 +33,31 @@ export default function Checkout() {
   const [shippingMethod, setShippingMethod] = useState('STANDARD');
   const [loading, setLoading] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
+  const [loyaltyPoints, setLoyaltyPoints] = useState(0);
+  const [redeemLoyaltyPoints, setRedeemLoyaltyPoints] = useState(false);
   
   const [couponCode, setCouponCode] = useState('');
+  const [availableCoupons, setAvailableCoupons] = useState([]);
+  const [appliedCouponDiscount, setAppliedCouponDiscount] = useState(0);
+  const [couponMessage, setCouponMessage] = useState('');
   const [notes, setNotes] = useState('');
 
   const subtotal = getSubtotal();
-  const shippingCost = shippingMethod === 'EXPRESS' ? 150 : 0;
-  const finalTotal = subtotal + shippingCost;
+  const standardShippingCost = Math.max(0, Number(settings?.standard_charge ?? settings?.default_shipping_charge ?? 50) || 0);
+  const expressShippingCost = Math.max(0, Number(settings?.express_charge ?? 150) || 0);
+  const shippingCost = rulePreview?.freeShipping ? 0 : shippingMethod === 'EXPRESS' ? expressShippingCost : standardShippingCost;
+  const loyaltyPointsPerRupee = Math.max(1, Number(settings?.loyalty_points_per_rupee) || 10);
+  const pointsPayableCap = Math.floor(Math.max(0, subtotal + shippingCost - appliedCouponDiscount) * loyaltyPointsPerRupee);
+  const loyaltyPointsRedeemed = redeemLoyaltyPoints ? Math.min(loyaltyPoints, pointsPayableCap) : 0;
+  const loyaltyDiscount = loyaltyPointsRedeemed / loyaltyPointsPerRupee;
+  const finalTotal = Math.max(0, subtotal + shippingCost - appliedCouponDiscount - loyaltyDiscount);
 
   const fetchData = useCallback(async () => {
     try {
-      const addrRes = await addressesApi.getAll();
+      const [addrRes, couponsRes] = await Promise.all([addressesApi.getAll(), couponsApi.getPublicActive().catch(() => ({ data: [] }))]);
       const list = addrRes.data.data || addrRes.data || [];
       setAddresses(list);
+      setAvailableCoupons(Array.isArray(couponsRes.data) ? couponsRes.data : couponsRes.data?.data || []);
       
       const def = list.find(a => a.is_default) || list[0];
       if (def) setSelectedAddress(def.id);
@@ -57,6 +71,14 @@ export default function Checkout() {
     } catch (err) {
       console.error("Failed to fetch wallet balance, defaulting to 0", err);
       setWalletBalance(0);
+    }
+
+    try {
+      const profileRes = await usersApi.getProfile();
+      const profile = profileRes.data?.user || profileRes.data;
+      setLoyaltyPoints(Math.max(0, Number(profile?.loyalty_points) || 0));
+    } catch {
+      setLoyaltyPoints(0);
     }
   }, []);
 
@@ -76,6 +98,7 @@ export default function Checkout() {
         isFastCheckout,
         deliveryType: shippingMethod.toLowerCase(),
         couponCode: couponCode.trim() || undefined,
+        loyaltyPointsToRedeem: loyaltyPointsRedeemed,
         notes: notes.trim() || undefined
       };
       
@@ -87,6 +110,26 @@ export default function Checkout() {
     } finally {
       setLoading(false);
     }
+  };
+
+  const applyBestCoupon = () => {
+    const offers = availableCoupons.map(coupon => {
+      const minimum = Number(coupon.min_order_value ?? coupon.min_order_amount) || 0;
+      if (subtotal < minimum || (coupon.usage_limit && Number(coupon.used_count) >= Number(coupon.usage_limit))) return null;
+      const amount = Number(coupon.value ?? coupon.discount_value) || 0;
+      const calculated = coupon.discount_type === 'percentage' || coupon.type === 'percentage'
+        ? subtotal * amount / 100
+        : amount;
+      const capped = coupon.max_discount ? Math.min(calculated, Number(coupon.max_discount)) : calculated;
+      return { code: coupon.code, discount: Math.max(0, Math.min(subtotal, capped)) };
+    }).filter(Boolean).sort((left, right) => right.discount - left.discount);
+    if (!offers.length || offers[0].discount <= 0) {
+      setCouponMessage('No eligible coupons for this subtotal.');
+      return;
+    }
+    setCouponCode(offers[0].code);
+    setAppliedCouponDiscount(offers[0].discount);
+    setCouponMessage(`Best coupon applied: ${offers[0].code}`);
   };
 
   return (
@@ -191,7 +234,7 @@ export default function Checkout() {
                     <p className="font-medium flex items-center gap-2">Standard Shipping {shippingMethod === 'STANDARD' && <FiCheckCircle className="text-[#8B9D83]"/>}</p>
                     <p className="text-sm text-stone-500 mt-1">3-5 Business Days</p>
                   </div>
-                  <span className="font-mono text-[#8B9D83] bg-[#E8E0D5] px-2 py-1 rounded text-xs">FREE</span>
+                    <span className="font-mono text-[#8B9D83] bg-[#E8E0D5] px-2 py-1 rounded text-xs">{rulePreview?.freeShipping ? 'FREE' : `₹${standardShippingCost}`}</span>
                 </div>
                 <div 
                   onClick={() => setShippingMethod('EXPRESS')}
@@ -201,7 +244,7 @@ export default function Checkout() {
                     <p className="font-medium flex items-center gap-2">Express Shipping {shippingMethod === 'EXPRESS' && <FiCheckCircle className="text-[#8B9D83]"/>}</p>
                     <p className="text-sm text-stone-500 mt-1">1-2 Business Days</p>
                   </div>
-                  <span className="font-mono text-[#1A1A1A]">₹150</span>
+                  <span className="font-mono text-[#1A1A1A]">{rulePreview?.freeShipping ? 'FREE' : `₹${expressShippingCost}`}</span>
                 </div>
               </div>
             </motion.section>
@@ -225,9 +268,14 @@ export default function Checkout() {
                       placeholder="ENTER CODE" 
                       className="flex-1 bg-stone-50 border border-stone-200 rounded-lg px-4 py-3 text-[#1A1A1A] text-sm focus:outline-none focus:border-[#8B9D83] transition-colors uppercase"
                     />
+                    <button type="button" onClick={applyBestCoupon} className="shrink-0 rounded-lg border border-[#8B9D83] px-3 text-xs font-bold text-[#2C3E2D] hover:bg-[#F5F1EB]">Best coupon</button>
                   </div>
-                  <p className="text-xs text-stone-500 mt-2 flex items-center gap-1"><FiInfo/> Discount applied dynamically at processing.</p>
+                  <p className="text-xs text-stone-500 mt-2 flex items-center gap-1"><FiInfo/>{couponMessage || 'Discount is confirmed when the order is placed.'}</p>
                 </div>
+                {loyaltyPoints > 0 && <label className="flex items-center justify-between gap-3 border border-stone-200 px-3 py-3 text-sm text-stone-700">
+                  <span><span className="block font-semibold">Use loyalty points</span><span className="text-xs text-stone-500">{loyaltyPoints.toLocaleString()} available · up to ₹{(Math.min(loyaltyPoints, pointsPayableCap) / loyaltyPointsPerRupee).toFixed(2)}</span></span>
+                  <input type="checkbox" checked={redeemLoyaltyPoints} onChange={event => setRedeemLoyaltyPoints(event.target.checked)} className="h-4 w-4 accent-[#8B9D83]"/>
+                </label>}
                 <div>
                   <label className="block text-xs font-bold text-stone-500 mb-2 uppercase tracking-wider flex items-center gap-2"><FiMessageSquare/> Order Notes</label>
                   <textarea 
@@ -279,6 +327,14 @@ export default function Checkout() {
                 Order Summary
                 <span className="text-xs bg-stone-100 text-stone-600 px-2 py-1 rounded font-bold">{cartItems?.length || 0} ITEMS</span>
               </h3>
+
+              {rulePreview?.tiers?.length > 0 && <section className="mb-6 space-y-3 border-b border-stone-200 pb-5" aria-label="Cart rewards progress">
+                {rulePreview.tiers.map(tier => <div key={tier.id}>
+                  <div className="mb-1 flex justify-between gap-2 text-[10px] font-bold uppercase tracking-wider"><span className="truncate text-stone-500">{tier.badge}</span><span className={tier.unlocked ? 'text-emerald-700' : 'text-[#8B9D83]'}>{tier.unlocked ? 'Unlocked' : `Add ₹${tier.missingAmount}`}</span></div>
+                  <div className="h-1.5 overflow-hidden bg-stone-100"><div className="h-full bg-[#8B9D83]" style={{ width: `${tier.progressPct}%` }}/></div>
+                </div>)}
+                {rulePreviewLoading && <p className="text-[10px] text-stone-400">Updating rewards…</p>}
+              </section>}
               
               {/* Cart Items Preview */}
               <div className="max-h-60 overflow-y-auto mb-6 pr-2 space-y-4 custom-scrollbar">
@@ -301,6 +357,7 @@ export default function Checkout() {
                     <p className="text-sm italic text-center">Your cart is empty.</p>
                   </div>
                 )}
+                {rulePreview?.gifts?.map(gift => <div key={`gift-${gift.ruleId}-${gift.productId}`} className="flex items-center gap-3 border-b border-emerald-100 pb-3 text-emerald-800"><Gift size={16}/><div className="flex-1"><p className="text-xs font-bold">FREE CART GIFT</p><p className="text-xs">{gift.productName || `Product #${gift.productId}`} · Qty {gift.quantity}</p></div><span className="text-xs font-bold">FREE</span></div>)}
               </div>
 
               {/* Cost Breakdown */}
@@ -323,10 +380,16 @@ export default function Checkout() {
                     <span>Pending Apply</span>
                   </div>
                 )}
+                {appliedCouponDiscount > 0 && <div className="flex justify-between text-emerald-700"><span>Coupon savings</span><span>-₹{appliedCouponDiscount.toFixed(2)}</span></div>}
+                {loyaltyDiscount > 0 && <div className="flex justify-between text-emerald-700"><span>Loyalty points ({loyaltyPointsRedeemed})</span><span>-₹{loyaltyDiscount.toFixed(2)}</span></div>}
                 <div className="border-t border-stone-200 pt-4 flex justify-between items-center text-lg font-serif text-[#1A1A1A]">
                   <span>Total</span>
                   <span className="font-bold text-[#2C3E2D] text-xl">₹{finalTotal}</span>
                 </div>
+              </div>
+
+              <div className="mb-5 grid grid-cols-2 gap-2 text-[10px] font-semibold uppercase tracking-wide text-stone-500">
+                {['Secure checkout', 'Verified products', 'Buyer protection', 'Support included'].map(badge => <span key={badge} className="border border-stone-200 px-2 py-2 text-center">{badge}</span>)}
               </div>
 
               {/* Actions */}
@@ -351,7 +414,7 @@ export default function Checkout() {
                   disabled={loading || walletBalance < finalTotal || !selectedAddress || cartItems?.length === 0} 
                   className="w-full bg-[#E8E0D5] text-[#1A1A1A] font-bold uppercase tracking-widest text-xs py-4 rounded-lg flex items-center justify-center gap-2 hover:bg-[#DED2C4] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  <FiZap size={16} /> Instapay Checkout
+                  <FiZap size={16} /> 1-Click Wallet Checkout
                 </button>
                 <p className="text-center text-stone-500 text-[10px] uppercase tracking-widest mt-2 flex items-center justify-center gap-1">
                   <FiInfo /> 1-Click Wallet Deduction

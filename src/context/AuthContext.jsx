@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import { auth as authApi, users as usersApi } from '../services/api';
 
 const AuthContext = createContext(null);
@@ -8,6 +8,7 @@ export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(() => { const s = localStorage.getItem('user'); return s ? JSON.parse(s) : null; });
   const [token, setToken] = useState(localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('warehouseToken') || null);
   const [loading, setLoading] = useState(true);
+  const authExpiryHandled = useRef(false);
 
   useEffect(() => {
     const initAuth = async () => {
@@ -50,12 +51,18 @@ export const AuthProvider = ({ children }) => {
       setLoading(false);
     };
     initAuth();
-    const he = () => logout('customer'); window.addEventListener('auth-expired', he); return () => window.removeEventListener('auth-expired', he);
+    const he = () => {
+      if (authExpiryHandled.current) return;
+      authExpiryHandled.current = true;
+      void logout('customer');
+    };
+    window.addEventListener('auth-expired', he);
+    return () => window.removeEventListener('auth-expired', he);
   }, []);
 
-  const login = async c => { const r = await authApi.login(c); if (r.status === 202 || r.data?.requires2FA) throw new Error("MFA Verification Required"); const { token: nt, user: ud } = r.data; const d = decodeJWT(nt); const role = d?.role || ud?.role || 'user'; const f = { ...ud, role }; localStorage.setItem('token', nt); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
+  const login = async c => { const r = await authApi.login(c); if (r.status === 202 || r.data?.requires2FA) throw new Error("MFA Verification Required"); const { token: nt, user: ud } = r.data; const d = decodeJWT(nt); const role = d?.role || ud?.role || 'user'; const f = { ...ud, role }; authExpiryHandled.current = false; localStorage.setItem('token', nt); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
   const mobileLogin = async d => { const r = await authApi.mobileLoginVerify(d); const { token: nt, user: ud } = r.data; const p = decodeJWT(nt); const f = { ...ud, role: p?.role || ud?.role || 'user' }; localStorage.setItem('token', nt); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
-  const adminLogin = async c => { const r = await authApi.adminLogin(c); const { token: nt, admin: ad } = r.data; const f = { ...ad, role: ad?.role || 'admin' }; localStorage.setItem('adminToken', nt); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
+  const adminLogin = async c => { const r = await authApi.adminLogin(c); const { token: nt, admin: ad } = r.data; const f = { ...ad, role: ad?.role || 'admin' }; authExpiryHandled.current = false; localStorage.setItem('adminToken', nt); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
   const adminOtpVerify = async d => { const f = { ...d.admin, role: d.admin.role || 'admin' }; localStorage.setItem('adminToken', d.token); localStorage.setItem('user', JSON.stringify(f)); setToken(d.token); setUser(f); return f; };
   const warehouseLoginVerify = d => { const p = d.admin || d.user || d; const f = { ...p, role: p.role || 'warehouse_admin' }; const t = d.token || d.warehouseToken || d.ms_token; localStorage.setItem('warehouseToken', t); localStorage.setItem('token', t); localStorage.setItem('user', JSON.stringify(f)); setToken(t); setUser(f); return f; };
   const register = async d => (await authApi.register(d)).data;

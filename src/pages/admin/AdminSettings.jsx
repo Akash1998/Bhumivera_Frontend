@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 // 100% STRICT IMPORT: Using the mapped users object for security
-import { users } from '../../services/api';
+import { settings as settingsApi, users } from '../../services/api';
 import { FiLock, FiSave, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 
 export default function AdminSettings() {
@@ -10,6 +10,58 @@ export default function AdminSettings() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
+  const [cartSettings, setCartSettings] = useState({ coupon_stack_policy: 'rule_first', enforce_cart_rule_minimum: '0' });
+  const [shippingSettings, setShippingSettings] = useState({ standard_charge: '50', express_charge: '150', free_shipping_threshold: '500' });
+  const [cartSettingsLoading, setCartSettingsLoading] = useState(true);
+  const [cartSettingsSaving, setCartSettingsSaving] = useState(false);
+
+  useEffect(() => {
+    let active = true;
+    settingsApi.get()
+      .then(response => {
+        if (!active) return;
+        const values = response.data?.cart_rules || {};
+        const shipping = response.data?.shipping || {};
+        setShippingSettings(current => ({ ...current, ...shipping }));
+        setCartSettings({
+          coupon_stack_policy: values.coupon_stack_policy || 'rule_first',
+          enforce_cart_rule_minimum: values.enforce_cart_rule_minimum || '0',
+        });
+      })
+      .catch(loadError => {
+        if (active) setError(loadError.normalized?.message || 'Could not load cart settings.');
+      })
+      .finally(() => { if (active) setCartSettingsLoading(false); });
+    return () => { active = false; };
+  }, []);
+
+  const saveCartSettings = async event => {
+    event.preventDefault();
+    setCartSettingsSaving(true);
+    setError(null);
+    try {
+      await settingsApi.update(cartSettings);
+      setMessage('Checkout and cart rules saved.');
+    } catch (saveError) {
+      setError(saveError.normalized?.message || saveError.response?.data?.message || 'Failed to save cart settings.');
+    } finally {
+      setCartSettingsSaving(false);
+    }
+  };
+
+  const saveShippingSettings = async event => {
+    event.preventDefault();
+    setCartSettingsSaving(true);
+    setError(null);
+    try {
+      await settingsApi.update(shippingSettings);
+      setMessage('Shipping tiers saved.');
+    } catch (saveError) {
+      setError(saveError.normalized?.message || saveError.response?.data?.message || 'Failed to save shipping tiers.');
+    } finally {
+      setCartSettingsSaving(false);
+    }
+  };
 
   const handlePasswordChange = async (e) => {
     e.preventDefault();
@@ -40,7 +92,7 @@ export default function AdminSettings() {
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
-      const d = err.response?.data;
+      const d = err.normalized || err.response?.data;
       if (d?.code === 'MIN_LENGTH') setError(d.message);
       else if (d?.code === 'COMPLEXITY') setError(d.message);
       else if (d?.code === 'COMMON_PASSWORD') setError(d.message);
@@ -126,6 +178,48 @@ export default function AdminSettings() {
             <FiSave />
             {loading ? 'Changing...' : 'Change Password'}
           </button>
+        </form>
+      </div>
+
+      <div className="mt-6 bg-[#1a1f2e] rounded-xl p-6 border border-gray-800">
+        <h3 className="text-lg font-semibold text-white mb-4">Checkout &amp; Cart Rules</h3>
+        <form onSubmit={saveCartSettings} className="space-y-5">
+          <fieldset disabled={cartSettingsLoading || cartSettingsSaving}>
+            <legend className="mb-2 block text-sm font-medium text-gray-300">Coupon and cart-rule stacking</legend>
+            <div role="radiogroup" aria-label="Coupon and cart-rule stacking" className="inline-flex flex-wrap gap-2">
+              {[
+                ['rule_first', 'Rule first'],
+                ['coupon_first', 'Coupon first'],
+                ['both', 'Allow both'],
+              ].map(([value, label]) => (
+                <label key={value} className={`cursor-pointer rounded-lg border px-3 py-2 text-sm ${cartSettings.coupon_stack_policy === value ? 'border-cyan-400 bg-cyan-500/10 text-cyan-200' : 'border-gray-700 text-gray-400'}`}>
+                  <input type="radio" name="coupon_stack_policy" value={value} checked={cartSettings.coupon_stack_policy === value} onChange={() => setCartSettings(current => ({ ...current, coupon_stack_policy: value }))} className="sr-only" />
+                  {label}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+          <label className="flex items-center justify-between gap-4 rounded-lg border border-gray-800 p-4 text-sm text-gray-200">
+            <span><span className="block font-medium">Enforce cart-rule minimums</span><span className="mt-1 block text-xs text-gray-500">Block checkout below a rule’s minimum when that rule is marked enforced.</span></span>
+            <input type="checkbox" checked={cartSettings.enforce_cart_rule_minimum === '1' || cartSettings.enforce_cart_rule_minimum === 1} onChange={event => setCartSettings(current => ({ ...current, enforce_cart_rule_minimum: event.target.checked ? '1' : '0' }))} className="h-4 w-4 accent-cyan-400" />
+          </label>
+          <button type="submit" disabled={cartSettingsLoading || cartSettingsSaving} className="flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50">
+            <FiSave />{cartSettingsSaving ? 'Saving…' : 'Save cart settings'}
+          </button>
+        </form>
+      </div>
+
+      <div className="mt-6 bg-[#1a1f2e] rounded-xl p-6 border border-gray-800">
+        <h3 className="text-lg font-semibold text-white mb-4">Shipping Tiers</h3>
+        <form onSubmit={saveShippingSettings} className="grid gap-4 sm:grid-cols-3">
+          {[
+            ['standard_charge', 'Standard delivery'],
+            ['express_charge', 'Express delivery'],
+            ['free_shipping_threshold', 'Free delivery threshold'],
+          ].map(([key, label]) => <label key={key} className="text-sm text-gray-300">{label} (₹)
+            <input type="number" min="0" value={shippingSettings[key]} onChange={event => setShippingSettings(current => ({ ...current, [key]: event.target.value }))} className="mt-2 w-full border border-gray-700 bg-[#0f1419] px-3 py-2 text-white focus:border-cyan-500"/>
+          </label>)}
+          <div className="sm:col-span-3"><button type="submit" disabled={cartSettingsLoading || cartSettingsSaving} className="flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"><FiSave/>{cartSettingsSaving ? 'Saving…' : 'Save shipping tiers'}</button></div>
         </form>
       </div>
 

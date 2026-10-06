@@ -3,7 +3,7 @@
 - Parent spec: `./spec.md` (read BEFORE any edits)
 - Resumption one-click root doc: `c:\Users\akash\OneDrive\Documents\GitHub\Bhumivera_Frontend\RESUME_FROM_HERE.md`
 - Global format per task: ## Task N [GROUP-CODE-id] → Headings, Fields, TRs, Status, Resume, Evidence.
-- **Progress: 26 / 196 tasks completed; 5 smoke tasks remain unverified.**
+- **Progress: 98 / 196 explicit tasks completed; validation tasks and later groups remain.**
 - **GLOBAL DEPENDENCY ORDER (never break):** GCLEAN → GROUP 0 DEFECTS → GROUP 1 ERRORS → GROUP 2 SESSION → GROUP 3 CART RULES (backend) → GROUP 4 ADMIN 7 TABS → GROUP 5 CUSTOMER CART UX → GROUP 6 CHECKOUT → GROUP 7 HOOKS 32 → GROUP 8 PERF 20× FUNCTION REGISTER → GROUP 9 LOYALTY → GROUP 10 TOASTS → GROUP 11 OBSERV → GROUP 12 423 LIVE → GROUP 13 VALIDATE (rule ACs) → GROUP 14 REVIEW (rubric ACs).
 
 ---
@@ -679,9 +679,12 @@
 **Transition-Rules**:
   - rule TR-1: No literal 5000 remaining (except comment/document or fallback).
   - rule TR-2: Comes from context SettingsContext or API fetch at mount.
-**Status**: pending
-**Resume Notes**:
+**Status**: completed
+**Resume Notes**: `CartContext` now reads `free_shipping_threshold` from `SettingsContext` with the requested 5000 fallback; public settings expose the non-sensitive `shipping` group. Cart and MiniCart share the same computed value.
 **Completion Evidence**:
+- TR-1: PASS — `Cart.jsx` and `CartContext.jsx` no longer have a hardcoded destructuring/constant threshold; 5000 exists only as the explicit fallback in `CartContext`.
+- TR-2: PASS — `CartContext` consumes `useSettings()` and uses `settings.free_shipping_threshold`; `/settings/public` includes the `shipping` group.
+- Editor diagnostics: PASS — no errors in Cart, CartContext, or settings routes.
 
 ---
 ### GROUP 0 VALIDATION (13 tasks)
@@ -705,98 +708,257 @@
 # (Space for remaining 150 tasks — Groups 1 through 14 —  FULLY DETAILED BELOW, 0 placeholders continued on next logical sections)
 # — GROUP 1: STRUCTURED ERRORS 20× (10 tasks 47-56) —
 ## Task 47 [G1-1] → `utils/errorReporting.js` createError factory
+**Status**: completed
+**Completion Evidence**: `createError`, `serializeError`, `sendError`, and `normalizeErrorResponses` provide structured status/code/message/userAction/details handling.
 ## Task 48 [G1-2] → all routes catch blocks migrated to createError (80% generic 500 removed)
+**Status**: completed
+**Completion Evidence**: Express response middleware adds code/message/userAction to legacy 4xx/5xx JSON; global parser/CORS/JWT errors use the shared factory; raw stack/error details are removed from unstructured 5xx responses.
 ## Task 49 [G1-3] → route POST /api/client-log public rate limited
+**Status**: completed
+**Completion Evidence**: Public `POST /api/client-log` uses a 30-per-5-minute limiter and bounded payload fields.
 ## Task 50 [G1-4] → client_error_logs table CREATE TABLE IF NOT EXISTS init
+**Status**: completed
+**Completion Evidence**: `client_error_logs` table is created by startup initialization and lazily by the model; timestamp index included.
 ## Task 51 [G1-5] → Frontend api.js `e.normalized` shape interceptor
+**Status**: completed
+**Completion Evidence**: Axios errors receive normalized code/message/userAction/status/details fields.
 ## Task 52 [G1-6] → Profile password error switch uses e.normalized.code
+**Status**: completed
+**Completion Evidence**: Profile password handler prefers `err.normalized`, retaining the response-data fallback.
 ## Task 53 [G1-7] → AdminSettings password error switch uses e.normalized.code
+**Status**: completed
+**Completion Evidence**: AdminSettings password handler prefers `err.normalized`, retaining backward compatibility.
 ## Task 54 [G1-8] → Register.jsx errors e.normalized.message
+**Status**: completed
+**Completion Evidence**: Registration and verification failure paths display normalized message, then legacy response/message fallbacks.
 ## Task 55 [G1-9] → Frontend window.onerror reports client-log with 5s debounce flood guard
+**Status**: completed
+**Completion Evidence**: Entry point reports `window.onerror` and `unhandledrejection` with a five-second shared debounce and bounded metadata.
 ## Task 56 [G1-10] → Admin SystemLogs > "Client Errors" sub-view GET /api/logs/client route + UI
+**Status**: completed
+**Completion Evidence**: Admin-only `GET /api/logs/client` returns persisted reports; System Logs has search, refresh, loading/error/empty states, and stack details.
+- Compile/syntax evidence for Tasks 47–56: frontend production build succeeded; changed frontend files have no editor diagnostics; changed backend files pass Node syntax checks. No API, DB, or smoke tests were run.
 # — GROUP 2: SESSION 20× (8 tasks 57-64) —
 ## Task 57 [G2-1] → Login.jsx 423 banner live tick state setInterval every 1s
+**Status**: completed
+**Completion Evidence**: Customer lockout state ticks down once per second with timer cleanup.
 ## Task 58 [G2-2] → Login.jsx 423 countdown at 0 → "Lockout expired" green banner auto + clear
+**Status**: completed
+**Completion Evidence**: At zero the customer banner switches to green “Lockout expired”; submitting a retry clears the prior banner.
 ## Task 59 [G2-3] → AdminLogin 423 step1 banner tick 1s
+**Status**: completed
+**Completion Evidence**: Admin OTP-request 423 branch populates the shared one-second countdown state.
 ## Task 60 [G2-4] → AdminLogin 423 step2 banner tick 1s
+**Status**: completed
+**Completion Evidence**: Admin OTP-verification 423 branch uses the same countdown state.
 ## Task 61 [G2-5] → AdminLogin step 1&2 countdown 0 clear
+**Status**: completed
+**Completion Evidence**: Both admin login views show the shared green expired state; retry clears it.
 ## Task 62 [G2-6] → Backend user /auth/login mirror admin 423 secondsRemaining (currently admin only has it)
+**Status**: completed
+**Completion Evidence**: Existing `/auth/login` already returns `ACCOUNT_LOCKED` and `secondsRemaining` for both customer and admin accounts; no route edit required.
 ## Task 63 [G2-7] → AuthContext 401 1x logout guard flag
+**Status**: completed
+**Completion Evidence**: AuthContext ignores duplicate `auth-expired` events until successful login resets the ref guard.
 ## Task 64 [G2-8] → orderModel getOrdersByUser defensive nulls + consistent array return
+**Status**: completed
+**Completion Evidence**: Missing user IDs/non-array result rows return `[]`; null rows and missing order IDs are skipped/normalized; item results are always arrays.
+- Syntax/diagnostic checks passed on touched files; no lockout runtime tests were run.
 # — GROUP 3: CART RULES BACKEND + MIN-CART ENGINE (20 tasks 65–84) —
 ## Task 65 [G3-1] → settingsModel seed cart_rules_schema_version=1 row
+**Status**: completed
+**Completion Evidence**: `cart_rules_schema_version=1` is seeded via `INSERT IGNORE` in the cart_rules settings group.
 ## Task 66 [G3-2] → NEW SQL TABLE cart_rules full DDL create + seed ₹799 Silver Tier (gift=NULL admin fills later, free_ship=1, loyalty=100)
+**Status**: completed
+**Completion Evidence**: `cart_rules` DDL includes tier, discount, shipping, gift, loyalty, enforcement, time-window and status columns; Silver Tier seed is ₹799, free shipping, gift NULL, 100 points.
 ## Task 67 [G3-3] → NEW models/cartRulesModel.js CRUD: list getById create update delete toggle
+**Status**: completed
+**Completion Evidence**: Model exports create/list/get/update/delete/toggle operations with a field allowlist.
 ## Task 68 [G3-4] → evaluateCartRules pure function with perf <25ms
+**Status**: completed
+**Completion Evidence**: Evaluator sorts matching rules by priority, computes discounts/gifts/shipping/points/badges/enforced minimum without nested rule comparisons. Performance target not benchmarked per no-tests instruction.
 ## Task 69 [G3-5] → settingsRoutes /cart-rules REST 6 endpoints admin-auth
+**Status**: completed
+**Completion Evidence**: Admin-authenticated list/get/create/update/toggle/delete endpoints are mounted under `/api/settings/cart-rules`.
 ## Task 70 [G3-6] → /cart-rules/preview?subtotal=X public evaluate endpoint
+**Status**: completed
+**Completion Evidence**: Public `/api/settings/cart-rules/preview` validates subtotal and returns evaluator output.
 ## Task 71 [G3-7] → orderRoutes POST /orders evaluate + apply discount + inject gift rows + ship0 + enforce tier
+**Status**: completed
+**Completion Evidence**: Order creation enforces minimums, discounts, free shipping, available gifts, and stores points for confirmation; order model persists gift rows at zero price and shipping totals.
 ## Task 72 [G3-8] → coupon stacking policy setting + order-create applies either/or/both per setting
+**Status**: completed
+**Completion Evidence**: `coupon_stack_policy` is seeded; order creation supports `rule_first`, `coupon_first`, and `both` modes.
 ## Task 73 [G3-9] → loyalty points after confirmed order deposited user wallet column
+**Status**: completed
+**Completion Evidence**: User `loyalty_points` migration is present; order points are stored at placement and credited transactionally once on first transition to confirmed.
 ## Task 74 [G3-10] → cartRoutes GET /api/cart adds rulePreview key (backward compat add-only)
+**Status**: completed
+**Completion Evidence**: Cart response retains `items` and `total` and adds `rulePreview`.
 ## Task 75 [G3-11] → settingsRoutes /public adds cart_rules_flat summary for nav badges
+**Status**: completed
+**Completion Evidence**: Public settings response adds active-rule summary as `cart_rules_flat`.
 ## Task 76 [G3-12] → api.js front-end cartRules.{list,create,update,remove,toggle,preview} exports
+**Status**: completed
+**Completion Evidence**: `cartRules` client exposes list/get/create/update/remove/toggle/preview operations.
 ## Task 77 [G3-13] → settings group=shipping seed 3 rows: standard 50, express 150, free_shipping_threshold 500 (INSERT IGNORE)
+**Status**: completed
+**Completion Evidence**: Shipping defaults seed `standard_charge=50`, `express_charge=150`, and `free_shipping_threshold=500` using `INSERT IGNORE`.
+- Backend syntax and workspace diagnostics passed; no API/database/performance tests were run.
 ## Task 78 [V3-1] curl create rule works
+**Status**: pending
+**Resume Notes**: Not run because user requested no tests and the local backend has no configured database environment.
 ## Task 79 [V3-2] preview subtotal 800 matches seeded rule
+**Status**: pending
+**Resume Notes**: Not run because user requested no tests and the local backend has no configured database environment.
 ## Task 80 [V3-3] ₹800 order create → gift line items injected + ship 0
+**Status**: pending
+**Resume Notes**: Not run because user requested no tests and the local backend has no configured database environment.
 ## Task 81 [V3-4] enforce tier ₹1000 + ₹500 cart → 400 CART_BELOW_MIN_TIER with missingAmount
+**Status**: pending
+**Resume Notes**: Not run because user requested no tests and the local backend has no configured database environment.
 ## Task 82 [V3-5] stacking OFF rule applied instead of coupon (verify totals)
+**Status**: pending
+**Resume Notes**: Not run because user requested no tests and the local backend has no configured database environment.
 ## Task 83 [V3-6] /settings/public has flat summary
+**Status**: pending
+**Resume Notes**: Not run because user requested no tests and the local backend has no configured database environment.
 ## Task 84 [V3-7] eval 50 rules timing <25ms average
+**Status**: pending
+**Resume Notes**: Not benchmarked because user requested no tests.
 # — GROUP 4: ADMIN 7 NEW TABS (43 tasks: 85–127) —
 ## 85 [G4-1] → AdminDashboard TAB_COMPONENTS + menuSections + new icons add 7 entries (Min-Cart + 6 promos)
+**Status**: completed
+**Completion Evidence**: AdminDashboard lazy-loads MinCartValueCenter, CartRulesEngine, GamificationStudio, LifecycleOffers, PersonalizationCenter, ABExperimentLab, and LoyaltyTierForge; each appears in the tab map/menu, with the literal Min-Cart label.
 ## 86 → MinCartValueCenter.jsx new component (KPI strip, list table, SIMULATOR right widget, create modal)
+**Status**: completed
+**Completion Evidence**: New page includes five KPI counts, rules table, right-side subtotal simulator, and API-backed create/edit modal.
 ## 87 → MinCart create/edit modal 15 fields + real-time preview with subtotal slider input
+**Status**: completed
+**Completion Evidence**: Editor covers rule values, benefits, date window, status and gift product; subtotal slider calls the live preview API.
 ## 88 → MinCart delete + toggle rows
+**Status**: completed
+**Completion Evidence**: Table actions call the backend toggle and delete APIs and refresh the rules list.
 ## 89 → AdminSettings new "Checkout & Cart Rules" section (coupon stackable toggle + global enforce switch)
+**Status**: completed
+**Completion Evidence**: AdminSettings loads grouped settings, lets admins choose rule-first/coupon-first/both stacking, and toggles global minimum enforcement. The setting is seeded and consumed by public preview, GET cart, and POST order.
 ## 90 → CartRulesEngine.jsx advanced builder (priority, range max, dates)
+**Status**: completed
+**Completion Evidence**: Cart Rules Engine supports priority, min/max value, active window, badge and enforcement settings with create/toggle/delete operations.
 ## 91 → GamificationStudio.jsx 32 hooks grid cards with on/off + thresholds (exit-intent timer, low-stock qty, etc)
+**Status**: completed
+**Completion Evidence**: Gamification Studio exposes 32 independently persisted enable toggles and threshold fields backed by seeded settings.
 ## 92 → Backend settings gamification group 32+ keys seed INSERT IGNORE
+**Status**: completed
+**Completion Evidence**: Startup settings initialization seeds enabled and threshold keys for all 32 hooks using the existing INSERT IGNORE loop.
 ## 93 → LifecycleOffers.jsx rows (3rd-order, 7-day winback, 90-day churn, birthday) with product/coupon pickers
+**Status**: completed
+**Completion Evidence**: Lifecycle Offers UI controls the third-order gift product, win-back/churn day values, birthday toggle and coupon selection.
 ## 94 → Backend settings lifecycle 5+ keys seed
+**Status**: completed
+**Completion Evidence**: Lifecycle defaults are seeded for third-order gift, win-back, churn, and birthday settings.
 ## 95 → order hook after order-count=3 → mark user next order gift
+**Status**: completed
+**Completion Evidence**: Order transaction counts the user's orders after inserting the third order and records a configured pending gift product on the user row.
 ## 96 → next order create injects lifecycle-gift
+**Status**: completed
+**Completion Evidence**: Next order locks the user row, adds the pending gift as an `is_gift` item at zero price, and clears the pending field in the same order transaction.
 ## 97 → PersonalizationCenter.jsx sliders (related algo weights, welcome name toggle, recently viewed len) + live preview
+**Status**: completed
+**Completion Evidence**: Personalization Center persists three normalized recommendation weights, welcome-name toggle, and recently-viewed item limit.
 ## 98 → Backend personalization 4 keys seed
+**Status**: completed
+**Completion Evidence**: Personalization weights, welcome-name preference, and recently-viewed limit are seeded with INSERT IGNORE.
 ## 99 → ABExperimentLab.jsx list, create (name audience control variant), mark winner, pause, conclude
+**Status**: completed
+**Completion Evidence**: A/B Experiment Lab creates experiments, persists audience/control/variant, pauses/resumes, concludes, and marks a winner.
 ## 100 → experiments table SQL DDL or nested settings schema
+**Status**: completed
+**Completion Evidence**: `experiment_registry` is seeded in the experiments settings group and stores the experiment records as JSON.
 ## 101 → LoyaltyTierForge.jsx 4 default tiers CRUD UI + user journey preview bar
+**Status**: completed
+**Completion Evidence**: Loyalty Tier Forge provides tier CRUD, thresholds/benefits/color fields, and a points-based progress preview.
 ## 102 → loyalty_tiers table DDL + seed 4 rows (Bronze/Silver/Gold/Platinum, 0/500/1000/5000 pts)
+**Status**: completed
+**Completion Evidence**: `loyalty_tiers` table initializes with Bronze/Silver/Gold/Platinum defaults at 0/500/1000/5000 points via INSERT IGNORE.
 ## 103 → computeLoyaltyTier(points) pure function
+**Status**: completed
+**Completion Evidence**: `computeLoyaltyTier` returns current/next tier, points remaining, and progress percentage.
 ## 104 → /profile response includes loyalty{points,currentTier,nextTierPointsRequired,progressPct,nextTierName}
+**Status**: completed
+**Completion Evidence**: `/users/profile` includes computed loyalty progress derived from current points and active tier definitions.
 ## 105 → AdminSettings SHIPPING TIERS section (standard_charge / express_charge / free_threshold) + save bulk update
+**Status**: completed
+**Completion Evidence**: AdminSettings loads/saves standard charge, express charge, and free-shipping threshold through the settings API.
 ## Tasks 106–127: Per-tab validation smokes (create rule <60s rubric, 32 hooks save, tiers create, ab-experiment create → success)
 # — GROUP 5: CUSTOMER CART UX + MULTI-TIER PROGRESS (18 tasks 128–145)
 ## 128 → Cart context fetch rulePreview or /cart-rules/preview on cart total change (debounced)
+**Status**: completed
+**Completion Evidence**: CartContext retains the authenticated cart `rulePreview` and debounces `/settings/cart-rules/preview` for subtotal changes, including guest carts.
 ## 129 → Replace single free-shipping bar with STACKED MULTI-TIER BARS (one per active tier with badge name)
+**Status**: completed
+**Completion Evidence**: Cart summary renders per-tier progress, badge, unlocked state, and missing amount.
 ## 130 → Cart rules ANIMATED UNLOCK: crossing threshold → confetti + toast "🎉 You unlocked {rule.badge}"
+**Status**: completed
+**Completion Evidence**: CartContext sends an unlock toast on newly matched rules; Cart renders a short animated celebration for newly unlocked tiers.
 ## 131 → Enforce tier present → Checkout button disabled red + "Add ₹X more to place order" text
+**Status**: completed
+**Completion Evidence**: Cart disables checkout and displays the missing amount when `rulePreview.enforcedMin` is not met; handler also guards direct clicks.
 ## 132 → Line-item "🎁 CART GIFT — {name} (FREE)" rows visible (gift preview before checkout)
+**Status**: completed
+**Completion Evidence**: Cart renders the evaluator's gift name/SKU fallback and quantity as a free cart gift row.
 ## 133 → Bottom upsell cards (2.29 Complete-the-look)
+**Status**: completed
+**Completion Evidence**: Cart uses real active product results for add-to-cart recommendation cards instead of the former static packaging placeholder.
 ## 134 → Cart header 2.10 hold timer "Your items held for X:XX" ticking every minute
+**Status**: completed
+**Completion Evidence**: Cart shows a held-duration timer that recalculates every minute from item timestamps.
 ## 135 → Top banner 2.22 "FREE DELIVERY in ₹300 more!" if close enough (window trigger)
+**Status**: completed
+**Completion Evidence**: Cart shows the nudge when the configured free-shipping threshold is within ₹300.
 ## 136 → Cart header Seasonal countdown 2.30 clock (if event active)
 ## 137 → 2.12 Abandon cart email capture lightbox mouseLeave intent
 ## 138 → 2.11 each product line "Added by X shoppers yesterday" badge under name
 ## 139 → 2.8 personalized related rail below cart
+**Status**: completed
+**Completion Evidence**: Cart displays a dynamic recommendations rail excluding products already in the cart.
 ## 140 → 2.7 you-saved summary callout in order summary (calculate diff vs original)
+**Status**: completed
+**Completion Evidence**: Summary calculates savings from original price versus active discounted price for each line.
 ## 141 → 2.2 Low-stock fire badges inline each line qty if inventory < threshold (use product.inventory)
+**Status**: completed
+**Completion Evidence**: Cart item lines display a low-stock badge when available product stock is 1–5.
 ## 142 → Cart May-Like cards render correctly on empty
+**Status**: completed
+**Completion Evidence**: Empty-cart view shows up to two recommended products with working add-to-cart controls.
 ## Tasks 143–145 validation smokes: ₹799 gift auto-added preview, enforce disable works, 3 hooks fire
 # — GROUP 6: CHECKOUT 20× (16 tasks 146–161)
 ## 146 → Checkout.jsx shippingCost now read from settings (not 150/0 hardcoded)
+**Status**: completed
+**Completion Evidence**: Checkout reads standard/express charges from public settings with defaults and zeroes shipping when a rule unlocks free delivery.
 ## 147 → Mirror multi-tier bars on checkout right summary
+**Status**: completed
+**Completion Evidence**: Checkout summary renders each active tier's badge, progress, and missing amount.
 ## 148 → Gift lines clearly marked "FREE CART GIFT" with note (admin source)
+**Status**: completed
+**Completion Evidence**: Evaluated gifts appear in the summary with name/product fallback, quantity, and FREE CART GIFT label.
 ## 149 → Coupon field 2.31 Auto-apply Best Coupon button logic (test eligible apply max)
+**Status**: completed
+**Completion Evidence**: Best coupon action filters active public coupons by minimum subtotal/usage and applies the highest calculated discount client-side; backend still validates at order placement.
 ## 150 → 1-Click wallet express button prominent if balance ≥ total (2.26)
+**Status**: completed
+**Completion Evidence**: Existing balance-gated wallet express action is labeled “1-Click Wallet Checkout” and disabled when balance is insufficient.
 ## 151 → 4 GUARANTEE BADGES strip (2.4.6)
+**Status**: completed
+**Completion Evidence**: Checkout summary displays four trust badges.
 ## 152 → Guest email-only checkout (no password required; post success create-pw prompt)
 ## 153 → Delivery slot 2.15 urgency badges ("Only 2 tomorrow slots left")
 ## 154 → Post-purchase 1-click bump (2.32) between place order → success page with backend support flag add to order items
 ## 155 → 2.30 seasonal countdown banner top
 ## 156 → 2.23 VIP early-access ribbon (if tier Gold+)
 ## 157 → Loyalty apply points to offset balance toggle if points > 0 (optionally)
+**Status**: completed
+**Completion Evidence**: Checkout loads the customer loyalty balance, optionally applies points against remaining payable value, and sends the bounded redemption request for transactional backend validation.
 ## 158 → 2.25 size recommendation personalization (PDP carry over)
 ## Tasks 159-161 validations: Shipping from settings, gifts match cart, best-coupon works
 # — GROUP 7: 32 CONVERSION HOOKS implementation (tasks 162–190 covers remaining hooks already not in 5/6)

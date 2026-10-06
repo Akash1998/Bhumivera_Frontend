@@ -9,6 +9,8 @@ const api = axios.create({ baseURL: `${BASE_URL}/api`, withCredentials: false })
 api.interceptors.request.use(c => {
   const url = c.url || "";
   const isAdminCall = url.startsWith("/admin/") ||
+    url.startsWith("/users/loyalty/tiers") ||
+    url.startsWith("/logs/") ||
     url.startsWith("/flash-sales/admin") ||
     url.startsWith("/orders/all") ||
     url.startsWith("/orders/") && c.method !== "post" && c.method !== "patch" ||
@@ -50,6 +52,7 @@ let _firstFailedRefreshAt = 0;
 
 const _resolveTokenKind = (url = '') => {
   const isAdminUrl = url.startsWith("/admin/") ||
+    url.startsWith("/logs/") ||
     url.startsWith("/flash-sales/admin") ||
     (url.startsWith("/flash-sales/") && !url.startsWith("/flash-sales/active")) ||
     url.startsWith("/orders/all") ||
@@ -91,6 +94,14 @@ const _attemptRefresh = async () => {
 };
 
 api.interceptors.response.use(r => r, async (e) => {
+  const errorData = e.response?.data || {};
+  e.normalized = {
+    code: errorData.code || (e.response ? `HTTP_${e.response.status}` : 'NETWORK_ERROR'),
+    message: errorData.message || errorData.error || e.message || 'Request failed.',
+    userAction: errorData.userAction || (e.response?.status === 401 ? 'Sign in and try again.' : 'Try again later.'),
+    status: e.response?.status || 0,
+    details: errorData.details,
+  };
   const status = e.response?.status;
   const url = e.config?.url || "";
   if (status === 401) {
@@ -153,6 +164,15 @@ export const products = { getAllActive: p => api.get("/products/active", { param
 export const categories = { getAll: () => api.get("/categories"), getById: id => api.get(`/categories/${id}`), create: d => api.post("/categories", d), update: (id, d) => api.put(`/categories/${id}`, d), delete: id => api.delete(`/categories/${id}`) };
 export const subcategories = { getAll: () => api.get("/subcategories"), getById: id => api.get(`/subcategories/${id}`), create: d => api.post("/subcategories", d), update: (id, d) => api.put(`/subcategories/${id}`, d), delete: id => api.delete(`/subcategories/${id}`) };
 export const cart = { get: () => api.get("/cart"), add: d => api.post("/cart", d), updateQuantity: (id, q) => api.put(`/cart/${id}`, { quantity: q }), remove: id => api.delete(`/cart/${id}`), clear: () => api.delete("/cart") };
+export const cartRules = {
+  list: () => api.get('/settings/cart-rules/list'),
+  get: id => api.get(`/settings/cart-rules/${id}`),
+  create: data => api.post('/settings/cart-rules/create', data),
+  update: (id, data) => api.put(`/settings/cart-rules/${id}`, data),
+  remove: id => api.delete(`/settings/cart-rules/${id}`),
+  toggle: (id, status) => api.patch(`/settings/cart-rules/${id}/toggle`, { status }),
+  preview: subtotal => api.get('/settings/cart-rules/preview', { params: { subtotal } }),
+};
 export const orders = { getMyOrders: () => api.get("/orders/my"), getById: id => api.get(`/orders/${id}`), create: d => api.post("/orders", d), getAllAdmin: () => api.get("/orders/all"), updateStatus: (id, s) => api.put(`/orders/${id}/status`, { status: s }), delete: id => api.delete(`/orders/${id}`), fastCheckout: d => api.post('/orders', d), cancel: id => api.post(`/orders/${id}/cancel`, {}), trackOrder: id => api.get(`/orders/${id}`) };
 export const addresses = { getAll: () => api.get("/addresses"), create: d => api.post("/addresses", d), update: (id, d) => api.put(`/addresses/${id}`, d), delete: id => api.delete(`/addresses/${id}`), setDefault: id => api.patch(`/addresses/${id}/default`) };
 export const wishlist = { get: () => api.get("/wishlist"), add: p => api.post("/wishlist", { productId: p }), remove: p => api.delete(`/wishlist/${p}`) };
@@ -162,6 +182,18 @@ export const notifications = { get: () => api.get("/notifications"), markRead: i
 export const analytics = { getDashboard: () => api.get("/analytics/dashboard"), getSales: () => api.get("/analytics/sales"), getProducts: () => api.get("/analytics/products"), getKpis: () => api.get("/analytics/kpis"), getRevenue: () => api.get("/analytics/revenue") };
 export const wallet = { getBalance: () => api.get('/wallet/balance'), getHistory: () => api.get('/wallet/history'), pay: d => api.post('/wallet/pay', d) };
 export const settings = { get: () => api.get("/settings"), getPublic: () => api.get("/settings/public"), update: d => api.put("/settings", d) };
+export const clientErrors = { getAllAdmin: limit => api.get('/logs/client', { params: { limit } }) };
+export const reportClientError = error => {
+  const source = typeof error?.source === 'string' ? error.source.split(/[?#]/, 1)[0] : null;
+  return axios.post(`${BASE_URL}/api/client-log`, {
+    message: String(error?.message || error || 'Unknown client error').slice(0, 2000),
+    source: source?.slice(0, 500) || null,
+    lineNumber: Number.isInteger(error?.lineNumber) ? error.lineNumber : null,
+    columnNumber: Number.isInteger(error?.columnNumber) ? error.columnNumber : null,
+    pageUrl: typeof window === 'undefined' ? null : window.location.pathname,
+    stack: typeof error?.stack === 'string' ? error.stack.slice(0, 8000) : null,
+  }, { timeout: 3000 }).catch(() => null);
+};
 export const shipping = { getAll: () => api.get("/shipping"), create: d => api.post("/shipping", d), update: (id, d) => api.put(`/shipping/${id}`, d), delete: id => api.delete(`/shipping/${id}`) };
 export const returns = { getMyReturns: () => api.get("/returns/my"), submit: d => api.post("/returns", d), getAllAdmin: () => api.get("/returns"), updateStatus: (id, s) => api.patch(`/returns/${id}/status`, { status: s }) };
 export const inventory = { get: () => api.get("/inventory"), updateStock: (p, q) => api.patch(`/inventory/${p}`, { quantity: q }) };
@@ -173,6 +205,12 @@ export const affiliate = { getAllPartners: () => api.get("/affiliate/partners"),
 export const flashSales = { getAll: () => api.get("/flash-sales"), getAllAdmin: () => api.get("/flash-sales"), getActive: () => api.get("/flash-sales/active"), create: d => api.post("/flash-sales", d), update: (id, d) => api.put(`/flash-sales/${id}`, d), delete: id => api.delete(`/flash-sales/${id}`) };
 export const support = { getAllAdmin: () => api.get("/contact"), updateStatus: (id, s) => api.patch(`/contact/${id}/status`, { status: s }), delete: id => api.delete(`/contact/${id}`) };
 export const loyalty = { getSystemConfig: () => api.get("/settings"), updateSystemConfig: d => api.put("/settings", d), getMembers: () => api.get("/admin/users"), adjustPoints: (u, d) => api.patch(`/admin/users/${u}/status`, d) };
+export const loyaltyTiers = {
+  list: () => api.get('/users/loyalty/tiers'),
+  create: data => api.post('/users/loyalty/tiers', data),
+  update: (id, data) => api.put(`/users/loyalty/tiers/${id}`, data),
+  remove: id => api.delete(`/users/loyalty/tiers/${id}`),
+};
 export const fetchProductQA = p => api.get(`/products/${p}/qa`);
 export const submitProductQuestion = (p, d) => api.post(`/products/${p}/qa`, d);
 export const fetchCart = () => cart.get();

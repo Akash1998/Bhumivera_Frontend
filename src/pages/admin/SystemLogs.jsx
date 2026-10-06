@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { clientErrors as clientErrorsApi } from '../../services/api';
 import { 
   Terminal, AlertTriangle, Info, XCircle, Activity, 
   Cpu, HardDrive, Wifi, Download, Search, Filter, 
@@ -32,6 +33,11 @@ export default function SystemLogs() {
   const [isPaused, setIsPaused] = useState(false);
   const [search, setSearch] = useState('');
   const [activeFilter, setActiveFilter] = useState('ALL');
+  const [activeView, setActiveView] = useState('telemetry');
+  const [clientErrors, setClientErrors] = useState([]);
+  const [clientErrorsLoading, setClientErrorsLoading] = useState(false);
+  const [clientErrorsLoadError, setClientErrorsLoadError] = useState('');
+  const [clientErrorsRefresh, setClientErrorsRefresh] = useState(0);
   const [metrics, setMetrics] = useState({ cpu: 42, ram: 68, net: 124, errRate: 0.05 });
   const logEndRef = useRef(null);
   const scrollContainerRef = useRef(null);
@@ -64,6 +70,24 @@ export default function SystemLogs() {
     }
   }, [logs, isPaused]);
 
+  useEffect(() => {
+    if (activeView !== 'client-errors') return undefined;
+    let active = true;
+    setClientErrorsLoading(true);
+    setClientErrorsLoadError('');
+    clientErrorsApi.getAllAdmin(100)
+      .then(response => {
+        if (active) setClientErrors(response.data?.data || []);
+      })
+      .catch(error => {
+        if (active) setClientErrorsLoadError(error.normalized?.message || 'Failed to load client errors.');
+      })
+      .finally(() => {
+        if (active) setClientErrorsLoading(false);
+      });
+    return () => { active = false; };
+  }, [activeView, clientErrorsRefresh]);
+
   const generateLog = (timestamp) => {
     const template = MOCK_MESSAGES[Math.floor(Math.random() * MOCK_MESSAGES.length)];
     const id = Math.random().toString(36).substr(2, 9);
@@ -74,6 +98,12 @@ export default function SystemLogs() {
     if (activeFilter !== 'ALL' && log.level !== activeFilter) return false;
     if (search && !log.msg.toLowerCase().includes(search.toLowerCase()) && !log.src.toLowerCase().includes(search.toLowerCase())) return false;
     return true;
+  });
+
+  const filteredClientErrors = clientErrors.filter(error => {
+    if (!search) return true;
+    const query = search.toLowerCase();
+    return [error.message, error.source, error.page_url].some(value => value?.toLowerCase().includes(query));
   });
 
   const exportLogs = () => {
@@ -101,6 +131,18 @@ export default function SystemLogs() {
         .terminal-scroll::-webkit-scrollbar-thumb { background-color: rgba(34, 211, 238, 0.3); border-radius: 4px; }
         .terminal-scroll::-webkit-scrollbar-thumb:hover { background-color: rgba(34, 211, 238, 0.6); }
       `}</style>
+
+      <div role="tablist" aria-label="System log views" className="flex gap-2 border-b border-slate-800">
+        <button role="tab" aria-selected={activeView === 'telemetry'} onClick={() => setActiveView('telemetry')} className={`border-b-2 px-4 py-3 text-xs font-bold ${activeView === 'telemetry' ? 'border-cyan-400 text-cyan-300' : 'border-transparent text-slate-500'}`}>
+          Live Telemetry
+        </button>
+        <button role="tab" aria-selected={activeView === 'client-errors'} onClick={() => setActiveView('client-errors')} className={`border-b-2 px-4 py-3 text-xs font-bold ${activeView === 'client-errors' ? 'border-rose-400 text-rose-300' : 'border-transparent text-slate-500'}`}>
+          Client Errors
+        </button>
+      </div>
+
+      {activeView === 'telemetry' ? (
+      <div className="flex min-h-0 flex-1 flex-col gap-6">
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 flex-shrink-0">
         {statCards.map((stat, i) => (
@@ -196,6 +238,47 @@ export default function SystemLogs() {
           )}
         </div>
       </div>
+      </div>
+      ) : (
+        <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40">
+          <div className="flex items-center justify-between gap-4 border-b border-slate-800 p-4">
+            <div>
+              <h2 className="text-sm font-bold text-white">Client Errors</h2>
+              <p className="mt-1 text-xs text-slate-500">Most recent browser error reports</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <input aria-label="Search client errors" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search errors" className="w-44 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none focus:border-cyan-500" />
+              <button onClick={() => setClientErrorsRefresh(value => value + 1)} className="rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-300 hover:border-cyan-500 hover:text-white">Refresh</button>
+            </div>
+          </div>
+          {clientErrorsLoading ? (
+            <div className="p-6 text-sm text-slate-400">Loading client errors…</div>
+          ) : clientErrorsLoadError ? (
+            <div role="alert" className="p-6 text-sm text-rose-300">{clientErrorsLoadError}</div>
+          ) : filteredClientErrors.length === 0 ? (
+            <div className="p-6 text-sm text-slate-500">No client error reports found.</div>
+          ) : (
+            <div className="min-h-0 flex-1 overflow-auto">
+              <table className="w-full min-w-[760px] border-collapse text-left text-xs">
+                <thead className="sticky top-0 bg-slate-950 text-[10px] uppercase tracking-wider text-slate-500">
+                  <tr><th className="p-3">Time</th><th className="p-3">Page</th><th className="p-3">Error</th><th className="p-3">Source</th><th className="p-3">Details</th></tr>
+                </thead>
+                <tbody>
+                  {filteredClientErrors.map(error => (
+                    <tr key={error.id} className="border-t border-slate-800 align-top text-slate-300">
+                      <td className="whitespace-nowrap p-3 text-slate-500">{new Date(error.created_at).toLocaleString()}</td>
+                      <td className="max-w-40 truncate p-3" title={error.page_url || ''}>{error.page_url || '—'}</td>
+                      <td className="max-w-md break-words p-3 text-rose-200">{error.message}</td>
+                      <td className="max-w-48 truncate p-3 text-slate-500" title={error.source || ''}>{error.source || '—'}{error.line_number ? `:${error.line_number}` : ''}</td>
+                      <td className="p-3">{error.stack ? <details><summary className="cursor-pointer text-cyan-300">Stack</summary><pre className="mt-2 max-w-xl whitespace-pre-wrap break-words text-[10px] text-slate-400">{error.stack}</pre></details> : '—'}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </section>
+      )}
     </div>
   );
 }

@@ -317,13 +317,13 @@ export default function Profile() {
       toast.success('Password changed');
       setPasswords({ current:'', new:'', confirm:'' });
     } catch (err) {
-      const d = err.response?.data;
+      const d = err.normalized || err.response?.data;
       if (d?.code === 'MIN_LENGTH') toast.error(d.message);
       else if (d?.code === 'COMPLEXITY') toast.error(d.message);
       else if (d?.code === 'COMMON_PASSWORD') toast.error(d.message);
       else if (d?.code === 'PWNED_PASSWORD') toast.error(d.message);
       else if (d?.code === 'PASSWORD_REUSED') toast.error(d.message);
-      else if (err.response?.status === 401) toast.error('Current password is incorrect');
+      else if ((err.normalized?.status || err.response?.status) === 401) toast.error('Current password is incorrect');
       else toast.error(d?.message || err.message || 'Failed');
     }
   };

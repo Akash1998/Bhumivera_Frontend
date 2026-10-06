@@ -26,6 +26,13 @@ const WarehouseManagement = lazy(() => import('./admin/WarehouseManagement'));
 const EWarrantyManagement = lazy(() => import('./admin/EWarrantyManagement'));
 const ShippingManagement = lazy(() => import('./admin/ShippingManagement')); 
 const AdminSettings = lazy(() => import('./admin/AdminSettings.jsx'));
+const MinCartValueCenter = lazy(() => import('./admin/MinCartValueCenter.jsx'));
+const CartRulesEngine = lazy(() => import('./admin/CartRulesEngine.jsx'));
+const GamificationStudio = lazy(() => import('./admin/GamificationStudio.jsx'));
+const LifecycleOffers = lazy(() => import('./admin/LifecycleOffers.jsx'));
+const PersonalizationCenter = lazy(() => import('./admin/PersonalizationCenter.jsx'));
+const ABExperimentLab = lazy(() => import('./admin/ABExperimentLab.jsx'));
+const LoyaltyTierForge = lazy(() => import('./admin/LoyaltyTierForge.jsx'));
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -76,6 +83,13 @@ const TAB_COMPONENTS = {
   notifications: NotificationManagement,
   tax: TaxManagement, shipping: ShippingManagement, logs: SystemLogs,
   warehouse: WarehouseManagement, settings: AdminSettings,
+  'min-cart-value': MinCartValueCenter,
+  'cart-rules': CartRulesEngine,
+  gamification: GamificationStudio,
+  'lifecycle-offers': LifecycleOffers,
+  personalization: PersonalizationCenter,
+  'ab-experiments': ABExperimentLab,
+  'loyalty-tiers': LoyaltyTierForge,
 };
 
 // Safe Generic Icon to bypass Lucide-React `.reduce()` compiler crashes
@@ -121,7 +135,14 @@ export default function AdminDashboard() {
       title: 'Marketing', items: [
         { id: 'loyalty', label: 'Loyalty' }, { id: 'affiliate', label: 'Affiliates' },
         { id: 'coupons', label: 'Coupons' }, { id: 'flash-sales', label: 'Flash Sales' },
-        { id: 'reviews', label: 'Reviews' }
+        { id: 'reviews', label: 'Reviews' },
+        { id: 'min-cart-value', label: 'MIN-CART-VALUE CONTROL CENTER' },
+        { id: 'cart-rules', label: 'Cart Rules Engine' },
+        { id: 'gamification', label: 'Gamification Studio' },
+        { id: 'lifecycle-offers', label: 'Lifecycle Offers' },
+        { id: 'personalization', label: 'Personalization Center' },
+        { id: 'ab-experiments', label: 'A/B Experiment Lab' },
+        { id: 'loyalty-tiers', label: 'Loyalty Tier Forge' }
       ]
     },
     {

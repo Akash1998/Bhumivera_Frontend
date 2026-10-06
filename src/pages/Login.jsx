@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import api, { auth } from '../services/api';
 import { toast } from 'react-hot-toast';
@@ -15,7 +15,28 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
   const [showLockoutBanner, setShowLockoutBanner] = useState(false);
   const [lockoutMsg, setLockoutMsg] = useState('');
+  const [lockoutSeconds, setLockoutSeconds] = useState(0);
+  const [lockoutExpired, setLockoutExpired] = useState(false);
   const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!showLockoutBanner || lockoutSeconds <= 0) return undefined;
+    const timer = setInterval(() => setLockoutSeconds(seconds => Math.max(0, seconds - 1)), 1000);
+    return () => clearInterval(timer);
+  }, [showLockoutBanner, lockoutSeconds]);
+
+  useEffect(() => {
+    if (!showLockoutBanner) return;
+    if (lockoutSeconds <= 0) {
+      setLockoutExpired(true);
+      setLockoutMsg('Lockout expired. You can try again now.');
+      return;
+    }
+    setLockoutExpired(false);
+    const mins = Math.floor(lockoutSeconds / 60);
+    const secs = lockoutSeconds % 60;
+    setLockoutMsg(`Account temporarily locked. Try again in ${mins}m ${secs}s or reset password now.`);
+  }, [lockoutSeconds, showLockoutBanner]);
 
   const _persistAndRedirect = (data, greetMsg = 'Welcome back to Bhumivera!') => {
     if (data.token) {
@@ -64,6 +85,8 @@ const Login = () => {
 
   const handlePasswordLogin = async (e) => {
     e.preventDefault();
+    setShowLockoutBanner(false);
+    setLockoutExpired(false);
     setLoading(true);
     try {
       const res = await auth.login({ email, password });
@@ -81,10 +104,8 @@ const Login = () => {
       const status = error.response?.status;
       const d = error.response?.data;
       if (status === 423) {
-        const secs = d?.secondsRemaining || 0;
-        const mins = Math.floor(secs / 60);
-        const rSecs = secs % 60;
-        setLockoutMsg(`Account temporarily locked. Try again in ${mins}m ${rSecs}s or reset password now.`);
+        const secs = Math.max(0, Number(d?.secondsRemaining) || 0);
+        setLockoutSeconds(secs);
         setShowLockoutBanner(true);
       } else if (error.response?.status === 202 && error.response?.data?.requires2FA) {
         setStep('2FA');
@@ -203,8 +224,8 @@ const Login = () => {
                     </div>
                   </div>
                   {showLockoutBanner && (
-                    <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-sm">
-                      <div className="font-semibold text-red-500 mb-2">🔒 {lockoutMsg}</div>
+                    <div className={`mb-4 p-4 border rounded-2xl text-sm ${lockoutExpired ? 'bg-emerald-500/10 border-emerald-500/30' : 'bg-red-500/10 border-red-500/30'}`}>
+                      <div className={`font-semibold mb-2 ${lockoutExpired ? 'text-emerald-700' : 'text-red-500'}`}>{lockoutExpired ? '✓' : '🔒'} {lockoutMsg}</div>
                       <Link to="/forgot-password" className="text-[#D4AF37] font-bold hover:underline">
                         Reset password to unlock immediately →
                       </Link>

@@ -1,6 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "./AuthContext";
-import { cart as cartApi } from "../services/api";
+import { useSettings } from "./SettingsContext";
+import { cart as cartApi, cartRules as cartRulesApi } from "../services/api";
+import toast from 'react-hot-toast';
 
 const CartContext = createContext();
 
@@ -9,7 +11,11 @@ export const CartProvider = ({ children }) => {
   const [cartLoading, setCartLoading] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false); 
   const [upsells, setUpsells] = useState([]); 
+  const [rulePreview, setRulePreview] = useState(null);
+  const [rulePreviewLoading, setRulePreviewLoading] = useState(false);
+  const previousRuleIds = useRef(null);
   const { isAuthenticated } = useAuth();
+  const { settings } = useSettings();
 
   const loadCart = useCallback(async () => {
     if (isAuthenticated) {
@@ -18,9 +24,11 @@ export const CartProvider = ({ children }) => {
         const res = await cartApi.get();
         const fetchedData = res.data?.items || res.data;
         setCart(Array.isArray(fetchedData) ? fetchedData : []);
+        setRulePreview(res.data?.rulePreview || null);
       } catch (err) {
         console.error("Cart sync failed:", err);
         setCart([]);
+        setRulePreview(null);
       } finally {
         setCartLoading(false);
       }
@@ -29,6 +37,7 @@ export const CartProvider = ({ children }) => {
         const saved = localStorage.getItem("Bhumivera_guest_cart");
         const parsed = saved ? JSON.parse(saved) : [];
         setCart(Array.isArray(parsed) ? parsed : []);
+        setRulePreview(null);
       } catch (e) {
         console.error("Local cart parse failed:", e);
         setCart([]);
@@ -136,9 +145,49 @@ export const CartProvider = ({ children }) => {
       return acc + (price * (item.quantity || 1));
     }, 0);
   };
+
+  const subtotalForRules = getSubtotal();
+
+  useEffect(() => {
+    if (subtotalForRules <= 0) {
+      setRulePreview(null);
+      setRulePreviewLoading(false);
+      previousRuleIds.current = null;
+      return undefined;
+    }
+    let active = true;
+    const timer = setTimeout(async () => {
+      setRulePreviewLoading(true);
+      try {
+        const { data } = await cartRulesApi.preview(subtotalForRules);
+        if (active) setRulePreview(data);
+      } catch (error) {
+        if (active) console.warn('Cart rule preview unavailable:', error.normalized?.message || error.message);
+      } finally {
+        if (active) setRulePreviewLoading(false);
+      }
+    }, 250);
+    return () => { active = false; clearTimeout(timer); };
+  }, [subtotalForRules]);
+
+  useEffect(() => {
+    if (!rulePreview) return;
+    const currentIds = new Set((rulePreview.matchedRuleIds || []).map(String));
+    if (previousRuleIds.current) {
+      const newlyUnlocked = (rulePreview.matchedRules || []).filter(rule => currentIds.has(String(rule.id)) && !previousRuleIds.current.has(String(rule.id)));
+      newlyUnlocked.forEach(rule => toast.success(`🎉 You unlocked ${rule.badge_text || rule.name}`));
+    }
+    previousRuleIds.current = currentIds;
+  }, [rulePreview]);
   
-  const freeShippingThreshold = 5000;
-  const shippingProgress = Math.min((getSubtotal() / freeShippingThreshold) * 100, 100);
+  const rawThreshold = settings?.free_shipping_threshold;
+  const parsedThreshold = Number(rawThreshold);
+  const freeShippingThreshold = rawThreshold !== null && rawThreshold !== undefined && rawThreshold !== '' && Number.isFinite(parsedThreshold)
+    ? parsedThreshold
+    : 5000;
+  const shippingProgress = freeShippingThreshold > 0
+    ? Math.min((getSubtotal() / freeShippingThreshold) * 100, 100)
+    : 100;
 
   return (
     <CartContext.Provider value={{ 
@@ -154,6 +203,8 @@ export const CartProvider = ({ children }) => {
       getSubtotal,
       shippingProgress,
       freeShippingThreshold,
+      rulePreview,
+      rulePreviewLoading,
       loadCart
     }}>
       {children}
