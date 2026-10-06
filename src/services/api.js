@@ -9,6 +9,7 @@ const api = axios.create({ baseURL: `${BASE_URL}/api`, withCredentials: false })
 api.interceptors.request.use(c => {
   const url = c.url || "";
   const isAdminCall = url.startsWith("/admin/") ||
+    url.startsWith("/flash-sales/admin") ||
     url.startsWith("/orders/all") ||
     url.startsWith("/orders/") && c.method !== "post" && c.method !== "patch" ||
     url.startsWith("/analytics/") ||
@@ -27,7 +28,7 @@ api.interceptors.request.use(c => {
     url.startsWith("/shipping") && c.method !== "get" ||
     url.startsWith("/shipping/zones") && c.method === "get" && !url.includes("/active") ||
     url.startsWith("/tax") && c.method !== "get" ||
-    url.startsWith("/flash-sales") && (c.method === "post" || c.method === "put" || c.method === "delete");
+    url.startsWith("/flash-sales") && (c.method === "post" || c.method === "put" || c.method === "patch" || c.method === "delete");
 
   const isWarehouseCall = url.startsWith("/warehouse/") && !url.startsWith("/warehouse/login");
 
@@ -49,6 +50,8 @@ let _firstFailedRefreshAt = 0;
 
 const _resolveTokenKind = (url = '') => {
   const isAdminUrl = url.startsWith("/admin/") ||
+    url.startsWith("/flash-sales/admin") ||
+    (url.startsWith("/flash-sales/") && !url.startsWith("/flash-sales/active")) ||
     url.startsWith("/orders/all") ||
     url.startsWith("/analytics/") ||
     url.startsWith("/settings") ||

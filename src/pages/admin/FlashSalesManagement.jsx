@@ -7,6 +7,14 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
+import DatetimeTzInput from '../../components/DatetimeTzInput';
+import { defaultRange } from '../../utils/dateTz';
+
+const toIsoString = value => {
+  if (!value) return '';
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date.toISOString() : '';
+};
 
 export default function FlashSalesManagement() {
   const [campaigns, setCampaigns] = useState([]);
@@ -43,13 +51,13 @@ export default function FlashSalesManagement() {
     try {
       // Parallel fetch: Get campaigns and all products for linkage
       const [campRes, prodRes] = await Promise.all([
-        api.get('/flash-sales').catch(() => ({ data: { data: [] } })), // Fallback if endpoint varies
+        api.get('/flash-sales/admin').catch(() => ({ data: { data: [] } })),
         api.get('/products').catch(() => api.get('/admin/products')).catch(() => ({ data: { data: [] } }))
       ]);
       
       setCampaigns(campRes.data?.data || campRes.data?.campaigns || campRes.data || []);
       setAvailableProducts(prodRes.data?.products || prodRes.data?.data || prodRes.data || []);
-    } catch (err) {
+    } catch {
       showToast?.('Failed to synchronize Chrono-Matrix.', 'error');
     } finally {
       setLoading(false);
@@ -76,18 +84,19 @@ export default function FlashSalesManagement() {
       setForm({
         name: campaign.name || '',
         discount_percentage: campaign.discount_percentage || campaign.discount || '',
-        start_time: campaign.start_time ? new Date(campaign.start_time).toISOString().slice(0, 16) : '',
-        end_time: campaign.end_time ? new Date(campaign.end_time).toISOString().slice(0, 16) : '',
+        start_time: toIsoString(campaign.start_time),
+        end_time: toIsoString(campaign.end_time),
         status: campaign.status || 'active',
         product_ids: campaign.products?.map(p => p.id || p._id) || campaign.product_ids || []
       });
     } else {
       setEditingCampaign(null);
+      const dates = defaultRange();
       setForm({
         name: '',
         discount_percentage: '',
-        start_time: '',
-        end_time: '',
+        start_time: dates.startIso,
+        end_time: dates.endIso,
         status: 'active',
         product_ids: []
       });
@@ -113,8 +122,12 @@ export default function FlashSalesManagement() {
     const start = new Date(form.start_time).getTime();
     const end = new Date(form.end_time).getTime();
     
-    if (end <= start) {
-      showToast?.('End time must be after start time.', 'error');
+    if (!Number.isFinite(start) || !Number.isFinite(end)) {
+      showToast?.('Please enter valid campaign start and end times.', 'error');
+      return;
+    }
+    if (end - start < 60 * 60 * 1000) {
+      showToast?.('End time must be at least one hour after start time.', 'error');
       return;
     }
 
@@ -130,7 +143,7 @@ export default function FlashSalesManagement() {
       }
       setIsModalOpen(false);
       fetchMatrixData();
-    } catch (err) {
+    } catch {
       showToast?.('Deployment sequence failed.', 'error');
     } finally {
       setIsProcessing(false);
@@ -143,7 +156,7 @@ export default function FlashSalesManagement() {
       await api.delete(`/flash-sales/${id}`);
       showToast?.('Campaign purged.', 'success');
       fetchMatrixData();
-    } catch (err) {
+    } catch {
       showToast?.('Purge failed.', 'error');
     }
   };
@@ -156,7 +169,7 @@ export default function FlashSalesManagement() {
       );
       showToast?.(`Campaign ${newStatus}`, 'success');
       fetchMatrixData();
-    } catch (err) {
+    } catch {
       showToast?.('State mutation failed', 'error');
     }
   };
@@ -436,22 +449,17 @@ export default function FlashSalesManagement() {
                       <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 space-y-4 md:col-span-2">
                         <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 mb-4"><Calendar size={14}/> Validity Horizon</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-500 uppercase block mb-1">Ignition Time</label>
-                            <input 
-                              type="datetime-local" required
-                              value={form.start_time} onChange={e => setForm({...form, start_time: e.target.value})}
-                              className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-xs outline-none focus:border-emerald-500" 
-                            />
-                          </div>
-                          <div>
-                            <label className="text-[9px] font-bold text-slate-500 uppercase block mb-1">Termination Time</label>
-                            <input 
-                              type="datetime-local" required
-                              value={form.end_time} onChange={e => setForm({...form, end_time: e.target.value})}
-                              className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-white text-xs outline-none focus:border-rose-500" 
-                            />
-                          </div>
+                          <DatetimeTzInput
+                            label="Ignition Time"
+                            value={form.start_time}
+                            onChange={start_time => setForm(current => ({ ...current, start_time }))}
+                          />
+                          <DatetimeTzInput
+                            label="Termination Time"
+                            value={form.end_time}
+                            defaultDayOffset={7}
+                            onChange={end_time => setForm(current => ({ ...current, end_time }))}
+                          />
                         </div>
                       </div>
                     </div>

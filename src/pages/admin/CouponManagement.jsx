@@ -8,6 +8,14 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
+import DatetimeTzInput from '../../components/DatetimeTzInput';
+import { defaultRange } from '../../utils/dateTz';
+
+const toIsoString = value => {
+  if (!value) return '';
+  const date = new Date(value);
+  return Number.isFinite(date.getTime()) ? date.toISOString() : '';
+};
 
 export default function CouponManagement() {
   const [coupons, setCoupons] = useState([]);
@@ -77,15 +85,16 @@ export default function CouponManagement() {
         min_purchase: item.min_purchase || item.min_cart_value || '',
         max_discount: item.max_discount || item.max_discount_amount || '',
         usage_limit: item.usage_limit || '',
-        valid_from: item.valid_from ? new Date(item.valid_from).toISOString().slice(0, 16) : '',
-        valid_until: item.valid_until ? new Date(item.valid_until).toISOString().slice(0, 16) : '',
+        valid_from: toIsoString(item.valid_from),
+        valid_until: toIsoString(item.valid_until || item.expires_at),
         status: item.status || 'active'
       });
     } else {
       setEditingItem(null);
+      const dates = defaultRange(0, 30);
       setForm({
         code: '', description: '', discount_type: 'percentage', discount_value: '',
-        min_purchase: '', max_discount: '', usage_limit: '', valid_from: '', valid_until: '', status: 'active'
+        min_purchase: '', max_discount: '', usage_limit: '', valid_from: dates.startIso, valid_until: dates.endIso, status: 'active'
       });
     }
     setActiveTab('core');
@@ -94,6 +103,18 @@ export default function CouponManagement() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (form.valid_from || form.valid_until) {
+      const start = new Date(form.valid_from).getTime();
+      const end = new Date(form.valid_until).getTime();
+      if (!Number.isFinite(start) || !Number.isFinite(end)) {
+        showToast?.('Enter both valid coupon dates or leave both dates empty.', 'error');
+        return;
+      }
+      if (end - start < 60 * 60 * 1000) {
+        showToast?.('Coupon expiry must be at least one hour after its start time.', 'error');
+        return;
+      }
+    }
     setIsProcessing(true);
     try {
       const payload = { ...form };
@@ -547,20 +568,20 @@ export default function CouponManagement() {
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Activation Horizon (Start Date)</label>
-                      <input 
-                        type="datetime-local" 
-                        value={form.valid_from} onChange={e => setForm({...form, valid_from: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-mono font-bold outline-none focus:border-amber-500/50 custom-calendar-icon" 
+                      <DatetimeTzInput
+                        label="Activation Horizon (Start Date)"
+                        value={form.valid_from}
+                        initializeEmpty={!editingItem}
+                        onChange={valid_from => setForm(current => ({ ...current, valid_from }))}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Termination Horizon (End Date)</label>
-                      <input 
-                        type="datetime-local" 
-                        value={form.valid_until} onChange={e => setForm({...form, valid_until: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-mono font-bold outline-none focus:border-amber-500/50 custom-calendar-icon" 
+                      <DatetimeTzInput
+                        label="Termination Horizon (End Date)"
+                        value={form.valid_until}
+                        initializeEmpty={!editingItem}
+                        onChange={valid_until => setForm(current => ({ ...current, valid_until }))}
                       />
                     </div>
                   </div>
