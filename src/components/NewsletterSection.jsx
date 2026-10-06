@@ -1,19 +1,26 @@
 import React, { useState } from 'react';
 import { Mail, Send, CheckCircle2, Shield, BellRing, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { newsletter as newsletterApi } from '../services/api';
 
 export default function NewsletterSection() {
   const [email, setEmail] = useState('');
   const [status, setStatus] = useState('idle');
+  const [error, setError] = useState('');
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!email) return;
     setStatus('loading');
-    setTimeout(() => {
+    setError('');
+    try {
+      await newsletterApi.subscribe(email, 'newsletter-section');
       setStatus('success');
       setEmail('');
-    }, 1500);
+    } catch (requestError) {
+      setStatus('idle');
+      setError(requestError.response?.data?.message || 'Could not subscribe right now. Please try again.');
+    }
   };
 
   return (
@@ -74,6 +81,7 @@ export default function NewsletterSection() {
                 </div>
               ) : (
                 <form onSubmit={handleSubmit} className="space-y-6">
+                  {error && <p role="alert" className="text-sm text-rose-300">{error}</p>}
                   <div className="relative group/input">
                     <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within/input:text-emerald-500 transition-colors">
                       <Mail size={24} />

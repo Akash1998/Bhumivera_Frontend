@@ -183,6 +183,7 @@ export const analytics = { getDashboard: () => api.get("/analytics/dashboard"), 
 export const wallet = { getBalance: () => api.get('/wallet/balance'), getHistory: () => api.get('/wallet/history'), pay: d => api.post('/wallet/pay', d) };
 export const settings = { get: () => api.get("/settings"), getPublic: () => api.get("/settings/public"), update: d => api.put("/settings", d) };
 export const clientErrors = { getAllAdmin: limit => api.get('/logs/client', { params: { limit } }) };
+export const newsletter = { subscribe: (email, source = 'site') => axios.post(`${BASE_URL}/api/newsletter/subscribe`, { email, source }, { timeout: 5000 }) };
 export const reportClientError = error => {
   const source = typeof error?.source === 'string' ? error.source.split(/[?#]/, 1)[0] : null;
   return axios.post(`${BASE_URL}/api/client-log`, {

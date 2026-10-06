@@ -34,7 +34,9 @@ export default function Checkout() {
   const [loading, setLoading] = useState(false);
   const [walletBalance, setWalletBalance] = useState(0);
   const [loyaltyPoints, setLoyaltyPoints] = useState(0);
+  const [loyaltyTier, setLoyaltyTier] = useState(user?.loyalty?.currentTier || '');
   const [redeemLoyaltyPoints, setRedeemLoyaltyPoints] = useState(false);
+  const [seasonalSeconds, setSeasonalSeconds] = useState(0);
   
   const [couponCode, setCouponCode] = useState('');
   const [availableCoupons, setAvailableCoupons] = useState([]);
@@ -77,6 +79,7 @@ export default function Checkout() {
       const profileRes = await usersApi.getProfile();
       const profile = profileRes.data?.user || profileRes.data;
       setLoyaltyPoints(Math.max(0, Number(profile?.loyalty_points) || 0));
+      setLoyaltyTier(profile?.loyalty?.currentTier || '');
     } catch {
       setLoyaltyPoints(0);
     }
@@ -85,6 +88,19 @@ export default function Checkout() {
   useEffect(() => {
     fetchData();
   }, [fetchData]);
+
+  useEffect(() => {
+    const enabled = settings?.gamification_seasonal_countdown_enabled === '1' || settings?.gamification_seasonal_countdown_enabled === 1;
+    const endTime = settings?.seasonal_countdown_end_at ? new Date(settings.seasonal_countdown_end_at).getTime() : 0;
+    if (!enabled || !Number.isFinite(endTime) || endTime <= Date.now()) {
+      setSeasonalSeconds(0);
+      return undefined;
+    }
+    const update = () => setSeasonalSeconds(Math.max(0, Math.ceil((endTime - Date.now()) / 1000)));
+    update();
+    const timer = setInterval(update, 1000);
+    return () => clearInterval(timer);
+  }, [settings]);
 
   const handlePlaceOrder = async (isFastCheckout = false) => {
     if (!selectedAddress) return alert("Please select a shipping destination to proceed.");

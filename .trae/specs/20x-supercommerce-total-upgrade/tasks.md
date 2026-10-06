@@ -3,7 +3,7 @@
 - Parent spec: `./spec.md` (read BEFORE any edits)
 - Resumption one-click root doc: `c:\Users\akash\OneDrive\Documents\GitHub\Bhumivera_Frontend\RESUME_FROM_HERE.md`
 - Global format per task: ## Task N [GROUP-CODE-id] → Headings, Fields, TRs, Status, Resume, Evidence.
-- **Progress: 98 / 196 explicit tasks completed; validation tasks and later groups remain.**
+- **Progress: 100 / 196 explicit tasks completed; validation tasks and later groups remain.**
 - **GLOBAL DEPENDENCY ORDER (never break):** GCLEAN → GROUP 0 DEFECTS → GROUP 1 ERRORS → GROUP 2 SESSION → GROUP 3 CART RULES (backend) → GROUP 4 ADMIN 7 TABS → GROUP 5 CUSTOMER CART UX → GROUP 6 CHECKOUT → GROUP 7 HOOKS 32 → GROUP 8 PERF 20× FUNCTION REGISTER → GROUP 9 LOYALTY → GROUP 10 TOASTS → GROUP 11 OBSERV → GROUP 12 423 LIVE → GROUP 13 VALIDATE (rule ACs) → GROUP 14 REVIEW (rubric ACs).
 
 ---
@@ -917,7 +917,11 @@
 **Status**: completed
 **Completion Evidence**: Cart shows the nudge when the configured free-shipping threshold is within ₹300.
 ## 136 → Cart header Seasonal countdown 2.30 clock (if event active)
+**Status**: completed
+**Completion Evidence**: Cart displays a second-by-second seasonal countdown only while the seeded admin hook is enabled and its configured end time remains in the future.
 ## 137 → 2.12 Abandon cart email capture lightbox mouseLeave intent
+**Status**: completed
+**Completion Evidence**: Guest cart exit intent opens an opt-in dialog when the admin hook is enabled; email is sent to the rate-limited newsletter subscription endpoint.
 ## 138 → 2.11 each product line "Added by X shoppers yesterday" badge under name
 ## 139 → 2.8 personalized related rail below cart
 **Status**: completed

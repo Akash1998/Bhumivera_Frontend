@@ -7,8 +7,9 @@ import {
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
+import { useSettings } from '../context/SettingsContext';
 import { Gift } from 'lucide-react';
-import { products as productsApi } from '../services/api';
+import { newsletter as newsletterApi, products as productsApi } from '../services/api';
 import toast from 'react-hot-toast';
 
 const getImageUrl = (img) => {
@@ -34,11 +35,16 @@ export default function Cart() {
   } = useCart();
   
   const { user } = useAuth();
+  const { settings } = useSettings();
   const navigate = useNavigate();
   const previousUnlockedRules = useRef(null);
   const [celebrationRule, setCelebrationRule] = useState(null);
   const [recommendations, setRecommendations] = useState([]);
   const [heldMinutes, setHeldMinutes] = useState(0);
+  const [exitPromptOpen, setExitPromptOpen] = useState(false);
+  const [exitEmail, setExitEmail] = useState('');
+  const [exitSubmitting, setExitSubmitting] = useState(false);
+  const [seasonalSeconds, setSeasonalSeconds] = useState(0);
 
   const cartTotal = typeof getSubtotal === 'function' ? getSubtotal() : 0;
   const cartCount = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
@@ -73,6 +79,46 @@ export default function Cart() {
     const timer = setInterval(update, 60000);
     return () => clearInterval(timer);
   }, [cartItems]);
+
+  useEffect(() => {
+    const enabled = settings?.gamification_abandoned_cart_email_enabled === '1' || settings?.gamification_abandoned_cart_email_enabled === 1;
+    if (!enabled || user || cartItems.length === 0 || sessionStorage.getItem('cart-exit-capture-seen')) return undefined;
+    const handleMouseLeave = event => {
+      if (event.clientY <= 0) {
+        sessionStorage.setItem('cart-exit-capture-seen', '1');
+        setExitPromptOpen(true);
+      }
+    };
+    document.addEventListener('mouseleave', handleMouseLeave);
+    return () => document.removeEventListener('mouseleave', handleMouseLeave);
+  }, [settings, user, cartItems.length]);
+
+  useEffect(() => {
+    const enabled = settings?.gamification_seasonal_countdown_enabled === '1' || settings?.gamification_seasonal_countdown_enabled === 1;
+    const endTime = settings?.seasonal_countdown_end_at ? new Date(settings.seasonal_countdown_end_at).getTime() : 0;
+    if (!enabled || !Number.isFinite(endTime) || endTime <= Date.now()) {
+      setSeasonalSeconds(0);
+      return undefined;
+    }
+    const update = () => setSeasonalSeconds(Math.max(0, Math.ceil((endTime - Date.now()) / 1000)));
+    update();
+    const timer = setInterval(update, 1000);
+    return () => clearInterval(timer);
+  }, [settings]);
+
+  const submitExitCapture = async event => {
+    event.preventDefault();
+    setExitSubmitting(true);
+    try {
+      await newsletterApi.subscribe(exitEmail, 'cart-exit-intent');
+      setExitPromptOpen(false);
+      toast.success('You’re on the list. Watch your inbox for updates.');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Could not save your email.');
+    } finally {
+      setExitSubmitting(false);
+    }
+  };
 
   useEffect(() => {
     const ids = (rulePreview?.matchedRuleIds || []).map(String);
@@ -139,6 +185,9 @@ export default function Cart() {
           {Array.from({ length: 12 }, (_, index) => <motion.span key={index} className={`absolute top-1/2 left-1/2 h-2 w-1.5 ${index % 3 === 0 ? 'bg-amber-400' : index % 3 === 1 ? 'bg-emerald-400' : 'bg-rose-400'}`} animate={{ x: Math.cos(index * Math.PI / 6) * 84, y: Math.sin(index * Math.PI / 6) * 52 + 20, rotate: 240, opacity: [1, 0] }} transition={{ duration: 0.9 }}/>) }
         </div>
       </motion.div>}
+      {seasonalSeconds > 0 && <div role="status" className="fixed right-4 top-24 z-40 border border-emerald-200 bg-white/95 px-4 py-3 text-xs font-bold text-emerald-900 shadow-md">
+        Seasonal offer ends in {Math.floor(seasonalSeconds / 86400)}d {String(Math.floor((seasonalSeconds % 86400) / 3600)).padStart(2, '0')}:{String(Math.floor((seasonalSeconds % 3600) / 60)).padStart(2, '0')}:{String(seasonalSeconds % 60).padStart(2, '0')}
+      </div>}
       <div className="max-w-7xl mx-auto">
         
         <div className="flex items-end justify-between mb-12 border-b border-[#e8dcc4] pb-6">
@@ -309,6 +358,14 @@ export default function Cart() {
 
         </div>
       </div>
+      {exitPromptOpen && <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 p-4" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) setExitPromptOpen(false); }}>
+        <form onSubmit={submitExitCapture} role="dialog" aria-modal="true" aria-labelledby="cart-exit-title" className="w-full max-w-md border border-[#e8dcc4] bg-white p-6 shadow-2xl">
+          <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-widest text-[#8b5a2b]">Before you go</p><h2 id="cart-exit-title" className="mt-2 text-xl font-serif text-[#2C3E2D]">Want your cart offers by email?</h2></div><button type="button" aria-label="Close" onClick={() => setExitPromptOpen(false)} className="text-stone-500">×</button></div>
+          <p className="mt-3 text-sm text-stone-500">Get a reminder and occasional offers. You can unsubscribe any time.</p>
+          <input type="email" required value={exitEmail} onChange={event => setExitEmail(event.target.value)} placeholder="Email address" className="mt-5 w-full border border-stone-300 px-3 py-3 text-sm outline-none focus:border-[#8b5a2b]"/>
+          <div className="mt-4 flex justify-end gap-3"><button type="button" onClick={() => setExitPromptOpen(false)} className="px-3 py-2 text-sm text-stone-500">Not now</button><button disabled={exitSubmitting} type="submit" className="bg-[#8b5a2b] px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{exitSubmitting ? 'Submitting…' : 'Send me updates'}</button></div>
+        </form>
+      </div>}
     </div>
   );
 }
