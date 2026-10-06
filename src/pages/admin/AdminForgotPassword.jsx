@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../../services/api';
 import toast from 'react-hot-toast';
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, ShieldCheck, Terminal } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, ShieldCheck, Terminal, CheckCircle2 } from 'lucide-react';
 
 export default function AdminForgotPassword() {
   const navigate = useNavigate();
@@ -15,6 +15,7 @@ export default function AdminForgotPassword() {
   const [showNewPw, setShowNewPw] = useState(false);
   const [showConfirmPw, setShowConfirmPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   const handleSubmitEmail = async (e) => {
     e.preventDefault();
@@ -59,8 +60,9 @@ export default function AdminForgotPassword() {
     setLoading(true);
     try {
       await auth.adminResetPasswordBearer(adminResetJwt, newPassword);
-      toast.success('Admin password reset successfully');
-      setTimeout(() => navigate('/admin/login'), 1500);
+      setResetSuccess(true);
+      toast.success('Admin password reset successfully! Redirecting you to admin login in 3s…');
+      setTimeout(() => navigate('/admin/login'), 2500);
     } catch (err) {
       const d = err.response?.data;
       if (d?.code === 'MIN_LENGTH') toast.error(d.message);
@@ -175,7 +177,17 @@ export default function AdminForgotPassword() {
           )}
 
           {step === 3 && (
-            <form onSubmit={handleSubmitNewPw} className="space-y-5">
+            <div className="space-y-5">
+              {resetSuccess && (
+                <div className="p-4 rounded-2xl border border-emerald-500/30 bg-emerald-500/10 text-emerald-300 flex items-start gap-2.5">
+                  <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5 text-emerald-400"/>
+                  <div>
+                    <div className="font-semibold text-emerald-200">✅ Admin password reset successfully!</div>
+                    <div className="text-sm text-emerald-400 mt-0.5">Redirecting you to admin login in 3s…</div>
+                  </div>
+                </div>
+              )}
+              <form onSubmit={handleSubmitNewPw} className="space-y-5">
               <div>
                 <label className="block text-xs font-semibold text-slate-300 uppercase tracking-[0.2em] mb-2">New Admin Password</label>
                 <div className="relative">
@@ -222,6 +234,7 @@ export default function AdminForgotPassword() {
                 {loading ? 'RESETTING…' : 'CONFIRM ADMIN PASSWORD RESET'}
               </button>
             </form>
+            </div>
           )}
         </div>
 

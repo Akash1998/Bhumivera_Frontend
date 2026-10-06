@@ -477,7 +477,7 @@ export default function Profile() {
   };
   const handleSetDefaultAddr = async (id) => {
     try { await addressesApi.setDefault(id); toast.success('Default address updated'); await loadAddresses(); }
-    catch (_) {}
+    catch (_) { toast.error('Failed to set default address'); }
   };
 
   const handleLogout = () => { if (window.confirm('Log out of your account?')) { logout(); navigate('/'); } };

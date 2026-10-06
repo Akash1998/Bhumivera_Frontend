@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { auth } from '../services/api';
 import toast from 'react-hot-toast';
-import { Mail, Lock, Eye, EyeOff, ArrowLeft, Leaf, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ArrowLeft, Leaf, ShieldCheck, CheckCircle2 } from 'lucide-react';
 
 export default function ForgotPassword() {
   const navigate = useNavigate();
@@ -15,6 +15,7 @@ export default function ForgotPassword() {
   const [showNewPw, setShowNewPw] = useState(false);
   const [showConfirmPw, setShowConfirmPw] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
 
   const handleSubmitEmail = async (e) => {
     e.preventDefault();
@@ -59,8 +60,9 @@ export default function ForgotPassword() {
     setLoading(true);
     try {
       await auth.resetPasswordBearer(resetJwt, newPassword);
-      toast.success('Password reset successfully');
-      setTimeout(() => navigate('/login'), 1500);
+      setResetSuccess(true);
+      toast.success('Password reset successfully! Redirecting you to login in 3s…');
+      setTimeout(() => navigate('/login'), 2500);
     } catch (err) {
       const d = err.response?.data;
       if (d?.code === 'MIN_LENGTH') toast.error(d.message);
@@ -175,7 +177,17 @@ export default function ForgotPassword() {
           )}
 
           {step === 3 && (
-            <form onSubmit={handleSubmitNewPw} className="space-y-5">
+            <div className="space-y-5">
+              {resetSuccess && (
+                <div className="p-4 rounded-2xl border border-emerald-200 bg-emerald-50 text-emerald-800 flex items-start gap-2.5">
+                  <CheckCircle2 className="w-5 h-5 shrink-0 mt-0.5"/>
+                  <div>
+                    <div className="font-semibold">✅ Password reset successfully!</div>
+                    <div className="text-sm text-emerald-700 mt-0.5">Redirecting you to login in 3s…</div>
+                  </div>
+                </div>
+              )}
+              <form onSubmit={handleSubmitNewPw} className="space-y-5">
               <div>
                 <label className="block text-xs font-semibold text-[#0B2419] uppercase tracking-wider mb-2">New Password</label>
                 <div className="relative">
@@ -222,6 +234,7 @@ export default function ForgotPassword() {
                 {loading ? 'Resetting…' : 'Reset Password'}
               </button>
             </form>
+            </div>
           )}
         </div>
 

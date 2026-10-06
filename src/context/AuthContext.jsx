@@ -60,11 +60,16 @@ export const AuthProvider = ({ children }) => {
   const warehouseLoginVerify = d => { const p = d.admin || d.user || d; const f = { ...p, role: p.role || 'warehouse_admin' }; const t = d.token || d.warehouseToken || d.ms_token; localStorage.setItem('warehouseToken', t); localStorage.setItem('token', t); localStorage.setItem('user', JSON.stringify(f)); setToken(t); setUser(f); return f; };
   const register = async d => (await authApi.register(d)).data;
   const verifyEmail = async dt => { const r = await authApi.verifyEmail(dt); const { token: nt, user: ud } = r.data; const d = decodeJWT(nt); const f = { ...ud, role: d?.role || ud?.role || 'user' }; localStorage.setItem('token', nt); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
-  const logout = (scope) => {
+  const logout = async (scope) => {
     if (window.location.pathname.startsWith('/warehouse')) return;
     const wp = window.location.pathname.startsWith('/warehouse');
     if (wp) return;
     const isAdminPath = window.location.pathname.includes('/admin');
+    const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('TIMEOUT')), 300));
+    try {
+      const serverFn = (scope === 'admin' || isAdminPath) ? authApi.adminLogout : authApi.logout;
+      await Promise.race([serverFn().catch(() => null), timeout]).catch(() => null);
+    } catch (_) { }
     if (scope === 'admin' || isAdminPath) {
       localStorage.removeItem('adminToken');
       setToken(null); setUser(null);

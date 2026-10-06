@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 import { addresses as addressesApi } from '../services/api';
 import { MapPin, Plus, Edit2, Trash2, Star, Home, Building, Map, X, CheckCircle2 } from 'lucide-react';
@@ -60,10 +61,14 @@ export default function AddressBook() {
     try {
       if (editId) {
         await addressesApi.update(editId, payload);
-        setMsg('Address updated successfully!');
+        const msg = 'Address updated successfully!';
+        setMsg(msg);
+        toast.success(msg);
       } else {
         await addressesApi.create(payload);
-        setMsg('Address added successfully!');
+        const msg = 'Address added successfully!';
+        setMsg(msg);
+        toast.success(msg);
       }
       setMsgType('success');
       setShowForm(false);
@@ -71,8 +76,13 @@ export default function AddressBook() {
       setForm(defaultForm);
       fetchAddresses();
     } catch (err) { 
-      setMsg('Failed to save address. Please try again.'); 
+      const code = err?.response?.data?.code || err?.code;
+      const msg = (code === 'MISSING_ADDRESS_FIELDS')
+        ? 'Please fill all required address fields (name, phone, street, pincode, city, state).'
+        : (err?.response?.data?.message || 'Failed to save address. Please try again.');
+      setMsg(msg); 
       setMsgType('error');
+      toast.error(msg);
       console.error(err);
     }
     setSaving(false);
@@ -83,23 +93,30 @@ export default function AddressBook() {
     if (!window.confirm('Are you sure you want to delete this address?')) return;
     try {
       await addressesApi.delete(id);
-      setMsg('Address deleted');
+      const msg = 'Address deleted';
+      setMsg(msg);
       setMsgType('success');
+      toast.success(msg);
       fetchAddresses();
       setTimeout(() => setMsg(''), 2000);
     } catch (err) {
+      const msg = err?.response?.data?.message || 'Failed to delete address';
       console.error("Failed to delete address", err);
-      setMsg('Failed to delete address');
+      setMsg(msg);
       setMsgType('error');
+      toast.error(msg);
     }
   };
 
   const setDefault = async (id) => {
     try {
       await addressesApi.setDefault(id);
+      toast.success('Default address updated');
       fetchAddresses();
     } catch (err) {
+      const msg = err?.response?.data?.message || 'Failed to set default address';
       console.error("Failed to set default address", err);
+      toast.error(msg);
     }
   };
 

@@ -44,6 +44,8 @@ api.interceptors.request.use(c => {
 }, e => Promise.reject(e));
 
 let _refreshPromise = null;
+let _lastRefreshAt = 0;
+let _firstFailedRefreshAt = 0;
 
 const _resolveTokenKind = (url = '') => {
   const isAdminUrl = url.startsWith("/admin/") ||
@@ -60,8 +62,10 @@ const _resolveTokenKind = (url = '') => {
 
 const _attemptRefresh = async () => {
   if (_refreshPromise) return _refreshPromise;
+  if (Date.now() - _lastRefreshAt < 10000) throw new Error("REFRESH_DEBOUNCE");
   _refreshPromise = (async () => {
     try {
+      _lastRefreshAt = Date.now();
       const currentToken = localStorage.getItem("token") || localStorage.getItem("ms_token");
       if (!currentToken) throw new Error("No token to refresh");
       const { data } = await axios.post(`${BASE_URL}/api/auth/refresh`, {}, {
@@ -70,8 +74,12 @@ const _attemptRefresh = async () => {
       if (data?.token) {
         localStorage.setItem("token", data.token);
         if (localStorage.getItem("ms_token")) localStorage.setItem("ms_token", data.token);
+        _firstFailedRefreshAt = 0;
       }
       return data?.token || null;
+    } catch (err) {
+      _firstFailedRefreshAt = _firstFailedRefreshAt || Date.now();
+      throw err;
     } finally {
       _refreshPromise = null;
     }
@@ -95,7 +103,10 @@ api.interceptors.response.use(r => r, async (e) => {
     }
 
     const refreshable = !e.config?._retry &&
-      (url.includes("/users/") ||
+      (url.includes("/auth/profile") ||
+       url.includes("/users/profile") ||
+       url.startsWith("/settings/public") ||
+       url.includes("/users/") ||
        url.startsWith("/orders/") ||
        url.startsWith("/cart/") ||
        url.startsWith("/addresses/") ||
@@ -115,8 +126,12 @@ api.interceptors.response.use(r => r, async (e) => {
           return api.request(e.config);
         }
       } catch (_refreshErr) {
-        // fall through to cleanup below
+        // fall through to cleanup guard below
       }
+    }
+
+    if (_firstFailedRefreshAt && (Date.now() - _firstFailedRefreshAt < 10000)) {
+      return Promise.reject(e);
     }
 
     localStorage.removeItem("token");
@@ -127,7 +142,7 @@ api.interceptors.response.use(r => r, async (e) => {
   return Promise.reject(e);
 });
 
-export const auth = { login: d => api.post('/auth/login', d), register: d => api.post('/auth/register', d), verifyEmail: d => api.post('/auth/verify-email', { email: d.email, otp: d.otp, securityAnswer: d.securityAnswer }), getProfile: () => api.get('/auth/profile'), updateProfile: d => api.put('/auth/profile', d), verify2FA: d => api.post('/auth/2fa/verify', d), requestPasswordReset: d => api.post('/auth/forgot-password', d), verifyResetOtp: d => api.post('/auth/verify-otp', d), resetPassword: d => api.post('/auth/reset-password', d), verifySecurityQuestion: d => api.post('/auth/security-question/verify', d), adminLogin: d => api.post('/auth/admin/login', d), getAdminProfile: () => api.get('/auth/profile'), sendAdminOtp: email => api.post('/auth/admin/request-otp', { email }), verifyAdminOtp: (email, otp) => api.post('/auth/admin/verify-otp', { email, otp }), mobileLoginRequest: email => api.post('/auth/mobile-login/request', { email }), mobileLoginVerify: d => api.post('/auth/mobile-login/verify', d), verifyPremiumResetOtp: d => api.post('/auth/verify-reset-otp', d), verifySecurityQuestionForReset: d => api.post('/auth/security-question/verify-for-reset', d), resetPasswordBearer: (resetJwt, newPassword) => api.post('/auth/reset-password', { newPassword }, { headers: { Authorization: `Bearer ${resetJwt}` } }), adminForgotPassword: d => api.post('/auth/admin/forgot-password', d), adminVerifyResetOtp: d => api.post('/auth/admin/verify-reset-otp', d), adminResetPasswordBearer: (resetJwt, newPassword) => api.post('/auth/admin/reset-password', { newPassword }, { headers: { Authorization: `Bearer ${resetJwt}` } }) };
+export const auth = { login: d => api.post('/auth/login', d), logout: () => api.post('/auth/logout'), adminLogout: () => { const t = localStorage.getItem('adminToken'); return axios.post(`${BASE_URL}/api/auth/logout`, {}, t ? { headers: { Authorization: `Bearer ${t}` } } : {}).catch(() => ({ data: {} })); }, register: d => api.post('/auth/register', d), verifyEmail: d => api.post('/auth/verify-email', { email: d.email, otp: d.otp, securityAnswer: d.securityAnswer }), getProfile: () => api.get('/auth/profile'), updateProfile: d => api.put('/auth/profile', d), verify2FA: d => api.post('/auth/2fa/verify', d), requestPasswordReset: d => api.post('/auth/forgot-password', d), verifyResetOtp: d => api.post('/auth/verify-otp', d), resetPassword: d => api.post('/auth/reset-password', d), verifySecurityQuestion: d => api.post('/auth/security-question/verify', d), adminLogin: d => api.post('/auth/admin/login', d), getAdminProfile: () => api.get('/auth/profile'), sendAdminOtp: email => api.post('/auth/admin/request-otp', { email }), verifyAdminOtp: (email, otp) => api.post('/auth/admin/verify-otp', { email, otp }), mobileLoginRequest: email => api.post('/auth/mobile-login/request', { email }), mobileLoginVerify: d => api.post('/auth/mobile-login/verify', d), verifyPremiumResetOtp: d => api.post('/auth/verify-reset-otp', d), verifySecurityQuestionForReset: d => api.post('/auth/security-question/verify-for-reset', d), resetPasswordBearer: (resetJwt, newPassword) => api.post('/auth/reset-password', { newPassword }, { headers: { Authorization: `Bearer ${resetJwt}` } }), adminForgotPassword: d => api.post('/auth/admin/forgot-password', d), adminVerifyResetOtp: d => api.post('/auth/admin/verify-reset-otp', d), adminResetPasswordBearer: (resetJwt, newPassword) => api.post('/auth/admin/reset-password', { newPassword }, { headers: { Authorization: `Bearer ${resetJwt}` } }) };
 export const adminLogin = async c => (await api.post("/auth/admin/login", c)).data;
 export const search = { query: q => api.get('/products/active', { params: { search: q } }), global: q => api.get('/products', { params: { search: q } }) };
 export const users = { updateProfile: d => api.put('/users/profile', d), changePassword: d => api.post('/users/change-password', d), getProfile: () => api.get('/users/profile'), generate2FA: () => api.post('/users/2fa/generate-setup'), verifyAndEnable2FA: d => api.post('/users/2fa/enable', d), disable2FA: () => api.post('/users/2fa/disable'), updateSecurityQuestion: d => api.put('/users/security-question', d) };
