@@ -1,9 +1,10 @@
 // src/pages/OrderSuccess.jsx
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 
 export default function OrderSuccess() {
   const { state } = useLocation();
-  const orderId = state?.orderId;
+  const { orderId: paramOrderId } = useParams();
+  const orderId = state?.orderId || paramOrderId;
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">

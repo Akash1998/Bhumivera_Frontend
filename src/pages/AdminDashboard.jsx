@@ -1,5 +1,6 @@
 import React, { useState, Suspense, Component, lazy } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
+import { Settings2 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 // DYNAMIC LAZY IMPORTS to isolate rendering logic
@@ -24,6 +25,7 @@ const SystemLogs = lazy(() => import('./admin/SystemLogs'));
 const WarehouseManagement = lazy(() => import('./admin/WarehouseManagement'));
 const EWarrantyManagement = lazy(() => import('./admin/EWarrantyManagement'));
 const ShippingManagement = lazy(() => import('./admin/ShippingManagement')); 
+const AdminSettings = lazy(() => import('./admin/AdminSettings.jsx'));
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -73,7 +75,7 @@ const TAB_COMPONENTS = {
   contact: ContactManagement,
   notifications: NotificationManagement,
   tax: TaxManagement, shipping: ShippingManagement, logs: SystemLogs,
-  warehouse: WarehouseManagement,
+  warehouse: WarehouseManagement, settings: AdminSettings,
 };
 
 // Safe Generic Icon to bypass Lucide-React `.reduce()` compiler crashes
@@ -126,6 +128,11 @@ export default function AdminDashboard() {
       title: 'Customer Service', items: [
         { id: 'support', label: 'Support Tickets' }, { id: 'returns', label: 'Returns' },
         { id: 'contact', label: 'Messages' }, { id: 'e-warranty', label: 'E-Warranty' }
+      ]
+    },
+    {
+      title: 'System', items: [
+        { id: 'settings', label: 'Settings', icon: Settings2 }
       ]
     }
   ];
@@ -190,7 +197,7 @@ export default function AdminDashboard() {
 
           <div className="p-4 border-t border-slate-800/50 bg-slate-950/90 sticky bottom-0 z-10">
             <button
-              onClick={() => { logout(); navigate('/admin-login'); }}
+              onClick={() => { logout(); navigate('/admin/login'); }}
               className={`w-full flex items-center py-3 rounded-xl transition-all duration-300 hover:bg-rose-500/10 border border-transparent text-slate-500 hover:text-rose-400 ${!isSidebarOpen ? 'justify-center px-0' : 'px-4 gap-3'}`}
             >
               <svg className="flex-shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">

@@ -37,14 +37,20 @@ export default function Register() {
 
   const getPasswordStrength = (pwd) => {
     let score = 0;
-    if (pwd.length > 7) score++;
-    if (/[A-Z]/.test(pwd)) score++;
-    if (/[0-9]/.test(pwd)) score++;
-    if (/[^A-Za-z0-9]/.test(pwd)) score++;
-    return score; 
+    if (pwd.length < 12) return 0;
+    const hasUpperCase = /[A-Z]/.test(pwd);
+    const hasLowerCase = /[a-z]/.test(pwd);
+    const hasDigit = /[0-9]/.test(pwd);
+    const hasSymbol = /[^A-Za-z0-9]/.test(pwd);
+    if (hasUpperCase) score++;
+    if (hasLowerCase) score++;
+    if (hasDigit) score++;
+    if (hasSymbol) score++;
+    return score;
   };
 
   const strength = getPasswordStrength(formData.password);
+  const strengthLabels = ["Too Short (min 12 chars)", "Weak", "Fair", "Good", "Strong"];
   // Using Earth-tones for the strength meter to match "Materia Medica" vibe
   const strengthColors = ['bg-[#e8dcc4]', 'bg-red-400', 'bg-amber-400', 'bg-emerald-400', 'bg-[#8b5a2b]'];
 

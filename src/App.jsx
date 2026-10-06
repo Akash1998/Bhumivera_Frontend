@@ -64,6 +64,17 @@ const ReturnsCentre = lazyWithRetry(() => import("./pages/ReturnsCentre.jsx"));
 // NEW: MPGEBusiness Landing Route
 const MPGEBusinessLanding = lazyWithRetry(() => import("./pages/MPGEBusinessLanding.jsx"));
 
+// NEW: Orphan pages routeability
+const FlashSales = lazyWithRetry(() => import("./pages/FlashSales.jsx"));
+const SomaticRegistry = lazyWithRetry(() => import("./pages/SomaticRegistry.jsx"));
+const ProvenanceEngine = lazyWithRetry(() => import("./pages/ProvenanceEngine.jsx"));
+const SpinRegistration = lazyWithRetry(() => import("./pages/SpinRegistration.jsx"));
+
+// NEW: Premium password reset pages
+const ForgotPassword = lazyWithRetry(() => import("./pages/ForgotPassword.jsx"));
+const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword.jsx"));
+const AdminForgotPassword = lazyWithRetry(() => import("./pages/admin/AdminForgotPassword.jsx"));
+
 const PageLoader = () => (
   <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
     <div className="w-12 h-12 border-4 border-[#D4AF37]/20 border-t-[#0B2419] rounded-full animate-spin"></div>
@@ -155,16 +166,27 @@ function AppContent() {
             <Route path="/warranty" element={<EWarranty />} />
             <Route path="/order-tracking" element={<OrderTracking />} />
             <Route path="/compare" element={<Compare />} />
+
+            {/* Orphan pages reachability */}
+            <Route path="/flash-sales" element={<FlashSales />} />
+            <Route path="/somatic-registry" element={<SomaticRegistry />} />
+            <Route path="/provenance-engine" element={<ProvenanceEngine />} />
+            <Route path="/spin-registration" element={<SpinRegistration />} />
             
             {/* Auth Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
 
+            {/* Public Auth Password Reset Routes */}
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
+            <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
+
             {/* Protected User Routes */}
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
             <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
-            <Route path="/order-success" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
+            <Route path="/order-success/:orderId?" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
             <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
             <Route path="/address-book" element={<ProtectedRoute><AddressBook /></ProtectedRoute>} />
             <Route path="/returns" element={<ProtectedRoute><Returns /></ProtectedRoute>} />
@@ -181,6 +203,9 @@ function AppContent() {
             <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/admin/dashboard/:tab" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
             <Route path="/admin/*" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+
+            {/* Backward-compat redirects (old bookmarks) */}
+            <Route path="/admin-login" element={<Navigate to="/admin/login" replace />} />
 
             {/* Global Redirect */}
             <Route path="*" element={<Navigate to="/" replace />} />

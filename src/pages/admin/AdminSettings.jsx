@@ -21,8 +21,8 @@ export default function AdminSettings() {
       return;
     }
 
-    if (newPassword.length < 6) {
-      setError('New password must be at least 6 characters');
+    if (newPassword.length < 12) {
+      setError('New password must be at least 12 characters');
       return;
     }
 
@@ -40,7 +40,13 @@ export default function AdminSettings() {
       setNewPassword('');
       setConfirmPassword('');
     } catch (err) {
-      setError(err.response?.data?.message || err.message || 'Failed to change password');
+      const d = err.response?.data;
+      if (d?.code === 'MIN_LENGTH') setError(d.message);
+      else if (d?.code === 'COMPLEXITY') setError(d.message);
+      else if (d?.code === 'COMMON_PASSWORD') setError(d.message);
+      else if (d?.code === 'PWNED_PASSWORD') setError(d.message);
+      else if (d?.code === 'PASSWORD_REUSED') setError(d.message);
+      else setError(d?.message || err.message || 'Failed to change password');
     } finally {
       setLoading(false);
     }

@@ -311,12 +311,21 @@ export default function Profile() {
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (passwords.new !== passwords.confirm) { toast.error('New passwords do not match'); return; }
-    if ((passwords.new||'').length < 6) { toast.error('New password must be at least 6 characters'); return; }
+    if ((passwords.new||'').length < 12) { toast.error('Password must be at least 12 characters'); return; }
     try {
       await usersApi.changePassword({ currentPassword: passwords.current, newPassword: passwords.new });
       toast.success('Password changed');
       setPasswords({ current:'', new:'', confirm:'' });
-    } catch (err) { toast.error(err.response?.data?.message || 'Failed to change password'); }
+    } catch (err) {
+      const d = err.response?.data;
+      if (d?.code === 'MIN_LENGTH') toast.error(d.message);
+      else if (d?.code === 'COMPLEXITY') toast.error(d.message);
+      else if (d?.code === 'COMMON_PASSWORD') toast.error(d.message);
+      else if (d?.code === 'PWNED_PASSWORD') toast.error(d.message);
+      else if (d?.code === 'PASSWORD_REUSED') toast.error(d.message);
+      else if (err.response?.status === 401) toast.error('Current password is incorrect');
+      else toast.error(d?.message || err.message || 'Failed');
+    }
   };
   const handleUpdateSecurityQuestion = async (e) => {
     e.preventDefault();

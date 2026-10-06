@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import api, { auth } from '../services/api';
 import { toast } from 'react-hot-toast';
 import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft, Leaf } from 'lucide-react';
@@ -13,6 +13,8 @@ const Login = () => {
   const [otp, setOtp] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [showLockoutBanner, setShowLockoutBanner] = useState(false);
+  const [lockoutMsg, setLockoutMsg] = useState('');
   const navigate = useNavigate();
 
   const _persistAndRedirect = (data, greetMsg = 'Welcome back to Bhumivera!') => {
@@ -76,11 +78,19 @@ const Login = () => {
         toast.error('Login failed. Please try again.');
       }
     } catch (error) {
-      if (error.response?.status === 202 && error.response?.data?.requires2FA) {
+      const status = error.response?.status;
+      const d = error.response?.data;
+      if (status === 423) {
+        const secs = d?.secondsRemaining || 0;
+        const mins = Math.floor(secs / 60);
+        const rSecs = secs % 60;
+        setLockoutMsg(`Account temporarily locked. Try again in ${mins}m ${rSecs}s or reset password now.`);
+        setShowLockoutBanner(true);
+      } else if (error.response?.status === 202 && error.response?.data?.requires2FA) {
         setStep('2FA');
         toast.info('Please enter your 2FA authenticator code');
       } else {
-        toast.error(error.response?.data?.message || 'Invalid email or password');
+        toast.error(d?.message || error.message || 'Invalid email or password');
       }
     } finally {
       setLoading(false);
@@ -175,7 +185,7 @@ const Login = () => {
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <label className="text-xs font-bold text-[#0B2419] uppercase tracking-widest">Password</label>
-                      <a href="/forgot-password" className="text-xs text-[#D4AF37] font-semibold hover:underline">Forgot?</a>
+                      <Link to="/forgot-password" className="text-xs text-[#D4AF37] font-semibold hover:underline">Forgot?</Link>
                     </div>
                     <div className="relative">
                       <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B9D83]" />
@@ -192,6 +202,14 @@ const Login = () => {
                       </button>
                     </div>
                   </div>
+                  {showLockoutBanner && (
+                    <div className="mb-4 p-4 bg-red-500/10 border border-red-500/30 rounded-2xl text-sm">
+                      <div className="font-semibold text-red-500 mb-2">🔒 {lockoutMsg}</div>
+                      <Link to="/forgot-password" className="text-[#D4AF37] font-bold hover:underline">
+                        Reset password to unlock immediately →
+                      </Link>
+                    </div>
+                  )}
                   <button 
                     type="submit" 
                     disabled={loading}
@@ -292,7 +310,7 @@ const Login = () => {
 
           <div className="mt-8 text-center border-t border-[#0B2419]/5 pt-6">
             <p className="text-sm text-[#0B2419]/60">
-              Don't have an account? <a href="/register" className="text-[#0B2419] font-bold border-b border-[#D4AF37] pb-0.5 hover:opacity-80 transition-opacity">Join Bhumivera</a>
+              Don't have an account? <Link to="/register" className="text-[#0B2419] font-bold border-b border-[#D4AF37] pb-0.5 hover:opacity-80 transition-opacity">Join Bhumivera</Link>
             </p>
           </div>
         </div>

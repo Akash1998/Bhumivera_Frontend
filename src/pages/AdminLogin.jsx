@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AdminLogin.css';
 
@@ -11,6 +11,8 @@ const AdminLogin = () => {
   const [otp, setOtp] = useState('');
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
+  const [showLockoutBanner, setShowLockoutBanner] = useState(false);
+  const [lockoutMsg, setLockoutMsg] = useState('');
   
   const navigate = useNavigate();
   const { adminOtpVerify } = useAuth();
@@ -37,6 +39,15 @@ const AdminLogin = () => {
         body: JSON.stringify({ email }) 
       });
       const data = await res.json();
+      if (res.status === 423) {
+        const secs = data?.secondsRemaining || 0;
+        const mins = Math.floor(secs / 60);
+        const rSecs = secs % 60;
+        setLockoutMsg(`Admin portal locked. Retry in ${mins}m ${rSecs}s or reset admin password.`);
+        setShowLockoutBanner(true);
+        setStatus({ type: 'error', message: data.message || 'Account temporarily locked.' });
+        return;
+      }
       if (!res.ok) throw new Error(data.message || 'Failed to trigger OTP.');
       
       setStatus({ type: 'success', message: 'OTP successfully deployed to your email.' });
@@ -65,6 +76,15 @@ const AdminLogin = () => {
         body: JSON.stringify({ email, otp })
       });
       const data = await res.json();
+      if (res.status === 423) {
+        const secs = data?.secondsRemaining || 0;
+        const mins = Math.floor(secs / 60);
+        const rSecs = secs % 60;
+        setLockoutMsg(`Admin portal locked. Retry in ${mins}m ${rSecs}s or reset admin password.`);
+        setShowLockoutBanner(true);
+        setStatus({ type: 'error', message: data.message || 'Account temporarily locked.' });
+        return;
+      }
       if (!res.ok) throw new Error(data.message || 'Invalid or expired OTP.');
       
       await adminOtpVerify(data);
@@ -138,7 +158,31 @@ const AdminLogin = () => {
             >
               ← Return to Email Entry
             </button>
+
+            <div className="mt-4 text-center">
+              <Link to="/admin/forgot-password" className="text-xs text-cyan-400 hover:text-cyan-300 font-medium">
+                Forgot admin password?
+              </Link>
+            </div>
+
+            {showLockoutBanner && (
+              <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-xs">
+                <div className="font-semibold text-red-400 mb-1.5">🔒 {lockoutMsg}</div>
+                <Link to="/admin/forgot-password" className="text-cyan-400 font-bold hover:underline">
+                  Reset admin password →
+                </Link>
+              </div>
+            )}
           </form>
+        )}
+
+        {showLockoutBanner && step === 1 && (
+          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/30 rounded-lg text-xs">
+            <div className="font-semibold text-red-400 mb-1.5">🔒 {lockoutMsg}</div>
+            <Link to="/admin/forgot-password" className="text-cyan-400 font-bold hover:underline">
+              Reset admin password →
+            </Link>
+          </div>
         )}
 
         {status.message && (
