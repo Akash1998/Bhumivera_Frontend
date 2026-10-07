@@ -9,6 +9,23 @@ const projects = [
   { id: 'community-care', title: 'Community care', copy: 'Make room for locally led support, with funds and updates recorded transparently.' },
 ];
 
+const impactQuestions = [
+  ['Are these three listed focus areas completed projects?', 'No. They are possible directions for future work, not claims of completed activity or established partnerships. Completed work appears only in Field notes after verification.'],
+  ['What happens when I add a contribution?', 'The selected amount is added to an eligible cash-on-delivery order and recorded as a pledge tied to that order.'],
+  ['When does a pledge become collected?', 'After an order is delivered, a team member must reconcile the cash and enter a collection reference. Only then does the amount count in public totals.'],
+  ['Can I contribute using my wallet?', 'Not yet. The current checkout supports contributions on cash-on-delivery orders only. The option is removed for wallet checkout.'],
+  ['Can I leave the contribution at zero?', 'Yes. Zero is the default, and every amount is optional.'],
+  ['Does the contribution go to a named charity?', 'There is no named partner in this ledger yet. We will name a recipient only when a real partnership and accounting process are in place.'],
+  ['Will I receive a tax-deductible receipt?', 'No charitable tax receipt is promised. This is an internal, order-linked contribution record, not a donation through a registered charity.'],
+  ['What happens if my order is cancelled?', 'An uncollected pledge attached to a cancelled or returned order is marked cancelled and is excluded from the public totals.'],
+  ['Why do you require a collection reference?', 'It creates an audit trail for the cash collected with the order and prevents a pledge from being represented as money received without reconciliation.'],
+  ['What makes a field update verified?', 'An administrator must provide a field date, written summary, secure photo or video, and confirm that it documents completed on-ground work.'],
+  ['Why might a project show no photos yet?', 'We will not use stock or illustrative images as evidence. Field media appears when a real activity has been completed and documented.'],
+  ['Will field media identify people in need?', 'Public updates should protect privacy and dignity. Personal details or identifiable images should be shared only with appropriate permission.'],
+  ['Can I choose where my contribution is directed?', 'Checkout lets you choose one of the listed focus areas. These are internal allocations; they do not imply that a specific partner or activity has already been selected.'],
+  ['How often will this page change?', 'It changes when contributions are reconciled or a verified field report is published. We prefer a quiet, accurate ledger over an artificial activity feed.'],
+];
+
 const money = amount => `₹${Number(amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
 
 export default function Impact() {
@@ -122,12 +139,7 @@ export default function Impact() {
       <section className="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-[0.75fr_1.25fr] md:py-24">
         <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b4c68a]">Stewardship questions</p><h2 className="mt-4 font-serif text-4xl leading-tight">The details matter.</h2><p className="mt-4 text-sm leading-6 text-white/55">Clear answers before a customer adds anything to an order.</p></div>
         <div className="border-t border-white/15">
-          {[
-            ['Is the contribution required?', 'No. It is optional, and the default is no contribution. The amount can be changed or removed in checkout.'],
-            ['When is it counted as collected?', 'The checkout creates a pledge on the order. After a delivered COD order is reconciled against a collection reference, the ledger can mark it collected. Until then it does not appear in the public total.'],
-            ['Who receives the contribution?', 'The current ledger tracks funds internally by focus area. A named nonprofit, tax receipt or external beneficiary is not claimed until a real partnership and process are established.'],
-            ['How will field work be documented?', 'An administrator must submit a date, summary and secure photo or video, then attest that the work is complete. Only verified entries appear publicly.'],
-          ].map(([question, answer], index) => <div key={question} className="border-b border-white/15">
+          {impactQuestions.map(([question, answer], index) => <div key={question} className="border-b border-white/15">
             <button type="button" aria-expanded={openFaq === index} onClick={() => setOpenFaq(openFaq === index ? -1 : index)} className="flex w-full items-center justify-between gap-4 py-5 text-left font-serif text-lg hover:text-[#dce7c5]">{question}<span className="font-sans text-xl text-[#b4c68a]">{openFaq === index ? '−' : '+'}</span></button>
             {openFaq === index && <p className="max-w-2xl pb-5 text-sm leading-6 text-white/60">{answer}</p>}
           </div>)}
