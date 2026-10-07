@@ -17,9 +17,9 @@ const IMAGE_BASE = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IM
 
 const productImage = product => {
   const source = product?.images?.[0] || product?.image_url || product?.image;
-  if (!source) return '/assets/images/aloeverabeaker.webp';
+  if (!source) return '/logo.webp';
   const path = typeof source === 'object' ? source.url || source.file_path || source.path : source;
-  if (!path) return '/assets/images/aloeverabeaker.webp';
+  if (!path) return '/logo.webp';
   return /^https?:\/\//i.test(path) ? path : `${IMAGE_BASE.replace(/\/$/, '')}/${String(path).replace(/^\//, '')}`;
 };
 
@@ -52,6 +52,29 @@ const ingredientStories = [
     tone: 'from-[#102019]/85',
   },
 ];
+
+const ritualStories = [
+  {
+    title: 'A gentler beginning',
+    copy: 'The best rituals leave room to notice what your skin needs today.',
+    image: 'aloeveradrop.webp',
+  },
+  {
+    title: 'Curiosity, with care',
+    copy: 'Good questions belong beside beautiful botanicals.',
+    image: 'aloeverascience.webp',
+  },
+  {
+    title: 'A daily moment, made yours',
+    copy: 'Small, considered steps can make an everyday routine feel personal.',
+    image: 'charcoalFace wash.webp',
+  },
+];
+
+const campaignImages = [1, 2, 3, 4, 5, 7, 8, 9, 10].map(number => ({
+  image: `Promo${number}.webp`,
+  number: String(number).padStart(2, '0'),
+}));
 
 const questions = [
   {
@@ -88,11 +111,11 @@ const questions = [
   },
   {
     key: 'impact',
-    label: 'Field ledger',
+    label: 'Our impact',
     question: 'How are checkout contributions recorded?',
-    answer: 'An eligible checkout contribution is treated as a pledge first. It is recorded as collected only after delivery and reconciliation; verified field updates are shared in the public ledger when evidence is available.',
+    answer: 'An eligible checkout contribution is treated as a pledge first. It is recorded as collected only after delivery and reconciliation; verified field updates are shared in our impact record when evidence is available.',
     link: '/impact',
-    linkLabel: 'Read the field ledger',
+    linkLabel: 'Explore our impact',
   },
 ];
 
@@ -297,7 +320,7 @@ export default function PremiumHome() {
             {products.slice(0, 8).map((product, index) => (
               <Motion.article key={product.id || product._id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (index % 4) * 0.06 }} className="group min-w-0">
                 <Link to={`/product/${product.slug || product.id}`} className="relative block overflow-hidden bg-[#e8e5dc]">
-                  <img src={productImage(product)} alt={product.name} loading="lazy" className="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-[1.035]" onError={event => { event.currentTarget.src = image('aloeverabeaker.webp'); }} />
+                  <img src={productImage(product)} alt={product.name} loading="lazy" className="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-[1.035]" onError={event => { event.currentTarget.src = '/logo.webp'; }} />
                   <span className="absolute bottom-2 right-2 grid h-9 w-9 place-items-center bg-[#f4f1e9]/90 text-[#24352a] transition-colors group-hover:bg-[#dce7c5] sm:bottom-3 sm:right-3"><ArrowUpRight size={16} /></span>
                 </Link>
                 <div className="flex flex-col gap-1 border-b border-[#253b2f]/15 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:py-4">
@@ -324,10 +347,84 @@ export default function PremiumHome() {
           <p className="mt-5 max-w-lg text-sm leading-7 text-white/70">We believe care is more meaningful when the details are easy to find. Clear product pages, considered ingredients and an honest account of what is available—so you can make a choice that feels like yours.</p>
           <Link to="/science" className="mt-7 inline-flex min-h-11 w-fit items-center gap-3 border-b border-[#dce7c5]/50 pb-2 text-xs font-bold uppercase tracking-[0.14em] text-[#e4ead7]">Our approach to ingredients <ArrowRight size={15} /></Link>
         </div>
-        <div className="relative min-h-[300px] overflow-hidden sm:min-h-[400px] md:min-h-full">
-          <img src={image('seabuckthorn.webp')} alt="Sea buckthorn among botanicals, reflecting Bhumivera's nature-first point of view" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-center" />
+        <div className="relative min-h-[300px] overflow-hidden bg-[#e8e5d9] sm:min-h-[400px] md:min-h-full">
+          <img src={image('aloeverabeaker.webp')} alt="Aloe vera in a clear beaker, reflecting Bhumivera's nature-first point of view" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-center" />
           <div className="absolute inset-0 bg-gradient-to-t from-[#101811]/55 via-transparent to-transparent md:bg-gradient-to-r md:from-[#19261e]/20 md:to-transparent" />
           <span className="absolute bottom-5 left-5 text-[9px] font-semibold uppercase tracking-[0.2em] text-white/80 sm:bottom-7 sm:left-7">Rooted in care · guided by clarity</span>
+        </div>
+      </section>
+
+      <section className="bg-[#f4f1e9]">
+        <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 md:px-10 md:py-24">
+          <div className="mb-9 grid gap-5 md:grid-cols-[0.9fr_1.1fr] md:items-end">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#687958]">A ritual, considered</p>
+              <h2 className="mt-3 max-w-xl font-serif text-4xl leading-tight sm:text-5xl md:text-6xl">Let care be a little more intentional.</h2>
+            </div>
+            <p className="max-w-xl text-sm leading-7 text-stone-600 sm:text-base">A good routine is not about doing everything. It is a chance to pause, learn what works for you and make space for a small act of care.</p>
+          </div>
+          <div className="grid gap-4 md:grid-cols-3">
+            {ritualStories.map((story, index) => (
+              <article key={story.title} className="group bg-[#e7e4d9]">
+                <div className="overflow-hidden bg-[#dedbcf]">
+                  <img src={image(story.image)} alt={story.title} loading="lazy" className="aspect-[4/3] w-full object-cover transition-transform duration-700 group-hover:scale-[1.025]" />
+                </div>
+                <div className="p-5 sm:p-6">
+                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#77816d]">A note on care · 0{index + 1}</span>
+                  <h3 className="mt-3 font-serif text-2xl">{story.title}</h3>
+                  <p className="mt-2 text-sm leading-6 text-stone-600">{story.copy}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      <section className="overflow-hidden bg-[#dce1d2]">
+        <div className="mx-auto grid max-w-7xl gap-7 px-5 py-16 sm:px-8 md:grid-cols-[0.8fr_1.2fr] md:items-center md:px-10 md:py-24">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#56684d]">Care, beyond the everyday</p>
+            <h2 className="mt-4 max-w-lg font-serif text-4xl leading-tight sm:text-5xl md:text-6xl">A softer footprint starts with attention.</h2>
+            <p className="mt-5 max-w-lg text-sm leading-7 text-[#53604e] sm:text-base">We believe care can reach further than a daily ritual. Planting, nourishment and community-led support are directions worth approaching with humility, local knowledge and follow-through—not promises to make before the work is real.</p>
+            <blockquote className="mt-7 border-l border-[#53684b] pl-4 font-serif text-xl leading-relaxed text-[#354933] sm:text-2xl">“What we care for today may become shade for someone tomorrow.”</blockquote>
+            <Link to="/impact" className="mt-7 inline-flex min-h-11 items-center gap-3 border-b border-[#536b4d]/40 pb-2 text-xs font-bold uppercase tracking-[0.14em] text-[#354933]">See how we keep account <ArrowRight size={15} /></Link>
+          </div>
+          <div className="border-y border-[#26392c]/20 py-6 sm:py-8">
+            <div className="grid grid-cols-[auto_1fr] gap-x-4 gap-y-6 sm:gap-x-6">
+              {[
+                ['01', 'Plant with place in mind', 'Long-term care starts with listening to the land and the people who know it.'],
+                ['02', 'Nourish what sustains us', 'Support should respond to real community priorities, not a convenient story.'],
+                ['03', 'Share only what we can show', 'When activity is verified, dates, records and evidence belong in the open.'],
+              ].map(([number, title, copy]) => (
+                <div key={number} className="contents">
+                  <span className="pt-1 font-mono text-[10px] text-[#65765a]">{number}</span>
+                  <div className="border-b border-[#26392c]/15 pb-5 last:border-b-0 last:pb-0">
+                    <h3 className="font-serif text-xl sm:text-2xl">{title}</h3>
+                    <p className="mt-2 max-w-lg text-sm leading-6 text-[#5d6658]">{copy}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="bg-[#111c17] text-[#f1efe7]">
+        <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 md:px-10 md:py-24">
+          <div className="mb-9 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#c8d6aa]">Botanical notes · campaign archive</p>
+              <h2 className="mt-3 max-w-2xl font-serif text-4xl leading-tight sm:text-5xl md:text-6xl">A visual world, in many shades of green.</h2>
+            </div>
+            <p className="max-w-sm text-sm leading-6 text-white/55">A collection of Bhumivera campaign artwork—each frame its own small chapter in the conversation between nature and care.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
+            {campaignImages.map(({ image: campaignImage, number }) => (
+              <figure key={campaignImage} className="overflow-hidden bg-[#202d25]">
+                <img src={image(campaignImage)} alt={`Bhumivera botanical campaign artwork, chapter ${number}`} loading="lazy" className="aspect-[9/16] w-full object-cover transition-transform duration-700 hover:scale-[1.02]" />
+              </figure>
+            ))}
+          </div>
         </div>
       </section>
 
@@ -352,8 +449,7 @@ export default function PremiumHome() {
       )}
 
       <section className="relative isolate overflow-hidden bg-[#17231d] text-white">
-        <img src={image('charcoal.webp')} alt="" aria-hidden="true" loading="lazy" className="absolute inset-0 -z-20 h-full w-full object-cover opacity-25" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#111a14]/95 via-[#111a14]/80 to-[#111a14]/55" />
+      <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#111a14] via-[#111a14] to-[#26352b]" />
         <div className="mx-auto grid max-w-7xl gap-9 px-5 py-14 sm:px-8 md:grid-cols-[1fr_auto] md:items-end md:px-10 md:py-20">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#dce7c5]">A more personal kind of help</p>
@@ -400,7 +496,7 @@ export default function PremiumHome() {
       <section className="border-t border-[#26392c]/15 bg-[#e7e4d9]">
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 py-10 sm:px-8 md:flex-row md:items-center md:justify-between md:px-10 md:py-12">
           <div className="flex items-start gap-4"><span className="mt-1 text-[#667956]"><Leaf size={18} /></span><div><p className="font-serif text-2xl">Care, returned to its source.</p><p className="mt-1 text-xs leading-5 text-stone-600">A considered ritual. A clear choice. A little more room to be yourself.</p></div></div>
-          <Link to="/impact" className="inline-flex min-h-11 w-fit items-center gap-2 border-b border-[#536b4d]/40 pb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#354933]">Visit the field ledger <ArrowRight size={14} /></Link>
+          <Link to="/impact" className="inline-flex min-h-11 w-fit items-center gap-2 border-b border-[#536b4d]/40 pb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#354933]">Visit our impact page <ArrowRight size={14} /></Link>
         </div>
       </section>
     </main>

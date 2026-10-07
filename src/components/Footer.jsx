@@ -23,7 +23,7 @@ export default function Footer() {
           <h3 className="mb-6 text-xs font-bold uppercase tracking-[0.15em] text-[#c8d6aa]">Bhumivera</h3>
           <ul className="space-y-4 text-sm font-light text-white/60">
             <li><Link to="/about" className="hover:text-[#f6f0e4] transition-colors duration-300">About Bhumivera</Link></li>
-            <li><Link to="/impact" className="font-medium text-[#dce7c5] hover:text-white transition-colors duration-300">Earth impact ledger</Link></li>
+            <li><Link to="/impact" className="font-medium text-[#dce7c5] hover:text-white transition-colors duration-300">Our impact</Link></li>
             <li><Link to="/science" className="hover:text-white transition-colors duration-300">Product science</Link></li>
           </ul>
         </div>
