@@ -1,10 +1,35 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
-export default function SEO({ product }) {
-  if (!product) return null;
-
+export default function SEO({ product, title, description, keywords, ogImage, route, schema }) {
   const siteUrl = import.meta.env.VITE_SITE_URL || 'https://www.bhumivera.com';
+
+  if (!product) {
+    const pageTitle = title || 'Bhumivera | Considered botanical care';
+    const pageDescription = description || 'Discover Bhumivera’s considered botanical stories, modern skincare ingredients and everyday rituals.';
+    const canonicalUrl = route ? new URL(route, siteUrl).toString() : siteUrl;
+    const imageUrl = ogImage ? new URL(ogImage, siteUrl).toString() : `${siteUrl}/logo.webp`;
+
+    return (
+      <Helmet>
+        <title>{pageTitle}</title>
+        <meta name="description" content={pageDescription} />
+        {keywords && <meta name="keywords" content={keywords} />}
+        {route && <link rel="canonical" href={canonicalUrl} />}
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={pageTitle} />
+        <meta property="og:description" content={pageDescription} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content={imageUrl} />
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={pageTitle} />
+        <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:image" content={imageUrl} />
+        {schema && <script type="application/ld+json">{JSON.stringify(schema)}</script>}
+      </Helmet>
+    );
+  }
+
   const productUrl = `${siteUrl}/product/${product.slug}`;
   
   // Safely extract the first image or default to logo

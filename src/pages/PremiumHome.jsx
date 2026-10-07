@@ -157,6 +157,8 @@ export default function PremiumHome() {
       <SEO
         title="Bhumivera | Botanical rituals, considered in every detail"
         description="Explore Bhumivera's botanical stories, modern skincare ingredients and considered everyday rituals."
+        keywords="Bhumivera, botanical skincare, sea buckthorn, charcoal, niacinamide, hyaluronic acid, skincare rituals"
+        ogImage="/assets/images/seabuckthorn%20nature.webp"
         route="/"
       />
 
@@ -247,7 +249,7 @@ export default function PremiumHome() {
       <section className="relative isolate overflow-hidden bg-[#17231d] text-white">
         <div className="mx-auto grid max-w-7xl items-center gap-8 px-5 py-14 sm:px-8 md:grid-cols-[1fr_1fr] md:gap-12 md:px-10 md:py-20">
           <div className="relative order-2 overflow-hidden bg-[#e8e5d9] md:order-1">
-            <img src={image('niacidamine.webp')} alt="Niacinamide and hyaluronic acid, two contemporary skincare actives" loading="lazy" className="h-full min-h-[210px] w-full object-cover sm:min-h-[300px] md:min-h-[410px]" />
+            <img src={image('niacidamine.webp')} alt="Niacinamide and hyaluronic acid, two contemporary skincare actives" loading="lazy" className="aspect-[16/9] w-full object-contain" />
             <span className="absolute bottom-3 left-3 bg-[#f4f1e9]/90 px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.15em] text-[#28382b] backdrop-blur-sm sm:bottom-5 sm:left-5">Modern actives, thoughtfully considered</span>
           </div>
           <div className="order-1 md:order-2">
