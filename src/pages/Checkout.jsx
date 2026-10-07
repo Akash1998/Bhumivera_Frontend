@@ -354,7 +354,7 @@ export default function Checkout() {
                   icon={<Wallet size={24} />} 
                   active={paymentMode} 
                   set={mode => { setPaymentMode(mode); if (mode !== 'COD') setImpactAmount(0); }}
-                  disabled={walletBalance < finalTotal} 
+                  disabled={walletBalance < finalTotal - impactAmount} 
                 />
               </div>
             </motion.section>
@@ -455,7 +455,7 @@ export default function Checkout() {
 
                 <button 
                   onClick={() => handlePlaceOrder(true)} 
-                  disabled={loading || walletBalance < finalTotal || !selectedAddress || cartItems?.length === 0} 
+                  disabled={loading || walletBalance < finalTotal - impactAmount || !selectedAddress || cartItems?.length === 0} 
                   className="w-full bg-[#E8E0D5] text-[#1A1A1A] font-bold uppercase tracking-widest text-xs py-4 rounded-lg flex items-center justify-center gap-2 hover:bg-[#DED2C4] transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   <FiZap size={16} /> 1-Click Wallet Checkout

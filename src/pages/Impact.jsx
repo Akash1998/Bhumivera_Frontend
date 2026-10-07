@@ -15,6 +15,7 @@ export default function Impact() {
   const [ledger, setLedger] = useState({ totals: [], updates: [] });
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState(false);
+  const [openFaq, setOpenFaq] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -53,8 +54,8 @@ export default function Impact() {
           <div className="mt-7 flex items-start gap-3 border-l border-[#b4c68a] pl-4 text-sm leading-6 text-white/80"><ShieldCheck size={17} className="mt-1 shrink-0 text-[#b4c68a]"/>This ledger is designed to separate what is promised from what is collected and verified.</div>
         </div>
         <div className="grid gap-px self-start border border-white/10 bg-white/10 sm:grid-cols-2">
-          <div className="bg-[#15221d] p-6"><p className="text-xs uppercase tracking-widest text-white/50">Verified collected</p><p className="mt-3 font-serif text-4xl">{loading ? '—' : money(totalCollected)}</p></div>
-          <div className="bg-[#15221d] p-6"><p className="text-xs uppercase tracking-widest text-white/50">Reconciled contributions</p><p className="mt-3 font-serif text-4xl">{loading ? '—' : totalContributions.toLocaleString('en-IN')}</p></div>
+          <div className="bg-[#15221d] p-6"><p className="text-xs uppercase tracking-widest text-white/50">Verified collected</p><p className="mt-3 font-serif text-4xl">{loading ? '—' : loadError ? 'Unavailable' : money(totalCollected)}</p></div>
+          <div className="bg-[#15221d] p-6"><p className="text-xs uppercase tracking-widest text-white/50">Reconciled contributions</p><p className="mt-3 font-serif text-4xl">{loading ? '—' : loadError ? 'Unavailable' : totalContributions.toLocaleString('en-IN')}</p></div>
         </div>
       </section>
 
@@ -72,7 +73,7 @@ export default function Impact() {
                 <h3 className="mt-5 font-serif text-2xl">{project.title}</h3>
                 <p className="mt-3 min-h-14 text-sm leading-6 text-white/60">{project.copy}</p>
                 <p className="mt-6 border-t border-white/10 pt-4 text-xs uppercase tracking-widest text-white/50">Verified collected</p>
-                <p className="mt-1 text-xl font-semibold">{loading ? '—' : money(totals?.collected_amount)}</p>
+                <p className="mt-1 text-xl font-semibold">{loading ? '—' : loadError ? 'Unavailable' : money(totals?.collected_amount)}</p>
               </article>;
             })}
           </div>
@@ -101,6 +102,45 @@ export default function Impact() {
             </article>)}
           </div>
         )}
+      </section>
+
+      <section className="border-y border-white/10 bg-[#17231e]">
+        <div className="mx-auto max-w-7xl px-6 py-16 md:py-24">
+          <div className="mb-12 max-w-2xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b4c68a]">From choice to proof</p><h2 className="mt-4 font-serif text-4xl leading-tight md:text-5xl">A contribution should have a journey you can follow.</h2></div>
+          <div className="grid gap-px border-y border-white/10 bg-white/10 md:grid-cols-4">
+            {[
+              ['01', 'You choose', 'Add ₹50, ₹100, ₹250 or ₹500 to an eligible cash-on-delivery order. Or choose none.'],
+              ['02', 'We collect', 'It starts as a pledge. After delivery, staff reconcile the cash and record a reference.'],
+              ['03', 'Work happens', 'The focus remains a direction until there is a real partner, plan and completed activity.'],
+              ['04', 'We show proof', 'Dated notes and secure photos or video are published only after staff verification.'],
+            ].map(([number, title, copy]) => <article key={number} className="bg-[#111c17] p-6 md:min-h-64 md:p-7"><p className="font-mono text-xs text-[#b4c68a]">{number}</p><h3 className="mt-7 font-serif text-2xl">{title}</h3><p className="mt-3 text-sm leading-6 text-white/60">{copy}</p></article>)}
+          </div>
+          <p className="mt-6 max-w-3xl text-xs leading-5 text-white/40">This ledger is an operational record, not a substitute for a formal charity receipt. No tax-deductible donation or named beneficiary is promised here.</p>
+        </div>
+      </section>
+
+      <section className="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-[0.75fr_1.25fr] md:py-24">
+        <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b4c68a]">Stewardship questions</p><h2 className="mt-4 font-serif text-4xl leading-tight">The details matter.</h2><p className="mt-4 text-sm leading-6 text-white/55">Clear answers before a customer adds anything to an order.</p></div>
+        <div className="border-t border-white/15">
+          {[
+            ['Is the contribution required?', 'No. It is optional, and the default is no contribution. The amount can be changed or removed in checkout.'],
+            ['When is it counted as collected?', 'The checkout creates a pledge on the order. After a delivered COD order is reconciled against a collection reference, the ledger can mark it collected. Until then it does not appear in the public total.'],
+            ['Who receives the contribution?', 'The current ledger tracks funds internally by focus area. A named nonprofit, tax receipt or external beneficiary is not claimed until a real partnership and process are established.'],
+            ['How will field work be documented?', 'An administrator must submit a date, summary and secure photo or video, then attest that the work is complete. Only verified entries appear publicly.'],
+          ].map(([question, answer], index) => <div key={question} className="border-b border-white/15">
+            <button type="button" aria-expanded={openFaq === index} onClick={() => setOpenFaq(openFaq === index ? -1 : index)} className="flex w-full items-center justify-between gap-4 py-5 text-left font-serif text-lg hover:text-[#dce7c5]">{question}<span className="font-sans text-xl text-[#b4c68a]">{openFaq === index ? '−' : '+'}</span></button>
+            {openFaq === index && <p className="max-w-2xl pb-5 text-sm leading-6 text-white/60">{answer}</p>}
+          </div>)}
+        </div>
+      </section>
+
+      <section className="relative isolate overflow-hidden border-t border-white/10 bg-[#0e1712]">
+        <img src="/assets/images/foundermanifesto.webp" alt="Bhumivera's commitment to mindful care" loading="lazy" className="absolute inset-0 -z-20 h-full w-full object-cover opacity-20" />
+        <div className="absolute inset-0 -z-10 bg-[#0b120e]/65" />
+        <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 px-6 py-16 md:flex-row md:items-end md:py-24">
+          <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b4c68a]">Begin with care</p><h2 className="mt-4 max-w-2xl font-serif text-4xl md:text-5xl">Choose a ritual. Follow the record.</h2></div>
+          <Link to="/shop" className="inline-flex items-center gap-3 bg-[#dce7c5] px-5 py-3 text-sm font-semibold text-[#101a17] hover:bg-white">Explore Bhumivera <ArrowRight size={16}/></Link>
+        </div>
       </section>
     </main>
   );

@@ -46,7 +46,7 @@ export default function PremiumHome() {
     <main className="bg-[#f4f2eb] text-[#1c2922]">
       <SEO title="Bhumivera | Considered care, closer to nature" description="Explore Bhumivera's aloe vera and charcoal cleansing, sea-buckthorn face care, and hair rituals." route="/" />
 
-      <section className="relative isolate flex min-h-[78svh] items-end overflow-hidden bg-[#14201a] text-white">
+      <section className="relative isolate flex min-h-[88svh] items-end overflow-hidden bg-[#14201a] text-white">
         <img src={productImage(heroProduct)} alt={heroProduct ? heroProduct.name : 'Aloe vera botanical preparation'} fetchPriority="high" className="absolute inset-0 -z-20 h-full w-full object-cover object-center opacity-70" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0b110e]/90 via-[#0b110e]/55 to-transparent" />
         <div className="mx-auto grid w-full max-w-7xl gap-10 px-6 pb-12 pt-36 md:grid-cols-[1fr_auto] md:items-end md:pb-20">
@@ -70,6 +70,20 @@ export default function PremiumHome() {
         <blockquote className="max-w-4xl font-serif text-3xl leading-tight md:text-5xl">“The best care feels considered: honest about what it is, gentle in how it speaks, and mindful of what it leaves behind.”</blockquote>
       </section>
 
+      <section className="relative grid overflow-hidden border-y border-[#253b2f]/15 bg-[#e8e6dc] lg:min-h-[680px] lg:grid-cols-2">
+        <div className="relative min-h-[360px] overflow-hidden lg:min-h-full">
+          <img src="/assets/images/aloeveradna.webp" alt="Aloe vera botanical texture" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#18261d]/55 via-transparent to-transparent" />
+          <p className="absolute bottom-6 left-6 text-[10px] font-bold uppercase tracking-[0.2em] text-white/85">The plant, before the promise.</p>
+        </div>
+        <div className="flex flex-col justify-center px-6 py-14 md:px-12 lg:px-20">
+          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#607552]">A slower point of view</p>
+          <h2 className="mt-5 max-w-xl font-serif text-4xl leading-[1.08] md:text-6xl">“Let the formula speak plainly. Let the ritual feel like yours.”</h2>
+          <p className="mt-6 max-w-lg text-sm leading-7 text-stone-600">Bhumivera is moving from a single-soap beginning into a considered skin and hair collection. Aloe vera and charcoal cleansing is here; sea-buckthorn face care and new hair rituals join as each product is ready.</p>
+          <Link to="/shop" className="mt-8 inline-flex w-fit items-center gap-3 border-b border-[#35533c]/35 pb-2 text-sm font-semibold text-[#253b2f] hover:border-[#253b2f]">See what is available now <ArrowRight size={16}/></Link>
+        </div>
+      </section>
+
       {categories.length > 0 && <section className="border-y border-[#253b2f]/15 bg-[#e9ebdf]">
         <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-5 px-6 py-7">
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#536b4d]">Explore by ritual</p>
@@ -84,7 +98,7 @@ export default function PremiumHome() {
         </div>
         {loading ? <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{[0, 1, 2, 3].map(item => <div key={item} className="aspect-[4/5] animate-pulse bg-[#e8e7dd]"/>)}</div> : products.length > 0 ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {products.slice(0, 4).map((product, index) => <motion.article key={product.id || product._id} initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: index * 0.07 }} className="group">
+            {products.slice(0, 8).map((product, index) => <motion.article key={product.id || product._id} initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (index % 4) * 0.07 }} className="group">
               <Link to={`/product/${product.slug || product.id}`} className="block overflow-hidden bg-[#e8e7dd]">
                 <img src={productImage(product)} alt={product.name} loading="lazy" className="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-[1.035]" onError={event => { event.currentTarget.src = '/assets/images/aloeverabeaker.webp'; }}/>
               </Link>
@@ -96,6 +110,28 @@ export default function PremiumHome() {
             </motion.article>)}
           </div>
         ) : <div className="border-y border-[#253b2f]/15 py-12 text-sm text-stone-600">The collection is being updated. Visit the shop for current availability.</div>}
+      </section>
+
+      <section className="bg-[#e8e6dc]">
+        <div className="mx-auto max-w-7xl px-6 py-16 md:py-24">
+          <div className="mb-12 max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#607552]">The Bhumivera edit</p><h2 className="mt-4 font-serif text-4xl leading-tight md:text-5xl">A collection growing with intention.</h2><p className="mt-4 max-w-2xl text-sm leading-7 text-stone-600">Skin and hair are not the same ritual. We are building each with its own pace, product details and ingredient story instead of stretching one formula across every need.</p></div>
+          <div className="grid gap-0 border-y border-[#253b2f]/20 md:grid-cols-3 md:divide-x md:divide-[#253b2f]/20">
+            {[
+              { image: '/assets/images/aloeverabeaker.webp', number: '01', title: 'Cleanse with care', note: 'Aloe vera face wash is listed in the live collection. Open its product page for current price, stock and description.', query: 'aloe vera' },
+              { image: '/assets/images/aloeveradrop.webp', number: '02', title: 'Explore the next face ritual', note: 'Sea-buckthorn face care is part of the direction. Products will appear here when they are listed and ready to order.', query: 'sea buckthorn' },
+              { image: '/assets/images/aloeverascience.webp', number: '03', title: 'Care for hair, thoughtfully', note: 'Hair oil and shampoo are being prepared for the collection. We will not show them as available before launch.', query: 'hair' },
+            ].map((ritual, index) => <article key={ritual.number} className="group relative min-h-[430px] overflow-hidden md:min-h-[540px]">
+              <img src={ritual.image} alt="Bhumivera botanical ritual" loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-[1.035]" />
+              <div className="absolute inset-0 bg-gradient-to-t from-[#0b140e]/90 via-[#0b140e]/15 to-[#0b140e]/10" />
+              <div className="absolute inset-x-0 bottom-0 p-6 text-white md:p-8">
+                <span className="font-mono text-xs text-[#dce7c5]">{ritual.number} / THE RITUAL</span>
+                <h3 className="mt-4 font-serif text-3xl">{ritual.title}</h3>
+                <p className="mt-3 max-w-sm text-sm leading-6 text-white/70">{ritual.note}</p>
+                <Link to={`/shop?search=${encodeURIComponent(ritual.query)}`} className="mt-6 inline-flex items-center gap-2 border-b border-white/50 pb-1 text-xs font-bold uppercase tracking-widest hover:border-[#dce7c5] hover:text-[#dce7c5]">Explore <ArrowRight size={14}/></Link>
+              </div>
+            </article>)}
+          </div>
+        </div>
       </section>
 
       <section className="grid min-h-[520px] bg-[#17231d] text-white md:grid-cols-2">
@@ -118,6 +154,16 @@ export default function PremiumHome() {
           ['02', 'Buy what is available', 'The collection reflects live catalog items. New rituals appear when they are ready.'],
           ['03', 'Follow the record', 'Collected contributions and documented field work have separate, visible statuses.'],
         ].map(([number, title, copy]) => <article key={number} className="border-t border-[#253b2f]/25 pt-5"><span className="font-mono text-xs text-[#71806a]">{number}</span><h3 className="mt-4 font-serif text-2xl">{title}</h3><p className="mt-3 text-sm leading-6 text-stone-600">{copy}</p></article>)}
+      </section>
+
+      <section className="border-y border-[#253b2f]/15 bg-[#f4f2eb]">
+        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 md:grid-cols-[0.7fr_1.3fr] md:py-24">
+          <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#607552]">Our point of view</p><h2 className="mt-4 font-serif text-4xl leading-tight">Luxury is attention, not excess.</h2></div>
+          <div className="grid gap-8 sm:grid-cols-2">
+            <blockquote className="border-l border-[#536b4d]/40 pl-5 font-serif text-xl leading-relaxed">“A good ritual should leave room for the rest of life.”<span className="mt-4 block font-sans text-[10px] font-bold uppercase tracking-widest text-[#71806a]">The Bhumivera journal</span></blockquote>
+            <blockquote className="border-l border-[#536b4d]/40 pl-5 font-serif text-xl leading-relaxed">“Care for the earth begins with learning what is true, then doing what we can.”<span className="mt-4 block font-sans text-[10px] font-bold uppercase tracking-widest text-[#71806a]">The Bhumivera journal</span></blockquote>
+          </div>
+        </div>
       </section>
     </main>
   );
