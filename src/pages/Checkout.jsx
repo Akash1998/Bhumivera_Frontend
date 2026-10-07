@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -37,6 +37,8 @@ export default function Checkout() {
   const [loyaltyTier, setLoyaltyTier] = useState(user?.loyalty?.currentTier || '');
   const [redeemLoyaltyPoints, setRedeemLoyaltyPoints] = useState(false);
   const [seasonalSeconds, setSeasonalSeconds] = useState(0);
+  const [impactAmount, setImpactAmount] = useState(0);
+  const [impactProject, setImpactProject] = useState('native-trees');
   
   const [couponCode, setCouponCode] = useState('');
   const [availableCoupons, setAvailableCoupons] = useState([]);
@@ -52,7 +54,7 @@ export default function Checkout() {
   const pointsPayableCap = Math.floor(Math.max(0, subtotal + shippingCost - appliedCouponDiscount) * loyaltyPointsPerRupee);
   const loyaltyPointsRedeemed = redeemLoyaltyPoints ? Math.min(loyaltyPoints, pointsPayableCap) : 0;
   const loyaltyDiscount = loyaltyPointsRedeemed / loyaltyPointsPerRupee;
-  const finalTotal = Math.max(0, subtotal + shippingCost - appliedCouponDiscount - loyaltyDiscount);
+  const finalTotal = Math.max(0, subtotal + shippingCost - appliedCouponDiscount - loyaltyDiscount + (paymentMode === 'COD' ? impactAmount : 0));
 
   const fetchData = useCallback(async () => {
     try {
@@ -115,6 +117,8 @@ export default function Checkout() {
         deliveryType: shippingMethod.toLowerCase(),
         couponCode: couponCode.trim() || undefined,
         loyaltyPointsToRedeem: loyaltyPointsRedeemed,
+        impactAmount: !isFastCheckout && paymentMode === 'COD' ? impactAmount : 0,
+        impactProject: !isFastCheckout && paymentMode === 'COD' && impactAmount > 0 ? impactProject : undefined,
         notes: notes.trim() || undefined
       };
       
@@ -305,6 +309,29 @@ export default function Checkout() {
               </div>
             </motion.section>
 
+            {/* Optional contribution */}
+            <motion.section
+              initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }}
+              className="border border-[#243e31]/15 bg-[#f2f4ec] p-6 md:p-8"
+            >
+              <div className="flex items-start justify-between gap-4">
+                <div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#536b4d]">A little more good</p><h2 className="mt-2 font-serif text-2xl text-[#1d2b22]">Add a cause contribution</h2><p className="mt-2 max-w-xl text-sm leading-6 text-stone-600">Optional. Added to your COD amount as a pledge, then shown in the public ledger only after collection is reconciled.</p></div>
+                <span className="hidden border border-[#536b4d]/25 p-2 text-[#536b4d] sm:block"><FiShield size={18}/></span>
+              </div>
+              <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-5">
+                {[0, 50, 100, 250, 500].map(amount => <button key={amount} type="button" disabled={paymentMode !== 'COD'} onClick={() => setImpactAmount(amount)} aria-pressed={impactAmount === amount} className={`min-h-11 border px-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-45 ${impactAmount === amount ? 'border-[#243e31] bg-[#243e31] text-white' : 'border-[#243e31]/20 bg-white text-[#243e31] hover:border-[#536b4d]'}`}>{amount === 0 ? 'None' : `₹${amount}`}</button>)}
+              </div>
+              {impactAmount > 0 && <label className="mt-5 block text-xs font-bold uppercase tracking-wider text-stone-600">Choose a focus area
+                <select value={impactProject} onChange={event => setImpactProject(event.target.value)} className="mt-2 w-full border border-stone-300 bg-white px-3 py-3 text-sm font-normal normal-case tracking-normal text-stone-800 outline-none focus:border-[#536b4d] sm:max-w-md">
+                  <option value="native-trees">Native tree restoration</option>
+                  <option value="river-care">River care</option>
+                  <option value="community-care">Community care</option>
+                </select>
+              </label>}
+              {paymentMode !== 'COD' && <p className="mt-4 text-xs text-stone-500">Contributions are temporarily available with cash on delivery only; no contribution will be added to wallet checkout.</p>}
+              {impactAmount > 0 && <Link to="/impact" className="mt-4 inline-flex text-xs font-semibold text-[#35533c] underline underline-offset-4">Read how collection and field updates are verified</Link>}
+            </motion.section>
+
             {/* Payment Method */}
             <motion.section 
               initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }}
@@ -319,14 +346,14 @@ export default function Checkout() {
                   label="Cash on Delivery" 
                   icon={<FiTruck size={24} />} 
                   active={paymentMode} 
-                  set={setPaymentMode} 
+                  set={mode => { setPaymentMode(mode); if (mode !== 'COD') setImpactAmount(0); }}
                 />
                 <PaymentCard 
                   id="WALLET" 
                   label={`Digital Wallet (₹${walletBalance})`} 
                   icon={<Wallet size={24} />} 
                   active={paymentMode} 
-                  set={setPaymentMode} 
+                  set={mode => { setPaymentMode(mode); if (mode !== 'COD') setImpactAmount(0); }}
                   disabled={walletBalance < finalTotal} 
                 />
               </div>
@@ -398,6 +425,7 @@ export default function Checkout() {
                 )}
                 {appliedCouponDiscount > 0 && <div className="flex justify-between text-emerald-700"><span>Coupon savings</span><span>-₹{appliedCouponDiscount.toFixed(2)}</span></div>}
                 {loyaltyDiscount > 0 && <div className="flex justify-between text-emerald-700"><span>Loyalty points ({loyaltyPointsRedeemed})</span><span>-₹{loyaltyDiscount.toFixed(2)}</span></div>}
+                {paymentMode === 'COD' && impactAmount > 0 && <div className="flex justify-between gap-4 border-t border-stone-200 pt-3 text-[#35533c]"><span>Cause pledge · {impactProject.replaceAll('-', ' ')}</span><span>+₹{impactAmount}</span></div>}
                 <div className="border-t border-stone-200 pt-4 flex justify-between items-center text-lg font-serif text-[#1A1A1A]">
                   <span>Total</span>
                   <span className="font-bold text-[#2C3E2D] text-xl">₹{finalTotal}</span>

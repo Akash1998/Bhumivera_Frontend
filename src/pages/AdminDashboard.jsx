@@ -33,6 +33,7 @@ const LifecycleOffers = lazy(() => import('./admin/LifecycleOffers.jsx'));
 const PersonalizationCenter = lazy(() => import('./admin/PersonalizationCenter.jsx'));
 const ABExperimentLab = lazy(() => import('./admin/ABExperimentLab.jsx'));
 const LoyaltyTierForge = lazy(() => import('./admin/LoyaltyTierForge.jsx'));
+const ImpactManagement = lazy(() => import('./admin/ImpactManagement.jsx'));
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -90,6 +91,7 @@ const TAB_COMPONENTS = {
   personalization: PersonalizationCenter,
   'ab-experiments': ABExperimentLab,
   'loyalty-tiers': LoyaltyTierForge,
+  impact: ImpactManagement,
 };
 
 // Safe Generic Icon to bypass Lucide-React `.reduce()` compiler crashes
@@ -121,7 +123,7 @@ export default function AdminDashboard() {
     {
       title: 'Sales & Revenue', items: [
         { id: 'orders', label: 'Orders' }, { id: 'tax', label: 'Taxes' },
-        { id: 'shipping', label: 'Shipping' }
+        { id: 'shipping', label: 'Shipping' }, { id: 'impact', label: 'Earth Impact' }
       ]
     },
     {

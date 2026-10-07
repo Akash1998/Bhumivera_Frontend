@@ -6,16 +6,14 @@ import { Package, CheckCircle2, Truck, ShoppingBag, PartyPopper, Settings, Arrow
 
 const STATUS_STEPS = [
   { key: 'placed', label: 'Order Placed', icon: ShoppingBag, description: 'Your order has been placed successfully.' },
-  { key: 'confirmed', label: 'Confirmed', icon: CheckCircle2, description: 'Seller has confirmed your order.' },
-  { key: 'processing', label: 'Processing', icon: Settings, description: 'Your order is being prepared.' },
+  { key: 'confirmed', label: 'Confirmed', icon: CheckCircle2, description: 'Your order has been confirmed.' },
+  { key: 'packed', label: 'Packed', icon: Package, description: 'Your order is being prepared for dispatch.' },
   { key: 'shipped', label: 'Shipped', icon: Truck, description: 'Your order is on its way.' },
-  { key: 'out_for_delivery', label: 'Out for Delivery', icon: Package, description: 'Your order is out for delivery.' },
   { key: 'delivered', label: 'Delivered', icon: PartyPopper, description: 'Your order has been delivered.' },
 ];
 
 const STATUS_MAP = {
-  pending: 0, placed: 0, confirmed: 1, processing: 2,
-  shipped: 3, out_for_delivery: 4, delivered: 5,
+  pending: 0, placed: 0, confirmed: 1, packed: 2, shipped: 3, delivered: 4,
 };
 
 function getStepIndex(status) {
@@ -25,7 +23,8 @@ function getStepIndex(status) {
 
 function StatusPill({ status, currentStep }) {
   const cfg = (() => {
-    if (currentStep >= 5) return { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+    if (['cancelled', 'returned'].includes(String(status).toLowerCase())) return { bg: 'bg-rose-50 text-rose-700 border-rose-200' };
+    if (currentStep >= STATUS_STEPS.length - 1) return { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
     if (currentStep >= 3) return { bg: 'bg-sky-50 text-sky-700 border-sky-200' };
     return { bg: 'bg-amber-50 text-amber-800 border-amber-200' };
   })();
@@ -119,7 +118,7 @@ export default function OrderTracking() {
               <Package className="w-10 h-10 text-[#8B9D83]" />
             </div>
             <h3 className="text-xl font-semibold text-[#0B2419] mb-2">No orders yet</h3>
-            <p className="text-[#8B9D83] mb-6">Start shopping to see your orders here. Every product comes with a 10-year warranty.</p>
+            <p className="text-[#8B9D83] mb-6">Start shopping to see your orders and delivery updates here.</p>
             <Link to="/shop" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#0B2419] text-[#FDFBF7] font-semibold hover:bg-[#2C3E2D] transition-colors shadow-sm">
               Shop Now <ArrowRight className="w-4 h-4" />
             </Link>
@@ -152,6 +151,10 @@ export default function OrderTracking() {
                       <p className="text-xs text-[#8B9D83] uppercase tracking-wider font-semibold">Total</p>
                       <p className="text-[#8a6a12] font-bold text-lg">₹{Number(total).toLocaleString()}</p>
                     </div>
+                    {ord.tracking_number && <div className="min-w-40">
+                      <p className="text-xs text-[#8B9D83] uppercase tracking-wider font-semibold">Shipment</p>
+                      <p className="font-mono text-sm text-[#0B2419]">{ord.courier ? `${ord.courier} · ` : ''}{ord.tracking_number}</p>
+                    </div>}
                     <div>
                       <StatusPill status={ord.status} currentStep={currentStep} />
                     </div>
@@ -159,7 +162,7 @@ export default function OrderTracking() {
 
                   {/* Tracking Timeline */}
                   <div className="px-6 sm:px-8 py-8 sm:py-10">
-                    <div className="relative">
+                    {['cancelled', 'returned'].includes(String(ord.status).toLowerCase()) ? <div className="border-l-2 border-rose-400 bg-rose-50 px-4 py-3 text-sm text-rose-800">This order is {ord.status}. The fulfillment timeline has stopped.</div> : <div className="relative">
                       {/* Progress Bar */}
                       <div className="absolute top-6 left-6 right-6 h-0.5 bg-[#8B9D83]/20 rounded-full">
                         <div
@@ -195,8 +198,15 @@ export default function OrderTracking() {
                           );
                         })}
                       </div>
-                    </div>
+                    </div>}
                   </div>
+
+                  {Number(ord.impact_amount) > 0 && <div className="mx-6 mb-8 border-t border-[#8B9D83]/15 pt-5 sm:mx-8">
+                    <p className="text-xs font-bold uppercase tracking-wider text-[#536b4d]">Cause contribution</p>
+                    <p className="mt-1 text-sm text-[#0B2419]">₹{Number(ord.impact_amount).toLocaleString('en-IN')} · {ord.impact_project?.replaceAll('-', ' ')}</p>
+                    <p className="mt-1 text-xs leading-5 text-stone-500">Status: {ord.impact_status || 'pledged'}{ord.impact_status !== 'collected' ? ' — it is not counted in the public impact total until collection is reconciled.' : ' — collection has been reconciled.'}</p>
+                    <Link to="/impact" className="mt-2 inline-flex text-xs font-semibold text-[#35533c] underline underline-offset-4">View the impact ledger</Link>
+                  </div>}
 
                   {/* Order Items */}
                   {items.length > 0 && (

@@ -211,6 +211,13 @@ export const returns = { getMyReturns: () => api.get("/returns/my"), submit: d =
 export const inventory = { get: () => api.get("/inventory"), updateStock: (p, q) => api.patch(`/inventory/${p}`, { quantity: q }) };
 export const warranty = { register: d => api.post("/warranty/register", d), getMyWarranties: () => api.get("/warranty/my"), getAllAdmin: () => api.get("/warranty"), updateStatus: (id, s) => api.patch(`/warranty/${id}/status`, { status: s }) };
 export const gamification = { spin: data => api.post('/gamification/spin', data) };
+export const impact = {
+  getPublic: () => api.get('/impact/public'),
+  getAdminContributions: () => api.get('/impact/admin/contributions', { adminAuth: true }),
+  collectContribution: (id, collectionReference) => api.patch(`/impact/admin/contributions/${id}/collected`, { collectionReference }, { adminAuth: true }),
+  getAdminUpdates: () => api.get('/impact/admin/updates', { adminAuth: true }),
+  createUpdate: data => api.post('/impact/admin/updates', data, { adminAuth: true }),
+};
 export const serials = { validate: s => api.post("/serials/validate", { serial: s }), getAllAdmin: () => api.get("/serials/admin/all"), getByProduct: p => api.get(`/serials/${p}`), getStats: p => api.get(`/serials/${p}/stats`), generate: d => api.post("/serials/generate", d), addManual: (p, d) => api.post(`/serials/${p}/add`, d), update: (p, s, d) => api.patch(`/serials/${p}/${s}`, d), delete: (p, s) => api.delete(`/serials/${p}/${s}`) };
 export const contact = { submit: d => api.post("/contact", d), getAllAdmin: () => api.get("/contact"), delete: id => api.delete(`/contact/${id}`) };
 export const adminManagement = { getAllUsers: () => api.get("/admin/users"), getUserDetails: id => api.get(`/admin/users/${id}`), updateUserStatus: (id, s) => api.patch(`/admin/users/${id}/status`, { status: s }), getAllOrders: () => api.get("/orders/all"), updateOrderStatus: (id, d) => api.put(`/orders/${id}/status`, d) };

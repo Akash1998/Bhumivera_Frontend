@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { 
   ShoppingCart, User, Search, Menu, X, Sparkles, 
-  ChevronDown, Package, Zap, Gift, ShieldCheck, 
+  ChevronDown, Package, Zap, Gift,
   MapPin, Activity, Droplets
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -82,20 +82,13 @@ export default function Navbar() {
     }
   };
 
-  const quickLinks = [
-    { label: 'Multani Mitti', path: '/shop?category=multani-mitti' },
-    { label: 'Aloe Vera', path: '/shop?category=aloe-vera' },
-    { label: 'Natural Soaps', path: '/shop?category=soaps' },
-    { label: 'Exclusive Offers', path: '/flash-sales', icon: Zap },
-  ];
-
   return (
     <>
       <div className="bg-[#1a1a1a] text-[#e8dcc4] py-2 px-6 text-[10px] font-bold uppercase tracking-widest hidden md:block border-b border-[#8b5a2b]/20">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-6">
-            <span className="flex items-center gap-2 transition-colors cursor-pointer"><ShieldCheck size={14} className="text-[#8b5a2b]" /> 100% Secure Checkout</span>
-            <span className="flex items-center gap-2 transition-colors cursor-pointer"><MapPin size={14} className="text-[#8b5a2b]" /> Track Order</span>
+            <Link to="/impact" className="flex items-center gap-2 transition-colors hover:text-white"><Droplets size={14} className="text-[#c8d6aa]" /> Verified field ledger</Link>
+            <Link to="/order-tracking" className="flex items-center gap-2 transition-colors hover:text-white"><MapPin size={14} className="text-[#8b5a2b]" /> Track Order</Link>
           </div>
           <div className="flex items-center gap-6">
             <Link to="/contact" className="hover:text-[#8b5a2b] transition-colors">Boutique Support</Link>
@@ -132,7 +125,7 @@ export default function Navbar() {
                 value={searchQuery}
                 onChange={handleSearch}
                 onFocus={() => { if(searchQuery.length > 2) setShowSearchDropdown(true); }}
-                placeholder="Search natural skincare..."
+                placeholder="Search skincare, hair care, ingredients..."
                 aria-label="Search skincare products"
                 className="w-full bg-white border border-[#e8dcc4] rounded-full pl-12 pr-6 py-3.5 text-sm text-[#2c2c2c] focus:border-[#8b5a2b] transition-all outline-none placeholder:text-[#8b5a2b]/50 shadow-sm"
               />

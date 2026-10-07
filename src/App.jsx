@@ -30,7 +30,7 @@ const lazyWithRetry = (componentImport) =>
   });
 
 // Existing Pages
-const Home = lazyWithRetry(() => import("./pages/Home.jsx"));
+const Home = lazyWithRetry(() => import("./pages/PremiumHome.jsx"));
 const Warehouse = lazyWithRetry(() => import("./pages/Warehouse.jsx"));
 const WarehouseAdmin = lazyWithRetry(() => import("./pages/admin/WarehouseAdmin.jsx"));
 const WarehouseManagement = lazyWithRetry(() => import("./pages/admin/WarehouseManagement.jsx"));
@@ -54,6 +54,7 @@ const AddressBook = lazyWithRetry(() => import("./pages/AddressBook.jsx"));
 const Returns = lazyWithRetry(() => import("./pages/Returns.jsx"));
 const Affiliate = lazyWithRetry(() => import("./pages/Affiliate.jsx"));
 const About = lazyWithRetry(() => import("./pages/About.jsx"));
+const Impact = lazyWithRetry(() => import("./pages/Impact.jsx"));
 const Legal = lazyWithRetry(() => import("./pages/Legal.jsx"));
 
 // NEW: Bhumivera Specific Pages using lazyWithRetry
@@ -151,6 +152,7 @@ function AppContent() {
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
+            <Route path="/impact" element={<Impact />} />
             <Route path="/legal" element={<Legal />} />
             
             {/* Bhumivera Brand Routes */}

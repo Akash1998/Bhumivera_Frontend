@@ -150,6 +150,7 @@ export default function OrderManagement() {
         'Order ID': formatId(o.id), 'Date': new Date(o.created_at).toLocaleString(),
         'Customer': o.user_name || o.address_snapshot?.full_name || 'Guest', 'Email': o.user_email || 'N/A',
         'Total (₹)': Number(o.total || 0), 'Payment Method': o.payment_mode || 'COD',
+        'Cause Pledge (₹)': Number(o.impact_amount || 0), 'Cause Project': o.impact_project || 'N/A',
         'Payment Status': o.payment_status || 'pending', 'Status': o.status,
         'Courier': o.courier || 'N/A', 'Tracking ID': o.tracking_number || 'N/A'
       }));
@@ -387,6 +388,7 @@ export default function OrderManagement() {
                     <div className="space-y-3 text-sm font-medium">
                       <div className="flex justify-between text-slate-600"><span>Subtotal</span><span>₹{Number(selectedOrder.subtotal || 0).toLocaleString()}</span></div>
                       <div className="flex justify-between text-slate-600"><span>Shipping</span><span>₹{Number(selectedOrder.shipping_cost || 0).toLocaleString()}</span></div>
+                      {Number(selectedOrder.impact_amount) > 0 && <div className="flex justify-between gap-3 text-[#35533c]"><span>Cause pledge · {selectedOrder.impact_project?.replaceAll('-', ' ') || 'Impact fund'}</span><span>₹{Number(selectedOrder.impact_amount).toLocaleString()}</span></div>}
                       {Number(selectedOrder.discount) > 0 && <div className="flex justify-between text-emerald-600"><span>Discount</span><span>- ₹{Number(selectedOrder.discount).toLocaleString()}</span></div>}
                       <div className="pt-3 mt-3 border-t border-slate-200 flex justify-between text-lg font-extrabold text-slate-900">
                         <span>Total Paid</span>

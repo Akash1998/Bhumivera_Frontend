@@ -1,16 +1,17 @@
 import SEO from '../components/SEO';
 import React, { useState, useEffect } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { 
-  Star, Leaf, Heart, Shield, Truck, Zap, ChevronRight, 
-  Minus, Plus, CheckCircle2, AlertCircle, Play, Droplet, Microscope, Package, Tag
+  Star, Leaf, Heart, Shield, ChevronRight,
+  Minus, Plus, CheckCircle2, AlertCircle, Microscope, Package, Tag
 } from 'lucide-react';
 import { 
   products as productsApi, 
   reviews as reviewsApi
 } from '../services/api';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
 // Robust parsing for JSON-stringified arrays from MySQL
 const getImageUrl = (img) => {
@@ -37,8 +38,8 @@ const getImageUrl = (img) => {
 
 export default function ProductDetail() {
   const { id } = useParams();
-  const navigate = useNavigate();
   const { addToCart } = useCart();
+  const { isWishlisted, toggleWishlist } = useWishlist();
   
   const [product, setProduct] = useState(null);
   const [reviewsData, setReviewsData] = useState([]);
@@ -85,7 +86,8 @@ export default function ProductDetail() {
         if (fetchedProduct && fetchedProduct.id) {
           try {
             const revRes = await reviewsApi.getByProduct(fetchedProduct.id);
-            setReviewsData(revRes.data?.data || revRes.data || []);
+            const reviewRows = revRes.data?.reviews || revRes.data?.data || revRes.data || [];
+            setReviewsData(Array.isArray(reviewRows) ? reviewRows.map(review => ({ ...review, comment: review.body || review.comment || '' })) : []);
           } catch (revErr) {
             setReviewsData([]);
           }
@@ -113,6 +115,15 @@ export default function ProductDetail() {
   };
 
   const isOutOfStock = product?.quantity <= 0;
+  let rawSpecifications = product?.specifications || {};
+  if (typeof rawSpecifications === 'string') {
+    try { rawSpecifications = JSON.parse(rawSpecifications); } catch { rawSpecifications = {}; }
+  }
+  const specificationEntries = rawSpecifications && typeof rawSpecifications === 'object' && !Array.isArray(rawSpecifications)
+    ? Object.entries(rawSpecifications).filter(([, value]) => value !== null && value !== undefined && String(value).trim())
+    : [];
+  const productRating = Number(product?.rating || 0);
+  const reviewCount = Number(product?.review_count || 0);
   
   if (loading) return <SkeletonPDP />;
 
@@ -146,11 +157,11 @@ export default function ProductDetail() {
   };
 
   return (
-    <div className="bg-[#FDFBF7] text-[#1A1C18] min-h-screen selection:bg-[#8b5a2b] selection:text-white pt-24 pb-32 font-sans relative">
+    <div className="bg-[#f4f2eb] text-[#1b2821] min-h-screen selection:bg-[#253b2f] selection:text-white pt-24 pb-32 font-sans relative">
       <SEO 
-        title={`Buy ${product.name} | Bhumivera Organic Skincare`}
+        title={`${product.name} | Bhumivera`}
         description={product.description?.substring(0, 155)}
-        keywords={`${product.name}, organic soap, luxury natural skincare, buy bhumivera`}
+        keywords={`${product.name}, Bhumivera, skincare, hair care`}
         ogImage={product.images && product.images.length > 0 ? getImageUrl(product.images[0]) : undefined}
         route={`/product/${product.slug || product.id}`}
         schema={productSchema} 
@@ -161,7 +172,7 @@ export default function ProductDetail() {
         <ChevronRight size={14} />
         <Link to={`/shop?category=${product.category_id}`} className="hover:text-[#8b5a2b] transition-colors">{product.category_name || 'Botanicals'}</Link>
         <ChevronRight size={14} />
-        <span className="text-[#8b5a2b] truncate max-w-[200px]">{product.name}</span>
+        <span className="text-[#35533c] truncate max-w-[200px]">{product.name}</span>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 relative z-10">
@@ -184,7 +195,7 @@ export default function ProductDetail() {
             })}
           </div>
 
-          <div className="relative w-full aspect-square md:aspect-auto md:h-[700px] bg-white border border-stone-200 shadow-sm overflow-hidden flex items-center justify-center lg:sticky lg:top-32 group">
+          <div className="relative w-full aspect-square md:aspect-auto md:h-[680px] bg-[#e9e8df] border border-[#253b2f]/10 shadow-sm overflow-hidden flex items-center justify-center lg:sticky lg:top-32 group">
             <AnimatePresence mode="wait">
               <motion.div
                 key={getImageUrl(activeMedia)}
@@ -192,9 +203,9 @@ export default function ProductDetail() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.8 }}
-                className="w-full h-full p-8"
+                className="w-full h-full p-8 md:p-12"
               >
-                <img src={getImageUrl(activeMedia)} alt={product.name} className="w-full h-full object-contain mix-blend-multiply" />
+                <img src={getImageUrl(activeMedia)} alt={product.name} className="w-full h-full object-contain mix-blend-multiply transition-transform duration-700 group-hover:scale-[1.025]" />
               </motion.div>
             </AnimatePresence>
 
@@ -202,16 +213,16 @@ export default function ProductDetail() {
               {product.is_featured === 1 && <span className="bg-[#8b5a2b] text-white px-4 py-1.5 text-[10px] font-mono uppercase tracking-widest">Premium Selection</span>}
             </div>
             
-            <button className="absolute top-6 right-6 w-12 h-12 bg-white border border-stone-200 rounded-full flex items-center justify-center text-stone-400 hover:text-[#8b5a2b] hover:border-[#8b5a2b] transition-all duration-300 z-10">
-              <Heart size={20} />
+            <button onClick={() => toggleWishlist(product)} aria-label={isWishlisted(product.id) ? 'Remove from saved products' : 'Save product'} aria-pressed={isWishlisted(product.id)} className="absolute top-6 right-6 w-12 h-12 bg-white border border-stone-200 rounded-full flex items-center justify-center text-stone-500 hover:text-[#35533c] hover:border-[#536b4d] transition-all duration-300 z-10">
+              <Heart size={20} fill={isWishlisted(product.id) ? 'currentColor' : 'none'} />
             </button>
           </div>
         </div>
 
         <div className="lg:col-span-5 flex flex-col relative">
-          <div className="mb-8 border-b border-stone-200 pb-8">
+          <div className="mb-8 border-b border-[#253b2f]/15 pb-8">
             <div className="flex items-center gap-3 mb-3">
-               <span className="text-[#8b5a2b] font-mono text-[10px] uppercase tracking-[0.3em] block">
+               <span className="text-[#536b4d] font-mono text-[10px] uppercase tracking-[0.2em] block">
                  SKU: {product.sku || 'N/A'}
                </span>
                {product.brand && (
@@ -221,13 +232,15 @@ export default function ProductDetail() {
                )}
             </div>
             
-            <h1 className="text-4xl md:text-5xl font-light tracking-tighter leading-[1.1] mb-6 italic text-[#1A1C18]">
+            <h1 className="font-serif text-4xl md:text-5xl leading-[1.05] mb-5 text-[#17251c]">
               {product.name}
             </h1>
+
+            {productRating > 0 && <div className="mb-5 flex items-center gap-2 text-sm text-[#526b4c]"><div className="flex" aria-label={`${productRating.toFixed(1)} out of 5 stars`}>{[1, 2, 3, 4, 5].map(star => <Star key={star} size={14} fill={star <= Math.round(productRating) ? 'currentColor' : 'none'} />)}</div><span>{productRating.toFixed(1)}{reviewCount > 0 ? ` · ${reviewCount} reviews` : ''}</span></div>}
             
-            <div className="flex flex-col gap-2 mb-6">
+            <div className="flex flex-col gap-2 mb-5">
               <div className="flex items-end gap-4">
-                <span className="text-4xl font-light tracking-tighter text-[#8b5a2b]">
+                <span className="font-serif text-4xl text-[#35533c]">
                   ₹{product.discount_price || product.price}
                 </span>
                 {product.discount_price && (
@@ -236,16 +249,16 @@ export default function ProductDetail() {
               </div>
             </div>
 
-            <p className="text-stone-600 text-sm leading-relaxed font-medium">
-              {product.description?.substring(0, 200)}...
+            <p className="text-stone-600 text-sm leading-7">
+              {product.description}
             </p>
           </div>
 
-          <div className="bg-white border border-stone-200 p-8 mb-8 relative">
+          <div className="bg-white border border-[#253b2f]/15 p-6 md:p-8 mb-8 relative">
             <div className="flex items-center justify-between gap-4 mb-6">
               <span className={`flex items-center gap-2 text-xs font-mono uppercase tracking-widest ${isOutOfStock ? 'text-red-500' : 'text-[#8b5a2b]'}`}>
                 {isOutOfStock ? <AlertCircle size={16}/> : <Package size={16}/>}
-                {isOutOfStock ? 'Lab Reserves Depleted' : `In Stock: ${product.quantity} Units`}
+                {isOutOfStock ? 'Currently unavailable' : product.quantity <= 5 ? `Only ${product.quantity} left` : 'Available to order'}
               </span>
             </div>
 
@@ -277,14 +290,14 @@ export default function ProductDetail() {
 
           <div className="grid grid-cols-2 gap-4">
             {[
-              { icon: <Shield />, title: "Somatic Registry", sub: "Verify Batch Origin via SNA-2" },
-              { icon: <Droplet />, title: "Zero Heat Damage", sub: "SOP-104 Cold Saponification" }
+              { icon: <Shield />, title: 'Product support', sub: 'Help with orders and product questions', to: '/contact' },
+              { icon: <Leaf />, title: 'Care beyond the product', sub: 'See the public, verified field ledger', to: '/impact' },
             ].map((item, i) => (
-              <Link to={i === 0 ? "/somatic-registry" : "/science"} key={i} className="flex flex-col gap-2 p-6 bg-white border border-stone-200 hover:border-[#8b5a2b] transition-colors group cursor-pointer">
+              <Link to={item.to} key={i} className="flex flex-col gap-2 p-6 bg-white border border-[#253b2f]/15 hover:border-[#536b4d]/60 transition-colors group cursor-pointer">
                 <div className="text-[#8b5a2b] group-hover:scale-110 transition-transform origin-left">{item.icon}</div>
                 <div>
                   <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-800">{item.title}</h4>
-                  <p className="text-[9px] font-mono text-stone-500 mt-1">{item.sub}</p>
+                  <p className="text-[9px] leading-4 text-stone-500 mt-1">{item.sub}</p>
                 </div>
               </Link>
             ))}
@@ -294,7 +307,7 @@ export default function ProductDetail() {
 
       <div className="max-w-7xl mx-auto px-6 mt-32 relative z-10">
         <div className="flex border-b border-stone-200 mb-12 relative overflow-x-auto no-scrollbar">
-          {['details', 'specifications', 'clinical reviews'].map((tab) => (
+          {['details', 'specifications', 'reviews'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -319,32 +332,24 @@ export default function ProductDetail() {
             )}
             
             {activeTab === 'specifications' && (
-              <motion.div key="specs" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-4xl border border-stone-200 bg-white p-8">
-                <h3 className="text-xl font-light italic mb-8 border-b border-stone-100 pb-4">Molecular Inventory Spec</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-y-6 gap-x-12">
-                  {[
-                    { label: 'Formulation Code', value: product.sku },
-                    { label: 'Extraction Origin', value: product.brand || 'Bhumivera Asansol' },
-                    { label: 'System Category', value: product.category_name },
-                    { label: 'pH Balance', value: 'Buffered to 5.5' },
-                    { label: 'Bioavailability', value: 'Maximized via Cold-Process' },
-                    { label: 'Stock Weight/Volume', value: product.weight ? `${product.weight}g` : 'Standard Metric' },
-                  ].map((spec, i) => (
-                    <div key={i} className="flex justify-between py-2 border-b border-stone-100 border-dashed">
-                      <span className="text-stone-400 font-mono uppercase text-[10px] tracking-widest">{spec.label}</span>
-                      <span className="text-[#8b5a2b] font-medium text-sm">{spec.value || 'N/A'}</span>
+              <motion.div key="specs" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-4xl border border-[#253b2f]/15 bg-white p-6 md:p-8">
+                <h3 className="mb-6 border-b border-stone-100 pb-4 font-serif text-2xl">Product details</h3>
+                {specificationEntries.length > 0 ? <div className="grid grid-cols-1 gap-x-12 md:grid-cols-2">
+                  {specificationEntries.map(([label, value]) => (
+                    <div key={label} className="flex justify-between py-2 border-b border-stone-100 border-dashed">
+                      <span className="text-stone-500 text-xs">{label.replaceAll('_', ' ')}</span>
+                      <span className="max-w-[60%] text-right text-sm font-medium text-[#35533c]">{typeof value === 'object' ? JSON.stringify(value) : String(value)}</span>
                     </div>
                   ))}
-                </div>
+                </div> : <p className="text-sm leading-6 text-stone-600">Detailed specifications have not been published for this product yet. Contact us for product-specific questions.</p>}
               </motion.div>
             )}
 
-            {activeTab === 'clinical reviews' && (
+            {activeTab === 'reviews' && (
               <motion.div key="reviews" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-4xl">
                 {reviewsData.length > 0 ? (
                   reviewsData.map((review, i) => (
                     <div key={i} className="p-8 bg-white border border-stone-200 mb-6 relative">
-                      <div className="absolute top-0 right-0 p-4 text-[10px] font-mono text-stone-300 uppercase">SNA-2 Verified</div>
                       <div className="flex items-center gap-1 text-[#8b5a2b] mb-4">
                         {[...Array(5)].map((_, idx) => <Star key={idx} size={14} fill={idx < review.rating ? "currentColor" : "none"} />)}
                       </div>
@@ -356,7 +361,7 @@ export default function ProductDetail() {
                 ) : (
                   <div className="text-center py-24 bg-white border border-stone-200">
                     <Microscope className="mx-auto text-stone-300 mb-4" size={40} />
-                    <h3 className="text-sm font-mono text-stone-400 uppercase tracking-widest">No Clinical Data Available</h3>
+                    <h3 className="text-sm font-mono text-stone-500 uppercase tracking-widest">No approved reviews yet</h3>
                   </div>
                 )}
               </motion.div>
