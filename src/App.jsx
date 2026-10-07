@@ -102,8 +102,8 @@ function ProtectedRoute({ children }) {
 
 function AdminRoute({ children }) {
   const { user, loading } = useAuth() || {};
-  const t = localStorage.getItem('token');
-  
+  const t = localStorage.getItem('adminToken') || localStorage.getItem('token');
+
   const isAdmin = useMemo(() => {
     return user?.role === 'admin' || user?.role === 'superadmin';
   }, [user]);
