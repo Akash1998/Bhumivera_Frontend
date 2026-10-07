@@ -1,5 +1,13 @@
 import { useEffect, useState } from 'react';
-import { ArrowDown, ArrowRight, Leaf, ShieldCheck } from 'lucide-react';
+import {
+  ArrowDown,
+  ArrowLeft,
+  ArrowRight,
+  ArrowUpRight,
+  Droplets,
+  Leaf,
+  Sparkles,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion as Motion } from 'framer-motion';
 import SEO from '../components/SEO';
@@ -16,31 +24,108 @@ const productImage = product => {
 };
 
 const price = product => Number(product.discount_price || product.price || 0).toLocaleString('en-IN');
+const image = name => `/assets/images/${name}`;
+
+const ingredientStories = [
+  {
+    name: 'Sea buckthorn',
+    note: 'A vivid botanical with a story all its own.',
+    image: 'seabuckthorn nature.webp',
+    tone: 'from-[#381d0d]/80',
+  },
+  {
+    name: 'Charcoal',
+    note: 'A grounded, elemental presence in the ritual.',
+    image: 'charcoal.webp',
+    tone: 'from-[#111a15]/90',
+  },
+  {
+    name: 'Tulsi',
+    note: 'A familiar botanical, seen with fresh attention.',
+    image: 'tulsi.webp',
+    tone: 'from-[#172719]/85',
+  },
+  {
+    name: 'Aloe vera',
+    note: 'A generous plant, and a thoughtful place to begin.',
+    image: 'aloeveradna.webp',
+    tone: 'from-[#102019]/85',
+  },
+];
+
+const questions = [
+  {
+    key: 'ingredients',
+    label: 'Ingredients',
+    question: 'What is actually inside each formula?',
+    answer: 'Every product has its own ingredient list and directions. Explore the product page before choosing; the ingredient stories on this homepage are an introduction to our world, not a claim that every ingredient appears in every formula.',
+    link: '/science',
+    linkLabel: 'Explore ingredient notes',
+  },
+  {
+    key: 'choosing',
+    label: 'Choosing a ritual',
+    question: 'Where should I begin?',
+    answer: 'Begin with the product that fits a routine you already enjoy. Read its details, check current availability, and add one considered step at a time. There is no need to build a complicated routine.',
+    link: '/shop',
+    linkLabel: 'Browse the collection',
+  },
+  {
+    key: 'orders',
+    label: 'Orders',
+    question: 'Where can I follow an order?',
+    answer: 'Use your order reference on the order-tracking page to see the latest fulfillment update recorded by our team.',
+    link: '/order-tracking',
+    linkLabel: 'Track an order',
+  },
+  {
+    key: 'returns',
+    label: 'Returns',
+    question: 'How do returns work?',
+    answer: 'Return eligibility depends on the published policy, order details and product condition. Review the Returns Centre for the current steps before sending an item back.',
+    link: '/returns-centre',
+    linkLabel: 'Visit the Returns Centre',
+  },
+  {
+    key: 'impact',
+    label: 'Field ledger',
+    question: 'How are checkout contributions recorded?',
+    answer: 'An eligible checkout contribution is treated as a pledge first. It is recorded as collected only after delivery and reconciliation; verified field updates are shared in the public ledger when evidence is available.',
+    link: '/impact',
+    linkLabel: 'Read the field ledger',
+  },
+];
 
 export default function PremiumHome() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [approvedReviews, setApprovedReviews] = useState([]);
-  const heroProduct = products[0];
-  const aloeProduct = products.find(product => /aloe/i.test(product.name)) || heroProduct;
-  const charcoalProduct = products.find(product => /charcoal/i.test(product.name));
-  const seaBuckthornProduct = products.find(product => /sea.?buckthorn/i.test(product.name));
-  const hairProducts = products.filter(product => /hair|shampoo|scalp/i.test(`${product.name} ${product.category_name || ''}`));
+  const [activeQuestion, setActiveQuestion] = useState('ingredients');
+  const heroProduct = products.find(product => /sea.?buckthorn/i.test(product.name)) || products[0];
+  const activeFaq = questions.find(question => question.key === activeQuestion) || questions[0];
 
   useEffect(() => {
     let active = true;
-    Promise.all([
+    Promise.allSettled([
       productsApi.getAllActive({ limit: 8 }),
       categoriesApi.getAll(),
-    ]).then(([productResponse, categoryResponse]) => {
+    ]).then(([productResult, categoryResult]) => {
       if (!active) return;
-      const productData = productResponse.data?.data || productResponse.data?.products || productResponse.data || [];
-      const categoryData = categoryResponse.data?.data || categoryResponse.data?.categories || categoryResponse.data || [];
-      setProducts(Array.isArray(productData) ? productData.slice(0, 8) : []);
-      setCategories(Array.isArray(categoryData) ? categoryData : []);
-    }).catch(error => {
-      console.error('[HOME_CATALOG]', error);
+      if (productResult.status === 'fulfilled') {
+        const response = productResult.value.data;
+        const productData = response?.data?.data || response?.data?.products || response?.data || [];
+        setProducts(Array.isArray(productData) ? productData.slice(0, 8) : []);
+      } else {
+        console.error('[HOME_CATALOG_PRODUCTS]', productResult.reason);
+      }
+      if (categoryResult.status === 'fulfilled') {
+        const response = categoryResult.value.data;
+        const categoryData = response?.data?.data || response?.data?.categories || response?.data || [];
+        setCategories(Array.isArray(categoryData) ? categoryData : []);
+      } else {
+        console.error('[HOME_CATALOG_CATEGORIES]', categoryResult.reason);
+      }
     }).finally(() => {
       if (active) setLoading(false);
     });
@@ -56,189 +141,266 @@ export default function PremiumHome() {
         const rows = results.flatMap(result => result.status === 'fulfilled'
           ? (result.value.data?.reviews || result.value.data?.data || [])
           : []);
-        setApprovedReviews(rows.filter(review => Number(review.is_approved) === 1).slice(0, 6));
+        setApprovedReviews(rows.filter(review => Number(review.is_approved) === 1).slice(0, 4));
       });
     return () => { active = false; };
   }, [products]);
 
-  return (
-    <main className="bg-[#f4f2eb] text-[#1c2922]">
-      <SEO title="Bhumivera | Considered care, closer to nature" description="Explore Bhumivera's aloe vera and charcoal cleansing, sea-buckthorn face care, and hair rituals." route="/" />
+  const goToQuestion = direction => {
+    const currentIndex = questions.findIndex(question => question.key === activeQuestion);
+    const nextIndex = (currentIndex + direction + questions.length) % questions.length;
+    setActiveQuestion(questions[nextIndex].key);
+  };
 
-      <section className="relative isolate flex min-h-[82svh] items-center overflow-hidden bg-[#14201a] text-white md:min-h-[min(820px,calc(100svh_-_112px))]">
-        <img src={productImage(heroProduct)} alt={heroProduct ? heroProduct.name : 'Aloe vera botanical preparation'} fetchPriority="high" className="absolute inset-0 -z-20 h-full w-full object-cover object-center opacity-70" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0b110e]/90 via-[#0b110e]/55 to-[#0b110e]/10" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#0b110e]/55 via-transparent to-[#0b110e]/15" />
-        <div className="mx-auto grid w-full max-w-7xl gap-10 px-6 pb-20 pt-28 md:grid-cols-[minmax(0,1fr)_260px] md:items-end md:pb-24 md:pt-32">
-          <Motion.div initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="max-w-3xl">
-            <p className="mb-7 inline-flex items-center gap-2 border border-white/25 bg-white/[0.06] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#e2eacb] backdrop-blur-sm"><Leaf size={14}/> Considered botanical care</p>
-            <h1 className="font-serif text-6xl leading-[0.9] tracking-[-0.045em] sm:text-7xl md:text-8xl lg:text-9xl">Bhumivera</h1>
-            <p className="mt-7 max-w-xl font-serif text-2xl leading-snug text-white/95 md:text-3xl">Care, returned to its source.</p>
-            <p className="mt-4 max-w-lg text-sm leading-7 text-white/75 md:text-base">Thoughtful skin and hair rituals, made for everyday use and explained without the noise.</p>
-            <div className="mt-9 flex flex-wrap gap-3">
-              <Link to="/shop" className="group inline-flex items-center gap-3 bg-[#dce7c5] px-5 py-3.5 text-sm font-semibold text-[#17251c] transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Explore the collection <ArrowRight size={16} className="transition-transform group-hover:translate-x-1"/></Link>
-              <Link to="/impact" className="inline-flex items-center gap-3 border border-white/40 bg-white/[0.04] px-5 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Our field ledger <ArrowRight size={16}/></Link>
+  return (
+    <main className="overflow-hidden bg-[#f4f1e9] text-[#1b2921]">
+      <SEO
+        title="Bhumivera | Botanical rituals, considered in every detail"
+        description="Explore Bhumivera's botanical stories, modern skincare ingredients and considered everyday rituals."
+        route="/"
+      />
+
+      <section className="relative isolate flex min-h-[min(900px,calc(100svh_-_75px))] items-end overflow-hidden bg-[#16231c] text-white md:min-h-[min(860px,calc(100svh_-_112px))] md:items-center">
+        <img
+          src={image('seabuckthorn nature.webp')}
+          alt="Bhumivera sea-buckthorn face wash among sea-buckthorn berries"
+          fetchPriority="high"
+          className="absolute inset-0 -z-20 h-full w-full object-cover object-[58%_center] md:object-center"
+        />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#101811]/95 via-[#101811]/45 to-[#101811]/10 md:bg-gradient-to-r md:from-[#101811]/90 md:via-[#101811]/65 md:to-[#101811]/10" />
+        <div className="mx-auto w-full max-w-7xl px-5 pb-16 pt-36 sm:px-8 md:px-10 md:pb-24 md:pt-28">
+          <Motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.75 }}
+            className="max-w-3xl"
+          >
+            <p className="mb-6 inline-flex items-center gap-2 border border-white/25 bg-black/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#e1e8ce] backdrop-blur-sm">
+              <Sparkles size={13} /> A more considered kind of care
+            </p>
+            <h1 className="max-w-2xl font-serif text-6xl leading-[0.9] tracking-[-0.045em] sm:text-7xl md:text-8xl lg:text-[104px]">
+              Rooted in nature. Made for your ritual.
+            </h1>
+            <p className="mt-6 max-w-lg text-sm leading-7 text-white/80 sm:text-base">
+              Botanical character meets a modern point of view on skin care. Discover thoughtful formulas, ingredient stories and small moments that feel like your own.
+            </p>
+            <div className="mt-8 flex flex-col gap-3 min-[420px]:flex-row">
+              <Link to="/shop" className="group inline-flex min-h-12 items-center justify-center gap-3 bg-[#e0e8ce] px-5 py-3 text-sm font-semibold text-[#19271e] transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+                Discover the collection <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+              </Link>
+              <Link to="/about" className="inline-flex min-h-12 items-center justify-center gap-3 border border-white/45 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10">
+                Our story <ArrowUpRight size={16} />
+              </Link>
             </div>
           </Motion.div>
-          <div className="hidden md:block">
-            {heroProduct ? (
-              <Link to={`/product/${heroProduct.slug || heroProduct.id}`} className="group block border border-white/20 bg-[#14201a]/35 p-5 text-white/85 shadow-2xl backdrop-blur-md transition-colors hover:bg-[#14201a]/55">
-                <span className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-[#dce7c5]"><span className="h-px w-5 bg-[#dce7c5]/70"/> In focus</span>
-                <span className="mt-4 block font-serif text-2xl leading-tight">{heroProduct.name}</span>
-                <span className="mt-2 block text-sm text-white/70">₹{price(heroProduct)}</span>
-                <span className="mt-5 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#dce7c5]">Discover the ritual <ArrowRight size={13} className="transition-transform group-hover:translate-x-1"/></span>
-              </Link>
-            ) : (
-              <div className="border border-white/20 bg-[#14201a]/35 p-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#dce7c5] backdrop-blur-md"><span className="flex items-center gap-2"><span className="h-px w-5 bg-[#dce7c5]/70"/> Skin · Hair · Ritual</span></div>
-            )}
-          </div>
-        </div>
-        <a href="#collection" aria-label="Scroll to collection" className="absolute bottom-6 right-6 hidden items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/70 transition-colors hover:text-white md:flex">Scroll to explore <ArrowDown size={15}/></a>
-      </section>
-
-      <section className="mx-auto grid max-w-7xl gap-8 px-6 py-16 md:grid-cols-[0.7fr_1.3fr] md:py-24">
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#607552]">A note from Bhumivera</p>
-        <blockquote className="max-w-4xl font-serif text-3xl leading-tight md:text-5xl">“The best care feels considered: honest about what it is, gentle in how it speaks, and mindful of what it leaves behind.”</blockquote>
-      </section>
-
-      <section className="relative grid overflow-hidden border-y border-[#253b2f]/15 bg-[#e8e6dc] lg:min-h-[680px] lg:grid-cols-2">
-        <div className="relative min-h-[360px] overflow-hidden lg:min-h-full">
-          <img src="/assets/images/aloeveradna.webp" alt="Aloe vera botanical texture" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#18261d]/55 via-transparent to-transparent" />
-          <p className="absolute bottom-6 left-6 text-[10px] font-bold uppercase tracking-[0.2em] text-white/85">The plant, before the promise.</p>
-        </div>
-        <div className="flex flex-col justify-center px-6 py-14 md:px-12 lg:px-20">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#607552]">A slower point of view</p>
-          <h2 className="mt-5 max-w-xl font-serif text-4xl leading-[1.08] md:text-6xl">“Let the formula speak plainly. Let the ritual feel like yours.”</h2>
-          <p className="mt-6 max-w-lg text-sm leading-7 text-stone-600">Bhumivera is moving from a single-soap beginning into a considered skin and hair collection. Aloe vera and charcoal cleansing is here; sea-buckthorn face care and new hair rituals join as each product is ready.</p>
-          <Link to="/shop" className="mt-8 inline-flex w-fit items-center gap-3 border-b border-[#35533c]/35 pb-2 text-sm font-semibold text-[#253b2f] hover:border-[#253b2f]">See what is available now <ArrowRight size={16}/></Link>
-        </div>
-      </section>
-
-      {categories.length > 0 && <section className="border-y border-[#253b2f]/15 bg-[#e9ebdf]">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-between gap-5 px-6 py-7">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#536b4d]">Explore by ritual</p>
-          <div className="flex flex-wrap gap-x-6 gap-y-3">{categories.slice(0, 6).map(category => <Link key={category.id} to={`/shop?category=${category.id}`} className="text-sm text-[#253b2f] underline decoration-[#536b4d]/30 underline-offset-4 hover:decoration-[#253b2f]">{category.name}</Link>)}</div>
-        </div>
-      </section>}
-
-      <section className="relative isolate min-h-[680px] overflow-hidden bg-[#17231d] text-white md:min-h-[820px]">
-        <img src="/assets/images/transformation.webp" alt="Bhumivera's first cleansing ritual, made with a botanical point of view" loading="lazy" className="absolute inset-0 -z-20 h-full w-full object-cover object-center" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#0b120e]/90 via-[#0b120e]/15 to-[#0b120e]/20" />
-        <div className="mx-auto flex min-h-[680px] max-w-7xl flex-col justify-end px-6 pb-12 md:min-h-[820px] md:pb-20">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#dce7c5]">A beginning, not a boundary</p>
-          <h2 className="mt-5 max-w-4xl font-serif text-4xl leading-[1.05] md:text-7xl">From one daily ritual to a more considered collection.</h2>
-          <p className="mt-6 max-w-2xl text-sm leading-7 text-white/75 md:text-base">Bhumivera began with a simple belief: everyday care can feel thoughtful without becoming complicated. Today, aloe vera cleansing is part of the live collection. New skin and hair rituals will join as each is ready, documented and available to order.</p>
-          <div className="mt-8 flex flex-wrap gap-4"><Link to={aloeProduct ? `/product/${aloeProduct.slug || aloeProduct.id}` : '/shop'} className="inline-flex items-center gap-3 bg-[#dce7c5] px-5 py-3 text-sm font-semibold text-[#14201a] hover:bg-white">{aloeProduct ? `Discover ${aloeProduct.name}` : 'Explore the collection'} <ArrowRight size={16}/></Link><Link to="/about" className="inline-flex items-center gap-3 border border-white/50 px-5 py-3 text-sm font-semibold text-white hover:bg-white/10">Read our story <ArrowRight size={16}/></Link></div>
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-7xl px-6 py-16 md:py-24">
-        <div className="mb-12 grid gap-6 md:grid-cols-[0.8fr_1.2fr] md:items-end">
-          <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#607552]">A close look at the ritual</p><h2 className="mt-4 font-serif text-4xl leading-tight md:text-5xl">Texture. Water. A moment to yourself.</h2></div>
-          <p className="max-w-2xl text-sm leading-7 text-stone-600">The details of care are small: the feel of a cleanser, the temperature of the water, the minute between one part of the day and the next. We want our products to earn a place in that quiet space, one honest formula at a time.</p>
-        </div>
-        <div className="grid gap-3 md:grid-cols-12 md:grid-rows-[260px_260px]">
-          <figure className="group relative min-h-[320px] overflow-hidden md:col-span-7 md:row-span-2 md:min-h-0"><img src="/assets/images/aloeveradna.webp" alt="Aloe vera leaf surface in morning light" loading="lazy" className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-[1.035]"/><figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#101a17]/80 to-transparent p-6 pt-20"><span className="text-xs font-bold uppercase tracking-[0.18em] text-[#dce7c5]">01 · The botanical</span><p className="mt-2 max-w-lg font-serif text-2xl text-white">Begin with what the product actually contains.</p></figcaption></figure>
-          <figure className="group relative min-h-[260px] overflow-hidden md:col-span-5 md:min-h-0"><img src="/assets/images/aloeveradrop.webp" alt="A drop of aloe vera preparation" loading="lazy" className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-[1.035]"/><figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#101a17]/80 to-transparent p-5 pt-16"><span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#dce7c5]">02 · The practice</span><p className="mt-1 font-serif text-xl text-white">Use it as directed. Leave room for your own rhythm.</p></figcaption></figure>
-          <figure className="group relative min-h-[260px] overflow-hidden md:col-span-5 md:min-h-0"><img src="/assets/images/aloeverascience.webp" alt="A botanical research and ingredient study" loading="lazy" className="h-full w-full object-cover transition-transform duration-1000 group-hover:scale-[1.035]"/><figcaption className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-[#101a17]/80 to-transparent p-5 pt-16"><span className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#dce7c5]">03 · The standard</span><p className="mt-1 font-serif text-xl text-white">If a detail is not published, ask us before you buy.</p></figcaption></figure>
-        </div>
-      </section>
-
-      <section className="border-y border-[#253b2f]/15 bg-[#e8e6dc]">
-        <div className="mx-auto max-w-7xl px-6 py-16 md:py-24">
-          <div className="mb-12 max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#607552]">A range in the making</p><h2 className="mt-4 font-serif text-4xl leading-tight md:text-6xl">Different needs deserve different thought.</h2><p className="mt-5 text-sm leading-7 text-stone-600">We are not turning one product into a promise for everyone. Each ritual earns its place with its own listing, clear details and current availability.</p></div>
-          <div className="grid gap-px border-y border-[#253b2f]/20 bg-[#253b2f]/20 md:grid-cols-2">
-            {[
-              { key: 'face', label: 'Skin · available now', title: aloeProduct?.name || 'Aloe vera cleansing', copy: aloeProduct ? 'This product is listed in the live collection. Visit its page for current pricing, stock, description and specifications.' : 'Browse the live collection for current skin-care products and their published details.', image: '/assets/images/aloeverabeaker.webp', item: aloeProduct },
-              { key: 'charcoal', label: 'Skin · collection direction', title: charcoalProduct?.name || 'Aloe vera and charcoal', copy: charcoalProduct ? 'This product is available in the current catalog. Its page shows the details and stock today.' : 'Charcoal is part of the direction you shared. We will link it here when a product is listed and ready to order.', image: '/assets/images/aloeveradrop.webp', item: charcoalProduct },
-              { key: 'sea-buckthorn', label: 'Skin · in development', title: seaBuckthornProduct?.name || 'Sea-buckthorn face care', copy: seaBuckthornProduct ? 'Explore the live product page for current information.' : 'A future face-care direction. No launch date or product claims until the formula is ready.', image: '/assets/images/aloeverascience.webp', item: seaBuckthornProduct },
-              { key: 'hair', label: 'Hair · in development', title: hairProducts[0]?.name || 'Hair oil and shampoo', copy: hairProducts.length ? 'See the currently listed hair products and their directions.' : 'Hair oil and shampoo are upcoming. They are not yet offered for sale.', image: '/assets/images/aloeveradna.webp', item: hairProducts[0] },
-            ].map((story, index) => <article key={story.key} className={`grid min-h-[360px] bg-[#f4f2eb] sm:grid-cols-2 ${index % 2 ? 'md:flex-row-reverse' : ''}`}>
-              <div className={`relative min-h-[260px] overflow-hidden ${index % 2 ? 'sm:order-2' : ''}`}><img src={story.image} alt={story.title} loading="lazy" className="absolute inset-0 h-full w-full object-cover"/></div>
-              <div className="flex flex-col justify-center p-6 md:p-9"><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#71806a]">{story.label}</p><h3 className="mt-3 font-serif text-2xl md:text-3xl">{story.title}</h3><p className="mt-4 text-sm leading-6 text-stone-600">{story.copy}</p>{story.item ? <Link to={`/product/${story.item.slug || story.item.id}`} className="mt-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#35533c]">View product <ArrowRight size={14}/></Link> : <span className="mt-6 w-fit border border-[#253b2f]/20 px-3 py-2 text-[10px] font-semibold uppercase tracking-widest text-[#536b4d]">Not yet available</span>}</div>
-            </article>)}
+          <div className="mt-12 flex items-end justify-between border-t border-white/25 pt-4 md:absolute md:bottom-9 md:left-1/2 md:mt-0 md:w-[min(88%,1280px)] md:-translate-x-1/2">
+            <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/65 sm:text-[10px]">Botanical heritage · contemporary skin science</span>
+            {heroProduct && <Link to={`/product/${heroProduct.slug || heroProduct.id}`} className="hidden items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[#e0e8ce] sm:inline-flex">In focus: {heroProduct.name} <ArrowRight size={13} /></Link>}
+            <a href="#story" aria-label="Scroll to the Bhumivera story" className="inline-flex items-center gap-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/65 md:hidden">Scroll <ArrowDown size={13} /></a>
           </div>
         </div>
       </section>
 
-      <section className="border-y border-[#253b2f]/15 bg-[#f4f2eb]">
-        <div className="mx-auto max-w-7xl px-6 py-16 md:py-24">
-          <div className="mb-10 flex flex-wrap items-end justify-between gap-6"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#607552]">Words from customers</p><h2 className="mt-4 font-serif text-4xl md:text-5xl">The experience, in their words.</h2></div><Link to="/shop" className="inline-flex items-center gap-2 text-sm font-semibold text-[#35533c]">Explore products <ArrowRight size={16}/></Link></div>
-          {approvedReviews.length ? <div className="grid gap-0 border-y border-[#253b2f]/20 md:grid-cols-2 md:divide-x md:divide-[#253b2f]/20">{approvedReviews.map((review, index) => <blockquote key={review.id || index} className="py-7 md:px-7 first:md:pl-0"><div className="flex gap-1 text-[#78875f]" aria-label={`${review.rating} out of 5 stars`}>{[1, 2, 3, 4, 5].map(star => <span key={star}>{Number(review.rating) >= star ? '★' : '☆'}</span>)}</div><p className="mt-4 font-serif text-xl leading-relaxed">“{review.body || review.comment}”</p><p className="mt-4 text-xs font-semibold uppercase tracking-widest text-[#71806a]">{review.user_name || 'Bhumivera customer'}{review.product_name ? ` · ${review.product_name}` : ''}</p></blockquote>)}</div> : <div className="border-y border-[#253b2f]/20 py-10"><p className="max-w-2xl font-serif text-2xl">No approved customer stories are published yet.</p><p className="mt-3 max-w-2xl text-sm leading-6 text-stone-600">When customers choose to share their experience and it is approved, their words can live here. Until then, this page speaks in the brand’s own voice.</p></div>}
+      <section id="story" className="mx-auto grid max-w-7xl gap-8 px-5 py-16 sm:px-8 md:grid-cols-[0.65fr_1.35fr] md:gap-16 md:px-10 md:py-24">
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#687958]">The Bhumivera point of view</p>
+          <p className="mt-4 font-serif text-3xl leading-tight sm:text-4xl">Care should feel like coming back to yourself.</p>
+        </div>
+        <div className="max-w-3xl">
+          <p className="font-serif text-2xl leading-relaxed text-[#26352b] sm:text-3xl md:text-4xl">
+            We begin with the living world, then bring curiosity to every detail.
+          </p>
+          <p className="mt-5 max-w-2xl text-sm leading-7 text-stone-600 sm:text-base">
+            Aloe vera, tulsi, charcoal and sea buckthorn each bring a different character to the Bhumivera story. Alongside these botanicals, we are exploring the language of contemporary skin care—from niacinamide to hyaluronic acid. The intention is not more steps or louder promises, but considered rituals, clear product information and room for you to choose what feels right.
+          </p>
+          <Link to="/about" className="mt-6 inline-flex items-center gap-2 border-b border-[#667956]/50 pb-2 text-xs font-bold uppercase tracking-[0.16em] text-[#354933] hover:border-[#354933]">
+            Read the Bhumivera story <ArrowRight size={14} />
+          </Link>
         </div>
       </section>
 
-      <section className="relative isolate overflow-hidden bg-[#14201a] text-white">
-        <img src="/assets/images/aloeveradna.webp" alt="Aloe vera leaf, close to the earth" loading="lazy" className="absolute inset-0 -z-20 h-full w-full object-cover opacity-35"/><div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0a100e]/90 to-[#0a100e]/35"/>
-        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 md:grid-cols-[1fr_0.7fr] md:py-24"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#dce7c5]">A ritual with room to grow</p><h2 className="mt-4 max-w-3xl font-serif text-4xl leading-tight md:text-6xl">The most meaningful routine is the one that still feels like yours.</h2></div><div className="self-end"><p className="text-sm leading-7 text-white/75">Keep what works. Read the product details. Ask us when something is unclear. Let a small daily habit be simple, rather than turning self-care into a performance.</p><Link to="/shop" className="mt-7 inline-flex items-center gap-3 border-b border-[#dce7c5]/60 pb-2 text-sm font-semibold text-[#e7edda]">Find your next ritual <ArrowRight size={16}/></Link></div></div>
+      <section className="bg-[#e7e4d9] py-16 sm:py-20 md:py-24">
+        <div className="mx-auto max-w-7xl px-5 sm:px-8 md:px-10">
+          <div className="mb-8 flex flex-col gap-4 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#687958]">A living ingredient palette</p>
+              <h2 className="mt-3 max-w-2xl font-serif text-4xl leading-tight sm:text-5xl md:text-6xl">Nature has more than one note.</h2>
+            </div>
+            <p className="max-w-md text-sm leading-6 text-stone-600">Meet the botanicals that inspire us—and the contemporary actives shaping the next chapter of skin care.</p>
+          </div>
+          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            {ingredientStories.map((story, index) => (
+              <article key={story.name} className={`group relative isolate min-h-[250px] overflow-hidden bg-[#26352b] text-white sm:min-h-[330px] lg:min-h-[430px] ${index === 0 ? 'col-span-2 lg:col-span-1' : ''}`}>
+                <img src={image(story.image)} alt={`${story.name} ingredient story`} loading="lazy" className="absolute inset-0 -z-20 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
+                <div className={`absolute inset-0 -z-10 bg-gradient-to-t ${story.tone} via-[#101811]/15 to-transparent`} />
+                <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6">
+                  <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#e0e8ce]">Ingredient story · 0{index + 1}</span>
+                  <h3 className="mt-2 font-serif text-2xl sm:text-3xl">{story.name}</h3>
+                  <p className="mt-2 max-w-xs text-xs leading-5 text-white/75 sm:text-sm">{story.note}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
       </section>
 
-      <section id="collection" className="mx-auto max-w-7xl px-6 py-16 md:py-24">
-        <div className="mb-9 flex flex-wrap items-end justify-between gap-5 border-b border-[#253b2f]/15 pb-6">
-          <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#607552]">The collection</p><h2 className="mt-3 font-serif text-4xl md:text-5xl">Made for your daily ritual.</h2></div>
-          <Link to="/shop" className="inline-flex items-center gap-2 text-sm font-semibold text-[#35533c] hover:text-[#14201a]">View all products <ArrowRight size={16}/></Link>
-        </div>
-        {loading ? <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{[0, 1, 2, 3].map(item => <div key={item} className="aspect-[4/5] animate-pulse bg-[#e8e7dd]"/>)}</div> : products.length > 0 ? (
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {products.slice(0, 8).map((product, index) => <Motion.article key={product.id || product._id} initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (index % 4) * 0.07 }} className="group">
-              <Link to={`/product/${product.slug || product.id}`} className="block overflow-hidden bg-[#e8e7dd]">
-                <img src={productImage(product)} alt={product.name} loading="lazy" className="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-[1.035]" onError={event => { event.currentTarget.src = '/assets/images/aloeverabeaker.webp'; }}/>
-              </Link>
-              <div className="flex items-start justify-between gap-3 border-b border-[#253b2f]/15 py-4">
-                <div><p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-[#71806a]">{product.category_name || 'Bhumivera ritual'}</p><h3 className="mt-1 font-serif text-xl">{product.name}</h3></div>
-                <span className="shrink-0 pt-4 text-sm font-semibold">₹{price(product)}</span>
+      <section className="relative isolate overflow-hidden bg-[#17231d] text-white">
+        <div className="mx-auto grid max-w-7xl items-center gap-8 px-5 py-14 sm:px-8 md:grid-cols-[1fr_1fr] md:gap-12 md:px-10 md:py-20">
+          <div className="relative order-2 overflow-hidden bg-[#e8e5d9] md:order-1">
+            <img src={image('niacidamine.webp')} alt="Niacinamide and hyaluronic acid, two contemporary skincare actives" loading="lazy" className="h-full min-h-[210px] w-full object-cover sm:min-h-[300px] md:min-h-[410px]" />
+            <span className="absolute bottom-3 left-3 bg-[#f4f1e9]/90 px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.15em] text-[#28382b] backdrop-blur-sm sm:bottom-5 sm:left-5">Modern actives, thoughtfully considered</span>
+          </div>
+          <div className="order-1 md:order-2">
+            <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-[#dce7c5]"><Droplets size={14} /> The modern ingredient edit</p>
+            <h2 className="mt-4 font-serif text-4xl leading-[1.05] sm:text-5xl md:text-6xl">Two names shaping today’s skin conversation.</h2>
+            <div className="mt-7 grid gap-5 border-t border-white/20 pt-5 sm:grid-cols-2">
+              <div>
+                <h3 className="font-serif text-2xl text-[#e3e9d5]">Niacinamide</h3>
+                <p className="mt-2 text-sm leading-6 text-white/65">A much-loved modern active, often explored in routines focused on the look of tone and the feel of the skin barrier.</p>
               </div>
-              <Link to={`/product/${product.slug || product.id}`} className="mt-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#35533c]">Discover formula <ArrowRight size={14}/></Link>
-            </Motion.article>)}
-          </div>
-        ) : <div className="border-y border-[#253b2f]/15 py-12 text-sm text-stone-600">The collection is being updated. Visit the shop for current availability.</div>}
-      </section>
-
-      <section className="bg-[#e8e6dc]">
-        <div className="mx-auto max-w-7xl px-6 py-16 md:py-24">
-          <div className="mb-12 max-w-3xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#607552]">The Bhumivera edit</p><h2 className="mt-4 font-serif text-4xl leading-tight md:text-5xl">A collection growing with intention.</h2><p className="mt-4 max-w-2xl text-sm leading-7 text-stone-600">Skin and hair are not the same ritual. We are building each with its own pace, product details and ingredient story instead of stretching one formula across every need.</p></div>
-          <div className="grid gap-0 border-y border-[#253b2f]/20 md:grid-cols-3 md:divide-x md:divide-[#253b2f]/20">
-            {[
-              { image: '/assets/images/aloeverabeaker.webp', number: '01', title: 'Cleanse with care', note: 'Aloe vera face wash is listed in the live collection. Open its product page for current price, stock and description.', query: 'aloe vera' },
-              { image: '/assets/images/aloeveradrop.webp', number: '02', title: 'Explore the next face ritual', note: 'Sea-buckthorn face care is part of the direction. Products will appear here when they are listed and ready to order.', query: 'sea buckthorn' },
-              { image: '/assets/images/aloeverascience.webp', number: '03', title: 'Care for hair, thoughtfully', note: 'Hair oil and shampoo are being prepared for the collection. We will not show them as available before launch.', query: 'hair' },
-            ].map(ritual => <article key={ritual.number} className="group relative min-h-[430px] overflow-hidden md:min-h-[540px]">
-              <img src={ritual.image} alt="Bhumivera botanical ritual" loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-[1.035]" />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#0b140e]/90 via-[#0b140e]/15 to-[#0b140e]/10" />
-              <div className="absolute inset-x-0 bottom-0 p-6 text-white md:p-8">
-                <span className="font-mono text-xs text-[#dce7c5]">{ritual.number} / THE RITUAL</span>
-                <h3 className="mt-4 font-serif text-3xl">{ritual.title}</h3>
-                <p className="mt-3 max-w-sm text-sm leading-6 text-white/70">{ritual.note}</p>
-                <Link to={`/shop?search=${encodeURIComponent(ritual.query)}`} className="mt-6 inline-flex items-center gap-2 border-b border-white/50 pb-1 text-xs font-bold uppercase tracking-widest hover:border-[#dce7c5] hover:text-[#dce7c5]">Explore <ArrowRight size={14}/></Link>
+              <div>
+                <h3 className="font-serif text-2xl text-[#e3e9d5]">Hyaluronic acid</h3>
+                <p className="mt-2 text-sm leading-6 text-white/65">A familiar hydration-focused ingredient, valued for the supple, comfortable feel it can bring to a routine.</p>
               </div>
-            </article>)}
+            </div>
+            <p className="mt-5 text-xs leading-5 text-white/50">Ingredient presence and directions vary by product. Always check the individual product page and label.</p>
+            <Link to="/science" className="mt-6 inline-flex items-center gap-2 border-b border-[#dce7c5]/50 pb-2 text-xs font-bold uppercase tracking-[0.15em] text-[#e3e9d5] hover:border-white">
+              Explore the ingredient notes <ArrowRight size={14} />
+            </Link>
           </div>
         </div>
       </section>
 
-      <section className="grid min-h-[520px] bg-[#17231d] text-white md:grid-cols-2">
-        <div className="flex flex-col justify-center px-6 py-16 md:px-12 lg:px-20">
-          <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#c2d09f]">Care beyond the bathroom</p>
-          <h2 className="mt-4 max-w-xl font-serif text-4xl leading-tight md:text-5xl">Good intentions deserve a public record.</h2>
-          <p className="mt-5 max-w-lg text-sm leading-7 text-white/65">Choose an optional contribution at eligible cash-on-delivery checkout. We show it as a pledge until collected, and publish field photos or video only after the work is completed and verified.</p>
-          <Link to="/impact" className="mt-7 inline-flex w-fit items-center gap-3 border-b border-[#c2d09f]/60 pb-2 text-sm font-semibold text-[#e5ebd5] hover:text-white">Read the Bhumivera field ledger <ArrowRight size={16}/></Link>
+      {categories.length > 0 && (
+        <section className="border-b border-[#26392c]/15 bg-[#f4f1e9]">
+          <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-5 gap-y-3 px-5 py-5 sm:px-8 md:px-10">
+            <span className="mr-2 text-[9px] font-bold uppercase tracking-[0.2em] text-[#77816d]">Explore by ritual</span>
+            {categories.slice(0, 5).map(category => <Link key={category.id} to={`/shop?category=${category.id}`} className="text-xs text-[#334632] underline decoration-[#536b4d]/30 underline-offset-4 hover:decoration-[#253b2f]">{category.name}</Link>)}
+          </div>
+        </section>
+      )}
+
+      <section id="collection" className="mx-auto max-w-7xl px-5 py-16 sm:px-8 md:px-10 md:py-24">
+        <div className="mb-8 flex flex-wrap items-end justify-between gap-5 border-b border-[#253b2f]/15 pb-6 sm:mb-10">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#687958]">The considered collection</p>
+            <h2 className="mt-3 font-serif text-4xl sm:text-5xl md:text-6xl">Find your daily ritual.</h2>
+          </div>
+          <Link to="/shop" className="inline-flex items-center gap-2 pb-1 text-xs font-bold uppercase tracking-[0.14em] text-[#354933]">View all <ArrowRight size={15} /></Link>
         </div>
-        <div className="relative min-h-[300px] overflow-hidden md:min-h-full">
-          <img src="/assets/images/foundermanifesto.webp" alt="Bhumivera's nature-first commitment" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-center opacity-80" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#17231d]/45 to-transparent" />
-          <p className="absolute bottom-5 left-6 text-[10px] font-bold uppercase tracking-[0.2em] text-white/80">Our commitment begins with accountability.</p>
+        {loading ? (
+          <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">{[0, 1, 2, 3].map(item => <div key={item} className="aspect-[4/5] animate-pulse bg-[#e8e5dc]" />)}</div>
+        ) : products.length > 0 ? (
+          <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 lg:grid-cols-4">
+            {products.slice(0, 8).map((product, index) => (
+              <Motion.article key={product.id || product._id} initial={{ opacity: 0, y: 16 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (index % 4) * 0.06 }} className="group min-w-0">
+                <Link to={`/product/${product.slug || product.id}`} className="relative block overflow-hidden bg-[#e8e5dc]">
+                  <img src={productImage(product)} alt={product.name} loading="lazy" className="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-[1.035]" onError={event => { event.currentTarget.src = image('aloeverabeaker.webp'); }} />
+                  <span className="absolute bottom-2 right-2 grid h-9 w-9 place-items-center bg-[#f4f1e9]/90 text-[#24352a] transition-colors group-hover:bg-[#dce7c5] sm:bottom-3 sm:right-3"><ArrowUpRight size={16} /></span>
+                </Link>
+                <div className="flex flex-col gap-1 border-b border-[#253b2f]/15 py-3 sm:flex-row sm:items-start sm:justify-between sm:gap-3 sm:py-4">
+                  <div className="min-w-0"><p className="truncate text-[8px] font-semibold uppercase tracking-[0.15em] text-[#71806a] sm:text-[10px]">{product.category_name || 'Bhumivera ritual'}</p><h3 className="mt-1 line-clamp-2 font-serif text-base leading-snug sm:text-xl">{product.name}</h3></div>
+                  <span className="text-xs font-semibold sm:shrink-0 sm:pt-4 sm:text-sm">₹{price(product)}</span>
+                </div>
+                <Link to={`/product/${product.slug || product.id}`} className="mt-3 inline-flex min-h-8 items-center gap-2 text-[9px] font-bold uppercase tracking-[0.13em] text-[#3d553b] sm:text-[10px]">Discover details <ArrowRight size={13} /></Link>
+              </Motion.article>
+            ))}
+          </div>
+        ) : (
+          <div className="border-y border-[#253b2f]/15 py-10 sm:py-14">
+            <p className="font-serif text-2xl sm:text-3xl">A collection worth taking your time with.</p>
+            <p className="mt-3 max-w-xl text-sm leading-6 text-stone-600">The live collection is being refreshed. Visit the shop to see current product availability.</p>
+            <Link to="/shop" className="mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#354933]">Visit the shop <ArrowRight size={14} /></Link>
+          </div>
+        )}
+      </section>
+
+      <section className="grid bg-[#19261e] text-white md:min-h-[540px] md:grid-cols-2">
+        <div className="flex flex-col justify-center px-5 py-14 sm:px-8 md:px-12 lg:px-20">
+          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#dce7c5]">A promise of clarity</p>
+          <h2 className="mt-4 max-w-xl font-serif text-4xl leading-tight sm:text-5xl md:text-6xl">A beautiful ritual should feel good in every detail.</h2>
+          <p className="mt-5 max-w-lg text-sm leading-7 text-white/70">We believe care is more meaningful when the details are easy to find. Clear product pages, considered ingredients and an honest account of what is available—so you can make a choice that feels like yours.</p>
+          <Link to="/science" className="mt-7 inline-flex min-h-11 w-fit items-center gap-3 border-b border-[#dce7c5]/50 pb-2 text-xs font-bold uppercase tracking-[0.14em] text-[#e4ead7]">Our approach to ingredients <ArrowRight size={15} /></Link>
+        </div>
+        <div className="relative min-h-[300px] overflow-hidden sm:min-h-[400px] md:min-h-full">
+          <img src={image('seabuckthorn.webp')} alt="Sea buckthorn among botanicals, reflecting Bhumivera's nature-first point of view" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-center" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#101811]/55 via-transparent to-transparent md:bg-gradient-to-r md:from-[#19261e]/20 md:to-transparent" />
+          <span className="absolute bottom-5 left-5 text-[9px] font-semibold uppercase tracking-[0.2em] text-white/80 sm:bottom-7 sm:left-7">Rooted in care · guided by clarity</span>
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-8 px-6 py-16 md:grid-cols-3 md:py-20">
-        {[
-          ['01', 'Know the formula', 'Product pages lead with what is actually listed for that product, not a universal promise.'],
-          ['02', 'Buy what is available', 'The collection reflects live catalog items. New rituals appear when they are ready.'],
-          ['03', 'Follow the record', 'Collected contributions and documented field work have separate, visible statuses.'],
-        ].map(([number, title, copy]) => <article key={number} className="border-t border-[#253b2f]/25 pt-5"><span className="font-mono text-xs text-[#71806a]">{number}</span><h3 className="mt-4 font-serif text-2xl">{title}</h3><p className="mt-3 text-sm leading-6 text-stone-600">{copy}</p></article>)}
+      {approvedReviews.length > 0 && (
+        <section className="bg-[#e7e4d9]">
+          <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8 md:px-10 md:py-20">
+            <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
+              <div><p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#687958]">Notes from our community</p><h2 className="mt-3 font-serif text-4xl sm:text-5xl">Shared, in their own words.</h2></div>
+              <Link to="/shop" className="inline-flex items-center gap-2 text-xs font-semibold text-[#354933]">Explore products <ArrowRight size={14} /></Link>
+            </div>
+            <div className="grid gap-5 sm:grid-cols-2">
+              {approvedReviews.map((review, index) => (
+                <blockquote key={review.id || index} className="border-t border-[#253b2f]/25 py-5 sm:py-6">
+                  <div className="text-xs tracking-[0.2em] text-[#78875f]" aria-label={`${review.rating} out of 5 stars`}>{[1, 2, 3, 4, 5].map(star => <span key={star}>{Number(review.rating) >= star ? '★' : '☆'}</span>)}</div>
+                  <p className="mt-4 font-serif text-xl leading-relaxed sm:text-2xl">“{review.body || review.comment}”</p>
+                  <p className="mt-4 text-[9px] font-semibold uppercase tracking-[0.15em] text-[#71806a]">{review.user_name || 'Bhumivera customer'}{review.product_name ? ` · ${review.product_name}` : ''}</p>
+                </blockquote>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      <section className="relative isolate overflow-hidden bg-[#17231d] text-white">
+        <img src={image('charcoal.webp')} alt="" aria-hidden="true" loading="lazy" className="absolute inset-0 -z-20 h-full w-full object-cover opacity-25" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#111a14]/95 via-[#111a14]/80 to-[#111a14]/55" />
+        <div className="mx-auto grid max-w-7xl gap-9 px-5 py-14 sm:px-8 md:grid-cols-[1fr_auto] md:items-end md:px-10 md:py-20">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#dce7c5]">A more personal kind of help</p>
+            <h2 className="mt-4 max-w-2xl font-serif text-4xl leading-tight sm:text-5xl md:text-6xl">A question deserves a considered answer.</h2>
+            <p className="mt-4 max-w-xl text-sm leading-7 text-white/65">Explore the topics that matter to you, one answer at a time. For anything more personal, our team is here to help.</p>
+          </div>
+          <Link to="/contact" className="inline-flex min-h-12 w-fit items-center gap-3 bg-[#dce7c5] px-5 py-3 text-xs font-bold uppercase tracking-[0.12em] text-[#19271e] transition-colors hover:bg-white">Speak with our team <ArrowRight size={15} /></Link>
+        </div>
       </section>
 
+      <section className="bg-[#f4f1e9]">
+        <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8 md:px-10 md:py-20">
+          <div className="mb-8 grid gap-4 sm:mb-10 md:grid-cols-[0.8fr_1.2fr] md:items-end">
+            <div><p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#687958]">The considered answer</p><h2 className="mt-3 font-serif text-4xl leading-tight sm:text-5xl">Good to know.</h2></div>
+            <p className="max-w-lg text-sm leading-6 text-stone-600">Choose a topic to reveal its answer. No wall of questions—just the details you came for.</p>
+          </div>
+          <div className="grid overflow-hidden border border-[#26392c]/15 bg-[#eeece3] md:grid-cols-[0.7fr_1.3fr]">
+            <div role="tablist" aria-label="Help topics" className="flex gap-2 overflow-x-auto border-b border-[#26392c]/15 p-3 [scrollbar-width:none] md:flex-col md:gap-1 md:border-b-0 md:border-r md:p-5">
+              {questions.map((question, index) => (
+                <button key={question.key} type="button" role="tab" id={`faq-tab-${question.key}`} aria-selected={activeQuestion === question.key} aria-controls="faq-panel" onClick={() => setActiveQuestion(question.key)} className={`flex min-h-11 shrink-0 items-center gap-3 px-3 text-left text-xs font-semibold transition-colors md:w-full md:py-3 ${activeQuestion === question.key ? 'bg-[#213329] text-[#e0e8ce]' : 'text-[#576451] hover:bg-white/70 hover:text-[#1c2922]'}`}>
+                  <span className={`font-mono text-[9px] ${activeQuestion === question.key ? 'text-[#d0dcba]' : 'text-[#8a927e]'}`}>0{index + 1}</span>{question.label}
+                </button>
+              ))}
+            </div>
+            <div id="faq-panel" role="tabpanel" aria-labelledby={`faq-tab-${activeFaq.key}`} className="flex min-h-[300px] flex-col justify-between p-5 sm:p-8 md:min-h-[360px] md:p-10">
+              <div>
+                <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#77816d]">{activeFaq.label} · Bhumivera care</span>
+                <h3 className="mt-5 max-w-2xl font-serif text-3xl leading-tight sm:text-4xl md:text-5xl">{activeFaq.question}</h3>
+                <p className="mt-5 max-w-2xl text-sm leading-7 text-stone-600">{activeFaq.answer}</p>
+                <Link to={activeFaq.link} className="mt-5 inline-flex min-h-10 items-center gap-2 border-b border-[#536b4d]/40 pb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#354933]">{activeFaq.linkLabel} <ArrowRight size={14} /></Link>
+              </div>
+              <div className="mt-8 flex items-center justify-between border-t border-[#26392c]/15 pt-4">
+                <span className="font-mono text-[10px] tracking-[0.15em] text-[#7c8673]">0{questions.findIndex(question => question.key === activeQuestion) + 1} <span className="mx-1 text-[#b0b2a6]">/</span> 0{questions.length}</span>
+                <div className="flex gap-2">
+                  <button type="button" onClick={() => goToQuestion(-1)} aria-label="Previous help topic" className="grid h-10 w-10 place-items-center border border-[#26392c]/20 text-[#354933] transition-colors hover:bg-white"><ArrowLeft size={15} /></button>
+                  <button type="button" onClick={() => goToQuestion(1)} aria-label="Next help topic" className="grid h-10 w-10 place-items-center bg-[#213329] text-white transition-colors hover:bg-[#354933]"><ArrowRight size={15} /></button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="border-t border-[#26392c]/15 bg-[#e7e4d9]">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 py-10 sm:px-8 md:flex-row md:items-center md:justify-between md:px-10 md:py-12">
+          <div className="flex items-start gap-4"><span className="mt-1 text-[#667956]"><Leaf size={18} /></span><div><p className="font-serif text-2xl">Care, returned to its source.</p><p className="mt-1 text-xs leading-5 text-stone-600">A considered ritual. A clear choice. A little more room to be yourself.</p></div></div>
+          <Link to="/impact" className="inline-flex min-h-11 w-fit items-center gap-2 border-b border-[#536b4d]/40 pb-1 text-[10px] font-bold uppercase tracking-[0.14em] text-[#354933]">Visit the field ledger <ArrowRight size={14} /></Link>
+        </div>
+      </section>
     </main>
   );
 }
