@@ -14,20 +14,6 @@ const LOG_LEVELS = {
   SEC: { color: 'text-purple-400', icon: ShieldCheck, bg: 'bg-purple-500/10' }
 };
 
-const MOCK_SOURCES = ['api-gateway', 'auth-service', 'db-cluster', 'payment-worker', 'img-processor'];
-const MOCK_MESSAGES = [
-  { level: 'INFO', msg: 'User session established successfully', src: 'auth-service' },
-  { level: 'INFO', msg: 'Cache payload refreshed for route /api/products', src: 'api-gateway' },
-  { level: 'SYSTEM', msg: 'Garbage collection cycle completed (1.2ms)', src: 'api-gateway' },
-  { level: 'WARN', msg: 'High latency detected on query execution (850ms)', src: 'db-cluster' },
-  { level: 'ERROR', msg: 'Connection timeout pooling primary replica', src: 'db-cluster' },
-  { level: 'SEC', msg: 'Rate limit exceeded for IP 192.168.1.104', src: 'auth-service' },
-  { level: 'INFO', msg: 'Payment intent pi_3J9Z... confirmed', src: 'payment-worker' },
-  { level: 'WARN', msg: 'Image processing queue buildup (45 pending)', src: 'img-processor' },
-  { level: 'ERROR', msg: 'Failed to sync vector embeddings', src: 'api-gateway' },
-  { level: 'SEC', msg: 'Invalid JWT signature detected', src: 'auth-service' }
-];
-
 export default function SystemLogs() {
   const [logs, setLogs] = useState([]);
   const [isPaused, setIsPaused] = useState(false);
@@ -43,26 +29,9 @@ export default function SystemLogs() {
   const scrollContainerRef = useRef(null);
 
   useEffect(() => {
-    const initLogs = Array.from({ length: 15 }).map((_, i) => generateLog(new Date(Date.now() - (15 - i) * 2000)));
-    setLogs(initLogs);
+    setLogs([]);
+    setMetrics({ cpu: 0, ram: 0, net: 0, errRate: 0 });
   }, []);
-
-  useEffect(() => {
-    if (isPaused) return;
-    const interval = setInterval(() => {
-      setLogs(prev => {
-        const newLogs = [...prev, generateLog(new Date())];
-        return newLogs.length > 200 ? newLogs.slice(newLogs.length - 200) : newLogs;
-      });
-      setMetrics({
-        cpu: Math.floor(Math.random() * 20) + 30,
-        ram: Math.floor(Math.random() * 10) + 65,
-        net: Math.floor(Math.random() * 150) + 50,
-        errRate: (Math.random() * 0.1).toFixed(2)
-      });
-    }, 1800);
-    return () => clearInterval(interval);
-  }, [isPaused]);
 
   useEffect(() => {
     if (!isPaused && scrollContainerRef.current) {
@@ -87,12 +56,6 @@ export default function SystemLogs() {
       });
     return () => { active = false; };
   }, [activeView, clientErrorsRefresh]);
-
-  const generateLog = (timestamp) => {
-    const template = MOCK_MESSAGES[Math.floor(Math.random() * MOCK_MESSAGES.length)];
-    const id = Math.random().toString(36).substr(2, 9);
-    return { id, timestamp, ...template, reqId: `req_${Math.random().toString(36).substr(2, 6)}` };
-  };
 
   const filteredLogs = logs.filter(log => {
     if (activeFilter !== 'ALL' && log.level !== activeFilter) return false;

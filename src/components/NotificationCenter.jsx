@@ -27,12 +27,6 @@ const timeAgo = (dateStr) => {
   return new Date(dateStr).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
 };
 
-const DEMO_NOTIFICATIONS = [
-  { _id: '1', title: 'Order Confirmed', message: 'Your order has been confirmed and is being processed!', read: false, createdAt: new Date().toISOString(), type: 'order' },
-  { _id: '2', title: 'Flash Sale Live!', message: 'Use code SAVE20 for flat 20% off on all electronics.', read: false, createdAt: new Date(Date.now() - 3600000).toISOString(), type: 'promo' },
-  { _id: '3', title: 'Order Shipped', message: 'Your order is on the way! Track it in My Orders.', read: true, createdAt: new Date(Date.now() - 86400000).toISOString(), type: 'order' },
-];
-
 export default function NotificationCenter() {
   const { token, user } = useAuth();
   const [open, setOpen] = useState(false);
@@ -71,16 +65,16 @@ export default function NotificationCenter() {
       });
       if (res.ok) {
         const data = await res.json();
-        const notifs = Array.isArray(data) ? data : (data.notifications || DEMO_NOTIFICATIONS);
+        const notifs = Array.isArray(data) ? data : (data.notifications || []);
         setNotifications(notifs);
         setUnread(notifs.filter(n => !n.read).length);
       } else {
-        setNotifications(DEMO_NOTIFICATIONS);
-        setUnread(DEMO_NOTIFICATIONS.filter(n => !n.read).length);
+        setNotifications([]);
+        setUnread(0);
       }
     } catch {
-      setNotifications(DEMO_NOTIFICATIONS);
-      setUnread(DEMO_NOTIFICATIONS.filter(n => !n.read).length);
+      setNotifications([]);
+      setUnread(0);
     } finally {
       setLoading(false);
     }

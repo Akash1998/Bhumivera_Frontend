@@ -1,22 +1,32 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import * as XLSX from 'xlsx';
 import { 
   ShoppingBag, Truck, Package, CheckCircle, XCircle, AlertCircle, 
   Search, Filter, Download, RefreshCw, Eye, IndianRupee, 
   MapPin, User, CreditCard, ArrowRight, Printer, Activity,
-  Clock, ShieldCheck, Mail, Phone, FileText
+  Clock, ShieldCheck, Mail, Phone, FileText, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 
 const STATUS_MAP = {
   'pending': { label: 'Pending', color: 'amber', icon: Clock },
-  'processing': { label: 'Processing', color: 'blue', icon: Activity },
+  'confirmed': { label: 'Confirmed', color: 'blue', icon: CheckCircle },
+  'packed': { label: 'Packed', color: 'cyan', icon: Package },
   'shipped': { label: 'Shipped / In Transit', color: 'purple', icon: Truck },
   'delivered': { label: 'Delivered', color: 'emerald', icon: CheckCircle },
   'cancelled': { label: 'Cancelled', color: 'rose', icon: XCircle },
-  'returned': { label: 'Returned', color: 'slate', icon: AlertCircle }
+  'returned': { label: 'Returned', color: 'slate', icon: AlertCircle },
+  'archived': { label: 'Archived', color: 'slate', icon: Package }
 };
+
+const STATUS_BADGE = {
+  amber: 'bg-amber-100 text-amber-800', blue: 'bg-blue-100 text-blue-800',
+  cyan: 'bg-cyan-100 text-cyan-800', purple: 'bg-purple-100 text-purple-800',
+  emerald: 'bg-emerald-100 text-emerald-800', rose: 'bg-rose-100 text-rose-800',
+  slate: 'bg-slate-100 text-slate-700'
+};
+const STATUS_RANK = { pending: 0, confirmed: 1, packed: 2, shipped: 3, delivered: 4, cancelled: 5, returned: 5, archived: 6 };
 
 // FIX: Dynamic 10-digit padding for professional Order IDs
 const formatId = (id) => String(id).padStart(10, '0');
@@ -24,12 +34,15 @@ const formatId = (id) => String(id).padStart(10, '0');
 export default function OrderManagement() {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [exporting, setExporting] = useState(false);
+  const [summary, setSummary] = useState({ totalOrders: 0, grossRevenue: 0, actionRequired: 0, inTransit: 0, completed: 0 });
+  const [pagination, setPagination] = useState({ page: 1, limit: 25, total: 0, totalPages: 0 });
   
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
-
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
   
@@ -41,20 +54,29 @@ export default function OrderManagement() {
   const { showToast } = useToast() || {};
 
   useEffect(() => {
-    fetchOrders();
-  }, []);
-
-  const fetchOrders = async () => {
-    setLoading(true);
-    try {
-      const res = await api.get('/orders/all', { params: { search: searchTerm || undefined, status: statusFilter || undefined } });
-      setOrders(res.data?.orders || res.data || []);
-    } catch (err) {
-      showToast?.('Failed to fetch orders.', 'error');
-    } finally {
-      setLoading(false);
-    }
-  };
+    let active = true;
+    const timer = setTimeout(async () => {
+      setLoading(true);
+      setLoadError('');
+      try {
+        const res = await api.get('/orders/all', { params: {
+          page: currentPage,
+          limit: pagination.limit,
+          search: searchTerm.trim() || undefined,
+          status: statusFilter === 'all' ? undefined : statusFilter
+        } });
+        if (!active) return;
+        setOrders(res.data?.orders || []);
+        setSummary(res.data?.summary || { totalOrders: 0, grossRevenue: 0, actionRequired: 0, inTransit: 0, completed: 0 });
+        setPagination(current => ({ ...current, ...(res.data?.pagination || {}) }));
+      } catch (err) {
+        if (active) setLoadError(err.normalized?.message || err.response?.data?.message || 'Failed to load orders.');
+      } finally {
+        if (active) setLoading(false);
+      }
+    }, 250);
+    return () => { active = false; clearTimeout(timer); };
+  }, [searchTerm, statusFilter, currentPage, pagination.limit, refreshKey]);
 
   const getImageUrl = (img) => {
     if (!img) return '/logo.webp';
@@ -66,19 +88,20 @@ export default function OrderManagement() {
   };
 
   const handleUpdateStatus = async (orderId, newStatus) => {
-    if (!window.confirm(`Update this order to ${newStatus}?`)) return;
+    if (['cancelled', 'returned'].includes(newStatus) && !window.confirm(`Mark this order as ${newStatus}? Inventory will be restocked.`)) return;
     setIsUpdating(true);
     try {
       await api.put(`/orders/${orderId}/status`, { status: newStatus });
       showToast?.(`Order marked as ${newStatus}`, 'success');
       
-      setOrders(orders.map(o => (o.id === orderId) ? { ...o, status: newStatus } : o));
-      if (selectedOrder) {
+      setOrders(current => current.map(o => (o.id === orderId) ? { ...o, status: newStatus } : o));
+      if (selectedOrder?.id === orderId) {
         setSelectedOrder({ ...selectedOrder, status: newStatus });
         setTrackingStatus(newStatus);
       }
+      setRefreshKey(key => key + 1);
     } catch (err) {
-      showToast?.('Failed to update status', 'error');
+      showToast?.(err.normalized?.message || err.response?.data?.message || 'Failed to update status.', 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -98,7 +121,7 @@ export default function OrderManagement() {
       });
       
       showToast?.('Order pipeline & tracking updated.', 'success');
-      fetchOrders();
+      setRefreshKey(key => key + 1);
       setSelectedOrder({ 
         ...selectedOrder, 
         tracking_number: trackingNumber, 
@@ -106,46 +129,40 @@ export default function OrderManagement() {
         status: trackingStatus 
       });
     } catch (err) {
-      showToast?.('Failed to save tracking info', 'error');
+      showToast?.(err.normalized?.message || err.response?.data?.message || 'Failed to save tracking information.', 'error');
     } finally {
       setIsUpdating(false);
     }
   };
 
-  const exportToExcel = () => {
-    const worksheetData = orders.map(o => ({
-      'Order ID': formatId(o.id),
-      'Date': new Date(o.created_at).toLocaleString(),
-      'Customer': o.user_name || o.address_snapshot?.full_name || 'Guest',
-      'Email': o.user_email || 'N/A',
-      'Total (₹)': parseFloat(o.total || 0),
-      'Payment Method': o.payment_mode || 'COD',
-      'Status': o.status,
-      'Tracking ID': o.tracking_number || 'N/A'
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Orders");
-    XLSX.writeFile(workbook, `Orders_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+  const exportToExcel = async () => {
+    setExporting(true);
+    try {
+      const params = { limit: 200, search: searchTerm.trim() || undefined, status: statusFilter === 'all' ? undefined : statusFilter };
+      const firstPage = await api.get('/orders/all', { params: { ...params, page: 1 } });
+      const allOrders = [...(firstPage.data?.orders || [])];
+      const totalPages = Number(firstPage.data?.pagination?.totalPages || 1);
+      for (let page = 2; page <= totalPages; page += 1) {
+        const response = await api.get('/orders/all', { params: { ...params, page } });
+        allOrders.push(...(response.data?.orders || []));
+      }
+      const worksheetData = allOrders.map(o => ({
+        'Order ID': formatId(o.id), 'Date': new Date(o.created_at).toLocaleString(),
+        'Customer': o.user_name || o.address_snapshot?.full_name || 'Guest', 'Email': o.user_email || 'N/A',
+        'Total (₹)': Number(o.total || 0), 'Payment Method': o.payment_mode || 'COD',
+        'Payment Status': o.payment_status || 'pending', 'Status': o.status,
+        'Courier': o.courier || 'N/A', 'Tracking ID': o.tracking_number || 'N/A'
+      }));
+      const worksheet = XLSX.utils.json_to_sheet(worksheetData);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Orders');
+      XLSX.writeFile(workbook, `Orders_Export_${new Date().toISOString().split('T')[0]}.xlsx`);
+    } catch (err) {
+      showToast?.(err.normalized?.message || 'Failed to export orders.', 'error');
+    } finally {
+      setExporting(false);
+    }
   };
-
-  const filteredOrders = useMemo(() => {
-    return orders.filter(o => {
-      const formattedId = formatId(o.id);
-      const searchStr = `${o.id} ${formattedId} ${o.user_name || ''} ${o.address_snapshot?.full_name || ''} ${o.user_email || ''}`.toLowerCase();
-      const matchesSearch = searchStr.includes(searchTerm.toLowerCase());
-      const matchesStatus = statusFilter === 'all' || o.status === statusFilter;
-      return matchesSearch && matchesStatus;
-    });
-  }, [orders, searchTerm, statusFilter]);
-
-  const paginatedOrders = filteredOrders.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-  const totalRevenue = orders.filter(o => o.status !== 'cancelled' && o.status !== 'returned').reduce((acc, o) => acc + parseFloat(o.total || 0), 0);
-  const activeOrders = orders.filter(o => o.status === 'processing' || o.status === 'pending').length;
-  const inTransitCount = orders.filter(o => o.status === 'shipped').length;
-  const completedCount = orders.filter(o => o.status === 'delivered').length;
 
   if (loading && orders.length === 0) {
     return (
@@ -170,11 +187,11 @@ export default function OrderManagement() {
           </p>
         </div>
         <div className="flex gap-3">
-          <button onClick={fetchOrders} className="p-3 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all shadow-sm">
-            <RefreshCw size={18} />
+          <button onClick={() => setRefreshKey(key => key + 1)} aria-label="Refresh orders" title="Refresh orders" className="p-3 bg-white border border-slate-200 text-slate-600 rounded-xl hover:bg-slate-50 transition-all shadow-sm disabled:opacity-50" disabled={loading}>
+            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
           </button>
-          <button onClick={exportToExcel} className="flex items-center gap-2 px-5 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-md">
-            <Download size={16} /> Export to Excel
+          <button onClick={exportToExcel} disabled={exporting} className="flex items-center gap-2 px-5 py-3 bg-emerald-600 text-white font-bold rounded-xl hover:bg-emerald-700 transition-all shadow-md disabled:opacity-60">
+            <Download size={16} /> {exporting ? 'Preparing export…' : 'Export filtered orders'}
           </button>
         </div>
       </div>
@@ -185,28 +202,28 @@ export default function OrderManagement() {
           <div className="p-4 rounded-xl bg-emerald-50 text-emerald-600"><IndianRupee size={24} /></div>
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase">Gross Revenue</p>
-            <h4 className="text-2xl font-black text-slate-900">₹{totalRevenue.toLocaleString()}</h4>
+            <h4 className="text-2xl font-black text-slate-900">₹{Number(summary.grossRevenue || 0).toLocaleString()}</h4>
           </div>
         </div>
         <div className="bg-white border border-slate-200 p-6 rounded-2xl flex items-center gap-4 shadow-sm">
           <div className="p-4 rounded-xl bg-amber-50 text-amber-600"><Clock size={24} /></div>
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase">Action Required</p>
-            <h4 className="text-2xl font-black text-slate-900">{activeOrders}</h4>
+            <h4 className="text-2xl font-black text-slate-900">{Number(summary.actionRequired || 0).toLocaleString()}</h4>
           </div>
         </div>
         <div className="bg-white border border-slate-200 p-6 rounded-2xl flex items-center gap-4 shadow-sm">
           <div className="p-4 rounded-xl bg-purple-50 text-purple-600"><Truck size={24} /></div>
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase">In Transit</p>
-            <h4 className="text-2xl font-black text-slate-900">{inTransitCount}</h4>
+            <h4 className="text-2xl font-black text-slate-900">{Number(summary.inTransit || 0).toLocaleString()}</h4>
           </div>
         </div>
         <div className="bg-white border border-slate-200 p-6 rounded-2xl flex items-center gap-4 shadow-sm">
           <div className="p-4 rounded-xl bg-blue-50 text-blue-600"><CheckCircle size={24} /></div>
           <div>
             <p className="text-xs font-bold text-slate-500 uppercase">Completed</p>
-            <h4 className="text-2xl font-black text-slate-900">{completedCount}</h4>
+            <h4 className="text-2xl font-black text-slate-900">{Number(summary.completed || 0).toLocaleString()}</h4>
           </div>
         </div>
       </div>
@@ -233,7 +250,15 @@ export default function OrderManagement() {
             ))}
           </select>
         </div>
+        <label className="flex items-center gap-2 text-sm font-semibold text-slate-600">
+          Rows
+          <select value={pagination.limit} onChange={event => { setCurrentPage(1); setPagination(current => ({ ...current, limit: Number(event.target.value) })); }} className="rounded-xl border border-slate-200 bg-slate-50 px-3 py-3 text-slate-800 outline-none focus:border-emerald-500">
+            {[25, 50, 100].map(size => <option key={size} value={size}>{size}</option>)}
+          </select>
+        </label>
       </div>
+
+      {loadError && <div role="alert" className="flex items-center justify-between gap-4 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-sm text-rose-800"><span>{loadError}</span><button onClick={() => setRefreshKey(key => key + 1)} className="font-bold underline">Retry</button></div>}
 
       {/* Table */}
       <div className="bg-white border border-slate-200 rounded-2xl overflow-hidden shadow-sm">
@@ -250,13 +275,13 @@ export default function OrderManagement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {paginatedOrders.length === 0 ? (
+              {orders.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="p-12 text-center text-slate-500">
-                    No orders found.
+                    {loading ? 'Loading orders…' : 'No orders match these filters.'}
                   </td>
                 </tr>
-              ) : paginatedOrders.map(order => {
+              ) : orders.map(order => {
                 const status = STATUS_MAP[order.status] || STATUS_MAP['pending'];
                 return (
                   <tr key={order.id} className="hover:bg-slate-50 transition-colors">
@@ -268,9 +293,14 @@ export default function OrderManagement() {
                     <td className="p-5 text-sm text-slate-600">{new Date(order.created_at).toLocaleDateString()}</td>
                     <td className="p-5 font-bold text-emerald-600">₹{parseFloat(order.total || 0).toLocaleString()}</td>
                     <td className="p-5">
-                      <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-${status.color}-100 text-${status.color}-700`}>
-                         {status.label}
-                      </span>
+                      <div className="flex flex-col items-start gap-2">
+                        <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${STATUS_BADGE[status.color]}`}>
+                          {status.label}
+                        </span>
+                        <select aria-label={`Update order ${formatId(order.id)} status`} value={order.status} onChange={event => handleUpdateStatus(order.id, event.target.value)} disabled={isUpdating} className="max-w-full rounded-md border border-slate-200 bg-white px-2 py-1 text-xs text-slate-600 disabled:opacity-50">
+                          {Object.entries(STATUS_MAP).filter(([key]) => STATUS_RANK[key] >= STATUS_RANK[order.status]).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
+                        </select>
+                      </div>
                     </td>
                     <td className="p-5 text-right">
                       <button 
@@ -290,6 +320,17 @@ export default function OrderManagement() {
               })}
             </tbody>
           </table>
+        </div>
+        <div className="flex flex-col gap-3 border-t border-slate-200 px-4 py-3 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-sm text-slate-500">
+            {pagination.total === 0 ? 'No orders' : `Showing ${(currentPage - 1) * pagination.limit + 1}–${Math.min(currentPage * pagination.limit, pagination.total)} of ${Number(pagination.total).toLocaleString()} orders`}
+            {loading && <span className="ml-2 text-emerald-700">Updating…</span>}
+          </p>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setCurrentPage(page => Math.max(1, page - 1))} disabled={currentPage <= 1 || loading} aria-label="Previous page" className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50 disabled:opacity-40"><ChevronLeft size={18}/></button>
+            <span className="min-w-24 text-center text-sm font-semibold text-slate-700">Page {currentPage} of {Math.max(1, pagination.totalPages)}</span>
+            <button onClick={() => setCurrentPage(page => Math.min(pagination.totalPages, page + 1))} disabled={currentPage >= pagination.totalPages || loading} aria-label="Next page" className="rounded-lg border border-slate-200 p-2 text-slate-600 hover:bg-slate-50 disabled:opacity-40"><ChevronRight size={18}/></button>
+          </div>
         </div>
       </div>
 
@@ -344,9 +385,9 @@ export default function OrderManagement() {
                   <div className="border border-slate-200 rounded-2xl p-6 bg-slate-50/50">
                     <h3 className="text-lg font-bold text-slate-900 mb-4 flex items-center gap-2"><FileText size={18}/> Payment Summary</h3>
                     <div className="space-y-3 text-sm font-medium">
-                      <div className="flex justify-between text-slate-600"><span>Subtotal</span><span>₹{selectedOrder.subtotal || selectedOrder.total}</span></div>
-                      <div className="flex justify-between text-slate-600"><span>Shipping</span><span>₹{selectedOrder.delivery_type === 'express' ? 99 : 0}</span></div>
-                      {selectedOrder.discount > 0 && <div className="flex justify-between text-emerald-600"><span>Discount</span><span>- ₹{selectedOrder.discount}</span></div>}
+                      <div className="flex justify-between text-slate-600"><span>Subtotal</span><span>₹{Number(selectedOrder.subtotal || 0).toLocaleString()}</span></div>
+                      <div className="flex justify-between text-slate-600"><span>Shipping</span><span>₹{Number(selectedOrder.shipping_cost || 0).toLocaleString()}</span></div>
+                      {Number(selectedOrder.discount) > 0 && <div className="flex justify-between text-emerald-600"><span>Discount</span><span>- ₹{Number(selectedOrder.discount).toLocaleString()}</span></div>}
                       <div className="pt-3 mt-3 border-t border-slate-200 flex justify-between text-lg font-extrabold text-slate-900">
                         <span>Total Paid</span>
                         <span className="text-emerald-600">₹{parseFloat(selectedOrder.total || 0).toLocaleString()}</span>

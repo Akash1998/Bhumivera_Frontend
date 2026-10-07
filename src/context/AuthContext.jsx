@@ -16,36 +16,39 @@ export const AuthProvider = ({ children }) => {
       const adminToken = localStorage.getItem('adminToken');
       const warehouseToken = localStorage.getItem('warehouseToken');
       const wp = window.location.pathname.startsWith('/warehouse');
+      const adminPath = window.location.pathname.startsWith('/admin');
       if (wp) {
         const t = warehouseToken || customerToken;
         if (t) { setToken(t); setUser(JSON.parse(localStorage.getItem('user') || '{"role":"warehouse_admin"}')); }
         setLoading(false); return;
       }
-      const anyT = customerToken || adminToken || warehouseToken;
+      const customerRole = decodeJWT(customerToken)?.role;
+      const anyT = adminPath
+        ? adminToken || (['admin', 'superadmin'].includes(customerRole) ? customerToken : null)
+        : customerToken || warehouseToken;
       if (anyT) {
+        let role = 'user';
         try {
-          const d = decodeJWT(anyT); const su = JSON.parse(localStorage.getItem('user') || '{}'); const r = d?.role || su?.role || 'user';
+          const d = decodeJWT(anyT); const su = JSON.parse(localStorage.getItem('user') || '{}'); role = d?.role || su?.role || 'user';
           let fu = su;
-          if (r === 'admin' || r === 'superadmin') {
+          if (role === 'admin' || role === 'superadmin') {
             try {
               fu = (await authApi.getAdminProfile()).data;
             } catch (_) { fu = su; }
-          } else if (r !== 'warehouse_admin') {
+          } else if (role !== 'warehouse_admin') {
             try {
               fu = (await usersApi.getProfile()).data?.user || (await usersApi.getProfile()).data;
             } catch (_) { fu = su; }
           }
-          const f = { ...fu, role: r };
+          const f = { ...fu, role };
           setUser(f);
-          if (r === 'admin' || r === 'superadmin') {
+          if (role === 'admin' || role === 'superadmin') {
             localStorage.setItem('adminToken', anyT);
-          } else if (!customerToken && !warehouseToken) {
-            localStorage.setItem('token', anyT);
           }
           localStorage.setItem('user', JSON.stringify(f));
           setToken(anyT);
         } catch (e) {
-          logout(r === 'admin' || r === 'superadmin' ? 'admin' : 'customer');
+          void logout(role === 'admin' || role === 'superadmin' ? 'admin' : 'customer');
         }
       }
       setLoading(false);
@@ -67,7 +70,6 @@ export const AuthProvider = ({ children }) => {
     const adminData = d?.admin || d?.user || {};
     const f = { ...adminData, role: adminData.role || 'admin' };
     localStorage.setItem('adminToken', d.token);
-    localStorage.setItem('token', d.token);
     localStorage.setItem('user', JSON.stringify(f));
     setToken(d.token);
     setUser(f);

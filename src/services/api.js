@@ -9,6 +9,9 @@ const api = axios.create({ baseURL: `${BASE_URL}/api`, withCredentials: false })
 api.interceptors.request.use(c => {
   const url = c.url || "";
   const isAdminCall = url.startsWith("/admin/") ||
+    url === "/auth/profile" ||
+    url.startsWith("/serials/admin/") ||
+    url.startsWith("/warehouse/admin/") ||
     url.startsWith("/users/loyalty/tiers") ||
     url.startsWith("/logs/") ||
     url.startsWith("/flash-sales/admin") ||
@@ -29,6 +32,7 @@ api.interceptors.request.use(c => {
     url.startsWith("/settings") ||
     url.startsWith("/shipping") && c.method !== "get" ||
     url.startsWith("/shipping/zones") && c.method === "get" && !url.includes("/active") ||
+    url.startsWith("/contact") && c.method !== "post" ||
     url.startsWith("/tax") && c.method !== "get" ||
     url.startsWith("/flash-sales") && (c.method === "post" || c.method === "put" || c.method === "patch" || c.method === "delete");
 
@@ -38,7 +42,7 @@ api.interceptors.request.use(c => {
   if (isAdminCall) {
     token = localStorage.getItem("adminToken");
   } else if (isWarehouseCall) {
-    token = localStorage.getItem("warehouseToken") || localStorage.getItem("token");
+    token = localStorage.getItem("warehouseToken") || localStorage.getItem("adminToken") || localStorage.getItem("token");
   } else {
     token = localStorage.getItem("token") || localStorage.getItem("ms_token");
   }
@@ -50,8 +54,12 @@ let _refreshPromise = null;
 let _lastRefreshAt = 0;
 let _firstFailedRefreshAt = 0;
 
-const _resolveTokenKind = (url = '') => {
+const _resolveTokenKind = (url = '', method = '') => {
   const isAdminUrl = url.startsWith("/admin/") ||
+    url === "/auth/profile" ||
+    url.startsWith("/contact") && method !== 'post' ||
+    url.startsWith("/serials/admin/") ||
+    url.startsWith("/warehouse/admin/") ||
     url.startsWith("/logs/") ||
     url.startsWith("/flash-sales/admin") ||
     (url.startsWith("/flash-sales/") && !url.startsWith("/flash-sales/active")) ||
@@ -105,7 +113,7 @@ api.interceptors.response.use(r => r, async (e) => {
   const status = e.response?.status;
   const url = e.config?.url || "";
   if (status === 401) {
-    const kind = _resolveTokenKind(url);
+    const kind = _resolveTokenKind(url, e.config?.method);
 
     if (kind === 'admin') {
       localStorage.removeItem("adminToken");

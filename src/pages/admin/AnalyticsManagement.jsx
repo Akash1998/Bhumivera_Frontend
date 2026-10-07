@@ -30,10 +30,10 @@ export default function AnalyticsManagement() {
 
         if (mounted) {
           setData({
-            kpis: kpiRes.status === 'fulfilled' && kpiRes.value.data ? kpiRes.value.data : mockKpis,
-            revenue: revRes.status === 'fulfilled' && revRes.value.data?.length ? revRes.value.data : mockRevenue,
-            sales: salesRes.status === 'fulfilled' && salesRes.value.data?.length ? salesRes.value.data : mockCategories,
-            products: prodRes.status === 'fulfilled' && prodRes.value.data?.length ? prodRes.value.data : mockTopProducts
+            kpis: kpiRes.status === 'fulfilled' && kpiRes.value?.data ? kpiRes.value.data : null,
+            revenue: revRes.status === 'fulfilled' && Array.isArray(revRes.value?.data) ? revRes.value.data : [],
+            sales: salesRes.status === 'fulfilled' && Array.isArray(salesRes.value?.data) ? salesRes.value.data : [],
+            products: prodRes.status === 'fulfilled' && Array.isArray(prodRes.value?.data) ? prodRes.value.data : []
           });
         }
       } catch (err) {
@@ -99,10 +99,10 @@ export default function AnalyticsManagement() {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <KpiCard title="Gross Volume" value={`₹${data.kpis?.revenue?.toLocaleString()}`} trend={data.kpis?.revTrend} icon={DollarSign} color="emerald" />
-        <KpiCard title="Active Sessions" value={data.kpis?.sessions?.toLocaleString()} trend={data.kpis?.sessionTrend} icon={Users} color="cyan" />
-        <KpiCard title="Conversion Rate" value={`${data.kpis?.conversion}%`} trend={data.kpis?.convTrend} icon={Target} color="purple" />
-        <KpiCard title="AOV" value={`₹${data.kpis?.aov?.toLocaleString()}`} trend={data.kpis?.aovTrend} icon={ShoppingCart} color="amber" />
+        <KpiCard title="Gross Volume" value={data.kpis?.revenue ? `₹${Number(data.kpis.revenue).toLocaleString()}` : '—'} trend={Number(data.kpis?.revTrend || 0)} icon={DollarSign} color="emerald" />
+        <KpiCard title="Active Sessions" value={data.kpis?.sessions ? Number(data.kpis.sessions).toLocaleString() : '—'} trend={Number(data.kpis?.sessionTrend || 0)} icon={Users} color="cyan" />
+        <KpiCard title="Conversion Rate" value={data.kpis?.conversion ? `${Number(data.kpis.conversion)}%` : '—'} trend={Number(data.kpis?.convTrend || 0)} icon={Target} color="purple" />
+        <KpiCard title="AOV" value={data.kpis?.aov ? `₹${Number(data.kpis.aov).toLocaleString()}` : '—'} trend={Number(data.kpis?.aovTrend || 0)} icon={ShoppingCart} color="amber" />
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -128,7 +128,7 @@ export default function AnalyticsManagement() {
             </div>
             
             <div className="flex-1 flex items-end justify-between h-full z-10 pl-2">
-              {data.revenue.map((item, idx) => (
+              {data.revenue.length > 0 ? data.revenue.map((item, idx) => (
                 <div key={idx} className="relative group/bar flex flex-col items-center justify-end h-full w-full px-0.5">
                   <div 
                     className="w-full bg-cyan-500/20 hover:bg-cyan-400 border-t-2 border-cyan-400 rounded-t-sm transition-all duration-500 relative"
@@ -140,7 +140,9 @@ export default function AnalyticsManagement() {
                   </div>
                   <span className="text-[8px] font-mono text-slate-500 mt-2 truncate w-full text-center">{item.label}</span>
                 </div>
-              ))}
+              )) : (
+                <div className="flex items-center justify-center w-full h-full text-slate-500 text-xs uppercase tracking-[0.3em]">No analytics data</div>
+              )}
             </div>
           </div>
         </div>
@@ -153,7 +155,7 @@ export default function AnalyticsManagement() {
           </h3>
           
           <div className="space-y-5">
-            {data.sales.map((cat, idx) => (
+            {data.sales.length > 0 ? data.sales.map((cat, idx) => (
               <div key={idx} className="group/cat">
                 <div className="flex justify-between items-end mb-1.5">
                   <span className="text-xs font-bold text-slate-300 group-hover/cat:text-white transition-colors">{cat.name}</span>
@@ -166,7 +168,9 @@ export default function AnalyticsManagement() {
                   />
                 </div>
               </div>
-            ))}
+            )) : (
+              <div className="text-xs uppercase tracking-[0.2em] text-slate-500">No category data</div>
+            )}
           </div>
         </div>
       </div>
@@ -190,7 +194,7 @@ export default function AnalyticsManagement() {
                 </tr>
               </thead>
               <tbody className="text-sm">
-                {data.products.map((prod, idx) => (
+                {data.products.length > 0 ? data.products.map((prod, idx) => (
                   <tr key={idx} className="border-b border-slate-800/30 hover:bg-slate-800/20 transition-colors group">
                     <td className="p-4">
                       <div className="font-bold text-slate-200 group-hover:text-white transition-colors">{prod.name}</div>
@@ -200,7 +204,11 @@ export default function AnalyticsManagement() {
                     <td className="p-4 text-right font-mono text-slate-300">{prod.units}</td>
                     <td className="p-4 text-right font-mono font-bold text-emerald-400">₹{prod.revenue.toLocaleString()}</td>
                   </tr>
-                ))}
+                )) : (
+                  <tr>
+                    <td colSpan="4" className="p-6 text-center text-xs uppercase tracking-[0.2em] text-slate-500">No product analytics</td>
+                  </tr>
+                )}
               </tbody>
             </table>
           </div>
@@ -277,15 +285,3 @@ function KpiCard({ title, value, trend, icon: Icon, color }) {
   );
 }
 
-const mockKpis = { revenue: 845200, revTrend: 12.5, sessions: 24502, sessionTrend: 8.2, conversion: 3.4, convTrend: -1.2, aov: 4250, aovTrend: 5.4 };
-const mockRevenue = Array.from({length: 14}, (_, i) => ({ label: `Day ${i+1}`, value: Math.floor(Math.random() * 50000) + 10000 }));
-const mockCategories = [
-  { name: 'Basstubes', amount: 425000 }, { name: 'LED Lighting', amount: 280000 },
-  { name: 'Ambience Kits', amount: 195000 }, { name: 'Wiring & Relays', amount: 85000 }
-];
-const mockTopProducts = [
-  { name: 'Bhumivera Pro Basstube 12"', sku: 'AV-BT-12P', category: 'Audio', units: 142, revenue: 120500 },
-  { name: 'H4 LED Headlight Kit 120W', sku: 'AV-LED-H4', category: 'Lighting', units: 310, revenue: 95000 },
-  { name: 'App Controlled RGB Ambience', sku: 'AV-RGB-APP', category: 'Interior', units: 84, revenue: 65000 },
-  { name: 'Premium Wiring Kit 4 Gauge', sku: 'AV-WK-4G', category: 'Accessories', units: 215, revenue: 45000 },
-];
