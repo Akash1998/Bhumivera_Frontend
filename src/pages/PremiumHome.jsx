@@ -158,13 +158,13 @@ export default function PremiumHome() {
         title="Bhumivera | Botanical rituals, considered in every detail"
         description="Explore Bhumivera's botanical stories, modern skincare ingredients and considered everyday rituals."
         keywords="Bhumivera, botanical skincare, sea buckthorn, charcoal, niacinamide, hyaluronic acid, skincare rituals"
-        ogImage="/assets/images/seabuckthorn%20nature.webp"
+        ogImage="/assets/images/seabuckthorn.webp"
         route="/"
       />
 
       <section className="relative isolate flex min-h-[min(900px,calc(100svh_-_75px))] items-end overflow-hidden bg-[#16231c] text-white md:min-h-[min(860px,calc(100svh_-_112px))] md:items-center">
         <img
-          src={image('seabuckthorn nature.webp')}
+          src={image('seabuckthorn.webp')}
           alt="Bhumivera sea-buckthorn face wash among sea-buckthorn berries"
           fetchPriority="high"
           className="absolute inset-0 -z-20 h-full w-full object-cover object-[58%_center] md:object-center"
