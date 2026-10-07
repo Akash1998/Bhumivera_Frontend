@@ -71,10 +71,32 @@ const ritualStories = [
   },
 ];
 
-const campaignImages = [1, 2, 3, 4, 5, 7, 8, 9, 10].map(number => ({
-  image: `Promo${number}.webp`,
-  number: String(number).padStart(2, '0'),
-}));
+const campaignStories = [
+  {
+    image: 'Promo1.webp',
+    number: '01',
+    title: 'Nature’s precision. Planet first.',
+    copy: 'A reminder to look closer: the natural world is intricate, generous and worth treating with care.',
+  },
+  {
+    image: 'Promo2.webp',
+    number: '02',
+    title: 'Where science meets soil.',
+    copy: 'Curiosity helps us understand what goes into a formula—and keep the conversation grounded in nature.',
+  },
+  {
+    image: 'Promo3.webp',
+    number: '03',
+    title: 'Change, made thoughtfully.',
+    copy: 'Better choices are built into everyday life, one considered decision at a time.',
+  },
+  {
+    image: 'Promo4.webp',
+    number: '04',
+    title: 'Where nature meets logic.',
+    copy: 'Botanical inspiration and careful thinking can belong in the same story.',
+  },
+];
 
 const questions = [
   {
@@ -409,22 +431,32 @@ export default function PremiumHome() {
         </div>
       </section>
 
-      <section className="bg-[#111c17] text-[#f1efe7]">
+      <section className="bg-[#e7e4d9] text-[#1b2921]">
         <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 md:px-10 md:py-24">
-          <div className="mb-9 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+          <div className="mb-10 grid gap-5 border-b border-[#26392c]/20 pb-7 md:grid-cols-[1fr_0.65fr] md:items-end md:pb-9">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#c8d6aa]">Botanical notes · campaign archive</p>
-              <h2 className="mt-3 max-w-2xl font-serif text-4xl leading-tight sm:text-5xl md:text-6xl">A visual world, in many shades of green.</h2>
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#687958]">A Bhumivera visual story</p>
+              <h2 className="mt-3 max-w-2xl font-serif text-4xl leading-tight sm:text-5xl md:text-6xl">Four notes on care.</h2>
             </div>
-            <p className="max-w-sm text-sm leading-6 text-white/55">A collection of Bhumivera campaign artwork—each frame its own small chapter in the conversation between nature and care.</p>
+            <p className="max-w-lg text-sm leading-7 text-stone-600 sm:text-base">From the intelligence of nature to the choices we make each day, these campaign frames share one thought: care is most beautiful when it is considered.</p>
           </div>
-          <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3 lg:grid-cols-5">
-            {campaignImages.map(({ image: campaignImage, number }) => (
-              <figure key={campaignImage} className="overflow-hidden bg-[#202d25]">
-                <img src={image(campaignImage)} alt={`Bhumivera botanical campaign artwork, chapter ${number}`} loading="lazy" className="aspect-[9/16] w-full object-cover transition-transform duration-700 hover:scale-[1.02]" />
-              </figure>
+          <div className="grid gap-4 lg:grid-cols-2 lg:gap-5">
+            {campaignStories.map(story => (
+              <article key={story.number} className="group grid min-h-[270px] grid-cols-[minmax(116px,0.72fr)_1fr] overflow-hidden border border-[#26392c]/15 bg-[#f4f1e9] sm:min-h-[340px] sm:grid-cols-[minmax(170px,0.78fr)_1fr]">
+                <div className="relative overflow-hidden bg-[#17231d]">
+                  <img src={image(story.image)} alt={`${story.title} — Bhumivera campaign artwork`} loading="lazy" className="h-full min-h-[270px] w-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.025] sm:min-h-[340px]" />
+                  <span className="absolute left-2 top-2 bg-[#111c17]/85 px-2 py-1.5 font-mono text-[9px] tracking-[0.12em] text-[#e1e8ce] sm:left-3 sm:top-3 sm:px-3 sm:text-[10px]">{story.number} / 04</span>
+                </div>
+                <div className="flex flex-col justify-center p-4 sm:p-6 md:p-8">
+                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#77816d]">A note on care</span>
+                  <h3 className="mt-3 font-serif text-xl leading-tight sm:text-2xl md:text-3xl">{story.title}</h3>
+                  <p className="mt-3 text-xs leading-5 text-stone-600 sm:mt-4 sm:text-sm sm:leading-6">{story.copy}</p>
+                  <span className="mt-5 h-px w-10 bg-[#879477] sm:mt-7" aria-hidden="true" />
+                </div>
+              </article>
             ))}
           </div>
+          <p className="mt-6 text-[10px] leading-5 text-stone-500">Campaign artwork and brand perspective; not a record of completed field activity.</p>
         </div>
       </section>
 

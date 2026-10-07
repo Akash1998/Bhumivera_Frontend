@@ -4,9 +4,9 @@ import { Link } from 'react-router-dom';
 import api from '../services/api';
 
 const projects = [
-  { id: 'native-trees', title: 'Planting & tree care', copy: 'Support locally appropriate planting and follow-up care, documented when field work takes place.', image: 'aloeveradna.webp', alt: 'Botanical leaf imagery, used to illustrate a future planting focus' },
-  { id: 'river-care', title: 'Waterway care', copy: 'Back practical river and waterway care, with evidence published after verified activity.', image: 'seabuckthorn nature.webp', alt: 'A botanical landscape, used to illustrate care for living places' },
-  { id: 'community-care', title: 'Community nourishment', copy: 'Make room for locally led support, with funds and updates recorded transparently.', image: 'tulsi.webp', alt: 'Tulsi leaves, used to illustrate a possible community-care focus' },
+  { id: 'native-trees', title: 'Plant a tree', copy: 'Locally chosen trees need patient planting, protection and care well beyond the first season.', image: 'plant tree.webp', alt: 'People planting a young tree together; illustrative artwork, not a verified Bhumivera field report' },
+  { id: 'river-care', title: 'Care for rivers', copy: 'Healthy waterways depend on steady, community-led attention to the places around them.', image: 'river free.webp', alt: 'People tending a riverbank together; illustrative artwork, not a verified Bhumivera field report' },
+  { id: 'community-care', title: 'Learn and nourish together', copy: 'Shared knowledge and access to nourishing food can help communities grow stronger together.', image: 'education.webp', alt: 'People preparing food together in a community garden; illustrative artwork, not a verified Bhumivera field report' },
 ];
 
 const impactQuestions = [
