@@ -9,23 +9,70 @@ import { WishlistProvider } from "./context/WishlistContext.jsx";
 import { CompareProvider } from "./context/CompareContext.jsx";
 import "./index.css";
 
+const CHUNK_RELOAD_KEY = 'page-chunk-reload-attempted';
+
+const reloadLatestBuild = () => {
+  window.sessionStorage.setItem(CHUNK_RELOAD_KEY, 'true');
+  const latestUrl = new URL(window.location.href);
+  latestUrl.searchParams.set('_refresh', Date.now().toString());
+  window.location.replace(latestUrl.toString());
+};
+
+function ModuleLoadError({ error }) {
+  const [isOnline, setIsOnline] = React.useState(navigator.onLine);
+
+  useEffect(() => {
+    const updateConnection = () => setIsOnline(navigator.onLine);
+    window.addEventListener('online', updateConnection);
+    window.addEventListener('offline', updateConnection);
+    return () => {
+      window.removeEventListener('online', updateConnection);
+      window.removeEventListener('offline', updateConnection);
+    };
+  }, []);
+
+  useEffect(() => {
+    console.error('[PAGE_MODULE_LOAD]', error);
+  }, [error]);
+
+  return (
+    <section className="flex min-h-[60vh] flex-col items-center justify-center bg-[#f4f2eb] px-6 text-center text-[#1c2922]">
+      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#607552]">Bhumivera</p>
+      <h1 className="mt-4 max-w-xl font-serif text-3xl md:text-4xl">A fresh connection is needed</h1>
+      <p className="mt-3 max-w-md text-sm leading-6 text-stone-600">
+        {isOnline
+          ? 'This page could not be loaded. Refresh to get the latest version and try again.'
+          : 'This page could not be loaded while you are offline. Reconnect to the internet, then try again.'}
+      </p>
+      <button
+        type="button"
+        onClick={reloadLatestBuild}
+        className="mt-7 bg-[#1c2922] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#35533c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#607552]"
+      >
+        {isOnline ? 'Refresh page' : 'Try again'}
+      </button>
+    </section>
+  );
+}
+
 const lazyWithRetry = (componentImport) =>
   lazy(async () => {
-    const pageHasAlreadyBeenForceRefreshed = JSON.parse(
-      window.sessionStorage.getItem('page-has-been-force-refreshed') || 'false'
-    );
-
     try {
       const component = await componentImport();
-      window.sessionStorage.setItem('page-has-been-force-refreshed', 'false');
+      window.sessionStorage.removeItem(CHUNK_RELOAD_KEY);
+      const currentUrl = new URL(window.location.href);
+      if (currentUrl.searchParams.has('_refresh')) {
+        currentUrl.searchParams.delete('_refresh');
+        window.history.replaceState(null, '', currentUrl.toString());
+      }
       return component;
     } catch (error) {
-      if (!pageHasAlreadyBeenForceRefreshed) {
-        window.sessionStorage.setItem('page-has-been-force-refreshed', 'true');
-        window.location.reload();
+      const alreadyRetried = window.sessionStorage.getItem(CHUNK_RELOAD_KEY) === 'true';
+      if (!alreadyRetried && navigator.onLine) {
+        reloadLatestBuild();
         return { default: () => <PageLoader /> };
       }
-      throw error;
+      return { default: () => <ModuleLoadError error={error} /> };
     }
   });
 

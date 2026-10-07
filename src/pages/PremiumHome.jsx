@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowDown, ArrowRight, Leaf, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { ChevronDown, Quote } from 'lucide-react';
+import { motion as Motion } from 'framer-motion';
 import SEO from '../components/SEO';
 import { categories as categoriesApi, products as productsApi, reviews as reviewsApi } from '../services/api';
 
@@ -18,31 +17,11 @@ const productImage = product => {
 
 const price = product => Number(product.discount_price || product.price || 0).toLocaleString('en-IN');
 
-const questions = [
-  ['Where should I begin?', 'Start with the product that fits the ritual you already have. Open its product page for the current description, ingredients, price and availability. There is no need to buy a full routine at once.'],
-  ['What is currently available?', 'Availability is determined by the live collection. If a product is not listed there, it is not currently available to order.'],
-  ['Is Aloe Vera Face Wash available?', 'When it is in stock, Aloe Vera Face Wash appears in the live collection with current price and stock shown on its product page.'],
-  ['Are charcoal products available now?', 'Check the collection for current active products. We do not mark a charcoal product available until it has a live catalog listing.'],
-  ['When will sea-buckthorn face wash arrive?', 'Sea-buckthorn face care is part of the collection we are developing. We will publish it with full product details when it is ready to order.'],
-  ['Are hair oil and shampoo available?', 'Hair oil and shampoo are upcoming. They will appear in the hair-care collection once the products are ready and listed.'],
-  ['How should I use a product?', 'Follow the directions and ingredient information on that specific product page and its packaging. If you have a skin or scalp condition, ask a qualified clinician before changing your routine.'],
-  ['Where can I see product ingredients?', 'Open the product detail page and review its published description and specifications. If a detail is not published, contact our support team before purchasing.'],
-  ['How do I know if something suits me?', 'Skin and hair vary. Review the product information, patch-test new products according to their packaging, and stop using a product if irritation occurs.'],
-  ['Can I add a contribution to my order?', 'A contribution is optional and currently available on cash-on-delivery checkout only. The available amounts and focus areas are shown before you place your order.'],
-  ['When is my contribution counted?', 'It begins as a pledge. It is counted as collected only after delivery and manual collection reconciliation. The public impact ledger shows the reconciled total.'],
-  ['Can I receive a charitable tax receipt?', 'The current checkout contribution is tracked in Bhumivera’s internal field ledger. It is not presented as a tax-deductible charitable donation or issued by a named nonprofit.'],
-  ['How will I see what the contribution supported?', 'Verified field updates, when work has taken place and evidence is available, are published in the public impact ledger with a date and photo or video.'],
-  ['How do I track an order?', 'Use Track Order in the navigation or view your order history after signing in. The page reflects the latest fulfillment status recorded by the team.'],
-  ['Who can help with an order or product question?', 'Visit Help & Support and include your order reference where relevant. That helps the team find the right record.'],
-  ['Can I return a purchase?', 'Review the current Returns Centre and the terms shown for your order. Eligibility depends on the published policy and product condition.'],
-];
-
 export default function PremiumHome() {
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [approvedReviews, setApprovedReviews] = useState([]);
-  const [activeQuestion, setActiveQuestion] = useState(0);
   const heroProduct = products[0];
   const aloeProduct = products.find(product => /aloe/i.test(product.name)) || heroProduct;
   const charcoalProduct = products.find(product => /charcoal/i.test(product.name));
@@ -86,23 +65,35 @@ export default function PremiumHome() {
     <main className="bg-[#f4f2eb] text-[#1c2922]">
       <SEO title="Bhumivera | Considered care, closer to nature" description="Explore Bhumivera's aloe vera and charcoal cleansing, sea-buckthorn face care, and hair rituals." route="/" />
 
-      <section className="relative isolate flex min-h-[88svh] items-end overflow-hidden bg-[#14201a] text-white">
+      <section className="relative isolate flex min-h-[82svh] items-center overflow-hidden bg-[#14201a] text-white md:min-h-[min(820px,calc(100svh_-_112px))]">
         <img src={productImage(heroProduct)} alt={heroProduct ? heroProduct.name : 'Aloe vera botanical preparation'} fetchPriority="high" className="absolute inset-0 -z-20 h-full w-full object-cover object-center opacity-70" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0b110e]/90 via-[#0b110e]/55 to-transparent" />
-        <div className="mx-auto grid w-full max-w-7xl gap-10 px-6 pb-12 pt-36 md:grid-cols-[1fr_auto] md:items-end md:pb-20">
-          <motion.div initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="max-w-3xl">
-            <p className="mb-5 flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.24em] text-[#d3dfb5]"><Leaf size={14}/> Aloe vera · charcoal · sea buckthorn</p>
-            <h1 className="font-serif text-6xl leading-[0.95] sm:text-7xl md:text-8xl">Bhumivera</h1>
-            <p className="mt-6 max-w-xl font-serif text-2xl leading-snug text-white/90 md:text-3xl">Care, returned to its source.</p>
-            <p className="mt-4 max-w-xl text-sm leading-6 text-white/75 md:text-base">Thoughtful skin and hair rituals, made for everyday use and explained without the noise.</p>
-            <div className="mt-8 flex flex-wrap gap-3">
-              <Link to="/shop" className="inline-flex items-center gap-3 bg-[#dce7c5] px-5 py-3 text-sm font-semibold text-[#17251c] transition-colors hover:bg-white">Explore the collection <ArrowRight size={16}/></Link>
-              <Link to="/impact" className="inline-flex items-center gap-3 border border-white/45 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10">Our field ledger <ArrowRight size={16}/></Link>
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0b110e]/90 via-[#0b110e]/55 to-[#0b110e]/10" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#0b110e]/55 via-transparent to-[#0b110e]/15" />
+        <div className="mx-auto grid w-full max-w-7xl gap-10 px-6 pb-20 pt-28 md:grid-cols-[minmax(0,1fr)_260px] md:items-end md:pb-24 md:pt-32">
+          <Motion.div initial={{ opacity: 0, y: 22 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.8 }} className="max-w-3xl">
+            <p className="mb-7 inline-flex items-center gap-2 border border-white/25 bg-white/[0.06] px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#e2eacb] backdrop-blur-sm"><Leaf size={14}/> Considered botanical care</p>
+            <h1 className="font-serif text-6xl leading-[0.9] tracking-[-0.045em] sm:text-7xl md:text-8xl lg:text-9xl">Bhumivera</h1>
+            <p className="mt-7 max-w-xl font-serif text-2xl leading-snug text-white/95 md:text-3xl">Care, returned to its source.</p>
+            <p className="mt-4 max-w-lg text-sm leading-7 text-white/75 md:text-base">Thoughtful skin and hair rituals, made for everyday use and explained without the noise.</p>
+            <div className="mt-9 flex flex-wrap gap-3">
+              <Link to="/shop" className="group inline-flex items-center gap-3 bg-[#dce7c5] px-5 py-3.5 text-sm font-semibold text-[#17251c] transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Explore the collection <ArrowRight size={16} className="transition-transform group-hover:translate-x-1"/></Link>
+              <Link to="/impact" className="inline-flex items-center gap-3 border border-white/40 bg-white/[0.04] px-5 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-white/10 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">Our field ledger <ArrowRight size={16}/></Link>
             </div>
-          </motion.div>
-          {heroProduct && <Link to={`/product/${heroProduct.slug || heroProduct.id}`} className="hidden max-w-56 border-l border-white/35 pl-5 text-sm text-white/80 transition-colors hover:text-white md:block"><span className="block text-[10px] uppercase tracking-[0.2em] text-[#d3dfb5]">In focus</span><span className="mt-2 block font-serif text-xl">{heroProduct.name}</span><span className="mt-1 block">₹{price(heroProduct)}</span></Link>}
+          </Motion.div>
+          <div className="hidden md:block">
+            {heroProduct ? (
+              <Link to={`/product/${heroProduct.slug || heroProduct.id}`} className="group block border border-white/20 bg-[#14201a]/35 p-5 text-white/85 shadow-2xl backdrop-blur-md transition-colors hover:bg-[#14201a]/55">
+                <span className="flex items-center gap-2 text-[10px] uppercase tracking-[0.2em] text-[#dce7c5]"><span className="h-px w-5 bg-[#dce7c5]/70"/> In focus</span>
+                <span className="mt-4 block font-serif text-2xl leading-tight">{heroProduct.name}</span>
+                <span className="mt-2 block text-sm text-white/70">₹{price(heroProduct)}</span>
+                <span className="mt-5 inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.16em] text-[#dce7c5]">Discover the ritual <ArrowRight size={13} className="transition-transform group-hover:translate-x-1"/></span>
+              </Link>
+            ) : (
+              <div className="border border-white/20 bg-[#14201a]/35 p-5 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#dce7c5] backdrop-blur-md"><span className="flex items-center gap-2"><span className="h-px w-5 bg-[#dce7c5]/70"/> Skin · Hair · Ritual</span></div>
+            )}
+          </div>
         </div>
-        <a href="#collection" aria-label="Scroll to collection" className="absolute bottom-6 right-6 hidden items-center gap-2 text-xs uppercase tracking-widest text-white/70 md:flex">Scroll to explore <ArrowDown size={15}/></a>
+        <a href="#collection" aria-label="Scroll to collection" className="absolute bottom-6 right-6 hidden items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.18em] text-white/70 transition-colors hover:text-white md:flex">Scroll to explore <ArrowDown size={15}/></a>
       </section>
 
       <section className="mx-auto grid max-w-7xl gap-8 px-6 py-16 md:grid-cols-[0.7fr_1.3fr] md:py-24">
@@ -171,11 +162,6 @@ export default function PremiumHome() {
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-[0.7fr_1.3fr] md:py-24">
-        <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#607552]">A human note</p><p className="mt-4 font-serif text-3xl leading-tight md:text-4xl">“I want care to feel like a kindness you can keep doing—not another thing you have to get perfect.”</p><span className="mt-5 block text-[10px] font-bold uppercase tracking-widest text-[#71806a]">A thought from the Bhumivera journal</span></div>
-        <div className="relative grid min-h-[360px] place-items-center overflow-hidden bg-[#16231c] p-8 text-center text-white md:min-h-[480px]"><img src="/assets/images/foundermanifesto.webp" alt="The people and place behind Bhumivera" loading="lazy" className="absolute inset-0 h-full w-full object-cover opacity-40"/><div className="relative max-w-2xl"><Quote className="mx-auto mb-7 text-[#dce7c5]" size={30}/><blockquote className="font-serif text-3xl leading-tight md:text-5xl">“A brand is not only what it makes. It is what it chooses to notice, and what it takes responsibility for next.”</blockquote><p className="mt-6 text-xs font-bold uppercase tracking-[0.2em] text-[#dce7c5]">The Bhumivera journal</p></div></div>
-      </section>
-
       <section className="border-y border-[#253b2f]/15 bg-[#f4f2eb]">
         <div className="mx-auto max-w-7xl px-6 py-16 md:py-24">
           <div className="mb-10 flex flex-wrap items-end justify-between gap-6"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#607552]">Words from customers</p><h2 className="mt-4 font-serif text-4xl md:text-5xl">The experience, in their words.</h2></div><Link to="/shop" className="inline-flex items-center gap-2 text-sm font-semibold text-[#35533c]">Explore products <ArrowRight size={16}/></Link></div>
@@ -188,26 +174,6 @@ export default function PremiumHome() {
         <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 md:grid-cols-[1fr_0.7fr] md:py-24"><div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#dce7c5]">A ritual with room to grow</p><h2 className="mt-4 max-w-3xl font-serif text-4xl leading-tight md:text-6xl">The most meaningful routine is the one that still feels like yours.</h2></div><div className="self-end"><p className="text-sm leading-7 text-white/75">Keep what works. Read the product details. Ask us when something is unclear. Let a small daily habit be simple, rather than turning self-care into a performance.</p><Link to="/shop" className="mt-7 inline-flex items-center gap-3 border-b border-[#dce7c5]/60 pb-2 text-sm font-semibold text-[#e7edda]">Find your next ritual <ArrowRight size={16}/></Link></div></div>
       </section>
 
-      <section className="bg-[#f4f2eb]">
-        <div className="mx-auto grid max-w-7xl gap-0 px-6 py-8 md:grid-cols-2 md:py-14">
-          {[
-            'The kindest ritual is one you can return to without bargaining with yourself.',
-            'A product earns trust in the little things: a clear label, a truthful promise, a helpful answer.',
-            'Growing a collection should feel like learning. Each new idea deserves its own care.',
-            'Nature is not a brand color. It is the living world our choices touch.',
-          ].map((quote, index) => <blockquote key={quote} className="border-b border-[#253b2f]/20 py-7 md:px-8 md:even:border-l md:even:border-b-0"><span className="font-mono text-[10px] font-semibold uppercase tracking-[0.2em] text-[#71806a]">Bhumivera journal · {String(index + 1).padStart(2, '0')}</span><p className="mt-4 max-w-xl font-serif text-2xl leading-relaxed text-[#1c2922] md:text-3xl">“{quote}”</p></blockquote>)}
-        </div>
-      </section>
-
-      <section className="mx-auto max-w-5xl px-6 py-16 md:py-24">
-        <div className="mb-10 text-center"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#607552]">The Bhumivera journal</p><h2 className="mt-4 font-serif text-4xl md:text-5xl">A few things worth asking.</h2><p className="mx-auto mt-4 max-w-2xl text-sm leading-6 text-stone-600">Clear information is part of a good experience. If you need something more specific, our support team is here to help.</p></div>
-        <div className="border-t border-[#253b2f]/20">{questions.map(([question, answer], index) => <article key={question} className="border-b border-[#253b2f]/20">
-          <button type="button" aria-expanded={activeQuestion === index} onClick={() => setActiveQuestion(activeQuestion === index ? -1 : index)} className="flex w-full items-center justify-between gap-6 py-5 text-left font-serif text-lg text-[#1c2922] hover:text-[#607552] md:text-xl"><span><span className="mr-4 font-mono text-xs text-[#8b987e]">{String(index + 1).padStart(2, '0')}</span>{question}</span><ChevronDown size={18} className={`shrink-0 transition-transform duration-300 ${activeQuestion === index ? 'rotate-180' : ''}`}/></button>
-          {activeQuestion === index && <motion.p initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="max-w-3xl pb-6 pl-9 text-sm leading-7 text-stone-600">{answer}</motion.p>}
-        </article>)}</div>
-        <p className="mt-8 text-center text-sm text-stone-500">Still wondering? <Link to="/contact" className="font-semibold text-[#35533c] underline underline-offset-4">Talk with our team</Link></p>
-      </section>
-
       <section id="collection" className="mx-auto max-w-7xl px-6 py-16 md:py-24">
         <div className="mb-9 flex flex-wrap items-end justify-between gap-5 border-b border-[#253b2f]/15 pb-6">
           <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#607552]">The collection</p><h2 className="mt-3 font-serif text-4xl md:text-5xl">Made for your daily ritual.</h2></div>
@@ -215,7 +181,7 @@ export default function PremiumHome() {
         </div>
         {loading ? <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">{[0, 1, 2, 3].map(item => <div key={item} className="aspect-[4/5] animate-pulse bg-[#e8e7dd]"/>)}</div> : products.length > 0 ? (
           <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
-            {products.slice(0, 8).map((product, index) => <motion.article key={product.id || product._id} initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (index % 4) * 0.07 }} className="group">
+            {products.slice(0, 8).map((product, index) => <Motion.article key={product.id || product._id} initial={{ opacity: 0, y: 18 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }} transition={{ delay: (index % 4) * 0.07 }} className="group">
               <Link to={`/product/${product.slug || product.id}`} className="block overflow-hidden bg-[#e8e7dd]">
                 <img src={productImage(product)} alt={product.name} loading="lazy" className="aspect-[4/5] w-full object-cover transition-transform duration-700 group-hover:scale-[1.035]" onError={event => { event.currentTarget.src = '/assets/images/aloeverabeaker.webp'; }}/>
               </Link>
@@ -224,7 +190,7 @@ export default function PremiumHome() {
                 <span className="shrink-0 pt-4 text-sm font-semibold">₹{price(product)}</span>
               </div>
               <Link to={`/product/${product.slug || product.id}`} className="mt-3 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#35533c]">Discover formula <ArrowRight size={14}/></Link>
-            </motion.article>)}
+            </Motion.article>)}
           </div>
         ) : <div className="border-y border-[#253b2f]/15 py-12 text-sm text-stone-600">The collection is being updated. Visit the shop for current availability.</div>}
       </section>
@@ -237,7 +203,7 @@ export default function PremiumHome() {
               { image: '/assets/images/aloeverabeaker.webp', number: '01', title: 'Cleanse with care', note: 'Aloe vera face wash is listed in the live collection. Open its product page for current price, stock and description.', query: 'aloe vera' },
               { image: '/assets/images/aloeveradrop.webp', number: '02', title: 'Explore the next face ritual', note: 'Sea-buckthorn face care is part of the direction. Products will appear here when they are listed and ready to order.', query: 'sea buckthorn' },
               { image: '/assets/images/aloeverascience.webp', number: '03', title: 'Care for hair, thoughtfully', note: 'Hair oil and shampoo are being prepared for the collection. We will not show them as available before launch.', query: 'hair' },
-            ].map((ritual, index) => <article key={ritual.number} className="group relative min-h-[430px] overflow-hidden md:min-h-[540px]">
+            ].map(ritual => <article key={ritual.number} className="group relative min-h-[430px] overflow-hidden md:min-h-[540px]">
               <img src={ritual.image} alt="Bhumivera botanical ritual" loading="lazy" className="absolute inset-0 h-full w-full object-cover transition-transform duration-1000 group-hover:scale-[1.035]" />
               <div className="absolute inset-0 bg-gradient-to-t from-[#0b140e]/90 via-[#0b140e]/15 to-[#0b140e]/10" />
               <div className="absolute inset-x-0 bottom-0 p-6 text-white md:p-8">
@@ -273,15 +239,6 @@ export default function PremiumHome() {
         ].map(([number, title, copy]) => <article key={number} className="border-t border-[#253b2f]/25 pt-5"><span className="font-mono text-xs text-[#71806a]">{number}</span><h3 className="mt-4 font-serif text-2xl">{title}</h3><p className="mt-3 text-sm leading-6 text-stone-600">{copy}</p></article>)}
       </section>
 
-      <section className="border-y border-[#253b2f]/15 bg-[#f4f2eb]">
-        <div className="mx-auto grid max-w-7xl gap-10 px-6 py-16 md:grid-cols-[0.7fr_1.3fr] md:py-24">
-          <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#607552]">Our point of view</p><h2 className="mt-4 font-serif text-4xl leading-tight">Luxury is attention, not excess.</h2></div>
-          <div className="grid gap-8 sm:grid-cols-2">
-            <blockquote className="border-l border-[#536b4d]/40 pl-5 font-serif text-xl leading-relaxed">“A good ritual should leave room for the rest of life.”<span className="mt-4 block font-sans text-[10px] font-bold uppercase tracking-widest text-[#71806a]">The Bhumivera journal</span></blockquote>
-            <blockquote className="border-l border-[#536b4d]/40 pl-5 font-serif text-xl leading-relaxed">“Care for the earth begins with learning what is true, then doing what we can.”<span className="mt-4 block font-sans text-[10px] font-bold uppercase tracking-widest text-[#71806a]">The Bhumivera journal</span></blockquote>
-          </div>
-        </div>
-      </section>
     </main>
   );
 }
