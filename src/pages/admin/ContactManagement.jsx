@@ -8,9 +8,10 @@ import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 
 const STATUS_MAP = {
-  'pending': { label: 'Awaiting Action', color: 'rose', icon: AlertTriangle },
-  'in-progress': { label: 'In Review', color: 'amber', icon: Clock },
+  'open': { label: 'Awaiting Action', color: 'rose', icon: AlertTriangle },
+  'in_progress': { label: 'In Review', color: 'amber', icon: Clock },
   'resolved': { label: 'Resolved', color: 'emerald', icon: CheckCircle },
+  'closed': { label: 'Closed', color: 'slate', icon: XCircle },
 };
 
 const CATEGORY_MAP = {
@@ -42,15 +43,10 @@ export default function ContactManagement() {
   const fetchTickets = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/contact').catch(() => api.get('/admin/contact'));
+      const res = await api.get('/contact');
       // Standardize data format
       const data = res.data?.contacts || res.data?.data || res.data || [];
-      // Auto-assign random priorities if backend lacks them (for aesthetic telemetry)
-      const enhancedData = data.map(t => ({
-        ...t, 
-        priority: t.priority || (t.subject === 'returns_rma' ? 'high' : 'normal'),
-        status: t.status || 'pending'
-      }));
+      const enhancedData = data.map(t => ({ ...t, status: t.status || 'open' }));
       setTickets(enhancedData);
     } catch (err) {
       showToast?.('Failed to sync Helpdesk Matrix.', 'error');
@@ -59,17 +55,17 @@ export default function ContactManagement() {
     }
   };
 
-  const handleUpdateStatus = async (id, newStatus) => {
+  const handleUpdateStatus = async (id, newStatus, adminReply) => {
     setIsUpdating(true);
     try {
-      await api.put(`/contact/${id}/status`, { status: newStatus }).catch(() => 
-        api.patch(`/contact/${id}`, { status: newStatus })
-      );
-      showToast?.(`Ticket status mutated to ${newStatus}`, 'success');
-      setTickets(tickets.map(t => (t.id === id || t._id === id) ? { ...t, status: newStatus } : t));
-      if (selectedTicket) setSelectedTicket({ ...selectedTicket, status: newStatus });
+      const response = await api.patch(`/contact/${id}/status`, { status: newStatus, admin_reply: adminReply });
+      showToast?.(response.data?.emailSent === false ? 'Reply saved, but email delivery failed.' : `Ticket updated to ${newStatus.replace('_', ' ')}.`, response.data?.emailSent === false ? 'error' : 'success');
+      setTickets(current => current.map(t => (t.id === id || t._id === id) ? { ...t, status: newStatus, ...(adminReply ? { admin_reply: adminReply } : {}) } : t));
+      setSelectedTicket(current => current && (current.id === id || current._id === id) ? { ...current, status: newStatus, ...(adminReply ? { admin_reply: adminReply } : {}) } : current);
+      return true;
     } catch (err) {
-      showToast?.('Mutation failed.', 'error');
+      showToast?.(err.normalized?.message || err.response?.data?.message || 'Ticket update failed.', 'error');
+      return false;
     } finally {
       setIsUpdating(false);
     }
@@ -83,21 +79,15 @@ export default function ContactManagement() {
       setTickets(tickets.filter(t => (t.id !== id && t._id !== id)));
       if (selectedTicket && (selectedTicket.id === id || selectedTicket._id === id)) setSelectedTicket(null);
     } catch(err) {
-      showToast?.('Purge failed.', 'error');
+      showToast?.(err.normalized?.message || err.response?.data?.message || 'Ticket deletion failed.', 'error');
     }
   };
 
-  const handleSimulateReply = (e) => {
+  const handleSendReply = (e) => {
     e.preventDefault();
     if (!replyText.trim()) return;
-    setIsUpdating(true);
-    // Simulating an email dispatch to customer
-    setTimeout(() => {
-      showToast?.('Comms dispatched to client email matrix.', 'success');
-      handleUpdateStatus(selectedTicket.id || selectedTicket._id, 'in-progress');
-      setReplyText('');
-      setIsUpdating(false);
-    }, 800);
+    void handleUpdateStatus(selectedTicket.id || selectedTicket._id, 'in_progress', replyText.trim())
+      .then(saved => { if (saved) setReplyText(''); });
   };
 
   const filteredTickets = useMemo(() => {
@@ -113,10 +103,10 @@ export default function ContactManagement() {
   const paginatedTickets = filteredTickets.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // Telemetry
-  const pendingCount = tickets.filter(t => t.status === 'pending').length;
-  const inProgressCount = tickets.filter(t => t.status === 'in-progress').length;
+  const pendingCount = tickets.filter(t => t.status === 'open').length;
+  const inProgressCount = tickets.filter(t => t.status === 'in_progress').length;
   const resolvedCount = tickets.filter(t => t.status === 'resolved').length;
-  const criticalCount = tickets.filter(t => t.priority === 'high' && t.status !== 'resolved').length;
+  const criticalCount = tickets.filter(ticket => ticket.status === 'open' && Date.now() - new Date(ticket.created_at).getTime() >= 24 * 60 * 60 * 1000).length;
 
   if (loading && tickets.length === 0) {
     return (
@@ -223,7 +213,7 @@ export default function ContactManagement() {
                   <td colSpan={5} className="p-12 text-center text-slate-500 font-bold text-xs">Helpdesk queue is completely clear.</td>
                 </tr>
               ) : paginatedTickets.map(ticket => {
-                const status = STATUS_MAP[ticket.status] || STATUS_MAP['pending'];
+                const status = STATUS_MAP[ticket.status] || STATUS_MAP['open'];
                 const StatusIcon = status.icon;
 
                 return (
@@ -360,7 +350,7 @@ export default function ContactManagement() {
                   <div className="p-6 bg-blue-500/5 border border-blue-500/20 rounded-2xl mt-auto relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-blue-500/10 blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
                     <h3 className="text-xs font-black uppercase tracking-widest text-blue-500 mb-3 flex items-center gap-2 relative z-10"><MailPlus size={14}/> Comms Dispatch Console</h3>
-                    <form onSubmit={handleSimulateReply} className="relative z-10">
+                    <form onSubmit={handleSendReply} className="relative z-10">
                       <textarea 
                         rows={3} placeholder="Draft response to client..." required
                         value={replyText} onChange={(e) => setReplyText(e.target.value)}

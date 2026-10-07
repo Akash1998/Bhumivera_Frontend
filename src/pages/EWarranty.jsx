@@ -102,7 +102,8 @@ export default function Genuine_test() {
   };
 
   const handleSpinRedirect = () => {
-    window.location.href = `https://spin.bhumivera.com/?id=${registrationId || serial}`;
+    sessionStorage.setItem('spin-registration-email', formData.email || '');
+    window.location.href = `/spin-registration?id=${encodeURIComponent(registrationId || serial)}`;
   };
 
   return (

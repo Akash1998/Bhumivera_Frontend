@@ -38,9 +38,9 @@ export default function ReviewManagement() {
   const fetchReviews = async () => {
     setLoading(true);
     try {
-      // Safely map endpoints based on standard routing patterns
-      const res = await api.get('/reviews').catch(() => api.get('/admin/reviews'));
-      setReviews(res.data?.reviews || res.data?.data || res.data || []);
+      const res = await api.get('/reviews', { adminAuth: true });
+      const data = Array.isArray(res.data) ? res.data : (res.data?.reviews || res.data?.data || []);
+      setReviews(data.map(review => ({ ...review, status: Number(review.is_approved) === 1 ? 'approved' : 'pending', comment: review.body || review.comment || '' })));
     } catch (err) {
       showToast?.('Failed to synchronize sentiment matrix.', 'error');
     } finally {
@@ -61,17 +61,24 @@ export default function ReviewManagement() {
   const handleUpdateStatus = async (reviewId, newStatus) => {
     setIsUpdating(true);
     try {
-      // Handle potential API structure variations
-      await api.put(`/reviews/${reviewId}/status`, { status: newStatus })
-        .catch(() => api.patch(`/reviews/${reviewId}/status`, { status: newStatus }));
-      
+      if (newStatus === 'approved') {
+        await api.put(`/reviews/${reviewId}/approve`, {}, { adminAuth: true });
+      } else if (newStatus === 'rejected') {
+        await api.delete(`/reviews/${reviewId}`, { adminAuth: true });
+        setReviews(current => current.filter(review => (review.id || review._id) !== reviewId));
+        setSelectedReview(null);
+        showToast?.('Feedback removed.', 'success');
+        return;
+      } else {
+        return;
+      }
       showToast?.(`Review matrix updated to: ${newStatus}`, 'success');
       
       // Optimistic UI update
-      setReviews(reviews.map(r => (r.id === reviewId || r._id === reviewId) ? { ...r, status: newStatus } : r));
-      if (selectedReview) setSelectedReview({ ...selectedReview, status: newStatus });
+      setReviews(current => current.map(r => (r.id === reviewId || r._id === reviewId) ? { ...r, status: newStatus, is_approved: 1 } : r));
+      setSelectedReview(current => current && (current.id === reviewId || current._id === reviewId) ? { ...current, status: newStatus, is_approved: 1 } : current);
     } catch (err) {
-      showToast?.('Sentiment mutation failed', 'error');
+      showToast?.(err.normalized?.message || err.response?.data?.message || 'Review update failed.', 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -80,7 +87,7 @@ export default function ReviewManagement() {
   const handleDelete = async (reviewId) => {
     if (!window.confirm('Permanently purge this feedback from the registry?')) return;
     try {
-      await api.delete(`/reviews/${reviewId}`);
+      await api.delete(`/reviews/${reviewId}`, { adminAuth: true });
       showToast?.('Feedback purged successfully', 'success');
       fetchReviews();
       if (selectedReview && (selectedReview.id === reviewId || selectedReview._id === reviewId)) {
