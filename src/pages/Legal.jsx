@@ -22,18 +22,21 @@ export default function Legal() {
           {isPrivacy ? (
             <>
               <h2 className="text-2xl font-bold text-gray-900 mt-8">1. Information We Collect</h2>
-              <p>We collect information to provide better services to our users. This includes basic details like your IP address, to more complex things like the Bhumivera products you register via our E-Warranty system.</p>
+              <p>We collect information needed to provide the site, process orders, and respond to customer support requests. This may include account, order, and service interactions.</p>
               
               <h2 className="text-2xl font-bold text-gray-900 mt-8">2. How We Use Your Data</h2>
-              <p>Your data helps us authenticate your premium hardware, process returns efficiently, and ensure you have 100% purchase protection. We never sell your personal data to third parties.</p>
+              <p>Your data helps us process orders, returns, and support requests. We do not sell your personal data to third parties.</p>
+
+              <h2 className="text-2xl font-bold text-gray-900 mt-8">3. Optional Marketing Emails</h2>
+              <p>Promotional emails are sent only to customers who explicitly opt in during registration or from Profile &gt; Security. You can change this preference at any time. Opting out does not affect order, account, or support emails.</p>
             </>
           ) : (
             <>
               <h2 className="text-2xl font-bold text-gray-900 mt-8">1. Acceptance of Terms</h2>
               <p>By using Bhumivera services or purchasing our automotive and audio products, you agree to these conditions. Please read them carefully.</p>
               
-              <h2 className="text-2xl font-bold text-gray-900 mt-8">2. E-Warranty & Returns</h2>
-              <p>All authentic Bhumivera products come with a manufacturer warranty. Serial numbers must be registered in our nexus to claim 100% purchase protection. Unregistered or tampered serials void this agreement.</p>
+              <h2 className="text-2xl font-bold text-gray-900 mt-8">2. Returns & Customer Support</h2>
+              <p>Return and replacement requests are reviewed under the applicable order and product policies. Contact our support team through your account or the Contact Center for assistance.</p>
             </>
           )}
           

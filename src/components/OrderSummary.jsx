@@ -1,5 +1,5 @@
 import React from 'react';
-import { Package, Truck, ShieldCheck } from 'lucide-react';
+import { Truck, Mail } from 'lucide-react';
 
 const OrderSummary = ({ cartItems = [], subtotal = 0, shipping = 0, tax = 0 }) => {
   const total = subtotal + shipping + tax;
@@ -50,11 +50,11 @@ const OrderSummary = ({ cartItems = [], subtotal = 0, shipping = 0, tax = 0 }) =
 
         <div className="flex items-center gap-4 p-4 rounded-2xl bg-white/5 border border-white/5 group hover:border-blue-500/30 transition-colors">
           <div className="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center text-blue-500">
-            <ShieldCheck size={20} />
+            <Mail size={20} />
           </div>
           <div>
-            <p className="text-sm font-bold text-white">2-Year Warranty</p>
-            <p className="text-xs text-slate-500">Full protection included</p>
+            <p className="text-sm font-bold text-white">Need help with your order?</p>
+            <a href="mailto:support@bhumivera.com" className="text-xs text-slate-400 hover:text-white">support@bhumivera.com</a>
           </div>
         </div>
       </div>

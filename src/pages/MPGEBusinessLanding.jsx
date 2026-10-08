@@ -18,8 +18,8 @@ export default function MPGEBusinessLanding() {
   const [activeFaq, setActiveFaq] = useState(null);
   
   // Business Phone Configurations - Change these values to your active support numbers
-  const phoneNumber = "+919999999999"; 
-  const whatsappNumber = "919999999999"; 
+  const phoneNumber = "+917430985647";
+  const whatsappNumber = "917430985647";
   const whatsappMessage = encodeURIComponent("Hello MPGEBusiness, I am interested in your Work from Home program. Please provide more details on how to start earning.");
 
   const highlights = [

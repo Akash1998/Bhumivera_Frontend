@@ -47,9 +47,7 @@ export default function Compare({ items = [], onRemove }) {
     { label: 'Sensitivity', key: 'sensitivity', format: (v) => v ? `${v}dB` : 'N/A' },
     { label: 'Impedance', key: 'impedance', format: (v) => v ? `${v} Ohms` : 'N/A' },
     
-    { label: 'Features & Warranty', type: 'header' },
-    { label: 'Warranty Period', key: 'warranty', format: (v) => v || '1 Year Standard' },
-    { label: 'E-Warranty Support', key: 'hasGenuine_test', format: (v) => v !== false ? <Check size={18} className="text-emerald-500"/> : <X size={18} className="text-slate-300"/> },
+    { label: 'Product Features', type: 'header' },
     { label: 'Return Policy', key: 'returnPolicy', format: (v) => v || '7 Days Replacement' },
     { label: 'Shipping', key: 'shippingInfo', format: (v) => v || 'Free Delivery' }
   ];

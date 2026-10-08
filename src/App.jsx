@@ -84,7 +84,6 @@ const WarehouseManagement = lazyWithRetry(() => import("./pages/admin/WarehouseM
 const WarehouseAdminLogin = lazyWithRetry(() => import("./pages/WarehouseAdminLogin.jsx"));
 const Shop = lazyWithRetry(() => import("./pages/Shop.jsx"));
 const ProductDetail = lazyWithRetry(() => import("./pages/ProductDetail.jsx"));
-const EWarranty = lazyWithRetry(() => import("./pages/EWarranty.jsx"));
 const Contact = lazyWithRetry(() => import("./pages/Contact.jsx"));
 const Cart = lazyWithRetry(() => import("./pages/Cart.jsx"));
 const Checkout = lazyWithRetry(() => import("./pages/Checkout.jsx"));
@@ -106,7 +105,6 @@ const Legal = lazyWithRetry(() => import("./pages/Legal.jsx"));
 
 // NEW: Bhumivera Specific Pages using lazyWithRetry
 const BhumiveraScience = lazyWithRetry(() => import("./pages/BhumiveraScience.jsx"));
-const PurchaseProtection = lazyWithRetry(() => import("./pages/PurchaseProtection.jsx"));
 const ReturnsCentre = lazyWithRetry(() => import("./pages/ReturnsCentre.jsx"));
 
 // NEW: MPGEBusiness Landing Route
@@ -204,7 +202,7 @@ function AppContent() {
             
             {/* Bhumivera Brand Routes */}
             <Route path="/science" element={<BhumiveraScience />} />
-            <Route path="/purchase-protection" element={<PurchaseProtection />} />
+            <Route path="/purchase-protection" element={<Navigate to="/returns" replace />} />
             <Route path="/returns-centre" element={<ReturnsCentre />} />
 
             {/* Campaign Inbound Routes */}
@@ -212,7 +210,7 @@ function AppContent() {
             <Route path="/mpgebusiness" element={<MPGEBusinessLanding />} />
 
             {/* Tools & Tracking */}
-            <Route path="/warranty" element={<EWarranty />} />
+            <Route path="/warranty" element={<Navigate to="/returns" replace />} />
             <Route path="/order-tracking" element={<OrderTracking />} />
             <Route path="/compare" element={<Compare />} />
 
@@ -220,7 +218,7 @@ function AppContent() {
             <Route path="/flash-sales" element={<FlashSales />} />
             <Route path="/somatic-registry" element={<SomaticRegistry />} />
             <Route path="/provenance-engine" element={<ProvenanceEngine />} />
-            <Route path="/spin-registration" element={<SpinRegistration />} />
+            <Route path="/spin-registration" element={<Navigate to="/returns" replace />} />
             
             {/* Auth Routes */}
             <Route path="/login" element={<Login />} />

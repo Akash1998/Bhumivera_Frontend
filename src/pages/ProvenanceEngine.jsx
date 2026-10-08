@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { Link } from 'react-router-dom';
 import { 
   ShieldCheck, 
   Search, 
@@ -149,9 +150,9 @@ const ProvenanceEngine = () => {
                     </div>
                   </div>
 
-                  <button className="mt-10 w-full py-4 bg-emerald-500 text-black font-bold uppercase text-[10px] tracking-[0.4em] hover:bg-emerald-400">
-                    Synchronize Warranty Benefits
-                  </button>
+                  <Link to="/contact" className="mt-10 block w-full py-4 bg-emerald-500 text-center text-black font-bold uppercase text-[10px] tracking-[0.4em] hover:bg-emerald-400">
+                    View Customer Support
+                  </Link>
                 </motion.div>
               )}
 
@@ -212,7 +213,7 @@ const ProvenanceEngine = () => {
                 <Zap className="text-emerald-500" size={20} /> Layer 03: The Ownership Synchronicity
               </h3>
               <p className="text-sm">
-                When you synchronize, you unlock the <strong>Biological Warranty</strong>. This includes prioritized skin-specialist access, early-access to new botanical patches, and a digital footprint of your skin's transformation ledger.
+                Product information and batch details should be checked against the information supplied with the product. For questions, contact Bhumivera customer support.
               </p>
             </div>
           </div>

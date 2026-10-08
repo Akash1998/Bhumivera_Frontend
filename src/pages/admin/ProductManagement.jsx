@@ -1,22 +1,22 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import axios from 'axios';
 import * as XLSX from 'xlsx';
 import { 
   Box, Plus, Edit2, Trash2, Search, RefreshCw, AlertTriangle, 
   CheckCircle, XCircle, ChevronLeft, ChevronRight, Image as ImageIcon, 
-  Video, BoxSelect, ShieldCheck, Tag, Activity, Cpu, QrCode, List, Database, UploadCloud, Globe
+  Video, BoxSelect, ShieldCheck, Tag, Activity, Cpu, QrCode, List, Database, UploadCloud, Globe, Eye
 } from 'lucide-react';
 import api, { products as productsApi, categories as categoriesApi, serials as serialsApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 
 const INITIAL_PRODUCT_STATE = {
   name: '', slug: '', description: '', price: '', discount_price: '', quantity: '', category_id: '', 
-  video_urls: '', model_3d_url: '', warranty_period: 12, status: 'active',
+  video_urls: '', model_3d_url: '', warranty_period: '', status: 'active',
   meta_title: '', meta_description: '', tags: '', sku: '', brand: 'Bhumivera'
 };
 
 const INITIAL_SERIAL_STATE = {
-  count: 10, prefix: 'BHU', format: 'advanced', base_warranty_months: 12
+  count: 10, prefix: 'BHU', format: 'advanced', base_warranty_months: ''
 };
 
 export default function ProductManagement() {
@@ -41,14 +41,18 @@ export default function ProductManagement() {
   
   // --- Upload State ---
   const [isUploading, setIsUploading] = useState(false);
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [uploadingFileName, setUploadingFileName] = useState('');
+  const uploadedBytes = useRef([]);
   
   const { showToast } = useToast() || {};
 
   // --- Form States ---
   const [form, setForm] = useState(INITIAL_PRODUCT_STATE);
   const [images, setImages] = useState([]);
+  const [imagePreviews, setImagePreviews] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
   const [specs, setSpecs] = useState([{ key: '', value: '' }]);
   const [serialForm, setSerialForm] = useState(INITIAL_SERIAL_STATE);
@@ -79,10 +83,16 @@ export default function ProductManagement() {
     }
   };
 
+  useEffect(() => {
+    const previews = images.map(file => URL.createObjectURL(file));
+    setImagePreviews(previews);
+    return () => previews.forEach(URL.revokeObjectURL);
+  }, [images]);
+
   // --- Utility Functions ---
   const getImageUrl = (img) => {
     if (!img) return '/logo.webp';
-    let path = typeof img === 'object' ? (img.file_path || img.url || img.path) : img;
+    let path = typeof img === 'object' ? (img.url || img.file_path || img.path) : img;
     if (!path) return '/logo.webp';
     if (path.startsWith('http')) return path;
     const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev/bhumivera';
@@ -114,12 +124,25 @@ export default function ProductManagement() {
 
   // --- Handlers: AI Content Generator ---
   const handleAIEnhance = async () => {
-    if (!form.name) return showToast?.('Enter a product name first!', 'error');
-    setUploadingFileName('AI is writing content...');
-    setIsUploading(true);
+    if (!form.name.trim()) return showToast?.('Enter a product name first!', 'error');
+    setUploadingFileName('Generating product content...');
+    setIsGeneratingAI(true);
     try {
-      const res = await api.post('/ai/generate-product-content', { productName: form.name });
-      const { description, meta_title, meta_description, tags } = res.data.data;
+      const specifications = specs.reduce((acc, { key, value }) => {
+        if (key.trim() && value.trim()) acc[key.trim()] = value.trim();
+        return acc;
+      }, {});
+      const category = categories.find(item => String(item.id || item._id) === String(form.category_id));
+      const res = await api.post('/ai/generate-product-content', {
+        productName: form.name.trim(),
+        category: category?.name || '',
+        brand: form.brand,
+        specifications,
+      }, { adminAuth: true, notify: false });
+      const { description, meta_title, meta_description, tags } = res.data?.data || {};
+      if (![description, meta_title, meta_description, tags].every(value => typeof value === 'string' && value.trim())) {
+        throw new Error('AI returned incomplete content. Please try again.');
+      }
       
       setForm(prev => ({
         ...prev,
@@ -128,11 +151,12 @@ export default function ProductManagement() {
         meta_description,
         tags
       }));
-      showToast?.('AI Content Generated!', 'success');
+      showToast?.('AI filled the description and SEO fields. Review the generated copy before saving.', 'success');
     } catch (error) {
-      showToast?.('AI Generation Failed', 'error');
+      showToast?.(error.normalized?.message || error.response?.data?.message || error.message || 'AI content generation failed.', 'error');
     } finally {
-      setIsUploading(false);
+      setIsGeneratingAI(false);
+      setUploadingFileName('');
     }
   };
 
@@ -145,7 +169,7 @@ export default function ProductManagement() {
         name: product.name || '', slug: product.slug || '', description: product.description || '', price: product.price || '', discount_price: product.discount_price || '',
         quantity: product.quantity || product.stock || '', category_id: product.category_id || '',
         video_urls: product.video_urls || '', model_3d_url: product.model_3d_url || '',
-        warranty_period: product.warranty_period || 12, status: product.status || 'active',
+        warranty_period: product.warranty_period ?? '', status: product.status || 'active',
         meta_title: product.meta_title || '', meta_description: product.meta_description || '', tags: product.tags || '', sku: product.sku || '', brand: product.brand || 'Bhumivera'
       });
       
@@ -178,7 +202,8 @@ export default function ProductManagement() {
 
   const handleImageChange = (e) => {
     if (e.target.files) {
-      setImages(Array.from(e.target.files));
+      setImages(prev => [...prev, ...Array.from(e.target.files).filter(file => file.type.startsWith('image/'))]);
+      e.target.value = '';
     }
   };
 
@@ -186,21 +211,21 @@ export default function ProductManagement() {
     setImages(prev => prev.filter((_, i) => i !== index));
   };
 
-  const handleDeleteExistingImage = async (imageId) => {
+  const handleDeleteExistingImage = async (image) => {
     if (!window.confirm('Are you sure you want to delete this image permanently from this product?')) return;
     try {
       const pId = currentProduct._id || currentProduct.id;
-      await api.delete(`/products/${pId}/images`, { data: { imageId } });
-      setExistingImages(prev => prev.filter(img => img.id !== imageId));
-      showToast?.('Image removed successfully', 'success');
+      await productsApi.deleteImage(pId, image, { notify: false });
+      setExistingImages(prev => prev.filter(img => img.id !== image.id && img.file_path !== image.file_path));
+      showToast?.('Product image deleted successfully.', 'success');
       setProducts(prev => prev.map(p => {
         if ((p.id || p._id) === pId) {
-          return { ...p, images: p.images.filter(img => img.id !== imageId) };
+          return { ...p, images: (p.images || []).filter(img => img.id !== image.id && img.file_path !== image.file_path) };
         }
         return p;
       }));
     } catch (err) {
-      showToast?.('Failed to delete image', 'error');
+      showToast?.(err.normalized?.message || err.response?.data?.message || 'Failed to delete image.', 'error');
     }
   };
 
@@ -208,7 +233,11 @@ export default function ProductManagement() {
     e.preventDefault();
     setIsUploading(true); 
     setUploadProgress(0); 
-    setUploadingFileName('Saving Product...');
+    setUploadingFileName('Saving product details...');
+    uploadedBytes.current = images.map(() => 0);
+    let productDetailsSaved = false;
+    let savedProduct = null;
+    let savedProductId = null;
     
     try {
       const specObj = specs.reduce((acc, { key, value }) => {
@@ -219,8 +248,6 @@ export default function ProductManagement() {
       const finalSlug = form.slug.trim() === '' ? form.name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') : form.slug;
       
       const payload = { ...form, slug: finalSlug, specifications: specObj };
-      let savedProduct;
-      
       if (currentProduct) {
         const res = await productsApi.update(currentProduct._id || currentProduct.id, payload, { notify: false });
         savedProduct = res.data?.data || res.data?.product || res.data;
@@ -229,34 +256,53 @@ export default function ProductManagement() {
         savedProduct = res.data?.data || res.data?.product || res.data;
       }
 
-      const finalId = savedProduct?.id || savedProduct?._id;
+      productDetailsSaved = true;
+      savedProductId = savedProduct?.id || savedProduct?._id;
+      if (!currentProduct && savedProductId) setCurrentProduct(savedProduct);
 
-      if (images.length > 0 && finalId) {
-        setUploadingFileName('Uploading Images...');
+      if (images.length > 0 && !savedProductId) {
+        throw new Error('Product details were saved, but the server did not return an ID for image upload.');
+      }
+
+      if (images.length > 0) {
+        setIsUploadingImages(true);
+        setUploadingFileName(`Uploading ${images.length} image${images.length === 1 ? '' : 's'}...`);
         const filesArray = Array.from(images);
+        const totalBytes = filesArray.reduce((sum, file) => sum + file.size, 0);
         
-        const uploadPromises = filesArray.map(async (file) => {
+        const uploadPromises = filesArray.map(async (file, index) => {
           const urlRes = await productsApi.getUploadUrl(file.name, file.type, { notify: false });
           await axios.put(urlRes.data.uploadUrl, file, {
             headers: { 'Content-Type': file.type },
             onUploadProgress: (e) => {
-              setUploadProgress(prev => Math.min(100, prev + Math.round((e.loaded * 100) / (e.total * filesArray.length))));
+              uploadedBytes.current[index] = Math.min(file.size, e.loaded || 0);
+              const loaded = uploadedBytes.current.reduce((sum, bytes) => sum + bytes, 0);
+              setUploadProgress(totalBytes ? Math.min(100, Math.floor((loaded / totalBytes) * 100)) : 0);
             }
           });
+          uploadedBytes.current[index] = file.size;
+          const loaded = uploadedBytes.current.reduce((sum, bytes) => sum + bytes, 0);
+          setUploadProgress(totalBytes ? Math.min(100, Math.floor((loaded / totalBytes) * 100)) : 100);
           return urlRes.data.key;
         });
 
         const imageKeys = await Promise.all(uploadPromises);
         // Direct absolute endpoint transmission for high system resilience
-        await productsApi.saveImageKeys(finalId, imageKeys, { notify: false });
+        await productsApi.saveImageKeys(savedProductId, imageKeys, { notify: false });
       }
 
       showToast?.('Product Saved Successfully', 'success');
       setProductModalOpen(false); 
       fetchData();
     } catch (err) {
-      showToast?.(err.response?.data?.message || 'Error saving product', 'error');
+      if (productDetailsSaved) {
+        fetchData();
+        showToast?.('Product details were saved, but image upload failed. Your selected files are still queued; retry to finish.', 'error');
+      } else {
+        showToast?.(err.normalized?.message || err.response?.data?.message || 'Could not save the product.', 'error');
+      }
     } finally {
+      setIsUploadingImages(false);
       setIsUploading(false); 
       setUploadProgress(0);
     }
@@ -270,7 +316,7 @@ export default function ProductManagement() {
       count: 10, 
       prefix: String(product.name || 'BHU').substring(0, 3).toUpperCase(), 
       format: 'advanced', 
-      base_warranty_months: product.warranty_period || 12 
+      base_warranty_months: product.warranty_period || ''
     });
     setSerialModalOpen(true);
   };
@@ -480,11 +526,11 @@ export default function ProductManagement() {
                 <UploadCloud className="w-12 h-12 text-emerald-500 animate-bounce mb-6" />
                 <h3 className="text-sm font-mono text-emerald-400 uppercase tracking-widest">{uploadingFileName}</h3>
                 <div className="w-72 bg-slate-900 rounded-full h-2 mt-6 border border-slate-800 overflow-hidden">
-                  <div className="bg-emerald-500 h-full rounded-full transition-all duration-300 relative" style={{ width: `${uploadProgress}%` }}>
+                  <div className={`bg-emerald-500 h-full rounded-full transition-all duration-300 relative ${isUploadingImages ? '' : 'w-1/3 animate-pulse'}`} style={isUploadingImages ? { width: `${uploadProgress}%` } : undefined}>
                     <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
                   </div>
                 </div>
-                <p className="text-[10px] text-slate-500 font-mono mt-3">{uploadProgress}% Complete</p>
+                {isUploadingImages && <p className="text-[10px] text-slate-500 font-mono mt-3">{uploadProgress}% uploaded</p>}
               </div>
             )}
 
@@ -503,7 +549,7 @@ export default function ProductManagement() {
                   {id:'seo', l:'SEO & Meta', i:Globe}, 
                   {id:'specs', l:'Specifications', i:List}, 
                   {id:'media', l:'Images & Docs', i:Database}, 
-                  {id:'warranty', l:'Warranty', i:ShieldCheck}
+                  {id:'warranty', l:'Warranty (Optional)', i:ShieldCheck}
                 ].map(t => (
                   <button 
                     key={t.id} type="button" onClick={() => setActiveTab(t.id)} 
@@ -520,8 +566,8 @@ export default function ProductManagement() {
                     <div className="col-span-2">
                       <div className="flex justify-between items-center mb-2">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Product Name</label>
-                        <button type="button" onClick={handleAIEnhance} className="text-[10px] text-emerald-400 font-bold uppercase flex items-center gap-1 hover:text-emerald-300">
-                          ✨ AI Auto-Fill
+                        <button type="button" onClick={handleAIEnhance} disabled={isGeneratingAI || !form.name.trim()} className="text-[10px] text-emerald-400 font-bold uppercase flex items-center gap-1 hover:text-emerald-300 disabled:opacity-50 disabled:cursor-not-allowed">
+                          {isGeneratingAI ? <><RefreshCw size={12} className="animate-spin" /> Generating…</> : '✨ AI Auto-Fill'}
                         </button>
                       </div>
                       <input required value={form.name} onChange={e=>setForm({...form, name:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="e.g. Aloe Vera Glow Serum" />
@@ -557,7 +603,7 @@ export default function ProductManagement() {
                   <div className="grid grid-cols-2 gap-5">
                     <div className="col-span-2 bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl mb-2">
                       <h4 className="text-sm font-bold text-blue-400 flex items-center gap-2"><Globe size={16}/> Schema.org Discovery Engine</h4>
-                      <p className="text-[10px] text-slate-400 font-mono mt-1">These fields are autonomously compiled into Google JSON-LD schema when the public API is queried. Do not leave blank for core products.</p>
+                      <p className="text-[10px] text-slate-400 font-mono mt-1">Product name, price, brand, SKU, description, images, and stock are used for structured search data. AI can draft the description and SEO fields; review accuracy before saving.</p>
                     </div>
                     <div className="col-span-2 md:col-span-1">
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2 flex justify-between">URL Slug <span className="text-slate-600 font-mono lowercase">auto-generated if empty</span></label>
@@ -635,14 +681,33 @@ export default function ProductManagement() {
                           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4 bg-slate-900/30 p-4 border border-slate-800 rounded-2xl">
                             {existingImages.map((img) => (
                               <div key={img.id} className="relative group aspect-square rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-md">
-                                <img src={getImageUrl(img)} alt="Product Live" className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                                <div className="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-sm">
-                                  <button type="button" onClick={() => handleDeleteExistingImage(img.id)} className="p-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl transition-all hover:scale-110 shadow-lg" title="Delete From Cloud Server">
+                                <img src={getImageUrl(img)} alt="Product image preview" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
+                                <div className="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-all flex items-center justify-center gap-3 backdrop-blur-sm">
+                                  <a href={getImageUrl(img)} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-all hover:scale-110 shadow-lg" title="View image in a new tab" aria-label="View image">
+                                    <Eye size={16} />
+                                  </a>
+                                  <button type="button" onClick={() => handleDeleteExistingImage(img)} className="p-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl transition-all hover:scale-110 shadow-lg" title="Delete image">
                                     <Trash2 size={16} />
                                   </button>
                                 </div>
                               </div>
                             ))}
+                          </div>
+                        </div>
+                      )}
+
+                      {activeTab === 'warranty' && (
+                        <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl">
+                          <div className="flex items-start gap-4">
+                            <div className="p-3 bg-slate-800 rounded-xl text-slate-400">
+                              <ShieldCheck size={24} />
+                            </div>
+                            <div className="flex-1">
+                              <h4 className="text-sm font-bold text-white mb-2">Product warranty (optional)</h4>
+                              <p className="text-xs text-slate-400 mb-4">Leave blank when no warranty applies, including personal-care products. Enter a period only when coverage is confirmed for this specific product.</p>
+                              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Warranty duration (months)</label>
+                              <input type="number" min="1" value={form.warranty_period} onChange={e=>setForm({...form, warranty_period:e.target.value})} className="w-full md:w-1/2 bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-white outline-none transition-colors" placeholder="Leave blank if not applicable" />
+                            </div>
                           </div>
                         </div>
                       )}
@@ -656,8 +721,11 @@ export default function ProductManagement() {
                           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4 bg-emerald-500/5 p-4 border border-emerald-500/20 rounded-2xl">
                             {images.map((file, idx) => (
                               <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-emerald-500/30 bg-slate-950 shadow-md">
-                                <img src={URL.createObjectURL(file)} alt="Staged Preview" className="w-full h-full object-cover" />
-                                <div className="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 transition-all flex items-center justify-center backdrop-blur-sm">
+                                <img src={imagePreviews[idx]} alt="Staged image preview" className="w-full h-full object-cover" />
+                                <div className="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-all flex items-center justify-center gap-3 backdrop-blur-sm">
+                                  <a href={imagePreviews[idx]} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-all hover:scale-110 shadow-lg" title="View image in a new tab" aria-label="View staged image">
+                                    <Eye size={16} />
+                                  </a>
                                   <button type="button" onClick={() => handleRemoveNewImage(idx)} className="p-2.5 bg-rose-500 hover:bg-rose-600 text-white rounded-xl transition-all hover:scale-110 shadow-lg" title="Remove from Queue">
                                     <XCircle size={16} />
                                   </button>
@@ -685,26 +753,11 @@ export default function ProductManagement() {
                   </div>
                 )}
 
-                {activeTab === 'warranty' && (
-                  <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl">
-                    <div className="flex items-start gap-4">
-                      <div className="p-3 bg-amber-500/10 rounded-xl text-amber-500">
-                        <ShieldCheck size={24} />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="text-sm font-bold text-white mb-4">Warranty Settings</h4>
-                        <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Warranty Duration (In Months)</label>
-                        <input type="number" value={form.warranty_period} onChange={e=>setForm({...form, warranty_period:e.target.value})} className="w-full md:w-1/2 bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-xl p-3 text-sm font-mono text-amber-400 outline-none transition-colors" />
-                        <p className="text-[10px] text-slate-500 mt-3 leading-relaxed">This determines how many months of coverage a customer receives when they register their product.</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
               </div>
 
               <div className="p-6 border-t border-slate-800 flex justify-end gap-4 bg-slate-900/40">
-                <button type="button" onClick={() => setProductModalOpen(false)} className="px-6 py-3 text-slate-400 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-colors">Cancel</button>
-                <button type="submit" className="px-8 py-3 bg-emerald-500 text-slate-950 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all flex items-center gap-2">
+                <button type="button" disabled={isUploading} onClick={() => setProductModalOpen(false)} className="px-6 py-3 text-slate-400 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-colors disabled:opacity-50">Cancel</button>
+                <button type="submit" disabled={isUploading} className="px-8 py-3 bg-emerald-500 text-slate-950 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                   <Activity size={16} /> Save Product
                 </button>
               </div>
@@ -749,8 +802,9 @@ export default function ProductManagement() {
                       <input type="text" required value={serialForm.prefix} onChange={e=>setSerialForm({...serialForm, prefix: e.target.value.toUpperCase()})} className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-amber-500 font-mono outline-none tracking-widest" />
                     </div>
                     <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Warranty (Months)</label>
-                      <select required value={serialForm.base_warranty_months} onChange={e=>setSerialForm({...serialForm, base_warranty_months: parseInt(e.target.value)})} className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-white font-mono outline-none appearance-none">
+                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Warranty (Optional)</label>
+                      <select value={serialForm.base_warranty_months} onChange={e=>setSerialForm({...serialForm, base_warranty_months: e.target.value ? parseInt(e.target.value) : ''})} className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-white font-mono outline-none appearance-none">
+                        <option value="">No warranty</option>
                         <option value={6}>6 Months</option>
                         <option value={12}>12 Months</option>
                         <option value={18}>18 Months</option>

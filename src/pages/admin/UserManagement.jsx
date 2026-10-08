@@ -1,471 +1,358 @@
-import React, { useState, useEffect, useMemo } from 'react';
-import * as XLSX from 'xlsx';
-import { 
-  Users, Shield, ShieldAlert, ShieldCheck, Mail, Phone, MapPin, 
-  Search, Filter, Download, RefreshCw, Eye, Ban, CheckCircle, 
-  Trash2, Activity, Calendar, ShoppingBag, CreditCard, XCircle,
-  Database
+import React, { useEffect, useMemo, useState } from 'react';
+import {
+  Activity, Ban, CheckCircle, ChevronLeft, ChevronRight, Eye, Gift, Mail,
+  Key, RefreshCw, Search, Shield, Users, X
 } from 'lucide-react';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 
+const PAGE_SIZE = 25;
+const money = value => `₹${Number(value || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
+const csvCell = value => {
+  const text = String(value ?? '');
+  const safeText = /^[\s]*[=+\-@]/.test(text) ? `'${text}` : text;
+  return `"${safeText.replaceAll('"', '""')}"`;
+};
+
 export default function UserManagement() {
   const [users, setUsers] = useState([]);
+  const [summary, setSummary] = useState({ total: 0, active: 0, disabled: 0 });
+  const [pagination, setPagination] = useState({ page: 1, limit: PAGE_SIZE, total: 0, totalPages: 0 });
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
+  const [status, setStatus] = useState('all');
+  const [activity, setActivity] = useState('all');
+  const [sort, setSort] = useState('recent');
   const [loading, setLoading] = useState(true);
-  
-  // Filtering & Pagination
-  const [searchTerm, setSearchTerm] = useState('');
-  const [roleFilter, setRoleFilter] = useState('all');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
-
-  // Deep Inspector State
+  const [refreshKey, setRefreshKey] = useState(0);
+  const [selectedIds, setSelectedIds] = useState([]);
   const [selectedUser, setSelectedUser] = useState(null);
-  const [isUpdating, setIsUpdating] = useState(false);
-
+  const [customerOrders, setCustomerOrders] = useState([]);
+  const [ordersLoading, setOrdersLoading] = useState(false);
+  const [noticeOpen, setNoticeOpen] = useState(false);
+  const [noticeMode, setNoticeMode] = useState('notification');
+  const [noticeTitle, setNoticeTitle] = useState('');
+  const [noticeMessage, setNoticeMessage] = useState('');
+  const [sendingNotice, setSendingNotice] = useState(false);
+  const [updatingId, setUpdatingId] = useState(null);
+  const [resettingPasswordId, setResettingPasswordId] = useState(null);
   const { showToast } = useToast() || {};
+  const selectedUserId = selectedUser?.id;
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+    const timeout = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(timeout);
+  }, [search]);
 
-  const fetchUsers = async () => {
+  useEffect(() => {
+    let cancelled = false;
     setLoading(true);
+    api.get('/admin/users', {
+      params: { page, limit: PAGE_SIZE, search: debouncedSearch, status, activity, sort }
+    }).then(({ data }) => {
+      if (cancelled) return;
+      setUsers(Array.isArray(data?.users) ? data.users : []);
+      setSummary(data?.summary || { total: 0, active: 0, disabled: 0 });
+      setPagination(data?.pagination || { page: 1, limit: PAGE_SIZE, total: 0, totalPages: 0 });
+    }).catch(() => {
+      if (!cancelled) showToast?.('Could not load customers. Please try again.', 'error');
+    }).finally(() => {
+      if (!cancelled) setLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [page, debouncedSearch, status, activity, sort, refreshKey, showToast]);
+
+  useEffect(() => {
+    if (!selectedUserId) return undefined;
+    let cancelled = false;
+    setOrdersLoading(true);
+    Promise.all([
+      api.get(`/admin/users/${selectedUserId}`),
+      api.get(`/admin/users/${selectedUserId}/orders`)
+    ]).then(([userResponse, orderResponse]) => {
+      if (cancelled) return;
+      setSelectedUser(current => ({ ...current, ...userResponse.data }));
+      setCustomerOrders(Array.isArray(orderResponse.data) ? orderResponse.data : []);
+    }).catch(() => {
+      if (!cancelled) {
+        setCustomerOrders([]);
+        showToast?.('Could not load customer details or order history.', 'error');
+      }
+    }).finally(() => {
+      if (!cancelled) setOrdersLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [selectedUserId, showToast]);
+
+  const pageIds = useMemo(() => users.map(user => Number(user.id)), [users]);
+  const allPageSelected = pageIds.length > 0 && pageIds.every(id => selectedIds.includes(id));
+  const togglePageSelection = () => {
+    if (!allPageSelected && selectedIds.length + pageIds.filter(id => !selectedIds.includes(id)).length > 500) {
+      showToast?.('Bulk notifications can target up to 500 customers at a time.', 'error');
+      return;
+    }
+    setSelectedIds(current => allPageSelected
+      ? current.filter(id => !pageIds.includes(id))
+      : [...new Set([...current, ...pageIds])]);
+  };
+  const toggleCustomerSelection = id => {
+    if (!selectedIds.includes(id) && selectedIds.length >= 500) {
+      showToast?.('Bulk notifications can target up to 500 customers at a time.', 'error');
+      return;
+    }
+    setSelectedIds(current => current.includes(id) ? current.filter(value => value !== id) : [...current, id]);
+  };
+
+  const changeFilter = setter => event => {
+    setter(event.target.value);
+    setPage(1);
+  };
+
+  const toggleStatus = async user => {
+    const id = Number(user.id);
+    const nextStatus = Number(user.is_active) === 1 ? 'disabled' : 'active';
+    const action = nextStatus === 'disabled' ? 'disable' : 'reactivate';
+    if (!window.confirm(`Are you sure you want to ${action} ${user.name || user.email}'s account?`)) return;
+    setUpdatingId(id);
     try {
-      // Adapting to standard REST conventions for admin user fetching
-      const res = await api.get('/admin/users').catch(() => api.get('/users'));
-      setUsers(res.data?.users || res.data?.data || res.data || []);
-    } catch (err) {
-      showToast?.('Failed to sync Identity Matrix.', 'error');
+      const { data } = await api.put(`/admin/users/${id}/status`, { status: nextStatus });
+      const isActive = Number(data?.is_active) === 1;
+      const update = customer => customer.id === id ? { ...customer, is_active: isActive ? 1 : 0 } : customer;
+      setUsers(current => current.map(update));
+      setSelectedUser(current => current?.id === id ? update(current) : current);
+      setSummary(current => ({
+        ...current,
+        active: current.active + (isActive ? 1 : -1),
+        disabled: current.disabled + (isActive ? -1 : 1)
+      }));
+      setPage(1);
+      setRefreshKey(value => value + 1);
+      showToast?.(`Customer account ${isActive ? 'reactivated' : 'disabled'}.`, 'success');
+    } catch (error) {
+      showToast?.(error.response?.data?.message || 'Could not update customer status.', 'error');
     } finally {
-      setLoading(false);
+      setUpdatingId(null);
     }
   };
 
-  // --- SECURITY & MUTATION PROTOCOLS ---
-  const handleToggleStatus = async (userId, currentStatus) => {
-    const newStatus = currentStatus === 'active' ? 'suspended' : 'active';
-    const action = newStatus === 'suspended' ? 'REVOKE' : 'RESTORE';
-    
-    if (!window.confirm(`SECURITY OVERRIDE: ${action} network access for this client?`)) return;
-    
-    setIsUpdating(true);
+  const sendNotification = async event => {
+    event.preventDefault();
+    if (noticeMode === 'email' && !window.confirm('Send this email campaign to the selected customers who opted in?')) return;
+    setSendingNotice(true);
     try {
-      await api.patch(`/users/${userId}/status`, { status: newStatus }).catch(() => 
-        api.put(`/users/${userId}/status`, { status: newStatus })
+      const endpoint = noticeMode === 'email'
+        ? '/admin/users/email-campaigns'
+        : '/admin/users/notifications';
+      const { data } = await api.post(endpoint, {
+        userIds: selectedIds,
+        title: noticeTitle,
+        message: noticeMessage,
+        ...(noticeMode === 'notification' ? { type: 'promotion' } : {})
+      }, { notify: false });
+      showToast?.(
+        noticeMode === 'email'
+          ? data.message || `Campaign sent to ${data.recipientCount} opted-in customer(s).`
+          : `Notification sent to ${data.recipientCount} customer(s).`,
+        'success'
       );
-      showToast?.(`Client access ${newStatus === 'active' ? 'restored' : 'revoked'}.`, 'success');
-      
-      // Optimistic update
-      setUsers(users.map(u => (u.id === userId || u._id === userId) ? { ...u, status: newStatus } : u));
-      if (selectedUser) setSelectedUser({ ...selectedUser, status: newStatus });
-    } catch (err) {
-      showToast?.('Security protocol failed.', 'error');
+      setSelectedIds([]);
+      setNoticeOpen(false);
+      setNoticeTitle('');
+      setNoticeMessage('');
+    } catch (error) {
+      showToast?.(error.response?.data?.message || 'Could not send customer notification.', 'error');
     } finally {
-      setIsUpdating(false);
+      setSendingNotice(false);
     }
   };
 
-  const handlePromoteRole = async (userId, currentRole) => {
-    if (currentRole === 'admin') return;
-    if (!window.confirm('CRITICAL: Grant Administrative Clearance to this client?')) return;
-    
-    setIsUpdating(true);
+  const sendPasswordResetOtp = async customer => {
+    if (customer.role !== 'customer') return;
+    if (!window.confirm(`Send a password reset OTP to ${customer.email}?`)) return;
+    setResettingPasswordId(Number(customer.id));
     try {
-      await api.patch(`/users/${userId}/role`, { role: 'admin' });
-      showToast?.('Administrative clearance granted.', 'success');
-      fetchUsers();
-      setSelectedUser(null);
-    } catch (err) {
-      showToast?.('Clearance upgrade failed.', 'error');
+      const { data } = await api.post(`/admin/users/${customer.id}/reset-password`);
+      showToast?.(data?.message || `Password reset OTP sent to ${customer.email}.`, 'success');
+    } catch (error) {
+      showToast?.(error.response?.data?.message || 'Could not send password reset OTP.', 'error');
     } finally {
-      setIsUpdating(false);
+      setResettingPasswordId(null);
     }
   };
 
-  const handleDeleteUser = async (userId) => {
-    if (!window.confirm('CRITICAL WARNING: Permanently purge this identity access from the database? This action is irreversible.')) return;
-    
-    try {
-      await api.delete(`/users/${userId}`);
-      showToast?.('Identity purged from records.', 'success');
-      fetchUsers();
-    } catch (err) {
-      showToast?.('Purge sequence failed.', 'error');
-    }
+  const exportCurrentPage = () => {
+    const csvRows = [
+      ['Name', 'Email', 'Phone', 'Status', 'Orders', 'Lifetime value', 'Loyalty points', 'Joined'],
+      ...users.map(user => [
+        user.name, user.email, user.phone || '', Number(user.is_active) === 1 ? 'Active' : 'Disabled',
+        user.order_count, user.total_spent, user.loyalty_points, user.created_at
+      ])
+    ];
+    const csv = csvRows.map(row => row.map(csvCell).join(',')).join('\r\n');
+    const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `bhumivera-customers-page-${page}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
-  // --- CRM DATA EXPORT ---
-  const exportToExcel = () => {
-    const worksheetData = users.map(u => ({
-      'Identity Hash (ID)': u.id || u._id,
-      'Full Name': u.name || u.full_name || 'Unknown',
-      'Email Vector': u.email,
-      'Phone': u.phone || 'N/A',
-      'Clearance Level': u.role || 'user',
-      'Network Status': u.status || 'active',
-      'Registration Date': new Date(u.created_at).toLocaleString(),
-      'Total Orders': u.total_orders || u.orders_count || 0,
-      'Lifetime Value (₹)': u.total_spent || u.ltv || 0
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Client Identity Matrix");
-    XLSX.writeFile(workbook, `Bhumivera_CRM_Dump_${new Date().toISOString().split('T')[0]}.xlsx`);
-    showToast?.('CRM Matrix Exported', 'success');
-  };
-
-  // --- ANALYTICS & FILTERING ---
-  const filteredUsers = useMemo(() => {
-    return users.filter(u => {
-      const searchStr = `${u.name || ''} ${u.email || ''} ${u.phone || ''}`.toLowerCase();
-      const matchesSearch = searchStr.includes(searchTerm.toLowerCase());
-      const matchesRole = roleFilter === 'all' || (u.role || 'user') === roleFilter;
-      const matchesStatus = statusFilter === 'all' || (u.status || 'active') === statusFilter;
-      return matchesSearch && matchesRole && matchesStatus;
-    }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  }, [users, searchTerm, roleFilter, statusFilter]);
-
-  const totalPages = Math.ceil(filteredUsers.length / itemsPerPage);
-  const paginatedUsers = filteredUsers.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
-
-  // CRM KPIs
-  const totalClients = users.length;
-  const activeClients = users.filter(u => (u.status || 'active') === 'active').length;
-  const suspendedClients = users.filter(u => u.status === 'suspended' || u.status === 'banned').length;
-  const adminClearances = users.filter(u => u.role === 'admin').length;
-
-  if (loading && users.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-        <div className="relative">
-          <div className="w-20 h-20 border-4 border-cyan-500/20 border-t-cyan-500 rounded-full animate-spin"></div>
-          <Database className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-cyan-500 animate-pulse" size={24} />
-        </div>
-        <p className="text-slate-500 font-black uppercase text-[10px] tracking-[0.3em] animate-pulse">Decrypting Identity Matrix...</p>
-      </div>
-    );
-  }
+  const totalPages = Number(pagination.totalPages || 0);
 
   return (
-    <div className="p-4 md:p-8 space-y-6 bg-[#020617] min-h-screen text-slate-300 font-sans animate-in fade-in duration-500">
-      
-      {/* COMMAND HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800/80">
+    <div className="min-h-screen space-y-6 bg-[#020617] p-4 text-slate-200 md:p-8">
+      <header className="flex flex-col justify-between gap-4 border-b border-slate-800 pb-6 sm:flex-row sm:items-center">
         <div>
-          <h1 className="text-3xl font-black text-white uppercase tracking-tight flex items-center gap-3">
-            Client <span className="text-cyan-500">Identity Matrix</span>
+          <h1 className="flex items-center gap-3 text-2xl font-black uppercase text-white md:text-3xl">
+            <Users className="text-cyan-400" /> Customer management
           </h1>
-          <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest mt-1 flex items-center gap-2">
-            <Shield size={12} className="text-cyan-500" /> Advanced CRM & Access Control
-          </p>
+          <p className="mt-2 text-sm text-slate-400">Search customer accounts, review their orders, and manage account access.</p>
         </div>
-        <div className="flex gap-3">
-          <button onClick={fetchUsers} className="p-3 bg-slate-900 border border-slate-800 text-slate-400 rounded-xl hover:bg-slate-800 hover:text-cyan-400 transition-all shadow-lg">
-            <RefreshCw size={18} />
+        <div className="flex gap-2">
+          <button onClick={() => setRefreshKey(value => value + 1)} aria-label="Refresh customers" className="rounded-xl border border-slate-700 bg-slate-900 p-3 text-slate-300 hover:border-cyan-500">
+            <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
           </button>
-          <button onClick={exportToExcel} className="flex items-center gap-2 px-5 py-3 bg-cyan-500/10 border border-cyan-500/50 text-cyan-400 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-cyan-500 hover:text-slate-950 transition-all shadow-[0_0_15px_rgba(6,182,212,0.15)]">
-            <Download size={16} /> Export CRM Dump
+          <button onClick={exportCurrentPage} disabled={!users.length} className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold hover:border-cyan-500 disabled:opacity-40">
+            Export this page
           </button>
         </div>
-      </div>
+      </header>
 
-      {/* KPI DASHBOARD */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-cyan-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-cyan-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-cyan-500 z-10"><Users size={22} /></div>
-          <div className="z-10">
-            <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Total Identities</p>
-            <h4 className="text-2xl font-black text-white tracking-tight mt-1">{totalClients}</h4>
+      <section className="grid gap-3 sm:grid-cols-3">
+        {[
+          ['All customers', summary.total, Users],
+          ['Active accounts', summary.active, CheckCircle],
+          ['Disabled accounts', summary.disabled, Ban]
+        ].map(([label, value, Icon]) => (
+          <div key={label} className="flex items-center gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+            {React.createElement(Icon, { className: 'text-cyan-400', size: 22 })}
+            <div><p className="text-xs uppercase tracking-widest text-slate-500">{label}</p><p className="mt-1 text-2xl font-black text-white">{Number(value || 0).toLocaleString()}</p></div>
           </div>
-        </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-emerald-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-emerald-500 z-10"><Activity size={22} /></div>
-          <div className="z-10">
-            <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Active Networks</p>
-            <h4 className="text-2xl font-black text-white tracking-tight mt-1">{activeClients}</h4>
-          </div>
-        </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-rose-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-rose-500 z-10"><Ban size={22} /></div>
-          <div className="z-10">
-            <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Quarantined / Suspended</p>
-            <h4 className="text-2xl font-black text-white tracking-tight mt-1">{suspendedClients}</h4>
-          </div>
-        </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-purple-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-purple-500 z-10"><ShieldCheck size={22} /></div>
-          <div className="z-10">
-            <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Admin Clearances</p>
-            <h4 className="text-2xl font-black text-white tracking-tight mt-1">{adminClearances}</h4>
-          </div>
-        </div>
-      </div>
+        ))}
+      </section>
 
-      {/* FILTER & SEARCH BAR */}
-      <div className="flex flex-col md:flex-row gap-4 bg-slate-900/40 border border-slate-800/80 p-4 rounded-[2rem] shadow-lg">
-        <div className="relative flex-1 group">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-cyan-500 transition-colors" size={18} />
-          <input 
-            type="text" placeholder="Scan by Name, Email Vector, or Phone Hash..." 
-            value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all"
-          />
+      <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+        <div className="grid gap-3 lg:grid-cols-[minmax(220px,1fr)_repeat(3,minmax(150px,auto))]">
+          <label className="relative">
+            <Search size={17} className="absolute left-3 top-3.5 text-slate-500" />
+            <input aria-label="Search customers" value={search} onChange={event => { setSearch(event.target.value); setPage(1); }} placeholder="Name, email, or phone" className="w-full rounded-xl border border-slate-700 bg-slate-950 py-3 pl-10 pr-3 text-sm outline-none focus:border-cyan-500" />
+          </label>
+          <select aria-label="Account status" value={status} onChange={changeFilter(setStatus)} className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm">
+            <option value="all">All account statuses</option><option value="active">Active</option><option value="disabled">Disabled</option>
+          </select>
+          <select aria-label="Order and loyalty filter" value={activity} onChange={changeFilter(setActivity)} className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm">
+            <option value="all">All customers</option><option value="ordered">Has orders</option><option value="no-orders">No orders</option><option value="loyalty">Has loyalty points</option>
+          </select>
+          <select aria-label="Sort customers" value={sort} onChange={changeFilter(setSort)} className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm">
+            <option value="recent">Recently joined</option><option value="orders">Most orders</option><option value="loyalty">Most loyalty points</option><option value="value">Highest lifetime value</option>
+          </select>
         </div>
-        <div className="flex gap-4 w-full md:w-auto">
-          <div className="relative flex-1 md:w-48">
-            <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={14} />
-            <select 
-              value={roleFilter} onChange={(e) => { setRoleFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500/50 rounded-xl py-3.5 pl-10 pr-4 text-white font-bold text-xs outline-none transition-all appearance-none cursor-pointer"
-            >
-              <option value="all">All Clearances</option>
-              <option value="user">Standard User</option>
-              <option value="admin">Administrator</option>
-            </select>
-          </div>
-          <div className="relative flex-1 md:w-48">
-            <ShieldAlert className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={14} />
-            <select 
-              value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full bg-slate-950 border border-slate-800 focus:border-cyan-500/50 rounded-xl py-3.5 pl-10 pr-4 text-white font-bold text-xs outline-none transition-all appearance-none cursor-pointer"
-            >
-              <option value="all">All Network States</option>
-              <option value="active">Active Online</option>
-              <option value="suspended">Suspended / Quarantined</option>
-            </select>
-          </div>
-        </div>
-      </div>
 
-      {/* CRM DENSE TABLE */}
-      <div className="bg-slate-900/30 border border-slate-800/80 rounded-[2.5rem] overflow-hidden shadow-2xl">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
-            <thead>
-              <tr className="bg-slate-950/80 border-b border-slate-800 backdrop-blur-md">
-                <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Identity Payload</th>
-                <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Network Clearance</th>
-                <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Telemetry (LTV)</th>
-                <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">State</th>
-                <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right">Ops</th>
+        {selectedIds.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-cyan-900 bg-cyan-950/30 p-3">
+            <span className="text-sm font-semibold text-cyan-200">{selectedIds.length} customer(s) selected</span>
+            <div className="flex gap-2">
+              <button onClick={() => { setNoticeOpen(noticeMode === 'notification' ? !noticeOpen : true); setNoticeMode('notification'); }} className="inline-flex items-center gap-2 rounded-lg bg-cyan-500 px-3 py-2 text-sm font-bold text-slate-950"><Mail size={16} /> Send in-app promo</button>
+              <button onClick={() => { setNoticeOpen(noticeMode === 'email' ? !noticeOpen : true); setNoticeMode('email'); }} className="inline-flex items-center gap-2 rounded-lg border border-cyan-700 px-3 py-2 text-sm font-bold text-cyan-200 hover:bg-cyan-950"><Mail size={16} /> Email campaign</button>
+              <button onClick={() => setSelectedIds([])} className="rounded-lg border border-slate-700 px-3 py-2 text-sm">Clear</button>
+            </div>
+          </div>
+        )}
+        {noticeOpen && (
+          <form onSubmit={sendNotification} className="grid gap-3 rounded-xl border border-slate-700 bg-slate-950 p-4">
+            <p className="text-sm text-slate-400">
+              {noticeMode === 'email'
+                ? 'Email is sent only to selected customers who explicitly opted in. Customers who have not opted in or have opted out are excluded. The email includes a link to manage preferences.'
+                : 'Send an in-app promotional notification to the selected customer accounts.'}
+            </p>
+            <input value={noticeTitle} onChange={event => setNoticeTitle(event.target.value)} maxLength={noticeMode === 'email' ? 200 : 255} required placeholder={noticeMode === 'email' ? 'Email subject' : 'Notification title'} className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm" />
+            <textarea value={noticeMessage} onChange={event => setNoticeMessage(event.target.value)} maxLength={noticeMode === 'email' ? 10000 : 5000} required rows={3} placeholder={noticeMode === 'email' ? 'Email message' : 'Notification message'} className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm" />
+            <div><button disabled={sendingNotice} className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-bold text-slate-950 disabled:opacity-50">{sendingNotice ? 'Sending…' : noticeMode === 'email' ? `Email selected customers who opted in` : `Send to ${selectedIds.length} selected`}</button></div>
+          </form>
+        )}
+
+        <div className="overflow-x-auto rounded-xl border border-slate-800">
+          <table className="w-full min-w-[850px] text-left text-sm">
+            <thead className="bg-slate-950 text-xs uppercase tracking-wider text-slate-500">
+              <tr>
+                <th className="p-4"><input aria-label="Select current page" type="checkbox" checked={allPageSelected} onChange={togglePageSelection} /></th>
+                <th className="p-4">Customer</th><th className="p-4">Status</th><th className="p-4">Orders / value</th><th className="p-4">Loyalty</th><th className="p-4">Joined</th><th className="p-4">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/50">
-              {paginatedUsers.length === 0 ? (
-                <tr>
-                  <td colSpan={5} className="p-16 text-center">
-                    <Users size={48} className="mx-auto text-slate-700 mb-4" />
-                    <p className="text-slate-500 font-black uppercase tracking-widest text-sm">No identities match current matrices</p>
-                  </td>
-                </tr>
-              ) : paginatedUsers.map(user => {
-                const isActive = (user.status || 'active') === 'active';
-                const isAdmin = user.role === 'admin';
-                const initials = (user.name || user.email || 'U').substring(0, 2).toUpperCase();
-
+            <tbody className="divide-y divide-slate-800">
+              {loading ? (
+                <tr><td colSpan="7" className="p-10 text-center text-slate-400">Loading customers…</td></tr>
+              ) : users.length === 0 ? (
+                <tr><td colSpan="7" className="p-10 text-center text-slate-400">No customers found for these filters.</td></tr>
+              ) : users.map(user => {
+                const id = Number(user.id);
+                const active = Number(user.is_active) === 1;
                 return (
-                  <tr key={user.id || user._id} className="hover:bg-cyan-500/[0.02] transition-colors group">
-                    <td className="p-6">
-                      <div className="flex items-center gap-4">
-                        <div className={`w-12 h-12 rounded-2xl flex items-center justify-center font-black text-lg border ${isAdmin ? 'bg-purple-500/10 text-purple-500 border-purple-500/30' : 'bg-slate-900 text-slate-400 border-slate-800'}`}>
-                          {initials}
-                        </div>
-                        <div>
-                          <p className="text-sm font-bold text-white truncate max-w-[200px]">{user.name || user.full_name || 'Guest Identity'}</p>
-                          <p className="text-[10px] font-mono text-slate-500 mt-0.5 truncate max-w-[200px]">{user.email}</p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-6">
-                      <div className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[9px] font-black uppercase tracking-widest ${isAdmin ? 'bg-purple-500/10 text-purple-500' : 'bg-slate-900 text-slate-400'}`}>
-                        {isAdmin ? <ShieldCheck size={10} /> : <Shield size={10} />}
-                        {isAdmin ? 'Administrator' : 'Standard User'}
-                      </div>
-                    </td>
-                    <td className="p-6">
-                      <p className="text-sm font-black text-emerald-400">₹{(user.total_spent || user.ltv || 0).toLocaleString()}</p>
-                      <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">{user.orders_count || user.total_orders || 0} Orders</p>
-                    </td>
-                    <td className="p-6">
-                      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest ${isActive ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20' : 'bg-rose-500/10 text-rose-500 border border-rose-500/20'}`}>
-                        {isActive ? <CheckCircle size={10} /> : <Ban size={10} />}
-                        {isActive ? 'Active' : 'Suspended'}
-                      </div>
-                    </td>
-                    <td className="p-6 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                        <button onClick={() => setSelectedUser(user)} className="px-3 py-2 bg-slate-950 border border-slate-800 rounded-lg text-cyan-500 hover:bg-cyan-500 hover:text-slate-950 transition-all text-[9px] font-black uppercase tracking-widest inline-flex items-center gap-1.5">
-                          <Eye size={12} /> Dossier
-                        </button>
-                        {!isAdmin && (
-                          <button 
-                            onClick={() => handleToggleStatus(user.id || user._id, user.status || 'active')}
-                            className={`p-2 border rounded-lg transition-all ${isActive ? 'bg-slate-950 border-slate-800 text-amber-500 hover:bg-amber-500 hover:text-slate-950' : 'bg-emerald-500/10 border-emerald-500/30 text-emerald-500 hover:bg-emerald-500 hover:text-slate-950'}`}
-                            title={isActive ? 'Suspend Access' : 'Restore Access'}
-                          >
-                            {isActive ? <Ban size={14} /> : <CheckCircle size={14} />}
-                          </button>
-                        )}
-                        {!isAdmin && (
-                          <button onClick={() => handleDeleteUser(user.id || user._id)} className="p-2 bg-slate-950 border border-slate-800 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white transition-all">
-                            <Trash2 size={14} />
-                          </button>
-                        )}
-                      </div>
-                    </td>
+                  <tr key={id} className="hover:bg-slate-800/40">
+                    <td className="p-4"><input aria-label={`Select ${user.name || user.email}`} type="checkbox" checked={selectedIds.includes(id)} onChange={() => toggleCustomerSelection(id)} /></td>
+                    <td className="p-4"><p className="font-semibold text-white">{user.name}</p><p className="mt-1 text-xs text-slate-400">{user.email}</p><p className="text-xs text-slate-500">{user.phone || 'No phone on file'}</p></td>
+                    <td className="p-4"><span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${active ? 'bg-emerald-950 text-emerald-300' : 'bg-rose-950 text-rose-300'}`}>{active ? 'Active' : 'Disabled'}</span></td>
+                    <td className="p-4"><span className="font-semibold text-white">{Number(user.order_count || 0)} orders</span><span className="block text-xs text-emerald-300">{money(user.total_spent)}</span></td>
+                    <td className="p-4"><span className="inline-flex items-center gap-1 text-amber-300"><Gift size={14} />{Number(user.loyalty_points || 0)}</span><span className="block text-xs text-slate-500">points</span></td>
+                    <td className="p-4 text-xs text-slate-400">{user.created_at ? new Date(user.created_at).toLocaleDateString() : '—'}</td>
+                    <td className="p-4"><div className="flex gap-2">
+                      <button onClick={() => setSelectedUser(user)} aria-label={`View ${user.name || user.email}`} className="rounded-lg border border-slate-700 p-2 text-cyan-300 hover:border-cyan-500"><Eye size={16} /></button>
+                      <button disabled={updatingId === id} onClick={() => toggleStatus(user)} aria-label={active ? 'Disable customer' : 'Reactivate customer'} className="rounded-lg border border-slate-700 p-2 text-amber-300 hover:border-amber-500 disabled:opacity-50">{active ? <Ban size={16} /> : <CheckCircle size={16} />}</button>
+                    </div></td>
                   </tr>
                 );
               })}
             </tbody>
           </table>
         </div>
-        
-        {/* PAGINATION */}
-        {totalPages > 1 && (
-          <div className="p-4 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4">
-              Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredUsers.length)} of {filteredUsers.length}
-            </span>
-            <div className="flex items-center gap-2 mr-4">
-              <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="p-2 bg-slate-900 border border-slate-800 text-slate-400 rounded-lg hover:bg-slate-800 disabled:opacity-50"><ChevronLeft size={16} /></button>
-              <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="p-2 bg-slate-900 border border-slate-800 text-slate-400 rounded-lg hover:bg-slate-800 disabled:opacity-50"><ChevronRight size={16} /></button>
-            </div>
+
+        <div className="flex flex-wrap items-center justify-between gap-3 text-sm text-slate-400">
+          <span>{pagination.total ? `Showing ${(page - 1) * PAGE_SIZE + 1}–${Math.min(page * PAGE_SIZE, pagination.total)} of ${Number(pagination.total).toLocaleString()} customers` : 'No customers'}</span>
+          <div className="flex items-center gap-3">
+            <span>Page {page} of {Math.max(1, totalPages)}</span>
+            <button aria-label="Previous page" disabled={page <= 1 || loading} onClick={() => setPage(value => value - 1)} className="rounded-lg border border-slate-700 p-2 disabled:opacity-40"><ChevronLeft size={17} /></button>
+            <button aria-label="Next page" disabled={page >= totalPages || loading} onClick={() => setPage(value => value + 1)} className="rounded-lg border border-slate-700 p-2 disabled:opacity-40"><ChevronRight size={17} /></button>
           </div>
-        )}
-      </div>
+        </div>
+      </section>
 
-      {/* CLIENT DOSSIER MODAL */}
       {selectedUser && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl overflow-y-auto custom-scrollbar">
-          <div className="bg-[#0a0c10] border border-slate-800 w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden my-auto animate-in zoom-in-95 duration-300 relative flex flex-col">
-            
-            {/* Modal Header */}
-            <div className="p-6 md:p-8 border-b border-slate-800 flex justify-between items-start bg-cyan-500/5 flex-shrink-0">
-              <div className="flex items-center gap-4">
-                <div className={`w-14 h-14 rounded-2xl flex items-center justify-center font-black text-xl border ${selectedUser.role === 'admin' ? 'bg-purple-500/10 text-purple-500 border-purple-500/30' : 'bg-cyan-500/10 text-cyan-500 border-cyan-500/30'}`}>
-                  {(selectedUser.name || selectedUser.email || 'U').substring(0, 2).toUpperCase()}
-                </div>
-                <div>
-                  <h2 className="text-2xl font-black text-white uppercase tracking-tighter">
-                    {selectedUser.name || selectedUser.full_name || 'Unverified Identity'}
-                  </h2>
-                  <p className="text-[10px] font-mono text-slate-500 mt-1 flex items-center gap-3">
-                    <span className="flex items-center gap-1"><Mail size={10}/> {selectedUser.email}</span>
-                    <span>|</span>
-                    <span className="flex items-center gap-1 text-cyan-400">ID: {selectedUser.id || selectedUser._id}</span>
-                  </p>
-                </div>
+        <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-slate-950/90 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Customer details">
+          <div className="my-auto max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl">
+            <div className="sticky top-0 flex items-start justify-between border-b border-slate-700 bg-slate-900 p-5">
+              <div><h2 className="text-xl font-bold text-white">{selectedUser.name}</h2><p className="mt-1 text-sm text-slate-400">{selectedUser.email} {selectedUser.phone ? `· ${selectedUser.phone}` : ''}</p>
+                {selectedUser.role === 'customer' && <button disabled={resettingPasswordId === Number(selectedUser.id)} onClick={() => sendPasswordResetOtp(selectedUser)} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-cyan-300 hover:border-cyan-500 disabled:opacity-50"><Key size={14} />{resettingPasswordId === Number(selectedUser.id) ? 'Sending OTP…' : 'Send password reset OTP'}</button>}
               </div>
-              <button onClick={() => setSelectedUser(null)} className="p-3 bg-slate-950 border border-slate-800 hover:bg-rose-500/10 text-slate-500 hover:text-rose-500 rounded-2xl transition-all shadow-md">
-                <XCircle size={20} />
-              </button>
+              <button aria-label="Close customer details" onClick={() => setSelectedUser(null)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-800"><X size={20} /></button>
             </div>
-
-            <div className="p-6 md:p-8 grid grid-cols-1 lg:grid-cols-2 gap-8">
-              
-              {/* LEFT COLUMN: Telemetry & Contact */}
-              <div className="space-y-6">
-                
-                {/* LTV Dashboard */}
-                <div className="bg-slate-900/30 border border-slate-800 rounded-[2rem] p-6">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-6 flex items-center gap-2"><Activity size={14}/> Value Telemetry</h3>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Lifetime Value (LTV)</p>
-                      <p className="text-2xl font-black text-emerald-400">₹{(selectedUser.total_spent || selectedUser.ltv || 0).toLocaleString()}</p>
-                    </div>
-                    <div className="p-4 bg-slate-950 border border-slate-800 rounded-2xl">
-                      <p className="text-[9px] font-black uppercase tracking-widest text-slate-500 mb-1">Hardware Procured</p>
-                      <p className="text-2xl font-black text-white">{selectedUser.orders_count || selectedUser.total_orders || 0}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Contact Vector */}
-                <div className="bg-slate-900/30 border border-slate-800 rounded-[2rem] p-6">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-6 flex items-center gap-2"><MapPin size={14}/> Communication & Origin</h3>
-                  <div className="space-y-4">
-                    <div className="flex items-center gap-4 text-sm font-bold text-slate-300">
-                      <Phone size={16} className="text-cyan-500" />
-                      {selectedUser.phone || 'Phone vector missing'}
-                    </div>
-                    <div className="flex items-center gap-4 text-sm font-bold text-slate-300">
-                      <Calendar size={16} className="text-cyan-500" />
-                      access Creation: {new Date(selectedUser.created_at).toLocaleString()}
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* RIGHT COLUMN: Security Clearance */}
-              <div className="space-y-6">
-                
-                <div className="bg-slate-900/30 border border-slate-800 rounded-[2rem] p-6 h-full flex flex-col">
-                  <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-6 flex items-center gap-2"><ShieldAlert size={14}/> Security & Clearance Console</h3>
-                  
-                  <div className="flex-1 space-y-4">
-                    <div className="p-5 bg-slate-950 border border-slate-800 rounded-2xl flex items-center justify-between">
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Current Network Status</p>
-                        <p className={`text-sm font-black uppercase tracking-widest mt-1 ${(selectedUser.status || 'active') === 'active' ? 'text-emerald-500' : 'text-rose-500'}`}>
-                          {(selectedUser.status || 'active') === 'active' ? 'Online & Active' : 'Quarantined'}
-                        </p>
+            <div className="grid gap-3 p-5 sm:grid-cols-4">
+              <div className="rounded-xl bg-slate-950 p-4"><p className="text-xs uppercase text-slate-500">Account</p><p className="mt-1 font-semibold">{Number(selectedUser.is_active) === 1 ? 'Active' : 'Disabled'}</p></div>
+              <div className="rounded-xl bg-slate-950 p-4"><p className="text-xs uppercase text-slate-500">Orders</p><p className="mt-1 font-semibold">{Number(selectedUser.order_count || customerOrders.length)}</p></div>
+              <div className="rounded-xl bg-slate-950 p-4"><p className="text-xs uppercase text-slate-500">Loyalty points</p><p className="mt-1 inline-flex items-center gap-1 font-semibold"><Activity size={15} className="text-amber-300" />{Number(selectedUser.loyalty_points || 0)}</p></div>
+              <div className="rounded-xl bg-slate-950 p-4"><p className="text-xs uppercase text-slate-500">Marketing email</p><p className="mt-1 font-semibold">{Number(selectedUser.marketing_email_opt_in) === 1 ? 'Opted in' : 'Opted out'}</p></div>
+            </div>
+            <div className="px-5 pb-5">
+              <h3 className="mb-3 font-bold text-white">Order history</h3>
+              {ordersLoading ? <p className="py-6 text-center text-slate-400">Loading order history…</p> : customerOrders.length === 0 ? <p className="rounded-xl bg-slate-950 p-5 text-sm text-slate-400">No orders found.</p> : (
+                <div className="space-y-3">
+                  {customerOrders.map(order => (
+                    <article key={order.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
+                      <div className="flex flex-wrap justify-between gap-2">
+                        <span className="font-semibold text-white">Order #{order.id}</span><span className="text-emerald-300">{money(order.total)}</span>
                       </div>
-                      {selectedUser.role !== 'admin' && (
-                        <button 
-                          disabled={isUpdating}
-                          onClick={() => handleToggleStatus(selectedUser.id || selectedUser._id, selectedUser.status || 'active')}
-                          className={`px-4 py-2 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${
-                            (selectedUser.status || 'active') === 'active' 
-                            ? 'bg-rose-500/10 text-rose-500 hover:bg-rose-500 hover:text-white border border-rose-500/30' 
-                            : 'bg-emerald-500/10 text-emerald-500 hover:bg-emerald-500 hover:text-slate-950 border border-emerald-500/30'
-                          }`}
-                        >
-                          {(selectedUser.status || 'active') === 'active' ? 'Revoke Access' : 'Restore Access'}
-                        </button>
-                      )}
-                    </div>
-
-                    <div className="p-5 bg-slate-950 border border-slate-800 rounded-2xl flex items-center justify-between">
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Clearance Level</p>
-                        <p className={`text-sm font-black uppercase tracking-widest mt-1 ${selectedUser.role === 'admin' ? 'text-purple-500' : 'text-slate-400'}`}>
-                          {selectedUser.role === 'admin' ? 'Master Admin' : 'Standard User'}
-                        </p>
+                      <div className="mt-2 flex flex-wrap justify-between gap-2 text-xs text-slate-400">
+                        <span>{order.status || 'Status unavailable'}</span><span>{order.created_at ? new Date(order.created_at).toLocaleString() : ''}</span>
                       </div>
-                      {selectedUser.role !== 'admin' && (
-                        <button 
-                          disabled={isUpdating}
-                          onClick={() => handlePromoteRole(selectedUser.id || selectedUser._id, selectedUser.role)}
-                          className="px-4 py-2 bg-purple-500/10 border border-purple-500/30 text-purple-400 rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-purple-500 hover:text-white transition-all"
-                        >
-                          Grant Admin
-                        </button>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="mt-6 p-4 border border-dashed border-rose-500/30 bg-rose-500/5 rounded-2xl">
-                    <p className="text-[9px] font-bold text-rose-400 uppercase tracking-widest leading-relaxed text-center">
-                      Security Notice: Mutating access levels or revoking network access will instantly terminate active sessions for this client access.
-                    </p>
-                  </div>
-
+                      {Array.isArray(order.items) && order.items.length > 0 && <p className="mt-2 text-xs text-slate-500">{order.items.length} line item(s)</p>}
+                    </article>
+                  ))}
                 </div>
-              </div>
-
+              )}
             </div>
           </div>
         </div>
       )}
-
     </div>
   );
 }

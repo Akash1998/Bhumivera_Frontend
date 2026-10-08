@@ -51,7 +51,9 @@ export default function Footer() {
           <ul className="space-y-4 text-sm font-light text-white/60">
             <li><Link to="/science" className="hover:text-[#f6f0e4] transition-colors duration-300">Botanical Science</Link></li>
             <li><Link to="/returns-centre" className="hover:text-[#f6f0e4] transition-colors duration-300">Returns Centre</Link></li>
-            <li><Link to="/purchase-protection" className="hover:text-[#f6f0e4] transition-colors duration-300">Purchase Protection</Link></li>
+            <li><a href="mailto:support@bhumivera.com" className="hover:text-[#f6f0e4] transition-colors duration-300">support@bhumivera.com</a></li>
+            <li><a href="tel:+917430985647" className="hover:text-[#f6f0e4] transition-colors duration-300">+91 74309 85647</a></li>
+            <li><a href="tel:+918370804458" className="hover:text-[#f6f0e4] transition-colors duration-300">+91 83708 04458</a></li>
             <li><Link to="/contact" className="hover:text-[#f6f0e4] transition-colors duration-300">Help & Support</Link></li>
           </ul>
         </div>

@@ -23,7 +23,7 @@ export default function Register() {
 
   const [view, setView] = useState('INIT');
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', securityAnswer: ''
+    name: '', email: '', password: '', securityAnswer: '', marketingEmailOptIn: false
   });
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const otpRefs = useRef([]);
@@ -185,6 +185,17 @@ export default function Register() {
                     <p className="text-[10px] text-[#8B5A2B] italic mb-3 pl-1">"What is your mother's maiden name?"</p>
                     <InputField icon={<Key size={18}/>} type="text" name="securityAnswer" value={formData.securityAnswer} onChange={handleInputChange} placeholder="Your Answer" disabled={loading} />
                   </div>
+
+                  <label className="flex items-start gap-3 rounded-xl border border-[#0B2419]/10 bg-[#F3F9F1]/70 p-4 text-xs leading-relaxed text-[#0B2419]/75">
+                    <input
+                      type="checkbox"
+                      checked={formData.marketingEmailOptIn}
+                      onChange={event => setFormData({ ...formData, marketingEmailOptIn: event.target.checked })}
+                      disabled={loading}
+                      className="mt-0.5 accent-[#0B2419]"
+                    />
+                    <span>Send me promotional emails and product updates. This is optional; I can change this preference in my profile at any time. Order and account emails are not affected.</span>
+                  </label>
 
                   <div className="flex justify-center pt-2">
                     {/* Attach the ref to the Turnstile component */}

@@ -134,7 +134,7 @@ export default function HeroSection() {
         <div className="container mx-auto px-6 flex justify-between items-center text-slate-400 font-bold uppercase tracking-widest text-[10px]">
           <div className="flex items-center gap-3">
             <ShieldCheck size={18} className="text-emerald-500" />
-            2-Year Premium Warranty
+            Dedicated Customer Support
           </div>
           <div className="w-px h-4 bg-slate-800" />
           <div className="flex items-center gap-3">

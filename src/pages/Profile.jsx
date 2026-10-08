@@ -28,6 +28,7 @@ import {
   Leaf, Zap, Users, Coins, ExternalLink, Key,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import SupportCenter from '../components/SupportCenter';
 
 const TABS = [
   { id: 'overview',      label: 'Overview',      icon: LayoutDashboard },
@@ -40,7 +41,6 @@ const TABS = [
   { id: 'coupons',       label: 'Coupons',       icon: Ticket },
   { id: 'security',      label: 'Security',      icon: Shield },
   { id: 'reviews',       label: 'Reviews',       icon: Star },
-  { id: 'warranty',      label: 'Warranty',      icon: Award },
   { id: 'affiliate',     label: 'Affiliate',     icon: Share2 },
   { id: 'support',       label: 'Support',       icon: LifeBuoy },
 ];
@@ -60,8 +60,7 @@ const DELIVERED_STATUSES = ['delivered', 'completed'];
 const faqItems = [
   { q: 'How do I track my order?', a: 'Go to the Orders tab above and click the "Track" button next to your order. You will see live status updates including processing, packed, shipped, out for delivery and delivered timelines.' },
   { q: 'What is your return policy?', a: 'We offer a 7-day return window on most products from the date of delivery. Simply navigate to Returns, choose the delivered order, select a reason and submit. An RMA number will be issued instantly.' },
-  { q: 'How does the wallet work?', a: 'Your wallet holds store credits and loyalty rewards automatically applied during returns processing. Balances from 10-year warranty redemptions are credited here and can be used during checkout. No demo add-funds capability is available at this time.' },
-  { q: 'How do I register a product warranty?', a: 'Open the Warranty tab, enter the 16-digit serial number found on the product package or certificate. If valid, you can register it to your account to unlock the full 10-year Bhumivera warranty.' },
+  { q: 'How does the wallet work?', a: 'Your wallet holds store credits and loyalty rewards. Available balances are applied during checkout. No demo add-funds capability is available at this time.' },
   { q: 'Is my account secure?', a: 'Yes. We use bcrypt password hashing, signed JWT tokens and optional TOTP-based 2FA. We recommend enabling 2FA from the Security tab and setting a security question for password-recovery fallback.' },
   { q: 'How do I join the affiliate program?', a: 'Your referral link is available on the Affiliate tab. Share it with friends. Every signup and purchase made through your link tracks to your account. See the Affiliate tab for live stats and share buttons.' },
 ];
@@ -162,7 +161,7 @@ export default function Profile() {
   const [loading, setLoading] = useState(false);
   const mobileTabsRef = useRef(null);
 
-  const [profileData, setProfileData] = useState({ name: '', phone: '' });
+  const [profileData, setProfileData] = useState({ name: '', phone: '', marketing_email_opt_in: false });
   const [orders, setOrders] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [wishlistError, setWishlistError] = useState('');
@@ -239,6 +238,7 @@ export default function Profile() {
       setProfileData({
         name: u.name || u.first_name || u.full_name || '',
         phone: u.phone || u.mobile || u.phone_number || '',
+        marketing_email_opt_in: Boolean(Number(u.marketing_email_opt_in)),
       });
       setTwoFactor(p => ({ ...p, isEnabled: !!u.two_factor_enabled || u.two_factor_enabled === 1 }));
       if (u.security_question) setSecQuestion(s => ({ ...s, question: u.security_question, answer: u.security_answer || s.answer }));
@@ -457,7 +457,8 @@ export default function Profile() {
       });
       toast.success('Message sent. We will respond soon.');
       setSupportTicket({ subject:'', message:'' });
-    } catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
+      return true;
+    } catch (err) { toast.error(err.response?.data?.message || 'Failed'); return false; }
   };
   const handleAddressSave = async (e) => {
     e.preventDefault();
@@ -501,7 +502,7 @@ export default function Profile() {
     catch (_) { toast.error('Copy failed'); }
   };
   const shareVia = (via) => {
-    const text = `I'm shopping at Bhumivera — 10 year warranty on every product. Use my link to sign up & earn rewards: ${referralUrl}`;
+    const text = `I'm shopping at Bhumivera. Use my link to sign up & earn rewards: ${referralUrl}`;
     try {
       if (via === 'wa') { window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank'); return; }
       if (via === 'email') { window.open(`mailto:?subject=${encodeURIComponent('Check out Bhumivera')}&body=${encodeURIComponent(text)}`, '_blank'); return; }
@@ -629,7 +630,7 @@ export default function Profile() {
                       </button>
                     </div>
                     {orders.length === 0 ? (
-                      <EmptyState icon={Package} title="No orders yet" subtitle="Explore our curated catalog and place your first order with a 10-year warranty." actionLabel="Shop Now" onAction={() => navigate('/shop')}/>
+                      <EmptyState icon={Package} title="No orders yet" subtitle="Explore our catalog and place your first order." actionLabel="Shop Now" onAction={() => navigate('/shop')}/>
                     ) : (
                       <div className="space-y-2.5">
                         {orders.slice(0,5).map(o => (
@@ -706,7 +707,6 @@ export default function Profile() {
                   {[
                     { id:'addresses', label:'Manage Addresses', icon:MapPin, sub:'Ship faster', cls:'border-[#8B9D83]/40' },
                     { id:'returns',   label:'Track Returns',   icon:RotateCcw, sub:'RMA status', cls:'border-sky-200' },
-                    { id:'warranty',  label:'My Warranties',   icon:Award,     sub:'10 yr cover', cls:'border-[#D4AF37]/50' },
                     { id:'security',  label:'Secure Account',  icon:Shield,    sub:'2FA & password', cls:'border-rose-200' },
                   ].map(s => {
                     const I = s.icon;
@@ -732,7 +732,7 @@ export default function Profile() {
                   <h2 className="text-lg font-semibold text-[#0B2419]">Orders ({orders.length})</h2>
                 </div>
                 {orders.length === 0 ? (
-                  <EmptyState icon={Package} title="No orders placed yet" subtitle="Your first order could be one leaf away. Bhumivera offers a 10-year warranty on every purchase." actionLabel="Browse Products" onAction={() => navigate('/shop')}/>
+                  <EmptyState icon={Package} title="No orders placed yet" subtitle="Browse the catalog to find products for your next order." actionLabel="Browse Products" onAction={() => navigate('/shop')}/>
                 ) : (
                   <div className="overflow-x-auto -mx-5 px-5">
                     <table className="w-full min-w-[700px] text-sm">
@@ -858,7 +858,7 @@ export default function Profile() {
                       </div>
                     </div>
                     <div className="mt-6 text-xs text-stone-400 border-t border-white/10 pt-5">
-                      Store credits and loyalty rewards are auto-credited for returns, warranty redemptions and promotional offers. Balances are applied automatically during checkout.
+                      Store credits and loyalty rewards are applied during checkout when available.
                     </div>
                   </div>
                 </div>
@@ -866,7 +866,7 @@ export default function Profile() {
                 <section className="rounded-2xl bg-white border border-stone-200 p-5 shadow-sm">
                   <h3 className="font-semibold text-[#0B2419] mb-4 text-lg">Transaction History</h3>
                   {wallet.transactions.length === 0 ? (
-                    <EmptyState icon={Clock} title="No transactions yet" subtitle="Wallet activity will appear here as you make purchases, returns, and warranty redemptions."/>
+                    <EmptyState icon={Clock} title="No transactions yet" subtitle="Wallet activity will appear here when you receive or use store credit."/>
                   ) : (
                     <div className="overflow-x-auto -mx-5 px-5">
                       <table className="w-full min-w-[600px] text-sm">
@@ -1032,7 +1032,7 @@ export default function Profile() {
                   )}
                 </div>
                 {notifications.length === 0 ? (
-                  <EmptyState icon={Bell} title="No notifications yet" subtitle="We'll notify you about order updates, flash sales, warranty events and more right here."/>
+                  <EmptyState icon={Bell} title="No notifications yet" subtitle="We'll notify you about order updates, support replies, and offers here."/>
                 ) : (
                   <div className="space-y-2">
                     {notifications.map(n => {
@@ -1167,6 +1167,18 @@ export default function Profile() {
                       <input value={profileData.phone} onChange={e => setProfileData({ ...profileData, phone: e.target.value })}
                         className="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:border-[#0B2419] focus:ring-4 focus:ring-[#0B2419]/5 transition-all text-sm"/>
                     </div>
+                    <label className="sm:col-span-2 flex items-start gap-3 rounded-xl border border-stone-200 bg-stone-50 p-4 text-sm text-stone-700">
+                      <input
+                        type="checkbox"
+                        checked={profileData.marketing_email_opt_in}
+                        onChange={e => setProfileData({ ...profileData, marketing_email_opt_in: e.target.checked })}
+                        className="mt-0.5 accent-[#0B2419]"
+                      />
+                      <span>
+                        Email me promotional offers and product updates.
+                        <span className="block mt-1 text-xs text-stone-500">Optional. You can change this preference any time. Order and account emails are not affected.</span>
+                      </span>
+                    </label>
                     <div className="sm:col-span-2">
                       <button type="submit" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#0B2419] text-[#FDFBF7] text-sm font-medium hover:bg-[#1e4031] transition-colors">
                         <CheckCircle2 className="w-4 h-4"/> Save Changes
@@ -1532,95 +1544,16 @@ export default function Profile() {
 
             {/* ======== SUPPORT ======== */}
             {activeTab === 'support' && (
-              <div className="space-y-5">
-                <section className="grid grid-cols-1 lg:grid-cols-5 gap-5">
-                  <div className="lg:col-span-2 relative overflow-hidden rounded-2xl bg-gradient-to-br from-[#0B2419] to-[#2C3E2D] p-6 text-white shadow-lg">
-                    <div className="absolute -top-10 -right-10 w-40 h-40 rounded-full bg-[#D4AF37]/20 blur-2xl"/>
-                    <div className="relative">
-                      <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center mb-4">
-                        <LifeBuoy className="w-6 h-6 text-[#D4AF37]"/>
-                      </div>
-                      <h3 className="text-2xl font-bold mb-2">Customer Care</h3>
-                      <p className="text-sm text-stone-300 mb-5 leading-relaxed">We're here for you. Real humans, fast replies — typically within a few hours on business days.</p>
-                      <div className="space-y-3">
-                        <a href="mailto:support@bhumivera.com" className="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 transition-colors">
-                          <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center"><Mail className="w-5 h-5 text-[#D4AF37]"/></div>
-                          <div>
-                            <div className="text-xs text-stone-400">Email us</div>
-                            <div className="font-semibold">support@bhumivera.com</div>
-                          </div>
-                        </a>
-                        <div className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10">
-                          <div className="w-10 h-10 rounded-xl bg-white/10 flex items-center justify-center"><Phone className="w-5 h-5 text-[#D4AF37]"/></div>
-                          <div>
-                            <div className="text-xs text-stone-400">Call us</div>
-                            <div className="font-semibold">+91 (Available Mon–Sat)</div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <form onSubmit={handleSupportSubmit} className="lg:col-span-3 rounded-2xl bg-white border border-stone-200 p-6 shadow-sm space-y-4">
-                    <div className="flex items-center gap-3 mb-1">
-                      <div className="w-11 h-11 rounded-xl bg-[#8B9D83]/15 text-[#3f503c] flex items-center justify-center"><MessageSquare className="w-5 h-5"/></div>
-                      <div><h3 className="font-semibold text-[#0B2419] text-lg">Send us a Message</h3><p className="text-xs text-stone-500">Reply sent to your registered email</p></div>
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-stone-600 mb-1.5 block">Subject</label>
-                      <input value={supportTicket.subject} onChange={e => setSupportTicket({ ...supportTicket, subject: e.target.value })}
-                        placeholder="How can we help you today?"
-                        className="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:border-[#0B2419] focus:ring-4 focus:ring-[#0B2419]/5 text-sm"/>
-                    </div>
-                    <div>
-                      <label className="text-xs font-semibold text-stone-600 mb-1.5 block">Your message</label>
-                      <textarea rows={6} value={supportTicket.message} onChange={e => setSupportTicket({ ...supportTicket, message: e.target.value })}
-                        placeholder="Include your order number, serial, or any other relevant details so we can help faster."
-                        className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-[#0B2419] focus:ring-4 focus:ring-[#0B2419]/5 text-sm resize-none"/>
-                    </div>
-                    <div className="flex items-center justify-between flex-wrap gap-3">
-                      <div className="flex flex-wrap gap-1.5">
-                        {['Order Help','Warranty','Return','Coupon','Affiliate','Other'].map(q => (
-                          <button key={q} type="button" onClick={() => setSupportTicket(t => ({ ...t, subject: `[${q}] ${t.subject}`.replace(/^\[\] /,'') }))}
-                            className="text-xs px-3 py-1.5 rounded-full border border-stone-200 hover:border-[#D4AF37] hover:bg-amber-50/60 hover:text-[#8a6a12] transition-colors text-stone-600">
-                            + {q}
-                          </button>
-                        ))}
-                      </div>
-                      <button type="submit" className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#0B2419] text-[#FDFBF7] text-sm font-medium hover:bg-[#1e4031] transition-colors">
-                        <Send className="w-4 h-4"/> Send Message
-                      </button>
-                    </div>
-                  </form>
-                </section>
-
-                <section className="rounded-2xl bg-white border border-stone-200 p-6 shadow-sm">
-                  <div className="flex items-center gap-3 mb-5">
-                    <div className="w-11 h-11 rounded-xl bg-amber-50 text-amber-600 flex items-center justify-center"><HelpCircle className="w-5 h-5"/></div>
-                    <div><h3 className="font-semibold text-[#0B2419] text-lg">Frequently Asked Questions</h3><p className="text-xs text-stone-500">Answers to the most common questions</p></div>
-                  </div>
-                  <div className="space-y-2">
-                    {faqItems.map((f, i) => {
-                      const open = faqOpen.has(i);
-                      return (
-                        <div key={i} className={`rounded-xl border transition-all ${open ? 'border-[#8B9D83]/50 bg-[#F1F4EF]/40' : 'border-stone-100 hover:border-stone-200 bg-white'}`}>
-                          <button onClick={() => toggleFaq(i)} className="w-full flex items-center justify-between gap-4 p-5 text-left">
-                            <span className="font-medium text-[#0B2419] text-sm sm:text-base">{f.q}</span>
-                            <span className={`shrink-0 w-8 h-8 rounded-lg flex items-center justify-center transition-all ${open ? 'bg-[#0B2419] text-[#FDFBF7] rotate-180' : 'bg-stone-100 text-stone-500'}`}>
-                              {open ? <ChevronUp className="w-4 h-4"/> : <ChevronDown className="w-4 h-4"/>}
-                            </span>
-                          </button>
-                          {open && (
-                            <div className="px-5 pb-5 text-sm text-stone-600 leading-relaxed border-t border-stone-100/60 pt-4 ml-5">
-                              {f.a}
-                            </div>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                </section>
-              </div>
+              <SupportCenter
+                name={profileData.name || user?.name}
+                email={user?.email}
+                supportTicket={supportTicket}
+                setSupportTicket={setSupportTicket}
+                onSubmit={handleSupportSubmit}
+                faqItems={faqItems}
+                faqOpen={faqOpen}
+                toggleFaq={toggleFaq}
+              />
             )}
 
           </main>

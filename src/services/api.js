@@ -95,7 +95,7 @@ api.interceptors.request.use(c => {
     url.startsWith("/inventory/") ||
     url.startsWith("/notifications/admin/") ||
     url.startsWith("/serials/admin/") ||
-    url.startsWith("/contact") && c.method === "get" ||
+    url.startsWith("/contact") && c.method === "get" && !url.startsWith("/contact/my") ||
     url.startsWith("/returns") && c.method === "get" && !url.includes("/my") ||
     url.startsWith("/warranty") && c.method === "get" && !url.includes("/my") ||
     url.startsWith("/products") && (c.method === "post" || c.method === "put" || c.method === "delete" || c.method === "patch") ||
@@ -106,7 +106,7 @@ api.interceptors.request.use(c => {
     url.startsWith("/settings") ||
     url.startsWith("/shipping") && c.method !== "get" ||
     url.startsWith("/shipping/zones") && c.method === "get" && !url.includes("/active") ||
-    url.startsWith("/contact") && c.method !== "post" ||
+    url.startsWith("/contact") && c.method !== "post" && !url.startsWith("/contact/my") ||
     url.startsWith("/tax") && c.method !== "get" ||
     url.startsWith("/flash-sales") && (c.method === "post" || c.method === "put" || c.method === "patch" || c.method === "delete");
 
@@ -133,7 +133,7 @@ const _resolveTokenKind = (url = '', method = '', adminAuth = false) => {
   const isAdminUrl = url.startsWith("/admin/") ||
     url === "/auth/profile" ||
     url === "/reviews" && method === 'get' ||
-    url.startsWith("/contact") && method !== 'post' ||
+    url.startsWith("/contact") && method !== 'post' && !url.startsWith("/contact/my") ||
     url.startsWith("/serials/admin/") ||
     url.startsWith("/warehouse/admin/") ||
     url.startsWith("/logs/") ||
@@ -255,7 +255,7 @@ export const auth = { login: d => api.post('/auth/login', d), logout: () => api.
 export const adminLogin = async c => (await api.post("/auth/admin/login", c)).data;
 export const search = { query: q => api.get('/products/active', { params: { search: q } }), global: q => api.get('/products', { params: { search: q } }) };
 export const users = { updateProfile: d => api.put('/users/profile', d), changePassword: d => api.post('/users/change-password', d), getProfile: () => api.get('/users/profile'), generate2FA: () => api.post('/users/2fa/generate-setup'), verifyAndEnable2FA: d => api.post('/users/2fa/enable', d), disable2FA: () => api.post('/users/2fa/disable'), updateSecurityQuestion: d => api.put('/users/security-question', d) };
-export const products = { getAllActive: p => api.get("/products/active", { params: p }), getAllAdmin: () => api.get("/products"), getById: id => api.get(`/products/${id}`), getBySlug: s => api.get(`/products/slug/${s}`), create: (d, options) => api.post("/products", d, options), update: (id, d, options) => api.put(`/products/${id}`, d, options), toggleStatus: (id, s) => api.patch(`/products/${id}/status`, { status: s }), getUploadUrl: (f, t, options) => api.post("/products/presign", { filename: f, fileType: t }, options), saveImageKeys: (id, k, options) => api.post(`/products/${id}/images/save`, { imageKeys: k }, options), deleteImage: (id, i) => api.delete(`/products/${id}/images`, { data: { imageId: i } }), addSerials: (id, s) => api.post(`/serials/${id}/add`, { serials: s }), delete: id => api.delete(`/products/${id}`) };
+export const products = { getAllActive: p => api.get("/products/active", { params: p }), getAllAdmin: () => api.get("/products"), getById: id => api.get(`/products/${id}`), getBySlug: s => api.get(`/products/slug/${s}`), create: (d, options) => api.post("/products", d, options), update: (id, d, options) => api.put(`/products/${id}`, d, options), toggleStatus: (id, s) => api.patch(`/products/${id}/status`, { status: s }), getUploadUrl: (f, t, options) => api.post("/products/presign", { filename: f, fileType: t }, options), saveImageKeys: (id, k, options) => api.post(`/products/${id}/images/save`, { imageKeys: k }, options), deleteImage: (id, image, options = {}) => api.delete(`/products/${id}/images`, { ...options, data: typeof image === 'object' ? { imageId: image.id, imagePath: image.file_path } : { imageId: image } }), addSerials: (id, s) => api.post(`/serials/${id}/add`, { serials: s }), delete: id => api.delete(`/products/${id}`) };
 export const categories = { getAll: () => api.get("/categories"), getById: id => api.get(`/categories/${id}`), create: d => api.post("/categories", d), update: (id, d) => api.put(`/categories/${id}`, d), delete: id => api.delete(`/categories/${id}`) };
 export const subcategories = { getAll: () => api.get("/subcategories"), getById: id => api.get(`/subcategories/${id}`), create: d => api.post("/subcategories", d), update: (id, d) => api.put(`/subcategories/${id}`, d), delete: id => api.delete(`/subcategories/${id}`) };
 export const cart = { get: () => api.get("/cart"), add: d => api.post("/cart", d), updateQuantity: (id, q) => api.put(`/cart/${id}`, { quantity: q }), remove: id => api.delete(`/cart/${id}`), clear: () => api.delete("/cart") };
@@ -303,11 +303,21 @@ export const impact = {
   createUpdate: data => api.post('/impact/admin/updates', data, { adminAuth: true }),
 };
 export const serials = { validate: s => api.post("/serials/validate", { serial: s }), getAllAdmin: () => api.get("/serials/admin/all"), getByProduct: p => api.get(`/serials/${p}`), getStats: p => api.get(`/serials/${p}/stats`), generate: d => api.post("/serials/generate", d), addManual: (p, d) => api.post(`/serials/${p}/add`, d), update: (p, s, d) => api.patch(`/serials/${p}/${s}`, d), delete: (p, s) => api.delete(`/serials/${p}/${s}`) };
-export const contact = { submit: d => api.post("/contact", d), getAllAdmin: () => api.get("/contact"), delete: id => api.delete(`/contact/${id}`) };
+export const contact = {
+  submit: d => api.post("/contact", d),
+  getMine: () => api.get("/contact/my"),
+  reply: (id, message) => api.post(`/contact/${id}/replies`, { message }),
+  getAllAdmin: () => api.get("/contact"),
+  delete: id => api.delete(`/contact/${id}`)
+};
 export const adminManagement = { getAllUsers: () => api.get("/admin/users"), getUserDetails: id => api.get(`/admin/users/${id}`), updateUserStatus: (id, s) => api.patch(`/admin/users/${id}/status`, { status: s }), getAllOrders: () => api.get("/orders/all"), updateOrderStatus: (id, d) => api.put(`/orders/${id}/status`, d) };
 export const affiliate = { getAllPartners: () => api.get("/affiliate/partners"), getAllWithdrawals: () => api.get("/affiliate/withdrawals"), getConfig: () => api.get("/affiliate/config"), updatePartnerStatus: (id, s) => api.patch(`/affiliate/partners/${id}/status`, { status: s }), approveWithdrawal: id => api.patch(`/affiliate/withdrawals/${id}/approve`), updateConfig: d => api.put("/affiliate/config", d) };
 export const flashSales = { getAll: () => api.get("/flash-sales"), getAllAdmin: () => api.get("/flash-sales"), getActive: () => api.get("/flash-sales/active"), create: d => api.post("/flash-sales", d), update: (id, d) => api.put(`/flash-sales/${id}`, d), delete: id => api.delete(`/flash-sales/${id}`) };
-export const support = { getAllAdmin: () => api.get('/contact'), updateStatus: (id, s, adminReply) => api.patch(`/contact/${id}/status`, { status: String(s).replaceAll('-', '_'), admin_reply: adminReply }), delete: id => api.delete(`/contact/${id}`) };
+export const support = {
+  getAllAdmin: () => api.get('/contact'),
+  updateStatus: (id, s, adminReply) => api.patch(`/contact/${id}/status`, { status: String(s).replaceAll('-', '_'), ...(adminReply ? { admin_reply: adminReply } : {}) }),
+  delete: id => api.delete(`/contact/${id}`)
+};
 export const loyalty = { getSystemConfig: () => api.get("/settings"), updateSystemConfig: d => api.put("/settings", d), getMembers: () => api.get("/admin/users"), adjustPoints: (u, d) => api.patch(`/admin/users/${u}/status`, d) };
 export const loyaltyTiers = {
   list: () => api.get('/users/loyalty/tiers'),

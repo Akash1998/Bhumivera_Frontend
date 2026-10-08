@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { RefreshCcw, ShieldCheck, Package, HeadphonesIcon } from 'lucide-react';
+import { RefreshCcw, Package, HeadphonesIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 export default function Returns() {
@@ -16,7 +16,7 @@ export default function Returns() {
           <RefreshCcw className="w-16 h-16 mx-auto mb-6 text-[#D4AF37]" />
           <h1 className="text-4xl md:text-5xl font-bold mb-6 tracking-tight">Returns &amp; Replacements</h1>
           <p className="text-lg text-[#FDFBF7]/80 max-w-2xl mx-auto leading-relaxed">
-            We stand by the quality of our premium Bhumivera products. If your purchase doesn't meet your expectations, we are here to make it right — backed by our 10-year E-Warranty promise.
+            If there is an issue with your order, our support team can help review the available return or replacement options.
           </p>
         </div>
       </div>
@@ -26,7 +26,7 @@ export default function Returns() {
         <h2 className="text-3xl font-bold text-center text-[#0B2419] mb-12 tracking-tight">How It Works</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
           {[
-            { step: "01", icon: ShieldCheck, title: "Verify Warranty", desc: "Ensure your product serial number is registered in our E-Warranty Nexus." },
+            { step: "01", icon: Package, title: "Find Your Order", desc: "Open your account and select the delivered order you need help with." },
             { step: "02", icon: HeadphonesIcon, title: "Contact Support", desc: "Reach out to our expert team to troubleshoot or authorize a return." },
             { step: "03", icon: Package, title: "Pack & Ship", desc: "Securely pack the item in its original packaging and ship it to our facility." }
           ].map((item, i) => (
@@ -49,8 +49,8 @@ export default function Returns() {
           Our specialized support team is ready to assist you with product diagnostics and the RMA (Return Merchandise Authorization) process.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
-          <Link to="/warranty" className="px-8 py-4 bg-[#0B2419] hover:bg-[#2C3E2D] text-[#FDFBF7] font-bold rounded-xl transition-colors shadow-sm inline-flex items-center justify-center">
-            Check E-Warranty
+          <Link to="/profile" className="px-8 py-4 bg-[#0B2419] hover:bg-[#2C3E2D] text-[#FDFBF7] font-bold rounded-xl transition-colors shadow-sm inline-flex items-center justify-center">
+            View My Orders
           </Link>
           <Link to="/contact" className="px-8 py-4 bg-[#D4AF37] hover:bg-[#c09d2e] text-[#0B2419] font-bold rounded-xl transition-colors shadow-sm inline-flex items-center justify-center">
             Contact Support Team

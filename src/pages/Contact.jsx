@@ -158,12 +158,15 @@ export default function Contact() {
             <div className="bg-white border border-[#dccfb8] p-8 rounded-[2rem] shadow-sm">
               <Mail className="text-[#6b4226] mb-5" size={28} />
               <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2 text-[#4a3628]">Digital Desk</h4>
-              <p className="text-sm font-medium text-[#1e1510]">support@Bhumivera.com</p>
+              <a href="mailto:support@bhumivera.com" className="text-sm font-medium text-[#1e1510] hover:underline">support@bhumivera.com</a>
             </div>
             <div className="bg-white border border-[#dccfb8] p-8 rounded-[2rem] shadow-sm">
               <Phone className="text-[#6b4226] mb-5" size={28} />
               <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] mb-2 text-[#4a3628]">Concierge Line</h4>
-              <p className="text-sm font-medium text-[#1e1510]">+91 90000 00000</p>
+              <div className="space-y-2 text-sm font-medium text-[#1e1510]">
+                <a href="tel:+917430985647" className="block hover:underline">+91 74309 85647</a>
+                <a href="tel:+918370804458" className="block hover:underline">+91 83708 04458</a>
+              </div>
             </div>
           </div>
 

@@ -28,7 +28,7 @@ export default function Affiliate() {
           {[
             { icon: DollarSign, title: "High Commissions", desc: "Earn highly competitive rates on every authentic Bhumivera product sold through your links." },
             { icon: Award, title: "Premium Brand", desc: "Promote a brand recognized for uncompromising quality and scientific acoustic engineering." },
-            { icon: Target, title: "High Conversion", desc: "Benefit from our optimized checkout process, E-Warranty security, and brand trust." },
+            { icon: Target, title: "High Conversion", desc: "Benefit from our optimized checkout process, clear product information, and brand trust." },
             { icon: TrendingUp, title: "Dedicated Support", desc: "Get access to exclusive marketing materials, product sheets, and partner support." }
           ].map((item, i) => (
             <div key={i} className="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">

@@ -23,7 +23,6 @@ const NotificationManagement = lazy(() => import('./admin/NotificationManagement
 const TaxManagement = lazy(() => import('./admin/TaxManagement'));
 const SystemLogs = lazy(() => import('./admin/SystemLogs'));
 const WarehouseManagement = lazy(() => import('./admin/WarehouseManagement'));
-const EWarrantyManagement = lazy(() => import('./admin/EWarrantyManagement'));
 const ShippingManagement = lazy(() => import('./admin/ShippingManagement')); 
 const AdminSettings = lazy(() => import('./admin/AdminSettings.jsx'));
 const MinCartValueCenter = lazy(() => import('./admin/MinCartValueCenter.jsx'));
@@ -78,7 +77,6 @@ const TAB_COMPONENTS = {
   'flash-sales': FlashSalesManagement, coupons: CouponManagement, users: UserManagement,
   support: SupportManagement, reviews: ReviewManagement, loyalty: LoyaltyManagement,
   affiliate: AffiliateManagement, 
-  'e-warranty': EWarrantyManagement, 
   analytics: AnalyticsManagement,
   contact: ContactManagement,
   notifications: NotificationManagement,
@@ -150,7 +148,7 @@ export default function AdminDashboard() {
     {
       title: 'Customer Service', items: [
         { id: 'support', label: 'Support Tickets' }, { id: 'returns', label: 'Returns' },
-        { id: 'contact', label: 'Messages' }, { id: 'e-warranty', label: 'E-Warranty' }
+        { id: 'contact', label: 'Messages' }
       ]
     },
     {
