@@ -1,9 +1,10 @@
 import React, { useEffect, useState } from 'react';
-// 100% STRICT IMPORT: Using the mapped users object for security
-import { settings as settingsApi, users } from '../../services/api';
+import { auth as authApi, settings as settingsApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { FiLock, FiSave, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 
 export default function AdminSettings() {
+  const { adminOtpVerify } = useAuth();
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -85,8 +86,8 @@ export default function AdminSettings() {
 
     setLoading(true);
     try {
-      // REWRITTEN: Strict object-oriented API call. Interceptor handles token.
-      await users.changePassword({ currentPassword, newPassword });
+      const response = await authApi.changeAdminPassword({ currentPassword, newPassword });
+      await adminOtpVerify(response.data);
       setMessage('Password changed successfully!');
       setCurrentPassword('');
       setNewPassword('');
