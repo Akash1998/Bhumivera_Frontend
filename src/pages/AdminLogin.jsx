@@ -16,6 +16,7 @@ const AdminLogin = () => {
   const [lockoutMsg, setLockoutMsg] = useState('');
   const [lockoutSeconds, setLockoutSeconds] = useState(0);
   const [lockoutExpired, setLockoutExpired] = useState(false);
+  const [resendSeconds, setResendSeconds] = useState(0);
   
   const navigate = useNavigate();
   const { adminOtpVerify } = useAuth();
@@ -39,6 +40,12 @@ const AdminLogin = () => {
     setLockoutMsg(`Admin portal locked. Retry in ${mins}m ${secs}s or reset admin password.`);
   }, [lockoutSeconds, showLockoutBanner]);
 
+  useEffect(() => {
+    if (resendSeconds <= 0) return undefined;
+    const timer = setTimeout(() => setResendSeconds(seconds => Math.max(0, seconds - 1)), 1000);
+    return () => clearTimeout(timer);
+  }, [resendSeconds]);
+
   const validateEmail = (emailStr) => {
     const regex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     return regex.test(emailStr);
@@ -59,6 +66,7 @@ const AdminLogin = () => {
     try {
       const res = await fetch(`${API}/api/auth/admin/request-otp`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, password })
       });
@@ -70,9 +78,13 @@ const AdminLogin = () => {
         return;
       }
       if (!res.ok) throw new Error(data.message || 'Failed to trigger OTP.');
-      
-      setPassword('');
-      setStatus({ type: 'success', message: 'OTP successfully deployed to your email.' });
+      if (data.token) {
+        await adminOtpVerify(data);
+        navigate('/admin');
+        return;
+      }
+      setResendSeconds(45);
+      setStatus({ type: 'success', message: 'Your email provider accepted the sign-in code request. Check your inbox and spam folder.' });
       setStep(2);
     } catch (err) {
       setStatus({ type: 'error', message: err.message || 'Network error triggering OTP.' });
@@ -96,6 +108,7 @@ const AdminLogin = () => {
     try {
       const res = await fetch(`${API}/api/auth/admin/verify-otp`, {
         method: 'POST',
+        credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email, otp })
       });
@@ -109,6 +122,7 @@ const AdminLogin = () => {
       if (!res.ok) throw new Error(data.message || 'Invalid or expired OTP.');
       
       await adminOtpVerify(data);
+      setPassword('');
       navigate('/admin');
     } catch (err) {
       setStatus({ type: 'error', message: err.message || 'Authentication failed.' });
@@ -120,6 +134,7 @@ const AdminLogin = () => {
   const handleBack = () => {
     setStep(1);
     setOtp('');
+    setResendSeconds(0);
     setPassword('');
     setStatus({ type: '', message: '' });
   };
@@ -166,7 +181,7 @@ const AdminLogin = () => {
         ) : (
           <form onSubmit={handleVerifyOtp} className="admin-login-form">
             <div className="form-group">
-              <p className="admin-login-hint">Secure payload sent to:<br/><strong>{email}</strong></p>
+              <p className="admin-login-hint">Sign-in code requested for:<br/><strong>{email}</strong></p>
               <label className="admin-login-label">AUTHORIZATION CODE</label>
               <input
                 type="text"
@@ -191,6 +206,15 @@ const AdminLogin = () => {
               disabled={loading}
             >
               ← Return to Email Entry
+            </button>
+
+            <button
+              type="button"
+              className="admin-login-back"
+              onClick={() => handleRequestOtp({ preventDefault: () => {} })}
+              disabled={loading || resendSeconds > 0}
+            >
+              {resendSeconds > 0 ? `Resend code in ${resendSeconds}s` : 'Resend sign-in code'}
             </button>
 
             <div className="mt-4 text-center">

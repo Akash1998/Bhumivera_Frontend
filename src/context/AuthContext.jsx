@@ -32,9 +32,7 @@ export const AuthProvider = ({ children }) => {
           const d = decodeJWT(anyT); const su = JSON.parse(localStorage.getItem('user') || '{}'); role = d?.role || su?.role || 'user';
           let fu = su;
           if (role === 'admin' || role === 'superadmin') {
-            try {
-              fu = (await authApi.getAdminProfile()).data;
-            } catch (_) { fu = su; }
+            fu = (await authApi.getAdminProfile()).data;
           } else if (role !== 'warehouse_admin') {
             try {
               const profile = await usersApi.getProfile();
@@ -60,17 +58,23 @@ export const AuthProvider = ({ children }) => {
       authExpiryHandled.current = true;
       void logout('customer');
     };
+    const adminExpired = () => void logout('admin');
     window.addEventListener('auth-expired', he);
-    return () => window.removeEventListener('auth-expired', he);
+    window.addEventListener('admin-auth-expired', adminExpired);
+    return () => {
+      window.removeEventListener('auth-expired', he);
+      window.removeEventListener('admin-auth-expired', adminExpired);
+    };
   }, []);
 
   const login = async c => { const r = await authApi.login(c); if (r.status === 202 || r.data?.requires2FA) throw new Error("MFA Verification Required"); const { token: nt, user: ud } = r.data; const d = decodeJWT(nt); const role = d?.role || ud?.role || 'user'; const f = { ...ud, role }; authExpiryHandled.current = false; localStorage.setItem('token', nt); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
   const mobileLogin = async d => { const r = await authApi.mobileLoginVerify(d); const { token: nt, user: ud } = r.data; const p = decodeJWT(nt); const f = { ...ud, role: p?.role || ud?.role || 'user' }; localStorage.setItem('token', nt); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
-  const adminLogin = async c => { const r = await authApi.adminLogin(c); const { token: nt, admin: ad } = r.data; const f = { ...ad, role: ad?.role || 'admin' }; authExpiryHandled.current = false; localStorage.setItem('adminToken', nt); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
+  const adminLogin = async c => { const r = await authApi.adminLogin(c); if (!r.data?.token) throw new Error(r.data?.message || 'Email verification is required for this browser.'); const { token: nt, admin: ad } = r.data; const f = { ...ad, role: ad?.role || 'admin' }; authExpiryHandled.current = false; localStorage.setItem('adminToken', nt); localStorage.setItem('adminLastActivity', String(Date.now())); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
   const adminOtpVerify = async d => {
     const adminData = d?.admin || d?.user || {};
     const f = { ...adminData, role: adminData.role || 'admin' };
     localStorage.setItem('adminToken', d.token);
+    localStorage.setItem('adminLastActivity', String(Date.now()));
     localStorage.setItem('user', JSON.stringify(f));
     setToken(d.token);
     setUser(f);
@@ -91,6 +95,7 @@ export const AuthProvider = ({ children }) => {
     } catch (_) { }
     if (scope === 'admin' || isAdminPath) {
       localStorage.removeItem('adminToken');
+      localStorage.removeItem('adminLastActivity');
       setToken(null); setUser(null);
       if (isAdminPath) window.location.href = '/admin/login';
       return;
@@ -98,6 +103,55 @@ export const AuthProvider = ({ children }) => {
     ['token', 'ms_token', 'user'].forEach(k => localStorage.removeItem(k));
     setToken(null); setUser(null);
   };
+
+  useEffect(() => {
+    if (!['admin', 'superadmin'].includes(user?.role) || !localStorage.getItem('adminToken')) return undefined;
+
+    const idleLimitMs = 24 * 60 * 60 * 1000;
+    let lastActivity = Number(localStorage.getItem('adminLastActivity')) || Date.now();
+    let timeout;
+    if (!localStorage.getItem('adminLastActivity')) {
+      localStorage.setItem('adminLastActivity', String(lastActivity));
+    }
+
+    const scheduleLogout = () => {
+      clearTimeout(timeout);
+      const remainingMs = idleLimitMs - (Date.now() - lastActivity);
+      if (remainingMs <= 0) {
+        window.dispatchEvent(new Event('admin-auth-expired'));
+        return;
+      }
+      timeout = setTimeout(scheduleLogout, remainingMs);
+    };
+    const recordActivity = () => {
+      lastActivity = Date.now();
+      localStorage.setItem('adminLastActivity', String(lastActivity));
+      scheduleLogout();
+    };
+    const syncActivity = event => {
+      if (event.key !== 'adminLastActivity' || !event.newValue) return;
+      lastActivity = Number(event.newValue) || lastActivity;
+      scheduleLogout();
+    };
+    const recordVisibleActivity = () => {
+      if (document.visibilityState === 'visible') recordActivity();
+    };
+
+    ['pointerdown', 'keydown', 'scroll', 'touchstart', 'focus'].forEach(eventName => {
+      window.addEventListener(eventName, recordActivity, { passive: true });
+    });
+    document.addEventListener('visibilitychange', recordVisibleActivity);
+    window.addEventListener('storage', syncActivity);
+    scheduleLogout();
+    return () => {
+      clearTimeout(timeout);
+      ['pointerdown', 'keydown', 'scroll', 'touchstart', 'focus'].forEach(eventName => {
+        window.removeEventListener(eventName, recordActivity);
+      });
+      document.removeEventListener('visibilitychange', recordVisibleActivity);
+      window.removeEventListener('storage', syncActivity);
+    };
+  }, [user?.role, token]);
 
   return <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, loading, login, mobileLogin, adminLogin, adminOtpVerify, warehouseLoginVerify, register, verifyEmail, logout }}>{!loading && children}</AuthContext.Provider>;
 };

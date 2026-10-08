@@ -124,7 +124,7 @@ api.interceptors.request.use(c => {
   return c;
 }, e => Promise.reject(e));
 
-let _refreshPromise = null;
+const _refreshPromises = { user: null, admin: null };
 
 const _resolveTokenKind = (url = '', method = '', adminAuth = false) => {
   if (adminAuth) return 'admin';
@@ -149,26 +149,32 @@ const _resolveTokenKind = (url = '', method = '', adminAuth = false) => {
   return 'user';
 };
 
-const _attemptRefresh = async () => {
-  if (_refreshPromise) return _refreshPromise;
-  _refreshPromise = (async () => {
+const _attemptRefresh = async (kind = 'user') => {
+  if (_refreshPromises[kind]) return _refreshPromises[kind];
+  _refreshPromises[kind] = (async () => {
     try {
-      const currentToken = localStorage.getItem("token") || localStorage.getItem("ms_token");
+      const currentToken = kind === 'admin'
+        ? localStorage.getItem("adminToken")
+        : localStorage.getItem("token") || localStorage.getItem("ms_token");
       if (!currentToken) throw new Error("No token to refresh");
       const { data } = await axios.post(`${BASE_URL}/api/auth/refresh`, {}, {
         withCredentials: true,
         headers: { Authorization: `Bearer ${currentToken}` }
       });
       if (data?.token) {
-        localStorage.setItem("token", data.token);
-        if (localStorage.getItem("ms_token")) localStorage.setItem("ms_token", data.token);
+        if (kind === 'admin') {
+          localStorage.setItem("adminToken", data.token);
+        } else {
+          localStorage.setItem("token", data.token);
+          if (localStorage.getItem("ms_token")) localStorage.setItem("ms_token", data.token);
+        }
       }
       return data?.token || null;
     } finally {
-      _refreshPromise = null;
+      _refreshPromises[kind] = null;
     }
   })();
-  return _refreshPromise;
+  return _refreshPromises[kind];
 };
 
 api.interceptors.response.use(response => {
@@ -188,7 +194,7 @@ api.interceptors.response.use(response => {
   const status = e.response?.status;
   const url = e.config?.url || "";
   if (status === 401) {
-    const isCredentialSubmission = /^\/auth\/(login|register|verify-email|login-request-otp|2fa\/verify|forgot-password|verify-otp|reset-password|mobile-login(?:\/|$)|security-question\/|admin\/(login|request-otp|verify-otp|forgot-password|verify-reset-otp|reset-password))(\/|$)/.test(url);
+    const isCredentialSubmission = /^\/auth\/(login|register|verify-email|login-request-otp|2fa\/verify|forgot-password|verify-otp|reset-password|mobile-login(?:\/|$)|security-question\/|admin\/(login|request-otp|verify-otp|forgot-password|verify-reset-otp|reset-password|change-password))(\/|$)/.test(url);
     if (isCredentialSubmission) {
       notifyMutationFailure(e);
       return Promise.reject(e);
@@ -197,7 +203,26 @@ api.interceptors.response.use(response => {
     const kind = _resolveTokenKind(url, e.config?.method, e.config?.adminAuth);
 
     if (kind === 'admin') {
-      localStorage.removeItem("adminToken");
+      if (!e.config?._retry) {
+        try {
+          const newToken = await _attemptRefresh('admin');
+          if (newToken) {
+            e.config._retry = true;
+            e.config.headers.Authorization = `Bearer ${newToken}`;
+            return api.request(e.config);
+          }
+        } catch (refreshError) {
+          if (refreshError.response?.status !== 401 && refreshError.message !== "No token to refresh") {
+            e.normalized = {
+              ...e.normalized,
+              message: refreshError.response?.data?.message || refreshError.message || e.normalized.message,
+            };
+            notifyMutationFailure(e);
+            return Promise.reject(e);
+          }
+        }
+      }
+      window.dispatchEvent(new Event('admin-auth-expired'));
       notifyMutationFailure(e);
       return Promise.reject(e);
     }
@@ -224,7 +249,7 @@ api.interceptors.response.use(response => {
 
     if (refreshable) {
       try {
-        const newToken = await _attemptRefresh();
+        const newToken = await _attemptRefresh('user');
         if (newToken) {
           e.config._retry = true;
           e.config.headers.Authorization = `Bearer ${newToken}`;
