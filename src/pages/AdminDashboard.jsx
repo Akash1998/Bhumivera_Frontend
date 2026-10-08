@@ -182,6 +182,34 @@ export default function AdminDashboard() {
         }
         .admin-shell { background: #0b2419; }
         .admin-shell ::selection { background: rgba(212, 175, 55, 0.25); }
+        .admin-shell .content-scroll [class~="bg-white"],
+        .admin-shell .content-scroll [class~="bg-gray-50"],
+        .admin-shell .content-scroll [class~="bg-slate-50"],
+        .admin-shell .content-scroll [class*="bg-blue-50"] {
+          background-color: #0f172a !important;
+        }
+        .admin-shell .content-scroll [class~="text-gray-900"],
+        .admin-shell .content-scroll [class~="text-gray-800"],
+        .admin-shell .content-scroll [class~="text-gray-700"],
+        .admin-shell .content-scroll [class~="text-slate-900"],
+        .admin-shell .content-scroll [class~="text-slate-800"],
+        .admin-shell .content-scroll [class~="text-slate-700"] {
+          color: #e2e8f0 !important;
+        }
+        .admin-shell .content-scroll [class~="text-gray-600"],
+        .admin-shell .content-scroll [class~="text-slate-600"] {
+          color: #cbd5e1 !important;
+        }
+        .admin-shell .content-scroll [class~="border-gray-100"],
+        .admin-shell .content-scroll [class~="border-gray-200"],
+        .admin-shell .content-scroll [class~="border-slate-100"],
+        .admin-shell .content-scroll [class~="border-slate-200"] {
+          border-color: #334155 !important;
+        }
+        .admin-shell .content-scroll [class*="hover:bg-slate-50"]:hover,
+        .admin-shell .content-scroll [class*="hover:bg-white"]:hover {
+          background-color: #1e293b !important;
+        }
       `}</style>
 
       <div className="admin-shell flex h-screen overflow-hidden text-[#f7f5ee] selection:bg-amber-500/30">

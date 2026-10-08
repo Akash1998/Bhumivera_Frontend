@@ -35,10 +35,6 @@ export default function ReviewManagement() {
 
   const { showToast } = useToast() || {};
 
-  useEffect(() => {
-    fetchReviews();
-  }, [fetchReviews]);
-
   const fetchReviews = useCallback(async () => {
     setLoading(true);
     setLoadError('');
@@ -54,6 +50,10 @@ export default function ReviewManagement() {
       setLoading(false);
     }
   }, [showToast]);
+
+  useEffect(() => {
+    fetchReviews();
+  }, [fetchReviews]);
 
   const getImageUrl = (img) => {
     if (!img) return '/logo.webp';
