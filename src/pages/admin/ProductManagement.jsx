@@ -8,15 +8,28 @@ import {
 } from 'lucide-react';
 import api, { products as productsApi, categories as categoriesApi, serials as serialsApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
+import compressImageForUpload from '../../utils/compressImageForUpload';
 
 const INITIAL_PRODUCT_STATE = {
   name: '', slug: '', description: '', price: '', discount_price: '', quantity: '', category_id: '', 
-  video_urls: '', model_3d_url: '', warranty_period: '', status: 'active',
+  video_urls: '', product_links: '', model_3d_url: '', warranty_period: '', status: 'active',
   meta_title: '', meta_description: '', tags: '', sku: '', brand: 'Bhumivera'
 };
 
 const INITIAL_SERIAL_STATE = {
   count: 10, prefix: 'BHU', format: 'advanced', base_warranty_months: ''
+};
+
+const formatUrlLines = value => {
+  if (Array.isArray(value)) return value.filter(url => typeof url === 'string').join('\n');
+  if (typeof value !== 'string') return '';
+  try {
+    const parsed = JSON.parse(value);
+    if (Array.isArray(parsed)) return parsed.filter(url => typeof url === 'string').join('\n');
+  } catch {
+    // Keep existing single URLs and newline-separated values as entered.
+  }
+  return value;
 };
 
 export default function ProductManagement() {
@@ -44,6 +57,8 @@ export default function ProductManagement() {
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [isGeneratingAI, setIsGeneratingAI] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadedByteCount, setUploadedByteCount] = useState(0);
+  const [uploadByteTotal, setUploadByteTotal] = useState(0);
   const [uploadingFileName, setUploadingFileName] = useState('');
   const uploadedBytes = useRef([]);
   
@@ -168,7 +183,7 @@ export default function ProductManagement() {
       setForm({
         name: product.name || '', slug: product.slug || '', description: product.description || '', price: product.price || '', discount_price: product.discount_price || '',
         quantity: product.quantity || product.stock || '', category_id: product.category_id || '',
-        video_urls: product.video_urls || '', model_3d_url: product.model_3d_url || '',
+        video_urls: formatUrlLines(product.video_urls), product_links: formatUrlLines(product.product_links), model_3d_url: product.model_3d_url || '',
         warranty_period: product.warranty_period ?? '', status: product.status || 'active',
         meta_title: product.meta_title || '', meta_description: product.meta_description || '', tags: product.tags || '', sku: product.sku || '', brand: product.brand || 'Bhumivera'
       });
@@ -202,7 +217,15 @@ export default function ProductManagement() {
 
   const handleImageChange = (e) => {
     if (e.target.files) {
-      setImages(prev => [...prev, ...Array.from(e.target.files).filter(file => file.type.startsWith('image/'))]);
+      const selected = Array.from(e.target.files);
+      const validFiles = selected.filter(file => ['image/jpeg', 'image/png', 'image/webp'].includes(file.type) && file.size <= 25 * 1024 * 1024);
+      if (validFiles.length !== selected.length) {
+        showToast?.('Choose JPEG, PNG, or WebP images up to 25 MB each.', 'error');
+      }
+      if (existingImages.length + images.length + validFiles.length > 20) {
+        showToast?.('Products can have up to 20 images.', 'error');
+      }
+      setImages(prev => [...prev, ...validFiles].slice(0, Math.max(0, 20 - existingImages.length)));
       e.target.value = '';
     }
   };
@@ -233,13 +256,20 @@ export default function ProductManagement() {
     e.preventDefault();
     setIsUploading(true); 
     setUploadProgress(0); 
+    setUploadedByteCount(0);
+    setUploadByteTotal(0);
     setUploadingFileName('Saving product details...');
-    uploadedBytes.current = images.map(() => 0);
+    uploadedBytes.current = [];
     let productDetailsSaved = false;
     let savedProduct = null;
     let savedProductId = null;
     
     try {
+      const uploadFiles = [];
+      for (let index = 0; index < images.length; index += 1) {
+        setUploadingFileName(`Optimizing image ${index + 1} of ${images.length} as WebP...`);
+        uploadFiles.push(await compressImageForUpload(images[index]));
+      }
       const specObj = specs.reduce((acc, { key, value }) => {
         if (key.trim() && value.trim()) acc[key.trim()] = value.trim();
         return acc;
@@ -266,27 +296,33 @@ export default function ProductManagement() {
 
       if (images.length > 0) {
         setIsUploadingImages(true);
-        setUploadingFileName(`Uploading ${images.length} image${images.length === 1 ? '' : 's'}...`);
-        const filesArray = Array.from(images);
-        const totalBytes = filesArray.reduce((sum, file) => sum + file.size, 0);
+        setUploadingFileName(`Uploading ${uploadFiles.length} optimized WebP image${uploadFiles.length === 1 ? '' : 's'}...`);
+        const totalBytes = uploadFiles.reduce((sum, file) => sum + file.size, 0);
+        setUploadByteTotal(totalBytes);
+        uploadedBytes.current = uploadFiles.map(() => 0);
         
-        const uploadPromises = filesArray.map(async (file, index) => {
+        const uploadPromises = uploadFiles.map(async (file, index) => {
           const urlRes = await productsApi.getUploadUrl(file.name, file.type, { notify: false });
           await axios.put(urlRes.data.uploadUrl, file, {
             headers: { 'Content-Type': file.type },
             onUploadProgress: (e) => {
               uploadedBytes.current[index] = Math.min(file.size, e.loaded || 0);
               const loaded = uploadedBytes.current.reduce((sum, bytes) => sum + bytes, 0);
+              setUploadedByteCount(loaded);
               setUploadProgress(totalBytes ? Math.min(100, Math.floor((loaded / totalBytes) * 100)) : 0);
             }
           });
           uploadedBytes.current[index] = file.size;
           const loaded = uploadedBytes.current.reduce((sum, bytes) => sum + bytes, 0);
+          setUploadedByteCount(loaded);
           setUploadProgress(totalBytes ? Math.min(100, Math.floor((loaded / totalBytes) * 100)) : 100);
           return urlRes.data.key;
         });
 
-        const imageKeys = await Promise.all(uploadPromises);
+        const uploadResults = await Promise.allSettled(uploadPromises);
+        const failedUpload = uploadResults.find(result => result.status === 'rejected');
+        if (failedUpload) throw failedUpload.reason || new Error('One or more image uploads failed.');
+        const imageKeys = uploadResults.map(result => result.value);
         // Direct absolute endpoint transmission for high system resilience
         await productsApi.saveImageKeys(savedProductId, imageKeys, { notify: false });
       }
@@ -305,6 +341,8 @@ export default function ProductManagement() {
       setIsUploadingImages(false);
       setIsUploading(false); 
       setUploadProgress(0);
+      setUploadedByteCount(0);
+      setUploadByteTotal(0);
     }
   };
 
@@ -525,12 +563,14 @@ export default function ProductManagement() {
               <div className="absolute inset-0 bg-[#081b15]/90 backdrop-blur-xl/95 z-50 flex flex-col items-center justify-center backdrop-blur-sm">
                 <UploadCloud className="w-12 h-12 text-emerald-500 animate-bounce mb-6" />
                 <h3 className="text-sm font-mono text-emerald-400 uppercase tracking-widest">{uploadingFileName}</h3>
-                <div className="w-72 bg-[#10241f]/85 backdrop-blur-xl rounded-full h-2 mt-6 border border-slate-800 overflow-hidden">
-                  <div className={`bg-emerald-500 h-full rounded-full transition-all duration-300 relative ${isUploadingImages ? '' : 'w-1/3 animate-pulse'}`} style={isUploadingImages ? { width: `${uploadProgress}%` } : undefined}>
-                    <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
-                  </div>
-                </div>
-                {isUploadingImages && <p className="text-[10px] text-slate-500 font-mono mt-3">{uploadProgress}% uploaded</p>}
+                {isUploadingImages && (
+                  <>
+                    <div className="w-72 bg-[#10241f]/85 backdrop-blur-xl rounded-full h-2 mt-6 border border-slate-800 overflow-hidden">
+                      <div className="bg-emerald-500 h-full rounded-full transition-all duration-150" style={{ width: `${uploadProgress}%` }} />
+                    </div>
+                    <p className="text-[10px] text-slate-500 font-mono mt-3">{uploadProgress}% · {(uploadedByteCount / (1024 * 1024)).toFixed(2)} / {(uploadByteTotal / (1024 * 1024)).toFixed(2)} MB transferred</p>
+                  </>
+                )}
               </div>
             )}
 
@@ -662,12 +702,12 @@ export default function ProductManagement() {
                 {activeTab === 'media' && (
                   <div className="grid grid-cols-2 gap-6">
                     <div className="col-span-2 p-6 border-2 border-dashed border-emerald-500/30 bg-emerald-500/5 rounded-2xl text-center relative hover:bg-emerald-500/10 transition-colors group cursor-pointer">
-                      <input type="file" multiple accept="image/*" onChange={handleImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
+                      <input type="file" multiple accept="image/jpeg,image/png,image/webp" onChange={handleImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
                       <div className="w-16 h-16 bg-[#081b15]/90 backdrop-blur-xl border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                         <ImageIcon size={28} className="text-emerald-500" />
                       </div>
                       <p className="text-sm font-black text-white uppercase tracking-widest mb-1">Product Images</p>
-                      <p className="text-[10px] font-mono text-slate-400">Click to add premium image files</p>
+                      <p className="text-[10px] font-mono text-slate-400">JPEG, PNG, or WebP · up to 25 MB each · optimized to WebP before upload</p>
                     </div>
 
                     {/* Integrated Media Gallery Grid Engine */}
@@ -742,8 +782,16 @@ export default function ProductManagement() {
 
                     <div className="col-span-2 space-y-4 mt-2">
                       <div>
-                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2 flex items-center gap-2"><Video size={14}/> YouTube Link</label>
-                        <input type="url" placeholder="https://youtube.com/watch?v=..." value={form.video_urls} onChange={e=>setForm({...form, video_urls:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-sm text-blue-400 font-mono outline-none transition-colors" />
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2 flex items-center gap-2"><Video size={14}/> YouTube & Instagram video embeds</label>
+                        <textarea rows={4} placeholder={`Paste secure YouTube or Instagram video URLs, one per line
+https://youtu.be/...
+https://www.instagram.com/reel/...`} value={form.video_urls} onChange={e=>setForm({...form, video_urls:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-sm text-blue-400 font-mono outline-none transition-colors" />
+                        <p className="mt-2 text-[10px] text-slate-500">YouTube videos/Shorts and Instagram Reels/posts are embedded on the product page. Videos are streamed from their source, not stored in R2.</p>
+                      </div>
+                      <div>
+                        <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2 flex items-center gap-2"><Globe size={14}/> Product resources and links</label>
+                        <textarea rows={3} placeholder="Paste secure HTTPS product, guide, or resource URLs, one per line" value={form.product_links} onChange={e=>setForm({...form, product_links:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-emerald-300 font-mono outline-none transition-colors" />
+                        <p className="mt-2 text-[10px] text-slate-500">Up to 10 secure links. They open in a new tab on the product page.</p>
                       </div>
                       <div>
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2 flex items-center gap-2"><Box size={14}/> 3D Model Link</label>

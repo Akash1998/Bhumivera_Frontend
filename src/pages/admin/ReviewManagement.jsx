@@ -6,7 +6,7 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
-import compressReviewImage from '../../utils/compressReviewImage';
+import compressImageForUpload from '../../utils/compressImageForUpload';
 
 // --- CONFIGURATION MAPS ---
 const STATUS_MAP = {
@@ -114,7 +114,7 @@ export default function ReviewManagement() {
     setImageUploading(true);
     setImageUploadProgress(0);
     try {
-      const compressedFile = await compressReviewImage(file);
+      const compressedFile = await compressImageForUpload(file);
       const { data } = await api.post('/reviews/admin/upload-url', {
         filename: compressedFile.name,
         fileType: compressedFile.type,

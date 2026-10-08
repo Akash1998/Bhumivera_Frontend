@@ -17,7 +17,7 @@ import {
   serials as serialsApi,
 } from '../services/api';
 import { useToast } from '../context/ToastContext';
-import compressReviewImage from '../utils/compressReviewImage';
+import compressImageForUpload from '../utils/compressImageForUpload';
 import {
   User, Package, Heart, Shield, LifeBuoy, LogOut,
   Wallet, MapPin, Bell, Ticket, Star, Award, Share2,
@@ -486,7 +486,7 @@ export default function Profile() {
     setReviewSubmission(null);
   };
   const uploadReviewPhoto = async (file, index, total) => {
-    const compressedFile = await compressReviewImage(file);
+    const compressedFile = await compressImageForUpload(file);
     const { data } = await reviewsApi.createUploadUrl({
       filename: compressedFile.name,
       fileType: compressedFile.type,

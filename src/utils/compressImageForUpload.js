@@ -1,6 +1,6 @@
 import imageCompression from 'browser-image-compression';
 
-export default async function compressReviewImage(file) {
+export default async function compressImageForUpload(file) {
   const compressed = await imageCompression(file, {
     maxSizeMB: 0.9,
     maxWidthOrHeight: 2560,

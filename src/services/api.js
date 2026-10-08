@@ -310,6 +310,10 @@ export const reviews = {
   approve: id => api.put(`/reviews/${id}/approve`, {}, { adminAuth: true }),
   delete: id => api.delete(`/reviews/${id}`, { adminAuth: true })
 };
+export const recommendations = {
+  recordProductView: productId => api.post('/recommendations/view', { product_id: productId }, { notify: false }),
+  getForYou: productId => api.get('/recommendations/for-you', { params: { product_id: productId } })
+};
 export const notifications = { get: () => api.get("/notifications"), getAllAdmin: () => api.get("/notifications/admin/all"), markRead: id => api.patch(`/notifications/${id}/read`), markAllRead: () => api.patch("/notifications/read-all"), delete: id => api.delete(`/notifications/${id}`), createBroadcast: data => api.post("/notifications/admin/create", data), send: d => api.post("/notifications", d) };
 export const analytics = {
   getDashboard: (period = '30d') => api.get('/analytics/dashboard', { params: { period } }),
