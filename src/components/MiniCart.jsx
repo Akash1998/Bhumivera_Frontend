@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { AnimatePresence, motion as Motion } from 'framer-motion';
 import { ArrowRight, BadgeCheck, ChevronDown, ChevronUp, Gift, Leaf, MapPin, Minus, Plus, ShieldCheck, ShoppingBag, Sparkles, Star, Tag, Trash2, Truck, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -242,12 +243,12 @@ export default function MiniCart() {
       <button type="button" aria-label="Close cart" className="absolute inset-0 h-full w-full bg-[#13241b]/55 backdrop-blur-sm" onClick={() => setIsCartOpen(false)} />
       <aside role="dialog" aria-modal="true" aria-labelledby="mini-cart-title" className="absolute inset-y-0 right-0 flex w-full max-w-[460px] flex-col border-l border-[#e8dcc4] bg-[#FDFBF7] text-[#1A1C18] shadow-2xl animate-in slide-in-from-right duration-300">
         <AnimatePresence>
-          {celebrationEvent && <motion.div key={celebrationEvent.id} initial={{ opacity: 0, y: -18, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -12 }} className="absolute left-4 right-4 top-20 z-30 overflow-hidden rounded-2xl border border-[#c8d6ae] bg-[#f1f5e8] p-4 text-[#263d31] shadow-xl" aria-live="polite">
+          {celebrationEvent && <Motion.div key={celebrationEvent.id} initial={{ opacity: 0, y: -18, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -12 }} className="absolute left-4 right-4 top-20 z-30 overflow-hidden rounded-2xl border border-[#c8d6ae] bg-[#f1f5e8] p-4 text-[#263d31] shadow-xl" aria-live="polite">
             <div className="absolute inset-0 pointer-events-none">
-              {[0, 1, 2, 3, 4, 5].map(index => <motion.span key={index} initial={{ opacity: 0, y: 24, x: `${index * 18}%`, rotate: -20 }} animate={{ opacity: [0, 1, 0], y: -22, rotate: 24 }} transition={{ duration: 1.3, delay: index * 0.06 }} className="absolute bottom-0"><Leaf size={13} className="text-[#758c53]"/></motion.span>)}
+              {[0, 1, 2, 3, 4, 5].map(index => <Motion.span key={index} initial={{ opacity: 0, y: 24, x: `${index * 18}%`, rotate: -20 }} animate={{ opacity: [0, 1, 0], y: -22, rotate: 24 }} transition={{ duration: 1.3, delay: index * 0.06 }} className="absolute bottom-0"><Leaf size={13} className="text-[#758c53]"/></Motion.span>)}
             </div>
             <div className="relative flex items-start gap-3"><span className="rounded-full bg-white p-2 text-[#536b4d]"><Sparkles size={17}/></span><div><p className="text-xs font-bold uppercase tracking-widest">A thoughtful choice</p><p className="mt-1 text-xs leading-5">We’ve added {celebrationEvent.productName} to your cart. Thank you for choosing with care.</p>{rulePreview?.gifts?.length > 0 && <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-800"><Gift size={14}/>Your cart includes an admin-configured gift reward.</p>}</div></div>
-          </motion.div>}
+          </Motion.div>}
         </AnimatePresence>
         <header className="flex items-center justify-between border-b border-[#e8dcc4] px-5 py-4 sm:px-6">
           <div className="flex items-center gap-3">
