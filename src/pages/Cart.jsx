@@ -3,7 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShoppingBag, ArrowLeft, Trash2, Plus, Minus, 
-  ShieldCheck, Zap, ArrowRight, Truck, PackageCheck, Clock, Sparkles
+  ShieldCheck, Zap, ArrowRight, Truck, PackageCheck, Clock, Sparkles, Star, BadgeCheck
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -14,8 +14,13 @@ import { useToast } from '../context/ToastContext';
 
 const getImageUrl = (img) => {
   if (!img) return '/logo.webp';
-  let path = typeof img === 'object' ? (img.url || img.file_path || img.path) : img;
-  if (!path) return '/logo.webp';
+  let parsed = img;
+  if (typeof parsed === 'string') {
+    try { parsed = JSON.parse(parsed); } catch { /* Plain image key. */ }
+  }
+  if (Array.isArray(parsed)) parsed = parsed.find(item => item?.type !== 'video' && item?.media_type !== 'video') || parsed[0];
+  const path = parsed && typeof parsed === 'object' ? parsed.url || parsed.file_path || parsed.path : parsed;
+  if (typeof path !== 'string' || !path.trim()) return '/logo.webp';
   if (path.startsWith('http')) return path;
   const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev/bhumivera';
   return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
@@ -265,7 +270,7 @@ export default function Cart() {
               {cartItems.map(item => {
                 const product = item.product || item;
                 const id = item.product_id || product._id || product.id;
-                const img = Array.isArray(product.images) ? product.images[0] : (product.image_url || product.image);
+                const img = product.image_url || item.image_url || item.image || product.image || product.images;
                 const qty = item.quantity || 1;
                 const price = product.discount_price || product.price || item.unit_price || 0;
 
@@ -291,6 +296,9 @@ export default function Cart() {
                               <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-rose-700 bg-rose-50 px-2 py-0.5 rounded border border-rose-200">Only {Number(product.stock ?? product.quantity ?? item.stock)} left</span>
                             ) : <span className="flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-green-700 bg-green-50 px-2 py-0.5 rounded border border-green-200"><PackageCheck size={12} /> In Stock</span>}
                           </div>
+                          {Number(product.review_count) > 0 && Number(product.rating) > 0 && <Link to={`/product/${product.slug || id}#product-reviews`} className="mt-2 inline-flex items-center gap-1 text-xs font-semibold text-[#765d17] hover:underline">
+                            <Star size={13} fill="currentColor"/> {Number(product.rating).toFixed(1)} <span className="text-stone-500">· {Number(product.review_count)} customer reviews</span>
+                          </Link>}
                         </div>
                         <button onClick={() => removeFromCart(id)} className="p-2.5 bg-[#faf8f5] text-stone-400 hover:text-red-500 hover:bg-red-50 rounded-xl transition-colors shrink-0">
                           <Trash2 size={18} />
@@ -409,6 +417,10 @@ export default function Cart() {
 
               <div className="mt-6 flex items-center justify-center gap-2 text-[10px] font-bold text-stone-400 uppercase tracking-widest relative z-10">
                 <ShieldCheck size={14} className="text-[#8b5a2b]" /> Secure 256-Bit SSL Encrypted Link
+              </div>
+              <div className="mt-4 grid grid-cols-2 gap-2 border-t border-[#f0e8da] pt-4 text-[10px] font-semibold text-stone-600 relative z-10">
+                <span className="flex items-center gap-1.5"><BadgeCheck size={14} className="text-[#8b5a2b]"/>Approved customer reviews</span>
+                <span className="flex items-center gap-1.5"><PackageCheck size={14} className="text-[#8b5a2b]"/>Order support available</span>
               </div>
             </div>
           </div>

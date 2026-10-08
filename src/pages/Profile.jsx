@@ -446,20 +446,22 @@ export default function Profile() {
         accepted.forEach(image => URL.revokeObjectURL(image.preview));
         return current;
       }
-      const room = Math.max(0, 5 - current.form.images.length);
+      const existingImages = Array.isArray(current.form?.images) ? current.form.images : [];
+      const room = Math.max(0, 5 - existingImages.length);
       if (accepted.length > room) toast.error('You can attach up to 5 evidence photos.');
       accepted.slice(room).forEach(image => URL.revokeObjectURL(image.preview));
-      return { ...current, form: { ...current.form, images: [...current.form.images, ...accepted.slice(0, room)] } };
+      return { ...current, form: { ...current.form, images: [...existingImages, ...accepted.slice(0, room)] } };
     });
   };
   const removeReturnImage = index => setReturnOrder(current => {
-    const image = current?.form.images[index];
+    const existingImages = Array.isArray(current?.form?.images) ? current.form.images : [];
+    const image = existingImages[index];
     if (image?.preview) URL.revokeObjectURL(image.preview);
-    return current ? { ...current, form: { ...current.form, images: current.form.images.filter((_, imageIndex) => imageIndex !== index) } } : current;
+    return current ? { ...current, form: { ...current.form, images: existingImages.filter((_, imageIndex) => imageIndex !== index) } } : current;
   });
   const closeReturnRequest = () => {
     if (returnSubmitting) return;
-    returnOrder?.form.images.forEach(image => URL.revokeObjectURL(image.preview));
+    (returnOrder?.form?.images || []).forEach(image => URL.revokeObjectURL(image.preview));
     setReturnOrder(null);
   };
   const uploadReturnPhoto = async (file, orderId, index, total) => {
@@ -485,6 +487,7 @@ export default function Profile() {
   const handleSubmitReturn = async (e) => {
     e.preventDefault();
     const f = returnOrder?.form || {};
+    const evidenceImages = Array.isArray(f.images) ? f.images : [];
     if (!returnOrder?.orderId) return;
     if (!f.reason) { toast.error('Please provide a return reason'); return; }
     if (!f.orderItemId) { toast.error('Select the item you need help returning.'); return; }
@@ -492,8 +495,8 @@ export default function Profile() {
     setReturnUploadProgress(0);
     try {
       const imageUrls = [];
-      for (let index = 0; index < f.images.length; index += 1) {
-        imageUrls.push(await uploadReturnPhoto(f.images[index].file, returnOrder.orderId, index, f.images.length));
+      for (let index = 0; index < evidenceImages.length; index += 1) {
+        imageUrls.push(await uploadReturnPhoto(evidenceImages[index].file, returnOrder.orderId, index, evidenceImages.length));
       }
       await returnsApi.submit({
         order_id: returnOrder.orderId,
@@ -504,7 +507,7 @@ export default function Profile() {
         image_urls: imageUrls,
       });
       toast.success('Request sent for admin review. Your order remains delivered while the team reviews it.');
-      f.images.forEach(image => URL.revokeObjectURL(image.preview));
+      evidenceImages.forEach(image => URL.revokeObjectURL(image.preview));
       setReturnOrder(null);
       await loadReturns();
     } catch (err) { toast.error(err.response?.data?.message || err.message || 'Could not submit the return request.'); }
@@ -1964,8 +1967,8 @@ export default function Profile() {
                     <X className="w-4 h-4"/> Cancel Order
                   </button>
                 )}
-                {DELIVERED_STATUSES.includes((selectedOrder.status||'').toLowerCase()) && (
-                  <button onClick={() => { setReturnOrder({ orderId:selectedOrder.id, form:{ orderItemId:null, reason:'', refundMethod:'wallet', notes:'' }, order:selectedOrder }); setSelectedOrder(null); }}
+                {DELIVERED_STATUSES.includes((selectedOrder.status||'').toLowerCase()) && canRequestReturn(selectedOrder.id) && (
+                  <button onClick={() => { openReturnRequest(selectedOrder); setSelectedOrder(null); }}
                     className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-100 text-sm font-medium">
                     <RotateCcw className="w-4 h-4"/> Request Return
                   </button>
@@ -2047,7 +2050,8 @@ export default function Profile() {
       {returnOrder && (() => {
         const deliveredOrders = eligibleReturnOrders;
         const selectedOrderItems = safeArr(returnOrder.order?.items || returnOrder.order?.order_items);
-        const form = returnOrder.form;
+        const form = returnOrder.form || {};
+        const evidenceImages = Array.isArray(form.images) ? form.images : [];
         return (
           <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-6" onClick={closeReturnRequest}>
             <form onSubmit={handleSubmitReturn} onClick={e => e.stopPropagation()} className="w-full sm:max-w-xl bg-[#FDFBF7] sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
@@ -2132,11 +2136,11 @@ export default function Profile() {
                     className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-sky-600 focus:ring-4 focus:ring-sky-100 text-sm resize-none"/>
                 </div>
                 <div>
-                  <div className="mb-2 flex items-center justify-between gap-3"><label className="text-xs font-semibold text-stone-600">Evidence photos (optional, up to 5)</label><span className="text-[10px] text-stone-400">{form.images.length}/5</span></div>
+                  <div className="mb-2 flex items-center justify-between gap-3"><label className="text-xs font-semibold text-stone-600">Evidence photos (optional, up to 5)</label><span className="text-[10px] text-stone-400">{evidenceImages.length}/5</span></div>
                   <input ref={returnPhotoInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={addReturnImages} className="hidden"/>
-                  <button type="button" onClick={() => returnPhotoInputRef.current?.click()} disabled={form.images.length >= 5 || returnSubmitting} className="w-full rounded-xl border border-dashed border-stone-300 bg-white px-4 py-3 text-left text-sm text-stone-600 hover:border-sky-500 disabled:opacity-50"><Camera className="mr-2 inline h-4 w-4"/>Add photos — JPEG, PNG, or WebP; max 8 MB each</button>
-                  {form.images.length > 0 && <div className="mt-3 grid grid-cols-5 gap-2">{form.images.map((image, index) => <div key={image.preview} className="relative aspect-square overflow-hidden rounded-lg border border-stone-200"><img src={image.preview} alt={`Return evidence ${index + 1}`} className="h-full w-full object-cover"/><button type="button" onClick={() => removeReturnImage(index)} disabled={returnSubmitting} aria-label="Remove evidence photo" className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white"><X className="h-3 w-3"/></button></div>)}</div>}
-                  {returnSubmitting && form.images.length > 0 && <div className="mt-3"><div className="h-2 overflow-hidden rounded-full bg-stone-200"><div className="h-full bg-sky-600 transition-all" style={{ width: `${returnUploadProgress}%` }}/></div><p className="mt-1 text-right text-xs text-stone-500">{returnUploadProgress}% uploaded</p></div>}
+                  <button type="button" onClick={() => returnPhotoInputRef.current?.click()} disabled={evidenceImages.length >= 5 || returnSubmitting} className="w-full rounded-xl border border-dashed border-stone-300 bg-white px-4 py-3 text-left text-sm text-stone-600 hover:border-sky-500 disabled:opacity-50"><Camera className="mr-2 inline h-4 w-4"/>Add photos — JPEG, PNG, or WebP; max 8 MB each</button>
+                  {evidenceImages.length > 0 && <div className="mt-3 grid grid-cols-5 gap-2">{evidenceImages.map((image, index) => <div key={image.preview} className="relative aspect-square overflow-hidden rounded-lg border border-stone-200"><img src={image.preview} alt={`Return evidence ${index + 1}`} className="h-full w-full object-cover"/><button type="button" onClick={() => removeReturnImage(index)} disabled={returnSubmitting} aria-label="Remove evidence photo" className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white"><X className="h-3 w-3"/></button></div>)}</div>}
+                  {returnSubmitting && evidenceImages.length > 0 && <div className="mt-3"><div className="h-2 overflow-hidden rounded-full bg-stone-200"><div className="h-full bg-sky-600 transition-all" style={{ width: `${returnUploadProgress}%` }}/></div><p className="mt-1 text-right text-xs text-stone-500">{returnUploadProgress}% uploaded</p></div>}
                 </div>
                 <div className="rounded-xl border border-sky-100 bg-sky-50 p-3 text-xs text-sky-900">Our team checks the order and the details you provide. Acceptance is required before a return can move into progress. Need help now? <button type="button" onClick={() => { closeReturnRequest(); setSupportTicket(ticket => ({ ...ticket, subject: `Return help for order #${returnOrder.orderId}`, order_id: String(returnOrder.orderId) })); setActiveTab('support'); }} className="font-semibold underline underline-offset-2">Chat with customer care</button>.</div>
               </div>

@@ -13,6 +13,7 @@ export const CartProvider = ({ children }) => {
   const [upsells, setUpsells] = useState([]); 
   const [rulePreview, setRulePreview] = useState(null);
   const [abandonment, setAbandonment] = useState(null);
+  const [couponStackPolicy, setCouponStackPolicy] = useState('rule_first');
   const [rulePreviewLoading, setRulePreviewLoading] = useState(false);
   const previousRuleIds = useRef(null);
   const { isAuthenticated } = useAuth();
@@ -29,11 +30,13 @@ export const CartProvider = ({ children }) => {
         setCart(Array.isArray(fetchedData) ? fetchedData : []);
         setRulePreview(res.data?.rulePreview || null);
         setAbandonment(res.data?.abandonment || null);
+        setCouponStackPolicy(res.data?.couponStackPolicy || 'rule_first');
       } catch (err) {
         console.error("Cart sync failed:", err);
         setCart([]);
         setRulePreview(null);
         setAbandonment(null);
+        setCouponStackPolicy('rule_first');
       } finally {
         setCartLoading(false);
         setRulePreviewLoading(false);
@@ -45,6 +48,7 @@ export const CartProvider = ({ children }) => {
         setCart(Array.isArray(parsed) ? parsed : []);
         setRulePreview(null);
         setAbandonment(null);
+        setCouponStackPolicy('rule_first');
       } catch (e) {
         console.error("Local cart parse failed:", e);
         setCart([]);
@@ -222,6 +226,7 @@ export const CartProvider = ({ children }) => {
       shippingProgress,
       freeShippingThreshold,
       rulePreview,
+      couponStackPolicy,
       rulePreviewLoading,
       abandonment,
       loadCart

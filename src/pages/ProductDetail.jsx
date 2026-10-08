@@ -1,10 +1,11 @@
 import SEO from '../components/SEO';
 import React, { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
 import { 
   Star, Leaf, Heart, Shield, ChevronRight, ChevronLeft,
-  Minus, Plus, CheckCircle2, AlertCircle, Microscope, Package, Tag
+  Minus, Plus, CheckCircle2, AlertCircle, Microscope, Package, Tag,
+  BadgeCheck, Play, X
 } from 'lucide-react';
 import { 
   products as productsApi, 
@@ -86,6 +87,7 @@ const getImageUrl = (img) => {
 
 export default function ProductDetail() {
   const { id } = useParams();
+  const location = useLocation();
   const { addToCart } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { user } = useAuth();
@@ -101,10 +103,23 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('details');
   const [isAdding, setIsAdding] = useState(false);
+  const [activeVideo, setActiveVideo] = useState(null);
+  const [reviewRatingFilter, setReviewRatingFilter] = useState('all');
+  const [reviewSort, setReviewSort] = useState('newest');
 
   const { scrollY } = useScroll();
   const showStickyBar = useTransform(scrollY, [0, 800], [0, 1]);
   const stickyYOffset = useTransform(showStickyBar, [0, 1], [50, 0]);
+
+  useEffect(() => {
+    if (location.hash === '#product-reviews') setActiveTab('reviews');
+  }, [location.hash, product?.id]);
+
+  useEffect(() => {
+    if (activeTab !== 'reviews' || location.hash !== '#product-reviews') return undefined;
+    const frame = window.requestAnimationFrame(() => document.getElementById('product-reviews')?.scrollIntoView({ behavior: 'smooth' }));
+    return () => window.cancelAnimationFrame(frame);
+  }, [activeTab, location.hash, reviewsData.length]);
 
   useEffect(() => {
     const fetchProductData = async () => {
@@ -212,6 +227,15 @@ export default function ProductDetail() {
   const videoEmbeds = splitUrls(product?.video_urls)
     .map(url => ({ source: url, embed: toVideoEmbedUrl(url) }))
     .filter(video => video.embed);
+  const reviewPhotos = reviewsData.flatMap(review => (Array.isArray(review.images) ? review.images : []).map(image => ({ image, review })));
+  const visibleReviews = reviewsData
+    .filter(review => reviewRatingFilter === 'all' || Number(review.rating) === Number(reviewRatingFilter))
+    .slice()
+    .sort((left, right) => reviewSort === 'highest'
+      ? Number(right.rating) - Number(left.rating)
+      : reviewSort === 'lowest'
+        ? Number(left.rating) - Number(right.rating)
+        : new Date(right.created_at || 0).getTime() - new Date(left.created_at || 0).getTime());
   const productLinks = splitUrls(product?.product_links)
     .map(url => getSecureExternalUrl(url))
     .filter(Boolean);
@@ -351,7 +375,10 @@ export default function ProductDetail() {
               {product.name}
             </h1>
 
-            {productRating > 0 && <div className="mb-5 flex items-center gap-2 text-sm text-[#526b4c]"><div className="flex" aria-label={`${productRating.toFixed(1)} out of 5 stars`}>{[1, 2, 3, 4, 5].map(star => <Star key={star} size={14} fill={star <= Math.round(productRating) ? 'currentColor' : 'none'} />)}</div><span>{productRating.toFixed(1)}{reviewCount > 0 ? ` · ${reviewCount} reviews` : ''}</span></div>}
+            {productRating > 0 && <a href="#product-reviews" onClick={() => setActiveTab('reviews')} className="mb-5 inline-flex items-center gap-2 text-sm text-[#526b4c] hover:text-[#8b5a2b]">
+              <span className="flex" aria-label={`${productRating.toFixed(1)} out of 5 stars`}>{[1, 2, 3, 4, 5].map(star => <Star key={star} size={14} fill={star <= Math.round(productRating) ? 'currentColor' : 'none'} />)}</span>
+              <span>{productRating.toFixed(1)}{reviewCount > 0 ? ` · ${reviewCount} reviews` : ''}</span>
+            </a>}
             
             <div className="flex flex-col gap-2 mb-5">
               <div className="flex items-end gap-4">
@@ -461,7 +488,7 @@ export default function ProductDetail() {
             )}
 
             {activeTab === 'reviews' && (
-              <motion.div key="reviews" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-4xl">
+              <motion.div id="product-reviews" key="reviews" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-4xl scroll-mt-28">
                 <div className="mb-8 grid gap-6 border border-[#253b2f]/15 bg-white p-6 md:grid-cols-[auto_1fr] md:items-center md:p-8">
                   <div className="text-center md:min-w-32">
                     <div className="font-serif text-5xl text-[#35533c]">{reviewCount ? productRating.toFixed(1) : '—'}</div>
@@ -472,33 +499,62 @@ export default function ProductDetail() {
                   </div>
                   <div className="border-t border-stone-100 pt-5 text-sm leading-7 text-stone-600 md:border-l md:border-t-0 md:pl-8 md:pt-0">
                     <h3 className="mb-1 font-serif text-xl text-[#17251c]">Real experiences, thoughtfully shared</h3>
-                    <p>Only currently approved customer reviews appear here. Ratings and totals update as reviews are published or removed.</p>
+                    <p>Only currently approved reviews are shown. A verified-purchase label appears only when a review is linked to an order.</p>
+                    <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-semibold text-[#35533c] sm:grid-cols-3">
+                      <span className="flex items-center gap-2"><Shield size={15} className="text-[#8b5a2b]"/>Secure checkout</span>
+                      <span className="flex items-center gap-2"><BadgeCheck size={15} className="text-[#8b5a2b]"/>Verified reviews</span>
+                      <span className="flex items-center gap-2"><Package size={15} className="text-[#8b5a2b]"/>Order support</span>
+                    </div>
                   </div>
                 </div>
-                {reviewsData.length > 0 ? (
-                  reviewsData.map((review, i) => (
-                    <div key={i} className="p-8 bg-white border border-stone-200 mb-6 relative">
-                      <div className="flex items-center gap-1 text-[#8b5a2b] mb-4">
-                        {[...Array(5)].map((_, idx) => <Star key={idx} size={14} fill={idx < review.rating ? "currentColor" : "none"} />)}
-                      </div>
-                      <h4 className="text-lg font-medium text-stone-800 mb-2 italic">"{review.title}"</h4>
-                      <p className="text-stone-500 text-sm mb-6">{review.comment}</p>
-                      {Array.isArray(review.images) && review.images.length > 0 && (
-                        <div className="mb-6 flex flex-wrap gap-3">
-                          {review.images.map((image, imageIndex) => (
-                            <a key={`${review.id}-${imageIndex}`} href={getImageUrl(image)} target="_blank" rel="noreferrer" className="block h-24 w-24 overflow-hidden rounded-xl border border-stone-200 bg-stone-50 focus:outline-none focus:ring-2 focus:ring-[#8b5a2b]">
-                              <img src={getImageUrl(image)} alt={`Customer photo ${imageIndex + 1} for ${product?.name || 'this product'}`} className="h-full w-full object-cover" loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}/>
-                            </a>
-                          ))}
+                {reviewPhotos.length > 0 && <section className="mb-8 rounded-2xl border border-[#253b2f]/15 bg-white p-5 md:p-6">
+                  <div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8b5a2b]">From our customers</p><h3 className="mt-1 font-serif text-2xl text-[#17251c]">Real photos, real reviews</h3></div><span className="text-xs text-stone-500">{reviewPhotos.length} customer {reviewPhotos.length === 1 ? 'photo' : 'photos'}</span></div>
+                  <div className="flex gap-3 overflow-x-auto pb-2">
+                    {reviewPhotos.map(({ image, review }, index) => <a key={`${review.id || index}-${index}`} href={getImageUrl(image)} target="_blank" rel="noreferrer" aria-label={`View customer photo from ${review.user_name || 'a customer'}'s review`} className="group relative h-36 w-32 shrink-0 overflow-hidden rounded-xl border border-stone-200 bg-stone-50 sm:h-44 sm:w-40">
+                      <img src={getImageUrl(image)} alt={`Customer photo for ${product.name}`} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}/>
+                      <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-2 pb-2 pt-7 text-left text-[10px] font-semibold text-white">{review.user_name || 'Customer'}{review.order_id ? ' · Verified' : ''}</span>
+                    </a>)}
+                  </div>
+                </section>}
+                {reviewsData.length > 0 && <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+                  <p className="text-sm font-semibold text-[#35533c]">{visibleReviews.length} customer {visibleReviews.length === 1 ? 'review' : 'reviews'}</p>
+                  <div className="flex gap-2">
+                    <label className="sr-only" htmlFor="review-rating-filter">Filter reviews by rating</label>
+                    <select id="review-rating-filter" value={reviewRatingFilter} onChange={event => setReviewRatingFilter(event.target.value)} className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-xs text-[#35533c]">
+                      <option value="all">All ratings</option>{[5, 4, 3, 2, 1].map(rating => <option key={rating} value={rating}>{rating} stars</option>)}
+                    </select>
+                    <label className="sr-only" htmlFor="review-sort">Sort reviews</label>
+                    <select id="review-sort" value={reviewSort} onChange={event => setReviewSort(event.target.value)} className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-xs text-[#35533c]">
+                      <option value="newest">Newest</option><option value="highest">Highest rated</option><option value="lowest">Lowest rated</option>
+                    </select>
+                  </div>
+                </div>}
+                {visibleReviews.length > 0 ? (
+                  visibleReviews.map((review, i) => (
+                    <article key={review.id || i} className="mb-4 rounded-2xl border border-stone-200 bg-white p-5 sm:p-7">
+                      <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
+                        <div className="flex items-center gap-1 text-[#8b5a2b]" aria-label={`${review.rating} out of 5 stars`}>
+                          {[...Array(5)].map((_, idx) => <Star key={idx} size={14} fill={idx < Number(review.rating) ? "currentColor" : "none"} />)}
                         </div>
-                      )}
-                      <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest border-t border-stone-100 pt-4">{review.user_name}</div>
-                    </div>
+                        {review.order_id && <span className="inline-flex items-center gap-1 rounded-full bg-[#e9f7ef] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-800"><BadgeCheck size={13}/>Verified purchase</span>}
+                      </div>
+                      {review.title && <h4 className="mb-2 text-lg font-semibold text-stone-800">{review.title}</h4>}
+                      <p className="whitespace-pre-line text-sm leading-6 text-stone-600">{review.comment}</p>
+                      {Array.isArray(review.images) && review.images.length > 0 && <div className="mt-4 flex flex-wrap gap-3">
+                        {review.images.map((image, imageIndex) => <a key={`${review.id}-${imageIndex}`} href={getImageUrl(image)} target="_blank" rel="noreferrer" className="block h-24 w-24 overflow-hidden rounded-xl border border-stone-200 bg-stone-50 focus:outline-none focus:ring-2 focus:ring-[#8b5a2b]">
+                          <img src={getImageUrl(image)} alt={`Customer photo ${imageIndex + 1} for ${product.name}`} className="h-full w-full object-cover" loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}/>
+                        </a>)}
+                      </div>}
+                      <div className="mt-5 flex items-center justify-between gap-3 border-t border-stone-100 pt-4 text-[10px] font-bold uppercase tracking-widest text-stone-400">
+                        <span>{review.user_name || 'Customer'}</span>
+                        {review.created_at && <time dateTime={review.created_at}>{new Date(review.created_at).toLocaleDateString()}</time>}
+                      </div>
+                    </article>
                   ))
                 ) : (
                   <div className="text-center py-24 bg-white border border-stone-200">
                     <Microscope className="mx-auto text-stone-300 mb-4" size={40} />
-                    <h3 className="text-sm font-mono text-stone-500 uppercase tracking-widest">No approved reviews yet</h3>
+                    <h3 className="text-sm font-mono text-stone-500 uppercase tracking-widest">{reviewsData.length ? 'No reviews match this filter' : 'No approved reviews yet'}</h3>
                   </div>
                 )}
               </motion.div>
@@ -515,13 +571,13 @@ export default function ProductDetail() {
                 <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#8b5a2b]">See it for yourself</p>
                 <h2 className="mt-2 font-serif text-3xl text-[#17251c]">Product videos</h2>
               </div>
-              <div className="grid gap-6 md:grid-cols-2">
+              <div className="flex snap-x gap-4 overflow-x-auto pb-3">
                 {videoEmbeds.map((video, index) => (
-                  <div key={video.embed} className="overflow-hidden border border-[#253b2f]/15 bg-white shadow-sm">
-                    <div className="aspect-video bg-[#e9e8df]">
-                      <iframe src={video.embed} title={`${product.name} video ${index + 1}`} className="h-full w-full" loading="lazy" referrerPolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen/>
-                    </div>
-                  </div>
+                  <button key={video.embed} type="button" onClick={() => setActiveVideo(video)} aria-label={`Play product video ${index + 1}`} className="group relative aspect-[9/12] w-56 shrink-0 snap-start overflow-hidden rounded-2xl border border-[#253b2f]/15 bg-[#e9e8df] text-left shadow-sm sm:w-64">
+                    {video.embed.includes('youtube-nocookie.com/embed/') ? <img src={`https://img.youtube.com/vi/${video.embed.split('/').pop()}/hqdefault.jpg`} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.classList.add('hidden'); }}/> : <div className="absolute inset-0 bg-gradient-to-br from-[#253b2f] to-[#8b5a2b]"/>}
+                    <span className="absolute inset-0 flex items-center justify-center bg-black/10 transition group-hover:bg-black/25"><span className="rounded-full bg-white/95 p-4 text-[#35533c] shadow-xl"><Play size={22} fill="currentColor"/></span></span>
+                    <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-4 pt-16 text-left text-sm font-semibold text-white">{product.name}<span className="mt-1 block text-[10px] font-bold uppercase tracking-widest text-white/80">Watch product video</span></span>
+                  </button>
                 ))}
               </div>
             </div>
@@ -564,6 +620,26 @@ export default function ProductDetail() {
           </div>
         </section>
       )}
+
+      <AnimatePresence>
+        {activeVideo && <motion.div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm" role="presentation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={event => { if (event.target === event.currentTarget) setActiveVideo(null); }}>
+          <motion.section role="dialog" aria-modal="true" aria-labelledby="product-video-title" initial={{ opacity: 0, y: 20, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }} className="relative grid max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-[#FDFBF7] shadow-2xl md:grid-cols-[0.9fr_1.1fr]">
+            <button type="button" aria-label="Close video" onClick={() => setActiveVideo(null)} className="absolute right-3 top-3 z-10 rounded-full bg-white/90 p-2 text-stone-700 shadow"><X size={18}/></button>
+            <div className="aspect-[9/12] max-h-[72vh] bg-black md:aspect-auto">
+              <iframe src={activeVideo.embed} title={`${product.name} product video`} className="h-full w-full" referrerPolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen/>
+            </div>
+            <div className="flex flex-col p-6 sm:p-8">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8b5a2b]">See it for yourself</p>
+              <h2 id="product-video-title" className="mt-2 font-serif text-2xl leading-tight text-[#17251c]">{product.name}</h2>
+              <p className="mt-3 text-xl font-semibold text-[#35533c]">₹{product.discount_price || product.price}</p>
+              <div className="mt-4 flex items-center gap-2 text-xs text-stone-600"><Shield size={15} className="text-[#8b5a2b]"/>Secure checkout · Bhumivera support</div>
+              <div className="mt-auto pt-8">
+                <button type="button" onClick={async () => { await handleAddToCart(); setActiveVideo(null); }} disabled={isOutOfStock || isAdding} className="w-full rounded-xl bg-[#35533c] px-5 py-4 text-sm font-bold uppercase tracking-widest text-white transition hover:bg-[#253b2f] disabled:cursor-not-allowed disabled:opacity-50">{isAdding ? 'Adding…' : isOutOfStock ? 'Currently unavailable' : 'Add to cart'}</button>
+              </div>
+            </div>
+          </motion.section>
+        </motion.div>}
+      </AnimatePresence>
 
       <motion.div 
         style={{ opacity: showStickyBar, y: stickyYOffset }}
