@@ -8,6 +8,8 @@ import {
 import { Turnstile } from '@marsidev/react-turnstile';
 import { useAuth } from '../context/AuthContext';
 
+const MotionDiv = motion.div;
+
 const viewVariants = {
   initial: { opacity: 0, x: 30, scale: 0.95 },
   animate: { opacity: 1, x: 0, scale: 1, transition: { duration: 0.4, ease: "easeOut" } },
@@ -35,24 +37,15 @@ export default function Register() {
 
   const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || "0x4AAAAAAADBENLaxaG5Y9r6D";
 
-  const getPasswordStrength = (pwd) => {
-    let score = 0;
-    if (pwd.length < 12) return 0;
-    const hasUpperCase = /[A-Z]/.test(pwd);
-    const hasLowerCase = /[a-z]/.test(pwd);
-    const hasDigit = /[0-9]/.test(pwd);
-    const hasSymbol = /[^A-Za-z0-9]/.test(pwd);
-    if (hasUpperCase) score++;
-    if (hasLowerCase) score++;
-    if (hasDigit) score++;
-    if (hasSymbol) score++;
-    return score;
-  };
-
-  const strength = getPasswordStrength(formData.password);
-  const strengthLabels = ["Too Short (min 12 chars)", "Weak", "Fair", "Good", "Strong"];
-  // Using Earth-tones for the strength meter to match "Materia Medica" vibe
-  const strengthColors = ['bg-[#e8dcc4]', 'bg-red-400', 'bg-amber-400', 'bg-emerald-400', 'bg-[#8b5a2b]'];
+  const passwordChecks = [
+    { label: '12–128 characters', valid: formData.password.length >= 12 && formData.password.length <= 128 },
+    { label: 'One uppercase letter (A–Z)', valid: /[A-Z]/.test(formData.password) },
+    { label: 'One lowercase letter (a–z)', valid: /[a-z]/.test(formData.password) },
+    { label: 'One number (0–9)', valid: /[0-9]/.test(formData.password) },
+    { label: 'One special character (e.g. ! @ # $ %)', valid: /[^A-Za-z0-9]/.test(formData.password) }
+  ];
+  const passwordIsValid = passwordChecks.every(check => check.valid) && formData.password.length <= 128;
+  const passwordStrength = passwordChecks.filter(check => check.valid).length;
 
   const handleInputChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -78,7 +71,11 @@ export default function Register() {
     e.preventDefault();
 
     if (!turnstileToken) return setError('Please complete the botanical identity verification.');
-    if (strength < 2) return setError("Please choose a more secure master key (stronger password).");
+    if (!passwordIsValid) {
+      const unmetRequirements = passwordChecks.filter(check => !check.valid).map(check => check.label);
+      if (formData.password.length > 128) unmetRequirements.push('No more than 128 characters');
+      return setError(`Please update your password: ${unmetRequirements.join('; ')}.`);
+    }
     if (!formData.securityAnswer) return setError("Security answer is required for account protection.");
 
     setLoading(true); 
@@ -158,7 +155,7 @@ export default function Register() {
           <AnimatePresence mode="wait">
             
             {view === 'INIT' && (
-              <motion.div key="INIT" variants={viewVariants} initial="initial" animate="animate" exit="exit">
+              <MotionDiv key="INIT" variants={viewVariants} initial="initial" animate="animate" exit="exit">
                 <div className="text-center mb-8 relative z-10">
                   <h1 className="text-4xl font-serif text-[#0B2419] tracking-tight mb-2">Create Account</h1>
                   <p className="text-[#0B2419]/60 text-sm italic">Join the Bhumivera Botanical Registry</p>
@@ -173,10 +170,24 @@ export default function Register() {
                   
                   <div className="space-y-3">
                     <InputField icon={<Lock size={18}/>} type="password" name="password" value={formData.password} onChange={handleInputChange} placeholder="Password" disabled={loading} />
-                    <div className="flex gap-1.5 h-1.5 w-full px-1">
-                      {[1, 2, 3, 4].map(level => (
-                        <div key={level} className={`flex-1 rounded-full transition-colors duration-500 ${level <= strength ? strengthColors[strength] : 'bg-[#F3F9F1]'}`}></div>
-                      ))}
+                    <div className="px-1" aria-live="polite">
+                      <div className="mb-2 flex items-center justify-between gap-2">
+                        <p className="text-xs font-semibold text-[#0B2419]">Password requirements</p>
+                        <p className={`text-xs font-semibold ${passwordIsValid ? 'text-emerald-700' : 'text-[#8B5A2B]'}`}>
+                          {passwordStrength}/{passwordChecks.length} complete
+                        </p>
+                      </div>
+                      <ul className="grid gap-1.5 text-xs sm:grid-cols-2">
+                        {passwordChecks.map(check => (
+                          <li key={check.label} className={`flex items-center gap-2 ${check.valid ? 'text-emerald-700' : 'text-[#0B2419]/55'}`}>
+                            <CheckCircle2 size={14} className={check.valid ? 'text-emerald-600' : 'text-[#0B2419]/25'} aria-hidden="true" />
+                            {check.label}
+                          </li>
+                        ))}
+                      </ul>
+                      <p className="mt-2 text-[11px] leading-relaxed text-[#0B2419]/55">
+                        Example format: <span className="font-semibold">RiverLeaf!2026</span> — don’t reuse this example. Use a unique password.
+                      </p>
                     </div>
                   </div>
 
@@ -207,13 +218,13 @@ export default function Register() {
                     />
                   </div>
                   
-                  <SubmitButton loading={loading} text="Initialize Registry" disabled={strength < 2 || !turnstileToken} />
+                  <SubmitButton loading={loading} text="Initialize Registry" disabled={!turnstileToken} />
                 </form>
-              </motion.div>
+              </MotionDiv>
             )}
 
             {view === 'OTP' && (
-              <motion.div key="OTP" variants={viewVariants} initial="initial" animate="animate" exit="exit" className="text-center">
+              <MotionDiv key="OTP" variants={viewVariants} initial="initial" animate="animate" exit="exit" className="text-center">
                 <h1 className="text-3xl font-serif text-[#0B2419] mb-2 tracking-tight">Verify Identity</h1>
                 <p className="text-[#0B2419]/60 text-sm mb-8">Enter the 6-digit sequence dispatched to <br/><strong>{formData.email}</strong></p>
 
@@ -245,7 +256,7 @@ export default function Register() {
                     Back to Form
                   </button>
                 </form>
-              </motion.div>
+              </MotionDiv>
             )}
 
           </AnimatePresence>
@@ -290,7 +301,7 @@ const SubmitButton = ({ loading, text, disabled = false }) => (
 );
 
 const AlertBox = ({ type, msg }) => (
-  <motion.div 
+  <MotionDiv 
     initial={{ opacity: 0, height: 0, y: -10 }} 
     animate={{ opacity: 1, height: 'auto', y: 0 }} 
     exit={{ opacity: 0, height: 0, y: -10 }} 
@@ -302,5 +313,5 @@ const AlertBox = ({ type, msg }) => (
       <CheckCircle2 size={20} className="shrink-0 mt-0.5 opacity-70" />
     )}
     <span className="text-xs font-medium leading-relaxed tracking-wide w-full">{msg}</span>
-  </motion.div>
+  </MotionDiv>
 );
