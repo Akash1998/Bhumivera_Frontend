@@ -3,9 +3,23 @@ import { auth as authApi, users as usersApi } from '../services/api';
 
 const AuthContext = createContext(null);
 const decodeJWT = t => { try { return JSON.parse(window.atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch (e) { return null; } };
+const getStoredUser = () => {
+  try {
+    const rawUser = localStorage.getItem('user');
+    return rawUser ? JSON.parse(rawUser) : null;
+  } catch (error) {
+    console.error('[AUTH_STORED_USER_PARSE]', error);
+    localStorage.removeItem('user');
+    return null;
+  }
+};
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => { const s = localStorage.getItem('user'); return s ? JSON.parse(s) : null; });
+  const [user, setUser] = useState(() => (
+    localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('warehouseToken')
+      ? getStoredUser()
+      : null
+  ));
   const [token, setToken] = useState(localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('warehouseToken') || null);
   const [loading, setLoading] = useState(true);
   const authExpiryHandled = useRef(false);
@@ -19,7 +33,8 @@ export const AuthProvider = ({ children }) => {
       const adminPath = window.location.pathname.startsWith('/admin');
       if (wp) {
         const t = warehouseToken || customerToken;
-        if (t) { setToken(t); setUser(JSON.parse(localStorage.getItem('user') || '{"role":"warehouse_admin"}')); }
+        if (t) { setToken(t); setUser(getStoredUser() || { role: 'warehouse_admin' }); }
+        else { setToken(null); setUser(null); }
         setLoading(false); return;
       }
       const customerRole = decodeJWT(customerToken)?.role;
@@ -29,7 +44,7 @@ export const AuthProvider = ({ children }) => {
       if (anyT) {
         let role = 'user';
         try {
-          const d = decodeJWT(anyT); const su = JSON.parse(localStorage.getItem('user') || '{}'); role = d?.role || su?.role || 'user';
+          const d = decodeJWT(anyT); const su = getStoredUser() || {}; role = d?.role || su?.role || 'user';
           let fu = su;
           if (role === 'admin' || role === 'superadmin') {
             fu = (await authApi.getAdminProfile()).data;
@@ -37,7 +52,11 @@ export const AuthProvider = ({ children }) => {
             try {
               const profile = await usersApi.getProfile();
               fu = profile.data?.user || profile.data;
-            } catch (_) { fu = su; }
+            } catch (error) {
+              if (error.response?.status === 401) throw error;
+              console.error('[AUTH_PROFILE_RESTORE]', error);
+              fu = su;
+            }
           }
           const f = { ...fu, role };
           setUser(f);
@@ -67,7 +86,20 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  const login = async c => { const r = await authApi.login(c); if (r.status === 202 || r.data?.requires2FA) throw new Error("MFA Verification Required"); const { token: nt, user: ud } = r.data; const d = decodeJWT(nt); const role = d?.role || ud?.role || 'user'; const f = { ...ud, role }; authExpiryHandled.current = false; localStorage.setItem('token', nt); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
+  const login = async c => {
+    const r = await authApi.login(c);
+    if (r.status === 202 || r.data?.requires2FA) return r;
+    const { token: nt, user: ud } = r.data;
+    const d = decodeJWT(nt);
+    const role = d?.role || ud?.role || 'user';
+    const f = { ...ud, role };
+    authExpiryHandled.current = false;
+    localStorage.setItem('token', nt);
+    localStorage.setItem('user', JSON.stringify(f));
+    setToken(nt);
+    setUser(f);
+    return r;
+  };
   const mobileLogin = async d => { const r = await authApi.mobileLoginVerify(d); const { token: nt, user: ud } = r.data; const p = decodeJWT(nt); const f = { ...ud, role: p?.role || ud?.role || 'user' }; localStorage.setItem('token', nt); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
   const adminLogin = async c => { const r = await authApi.adminLogin(c); if (!r.data?.token) throw new Error(r.data?.message || 'Email verification is required for this browser.'); const { token: nt, admin: ad } = r.data; const f = { ...ad, role: ad?.role || 'admin' }; authExpiryHandled.current = false; localStorage.setItem('adminToken', nt); localStorage.setItem('adminLastActivity', String(Date.now())); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
   const adminOtpVerify = async d => {
