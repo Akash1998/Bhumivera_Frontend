@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { 
   DollarSign, ShoppingBag, Users, TrendingUp, Box, Tag, 
-  LifeBuoy, Zap, Layers, Settings, ArrowRight, Server, Database, Activity 
+  Star, Zap, Layers, Settings, ArrowRight, Server, Database, Activity
 } from 'lucide-react';
 import { analytics } from '../../services/api';
 
@@ -83,7 +83,7 @@ export default function DashboardOverview() {
     { title: 'Customer Base', desc: 'Identity & Access', icon: Users, route: '/admin/dashboard/users', colorKey: 'blue' },
     { title: 'Order Operations', desc: 'Fulfillment processing', icon: ShoppingBag, route: '/admin/dashboard/orders', colorKey: 'purple' },
     { title: 'Flash Scheduler', desc: 'Temporal pricing', icon: Zap, route: '/admin/dashboard/flash-sales', colorKey: 'amber' },
-    { title: 'Review Matrix', desc: 'Reputation management', icon: LifeBuoy, route: '/admin/dashboard/reviews', colorKey: 'cyan' },
+    { title: 'Customer Reviews', desc: 'Moderate ratings and customer photos', icon: Star, route: '/admin/dashboard/reviews', colorKey: 'amber' },
     { title: 'Core Configuration', desc: 'Platform settings', icon: Settings, route: '/admin/dashboard/settings', colorKey: 'slate' }
   ];
 

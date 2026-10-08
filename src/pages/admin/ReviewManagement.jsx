@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   MessageSquare, Star, CheckCircle, XCircle, AlertTriangle, 
   Search, Filter, RefreshCw, Trash2, Eye, User, Box, 
@@ -17,6 +17,7 @@ const STATUS_MAP = {
 export default function ReviewManagement() {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   
   // Filtering & Pagination
   const [searchTerm, setSearchTerm] = useState('');
@@ -36,20 +37,23 @@ export default function ReviewManagement() {
 
   useEffect(() => {
     fetchReviews();
-  }, []);
+  }, [fetchReviews]);
 
-  const fetchReviews = async () => {
+  const fetchReviews = useCallback(async () => {
     setLoading(true);
+    setLoadError('');
     try {
       const res = await api.get('/reviews', { adminAuth: true });
       const data = Array.isArray(res.data) ? res.data : (res.data?.reviews || res.data?.data || []);
       setReviews(data.map(review => ({ ...review, status: Number(review.is_approved) === 1 ? 'approved' : 'pending', comment: review.body || review.comment || '' })));
     } catch (err) {
-      showToast?.('Failed to synchronize sentiment matrix.', 'error');
+      const message = err.normalized?.message || err.response?.data?.message || 'Could not load customer reviews. Check your admin session and try again.';
+      setLoadError(message);
+      showToast?.(message, 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
   const getImageUrl = (img) => {
     if (!img) return '/logo.webp';
@@ -185,7 +189,6 @@ export default function ReviewManagement() {
     }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   }, [reviews, searchTerm, statusFilter, ratingFilter]);
 
-  const totalPages = Math.ceil(filteredReviews.length / itemsPerPage);
   const paginatedReviews = filteredReviews.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
 
   // Telemetry KPIs
@@ -201,30 +204,56 @@ export default function ReviewManagement() {
           <div className="w-20 h-20 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin"></div>
           <MessageSquare className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-amber-500 animate-pulse" size={24} />
         </div>
-        <p className="text-slate-500 font-black uppercase text-[10px] tracking-[0.3em] animate-pulse">Syncing Sentiment Matrix...</p>
+        <p className="text-slate-400 text-sm animate-pulse">Loading customer reviews…</p>
+      </div>
+    );
+  }
+
+  if (loadError && reviews.length === 0) {
+    return (
+      <div className="mx-auto flex min-h-[45vh] max-w-xl flex-col items-center justify-center rounded-2xl border border-rose-500/25 bg-slate-900/60 p-8 text-center">
+        <AlertTriangle size={30} className="mb-3 text-rose-400" aria-hidden="true" />
+        <h2 className="text-lg font-semibold text-white">Reviews could not be loaded</h2>
+        <p role="alert" className="mt-2 text-sm text-slate-300">{loadError}</p>
+        <button
+          type="button"
+          onClick={fetchReviews}
+          disabled={loading}
+          className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#d4af37] px-4 py-2.5 text-sm font-semibold text-[#0b2419] transition hover:bg-[#e6c756] disabled:opacity-60"
+        >
+          <RefreshCw size={15} className={loading ? 'animate-spin' : ''} aria-hidden="true" />
+          Try again
+        </button>
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-8 space-y-6 bg-[#020617] min-h-screen text-slate-300 font-sans animate-in fade-in duration-500">
+    <div className="p-3 md:p-5 space-y-5 bg-[#0b2419] min-h-full text-slate-300 font-sans animate-in fade-in duration-500">
       
       {/* COMMAND HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800/80">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#d4af37]/20">
         <div>
-          <h1 className="text-3xl font-black text-white uppercase tracking-tight flex items-center gap-3">
-            Sentiment <span className="text-amber-500">Matrix</span>
+          <h1 className="text-2xl font-semibold text-white tracking-tight flex items-center gap-3">
+            Customer reviews
           </h1>
-          <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest mt-1 flex items-center gap-2">
-            <BarChart2 size={12} className="text-amber-500" /> Advanced Client Feedback & Telemetry
+          <p className="text-slate-400 text-xs mt-1 flex items-center gap-2">
+            <BarChart2 size={13} className="text-[#d4af37]" /> Review moderation, customer photos, and ratings
           </p>
         </div>
         <div className="flex gap-3">
-          <button onClick={fetchReviews} className="p-3 bg-slate-900 border border-slate-800 text-slate-400 rounded-xl hover:bg-slate-800 hover:text-amber-400 transition-all shadow-lg">
+          <button type="button" onClick={fetchReviews} disabled={loading} aria-label="Refresh customer reviews" className="p-2.5 bg-slate-900 border border-slate-800 text-slate-300 rounded-lg hover:bg-slate-800 hover:text-amber-400 transition-all disabled:opacity-60">
             <RefreshCw size={18} />
           </button>
         </div>
       </div>
+
+      {loadError && (
+        <div role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-rose-500/25 bg-rose-500/10 px-4 py-3 text-sm text-rose-100">
+          <span>{loadError}</span>
+          <button type="button" onClick={fetchReviews} disabled={loading} className="font-semibold underline underline-offset-2 disabled:opacity-60">Retry</button>
+        </div>
+      )}
 
       {/* KPI DASHBOARD */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -232,7 +261,7 @@ export default function ReviewManagement() {
           <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-blue-500/20 transition-all"></div>
           <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-blue-500 z-10"><MessageSquare size={22} /></div>
           <div className="z-10">
-            <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Total Feedbacks</p>
+            <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Total reviews</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{totalReviews}</h4>
           </div>
         </div>
@@ -240,7 +269,7 @@ export default function ReviewManagement() {
           <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-amber-500/20 transition-all"></div>
           <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-amber-500 z-10"><Star size={22} /></div>
           <div className="z-10">
-            <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Global Rating</p>
+            <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Average rating</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{averageRating} <span className="text-sm text-slate-500">/ 5.0</span></h4>
           </div>
         </div>
@@ -248,7 +277,7 @@ export default function ReviewManagement() {
           <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-rose-500/20 transition-all"></div>
           <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-rose-500 z-10"><ShieldAlert size={22} /></div>
           <div className="z-10">
-            <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Moderation Queue</p>
+            <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Needs review</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{pendingCount}</h4>
           </div>
         </div>
@@ -256,7 +285,7 @@ export default function ReviewManagement() {
           <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-emerald-500/20 transition-all"></div>
           <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-emerald-500 z-10"><ThumbsUp size={22} /></div>
           <div className="z-10">
-            <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Positive Sentiment</p>
+            <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">4–5 star reviews</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{positiveRatio}%</h4>
           </div>
         </div>
@@ -267,7 +296,7 @@ export default function ReviewManagement() {
         <div className="relative flex-1 group">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-amber-500 transition-colors" size={18} />
           <input 
-            type="text" placeholder="Scan by content, client identity, or hardware access..." 
+          type="text" placeholder="Search by review, customer, product, or order…"
             value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
             className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all"
           />
@@ -308,11 +337,11 @@ export default function ReviewManagement() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-slate-950/80 border-b border-slate-800 backdrop-blur-md">
-                <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Hardware Target</th>
-                <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Client Identity</th>
-                <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Sentiment Payload</th>
+                <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Product</th>
+                <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Customer</th>
+                <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Review</th>
                 <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">State</th>
-                <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right">Ops</th>
+                <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right">Actions</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50">
@@ -320,7 +349,9 @@ export default function ReviewManagement() {
                 <tr>
                   <td colSpan={5} className="p-16 text-center">
                     <MessageSquare size={48} className="mx-auto text-slate-700 mb-4" />
-                    <p className="text-slate-500 font-black uppercase tracking-widest text-sm">Sentiment Matrix is empty for current parameters</p>
+                    <p className="text-slate-400 font-semibold text-sm">
+                      {reviews.length ? 'No reviews match these filters.' : 'No customer reviews yet.'}
+                    </p>
                   </td>
                 </tr>
               ) : paginatedReviews.map(review => {

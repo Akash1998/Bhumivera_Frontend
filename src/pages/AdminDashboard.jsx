@@ -1,6 +1,10 @@
 import React, { useState, Suspense, Component, lazy } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Settings2 } from 'lucide-react';
+import {
+  Activity, Award, Bell, Boxes, ChartNoAxesCombined, FlaskConical,
+  Gamepad2, Gift, Leaf, LifeBuoy, Mail, Package, ScrollText, Settings2,
+  ShoppingBag, SlidersHorizontal, Star, Tags, Truck, Users, Warehouse, Zap
+} from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 // DYNAMIC LAZY IMPORTS to isolate rendering logic
@@ -92,16 +96,15 @@ const TAB_COMPONENTS = {
   impact: ImpactManagement,
 };
 
-// Safe Generic Icon to bypass Lucide-React `.reduce()` compiler crashes
-const SafeIcon = ({ active }) => (
-  <svg 
-    className={`flex-shrink-0 transition-colors duration-300 ${active ? 'text-emerald-400' : 'text-slate-500'}`} 
-    width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"
-  >
-    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-    <line x1="9" y1="3" x2="9" y2="21"></line>
-  </svg>
-);
+const TAB_ICONS = {
+  overview: Activity, analytics: ChartNoAxesCombined, notifications: Bell, logs: ScrollText,
+  orders: ShoppingBag, shipping: Truck, impact: Leaf, products: Package, categories: Boxes,
+  inventory: Tags, warehouse: Warehouse, loyalty: Award, affiliate: Users, coupons: Gift,
+  'flash-sales': Zap, reviews: Star, 'min-cart-value': SlidersHorizontal, 'cart-rules': SlidersHorizontal,
+  gamification: Gamepad2, 'lifecycle-offers': Mail, personalization: Users,
+  'ab-experiments': FlaskConical, 'loyalty-tiers': Award, support: LifeBuoy,
+  returns: Truck, contact: Mail, settings: Settings2, tax: Tags, users: Users
+};
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
@@ -109,55 +112,60 @@ export default function AdminDashboard() {
   const { tab } = useParams();
   const activeTab = tab || 'overview';
   const [isSidebarOpen, setSidebarOpen] = useState(true);
+  const [navSearch, setNavSearch] = useState('');
 
-  // Re-written to standard E-Commerce Jargon with requested features removed
   const menuSections = [
     {
-      title: 'Overview', items: [
+      title: 'Workspace', items: [
         { id: 'overview', label: 'Dashboard' }, { id: 'analytics', label: 'Analytics' },
-        { id: 'notifications', label: 'Notifications' }, { id: 'logs', label: 'System Logs' }
+        { id: 'notifications', label: 'Notifications' }
       ]
     },
     {
-      title: 'Sales & Revenue', items: [
-        { id: 'orders', label: 'Orders' }, { id: 'tax', label: 'Taxes' },
-        { id: 'shipping', label: 'Shipping' }, { id: 'impact', label: 'Earth Impact' }
+      title: 'Customer experience', items: [
+        { id: 'reviews', label: 'Reviews' }, { id: 'support', label: 'Support inbox' },
+        { id: 'users', label: 'Customers' }, { id: 'contact', label: 'Messages' },
+        { id: 'returns', label: 'Returns' }
       ]
     },
     {
-      title: 'Catalog', items: [
-        { id: 'products', label: 'Products' }, { id: 'categories', label: 'Categories' },
-        { id: 'inventory', label: 'Inventory' },
-        { id: 'warehouse', label: 'Warehouse' }
+      title: 'Store operations', items: [
+        { id: 'orders', label: 'Orders' }, { id: 'products', label: 'Products' },
+        { id: 'categories', label: 'Categories' }, { id: 'inventory', label: 'Inventory' },
+        { id: 'warehouse', label: 'Warehouse' }, { id: 'shipping', label: 'Shipping' },
+        { id: 'tax', label: 'Taxes' }
       ]
     },
     {
-      title: 'Marketing', items: [
+      title: 'Growth & offers', items: [
         { id: 'loyalty', label: 'Loyalty' }, { id: 'affiliate', label: 'Affiliates' },
         { id: 'coupons', label: 'Coupons' }, { id: 'flash-sales', label: 'Flash Sales' },
-        { id: 'reviews', label: 'Reviews' },
-        { id: 'min-cart-value', label: 'MIN-CART-VALUE CONTROL CENTER' },
-        { id: 'cart-rules', label: 'Cart Rules Engine' },
-        { id: 'gamification', label: 'Gamification Studio' },
-        { id: 'lifecycle-offers', label: 'Lifecycle Offers' },
-        { id: 'personalization', label: 'Personalization Center' },
-        { id: 'ab-experiments', label: 'A/B Experiment Lab' },
-        { id: 'loyalty-tiers', label: 'Loyalty Tier Forge' }
+        { id: 'min-cart-value', label: 'Cart minimums' }, { id: 'cart-rules', label: 'Cart rules' },
+        { id: 'gamification', label: 'Gamification' }, { id: 'lifecycle-offers', label: 'Lifecycle offers' },
+        { id: 'personalization', label: 'Personalization' }, { id: 'ab-experiments', label: 'A/B experiments' },
+        { id: 'loyalty-tiers', label: 'Loyalty tiers' }
       ]
     },
     {
-      title: 'Customer Service', items: [
-        { id: 'support', label: 'Support Tickets' }, { id: 'returns', label: 'Returns' },
-        { id: 'contact', label: 'Messages' }
+      title: 'Platform', items: [
+        { id: 'impact', label: 'Earth impact' }, { id: 'logs', label: 'System logs' },
+        { id: 'settings', label: 'Settings' }
       ]
     },
-    {
-      title: 'System', items: [
-        { id: 'settings', label: 'Settings', icon: Settings2 }
-      ]
-    }
   ];
 
+  const quickTabs = ['overview', 'orders', 'products', 'users', 'reviews', 'support', 'coupons'];
+  const allMenuItems = menuSections.flatMap(section => section.items);
+  const quickItems = quickTabs.map(id => allMenuItems.find(item => item.id === id)).filter(Boolean);
+  const normalizedSearch = navSearch.trim().toLowerCase();
+  const visibleSections = menuSections
+    .filter(section => section.items.length)
+    .map(section => ({
+      ...section,
+      items: section.items.filter(item => item.label.toLowerCase().includes(normalizedSearch))
+    }))
+    .filter(section => section.items.length);
+  const activeLabel = allMenuItems.find(item => item.id === activeTab)?.label || 'Dashboard';
   const ActiveComponent = TAB_COMPONENTS[activeTab] || DashboardOverview;
 
   return (
@@ -166,112 +174,157 @@ export default function AdminDashboard() {
         .sidebar-scroll::-webkit-scrollbar,
         .content-scroll::-webkit-scrollbar { width: 8px; }
         .sidebar-scroll::-webkit-scrollbar-track,
-        .content-scroll::-webkit-scrollbar-track { background: #0a0b10; }
+        .content-scroll::-webkit-scrollbar-track { background: #071a12; }
         .sidebar-scroll::-webkit-scrollbar-thumb,
         .content-scroll::-webkit-scrollbar-thumb {
-          background-color: rgba(16, 185, 129, 0.4);
+          background-color: rgba(212, 175, 55, 0.48);
           border-radius: 4px;
         }
+        .admin-shell { background: #0b2419; }
+        .admin-shell ::selection { background: rgba(212, 175, 55, 0.25); }
       `}</style>
 
-      <div className="flex h-screen bg-[#050810] overflow-hidden selection:bg-emerald-500/30">
-        <div className={`${isSidebarOpen ? 'w-64' : 'w-20'} transition-all duration-500 sidebar-scroll flex-shrink-0 bg-slate-950/80 backdrop-blur-2xl border-r border-slate-800/50 flex flex-col overflow-y-auto relative z-20`}>
-          <div className="flex items-center gap-4 px-5 py-6 border-b border-slate-800/50 sticky top-0 bg-slate-950/90 z-10">
-            <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 to-cyan-500 rounded-xl flex items-center justify-center flex-shrink-0">
-              <span className="text-slate-950 font-black text-sm tracking-tighter">AV</span>
+      <div className="admin-shell flex h-screen overflow-hidden text-[#f7f5ee] selection:bg-amber-500/30">
+        <div className={`${isSidebarOpen ? 'w-64' : 'w-[4.5rem]'} transition-[width] duration-300 sidebar-scroll flex-shrink-0 bg-[#071a12] border-r border-[#d4af37]/15 flex flex-col overflow-y-auto relative z-20`}>
+          <div className="flex items-center gap-3 px-4 py-4 border-b border-[#d4af37]/15 sticky top-0 bg-[#071a12] z-10">
+            <div className="w-10 h-10 bg-[#d4af37] rounded-xl flex items-center justify-center flex-shrink-0">
+              <span className="text-[#0b2419] font-black text-sm tracking-tighter">BV</span>
             </div>
-            <div className={`overflow-hidden transition-all duration-500 ${isSidebarOpen ? 'w-32 opacity-100' : 'w-0 opacity-0'}`}>
-              <span className="text-white font-black tracking-[0.15em] text-sm block">Bhumivera</span>
-              <span className="text-emerald-500 font-mono text-[9px] uppercase tracking-widest block">Admin Panel</span>
+            <div className={`overflow-hidden transition-all duration-300 ${isSidebarOpen ? 'w-36 opacity-100' : 'w-0 opacity-0'}`}>
+              <span className="text-white font-black tracking-[0.12em] text-sm block">Bhumivera</span>
+              <span className="text-[#d4af37] font-semibold text-[10px] uppercase tracking-widest block">Admin workspace</span>
             </div>
           </div>
 
-          <div className="flex-1 py-6 px-3 space-y-6">
-            {menuSections.map((section, idx) => (
-              <div key={idx} className="space-y-1 relative group">
-                <div className={`overflow-hidden transition-all duration-500 ${isSidebarOpen ? 'h-6 opacity-100' : 'h-0 opacity-0'}`}>
-                  <p className="text-[10px] font-black text-slate-600 uppercase tracking-[0.2em] px-3">{section.title}</p>
-                </div>
-                {section.items.map((item) => {
+          {isSidebarOpen && (
+            <label className="mx-3 mt-3 flex items-center gap-2 rounded-lg border border-white/10 bg-white/5 px-3 py-2 text-slate-400 focus-within:border-[#d4af37]/50">
+              <ChartNoAxesCombined size={15} aria-hidden="true" />
+              <input
+                value={navSearch}
+                onChange={event => setNavSearch(event.target.value)}
+                placeholder="Find a section"
+                aria-label="Find an admin section"
+                className="w-full min-w-0 bg-transparent text-xs text-white outline-none placeholder:text-slate-500"
+              />
+              {navSearch && <button type="button" onClick={() => setNavSearch('')} className="text-[10px] text-slate-400 hover:text-white" aria-label="Clear section search">Clear</button>}
+            </label>
+          )}
+
+          <nav aria-label="Admin sections" className="flex-1 py-4 px-2 space-y-4">
+            {visibleSections.length ? visibleSections.map(section => (
+              <div key={section.title} className="space-y-0.5">
+                {isSidebarOpen && (
+                  <p className="px-3 pb-1 text-[9px] font-bold text-slate-500 uppercase tracking-[0.16em]">
+                    {section.title}
+                  </p>
+                )}
+                {section.items.map(item => {
                   const isActive = activeTab === item.id;
+                  const Icon = TAB_ICONS[item.id] || Activity;
                   return (
                     <button
                       key={item.id}
+                      type="button"
+                      title={!isSidebarOpen ? item.label : undefined}
+                      aria-current={isActive ? 'page' : undefined}
                       onClick={() => navigate(`/admin/dashboard/${item.id}`)}
-                      className={`w-full flex items-center px-3 py-3 rounded-xl transition-all duration-300 border border-transparent ${
-                        isActive ? 'bg-emerald-500/10 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.05)]' : 'hover:bg-slate-800/40'
-                      } ${!isSidebarOpen && 'justify-center'}`}
+                      className={`w-full min-h-9 flex items-center px-3 py-2 rounded-lg transition-colors border ${
+                        isActive
+                          ? 'bg-[#d4af37]/15 border-[#d4af37]/30 text-[#f3d77b]'
+                          : 'border-transparent text-slate-300 hover:bg-white/5 hover:text-white'
+                      } ${!isSidebarOpen ? 'justify-center' : 'gap-2.5'}`}
                     >
-                      {isActive && <div className="absolute left-0 top-0 bottom-0 w-1 bg-emerald-500" />}
-                      <SafeIcon active={isActive} />
-                      <div className={`overflow-hidden transition-all duration-500 whitespace-nowrap ${isSidebarOpen ? 'w-full ml-3 opacity-100' : 'w-0 ml-0 opacity-0'}`}>
-                        <span className={`text-sm font-semibold tracking-wide flex justify-start ${isActive ? 'text-emerald-400' : 'text-slate-400'}`}>
-                          {item.label}
-                        </span>
-                      </div>
+                      <Icon size={17} strokeWidth={isActive ? 2.3 : 1.8} className="flex-shrink-0" aria-hidden="true" />
+                      {isSidebarOpen && <span className="truncate text-xs font-medium">{item.label}</span>}
                     </button>
                   );
                 })}
               </div>
-            ))}
-          </div>
+            )) : (
+              <p className="px-3 py-4 text-xs text-slate-500">No matching section.</p>
+            )}
+          </nav>
 
-          <div className="p-4 border-t border-slate-800/50 bg-slate-950/90 sticky bottom-0 z-10">
+          <div className="p-3 border-t border-[#d4af37]/15 bg-[#071a12] sticky bottom-0 z-10">
             <button
-              onClick={() => { logout(); navigate('/admin/login'); }}
-              className={`w-full flex items-center py-3 rounded-xl transition-all duration-300 hover:bg-rose-500/10 border border-transparent text-slate-500 hover:text-rose-400 ${!isSidebarOpen ? 'justify-center px-0' : 'px-4 gap-3'}`}
+              type="button"
+              onClick={() => { logout('admin'); navigate('/admin/login'); }}
+              className={`w-full min-h-9 flex items-center py-2 rounded-lg transition-colors border border-transparent text-slate-400 hover:bg-rose-500/10 hover:text-rose-300 ${!isSidebarOpen ? 'justify-center px-0' : 'px-3 gap-2.5'}`}
             >
-              <svg className="flex-shrink-0" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <svg className="flex-shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                 <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path><polyline points="16 17 21 12 16 7"></polyline><line x1="21" y1="12" x2="9" y2="12"></line>
               </svg>
-              <div className={`overflow-hidden transition-all duration-500 ${isSidebarOpen ? 'w-full ml-3 opacity-100' : 'w-0 ml-0 opacity-0'}`}>
-                <span className="text-sm font-bold flex justify-start tracking-wide">Disconnect</span>
-              </div>
+              {isSidebarOpen && <span className="text-xs font-semibold">Sign out</span>}
             </button>
           </div>
         </div>
 
-        <div className="flex-1 flex flex-col overflow-hidden relative">
-          <div className="flex items-center justify-between px-8 py-5 border-b border-slate-800/50 bg-slate-950/40 backdrop-blur-xl relative z-10">
-            <div className="flex items-center gap-6">
-              <button
-                onClick={() => setSidebarOpen(!isSidebarOpen)}
-                className="p-2.5 bg-slate-900/80 border border-slate-800 rounded-xl text-slate-400 transition-all shadow-sm"
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
-              </button>
-              <div className="flex items-center gap-3">
-                <h1 className="text-xl text-white font-black uppercase tracking-widest">{activeTab.replace(/-/g, ' ')}</h1>
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono font-bold bg-slate-800 text-slate-400 uppercase border border-slate-700">Panel</span>
+        <div className="min-w-0 flex-1 flex flex-col overflow-hidden relative">
+          <header className="relative z-10 border-b border-[#d4af37]/15 bg-[#0b2419]">
+            <div className="flex min-h-[4.25rem] items-center justify-between gap-4 px-4 py-3 md:px-6">
+              <div className="flex min-w-0 items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSidebarOpen(!isSidebarOpen)}
+                  aria-label={isSidebarOpen ? 'Collapse navigation' : 'Expand navigation'}
+                  className="rounded-lg border border-white/10 bg-white/5 p-2 text-slate-300 transition hover:border-[#d4af37]/50 hover:text-white"
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <line x1="3" y1="12" x2="21" y2="12"></line><line x1="3" y1="6" x2="21" y2="6"></line><line x1="3" y1="18" x2="21" y2="18"></line>
+                  </svg>
+                </button>
+                <div className="min-w-0">
+                  <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#d4af37]">Bhumivera admin</p>
+                  <h1 className="truncate text-lg font-semibold text-white md:text-xl">{activeLabel}</h1>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 border-l border-white/10 pl-3 md:gap-3 md:pl-5">
+                <div className="hidden text-right sm:block">
+                  <p className="max-w-40 truncate text-xs font-semibold text-white">{user?.name || user?.email || 'Administrator'}</p>
+                  <p className="text-[10px] capitalize text-slate-400">{user?.role || 'admin'}</p>
+                </div>
+                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d4af37]/40 bg-[#d4af37]/10 text-sm font-bold text-[#f3d77b]" aria-hidden="true">
+                  {(user?.name || user?.email || 'A')[0].toUpperCase()}
+                </div>
               </div>
             </div>
-            <div className="flex items-center gap-3 pl-6 border-l border-slate-800/80">
-              <div className="text-right hidden md:block">
-                <p className="text-sm font-black text-white uppercase tracking-wider">{user?.name || 'SYSADMIN'}</p>
-                <p className="text-[10px] font-mono text-emerald-500 uppercase tracking-widest">Role: Admin</p>
-              </div>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-800 to-slate-900 border border-slate-700 flex items-center justify-center text-white font-black text-sm">
-                {user?.name?.[0] || 'A'}
-              </div>
-            </div>
-          </div>
+            <nav aria-label="Frequently used admin sections" className="flex gap-1 overflow-x-auto px-4 pb-3 md:px-6">
+              {quickItems.map(item => {
+                const isActive = activeTab === item.id;
+                const Icon = TAB_ICONS[item.id] || Activity;
+                return (
+                  <button
+                    key={item.id}
+                    type="button"
+                    aria-current={isActive ? 'page' : undefined}
+                    onClick={() => navigate(`/admin/dashboard/${item.id}`)}
+                    className={`inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[11px] font-medium transition ${
+                      isActive
+                        ? 'border-[#d4af37]/40 bg-[#d4af37] text-[#0b2419]'
+                        : 'border-white/10 bg-white/[0.03] text-slate-300 hover:border-[#d4af37]/40 hover:text-white'
+                    }`}
+                  >
+                    <Icon size={13} aria-hidden="true" />{item.label}
+                  </button>
+                );
+              })}
+            </nav>
+          </header>
 
-          <div className="flex-1 overflow-auto p-6 relative z-10 content-scroll">
+          <main className="content-scroll min-h-0 flex-1 overflow-auto p-3 md:p-5">
             <ErrorBoundary key={activeTab}>
               <Suspense fallback={
-                <div className="flex items-center justify-center min-h-[60vh]">
-                  <div className="flex flex-col items-center gap-4">
-                    <div className="w-12 h-12 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin" />
-                    <span className="text-emerald-500 font-mono text-xs uppercase tracking-[0.3em] animate-pulse">Loading View...</span>
+                <div className="flex min-h-[40vh] items-center justify-center">
+                  <div className="flex flex-col items-center gap-3">
+                    <div className="h-10 w-10 animate-spin rounded-full border-4 border-[#d4af37]/20 border-t-[#d4af37]" />
+                    <span className="text-[#d4af37] text-xs font-medium">Loading {activeLabel}…</span>
                   </div>
                 </div>
               }>
                 <ActiveComponent key={activeTab} />
               </Suspense>
             </ErrorBoundary>
-          </div>
+          </main>
         </div>
       </div>
     </>
