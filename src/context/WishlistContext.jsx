@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { useAuth } from './AuthContext';
 import { wishlist as wishlistApi } from '../services/api';
-import toast from 'react-hot-toast';
+import { useToast } from './ToastContext';
 
 const WishlistContext = createContext(null);
 
@@ -20,6 +20,7 @@ function readGuestWishlist() {
 
 export function WishlistProvider({ children }) {
   const { user, token } = useAuth();
+  const toast = useToast();
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -54,24 +55,32 @@ export function WishlistProvider({ children }) {
     return wishlist.some(item => String(productIdOf(item)) === String(productId));
   }, [wishlist]);
 
-  const removeFromWishlist = useCallback(async productId => {
+  const removeFromWishlist = useCallback(async (productId, { notify = true } = {}) => {
     if (productId === undefined || productId === null) return false;
-    setWishlist(current => current.filter(item => String(productIdOf(item)) !== String(productId)));
     if (user && token) {
+      setWishlist(current => current.filter(item => String(productIdOf(item)) !== String(productId)));
       try {
-        await wishlistApi.remove(productId);
+        await wishlistApi.remove(productId, { notify });
         return true;
       } catch (requestError) {
         console.error('[WISHLIST_REMOVE]', requestError);
         await fetchWishlistFromAPI();
-        toast.error(requestError.response?.data?.message || 'Could not remove this product.');
+        if (notify) toast.error(requestError.response?.data?.message || 'Could not remove this product.');
         return false;
       }
     }
     const updated = wishlist.filter(item => String(productIdOf(item)) !== String(productId));
-    localStorage.setItem('guest_wishlist', JSON.stringify(updated));
+    try {
+      localStorage.setItem('guest_wishlist', JSON.stringify(updated));
+      setWishlist(updated);
+      toast.success('Product removed from your wishlist.');
+    } catch (storageError) {
+      console.error('[WISHLIST_GUEST_REMOVE]', storageError);
+      toast.error('Could not remove this product from your wishlist.');
+      return false;
+    }
     return true;
-  }, [wishlist, user, token, fetchWishlistFromAPI]);
+  }, [wishlist, user, token, fetchWishlistFromAPI, toast]);
 
   const toggleWishlist = useCallback(async product => {
     const productId = productIdOf(product);
@@ -94,20 +103,39 @@ export function WishlistProvider({ children }) {
     }
 
     const updated = [...wishlist, product];
-    setWishlist(updated);
-    localStorage.setItem('guest_wishlist', JSON.stringify(updated));
+    try {
+      localStorage.setItem('guest_wishlist', JSON.stringify(updated));
+      setWishlist(updated);
+      toast.success('Product added to your wishlist.');
+    } catch (storageError) {
+      console.error('[WISHLIST_GUEST_ADD]', storageError);
+      toast.error('Could not save this product to your wishlist.');
+      return false;
+    }
     return true;
-  }, [wishlist, user, token, isWishlisted, removeFromWishlist]);
+  }, [wishlist, user, token, isWishlisted, removeFromWishlist, toast]);
 
   const clearWishlist = useCallback(async () => {
     if (user && token) {
-      const results = await Promise.all(wishlist.map(item => removeFromWishlist(productIdOf(item))));
-      return results.every(Boolean);
+      const results = await Promise.all(wishlist.map(item => removeFromWishlist(productIdOf(item), { notify: false })));
+      if (results.every(Boolean)) {
+        toast.success('Wishlist cleared successfully.');
+        return true;
+      }
+      toast.error('Some products could not be removed from your wishlist.');
+      return false;
     }
-    setWishlist([]);
-    localStorage.removeItem('guest_wishlist');
+    try {
+      localStorage.removeItem('guest_wishlist');
+      setWishlist([]);
+      toast.success('Wishlist cleared successfully.');
+    } catch (storageError) {
+      console.error('[WISHLIST_GUEST_CLEAR]', storageError);
+      toast.error('Could not clear your wishlist.');
+      return false;
+    }
     return true;
-  }, [wishlist, user, token, removeFromWishlist]);
+  }, [wishlist, user, token, removeFromWishlist, toast]);
 
   return (
     <WishlistContext.Provider value={{ wishlist, loading, error, isWishlisted, toggleWishlist, removeFromWishlist, clearWishlist, refreshWishlist: fetchWishlistFromAPI, count: wishlist.length }}>

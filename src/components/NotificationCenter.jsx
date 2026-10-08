@@ -2,8 +2,8 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Bell, X, CheckCheck, Trash2, Package, Tag, Info, Star, AlertCircle } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-
-const API = import.meta.env.VITE_API_URL || import.meta.env.VITE_BASE_URL || 'https://service.Bhumivera.com';
+import { notifications as notificationsApi } from '../services/api';
+import { useToast } from '../context/ToastContext';
 
 const TYPE_CONFIG = {
   order:   { icon: Package,     color: 'text-cyan-400',   bg: 'bg-cyan-500/10',   border: 'border-cyan-500/30' },
@@ -29,6 +29,7 @@ const timeAgo = (dateStr) => {
 
 export default function NotificationCenter() {
   const { token, user } = useAuth();
+  const toast = useToast();
   const [open, setOpen] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [unread, setUnread] = useState(0);
@@ -60,62 +61,50 @@ export default function NotificationCenter() {
   const fetchNotifications = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/notifications`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (res.ok) {
-        const data = await res.json();
-        const notifs = Array.isArray(data) ? data : (data.notifications || []);
-        setNotifications(notifs);
-        setUnread(notifs.filter(n => !n.read).length);
-      } else {
-        setNotifications([]);
-        setUnread(0);
-      }
-    } catch {
-      setNotifications([]);
-      setUnread(0);
+      const { data } = await notificationsApi.get();
+      const notifs = Array.isArray(data) ? data : (data.notifications || []);
+      setNotifications(notifs);
+      setUnread(notifs.filter(n => !n.read).length);
+    } catch (error) {
+      toast.error(error.normalized?.message || 'Could not load notifications.');
     } finally {
       setLoading(false);
     }
-  }, [token]);
+  }, [token, toast]);
 
   const markAllRead = async () => {
     try {
-      await fetch(`${API}/api/notifications/read-all`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-    } catch {}
-    setNotifications(prev => prev.map(n => ({ ...n, read: true })));
-    setUnread(0);
+      await notificationsApi.markAllRead();
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+      setUnread(0);
+    } catch (error) {
+      toast.error(error.normalized?.message || 'Could not mark notifications as read.');
+    }
   };
 
   const markRead = async (id) => {
     if (!id) return;
     try {
-      await fetch(`${API}/api/notifications/${id}/read`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` }
-      });
-    } catch {}
-    setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
-    setUnread(prev => Math.max(0, prev - 1));
+      await notificationsApi.markRead(id);
+      setNotifications(prev => prev.map(n => n._id === id ? { ...n, read: true } : n));
+      setUnread(prev => Math.max(0, prev - 1));
+    } catch (error) {
+      toast.error(error.normalized?.message || 'Could not mark the notification as read.');
+    }
   };
 
   const deleteNotif = async (id, e) => {
     e.stopPropagation();
     try {
-      await fetch(`${API}/api/notifications/${id}`, {
-        method: 'DELETE',
-        headers: { Authorization: `Bearer ${token}` }
+      await notificationsApi.delete(id);
+      setNotifications(prev => prev.filter(n => n._id !== id));
+      setUnread(prev => {
+        const wasUnread = notifications.find(n => n._id === id && !n.read);
+        return wasUnread ? Math.max(0, prev - 1) : prev;
       });
-    } catch {}
-    setNotifications(prev => prev.filter(n => n._id !== id));
-    setUnread(prev => {
-      const wasUnread = notifications.find(n => n._id === id && !n.read);
-      return wasUnread ? Math.max(0, prev - 1) : prev;
-    });
+    } catch (error) {
+      toast.error(error.normalized?.message || 'Could not delete the notification.');
+    }
   };
 
   if (!user) return null;

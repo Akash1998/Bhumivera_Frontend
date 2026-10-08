@@ -10,7 +10,7 @@ import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import { Gift } from 'lucide-react';
 import { newsletter as newsletterApi, products as productsApi } from '../services/api';
-import toast from 'react-hot-toast';
+import { useToast } from '../context/ToastContext';
 
 const getImageUrl = (img) => {
   if (!img) return '/logo.webp';
@@ -22,6 +22,7 @@ const getImageUrl = (img) => {
 };
 
 export default function Cart() {
+  const toast = useToast();
   const { 
     cartItems = [], 
     removeFromCart, 

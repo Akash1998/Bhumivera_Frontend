@@ -1,10 +1,83 @@
 import axios from "axios";
+import { notifyOperation } from "../utils/operationFeedback";
 
 let b = import.meta.env.VITE_BASE_URL || "https://service.Bhumivera.com";
 if (b.startsWith("http://") && !b.includes("localhost")) b = b.replace("http://", "https://");
 export const BASE_URL = b;
 
 const api = axios.create({ baseURL: `${BASE_URL}/api`, withCredentials: true });
+
+const isMutation = method => ['post', 'put', 'patch', 'delete'].includes(String(method || '').toLowerCase());
+
+const getOperationLabel = url => {
+  const path = String(url || '').split('?')[0].replace(/\/+$/, '');
+  if (/^\/orders\/[^/]+\/status$/.test(path)) return 'Order status and tracking';
+  if (/^\/orders\/[^/]+\/cancel$/.test(path)) return 'Order cancellation';
+  if (path.startsWith('/orders')) return 'Order';
+  if (path.startsWith('/cart')) return 'Cart';
+  if (path.startsWith('/wishlist')) return 'Wishlist';
+  if (path.startsWith('/addresses')) return 'Address';
+  if (path.startsWith('/coupons')) return 'Coupon';
+  if (path.startsWith('/settings/cart-rules')) return 'Cart rule';
+  if (path.startsWith('/settings')) return 'Settings';
+  if (path.startsWith('/products')) return 'Product';
+  if (path.startsWith('/categories')) return 'Category';
+  if (path.startsWith('/subcategories')) return 'Subcategory';
+  if (path.startsWith('/users/profile')) return 'Profile';
+  if (path.startsWith('/users')) return 'Account';
+  if (path.startsWith('/returns')) return 'Return request';
+  if (path.startsWith('/warranty')) return 'Warranty request';
+  if (path.startsWith('/shipping')) return 'Shipping settings';
+  if (path.startsWith('/inventory')) return 'Inventory';
+  if (path.startsWith('/serials')) return 'Serial number';
+  if (path.startsWith('/flash-sales')) return 'Flash sale';
+  if (path.startsWith('/notifications')) return 'Notification';
+  if (path.startsWith('/reviews')) return 'Review';
+  if (path.startsWith('/contact')) return 'Contact request';
+  if (path.startsWith('/newsletter')) return 'Subscription';
+  if (path.startsWith('/wallet')) return 'Wallet operation';
+  const segment = path.split('/').filter(Boolean).find(part => !/^\d+$/.test(part));
+  return segment
+    ? segment.replace(/[-_]/g, ' ').replace(/\b\w/g, letter => letter.toUpperCase())
+    : 'Operation';
+};
+
+const getSuccessMessage = response => {
+  const config = response.config || {};
+  if (config.successMessage) return config.successMessage;
+  if (/^\/orders\/[^/]+\/status$/.test(String(config.url || '').split('?')[0])) {
+    let body = config.data;
+    if (typeof body === 'string') {
+      try { body = JSON.parse(body); } catch { body = {}; }
+    }
+    return body?.trackingNumber || body?.courier
+      ? 'Order status and tracking details updated successfully.'
+      : 'Order status updated successfully.';
+  }
+  const serverMessage = response.data?.message;
+  if (typeof serverMessage === 'string' && serverMessage.trim().length > 3) return serverMessage.trim();
+  const method = String(config.method || '').toLowerCase();
+  const label = getOperationLabel(config.url);
+  if (method === 'delete') return `${label} deleted successfully.`;
+  if (method === 'post') return `${label} completed successfully.`;
+  return `${label} updated successfully.`;
+};
+
+const shouldNotifyMutation = config => isMutation(config?.method) &&
+  config?.notify !== false &&
+  !/\/auth\/(login|register|verify-email|mobile-login|admin\/request-otp|admin\/verify-otp|admin\/forgot-password|admin\/verify-reset-otp|admin\/reset-password|forgot-password|verify-otp|reset-password|2fa\/verify)(\/|$)/.test(config?.url || '') &&
+  !/\/coupons\/validate(\/|$)/.test(config?.url || '');
+
+const notifyMutationFailure = error => {
+  const config = error.config || {};
+  if (!shouldNotifyMutation(config) || axios.isCancel(error)) return;
+  const serverMessage = error.response?.data?.message || error.normalized?.message;
+  const label = getOperationLabel(config.url);
+  const message = typeof serverMessage === 'string' && serverMessage.trim()
+    ? serverMessage.trim()
+    : `Could not complete ${label.toLowerCase()}. Please try again.`;
+  notifyOperation('error', message);
+};
 
 api.interceptors.request.use(c => {
   const url = c.url || "";
@@ -106,7 +179,12 @@ const _attemptRefresh = async () => {
   return _refreshPromise;
 };
 
-api.interceptors.response.use(r => r, async (e) => {
+api.interceptors.response.use(response => {
+  if (shouldNotifyMutation(response.config)) {
+    notifyOperation('success', getSuccessMessage(response));
+  }
+  return response;
+}, async (e) => {
   const errorData = e.response?.data || {};
   e.normalized = {
     code: errorData.code || (e.response ? `HTTP_${e.response.status}` : 'NETWORK_ERROR'),
@@ -122,10 +200,12 @@ api.interceptors.response.use(r => r, async (e) => {
 
     if (kind === 'admin') {
       localStorage.removeItem("adminToken");
+      notifyMutationFailure(e);
       return Promise.reject(e);
     }
     if (kind === 'warehouse') {
       localStorage.removeItem("warehouseToken");
+      notifyMutationFailure(e);
       return Promise.reject(e);
     }
 
@@ -158,6 +238,7 @@ api.interceptors.response.use(r => r, async (e) => {
     }
 
     if (_firstFailedRefreshAt && (Date.now() - _firstFailedRefreshAt < 10000)) {
+      notifyMutationFailure(e);
       return Promise.reject(e);
     }
 
@@ -166,6 +247,7 @@ api.interceptors.response.use(r => r, async (e) => {
     localStorage.removeItem("user");
     window.dispatchEvent(new Event('auth-expired'));
   }
+  notifyMutationFailure(e);
   return Promise.reject(e);
 });
 
@@ -173,7 +255,7 @@ export const auth = { login: d => api.post('/auth/login', d), logout: () => api.
 export const adminLogin = async c => (await api.post("/auth/admin/login", c)).data;
 export const search = { query: q => api.get('/products/active', { params: { search: q } }), global: q => api.get('/products', { params: { search: q } }) };
 export const users = { updateProfile: d => api.put('/users/profile', d), changePassword: d => api.post('/users/change-password', d), getProfile: () => api.get('/users/profile'), generate2FA: () => api.post('/users/2fa/generate-setup'), verifyAndEnable2FA: d => api.post('/users/2fa/enable', d), disable2FA: () => api.post('/users/2fa/disable'), updateSecurityQuestion: d => api.put('/users/security-question', d) };
-export const products = { getAllActive: p => api.get("/products/active", { params: p }), getAllAdmin: () => api.get("/products"), getById: id => api.get(`/products/${id}`), getBySlug: s => api.get(`/products/slug/${s}`), create: d => api.post("/products", d), update: (id, d) => api.put(`/products/${id}`, d), toggleStatus: (id, s) => api.patch(`/products/${id}/status`, { status: s }), getUploadUrl: (f, t) => api.post("/products/presign", { filename: f, fileType: t }), saveImageKeys: (id, k) => api.post(`/products/${id}/images/save`, { imageKeys: k }), deleteImage: (id, i) => api.delete(`/products/${id}/images`, { data: { imageId: i } }), addSerials: (id, s) => api.post(`/serials/${id}/add`, { serials: s }), delete: id => api.delete(`/products/${id}`) };
+export const products = { getAllActive: p => api.get("/products/active", { params: p }), getAllAdmin: () => api.get("/products"), getById: id => api.get(`/products/${id}`), getBySlug: s => api.get(`/products/slug/${s}`), create: (d, options) => api.post("/products", d, options), update: (id, d, options) => api.put(`/products/${id}`, d, options), toggleStatus: (id, s) => api.patch(`/products/${id}/status`, { status: s }), getUploadUrl: (f, t, options) => api.post("/products/presign", { filename: f, fileType: t }, options), saveImageKeys: (id, k, options) => api.post(`/products/${id}/images/save`, { imageKeys: k }, options), deleteImage: (id, i) => api.delete(`/products/${id}/images`, { data: { imageId: i } }), addSerials: (id, s) => api.post(`/serials/${id}/add`, { serials: s }), delete: id => api.delete(`/products/${id}`) };
 export const categories = { getAll: () => api.get("/categories"), getById: id => api.get(`/categories/${id}`), create: d => api.post("/categories", d), update: (id, d) => api.put(`/categories/${id}`, d), delete: id => api.delete(`/categories/${id}`) };
 export const subcategories = { getAll: () => api.get("/subcategories"), getById: id => api.get(`/subcategories/${id}`), create: d => api.post("/subcategories", d), update: (id, d) => api.put(`/subcategories/${id}`, d), delete: id => api.delete(`/subcategories/${id}`) };
 export const cart = { get: () => api.get("/cart"), add: d => api.post("/cart", d), updateQuantity: (id, q) => api.put(`/cart/${id}`, { quantity: q }), remove: id => api.delete(`/cart/${id}`), clear: () => api.delete("/cart") };
@@ -188,15 +270,15 @@ export const cartRules = {
 };
 export const orders = { getMyOrders: () => api.get("/orders/my"), getById: id => api.get(`/orders/${id}`), create: d => api.post("/orders", d), getAllAdmin: () => api.get("/orders/all"), updateStatus: (id, s) => api.put(`/orders/${id}/status`, { status: s }), delete: id => api.delete(`/orders/${id}`), fastCheckout: d => api.post('/orders', d), cancel: id => api.post(`/orders/${id}/cancel`, {}), trackOrder: id => api.get(`/orders/${id}`) };
 export const addresses = { getAll: () => api.get("/addresses"), create: d => api.post("/addresses", d), update: (id, d) => api.put(`/addresses/${id}`, d), delete: id => api.delete(`/addresses/${id}`), setDefault: id => api.patch(`/addresses/${id}/default`) };
-export const wishlist = { get: () => api.get("/wishlist"), add: p => api.post("/wishlist", { productId: p }), remove: p => api.delete(`/wishlist/${p}`) };
+export const wishlist = { get: () => api.get("/wishlist"), add: p => api.post("/wishlist", { productId: p }), remove: (p, options) => api.delete(`/wishlist/${p}`, options) };
 export const coupons = { getPublicActive: () => api.get("/coupons/public/active"), validate: c => api.post("/coupons/validate", { code: c }), getAllAdmin: () => api.get("/coupons"), create: d => api.post("/coupons", d), update: (id, d) => api.put(`/coupons/${id}`, d), delete: id => api.delete(`/coupons/${id}`) };
 export const reviews = { getByProduct: p => api.get(`/reviews/product/${p}`), getMyReviews: () => api.get('/reviews/my'), update: (id, d) => api.put(`/reviews/${id}`, d), deleteOwner: id => api.delete(`/reviews/${id}`), getAllAdmin: () => api.get('/reviews', { adminAuth: true }), submit: d => api.post('/reviews', d), approve: id => api.put(`/reviews/${id}/approve`, {}, { adminAuth: true }), delete: id => api.delete(`/reviews/${id}`, { adminAuth: true }) };
-export const notifications = { get: () => api.get("/notifications"), markRead: id => api.patch(`/notifications/${id}/read`), markAllRead: () => api.patch("/notifications/read-all"), send: d => api.post("/notifications", d) };
+export const notifications = { get: () => api.get("/notifications"), getAllAdmin: () => api.get("/notifications/admin/all"), markRead: id => api.patch(`/notifications/${id}/read`), markAllRead: () => api.patch("/notifications/read-all"), delete: id => api.delete(`/notifications/${id}`), createBroadcast: data => api.post("/notifications/admin/create", data), send: d => api.post("/notifications", d) };
 export const analytics = { getDashboard: () => api.get("/analytics/dashboard"), getSales: () => api.get("/analytics/sales"), getProducts: () => api.get("/analytics/products"), getKpis: () => api.get("/analytics/kpis"), getRevenue: () => api.get("/analytics/revenue") };
 export const wallet = { getBalance: () => api.get('/wallet/balance'), getHistory: () => api.get('/wallet/history'), pay: d => api.post('/wallet/pay', d) };
 export const settings = { get: () => api.get("/settings"), getPublic: () => api.get("/settings/public"), update: d => api.put("/settings", d) };
 export const clientErrors = { getAllAdmin: limit => api.get('/logs/client', { params: { limit } }) };
-export const newsletter = { subscribe: (email, source = 'site') => axios.post(`${BASE_URL}/api/newsletter/subscribe`, { email, source }, { timeout: 5000 }) };
+export const newsletter = { subscribe: (email, source = 'site') => api.post('/newsletter/subscribe', { email, source }, { timeout: 5000 }) };
 export const reportClientError = error => {
   const source = typeof error?.source === 'string' ? error.source.split(/[?#]/, 1)[0] : null;
   return axios.post(`${BASE_URL}/api/client-log`, {

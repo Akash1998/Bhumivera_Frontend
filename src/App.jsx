@@ -270,17 +270,17 @@ function AppContent() {
 function App() {
   return (
     <BrowserRouter>
-      <AuthProvider>
-        <CartProvider>
-          <WishlistProvider>
-            <CompareProvider>
-              <ToastProvider>
+      <ToastProvider>
+        <AuthProvider>
+          <CartProvider>
+            <WishlistProvider>
+              <CompareProvider>
                 <AppContent />
-              </ToastProvider>
-            </CompareProvider>
-          </WishlistProvider>
-        </CartProvider>
-      </AuthProvider>
+              </CompareProvider>
+            </WishlistProvider>
+          </CartProvider>
+        </AuthProvider>
+      </ToastProvider>
     </BrowserRouter>
   );
 }

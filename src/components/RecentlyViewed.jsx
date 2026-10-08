@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, Eye, ShoppingCart, Trash2, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useToast } from '../context/ToastContext';
 
 const STORAGE_KEY = 'Bhumivera_recently_viewed';
 const MAX_ITEMS = 8;
@@ -28,6 +29,7 @@ export function addToRecentlyViewed(product) {
 }
 
 export default function RecentlyViewed({ currentId }) {
+  const toast = useToast();
   const [items, setItems] = useState([]);
   useEffect(() => {
     loadItems();
@@ -41,7 +43,16 @@ export default function RecentlyViewed({ currentId }) {
       setItems(stored.filter(p => String(p.id || p._id) !== cid));
     } catch (err) { setItems([]); }
   };
-  const clearAll = () => { localStorage.removeItem(STORAGE_KEY); setItems([]); };
+  const clearAll = () => {
+    try {
+      localStorage.removeItem(STORAGE_KEY);
+      setItems([]);
+      toast.success('Recently viewed history cleared.');
+    } catch (error) {
+      console.error('Could not clear recently viewed history:', error);
+      toast.error('Could not clear recently viewed history.');
+    }
+  };
   if (!items.length) return null;
   return (
     <section className="py-16 px-4 bg-gradient-to-b from-transparent to-[#050505]/30 rounded-[3rem] border border-white/5 mb-16 relative overflow-hidden">

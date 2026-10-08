@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
+import { useToast } from '../context/ToastContext';
 import { addresses as addressesApi } from '../services/api';
 import { MapPin, Plus, Edit2, Trash2, Star, Home, Building, Map, X, CheckCircle2 } from 'lucide-react';
 
@@ -19,6 +19,7 @@ const defaultForm = {
 
 export default function AddressBook() {
   const { user } = useAuth();
+  const toast = useToast();
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);

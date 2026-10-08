@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { Link } from 'react-router-dom';
-import toast from 'react-hot-toast';
+import { useToast } from '../context/ToastContext';
 
 const IMAGE_BASE = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev/bhumivera';
 const FALLBACK = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%230f172a'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%23334155' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E`;
@@ -19,6 +19,7 @@ function getImageUrl(product) {
 }
 
 export default function Wishlist() {
+  const toast = useToast();
   const { wishlist, loading, error, removeFromWishlist, clearWishlist, refreshWishlist } = useWishlist();
   const { addToCart } = useCart();
 

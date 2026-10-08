@@ -222,10 +222,10 @@ export default function ProductManagement() {
       let savedProduct;
       
       if (currentProduct) {
-        const res = await productsApi.update(currentProduct._id || currentProduct.id, payload);
+        const res = await productsApi.update(currentProduct._id || currentProduct.id, payload, { notify: false });
         savedProduct = res.data?.data || res.data?.product || res.data;
       } else {
-        const res = await productsApi.create(payload);
+        const res = await productsApi.create(payload, { notify: false });
         savedProduct = res.data?.data || res.data?.product || res.data;
       }
 
@@ -236,7 +236,7 @@ export default function ProductManagement() {
         const filesArray = Array.from(images);
         
         const uploadPromises = filesArray.map(async (file) => {
-          const urlRes = await productsApi.getUploadUrl(file.name, file.type);
+          const urlRes = await productsApi.getUploadUrl(file.name, file.type, { notify: false });
           await axios.put(urlRes.data.uploadUrl, file, {
             headers: { 'Content-Type': file.type },
             onUploadProgress: (e) => {
@@ -248,7 +248,7 @@ export default function ProductManagement() {
 
         const imageKeys = await Promise.all(uploadPromises);
         // Direct absolute endpoint transmission for high system resilience
-        await api.post(`/products/${finalId}/images/save`, { imageKeys });
+        await productsApi.saveImageKeys(finalId, imageKeys, { notify: false });
       }
 
       showToast?.('Product Saved Successfully', 'success');

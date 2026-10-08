@@ -15,7 +15,7 @@ import {
   warranty as warrantyApi,
   serials as serialsApi,
 } from '../services/api';
-import toast from 'react-hot-toast';
+import { useToast } from '../context/ToastContext';
 import {
   User, Package, Heart, Shield, LifeBuoy, LogOut,
   Wallet, MapPin, Bell, Ticket, Star, Award, Share2,
@@ -154,6 +154,7 @@ const StarsInput = ({ value, onChange, size='md', readonly=false }) => {
 };
 
 export default function Profile() {
+  const toast = useToast();
   const { user, logout } = useAuth();
   const { addToCart } = useCart();
   const navigate = useNavigate();

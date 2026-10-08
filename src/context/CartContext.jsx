@@ -2,7 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback, use
 import { useAuth } from "./AuthContext";
 import { useSettings } from "./SettingsContext";
 import { cart as cartApi, cartRules as cartRulesApi } from "../services/api";
-import toast from 'react-hot-toast';
+import { useToast } from './ToastContext';
 
 const CartContext = createContext();
 
@@ -16,6 +16,7 @@ export const CartProvider = ({ children }) => {
   const previousRuleIds = useRef(null);
   const { isAuthenticated } = useAuth();
   const { settings } = useSettings();
+  const toast = useToast();
 
   const loadCart = useCallback(async () => {
     if (isAuthenticated) {
@@ -45,6 +46,18 @@ export const CartProvider = ({ children }) => {
     }
   }, [isAuthenticated]);
 
+  const saveGuestCart = (nextCart, failureMessage) => {
+    try {
+      localStorage.setItem("Bhumivera_guest_cart", JSON.stringify(nextCart));
+      setCart(nextCart);
+      return true;
+    } catch (error) {
+      console.error("Guest cart update failed:", error);
+      toast.error(failureMessage);
+      return false;
+    }
+  };
+
   useEffect(() => {
     loadCart();
   }, [loadCart]);
@@ -53,20 +66,19 @@ export const CartProvider = ({ children }) => {
   const addToCart = async (product, qty = 1) => {
     const prodId = product._id || product.id;
     
-    // 1. Immediately open sidebar
-    setIsCartOpen(true); 
-    
-    // 2. Immediately update local state without waiting for DB
-    setCart(prev => {
+    const addProduct = prev => {
       const safeCart = Array.isArray(prev) ? prev : [];
       const updated = [...safeCart];
       const idx = updated.findIndex(i => i.product_id === prodId || i.id === prodId);
       if (idx > -1) updated[idx].quantity += qty;
       else updated.push({ product_id: prodId, id: prodId, product, quantity: qty });
-      
-      if (!isAuthenticated) localStorage.setItem("Bhumivera_guest_cart", JSON.stringify(updated));
       return updated;
-    });
+    };
+
+    if (isAuthenticated) setCart(prev => addProduct(prev));
+    else if (!saveGuestCart(addProduct(cart), 'Could not add this product to your cart.')) return false;
+
+    setIsCartOpen(true);
 
     if (product.category === 'Lights' || product.category_name === 'Lights') {
       setUpsells([{ _id: 'rel_1', name: 'Heavy Duty Wiring Relay', price: 499, img: '/logo.webp' }]);
@@ -77,13 +89,16 @@ export const CartProvider = ({ children }) => {
       try {
         await cartApi.add({ productId: prodId, quantity: qty });
         await loadCart(); // Re-sync to assure accuracy
+        toast.success('Added to cart successfully.');
         return true;
       } catch (err) {
         console.error("Failed to sync cart add to DB, reverting state", err);
         await loadCart(); // Auto-revert if offline/error
+        toast.error(err.normalized?.message || 'Could not add this product to your cart.');
         return false;
       }
     }
+    toast.success('Added to cart successfully.');
     return true;
   };
 
@@ -91,14 +106,15 @@ export const CartProvider = ({ children }) => {
     if (newQty < 1) return removeFromCart(productId);
     
     // Optimistic Update
-    setCart(prev => {
+    const update = prev => {
       const safeCart = Array.isArray(prev) ? prev : [];
       const updated = [...safeCart];
       const idx = updated.findIndex(i => i.product_id === productId || i.id === productId);
       if (idx > -1) updated[idx].quantity = newQty;
-      if (!isAuthenticated) localStorage.setItem("Bhumivera_guest_cart", JSON.stringify(updated));
       return updated;
-    });
+    };
+    if (isAuthenticated) setCart(prev => update(prev));
+    else if (!saveGuestCart(update(cart), 'Could not update the cart quantity.')) return;
     
     if (isAuthenticated) {
       try {
@@ -107,18 +123,22 @@ export const CartProvider = ({ children }) => {
       } catch (err) {
         console.error("Quantity update failed", err);
         await loadCart();
+        toast.error(err.normalized?.message || 'Could not update the cart quantity.');
       }
+    } else {
+      toast.success('Cart quantity updated successfully.');
     }
   };
 
   const removeFromCart = async (id) => {
     // Optimistic Update
-    setCart(prev => {
+    const remove = prev => {
       const safeCart = Array.isArray(prev) ? prev : [];
       const updated = safeCart.filter(i => i.product_id !== id && i.id !== id);
-      if (!isAuthenticated) localStorage.setItem("Bhumivera_guest_cart", JSON.stringify(updated));
       return updated;
-    });
+    };
+    if (isAuthenticated) setCart(prev => remove(prev));
+    else if (!saveGuestCart(remove(cart), 'Could not remove this item from your cart.')) return;
 
     if (isAuthenticated) {
       try {
@@ -127,16 +147,29 @@ export const CartProvider = ({ children }) => {
       } catch (err) {
         console.error("Remove failed", err);
         await loadCart();
+        toast.error(err.normalized?.message || 'Could not remove this item from your cart.');
       }
+    } else {
+      toast.success('Item removed from your cart.');
     }
   };
   
   const clearCart = async () => {
-    setCart([]); // Optimistic
-    if (isAuthenticated) {
-      await cartApi.clear();
-    } else {
-      localStorage.removeItem("Bhumivera_guest_cart");
+    const previousCart = cart;
+    try {
+      if (isAuthenticated) {
+        setCart([]);
+        await cartApi.clear();
+      } else {
+        localStorage.removeItem("Bhumivera_guest_cart");
+        setCart([]);
+      }
+      toast.success('Cart cleared successfully.');
+      return true;
+    } catch (err) {
+      setCart(previousCart);
+      toast.error(err.normalized?.message || 'Could not clear your cart.');
+      return false;
     }
   };
 
@@ -181,7 +214,7 @@ export const CartProvider = ({ children }) => {
       newlyUnlocked.forEach(rule => toast.success(`🎉 You unlocked ${rule.badge_text || rule.name}`));
     }
     previousRuleIds.current = currentIds;
-  }, [rulePreview]);
+  }, [rulePreview, toast]);
   
   const rawThreshold = settings?.free_shipping_threshold;
   const parsedThreshold = Number(rawThreshold);

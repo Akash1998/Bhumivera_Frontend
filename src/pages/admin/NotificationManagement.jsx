@@ -4,9 +4,12 @@ import {
   Plus, Search, CheckCircle, X, Clock, Activity, Zap
 } from 'lucide-react';
 import { useAuth } from '../../context/AuthContext';
+import { notifications as notificationsApi } from '../../services/api';
+import { useToast } from '../../context/ToastContext';
 
 export default function NotificationManagement() {
   const { user, token } = useAuth();
+  const toast = useToast();
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
@@ -14,8 +17,6 @@ export default function NotificationManagement() {
   const [isComposing, setIsComposing] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [composeData, setComposeData] = useState({ title: '', message: '', type: 'info', target: 'all' });
-
-  const API = import.meta.env.VITE_API_URL || import.meta.env.VITE_BASE_URL || 'https://service.bhumivera.com';
 
   // ARCHITECT FIX: Hydration Guard implemented. 
   // Wait for the AuthContext token to initialize before hitting protected Admin endpoints.
@@ -27,14 +28,11 @@ export default function NotificationManagement() {
   const fetchAlerts = async () => {
     try {
       setLoading(true);
-      const res = await fetch(`${API}/api/notifications/admin/all`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error(`HTTP ${res.status}: Failed to fetch telemetry`);
-      const data = await res.json();
+      const { data } = await notificationsApi.getAllAdmin();
       setAlerts(data || []);
     } catch (error) {
       console.error('Telemetry Sync Error:', error);
+      toast.error(error.normalized?.message || 'Could not load notifications.');
       setAlerts([]);
     } finally {
       setLoading(false);
@@ -43,25 +41,21 @@ export default function NotificationManagement() {
 
   const handleMarkRead = async (id) => {
     try {
-      await fetch(`${API}/api/notifications/${id}/read`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await notificationsApi.markRead(id);
       setAlerts(alerts.map(a => a.id === id ? { ...a, is_read: true } : a));
     } catch (err) {
       console.error('Mark read failed', err);
+      toast.error(err.normalized?.message || 'Could not mark the notification as read.');
     }
   };
 
   const handleMarkAllRead = async () => {
     try {
-      await fetch(`${API}/api/notifications/read-all`, {
-        method: 'PUT',
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await notificationsApi.markAllRead();
       setAlerts(alerts.map(a => ({ ...a, is_read: true })));
     } catch (err) {
       console.error('Mark all read failed', err);
+      toast.error(err.normalized?.message || 'Could not mark notifications as read.');
     }
   };
 
@@ -69,20 +63,17 @@ export default function NotificationManagement() {
     e.preventDefault();
     setSubmitting(true);
     try {
-      await fetch(`${API}/api/notifications/admin/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
-        body: JSON.stringify({ 
-          ...composeData, 
-          is_global: composeData.target === 'all',
-          user_id: null
-        })
+      await notificationsApi.createBroadcast({
+        ...composeData,
+        is_global: composeData.target === 'all',
+        user_id: null
       });
       setIsComposing(false);
       setComposeData({ title: '', message: '', type: 'info', target: 'all' });
-      fetchAlerts();
+      await fetchAlerts();
     } catch (err) {
       console.error('Broadcast transmission failed', err);
+      toast.error(err.normalized?.message || 'Could not send notification.');
     } finally {
       setSubmitting(false);
     }
