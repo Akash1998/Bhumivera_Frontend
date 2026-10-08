@@ -65,7 +65,7 @@ const getSuccessMessage = response => {
 
 const shouldNotifyMutation = config => isMutation(config?.method) &&
   config?.notify !== false &&
-  !/\/auth\/(login|register|verify-email|mobile-login|admin\/request-otp|admin\/verify-otp|admin\/forgot-password|admin\/verify-reset-otp|admin\/reset-password|forgot-password|verify-otp|reset-password|2fa\/verify)(\/|$)/.test(config?.url || '') &&
+  !/\/auth\/(login|register|verify-email|login-request-otp|mobile-login|admin\/login|admin\/request-otp|admin\/verify-otp|admin\/forgot-password|admin\/verify-reset-otp|admin\/reset-password|forgot-password|verify-otp|reset-password|2fa\/verify)(\/|$)/.test(config?.url || '') &&
   !/\/coupons\/validate(\/|$)/.test(config?.url || '');
 
 const notifyMutationFailure = error => {
@@ -125,8 +125,6 @@ api.interceptors.request.use(c => {
 }, e => Promise.reject(e));
 
 let _refreshPromise = null;
-let _lastRefreshAt = 0;
-let _firstFailedRefreshAt = 0;
 
 const _resolveTokenKind = (url = '', method = '', adminAuth = false) => {
   if (adminAuth) return 'admin';
@@ -153,10 +151,8 @@ const _resolveTokenKind = (url = '', method = '', adminAuth = false) => {
 
 const _attemptRefresh = async () => {
   if (_refreshPromise) return _refreshPromise;
-  if (Date.now() - _lastRefreshAt < 10000) throw new Error("REFRESH_DEBOUNCE");
   _refreshPromise = (async () => {
     try {
-      _lastRefreshAt = Date.now();
       const currentToken = localStorage.getItem("token") || localStorage.getItem("ms_token");
       if (!currentToken) throw new Error("No token to refresh");
       const { data } = await axios.post(`${BASE_URL}/api/auth/refresh`, {}, {
@@ -166,12 +162,8 @@ const _attemptRefresh = async () => {
       if (data?.token) {
         localStorage.setItem("token", data.token);
         if (localStorage.getItem("ms_token")) localStorage.setItem("ms_token", data.token);
-        _firstFailedRefreshAt = 0;
       }
       return data?.token || null;
-    } catch (err) {
-      _firstFailedRefreshAt = _firstFailedRefreshAt || Date.now();
-      throw err;
     } finally {
       _refreshPromise = null;
     }
@@ -196,6 +188,12 @@ api.interceptors.response.use(response => {
   const status = e.response?.status;
   const url = e.config?.url || "";
   if (status === 401) {
+    const isCredentialSubmission = /^\/auth\/(login|register|verify-email|login-request-otp|2fa\/verify|forgot-password|verify-otp|reset-password|mobile-login(?:\/|$)|security-question\/|admin\/(login|request-otp|verify-otp|forgot-password|verify-reset-otp|reset-password))(\/|$)/.test(url);
+    if (isCredentialSubmission) {
+      notifyMutationFailure(e);
+      return Promise.reject(e);
+    }
+
     const kind = _resolveTokenKind(url, e.config?.method, e.config?.adminAuth);
 
     if (kind === 'admin') {
@@ -233,19 +231,21 @@ api.interceptors.response.use(response => {
           return api.request(e.config);
         }
       } catch (_refreshErr) {
-        // fall through to cleanup guard below
+        if (_refreshErr.response?.status === 401) {
+          e.response.data = { ...e.response.data, ..._refreshErr.response.data };
+        } else if (_refreshErr.response || _refreshErr.message !== "No token to refresh") {
+          notifyMutationFailure(e);
+          return Promise.reject(e);
+        }
       }
     }
 
-    if (_firstFailedRefreshAt && (Date.now() - _firstFailedRefreshAt < 10000)) {
-      notifyMutationFailure(e);
-      return Promise.reject(e);
+    if (localStorage.getItem("token") || localStorage.getItem("ms_token")) {
+      localStorage.removeItem("token");
+      localStorage.removeItem("ms_token");
+      localStorage.removeItem("user");
+      window.dispatchEvent(new Event('auth-expired'));
     }
-
-    localStorage.removeItem("token");
-    localStorage.removeItem("ms_token");
-    localStorage.removeItem("user");
-    window.dispatchEvent(new Event('auth-expired'));
   }
   notifyMutationFailure(e);
   return Promise.reject(e);

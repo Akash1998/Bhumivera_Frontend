@@ -37,7 +37,8 @@ export const AuthProvider = ({ children }) => {
             } catch (_) { fu = su; }
           } else if (role !== 'warehouse_admin') {
             try {
-              fu = (await usersApi.getProfile()).data?.user || (await usersApi.getProfile()).data;
+              const profile = await usersApi.getProfile();
+              fu = profile.data?.user || profile.data;
             } catch (_) { fu = su; }
           }
           const f = { ...fu, role };
