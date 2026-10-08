@@ -272,7 +272,19 @@ export const orders = { getMyOrders: () => api.get("/orders/my"), getById: id =>
 export const addresses = { getAll: () => api.get("/addresses"), create: d => api.post("/addresses", d), update: (id, d) => api.put(`/addresses/${id}`, d), delete: id => api.delete(`/addresses/${id}`), setDefault: id => api.patch(`/addresses/${id}/default`) };
 export const wishlist = { get: () => api.get("/wishlist"), add: p => api.post("/wishlist", { productId: p }), remove: (p, options) => api.delete(`/wishlist/${p}`, options) };
 export const coupons = { getPublicActive: () => api.get("/coupons/public/active"), validate: c => api.post("/coupons/validate", { code: c }), getAllAdmin: () => api.get("/coupons"), create: d => api.post("/coupons", d), update: (id, d) => api.put(`/coupons/${id}`, d), delete: id => api.delete(`/coupons/${id}`) };
-export const reviews = { getByProduct: p => api.get(`/reviews/product/${p}`), getMyReviews: () => api.get('/reviews/my'), update: (id, d) => api.put(`/reviews/${id}`, d), deleteOwner: id => api.delete(`/reviews/${id}`), getAllAdmin: () => api.get('/reviews', { adminAuth: true }), submit: d => api.post('/reviews', d), approve: id => api.put(`/reviews/${id}/approve`, {}, { adminAuth: true }), delete: id => api.delete(`/reviews/${id}`, { adminAuth: true }) };
+export const reviews = {
+  getByProduct: productId => api.get(`/reviews/product/${productId}`),
+  getMyReviews: () => api.get('/reviews/my'),
+  update: (id, data) => api.put(`/reviews/${id}`, data),
+  deleteOwner: id => api.delete(`/reviews/${id}`),
+  getAllAdmin: () => api.get('/reviews', { adminAuth: true }),
+  submit: data => api.post('/reviews', data),
+  createUploadUrl: data => api.post('/reviews/upload-url', data),
+  createAdminUploadUrl: data => api.post('/reviews/admin/upload-url', data, { adminAuth: true }),
+  updateAdmin: (id, data) => api.put(`/reviews/admin/${id}`, data, { adminAuth: true }),
+  approve: id => api.put(`/reviews/${id}/approve`, {}, { adminAuth: true }),
+  delete: id => api.delete(`/reviews/${id}`, { adminAuth: true })
+};
 export const notifications = { get: () => api.get("/notifications"), getAllAdmin: () => api.get("/notifications/admin/all"), markRead: id => api.patch(`/notifications/${id}/read`), markAllRead: () => api.patch("/notifications/read-all"), delete: id => api.delete(`/notifications/${id}`), createBroadcast: data => api.post("/notifications/admin/create", data), send: d => api.post("/notifications", d) };
 export const analytics = { getDashboard: () => api.get("/analytics/dashboard"), getSales: () => api.get("/analytics/sales"), getProducts: () => api.get("/analytics/products"), getKpis: () => api.get("/analytics/kpis"), getRevenue: () => api.get("/analytics/revenue") };
 export const wallet = { getBalance: () => api.get('/wallet/balance'), getHistory: () => api.get('/wallet/history'), pay: d => api.post('/wallet/pay', d) };

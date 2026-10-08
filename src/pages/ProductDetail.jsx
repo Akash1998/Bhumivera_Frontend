@@ -355,6 +355,15 @@ export default function ProductDetail() {
                       </div>
                       <h4 className="text-lg font-medium text-stone-800 mb-2 italic">"{review.title}"</h4>
                       <p className="text-stone-500 text-sm mb-6">{review.comment}</p>
+                      {Array.isArray(review.images) && review.images.length > 0 && (
+                        <div className="mb-6 flex flex-wrap gap-3">
+                          {review.images.map((image, imageIndex) => (
+                            <a key={`${review.id}-${imageIndex}`} href={getImageUrl(image)} target="_blank" rel="noreferrer" className="block h-24 w-24 overflow-hidden rounded-xl border border-stone-200 bg-stone-50 focus:outline-none focus:ring-2 focus:ring-[#8b5a2b]">
+                              <img src={getImageUrl(image)} alt={`Customer photo ${imageIndex + 1} for ${product?.name || 'this product'}`} className="h-full w-full object-cover" loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}/>
+                            </a>
+                          ))}
+                        </div>
+                      )}
                       <div className="text-[10px] font-bold text-stone-400 uppercase tracking-widest border-t border-stone-100 pt-4">{review.user_name}</div>
                     </div>
                   ))

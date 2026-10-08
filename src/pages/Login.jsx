@@ -72,7 +72,7 @@ const Login = () => {
       const { data } = await api.post('/auth/2fa/verify', { email, otp });
       if (data.requires2FA) {
         setStep('2FA');
-        toast.info('Please enter your 2FA code');
+        toast('Please enter your 2FA code.', { icon: 'ℹ️' });
       } else if (data.token) {
         _persistAndRedirect(data);
       } else {
@@ -95,7 +95,7 @@ const Login = () => {
       if (res.status === 202 && res.data?.requires2FA) {
         setTwoFactorMethod(res.data.factor || 'authenticator');
         setStep('2FA');
-        toast.info(res.data.message || 'Enter your verification code to continue.');
+        toast(res.data.message || 'Enter your verification code to continue.', { icon: 'ℹ️' });
         return;
       }
       if (res.data?.token) {
@@ -113,7 +113,7 @@ const Login = () => {
       } else if (error.response?.status === 202 && error.response?.data?.requires2FA) {
         setTwoFactorMethod(error.response.data.factor || 'authenticator');
         setStep('2FA');
-        toast.info(error.response.data.message || 'Enter your verification code to continue.');
+        toast(error.response.data.message || 'Enter your verification code to continue.', { icon: 'ℹ️' });
       } else {
         toast.error(d?.message || error.message || 'Invalid email or password');
       }

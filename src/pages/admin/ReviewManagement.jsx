@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { 
   MessageSquare, Star, CheckCircle, XCircle, AlertTriangle, 
   Search, Filter, RefreshCw, Trash2, Eye, User, Box, 
-  ShieldAlert, ThumbsUp, ThumbsDown, BarChart2
+  ShieldAlert, ThumbsUp, ThumbsDown, BarChart2, Camera, Save, X
 } from 'lucide-react';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
@@ -28,6 +28,9 @@ export default function ReviewManagement() {
   // Inspector Modal State
   const [selectedReview, setSelectedReview] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [reviewDraft, setReviewDraft] = useState(null);
+  const [imageUploadProgress, setImageUploadProgress] = useState(0);
+  const [imageUploading, setImageUploading] = useState(false);
 
   const { showToast } = useToast() || {};
 
@@ -63,22 +66,94 @@ export default function ReviewManagement() {
     try {
       if (newStatus === 'approved') {
         await api.put(`/reviews/${reviewId}/approve`, {}, { adminAuth: true });
-      } else if (newStatus === 'rejected') {
-        await api.delete(`/reviews/${reviewId}`, { adminAuth: true });
-        setReviews(current => current.filter(review => (review.id || review._id) !== reviewId));
-        setSelectedReview(null);
-        showToast?.('Feedback removed.', 'success');
-        return;
       } else {
-        return;
+        await api.put(`/reviews/admin/${reviewId}`, { is_approved: 0 }, { adminAuth: true });
       }
-      showToast?.(`Review matrix updated to: ${newStatus}`, 'success');
+      showToast?.(newStatus === 'approved' ? 'Review published.' : 'Review hidden from the storefront.', 'success');
       
       // Optimistic UI update
-      setReviews(current => current.map(r => (r.id === reviewId || r._id === reviewId) ? { ...r, status: newStatus, is_approved: 1 } : r));
-      setSelectedReview(current => current && (current.id === reviewId || current._id === reviewId) ? { ...current, status: newStatus, is_approved: 1 } : current);
+      const approved = newStatus === 'approved';
+      setReviews(current => current.map(r => (r.id === reviewId || r._id === reviewId) ? { ...r, status: approved ? 'approved' : 'pending', is_approved: approved ? 1 : 0 } : r));
+      setSelectedReview(current => current && (current.id === reviewId || current._id === reviewId) ? { ...current, status: approved ? 'approved' : 'pending', is_approved: approved ? 1 : 0 } : current);
+      setReviewDraft(current => current ? { ...current, is_approved: approved } : current);
     } catch (err) {
       showToast?.(err.normalized?.message || err.response?.data?.message || 'Review update failed.', 'error');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleInspect = review => {
+    setSelectedReview(review);
+    setReviewDraft({
+      rating: Number(review.rating) || 5,
+      title: review.title || '',
+      body: review.body || review.comment || '',
+      is_approved: Number(review.is_approved) === 1,
+      images: Array.isArray(review.images) ? review.images : []
+    });
+  };
+
+  const handleAdminImageAdd = async event => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type) || file.size > 8 * 1024 * 1024) {
+      showToast?.('Choose a JPEG, PNG, or WebP image up to 8 MB.', 'error');
+      return;
+    }
+    if (reviewDraft.images.length >= 5) {
+      showToast?.('Reviews can include up to 5 photos.', 'error');
+      return;
+    }
+    setImageUploading(true);
+    setImageUploadProgress(0);
+    try {
+      const { data } = await api.post('/reviews/admin/upload-url', {
+        filename: file.name,
+        fileType: file.type,
+        size: file.size
+      }, { adminAuth: true });
+      await new Promise((resolve, reject) => {
+        const request = new XMLHttpRequest();
+        request.open('PUT', data.uploadUrl);
+        request.setRequestHeader('Content-Type', file.type);
+        request.upload.onprogress = upload => {
+          if (upload.lengthComputable) setImageUploadProgress(Math.round((upload.loaded / upload.total) * 100));
+        };
+        request.onload = () => request.status >= 200 && request.status < 300
+          ? resolve()
+          : reject(new Error('Photo upload failed.'));
+        request.onerror = () => reject(new Error('Photo upload failed. Check your connection.'));
+        request.send(file);
+      });
+      setReviewDraft(current => ({ ...current, images: [...current.images, data.key] }));
+      showToast?.('Photo uploaded. Save the review to apply it.', 'success');
+    } catch (error) {
+      showToast?.(error.response?.data?.message || error.message || 'Could not upload this photo.', 'error');
+    } finally {
+      setImageUploading(false);
+    }
+  };
+
+  const saveReviewChanges = async () => {
+    if (!selectedReview || !reviewDraft) return;
+    setIsUpdating(true);
+    try {
+      const reviewId = selectedReview.id || selectedReview._id;
+      const response = await api.put(`/reviews/admin/${reviewId}`, {
+        rating: Number(reviewDraft.rating),
+        title: reviewDraft.title,
+        body: reviewDraft.body,
+        images: reviewDraft.images,
+        is_approved: reviewDraft.is_approved ? 1 : 0
+      }, { adminAuth: true });
+      showToast?.(response.data?.warning || 'Review changes saved successfully.', response.data?.warning ? 'error' : 'success');
+      await fetchReviews();
+      setSelectedReview(null);
+      setReviewDraft(null);
+    } catch (error) {
+      showToast?.(error.response?.data?.message || 'Could not save review changes.', 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -88,20 +163,21 @@ export default function ReviewManagement() {
     if (!window.confirm('Permanently purge this feedback from the registry?')) return;
     try {
       await api.delete(`/reviews/${reviewId}`, { adminAuth: true });
-      showToast?.('Feedback purged successfully', 'success');
+      showToast?.('Feedback deleted successfully.', 'success');
       fetchReviews();
       if (selectedReview && (selectedReview.id === reviewId || selectedReview._id === reviewId)) {
         setSelectedReview(null);
+        setReviewDraft(null);
       }
     } catch (err) {
-      showToast?.('Purge protocol failed', 'error');
+      showToast?.(err.response?.data?.message || 'Could not delete this review.', 'error');
     }
   };
 
   // --- ANALYTICS & FILTERING ---
   const filteredReviews = useMemo(() => {
     return reviews.filter(r => {
-      const searchStr = `${r.title || ''} ${r.comment || ''} ${r.user?.name || r.reviewer_name || ''} ${r.product?.name || ''}`.toLowerCase();
+      const searchStr = `${r.title || ''} ${r.body || r.comment || ''} ${r.user_name || r.user_email || r.user?.name || r.reviewer_name || ''} ${r.product_name || r.product?.name || ''} ${r.order_number || r.order_id || ''}`.toLowerCase();
       const matchesSearch = searchStr.includes(searchTerm.toLowerCase());
       const matchesStatus = statusFilter === 'all' || r.status === statusFilter;
       const matchesRating = ratingFilter === 'all' || parseInt(r.rating) === parseInt(ratingFilter);
@@ -258,21 +334,23 @@ export default function ReviewManagement() {
                       <div className="flex items-center gap-4">
                         <div className="w-12 h-12 rounded-xl bg-slate-950 border border-slate-800 flex-shrink-0 p-1">
                           <img 
-                            src={getImageUrl(review.product?.images?.[0] || review.product?.image_url)} 
+                            src={getImageUrl(review.images?.[0] || review.product?.images?.[0] || review.product?.image_url)}
                             alt="product" 
                             className="w-full h-full object-cover rounded-lg"
                             onError={(e) => { e.target.src = '/logo.webp'; }}
                           />
                         </div>
                         <div className="max-w-[150px]">
-                          <p className="text-xs font-bold text-white truncate">{review.product?.name || 'Unknown access'}</p>
+                          <p className="text-xs font-bold text-white truncate">{review.product_name || review.product?.name || 'Product'}</p>
                           <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">ID: {review.product_id || 'N/A'}</p>
                         </div>
                       </div>
                     </td>
                     <td className="p-6">
-                      <p className="text-xs font-bold text-white truncate max-w-[150px]">{review.user?.name || review.reviewer_name || 'Guest User'}</p>
+                      <p className="text-xs font-bold text-white truncate max-w-[150px]">{review.user_name || review.user?.name || review.reviewer_name || 'Customer'}</p>
+                      <p className="text-[9px] text-slate-500 truncate max-w-[150px]">{review.user_email || review.user?.email || ''}</p>
                       <p className="text-[9px] text-slate-500 font-mono mt-1">{new Date(review.created_at).toLocaleDateString()}</p>
+                      {review.order_number && <p className="text-[9px] text-cyan-400 mt-1">Verified order #{review.order_number}</p>}
                     </td>
                     <td className="p-6">
                       <div className="flex mb-1.5 gap-0.5 text-amber-500">
@@ -281,7 +359,8 @@ export default function ReviewManagement() {
                         ))}
                       </div>
                       <p className="text-xs font-bold text-white truncate max-w-[250px]">{review.title || 'No Title'}</p>
-                      <p className="text-[10px] text-slate-400 truncate max-w-[250px] mt-1">{review.comment || review.review || 'No content provided.'}</p>
+                      <p className="text-[10px] text-slate-400 truncate max-w-[250px] mt-1">{review.body || review.comment || review.review || 'No content provided.'}</p>
+                      {review.images?.length > 0 && <p className="mt-1 text-[9px] font-bold text-cyan-300">{review.images.length} customer photo{review.images.length === 1 ? '' : 's'}</p>}
                     </td>
                     <td className="p-6">
                       <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-${status.color}-500/10 text-${status.color}-500 border border-${status.color}-500/20`}>
@@ -300,7 +379,7 @@ export default function ReviewManagement() {
                           </button>
                         )}
                         <button 
-                          onClick={() => setSelectedReview(review)}
+                          onClick={() => handleInspect(review)}
                           className="px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-amber-500 hover:bg-amber-500 hover:text-slate-950 transition-all text-[10px] font-black uppercase tracking-widest shadow-md inline-flex items-center gap-2"
                         >
                           <Eye size={14} /> Inspect
@@ -330,7 +409,7 @@ export default function ReviewManagement() {
                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Deep Scan Inspector</p>
                 </div>
               </div>
-              <button onClick={() => setSelectedReview(null)} className="p-3 bg-slate-950 border border-slate-800 hover:bg-rose-500/10 text-slate-500 hover:text-rose-500 rounded-2xl transition-all shadow-md">
+              <button onClick={() => { setSelectedReview(null); setReviewDraft(null); }} className="p-3 bg-slate-950 border border-slate-800 hover:bg-rose-500/10 text-slate-500 hover:text-rose-500 rounded-2xl transition-all shadow-md">
                 <XCircle size={20} />
               </button>
             </div>
@@ -344,13 +423,13 @@ export default function ReviewManagement() {
                     <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3 flex items-center gap-2"><Box size={14}/> Target Hardware access</h4>
                     <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3 flex gap-3 items-center">
                       <img 
-                        src={getImageUrl(selectedReview.product?.images?.[0] || selectedReview.product?.image_url)} 
+                        src={getImageUrl(reviewDraft?.images?.[0] || selectedReview.product?.images?.[0] || selectedReview.product?.image_url)}
                         alt="hardware" 
                         className="w-14 h-14 object-cover rounded-xl border border-slate-800"
                         onError={(e) => { e.target.src = '/logo.webp'; }}
                       />
                       <div>
-                        <p className="text-xs font-bold text-white line-clamp-2">{selectedReview.product?.name || 'Unknown'}</p>
+                        <p className="text-xs font-bold text-white line-clamp-2">{selectedReview.product_name || selectedReview.product?.name || 'Product'}</p>
                       </div>
                     </div>
                   </div>
@@ -358,8 +437,9 @@ export default function ReviewManagement() {
                   <div>
                     <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3 flex items-center gap-2"><User size={14}/> Client Identity</h4>
                     <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
-                      <p className="text-sm font-bold text-white">{selectedReview.user?.name || selectedReview.reviewer_name || 'Guest User'}</p>
-                      <p className="text-[10px] font-mono text-slate-500 mt-1">{selectedReview.user?.email || 'No email attached'}</p>
+                      <p className="text-sm font-bold text-white">{selectedReview.user_name || selectedReview.user?.name || selectedReview.reviewer_name || 'Customer'}</p>
+                      <p className="text-[10px] font-mono text-slate-500 mt-1">{selectedReview.user_email || selectedReview.user?.email || 'No email attached'}</p>
+                      <p className="mt-1 text-xs text-cyan-300">Order #{selectedReview.order_number || selectedReview.order_id || 'N/A'}</p>
                       <div className="w-full h-px bg-slate-800 my-3"></div>
                       <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Submitted: <span className="text-slate-300 font-mono">{new Date(selectedReview.created_at).toLocaleString()}</span></p>
                     </div>
@@ -384,33 +464,58 @@ export default function ReviewManagement() {
                   </div>
                 </div>
 
-                <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-8 mb-8 relative">
+                <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-6 mb-5 relative space-y-4">
                   <MessageSquare size={100} className="absolute top-4 right-4 text-slate-800/30 pointer-events-none" />
-                  <h3 className="text-xl font-bold text-white mb-4 relative z-10">{selectedReview.title || 'No Title'}</h3>
-                  <p className="text-sm font-medium text-slate-300 leading-relaxed relative z-10 whitespace-pre-wrap">
-                    "{selectedReview.comment || selectedReview.review || 'No content provided.'}"
-                  </p>
+                  <label className="relative z-10 block text-xs font-bold uppercase text-slate-400">Rating
+                    <select value={reviewDraft?.rating || 5} onChange={event => setReviewDraft(current => ({ ...current, rating: Number(event.target.value) }))} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-sm text-white">
+                      {[5, 4, 3, 2, 1].map(rating => <option key={rating} value={rating}>{rating} star{rating === 1 ? '' : 's'}</option>)}
+                    </select>
+                  </label>
+                  <label className="relative z-10 block text-xs font-bold uppercase text-slate-400">Review title
+                    <input maxLength={255} value={reviewDraft?.title || ''} onChange={event => setReviewDraft(current => ({ ...current, title: event.target.value }))} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-sm normal-case text-white" />
+                  </label>
+                  <label className="relative z-10 block text-xs font-bold uppercase text-slate-400">Customer review
+                    <textarea maxLength={5000} rows={5} value={reviewDraft?.body || ''} onChange={event => setReviewDraft(current => ({ ...current, body: event.target.value }))} className="mt-1 w-full resize-y rounded-xl border border-slate-700 bg-slate-950 p-3 text-sm normal-case text-white" />
+                  </label>
+                </div>
+
+                <div className="mb-5 rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
+                  <div className="mb-3 flex items-center justify-between gap-3">
+                    <div><h4 className="font-bold text-white">Customer photos</h4><p className="text-xs text-slate-500">Add or remove up to five review images.</p></div>
+                    <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-cyan-500/30 px-3 py-2 text-xs font-bold text-cyan-300 hover:bg-cyan-500/10">
+                      <Camera size={15}/> {imageUploading ? 'Uploading…' : 'Add photo'}
+                      <input type="file" accept="image/jpeg,image/png,image/webp" className="hidden" disabled={imageUploading || (reviewDraft?.images.length || 0) >= 5} onChange={handleAdminImageAdd}/>
+                    </label>
+                  </div>
+                  {imageUploading && (
+                    <div className="mb-3" role="status" aria-live="polite">
+                      <div className="mb-1 flex justify-between text-xs text-slate-400"><span>Uploading photo…</span><span>{imageUploadProgress}%</span></div>
+                      <div className="h-2 overflow-hidden rounded-full bg-slate-800"><div className="h-full bg-cyan-400 transition-all" style={{ width: `${imageUploadProgress}%` }}/></div>
+                    </div>
+                  )}
+                  <div className="flex flex-wrap gap-3">
+                    {(reviewDraft?.images || []).map((image, index) => (
+                      <div key={`${image}-${index}`} className="relative h-24 w-24 overflow-hidden rounded-xl border border-slate-700">
+                        <img src={getImageUrl(image)} alt={`Review attachment ${index + 1}`} className="h-full w-full object-cover" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}/>
+                        <button type="button" onClick={() => setReviewDraft(current => ({ ...current, images: current.images.filter((_, imageIndex) => imageIndex !== index) }))} aria-label={`Remove photo ${index + 1}`} className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white hover:bg-rose-600"><X size={13}/></button>
+                      </div>
+                    ))}
+                    {!reviewDraft?.images.length && <p className="text-sm text-slate-500">No customer photos attached.</p>}
+                  </div>
                 </div>
 
                 {/* Moderation Controls */}
                 <div className="border-t border-slate-800 pt-6">
-                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2"><ShieldAlert size={14}/> Execution Protocols</h4>
+                  <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2"><ShieldAlert size={14}/> Review visibility and actions</h4>
                   <div className="flex flex-wrap items-center gap-3">
-                    <button 
-                      disabled={isUpdating || selectedReview.status === 'approved'}
-                      onClick={() => handleUpdateStatus(selectedReview.id || selectedReview._id, 'approved')}
-                      className="px-6 py-3.5 bg-emerald-500/10 border border-emerald-500/30 text-emerald-500 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-emerald-500 hover:text-black transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
-                    >
-                      <CheckCircle size={14}/> Publish to Storefront
-                    </button>
-                    <button 
-                      disabled={isUpdating || selectedReview.status === 'rejected'}
-                      onClick={() => handleUpdateStatus(selectedReview.id || selectedReview._id, 'rejected')}
-                      className="px-6 py-3.5 bg-rose-500/10 border border-rose-500/30 text-rose-500 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-md flex items-center gap-2 disabled:opacity-50"
-                    >
-                      <XCircle size={14}/> Filter (Hide)
-                    </button>
+                    <label className="flex items-center gap-2 text-sm text-slate-300">
+                      <input type="checkbox" checked={Boolean(reviewDraft?.is_approved)} onChange={event => setReviewDraft(current => ({ ...current, is_approved: event.target.checked }))} className="h-4 w-4 accent-emerald-500"/>
+                      Visible on product pages
+                    </label>
                     <div className="flex-1"></div>
+                    <button disabled={isUpdating || imageUploading} onClick={saveReviewChanges} className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-5 py-3.5 text-[10px] font-black uppercase tracking-widest text-slate-950 hover:bg-cyan-400 disabled:opacity-50">
+                      <Save size={14}/> {isUpdating ? 'Saving…' : 'Save changes'}
+                    </button>
                     <button 
                       onClick={() => handleDelete(selectedReview.id || selectedReview._id)}
                       className="px-6 py-3.5 bg-slate-950 border border-slate-800 text-slate-500 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all shadow-md flex items-center gap-2"

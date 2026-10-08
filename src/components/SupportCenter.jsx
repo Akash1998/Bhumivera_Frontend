@@ -9,7 +9,7 @@ const formatDate = value => {
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleString();
 };
 
-export default function SupportCenter({ name, email, supportTicket, setSupportTicket, onSubmit, faqItems, faqOpen, toggleFaq }) {
+export default function SupportCenter({ name, email, orders = [], supportTicket, setSupportTicket, onSubmit, faqItems, faqOpen, toggleFaq }) {
   const { showToast } = useToast() || {};
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -18,6 +18,8 @@ export default function SupportCenter({ name, email, supportTicket, setSupportTi
   const [sendingId, setSendingId] = useState(null);
   const [submitting, setSubmitting] = useState(false);
   const generalFaqs = faqItems.filter(item => !/warranty|10.year/i.test(`${item.q} ${item.a}`));
+  const selectedOrder = orders.find(order => String(order.id) === String(supportTicket.order_id));
+  const selectedItems = selectedOrder?.items || selectedOrder?.order_items || [];
 
   const loadTickets = useCallback(async () => {
     setLoading(true);
@@ -91,6 +93,35 @@ export default function SupportCenter({ name, email, supportTicket, setSupportTi
             <div><h3 className="font-semibold text-[#0B2419] text-lg">Send us a Message</h3><p className="text-xs text-stone-500">We will reply to this account's support inbox.</p></div>
           </div>
           <div>
+            <label htmlFor="support-order" className="text-xs font-semibold text-stone-600 mb-1.5 block">Related order (optional)</label>
+            <select
+              id="support-order"
+              value={supportTicket.order_id || ''}
+              onChange={event => setSupportTicket({ ...supportTicket, order_id: event.target.value, product_id: '' })}
+              className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white focus:border-[#0B2419] text-sm"
+            >
+              <option value="">General question — no order</option>
+              {orders.map(order => <option key={order.id} value={order.id}>Order #{order.id} · {String(order.status || 'processing').replaceAll('_', ' ')}</option>)}
+            </select>
+          </div>
+          {selectedOrder && selectedItems.length > 0 && (
+            <div>
+              <label htmlFor="support-product" className="text-xs font-semibold text-stone-600 mb-1.5 block">Product (optional)</label>
+              <select
+                id="support-product"
+                value={supportTicket.product_id || ''}
+                onChange={event => setSupportTicket({ ...supportTicket, product_id: event.target.value })}
+                className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white focus:border-[#0B2419] text-sm"
+              >
+                <option value="">Order-wide support</option>
+                {selectedItems.map((item, index) => {
+                  const productId = item.product_id || item.id;
+                  return <option key={`${productId}-${index}`} value={productId}>{item.product_name || item.name || `Product #${productId}`}</option>;
+                })}
+              </select>
+            </div>
+          )}
+          <div>
             <label className="text-xs font-semibold text-stone-600 mb-1.5 block">Subject</label>
             <input
               required maxLength={200}
@@ -133,7 +164,7 @@ export default function SupportCenter({ name, email, supportTicket, setSupportTi
           {tickets.map(ticket => (
             <article key={ticket.id} className="rounded-xl border border-stone-200 overflow-hidden">
               <div className="flex flex-wrap items-center justify-between gap-2 px-4 py-3 bg-stone-50 border-b border-stone-200">
-                <div><h4 className="font-semibold text-[#0B2419]">{ticket.subject}</h4><p className="text-xs text-stone-500">Ticket #{ticket.id} · {formatDate(ticket.created_at)}</p></div>
+                <div><h4 className="font-semibold text-[#0B2419]">{ticket.subject}</h4><p className="text-xs text-stone-500">Ticket #{ticket.id}{ticket.order_id ? ` · Order #${ticket.order_id}` : ''}{ticket.product_name ? ` · ${ticket.product_name}` : ''} · {formatDate(ticket.created_at)}</p></div>
                 <span className="text-xs capitalize px-2.5 py-1 rounded-full bg-amber-50 text-amber-800">{String(ticket.status || 'open').replaceAll('_', ' ')}</span>
               </div>
               <div className="p-4 space-y-3">

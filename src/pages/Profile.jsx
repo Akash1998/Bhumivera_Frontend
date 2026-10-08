@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import {
+  BASE_URL,
   users as usersApi,
   orders as ordersApi,
   wishlist as wishlistApi,
@@ -25,10 +26,32 @@ import {
   QrCode, Smartphone, HelpCircle, MessageSquare, Phone, Mail, ShoppingCart,
   Filter, Calendar, Hash, Truck, PackageCheck, RotateCcw,
   ChevronDown, ChevronUp, Gift, PiggyBank, ShoppingBag,
-  Leaf, Zap, Users, Coins, ExternalLink, Key,
+  Leaf, Zap, Users, Coins, ExternalLink, Key, Camera, Image as ImageIcon,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import SupportCenter from '../components/SupportCenter';
+
+const getProfileImageUrl = image => {
+  let value = image;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      value = Array.isArray(parsed) ? parsed[0] : parsed;
+    } catch {
+      // Keep plain image URLs and object-storage keys as-is.
+    }
+  }
+  const path = typeof value === 'object' && value !== null
+    ? value.url || value.file_path || value.path
+    : value;
+  if (typeof path !== 'string' || !path.trim()) return null;
+  if (/^(https?:|data:|blob:)/i.test(path)) return path;
+  if (path.startsWith('uploads/')) return `${BASE_URL.replace(/\/$/, '')}/${path.replace(/^\/+/, '')}`;
+  const imageBase = import.meta.env.VITE_R2_PUBLIC_URL ||
+    import.meta.env.VITE_IMAGE_BASE_URL ||
+    'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev/bhumivera';
+  return `${imageBase.replace(/\/$/, '')}/${path.replace(/^\/+/, '')}`;
+};
 
 const TABS = [
   { id: 'overview',      label: 'Overview',      icon: LayoutDashboard },
@@ -176,13 +199,19 @@ export default function Profile() {
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
   const [secQuestion, setSecQuestion] = useState({ question: SECURITY_QUESTIONS[0], answer: '' });
   const [twoFactor, setTwoFactor] = useState({ isEnabled: false, qrCode: '', secret: '', otp: '' });
-  const [supportTicket, setSupportTicket] = useState({ subject: '', message: '' });
+  const [supportTicket, setSupportTicket] = useState({ subject: '', message: '', order_id: '', product_id: '' });
 
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [returnOrder, setReturnOrder] = useState(null);
   const [addressModal, setAddressModal] = useState({ open:false, editId:null, form:{ label:'Home', full_name:'', phone:'', line1:'', line2:'', city:'', state:'', postal_code:'', country:'India', is_default:false }});
   const [faqOpen, setFaqOpen] = useState(new Set());
   const [reviewEditing, setReviewEditing] = useState(null);
+  const [reviewSubmission, setReviewSubmission] = useState(null);
+  const [reviewSubmitting, setReviewSubmitting] = useState(false);
+  const [reviewUploadProgress, setReviewUploadProgress] = useState(0);
+  const [reviewDraft, setReviewDraft] = useState({ rating: 5, title: '', body: '', images: [] });
+  const reviewCameraInputRef = useRef(null);
+  const reviewGalleryInputRef = useRef(null);
 
   const [warrantyInput, setWarrantyInput] = useState({ serial: '' });
   const [warrantyCheck, setWarrantyCheck] = useState(null);
@@ -206,14 +235,14 @@ export default function Profile() {
     try {
       const tab = activeTab;
       const needsProfile = ['overview','security'];
-      const needsOrders = ['overview','orders','returns'];
+      const needsOrders = ['overview','orders','returns','support'];
       const needsWishlist = ['overview','wishlist'];
       const needsWallet = ['overview','wallet'];
       const needsAddresses = ['addresses'];
       const needsReturns = ['returns'];
       const needsNotifications = ['notifications'];
       const needsCoupons = ['overview','coupons'];
-      const needsReviews = ['reviews'];
+      const needsReviews = ['orders','reviews'];
       const needsWarranties = ['warranty'];
 
       const jobs = [];
@@ -421,6 +450,94 @@ export default function Profile() {
       await loadReviews();
     } catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
   };
+  const addReviewImages = event => {
+    const selected = Array.from(event.target.files || []);
+    event.target.value = '';
+    const accepted = [];
+    for (const file of selected) {
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        toast.error('Review photos must be JPEG, PNG, or WebP images.');
+      } else if (file.size > 8 * 1024 * 1024) {
+        toast.error(`${file.name} exceeds the 8 MB photo limit.`);
+      } else {
+        accepted.push({ file, preview: URL.createObjectURL(file) });
+      }
+    }
+    setReviewDraft(current => {
+      const room = Math.max(0, 5 - current.images.length);
+      if (accepted.length > room) toast.error('You can attach up to 5 photos to a review.');
+      const additions = accepted.slice(0, room);
+      accepted.slice(room).forEach(image => URL.revokeObjectURL(image.preview));
+      return { ...current, images: [...current.images, ...additions] };
+    });
+  };
+  const removeReviewImage = index => {
+    setReviewDraft(current => {
+      const image = current.images[index];
+      if (image?.preview) URL.revokeObjectURL(image.preview);
+      return { ...current, images: current.images.filter((_, imageIndex) => imageIndex !== index) };
+    });
+  };
+  const closeReviewForm = () => {
+    if (reviewSubmitting) return;
+    reviewDraft.images.forEach(image => URL.revokeObjectURL(image.preview));
+    setReviewDraft({ rating: 5, title: '', body: '', images: [] });
+    setReviewSubmission(null);
+  };
+  const uploadReviewPhoto = async (file, index, total) => {
+    const { data } = await reviewsApi.createUploadUrl({
+      filename: file.name,
+      fileType: file.type,
+      size: file.size,
+      order_id: reviewSubmission.orderId,
+      product_id: reviewSubmission.productId,
+    });
+    return new Promise((resolve, reject) => {
+      const request = new XMLHttpRequest();
+      request.open('PUT', data.uploadUrl);
+      request.setRequestHeader('Content-Type', file.type);
+      request.upload.onprogress = event => {
+        if (event.lengthComputable) {
+          setReviewUploadProgress(Math.round(((index + event.loaded / event.total) / total) * 100));
+        }
+      };
+      request.onload = () => {
+        if (request.status >= 200 && request.status < 300) resolve(data.key);
+        else reject(new Error('Photo upload failed. Please try again.'));
+      };
+      request.onerror = () => reject(new Error('Photo upload failed. Check your connection and try again.'));
+      request.send(file);
+    });
+  };
+  const submitPurchaseReview = async event => {
+    event.preventDefault();
+    if (!reviewSubmission) return;
+    setReviewSubmitting(true);
+    setReviewUploadProgress(0);
+    try {
+      const uploadedImages = [];
+      for (let index = 0; index < reviewDraft.images.length; index += 1) {
+        uploadedImages.push(await uploadReviewPhoto(reviewDraft.images[index].file, index, reviewDraft.images.length));
+      }
+      await reviewsApi.submit({
+        product_id: reviewSubmission.productId,
+        order_id: reviewSubmission.orderId,
+        rating: reviewDraft.rating,
+        title: reviewDraft.title,
+        body: reviewDraft.body,
+        images: uploadedImages
+      });
+      toast.success('Review submitted successfully. It will appear after approval.');
+      setReviewSubmission(null);
+      reviewDraft.images.forEach(image => URL.revokeObjectURL(image.preview));
+      setReviewDraft({ rating: 5, title: '', body: '', images: [] });
+      await loadReviews();
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message || 'Could not submit your review.');
+    } finally {
+      setReviewSubmitting(false);
+    }
+  };
   const handleReviewDelete = async (id) => {
     if (!window.confirm('Delete your review?')) return;
     try { await reviewsApi.deleteOwner(id); toast.success('Review deleted'); await loadReviews(); }
@@ -454,9 +571,11 @@ export default function Profile() {
         email: user?.email || '',
         subject: supportTicket.subject,
         message: supportTicket.message,
+        order_id: supportTicket.order_id || null,
+        product_id: supportTicket.product_id || null,
       });
       toast.success('Message sent. We will respond soon.');
-      setSupportTicket({ subject:'', message:'' });
+      setSupportTicket({ subject:'', message:'', order_id:'', product_id:'' });
       return true;
     } catch (err) { toast.error(err.response?.data?.message || 'Failed'); return false; }
   };
@@ -810,7 +929,7 @@ export default function Profile() {
                         <div key={w.id || pid} className="group rounded-2xl bg-white border border-stone-200 overflow-hidden shadow-sm hover:shadow-md transition-all">
                           <div className="aspect-[4/3] bg-stone-50 relative overflow-hidden flex items-center justify-center">
                             {img ? (
-                              <img src={img} alt={name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+                              <img src={getProfileImageUrl(img)} alt={name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
                             ) : (
                               <div className="text-5xl text-stone-200"><Leaf/></div>
                             )}
@@ -1314,7 +1433,7 @@ export default function Profile() {
                   </div>
                 </div>
                 {myReviews.length === 0 ? (
-                  <EmptyState icon={Star} title="You haven't reviewed any products yet" subtitle="Share your experience with fellow Bhumivera customers. Review your purchased products to unlock community points." actionLabel="Browse Orders" onAction={() => setActiveTab('orders')}/>
+                  <EmptyState icon={Star} title="You haven't reviewed any products yet" subtitle="You can review products after an order is delivered. Open a delivered order to rate its products." actionLabel="Review a Delivered Purchase" onAction={() => setActiveTab('orders')}/>
                 ) : (
                   <div className="space-y-4">
                     {myReviews.map(r => {
@@ -1547,6 +1666,7 @@ export default function Profile() {
               <SupportCenter
                 name={profileData.name || user?.name}
                 email={user?.email}
+                orders={orders}
                 supportTicket={supportTicket}
                 setSupportTicket={setSupportTicket}
                 onSubmit={handleSupportSubmit}
@@ -1627,16 +1747,65 @@ export default function Profile() {
                 <h4 className="text-sm font-bold text-[#0B2419] uppercase tracking-wider mb-3 text-stone-500">Items ({ (selectedOrder.items?.length || selectedOrder.order_items?.length || 1) })</h4>
                 <div className="rounded-2xl border border-stone-200 divide-y divide-stone-100 bg-white overflow-hidden">
                   {safeArr(selectedOrder.items || selectedOrder.order_items).length > 0 ? (
-                    safeArr(selectedOrder.items || selectedOrder.order_items).map((it, idx) => (
+                    safeArr(selectedOrder.items || selectedOrder.order_items).map((it, idx) => {
+                      const productId = Number(it.product_id || it.id);
+                      const alreadyReviewed = myReviews.some(review =>
+                        Number(review.product_id) === productId &&
+                        Number(review.order_id) === Number(selectedOrder.id)
+                      );
+                      const itemImage = getProfileImageUrl(it.image || it.image_url);
+                      return (
                       <div key={it.id || idx} className="flex items-center gap-4 p-4">
-                        <div className="w-14 h-14 rounded-xl bg-stone-50 border border-stone-100 flex items-center justify-center text-2xl text-stone-300 shrink-0"><Package/></div>
+                        <div className="w-14 h-14 rounded-xl bg-stone-50 border border-stone-100 flex items-center justify-center text-2xl text-stone-300 shrink-0 overflow-hidden">
+                          {itemImage
+                            ? <img src={itemImage} alt={it.name || it.product_name || 'Ordered product'} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-contain p-1"/>
+                            : <Package/>}
+                        </div>
                         <div className="flex-1 min-w-0">
                           <div className="font-medium text-sm text-[#0B2419] truncate">{it.product_name || it.name || `Product #${it.product_id}`}</div>
                           <div className="text-xs text-stone-500 mt-0.5">Qty: {it.quantity || 1}</div>
+                          {DELIVERED_STATUSES.includes((selectedOrder.status || '').toLowerCase()) && (
+                            <div className="mt-1 flex flex-wrap items-center gap-x-4 gap-y-1">
+                            {alreadyReviewed ? (
+                              <span className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-emerald-700"><CheckCircle2 className="w-3 h-3"/> Review submitted</span>
+                            ) : (
+                              <button
+                                onClick={() => {
+                                  setReviewSubmission({
+                                    orderId: Number(selectedOrder.id),
+                                    productId,
+                                    productName: it.product_name || it.name || `Product #${productId}`,
+                                    image: itemImage
+                                  });
+                                  setReviewDraft({ rating: 5, title: '', body: '', images: [] });
+                                }}
+                                className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[#8a6a12] hover:text-[#0B2419]"
+                              >
+                                <Star className="w-3 h-3"/> Write a review
+                              </button>
+                            )}
+                            <button
+                              onClick={() => {
+                                const productName = it.product_name || it.name || `Product #${productId}`;
+                                setSupportTicket({
+                                  subject: `Help with ${productName} · Order #${selectedOrder.id}`.slice(0, 200),
+                                  message: `I need help with ${productName} from order #${selectedOrder.id}.\n\n`,
+                                  order_id: String(selectedOrder.id),
+                                  product_id: Number.isSafeInteger(productId) && productId > 0 ? String(productId) : ''
+                                });
+                                setSelectedOrder(null);
+                                setActiveTab('support');
+                              }}
+                              className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[#0B5B78] hover:text-[#0B2419]"
+                            >
+                              <LifeBuoy className="w-3 h-3"/> Get help with this item
+                            </button>
+                            </div>
+                          )}
                         </div>
                         <div className="font-semibold text-sm text-[#0B2419]">₹{Number(it.subtotal || it.price * (it.quantity||1) || 0).toFixed(2)}</div>
                       </div>
-                    ))
+                    )})
                   ) : (
                     <div className="p-4 text-sm text-stone-600">1 item in this order</div>
                   )}
@@ -1691,6 +1860,70 @@ export default function Profile() {
               </div>
             </div>
           </div>
+        </div>
+      )}
+
+      {reviewSubmission && (
+        <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/60 p-0 backdrop-blur-sm sm:items-center sm:p-6" onClick={closeReviewForm}>
+          <form onSubmit={submitPurchaseReview} onClick={event => event.stopPropagation()} className="w-full max-w-xl overflow-hidden rounded-t-3xl bg-[#FDFBF7] shadow-2xl sm:rounded-3xl">
+            <div className="flex items-center gap-4 bg-gradient-to-br from-[#0B2419] to-[#2C3E2D] px-6 py-5 text-white">
+              {reviewSubmission.image && <img src={reviewSubmission.image} alt="" className="h-14 w-14 rounded-xl bg-white object-contain p-1"/>}
+              <div className="min-w-0 flex-1">
+                <div className="text-xs font-semibold uppercase tracking-widest text-[#D4AF37]">Order #{reviewSubmission.orderId}</div>
+                <h3 className="truncate text-lg font-bold">{reviewSubmission.productName}</h3>
+              </div>
+              <button type="button" disabled={reviewSubmitting} onClick={closeReviewForm} aria-label="Close review form" className="rounded-lg p-2 hover:bg-white/10 disabled:opacity-50"><X className="h-5 w-5"/></button>
+            </div>
+            <div className="space-y-5 p-6">
+              <div>
+                <label className="mb-2 block text-sm font-semibold text-[#0B2419]">Your rating</label>
+                <StarsInput value={reviewDraft.rating} onChange={rating => setReviewDraft(current => ({ ...current, rating }))}/>
+              </div>
+              <div>
+                <label htmlFor="purchase-review-title" className="mb-1.5 block text-xs font-semibold text-stone-600">Title (optional)</label>
+                <input id="purchase-review-title" value={reviewDraft.title} maxLength={255} onChange={event => setReviewDraft(current => ({ ...current, title: event.target.value }))} className="w-full rounded-xl border border-stone-200 px-4 py-2.5 text-sm focus:border-[#0B2419] focus:outline-none" placeholder="Summarize your experience"/>
+              </div>
+              <div>
+                <label htmlFor="purchase-review-body" className="mb-1.5 block text-xs font-semibold text-stone-600">Your review (optional)</label>
+                <textarea id="purchase-review-body" value={reviewDraft.body} maxLength={5000} rows={4} onChange={event => setReviewDraft(current => ({ ...current, body: event.target.value }))} className="w-full resize-y rounded-xl border border-stone-200 px-4 py-3 text-sm focus:border-[#0B2419] focus:outline-none" placeholder="Share your experience with this product"/>
+              </div>
+              <div>
+                <div className="mb-2 flex items-center justify-between">
+                  <label className="block text-sm font-semibold text-[#0B2419]">Photos of the item you received</label>
+                  <span className="text-xs text-stone-500">{reviewDraft.images.length}/5</span>
+                </div>
+                <input ref={reviewCameraInputRef} type="file" accept="image/jpeg,image/png,image/webp" capture="environment" multiple className="hidden" onChange={addReviewImages}/>
+                <input ref={reviewGalleryInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple className="hidden" onChange={addReviewImages}/>
+                <div className="flex flex-wrap gap-2">
+                  <button type="button" disabled={reviewSubmitting || reviewDraft.images.length >= 5} onClick={() => reviewCameraInputRef.current?.click()} className="inline-flex items-center gap-2 rounded-xl border border-stone-200 px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:opacity-50"><Camera className="h-4 w-4"/> Take photo</button>
+                  <button type="button" disabled={reviewSubmitting || reviewDraft.images.length >= 5} onClick={() => reviewGalleryInputRef.current?.click()} className="inline-flex items-center gap-2 rounded-xl border border-stone-200 px-3 py-2 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:opacity-50"><ImageIcon className="h-4 w-4"/> Choose photos</button>
+                </div>
+                {reviewDraft.images.length > 0 && (
+                  <div className="mt-3 grid grid-cols-5 gap-2">
+                    {reviewDraft.images.map((image, index) => (
+                      <div key={`${image.file.name}-${index}`} className="relative aspect-square overflow-hidden rounded-lg border border-stone-200 bg-white">
+                        <img src={image.preview} alt={`Review attachment ${index + 1}`} className="h-full w-full object-cover"/>
+                        <button type="button" disabled={reviewSubmitting} onClick={() => removeReviewImage(index)} aria-label={`Remove photo ${index + 1}`} className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white disabled:opacity-50"><X className="h-3 w-3"/></button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+                {reviewSubmitting && reviewDraft.images.length > 0 && (
+                  <div className="mt-3" role="status" aria-live="polite">
+                    <div className="mb-1 flex justify-between text-xs text-stone-600"><span>Uploading photos…</span><span>{reviewUploadProgress}%</span></div>
+                    <div className="h-2 overflow-hidden rounded-full bg-stone-200"><div className="h-full rounded-full bg-emerald-600 transition-all" style={{ width: `${reviewUploadProgress}%` }}/></div>
+                  </div>
+                )}
+                <p className="mt-2 text-xs text-stone-500">JPEG, PNG, or WebP · up to 8 MB per photo.</p>
+              </div>
+            </div>
+            <div className="flex justify-end gap-2 border-t border-stone-200 bg-white px-6 py-4">
+              <button type="button" disabled={reviewSubmitting} onClick={closeReviewForm} className="rounded-xl border border-stone-200 px-5 py-2.5 text-sm font-medium text-stone-700 hover:bg-stone-50 disabled:opacity-50">Cancel</button>
+              <button type="submit" disabled={reviewSubmitting} className="inline-flex items-center gap-2 rounded-xl bg-[#0B2419] px-6 py-2.5 text-sm font-semibold text-white hover:bg-[#1e4031] disabled:opacity-50">
+                <Star className="h-4 w-4"/> {reviewSubmitting ? 'Submitting…' : 'Submit Review'}
+              </button>
+            </div>
+          </form>
         </div>
       )}
 
