@@ -201,7 +201,7 @@ export default function UserManagement() {
   const totalPages = Number(pagination.totalPages || 0);
 
   return (
-    <div className="min-h-screen space-y-6 bg-[#020617] p-4 text-slate-200 md:p-8">
+    <div className="space-y-5 text-slate-200">
       <header className="flex flex-col justify-between gap-4 border-b border-slate-800 pb-6 sm:flex-row sm:items-center">
         <div>
           <h1 className="flex items-center gap-3 text-2xl font-black uppercase text-white md:text-3xl">
@@ -210,10 +210,10 @@ export default function UserManagement() {
           <p className="mt-2 text-sm text-slate-400">Search customer accounts, review their orders, and manage account access.</p>
         </div>
         <div className="flex gap-2">
-          <button onClick={() => setRefreshKey(value => value + 1)} aria-label="Refresh customers" className="rounded-xl border border-slate-700 bg-slate-900 p-3 text-slate-300 hover:border-cyan-500">
+          <button onClick={() => setRefreshKey(value => value + 1)} aria-label="Refresh customers" className="rounded-xl border border-slate-700 bg-[#10241f]/85 backdrop-blur-xl p-3 text-slate-300 hover:border-cyan-500">
             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
           </button>
-          <button onClick={exportCurrentPage} disabled={!users.length} className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-2 text-sm font-semibold hover:border-cyan-500 disabled:opacity-40">
+          <button onClick={exportCurrentPage} disabled={!users.length} className="rounded-xl border border-slate-700 bg-[#10241f]/85 backdrop-blur-xl px-4 py-2 text-sm font-semibold hover:border-cyan-500 disabled:opacity-40">
             Export this page
           </button>
         </div>
@@ -225,26 +225,26 @@ export default function UserManagement() {
           ['Active accounts', summary.active, CheckCircle],
           ['Disabled accounts', summary.disabled, Ban]
         ].map(([label, value, Icon]) => (
-          <div key={label} className="flex items-center gap-4 rounded-2xl border border-slate-800 bg-slate-900/60 p-5">
+          <div key={label} className="flex items-center gap-4 rounded-2xl border border-slate-800 bg-[#10241f]/65 backdrop-blur-xl p-5">
             {React.createElement(Icon, { className: 'text-cyan-400', size: 22 })}
             <div><p className="text-xs uppercase tracking-widest text-slate-500">{label}</p><p className="mt-1 text-2xl font-black text-white">{Number(value || 0).toLocaleString()}</p></div>
           </div>
         ))}
       </section>
 
-      <section className="space-y-4 rounded-2xl border border-slate-800 bg-slate-900/40 p-4">
+      <section className="space-y-4 rounded-2xl border border-slate-800 bg-[#10241f]/45 backdrop-blur-xl p-4">
         <div className="grid gap-3 lg:grid-cols-[minmax(220px,1fr)_repeat(3,minmax(150px,auto))]">
           <label className="relative">
             <Search size={17} className="absolute left-3 top-3.5 text-slate-500" />
-            <input aria-label="Search customers" value={search} onChange={event => { setSearch(event.target.value); setPage(1); }} placeholder="Name, email, or phone" className="w-full rounded-xl border border-slate-700 bg-slate-950 py-3 pl-10 pr-3 text-sm outline-none focus:border-cyan-500" />
+            <input aria-label="Search customers" value={search} onChange={event => { setSearch(event.target.value); setPage(1); }} placeholder="Name, email, or phone" className="w-full rounded-xl border border-slate-700 bg-[#081b15]/90 backdrop-blur-xl py-3 pl-10 pr-3 text-sm outline-none focus:border-cyan-500" />
           </label>
-          <select aria-label="Account status" value={status} onChange={changeFilter(setStatus)} className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm">
+          <select aria-label="Account status" value={status} onChange={changeFilter(setStatus)} className="rounded-xl border border-slate-700 bg-[#081b15]/90 backdrop-blur-xl px-3 py-3 text-sm">
             <option value="all">All account statuses</option><option value="active">Active</option><option value="disabled">Disabled</option>
           </select>
-          <select aria-label="Order and loyalty filter" value={activity} onChange={changeFilter(setActivity)} className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm">
+          <select aria-label="Order and loyalty filter" value={activity} onChange={changeFilter(setActivity)} className="rounded-xl border border-slate-700 bg-[#081b15]/90 backdrop-blur-xl px-3 py-3 text-sm">
             <option value="all">All customers</option><option value="ordered">Has orders</option><option value="no-orders">No orders</option><option value="loyalty">Has loyalty points</option>
           </select>
-          <select aria-label="Sort customers" value={sort} onChange={changeFilter(setSort)} className="rounded-xl border border-slate-700 bg-slate-950 px-3 py-3 text-sm">
+          <select aria-label="Sort customers" value={sort} onChange={changeFilter(setSort)} className="rounded-xl border border-slate-700 bg-[#081b15]/90 backdrop-blur-xl px-3 py-3 text-sm">
             <option value="recent">Recently joined</option><option value="orders">Most orders</option><option value="loyalty">Most loyalty points</option><option value="value">Highest lifetime value</option>
           </select>
         </div>
@@ -260,21 +260,21 @@ export default function UserManagement() {
           </div>
         )}
         {noticeOpen && (
-          <form onSubmit={sendNotification} className="grid gap-3 rounded-xl border border-slate-700 bg-slate-950 p-4">
+          <form onSubmit={sendNotification} className="grid gap-3 rounded-xl border border-slate-700 bg-[#081b15]/90 backdrop-blur-xl p-4">
             <p className="text-sm text-slate-400">
               {noticeMode === 'email'
                 ? 'Email is sent only to selected customers who explicitly opted in. Customers who have not opted in or have opted out are excluded. The email includes a link to manage preferences.'
                 : 'Send an in-app promotional notification to the selected customer accounts.'}
             </p>
-            <input value={noticeTitle} onChange={event => setNoticeTitle(event.target.value)} maxLength={noticeMode === 'email' ? 200 : 255} required placeholder={noticeMode === 'email' ? 'Email subject' : 'Notification title'} className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm" />
-            <textarea value={noticeMessage} onChange={event => setNoticeMessage(event.target.value)} maxLength={noticeMode === 'email' ? 10000 : 5000} required rows={3} placeholder={noticeMode === 'email' ? 'Email message' : 'Notification message'} className="rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm" />
+            <input value={noticeTitle} onChange={event => setNoticeTitle(event.target.value)} maxLength={noticeMode === 'email' ? 200 : 255} required placeholder={noticeMode === 'email' ? 'Email subject' : 'Notification title'} className="rounded-lg border border-slate-700 bg-[#10241f]/85 backdrop-blur-xl px-3 py-2 text-sm" />
+            <textarea value={noticeMessage} onChange={event => setNoticeMessage(event.target.value)} maxLength={noticeMode === 'email' ? 10000 : 5000} required rows={3} placeholder={noticeMode === 'email' ? 'Email message' : 'Notification message'} className="rounded-lg border border-slate-700 bg-[#10241f]/85 backdrop-blur-xl px-3 py-2 text-sm" />
             <div><button disabled={sendingNotice} className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-bold text-slate-950 disabled:opacity-50">{sendingNotice ? 'Sending…' : noticeMode === 'email' ? `Email selected customers who opted in` : `Send to ${selectedIds.length} selected`}</button></div>
           </form>
         )}
 
         <div className="overflow-x-auto rounded-xl border border-slate-800">
           <table className="w-full min-w-[850px] text-left text-sm">
-            <thead className="bg-slate-950 text-xs uppercase tracking-wider text-slate-500">
+            <thead className="bg-[#081b15]/90 backdrop-blur-xl text-xs uppercase tracking-wider text-slate-500">
               <tr>
                 <th className="p-4"><input aria-label="Select current page" type="checkbox" checked={allPageSelected} onChange={togglePageSelection} /></th>
                 <th className="p-4">Customer</th><th className="p-4">Status</th><th className="p-4">Orders / value</th><th className="p-4">Loyalty</th><th className="p-4">Joined</th><th className="p-4">Actions</th>
@@ -318,26 +318,26 @@ export default function UserManagement() {
       </section>
 
       {selectedUser && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-slate-950/90 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Customer details">
-          <div className="my-auto max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-slate-700 bg-slate-900 shadow-2xl">
-            <div className="sticky top-0 flex items-start justify-between border-b border-slate-700 bg-slate-900 p-5">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center overflow-y-auto bg-[#081b15]/90 backdrop-blur-xl/90 p-4 backdrop-blur-sm" role="dialog" aria-modal="true" aria-label="Customer details">
+          <div className="my-auto max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-slate-700 bg-[#10241f]/85 backdrop-blur-xl shadow-2xl">
+            <div className="sticky top-0 flex items-start justify-between border-b border-slate-700 bg-[#10241f]/85 backdrop-blur-xl p-5">
               <div><h2 className="text-xl font-bold text-white">{selectedUser.name}</h2><p className="mt-1 text-sm text-slate-400">{selectedUser.email} {selectedUser.phone ? `· ${selectedUser.phone}` : ''}</p>
                 {selectedUser.role === 'customer' && <button disabled={resettingPasswordId === Number(selectedUser.id)} onClick={() => sendPasswordResetOtp(selectedUser)} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-cyan-300 hover:border-cyan-500 disabled:opacity-50"><Key size={14} />{resettingPasswordId === Number(selectedUser.id) ? 'Sending OTP…' : 'Send password reset OTP'}</button>}
               </div>
               <button aria-label="Close customer details" onClick={() => setSelectedUser(null)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-800"><X size={20} /></button>
             </div>
             <div className="grid gap-3 p-5 sm:grid-cols-4">
-              <div className="rounded-xl bg-slate-950 p-4"><p className="text-xs uppercase text-slate-500">Account</p><p className="mt-1 font-semibold">{Number(selectedUser.is_active) === 1 ? 'Active' : 'Disabled'}</p></div>
-              <div className="rounded-xl bg-slate-950 p-4"><p className="text-xs uppercase text-slate-500">Orders</p><p className="mt-1 font-semibold">{Number(selectedUser.order_count || customerOrders.length)}</p></div>
-              <div className="rounded-xl bg-slate-950 p-4"><p className="text-xs uppercase text-slate-500">Loyalty points</p><p className="mt-1 inline-flex items-center gap-1 font-semibold"><Activity size={15} className="text-amber-300" />{Number(selectedUser.loyalty_points || 0)}</p></div>
-              <div className="rounded-xl bg-slate-950 p-4"><p className="text-xs uppercase text-slate-500">Marketing email</p><p className="mt-1 font-semibold">{Number(selectedUser.marketing_email_opt_in) === 1 ? 'Opted in' : 'Opted out'}</p></div>
+              <div className="rounded-xl bg-[#081b15]/90 backdrop-blur-xl p-4"><p className="text-xs uppercase text-slate-500">Account</p><p className="mt-1 font-semibold">{Number(selectedUser.is_active) === 1 ? 'Active' : 'Disabled'}</p></div>
+              <div className="rounded-xl bg-[#081b15]/90 backdrop-blur-xl p-4"><p className="text-xs uppercase text-slate-500">Orders</p><p className="mt-1 font-semibold">{Number(selectedUser.order_count || customerOrders.length)}</p></div>
+              <div className="rounded-xl bg-[#081b15]/90 backdrop-blur-xl p-4"><p className="text-xs uppercase text-slate-500">Loyalty points</p><p className="mt-1 inline-flex items-center gap-1 font-semibold"><Activity size={15} className="text-amber-300" />{Number(selectedUser.loyalty_points || 0)}</p></div>
+              <div className="rounded-xl bg-[#081b15]/90 backdrop-blur-xl p-4"><p className="text-xs uppercase text-slate-500">Marketing email</p><p className="mt-1 font-semibold">{Number(selectedUser.marketing_email_opt_in) === 1 ? 'Opted in' : 'Opted out'}</p></div>
             </div>
             <div className="px-5 pb-5">
               <h3 className="mb-3 font-bold text-white">Order history</h3>
-              {ordersLoading ? <p className="py-6 text-center text-slate-400">Loading order history…</p> : customerOrders.length === 0 ? <p className="rounded-xl bg-slate-950 p-5 text-sm text-slate-400">No orders found.</p> : (
+              {ordersLoading ? <p className="py-6 text-center text-slate-400">Loading order history…</p> : customerOrders.length === 0 ? <p className="rounded-xl bg-[#081b15]/90 backdrop-blur-xl p-5 text-sm text-slate-400">No orders found.</p> : (
                 <div className="space-y-3">
                   {customerOrders.map(order => (
-                    <article key={order.id} className="rounded-xl border border-slate-800 bg-slate-950 p-4">
+                    <article key={order.id} className="rounded-xl border border-slate-800 bg-[#081b15]/90 backdrop-blur-xl p-4">
                       <div className="flex flex-wrap justify-between gap-2">
                         <span className="font-semibold text-white">Order #{order.id}</span><span className="text-emerald-300">{money(order.total)}</span>
                       </div>

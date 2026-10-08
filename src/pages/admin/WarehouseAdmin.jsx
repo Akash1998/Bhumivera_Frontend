@@ -31,10 +31,10 @@ export default function WarehouseAdmin() {
 
   useEffect(() => { loadData(); }, []);
 
-  if (loading) return <div className="min-h-screen bg-[#020617] text-cyan-500 flex justify-center items-center font-black animate-pulse uppercase tracking-widest text-sm">Decrypting Global Matrix...</div>;
+  if (loading) return <div className="min-h-screen bg-[#081b15]/90 backdrop-blur-xl text-cyan-500 flex justify-center items-center font-black animate-pulse uppercase tracking-widest text-sm">Decrypting Global Matrix...</div>;
 
   return (
-    <div className="min-h-screen bg-[#020617] p-4 md:p-8 text-slate-300 font-sans">
+    <div className="space-y-5 text-slate-300 font-sans">
       <div className="max-w-7xl mx-auto space-y-6">
         <div className="flex items-center justify-between pb-6 border-b border-slate-800">
           <div>
@@ -43,21 +43,21 @@ export default function WarehouseAdmin() {
             </h1>
             <p className="text-[10px] text-slate-500 font-bold uppercase tracking-widest mt-1">Live Global Sales Telemetry</p>
           </div>
-          <button onClick={loadData} className="p-3 bg-slate-900 border border-slate-800 rounded-xl hover:text-cyan-400 transition-colors shadow-lg">
+          <button onClick={loadData} className="p-3 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 rounded-xl hover:text-cyan-400 transition-colors shadow-lg">
             <RefreshCw size={20} />
           </button>
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 bg-slate-900/40 border border-slate-800/80 rounded-[2rem] overflow-hidden shadow-2xl">
-            <div className="p-6 border-b border-slate-800 bg-slate-950/50 flex items-center justify-between">
+          <div className="lg:col-span-2 bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 rounded-[2rem] overflow-hidden shadow-2xl">
+            <div className="p-6 border-b border-slate-800 bg-[#081b15]/55 backdrop-blur-xl flex items-center justify-between">
               <h3 className="text-xs font-black uppercase tracking-widest text-white flex items-center gap-2">
                 <Activity className="text-purple-400 w-4 h-4" /> Live Transaction Ledger
               </h3>
             </div>
             <div className="overflow-x-auto h-[600px] custom-scrollbar">
               <table className="w-full text-left border-collapse">
-                <thead className="bg-slate-950/80 border-b border-slate-800 sticky top-0 backdrop-blur-md">
+                <thead className="bg-[#081b15]/80 backdrop-blur-xl border-b border-slate-800 sticky top-0 backdrop-blur-md">
                   <tr>
                     <th className="p-5 text-[9px] font-black uppercase text-slate-500 tracking-widest">Timestamp</th>
                     <th className="p-5 text-[9px] font-black uppercase text-slate-500 tracking-widest">Distributor access</th>
@@ -93,7 +93,7 @@ export default function WarehouseAdmin() {
             </div>
           </div>
 
-          <div className="bg-slate-900/40 border border-slate-800/80 rounded-[2rem] p-6 h-fit shadow-2xl">
+          <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 rounded-[2rem] p-6 h-fit shadow-2xl">
             <h3 className="text-xs font-black uppercase tracking-widest text-white mb-6 flex items-center gap-2">
               <ShieldCheck className="text-emerald-400 w-4 h-4" /> Authorized Distributors
             </h3>
@@ -101,7 +101,7 @@ export default function WarehouseAdmin() {
               {distributors.filter(u => u.is_active === 1).length === 0 ? (
                 <p className="text-slate-500 text-[10px] text-center p-4 font-black uppercase tracking-widest">No active accesss.</p>
               ) : distributors.filter(u => u.is_active === 1).map(u => (
-                <div key={u.id} className="p-5 bg-slate-950/60 border border-slate-800 rounded-[1rem] flex justify-between items-center hover:border-emerald-500/50 transition-colors">
+                <div key={u.id} className="p-5 bg-[#081b15]/65 backdrop-blur-xl border border-slate-800 rounded-[1rem] flex justify-between items-center hover:border-emerald-500/50 transition-colors">
                   <div>
                     <p className="text-sm font-bold text-white">{u.name}</p>
                     <p className="text-[9px] text-emerald-500 font-black uppercase tracking-widest mt-1">{u.store_name}</p>

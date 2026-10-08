@@ -189,7 +189,7 @@ export default function InventoryManagement() {
   }
 
   return (
-    <div className="p-4 space-y-6 bg-[#020617] min-h-screen text-slate-300 font-sans animate-in fade-in duration-300 relative">
+    <div className="relative space-y-5 text-slate-300 font-sans animate-in fade-in duration-300">
       
       {/* HEADER COMMAND CENTER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
@@ -202,7 +202,7 @@ export default function InventoryManagement() {
           </p>
         </div>
         <div className="flex gap-2">
-          <button onClick={fetchInventory} className="p-2.5 bg-slate-900 border border-slate-800 text-slate-400 rounded-lg hover:bg-slate-800 hover:text-emerald-400 transition-all">
+          <button onClick={fetchInventory} className="p-2.5 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 text-slate-400 rounded-lg hover:bg-slate-800 hover:text-emerald-400 transition-all">
             <RefreshCw size={16} />
           </button>
           <button onClick={exportToExcel} className="flex items-center gap-2 px-4 py-2.5 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 font-black uppercase text-[10px] tracking-widest rounded-lg hover:bg-emerald-500 hover:text-black transition-all">
@@ -213,28 +213,28 @@ export default function InventoryManagement() {
 
       {/* TELEMETRY KPI DASHBOARD */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4 hover:border-emerald-500/30 transition-colors">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4 hover:border-emerald-500/30 transition-colors">
           <div className="p-2.5 rounded-xl bg-emerald-500/10 text-emerald-500"><span className="font-bold text-lg">₹</span></div>
           <div>
             <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Total Valuation</p>
             <h4 className="text-lg font-black text-white tracking-tight">₹{totalValuation.toLocaleString()}</h4>
           </div>
         </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4 hover:border-blue-500/30 transition-colors">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4 hover:border-blue-500/30 transition-colors">
           <div className="p-2.5 rounded-xl bg-blue-500/10 text-blue-500"><Package size={18} /></div>
           <div>
             <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Total Units Banked</p>
             <h4 className="text-lg font-black text-white tracking-tight">{totalUnits.toLocaleString()}</h4>
           </div>
         </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4 hover:border-amber-500/30 transition-colors">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4 hover:border-amber-500/30 transition-colors">
           <div className="p-2.5 rounded-xl bg-amber-500/10 text-amber-500"><AlertTriangle size={18} /></div>
           <div>
             <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Critical Alert (&le;10)</p>
             <h4 className="text-lg font-black text-white tracking-tight">{lowStockCount} accesss</h4>
           </div>
         </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4 hover:border-rose-500/30 transition-colors">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-4 rounded-2xl flex items-center gap-4 hover:border-rose-500/30 transition-colors">
           <div className="p-2.5 rounded-xl bg-rose-500/10 text-rose-500"><TrendingDown size={18} /></div>
           <div>
             <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Depleted (0)</p>
@@ -244,21 +244,21 @@ export default function InventoryManagement() {
       </div>
 
       {/* FILTER, SEARCH & BULK ACTION BAR */}
-      <div className="flex flex-col md:flex-row gap-3 items-center justify-between bg-slate-900/40 p-3 rounded-2xl border border-slate-800">
+      <div className="flex flex-col md:flex-row gap-3 items-center justify-between bg-[#10241f]/45 backdrop-blur-xl p-3 rounded-2xl border border-slate-800">
         <div className="flex items-center gap-3 w-full md:w-auto">
           <div className="relative w-full md:w-64 group">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
             <input 
               type="text" placeholder="Search SKU or access..." 
               value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-              className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-xl py-2 pl-10 pr-4 text-white font-bold text-xs outline-none transition-all"
+              className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 focus:border-emerald-500/50 rounded-xl py-2 pl-10 pr-4 text-white font-bold text-xs outline-none transition-all"
             />
           </div>
           <div className="relative w-full md:w-48">
             <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={14} />
             <select 
               value={stockFilter} onChange={(e) => { setStockFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full bg-slate-950 border border-slate-800 focus:border-emerald-500/50 rounded-xl py-2 pl-10 pr-4 text-white font-bold text-xs outline-none transition-all appearance-none cursor-pointer"
+              className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 focus:border-emerald-500/50 rounded-xl py-2 pl-10 pr-4 text-white font-bold text-xs outline-none transition-all appearance-none cursor-pointer"
             >
               <option value="all">All Statuses</option>
               <option value="in-stock">Healthy (&gt;10)</option>
@@ -284,15 +284,15 @@ export default function InventoryManagement() {
       </div>
 
       {/* DENSE TELEMETRY TABLE */}
-      <div className="bg-slate-900/30 border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
+      <div className="bg-[#10241f]/35 backdrop-blur-xl border border-slate-800/80 rounded-2xl overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-950/80 border-b border-slate-800">
+              <tr className="bg-[#081b15]/80 backdrop-blur-xl border-b border-slate-800">
                 <th className="p-4 w-12 text-center">
                   <button onClick={toggleAll} className="text-slate-500 hover:text-emerald-400 transition-colors">
                     {paginatedProducts.length > 0 && selectedIds.size === paginatedProducts.length 
-                      ? <div className="w-4 h-4 bg-emerald-500 rounded flex items-center justify-center"><CheckCircle size={12} className="text-black"/></div> 
+                      ? <div className="w-4 h-4 bg-emerald-500 rounded flex items-center justify-center"><CheckCircle size={12} className="text-black"/></div>
                       : <div className="w-4 h-4 border-2 border-slate-600 rounded"></div>}
                   </button>
                 </th>
@@ -329,7 +329,7 @@ export default function InventoryManagement() {
                     <td className="p-3 text-center">
                       <button onClick={() => toggleSelection(pId)} className="text-slate-500 hover:text-emerald-400 transition-colors mt-1">
                         {isSelected 
-                          ? <div className="w-4 h-4 bg-emerald-500 rounded flex items-center justify-center"><CheckCircle size={12} className="text-black"/></div> 
+                          ? <div className="w-4 h-4 bg-emerald-500 rounded flex items-center justify-center"><CheckCircle size={12} className="text-black"/></div>
                           : <div className="w-4 h-4 border-2 border-slate-600 rounded"></div>}
                       </button>
                     </td>
@@ -337,13 +337,13 @@ export default function InventoryManagement() {
                       <div className="flex items-center gap-3">
                         <img 
                           src={getImageUrl(product.images?.[0])} 
-                          className="w-10 h-10 object-cover rounded-lg bg-slate-950 border border-slate-800"
+                          className="w-10 h-10 object-cover rounded-lg bg-[#081b15]/90 backdrop-blur-xl border border-slate-800"
                           onError={(e) => { e.target.src = '/logo.webp'; }}
                         />
                         <div>
                           <p className="text-xs font-bold text-white line-clamp-1">{product.name}</p>
                           <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-[9px] text-slate-400 font-mono bg-slate-950 px-1.5 py-0.5 rounded border border-slate-800">
+                            <span className="text-[9px] text-slate-400 font-mono bg-[#081b15]/90 backdrop-blur-xl px-1.5 py-0.5 rounded border border-slate-800">
                               {product.sku || 'NO-SKU'}
                             </span>
                             <span className="text-[9px] text-slate-500">{product.category_name || 'Uncategorized'}</span>
@@ -361,7 +361,7 @@ export default function InventoryManagement() {
                     </td>
                     <td className="p-3">
                       {isEditing ? (
-                        <div className="flex items-center justify-center gap-1.5 bg-slate-950 p-1 rounded-xl border border-emerald-500/50">
+                        <div className="flex items-center justify-center gap-1.5 bg-[#081b15]/90 backdrop-blur-xl p-1 rounded-xl border border-emerald-500/50">
                           <button 
                             disabled={isUpdating}
                             onClick={() => handleQuickUpdate(pId, 'subtract', '1')}
@@ -391,14 +391,14 @@ export default function InventoryManagement() {
                           <button 
                             disabled={isUpdating}
                             onClick={() => setEditingId(null)}
-                            className="p-1.5 bg-slate-900 text-slate-400 rounded-lg hover:bg-slate-800 hover:text-white transition-colors"
+                            className="p-1.5 bg-[#10241f]/85 backdrop-blur-xl text-slate-400 rounded-lg hover:bg-slate-800 hover:text-white transition-colors"
                           ><XCircle size={14} /></button>
                         </div>
                       ) : (
                         <div className="flex justify-center">
                           <div 
                             onClick={() => { setEditingId(pId); setEditValue(stock.toString()); }}
-                            className="flex items-center justify-between w-28 bg-slate-950 border border-slate-800 rounded-xl p-2 cursor-pointer hover:border-emerald-500/50 hover:bg-slate-900 group transition-all"
+                            className="flex items-center justify-between w-28 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl p-2 cursor-pointer hover:border-emerald-500/50 hover:bg-[#10241f]/85 backdrop-blur-xl group transition-all"
                           >
                             <span className={`text-sm font-black font-mono pl-2 ${stock > 0 ? 'text-white' : 'text-rose-500'}`}>
                               {stock}
@@ -418,13 +418,13 @@ export default function InventoryManagement() {
         </div>
         
         {totalPages > 1 && (
-          <div className="p-3 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between">
+          <div className="p-3 bg-[#081b15]/80 backdrop-blur-xl border-t border-slate-800 flex items-center justify-between">
             <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest ml-1">
               Page {currentPage} of {totalPages}
             </span>
             <div className="flex items-center gap-1">
-              <button disabled={currentPage===1} onClick={()=>setCurrentPage(p=>p-1)} className="p-1.5 bg-slate-900 rounded-lg text-slate-400 disabled:opacity-50 hover:bg-slate-800 transition-colors"><ChevronLeft size={14} /></button>
-              <button disabled={currentPage===totalPages} onClick={()=>setCurrentPage(p=>p+1)} className="p-1.5 bg-slate-900 rounded-lg text-slate-400 disabled:opacity-50 hover:bg-slate-800 transition-colors"><ChevronRight size={14} /></button>
+              <button disabled={currentPage===1} onClick={()=>setCurrentPage(p=>p-1)} className="p-1.5 bg-[#10241f]/85 backdrop-blur-xl rounded-lg text-slate-400 disabled:opacity-50 hover:bg-slate-800 transition-colors"><ChevronLeft size={14} /></button>
+              <button disabled={currentPage===totalPages} onClick={()=>setCurrentPage(p=>p+1)} className="p-1.5 bg-[#10241f]/85 backdrop-blur-xl rounded-lg text-slate-400 disabled:opacity-50 hover:bg-slate-800 transition-colors"><ChevronRight size={14} /></button>
             </div>
           </div>
         )}
@@ -432,7 +432,7 @@ export default function InventoryManagement() {
 
       {isBulkModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
-          <div className="bg-[#020617] border border-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-2xl">
+          <div className="bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 p-6 rounded-2xl w-full max-w-sm shadow-2xl">
             <h3 className="text-lg font-black text-white flex items-center gap-2 mb-2">
               <Box className="text-emerald-500" size={20} /> Batch Override
             </h3>
@@ -446,7 +446,7 @@ export default function InventoryManagement() {
                 <input 
                   type="number" min="0" autoFocus
                   value={bulkStockValue} onChange={(e) => setBulkStockValue(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 focus:border-emerald-500 rounded-xl py-3 px-4 text-white font-mono font-bold outline-none"
+                  className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 focus:border-emerald-500 rounded-xl py-3 px-4 text-white font-mono font-bold outline-none"
                   placeholder="e.g., 100"
                 />
               </div>
@@ -454,7 +454,7 @@ export default function InventoryManagement() {
               <div className="flex gap-3 pt-2">
                 <button 
                   onClick={() => setIsBulkModalOpen(false)}
-                  className="flex-1 py-3 bg-slate-900 text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-800 transition-colors"
+                  className="flex-1 py-3 bg-[#10241f]/85 backdrop-blur-xl text-slate-300 font-bold text-xs rounded-xl hover:bg-slate-800 transition-colors"
                 >
                   Cancel
                 </button>

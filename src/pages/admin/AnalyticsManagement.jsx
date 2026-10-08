@@ -76,7 +76,7 @@ export default function AnalyticsManagement() {
         </div>
         
         <div className="flex items-center gap-3 w-full lg:w-auto">
-          <div className="flex bg-slate-900/50 backdrop-blur-xl border border-slate-800/50 rounded-lg p-1">
+          <div className="flex bg-[#10241f]/55 backdrop-blur-xl border border-slate-800/50 rounded-lg p-1">
             {['7d', '30d', '90d', '1y'].map((t) => (
               <button
                 key={t}
@@ -106,7 +106,7 @@ export default function AnalyticsManagement() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-slate-900/40 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 shadow-2xl relative overflow-hidden group">
+        <div className="lg:col-span-2 bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 shadow-2xl relative overflow-hidden group">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-cyan-500/0 via-cyan-500 to-cyan-500/0 opacity-50" />
           <div className="flex justify-between items-center mb-8">
             <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
@@ -147,7 +147,7 @@ export default function AnalyticsManagement() {
           </div>
         </div>
 
-        <div className="bg-slate-900/40 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-purple-500/0 via-purple-500 to-purple-500/0 opacity-50" />
           <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2 mb-6">
             <PieChart className="text-purple-400" size={16} />
@@ -161,7 +161,7 @@ export default function AnalyticsManagement() {
                   <span className="text-xs font-bold text-slate-300 group-hover/cat:text-white transition-colors">{cat.name}</span>
                   <span className="text-[10px] font-mono text-purple-400">₹{cat.amount.toLocaleString()}</span>
                 </div>
-                <div className="h-1.5 w-full bg-slate-950 rounded-full overflow-hidden border border-slate-800">
+                <div className="h-1.5 w-full bg-[#081b15]/90 backdrop-blur-xl rounded-full overflow-hidden border border-slate-800">
                   <div 
                     className="h-full bg-gradient-to-r from-purple-600 to-purple-400 rounded-full shadow-[0_0_10px_rgba(168,85,247,0.5)] transition-all duration-1000"
                     style={{ width: `${(cat.amount / maxCategory) * 100}%` }}
@@ -176,7 +176,7 @@ export default function AnalyticsManagement() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <div className="bg-slate-900/40 backdrop-blur-xl border border-slate-800/50 rounded-2xl shadow-2xl overflow-hidden">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/50 rounded-2xl shadow-2xl overflow-hidden">
           <div className="p-6 border-b border-slate-800/50 flex justify-between items-center">
             <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
               <Zap className="text-amber-400" size={16} />
@@ -186,7 +186,7 @@ export default function AnalyticsManagement() {
           <div className="overflow-x-auto">
             <table className="w-full text-left border-collapse">
               <thead>
-                <tr className="bg-slate-950/50 text-[10px] uppercase tracking-widest text-slate-500 font-mono">
+                <tr className="bg-[#081b15]/55 backdrop-blur-xl text-[10px] uppercase tracking-widest text-slate-500 font-mono">
                   <th className="p-4 font-normal">Asset ID</th>
                   <th className="p-4 font-normal">Classification</th>
                   <th className="p-4 font-normal text-right">Units</th>
@@ -214,7 +214,7 @@ export default function AnalyticsManagement() {
           </div>
         </div>
 
-        <div className="bg-slate-900/40 backdrop-blur-xl border border-slate-800/50 rounded-2xl shadow-2xl p-6 relative overflow-hidden">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/50 rounded-2xl shadow-2xl p-6 relative overflow-hidden">
           <div className="absolute -right-10 -bottom-10 opacity-5">
             <Globe size={200} />
           </div>
@@ -230,7 +230,7 @@ export default function AnalyticsManagement() {
               { region: 'Tamil Nadu', users: 1205, percentage: 10 },
               { region: 'Other', users: 1200, percentage: 10 },
             ].map((geo, idx) => (
-              <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-slate-950/50 border border-slate-800/50 hover:border-emerald-500/30 transition-colors">
+              <div key={idx} className="flex items-center justify-between p-3 rounded-xl bg-[#081b15]/55 backdrop-blur-xl border border-slate-800/50 hover:border-emerald-500/30 transition-colors">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 font-mono text-xs font-bold">
                     #{idx + 1}
@@ -265,7 +265,7 @@ function KpiCard({ title, value, trend, icon: Icon, color }) {
   };
 
   return (
-    <div className={`rounded-2xl p-5 bg-slate-900/40 backdrop-blur-xl border border-slate-800/50 transition-all duration-300 hover:bg-slate-800/40 group relative overflow-hidden`}>
+    <div className={`rounded-2xl p-5 bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/50 transition-all duration-300 hover:bg-slate-800/40 group relative overflow-hidden`}>
       <div className={`absolute -right-4 -top-4 w-24 h-24 rounded-full blur-2xl opacity-20 transition-opacity duration-500 group-hover:opacity-40 ${colors[color].split(' ')[0].replace('text-', 'bg-')}`} />
       
       <div className="flex justify-between items-start mb-4 relative z-10">

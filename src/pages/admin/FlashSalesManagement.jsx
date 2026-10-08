@@ -206,7 +206,7 @@ export default function FlashSalesManagement() {
   }
 
   return (
-    <div className="p-4 md:p-8 space-y-6 bg-[#020617] min-h-screen text-slate-300 font-sans animate-in fade-in duration-500">
+    <div className="space-y-5 text-slate-300 font-sans animate-in fade-in duration-500">
       
       {/* COMMAND HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800/80">
@@ -219,7 +219,7 @@ export default function FlashSalesManagement() {
           </p>
         </div>
         <div className="flex gap-3">
-          <button onClick={fetchMatrixData} className="p-3 bg-slate-900 border border-slate-800 text-slate-400 rounded-xl hover:bg-slate-800 hover:text-amber-400 transition-all shadow-lg">
+          <button onClick={fetchMatrixData} className="p-3 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 text-slate-400 rounded-xl hover:bg-slate-800 hover:text-amber-400 transition-all shadow-lg">
             <RefreshCw size={18} />
           </button>
           <button 
@@ -233,33 +233,33 @@ export default function FlashSalesManagement() {
 
       {/* KPI DASHBOARD */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-emerald-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-emerald-500 z-10"><PlayCircle size={22} /></div>
+          <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-emerald-500 z-10"><PlayCircle size={22} /></div>
           <div className="z-10">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Live Drops</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{liveCount}</h4>
           </div>
         </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-blue-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-blue-500 z-10"><Clock size={22} /></div>
+          <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-blue-500 z-10"><Clock size={22} /></div>
           <div className="z-10">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Upcoming Events</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{upcomingCount}</h4>
           </div>
         </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-amber-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-amber-500 z-10"><Percent size={22} /></div>
+          <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-amber-500 z-10"><Percent size={22} /></div>
           <div className="z-10">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Avg Markdown</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{avgDiscount}%</h4>
           </div>
         </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-purple-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-purple-500 z-10"><LayoutDashboard size={22} /></div>
+          <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-purple-500 z-10"><LayoutDashboard size={22} /></div>
           <div className="z-10">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Total Campaigns</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{totalCampaigns}</h4>
@@ -268,20 +268,20 @@ export default function FlashSalesManagement() {
       </div>
 
       {/* FILTER MATRIX */}
-      <div className="flex flex-col md:flex-row gap-4 bg-slate-900/40 border border-slate-800/80 p-4 rounded-[2rem] shadow-lg">
+      <div className="flex flex-col md:flex-row gap-4 bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-4 rounded-[2rem] shadow-lg">
         <div className="relative flex-1 group">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-amber-500 transition-colors" size={18} />
           <input 
             type="text" placeholder="Scan by Campaign Designation..." 
             value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all"
+            className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 focus:border-amber-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all"
           />
         </div>
         <div className="relative w-full md:w-64">
           <Activity className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={16} />
           <select 
             value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all appearance-none cursor-pointer capitalize"
+            className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 focus:border-amber-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all appearance-none cursor-pointer capitalize"
           >
             <option value="all">All Chrono-States</option>
             <option value="live">Live Now</option>
@@ -293,11 +293,11 @@ export default function FlashSalesManagement() {
       </div>
 
       {/* CHRONOLOGICAL CAMPAIGN TABLE */}
-      <div className="bg-slate-900/30 border border-slate-800/80 rounded-[2.5rem] overflow-hidden shadow-2xl">
+      <div className="bg-[#10241f]/35 backdrop-blur-xl border border-slate-800/80 rounded-[2.5rem] overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-950/80 border-b border-slate-800 backdrop-blur-md">
+              <tr className="bg-[#081b15]/80 backdrop-blur-xl border-b border-slate-800 backdrop-blur-md">
                 <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Campaign Identity</th>
                 <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Chrono-State</th>
                 <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Validity Horizon</th>
@@ -343,17 +343,17 @@ export default function FlashSalesManagement() {
                     <td className="p-6">
                       <div className="space-y-1.5">
                         <div className="flex items-center gap-2 text-xs text-slate-300">
-                          <PlayCircle size={12} className="text-emerald-500" /> 
+                          <PlayCircle size={12} className="text-emerald-500" />
                           {new Date(campaign.start_time).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'})}
                         </div>
                         <div className="flex items-center gap-2 text-xs text-slate-300">
-                          <StopCircle size={12} className="text-rose-500" /> 
+                          <StopCircle size={12} className="text-rose-500" />
                           {new Date(campaign.end_time).toLocaleString(undefined, { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'})}
                         </div>
                       </div>
                     </td>
                     <td className="p-6">
-                      <div className="flex items-center gap-2 text-slate-400 text-xs font-bold bg-slate-950 border border-slate-800 px-3 py-1.5 rounded-lg inline-flex">
+                      <div className="flex items-center gap-2 text-slate-400 text-xs font-bold bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 px-3 py-1.5 rounded-lg inline-flex">
                         <Package size={14} /> {productCount} accesss Linked
                       </div>
                     </td>
@@ -361,13 +361,13 @@ export default function FlashSalesManagement() {
                       <div className="flex items-center justify-end gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
                         <button 
                           onClick={() => handleToggleStatus(campaign.id || campaign._id, campaign.status)}
-                          className={`p-2 bg-slate-950 border border-slate-800 rounded-xl transition-all ${campaign.status === 'active' ? 'text-amber-500 hover:bg-amber-500 hover:text-black' : 'text-emerald-500 hover:bg-emerald-500 hover:text-black'}`}
+                          className={`p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl transition-all ${campaign.status === 'active' ? 'text-amber-500 hover:bg-amber-500 hover:text-black' : 'text-emerald-500 hover:bg-emerald-500 hover:text-black'}`}
                           title={campaign.status === 'active' ? 'Halt Campaign' : 'Activate Campaign'}
                         >
                           {campaign.status === 'active' ? <StopCircle size={16} /> : <PlayCircle size={16} />}
                         </button>
-                        <button onClick={() => openModal(campaign)} className="p-2 bg-slate-950 border border-slate-800 rounded-xl text-blue-500 hover:bg-blue-500 hover:text-white transition-all"><Edit2 size={16} /></button>
-                        <button onClick={() => handleDelete(campaign.id || campaign._id)} className="p-2 bg-slate-950 border border-slate-800 rounded-xl text-rose-500 hover:bg-rose-500 hover:text-white transition-all"><Trash2 size={16} /></button>
+                        <button onClick={() => openModal(campaign)} className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl text-blue-500 hover:bg-blue-500 hover:text-white transition-all"><Edit2 size={16} /></button>
+                        <button onClick={() => handleDelete(campaign.id || campaign._id)} className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl text-rose-500 hover:bg-rose-500 hover:text-white transition-all"><Trash2 size={16} /></button>
                       </div>
                     </td>
                   </tr>
@@ -380,8 +380,8 @@ export default function FlashSalesManagement() {
 
       {/* DEPLOYMENT COMMAND MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl overflow-y-auto custom-scrollbar">
-          <div className="bg-[#0a0c10] border border-slate-800 w-full max-w-3xl rounded-[3rem] shadow-2xl overflow-hidden my-auto animate-in zoom-in-95 duration-200">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#081b15]/90 backdrop-blur-xl/90 backdrop-blur-xl overflow-y-auto custom-scrollbar">
+          <div className="bg-[#10241f]/90 backdrop-blur-xl border border-slate-800 w-full max-w-3xl rounded-[3rem] shadow-2xl overflow-hidden my-auto animate-in zoom-in-95 duration-200">
             
             {/* Header */}
             <div className="p-6 md:p-8 border-b border-slate-800 flex justify-between items-start bg-amber-500/5">
@@ -396,13 +396,13 @@ export default function FlashSalesManagement() {
                 </div>
                 <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1 ml-14">Chronological Markdown Engine</p>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="text-slate-500 hover:text-rose-500 transition-colors p-2 bg-slate-950 rounded-xl border border-slate-800">
+              <button onClick={() => setIsModalOpen(false)} className="text-slate-500 hover:text-rose-500 transition-colors p-2 bg-[#081b15]/90 backdrop-blur-xl rounded-xl border border-slate-800">
                 <XCircle size={20} />
               </button>
             </div>
             
             {/* Tab Navigation */}
-            <div className="flex border-b border-slate-800 px-8 bg-slate-950/30">
+            <div className="flex border-b border-slate-800 px-8 bg-[#081b15]/35 backdrop-blur-xl">
               <button
                 onClick={() => setActiveTab('core')}
                 className={`flex items-center gap-2 px-6 py-4 text-[10px] font-black uppercase tracking-widest transition-all border-b-2 ${activeTab === 'core' ? 'border-amber-500 text-amber-400 bg-amber-500/5' : 'border-transparent text-slate-500 hover:text-slate-300'}`}
@@ -430,7 +430,7 @@ export default function FlashSalesManagement() {
                         <input 
                           type="text" required placeholder="e.g. Cyber Monday Drop"
                           value={form.name} onChange={e => setForm({...form, name: e.target.value})}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-4 text-white font-bold outline-none focus:border-amber-500/50 transition-all text-lg" 
+                          className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl p-4 text-white font-bold outline-none focus:border-amber-500/50 transition-all text-lg"
                         />
                       </div>
                       
@@ -441,12 +441,12 @@ export default function FlashSalesManagement() {
                           <input 
                             type="number" required min="1" max="99" placeholder="e.g. 25"
                             value={form.discount_percentage} onChange={e => setForm({...form, discount_percentage: e.target.value})}
-                            className="w-full bg-slate-950 border border-amber-500/30 rounded-xl p-4 pl-12 text-amber-400 font-black outline-none focus:border-amber-500 transition-all text-xl" 
+                            className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-amber-500/30 rounded-xl p-4 pl-12 text-amber-400 font-black outline-none focus:border-amber-500 transition-all text-xl"
                           />
                         </div>
                       </div>
 
-                      <div className="bg-slate-900/50 p-6 rounded-2xl border border-slate-800 space-y-4 md:col-span-2">
+                      <div className="bg-[#10241f]/55 backdrop-blur-xl p-6 rounded-2xl border border-slate-800 space-y-4 md:col-span-2">
                         <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2 mb-4"><Calendar size={14}/> Validity Horizon</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           <DatetimeTzInput
@@ -475,7 +475,7 @@ export default function FlashSalesManagement() {
                     
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-h-[300px] overflow-y-auto custom-scrollbar pr-2">
                       {availableProducts.length === 0 ? (
-                        <div className="col-span-2 text-center text-slate-600 font-bold text-xs p-8 bg-slate-900/50 rounded-xl border border-dashed border-slate-700">
+                        <div className="col-span-2 text-center text-slate-600 font-bold text-xs p-8 bg-[#10241f]/55 backdrop-blur-xl rounded-xl border border-dashed border-slate-700">
                           No hardware accesss found in registry.
                         </div>
                       ) : availableProducts.map(product => {
@@ -484,7 +484,7 @@ export default function FlashSalesManagement() {
                           <div 
                             key={product.id || product._id}
                             onClick={() => handleToggleProduct(product.id || product._id)}
-                            className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${isSelected ? 'bg-amber-500/10 border-amber-500/50' : 'bg-slate-950 border-slate-800 hover:border-slate-600'}`}
+                            className={`flex items-center justify-between p-3 rounded-xl border cursor-pointer transition-all ${isSelected ? 'bg-amber-500/10 border-amber-500/50' : 'bg-[#081b15]/90 backdrop-blur-xl border-slate-800 hover:border-slate-600'}`}
                           >
                             <div className="flex flex-col min-w-0 pr-2">
                               <span className={`text-xs font-bold truncate ${isSelected ? 'text-amber-400' : 'text-white'}`}>{product.name}</span>
@@ -502,12 +502,12 @@ export default function FlashSalesManagement() {
 
               </div>
 
-              <div className="p-6 border-t border-slate-800 bg-slate-950/80 flex justify-end gap-3">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3.5 text-slate-400 font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-slate-900 transition-all">
+              <div className="p-6 border-t border-slate-800 bg-[#081b15]/80 backdrop-blur-xl flex justify-end gap-3">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3.5 text-slate-400 font-black uppercase tracking-widest text-[10px] rounded-xl hover:bg-[#10241f]/85 backdrop-blur-xl transition-all">
                   Abort Integration
                 </button>
                 <button type="submit" disabled={isProcessing} className="px-8 py-3.5 bg-amber-500 text-slate-950 font-black uppercase tracking-widest text-[10px] rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.2)] hover:bg-amber-400 transition-all flex items-center gap-2 disabled:opacity-50">
-                  {isProcessing ? <RefreshCw size={14} className="animate-spin" /> : <Zap size={14} />} 
+                  {isProcessing ? <RefreshCw size={14} className="animate-spin" /> : <Zap size={14} />}
                   Execute Deployment
                 </button>
               </div>

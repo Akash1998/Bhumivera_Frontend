@@ -14,6 +14,14 @@ body {
 }
 
 @layer components {
+  .admin-glass-panel {
+    @apply border border-white/10 bg-[#10241f]/65 shadow-[0_14px_40px_rgba(0,0,0,0.18)] backdrop-blur-2xl;
+  }
+
+  .admin-glass-control {
+    @apply border border-white/10 bg-[#071a14]/70 text-slate-100 placeholder:text-slate-500 outline-none transition-colors focus:border-emerald-400/60 focus:ring-2 focus:ring-emerald-400/10;
+  }
+
   .bg-alabaster {
     background-color: var(--alabaster);
   }

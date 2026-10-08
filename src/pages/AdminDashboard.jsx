@@ -180,35 +180,29 @@ export default function AdminDashboard() {
           background-color: rgba(212, 175, 55, 0.48);
           border-radius: 4px;
         }
-        .admin-shell { background: #0b2419; }
+        .admin-shell {
+          background:
+            radial-gradient(ellipse at 76% 4%, rgba(34, 197, 94, 0.14), transparent 40%),
+            radial-gradient(ellipse at 18% 82%, rgba(212, 175, 55, 0.08), transparent 42%),
+            linear-gradient(135deg, #071a12 0%, #0b2419 52%, #0a1c16 100%);
+          isolation: isolate;
+        }
+        .admin-shell::before {
+          content: "";
+          position: fixed;
+          inset: -18%;
+          z-index: -1;
+          pointer-events: none;
+          background:
+            radial-gradient(ellipse at 42% 35%, rgba(16, 185, 129, 0.08), transparent 34%),
+            radial-gradient(ellipse at 82% 72%, rgba(212, 175, 55, 0.05), transparent 30%);
+          filter: blur(38px);
+          animation: admin-glass-flow 24s ease-in-out infinite alternate;
+        }
         .admin-shell ::selection { background: rgba(212, 175, 55, 0.25); }
-        .admin-shell .content-scroll [class~="bg-white"],
-        .admin-shell .content-scroll [class~="bg-gray-50"],
-        .admin-shell .content-scroll [class~="bg-slate-50"],
-        .admin-shell .content-scroll [class*="bg-blue-50"] {
-          background-color: #0f172a !important;
-        }
-        .admin-shell .content-scroll [class~="text-gray-900"],
-        .admin-shell .content-scroll [class~="text-gray-800"],
-        .admin-shell .content-scroll [class~="text-gray-700"],
-        .admin-shell .content-scroll [class~="text-slate-900"],
-        .admin-shell .content-scroll [class~="text-slate-800"],
-        .admin-shell .content-scroll [class~="text-slate-700"] {
-          color: #e2e8f0 !important;
-        }
-        .admin-shell .content-scroll [class~="text-gray-600"],
-        .admin-shell .content-scroll [class~="text-slate-600"] {
-          color: #cbd5e1 !important;
-        }
-        .admin-shell .content-scroll [class~="border-gray-100"],
-        .admin-shell .content-scroll [class~="border-gray-200"],
-        .admin-shell .content-scroll [class~="border-slate-100"],
-        .admin-shell .content-scroll [class~="border-slate-200"] {
-          border-color: #334155 !important;
-        }
-        .admin-shell .content-scroll [class*="hover:bg-slate-50"]:hover,
-        .admin-shell .content-scroll [class*="hover:bg-white"]:hover {
-          background-color: #1e293b !important;
+        @keyframes admin-glass-flow {
+          from { transform: translate3d(-2%, -1%, 0) scale(0.98); }
+          to { transform: translate3d(2%, 1%, 0) scale(1.04); }
         }
       `}</style>
 

@@ -211,7 +211,7 @@ export default function ReviewManagement() {
 
   if (loadError && reviews.length === 0) {
     return (
-      <div className="mx-auto flex min-h-[45vh] max-w-xl flex-col items-center justify-center rounded-2xl border border-rose-500/25 bg-slate-900/60 p-8 text-center">
+      <div className="mx-auto flex min-h-[45vh] max-w-xl flex-col items-center justify-center rounded-2xl border border-rose-500/25 bg-[#10241f]/65 backdrop-blur-xl p-8 text-center">
         <AlertTriangle size={30} className="mb-3 text-rose-400" aria-hidden="true" />
         <h2 className="text-lg font-semibold text-white">Reviews could not be loaded</h2>
         <p role="alert" className="mt-2 text-sm text-slate-300">{loadError}</p>
@@ -229,7 +229,7 @@ export default function ReviewManagement() {
   }
 
   return (
-    <div className="p-3 md:p-5 space-y-5 bg-[#0b2419] min-h-full text-slate-300 font-sans animate-in fade-in duration-500">
+    <div className="space-y-5 text-slate-300 font-sans animate-in fade-in duration-500">
       
       {/* COMMAND HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#d4af37]/20">
@@ -242,7 +242,7 @@ export default function ReviewManagement() {
           </p>
         </div>
         <div className="flex gap-3">
-          <button type="button" onClick={fetchReviews} disabled={loading} aria-label="Refresh customer reviews" className="p-2.5 bg-slate-900 border border-slate-800 text-slate-300 rounded-lg hover:bg-slate-800 hover:text-amber-400 transition-all disabled:opacity-60">
+          <button type="button" onClick={fetchReviews} disabled={loading} aria-label="Refresh customer reviews" className="p-2.5 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 text-slate-300 rounded-lg hover:bg-slate-800 hover:text-amber-400 transition-all disabled:opacity-60">
             <RefreshCw size={18} />
           </button>
         </div>
@@ -257,33 +257,33 @@ export default function ReviewManagement() {
 
       {/* KPI DASHBOARD */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-blue-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-blue-500 z-10"><MessageSquare size={22} /></div>
+          <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-blue-500 z-10"><MessageSquare size={22} /></div>
           <div className="z-10">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Total reviews</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{totalReviews}</h4>
           </div>
         </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-amber-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-amber-500 z-10"><Star size={22} /></div>
+          <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-amber-500 z-10"><Star size={22} /></div>
           <div className="z-10">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Average rating</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{averageRating} <span className="text-sm text-slate-500">/ 5.0</span></h4>
           </div>
         </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-rose-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-rose-500 z-10"><ShieldAlert size={22} /></div>
+          <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-rose-500 z-10"><ShieldAlert size={22} /></div>
           <div className="z-10">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Needs review</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{pendingCount}</h4>
           </div>
         </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-emerald-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-emerald-500 z-10"><ThumbsUp size={22} /></div>
+          <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-emerald-500 z-10"><ThumbsUp size={22} /></div>
           <div className="z-10">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">4–5 star reviews</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{positiveRatio}%</h4>
@@ -292,13 +292,13 @@ export default function ReviewManagement() {
       </div>
 
       {/* FILTER & SEARCH BAR */}
-      <div className="flex flex-col md:flex-row gap-4 bg-slate-900/40 border border-slate-800/80 p-4 rounded-[2rem] shadow-lg">
+      <div className="flex flex-col md:flex-row gap-4 bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-4 rounded-[2rem] shadow-lg">
         <div className="relative flex-1 group">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-amber-500 transition-colors" size={18} />
           <input 
           type="text" placeholder="Search by review, customer, product, or order…"
             value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all"
+            className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 focus:border-amber-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all"
           />
         </div>
         <div className="flex gap-4 w-full md:w-auto">
@@ -306,7 +306,7 @@ export default function ReviewManagement() {
             <Filter className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={16} />
             <select 
               value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all appearance-none cursor-pointer"
+              className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 focus:border-amber-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all appearance-none cursor-pointer"
             >
               <option value="all">All Moderation States</option>
               {Object.entries(STATUS_MAP).map(([key, { label }]) => (
@@ -318,7 +318,7 @@ export default function ReviewManagement() {
             <Star className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={16} />
             <select 
               value={ratingFilter} onChange={(e) => { setRatingFilter(e.target.value); setCurrentPage(1); }}
-              className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500/50 rounded-xl py-3.5 pl-10 pr-4 text-white font-bold text-sm outline-none transition-all appearance-none cursor-pointer"
+              className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 focus:border-amber-500/50 rounded-xl py-3.5 pl-10 pr-4 text-white font-bold text-sm outline-none transition-all appearance-none cursor-pointer"
             >
               <option value="all">All Ratings</option>
               <option value="5">5 Stars Only</option>
@@ -332,11 +332,11 @@ export default function ReviewManagement() {
       </div>
 
       {/* MODERATION FEED TABLE */}
-      <div className="bg-slate-900/30 border border-slate-800/80 rounded-[2.5rem] overflow-hidden shadow-2xl">
+      <div className="bg-[#10241f]/35 backdrop-blur-xl border border-slate-800/80 rounded-[2.5rem] overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-950/80 border-b border-slate-800 backdrop-blur-md">
+              <tr className="bg-[#081b15]/80 backdrop-blur-xl border-b border-slate-800 backdrop-blur-md">
                 <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Product</th>
                 <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Customer</th>
                 <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Review</th>
@@ -363,7 +363,7 @@ export default function ReviewManagement() {
                   <tr key={review.id || review._id} className="hover:bg-amber-500/[0.02] transition-colors group">
                     <td className="p-6">
                       <div className="flex items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-slate-950 border border-slate-800 flex-shrink-0 p-1">
+                        <div className="w-12 h-12 rounded-xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 flex-shrink-0 p-1">
                           <img 
                             src={getImageUrl(review.images?.[0] || review.product?.images?.[0] || review.product?.image_url)}
                             alt="product" 
@@ -403,7 +403,7 @@ export default function ReviewManagement() {
                         {review.status === 'pending' && (
                           <button 
                             onClick={() => handleUpdateStatus(review.id || review._id, 'approved')}
-                            className="p-2.5 bg-slate-950 border border-slate-800 rounded-xl text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all shadow-md"
+                            className="p-2.5 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl text-emerald-500 hover:bg-emerald-500 hover:text-white transition-all shadow-md"
                             title="Publish to Storefront"
                           >
                             <CheckCircle size={14} />
@@ -411,7 +411,7 @@ export default function ReviewManagement() {
                         )}
                         <button 
                           onClick={() => handleInspect(review)}
-                          className="px-4 py-2.5 bg-slate-950 border border-slate-800 rounded-xl text-amber-500 hover:bg-amber-500 hover:text-slate-950 transition-all text-[10px] font-black uppercase tracking-widest shadow-md inline-flex items-center gap-2"
+                          className="px-4 py-2.5 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl text-amber-500 hover:bg-amber-500 hover:text-slate-950 transition-all text-[10px] font-black uppercase tracking-widest shadow-md inline-flex items-center gap-2"
                         >
                           <Eye size={14} /> Inspect
                         </button>
@@ -427,10 +427,10 @@ export default function ReviewManagement() {
 
       {/* DEEP INSPECTOR MODAL */}
       {selectedReview && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl overflow-y-auto custom-scrollbar">
-          <div className="bg-[#0a0c10] border border-slate-800 w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden my-auto animate-in zoom-in-95 duration-300 relative">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#081b15]/90 backdrop-blur-xl/90 backdrop-blur-xl overflow-y-auto custom-scrollbar">
+          <div className="bg-[#10241f]/90 backdrop-blur-xl border border-slate-800 w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden my-auto animate-in zoom-in-95 duration-300 relative">
             
-            <div className="p-6 md:p-8 border-b border-slate-800 flex justify-between items-start bg-slate-900/50">
+            <div className="p-6 md:p-8 border-b border-slate-800 flex justify-between items-start bg-[#10241f]/55 backdrop-blur-xl">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500">
                   <MessageSquare size={24} />
@@ -440,7 +440,7 @@ export default function ReviewManagement() {
                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Deep Scan Inspector</p>
                 </div>
               </div>
-              <button onClick={() => { setSelectedReview(null); setReviewDraft(null); }} className="p-3 bg-slate-950 border border-slate-800 hover:bg-rose-500/10 text-slate-500 hover:text-rose-500 rounded-2xl transition-all shadow-md">
+              <button onClick={() => { setSelectedReview(null); setReviewDraft(null); }} className="p-3 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 hover:bg-rose-500/10 text-slate-500 hover:text-rose-500 rounded-2xl transition-all shadow-md">
                 <XCircle size={20} />
               </button>
             </div>
@@ -448,11 +448,11 @@ export default function ReviewManagement() {
             <div className="grid grid-cols-1 md:grid-cols-12">
               
               {/* Context Sidebar */}
-              <div className="col-span-1 md:col-span-4 p-6 md:p-8 border-b md:border-b-0 md:border-r border-slate-800 bg-slate-950/30">
+              <div className="col-span-1 md:col-span-4 p-6 md:p-8 border-b md:border-b-0 md:border-r border-slate-800 bg-[#081b15]/35 backdrop-blur-xl">
                 <div className="space-y-6">
                   <div>
                     <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3 flex items-center gap-2"><Box size={14}/> Target Hardware access</h4>
-                    <div className="bg-slate-950 border border-slate-800 rounded-2xl p-3 flex gap-3 items-center">
+                    <div className="bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-3 flex gap-3 items-center">
                       <img 
                         src={getImageUrl(reviewDraft?.images?.[0] || selectedReview.product?.images?.[0] || selectedReview.product?.image_url)}
                         alt="hardware" 
@@ -467,7 +467,7 @@ export default function ReviewManagement() {
 
                   <div>
                     <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3 flex items-center gap-2"><User size={14}/> Client Identity</h4>
-                    <div className="bg-slate-950 border border-slate-800 rounded-2xl p-4">
+                    <div className="bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-4">
                       <p className="text-sm font-bold text-white">{selectedReview.user_name || selectedReview.user?.name || selectedReview.reviewer_name || 'Customer'}</p>
                       <p className="text-[10px] font-mono text-slate-500 mt-1">{selectedReview.user_email || selectedReview.user?.email || 'No email attached'}</p>
                       <p className="mt-1 text-xs text-cyan-300">Order #{selectedReview.order_number || selectedReview.order_id || 'N/A'}</p>
@@ -495,22 +495,22 @@ export default function ReviewManagement() {
                   </div>
                 </div>
 
-                <div className="bg-slate-900/50 border border-slate-800 rounded-3xl p-6 mb-5 relative space-y-4">
+                <div className="bg-[#10241f]/55 backdrop-blur-xl border border-slate-800 rounded-3xl p-6 mb-5 relative space-y-4">
                   <MessageSquare size={100} className="absolute top-4 right-4 text-slate-800/30 pointer-events-none" />
                   <label className="relative z-10 block text-xs font-bold uppercase text-slate-400">Rating
-                    <select value={reviewDraft?.rating || 5} onChange={event => setReviewDraft(current => ({ ...current, rating: Number(event.target.value) }))} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-sm text-white">
+                    <select value={reviewDraft?.rating || 5} onChange={event => setReviewDraft(current => ({ ...current, rating: Number(event.target.value) }))} className="mt-1 w-full rounded-xl border border-slate-700 bg-[#081b15]/90 backdrop-blur-xl p-3 text-sm text-white">
                       {[5, 4, 3, 2, 1].map(rating => <option key={rating} value={rating}>{rating} star{rating === 1 ? '' : 's'}</option>)}
                     </select>
                   </label>
                   <label className="relative z-10 block text-xs font-bold uppercase text-slate-400">Review title
-                    <input maxLength={255} value={reviewDraft?.title || ''} onChange={event => setReviewDraft(current => ({ ...current, title: event.target.value }))} className="mt-1 w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-sm normal-case text-white" />
+                    <input maxLength={255} value={reviewDraft?.title || ''} onChange={event => setReviewDraft(current => ({ ...current, title: event.target.value }))} className="mt-1 w-full rounded-xl border border-slate-700 bg-[#081b15]/90 backdrop-blur-xl p-3 text-sm normal-case text-white" />
                   </label>
                   <label className="relative z-10 block text-xs font-bold uppercase text-slate-400">Customer review
-                    <textarea maxLength={5000} rows={5} value={reviewDraft?.body || ''} onChange={event => setReviewDraft(current => ({ ...current, body: event.target.value }))} className="mt-1 w-full resize-y rounded-xl border border-slate-700 bg-slate-950 p-3 text-sm normal-case text-white" />
+                    <textarea maxLength={5000} rows={5} value={reviewDraft?.body || ''} onChange={event => setReviewDraft(current => ({ ...current, body: event.target.value }))} className="mt-1 w-full resize-y rounded-xl border border-slate-700 bg-[#081b15]/90 backdrop-blur-xl p-3 text-sm normal-case text-white" />
                   </label>
                 </div>
 
-                <div className="mb-5 rounded-3xl border border-slate-800 bg-slate-900/50 p-6">
+                <div className="mb-5 rounded-3xl border border-slate-800 bg-[#10241f]/55 backdrop-blur-xl p-6">
                   <div className="mb-3 flex items-center justify-between gap-3">
                     <div><h4 className="font-bold text-white">Customer photos</h4><p className="text-xs text-slate-500">Add or remove up to five review images.</p></div>
                     <label className="inline-flex cursor-pointer items-center gap-2 rounded-xl border border-cyan-500/30 px-3 py-2 text-xs font-bold text-cyan-300 hover:bg-cyan-500/10">
@@ -549,7 +549,7 @@ export default function ReviewManagement() {
                     </button>
                     <button 
                       onClick={() => handleDelete(selectedReview.id || selectedReview._id)}
-                      className="px-6 py-3.5 bg-slate-950 border border-slate-800 text-slate-500 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all shadow-md flex items-center gap-2"
+                      className="px-6 py-3.5 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-slate-500 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-rose-500 hover:text-white hover:border-rose-500 transition-all shadow-md flex items-center gap-2"
                     >
                       <Trash2 size={14}/> Purge access
                     </button>

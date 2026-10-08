@@ -136,26 +136,26 @@ export default function NotificationManagement() {
           { label: 'Unacknowledged Logs', value: unreadCount, icon: Zap, color: 'text-emerald-400' },
           { label: 'Critical Exceptions', value: securityCount, icon: ShieldAlert, color: 'text-rose-400' }
         ].map((stat, i) => (
-          <div key={i} className="bg-slate-900/40 backdrop-blur-md border border-slate-800/50 rounded-2xl p-6 flex items-center justify-between shadow-xl">
+          <div key={i} className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 flex items-center justify-between shadow-xl">
             <div>
               <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest mb-1">{stat.label}</p>
               <h3 className="text-3xl font-black text-white">{stat.value}</h3>
             </div>
-            <div className={`p-3 rounded-xl bg-slate-950 border border-slate-800 shadow-inner ${stat.color}`}>
+            <div className={`p-3 rounded-xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 shadow-inner ${stat.color}`}>
               <stat.icon size={24} />
             </div>
           </div>
         ))}
       </div>
 
-      <div className="bg-slate-900/40 backdrop-blur-xl border border-slate-800/50 rounded-2xl flex flex-col h-[600px] overflow-hidden shadow-2xl">
-        <div className="p-4 border-b border-slate-800/50 flex flex-col md:flex-row justify-between items-center gap-4 bg-slate-950/30">
+      <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/50 rounded-2xl flex flex-col h-[600px] overflow-hidden shadow-2xl">
+        <div className="p-4 border-b border-slate-800/50 flex flex-col md:flex-row justify-between items-center gap-4 bg-[#081b15]/35 backdrop-blur-xl">
           <div className="flex items-center gap-2 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 hide-scrollbar">
             {['all', 'unread', 'system', 'security'].map(f => (
               <button
                 key={f} onClick={() => setFilter(f)}
                 className={`px-4 py-2 rounded-lg text-xs font-bold uppercase tracking-wider whitespace-nowrap transition-all ${
-                  filter === f ? 'bg-emerald-500 text-black shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-slate-950 border border-slate-800 text-slate-400 hover:text-white'
+                  filter === f ? 'bg-emerald-500 text-black shadow-[0_0_15px_rgba(16,185,129,0.4)]' : 'bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-slate-400 hover:text-white'
                 }`}
               >
                 {f}
@@ -168,11 +168,11 @@ export default function NotificationManagement() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
               <input
                 type="text" placeholder="Search logs..." value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors font-mono"
+                className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-lg pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors font-mono"
               />
             </div>
             {unreadCount > 0 && (
-              <button onClick={handleMarkAllRead} className="p-2 bg-slate-950 border border-slate-800 rounded-lg text-slate-400 hover:text-emerald-400 hover:border-emerald-500/50 transition-all flex-shrink-0" title="Acknowledge all alerts">
+              <button onClick={handleMarkAllRead} className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-lg text-slate-400 hover:text-emerald-400 hover:border-emerald-500/50 transition-all flex-shrink-0" title="Acknowledge all alerts">
                 <CheckCheck size={18} />
               </button>
             )}
@@ -191,7 +191,7 @@ export default function NotificationManagement() {
               return (
                 <div 
                   key={alert.id} onClick={() => !alert.is_read && handleMarkRead(alert.id)}
-                  className={`group relative flex gap-4 p-5 rounded-xl border transition-all duration-300 ${alert.is_read ? 'bg-slate-950/50 border-slate-800/50 opacity-70' : `bg-slate-900/80 ${border} shadow-[0_4px_20px_rgba(0,0,0,0.2)] cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)]`}`}
+                  className={`group relative flex gap-4 p-5 rounded-xl border transition-all duration-300 ${alert.is_read ? 'bg-[#081b15]/55 backdrop-blur-xl border-slate-800/50 opacity-70' : `bg-[#10241f]/80 backdrop-blur-xl ${border} shadow-[0_4px_20px_rgba(0,0,0,0.2)] cursor-pointer hover:-translate-y-0.5 hover:shadow-[0_8px_30px_rgba(0,0,0,0.3)]`}`}
                 >
                   {!alert.is_read && <div className={`absolute -left-1 top-1/2 -translate-y-1/2 w-2 h-8 rounded-r-full ${color.replace('text-', 'bg-')} shadow-[0_0_10px_currentColor]`} />}
                   <div className={`p-3 rounded-xl h-fit flex-shrink-0 ${bg} ${color}`}>
@@ -200,7 +200,7 @@ export default function NotificationManagement() {
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between items-start mb-1">
                       <h4 className={`font-bold text-sm truncate ${alert.is_read ? 'text-slate-400' : 'text-white'}`}>{alert.title}</h4>
-                      <span className="flex items-center gap-1 text-[10px] font-mono text-slate-500 flex-shrink-0 ml-4 bg-slate-950 px-2 py-1 rounded border border-slate-800">
+                      <span className="flex items-center gap-1 text-[10px] font-mono text-slate-500 flex-shrink-0 ml-4 bg-[#081b15]/90 backdrop-blur-xl px-2 py-1 rounded border border-slate-800">
                         <Clock size={10} />
                         {new Intl.DateTimeFormat('en-GB', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }).format(new Date(alert.created_at))}
                       </span>
@@ -221,8 +221,8 @@ export default function NotificationManagement() {
 
       {isComposing && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md">
-          <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden animate-in fade-in zoom-in duration-300">
-            <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-slate-950/50">
+          <div className="w-full max-w-lg bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 rounded-2xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden animate-in fade-in zoom-in duration-300">
+            <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center bg-[#081b15]/55 backdrop-blur-xl">
               <h3 className="font-black text-white uppercase tracking-widest flex items-center gap-2">
                 <Send size={16} className="text-emerald-500" /> Transmit Broadcast
               </h3>
@@ -237,7 +237,7 @@ export default function NotificationManagement() {
                   <label className="block text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2">Severity</label>
                   <select 
                     value={composeData.type} onChange={e => setComposeData({...composeData, type: e.target.value})}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors cursor-pointer"
+                    className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors cursor-pointer"
                   >
                     <option value="info">System Info</option>
                     <option value="success">Success Status</option>
@@ -249,7 +249,7 @@ export default function NotificationManagement() {
                   <label className="block text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2">Target Scope</label>
                   <select 
                     value={composeData.target} onChange={e => setComposeData({...composeData, target: e.target.value})}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors cursor-pointer"
+                    className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors cursor-pointer"
                   >
                     <option value="all">Global Access (All)</option>
                     <option value="admins">Admin Level Only</option>
@@ -261,7 +261,7 @@ export default function NotificationManagement() {
                 <label className="block text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2">Transmission Header</label>
                 <input 
                   type="text" required value={composeData.title} onChange={e => setComposeData({...composeData, title: e.target.value})}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
+                  className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl px-4 py-3 text-sm text-white focus:outline-none focus:border-emerald-500/50 transition-colors"
                   placeholder="e.g., Database Sync Completed"
                 />
               </div>
@@ -270,7 +270,7 @@ export default function NotificationManagement() {
                 <label className="block text-[10px] font-mono text-slate-500 uppercase tracking-widest mb-2">Payload Trace</label>
                 <textarea 
                   required rows={4} value={composeData.message} onChange={e => setComposeData({...composeData, message: e.target.value})}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-emerald-500/50 transition-colors resize-none"
+                  className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl px-4 py-3 text-sm text-white font-mono focus:outline-none focus:border-emerald-500/50 transition-colors resize-none"
                   placeholder="Enter detailed system trace or message..."
                 />
               </div>

@@ -118,7 +118,7 @@ export default function ContactManagement() {
   }
 
   return (
-    <div className="p-4 md:p-8 space-y-6 bg-[#020617] min-h-screen text-slate-300 font-sans animate-in fade-in duration-500">
+    <div className="space-y-5 text-slate-300 font-sans animate-in fade-in duration-500">
       
       {/* HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-800/80">
@@ -130,32 +130,32 @@ export default function ContactManagement() {
             <LifeBuoy size={12} className="text-blue-500" /> Triage & Comms Center
           </p>
         </div>
-        <button onClick={fetchTickets} className="p-3 bg-slate-900 border border-slate-800 text-slate-400 rounded-xl hover:bg-slate-800 hover:text-blue-400 transition-all shadow-lg self-end sm:self-auto">
+        <button onClick={fetchTickets} className="p-3 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 text-slate-400 rounded-xl hover:bg-slate-800 hover:text-blue-400 transition-all shadow-lg self-end sm:self-auto">
           <RefreshCw size={18} />
         </button>
       </div>
 
       {/* KPI DASHBOARD */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-900/40 border border-slate-800/80 p-5 rounded-2xl flex items-center gap-4 relative overflow-hidden group">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-5 rounded-2xl flex items-center gap-4 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-20 h-20 bg-rose-500/10 blur-2xl -mr-6 -mt-6"></div>
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-rose-500 z-10"><AlertTriangle size={20} /></div>
+          <div className="p-3 rounded-xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-rose-500 z-10"><AlertTriangle size={20} /></div>
           <div className="z-10">
             <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Pending Action</p>
             <h4 className="text-xl font-black text-white tracking-tight mt-0.5">{pendingCount}</h4>
           </div>
         </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-5 rounded-2xl flex items-center gap-4 relative overflow-hidden">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-5 rounded-2xl flex items-center gap-4 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-20 h-20 bg-amber-500/10 blur-2xl -mr-6 -mt-6"></div>
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-amber-500 z-10"><Clock size={20} /></div>
+          <div className="p-3 rounded-xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-amber-500 z-10"><Clock size={20} /></div>
           <div className="z-10">
             <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest">In Review</p>
             <h4 className="text-xl font-black text-white tracking-tight mt-0.5">{inProgressCount}</h4>
           </div>
         </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-5 rounded-2xl flex items-center gap-4 relative overflow-hidden">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-5 rounded-2xl flex items-center gap-4 relative overflow-hidden">
           <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 blur-2xl -mr-6 -mt-6"></div>
-          <div className="p-3 rounded-xl bg-slate-950 border border-slate-800 text-emerald-500 z-10"><CheckCircle size={20} /></div>
+          <div className="p-3 rounded-xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-emerald-500 z-10"><CheckCircle size={20} /></div>
           <div className="z-10">
             <p className="text-[9px] font-black uppercase text-slate-500 tracking-widest">Resolved Tickets</p>
             <h4 className="text-xl font-black text-white tracking-tight mt-0.5">{resolvedCount}</h4>
@@ -171,20 +171,20 @@ export default function ContactManagement() {
       </div>
 
       {/* FILTER & SEARCH BAR */}
-      <div className="flex flex-col md:flex-row gap-3 bg-slate-900/40 border border-slate-800/80 p-3 rounded-2xl shadow-lg">
+      <div className="flex flex-col md:flex-row gap-3 bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-3 rounded-2xl shadow-lg">
         <div className="relative flex-1 group">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-blue-500 transition-colors" size={16} />
           <input 
             type="text" placeholder="Scan client identity, email, or hash..." 
             value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full bg-slate-950 border border-slate-800 focus:border-blue-500/50 rounded-xl py-3 pl-10 pr-4 text-white font-bold text-xs outline-none transition-all"
+            className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 focus:border-blue-500/50 rounded-xl py-3 pl-10 pr-4 text-white font-bold text-xs outline-none transition-all"
           />
         </div>
         <div className="relative w-full md:w-64">
           <Filter className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={14} />
           <select 
             value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-            className="w-full bg-slate-950 border border-slate-800 focus:border-blue-500/50 rounded-xl py-3 pl-10 pr-4 text-white font-bold text-xs outline-none transition-all appearance-none cursor-pointer"
+            className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 focus:border-blue-500/50 rounded-xl py-3 pl-10 pr-4 text-white font-bold text-xs outline-none transition-all appearance-none cursor-pointer"
           >
             <option value="all">All Triage States</option>
             {Object.entries(STATUS_MAP).map(([key, { label }]) => (
@@ -195,11 +195,11 @@ export default function ContactManagement() {
       </div>
 
       {/* TICKETS TABLE */}
-      <div className="bg-slate-900/30 border border-slate-800/80 rounded-[2rem] overflow-hidden shadow-xl">
+      <div className="bg-[#10241f]/35 backdrop-blur-xl border border-slate-800/80 rounded-[2rem] overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-950/80 border-b border-slate-800 backdrop-blur-md">
+              <tr className="bg-[#081b15]/80 backdrop-blur-xl border-b border-slate-800 backdrop-blur-md">
                 <th className="p-5 text-[9px] font-black uppercase text-slate-500 tracking-widest">Client Payload</th>
                 <th className="p-5 text-[9px] font-black uppercase text-slate-500 tracking-widest">Routing Tag</th>
                 <th className="p-5 text-[9px] font-black uppercase text-slate-500 tracking-widest">Timestamp</th>
@@ -220,7 +220,7 @@ export default function ContactManagement() {
                   <tr key={ticket.id || ticket._id} className="hover:bg-slate-800/30 transition-colors group cursor-pointer" onClick={() => setSelectedTicket(ticket)}>
                     <td className="p-5">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-full bg-slate-950 border border-slate-800 flex items-center justify-center text-slate-400 flex-shrink-0">
+                        <div className="w-10 h-10 rounded-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 flex items-center justify-center text-slate-400 flex-shrink-0">
                           {ticket.name.charAt(0).toUpperCase()}
                         </div>
                         <div className="min-w-0">
@@ -230,7 +230,7 @@ export default function ContactManagement() {
                       </div>
                     </td>
                     <td className="p-5">
-                      <span className="px-2 py-1 bg-slate-950 border border-slate-800 text-slate-400 rounded-md text-[9px] font-black uppercase tracking-widest">
+                      <span className="px-2 py-1 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-slate-400 rounded-md text-[9px] font-black uppercase tracking-widest">
                         {CATEGORY_MAP[ticket.subject] || ticket.subject}
                       </span>
                       {ticket.order_id && (
@@ -248,10 +248,10 @@ export default function ContactManagement() {
                     </td>
                     <td className="p-5 text-right">
                       <div className="flex items-center justify-end gap-1.5 opacity-50 group-hover:opacity-100 transition-opacity">
-                        <button onClick={(e) => { e.stopPropagation(); setSelectedTicket(ticket); }} className="p-2 bg-slate-950 border border-slate-800 rounded-lg text-blue-500 hover:bg-blue-500 hover:text-white transition-all">
+                        <button onClick={(e) => { e.stopPropagation(); setSelectedTicket(ticket); }} className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-lg text-blue-500 hover:bg-blue-500 hover:text-white transition-all">
                           <Eye size={14} />
                         </button>
-                        <button onClick={(e) => { e.stopPropagation(); handleDelete(ticket.id || ticket._id); }} className="p-2 bg-slate-950 border border-slate-800 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white transition-all">
+                        <button onClick={(e) => { e.stopPropagation(); handleDelete(ticket.id || ticket._id); }} className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white transition-all">
                           <Trash2 size={14} />
                         </button>
                       </div>
@@ -266,11 +266,11 @@ export default function ContactManagement() {
 
       {/* TICKET DEEP DIVE MODAL */}
       {selectedTicket && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-sm">
-          <div className="bg-[#0a0c10] border border-slate-800 w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#081b15]/90 backdrop-blur-xl/90 backdrop-blur-sm">
+          <div className="bg-[#10241f]/90 backdrop-blur-xl border border-slate-800 w-full max-w-4xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]">
             
             {/* Header */}
-            <div className="p-6 border-b border-slate-800 flex justify-between items-start bg-slate-900/50 flex-shrink-0">
+            <div className="p-6 border-b border-slate-800 flex justify-between items-start bg-[#10241f]/55 backdrop-blur-xl flex-shrink-0">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-blue-500/10 rounded-2xl flex items-center justify-center text-blue-500">
                   <MessageSquare size={24} />
@@ -286,7 +286,7 @@ export default function ContactManagement() {
                   </div>
                 </div>
               </div>
-              <button onClick={() => setSelectedTicket(null)} className="p-2.5 bg-slate-950 hover:bg-rose-500/10 border border-slate-800 text-slate-500 hover:text-rose-500 rounded-xl transition-all">
+              <button onClick={() => setSelectedTicket(null)} className="p-2.5 bg-[#081b15]/90 backdrop-blur-xl hover:bg-rose-500/10 border border-slate-800 text-slate-500 hover:text-rose-500 rounded-xl transition-all">
                 <XCircle size={18} />
               </button>
             </div>
@@ -297,7 +297,7 @@ export default function ContactManagement() {
                 
                 {/* Left Col: Customer Info */}
                 <div className="lg:col-span-1 space-y-4">
-                  <div className="p-5 bg-slate-900/30 border border-slate-800 rounded-2xl">
+                  <div className="p-5 bg-[#10241f]/35 backdrop-blur-xl border border-slate-800 rounded-2xl">
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2"><User size={12}/> Client Profile</h3>
                     <div className="space-y-3">
                       <div><p className="text-[9px] text-slate-500 uppercase font-bold">Name</p><p className="text-xs text-white font-bold">{selectedTicket.name}</p></div>
@@ -312,14 +312,14 @@ export default function ContactManagement() {
                     </div>
                   </div>
 
-                  <div className="p-5 bg-slate-900/30 border border-slate-800 rounded-2xl">
+                  <div className="p-5 bg-[#10241f]/35 backdrop-blur-xl border border-slate-800 rounded-2xl">
                     <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2"><Activity size={12}/> Triage Status</h3>
                     <div className="flex flex-col gap-2">
                       {Object.entries(STATUS_MAP).map(([key, data]) => (
                         <button 
                           key={key} disabled={isUpdating || selectedTicket.status === key}
                           onClick={() => handleUpdateStatus(selectedTicket.id || selectedTicket._id, key)}
-                          className={`w-full py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 border transition-all ${selectedTicket.status === key ? `bg-${data.color}-500/10 border-${data.color}-500/30 text-${data.color}-400 shadow-[0_0_10px_rgba(var(--tw-colors-${data.color}-500),0.1)]` : 'bg-slate-950 border-slate-800 text-slate-500 hover:border-slate-600'} disabled:opacity-50`}
+                          className={`w-full py-2.5 rounded-lg text-[9px] font-black uppercase tracking-widest flex items-center justify-center gap-2 border transition-all ${selectedTicket.status === key ? `bg-${data.color}-500/10 border-${data.color}-500/30 text-${data.color}-400 shadow-[0_0_10px_rgba(var(--tw-colors-${data.color}-500),0.1)]` : 'bg-[#081b15]/90 backdrop-blur-xl border-slate-800 text-slate-500 hover:border-slate-600'} disabled:opacity-50`}
                         >
                           <data.icon size={12} /> Force {data.label}
                         </button>
@@ -331,7 +331,7 @@ export default function ContactManagement() {
                 {/* Right Col: Comms Matrix */}
                 <div className="lg:col-span-2 space-y-4 flex flex-col">
                   {/* Original Message */}
-                  <div className="p-6 bg-slate-900/30 border border-slate-800 rounded-2xl flex-1">
+                  <div className="p-6 bg-[#10241f]/35 backdrop-blur-xl border border-slate-800 rounded-2xl flex-1">
                     <div className="flex items-center gap-3 mb-4">
                       <div className="w-8 h-8 rounded-full bg-slate-800 flex items-center justify-center text-xs font-bold text-white">
                         {selectedTicket.name.charAt(0)}
@@ -341,7 +341,7 @@ export default function ContactManagement() {
                         <p className="text-[9px] text-slate-500">{new Date(selectedTicket.created_at).toLocaleString()}</p>
                       </div>
                     </div>
-                    <div className="p-4 bg-slate-950 border border-slate-800 rounded-xl">
+                    <div className="p-4 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl">
                       <p className="text-sm text-slate-300 leading-relaxed whitespace-pre-wrap">{selectedTicket.message}</p>
                     </div>
                   </div>
@@ -354,7 +354,7 @@ export default function ContactManagement() {
                       <textarea 
                         rows={3} placeholder="Draft response to client..." required
                         value={replyText} onChange={(e) => setReplyText(e.target.value)}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-xs text-slate-300 outline-none focus:border-blue-500/50 resize-none mb-3 custom-scrollbar"
+                        className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl p-3 text-xs text-slate-300 outline-none focus:border-blue-500/50 resize-none mb-3 custom-scrollbar"
                       />
                       <div className="flex justify-between items-center">
                         <span className="text-[9px] font-bold text-slate-500 uppercase">Replies dispatch via associated email</span>

@@ -58,17 +58,17 @@ export default function ShippingManagement() {
         </div>
         <button onClick={() => openModal()} className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all"><Plus size={18} /> Add Zone</button>
       </div>
-      <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden">
+      <div className="bg-[#10241f]/55 backdrop-blur-xl border border-slate-800 rounded-2xl overflow-hidden">
         <div className="p-6 border-b border-slate-800 flex justify-between items-center">
           <h3 className="text-lg font-bold text-white">Configured Zones</h3>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-            <input type="text" placeholder="Search..." className="bg-slate-950 border border-slate-800 text-sm text-white rounded-lg pl-9 pr-4 py-2 focus:border-emerald-500 focus:outline-none w-64" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+            <input type="text" placeholder="Search..." className="bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-sm text-white rounded-lg pl-9 pr-4 py-2 focus:border-emerald-500 focus:outline-none w-64" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
           </div>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-400">
-            <thead className="text-xs uppercase bg-slate-900 text-slate-500 font-bold">
+            <thead className="text-xs uppercase bg-[#10241f]/85 backdrop-blur-xl text-slate-500 font-bold">
               <tr><th className="px-6 py-4">Zone Name</th><th className="px-6 py-4">Regions Covered</th><th className="px-6 py-4">Base Charge (₹)</th><th className="px-6 py-4 text-right">Actions</th></tr>
             </thead>
             <tbody>
@@ -88,14 +88,14 @@ export default function ShippingManagement() {
         </div>
       </div>
       {isModalOpen && (
-        <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-900 border border-slate-800 p-6 rounded-2xl w-full max-w-md relative">
+        <div className="fixed inset-0 bg-[#081b15]/80 backdrop-blur-sm flex items-center justify-center z-50 p-4">
+          <div className="bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 p-6 rounded-2xl w-full max-w-md relative">
             <button onClick={() => setIsModalOpen(false)} className="absolute top-4 right-4 text-slate-500 hover:text-white"><X size={20} /></button>
             <h3 className="text-xl font-bold text-white mb-6">{currentZone ? 'Edit Zone' : 'Add Zone'}</h3>
             <form onSubmit={handleSave} className="space-y-4">
-              <div><label className="block text-xs font-bold text-slate-400 mb-1">Zone Name</label><input type="text" required className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-2 focus:border-emerald-500 outline-none" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} /></div>
-              <div><label className="block text-xs font-bold text-slate-400 mb-1">Regions (Comma separated)</label><textarea required rows="3" className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-2 focus:border-emerald-500 outline-none resize-none" value={formData.regions} onChange={(e) => setFormData({...formData, regions: e.target.value})} /></div>
-              <div><label className="block text-xs font-bold text-slate-400 mb-1">Base Charge (₹)</label><input type="number" required step="0.01" className="w-full bg-slate-950 border border-slate-800 text-white rounded-lg px-4 py-2 focus:border-emerald-500 outline-none font-mono" value={formData.base_charge} onChange={(e) => setFormData({...formData, base_charge: e.target.value})} /></div>
+              <div><label className="block text-xs font-bold text-slate-400 mb-1">Zone Name</label><input type="text" required className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-white rounded-lg px-4 py-2 focus:border-emerald-500 outline-none" value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} /></div>
+              <div><label className="block text-xs font-bold text-slate-400 mb-1">Regions (Comma separated)</label><textarea required rows="3" className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-white rounded-lg px-4 py-2 focus:border-emerald-500 outline-none resize-none" value={formData.regions} onChange={(e) => setFormData({...formData, regions: e.target.value})} /></div>
+              <div><label className="block text-xs font-bold text-slate-400 mb-1">Base Charge (₹)</label><input type="number" required step="0.01" className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-white rounded-lg px-4 py-2 focus:border-emerald-500 outline-none font-mono" value={formData.base_charge} onChange={(e) => setFormData({...formData, base_charge: e.target.value})} /></div>
               <button type="submit" className="w-full bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold py-3 rounded-xl transition-all">{currentZone ? 'Update Zone' : 'Create Zone'}</button>
             </form>
           </div>

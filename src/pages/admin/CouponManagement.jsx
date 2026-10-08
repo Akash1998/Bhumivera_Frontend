@@ -225,7 +225,7 @@ export default function CouponManagement() {
   }
 
   return (
-    <div className="p-4 md:p-8 space-y-6 bg-[#020617] min-h-screen text-slate-300 font-sans animate-in fade-in duration-500">
+    <div className="space-y-5 text-slate-300 font-sans animate-in fade-in duration-500">
       
       {/* COMMAND HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800/80">
@@ -238,10 +238,10 @@ export default function CouponManagement() {
           </p>
         </div>
         <div className="flex gap-3">
-          <button onClick={fetchCoupons} className="p-3 bg-slate-900 border border-slate-800 text-slate-400 rounded-xl hover:bg-slate-800 hover:text-amber-400 transition-all shadow-lg">
+          <button onClick={fetchCoupons} className="p-3 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 text-slate-400 rounded-xl hover:bg-slate-800 hover:text-amber-400 transition-all shadow-lg">
             <RefreshCw size={18} />
           </button>
-          <button onClick={exportToExcel} className="hidden sm:flex items-center gap-2 px-4 py-3 bg-slate-900 border border-slate-800 text-slate-400 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-slate-800 hover:text-white transition-all">
+          <button onClick={exportToExcel} className="hidden sm:flex items-center gap-2 px-4 py-3 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 text-slate-400 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-slate-800 hover:text-white transition-all">
             <Download size={14} /> Export
           </button>
           <button onClick={() => openModal()} className="flex items-center gap-2 px-5 py-3 bg-amber-500 text-slate-950 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-amber-400 transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]">
@@ -252,25 +252,25 @@ export default function CouponManagement() {
 
       {/* KPI DASHBOARD */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-emerald-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-emerald-500 z-10"><Zap size={22} /></div>
+          <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-emerald-500 z-10"><Zap size={22} /></div>
           <div className="z-10">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Live Vectors</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{activeCampaigns}</h4>
           </div>
         </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-blue-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-blue-500 z-10"><Users size={22} /></div>
+          <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-blue-500 z-10"><Users size={22} /></div>
           <div className="z-10">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Total Redemptions</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{totalClaims.toLocaleString()}</h4>
           </div>
         </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-rose-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-rose-500 z-10"><Clock size={22} /></div>
+          <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-rose-500 z-10"><Clock size={22} /></div>
           <div className="z-10">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Expiring Horizon (&lt;7D)</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{expiringSoon}</h4>
@@ -279,20 +279,20 @@ export default function CouponManagement() {
       </div>
 
       {/* FILTER MATRIX */}
-      <div className="flex flex-col md:flex-row gap-4 bg-slate-900/40 border border-slate-800/80 p-4 rounded-[2rem] shadow-lg">
+      <div className="flex flex-col md:flex-row gap-4 bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-4 rounded-[2rem] shadow-lg">
         <div className="relative flex-1 group">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-amber-500 transition-colors" size={18} />
           <input 
             type="text" placeholder="Scan by Hash Code or Designation..." 
             value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all"
+            className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 focus:border-amber-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all"
           />
         </div>
         <div className="relative w-full md:w-64">
           <Filter className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={16} />
           <select 
             value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-            className="w-full bg-slate-950 border border-slate-800 focus:border-amber-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all appearance-none cursor-pointer capitalize"
+            className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 focus:border-amber-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all appearance-none cursor-pointer capitalize"
           >
             <option value="all">All Lifecycles</option>
             <option value="live">Live</option>
@@ -305,11 +305,11 @@ export default function CouponManagement() {
       </div>
 
       {/* CAMPAIGN LEDGER TABLE */}
-      <div className="bg-slate-900/30 border border-slate-800/80 rounded-[2.5rem] overflow-hidden shadow-2xl">
+      <div className="bg-[#10241f]/35 backdrop-blur-xl border border-slate-800/80 rounded-[2.5rem] overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-950/80 border-b border-slate-800 backdrop-blur-md">
+              <tr className="bg-[#081b15]/80 backdrop-blur-xl border-b border-slate-800 backdrop-blur-md">
                 <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Campaign Hash</th>
                 <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Yield Logic</th>
                 <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Redemptions</th>
@@ -335,7 +335,7 @@ export default function CouponManagement() {
                   <tr key={coupon.id || coupon._id} className="hover:bg-amber-500/[0.02] transition-colors group">
                     <td className="p-6">
                       <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center ${isPerc ? 'text-blue-500' : 'text-emerald-500'}`}>
+                        <div className={`w-10 h-10 rounded-xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 flex items-center justify-center ${isPerc ? 'text-blue-500' : 'text-emerald-500'}`}>
                           {isPerc ? <Percent size={16}/> : <IndianRupee size={16}/>}
                         </div>
                         <div>
@@ -384,20 +384,20 @@ export default function CouponManagement() {
                       <div className="flex items-center justify-end gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
                         <button 
                           onClick={() => toggleStatus(coupon.id || coupon._id, coupon.status)}
-                          className="p-2 bg-slate-950 border border-slate-800 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
+                          className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
                           title="Toggle Suspend/Active"
                         >
                           {coupon.status === 'active' ? <Clock size={14} /> : <Zap size={14} />}
                         </button>
                         <button 
                           onClick={() => openModal(coupon)}
-                          className="p-2 bg-slate-950 border border-slate-800 rounded-xl text-blue-500 hover:bg-blue-500 hover:text-white transition-all"
+                          className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl text-blue-500 hover:bg-blue-500 hover:text-white transition-all"
                         >
                           <Edit2 size={14} />
                         </button>
                         <button 
                           onClick={() => handleDelete(coupon.id || coupon._id)}
-                          className="p-2 bg-slate-950 border border-slate-800 rounded-xl text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
+                          className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
                         >
                           <Trash2 size={14} />
                         </button>
@@ -411,13 +411,13 @@ export default function CouponManagement() {
         </div>
 
         {totalPages > 1 && (
-          <div className="p-4 bg-slate-950/80 border-t border-slate-800 flex items-center justify-between">
+          <div className="p-4 bg-[#081b15]/80 backdrop-blur-xl border-t border-slate-800 flex items-center justify-between">
             <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4">
               Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredCoupons.length)} of {filteredCoupons.length}
             </span>
             <div className="flex items-center gap-2 mr-4">
-              <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="p-2 bg-slate-900 border border-slate-800 text-slate-400 rounded-lg hover:bg-slate-800 disabled:opacity-50 transition-colors"><ChevronLeft size={16}/></button>
-              <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="p-2 bg-slate-900 border border-slate-800 text-slate-400 rounded-lg hover:bg-slate-800 disabled:opacity-50 transition-colors"><ChevronRight size={16}/></button>
+              <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="p-2 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 text-slate-400 rounded-lg hover:bg-slate-800 disabled:opacity-50 transition-colors"><ChevronLeft size={16}/></button>
+              <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="p-2 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 text-slate-400 rounded-lg hover:bg-slate-800 disabled:opacity-50 transition-colors"><ChevronRight size={16}/></button>
             </div>
           </div>
         )}
@@ -425,10 +425,10 @@ export default function CouponManagement() {
 
       {/* CAMPAIGN DEPLOYMENT ENGINE MODAL */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl overflow-y-auto custom-scrollbar">
-          <div className="bg-[#0a0c10] border border-slate-800 w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden my-auto animate-in zoom-in-95 duration-300 relative flex flex-col">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#081b15]/90 backdrop-blur-xl/90 backdrop-blur-xl overflow-y-auto custom-scrollbar">
+          <div className="bg-[#10241f]/90 backdrop-blur-xl border border-slate-800 w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden my-auto animate-in zoom-in-95 duration-300 relative flex flex-col">
             
-            <div className="p-6 md:p-8 border-b border-slate-800 flex justify-between items-start bg-slate-900/50 flex-shrink-0">
+            <div className="p-6 md:p-8 border-b border-slate-800 flex justify-between items-start bg-[#10241f]/55 backdrop-blur-xl flex-shrink-0">
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500">
                   <Sparkles size={24} />
@@ -440,13 +440,13 @@ export default function CouponManagement() {
                   <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Advanced Yield & Promotional Routing</p>
                 </div>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="p-3 bg-slate-950 border border-slate-800 hover:bg-rose-500/10 text-slate-500 hover:text-rose-500 rounded-2xl transition-all shadow-md">
+              <button onClick={() => setIsModalOpen(false)} className="p-3 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 hover:bg-rose-500/10 text-slate-500 hover:text-rose-500 rounded-2xl transition-all shadow-md">
                 <XCircle size={20} />
               </button>
             </div>
 
             <form onSubmit={handleSubmit} className="flex flex-col flex-1">
-              <div className="flex border-b border-slate-800 px-8 bg-slate-950/30">
+              <div className="flex border-b border-slate-800 px-8 bg-[#081b15]/35 backdrop-blur-xl">
                 {[
                   { id: 'core', label: 'Hash & Yield', icon: Zap },
                   { id: 'targeting', label: 'Targeting Matrix', icon: Target },
@@ -474,9 +474,9 @@ export default function CouponManagement() {
                         <input 
                           required type="text" placeholder="e.g. SUMMER25"
                           value={form.code} onChange={e => setForm({...form, code: e.target.value.toUpperCase().replace(/\s+/g, '')})}
-                          className="flex-1 bg-slate-950 border border-slate-800 rounded-2xl p-4 text-amber-400 font-mono font-bold text-lg outline-none focus:border-amber-500/50 uppercase" 
+                          className="flex-1 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 text-amber-400 font-mono font-bold text-lg outline-none focus:border-amber-500/50 uppercase"
                         />
-                        <button type="button" onClick={() => generateHash(8, 'ANR')} className="px-4 bg-slate-900 border border-slate-800 rounded-2xl text-slate-400 hover:bg-slate-800 hover:text-white transition-colors" title="Auto-Generate Hash">
+                        <button type="button" onClick={() => generateHash(8, 'ANR')} className="px-4 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 rounded-2xl text-slate-400 hover:bg-slate-800 hover:text-white transition-colors" title="Auto-Generate Hash">
                           <RefreshCw size={20} />
                         </button>
                       </div>
@@ -487,7 +487,7 @@ export default function CouponManagement() {
                       <input 
                         type="text" placeholder="e.g. End of Summer Flash Sale"
                         value={form.description} onChange={e => setForm({...form, description: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-bold outline-none focus:border-amber-500/50" 
+                        className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 text-white font-bold outline-none focus:border-amber-500/50"
                       />
                     </div>
 
@@ -495,7 +495,7 @@ export default function CouponManagement() {
                       <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Yield Logic (Type)</label>
                       <select 
                         value={form.discount_type} onChange={e => setForm({...form, discount_type: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-bold outline-none focus:border-amber-500/50 appearance-none cursor-pointer"
+                        className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 text-white font-bold outline-none focus:border-amber-500/50 appearance-none cursor-pointer"
                       >
                         <option value="percentage">Percentage Algorithm (%)</option>
                         <option value="fixed">Fixed Currency (₹)</option>
@@ -511,7 +511,7 @@ export default function CouponManagement() {
                         <input 
                           required type="number" min="0" step="0.01" placeholder={form.discount_type === 'percentage' ? '20' : '500'}
                           value={form.discount_value} onChange={e => setForm({...form, discount_value: e.target.value})}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 pl-10 text-white font-bold outline-none focus:border-amber-500/50" 
+                          className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 pl-10 text-white font-bold outline-none focus:border-amber-500/50"
                         />
                       </div>
                     </div>
@@ -526,7 +526,7 @@ export default function CouponManagement() {
                       <input 
                         type="number" min="0" placeholder="0 = No Minimum"
                         value={form.min_purchase} onChange={e => setForm({...form, min_purchase: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-bold outline-none focus:border-amber-500/50" 
+                        className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 text-white font-bold outline-none focus:border-amber-500/50"
                       />
                       <p className="text-[9px] font-bold text-slate-600 ml-1 mt-1">Require users to spend this amount to activate the hash.</p>
                     </div>
@@ -536,7 +536,7 @@ export default function CouponManagement() {
                       <input 
                         type="number" min="0" placeholder="Optional cap for % discounts" disabled={form.discount_type !== 'percentage'}
                         value={form.max_discount} onChange={e => setForm({...form, max_discount: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-bold outline-none focus:border-amber-500/50 disabled:opacity-30 disabled:cursor-not-allowed" 
+                        className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 text-white font-bold outline-none focus:border-amber-500/50 disabled:opacity-30 disabled:cursor-not-allowed"
                       />
                     </div>
 
@@ -545,7 +545,7 @@ export default function CouponManagement() {
                       <input 
                         type="number" min="0" placeholder="Leave empty for unlimited redemptions"
                         value={form.usage_limit} onChange={e => setForm({...form, usage_limit: e.target.value})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-2xl p-4 text-white font-bold outline-none focus:border-amber-500/50" 
+                        className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 text-white font-bold outline-none focus:border-amber-500/50"
                       />
                       <p className="text-[9px] font-bold text-slate-600 ml-1 mt-1">Useful for "First 100 Customers Only" campaigns.</p>
                     </div>
@@ -590,12 +590,12 @@ export default function CouponManagement() {
               </div>
 
               {/* Modal Footer */}
-              <div className="p-6 border-t border-slate-800 bg-slate-950/80 flex justify-end gap-4 mt-auto">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-8 py-3.5 text-slate-400 font-black uppercase tracking-widest text-xs rounded-xl hover:bg-slate-900 transition-all">
+              <div className="p-6 border-t border-slate-800 bg-[#081b15]/80 backdrop-blur-xl flex justify-end gap-4 mt-auto">
+                <button type="button" onClick={() => setIsModalOpen(false)} className="px-8 py-3.5 text-slate-400 font-black uppercase tracking-widest text-xs rounded-xl hover:bg-[#10241f]/85 backdrop-blur-xl transition-all">
                   Abort
                 </button>
                 <button type="submit" disabled={isProcessing} className="px-10 py-3.5 bg-amber-500 text-slate-950 font-black uppercase tracking-widest text-xs rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.2)] hover:bg-amber-400 transition-all hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50">
-                  {isProcessing ? <RefreshCw size={16} className="animate-spin" /> : <Sparkles size={16} />} 
+                  {isProcessing ? <RefreshCw size={16} className="animate-spin" /> : <Sparkles size={16} />}
                   Execute Integration
                 </button>
               </div>

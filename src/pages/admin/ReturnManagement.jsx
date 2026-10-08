@@ -152,7 +152,7 @@ export default function ReturnManagement() {
   }
 
   return (
-    <div className="p-4 md:p-8 space-y-6 bg-[#020617] min-h-screen text-slate-300 font-sans animate-in fade-in duration-500">
+    <div className="space-y-5 text-slate-300 font-sans animate-in fade-in duration-500">
       
       {/* COMMAND HEADER */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800/80">
@@ -165,7 +165,7 @@ export default function ReturnManagement() {
           </p>
         </div>
         <div className="flex gap-3">
-          <button onClick={fetchReturns} className="p-3 bg-slate-900 border border-slate-800 text-slate-400 rounded-xl hover:bg-slate-800 hover:text-rose-400 transition-all shadow-lg">
+          <button onClick={fetchReturns} className="p-3 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 text-slate-400 rounded-xl hover:bg-slate-800 hover:text-rose-400 transition-all shadow-lg">
             <RefreshCw size={18} />
           </button>
           <button onClick={exportToExcel} className="flex items-center gap-2 px-5 py-3 bg-rose-500/10 border border-rose-500/50 text-rose-400 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-rose-500 hover:text-white transition-all shadow-[0_0_15px_rgba(244,63,94,0.15)]">
@@ -176,33 +176,33 @@ export default function ReturnManagement() {
 
       {/* KPI DASHBOARD */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-rose-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-rose-500 z-10"><Activity size={22} /></div>
+          <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-rose-500 z-10"><Activity size={22} /></div>
           <div className="z-10">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Total RMA Cases</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{totalRMARequests}</h4>
           </div>
         </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-amber-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-amber-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-amber-500 z-10"><Clock size={22} /></div>
+          <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-amber-500 z-10"><Clock size={22} /></div>
           <div className="z-10">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Pending Action</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{pendingActionCount}</h4>
           </div>
         </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-emerald-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-emerald-500 z-10"><IndianRupee size={22} /></div>
+          <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-emerald-500 z-10"><IndianRupee size={22} /></div>
           <div className="z-10">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Capital Refunded</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">₹{totalRefunded.toLocaleString()}</h4>
           </div>
         </div>
-        <div className="bg-slate-900/40 border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
           <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-purple-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-slate-950 border border-slate-800 text-purple-500 z-10"><ShieldAlert size={22} /></div>
+          <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-purple-500 z-10"><ShieldAlert size={22} /></div>
           <div className="z-10">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Fraud / Rejection Rate</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{rejectionRate}%</h4>
@@ -211,20 +211,20 @@ export default function ReturnManagement() {
       </div>
 
       {/* FILTER & SEARCH BAR */}
-      <div className="flex flex-col md:flex-row gap-4 bg-slate-900/40 border border-slate-800/80 p-4 rounded-[2rem] shadow-lg">
+      <div className="flex flex-col md:flex-row gap-4 bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-4 rounded-[2rem] shadow-lg">
         <div className="relative flex-1 group">
           <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-rose-500 transition-colors" size={18} />
           <input 
             type="text" placeholder="Scan by RMA Hash, Order ID, Client, or Reason..." 
             value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full bg-slate-950 border border-slate-800 focus:border-rose-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all"
+            className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 focus:border-rose-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all"
           />
         </div>
         <div className="relative w-full md:w-64">
           <Filter className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={16} />
           <select 
             value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-            className="w-full bg-slate-950 border border-slate-800 focus:border-rose-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all appearance-none cursor-pointer"
+            className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 focus:border-rose-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all appearance-none cursor-pointer"
           >
             <option value="all">All RMA Stages</option>
             {Object.entries(RMA_STATUS_MAP).map(([key, { label }]) => (
@@ -235,11 +235,11 @@ export default function ReturnManagement() {
       </div>
 
       {/* RMA LEDGER TABLE */}
-      <div className="bg-slate-900/30 border border-slate-800/80 rounded-[2.5rem] overflow-hidden shadow-2xl">
+      <div className="bg-[#10241f]/35 backdrop-blur-xl border border-slate-800/80 rounded-[2.5rem] overflow-hidden shadow-2xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-950/80 border-b border-slate-800 backdrop-blur-md">
+              <tr className="bg-[#081b15]/80 backdrop-blur-xl border-b border-slate-800 backdrop-blur-md">
                 <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">RMA Hash</th>
                 <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Client Identity</th>
                 <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Claim / Reason</th>
@@ -265,7 +265,7 @@ export default function ReturnManagement() {
                   <tr key={rma.id || rma._id} className="hover:bg-rose-500/[0.02] transition-colors group">
                     <td className="p-6">
                       <div className="flex items-center gap-3">
-                        <div className="w-10 h-10 rounded-xl bg-slate-950 border border-slate-800 flex items-center justify-center text-rose-500">
+                        <div className="w-10 h-10 rounded-xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 flex items-center justify-center text-rose-500">
                           <RotateCcw size={16} />
                         </div>
                         <div>
@@ -304,7 +304,7 @@ export default function ReturnManagement() {
                           setAdminNotes(rma.admin_notes || '');
                           setRefundOverride(rma.refund_amount || '');
                         }}
-                        className="px-4 py-2 bg-slate-950 border border-slate-800 rounded-xl text-rose-500 hover:bg-rose-500 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest shadow-md inline-flex items-center gap-2"
+                        className="px-4 py-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl text-rose-500 hover:bg-rose-500 hover:text-white transition-all text-[10px] font-black uppercase tracking-widest shadow-md inline-flex items-center gap-2"
                       >
                         <Eye size={14} /> Inspect
                       </button>
@@ -319,11 +319,11 @@ export default function ReturnManagement() {
 
       {/* COMMAND CENTER MODAL - DEEP INSPECTION */}
       {selectedRMA && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-xl overflow-y-auto custom-scrollbar">
-          <div className="bg-[#0a0c10] border border-slate-800 w-full max-w-5xl rounded-[3rem] shadow-2xl overflow-hidden my-auto animate-in zoom-in-95 duration-300 relative flex flex-col max-h-[90vh]">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#081b15]/90 backdrop-blur-xl/90 backdrop-blur-xl overflow-y-auto custom-scrollbar">
+          <div className="bg-[#10241f]/90 backdrop-blur-xl border border-slate-800 w-full max-w-5xl rounded-[3rem] shadow-2xl overflow-hidden my-auto animate-in zoom-in-95 duration-300 relative flex flex-col max-h-[90vh]">
             
             {/* Modal Header */}
-            <div className="p-6 md:p-8 border-b border-slate-800 flex justify-between items-start bg-slate-900/50 flex-shrink-0">
+            <div className="p-6 md:p-8 border-b border-slate-800 flex justify-between items-start bg-[#10241f]/55 backdrop-blur-xl flex-shrink-0">
               <div>
                 <div className="flex items-center gap-4 mb-2">
                   <div className="w-12 h-12 bg-rose-500/10 rounded-2xl flex items-center justify-center text-rose-500">
@@ -340,10 +340,10 @@ export default function ReturnManagement() {
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <button onClick={() => window.print()} className="p-3 bg-slate-950 border border-slate-800 text-slate-400 rounded-2xl hover:bg-slate-800 hover:text-white transition-all shadow-md hidden sm:block" title="Print Return Slip">
+                <button onClick={() => window.print()} className="p-3 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-slate-400 rounded-2xl hover:bg-slate-800 hover:text-white transition-all shadow-md hidden sm:block" title="Print Return Slip">
                   <Printer size={20} />
                 </button>
-                <button onClick={() => setSelectedRMA(null)} className="p-3 bg-slate-950 border border-slate-800 hover:bg-rose-500/10 text-slate-500 hover:text-rose-500 rounded-2xl transition-all shadow-md">
+                <button onClick={() => setSelectedRMA(null)} className="p-3 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 hover:bg-rose-500/10 text-slate-500 hover:text-rose-500 rounded-2xl transition-all shadow-md">
                   <XCircle size={20} />
                 </button>
               </div>
@@ -357,7 +357,7 @@ export default function ReturnManagement() {
                 <div className="space-y-8">
                   
                   {/* Claim Diagnostics */}
-                  <div className="bg-slate-900/30 border border-slate-800 rounded-[2rem] p-6">
+                  <div className="bg-[#10241f]/35 backdrop-blur-xl border border-slate-800 rounded-[2rem] p-6">
                     <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-6 flex items-center gap-2"><AlertCircle size={14}/> Claim Diagnostics</h3>
                     <div className="p-5 bg-rose-500/5 border border-rose-500/20 rounded-2xl mb-4">
                       <p className="text-[10px] font-black uppercase tracking-widest text-rose-500 mb-2">Customer Stated Reason</p>
@@ -386,10 +386,10 @@ export default function ReturnManagement() {
                   </div>
 
                   {/* Targeted Hardware */}
-                  <div className="bg-slate-900/30 border border-slate-800 rounded-[2rem] p-6">
+                  <div className="bg-[#10241f]/35 backdrop-blur-xl border border-slate-800 rounded-[2rem] p-6">
                     <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-6 flex items-center gap-2"><Box size={14}/> Targeted Hardware access</h3>
-                    <div className="flex items-center gap-4 p-4 bg-slate-950 border border-slate-800 rounded-2xl">
-                      <div className="w-16 h-16 rounded-xl bg-slate-900 border border-slate-800 flex-shrink-0 p-1">
+                    <div className="flex items-center gap-4 p-4 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-2xl">
+                      <div className="w-16 h-16 rounded-xl bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 flex-shrink-0 p-1">
                         <img src={getImageUrl(selectedRMA.product?.images?.[0] || selectedRMA.product?.image_url)} alt="access" className="w-full h-full object-cover rounded-lg" onError={(e) => { e.target.src = '/logo.webp'; }}/>
                       </div>
                       <div className="flex-1 min-w-0">
@@ -405,7 +405,7 @@ export default function ReturnManagement() {
                 <div className="space-y-8">
                   
                   {/* Warehouse Grading Matrix */}
-                  <div className="bg-slate-900/30 border border-slate-800 rounded-[2rem] p-6">
+                  <div className="bg-[#10241f]/35 backdrop-blur-xl border border-slate-800 rounded-[2rem] p-6">
                     <h3 className="text-xs font-black uppercase tracking-widest text-slate-500 mb-6 flex items-center gap-2"><ClipboardCheck size={14}/> Warehouse Receiving Matrix</h3>
                     
                     <div className="space-y-4">
@@ -416,7 +416,7 @@ export default function ReturnManagement() {
                             <div 
                               key={grade.grade}
                               onClick={() => setConditionGrade(grade.grade)}
-                              className={`p-3 rounded-xl border cursor-pointer transition-all ${conditionGrade === grade.grade ? 'bg-purple-500/10 border-purple-500 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.1)]' : 'bg-slate-950 border-slate-800 text-slate-500 hover:border-slate-600'}`}
+                              className={`p-3 rounded-xl border cursor-pointer transition-all ${conditionGrade === grade.grade ? 'bg-purple-500/10 border-purple-500 text-purple-400 shadow-[0_0_15px_rgba(168,85,247,0.1)]' : 'bg-[#081b15]/90 backdrop-blur-xl border-slate-800 text-slate-500 hover:border-slate-600'}`}
                             >
                               <div className="flex items-center justify-between">
                                 <span className="font-black text-lg">{grade.grade}</span>
@@ -432,7 +432,7 @@ export default function ReturnManagement() {
                       <div className="grid grid-cols-2 gap-4 pt-2">
                         <div>
                           <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-1 block mb-2">Base Valuation (₹)</label>
-                          <input type="text" readOnly value={selectedRMA.refund_amount || 0} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs text-slate-500 font-mono outline-none cursor-not-allowed" />
+                          <input type="text" readOnly value={selectedRMA.refund_amount || 0} className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl p-3.5 text-xs text-slate-500 font-mono outline-none cursor-not-allowed" />
                         </div>
                         <div>
                           <label className="text-[9px] font-black uppercase tracking-widest text-emerald-500 ml-1 block mb-2">Adjusted Refund (₹)</label>
@@ -440,7 +440,7 @@ export default function ReturnManagement() {
                             type="number" 
                             value={refundOverride} onChange={e => setRefundOverride(e.target.value)}
                             placeholder="Override Amount"
-                            className="w-full bg-emerald-500/5 border border-emerald-500/30 rounded-xl p-3.5 text-xs text-emerald-400 font-black outline-none focus:border-emerald-500" 
+                            className="w-full bg-emerald-500/5 border border-emerald-500/30 rounded-xl p-3.5 text-xs text-emerald-400 font-black outline-none focus:border-emerald-500"
                           />
                         </div>
                       </div>
@@ -450,14 +450,14 @@ export default function ReturnManagement() {
                         <textarea 
                           rows={3} placeholder="Log visual damage, missing cables, or RMA approval notes..."
                           value={adminNotes} onChange={e => setAdminNotes(e.target.value)}
-                          className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-xs text-slate-300 resize-none outline-none focus:border-purple-500/50" 
+                          className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl p-3.5 text-xs text-slate-300 resize-none outline-none focus:border-purple-500/50"
                         />
                       </div>
                     </div>
                   </div>
 
                   {/* Execution Control Panel */}
-                  <div className="bg-slate-950 border border-slate-800 rounded-[2rem] p-6 relative overflow-hidden">
+                  <div className="bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-[2rem] p-6 relative overflow-hidden">
                     <div className="absolute top-0 right-0 w-32 h-32 bg-rose-500/5 blur-3xl -mr-10 -mt-10 pointer-events-none"></div>
                     <h3 className="text-xs font-black uppercase tracking-widest text-white mb-6 flex items-center gap-2 relative z-10"><ShieldCheck size={14}/> Execution Protocol</h3>
                     

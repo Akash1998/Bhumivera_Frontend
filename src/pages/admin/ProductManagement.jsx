@@ -404,7 +404,7 @@ export default function ProductManagement() {
   }
 
   return (
-    <div className="p-4 md:p-8 space-y-6 bg-slate-950 min-h-screen text-slate-300 font-sans">
+    <div className="space-y-5 text-slate-300 font-sans">
       
       {/* Header & Controls */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-800/80">
@@ -425,10 +425,10 @@ export default function ProductManagement() {
               placeholder="Search products or SKU..." 
               value={searchTerm} 
               onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }} 
-              className="w-full sm:w-64 bg-slate-900 border border-slate-800 focus:border-emerald-500/50 rounded-xl py-2.5 pl-10 pr-4 text-white font-mono text-xs outline-none transition-all shadow-inner" 
+              className="w-full sm:w-64 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 focus:border-emerald-500/50 rounded-xl py-2.5 pl-10 pr-4 text-white font-mono text-xs outline-none transition-all shadow-inner"
             />
           </div>
-          <button onClick={fetchData} className="p-2.5 bg-slate-900 border border-slate-800 text-slate-400 rounded-xl hover:text-emerald-400 hover:border-slate-600 transition-all flex justify-center items-center">
+          <button onClick={fetchData} className="p-2.5 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 text-slate-400 rounded-xl hover:text-emerald-400 hover:border-slate-600 transition-all flex justify-center items-center">
             <RefreshCw size={16} />
           </button>
           <button onClick={() => openProductModal()} className="flex items-center justify-center gap-2 px-5 py-2.5 bg-emerald-500 text-slate-950 font-black uppercase text-xs tracking-widest rounded-xl hover:bg-emerald-400 hover:shadow-[0_0_15px_rgba(16,185,129,0.4)] transition-all">
@@ -438,11 +438,11 @@ export default function ProductManagement() {
       </div>
 
       {/* Main Data Table */}
-      <div className="bg-slate-900/50 border border-slate-800/80 rounded-[1.5rem] overflow-hidden shadow-xl">
+      <div className="bg-[#10241f]/55 backdrop-blur-xl border border-slate-800/80 rounded-[1.5rem] overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-slate-950 border-b border-slate-800">
+              <tr className="bg-[#081b15]/90 backdrop-blur-xl border-b border-slate-800">
                 <th className="p-5 text-[10px] font-black uppercase text-slate-500 tracking-widest">Product</th>
                 <th className="p-5 text-[10px] font-black uppercase text-slate-500 tracking-widest">Category</th>
                 <th className="p-5 text-[10px] font-black uppercase text-slate-500 tracking-widest">Price & Stock</th>
@@ -459,8 +459,8 @@ export default function ProductManagement() {
                 <tr key={product._id || product.id} className="hover:bg-slate-800/40 transition-colors group">
                   <td className="p-4 flex items-center gap-4">
                     <div className="relative">
-                      <img src={getImageUrl(product.images?.[0])} className="w-12 h-12 object-cover rounded-xl bg-slate-950 border border-slate-700 shadow-sm" onError={(e) => { e.target.src = '/logo.webp'; }} alt={product.name}/>
-                      {product.video_urls && <Video size={12} className="absolute -bottom-1 -right-1 text-blue-400 bg-slate-900 rounded-full" />}
+                      <img src={getImageUrl(product.images?.[0])} className="w-12 h-12 object-cover rounded-xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 shadow-sm" onError={(e) => { e.target.src = '/logo.webp'; }} alt={product.name}/>
+                      {product.video_urls && <Video size={12} className="absolute -bottom-1 -right-1 text-blue-400 bg-[#10241f]/85 backdrop-blur-xl rounded-full" />}
                     </div>
                     <div>
                       <p className="text-sm font-bold text-white line-clamp-1">{product.name}</p>
@@ -470,7 +470,7 @@ export default function ProductManagement() {
                     </div>
                   </td>
                   <td className="p-4">
-                    <span className="px-2.5 py-1 bg-slate-950 border border-slate-700 text-slate-300 rounded-lg text-[10px] font-bold uppercase tracking-wider">
+                    <span className="px-2.5 py-1 bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 text-slate-300 rounded-lg text-[10px] font-bold uppercase tracking-wider">
                       {product.category_name || 'Uncategorized'}
                     </span>
                   </td>
@@ -492,9 +492,9 @@ export default function ProductManagement() {
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-40 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openSerialModal(product)} className="p-2 bg-slate-950 border border-slate-700 rounded-lg text-amber-500 hover:bg-amber-500 hover:text-slate-950 transition-colors tooltip-trigger" title="Serial Numbers"><QrCode size={16} /></button>
-                      <button onClick={() => openProductModal(product)} className="p-2 bg-slate-950 border border-slate-700 rounded-lg text-blue-500 hover:bg-blue-500 hover:text-slate-950 transition-colors" title="Edit Product"><Edit2 size={16} /></button>
-                      <button onClick={() => handleDelete(product._id || product.id)} className="p-2 bg-slate-950 border border-slate-700 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white transition-colors" title="Delete Product"><Trash2 size={16} /></button>
+                      <button onClick={() => openSerialModal(product)} className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 rounded-lg text-amber-500 hover:bg-amber-500 hover:text-slate-950 transition-colors tooltip-trigger" title="Serial Numbers"><QrCode size={16} /></button>
+                      <button onClick={() => openProductModal(product)} className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 rounded-lg text-blue-500 hover:bg-blue-500 hover:text-slate-950 transition-colors" title="Edit Product"><Edit2 size={16} /></button>
+                      <button onClick={() => handleDelete(product._id || product.id)} className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white transition-colors" title="Delete Product"><Trash2 size={16} /></button>
                     </div>
                   </td>
                 </tr>
@@ -505,11 +505,11 @@ export default function ProductManagement() {
         
         {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="p-4 border-t border-slate-800 flex items-center justify-between bg-slate-950/50">
+          <div className="p-4 border-t border-slate-800 flex items-center justify-between bg-[#081b15]/55 backdrop-blur-xl">
             <span className="text-xs font-mono text-slate-500">Page {currentPage} of {totalPages}</span>
             <div className="flex gap-2">
-              <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className="p-1.5 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 disabled:opacity-30 hover:text-white"><ChevronLeft size={16} /></button>
-              <button disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className="p-1.5 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 disabled:opacity-30 hover:text-white"><ChevronRight size={16} /></button>
+              <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => Math.max(1, p - 1))} className="p-1.5 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 rounded-lg text-slate-400 disabled:opacity-30 hover:text-white"><ChevronLeft size={16} /></button>
+              <button disabled={currentPage >= totalPages} onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))} className="p-1.5 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 rounded-lg text-slate-400 disabled:opacity-30 hover:text-white"><ChevronRight size={16} /></button>
             </div>
           </div>
         )}
@@ -517,15 +517,15 @@ export default function ProductManagement() {
 
       {/* --- PRODUCT MODAL --- */}
       {isProductModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
-          <div className="bg-slate-950 border border-slate-800 w-full max-w-4xl rounded-[2rem] shadow-2xl overflow-hidden relative">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#081b15]/90 backdrop-blur-xl/90 backdrop-blur-md">
+          <div className="bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 w-full max-w-4xl rounded-[2rem] shadow-2xl overflow-hidden relative">
             
             {/* Uploading Overlay */}
             {isUploading && (
-              <div className="absolute inset-0 bg-slate-950/95 z-50 flex flex-col items-center justify-center backdrop-blur-sm">
+              <div className="absolute inset-0 bg-[#081b15]/90 backdrop-blur-xl/95 z-50 flex flex-col items-center justify-center backdrop-blur-sm">
                 <UploadCloud className="w-12 h-12 text-emerald-500 animate-bounce mb-6" />
                 <h3 className="text-sm font-mono text-emerald-400 uppercase tracking-widest">{uploadingFileName}</h3>
-                <div className="w-72 bg-slate-900 rounded-full h-2 mt-6 border border-slate-800 overflow-hidden">
+                <div className="w-72 bg-[#10241f]/85 backdrop-blur-xl rounded-full h-2 mt-6 border border-slate-800 overflow-hidden">
                   <div className={`bg-emerald-500 h-full rounded-full transition-all duration-300 relative ${isUploadingImages ? '' : 'w-1/3 animate-pulse'}`} style={isUploadingImages ? { width: `${uploadProgress}%` } : undefined}>
                     <div className="absolute inset-0 bg-white/20 animate-pulse"></div>
                   </div>
@@ -534,16 +534,16 @@ export default function ProductManagement() {
               </div>
             )}
 
-            <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-slate-900/40">
+            <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-[#10241f]/45 backdrop-blur-xl">
               <h2 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-2">
                 <Cpu className="text-emerald-500" /> {currentProduct ? 'Edit Product' : 'Add Product'}
               </h2>
-              <button onClick={() => setProductModalOpen(false)} className="text-slate-500 hover:text-rose-500 transition-colors bg-slate-900 p-2 rounded-full"><XCircle size={20} /></button>
+              <button onClick={() => setProductModalOpen(false)} className="text-slate-500 hover:text-rose-500 transition-colors bg-[#10241f]/85 backdrop-blur-xl p-2 rounded-full"><XCircle size={20} /></button>
             </div>
 
             <form onSubmit={handleSaveProduct}>
               {/* Tab Navigation */}
-              <div className="flex border-b border-slate-800 px-6 bg-slate-900/20 overflow-x-auto custom-scrollbar">
+              <div className="flex border-b border-slate-800 px-6 bg-[#10241f]/25 backdrop-blur-xl overflow-x-auto custom-scrollbar">
                 {[
                   {id:'basic', l:'Basic Info', i:BoxSelect}, 
                   {id:'seo', l:'SEO & Meta', i:Globe}, 
@@ -560,7 +560,7 @@ export default function ProductManagement() {
                 ))}
               </div>
 
-              <div className="p-6 min-h-[400px] max-h-[60vh] overflow-y-auto custom-scrollbar bg-slate-950/50">
+              <div className="p-6 min-h-[400px] max-h-[60vh] overflow-y-auto custom-scrollbar bg-[#081b15]/55 backdrop-blur-xl">
                 {activeTab === 'basic' && (
                   <div className="grid grid-cols-2 gap-5">
                     <div className="col-span-2">
@@ -570,30 +570,30 @@ export default function ProductManagement() {
                           {isGeneratingAI ? <><RefreshCw size={12} className="animate-spin" /> Generating…</> : '✨ AI Auto-Fill'}
                         </button>
                       </div>
-                      <input required value={form.name} onChange={e=>setForm({...form, name:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="e.g. Aloe Vera Glow Serum" />
+                      <input required value={form.name} onChange={e=>setForm({...form, name:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="e.g. Aloe Vera Glow Serum" />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Price (₹)</label>
-                      <input required type="number" value={form.price} onChange={e=>setForm({...form, price:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-slate-300 outline-none transition-colors" placeholder="0.00" />
+                      <input required type="number" value={form.price} onChange={e=>setForm({...form, price:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-slate-300 outline-none transition-colors" placeholder="0.00" />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest block mb-2">Discount Price (₹)</label>
-                      <input type="number" value={form.discount_price} onChange={e=>setForm({...form, discount_price:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-emerald-400 outline-none transition-colors" placeholder="0.00" />
+                      <input type="number" value={form.discount_price} onChange={e=>setForm({...form, discount_price:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-emerald-400 outline-none transition-colors" placeholder="0.00" />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Stock Quantity</label>
-                      <input required type="number" value={form.quantity} onChange={e=>setForm({...form, quantity:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-white outline-none transition-colors" placeholder="0" />
+                      <input required type="number" value={form.quantity} onChange={e=>setForm({...form, quantity:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-white outline-none transition-colors" placeholder="0" />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Category</label>
-                      <select required value={form.category_id} onChange={e=>setForm({...form, category_id:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors appearance-none">
+                      <select required value={form.category_id} onChange={e=>setForm({...form, category_id:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors appearance-none">
                         <option value="" disabled>Select a Category...</option>
                         {categories.map(c => <option key={c.id || c._id} value={c.id || c._id}>{c.name}</option>)}
                       </select>
                     </div>
                     <div className="col-span-2">
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Description</label>
-                      <textarea rows={5} value={form.description} onChange={e=>setForm({...form, description:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-slate-300 resize-y outline-none transition-colors" placeholder="Enter product details, features, and ingredients..." />
+                      <textarea rows={5} value={form.description} onChange={e=>setForm({...form, description:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-slate-300 resize-y outline-none transition-colors" placeholder="Enter product details, features, and ingredients..." />
                     </div>
                   </div>
                 )}
@@ -607,34 +607,34 @@ export default function ProductManagement() {
                     </div>
                     <div className="col-span-2 md:col-span-1">
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2 flex justify-between">URL Slug <span className="text-slate-600 font-mono lowercase">auto-generated if empty</span></label>
-                      <input value={form.slug} onChange={e=>setForm({...form, slug:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-emerald-400 font-mono outline-none transition-colors" placeholder="e.g. aloe-vera-serum" />
+                      <input value={form.slug} onChange={e=>setForm({...form, slug:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-emerald-400 font-mono outline-none transition-colors" placeholder="e.g. aloe-vera-serum" />
                     </div>
                     <div className="col-span-2 md:col-span-1">
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">SKU / Item Number</label>
-                      <input value={form.sku} onChange={e=>setForm({...form, sku:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white font-mono outline-none transition-colors" placeholder="e.g. BHU-ALOE-01" />
+                      <input value={form.sku} onChange={e=>setForm({...form, sku:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white font-mono outline-none transition-colors" placeholder="e.g. BHU-ALOE-01" />
                     </div>
                     <div className="col-span-2 md:col-span-1">
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Brand</label>
-                      <input value={form.brand} onChange={e=>setForm({...form, brand:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="Bhumivera" />
+                      <input value={form.brand} onChange={e=>setForm({...form, brand:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="Bhumivera" />
                     </div>
                     <div className="col-span-2 md:col-span-1">
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Search Tags (Comma separated)</label>
-                      <input value={form.tags} onChange={e=>setForm({...form, tags:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="natural, vegan, skincare" />
+                      <input value={form.tags} onChange={e=>setForm({...form, tags:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="natural, vegan, skincare" />
                     </div>
                     <div className="col-span-2">
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Meta Title (Google Search Head)</label>
-                      <input value={form.meta_title} onChange={e=>setForm({...form, meta_title:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="Buy Bhumivera Natural Serum Online" />
+                      <input value={form.meta_title} onChange={e=>setForm({...form, meta_title:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="Buy Bhumivera Natural Serum Online" />
                     </div>
                     <div className="col-span-2">
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Meta Description (Snippet)</label>
-                      <textarea rows={3} value={form.meta_description} onChange={e=>setForm({...form, meta_description:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-slate-300 resize-y outline-none transition-colors" placeholder="100% natural, cruelty-free serum for glowing skin..." />
+                      <textarea rows={3} value={form.meta_description} onChange={e=>setForm({...form, meta_description:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-slate-300 resize-y outline-none transition-colors" placeholder="100% natural, cruelty-free serum for glowing skin..." />
                     </div>
                   </div>
                 )}
 
                 {activeTab === 'specs' && (
                   <div className="space-y-4">
-                    <div className="flex items-center justify-between mb-6 bg-slate-900 border border-slate-800 p-4 rounded-xl">
+                    <div className="flex items-center justify-between mb-6 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 p-4 rounded-xl">
                       <div>
                         <h4 className="text-sm font-bold text-white">Product Specifications</h4>
                         <p className="text-[10px] font-mono text-slate-500 mt-1">Add details like Volume, Weight, Ingredients</p>
@@ -647,10 +647,10 @@ export default function ProductManagement() {
                     <div className="space-y-3">
                       {specs.map((spec, i) => (
                         <div key={i} className="flex gap-3 items-center group">
-                          <input type="text" placeholder="Title (e.g. Weight)" value={spec.key} onChange={e => updateSpec(i, 'key', e.target.value)} className="flex-1 bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-white outline-none transition-colors" />
+                          <input type="text" placeholder="Title (e.g. Weight)" value={spec.key} onChange={e => updateSpec(i, 'key', e.target.value)} className="flex-1 bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-white outline-none transition-colors" />
                           <span className="text-slate-600 font-bold">:</span>
-                          <input type="text" placeholder="Value (e.g. 50g)" value={spec.value} onChange={e => updateSpec(i, 'value', e.target.value)} className="flex-[2] bg-slate-900 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" />
-                          <button type="button" onClick={() => setSpecs(specs.filter((_, idx) => idx !== i))} className="p-3 text-rose-500 bg-slate-900 border border-slate-700 hover:bg-rose-500 hover:border-rose-500 hover:text-white rounded-xl transition-all opacity-50 group-hover:opacity-100">
+                          <input type="text" placeholder="Value (e.g. 50g)" value={spec.value} onChange={e => updateSpec(i, 'value', e.target.value)} className="flex-[2] bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" />
+                          <button type="button" onClick={() => setSpecs(specs.filter((_, idx) => idx !== i))} className="p-3 text-rose-500 bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 hover:bg-rose-500 hover:border-rose-500 hover:text-white rounded-xl transition-all opacity-50 group-hover:opacity-100">
                             <Trash2 size={16}/>
                           </button>
                         </div>
@@ -663,7 +663,7 @@ export default function ProductManagement() {
                   <div className="grid grid-cols-2 gap-6">
                     <div className="col-span-2 p-6 border-2 border-dashed border-emerald-500/30 bg-emerald-500/5 rounded-2xl text-center relative hover:bg-emerald-500/10 transition-colors group cursor-pointer">
                       <input type="file" multiple accept="image/*" onChange={handleImageChange} className="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10" />
-                      <div className="w-16 h-16 bg-slate-950 border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
+                      <div className="w-16 h-16 bg-[#081b15]/90 backdrop-blur-xl border border-emerald-500/30 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-transform">
                         <ImageIcon size={28} className="text-emerald-500" />
                       </div>
                       <p className="text-sm font-black text-white uppercase tracking-widest mb-1">Product Images</p>
@@ -678,11 +678,11 @@ export default function ProductManagement() {
                           <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
                             <CheckCircle size={12} className="text-emerald-500" /> Active CDN Images ({existingImages.length})
                           </h4>
-                          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4 bg-slate-900/30 p-4 border border-slate-800 rounded-2xl">
+                          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4 bg-[#10241f]/35 backdrop-blur-xl p-4 border border-slate-800 rounded-2xl">
                             {existingImages.map((img) => (
-                              <div key={img.id} className="relative group aspect-square rounded-xl overflow-hidden border border-slate-800 bg-slate-950 shadow-md">
+                              <div key={img.id} className="relative group aspect-square rounded-xl overflow-hidden border border-slate-800 bg-[#081b15]/90 backdrop-blur-xl shadow-md">
                                 <img src={getImageUrl(img)} alt="Product image preview" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" />
-                                <div className="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-all flex items-center justify-center gap-3 backdrop-blur-sm">
+                                <div className="absolute inset-0 bg-[#081b15]/80 backdrop-blur-xl opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-all flex items-center justify-center gap-3 backdrop-blur-sm">
                                   <a href={getImageUrl(img)} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-all hover:scale-110 shadow-lg" title="View image in a new tab" aria-label="View image">
                                     <Eye size={16} />
                                   </a>
@@ -697,7 +697,7 @@ export default function ProductManagement() {
                       )}
 
                       {activeTab === 'warranty' && (
-                        <div className="p-6 bg-slate-900 border border-slate-800 rounded-2xl">
+                        <div className="p-6 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 rounded-2xl">
                           <div className="flex items-start gap-4">
                             <div className="p-3 bg-slate-800 rounded-xl text-slate-400">
                               <ShieldCheck size={24} />
@@ -706,7 +706,7 @@ export default function ProductManagement() {
                               <h4 className="text-sm font-bold text-white mb-2">Product warranty (optional)</h4>
                               <p className="text-xs text-slate-400 mb-4">Leave blank when no warranty applies, including personal-care products. Enter a period only when coverage is confirmed for this specific product.</p>
                               <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Warranty duration (months)</label>
-                              <input type="number" min="1" value={form.warranty_period} onChange={e=>setForm({...form, warranty_period:e.target.value})} className="w-full md:w-1/2 bg-slate-950 border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-white outline-none transition-colors" placeholder="Leave blank if not applicable" />
+                              <input type="number" min="1" value={form.warranty_period} onChange={e=>setForm({...form, warranty_period:e.target.value})} className="w-full md:w-1/2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-white outline-none transition-colors" placeholder="Leave blank if not applicable" />
                             </div>
                           </div>
                         </div>
@@ -720,9 +720,9 @@ export default function ProductManagement() {
                           </h4>
                           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-5 gap-4 bg-emerald-500/5 p-4 border border-emerald-500/20 rounded-2xl">
                             {images.map((file, idx) => (
-                              <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-emerald-500/30 bg-slate-950 shadow-md">
+                              <div key={idx} className="relative group aspect-square rounded-xl overflow-hidden border border-emerald-500/30 bg-[#081b15]/90 backdrop-blur-xl shadow-md">
                                 <img src={imagePreviews[idx]} alt="Staged image preview" className="w-full h-full object-cover" />
-                                <div className="absolute inset-0 bg-slate-950/80 opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-all flex items-center justify-center gap-3 backdrop-blur-sm">
+                                <div className="absolute inset-0 bg-[#081b15]/80 backdrop-blur-xl opacity-0 group-hover:opacity-100 focus-within:opacity-100 transition-all flex items-center justify-center gap-3 backdrop-blur-sm">
                                   <a href={imagePreviews[idx]} target="_blank" rel="noopener noreferrer" className="p-2.5 bg-blue-500 hover:bg-blue-600 text-white rounded-xl transition-all hover:scale-110 shadow-lg" title="View image in a new tab" aria-label="View staged image">
                                     <Eye size={16} />
                                   </a>
@@ -730,7 +730,7 @@ export default function ProductManagement() {
                                     <XCircle size={16} />
                                   </button>
                                 </div>
-                                <div className="absolute bottom-1 left-1 right-1 bg-slate-950/90 text-slate-400 text-[8px] font-mono px-2 py-1 rounded border border-slate-800 truncate text-center">
+                                <div className="absolute bottom-1 left-1 right-1 bg-[#081b15]/90 backdrop-blur-xl/90 text-slate-400 text-[8px] font-mono px-2 py-1 rounded border border-slate-800 truncate text-center">
                                   {file.name}
                                 </div>
                               </div>
@@ -743,11 +743,11 @@ export default function ProductManagement() {
                     <div className="col-span-2 space-y-4 mt-2">
                       <div>
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2 flex items-center gap-2"><Video size={14}/> YouTube Link</label>
-                        <input type="url" placeholder="https://youtube.com/watch?v=..." value={form.video_urls} onChange={e=>setForm({...form, video_urls:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-sm text-blue-400 font-mono outline-none transition-colors" />
+                        <input type="url" placeholder="https://youtube.com/watch?v=..." value={form.video_urls} onChange={e=>setForm({...form, video_urls:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-blue-500 rounded-xl p-3 text-sm text-blue-400 font-mono outline-none transition-colors" />
                       </div>
                       <div>
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2 flex items-center gap-2"><Box size={14}/> 3D Model Link</label>
-                        <input type="url" placeholder="https://..." value={form.model_3d_url} onChange={e=>setForm({...form, model_3d_url:e.target.value})} className="w-full bg-slate-900 border border-slate-700 focus:border-purple-500 rounded-xl p-3 text-sm text-purple-400 font-mono outline-none transition-colors" />
+                        <input type="url" placeholder="https://..." value={form.model_3d_url} onChange={e=>setForm({...form, model_3d_url:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-purple-500 rounded-xl p-3 text-sm text-purple-400 font-mono outline-none transition-colors" />
                       </div>
                     </div>
                   </div>
@@ -755,7 +755,7 @@ export default function ProductManagement() {
 
               </div>
 
-              <div className="p-6 border-t border-slate-800 flex justify-end gap-4 bg-slate-900/40">
+              <div className="p-6 border-t border-slate-800 flex justify-end gap-4 bg-[#10241f]/45 backdrop-blur-xl">
                 <button type="button" disabled={isUploading} onClick={() => setProductModalOpen(false)} className="px-6 py-3 text-slate-400 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-slate-800 transition-colors disabled:opacity-50">Cancel</button>
                 <button type="submit" disabled={isUploading} className="px-8 py-3 bg-emerald-500 text-slate-950 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-emerald-400 hover:shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
                   <Activity size={16} /> Save Product
@@ -768,8 +768,8 @@ export default function ProductManagement() {
 
       {/* --- SERIAL GENERATION MODAL --- */}
       {isSerialModalOpen && currentProduct && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-slate-950/90 backdrop-blur-md">
-          <div className="bg-[#0a0c10] border border-slate-800 w-full max-w-3xl rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
+        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#081b15]/90 backdrop-blur-xl/90 backdrop-blur-md">
+          <div className="bg-[#10241f]/90 backdrop-blur-xl border border-slate-800 w-full max-w-3xl rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
             <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-amber-500/10">
               <div>
                 <h2 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-3">
@@ -777,10 +777,10 @@ export default function ProductManagement() {
                 </h2>
                 <p className="text-[10px] font-mono text-slate-400 mt-1 uppercase tracking-widest">Product: {currentProduct.name}</p>
               </div>
-              <button onClick={() => setSerialModalOpen(false)} className="text-slate-500 hover:text-white bg-slate-900 p-2 rounded-full transition-colors"><XCircle size={20} /></button>
+              <button onClick={() => setSerialModalOpen(false)} className="text-slate-500 hover:text-white bg-[#10241f]/85 backdrop-blur-xl p-2 rounded-full transition-colors"><XCircle size={20} /></button>
             </div>
             
-            <div className="flex border-b border-slate-800 px-6 bg-slate-900/40">
+            <div className="flex border-b border-slate-800 px-6 bg-[#10241f]/45 backdrop-blur-xl">
               <button onClick={() => setSerialTab('generate')} className={`flex items-center gap-2 px-6 py-4 text-[10px] font-black uppercase tracking-widest border-b-2 transition-colors ${serialTab === 'generate' ? 'border-amber-500 text-amber-400 bg-amber-500/5' : 'border-transparent text-slate-500 hover:text-slate-300'}`}>
                 <Plus size={16} /> Generate New
               </button>
@@ -793,17 +793,17 @@ export default function ProductManagement() {
               {serialTab === 'generate' && (
                 <form onSubmit={handleGenerateSerials} className="p-8 space-y-6">
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                    <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+                    <div className="bg-[#10241f]/55 backdrop-blur-xl p-4 rounded-xl border border-slate-800">
                       <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Quantity to Generate</label>
-                      <input type="number" required min="1" max="1000" value={serialForm.count} onChange={e=>setSerialForm({...serialForm, count: parseInt(e.target.value)})} className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-white font-mono outline-none" />
+                      <input type="number" required min="1" max="1000" value={serialForm.count} onChange={e=>setSerialForm({...serialForm, count: parseInt(e.target.value)})} className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-white font-mono outline-none" />
                     </div>
-                    <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+                    <div className="bg-[#10241f]/55 backdrop-blur-xl p-4 rounded-xl border border-slate-800">
                       <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Code Prefix</label>
-                      <input type="text" required value={serialForm.prefix} onChange={e=>setSerialForm({...serialForm, prefix: e.target.value.toUpperCase()})} className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-amber-500 font-mono outline-none tracking-widest" />
+                      <input type="text" required value={serialForm.prefix} onChange={e=>setSerialForm({...serialForm, prefix: e.target.value.toUpperCase()})} className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-amber-500 font-mono outline-none tracking-widest" />
                     </div>
-                    <div className="bg-slate-900/50 p-4 rounded-xl border border-slate-800">
+                    <div className="bg-[#10241f]/55 backdrop-blur-xl p-4 rounded-xl border border-slate-800">
                       <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Warranty (Optional)</label>
-                      <select value={serialForm.base_warranty_months} onChange={e=>setSerialForm({...serialForm, base_warranty_months: e.target.value ? parseInt(e.target.value) : ''})} className="w-full bg-slate-950 border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-white font-mono outline-none appearance-none">
+                      <select value={serialForm.base_warranty_months} onChange={e=>setSerialForm({...serialForm, base_warranty_months: e.target.value ? parseInt(e.target.value) : ''})} className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-white font-mono outline-none appearance-none">
                         <option value="">No warranty</option>
                         <option value={6}>6 Months</option>
                         <option value={12}>12 Months</option>
@@ -830,10 +830,10 @@ export default function ProductManagement() {
                       <p className="text-amber-500 font-mono text-xs uppercase tracking-widest animate-pulse">Loading Numbers...</p>
                     </div>
                   ) : (
-                    <div className="bg-slate-900/50 border border-slate-800 rounded-xl overflow-hidden">
+                    <div className="bg-[#10241f]/55 backdrop-blur-xl border border-slate-800 rounded-xl overflow-hidden">
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="bg-slate-950 border-b border-slate-800">
+                          <tr className="bg-[#081b15]/90 backdrop-blur-xl border-b border-slate-800">
                             <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Serial Number</th>
                             <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Status</th>
                             <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Actions</th>

@@ -129,7 +129,7 @@ export default function AdminSettings() {
         </div>
       )}
 
-      <div className="bg-[#1a1f2e] rounded-xl p-6 border border-gray-800">
+      <div className="admin-glass-panel rounded-2xl p-6">
         <h3 className="text-lg font-semibold text-white mb-4">Change Password</h3>
         <form onSubmit={handlePasswordChange} className="space-y-4">
           <div>
@@ -140,7 +140,7 @@ export default function AdminSettings() {
               type="password"
               value={currentPassword}
               onChange={(e) => setCurrentPassword(e.target.value)}
-              className="w-full px-4 py-2 bg-[#0f1419] border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+              className="admin-glass-control w-full rounded-lg px-4 py-2 focus:border-cyan-400"
               disabled={loading}
             />
           </div>
@@ -153,7 +153,7 @@ export default function AdminSettings() {
               type="password"
               value={newPassword}
               onChange={(e) => setNewPassword(e.target.value)}
-              className="w-full px-4 py-2 bg-[#0f1419] border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+              className="admin-glass-control w-full rounded-lg px-4 py-2 focus:border-cyan-400"
               disabled={loading}
             />
           </div>
@@ -166,7 +166,7 @@ export default function AdminSettings() {
               type="password"
               value={confirmPassword}
               onChange={(e) => setConfirmPassword(e.target.value)}
-              className="w-full px-4 py-2 bg-[#0f1419] border border-gray-700 rounded-lg text-white focus:outline-none focus:border-cyan-500"
+              className="admin-glass-control w-full rounded-lg px-4 py-2 focus:border-cyan-400"
               disabled={loading}
             />
           </div>
@@ -182,7 +182,7 @@ export default function AdminSettings() {
         </form>
       </div>
 
-      <div className="mt-6 bg-[#1a1f2e] rounded-xl p-6 border border-gray-800">
+      <div className="admin-glass-panel mt-6 rounded-2xl p-6">
         <h3 className="text-lg font-semibold text-white mb-4">Checkout &amp; Cart Rules</h3>
         <form onSubmit={saveCartSettings} className="space-y-5">
           <fieldset disabled={cartSettingsLoading || cartSettingsSaving}>
@@ -210,7 +210,7 @@ export default function AdminSettings() {
         </form>
       </div>
 
-      <div className="mt-6 bg-[#1a1f2e] rounded-xl p-6 border border-gray-800">
+      <div className="admin-glass-panel mt-6 rounded-2xl p-6">
         <h3 className="text-lg font-semibold text-white mb-4">Shipping Tiers</h3>
         <form onSubmit={saveShippingSettings} className="grid gap-4 sm:grid-cols-3">
           {[
@@ -218,13 +218,13 @@ export default function AdminSettings() {
             ['express_charge', 'Express delivery'],
             ['free_shipping_threshold', 'Free delivery threshold'],
           ].map(([key, label]) => <label key={key} className="text-sm text-gray-300">{label} (₹)
-            <input type="number" min="0" value={shippingSettings[key]} onChange={event => setShippingSettings(current => ({ ...current, [key]: event.target.value }))} className="mt-2 w-full border border-gray-700 bg-[#0f1419] px-3 py-2 text-white focus:border-cyan-500"/>
+            <input type="number" min="0" value={shippingSettings[key]} onChange={event => setShippingSettings(current => ({ ...current, [key]: event.target.value }))} className="admin-glass-control mt-2 w-full rounded-lg px-3 py-2 focus:border-cyan-400"/>
           </label>)}
           <div className="sm:col-span-3"><button type="submit" disabled={cartSettingsLoading || cartSettingsSaving} className="flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"><FiSave/>{cartSettingsSaving ? 'Saving…' : 'Save shipping tiers'}</button></div>
         </form>
       </div>
 
-      <div className="mt-6 bg-[#1a1f2e] rounded-xl p-6 border border-gray-800">
+      <div className="admin-glass-panel mt-6 rounded-2xl p-6">
         <h3 className="text-lg font-semibold text-white mb-4">Site Information</h3>
         <div className="space-y-3 text-gray-400">
           <div className="flex justify-between">

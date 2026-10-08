@@ -319,7 +319,7 @@ export default function CategoryManagement() {
   const renderInspectorPane = () => {
     if (!activeInspectoraccess) {
       return (
-        <div className="h-full flex flex-col items-center justify-center p-8 text-center bg-slate-900/30 border-l border-slate-800/80">
+        <div className="h-full flex flex-col items-center justify-center p-8 text-center bg-[#10241f]/35 backdrop-blur-xl border-l border-slate-800/80">
           <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center mb-4 border border-slate-700 shadow-inner">
             <Eye size={24} className="text-slate-500" />
           </div>
@@ -335,8 +335,8 @@ export default function CategoryManagement() {
     const healthBg = score === 100 ? 'bg-emerald-500/10 border-emerald-500/20' : score >= 60 ? 'bg-amber-500/10 border-amber-500/20' : 'bg-rose-500/10 border-rose-500/20';
 
     return (
-      <div className="h-full flex flex-col bg-slate-900/50 border-l border-slate-800/80 overflow-y-auto animate-in slide-in-from-right-4 duration-300">
-        <div className="p-5 border-b border-slate-800 bg-slate-950/60 sticky top-0 z-10 flex justify-between items-start">
+      <div className="h-full flex flex-col bg-[#10241f]/55 backdrop-blur-xl border-l border-slate-800/80 overflow-y-auto animate-in slide-in-from-right-4 duration-300">
+        <div className="p-5 border-b border-slate-800 bg-[#081b15]/65 backdrop-blur-xl sticky top-0 z-10 flex justify-between items-start">
           <div>
             <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest mb-3 border ${isMaster ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
               {isMaster ? <Layers size={10}/> : <Component size={10}/>}
@@ -386,20 +386,20 @@ export default function CategoryManagement() {
           </div>
 
           {/* Details Card */}
-          <div className="p-4 bg-slate-950/50 rounded-2xl border border-slate-800">
+          <div className="p-4 bg-[#081b15]/55 backdrop-blur-xl rounded-2xl border border-slate-800">
             <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
               <Database size={12} /> Data Payload
             </h4>
             <div className="space-y-4">
               <div>
                 <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest block mb-1">Routing Slug</span>
-                <div className="bg-slate-900 p-2 rounded border border-slate-800 font-mono text-xs text-cyan-400 break-all select-all">
+                <div className="bg-[#10241f]/85 backdrop-blur-xl p-2 rounded border border-slate-800 font-mono text-xs text-cyan-400 break-all select-all">
                   /shop/{isMaster ? activeInspectoraccess.slug : `parent/${activeInspectoraccess.slug}`}
                 </div>
               </div>
               <div>
                 <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest block mb-1">Description</span>
-                <div className="bg-slate-900 p-3 rounded border border-slate-800 text-xs text-slate-300 min-h-[60px]">
+                <div className="bg-[#10241f]/85 backdrop-blur-xl p-3 rounded border border-slate-800 text-xs text-slate-300 min-h-[60px]">
                   {activeInspectoraccess.description || <span className="text-slate-600 italic">No semantic description provided.</span>}
                 </div>
               </div>
@@ -459,13 +459,13 @@ export default function CategoryManagement() {
   }
 
   return (
-    <div className="flex flex-col h-full bg-[#030712] text-slate-300 font-sans animate-in fade-in duration-500 relative overflow-hidden">
+    <div className="relative flex h-full flex-col overflow-hidden text-slate-300 font-sans animate-in fade-in duration-500">
       {/* Background Ambience */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-600/5 blur-[120px] rounded-full pointer-events-none" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none" />
 
       {/* --- COMMAND HEADER --- */}
-      <div className="px-6 py-5 border-b border-slate-800/80 bg-slate-950/40 backdrop-blur-md z-10 flex-shrink-0">
+      <div className="px-6 py-5 border-b border-slate-800/80 bg-[#081b15]/45 backdrop-blur-xl z-10 flex-shrink-0">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.3)]">
@@ -483,7 +483,7 @@ export default function CategoryManagement() {
 
           <div className="flex flex-wrap items-center gap-3">
             {/* Quick Stats Mini-Bar */}
-            <div className="hidden xl:flex items-center gap-4 px-4 py-2 bg-slate-900/80 border border-slate-800 rounded-xl mr-2">
+            <div className="hidden xl:flex items-center gap-4 px-4 py-2 bg-[#10241f]/80 backdrop-blur-xl border border-slate-800 rounded-xl mr-2">
               <div className="flex flex-col">
                 <span className="text-[8px] font-black uppercase text-slate-500 tracking-widest">Global Health</span>
                 <span className={`text-sm font-black font-mono leading-none ${taxonomyMetrics.averageHealth >= 80 ? 'text-emerald-400' : 'text-amber-400'}`}>
@@ -497,10 +497,10 @@ export default function CategoryManagement() {
               </div>
             </div>
 
-            <button onClick={fetchTaxonomy} className="p-3 bg-slate-900 border border-slate-700 text-slate-400 rounded-xl hover:bg-slate-800 hover:text-white transition-all shadow-sm">
+            <button onClick={fetchTaxonomy} className="p-3 bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 text-slate-400 rounded-xl hover:bg-slate-800 hover:text-white transition-all shadow-sm">
               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             </button>
-            <button onClick={exportTaxonomyCSV} className="p-3 bg-slate-900 border border-slate-700 text-slate-400 rounded-xl hover:bg-slate-800 hover:text-cyan-400 transition-all shadow-sm group relative">
+            <button onClick={exportTaxonomyCSV} className="p-3 bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 text-slate-400 rounded-xl hover:bg-slate-800 hover:text-cyan-400 transition-all shadow-sm group relative">
               <Download size={16} />
               <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-[9px] font-bold text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity pointer-events-none">Export CSV</span>
             </button>
@@ -518,21 +518,21 @@ export default function CategoryManagement() {
       </div>
 
       {/* --- TOOLBAR & BULK ACTIONS --- */}
-      <div className="px-6 py-3 border-b border-slate-800/50 bg-slate-950/80 z-10 flex-shrink-0 flex flex-col sm:flex-row justify-between items-center gap-4">
+      <div className="px-6 py-3 border-b border-slate-800/50 bg-[#081b15]/80 backdrop-blur-xl z-10 flex-shrink-0 flex flex-col sm:flex-row justify-between items-center gap-4">
         <div className="flex flex-1 w-full gap-3">
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
             <input 
               type="text" placeholder="Search matrix accesss by name or slug..." 
               value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 focus:border-purple-500/50 rounded-lg py-2 pl-9 pr-4 text-white text-xs outline-none transition-all"
+              className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 focus:border-purple-500/50 rounded-lg py-2 pl-9 pr-4 text-white text-xs outline-none transition-all"
             />
           </div>
           <div className="relative max-w-[200px]">
             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
             <select
               value={filterMode} onChange={(e) => setFilterMode(e.target.value)}
-              className="w-full bg-slate-900 border border-slate-800 text-xs text-white rounded-lg pl-9 pr-8 py-2 focus:outline-none focus:border-purple-500/50 appearance-none cursor-pointer"
+              className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 text-xs text-white rounded-lg pl-9 pr-8 py-2 focus:outline-none focus:border-purple-500/50 appearance-none cursor-pointer"
             >
               <option value="all">Global Matrix (All)</option>
               <option value="missing_seo">SEO Deficient Only</option>
@@ -558,9 +558,9 @@ export default function CategoryManagement() {
         {/* LEFT PANE: Tree View */}
         <div className="flex-1 flex flex-col bg-transparent overflow-hidden">
           {/* Header Row */}
-          <div className="grid grid-cols-12 bg-slate-950 border-b border-slate-800/80 p-3 text-[9px] font-black uppercase text-slate-500 tracking-widest sticky top-0 z-10 pr-6">
+          <div className="grid grid-cols-12 bg-[#081b15]/90 backdrop-blur-xl border-b border-slate-800/80 p-3 text-[9px] font-black uppercase text-slate-500 tracking-widest sticky top-0 z-10 pr-6">
             <div className="col-span-5 pl-2 flex items-center gap-3">
-              <button onClick={selectAllaccesss} className="w-4 h-4 rounded border border-slate-700 bg-slate-900 flex items-center justify-center hover:border-purple-500 transition-colors">
+              <button onClick={selectAllaccesss} className="w-4 h-4 rounded border border-slate-700 bg-[#10241f]/85 backdrop-blur-xl flex items-center justify-center hover:border-purple-500 transition-colors">
                 {selectedaccesss.length > 0 && <div className="w-2 h-2 bg-purple-500 rounded-sm" />}
               </button>
               Hierarchy access
@@ -586,11 +586,11 @@ export default function CategoryManagement() {
                 const isInspecting = activeInspectoraccess && (activeInspectoraccess.id || activeInspectoraccess._id) === catId;
 
                 return (
-                  <div key={`master-${catId}`} className="bg-slate-900/40 border border-slate-800/60 rounded-xl overflow-hidden shadow-sm transition-all hover:border-slate-700/80">
+                  <div key={`master-${catId}`} className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/60 rounded-xl overflow-hidden shadow-sm transition-all hover:border-slate-700/80">
                     {/* Master Row */}
                     <div className={`grid grid-cols-12 items-center p-2.5 transition-colors ${isInspecting ? 'bg-slate-800/80' : 'hover:bg-slate-800/40'}`}>
                       <div className="col-span-5 flex items-center gap-3 pl-1">
-                        <button onClick={() => toggleaccessSelection(catId)} className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? 'border-purple-500 bg-purple-500/20 text-purple-400' : 'border-slate-700 bg-slate-900'}`}>
+                        <button onClick={() => toggleaccessSelection(catId)} className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? 'border-purple-500 bg-purple-500/20 text-purple-400' : 'border-slate-700 bg-[#10241f]/85 backdrop-blur-xl'}`}>
                           {isSelected && <CheckCircle size={10} />}
                         </button>
                         <button onClick={() => toggleRow(catId)} className={`p-1 rounded transition-colors ${subs.length > 0 ? 'text-slate-400 hover:bg-slate-700 hover:text-white' : 'opacity-20 cursor-default'}`}>
@@ -606,7 +606,7 @@ export default function CategoryManagement() {
                       </div>
                       
                       <div className="col-span-4 flex items-center gap-3">
-                        <div className="w-full max-w-[80px] bg-slate-950 h-1.5 rounded-full overflow-hidden border border-slate-800 flex-shrink-0">
+                        <div className="w-full max-w-[80px] bg-[#081b15]/90 backdrop-blur-xl h-1.5 rounded-full overflow-hidden border border-slate-800 flex-shrink-0">
                           <div className={`h-full ${score === 100 ? 'bg-emerald-500' : score >= 60 ? 'bg-amber-500' : 'bg-rose-500'}`} style={{ width: `${score}%` }} />
                         </div>
                         <span className="text-[10px] font-mono text-slate-400 truncate">/{category.slug}</span>
@@ -621,7 +621,7 @@ export default function CategoryManagement() {
 
                     {/* Sub accesss */}
                     <div className={`overflow-hidden transition-all duration-300 ${isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
-                      <div className="bg-slate-950/50 border-t border-slate-800/50">
+                      <div className="bg-[#081b15]/55 backdrop-blur-xl border-t border-slate-800/50">
                         {subs.length === 0 ? (
                           <div className="py-4 pl-16 text-[10px] text-slate-500 font-mono uppercase tracking-widest flex items-center gap-2">
                             <Info size={12} className="text-amber-500" /> Empty Cluster. No sub-accesss deployed.
@@ -641,17 +641,17 @@ export default function CategoryManagement() {
                                 <div className="absolute left-[38px] top-1/2 w-4 h-px bg-slate-800"></div>
 
                                 <div className="col-span-5 flex items-center gap-3 pl-[58px]">
-                                  <button onClick={() => toggleaccessSelection(subId)} className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center flex-shrink-0 transition-colors ${isSubSelected ? 'border-blue-500 bg-blue-500/20 text-blue-400' : 'border-slate-700 bg-slate-900'}`}>
+                                  <button onClick={() => toggleaccessSelection(subId)} className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center flex-shrink-0 transition-colors ${isSubSelected ? 'border-blue-500 bg-blue-500/20 text-blue-400' : 'border-slate-700 bg-[#10241f]/85 backdrop-blur-xl'}`}>
                                     {isSubSelected && <CheckCircle size={8} className="stroke-[3]" />}
                                   </button>
-                                  <div className="w-6 h-6 rounded-md bg-slate-900 border border-slate-800 flex items-center justify-center text-blue-500 flex-shrink-0">
+                                  <div className="w-6 h-6 rounded-md bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 flex items-center justify-center text-blue-500 flex-shrink-0">
                                     <Component size={10} />
                                   </div>
                                   <p className="text-xs font-semibold text-slate-300 truncate">{sub.name}</p>
                                 </div>
                                 
                                 <div className="col-span-4 flex items-center gap-3">
-                                  <div className="w-full max-w-[60px] bg-slate-950 h-1 rounded-full overflow-hidden border border-slate-800 flex-shrink-0">
+                                  <div className="w-full max-w-[60px] bg-[#081b15]/90 backdrop-blur-xl h-1 rounded-full overflow-hidden border border-slate-800 flex-shrink-0">
                                     <div className={`h-full ${subScore === 100 ? 'bg-emerald-500' : subScore >= 60 ? 'bg-amber-500' : 'bg-rose-500'}`} style={{ width: `${subScore}%` }} />
                                   </div>
                                   <span className="text-[9px] font-mono text-slate-500 truncate">/{sub.slug}</span>
@@ -683,8 +683,8 @@ export default function CategoryManagement() {
           </div>
           
           {/* Bottom Half: Audit Log */}
-          <div className="h-1/3 bg-slate-950/80 border-l border-t border-slate-800/80 flex flex-col">
-            <div className="p-3 border-b border-slate-800/80 bg-slate-900 flex items-center gap-2">
+          <div className="h-1/3 bg-[#081b15]/80 backdrop-blur-xl border-l border-t border-slate-800/80 flex flex-col">
+            <div className="p-3 border-b border-slate-800/80 bg-[#10241f]/85 backdrop-blur-xl flex items-center gap-2">
               <Terminal size={14} className="text-emerald-500" />
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">System Event Log</h3>
             </div>
@@ -704,12 +704,12 @@ export default function CategoryManagement() {
 
       {/* --- UNIFIED CREATION MODAL --- */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#030712]/90 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-slate-900 border border-slate-700 w-full max-w-2xl rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 duration-300">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#081b15]/90 backdrop-blur-xl/90 backdrop-blur-md animate-in fade-in duration-200">
+          <div className="bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 w-full max-w-2xl rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 duration-300">
             
             <div className="relative h-1 w-full bg-gradient-to-r from-purple-500 to-blue-500"></div>
 
-            <div className="p-6 border-b border-slate-800/80 flex justify-between items-start bg-slate-950/50">
+            <div className="p-6 border-b border-slate-800/80 flex justify-between items-start bg-[#081b15]/55 backdrop-blur-xl">
               <div className="flex items-center gap-4">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${modalMode === 'category' ? 'bg-purple-500/10 border-purple-500/30 text-purple-400' : 'bg-blue-500/10 border-blue-500/30 text-blue-400'}`}>
                   {modalMode === 'category' ? <Layers size={24} /> : <Component size={24} />}
@@ -737,7 +737,7 @@ export default function CategoryManagement() {
                     </label>
                     <select 
                       required value={form.category_id} onChange={e => setForm({...form, category_id: e.target.value})}
-                      className="w-full bg-slate-950 border border-slate-700 rounded-lg p-3 text-sm text-white font-bold outline-none focus:border-blue-500 appearance-none cursor-pointer"
+                      className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 rounded-lg p-3 text-sm text-white font-bold outline-none focus:border-blue-500 appearance-none cursor-pointer"
                     >
                       <option value="">Select Target Parent Matrix...</option>
                       {categories.map(c => <option key={c.id || c._id} value={c.id || c._id}>{c.name}</option>)}
@@ -752,7 +752,7 @@ export default function CategoryManagement() {
                     <input 
                       required type="text" placeholder="e.g. Core Processors"
                       value={form.name} onChange={e => handleAutoSlug(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-sm text-white font-bold outline-none focus:border-purple-500/50 transition-colors" 
+                      className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl p-3.5 text-sm text-white font-bold outline-none focus:border-purple-500/50 transition-colors"
                     />
                   </div>
                   <div>
@@ -762,7 +762,7 @@ export default function CategoryManagement() {
                       <input 
                         required type="text" 
                         value={form.slug} onChange={e => setForm({...form, slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})}
-                        className="w-full bg-slate-950 border border-slate-800 rounded-xl py-3.5 pl-7 pr-4 text-sm text-cyan-400 font-mono outline-none focus:border-cyan-500/50 transition-colors" 
+                        className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl py-3.5 pl-7 pr-4 text-sm text-cyan-400 font-mono outline-none focus:border-cyan-500/50 transition-colors"
                       />
                     </div>
                   </div>
@@ -779,13 +779,13 @@ export default function CategoryManagement() {
                   <textarea 
                     rows={3} placeholder="Inject metadata for crawler interpretation..."
                     value={form.description} onChange={e => setForm({...form, description: e.target.value})}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3.5 text-sm text-slate-300 resize-none outline-none focus:border-emerald-500/50 transition-colors" 
+                    className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl p-3.5 text-sm text-slate-300 resize-none outline-none focus:border-emerald-500/50 transition-colors"
                   />
                   <p className="text-[9px] text-slate-600 mt-1 font-mono">Minimum 20 characters recommended for optimal PageRank health.</p>
                 </div>
 
                 {/* Active Toggle */}
-                <div className="bg-slate-900 border border-slate-800 p-4 rounded-xl flex items-center justify-between">
+                <div className="bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 p-4 rounded-xl flex items-center justify-between">
                   <div>
                     <h4 className="text-sm font-bold text-white mb-1">Logic Gate Status</h4>
                     <p className="text-[10px] text-slate-500 font-mono uppercase tracking-widest">Enable or disable client-side routing visibility.</p>
@@ -801,12 +801,12 @@ export default function CategoryManagement() {
                 </div>
               </div>
 
-              <div className="p-5 border-t border-slate-800 bg-slate-950 flex justify-end gap-3">
+              <div className="p-5 border-t border-slate-800 bg-[#081b15]/90 backdrop-blur-xl flex justify-end gap-3">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-slate-400 text-xs font-bold rounded-xl hover:bg-slate-800 hover:text-white transition-colors">
                   Cancel
                 </button>
                 <button type="submit" disabled={isProcessing} className={`px-8 py-3 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg flex items-center gap-2 ${modalMode === 'category' ? 'bg-purple-600 hover:bg-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.3)]' : 'bg-blue-600 hover:bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.3)]'} disabled:opacity-50`}>
-                  {isProcessing ? <RefreshCw size={16} className="animate-spin" /> : <ShieldAlert size={16} />} 
+                  {isProcessing ? <RefreshCw size={16} className="animate-spin" /> : <ShieldAlert size={16} />}
                   {editingItem ? 'Execute Update' : 'Initialize access'}
                 </button>
               </div>

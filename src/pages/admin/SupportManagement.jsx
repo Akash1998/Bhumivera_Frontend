@@ -98,7 +98,7 @@ export default function SupportManagement() {
   );
 
   return (
-    <div className="min-h-screen space-y-6 bg-[#030712] p-6 text-slate-300 lg:p-8">
+    <div className="space-y-5 text-slate-300">
       <header className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <div className="rounded-2xl border border-cyan-500/20 bg-cyan-500/10 p-3"><LifeBuoy className="text-cyan-400" size={26} /></div>
@@ -116,17 +116,17 @@ export default function SupportManagement() {
           ['All requests', tickets.length],
           ['Open', tickets.filter(ticket => !isResolved(ticket.status)).length],
           ['Resolved', tickets.filter(ticket => isResolved(ticket.status)).length]
-        ].map(([label, value]) => <div key={label} className="rounded-2xl border border-slate-800 bg-slate-900/60 p-5"><p className="text-xs font-bold uppercase text-slate-500">{label}</p><p className="mt-2 text-3xl font-black text-white">{value}</p></div>)}
+        ].map(([label, value]) => <div key={label} className="rounded-2xl border border-slate-800 bg-[#10241f]/65 backdrop-blur-xl p-5"><p className="text-xs font-bold uppercase text-slate-500">{label}</p><p className="mt-2 text-3xl font-black text-white">{value}</p></div>)}
       </section>
 
       <div className="grid min-h-[60vh] gap-5 xl:grid-cols-[minmax(300px,0.8fr)_minmax(0,1.5fr)]">
-        <section className="overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
+        <section className="overflow-hidden rounded-2xl border border-slate-800 bg-[#10241f]/55 backdrop-blur-xl">
           <div className="space-y-3 border-b border-slate-800 p-4">
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
-              <input value={searchTerm} onChange={event => setSearchTerm(event.target.value)} placeholder="Search messages…" className="w-full rounded-lg border border-slate-700 bg-slate-950 py-2.5 pl-9 pr-3 text-sm text-white outline-none focus:border-cyan-500" />
+              <input value={searchTerm} onChange={event => setSearchTerm(event.target.value)} placeholder="Search messages…" className="w-full rounded-lg border border-slate-700 bg-[#081b15]/90 backdrop-blur-xl py-2.5 pl-9 pr-3 text-sm text-white outline-none focus:border-cyan-500" />
             </div>
-            <div className="flex gap-1 rounded-lg bg-slate-950 p-1">
+            <div className="flex gap-1 rounded-lg bg-[#081b15]/90 backdrop-blur-xl p-1">
               {['all', 'open', 'resolved'].map(tab => <button key={tab} onClick={() => setActiveTab(tab)} className={`flex-1 rounded-md py-2 text-xs font-bold capitalize ${activeTab === tab ? 'bg-cyan-500 text-black' : 'text-slate-400 hover:text-white'}`}>{tab}</button>)}
             </div>
           </div>
@@ -149,7 +149,7 @@ export default function SupportManagement() {
           </div>
         </section>
 
-        <section className="flex min-h-[55vh] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/50">
+        <section className="flex min-h-[55vh] flex-col overflow-hidden rounded-2xl border border-slate-800 bg-[#10241f]/55 backdrop-blur-xl">
           {!selectedTicket ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 text-slate-500"><Mail size={32} /><p>Select a customer request to read and reply.</p></div>
           ) : (
@@ -166,15 +166,15 @@ export default function SupportManagement() {
               <div className="flex-1 space-y-3 overflow-y-auto p-5">
                 {(selectedTicket.messages || []).map((message, index) => {
                   const fromSupport = message.sender_type === 'admin';
-                  return <article key={message.id || index} className={`max-w-[90%] rounded-xl border p-4 ${fromSupport ? 'mr-auto border-cyan-500/20 bg-cyan-500/5' : 'ml-auto border-slate-700 bg-slate-950/70'}`}>
+                  return <article key={message.id || index} className={`max-w-[90%] rounded-xl border p-4 ${fromSupport ? 'mr-auto border-cyan-500/20 bg-cyan-500/5' : 'ml-auto border-slate-700 bg-[#081b15]/90 backdrop-blur-xl/70'}`}>
                     <div className="mb-2 flex flex-wrap items-center justify-between gap-2"><span className={`text-xs font-bold ${fromSupport ? 'text-cyan-300' : 'text-slate-200'}`}>{fromSupport ? 'Support team' : selectedTicket.name}</span><span className="text-[11px] text-slate-500">{formatDate(message.created_at)}</span></div>
                     <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-300">{message.message}</p>
                   </article>;
                 })}
               </div>
-              <form onSubmit={sendReply} className="space-y-3 border-t border-slate-800 bg-slate-950/50 p-5">
+              <form onSubmit={sendReply} className="space-y-3 border-t border-slate-800 bg-[#081b15]/55 backdrop-blur-xl p-5">
                 <label htmlFor="support-reply" className="text-xs font-bold uppercase tracking-wider text-slate-400">Reply to customer</label>
-                <textarea id="support-reply" required maxLength={10000} rows={4} value={reply} onChange={event => setReply(event.target.value)} placeholder="Write a reply. The customer can read and respond in Profile > Support." className="w-full rounded-xl border border-slate-700 bg-slate-950 p-3 text-sm text-white outline-none focus:border-cyan-500" />
+                <textarea id="support-reply" required maxLength={10000} rows={4} value={reply} onChange={event => setReply(event.target.value)} placeholder="Write a reply. The customer can read and respond in Profile > Support." className="w-full rounded-xl border border-slate-700 bg-[#081b15]/90 backdrop-blur-xl p-3 text-sm text-white outline-none focus:border-cyan-500" />
                 <div className="flex flex-wrap items-center justify-between gap-3">
                   <p className="text-xs text-slate-500">An email notification will be attempted after saving.</p>
                   <button disabled={saving || !reply.trim()} type="submit" className="inline-flex items-center gap-2 rounded-xl bg-cyan-500 px-5 py-3 text-sm font-bold text-black hover:bg-cyan-400 disabled:opacity-50">

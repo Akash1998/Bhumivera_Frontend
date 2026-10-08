@@ -109,7 +109,7 @@ export default function SystemLogs() {
 
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 flex-shrink-0">
         {statCards.map((stat, i) => (
-          <div key={i} className="bg-slate-900/40 backdrop-blur-md border border-slate-800/50 p-4 rounded-2xl flex items-center gap-4">
+          <div key={i} className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/50 p-4 rounded-2xl flex items-center gap-4">
             <div className={`p-3 rounded-xl ${stat.bg}`}>
               <stat.icon size={20} className={stat.color} />
             </div>
@@ -121,8 +121,8 @@ export default function SystemLogs() {
         ))}
       </div>
 
-      <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/50 rounded-2xl flex flex-col flex-1 overflow-hidden shadow-2xl">
-        <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-b border-slate-800/50 gap-4 bg-slate-950/50">
+      <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/50 rounded-2xl flex flex-col flex-1 overflow-hidden shadow-2xl">
+        <div className="flex flex-col sm:flex-row items-center justify-between p-4 border-b border-slate-800/50 gap-4 bg-[#081b15]/55 backdrop-blur-xl">
           <div className="flex items-center gap-3 w-full sm:w-auto">
             <div className="relative flex-1 sm:w-64">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
@@ -131,10 +131,10 @@ export default function SystemLogs() {
                 placeholder="Grep logs..." 
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full bg-slate-950 border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-sm text-white font-mono focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
+                className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-lg pl-9 pr-4 py-2 text-sm text-white font-mono focus:outline-none focus:border-cyan-500/50 focus:ring-1 focus:ring-cyan-500/50 transition-all"
               />
             </div>
-            <div className="flex bg-slate-950 border border-slate-800 rounded-lg p-1">
+            <div className="flex bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-lg p-1">
               {['ALL', 'ERROR', 'WARN', 'SEC'].map(lvl => (
                 <button
                   key={lvl}
@@ -155,10 +155,10 @@ export default function SystemLogs() {
               {isPaused ? <Play size={14} /> : <Pause size={14} />}
               {isPaused ? 'RESUME' : 'PAUSE'}
             </button>
-            <button onClick={() => setLogs([])} className="p-2 bg-slate-950 border border-slate-800 hover:border-rose-500/50 hover:text-rose-400 rounded-lg text-slate-400 transition-all">
+            <button onClick={() => setLogs([])} className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 hover:border-rose-500/50 hover:text-rose-400 rounded-lg text-slate-400 transition-all">
               <Trash2 size={16} />
             </button>
-            <button onClick={exportLogs} className="p-2 bg-slate-950 border border-slate-800 hover:border-cyan-500/50 hover:text-cyan-400 rounded-lg text-slate-400 transition-all">
+            <button onClick={exportLogs} className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 hover:border-cyan-500/50 hover:text-cyan-400 rounded-lg text-slate-400 transition-all">
               <Download size={16} />
             </button>
           </div>
@@ -203,14 +203,14 @@ export default function SystemLogs() {
       </div>
       </div>
       ) : (
-        <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-800 bg-slate-900/40">
+        <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-2xl border border-slate-800 bg-[#10241f]/45 backdrop-blur-xl">
           <div className="flex items-center justify-between gap-4 border-b border-slate-800 p-4">
             <div>
               <h2 className="text-sm font-bold text-white">Client Errors</h2>
               <p className="mt-1 text-xs text-slate-500">Most recent browser error reports</p>
             </div>
             <div className="flex items-center gap-2">
-              <input aria-label="Search client errors" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search errors" className="w-44 rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white outline-none focus:border-cyan-500" />
+              <input aria-label="Search client errors" value={search} onChange={event => setSearch(event.target.value)} placeholder="Search errors" className="w-44 rounded-lg border border-slate-700 bg-[#081b15]/90 backdrop-blur-xl px-3 py-2 text-xs text-white outline-none focus:border-cyan-500" />
               <button onClick={() => setClientErrorsRefresh(value => value + 1)} className="rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-slate-300 hover:border-cyan-500 hover:text-white">Refresh</button>
             </div>
           </div>
@@ -223,7 +223,7 @@ export default function SystemLogs() {
           ) : (
             <div className="min-h-0 flex-1 overflow-auto">
               <table className="w-full min-w-[760px] border-collapse text-left text-xs">
-                <thead className="sticky top-0 bg-slate-950 text-[10px] uppercase tracking-wider text-slate-500">
+                <thead className="sticky top-0 bg-[#081b15]/90 backdrop-blur-xl text-[10px] uppercase tracking-wider text-slate-500">
                   <tr><th className="p-3">Time</th><th className="p-3">Page</th><th className="p-3">Error</th><th className="p-3">Source</th><th className="p-3">Details</th></tr>
                 </thead>
                 <tbody>

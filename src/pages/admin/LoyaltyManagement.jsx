@@ -118,7 +118,7 @@ export default function LoyaltyManagement() {
       </div>
 
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-8">
-        <div className="xl:col-span-2 bg-[#0a0c10] border border-white/10 rounded-3xl overflow-hidden">
+        <div className="xl:col-span-2 bg-[#10241f]/90 backdrop-blur-xl border border-white/10 rounded-3xl overflow-hidden">
           <div className="p-6 border-b border-white/10 flex justify-between items-center bg-white/5">
             <h2 className="text-lg font-bold text-white uppercase tracking-wide">Member Roster</h2>
             <div className="relative">
@@ -176,7 +176,7 @@ export default function LoyaltyManagement() {
           </div>
         </div>
 
-        <div className="bg-[#0a0c10] border border-white/10 rounded-3xl p-6 h-fit">
+        <div className="bg-[#10241f]/90 backdrop-blur-xl border border-white/10 rounded-3xl p-6 h-fit">
           <h2 className="text-lg font-bold text-white uppercase tracking-wide mb-6">Engine Rules</h2>
           <div className="space-y-6">
             <div>

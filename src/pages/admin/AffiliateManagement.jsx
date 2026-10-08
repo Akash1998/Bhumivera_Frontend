@@ -52,77 +52,77 @@ export default function AffiliateManagement() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 text-slate-100">
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-black text-slate-900 uppercase tracking-tighter">Affiliate Network</h2>
-          <p className="text-slate-500 font-medium mt-1">Manage affiliate partners and commissions</p>
+          <h2 className="text-2xl font-semibold tracking-tight text-white">Affiliate network</h2>
+          <p className="mt-1 text-sm text-slate-400">Manage partners, commissions, and payout requests.</p>
         </div>
-        <button onClick={fetchAll} className="flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-bold transition">
+        <button onClick={fetchAll} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 backdrop-blur-xl transition hover:bg-white/10">
           <RefreshCw size={14} /> Refresh
         </button>
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-4 gap-4">
-        <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm text-center">
-          <div className="text-2xl font-black text-slate-900">{partners.length}</div>
-          <div className="text-xs font-bold text-slate-400 uppercase mt-1">Partners</div>
+      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="admin-glass-panel rounded-2xl p-4 text-center">
+          <div className="text-2xl font-bold text-white">{partners.length}</div>
+          <div className="mt-1 text-xs font-semibold uppercase text-slate-400">Partners</div>
         </div>
-        <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm text-center">
-          <div className="text-2xl font-black text-emerald-600">{partners.filter(p => p.status === 'active').length}</div>
-          <div className="text-xs font-bold text-slate-400 uppercase mt-1">Active</div>
+        <div className="admin-glass-panel rounded-2xl p-4 text-center">
+          <div className="text-2xl font-bold text-emerald-300">{partners.filter(p => p.status === 'active').length}</div>
+          <div className="mt-1 text-xs font-semibold uppercase text-slate-400">Active</div>
         </div>
-        <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm text-center">
-          <div className="text-2xl font-black text-amber-600">{withdrawals.filter(w => w.status === 'pending').length}</div>
-          <div className="text-xs font-bold text-slate-400 uppercase mt-1">Pending Payouts</div>
+        <div className="admin-glass-panel rounded-2xl p-4 text-center">
+          <div className="text-2xl font-bold text-amber-300">{withdrawals.filter(w => w.status === 'pending').length}</div>
+          <div className="mt-1 text-xs font-semibold uppercase text-slate-400">Pending payouts</div>
         </div>
-        <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm text-center">
-          <div className="text-2xl font-black text-blue-600">{config.commission_percent}%</div>
-          <div className="text-xs font-bold text-slate-400 uppercase mt-1">Commission</div>
+        <div className="admin-glass-panel rounded-2xl p-4 text-center">
+          <div className="text-2xl font-bold text-sky-300">{config.commission_percent}%</div>
+          <div className="mt-1 text-xs font-semibold uppercase text-slate-400">Commission</div>
         </div>
       </div>
 
       {/* Config */}
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-        <h3 className="font-black text-slate-900 text-lg mb-4">Commission Settings</h3>
-        <div className="grid grid-cols-2 gap-4">
+      <div className="admin-glass-panel rounded-2xl p-5">
+        <h3 className="mb-4 text-base font-semibold text-white">Commission settings</h3>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           <div>
-            <label className="text-xs text-slate-500 mb-1 block">Commission Percentage</label>
-            <input type="number" value={config.commission_percent} onChange={e => setConfig({...config, commission_percent: parseFloat(e.target.value)})} className="w-full px-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            <label className="mb-1 block text-xs text-slate-400">Commission percentage</label>
+            <input type="number" value={config.commission_percent} onChange={e => setConfig({...config, commission_percent: parseFloat(e.target.value)})} className="admin-glass-control w-full rounded-xl px-4 py-2 text-sm" />
           </div>
           <div>
-            <label className="text-xs text-slate-500 mb-1 block">Min Payout (₹)</label>
-            <input type="number" value={config.min_payout} onChange={e => setConfig({...config, min_payout: parseFloat(e.target.value)})} className="w-full px-4 py-2 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+            <label className="mb-1 block text-xs text-slate-400">Minimum payout (₹)</label>
+            <input type="number" value={config.min_payout} onChange={e => setConfig({...config, min_payout: parseFloat(e.target.value)})} className="admin-glass-control w-full rounded-xl px-4 py-2 text-sm" />
           </div>
         </div>
-        <button onClick={saveConfig} className="mt-4 px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm">Save Config</button>
+        <button onClick={saveConfig} className="mt-4 rounded-xl bg-emerald-400 px-4 py-2 text-sm font-semibold text-[#071a12] transition hover:bg-emerald-300">Save config</button>
       </div>
 
       {/* Partners */}
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-        <h3 className="font-black text-slate-900 text-lg mb-4">Affiliate Partners</h3>
+      <div className="admin-glass-panel rounded-2xl p-5">
+        <h3 className="mb-4 text-base font-semibold text-white">Affiliate partners</h3>
         {loading ? <div className="text-center py-8 text-slate-400">Loading...</div> : partners.length === 0 ? <div className="text-center py-8 text-slate-400">No partners yet</div> : (
           <div className="space-y-3">
             {partners.map(p => (
-              <div key={p.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+              <div key={p.id} className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.035] p-4 backdrop-blur-lg">
                 <div className="flex-1">
-                  <div className="font-black text-slate-900">{p.name || p.user_name || 'Partner #' + p.id}</div>
-                  <div className="text-xs text-slate-500">{p.email || p.user_email} • Code: {p.affiliate_code}</div>
-                  <div className="text-xs text-slate-600 mt-1">
+                  <div className="font-semibold text-slate-100">{p.name || p.user_name || 'Partner #' + p.id}</div>
+                  <div className="text-xs text-slate-400">{p.email || p.user_email} • Code: {p.affiliate_code}</div>
+                  <div className="text-xs text-slate-400 mt-1">
                     Total Earned: ₹{p.total_earnings || 0} • Pending: ₹{p.pending_amount || 0}
                   </div>
                 </div>
                 <div className="flex items-center gap-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-bold ${p.status === 'active' ? 'bg-emerald-50 text-emerald-600' : 'bg-rose-50 text-rose-600'}`}>
+                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${p.status === 'active' ? 'bg-emerald-400/10 text-emerald-300' : 'bg-rose-400/10 text-rose-300'}`}>
                     {p.status || 'pending'}
                   </span>
                   {p.status === 'active' ? (
-                    <button onClick={() => updatePartnerStatus(p.id, 'suspended')} className="p-2 hover:bg-slate-200 rounded-lg" title="Suspend">
+                    <button onClick={() => updatePartnerStatus(p.id, 'suspended')} className="rounded-lg p-2 transition hover:bg-white/10" title="Suspend">
                       <XCircle size={16} className="text-rose-500" />
                     </button>
                   ) : (
-                    <button onClick={() => updatePartnerStatus(p.id, 'active')} className="p-2 hover:bg-slate-200 rounded-lg" title="Activate">
+                    <button onClick={() => updatePartnerStatus(p.id, 'active')} className="rounded-lg p-2 transition hover:bg-white/10" title="Activate">
                       <CheckCircle size={16} className="text-emerald-500" />
                     </button>
                   )}
@@ -134,25 +134,25 @@ export default function AffiliateManagement() {
       </div>
 
       {/* Withdrawals */}
-      <div className="bg-white rounded-3xl border border-slate-100 shadow-sm p-6">
-        <h3 className="font-black text-slate-900 text-lg mb-4">Withdrawal Requests</h3>
+      <div className="admin-glass-panel rounded-2xl p-5">
+        <h3 className="mb-4 text-base font-semibold text-white">Withdrawal requests</h3>
         {loading ? <div className="text-center py-8 text-slate-400">Loading...</div> : withdrawals.length === 0 ? <div className="text-center py-8 text-slate-400">No requests</div> : (
           <div className="space-y-3">
             {withdrawals.map(w => (
-              <div key={w.id} className="flex items-center justify-between p-4 bg-slate-50 rounded-2xl">
+              <div key={w.id} className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.035] p-4 backdrop-blur-lg">
                 <div className="flex-1">
-                  <div className="font-bold text-sm text-slate-900">{w.partner_name || 'Partner #' + w.partner_id}</div>
-                  <div className="text-xs text-slate-500">Requested: {new Date(w.created_at).toLocaleDateString('en-IN')}</div>
+                  <div className="text-sm font-semibold text-slate-100">{w.partner_name || 'Partner #' + w.partner_id}</div>
+                  <div className="text-xs text-slate-400">Requested: {new Date(w.created_at).toLocaleDateString('en-IN')}</div>
                 </div>
                 <div className="flex items-center gap-3">
                   <div className="text-right">
-                    <div className="font-black text-emerald-600">₹{w.amount}</div>
-                    <div className={`text-xs font-bold ${w.status === 'approved' ? 'text-emerald-600' : w.status === 'pending' ? 'text-amber-600' : 'text-slate-400'}`}>
+                    <div className="font-semibold text-emerald-300">₹{w.amount}</div>
+                    <div className={`text-xs font-semibold ${w.status === 'approved' ? 'text-emerald-300' : w.status === 'pending' ? 'text-amber-300' : 'text-slate-400'}`}>
                       {w.status}
                     </div>
                   </div>
                   {w.status === 'pending' && (
-                    <button onClick={() => approveWithdrawal(w.id)} className="px-3 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-xs font-bold">
+                    <button onClick={() => approveWithdrawal(w.id)} className="rounded-xl bg-emerald-400 px-3 py-2 text-xs font-semibold text-[#071a12] transition hover:bg-emerald-300">
                       Approve
                     </button>
                   )}

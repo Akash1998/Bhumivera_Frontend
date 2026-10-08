@@ -135,21 +135,21 @@ export default function TaxManagement() {
 
       {/* KPI Dashboard */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/50 p-6 rounded-2xl shadow-xl flex items-center gap-4">
+        <div className="bg-[#10241f]/55 backdrop-blur-xl border border-slate-800/50 p-6 rounded-2xl shadow-xl flex items-center gap-4">
           <div className="p-4 bg-emerald-500/10 rounded-xl"><Activity className="text-emerald-500" size={24} /></div>
           <div>
             <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Active Rules</p>
             <p className="text-2xl font-black text-white font-mono">{metrics.activeCount}</p>
           </div>
         </div>
-        <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/50 p-6 rounded-2xl shadow-xl flex items-center gap-4">
+        <div className="bg-[#10241f]/55 backdrop-blur-xl border border-slate-800/50 p-6 rounded-2xl shadow-xl flex items-center gap-4">
           <div className="p-4 bg-cyan-500/10 rounded-xl"><Percent className="text-cyan-500" size={24} /></div>
           <div>
             <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Avg Burden (Active)</p>
             <p className="text-2xl font-black text-white font-mono">{metrics.avgRate}%</p>
           </div>
         </div>
-        <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/50 p-6 rounded-2xl shadow-xl flex items-center gap-4">
+        <div className="bg-[#10241f]/55 backdrop-blur-xl border border-slate-800/50 p-6 rounded-2xl shadow-xl flex items-center gap-4">
           <div className="p-4 bg-purple-500/10 rounded-xl"><Globe className="text-purple-500" size={24} /></div>
           <div>
             <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest">Mapped Jurisdictions</p>
@@ -159,20 +159,20 @@ export default function TaxManagement() {
       </div>
 
       {/* Filter Toolbar */}
-      <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/50 p-4 rounded-2xl flex flex-col sm:flex-row gap-4 shadow-xl">
+      <div className="bg-[#10241f]/55 backdrop-blur-xl border border-slate-800/50 p-4 rounded-2xl flex flex-col sm:flex-row gap-4 shadow-xl">
         <div className="relative flex-1 sm:max-w-xs">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
           <input 
             type="text" placeholder="Search Rules or Regions..." 
             value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 text-sm text-white rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-cyan-500 transition-colors"
+            className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-sm text-white rounded-xl pl-10 pr-4 py-2.5 focus:outline-none focus:border-cyan-500 transition-colors"
           />
         </div>
         <div className="relative sm:max-w-xs">
           <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
           <select
             value={statusFilter} onChange={(e) => setStatusFilter(e.target.value)}
-            className="w-full bg-slate-950 border border-slate-800 text-sm text-white rounded-xl pl-10 pr-8 py-2.5 focus:outline-none focus:border-cyan-500 appearance-none cursor-pointer"
+            className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-sm text-white rounded-xl pl-10 pr-8 py-2.5 focus:outline-none focus:border-cyan-500 appearance-none cursor-pointer"
           >
             <option value="all">All Statuses</option>
             <option value="active">Active Logic</option>
@@ -182,10 +182,10 @@ export default function TaxManagement() {
       </div>
 
       {/* Data Matrix */}
-      <div className="bg-slate-900/50 backdrop-blur-md border border-slate-800/50 rounded-2xl overflow-hidden shadow-xl">
+      <div className="bg-[#10241f]/55 backdrop-blur-xl border border-slate-800/50 rounded-2xl overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left text-sm text-slate-400">
-            <thead className="bg-slate-950 text-slate-500 font-bold uppercase tracking-widest text-[10px]">
+            <thead className="bg-[#081b15]/90 backdrop-blur-xl text-slate-500 font-bold uppercase tracking-widest text-[10px]">
               <tr>
                 <th className="px-6 py-4">Rule Identifier</th>
                 <th className="px-6 py-4">Tax Yield</th>
@@ -254,7 +254,7 @@ export default function TaxManagement() {
       {/* Logic Editor Modal */}
       {isModalOpen && (
         <div className="fixed inset-0 bg-[#050810]/90 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-slate-900 border border-slate-700 p-8 rounded-3xl w-full max-w-md relative shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden">
+          <div className="bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 p-8 rounded-3xl w-full max-w-md relative shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden">
             <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-emerald-500 to-cyan-500" />
             
             <button onClick={() => setIsModalOpen(false)} className="absolute top-6 right-6 text-slate-500 hover:text-white transition-colors">
@@ -271,7 +271,7 @@ export default function TaxManagement() {
                 <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Rule Identifier</label>
                 <input 
                   type="text" required placeholder="e.g. IGST 18%" 
-                  className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 focus:border-cyan-500 focus:outline-none transition-colors" 
+                  className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-white rounded-xl px-4 py-3 focus:border-cyan-500 focus:outline-none transition-colors"
                   value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} 
                 />
               </div>
@@ -281,7 +281,7 @@ export default function TaxManagement() {
                   <Percent className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
                   <input 
                     type="number" required step="0.01" min="0" placeholder="18.00" 
-                    className="w-full bg-slate-950 border border-slate-800 text-cyan-400 font-bold rounded-xl pl-11 pr-4 py-3 focus:border-cyan-500 focus:outline-none font-mono transition-colors" 
+                    className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-cyan-400 font-bold rounded-xl pl-11 pr-4 py-3 focus:border-cyan-500 focus:outline-none font-mono transition-colors"
                     value={formData.rate} onChange={(e) => setFormData({...formData, rate: e.target.value})} 
                   />
                 </div>
@@ -290,7 +290,7 @@ export default function TaxManagement() {
                 <label className="block text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Applied Jurisdiction</label>
                 <input 
                   type="text" required placeholder="e.g. National, Kerala, International" 
-                  className="w-full bg-slate-950 border border-slate-800 text-white rounded-xl px-4 py-3 focus:border-cyan-500 focus:outline-none transition-colors" 
+                  className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-white rounded-xl px-4 py-3 focus:border-cyan-500 focus:outline-none transition-colors"
                   value={formData.region} onChange={(e) => setFormData({...formData, region: e.target.value})} 
                 />
               </div>
@@ -328,7 +328,7 @@ export default function TaxManagement() {
       {/* Destructive Warning Modal */}
       {deleteModal.isOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#050810]/90 backdrop-blur-sm">
-          <div className="bg-slate-900 border border-rose-500/20 rounded-3xl w-full max-w-sm p-8 shadow-[0_0_50px_rgba(244,63,94,0.15)] text-center relative overflow-hidden">
+          <div className="bg-[#10241f]/85 backdrop-blur-xl border border-rose-500/20 rounded-3xl w-full max-w-sm p-8 shadow-[0_0_50px_rgba(244,63,94,0.15)] text-center relative overflow-hidden">
              <div className="absolute top-0 left-0 w-full h-1 bg-rose-500" />
              <div className="w-16 h-16 bg-rose-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-rose-500/20">
                 <AlertTriangle size={32} className="text-rose-500" />

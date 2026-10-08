@@ -63,7 +63,7 @@ export default function DashboardOverview() {
   const nav = (p) => { navigate(p); window.scrollTo(0, 0); };
 
   if (loading) return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6 bg-slate-950">
+    <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
       <div className="w-20 h-20 border-4 border-emerald-500/20 border-t-emerald-500 rounded-full animate-spin"></div>
       <p className="text-emerald-500 font-mono uppercase text-xs tracking-[0.3em] animate-pulse">Syncing Telemetry...</p>
     </div>
@@ -92,7 +92,7 @@ export default function DashboardOverview() {
   const maxC = Math.max(...(dashboardData.categoryData.length ? dashboardData.categoryData.map(d => Number(d.sales)) : [1]), 1);
 
   return (
-    <div className="p-4 md:p-8 space-y-10 bg-slate-950 min-h-screen text-slate-300 font-sans overflow-x-hidden">
+    <div className="p-2 md:p-3 space-y-6 text-slate-300 font-sans overflow-x-hidden">
       
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-end justify-between gap-6 pb-6 border-b border-slate-800/80">
@@ -111,12 +111,12 @@ export default function DashboardOverview() {
         {topKPIs.map((s, i) => {
           const c = kpiColors[s.colorKey];
           return (
-            <div key={i} onClick={() => nav(s.route)} className={`group bg-slate-900/40 backdrop-blur-md border border-slate-800/50 p-6 rounded-2xl ${c.border} shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer relative overflow-hidden`}>
+            <div key={i} onClick={() => nav(s.route)} className={`group bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/50 p-6 rounded-2xl ${c.border} shadow-xl hover:shadow-2xl transition-all duration-300 cursor-pointer relative overflow-hidden`}>
               <div className="relative z-10 flex justify-between items-start mb-4">
                 <div className={`p-2.5 rounded-xl ${c.bg} group-hover:scale-110 transition-transform duration-300`}>
                   <s.icon size={20}/>
                 </div>
-                <div className="flex items-center gap-1 bg-slate-950/80 border border-slate-800 text-slate-300 px-2 py-1 rounded text-[10px] font-mono shadow-inner">
+                <div className="flex items-center gap-1 bg-[#081b15]/80 backdrop-blur-xl border border-slate-800 text-slate-300 px-2 py-1 rounded text-[10px] font-mono shadow-inner">
                   <TrendingUp size={12} className="text-emerald-500"/> {s.trend}
                 </div>
               </div>
@@ -135,7 +135,7 @@ export default function DashboardOverview() {
       {/* Charts Section */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">
         {/* Real Revenue Velocity Chart */}
-        <div className="xl:col-span-2 bg-slate-900/40 backdrop-blur-md border border-slate-800/50 rounded-2xl p-6 shadow-xl overflow-hidden flex flex-col">
+        <div className="xl:col-span-2 bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 shadow-xl overflow-hidden flex flex-col">
           <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2">
             <Activity className="text-emerald-500" size={16}/> Sales Velocity (30 Days)
           </h3>
@@ -159,7 +159,7 @@ export default function DashboardOverview() {
               return (
                 <div key={i} className="flex-1 flex flex-col items-center justify-end h-full z-10 group">
                   <div 
-                    className="w-full max-w-[40px] bg-emerald-500/20 hover:bg-emerald-500/80 border-t-2 border-emerald-500 transition-all duration-500 rounded-t-sm relative shadow-[0_0_15px_rgba(16,185,129,0.1)] group-hover:shadow-[0_0_20px_rgba(16,185,129,0.4)]" 
+                    className="w-full max-w-[40px] bg-emerald-500/20 hover:bg-emerald-500/80 border-t-2 border-emerald-500 transition-all duration-500 rounded-t-sm relative shadow-[0_0_15px_rgba(16,185,129,0.1)] group-hover:shadow-[0_0_20px_rgba(16,185,129,0.4)]"
                     style={{ height }}
                   >
                     <div className="absolute -top-10 left-1/2 -translate-x-1/2 bg-slate-800/90 backdrop-blur border border-emerald-500/30 text-white text-[10px] font-mono py-1 px-2 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap z-50 pointer-events-none">
@@ -175,7 +175,7 @@ export default function DashboardOverview() {
         </div>
 
         {/* Real Inventory Movement */}
-        <div className="bg-slate-900/40 backdrop-blur-md border border-slate-800/50 rounded-2xl p-6 shadow-xl flex flex-col">
+        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 shadow-xl flex flex-col">
           <h3 className="text-sm font-black text-white uppercase tracking-widest flex items-center gap-2 mb-1">
             <Tag className="text-blue-500" size={16}/> Top Moving Categories
           </h3>
@@ -194,7 +194,7 @@ export default function DashboardOverview() {
                     <span className="text-slate-300 uppercase tracking-wider truncate mr-2">{d.name}</span>
                     <span className="text-slate-500 font-mono">₹{Number(d.sales).toLocaleString()}</span>
                   </div>
-                  <div className="w-full bg-slate-950/80 shadow-inner h-2 rounded-full overflow-hidden border border-slate-800">
+                  <div className="w-full bg-[#081b15]/80 backdrop-blur-xl shadow-inner h-2 rounded-full overflow-hidden border border-slate-800">
                     <div className={`h-full ${barColor} transition-all duration-1000 shadow-[0_0_10px_currentColor]`} style={{ width }}></div>
                   </div>
                 </div>
@@ -206,13 +206,13 @@ export default function DashboardOverview() {
 
       {/* Operational Control */}
       <div className="grid grid-cols-1 xl:grid-cols-3 gap-6 pt-6">
-        <div className="xl:col-span-3 bg-slate-900/40 backdrop-blur-md border border-slate-800/50 rounded-2xl p-6 shadow-xl">
+        <div className="xl:col-span-3 bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 shadow-xl">
           <h3 className="text-xs font-black text-slate-400 uppercase tracking-widest flex items-center gap-2 mb-6">
             <Database size={14} className="text-blue-500"/> Operational Modules
           </h3>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {adminModules.map((m, i) => (
-              <div key={i} onClick={() => nav(m.route)} className="bg-slate-950/50 border border-slate-800/80 p-4 rounded-xl hover:border-slate-600 hover:bg-slate-800/30 transition-all duration-300 cursor-pointer group flex items-start gap-4">
+              <div key={i} onClick={() => nav(m.route)} className="bg-[#081b15]/55 backdrop-blur-xl border border-slate-800/80 p-4 rounded-xl hover:border-slate-600 hover:bg-slate-800/30 transition-all duration-300 cursor-pointer group flex items-start gap-4">
                 <div className={`p-2.5 rounded-lg transition-colors duration-300 ${moduleColors[m.colorKey]}`}>
                   <m.icon size={18}/>
                 </div>

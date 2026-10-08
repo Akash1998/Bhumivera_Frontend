@@ -62,37 +62,37 @@ export default function WarehouseManagement() {
   ), [warehouseUsers, searchQuery]);
 
   return (
-    <div className="p-6 bg-[#020617] min-h-screen text-slate-300">
+    <div className="text-slate-300">
       <div className="flex justify-between items-center mb-8 border-b border-slate-800 pb-6">
         <h1 className="text-2xl font-black text-white uppercase tracking-tighter">Warehouse <span className="text-emerald-500">Access Portal</span></h1>
-        <button onClick={fetchData} className="p-2 bg-slate-900 rounded-lg hover:text-emerald-400">
+        <button onClick={fetchData} className="p-2 bg-[#10241f]/85 backdrop-blur-xl rounded-lg hover:text-emerald-400">
           <RefreshCw size={20} className={loading ? 'animate-spin' : ''} />
         </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
         <div className="space-y-6">
-          <div className="bg-slate-900/40 border border-slate-800 p-6 rounded-3xl">
+          <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800 p-6 rounded-3xl">
             <h2 className="text-xs font-black uppercase text-slate-500 tracking-widest mb-4 flex items-center gap-2"><UserPlus size={16}/> Grant Access</h2>
             <form onSubmit={handleGrantAccess} className="space-y-4">
-              <select value={selectedUserId} onChange={e => setSelectedUserId(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm outline-none">
+              <select value={selectedUserId} onChange={e => setSelectedUserId(e.target.value)} className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl p-3 text-sm outline-none">
                 <option value="">Select a Registered User</option>
                 {allUsers.filter(u => !u.has_access).map(u => <option key={u.id} value={u.id}>{u.name} ({u.email})</option>)}
               </select>
-              <input type="text" placeholder="Assigned Store Name" value={storeName} onChange={e => setStoreName(e.target.value)} className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-sm outline-none" />
+              <input type="text" placeholder="Assigned Store Name" value={storeName} onChange={e => setStoreName(e.target.value)} className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl p-3 text-sm outline-none" />
               <button type="submit" className="w-full py-3 bg-emerald-500/10 border border-emerald-500 text-emerald-400 rounded-xl font-bold uppercase text-[10px] hover:bg-emerald-500 hover:text-black transition-all">Authorize access</button>
             </form>
           </div>
 
-          <div className="bg-slate-900/40 border border-slate-800 p-4 rounded-3xl flex items-center gap-3">
+          <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800 p-4 rounded-3xl flex items-center gap-3">
             <Search size={18} className="text-slate-500" />
             <input type="text" placeholder="SEARCH DISTRIBUTOR..." value={searchQuery} onChange={e => setSearchQuery(e.target.value)} className="bg-transparent border-none outline-none text-xs font-bold uppercase w-full" />
           </div>
         </div>
 
-        <div className="lg:col-span-2 bg-slate-900/40 border border-slate-800 rounded-3xl overflow-hidden">
+        <div className="lg:col-span-2 bg-[#10241f]/45 backdrop-blur-xl border border-slate-800 rounded-3xl overflow-hidden">
           <table className="w-full text-left">
-            <thead className="bg-slate-950 border-b border-slate-800 text-[10px] font-black uppercase text-slate-500">
+            <thead className="bg-[#081b15]/90 backdrop-blur-xl border-b border-slate-800 text-[10px] font-black uppercase text-slate-500">
               <tr>
                 <th className="p-4">Distributor</th>
                 <th className="p-4">Store</th>
@@ -107,7 +107,7 @@ export default function WarehouseManagement() {
                     <p className="text-[10px] font-mono text-slate-500">{user.email}</p>
                   </td>
                   <td className="p-4">
-                    <span className={`text-[10px] font-black px-2 py-1 rounded bg-slate-950 border border-slate-800 ${user.is_active ? 'text-emerald-400' : 'text-slate-600'}`}>
+                    <span className={`text-[10px] font-black px-2 py-1 rounded bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 ${user.is_active ? 'text-emerald-400' : 'text-slate-600'}`}>
                       {user.store_name}
                     </span>
                   </td>

@@ -77,9 +77,9 @@ export default function AdminForgotPassword() {
   };
 
   return (
-    <div className="min-h-screen bg-[#0A0F1E] flex items-center justify-center p-4 font-sans relative overflow-hidden">
-      <div className="absolute top-0 left-0 w-96 h-96 bg-cyan-500 opacity-5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
-      <div className="absolute bottom-0 right-0 w-96 h-96 bg-cyan-400 opacity-5 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl"></div>
+    <div className="relative flex min-h-screen items-center justify-center overflow-hidden bg-[#071a12] p-4 font-sans">
+      <div className="absolute top-0 left-0 w-96 h-96 bg-emerald-400 opacity-10 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
+      <div className="absolute bottom-0 right-0 w-96 h-96 bg-amber-300 opacity-5 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl"></div>
 
       <div className="w-full max-w-md relative z-10">
         <div className="mb-6">
@@ -111,7 +111,7 @@ export default function AdminForgotPassword() {
           ))}
         </div>
 
-        <div className="bg-slate-900/60 backdrop-blur-xl rounded-2xl shadow-2xl border border-slate-800 p-8">
+        <div className="admin-glass-panel rounded-2xl p-8">
           {step === 1 && (
             <form onSubmit={handleSubmitEmail} className="space-y-5">
               <div>
@@ -123,7 +123,7 @@ export default function AdminForgotPassword() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     placeholder="admin@bhumivera.com"
-                    className="w-full pl-11 pr-4 py-3 bg-[#0f1419] border border-slate-700 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30 transition-all font-mono"
+                    className="admin-glass-control w-full rounded-lg py-3 pl-11 pr-4 font-mono focus:border-emerald-400"
                     disabled={loading}
                     autoComplete="email"
                     required
@@ -151,7 +151,7 @@ export default function AdminForgotPassword() {
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, ''))}
                   placeholder="000000"
                   maxLength={6}
-                  className="w-full px-4 py-3.5 bg-[#0f1419] border border-slate-700 rounded-lg text-center text-white text-2xl font-mono tracking-[0.5em] placeholder:text-slate-600 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30 transition-all"
+                  className="admin-glass-control w-full rounded-lg px-4 py-3.5 text-center font-mono text-2xl tracking-[0.5em] focus:border-emerald-400"
                   disabled={loading}
                   autoComplete="one-time-code"
                   required
@@ -197,7 +197,7 @@ export default function AdminForgotPassword() {
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
                     placeholder="Min 12 characters"
-                    className="w-full pl-11 pr-11 py-3 bg-[#0f1419] border border-slate-700 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30 transition-all font-mono"
+                    className="admin-glass-control w-full rounded-lg py-3 pl-11 pr-11 font-mono focus:border-emerald-400"
                     disabled={loading}
                     autoComplete="new-password"
                     required
@@ -216,7 +216,7 @@ export default function AdminForgotPassword() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     placeholder="Re-enter password"
-                    className="w-full pl-11 pr-11 py-3 bg-[#0f1419] border border-slate-700 rounded-lg text-white placeholder:text-slate-500 focus:outline-none focus:border-cyan-500 focus:ring-1 focus:ring-cyan-500/30 transition-all font-mono"
+                    className="admin-glass-control w-full rounded-lg py-3 pl-11 pr-11 font-mono focus:border-emerald-400"
                     disabled={loading}
                     autoComplete="new-password"
                     required
