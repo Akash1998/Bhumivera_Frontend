@@ -311,7 +311,13 @@ export const reviews = {
   delete: id => api.delete(`/reviews/${id}`, { adminAuth: true })
 };
 export const notifications = { get: () => api.get("/notifications"), getAllAdmin: () => api.get("/notifications/admin/all"), markRead: id => api.patch(`/notifications/${id}/read`), markAllRead: () => api.patch("/notifications/read-all"), delete: id => api.delete(`/notifications/${id}`), createBroadcast: data => api.post("/notifications/admin/create", data), send: d => api.post("/notifications", d) };
-export const analytics = { getDashboard: () => api.get("/analytics/dashboard"), getSales: () => api.get("/analytics/sales"), getProducts: () => api.get("/analytics/products"), getKpis: () => api.get("/analytics/kpis"), getRevenue: () => api.get("/analytics/revenue") };
+export const analytics = {
+  getDashboard: (period = '30d') => api.get('/analytics/dashboard', { params: { period } }),
+  getSales: (period = '30d') => api.get('/analytics/sales', { params: { period } }),
+  getProducts: (period = '30d') => api.get('/analytics/products', { params: { period } }),
+  getKpis: (period = '30d') => api.get('/analytics/kpis', { params: { period } }),
+  getRevenue: (period = '30d') => api.get('/analytics/revenue', { params: { period } })
+};
 export const wallet = { getBalance: () => api.get('/wallet/balance'), getHistory: () => api.get('/wallet/history'), pay: d => api.post('/wallet/pay', d) };
 export const settings = { get: () => api.get("/settings"), getPublic: () => api.get("/settings/public"), update: d => api.put("/settings", d) };
 export const clientErrors = { getAllAdmin: limit => api.get('/logs/client', { params: { limit } }) };
