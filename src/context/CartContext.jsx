@@ -77,11 +77,14 @@ export const CartProvider = ({ children }) => {
       try {
         await cartApi.add({ productId: prodId, quantity: qty });
         await loadCart(); // Re-sync to assure accuracy
+        return true;
       } catch (err) {
         console.error("Failed to sync cart add to DB, reverting state", err);
         await loadCart(); // Auto-revert if offline/error
+        return false;
       }
     }
+    return true;
   };
 
   const updateQuantity = async (productId, newQty) => {

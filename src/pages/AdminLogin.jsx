@@ -8,6 +8,7 @@ const API = import.meta.env.VITE_API_URL || 'https://service.Bhumivera.com';
 const AdminLogin = () => {
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
@@ -59,7 +60,7 @@ const AdminLogin = () => {
       const res = await fetch(`${API}/api/auth/admin/request-otp`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email }) 
+        body: JSON.stringify({ email, password })
       });
       const data = await res.json();
       if (res.status === 423) {
@@ -70,6 +71,7 @@ const AdminLogin = () => {
       }
       if (!res.ok) throw new Error(data.message || 'Failed to trigger OTP.');
       
+      setPassword('');
       setStatus({ type: 'success', message: 'OTP successfully deployed to your email.' });
       setStep(2);
     } catch (err) {
@@ -118,6 +120,7 @@ const AdminLogin = () => {
   const handleBack = () => {
     setStep(1);
     setOtp('');
+    setPassword('');
     setStatus({ type: '', message: '' });
   };
 
@@ -131,6 +134,18 @@ const AdminLogin = () => {
 
         {step === 1 ? (
           <form onSubmit={handleRequestOtp} className="admin-login-form">
+            <div className="form-group">
+              <label className="admin-login-label">ADMIN PASSWORD</label>
+              <input
+                type="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="Enter your admin password"
+                required
+                autoComplete="current-password"
+                className="admin-login-input"
+              />
+            </div>
             <div className="form-group">
               <label className="admin-login-label">AUTHORIZED EMAIL</label>
               <input

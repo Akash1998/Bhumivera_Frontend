@@ -12,6 +12,7 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [otp, setOtp] = useState('');
   const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [twoFactorMethod, setTwoFactorMethod] = useState('authenticator');
   const [loading, setLoading] = useState(false);
   const [showLockoutBanner, setShowLockoutBanner] = useState(false);
   const [lockoutMsg, setLockoutMsg] = useState('');
@@ -55,6 +56,7 @@ const Login = () => {
     try {
       await api.post('/auth/login-request-otp', { email });
       toast.success('OTP sent to your email!');
+      setTwoFactorMethod('email');
       setStep('OTP');
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to send OTP');
@@ -91,8 +93,9 @@ const Login = () => {
     try {
       const res = await auth.login({ email, password });
       if (res.status === 202 && res.data?.requires2FA) {
+        setTwoFactorMethod(res.data.factor || 'authenticator');
         setStep('2FA');
-        toast.info('Please enter your 2FA authenticator code');
+        toast.info(res.data.message || 'Enter your verification code to continue.');
         return;
       }
       if (res.data?.token) {
@@ -108,8 +111,9 @@ const Login = () => {
         setLockoutSeconds(secs);
         setShowLockoutBanner(true);
       } else if (error.response?.status === 202 && error.response?.data?.requires2FA) {
+        setTwoFactorMethod(error.response.data.factor || 'authenticator');
         setStep('2FA');
-        toast.info('Please enter your 2FA authenticator code');
+        toast.info(error.response.data.message || 'Enter your verification code to continue.');
       } else {
         toast.error(d?.message || error.message || 'Invalid email or password');
       }
@@ -143,6 +147,7 @@ const Login = () => {
     setPassword('');
     setOtp('');
     setTwoFactorCode('');
+    setTwoFactorMethod('authenticator');
   };
 
   return (
@@ -312,7 +317,9 @@ const Login = () => {
                   <ShieldCheck size={28} />
                 </div>
                 <h2 className="text-[#0B2419] font-bold text-lg">2-Factor Authentication</h2>
-                <p className="text-xs text-[#0B2419]/60 mt-1 text-center">Enter the 6-digit code from your authenticator app</p>
+                <p className="text-xs text-[#0B2419]/60 mt-1 text-center">
+                  {twoFactorMethod === 'email' ? 'Enter the 6-digit code we sent to your email.' : 'Enter the 6-digit code from your authenticator app.'}
+                </p>
               </div>
               <input 
                 type="text" 

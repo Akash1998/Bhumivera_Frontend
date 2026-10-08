@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import {
   users as usersApi,
   orders as ordersApi,
@@ -21,7 +22,7 @@ import {
   ChevronRight, LayoutDashboard, Home, Building2, Map,
   Eye, X, Plus, Edit2, Trash2, Clock, CheckCircle2, AlertTriangle,
   Search, EyeOff, Copy, Send, ArrowRight, ArrowUpRight, ArrowDownLeft,
-  QrCode, Smartphone, HelpCircle, MessageSquare, Phone, Mail,
+  QrCode, Smartphone, HelpCircle, MessageSquare, Phone, Mail, ShoppingCart,
   Filter, Calendar, Hash, Truck, PackageCheck, RotateCcw,
   ChevronDown, ChevronUp, Gift, PiggyBank, ShoppingBag,
   Leaf, Zap, Users, Coins, ExternalLink, Key,
@@ -154,6 +155,7 @@ const StarsInput = ({ value, onChange, size='md', readonly=false }) => {
 
 export default function Profile() {
   const { user, logout } = useAuth();
+  const { addToCart } = useCart();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(false);
@@ -162,6 +164,7 @@ export default function Profile() {
   const [profileData, setProfileData] = useState({ name: '', phone: '' });
   const [orders, setOrders] = useState([]);
   const [wishlist, setWishlist] = useState([]);
+  const [wishlistError, setWishlistError] = useState('');
   const [wallet, setWallet] = useState({ balance: 0, transactions: [] });
   const [addresses, setAddresses] = useState([]);
   const [returns, setReturns] = useState([]);
@@ -251,7 +254,11 @@ export default function Profile() {
       const res = await wishlistApi.get();
       const items = safeArr(safeExtract(res, 'wishlist')) || safeArr(safeExtract(res, 'items')) || safeArr(safeExtract(res, 'data')) || safeArr(res?.data);
       setWishlist(items);
-    } catch (_) {}
+      setWishlistError('');
+    } catch (error) {
+      console.error('[PROFILE_WISHLIST_FETCH]', error);
+      setWishlistError(error.response?.data?.message || 'Could not load your saved products.');
+    }
   };
   const loadWallet = async () => {
     try {
@@ -361,8 +368,13 @@ export default function Profile() {
     catch (err) { toast.error(err.response?.data?.message || 'Cannot cancel'); }
   };
   const handleRemoveWishlist = async (productId) => {
-    try { await wishlistApi.remove(productId); setWishlist(w => w.filter(x => x.product_id !== productId && x.id !== productId)); toast.success('Removed from wishlist'); }
+    try { await wishlistApi.remove(productId); setWishlist(w => w.filter(item => String(item.product_id || item.id || item._id) !== String(productId))); toast.success('Removed from wishlist'); }
     catch (_) { toast.error('Could not remove'); }
+  };
+  const handleWishlistAddToCart = async (product) => {
+    const added = await addToCart(product);
+    if (added) toast.success('Added to your cart');
+    else toast.error('Could not add this product to your cart.');
   };
   const handleSubmitReturn = async (e) => {
     e.preventDefault();
@@ -778,23 +790,26 @@ export default function Profile() {
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-lg font-semibold text-[#0B2419]">Wishlist ({wishlist.length})</h2>
                 </div>
-                {wishlist.length === 0 ? (
+                {wishlistError ? (
+                  <p role="alert" className="rounded-xl border border-rose-200 bg-rose-50 p-4 text-sm text-rose-700">{wishlistError}</p>
+                ) : wishlist.length === 0 ? (
                   <div className="rounded-2xl bg-white border border-stone-200 p-5 shadow-sm">
                     <EmptyState icon={Heart} title="Your wishlist is empty" subtitle="Save the products you love for later. Shop and tap the heart icon to add items here." actionLabel="Discover Products" onAction={() => navigate('/shop')}/>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
                     {wishlist.map(w => {
-                      const pid = w.product_id || w.id;
+                      const pid = w.product_id || w.id || w._id;
                       const p = w.product || w;
                       const name = p.name || p.title || p.product_name || 'Product';
                       const price = Number(p.price || p.sale_price || w.price || 0);
-                      const img = p.image_url || p.image || p.thumbnail || p.images?.[0];
+                      const firstImage = p.images?.[0];
+                      const img = p.image_url || p.image || p.thumbnail || (typeof firstImage === 'object' ? firstImage.url || firstImage.file_path : firstImage);
                       return (
                         <div key={w.id || pid} className="group rounded-2xl bg-white border border-stone-200 overflow-hidden shadow-sm hover:shadow-md transition-all">
                           <div className="aspect-[4/3] bg-stone-50 relative overflow-hidden flex items-center justify-center">
                             {img ? (
-                              <img src={img} alt={name} onError={(e) => { e.currentTarget.replaceWith(Object.assign(document.createElement('div'),{className:'w-full h-full flex items-center justify-center', innerHTML:'<span class="text-stone-300 text-5xl">🌿</span>'})); }} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+                              <img src={img} alt={name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
                             ) : (
                               <div className="text-5xl text-stone-200"><Leaf/></div>
                             )}
@@ -806,9 +821,14 @@ export default function Profile() {
                             <h3 className="font-semibold text-[#0B2419] line-clamp-2 min-h-[2.5rem]">{name}</h3>
                             <div className="mt-2 flex items-center justify-between">
                               <div className="text-lg font-bold text-[#0B2419]">₹{price.toFixed(2)}</div>
-                              <button onClick={() => navigate(`/product/${pid}`)} className="text-xs font-medium px-3 py-1.5 rounded-lg bg-[#0B2419] text-[#FDFBF7] hover:bg-[#1e4031] transition-colors inline-flex items-center gap-1">
-                                View <ExternalLink className="w-3 h-3"/>
-                              </button>
+                              <div className="flex gap-2">
+                                <button onClick={() => navigate(`/product/${p.slug || pid}`)} className="text-xs font-medium px-3 py-1.5 rounded-lg border border-stone-300 text-stone-700 hover:bg-stone-50 transition-colors inline-flex items-center gap-1">
+                                  View <ExternalLink className="w-3 h-3"/>
+                                </button>
+                                <button onClick={() => handleWishlistAddToCart(p)} className="text-xs font-medium px-3 py-1.5 rounded-lg bg-[#0B2419] text-[#FDFBF7] hover:bg-[#1e4031] transition-colors inline-flex items-center gap-1">
+                                  <ShoppingCart className="w-3 h-3"/> Buy
+                                </button>
+                              </div>
                             </div>
                           </div>
                         </div>

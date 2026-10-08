@@ -32,8 +32,8 @@ const getImageUrl = (img) => {
   if (!path || typeof path !== 'string') return '/logo.webp';
   if (path.startsWith('http') || path.startsWith('data:')) return path;
   
-  const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-22cd43cce9bc475680ad496e199706c4.r2.dev';
-  return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+  const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev/bhumivera';
+  return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\/+/, '')}`;
 };
 
 export default function ProductDetail() {
@@ -189,7 +189,7 @@ export default function ProductDetail() {
                     getImageUrl(activeMedia) === url ? 'border-[#8b5a2b] shadow-[2px_2px_0px_#6b4421]' : 'border-stone-200 hover:border-stone-300'
                   }`}
                 >
-                  <img src={url} alt={`Thumbnail ${idx}`} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" />
+                  <img src={url} alt={`Thumbnail ${idx}`} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" />
                 </button>
               );
             })}
@@ -205,7 +205,7 @@ export default function ProductDetail() {
                 transition={{ duration: 0.8 }}
                 className="w-full h-full p-8 md:p-12"
               >
-                <img src={getImageUrl(activeMedia)} alt={product.name} className="w-full h-full object-contain mix-blend-multiply transition-transform duration-700 group-hover:scale-[1.025]" />
+                <img src={getImageUrl(activeMedia)} alt={product.name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-contain mix-blend-multiply transition-transform duration-700 group-hover:scale-[1.025]" />
               </motion.div>
             </AnimatePresence>
 
@@ -377,7 +377,7 @@ export default function ProductDetail() {
         <div className="max-w-4xl mx-auto bg-white/90 backdrop-blur-xl border border-[#8b5a2b]/20 p-3 shadow-lg flex items-center justify-between pointer-events-auto">
           <div className="hidden md:flex items-center gap-4 pl-2">
             <div className="w-10 h-10 border border-stone-200 overflow-hidden bg-white">
-              <img src={getImageUrl(activeMedia)} className="w-full h-full object-contain mix-blend-multiply" alt="sticky" />
+              <img src={getImageUrl(activeMedia)} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-contain mix-blend-multiply" alt="sticky" />
             </div>
             <div>
               <h4 className="text-xs font-medium italic text-stone-800 line-clamp-1">{product.name}</h4>
