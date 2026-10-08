@@ -354,6 +354,7 @@ export default function Checkout() {
               <div className="mt-5 grid grid-cols-3 gap-2 sm:grid-cols-5">
                 {[0, 50, 100, 250, 500].map(amount => <button key={amount} type="button" disabled={paymentMode !== 'COD'} onClick={() => setImpactAmount(amount)} aria-pressed={impactAmount === amount} className={`min-h-11 border px-2 text-sm font-semibold transition-colors disabled:cursor-not-allowed disabled:opacity-45 ${impactAmount === amount ? 'border-[#243e31] bg-[#243e31] text-white' : 'border-[#243e31]/20 bg-white text-[#243e31] hover:border-[#536b4d]'}`}>{amount === 0 ? 'None' : `₹${amount}`}</button>)}
               </div>
+              <Link to="/impact" className="mt-4 inline-flex text-xs font-semibold text-[#35533c] underline underline-offset-4">Read how collection and field updates are verified</Link>
               {impactAmount > 0 && <label className="mt-5 block text-xs font-bold uppercase tracking-wider text-stone-600">Choose a focus area
                 <select value={impactProject} onChange={event => setImpactProject(event.target.value)} className="mt-2 w-full border border-stone-300 bg-white px-3 py-3 text-sm font-normal normal-case tracking-normal text-stone-800 outline-none focus:border-[#536b4d] sm:max-w-md">
                   <option value="native-trees">Native tree restoration</option>
@@ -362,7 +363,6 @@ export default function Checkout() {
                 </select>
               </label>}
               {paymentMode !== 'COD' && <p className="mt-4 text-xs text-stone-500">Contributions are temporarily available with cash on delivery only; no contribution will be added to wallet checkout.</p>}
-              {impactAmount > 0 && <Link to="/impact" className="mt-4 inline-flex text-xs font-semibold text-[#35533c] underline underline-offset-4">Read how collection and field updates are verified</Link>}
             </motion.section>
 
             {/* Payment Method */}
