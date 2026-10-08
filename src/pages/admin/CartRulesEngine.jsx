@@ -3,7 +3,7 @@ import { cartRules as cartRulesApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { Layers3, Plus, RefreshCw, ShieldCheck, Trash2 } from 'lucide-react';
 
-const blankRule = { name: '', description: '', priority: 0, min_cart_value: 0, max_cart_value: '', discount_amount: 0, discount_percent: 0, free_shipping_enabled: 0, gift_product_id: '', gift_quantity: 1, loyalty_bonus_points: 0, loyalty_tier_id: '', start_time: '', end_time: '', enforce_min_checkout: 0, badge_text: '', status: 'active' };
+const blankRule = { name: '', description: '', priority: 0, min_cart_value: 0, max_cart_value: '', discount_amount: 0, discount_percent: 0, free_shipping_enabled: 0, gift_product_id: '', gift_quantity: 1, loyalty_bonus_points: 0, loyalty_tier_id: '', customer_id: '', start_time: '', end_time: '', enforce_min_checkout: 0, badge_text: '', status: 'active' };
 const dateToIso = value => value ? new Date(value).toISOString() : null;
 
 export default function CartRulesEngine() {
@@ -47,6 +47,7 @@ export default function CartRulesEngine() {
       gift_quantity: Math.max(1, Number(draft.gift_quantity) || 1),
       loyalty_bonus_points: Math.max(0, Number(draft.loyalty_bonus_points) || 0),
       loyalty_tier_id: draft.loyalty_tier_id === '' ? null : Number(draft.loyalty_tier_id),
+      customer_id: draft.customer_id === '' ? null : Number(draft.customer_id),
       enforce_min_checkout: draft.enforce_min_checkout ? 1 : 0,
       start_time: dateToIso(draft.start_time),
       end_time: dateToIso(draft.end_time),
@@ -100,6 +101,7 @@ export default function CartRulesEngine() {
             <option value="">All members</option>{loyaltyTiers.map(tier => <option key={tier.id} value={tier.id}>{tier.name}</option>)}
           </select>
         </label>
+        <label className="text-xs text-slate-300">Specific customer ID (blank = everyone)<input min="1" step="1" type="number" value={draft.customer_id} onChange={event => setDraft(current => ({ ...current, customer_id: event.target.value }))} className="admin-glass-control mt-1 w-full rounded-lg px-3 py-2 text-sm"/></label>
         <label className="text-xs text-slate-300">Gift product ID<input min="1" type="number" value={draft.gift_product_id} onChange={event => setDraft(current => ({ ...current, gift_product_id: event.target.value }))} className="admin-glass-control mt-1 w-full rounded-lg px-3 py-2 text-sm"/></label>
         <label className="text-xs text-slate-300">Gift quantity<input min="1" type="number" value={draft.gift_quantity} onChange={event => setDraft(current => ({ ...current, gift_quantity: event.target.value }))} className="admin-glass-control mt-1 w-full rounded-lg px-3 py-2 text-sm"/></label>
         <label className="text-xs text-slate-300">Bonus loyalty points<input min="0" type="number" value={draft.loyalty_bonus_points} onChange={event => setDraft(current => ({ ...current, loyalty_bonus_points: event.target.value }))} className="admin-glass-control mt-1 w-full rounded-lg px-3 py-2 text-sm"/></label>

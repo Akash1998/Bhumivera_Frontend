@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import api, { auth } from '../services/api';
 import { toast } from 'react-hot-toast';
 import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft, Leaf } from 'lucide-react';
@@ -18,7 +18,7 @@ const Login = () => {
   const [lockoutMsg, setLockoutMsg] = useState('');
   const [lockoutSeconds, setLockoutSeconds] = useState(0);
   const [lockoutExpired, setLockoutExpired] = useState(false);
-  const navigate = useNavigate();
+  const location = useLocation();
 
   useEffect(() => {
     if (!showLockoutBanner || lockoutSeconds <= 0) return undefined;
@@ -47,7 +47,12 @@ const Login = () => {
       localStorage.setItem('user', JSON.stringify(data.user));
     }
     toast.success(greetMsg);
-    setTimeout(() => { window.location.href = '/profile'; }, 300);
+    const requestedPath = typeof location.state?.from === 'string' &&
+      location.state.from.startsWith('/') && !location.state.from.startsWith('//')
+      ? location.state.from
+      : '/profile';
+    const destination = location.state?.reopenCart ? '/?cartCheckout=1' : requestedPath;
+    setTimeout(() => { window.location.href = destination; }, 300);
   };
 
   const handleRequestOTP = async (e) => {

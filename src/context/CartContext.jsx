@@ -10,6 +10,7 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
   const [cartLoading, setCartLoading] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false); 
+  const [cartAddEvent, setCartAddEvent] = useState(null);
   const [upsells, setUpsells] = useState([]); 
   const [rulePreview, setRulePreview] = useState(null);
   const [abandonment, setAbandonment] = useState(null);
@@ -99,6 +100,7 @@ export const CartProvider = ({ children }) => {
       try {
         await cartApi.add({ productId: prodId, quantity: qty });
         await loadCart(); // Re-sync to assure accuracy
+        setCartAddEvent({ id: Date.now(), productName: product.name || 'your selection' });
         toast.success('Added to cart successfully.');
         return true;
       } catch (err) {
@@ -108,6 +110,7 @@ export const CartProvider = ({ children }) => {
         return false;
       }
     }
+    setCartAddEvent({ id: Date.now(), productName: product.name || 'your selection' });
     toast.success('Added to cart successfully.');
     return true;
   };
@@ -217,6 +220,7 @@ export const CartProvider = ({ children }) => {
       loading: cartLoading, 
       isCartOpen, 
       setIsCartOpen,
+      cartAddEvent,
       addToCart, 
       updateQuantity, 
       removeFromCart,

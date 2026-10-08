@@ -215,7 +215,7 @@ export default function Profile() {
   const [reviewSubmission, setReviewSubmission] = useState(null);
   const [reviewSubmitting, setReviewSubmitting] = useState(false);
   const [reviewUploadProgress, setReviewUploadProgress] = useState(0);
-  const [reviewDraft, setReviewDraft] = useState({ rating: 5, title: '', body: '', images: [] });
+  const [reviewDraft, setReviewDraft] = useState({ rating: 5, title: '', body: '', images: [], publicStoryConsent: false });
   const reviewCameraInputRef = useRef(null);
   const reviewGalleryInputRef = useRef(null);
 
@@ -569,7 +569,7 @@ export default function Profile() {
   const closeReviewForm = () => {
     if (reviewSubmitting) return;
     reviewDraft.images.forEach(image => URL.revokeObjectURL(image.preview));
-    setReviewDraft({ rating: 5, title: '', body: '', images: [] });
+    setReviewDraft({ rating: 5, title: '', body: '', images: [], publicStoryConsent: false });
     setReviewSubmission(null);
   };
   const uploadReviewPhoto = async (file, index, total) => {
@@ -614,12 +614,13 @@ export default function Profile() {
         rating: reviewDraft.rating,
         title: reviewDraft.title,
         body: reviewDraft.body,
-        images: uploadedImages
+        images: uploadedImages,
+        public_story_consent: reviewDraft.publicStoryConsent
       });
       toast.success('Review submitted successfully. It will appear after approval.');
       setReviewSubmission(null);
       reviewDraft.images.forEach(image => URL.revokeObjectURL(image.preview));
-      setReviewDraft({ rating: 5, title: '', body: '', images: [] });
+      setReviewDraft({ rating: 5, title: '', body: '', images: [], publicStoryConsent: false });
       await loadReviews();
     } catch (error) {
       toast.error(error.response?.data?.message || error.message || 'Could not submit your review.');
@@ -1896,7 +1897,7 @@ export default function Profile() {
                                     productName: it.product_name || it.name || `Product #${productId}`,
                                     image: itemImage
                                   });
-                                  setReviewDraft({ rating: 5, title: '', body: '', images: [] });
+                                  setReviewDraft({ rating: 5, title: '', body: '', images: [], publicStoryConsent: false });
                                 }}
                                 className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[#8a6a12] hover:text-[#0B2419]"
                               >
@@ -2034,6 +2035,11 @@ export default function Profile() {
                   </div>
                 )}
                 <p className="mt-2 text-xs text-stone-500">JPEG, PNG, or WebP · up to 8 MB per photo.</p>
+                <label className="mt-3 flex items-start gap-2.5 rounded-xl border border-[#8B9D83]/20 bg-[#f5f6ef] p-3 text-xs leading-5 text-stone-600">
+                  <input type="checkbox" checked={reviewDraft.publicStoryConsent} disabled={!reviewDraft.images.length || reviewSubmitting} onChange={event => setReviewDraft(current => ({ ...current, publicStoryConsent: event.target.checked }))} className="mt-1 h-4 w-4 shrink-0 accent-[#2C3E2D]"/>
+                  <span><strong className="text-[#263d31]">Optional: let us feature my photo and first name on the Bhumivera website.</strong> Only approved reviews with this permission may appear in our customer-story feature. Your review remains eligible for approval if you leave this unchecked.</span>
+                </label>
+                {!reviewDraft.images.length && <p className="text-[10px] text-stone-500">Add a review photo to opt into being featured. You can also leave this unchecked.</p>}
               </div>
             </div>
             <div className="flex justify-end gap-2 border-t border-stone-200 bg-white px-6 py-4">

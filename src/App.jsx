@@ -1,9 +1,9 @@
 import React, { lazy, Suspense, useMemo, useEffect } from "react";
-import { BrowserRouter, Routes, Route, useLocation, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
 import Footer from "./components/Footer.jsx";
 import MiniCart from "./components/MiniCart.jsx";
-import { CartProvider } from "./context/CartContext.jsx";
+import { CartProvider, useCart } from "./context/CartContext.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { ToastProvider } from "./context/ToastContext.jsx";
 import { WishlistProvider } from "./context/WishlistContext.jsx";
@@ -171,6 +171,16 @@ function WarehouseRoute({ children }) {
 
 function AppContent() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { setIsCartOpen } = useCart();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (!params.has('cartCheckout')) return;
+    sessionStorage.setItem('mini-cart-checkout', '1');
+    setIsCartOpen(true);
+    navigate(location.pathname, { replace: true });
+  }, [location.pathname, location.search, navigate, setIsCartOpen]);
   
   const isManagementView = useMemo(() => {
     const path = location.pathname;

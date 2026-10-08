@@ -394,6 +394,7 @@ export default function ReviewManagement() {
                       <p className="text-xs font-bold text-white truncate max-w-[250px]">{review.title || 'No Title'}</p>
                       <p className="text-[10px] text-slate-400 truncate max-w-[250px] mt-1">{review.body || review.comment || review.review || 'No content provided.'}</p>
                       {review.images?.length > 0 && <p className="mt-1 text-[9px] font-bold text-cyan-300">{review.images.length} customer photo{review.images.length === 1 ? '' : 's'}</p>}
+                      {Boolean(Number(review.public_story_consent)) && review.images?.length > 0 && <p className="mt-1 inline-flex rounded-full bg-emerald-500/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-300">Customer opted into story feature</p>}
                     </td>
                     <td className="p-6">
                       <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-${status.color}-500/10 text-${status.color}-500 border border-${status.color}-500/20`}>

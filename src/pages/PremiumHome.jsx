@@ -146,6 +146,7 @@ export default function PremiumHome() {
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [approvedReviews, setApprovedReviews] = useState([]);
+  const [customerStories, setCustomerStories] = useState([]);
   const [activeQuestion, setActiveQuestion] = useState('ingredients');
   const heroProduct = products.find(product => /sea.?buckthorn/i.test(product.name)) || products[0];
   const activeFaq = questions.find(question => question.key === activeQuestion) || questions[0];
@@ -190,6 +191,19 @@ export default function PremiumHome() {
       });
     return () => { active = false; };
   }, [products]);
+
+  useEffect(() => {
+    let active = true;
+    reviewsApi.getPublicStories()
+      .then(({ data }) => {
+        if (active) setCustomerStories(Array.isArray(data?.stories) ? data.stories : []);
+      })
+      .catch(error => {
+        console.error('[HOME_CUSTOMER_STORIES]', error);
+        if (active) setCustomerStories([]);
+      });
+    return () => { active = false; };
+  }, []);
 
   const goToQuestion = direction => {
     const currentIndex = questions.findIndex(question => question.key === activeQuestion);
@@ -474,6 +488,33 @@ export default function PremiumHome() {
                   <p className="mt-4 font-serif text-xl leading-relaxed sm:text-2xl">“{review.body || review.comment}”</p>
                   <p className="mt-4 text-[9px] font-semibold uppercase tracking-[0.15em] text-[#71806a]">{review.user_name || 'Bhumivera customer'}{review.product_name ? ` · ${review.product_name}` : ''}</p>
                 </blockquote>
+              ))}
+            </div>
+          </div>
+        </section>
+      )}
+
+      {customerStories.length > 0 && (
+        <section className="bg-[#19261e] text-white">
+          <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 md:px-10 md:py-24">
+            <div className="mb-9 flex flex-wrap items-end justify-between gap-5">
+              <div><p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#dce7c5]">Our community, by choice</p><h2 className="mt-3 max-w-2xl font-serif text-4xl leading-tight sm:text-5xl">The people who make this story their own.</h2><p className="mt-4 max-w-xl text-sm leading-6 text-white/65">These customer photos and words are shared with permission and shown only after the review is approved.</p></div>
+              <Link to="/impact" className="inline-flex min-h-11 items-center gap-2 border-b border-[#dce7c5]/40 pb-1 text-xs font-semibold text-[#e0e8ce]">See our verified impact record <ArrowRight size={14}/></Link>
+            </div>
+            <div className="grid gap-4 md:grid-cols-3">
+              {customerStories.slice(0, 3).map((story, index) => (
+                <article key={story.id} className={`overflow-hidden rounded-2xl border border-white/10 bg-[#223229] ${index === 0 ? 'md:col-span-2 md:grid md:grid-cols-[1fr_1fr]' : ''}`}>
+                  <Link to={`/product/${story.product_id || ''}`} aria-label={`Read ${story.product_name || 'product'} details`} className="block aspect-[4/3] overflow-hidden bg-[#314238] md:aspect-auto">
+                    <img src={productImage({ image_url: story.images?.[0] })} alt={`${story.first_name || 'Customer'} with a Bhumivera product`} loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-full w-full object-cover transition duration-700 hover:scale-[1.03]"/>
+                  </Link>
+                  <div className="flex flex-col justify-center p-5 sm:p-7">
+                    <div className="text-sm tracking-[0.16em] text-[#d6dfbf]" aria-label={`${story.rating} out of 5 stars`}>{[1, 2, 3, 4, 5].map(star => <span key={star}>{Number(story.rating) >= star ? '★' : '☆'}</span>)}</div>
+                    {story.body && <blockquote className="mt-4 line-clamp-5 font-serif text-xl leading-relaxed text-white/90">“{story.body}”</blockquote>}
+                    {story.title && <p className="mt-3 text-xs font-semibold text-[#e0e8ce]">{story.title}</p>}
+                    <p className="mt-5 text-[9px] font-bold uppercase tracking-[0.17em] text-white/55">Shared by {story.first_name || 'a customer'} · Approved review</p>
+                    {story.product_name && <p className="mt-1 text-xs text-white/70">{story.product_name}</p>}
+                  </div>
+                </article>
               ))}
             </div>
           </div>

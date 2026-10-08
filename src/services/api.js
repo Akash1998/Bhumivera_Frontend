@@ -302,6 +302,7 @@ export const wishlist = { get: () => api.get("/wishlist"), add: p => api.post("/
 export const coupons = { getPublicActive: () => api.get("/coupons/public/active"), validate: (c, orderTotal = 0) => api.post("/coupons/validate", { code: c, orderTotal }), getAllAdmin: () => api.get("/coupons"), create: d => api.post("/coupons", d), update: (id, d) => api.put(`/coupons/${id}`, d), delete: id => api.delete(`/coupons/${id}`) };
 export const reviews = {
   getByProduct: productId => api.get(`/reviews/product/${productId}`),
+  getPublicStories: () => api.get('/reviews/public-stories'),
   getMyReviews: () => api.get('/reviews/my'),
   update: (id, data) => api.put(`/reviews/${id}`, data),
   deleteOwner: id => api.delete(`/reviews/${id}`),
