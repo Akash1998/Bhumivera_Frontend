@@ -187,6 +187,24 @@ api.interceptors.response.use(response => {
   }
   return response;
 }, async (e) => {
+  const retryConfig = e.config;
+  const requestMethod = String(retryConfig?.method || '').toLowerCase();
+  const serviceUnavailableRetries = Number(retryConfig?._serviceUnavailableRetries) || 0;
+  if (
+    e.response?.status === 503 &&
+    ['get', 'head'].includes(requestMethod) &&
+    retryConfig &&
+    serviceUnavailableRetries < 2
+  ) {
+    const retryAfterHeader = Number(e.response.headers?.['retry-after']);
+    const retryDelaySeconds = Number.isFinite(retryAfterHeader) && retryAfterHeader > 0
+      ? Math.min(retryAfterHeader, 15)
+      : 2 ** serviceUnavailableRetries;
+    retryConfig._serviceUnavailableRetries = serviceUnavailableRetries + 1;
+    await new Promise(resolve => setTimeout(resolve, retryDelaySeconds * 1000));
+    return api.request(retryConfig);
+  }
+
   const errorData = e.response?.data || {};
   e.normalized = {
     code: errorData.code || (e.response ? `HTTP_${e.response.status}` : 'NETWORK_ERROR'),
