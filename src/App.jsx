@@ -139,11 +139,11 @@ function ScrollToTop() {
 }
 
 function ProtectedRoute({ children }) {
-  const { user, loading } = useAuth() || {};
+  const { loading } = useAuth() || {};
   const t = localStorage.getItem('token');
   
   if (loading) return <PageLoader />;
-  if (!user && !t) return <Navigate to="/login" replace />;
+  if (!t) return <Navigate to="/login" replace />;
   return children;
 }
 

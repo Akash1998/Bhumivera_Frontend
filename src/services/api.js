@@ -127,6 +127,8 @@ api.interceptors.request.use(c => {
 
 const _refreshPromises = { user: null, admin: null };
 
+const isPathOrChild = (url, path) => url === path || url.startsWith(`${path}/`);
+
 const _resolveTokenKind = (url = '', method = '', adminAuth = false) => {
   if (adminAuth) return 'admin';
   const isAdminUrl = url.startsWith("/admin/") ||
@@ -239,11 +241,12 @@ api.interceptors.response.use(response => {
        url.includes("/users/profile") ||
        url.startsWith("/settings/public") ||
        url.includes("/users/") ||
-       url.startsWith("/orders/") ||
-       url.startsWith("/cart/") ||
-       url.startsWith("/addresses/") ||
-       url.startsWith("/wallet/") ||
+       isPathOrChild(url, "/orders") ||
+       isPathOrChild(url, "/cart") ||
+       isPathOrChild(url, "/addresses") ||
+       isPathOrChild(url, "/wallet") ||
        url.startsWith("/wishlist/") ||
+       url === "/wishlist" ||
        url.startsWith("/reviews/my") ||
        url.startsWith("/returns/my") ||
        url.startsWith("/returns/eligibility") ||
