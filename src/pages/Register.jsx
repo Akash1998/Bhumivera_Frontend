@@ -194,7 +194,7 @@ export default function Register() {
                       disabled={loading}
                       className="mt-0.5 accent-[#0B2419]"
                     />
-                    <span>Send me promotional emails and product updates. This is optional; I can change this preference in my profile at any time. Order and account emails are not affected.</span>
+                    <span>Send me emails and product updates. This is optional; I can change this preference in my profile at any time. Order and account emails are not affected.</span>
                   </label>
 
                   <div className="flex justify-center pt-2">
