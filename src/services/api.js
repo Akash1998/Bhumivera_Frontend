@@ -17,7 +17,7 @@ api.interceptors.request.use(c => {
     url.startsWith("/logs/") ||
     url.startsWith("/flash-sales/admin") ||
     url.startsWith("/orders/all") ||
-    url.startsWith("/orders/") && c.method !== "post" && c.method !== "patch" ||
+    url.startsWith("/orders/") && (c.method === "put" || c.method === "delete") ||
     url.startsWith("/analytics/") ||
     url.startsWith("/inventory/") ||
     url.startsWith("/notifications/admin/") ||
@@ -67,6 +67,7 @@ const _resolveTokenKind = (url = '', method = '', adminAuth = false) => {
     url.startsWith("/flash-sales/admin") ||
     (url.startsWith("/flash-sales/") && !url.startsWith("/flash-sales/active")) ||
     url.startsWith("/orders/all") ||
+    url.startsWith("/orders/") && (method === 'put' || method === 'delete') ||
     url.startsWith("/analytics/") ||
     url.startsWith("/settings") ||
     url.startsWith("/notifications/admin/");
