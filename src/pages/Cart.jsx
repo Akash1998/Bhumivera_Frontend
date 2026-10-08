@@ -199,8 +199,12 @@ export default function Cart() {
 
   const continueToCheckout = () => {
     setCheckoutPromptOpen(false);
-    if (!user) navigate('/login', { state: { from: '/checkout' } });
-    else navigate('/checkout', { state: { couponCode: abandonedCoupon?.code || '' } });
+    if (abandonedCoupon?.code) sessionStorage.setItem('mini-cart-coupon', abandonedCoupon.code);
+    if (!user) {
+      navigate('/login', { state: { from: '/?cartCheckout=1', reopenCart: true } });
+      return;
+    }
+    navigate('/?cartCheckout=1');
   };
 
   if (cartItems.length === 0) {

@@ -108,7 +108,30 @@ export default function MiniCart() {
     if (!isCartOpen || sessionStorage.getItem('mini-cart-checkout') !== '1') return;
     sessionStorage.removeItem('mini-cart-checkout');
     setCheckoutOpen(true);
-  }, [isCartOpen]);
+    const pendingCoupon = sessionStorage.getItem('mini-cart-coupon');
+    if (pendingCoupon) {
+      setCouponCode(pendingCoupon);
+      sessionStorage.removeItem('mini-cart-coupon');
+      let active = true;
+      setCouponBusy(true);
+      couponsApi.validate(pendingCoupon, subtotal)
+        .then(response => {
+          if (!active) return;
+          const data = response.data?.data || response.data || {};
+          setAppliedCoupon({ code: pendingCoupon, discount: Number(data.discount) || 0 });
+          setCouponMessage(`Coupon applied — saving ${formatPrice(data.discount)}.`);
+        })
+        .catch(error => {
+          if (!active) return;
+          setAppliedCoupon(null);
+          setCouponMessage(error.response?.data?.message || 'This coupon could not be applied.');
+        })
+        .finally(() => {
+          if (active) setCouponBusy(false);
+        });
+      return () => { active = false; };
+    }
+  }, [isCartOpen, subtotal]);
 
   useEffect(() => {
     if (!cartAddEvent?.id) return undefined;
