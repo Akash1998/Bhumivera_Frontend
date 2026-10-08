@@ -8,6 +8,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { ToastProvider } from "./context/ToastContext.jsx";
 import { WishlistProvider } from "./context/WishlistContext.jsx";
 import { CompareProvider } from "./context/CompareContext.jsx";
+import { reportClientError } from "./services/api.js";
 import "./index.css";
 
 const CHUNK_RELOAD_KEY = 'page-chunk-reload-attempted';
@@ -147,6 +148,51 @@ function ProtectedRoute({ children }) {
   return children;
 }
 
+class CheckoutErrorBoundary extends React.Component {
+  state = { hasError: false };
+
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  componentDidCatch(error, info) {
+    console.error('[CHECKOUT_RENDER_ERROR]', error, info.componentStack);
+    void reportClientError({
+      message: error.message,
+      source: 'checkout-render',
+      stack: `${error.stack || ''}\n${info.componentStack || ''}`,
+    });
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return (
+        <section className="flex min-h-[60vh] flex-col items-center justify-center bg-[#FDFBF7] px-6 text-center text-[#1c2922]">
+          <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#607552]">Bhumivera checkout</p>
+          <h1 className="mt-4 max-w-xl font-serif text-3xl md:text-4xl">Checkout could not load</h1>
+          <p className="mt-3 max-w-md text-sm leading-6 text-stone-600">
+            Your cart is safe. Return to your cart and try checkout again, or refresh this page.
+          </p>
+          <div className="mt-7 flex flex-wrap justify-center gap-3">
+            <a href="/cart" className="bg-[#1c2922] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#35533c]">
+              Return to cart
+            </a>
+            <button
+              type="button"
+              onClick={() => window.location.reload()}
+              className="border border-[#607552] px-5 py-3 text-sm font-semibold text-[#1c2922] transition-colors hover:bg-white"
+            >
+              Refresh checkout
+            </button>
+          </div>
+        </section>
+      );
+    }
+
+    return this.props.children;
+  }
+}
+
 function AdminRoute({ children }) {
   const { user, loading } = useAuth() || {};
   const t = localStorage.getItem('adminToken') || localStorage.getItem('token');
@@ -243,7 +289,7 @@ function AppContent() {
             {/* Protected User Routes */}
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
-            <Route path="/checkout" element={<ProtectedRoute><Checkout /></ProtectedRoute>} />
+            <Route path="/checkout" element={<ProtectedRoute><CheckoutErrorBoundary><Checkout /></CheckoutErrorBoundary></ProtectedRoute>} />
             <Route path="/order-success/:orderId?" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
             <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
             <Route path="/address-book" element={<ProtectedRoute><AddressBook /></ProtectedRoute>} />
