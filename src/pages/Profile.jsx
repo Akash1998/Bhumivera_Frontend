@@ -17,6 +17,7 @@ import {
   serials as serialsApi,
 } from '../services/api';
 import { useToast } from '../context/ToastContext';
+import compressReviewImage from '../utils/compressReviewImage';
 import {
   User, Package, Heart, Shield, LifeBuoy, LogOut,
   Wallet, MapPin, Bell, Ticket, Star, Award, Share2,
@@ -485,17 +486,18 @@ export default function Profile() {
     setReviewSubmission(null);
   };
   const uploadReviewPhoto = async (file, index, total) => {
+    const compressedFile = await compressReviewImage(file);
     const { data } = await reviewsApi.createUploadUrl({
-      filename: file.name,
-      fileType: file.type,
-      size: file.size,
+      filename: compressedFile.name,
+      fileType: compressedFile.type,
+      size: compressedFile.size,
       order_id: reviewSubmission.orderId,
       product_id: reviewSubmission.productId,
     });
     return new Promise((resolve, reject) => {
       const request = new XMLHttpRequest();
       request.open('PUT', data.uploadUrl);
-      request.setRequestHeader('Content-Type', file.type);
+      request.setRequestHeader('Content-Type', compressedFile.type);
       request.upload.onprogress = event => {
         if (event.lengthComputable) {
           setReviewUploadProgress(Math.round(((index + event.loaded / event.total) / total) * 100));
@@ -506,7 +508,7 @@ export default function Profile() {
         else reject(new Error('Photo upload failed. Please try again.'));
       };
       request.onerror = () => reject(new Error('Photo upload failed. Check your connection and try again.'));
-      request.send(file);
+      request.send(compressedFile);
     });
   };
   const submitPurchaseReview = async event => {

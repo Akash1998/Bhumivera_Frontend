@@ -43,6 +43,7 @@ export default function ProductDetail() {
   
   const [product, setProduct] = useState(null);
   const [reviewsData, setReviewsData] = useState([]);
+  const [reviewSummary, setReviewSummary] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeMedia, setActiveMedia] = useState(null);
   const [quantity, setQuantity] = useState(1);
@@ -86,10 +87,13 @@ export default function ProductDetail() {
         if (fetchedProduct && fetchedProduct.id) {
           try {
             const revRes = await reviewsApi.getByProduct(fetchedProduct.id);
-            const reviewRows = revRes.data?.reviews || revRes.data?.data || revRes.data || [];
+            const reviewPayload = revRes.data?.data || revRes.data || {};
+            const reviewRows = Array.isArray(reviewPayload) ? reviewPayload : reviewPayload.reviews || [];
             setReviewsData(Array.isArray(reviewRows) ? reviewRows.map(review => ({ ...review, comment: review.body || review.comment || '' })) : []);
+            setReviewSummary(reviewPayload.summary || revRes.data?.summary || null);
           } catch (revErr) {
             setReviewsData([]);
+            setReviewSummary(null);
           }
         }
       } catch (err) {
@@ -122,8 +126,10 @@ export default function ProductDetail() {
   const specificationEntries = rawSpecifications && typeof rawSpecifications === 'object' && !Array.isArray(rawSpecifications)
     ? Object.entries(rawSpecifications).filter(([, value]) => value !== null && value !== undefined && String(value).trim())
     : [];
-  const productRating = Number(product?.rating || 0);
-  const reviewCount = Number(product?.review_count || 0);
+  const productRating = reviewSummary
+    ? Number(reviewSummary.average || 0)
+    : Number(product?.rating || 0);
+  const reviewCount = Number(reviewSummary?.total ?? product?.review_count ?? 0);
   
   if (loading) return <SkeletonPDP />;
 

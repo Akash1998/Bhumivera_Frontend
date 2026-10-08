@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
+import compressReviewImage from '../../utils/compressReviewImage';
 
 // --- CONFIGURATION MAPS ---
 const STATUS_MAP = {
@@ -60,7 +61,7 @@ export default function ReviewManagement() {
     let path = typeof img === 'object' ? (img.file_path || img.url || img.path) : img;
     if (!path) return '/logo.webp';
     if (path.startsWith('http')) return path;
-    const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-22cd43cce9bc475680ad496e199706c4.r2.dev';
+    const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev/bhumivera';
     return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
   };
 
@@ -113,15 +114,16 @@ export default function ReviewManagement() {
     setImageUploading(true);
     setImageUploadProgress(0);
     try {
+      const compressedFile = await compressReviewImage(file);
       const { data } = await api.post('/reviews/admin/upload-url', {
-        filename: file.name,
-        fileType: file.type,
-        size: file.size
+        filename: compressedFile.name,
+        fileType: compressedFile.type,
+        size: compressedFile.size
       }, { adminAuth: true });
       await new Promise((resolve, reject) => {
         const request = new XMLHttpRequest();
         request.open('PUT', data.uploadUrl);
-        request.setRequestHeader('Content-Type', file.type);
+        request.setRequestHeader('Content-Type', compressedFile.type);
         request.upload.onprogress = upload => {
           if (upload.lengthComputable) setImageUploadProgress(Math.round((upload.loaded / upload.total) * 100));
         };
@@ -129,7 +131,7 @@ export default function ReviewManagement() {
           ? resolve()
           : reject(new Error('Photo upload failed.'));
         request.onerror = () => reject(new Error('Photo upload failed. Check your connection.'));
-        request.send(file);
+        request.send(compressedFile);
       });
       setReviewDraft(current => ({ ...current, images: [...current.images, data.key] }));
       showToast?.('Photo uploaded. Save the review to apply it.', 'success');
