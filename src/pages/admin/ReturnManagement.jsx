@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import * as XLSX from 'xlsx';
 import { 
   RotateCcw, Package, CheckCircle, XCircle, AlertCircle, 
@@ -11,12 +11,13 @@ import { useToast } from '../../context/ToastContext';
 
 // --- CONFIGURATION MAPS ---
 const RMA_STATUS_MAP = {
-  'pending': { label: 'RMA Requested', color: 'amber', icon: Clock, next: 'approved' },
-  'approved': { label: 'RMA Approved', color: 'blue', icon: CheckCircle, next: 'received' },
+  'pending_admin_review': { label: 'Needs admin review', color: 'amber', icon: Clock, next: 'return_in_progress' },
+  'waiting_customer_service_review': { label: 'Customer service review', color: 'amber', icon: AlertCircle, next: 'return_in_progress' },
+  'return_in_progress': { label: 'Return in progress', color: 'blue', icon: RotateCcw, next: 'received' },
   'received': { label: 'Item Received', color: 'purple', icon: Package, next: 'refunded' },
   'refunded': { label: 'Refund Issued', color: 'emerald', icon: IndianRupee, next: null },
-  'exchanged': { label: 'Replacement Sent', color: 'emerald', icon: RotateCcw, next: null },
-  'rejected': { label: 'RMA Denied', color: 'rose', icon: XCircle, next: null }
+  'replacement_sent': { label: 'Replacement Sent', color: 'emerald', icon: RotateCcw, next: null },
+  'rejected': { label: 'RMA Denied', color: 'rose', icon: XCircle, next: null },
 };
 
 const CONDITION_GRADES = [
@@ -47,28 +48,28 @@ export default function ReturnManagement() {
 
   const { showToast } = useToast() || {};
 
-  useEffect(() => {
-    fetchReturns();
-  }, []);
-
-  const fetchReturns = async () => {
+  const fetchReturns = useCallback(async () => {
     setLoading(true);
     try {
-      const res = await api.get('/returns').catch(() => api.get('/admin/returns'));
+      const res = await api.get('/returns/admin/all');
       setReturns(res.data?.returns || res.data?.data || res.data || []);
     } catch (err) {
-      showToast?.('Failed to synchronize RMA matrix.', 'error');
+      showToast?.(err.response?.data?.message || 'Failed to synchronize return requests.', 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    fetchReturns();
+  }, [fetchReturns]);
 
   const getImageUrl = (img) => {
     if (!img) return '/logo.webp';
     let path = typeof img === 'object' ? (img.file_path || img.url || img.path) : img;
     if (!path) return '/logo.webp';
     if (path.startsWith('http')) return path;
-    const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-22cd43cce9bc475680ad496e199706c4.r2.dev';
+    const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev/bhumivera';
     return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
   };
 
@@ -84,16 +85,14 @@ export default function ReturnManagement() {
         refund_amount: refundOverride || selectedRMA?.refund_amount
       };
 
-      await api.put(`/returns/${rmaId}/status`, payload).catch(() => 
-        api.patch(`/returns/${rmaId}/status`, payload)
-      );
+      await api.put(`/returns/admin/${rmaId}`, payload);
       
       showToast?.(`RMA transitioned to ${newStatus}`, 'success');
       
       setReturns(returns.map(r => (r.id === rmaId || r._id === rmaId) ? { ...r, status: newStatus, ...payload } : r));
       if (selectedRMA) setSelectedRMA({ ...selectedRMA, status: newStatus, ...payload });
     } catch (err) {
-      showToast?.('RMA transition failed', 'error');
+      showToast?.(err.response?.data?.message || 'RMA transition failed.', 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -135,9 +134,34 @@ export default function ReturnManagement() {
 
   // Telemetry KPIs
   const totalRMARequests = returns.length;
-  const pendingActionCount = returns.filter(r => r.status === 'pending' || r.status === 'approved' || r.status === 'received').length;
+  const pendingActionCount = returns.filter(r => ['pending_admin_review', 'waiting_customer_service_review', 'return_in_progress', 'received'].includes(r.status)).length;
   const totalRefunded = returns.filter(r => r.status === 'refunded').reduce((acc, r) => acc + parseFloat(r.refund_amount || 0), 0);
   const rejectionRate = totalRMARequests > 0 ? Math.round((returns.filter(r => r.status === 'rejected').length / totalRMARequests) * 100) : 0;
+  const getEvidenceImages = request => {
+    const images = request.image_urls || request.images;
+    if (Array.isArray(images)) return images;
+    if (typeof images === 'string') {
+      try {
+        const parsed = JSON.parse(images);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (error) {
+        console.error('[RETURN_EVIDENCE_PARSE]', error);
+      }
+    }
+    return [];
+  };
+  const getRequestedItems = request => {
+    if (Array.isArray(request.items)) return request.items;
+    if (typeof request.items === 'string') {
+      try {
+        const parsed = JSON.parse(request.items);
+        return Array.isArray(parsed) ? parsed : [];
+      } catch (error) {
+        console.error('[RETURN_ITEMS_PARSE]', error);
+      }
+    }
+    return [];
+  };
 
   if (loading && returns.length === 0) {
     return (
@@ -257,7 +281,7 @@ export default function ReturnManagement() {
                   </td>
                 </tr>
               ) : paginatedReturns.map(rma => {
-                const status = RMA_STATUS_MAP[rma.status] || RMA_STATUS_MAP['pending'];
+                const status = RMA_STATUS_MAP[rma.status] || RMA_STATUS_MAP.pending_admin_review;
                 const StatusIcon = status.icon;
                 const rmaIdStr = rma.rma_number || `RMA-${String(rma.id || rma._id).padStart(5, '0')}`;
 
@@ -315,6 +339,25 @@ export default function ReturnManagement() {
             </tbody>
           </table>
         </div>
+        {totalPages > 1 && <div className="flex items-center justify-between border-t border-slate-800 px-5 py-4">
+          <button
+            type="button"
+            disabled={currentPage <= 1}
+            onClick={() => setCurrentPage(page => Math.max(1, page - 1))}
+            className="rounded-lg border border-slate-700 px-3 py-2 text-xs font-bold text-slate-300 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Previous
+          </button>
+          <span className="text-xs text-slate-400">Page {currentPage} of {totalPages}</span>
+          <button
+            type="button"
+            disabled={currentPage >= totalPages}
+            onClick={() => setCurrentPage(page => Math.min(totalPages, page + 1))}
+            className="rounded-lg border border-slate-700 px-3 py-2 text-xs font-bold text-slate-300 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Next
+          </button>
+        </div>}
       </div>
 
       {/* COMMAND CENTER MODAL - DEEP INSPECTION */}
@@ -362,20 +405,18 @@ export default function ReturnManagement() {
                     <div className="p-5 bg-rose-500/5 border border-rose-500/20 rounded-2xl mb-4">
                       <p className="text-[10px] font-black uppercase tracking-widest text-rose-500 mb-2">Customer Stated Reason</p>
                       <p className="text-sm font-bold text-white leading-relaxed">{selectedRMA.reason}</p>
-                      {selectedRMA.comments && (
+                      {(selectedRMA.description || selectedRMA.notes || selectedRMA.comments) && (
                         <div className="mt-4 pt-4 border-t border-rose-500/10">
                           <p className="text-[10px] font-black uppercase tracking-widest text-rose-500 mb-2">Additional Comments</p>
-                          <p className="text-xs text-slate-300 italic">"{selectedRMA.comments}"</p>
+                          <p className="text-xs text-slate-300 italic">"{selectedRMA.description || selectedRMA.notes || selectedRMA.comments}"</p>
                         </div>
                       )}
                     </div>
-                    
-                    {/* Visual Evidence Area (If applicable in your DB) */}
-                    {selectedRMA.images && selectedRMA.images.length > 0 && (
-                      <div>
-                        <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Client Visual Evidence</p>
-                        <div className="flex gap-3 overflow-x-auto pb-2">
-                          {selectedRMA.images.map((img, i) => (
+                    {getEvidenceImages(selectedRMA).length > 0 && (
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-3">Client Visual Evidence</p>
+                          <div className="flex gap-3 overflow-x-auto pb-2">
+                            {getEvidenceImages(selectedRMA).map((img, i) => (
                             <a key={i} href={getImageUrl(img)} target="_blank" rel="noreferrer" className="w-20 h-20 rounded-xl overflow-hidden border border-slate-700 block flex-shrink-0 hover:border-rose-500 transition-colors">
                               <img src={getImageUrl(img)} className="w-full h-full object-cover" alt={`evidence-${i}`} />
                             </a>
@@ -383,6 +424,10 @@ export default function ReturnManagement() {
                         </div>
                       </div>
                     )}
+                    {getRequestedItems(selectedRMA).length > 0 && <div className="mt-4 space-y-2">
+                      <p className="text-[10px] font-black uppercase tracking-widest text-slate-500">Requested order lines</p>
+                      {getRequestedItems(selectedRMA).map(item => <div key={item.order_item_id} className="flex justify-between gap-3 rounded-xl border border-slate-800 bg-[#081b15]/90 p-3 text-xs text-slate-300"><span>{item.name || `Product #${item.product_id}`}</span><span>Qty {item.quantity}</span></div>)}
+                    </div>}
                   </div>
 
                   {/* Targeted Hardware */}
@@ -462,47 +507,33 @@ export default function ReturnManagement() {
                     <h3 className="text-xs font-black uppercase tracking-widest text-white mb-6 flex items-center gap-2 relative z-10"><ShieldCheck size={14}/> Execution Protocol</h3>
                     
                     <div className="space-y-3 relative z-10">
-                      <div className="flex gap-3">
-                        <button 
-                          disabled={isUpdating || selectedRMA.status === 'approved'}
-                          onClick={() => handleUpdateStatus(selectedRMA.id || selectedRMA._id, 'approved')}
-                          className="flex-1 py-3 bg-blue-600/20 text-blue-400 border border-blue-500/30 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-600 hover:text-white transition-all disabled:opacity-50"
-                        >
-                          Approve RMA
-                        </button>
-                        <button 
-                          disabled={isUpdating || selectedRMA.status === 'rejected'}
+                      {['pending_admin_review', 'waiting_customer_service_review'].includes(selectedRMA.status) && <>
+                        <button
+                          disabled={isUpdating}
+                          onClick={() => handleUpdateStatus(selectedRMA.id || selectedRMA._id, 'return_in_progress')}
+                          className="w-full py-3 bg-blue-600/20 text-blue-300 border border-blue-500/30 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-blue-600 hover:text-white transition-all disabled:opacity-50"
+                        >Accept &amp; start return</button>
+                        {selectedRMA.status === 'pending_admin_review' && <button
+                          disabled={isUpdating || !adminNotes.trim()}
+                          onClick={() => handleUpdateStatus(selectedRMA.id || selectedRMA._id, 'waiting_customer_service_review')}
+                          className="w-full py-3 bg-amber-600/15 text-amber-300 border border-amber-500/30 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-amber-600 hover:text-white transition-all disabled:opacity-50"
+                        >Send to customer service review (add note first)</button>}
+                        <button
+                          disabled={isUpdating || !adminNotes.trim()}
                           onClick={() => handleUpdateStatus(selectedRMA.id || selectedRMA._id, 'rejected')}
-                          className="flex-1 py-3 bg-rose-600/20 text-rose-400 border border-rose-500/30 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-600 hover:text-white transition-all disabled:opacity-50"
-                        >
-                          Deny Claim
-                        </button>
-                      </div>
-
-                      <button 
-                        disabled={isUpdating || selectedRMA.status === 'received'}
+                          className="w-full py-3 bg-rose-600/15 text-rose-300 border border-rose-500/30 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-600 hover:text-white transition-all disabled:opacity-50"
+                        >Decline with reason (add note first)</button>
+                      </>}
+                      {selectedRMA.status === 'return_in_progress' && <button
+                        disabled={isUpdating}
                         onClick={() => handleUpdateStatus(selectedRMA.id || selectedRMA._id, 'received')}
-                        className="w-full py-3 bg-purple-600/20 text-purple-400 border border-purple-500/30 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-purple-600 hover:text-white transition-all disabled:opacity-50"
-                      >
-                        Mark Hardware Received
-                      </button>
-
-                      <div className="pt-3 border-t border-slate-800 mt-2 flex gap-3">
-                        <button 
-                          disabled={isUpdating || selectedRMA.status === 'refunded'}
-                          onClick={() => handleUpdateStatus(selectedRMA.id || selectedRMA._id, 'refunded')}
-                          className="flex-1 py-4 bg-emerald-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.2)] text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-500 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                        >
-                          <IndianRupee size={14}/> Execute Refund
-                        </button>
-                        <button 
-                          disabled={isUpdating || selectedRMA.status === 'exchanged'}
-                          onClick={() => handleUpdateStatus(selectedRMA.id || selectedRMA._id, 'exchanged')}
-                          className="flex-1 py-4 bg-amber-600 text-white shadow-[0_0_15px_rgba(245,158,11,0.2)] text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-amber-500 transition-all disabled:opacity-50 flex items-center justify-center gap-2"
-                        >
-                          <RotateCcw size={14}/> Execute Exchange
-                        </button>
-                      </div>
+                        className="w-full py-3 bg-purple-600/20 text-purple-300 border border-purple-500/30 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-purple-600 hover:text-white transition-all disabled:opacity-50"
+                      >Mark returned item received</button>}
+                      {selectedRMA.status === 'received' && <div className="flex gap-3">
+                        <button disabled={isUpdating} onClick={() => handleUpdateStatus(selectedRMA.id || selectedRMA._id, 'refunded')} className="flex-1 py-4 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-500 transition-all disabled:opacity-50"><IndianRupee size={14} className="mr-1 inline"/>Mark refund issued</button>
+                        <button disabled={isUpdating} onClick={() => handleUpdateStatus(selectedRMA.id || selectedRMA._id, 'replacement_sent')} className="flex-1 py-4 bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-amber-500 transition-all disabled:opacity-50"><RotateCcw size={14} className="mr-1 inline"/>Mark replacement sent</button>
+                      </div>}
+                      {!['pending_admin_review', 'waiting_customer_service_review', 'return_in_progress', 'received'].includes(selectedRMA.status) && <p className="text-center text-xs text-slate-500">This request is closed.</p>}
                     </div>
                   </div>
 

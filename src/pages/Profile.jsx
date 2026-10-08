@@ -83,7 +83,7 @@ const DELIVERED_STATUSES = ['delivered', 'completed'];
 
 const faqItems = [
   { q: 'How do I track my order?', a: 'Go to the Orders tab above and click the "Track" button next to your order. You will see live status updates including processing, packed, shipped, out for delivery and delivered timelines.' },
-  { q: 'What is your return policy?', a: 'We offer a 7-day return window on most products from the date of delivery. Simply navigate to Returns, choose the delivered order, select a reason and submit. An RMA number will be issued instantly.' },
+  { q: 'What is your return policy?', a: "Return requests open 30 minutes after verified delivery and follow the store's configured return window. Choose the order and item, add photos if helpful, and submit it for review. The order is not marked returned unless the team accepts the request." },
   { q: 'How does the wallet work?', a: 'Your wallet holds store credits and loyalty rewards. Available balances are applied during checkout. No demo add-funds capability is available at this time.' },
   { q: 'Is my account secure?', a: 'Yes. We use bcrypt password hashing, signed JWT tokens and optional TOTP-based 2FA. We recommend enabling 2FA from the Security tab and setting a security question for password-recovery fallback.' },
   { q: 'How do I join the affiliate program?', a: 'Your referral link is available on the Affiliate tab. Share it with friends. Every signup and purchase made through your link tracks to your account. See the Affiliate tab for live stats and share buttons.' },
@@ -118,11 +118,11 @@ const LabelIcon = ({ label }) => {
 const StatusPill = ({ status }) => {
   const s = (status || '').toLowerCase();
   const cfg = (() => {
-    if (['pending', 'processing', 'confirmed'].includes(s)) return { bg: 'bg-amber-50 text-amber-800 border-amber-200', dot: 'bg-amber-500' };
-    if (['packed', 'shipped', 'out_for_delivery', 'out for delivery'].includes(s)) return { bg: 'bg-sky-50 text-sky-800 border-sky-200', dot: 'bg-sky-500' };
-    if (['delivered', 'completed', 'paid', 'approved', 'registered', 'active'].includes(s)) return { bg: 'bg-emerald-50 text-emerald-800 border-emerald-200', dot: 'bg-emerald-500' };
+    if (['pending', 'pending_admin_review', 'waiting_customer_service_review', 'processing', 'confirmed'].includes(s)) return { bg: 'bg-amber-50 text-amber-800 border-amber-200', dot: 'bg-amber-500' };
+    if (['packed', 'shipped', 'out_for_delivery', 'out for delivery', 'return_in_progress'].includes(s)) return { bg: 'bg-sky-50 text-sky-800 border-sky-200', dot: 'bg-sky-500' };
+    if (['delivered', 'completed', 'paid', 'approved', 'registered', 'active', 'replacement_sent'].includes(s)) return { bg: 'bg-emerald-50 text-emerald-800 border-emerald-200', dot: 'bg-emerald-500' };
     if (['cancelled', 'canceled', 'rejected', 'expired', 'failed'].includes(s)) return { bg: 'bg-rose-50 text-rose-800 border-rose-200', dot: 'bg-rose-500' };
-    if (['refunded', 'returned'].includes(s)) return { bg: 'bg-violet-50 text-violet-800 border-violet-200', dot: 'bg-violet-500' };
+    if (['refunded', 'returned', 'received'].includes(s)) return { bg: 'bg-violet-50 text-violet-800 border-violet-200', dot: 'bg-violet-500' };
     if (['unread'].includes(s)) return { bg: 'bg-[#0B2419]/5 text-[#0B2419] border-[#0B2419]/20', dot: 'bg-[#D4AF37]' };
     return { bg: 'bg-stone-100 text-stone-700 border-stone-200', dot: 'bg-stone-400' };
   })();
@@ -192,6 +192,7 @@ export default function Profile() {
   const [wallet, setWallet] = useState({ balance: 0, transactions: [] });
   const [addresses, setAddresses] = useState([]);
   const [returns, setReturns] = useState([]);
+  const [returnEligibility, setReturnEligibility] = useState([]);
   const [notifications, setNotifications] = useState([]);
   const [coupons, setCoupons] = useState([]);
   const [myReviews, setMyReviews] = useState([]);
@@ -204,6 +205,10 @@ export default function Profile() {
 
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [returnOrder, setReturnOrder] = useState(null);
+  const [returnSubmitting, setReturnSubmitting] = useState(false);
+  const [returnUploadProgress, setReturnUploadProgress] = useState(0);
+  const returnPhotoInputRef = useRef(null);
+  const [returnEligibilityClock, setReturnEligibilityClock] = useState(Date.now());
   const [addressModal, setAddressModal] = useState({ open:false, editId:null, form:{ label:'Home', full_name:'', phone:'', line1:'', line2:'', city:'', state:'', postal_code:'', country:'India', is_default:false }});
   const [faqOpen, setFaqOpen] = useState(new Set());
   const [reviewEditing, setReviewEditing] = useState(null);
@@ -223,6 +228,11 @@ export default function Profile() {
   const userId = user?.id || user?.userId || (() => { try { const u = JSON.parse(localStorage.getItem('user')||'{}'); return u.id||u.userId; } catch (_) { return null; }})();
 
   useEffect(() => { fetchAllForActiveTab(); }, [activeTab]);
+  useEffect(() => {
+    if (!['orders', 'returns'].includes(activeTab)) return undefined;
+    const timer = setInterval(() => setReturnEligibilityClock(Date.now()), 15000);
+    return () => clearInterval(timer);
+  }, [activeTab]);
 
   const safeExtract = (res, ...keys) => {
     let d = res?.data;
@@ -240,7 +250,7 @@ export default function Profile() {
       const needsWishlist = ['overview','wishlist'];
       const needsWallet = ['overview','wallet'];
       const needsAddresses = ['addresses'];
-      const needsReturns = ['returns'];
+      const needsReturns = ['orders','returns'];
       const needsNotifications = ['notifications'];
       const needsCoupons = ['overview','coupons'];
       const needsReviews = ['orders','reviews'];
@@ -308,9 +318,14 @@ export default function Profile() {
   };
   const loadReturns = async () => {
     try {
-      const res = await returnsApi.getMyReturns();
+      const [res, eligibilityRes] = await Promise.all([returnsApi.getMyReturns(), returnsApi.getEligibility()]);
       setReturns(safeArr(safeExtract(res, 'returns')) || safeArr(safeExtract(res, 'data')) || safeArr(res?.data));
-    } catch (_) {}
+      const eligibility = safeExtract(eligibilityRes, 'data') || eligibilityRes?.data;
+      setReturnEligibility(safeArr(eligibility));
+    } catch (error) {
+      console.error('[PROFILE_RETURNS_LOAD]', error);
+      toast.error(error.response?.data?.message || 'Could not load return eligibility.');
+    }
   };
   const loadNotifications = async () => {
     try {
@@ -407,24 +422,93 @@ export default function Profile() {
     if (added) toast.success('Added to your cart');
     else toast.error('Could not add this product to your cart.');
   };
+  const openReturnRequest = order => {
+    const orderItems = safeArr(order.items || order.order_items);
+    setReturnOrder({
+      orderId: order.id,
+      order,
+      form: { orderItemId: orderItems[0]?.id || '', quantity: 1, reason: '', refundMethod: 'wallet', notes: '', images: [] },
+    });
+  };
+  const addReturnImages = event => {
+    const selected = Array.from(event.target.files || []);
+    event.target.value = '';
+    const accepted = [];
+    for (const file of selected) {
+      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+        toast.error('Evidence photos must be JPEG, PNG, or WebP images.');
+      } else if (file.size > 8 * 1024 * 1024) {
+        toast.error(`${file.name} exceeds the 8 MB photo limit.`);
+      } else accepted.push({ file, preview: URL.createObjectURL(file) });
+    }
+    setReturnOrder(current => {
+      if (!current) {
+        accepted.forEach(image => URL.revokeObjectURL(image.preview));
+        return current;
+      }
+      const room = Math.max(0, 5 - current.form.images.length);
+      if (accepted.length > room) toast.error('You can attach up to 5 evidence photos.');
+      accepted.slice(room).forEach(image => URL.revokeObjectURL(image.preview));
+      return { ...current, form: { ...current.form, images: [...current.form.images, ...accepted.slice(0, room)] } };
+    });
+  };
+  const removeReturnImage = index => setReturnOrder(current => {
+    const image = current?.form.images[index];
+    if (image?.preview) URL.revokeObjectURL(image.preview);
+    return current ? { ...current, form: { ...current.form, images: current.form.images.filter((_, imageIndex) => imageIndex !== index) } } : current;
+  });
+  const closeReturnRequest = () => {
+    if (returnSubmitting) return;
+    returnOrder?.form.images.forEach(image => URL.revokeObjectURL(image.preview));
+    setReturnOrder(null);
+  };
+  const uploadReturnPhoto = async (file, orderId, index, total) => {
+    const compressedFile = await compressImageForUpload(file);
+    const { data } = await returnsApi.createUploadUrl({
+      filename: compressedFile.name,
+      fileType: compressedFile.type,
+      size: compressedFile.size,
+      order_id: orderId,
+    });
+    return new Promise((resolve, reject) => {
+      const request = new XMLHttpRequest();
+      request.open('PUT', data.uploadUrl);
+      request.setRequestHeader('Content-Type', compressedFile.type);
+      request.upload.onprogress = progress => {
+        if (progress.lengthComputable) setReturnUploadProgress(Math.round(((index + progress.loaded / progress.total) / total) * 100));
+      };
+      request.onload = () => request.status >= 200 && request.status < 300 ? resolve(data.key) : reject(new Error('Evidence photo upload failed. Please try again.'));
+      request.onerror = () => reject(new Error('Evidence photo upload failed. Check your connection.'));
+      request.send(compressedFile);
+    });
+  };
   const handleSubmitReturn = async (e) => {
     e.preventDefault();
     const f = returnOrder?.form || {};
     if (!returnOrder?.orderId) return;
     if (!f.reason) { toast.error('Please provide a return reason'); return; }
+    if (!f.orderItemId) { toast.error('Select the item you need help returning.'); return; }
+    setReturnSubmitting(true);
+    setReturnUploadProgress(0);
     try {
+      const imageUrls = [];
+      for (let index = 0; index < f.images.length; index += 1) {
+        imageUrls.push(await uploadReturnPhoto(f.images[index].file, returnOrder.orderId, index, f.images.length));
+      }
       await returnsApi.submit({
         order_id: returnOrder.orderId,
-        order_item_id: f.orderItemId || null,
+        items: [{ order_item_id: f.orderItemId, quantity: Number(f.quantity) || 1 }],
         reason: f.reason,
         refund_method: f.refundMethod || 'wallet',
-        notes: f.notes || '',
+        description: f.notes || '',
+        image_urls: imageUrls,
       });
-      toast.success('Return request submitted. RMA generated.');
+      toast.success('Request sent for admin review. Your order remains delivered while the team reviews it.');
+      f.images.forEach(image => URL.revokeObjectURL(image.preview));
       setReturnOrder(null);
       await loadReturns();
-      await loadOrders();
-    } catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
+    } catch (err) { toast.error(err.response?.data?.message || err.message || 'Could not submit the return request.'); }
+    finally { setReturnSubmitting(false); }
   };
   const handleMarkNotifRead = async (id) => {
     try { await notificationsApi.markRead(id); setNotifications(ns => ns.map(n => n.id===id ? { ...n, is_read:1, status:'read' } : n)); }
@@ -637,6 +721,31 @@ export default function Profile() {
 
   const displayName = profileData.name || user?.name || user?.first_name || user?.full_name || 'Customer';
   const initials = displayName.split(/\s+/).map(s => s[0]).filter(Boolean).slice(0,2).join('').toUpperCase() || 'B';
+  const eligibilityForOrder = orderId => returnEligibility.find(item => String(item.id) === String(orderId));
+  const canRequestReturn = orderId => {
+    const eligibility = eligibilityForOrder(orderId);
+    if (!eligibility || Number(eligibility.has_return_request)) return false;
+    const opensAt = new Date(eligibility.return_available_at || '').getTime();
+    const expiresAt = new Date(eligibility.return_expires_at || '').getTime();
+    return Number.isFinite(opensAt) && Number.isFinite(expiresAt) && returnEligibilityClock >= opensAt && returnEligibilityClock <= expiresAt;
+  };
+  const returnWindowMessage = orderId => {
+    const eligibility = eligibilityForOrder(orderId);
+    if (!eligibility) return 'Checking return window…';
+    if (Number(eligibility.has_return_request)) return 'Return request already on file';
+    const opensAt = new Date(eligibility.return_available_at || '').getTime();
+    const expiresAt = new Date(eligibility.return_expires_at || '').getTime();
+    if (!Number.isFinite(opensAt) || !Number.isFinite(expiresAt)) return 'Contact support to check eligibility';
+    if (Number.isFinite(opensAt) && returnEligibilityClock < opensAt) {
+      const remainingMinutes = Math.ceil((opensAt - returnEligibilityClock) / 60000);
+      return `Return opens in ${Math.floor(remainingMinutes / 60)}h ${remainingMinutes % 60}m`;
+    }
+    if (Number.isFinite(expiresAt) && returnEligibilityClock > expiresAt) return 'Return window closed';
+    return 'Return request available';
+  };
+  const eligibleReturnOrders = orders.filter(order =>
+    DELIVERED_STATUSES.includes(String(order.status || '').toLowerCase()) && canRequestReturn(order.id)
+  );
 
   // ========== RENDER ==========
   return (
@@ -871,7 +980,8 @@ export default function Profile() {
                         {orders.map(o => {
                           const items = safeArr(o.items || o.order_items || o.Items);
                           const canCancel = CANCELLABLE_STATUSES.includes((o.status||'').toLowerCase());
-                          const canReturn = DELIVERED_STATUSES.includes((o.status||'').toLowerCase());
+                          const delivered = DELIVERED_STATUSES.includes((o.status||'').toLowerCase());
+                          const canReturn = delivered && canRequestReturn(o.id);
                           return (
                             <tr key={o.id} className="hover:bg-stone-50/60">
                               <td className="py-4 px-3 font-medium text-[#0B2419]">#{o.id}</td>
@@ -890,10 +1000,11 @@ export default function Profile() {
                                     </button>
                                   )}
                                   {canReturn && (
-                                    <button onClick={() => setReturnOrder({ orderId:o.id, form:{ orderItemId:null, reason:'', refundMethod:'wallet', notes:'' }, order:o })} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-100">
+                                    <button onClick={() => openReturnRequest(o)} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-100">
                                       <RotateCcw className="w-3.5 h-3.5"/> Return
                                     </button>
                                   )}
+                                  {delivered && !canReturn && <span className="max-w-32 text-right text-[10px] text-stone-500">{returnWindowMessage(o.id)}</span>}
                                 </div>
                               </td>
                             </tr>
@@ -1093,19 +1204,22 @@ export default function Profile() {
                   <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
                     <div>
                       <h2 className="text-lg font-semibold text-[#0B2419]">Returns & RMAs</h2>
-                      <p className="text-xs text-stone-500 mt-1">7-day return window on eligible delivered orders</p>
+                      <p className="text-xs text-stone-500 mt-1">Return requests open 30 minutes after delivery and remain available for the admin-configured {returnEligibility[0]?.return_window_days || 7}-day window.</p>
                     </div>
-                    {orders.filter(o => DELIVERED_STATUSES.includes((o.status||'').toLowerCase())).length > 0 && (
-                      <button onClick={() => {
-                        const d = orders.find(o => DELIVERED_STATUSES.includes((o.status||'').toLowerCase()));
-                        if (d) setReturnOrder({ orderId:d.id, form:{ orderItemId:null, reason:'', refundMethod:'wallet', notes:'' }, order:d });
-                      }} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B2419] text-[#FDFBF7] text-sm font-medium hover:bg-[#1e4031] shadow-sm">
+                    {eligibleReturnOrders.length > 0 && (
+                      <button onClick={() => openReturnRequest(eligibleReturnOrders[0])} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B2419] text-[#FDFBF7] text-sm font-medium hover:bg-[#1e4031] shadow-sm">
                         <RotateCcw className="w-4 h-4"/> New Return Request
                       </button>
                     )}
                   </div>
+                  {orders.some(order => {
+                    const eligibility = eligibilityForOrder(order.id);
+                    return DELIVERED_STATUSES.includes(String(order.status || '').toLowerCase()) &&
+                      eligibility && !Number(eligibility.has_return_request) &&
+                      new Date(eligibility.return_available_at || '').getTime() > returnEligibilityClock;
+                  }) && <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">A return option appears 30 minutes after verified delivery. Check the Orders tab for each order's opening time. Your delivery window follows the current store policy.</p>}
                   {returns.length === 0 ? (
-                    <EmptyState icon={RotateCcw} title="No returns filed yet" subtitle="You can return eligible delivered orders within 7 days and track the refund/RMA status from here."/>
+                    <EmptyState icon={RotateCcw} title="No returns filed yet" subtitle="When eligible, submit an item-level request with optional photos. Our team reviews it before it can move into return progress."/>
                   ) : (
                     <div className="overflow-x-auto -mx-5 px-5">
                       <table className="w-full min-w-[700px] text-sm">
@@ -1931,31 +2045,49 @@ export default function Profile() {
 
       {/* ======== RETURN REQUEST MODAL ======== */}
       {returnOrder && (() => {
-        const deliveredOrders = orders.filter(o => DELIVERED_STATUSES.includes((o.status||'').toLowerCase()));
+        const deliveredOrders = eligibleReturnOrders;
+        const selectedOrderItems = safeArr(returnOrder.order?.items || returnOrder.order?.order_items);
         const form = returnOrder.form;
         return (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-6" onClick={() => setReturnOrder(null)}>
+          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/60 backdrop-blur-sm p-0 sm:p-6" onClick={closeReturnRequest}>
             <form onSubmit={handleSubmitReturn} onClick={e => e.stopPropagation()} className="w-full sm:max-w-xl bg-[#FDFBF7] sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
               <div className="bg-gradient-to-br from-sky-600 to-sky-800 text-white px-6 sm:px-8 py-6 flex items-start justify-between gap-4">
                 <div>
                   <div className="text-xs uppercase tracking-[0.2em] text-sky-200 font-semibold mb-1">Return Request</div>
                   <h3 className="text-2xl font-bold">Submit Return</h3>
-                  <p className="text-sm text-sky-100 mt-1">Filed returns are processed within 48 hours.</p>
+                  <p className="text-sm text-sky-100 mt-1">Your order stays delivered while our team reviews the request.</p>
                 </div>
-                <button type="button" onClick={() => setReturnOrder(null)} className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center">
+                <button type="button" onClick={closeReturnRequest} className="w-9 h-9 rounded-xl bg-white/10 hover:bg-white/20 border border-white/10 flex items-center justify-center">
                   <X className="w-4 h-4"/>
                 </button>
               </div>
               <div className="px-6 sm:px-8 py-6 space-y-4 flex-1 overflow-y-auto">
                 <div>
                   <label className="text-xs font-semibold text-stone-600 mb-1.5 block">Delivered Order</label>
-                  <select value={returnOrder.orderId} onChange={e => setReturnOrder(r => ({ ...r, orderId: Number(e.target.value) }))}
+                  <select value={returnOrder.orderId} onChange={e => {
+                    const order = deliveredOrders.find(item => String(item.id) === e.target.value);
+                    setReturnOrder(current => ({ ...current, orderId: Number(e.target.value), order, form: { ...current.form, orderItemId: (order?.items || order?.order_items || [])[0]?.id || '', quantity: 1 } }));
+                  }}
                     className="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:border-sky-600 focus:ring-4 focus:ring-sky-100 bg-white text-sm">
                     {deliveredOrders.map(o => (
                       <option key={o.id} value={o.id}>Order #{o.id} — ₹{Number(o.total_amount||o.total||0).toFixed(2)} ({o.created_at? new Date(o.created_at).toLocaleDateString():''})</option>
                     ))}
-                    {deliveredOrders.length === 0 && <option value="">No delivered orders yet</option>}
+                    {deliveredOrders.length === 0 && <option value="">No currently eligible delivered orders</option>}
                   </select>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-[1fr_120px] gap-3">
+                  <div>
+                    <label className="text-xs font-semibold text-stone-600 mb-1.5 block">Item to return</label>
+                    <select value={form.orderItemId} onChange={e => setReturnOrder(current => ({ ...current, form: { ...current.form, orderItemId: e.target.value, quantity: 1 } }))}
+                      className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-sm">
+                      <option value="">Select an item…</option>
+                      {selectedOrderItems.map(item => <option key={item.id} value={item.id}>{item.name || item.product_name || `Product #${item.product_id}`} · {item.quantity} purchased</option>)}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="text-xs font-semibold text-stone-600 mb-1.5 block">Quantity</label>
+                    <input type="number" min="1" max={selectedOrderItems.find(item => String(item.id) === String(form.orderItemId))?.quantity || 1} value={form.quantity} onChange={e => setReturnOrder(current => ({ ...current, form: { ...current.form, quantity: e.target.value } }))} className="w-full px-4 py-2.5 rounded-xl border border-stone-200 bg-white text-sm"/>
+                  </div>
                 </div>
                 <div>
                   <label className="text-xs font-semibold text-stone-600 mb-1.5 block">Return Reason</label>
@@ -1994,16 +2126,24 @@ export default function Profile() {
                   </div>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-stone-600 mb-1.5 block">Additional notes (optional)</label>
+                  <label className="text-xs font-semibold text-stone-600 mb-1.5 block">What happened? (optional details)</label>
                   <textarea rows={3} value={form.notes} onChange={e => setReturnOrder(r => ({ ...r, form:{ ...r.form, notes: e.target.value }}))}
-                    placeholder="Attach photos or share more context so our team can help faster."
+                    maxLength={2000} placeholder="Share what happened so our team can review the right solution."
                     className="w-full px-4 py-3 rounded-xl border border-stone-200 focus:border-sky-600 focus:ring-4 focus:ring-sky-100 text-sm resize-none"/>
                 </div>
+                <div>
+                  <div className="mb-2 flex items-center justify-between gap-3"><label className="text-xs font-semibold text-stone-600">Evidence photos (optional, up to 5)</label><span className="text-[10px] text-stone-400">{form.images.length}/5</span></div>
+                  <input ref={returnPhotoInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={addReturnImages} className="hidden"/>
+                  <button type="button" onClick={() => returnPhotoInputRef.current?.click()} disabled={form.images.length >= 5 || returnSubmitting} className="w-full rounded-xl border border-dashed border-stone-300 bg-white px-4 py-3 text-left text-sm text-stone-600 hover:border-sky-500 disabled:opacity-50"><Camera className="mr-2 inline h-4 w-4"/>Add photos — JPEG, PNG, or WebP; max 8 MB each</button>
+                  {form.images.length > 0 && <div className="mt-3 grid grid-cols-5 gap-2">{form.images.map((image, index) => <div key={image.preview} className="relative aspect-square overflow-hidden rounded-lg border border-stone-200"><img src={image.preview} alt={`Return evidence ${index + 1}`} className="h-full w-full object-cover"/><button type="button" onClick={() => removeReturnImage(index)} disabled={returnSubmitting} aria-label="Remove evidence photo" className="absolute right-1 top-1 rounded-full bg-black/70 p-1 text-white"><X className="h-3 w-3"/></button></div>)}</div>}
+                  {returnSubmitting && form.images.length > 0 && <div className="mt-3"><div className="h-2 overflow-hidden rounded-full bg-stone-200"><div className="h-full bg-sky-600 transition-all" style={{ width: `${returnUploadProgress}%` }}/></div><p className="mt-1 text-right text-xs text-stone-500">{returnUploadProgress}% uploaded</p></div>}
+                </div>
+                <div className="rounded-xl border border-sky-100 bg-sky-50 p-3 text-xs text-sky-900">Our team checks the order and the details you provide. Acceptance is required before a return can move into progress. Need help now? <button type="button" onClick={() => { closeReturnRequest(); setSupportTicket(ticket => ({ ...ticket, subject: `Return help for order #${returnOrder.orderId}`, order_id: String(returnOrder.orderId) })); setActiveTab('support'); }} className="font-semibold underline underline-offset-2">Chat with customer care</button>.</div>
               </div>
               <div className="border-t border-stone-200 bg-white px-6 sm:px-8 py-4 flex flex-wrap items-center justify-end gap-2">
-                <button type="button" onClick={() => setReturnOrder(null)} className="px-5 py-2.5 rounded-xl border border-stone-200 text-stone-700 hover:bg-stone-50 text-sm font-medium">Cancel</button>
-                <button type="submit" className="px-6 py-2.5 rounded-xl bg-[#0B2419] text-[#FDFBF7] text-sm font-semibold hover:bg-[#1e4031] inline-flex items-center gap-2">
-                  <CheckCircle2 className="w-4 h-4"/> Submit Return
+                <button type="button" onClick={closeReturnRequest} disabled={returnSubmitting} className="px-5 py-2.5 rounded-xl border border-stone-200 text-stone-700 hover:bg-stone-50 text-sm font-medium disabled:opacity-50">Cancel</button>
+                <button type="submit" disabled={returnSubmitting} className="px-6 py-2.5 rounded-xl bg-[#0B2419] text-[#FDFBF7] text-sm font-semibold hover:bg-[#1e4031] inline-flex items-center gap-2 disabled:opacity-50">
+                  <CheckCircle2 className="w-4 h-4"/> {returnSubmitting ? 'Sending for review…' : 'Submit for review'}
                 </button>
               </div>
             </form>

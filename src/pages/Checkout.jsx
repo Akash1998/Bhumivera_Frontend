@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -21,11 +21,20 @@ import {
 } from 'react-icons/fi';
 import { Gift, Wallet } from 'lucide-react';
 
+const getCheckoutImageUrl = image => {
+  const value = typeof image === 'object' && image !== null ? image.url || image.file_path || image.path : image;
+  if (typeof value !== 'string' || !value.trim()) return '/logo.webp';
+  if (/^(https?:|data:|blob:)/i.test(value)) return value;
+  const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev/bhumivera';
+  return `${baseUrl.replace(/\/$/, '')}/${value.replace(/^\/+/, '')}`;
+};
+
 export default function Checkout() {
   const { user } = useAuth();
   const { cartItems, getSubtotal, clearCart, rulePreview, rulePreviewLoading } = useCart();
   const { settings } = useSettings();
   const navigate = useNavigate();
+  const location = useLocation();
 
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState(null);
@@ -40,21 +49,45 @@ export default function Checkout() {
   const [impactAmount, setImpactAmount] = useState(0);
   const [impactProject, setImpactProject] = useState('native-trees');
   
-  const [couponCode, setCouponCode] = useState('');
+  const [couponCode, setCouponCode] = useState(location.state?.couponCode || '');
   const [availableCoupons, setAvailableCoupons] = useState([]);
   const [appliedCouponDiscount, setAppliedCouponDiscount] = useState(0);
-  const [couponMessage, setCouponMessage] = useState('');
+  const [couponMessage, setCouponMessage] = useState(location.state?.couponCode ? 'Your personal cart-recovery coupon is ready. Its discount is confirmed when the order is placed.' : '');
   const [notes, setNotes] = useState('');
 
   const subtotal = getSubtotal();
   const standardShippingCost = Math.max(0, Number(settings?.standard_charge ?? settings?.default_shipping_charge ?? 50) || 0);
   const expressShippingCost = Math.max(0, Number(settings?.express_charge ?? 150) || 0);
   const shippingCost = rulePreview?.freeShipping ? 0 : shippingMethod === 'EXPRESS' ? expressShippingCost : standardShippingCost;
+  const cartRuleDiscount = Math.max(0, Number(rulePreview?.totalDiscount) || 0);
   const loyaltyPointsPerRupee = Math.max(1, Number(settings?.loyalty_points_per_rupee) || 10);
   const pointsPayableCap = Math.floor(Math.max(0, subtotal + shippingCost - appliedCouponDiscount) * loyaltyPointsPerRupee);
   const loyaltyPointsRedeemed = redeemLoyaltyPoints ? Math.min(loyaltyPoints, pointsPayableCap) : 0;
   const loyaltyDiscount = loyaltyPointsRedeemed / loyaltyPointsPerRupee;
-  const finalTotal = Math.max(0, subtotal + shippingCost - appliedCouponDiscount - loyaltyDiscount + (paymentMode === 'COD' ? impactAmount : 0));
+  const finalTotal = Math.max(0, subtotal + shippingCost - cartRuleDiscount - appliedCouponDiscount - loyaltyDiscount + (paymentMode === 'COD' ? impactAmount : 0));
+
+  useEffect(() => {
+    if (location.state?.couponCode) setCouponCode(location.state.couponCode);
+  }, [location.state?.couponCode]);
+
+  useEffect(() => {
+    const recoveryCode = location.state?.couponCode;
+    if (!recoveryCode) return undefined;
+    let active = true;
+    couponsApi.validate(recoveryCode, subtotal)
+      .then(response => {
+        if (!active) return;
+        const data = response.data?.data || response.data || {};
+        setAppliedCouponDiscount(Number(data.discount) || 0);
+        setCouponMessage(`Personal ${Number(data.coupon?.discount_value) || 5}% recovery coupon is ready.`);
+      })
+      .catch(error => {
+        if (!active) return;
+        setAppliedCouponDiscount(0);
+        setCouponMessage(error.response?.data?.message || 'This cart-recovery coupon is no longer available.');
+      });
+    return () => { active = false; };
+  }, [location.state?.couponCode, subtotal]);
 
   const fetchData = useCallback(async () => {
     try {
@@ -384,7 +417,7 @@ export default function Checkout() {
                 {cartItems?.length > 0 ? cartItems.map((item, idx) => (
                   <div key={idx} className="flex items-center gap-4 border-b border-stone-100 pb-4 last:border-0 last:pb-0">
                     <div className="w-16 h-16 bg-stone-50 rounded-lg border border-stone-200 overflow-hidden flex-shrink-0 relative group p-1">
-                      <img src={item.image || '/assets/images/placeholder.webp'} alt={item.name} className="w-full h-full object-contain mix-blend-multiply opacity-90 group-hover:opacity-100 transition-opacity" />
+                      <img src={getCheckoutImageUrl(item.image)} alt={item.name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-contain mix-blend-multiply opacity-90 group-hover:opacity-100 transition-opacity" />
                       <div className="absolute top-0 right-0 bg-white/90 backdrop-blur text-[10px] font-bold px-1.5 py-0.5 rounded-bl-lg shadow-sm">x{item.quantity}</div>
                     </div>
                     <div className="flex-1">
@@ -417,10 +450,11 @@ export default function Checkout() {
                     <span className="text-[#1A1A1A] font-medium">₹{shippingCost}</span>
                   )}
                 </div>
+                {cartRuleDiscount > 0 && <div className="flex justify-between text-emerald-700"><span>Cart &amp; member rewards</span><span>-₹{cartRuleDiscount.toFixed(2)}</span></div>}
                 {couponCode && (
                   <div className="flex justify-between text-[#8B9D83] text-xs font-medium">
                     <span>Promo: {couponCode}</span>
-                    <span>Pending Apply</span>
+                    <span>{appliedCouponDiscount > 0 ? 'Applied' : 'Checking'}</span>
                   </div>
                 )}
                 {appliedCouponDiscount > 0 && <div className="flex justify-between text-emerald-700"><span>Coupon savings</span><span>-₹{appliedCouponDiscount.toFixed(2)}</span></div>}

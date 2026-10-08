@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "./AuthContext";
 import { useSettings } from "./SettingsContext";
-import { cart as cartApi, cartRules as cartRulesApi } from "../services/api";
+import { cart as cartApi } from "../services/api";
 import { useToast } from './ToastContext';
 
 const CartContext = createContext();
@@ -12,6 +12,7 @@ export const CartProvider = ({ children }) => {
   const [isCartOpen, setIsCartOpen] = useState(false); 
   const [upsells, setUpsells] = useState([]); 
   const [rulePreview, setRulePreview] = useState(null);
+  const [abandonment, setAbandonment] = useState(null);
   const [rulePreviewLoading, setRulePreviewLoading] = useState(false);
   const previousRuleIds = useRef(null);
   const { isAuthenticated } = useAuth();
@@ -21,17 +22,21 @@ export const CartProvider = ({ children }) => {
   const loadCart = useCallback(async () => {
     if (isAuthenticated) {
       setCartLoading(true);
+      setRulePreviewLoading(true);
       try {
         const res = await cartApi.get();
         const fetchedData = res.data?.items || res.data;
         setCart(Array.isArray(fetchedData) ? fetchedData : []);
         setRulePreview(res.data?.rulePreview || null);
+        setAbandonment(res.data?.abandonment || null);
       } catch (err) {
         console.error("Cart sync failed:", err);
         setCart([]);
         setRulePreview(null);
+        setAbandonment(null);
       } finally {
         setCartLoading(false);
+        setRulePreviewLoading(false);
       }
     } else {
       try {
@@ -39,6 +44,7 @@ export const CartProvider = ({ children }) => {
         const parsed = saved ? JSON.parse(saved) : [];
         setCart(Array.isArray(parsed) ? parsed : []);
         setRulePreview(null);
+        setAbandonment(null);
       } catch (e) {
         console.error("Local cart parse failed:", e);
         setCart([]);
@@ -182,30 +188,6 @@ export const CartProvider = ({ children }) => {
     }, 0);
   };
 
-  const subtotalForRules = getSubtotal();
-
-  useEffect(() => {
-    if (subtotalForRules <= 0) {
-      setRulePreview(null);
-      setRulePreviewLoading(false);
-      previousRuleIds.current = null;
-      return undefined;
-    }
-    let active = true;
-    const timer = setTimeout(async () => {
-      setRulePreviewLoading(true);
-      try {
-        const { data } = await cartRulesApi.preview(subtotalForRules);
-        if (active) setRulePreview(data);
-      } catch (error) {
-        if (active) console.warn('Cart rule preview unavailable:', error.normalized?.message || error.message);
-      } finally {
-        if (active) setRulePreviewLoading(false);
-      }
-    }, 250);
-    return () => { active = false; clearTimeout(timer); };
-  }, [subtotalForRules]);
-
   useEffect(() => {
     if (!rulePreview) return;
     const currentIds = new Set((rulePreview.matchedRuleIds || []).map(String));
@@ -241,6 +223,7 @@ export const CartProvider = ({ children }) => {
       freeShippingThreshold,
       rulePreview,
       rulePreviewLoading,
+      abandonment,
       loadCart
     }}>
       {children}

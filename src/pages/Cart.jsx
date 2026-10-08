@@ -9,7 +9,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import { Gift } from 'lucide-react';
-import { newsletter as newsletterApi, products as productsApi } from '../services/api';
+import { cart as cartApi, newsletter as newsletterApi, products as productsApi, wishlist as wishlistApi } from '../services/api';
 import { useToast } from '../context/ToastContext';
 
 const getImageUrl = (img) => {
@@ -17,7 +17,7 @@ const getImageUrl = (img) => {
   let path = typeof img === 'object' ? (img.url || img.file_path || img.path) : img;
   if (!path) return '/logo.webp';
   if (path.startsWith('http')) return path;
-  const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-22cd43cce9bc475680ad496e199706c4.r2.dev';
+  const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev/bhumivera';
   return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
 };
 
@@ -32,6 +32,7 @@ export default function Cart() {
     freeShippingThreshold,
     rulePreview,
     rulePreviewLoading,
+    abandonment,
     addToCart
   } = useCart();
   
@@ -46,9 +47,13 @@ export default function Cart() {
   const [exitEmail, setExitEmail] = useState('');
   const [exitSubmitting, setExitSubmitting] = useState(false);
   const [seasonalSeconds, setSeasonalSeconds] = useState(0);
+  const [watchlistItems, setWatchlistItems] = useState([]);
+  const [checkoutPromptOpen, setCheckoutPromptOpen] = useState(false);
+  const [abandonedCoupon, setAbandonedCoupon] = useState(null);
 
   const cartTotal = typeof getSubtotal === 'function' ? getSubtotal() : 0;
   const cartCount = cartItems.reduce((acc, item) => acc + (item.quantity || 1), 0);
+  const cartRuleDiscount = Math.max(0, Number(rulePreview?.totalDiscount) || 0);
   const amountLeftForFreeShipping = Math.max(freeShippingThreshold - cartTotal, 0);
   const enforcedMissingAmount = rulePreview?.enforcedMin !== null && rulePreview?.enforcedMin !== undefined
     ? Number(rulePreview.missingAmount) || 0
@@ -71,6 +76,49 @@ export default function Cart() {
     }).catch(() => { if (active) setRecommendations([]); });
     return () => { active = false; };
   }, [cartItems]);
+
+  useEffect(() => {
+    let active = true;
+    if (!user) {
+      setWatchlistItems([]);
+      return undefined;
+    }
+    wishlistApi.get()
+      .then(response => {
+        const data = response.data?.wishlist || response.data?.items || response.data?.data || response.data;
+        if (active) setWatchlistItems(Array.isArray(data) ? data : []);
+      })
+      .catch(error => {
+        console.error('[CART_WISHLIST_LOAD]', error);
+        if (active) setWatchlistItems([]);
+      });
+    return () => { active = false; };
+  }, [user]);
+
+  useEffect(() => {
+    if (!user || !cartItems.length || !abandonment?.enabled || abandonedCoupon) return undefined;
+    const lastActivity = new Date(abandonment.lastActivityAt || '').getTime();
+    if (!Number.isFinite(lastActivity)) return undefined;
+    const eligibleAt = lastActivity + Math.max(1, Number(abandonment.delayMinutes) || 30) * 60000;
+    let active = true;
+    const claimOffer = async () => {
+      try {
+        const response = await cartApi.claimAbandonedCoupon();
+        if (!active) return;
+        setAbandonedCoupon(response.data?.data || response.data);
+        toast.success(`Your personal ${Number(response.data?.discount_percent) || 5}% cart coupon is ready for checkout.`);
+      } catch (error) {
+        const serverEligibleAt = new Date(error.response?.data?.eligible_at || '').getTime();
+        if (active && Number.isFinite(serverEligibleAt) && serverEligibleAt > Date.now()) {
+          timer = setTimeout(claimOffer, serverEligibleAt - Date.now());
+        } else if (error.response?.status !== 409) {
+          console.error('[CART_ABANDONED_COUPON]', error);
+        }
+      }
+    };
+    let timer = setTimeout(claimOffer, Math.max(0, eligibleAt - Date.now()));
+    return () => { active = false; clearTimeout(timer); };
+  }, [user, cartItems.length, abandonment, abandonedCoupon, toast]);
 
   useEffect(() => {
     const dates = cartItems.map(item => new Date(item.created_at || item.added_at || NaN).getTime()).filter(Number.isFinite);
@@ -141,11 +189,13 @@ export default function Cart() {
       toast.error(`Add ₹${enforcedMissingAmount.toLocaleString()} more to place this order.`);
       return;
     }
-    if (!user) {
-      navigate('/login', { state: { from: '/checkout' } });
-    } else {
-      navigate('/checkout');
-    }
+    setCheckoutPromptOpen(true);
+  };
+
+  const continueToCheckout = () => {
+    setCheckoutPromptOpen(false);
+    if (!user) navigate('/login', { state: { from: '/checkout' } });
+    else navigate('/checkout', { state: { couponCode: abandonedCoupon?.code || '' } });
   };
 
   if (cartItems.length === 0) {
@@ -203,6 +253,10 @@ export default function Cart() {
         </div>
 
         {amountLeftForFreeShipping > 0 && amountLeftForFreeShipping <= 300 && <div className="mb-6 border-l-4 border-emerald-500 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-900">Free delivery in ₹{amountLeftForFreeShipping.toLocaleString()} more.</div>}
+        {abandonedCoupon?.code && <div className="mb-6 flex flex-col gap-3 border border-[#D4AF37]/50 bg-[#FFF8E7] px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+          <div><p className="text-xs font-bold uppercase tracking-widest text-[#8a6a12]">A little thank-you for coming back</p><p className="mt-1 text-sm text-[#2C3E2D]">Your personal {Number(abandonedCoupon.discount_percent) || 5}% coupon <strong>{abandonedCoupon.code}</strong> is ready for your next order{abandonedCoupon.expires_at ? ` until ${new Date(abandonedCoupon.expires_at).toLocaleDateString()}` : ''}.</p></div>
+          <button onClick={() => { navigator.clipboard.writeText(abandonedCoupon.code).then(() => toast.success('Coupon copied. It will be ready at checkout.')).catch(() => toast.error('Could not copy the coupon code.')); }} className="shrink-0 border border-[#D4AF37]/60 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#6d5410] hover:bg-white">Copy coupon</button>
+        </div>}
 
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
           
@@ -223,7 +277,7 @@ export default function Cart() {
                     className="bg-white border border-[#e8dcc4] rounded-3xl p-4 sm:p-6 flex flex-col sm:flex-row gap-6 items-center sm:items-start group hover:border-[#8b5a2b]/30 transition-colors shadow-sm"
                   >
                     <div className="w-full sm:w-32 h-32 bg-[#faf8f5] rounded-2xl border border-[#e8dcc4] overflow-hidden shrink-0 relative flex items-center justify-center p-2">
-                      <img src={getImageUrl(img)} alt={product.name} className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110" />
+                      <img src={getImageUrl(img)} alt={product.name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-contain mix-blend-multiply transition-transform duration-500 group-hover:scale-110" />
                     </div>
 
                     <div className="flex-1 w-full flex flex-col h-full justify-between">
@@ -298,6 +352,7 @@ export default function Cart() {
               
               <div className="mb-8 relative z-10">
                 {rulePreview?.tiers?.length > 0 && <div className="mb-6 space-y-4" aria-label="Cart rewards progress">
+                  {rulePreview.membershipTier && <p className="border border-[#D4AF37]/30 bg-[#FFF8E7] px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#765d17]">{rulePreview.membershipTier} member benefits</p>}
                   {rulePreview.tiers.map(tier => <div key={tier.id}>
                     <div className="mb-1.5 flex justify-between gap-3 text-[10px] font-bold uppercase tracking-wider"><span className="truncate text-stone-600">{tier.badge}</span><span className={tier.unlocked ? 'text-emerald-700' : 'text-[#8b5a2b]'}>{tier.unlocked ? 'Unlocked' : `Add ₹${tier.missingAmount.toLocaleString()}`}</span></div>
                     <div className="h-1.5 overflow-hidden bg-[#f3efe7]"><div className={`h-full transition-all ${tier.unlocked ? 'bg-emerald-500' : 'bg-[#8b5a2b]'}`} style={{ width: `${tier.progressPct}%` }}/></div>
@@ -325,6 +380,7 @@ export default function Cart() {
                   <span>Subtotal ({cartCount} Items)</span>
                   <span className="font-bold text-[#1A1C18]">₹{cartTotal.toLocaleString()}</span>
                 </div>
+                {cartRuleDiscount > 0 && <div className="flex justify-between text-sm font-semibold text-emerald-700"><span>Member &amp; cart rewards</span><span>−₹{cartRuleDiscount.toLocaleString()}</span></div>}
                 {savedAmount > 0 && <div className="flex justify-between text-sm font-semibold text-emerald-700"><span>You saved</span><span>₹{savedAmount.toLocaleString()}</span></div>}
                 <div className="flex justify-between text-stone-600 font-medium pb-6 border-b border-[#e8dcc4]">
                   <span>Logistics & Handling</span>
@@ -337,7 +393,7 @@ export default function Cart() {
                 
                 <div className="flex justify-between items-end pt-2">
                   <span className="text-sm font-bold uppercase tracking-widest text-stone-500">Final Total</span>
-                  <span className="text-4xl font-serif text-[#8b5a2b]">₹{cartTotal.toLocaleString()}</span>
+                  <span className="text-4xl font-serif text-[#8b5a2b]">₹{Math.max(0, cartTotal - cartRuleDiscount).toLocaleString()}</span>
                 </div>
               </div>
 
@@ -366,6 +422,28 @@ export default function Cart() {
           <input type="email" required value={exitEmail} onChange={event => setExitEmail(event.target.value)} placeholder="Email address" className="mt-5 w-full border border-stone-300 px-3 py-3 text-sm outline-none focus:border-[#8b5a2b]"/>
           <div className="mt-4 flex justify-end gap-3"><button type="button" onClick={() => setExitPromptOpen(false)} className="px-3 py-2 text-sm text-stone-500">Not now</button><button disabled={exitSubmitting} type="submit" className="bg-[#8b5a2b] px-4 py-2 text-sm font-bold text-white disabled:opacity-50">{exitSubmitting ? 'Submitting…' : 'Send me updates'}</button></div>
         </form>
+      </div>}
+      {checkoutPromptOpen && <div className="fixed inset-0 z-[90] flex items-center justify-center bg-black/60 p-4" role="presentation" onMouseDown={event => { if (event.target === event.currentTarget) setCheckoutPromptOpen(false); }}>
+        <section role="dialog" aria-modal="true" aria-labelledby="checkout-watchlist-title" className="w-full max-w-xl border border-[#e8dcc4] bg-[#FDFBF7] p-6 shadow-2xl sm:p-8">
+          <div className="flex items-start justify-between gap-4"><div><p className="text-xs font-bold uppercase tracking-widest text-[#8b5a2b]">One last look</p><h2 id="checkout-watchlist-title" className="mt-2 text-2xl font-serif text-[#2C3E2D]">Anything saved for later?</h2></div><button type="button" aria-label="Close" onClick={() => setCheckoutPromptOpen(false)} className="text-2xl leading-none text-stone-500">×</button></div>
+          <p className="mt-2 text-sm text-stone-600">Review your wishlist before checkout, or continue with your cart as it is. Your saved items are never added without your choice.</p>
+          {watchlistItems.length > 0 ? <div className="mt-5 max-h-56 space-y-2 overflow-y-auto">
+            {watchlistItems.slice(0, 5).map(item => {
+              const product = item.product || item;
+              const productId = product.id || product.product_id || product._id;
+              const image = product.image_url || product.image || product.thumbnail || product.images?.[0];
+              return <div key={item.id || productId} className="flex items-center gap-3 border border-[#e8dcc4] bg-white p-3">
+                <img src={getImageUrl(image)} alt="" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-12 w-12 object-contain"/>
+                <div className="min-w-0 flex-1"><p className="truncate text-sm font-semibold text-[#2C3E2D]">{product.name || product.title || 'Saved item'}</p><p className="text-xs text-stone-500">₹{Number(product.discount_price || product.price || item.price || 0).toLocaleString()}</p></div>
+                <button type="button" onClick={async () => { const added = await addToCart(product); if (added) setWatchlistItems(items => items.filter(saved => String(saved.product_id || saved.id || saved._id) !== String(productId))); }} className="border border-[#e8dcc4] px-3 py-2 text-xs font-bold text-[#8b5a2b] hover:bg-[#faf8f5]">Add</button>
+              </div>;
+            })}
+          </div> : <p className="mt-5 rounded-xl border border-[#e8dcc4] bg-white p-4 text-sm text-stone-600">Your wishlist is empty. You can still browse it or go straight to checkout.</p>}
+          <div className="mt-6 flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
+            <button type="button" onClick={() => { setCheckoutPromptOpen(false); navigate('/wishlist'); }} className="border border-[#e8dcc4] px-5 py-3 text-sm font-semibold text-[#2C3E2D] hover:bg-white">Review wishlist</button>
+            <button type="button" onClick={continueToCheckout} className="bg-[#8b5a2b] px-5 py-3 text-sm font-bold text-white hover:bg-[#6b4421]">Continue to checkout <ArrowRight size={15} className="ml-1 inline"/></button>
+          </div>
+        </section>
       </div>}
     </div>
   );

@@ -94,6 +94,7 @@ api.interceptors.request.use(c => {
     url.startsWith("/analytics/") ||
     url.startsWith("/inventory/") ||
     url.startsWith("/notifications/admin/") ||
+    url.startsWith("/returns/admin/") ||
     url.startsWith("/serials/admin/") ||
     url.startsWith("/contact") && c.method === "get" && !url.startsWith("/contact/my") ||
     url.startsWith("/returns") && c.method === "get" && !url.includes("/my") ||
@@ -102,7 +103,7 @@ api.interceptors.request.use(c => {
     url.startsWith("/products") && c.method === "get" && !url.startsWith("/products/active") && !url.startsWith("/products/slug/") && !url.includes("/qa") && !/\/products\/\d+/.test(url) && !/\/products\/[a-f0-9]{24}/.test(url) ||
     url.startsWith("/categories") && (c.method === "post" || c.method === "put" || c.method === "delete") ||
     url.startsWith("/subcategories") && (c.method === "post" || c.method === "put" || c.method === "delete") ||
-    url.startsWith("/coupons") && (c.method === "post" || c.method === "put" || c.method === "delete" || url.includes("/coupons") && c.method === "get" && !url.includes("/public/")) ||
+    url.startsWith("/coupons") && !url.startsWith("/coupons/validate") && (c.method === "post" || c.method === "put" || c.method === "delete" || url.includes("/coupons") && c.method === "get" && !url.includes("/public/")) ||
     url.startsWith("/settings") ||
     url.startsWith("/shipping") && c.method !== "get" ||
     url.startsWith("/shipping/zones") && c.method === "get" && !url.includes("/active") ||
@@ -141,7 +142,8 @@ const _resolveTokenKind = (url = '', method = '', adminAuth = false) => {
     url.startsWith("/orders/") && (method === 'put' || method === 'delete') ||
     url.startsWith("/analytics/") ||
     url.startsWith("/settings") ||
-    url.startsWith("/notifications/admin/");
+    url.startsWith("/notifications/admin/") ||
+    url.startsWith("/returns/admin/");
   const isWarehouseUrl = url.startsWith("/warehouse/");
   const isAuthUrl = url.includes("/auth/");
   if (isAdminUrl || (isAuthUrl && (url.includes("/admin/") || url.includes("/warehouse/")))) return 'admin';
@@ -283,9 +285,10 @@ export const users = { updateProfile: d => api.put('/users/profile', d), changeP
 export const products = { getAllActive: p => api.get("/products/active", { params: p }), getAllAdmin: () => api.get("/products"), getById: id => api.get(`/products/${id}`), getBySlug: s => api.get(`/products/slug/${s}`), create: (d, options) => api.post("/products", d, options), update: (id, d, options) => api.put(`/products/${id}`, d, options), toggleStatus: (id, s) => api.patch(`/products/${id}/status`, { status: s }), getUploadUrl: (f, t, options) => api.post("/products/presign", { filename: f, fileType: t }, options), saveImageKeys: (id, k, options) => api.post(`/products/${id}/images/save`, { imageKeys: k }, options), deleteImage: (id, image, options = {}) => api.delete(`/products/${id}/images`, { ...options, data: typeof image === 'object' ? { imageId: image.id, imagePath: image.file_path } : { imageId: image } }), addSerials: (id, s) => api.post(`/serials/${id}/add`, { serials: s }), delete: id => api.delete(`/products/${id}`) };
 export const categories = { getAll: () => api.get("/categories"), getById: id => api.get(`/categories/${id}`), create: d => api.post("/categories", d), update: (id, d) => api.put(`/categories/${id}`, d), delete: id => api.delete(`/categories/${id}`) };
 export const subcategories = { getAll: () => api.get("/subcategories"), getById: id => api.get(`/subcategories/${id}`), create: d => api.post("/subcategories", d), update: (id, d) => api.put(`/subcategories/${id}`, d), delete: id => api.delete(`/subcategories/${id}`) };
-export const cart = { get: () => api.get("/cart"), add: d => api.post("/cart", d), updateQuantity: (id, q) => api.put(`/cart/${id}`, { quantity: q }), remove: id => api.delete(`/cart/${id}`), clear: () => api.delete("/cart") };
+export const cart = { get: () => api.get("/cart"), add: d => api.post("/cart", d), updateQuantity: (id, q) => api.put(`/cart/${id}`, { quantity: q }), remove: id => api.delete(`/cart/${id}`), clear: () => api.delete("/cart"), claimAbandonedCoupon: () => api.post('/cart/abandoned-coupon') };
 export const cartRules = {
   list: () => api.get('/settings/cart-rules/list'),
+  getLoyaltyTiers: () => api.get('/settings/cart-rules/loyalty-tiers'),
   get: id => api.get(`/settings/cart-rules/${id}`),
   create: data => api.post('/settings/cart-rules/create', data),
   update: (id, data) => api.put(`/settings/cart-rules/${id}`, data),
@@ -296,7 +299,7 @@ export const cartRules = {
 export const orders = { getMyOrders: () => api.get("/orders/my"), getById: id => api.get(`/orders/${id}`), create: d => api.post("/orders", d), getAllAdmin: () => api.get("/orders/all"), updateStatus: (id, s) => api.put(`/orders/${id}/status`, { status: s }), delete: id => api.delete(`/orders/${id}`), fastCheckout: d => api.post('/orders', d), cancel: id => api.post(`/orders/${id}/cancel`, {}), trackOrder: id => api.get(`/orders/${id}`) };
 export const addresses = { getAll: () => api.get("/addresses"), create: d => api.post("/addresses", d), update: (id, d) => api.put(`/addresses/${id}`, d), delete: id => api.delete(`/addresses/${id}`), setDefault: id => api.patch(`/addresses/${id}/default`) };
 export const wishlist = { get: () => api.get("/wishlist"), add: p => api.post("/wishlist", { productId: p }), remove: (p, options) => api.delete(`/wishlist/${p}`, options) };
-export const coupons = { getPublicActive: () => api.get("/coupons/public/active"), validate: c => api.post("/coupons/validate", { code: c }), getAllAdmin: () => api.get("/coupons"), create: d => api.post("/coupons", d), update: (id, d) => api.put(`/coupons/${id}`, d), delete: id => api.delete(`/coupons/${id}`) };
+export const coupons = { getPublicActive: () => api.get("/coupons/public/active"), validate: (c, orderTotal = 0) => api.post("/coupons/validate", { code: c, orderTotal }), getAllAdmin: () => api.get("/coupons"), create: d => api.post("/coupons", d), update: (id, d) => api.put(`/coupons/${id}`, d), delete: id => api.delete(`/coupons/${id}`) };
 export const reviews = {
   getByProduct: productId => api.get(`/reviews/product/${productId}`),
   getMyReviews: () => api.get('/reviews/my'),
@@ -338,7 +341,7 @@ export const reportClientError = error => {
   }, { timeout: 3000 }).catch(() => null);
 };
 export const shipping = { getAll: () => api.get("/shipping"), create: d => api.post("/shipping", d), update: (id, d) => api.put(`/shipping/${id}`, d), delete: id => api.delete(`/shipping/${id}`) };
-export const returns = { getMyReturns: () => api.get("/returns/my"), submit: d => api.post("/returns", d), getAllAdmin: () => api.get("/returns"), updateStatus: (id, s) => api.patch(`/returns/${id}/status`, { status: s }) };
+export const returns = { getMyReturns: () => api.get("/returns/my"), getEligibility: () => api.get("/returns/eligibility"), createUploadUrl: data => api.post('/returns/upload-url', data), submit: d => api.post("/returns", d), getAllAdmin: () => api.get("/returns/admin/all"), updateStatus: (id, data) => api.put(`/returns/admin/${id}`, typeof data === 'string' ? { status: data } : data) };
 export const inventory = { get: () => api.get("/inventory"), updateStock: (p, q) => api.patch(`/inventory/${p}`, { quantity: q }) };
 export const warranty = { register: d => api.post("/warranty/register", d), getMyWarranties: () => api.get("/warranty/my"), getAllAdmin: () => api.get("/warranty"), updateStatus: (id, s) => api.patch(`/warranty/${id}/status`, { status: s }) };
 export const gamification = { spin: data => api.post('/gamification/spin', data) };

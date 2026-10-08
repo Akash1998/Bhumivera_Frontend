@@ -11,22 +11,38 @@ export default function AdminSettings() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
-  const [cartSettings, setCartSettings] = useState({ coupon_stack_policy: 'rule_first', enforce_cart_rule_minimum: '0' });
+  const [cartSettings, setCartSettings] = useState({
+    coupon_stack_policy: 'rule_first',
+    enforce_cart_rule_minimum: '0',
+    cart_abandonment_coupon_enabled: '1',
+    cart_abandonment_coupon_percent: '5',
+    cart_abandonment_coupon_delay_minutes: '30',
+    cart_abandonment_coupon_valid_days: '7',
+    cart_abandonment_coupon_max_discount: '100',
+  });
   const [shippingSettings, setShippingSettings] = useState({ standard_charge: '50', express_charge: '150', free_shipping_threshold: '500' });
   const [cartSettingsLoading, setCartSettingsLoading] = useState(true);
   const [cartSettingsSaving, setCartSettingsSaving] = useState(false);
+  const [returnPolicyDays, setReturnPolicyDays] = useState('7');
 
   useEffect(() => {
     let active = true;
     settingsApi.get()
       .then(response => {
         if (!active) return;
-        const values = response.data?.cart_rules || {};
+        const values = { ...response.data?.cart_rules, ...response.data?.general };
         const shipping = response.data?.shipping || {};
+        const policy = response.data?.policy || {};
         setShippingSettings(current => ({ ...current, ...shipping }));
+        setReturnPolicyDays(policy.return_policy_days || response.data?.general?.return_policy_days || '7');
         setCartSettings({
           coupon_stack_policy: values.coupon_stack_policy || 'rule_first',
           enforce_cart_rule_minimum: values.enforce_cart_rule_minimum || '0',
+          cart_abandonment_coupon_enabled: values.cart_abandonment_coupon_enabled || '1',
+          cart_abandonment_coupon_percent: values.cart_abandonment_coupon_percent || '5',
+          cart_abandonment_coupon_delay_minutes: values.cart_abandonment_coupon_delay_minutes || '30',
+          cart_abandonment_coupon_valid_days: values.cart_abandonment_coupon_valid_days || '7',
+          cart_abandonment_coupon_max_discount: values.cart_abandonment_coupon_max_discount || '100',
         });
       })
       .catch(loadError => {
@@ -59,6 +75,25 @@ export default function AdminSettings() {
       setMessage('Shipping tiers saved.');
     } catch (saveError) {
       setError(saveError.normalized?.message || saveError.response?.data?.message || 'Failed to save shipping tiers.');
+    } finally {
+      setCartSettingsSaving(false);
+    }
+  };
+
+  const saveReturnPolicy = async event => {
+    event.preventDefault();
+    const days = Number(returnPolicyDays);
+    if (!Number.isInteger(days) || days < 1 || days > 90) {
+      setError('Return windows must be between 1 and 90 days.');
+      return;
+    }
+    setCartSettingsSaving(true);
+    setError(null);
+    try {
+      await settingsApi.update({ return_policy_days: String(days) });
+      setMessage('Return policy saved. Customers can request returns from 30 minutes after delivery.');
+    } catch (saveError) {
+      setError(saveError.normalized?.message || saveError.response?.data?.message || 'Failed to save the return policy.');
     } finally {
       setCartSettingsSaving(false);
     }
@@ -204,6 +239,22 @@ export default function AdminSettings() {
             <span><span className="block font-medium">Enforce cart-rule minimums</span><span className="mt-1 block text-xs text-gray-500">Block checkout below a rule’s minimum when that rule is marked enforced.</span></span>
             <input type="checkbox" checked={cartSettings.enforce_cart_rule_minimum === '1' || cartSettings.enforce_cart_rule_minimum === 1} onChange={event => setCartSettings(current => ({ ...current, enforce_cart_rule_minimum: event.target.checked ? '1' : '0' }))} className="h-4 w-4 accent-cyan-400" />
           </label>
+          <div className="rounded-xl border border-gray-800 p-4">
+            <label className="flex items-center justify-between gap-4 text-sm text-gray-200">
+              <span><span className="block font-medium">Personal abandoned-cart coupon</span><span className="mt-1 block text-xs text-gray-500">Issue a one-use coupon tied to the signed-in customer after their cart has been inactive.</span></span>
+              <input type="checkbox" checked={cartSettings.cart_abandonment_coupon_enabled === '1' || cartSettings.cart_abandonment_coupon_enabled === 1} onChange={event => setCartSettings(current => ({ ...current, cart_abandonment_coupon_enabled: event.target.checked ? '1' : '0' }))} className="h-4 w-4 accent-cyan-400" />
+            </label>
+            <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+              {[
+                ['cart_abandonment_coupon_percent', 'Discount (%)', 1, 50],
+                ['cart_abandonment_coupon_delay_minutes', 'Idle time (minutes)', 1, 10080],
+                ['cart_abandonment_coupon_valid_days', 'Valid for (days)', 1, 30],
+                ['cart_abandonment_coupon_max_discount', 'Maximum discount (₹)', 1, 100000],
+              ].map(([key, label, min, max]) => <label key={key} className="text-xs text-gray-400">{label}
+                <input type="number" min={min} max={max} value={cartSettings[key]} onChange={event => setCartSettings(current => ({ ...current, [key]: event.target.value }))} className="admin-glass-control mt-1 w-full rounded-lg px-3 py-2 text-sm text-white"/>
+              </label>)}
+            </div>
+          </div>
           <button type="submit" disabled={cartSettingsLoading || cartSettingsSaving} className="flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50">
             <FiSave />{cartSettingsSaving ? 'Saving…' : 'Save cart settings'}
           </button>
@@ -221,6 +272,17 @@ export default function AdminSettings() {
             <input type="number" min="0" value={shippingSettings[key]} onChange={event => setShippingSettings(current => ({ ...current, [key]: event.target.value }))} className="admin-glass-control mt-2 w-full rounded-lg px-3 py-2 focus:border-cyan-400"/>
           </label>)}
           <div className="sm:col-span-3"><button type="submit" disabled={cartSettingsLoading || cartSettingsSaving} className="flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"><FiSave/>{cartSettingsSaving ? 'Saving…' : 'Save shipping tiers'}</button></div>
+        </form>
+      </div>
+
+      <div className="admin-glass-panel mt-6 rounded-2xl p-6">
+        <h3 className="text-lg font-semibold text-white mb-2">Return window</h3>
+        <p className="mb-4 text-sm text-gray-400">The return option opens 30 minutes after an order is marked delivered. This setting controls how long it stays available after delivery.</p>
+        <form onSubmit={saveReturnPolicy} className="flex flex-wrap items-end gap-4">
+          <label className="text-sm text-gray-300">Eligible for (days after delivery)
+            <input type="number" min="1" max="90" required value={returnPolicyDays} onChange={event => setReturnPolicyDays(event.target.value)} className="admin-glass-control mt-2 block w-full rounded-lg px-3 py-2 sm:w-48"/>
+          </label>
+          <button type="submit" disabled={cartSettingsLoading || cartSettingsSaving} className="flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"><FiSave/>{cartSettingsSaving ? 'Saving…' : 'Save return window'}</button>
         </form>
       </div>
 
