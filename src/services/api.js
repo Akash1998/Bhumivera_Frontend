@@ -246,6 +246,7 @@ api.interceptors.response.use(response => {
        url.startsWith("/wishlist/") ||
        url.startsWith("/reviews/my") ||
        url.startsWith("/returns/my") ||
+       url.startsWith("/returns/eligibility") ||
        url.startsWith("/warranty/my") ||
        (url.startsWith("/notifications") && !url.includes("/admin/")));
 
@@ -271,6 +272,8 @@ api.interceptors.response.use(response => {
       localStorage.removeItem("token");
       localStorage.removeItem("ms_token");
       localStorage.removeItem("user");
+      window.dispatchEvent(new Event('auth-expired'));
+    } else if (refreshable && !url.startsWith("/settings/public")) {
       window.dispatchEvent(new Event('auth-expired'));
     }
   }
