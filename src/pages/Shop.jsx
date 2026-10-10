@@ -127,8 +127,8 @@ export default function Shop() {
     <div className="min-h-screen bg-[#faf8f5] text-[#1a1a1a] pt-40 pb-32 font-sans">
       <SEO 
         title="Botanical Collection | Bhumivera"
-        description="Browse Bhumivera's exclusive collection of naturally derived, plant-powered organic soaps and luxury skincare treatments."
-        keywords="buy organic soap, plant-based skincare, natural body wash, buy bhumivera"
+        description="Browse Bhumivera's skincare collection and review product-specific details, ingredients and directions."
+        keywords="Bhumivera skincare, product details, skincare ingredients, skincare collection"
         route="/shop"
       />
       <div className="max-w-7xl mx-auto px-6">

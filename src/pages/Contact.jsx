@@ -10,8 +10,8 @@ import { useToast } from '../context/ToastContext';
 
 const FAQS = [
   {
-    q: "Are your formulations 100% natural?",
-    a: "Absolutely. We reject all synthetic preservatives, parabens, and sulfates. Our entire catalog is rooted in pure, earth-derived botanicals sourced directly from trusted cultivators."
+    q: "Where can I check a product's ingredients?",
+    a: "Open the page for the specific product and review its ingredient list and directions. Formulas vary by product; the botanical stories on our site do not mean that every featured ingredient is present in every item."
   },
   {
     q: "How can I become an authorized retail partner?",
@@ -23,7 +23,7 @@ const FAQS = [
   },
   {
     q: "What is your return policy?",
-    a: "Due to the natural and personal care nature of our products, we accept returns on unopened, sealed items within 7 days of delivery. Refer to our Returns Centre for full details."
+    a: "Return and refund eligibility depends on the terms for your order. Contact our support team with your order number to confirm the applicable options and next steps."
   }
 ];
 

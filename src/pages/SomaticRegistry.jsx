@@ -30,20 +30,6 @@ const SomaticRegistry = () => {
   }, []);
 
   const productDatabase = {
-    'MM': {
-      name: 'Multani Mitti & Earth Mineral Bar',
-      vibe: 'Deep Detoxification & Ion Exchange',
-      batch: '0526-AS-01',
-      date: 'May 2026',
-      howToUse: [
-        { step: "01", title: "Thermal Prep", desc: "Splash face with lukewarm water (approx 32°C) to open dermal pores." },
-        { step: "02", title: "Lather Logic", desc: "Create a thick lather in hands. Do not apply the bar directly to inflamed areas." },
-        { step: "03", title: "Cationic Sit", desc: "Leave the minerals on the skin for 45 seconds to allow the Ion Exchange to complete." },
-        { step: "04", title: "Cold Seal", desc: "Rinse with cold water to lock the mineral matrix into the skin barrier." }
-      ],
-      molecularStats: { purity: "99.4%", ashContent: "0.2%", hydrationIndex: "88/100" },
-      image: "/assets/images/multanimitti.webp" // Utilizing actual assets from repo
-    },
     'AV': {
       name: 'Aloe Vera & Living Enzyme Bar',
       vibe: 'Biological Repair & Hydration',
@@ -121,7 +107,7 @@ const SomaticRegistry = () => {
                   <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500" size={18} />
                   <input 
                     type="text" 
-                    placeholder="Enter Key (e.g., BHV-0526-MM-01)"
+                    placeholder="Enter your product key"
                     className="bg-black border border-white/10 pl-12 pr-6 py-4 rounded-xl w-full font-mono text-sm tracking-widest focus:border-emerald-500 outline-none transition-all placeholder:text-gray-700"
                     value={serial}
                     onChange={(e) => setSerial(e.target.value.toUpperCase())}

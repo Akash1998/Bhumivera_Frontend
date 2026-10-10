@@ -188,10 +188,10 @@ const ProvenanceEngine = () => {
           
           <div className="space-y-12 text-gray-400 leading-relaxed text-lg">
             <p>
-              The concept of "genuinity" in the modern world has been reduced to a simple sticker or a poorly rendered barcode. At <strong>Bhumivera</strong>, we view authenticity as a deep-state architectural requirement. When you hold a bar of our Aloe Vera or Multani Mitti soap, you are holding the result of 1,008 hours of cold-process chemistry. 
+              Product details should be grounded in information that can be checked. For the exact ingredients, directions and product particulars, use the label and product information supplied for the item you have.
             </p>
             <p>
-              The legacy system served its purpose in our alpha phase, but the new <strong>SNA-2 (Serial Number Architecture)</strong> is a leap into biological transparency. Every code is a cryptographic hash of the batch's specific environmental conditions—the humidity of the Asansol air, the purity of the mineral earth, and the molecular density of the hand-harvested Aloe.
+              A code or batch reference is useful only when it resolves to a real, maintained product record. This page should not be read as laboratory analysis, certification or proof of ingredient origin.
             </p>
             
             <div className="py-8 border-y border-white/5 space-y-8">
@@ -206,7 +206,7 @@ const ProvenanceEngine = () => {
                 <ThermometerSnowflake className="text-emerald-500" size={20} /> Layer 02: Cold-Chain Verification
               </h3>
               <p className="text-sm">
-                Our science dictates that heat is the enemy of botanical logic. The Provenance Engine verifies that your bar was maintained at sub-30°C temperatures throughout its curing cycle.
+                Processing and storage details should be shared only when they are documented for the specific product and batch.
               </p>
 
               <h3 className="text-white text-xl flex items-center gap-3 italic">
@@ -240,7 +240,7 @@ const ProvenanceEngine = () => {
               <Box className="text-emerald-500 mb-6" />
               <h4 className="text-lg mb-4">Eco-Sourcing Path</h4>
               <p className="text-xs text-gray-500 uppercase tracking-widest font-mono">Status: Traceable</p>
-              <p className="mt-4 text-sm text-gray-400">See the geolocation data of the Multani Mitti and Aloe Vera used in your specific bar. 100% transparency from earth to skin.</p>
+              <p className="mt-4 text-sm text-gray-400">Review the product information provided for your item. Ingredient origin or location is not stated here unless it is documented for that specific batch.</p>
             </div>
           </div>
         </div>

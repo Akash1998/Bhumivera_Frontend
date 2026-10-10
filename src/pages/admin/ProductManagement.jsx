@@ -667,7 +667,7 @@ export default function ProductManagement() {
                     </div>
                     <div className="col-span-2">
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Meta Description (Snippet)</label>
-                      <textarea rows={3} value={form.meta_description} onChange={e=>setForm({...form, meta_description:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-slate-300 resize-y outline-none transition-colors" placeholder="100% natural, cruelty-free serum for glowing skin..." />
+                      <textarea rows={3} value={form.meta_description} onChange={e=>setForm({...form, meta_description:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-slate-300 resize-y outline-none transition-colors" placeholder="Describe this specific product using clear, substantiated details." />
                     </div>
                   </div>
                 )}

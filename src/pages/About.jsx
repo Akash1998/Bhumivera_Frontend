@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Leaf, Droplets, Sparkles, ShieldCheck, Heart, Sun, Feather, RefreshCw, Activity, Zap, Terminal, ArrowRight, Briefcase, Mic } from 'lucide-react';
+import { Leaf, Droplets, Sparkles, ShieldCheck, Heart, Feather, RefreshCw, Activity, Zap, Terminal, ArrowRight, Briefcase, Mic } from 'lucide-react';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
@@ -59,19 +59,19 @@ export default function About() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-emerald-500/30 bg-emerald-500/5 backdrop-blur-md mb-8"
           >
             <Sparkles size={14} className="text-emerald-500" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-emerald-400">Somatic Protocol v2.1</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-emerald-400">A considered point of view</span>
           </motion.div>
           <motion.h1 
             initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.2 }}
             className="text-6xl md:text-9xl font-serif text-white tracking-tight mb-8 drop-shadow-2xl"
           >
-            Nature, <span className="italic font-light text-gray-500">Architected.</span>
+            Care, <span className="italic font-light text-gray-500">with context.</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.5 }}
             className="text-lg md:text-xl text-gray-400 font-light max-w-2xl mx-auto tracking-wider leading-relaxed"
           >
-            Decoding millennial botanical intelligence to solve modern dermal equations. No synthetics. Just pure molecular power from the soil of Asansol.
+            We are curious about the living world and the ingredients used in everyday care. Our aim is to make room for botanical inspiration, clear product information and considered choices.
           </motion.p>
         </div>
       </section>
@@ -84,12 +84,12 @@ export default function About() {
             className="relative group"
           >
             <div className="absolute -top-4 -left-4 font-mono text-[8px] text-emerald-600 tracking-[0.5em] uppercase z-20 bg-white px-2 py-1">
-              REF: BATCH_DNA_ORIGIN
+              A STORY GROUNDED IN NATURE
             </div>
             <div className="aspect-[4/5] rounded-sm overflow-hidden shadow-2xl relative">
               <img 
                 src="/assets/images/aloeveradna.webp" 
-                alt="Biological DNA Origins" 
+                alt="                A close study of a botanical leaf"
                 className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
                 onError={(e) => { e.target.src = '/logo.webp'; }}
               />
@@ -101,16 +101,16 @@ export default function About() {
             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={staggerContainer}
             className="space-y-8"
           >
-            <motion.h2 variants={fadeInUp} className="text-xs font-bold text-emerald-600 uppercase tracking-[0.4em]">Project Genesis</motion.h2>
+            <motion.h2 variants={fadeInUp} className="text-xs font-bold text-emerald-600 uppercase tracking-[0.4em]">Our point of view</motion.h2>
             <motion.h3 variants={fadeInUp} className="text-4xl md:text-6xl font-serif text-[#1a1a1a] leading-tight">
-              Born from the <span className="italic underline underline-offset-8 decoration-emerald-500/30">Molecular Soil.</span>
+              Inspired by the <span className="italic underline underline-offset-8 decoration-emerald-500/30">living world.</span>
             </motion.h3>
             <motion.div variants={fadeInUp} className="space-y-6 text-gray-500 font-light text-lg leading-relaxed">
               <p>
-                The journey of Bhumivera began with a rejection of "legacy errors" in skincare. While aisles were flooded with synthetic preservatives that delete the logic of skin vitality, we looked toward the earth's base code.
+                Bhumivera began with curiosity about how everyday care can feel more considered. The natural world offers a rich source of botanical forms, textures and stories worth exploring.
               </p>
               <p>
-                We asked: Why alter what nature has already perfected? Why introduce toxins when the earth offers remedies trusted for millennia? Bhumivera bridges the gap between ancient Ayurvedic wisdom and modern molecular precision.
+                We pair that curiosity with respect for the details: what an individual product contains, how it is described and the information someone needs to make a choice that suits them.
               </p>
             </motion.div>
           </motion.div>
@@ -127,9 +127,9 @@ export default function About() {
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             {[
-              { icon: <Leaf size={24} />, title: "0% Logic Deletion", desc: "No parabens or sulfates. If it disrupts your skin's biological logic, it is purged." },
-              { icon: <Zap size={24} />, title: "Ethical Recursion", desc: "Cruelty-free extraction that respects local ecosystems and communities." },
-              { icon: <Activity size={24} />, title: "1,008 HR Cured", desc: "Small-batch soaps cured for 6 weeks to maximize enzymatic vitality." }
+              { icon: <Leaf size={24} />, title: "Product-specific clarity", desc: "Ingredient information and directions should be checked on the page and packaging for the individual product." },
+              { icon: <Zap size={24} />, title: "Botanical context", desc: "Plant names can invite curiosity; they do not, on their own, tell the full story of a finished formula." },
+              { icon: <Activity size={24} />, title: "Considered choices", desc: "We aim to describe products with care and leave room for different preferences and individual needs." }
             ].map((pillar, idx) => (
               <motion.div key={idx} variants={fadeInUp} className="bg-[#0d0d0d] p-10 rounded-sm border border-white/5 hover:border-emerald-500/40 transition-all group">
                 <div className="w-12 h-12 bg-emerald-500/10 rounded-full flex items-center justify-center text-emerald-500 mb-8 group-hover:bg-emerald-500 group-hover:text-black transition-all">
@@ -143,77 +143,19 @@ export default function About() {
         </div>
       </section>
 
-      {/* 4. MATERIA MEDICA: BOTANICAL MATRIX */}
-      <section className="py-32 px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-24 max-w-3xl mx-auto">
-            <h2 className="text-xs font-bold text-emerald-600 uppercase tracking-[0.4em] mb-4">Materia Medica</h2>
-            <h3 className="text-4xl md:text-5xl font-serif text-[#1a1a1a] mb-6">The Extraction Heroes</h3>
-            <p className="text-gray-500 font-light">Biological data sheets for our primary actives. No fillers. Just authentic botanical efficacy.</p>
+      <section className="border-y border-[#dccfb8] bg-[#f6f0e4] px-6 py-16 sm:py-20">
+        <div className="mx-auto grid max-w-7xl gap-8 md:grid-cols-[0.8fr_1.2fr] md:items-end md:gap-12">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.3em] text-emerald-700">Botanicals, with context</p>
+            <h2 className="mt-4 font-serif text-3xl leading-tight text-[#1e2921] sm:text-4xl">A plant can inspire a story. A product deserves its own facts.</h2>
           </div>
-
-          <div className="space-y-32">
-            {/* --- MULTANI MITTI --- */}
-            <motion.div 
-              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
-              className="flex flex-col lg:flex-row gap-24 items-center"
-            >
-              <div className="w-full lg:w-[55%] aspect-square rounded-sm overflow-hidden bg-white shadow-2xl shadow-stone-900/5 relative group border border-stone-100">
-                <img 
-                  src="/assets/images/multanimittibeaker.webp" 
-                  className="w-full h-full object-cover transition-transform duration-[5000ms] ease-out group-hover:scale-110 opacity-95" 
-                  alt="Bhumivera Multani Mitti Extraction" 
-                />
-                <div className="absolute top-8 left-8 font-mono text-[9px] text-stone-900/40 tracking-[0.6em] uppercase vertical-text">Elemental_Purification_v1.0</div>
-              </div>
-
-              <div className="w-full lg:w-[45%] space-y-10">
-                <div className="space-y-6">
-                  <div className="inline-flex items-center gap-3 px-4 py-2 bg-white border border-stone-900/10 text-stone-800 text-[10px] font-bold uppercase tracking-[0.3em] rounded-sm shadow-sm font-mono">
-                    <Sun size={14} strokeWidth={1.5} className="text-amber-600" /> Ion_Exchange_Active
-                  </div>
-                  <h4 className="text-6xl font-serif text-[#1a1a1a] leading-[1.1] tracking-tight">Multani <br /><span className="italic text-stone-500 font-light">Mitti Clay</span></h4>
-                  <p className="text-gray-500 leading-relaxed font-light text-xl max-w-md">Harvested from mineral-rich reserves, this ultra-refined clay operates as a molecular magnet, drawing out impurities while preserving your skin's vital barrier.</p>
-                </div>
-                <div className="relative py-6 border-y border-gray-200/60 text-[#1a1a1a] font-serif italic text-2xl leading-snug">
-                  "Purity is not merely the absence of toxins; it is the absolute calibration of earth's rarest elements."
-                </div>
-                <div className="grid grid-cols-2 gap-16 pt-4">
-                  <div className="space-y-2"><span className="block text-[10px] text-stone-700 font-bold uppercase tracking-[0.2em]">Particle Density</span><div className="flex items-baseline gap-1 font-mono"><span className="text-3xl font-light tracking-tighter">0.45</span><span className="text-xs text-gray-400">μm</span></div></div>
-                  <div className="space-y-2"><span className="block text-[10px] text-stone-700 font-bold uppercase tracking-[0.2em]">Ionic Charge</span><span className="block text-2xl font-mono font-light tracking-widest uppercase text-amber-700">Cationic+</span></div>
-                </div>
-              </div>
-            </motion.div>
-
-            {/* --- ALOE VERA --- */}
-            <motion.div 
-              initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
-              className="flex flex-col lg:flex-row-reverse gap-24 items-center"
-            >
-              <div className="w-full lg:w-[55%] aspect-square rounded-sm overflow-hidden bg-white shadow-2xl shadow-emerald-900/5 relative group">
-                <img 
-                  src="/assets/images/aloeveradrop.webp" 
-                  className="w-full h-full object-cover transition-transform duration-[5000ms] ease-out group-hover:scale-110" 
-                  alt="Bhumivera Aloe Extraction" 
-                />
-                <div className="absolute top-8 right-8 font-mono text-[9px] text-emerald-900/30 tracking-[0.6em] uppercase vertical-text">Molecular_Hydration_v2.0</div>
-              </div>
-
-              <div className="w-full lg:w-[45%] space-y-10">
-                <div className="space-y-6">
-                  <div className="inline-flex items-center gap-3 px-4 py-2 bg-white border border-emerald-900/10 text-emerald-800 text-[10px] font-bold uppercase tracking-[0.3em] rounded-sm shadow-sm font-mono">
-                    <Droplets size={14} strokeWidth={1.5} className="text-emerald-500" /> Enzymatic_Sync
-                  </div>
-                  <h4 className="text-6xl font-serif text-[#1a1a1a] leading-[1.1] tracking-tight">Pure Aloe <br /><span className="italic text-emerald-800/90 font-light">Vera Extract</span></h4>
-                  <p className="text-gray-500 leading-relaxed font-light text-xl max-w-md">Cold-pressed polysaccharides that accelerate cellular hydration and repair, refined by science to become a masterpiece of self-care.</p>
-                </div>
-                <div className="relative py-6 border-y border-gray-200/60 text-[#1a1a1a] font-serif italic text-2xl leading-snug">"True luxury is found in the raw intelligence of nature."</div>
-                <div className="grid grid-cols-2 gap-16 pt-4">
-                  <div className="space-y-2"><span className="block text-[10px] text-emerald-700 font-bold uppercase tracking-[0.2em]">Bio-Vitality</span><div className="flex items-baseline gap-1 font-mono"><span className="text-3xl font-light tracking-tighter">94.00</span><span className="text-xs text-gray-400">/100</span></div></div>
-                  <div className="space-y-2"><span className="block text-[10px] text-emerald-700 font-bold uppercase tracking-[0.2em]">Status</span><span className="block text-2xl font-mono font-light tracking-widest uppercase text-emerald-900">Optimized</span></div>
-                </div>
-              </div>
-            </motion.div>
+          <div>
+            <p className="max-w-2xl text-sm leading-7 text-[#4a574a] sm:text-base">
+              We are building a clearer way to explore botanical names and product information. Ingredient presence and directions vary by item, so check the individual product page and packaging before choosing.
+            </p>
+            <Link to="/science" className="mt-6 inline-flex min-h-11 items-center gap-2 border-b border-[#536b4d]/40 pb-1 text-xs font-bold uppercase tracking-[0.14em] text-[#354933]">
+              Explore botanical science <ArrowRight size={14} />
+            </Link>
           </div>
         </div>
       </section>
@@ -227,9 +169,9 @@ export default function About() {
             <div className="w-16 h-16 bg-[#6b4226] text-[#f6f0e4] flex items-center justify-center rounded-full mb-8">
               <Briefcase size={28} />
             </div>
-            <h3 className="text-3xl font-serif text-[#1e1510] mb-4">Join the Eco-Lab.</h3>
+            <h3 className="text-3xl font-serif text-[#1e1510] mb-4">Work with us.</h3>
             <p className="text-[#4a3628] font-light leading-relaxed mb-8">
-              We are constantly seeking visionary formulators, digital architects, and holistic experts to help us redefine botanical luxury. If you believe in zero-regression ethics and pure formulations, we want to hear from you.
+              We welcome thoughtful formulators, digital specialists and creative collaborators who care about clear information and considered product experiences.
             </p>
             <a href="mailto:careers@bhumivera.com" className="inline-flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#6b4226] hover:text-[#1e1510] transition-colors">
               View Open Roles <ArrowRight size={14} />
@@ -243,7 +185,7 @@ export default function About() {
             </div>
             <h3 className="text-3xl font-serif text-[#1e1510] mb-4">Press & Media.</h3>
             <p className="text-[#4a3628] font-light leading-relaxed mb-8">
-              For media inquiries, brand kits, and interview requests regarding our unique approach to Ayurvedic molecular science and e-commerce infrastructure, please contact our relations desk.
+              For media inquiries, brand information and interview requests, please contact our team.
             </p>
             <a href="mailto:press@bhumivera.com" className="inline-flex items-center gap-3 text-[10px] font-bold uppercase tracking-[0.2em] text-[#6b4226] hover:text-[#1e1510] transition-colors">
               Download Media Kit <ArrowRight size={14} />
@@ -265,12 +207,12 @@ export default function About() {
         </div>
         <div className="max-w-4xl mx-auto relative z-10 text-center px-6">
           <div className="inline-flex items-center gap-2 mb-12 text-[10px] font-mono text-emerald-500 tracking-[0.4em] uppercase border-b border-emerald-500/20 pb-2">
-            <Terminal size={12} /> Root_Log: Founding_Manifesto
+            <Terminal size={12} /> A note from our founder
           </div>
-          <h3 className="text-3xl md:text-5xl font-serif text-white mb-10 leading-tight italic">"We aren't just creating skincare. We are reviving a forgotten dialogue between human skin and the natural world."</h3>
+          <h3 className="text-3xl md:text-5xl font-serif text-white mb-10 leading-tight italic">"Bhumivera began with curiosity about the natural world and how it can inspire more considered everyday care."</h3>
           <div className="w-12 h-0.5 bg-emerald-500 mx-auto mb-8" />
           <p className="text-emerald-400 font-bold uppercase tracking-[0.4em] text-sm mb-2">Akash Prasad</p>
-          <p className="text-gray-600 font-light text-[10px] uppercase tracking-widest font-mono">Principal Architect // Bhumivera Eco-Labs</p>
+          <p className="text-gray-600 font-light text-[10px] uppercase tracking-widest font-mono">Founder, Bhumivera</p>
         </div>
       </section>
 
