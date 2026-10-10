@@ -221,81 +221,83 @@ export default function PremiumHome() {
         route="/"
       />
 
-      <section className="relative isolate flex min-h-[min(900px,calc(100svh_-_75px))] items-end overflow-hidden bg-[#16231c] text-white md:min-h-[min(860px,calc(100svh_-_112px))] md:items-center">
+      <section className="relative isolate flex min-h-[min(760px,calc(100svh_-_72px))] items-end overflow-hidden bg-[#16231c] text-white lg:min-h-[min(800px,calc(100svh_-_110px))] lg:items-center">
         <img
           src={image('seabuckthorn.webp')}
           alt="Bhumivera sea-buckthorn face wash among sea-buckthorn berries"
           fetchPriority="high"
-          className="absolute inset-0 -z-20 h-full w-full object-cover object-[58%_center] md:object-center"
+          className="absolute inset-0 -z-20 h-full w-full object-cover object-left sm:object-center"
         />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#101811]/95 via-[#101811]/45 to-[#101811]/10 md:bg-gradient-to-r md:from-[#101811]/90 md:via-[#101811]/65 md:to-[#101811]/10" />
-        <div className="mx-auto w-full max-w-7xl px-5 pb-16 pt-36 sm:px-8 md:px-10 md:pb-24 md:pt-28">
+        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#101811]/95 via-[#101811]/72 to-[#101811]/20 lg:bg-gradient-to-r lg:from-[#101811]/90 lg:via-[#101811]/65 lg:to-[#101811]/10" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#101811]/65 via-[#101811]/30 to-transparent lg:hidden" />
+        <div className="mx-auto w-full max-w-7xl px-5 pb-10 pt-28 sm:px-8 sm:pb-12 sm:pt-32 lg:px-10 lg:pb-24 lg:pt-28">
           <Motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.75 }}
-            className="max-w-3xl"
+            className="relative isolate max-w-3xl before:absolute before:inset-y-[-12px] before:-left-5 before:-right-5 before:-z-10 before:bg-gradient-to-r before:from-[#101811]/75 before:via-[#101811]/45 before:to-transparent before:content-[''] sm:before:hidden"
           >
-            <p className="mb-6 inline-flex items-center gap-2 border border-white/25 bg-black/10 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.24em] text-[#e1e8ce] backdrop-blur-sm">
+            <p className="mb-5 inline-flex items-center gap-2 border border-white/25 bg-black/10 px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.2em] text-[#e1e8ce] backdrop-blur-sm sm:mb-6 sm:text-[10px] sm:tracking-[0.24em]">
               <Sparkles size={13} /> A story that begins with the earth
             </p>
-            <h1 className="max-w-2xl font-serif text-6xl leading-[0.9] tracking-[-0.045em] sm:text-7xl md:text-8xl lg:text-[104px]">
-              Rooted in the earth. Made for your everyday.
+            <h1 className="max-w-2xl font-serif text-[clamp(2.8rem,11.5vw,4.75rem)] leading-[0.96] tracking-[-0.045em] lg:text-[clamp(4.5rem,6vw,6.5rem)]">
+              <span className="sm:hidden">Rooted in nature.<br />Made with care.</span>
+              <span className="hidden sm:inline">Rooted in nature. Made for your everyday.</span>
             </h1>
-            <p className="mt-6 max-w-lg text-sm leading-7 text-white/80 sm:text-base">
+            <p className="mt-5 max-w-lg text-sm leading-6 text-white/80 sm:mt-6 sm:text-base sm:leading-7">
               From botanicals shaped by the natural world to the care we choose to give it, discover a more considered way to make your everyday ritual your own.
             </p>
-            <div className="mt-8 flex flex-col gap-3 min-[420px]:flex-row">
-              <Link to="/shop" className="group inline-flex min-h-12 items-center justify-center gap-3 bg-[#e0e8ce] px-5 py-3 text-sm font-semibold text-[#19271e] transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white">
+            <div className="mt-6 flex flex-col gap-3 min-[380px]:flex-row sm:mt-8">
+              <Link to="/shop" className="group inline-flex min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap bg-[#e0e8ce] px-3 py-3 text-xs font-semibold text-[#19271e] transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-[380px]:w-auto sm:gap-3 sm:px-5 sm:text-sm">
                 Discover the collection <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </Link>
-              <Link to="/about" className="inline-flex min-h-12 items-center justify-center gap-3 border border-white/45 bg-white/[0.04] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-white/10">
+              <Link to="/about" className="inline-flex min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap border border-white/45 bg-white/[0.04] px-3 py-3 text-xs font-semibold text-white transition-colors hover:bg-white/10 min-[380px]:w-auto sm:gap-3 sm:px-5 sm:text-sm">
                 Our story <ArrowUpRight size={16} />
               </Link>
             </div>
           </Motion.div>
-          <div className="mt-12 flex items-end justify-between border-t border-white/25 pt-4 md:absolute md:bottom-9 md:left-1/2 md:mt-0 md:w-[min(88%,1280px)] md:-translate-x-1/2">
-            <span className="text-[9px] font-semibold uppercase tracking-[0.18em] text-white/65 sm:text-[10px]">Botanical heritage · contemporary skin science</span>
+          <div className="mt-8 flex items-end justify-between gap-3 border-t border-white/25 pt-3 sm:mt-10 sm:pt-4 lg:absolute lg:bottom-9 lg:left-1/2 lg:mt-0 lg:w-[min(88%,1280px)] lg:-translate-x-1/2">
+            <span className="max-w-[65%] text-[8px] font-semibold uppercase leading-4 tracking-[0.14em] text-white/65 sm:max-w-none sm:text-[10px] sm:tracking-[0.18em]">Botanical heritage · contemporary skin science</span>
             {heroProduct && <Link to={`/product/${heroProduct.slug || heroProduct.id}`} className="hidden items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.15em] text-[#e0e8ce] sm:inline-flex">In focus: {heroProduct.name} <ArrowRight size={13} /></Link>}
-            <a href="#roots" aria-label="Scroll to the tree-planting story" className="inline-flex items-center gap-2 text-[9px] font-semibold uppercase tracking-[0.18em] text-white/65 md:hidden">Scroll <ArrowDown size={13} /></a>
+            <a href="#roots" aria-label="Scroll to the tree-planting story" className="inline-flex shrink-0 items-center gap-2 text-[8px] font-semibold uppercase tracking-[0.14em] text-white/65 sm:text-[9px] sm:tracking-[0.18em] lg:hidden">Scroll <ArrowDown size={13} /></a>
           </div>
         </div>
       </section>
 
-      <section id="roots" className="overflow-hidden bg-[#dce1d2] text-[#1b2921]">
-        <div className="mx-auto grid max-w-7xl md:min-h-[560px] md:grid-cols-[0.9fr_1.1fr]">
-          <div className="order-2 flex flex-col justify-center px-5 py-12 sm:px-8 md:order-1 md:px-10 lg:px-16 md:py-20">
-            <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.24em] text-[#56684d]"><Leaf size={14} /> Care, returned to the earth</p>
-            <h2 className="mt-4 max-w-xl font-serif text-4xl leading-[1.05] tracking-[-0.025em] sm:text-5xl md:text-6xl">A future worth growing, one tree at a time.</h2>
-            <p className="mt-5 max-w-lg text-sm leading-7 text-[#53604e] sm:text-base">
-              Our tree-planting vision begins with the right tree for the right place—and the patience to care for it beyond planting day. We want any work we support to grow from local knowledge, lasting stewardship and proof you can see.
+      <section id="roots" className="bg-[#f4f1e9] px-4 py-5 text-[#1b2921] sm:px-8 sm:py-10 lg:px-10 lg:py-16">
+        <div className="mx-auto grid max-w-7xl overflow-hidden rounded-2xl bg-[#e7e9de] md:grid-cols-[0.95fr_1.05fr]">
+          <div className="order-2 flex flex-col justify-center px-5 py-6 sm:px-8 sm:py-8 md:order-1 md:px-8 md:py-8 lg:px-12 lg:py-10 xl:px-16">
+            <p className="inline-flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.2em] text-[#56684d] sm:text-[10px] sm:tracking-[0.24em]"><Leaf size={14} /> Care, returned to the earth</p>
+            <h2 className="mt-3 max-w-xl font-serif text-3xl leading-[1.06] tracking-[-0.025em] sm:mt-4 sm:text-4xl lg:text-5xl xl:text-6xl">A future worth growing, one tree at a time.</h2>
+            <p className="mt-4 max-w-lg text-sm leading-6 text-[#53604e] sm:mt-5 sm:text-base sm:leading-7">
+              Our planting vision starts with locally chosen trees and care that continues beyond planting day. We believe the work should be guided by local knowledge and shared through updates you can verify.
             </p>
-            <p className="mt-4 max-w-lg text-xs leading-6 text-[#65705f]">
-              This is a direction we hope to support, not a claim of completed planting. We share field activity only when it is verified.
+            <p className="mt-3 max-w-lg text-xs leading-5 text-[#65705f] sm:mt-4 sm:leading-6">
+              A future direction—not a claim of completed planting.
             </p>
-            <Link to="/impact" className="mt-6 inline-flex min-h-11 w-fit items-center gap-3 border-b border-[#536b4d]/40 pb-2 text-xs font-bold uppercase tracking-[0.14em] text-[#354933]">
+            <Link to="/impact" className="mt-4 inline-flex min-h-11 w-fit items-center gap-3 border-b border-[#536b4d]/40 pb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#354933] sm:mt-5 sm:text-xs sm:tracking-[0.14em]">
               Explore our impact record <ArrowRight size={15} />
             </Link>
           </div>
-          <div className="relative order-1 min-h-[250px] overflow-hidden bg-[#26392c] sm:min-h-[340px] md:order-2 md:min-h-full">
-            <img src={image('plant tree.webp')} alt="Illustrative vision of people planting a young tree together, not a verified Bhumivera field report" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+          <div className="relative order-1 aspect-[16/10] overflow-hidden bg-[#26392c] sm:aspect-[16/9] md:order-2 md:aspect-auto md:min-h-[390px] lg:min-h-[440px]">
+            <img src={image('plant tree.webp')} alt="Illustrative vision of people planting a young tree together, not a verified Bhumivera field report" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-center" />
             <div className="absolute inset-0 bg-gradient-to-t from-[#101811]/65 via-transparent to-transparent" />
-            <span className="absolute bottom-4 left-4 bg-[#101811]/75 px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.16em] text-[#e1e8ce] backdrop-blur-sm sm:bottom-6 sm:left-6">A planting vision · illustrative artwork</span>
+            <span className="absolute bottom-3 left-3 bg-[#101811]/75 px-2.5 py-1.5 text-[8px] font-semibold uppercase tracking-[0.12em] text-[#e1e8ce] backdrop-blur-sm sm:bottom-5 sm:left-5 sm:px-3 sm:py-2 sm:text-[9px] sm:tracking-[0.16em]">A planting vision · illustrative artwork</span>
           </div>
         </div>
       </section>
 
-      <section id="story" className="mx-auto grid max-w-7xl gap-8 px-5 py-16 sm:px-8 md:grid-cols-[0.65fr_1.35fr] md:gap-16 md:px-10 md:py-24">
+      <section id="story" className="mx-auto grid max-w-7xl gap-5 px-5 py-10 sm:gap-8 sm:px-8 sm:py-14 lg:grid-cols-[0.65fr_1.35fr] lg:gap-16 lg:px-10 lg:py-20">
         <div>
           <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#687958]">The Bhumivera point of view</p>
-          <p className="mt-4 font-serif text-3xl leading-tight sm:text-4xl">Care should feel like coming back to yourself.</p>
+          <p className="mt-3 font-serif text-3xl leading-tight sm:mt-4 sm:text-4xl">Care should feel like coming back to yourself.</p>
         </div>
         <div className="max-w-3xl">
-          <p className="font-serif text-2xl leading-relaxed text-[#26352b] sm:text-3xl md:text-4xl">
+          <p className="font-serif text-2xl leading-snug text-[#26352b] sm:text-3xl lg:text-4xl">
             We begin with the living world, then bring curiosity to every detail.
           </p>
           <p className="mt-5 max-w-2xl text-sm leading-7 text-stone-600 sm:text-base">
-            Aloe vera, tulsi, charcoal and sea buckthorn each bring a different character to the Bhumivera story. Alongside these botanicals, we are exploring the language of contemporary skin care—from niacinamide to hyaluronic acid. The intention is not more steps or louder promises, but considered rituals, clear product information and room for you to choose what feels right.
+            Aloe vera, tulsi, charcoal and sea buckthorn each bring a different character to our story. We pair that botanical curiosity with contemporary skin care knowledge—without louder promises or more steps than you need.
           </p>
           <Link to="/about" className="mt-6 inline-flex items-center gap-2 border-b border-[#667956]/50 pb-2 text-xs font-bold uppercase tracking-[0.16em] text-[#354933] hover:border-[#354933]">
             Read the Bhumivera story <ArrowRight size={14} />
@@ -303,24 +305,24 @@ export default function PremiumHome() {
         </div>
       </section>
 
-      <section className="bg-[#e7e4d9] py-16 sm:py-20 md:py-24">
+      <section className="bg-[#e7e4d9] py-12 sm:py-16 lg:py-20">
         <div className="mx-auto max-w-7xl px-5 sm:px-8 md:px-10">
           <div className="mb-8 flex flex-col gap-4 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#687958]">A living ingredient palette</p>
-              <h2 className="mt-3 max-w-2xl font-serif text-4xl leading-tight sm:text-5xl md:text-6xl">Nature has more than one note.</h2>
+              <h2 className="mt-3 max-w-2xl font-serif text-3xl leading-tight sm:text-4xl lg:text-5xl">Nature has more than one note.</h2>
             </div>
             <p className="max-w-md text-sm leading-6 text-stone-600">Meet the botanicals that inspire us—and the contemporary actives shaping the next chapter of skin care.</p>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+          <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
             {ingredientStories.map((story, index) => (
-              <article key={story.name} className="group relative isolate min-h-[250px] overflow-hidden bg-[#26352b] text-white sm:min-h-[330px] lg:min-h-[430px]">
+              <article key={story.name} className="group relative isolate aspect-[3/4] min-h-[205px] overflow-hidden bg-[#26352b] text-white sm:aspect-auto sm:min-h-[330px] lg:min-h-[400px]">
                 <img src={image(story.image)} alt={`${story.name} ingredient story`} loading="lazy" className="absolute inset-0 -z-20 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
                 <div className={`absolute inset-0 -z-10 bg-gradient-to-t ${story.tone} via-[#101811]/15 to-transparent`} />
-                <div className="absolute inset-x-0 bottom-0 p-4 sm:p-6">
-                  <span className="text-[9px] font-semibold uppercase tracking-[0.2em] text-[#e0e8ce]">Ingredient story · 0{index + 1}</span>
-                  <h3 className="mt-2 font-serif text-2xl sm:text-3xl">{story.name}</h3>
-                  <p className="mt-2 max-w-xs text-xs leading-5 text-white/75 sm:text-sm">{story.note}</p>
+                <div className="absolute inset-x-0 bottom-0 p-3 sm:p-5 lg:p-6">
+                  <span className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[#e0e8ce] sm:text-[9px] sm:tracking-[0.2em]">Ingredient story · 0{index + 1}</span>
+                  <h3 className="mt-1.5 font-serif text-xl sm:mt-2 sm:text-3xl">{story.name}</h3>
+                  <p className="mt-1.5 max-w-xs text-[11px] leading-4 text-white/80 sm:mt-2 sm:text-sm sm:leading-5">{story.note}</p>
                 </div>
               </article>
             ))}
@@ -329,15 +331,15 @@ export default function PremiumHome() {
       </section>
 
       <section className="relative isolate overflow-hidden bg-[#17231d] text-white">
-        <div className="mx-auto grid max-w-7xl items-center gap-8 px-5 py-14 sm:px-8 md:grid-cols-[1fr_1fr] md:gap-12 md:px-10 md:py-20">
-          <div className="relative order-2 overflow-hidden bg-[#e8e5d9] md:order-1">
+        <div className="mx-auto grid max-w-7xl items-center gap-7 px-5 py-12 sm:px-8 sm:py-16 lg:grid-cols-[1fr_1fr] lg:gap-12 lg:px-10 lg:py-20">
+          <div className="relative order-2 overflow-hidden bg-[#e8e5d9] lg:order-1">
             <img src={image('niacidamine.webp')} alt="Niacinamide and hyaluronic acid, two contemporary skincare actives" loading="lazy" className="aspect-[16/9] w-full object-contain" />
             <span className="absolute bottom-3 left-3 bg-[#f4f1e9]/90 px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.15em] text-[#28382b] backdrop-blur-sm sm:bottom-5 sm:left-5">Modern actives, thoughtfully considered</span>
           </div>
-          <div className="order-1 md:order-2">
+          <div className="order-1 lg:order-2">
             <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-[#dce7c5]"><Droplets size={14} /> The modern ingredient edit</p>
-            <h2 className="mt-4 font-serif text-4xl leading-[1.05] sm:text-5xl md:text-6xl">Two names shaping today’s skin conversation.</h2>
-            <div className="mt-7 grid gap-5 border-t border-white/20 pt-5 sm:grid-cols-2">
+            <h2 className="mt-3 font-serif text-3xl leading-[1.05] sm:mt-4 sm:text-4xl lg:text-5xl">Two names shaping today’s skin conversation.</h2>
+            <div className="mt-5 grid gap-4 border-t border-white/20 pt-4 sm:mt-7 sm:grid-cols-2 sm:gap-5 sm:pt-5">
               <div>
                 <h3 className="font-serif text-2xl text-[#e3e9d5]">Niacinamide</h3>
                 <p className="mt-2 text-sm leading-6 text-white/65">A much-loved modern active, often explored in routines focused on the look of tone and the feel of the skin barrier.</p>
@@ -364,11 +366,11 @@ export default function PremiumHome() {
         </section>
       )}
 
-      <section id="collection" className="mx-auto max-w-7xl px-5 py-16 sm:px-8 md:px-10 md:py-24">
-        <div className="mb-8 flex flex-wrap items-end justify-between gap-5 border-b border-[#253b2f]/15 pb-6 sm:mb-10">
+      <section id="collection" className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16 lg:px-10 lg:py-20">
+        <div className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-[#253b2f]/15 pb-5 sm:mb-10 sm:gap-5 sm:pb-6">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#687958]">The considered collection</p>
-            <h2 className="mt-3 font-serif text-4xl sm:text-5xl md:text-6xl">Find your daily ritual.</h2>
+            <h2 className="mt-3 font-serif text-3xl sm:text-4xl lg:text-5xl">Find your daily ritual.</h2>
           </div>
           <Link to="/shop" className="inline-flex items-center gap-2 pb-1 text-xs font-bold uppercase tracking-[0.14em] text-[#354933]">View all <ArrowRight size={15} /></Link>
         </div>
@@ -414,23 +416,23 @@ export default function PremiumHome() {
       </section>
 
       <section className="bg-[#f4f1e9]">
-        <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 md:px-10 md:py-24">
-          <div className="mb-9 grid gap-5 md:grid-cols-[0.9fr_1.1fr] md:items-end">
+        <div className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16 lg:px-10 lg:py-20">
+          <div className="mb-7 grid gap-4 lg:mb-9 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#687958]">A ritual, considered</p>
-              <h2 className="mt-3 max-w-xl font-serif text-4xl leading-tight sm:text-5xl md:text-6xl">Let care be a little more intentional.</h2>
+              <h2 className="mt-3 max-w-xl font-serif text-3xl leading-tight sm:text-4xl lg:text-5xl">Let care be a little more intentional.</h2>
             </div>
             <p className="max-w-xl text-sm leading-7 text-stone-600 sm:text-base">A good routine is not about doing everything. It is a chance to pause, learn what works for you and make space for a small act of care.</p>
           </div>
           <div className="grid gap-4 md:grid-cols-3">
             {ritualStories.map((story, index) => (
-              <article key={story.title} className="group bg-[#e7e4d9]">
+              <article key={story.title} className="group overflow-hidden bg-[#e7e4d9]">
                 <div className="overflow-hidden bg-[#dedbcf]">
-                  <img src={image(story.image)} alt={story.title} loading="lazy" className="aspect-[4/3] w-full object-cover transition-transform duration-700 group-hover:scale-[1.025]" />
+                  <img src={image(story.image)} alt={story.title} loading="lazy" className="aspect-[16/10] w-full object-cover transition-transform duration-700 group-hover:scale-[1.025] sm:aspect-[4/3]" />
                 </div>
-                <div className="p-5 sm:p-6">
+                <div className="p-4 sm:p-6">
                   <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#77816d]">A note on care · 0{index + 1}</span>
-                  <h3 className="mt-3 font-serif text-2xl">{story.title}</h3>
+                  <h3 className="mt-2 font-serif text-xl sm:mt-3 sm:text-2xl">{story.title}</h3>
                   <p className="mt-2 text-sm leading-6 text-stone-600">{story.copy}</p>
                 </div>
               </article>
@@ -440,25 +442,25 @@ export default function PremiumHome() {
       </section>
 
       <section className="bg-[#e7e4d9] text-[#1b2921]">
-        <div className="mx-auto max-w-7xl px-5 py-16 sm:px-8 md:px-10 md:py-24">
-          <div className="mb-10 grid gap-5 border-b border-[#26392c]/20 pb-7 md:grid-cols-[1fr_0.65fr] md:items-end md:pb-9">
+        <div className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16 lg:px-10 lg:py-20">
+          <div className="mb-7 grid gap-4 border-b border-[#26392c]/20 pb-5 lg:mb-10 lg:grid-cols-[1fr_0.65fr] lg:items-end lg:pb-9">
             <div>
               <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#687958]">A Bhumivera visual story</p>
-              <h2 className="mt-3 max-w-2xl font-serif text-4xl leading-tight sm:text-5xl md:text-6xl">Four notes on care.</h2>
+              <h2 className="mt-3 max-w-2xl font-serif text-3xl leading-tight sm:text-4xl lg:text-5xl">Four notes on care.</h2>
             </div>
             <p className="max-w-lg text-sm leading-7 text-stone-600 sm:text-base">From the intelligence of nature to the choices we make each day, these campaign frames share one thought: care is most beautiful when it is considered.</p>
           </div>
           <div className="grid gap-4 lg:grid-cols-2 lg:gap-5">
             {campaignStories.map(story => (
-              <article key={story.number} className="group grid min-h-[270px] grid-cols-[minmax(116px,0.72fr)_1fr] overflow-hidden border border-[#26392c]/15 bg-[#f4f1e9] sm:min-h-[340px] sm:grid-cols-[minmax(170px,0.78fr)_1fr]">
+              <article key={story.number} className="group grid min-h-[220px] grid-cols-[minmax(112px,0.72fr)_1fr] overflow-hidden border border-[#26392c]/15 bg-[#f4f1e9] sm:min-h-[340px] sm:grid-cols-[minmax(170px,0.78fr)_1fr]">
                 <div className="relative overflow-hidden bg-[#17231d]">
                   <img src={image(story.image)} alt={`${story.title} — Bhumivera campaign artwork`} loading="lazy" className="h-full min-h-[270px] w-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.025] sm:min-h-[340px]" />
                   <span className="absolute left-2 top-2 bg-[#111c17]/85 px-2 py-1.5 font-mono text-[9px] tracking-[0.12em] text-[#e1e8ce] sm:left-3 sm:top-3 sm:px-3 sm:text-[10px]">{story.number} / 04</span>
                 </div>
-                <div className="flex flex-col justify-center p-4 sm:p-6 md:p-8">
-                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#77816d]">A note on care</span>
-                  <h3 className="mt-3 font-serif text-xl leading-tight sm:text-2xl md:text-3xl">{story.title}</h3>
-                  <p className="mt-3 text-xs leading-5 text-stone-600 sm:mt-4 sm:text-sm sm:leading-6">{story.copy}</p>
+                <div className="flex flex-col justify-center p-3 sm:p-6 lg:p-8">
+                  <span className="text-[8px] font-bold uppercase tracking-[0.14em] text-[#77816d] sm:text-[9px] sm:tracking-[0.2em]">A note on care</span>
+                  <h3 className="mt-2 font-serif text-lg leading-tight sm:mt-3 sm:text-2xl lg:text-3xl">{story.title}</h3>
+                  <p className="mt-2 text-[11px] leading-4 text-stone-600 sm:mt-4 sm:text-sm sm:leading-6">{story.copy}</p>
                   <span className="mt-5 h-px w-10 bg-[#879477] sm:mt-7" aria-hidden="true" />
                 </div>
               </article>
