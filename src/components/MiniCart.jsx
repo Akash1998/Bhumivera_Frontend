@@ -1,10 +1,11 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
-import { ArrowRight, BadgeCheck, ChevronDown, ChevronUp, Gift, Leaf, MapPin, Minus, Plus, ShieldCheck, ShoppingBag, Sparkles, Star, Tag, Trash2, Truck, X } from 'lucide-react';
+import { ArrowRight, BadgeCheck, ChevronDown, ChevronUp, Gift, Heart, Leaf, MapPin, Minus, Plus, ShieldCheck, ShoppingBag, Sparkles, Star, Tag, Trash2, Truck, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
+import { useWishlist } from '../context/WishlistContext';
 import { addresses as addressesApi, coupons as couponsApi, orders as ordersApi, payments as paymentsApi, products as productsApi, wallet as walletApi } from '../services/api';
 import { useToast } from '../context/ToastContext';
 
@@ -54,6 +55,7 @@ export default function MiniCart() {
   } = useCart();
   const { user } = useAuth();
   const { settings } = useSettings();
+  const { wishlist, isWishlisted, toggleWishlist, removeFromWishlist } = useWishlist();
   const navigate = useNavigate();
   const toast = useToast();
   const [recommendations, setRecommendations] = useState([]);
@@ -77,6 +79,10 @@ export default function MiniCart() {
   const [impactAmount, setImpactAmount] = useState(0);
   const [impactProject, setImpactProject] = useState('native-trees');
   const [celebrationEvent, setCelebrationEvent] = useState(null);
+  const [savedListOpen, setSavedListOpen] = useState(false);
+  const [busyCartItems, setBusyCartItems] = useState(() => new Set());
+  const [busySavedItem, setBusySavedItem] = useState(null);
+  const cartCount = cartItems.reduce((count, item) => count + (Number(item.quantity) || 1), 0);
 
   const subtotal = Number(getSubtotal()) || 0;
   const discount = Math.max(0, Number(rulePreview?.totalDiscount) || 0);
@@ -215,6 +221,73 @@ export default function MiniCart() {
     setCheckoutOpen(true);
   };
 
+  const withBusyCartItem = async (productId, operation) => {
+    const id = String(productId);
+    setBusyCartItems(current => new Set(current).add(id));
+    try {
+      await operation();
+    } finally {
+      setBusyCartItems(current => {
+        const next = new Set(current);
+        next.delete(id);
+        return next;
+      });
+    }
+  };
+
+  const removeCartItem = productId => withBusyCartItem(productId, async () => {
+    if (await removeFromCart(productId, { notify: false })) toast.success('Item removed from your cart.');
+  });
+
+  const changeCartQuantity = (productId, quantity) => withBusyCartItem(productId, async () => {
+    if (await updateQuantity(productId, Math.max(1, quantity), { notify: false })) {
+      toast.success('Cart quantity updated.');
+    }
+  });
+
+  const saveForLater = async item => {
+    const product = item.product || item;
+    const productId = item.product_id || product.id || product._id;
+    if (productId === undefined || productId === null) {
+      toast.error('This item cannot be saved right now.');
+      return;
+    }
+    await withBusyCartItem(productId, async () => {
+      if (!isWishlisted(productId) && !await toggleWishlist(product, { notify: false })) return;
+      if (!await removeFromCart(productId, { notify: false })) return;
+      toast.success('Saved for later and removed from your cart.');
+    });
+  };
+
+  const moveSavedItemToCart = async savedItem => {
+    const product = savedItem.product || savedItem;
+    const productId = savedItem.product_id || product.id || product._id;
+    if (productId === undefined || productId === null) {
+      toast.error('This saved item is no longer available.');
+      return;
+    }
+    setBusySavedItem(String(productId));
+    try {
+      if (!await addToCart(product)) return;
+      if (!await removeFromWishlist(productId, { notify: false })) return;
+      setSavedListOpen(false);
+    } catch (error) {
+      console.error('[MINI_CART_RESTORE_WISHLIST_ITEM]', error);
+      toast.error('Could not move this item to your cart.');
+    } finally {
+      setBusySavedItem(null);
+    }
+  };
+
+  const removeSavedItem = async productId => {
+    setBusySavedItem(String(productId));
+    try {
+      await removeFromWishlist(productId);
+    } finally {
+      setBusySavedItem(null);
+    }
+  };
+
   const saveAddress = async event => {
     event.preventDefault();
     setAddressSaving(true);
@@ -350,7 +423,7 @@ export default function MiniCart() {
         <header className="flex items-center justify-between border-b border-[#e8dcc4] px-5 py-4 sm:px-6">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#8b5a2b]/10 text-[#8b5a2b]"><ShoppingBag size={19}/></span>
-            <div><h2 id="mini-cart-title" className="font-serif text-xl text-[#2C3E2D]">Your Cart <span className="font-sans text-sm text-stone-500">({cartItems.length} items)</span></h2><p className="text-[10px] font-bold uppercase tracking-widest text-[#8b5a2b]">Thoughtfully chosen for you</p></div>
+            <div><h2 id="mini-cart-title" className="font-serif text-xl text-[#2C3E2D]">Your Cart <span className="font-sans text-sm text-stone-500">({cartCount} {cartCount === 1 ? 'item' : 'items'})</span></h2><p className="text-[10px] font-bold uppercase tracking-widest text-[#8b5a2b]">Thoughtfully chosen for you</p></div>
           </div>
           <button type="button" aria-label="Close cart" onClick={() => setIsCartOpen(false)} className="rounded-full p-2 text-stone-500 transition hover:bg-white hover:text-[#2C3E2D]"><X size={20}/></button>
         </header>
@@ -373,36 +446,45 @@ export default function MiniCart() {
         </div>}
 
         <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4 sm:px-6">
-          {cartItems.length === 0 ? <div className="flex h-full flex-col items-center justify-center text-center">
+          {cartItems.length === 0 && <div className="flex min-h-56 flex-col items-center justify-center text-center">
             <ShoppingBag size={42} className="text-[#8b5a2b]/40"/>
             <p className="mt-4 font-serif text-xl text-[#2C3E2D]">Your cart is waiting</p>
             <p className="mt-1 text-sm text-stone-500">Explore botanicals and add something you love.</p>
             <button type="button" onClick={() => setIsCartOpen(false)} className="mt-5 rounded-xl bg-[#8b5a2b] px-5 py-3 text-xs font-bold uppercase tracking-widest text-white">Continue shopping</button>
-          </div> : <>
+          </div>}
+          {cartItems.length > 0 && <>
+            <AnimatePresence initial={false}>
             {cartItems.map(item => {
               const product = item.product || item;
               const id = item.product_id || product.id || product._id;
               const image = product.image_url || item.image_url || item.image || product.image || product.images?.[0];
               const price = Number(product.discount_price || item.unit_price || product.price) || 0;
-              return <article key={id} className="flex gap-3 rounded-2xl border border-[#e8dcc4] bg-white p-3">
+              const itemBusy = busyCartItems.has(String(id));
+              const saved = isWishlisted(id);
+              return <Motion.article layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 24 }} key={id} className={`flex gap-3 rounded-2xl border border-[#e8dcc4] bg-white p-3 transition-opacity ${itemBusy ? 'opacity-60' : ''}`}>
                 <img src={getImageUrl(image)} alt={product.name || 'Cart product'} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-[76px] w-[76px] shrink-0 rounded-xl border border-[#f0e8da] bg-[#faf8f5] object-contain p-1"/>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-2"><h3 className="line-clamp-2 text-sm font-semibold leading-snug text-[#2C3E2D]">{product.name || 'Bhumivera product'}</h3><button type="button" aria-label={`Remove ${product.name || 'product'}`} onClick={() => removeFromCart(id)} className="shrink-0 rounded-lg p-1.5 text-stone-400 hover:bg-rose-50 hover:text-rose-600"><Trash2 size={15}/></button></div>
+                  <div className="flex items-start justify-between gap-2"><h3 className="line-clamp-2 text-sm font-semibold leading-snug text-[#2C3E2D]">{product.name || 'Bhumivera product'}</h3><button type="button" aria-label={`Remove ${product.name || 'product'}`} disabled={itemBusy} onClick={() => removeCartItem(id)} className="shrink-0 rounded-lg p-1.5 text-stone-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:cursor-wait"><Trash2 size={15}/></button></div>
                   {product.sku && <p className="mt-1 text-[9px] font-bold uppercase tracking-wider text-stone-400">SKU: {product.sku}</p>}
                   {Number(product.review_count) > 0 && Number(product.rating) > 0 && <button type="button" onClick={() => { setIsCartOpen(false); navigate(`/product/${product.slug || id}#product-reviews`); }} className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-[#765d17] hover:underline">
                     <Star size={11} fill="currentColor"/> {Number(product.rating).toFixed(1)} <span className="text-stone-500">({Number(product.review_count)} reviews)</span>
                   </button>}
                   <div className="mt-2 flex items-center justify-between gap-2">
                     <div className="flex items-center rounded-lg border border-[#e8dcc4] bg-[#faf8f5]">
-                      <button type="button" aria-label="Decrease quantity" onClick={() => updateQuantity(id, Math.max(1, Number(item.quantity || 1) - 1))} className="p-1.5 text-stone-600 hover:text-[#8b5a2b]"><Minus size={13}/></button>
+                      <button type="button" aria-label="Decrease quantity" disabled={itemBusy || Number(item.quantity || 1) <= 1} onClick={() => changeCartQuantity(id, Number(item.quantity || 1) - 1)} className="p-1.5 text-stone-600 hover:text-[#8b5a2b] disabled:cursor-not-allowed disabled:opacity-40"><Minus size={13}/></button>
                       <span className="min-w-7 text-center text-xs font-bold">{item.quantity || 1}</span>
-                      <button type="button" aria-label="Increase quantity" onClick={() => updateQuantity(id, Number(item.quantity || 1) + 1)} className="p-1.5 text-stone-600 hover:text-[#8b5a2b]"><Plus size={13}/></button>
+                      <button type="button" aria-label="Increase quantity" disabled={itemBusy} onClick={() => changeCartQuantity(id, Number(item.quantity || 1) + 1)} className="p-1.5 text-stone-600 hover:text-[#8b5a2b] disabled:cursor-wait disabled:opacity-40"><Plus size={13}/></button>
                     </div>
                     <span className="text-sm font-bold text-[#8b5a2b]">{formatPrice(price * (Number(item.quantity) || 1))}</span>
                   </div>
+                  <button type="button" disabled={itemBusy} onClick={() => saveForLater(item)} className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-semibold text-stone-500 transition hover:text-[#8b5a2b] disabled:cursor-wait">
+                    <Heart size={13} fill={saved ? 'currentColor' : 'none'} className={saved ? 'text-[#8b5a2b]' : ''}/>
+                    {saved ? 'Saved · remove from cart' : 'Save for later'}
+                  </button>
                 </div>
-              </article>;
+              </Motion.article>;
             })}
+            </AnimatePresence>
 
             <div className="grid grid-cols-2 gap-2 rounded-xl border border-[#e8dcc4] bg-[#fffdf8] p-3 text-[10px] font-semibold text-[#35533c]">
               <span className="flex items-center gap-1.5"><ShieldCheck size={14} className="text-[#8b5a2b]"/>Secure checkout</span>
@@ -479,6 +561,27 @@ export default function MiniCart() {
               </div>
             </section>}
           </>}
+
+          {wishlist.length > 0 && <section className="overflow-hidden rounded-2xl border border-[#e8dcc4] bg-white" aria-label="Saved for later items">
+            <h3 id="saved-items-title" className="sr-only">Saved for later</h3>
+            <button type="button" aria-expanded={savedListOpen} aria-controls="mini-cart-saved-items" onClick={() => setSavedListOpen(open => !open)} className="flex w-full items-center justify-between gap-3 p-4 text-left">
+              <span className="flex items-center gap-2 text-sm font-semibold text-[#2C3E2D]"><Heart size={16} className="text-[#8b5a2b]"/>Saved for later <span className="rounded-full bg-[#f5f0e8] px-2 py-0.5 text-[10px] text-stone-600">{wishlist.length}</span></span>
+              {savedListOpen ? <ChevronUp size={16} className="text-stone-500"/> : <ChevronDown size={16} className="text-stone-500"/>}
+            </button>
+            {savedListOpen && <div id="mini-cart-saved-items" className="max-h-64 space-y-2 overflow-y-auto border-t border-[#f0e8da] p-3">
+              {wishlist.map(savedItem => {
+                const product = savedItem.product || savedItem;
+                const id = savedItem.product_id || product.id || product._id;
+                const savedBusy = busySavedItem === String(id);
+                return <article key={id} className="flex items-center gap-2 rounded-xl bg-[#faf8f5] p-2">
+                  <img src={getImageUrl(product.image_url || product.images?.[0] || product.image)} alt={product.name || 'Saved product'} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-11 w-11 shrink-0 rounded-lg bg-white object-contain p-1"/>
+                  <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-[#2C3E2D]">{product.name || 'Saved product'}</p><p className="mt-1 text-[10px] font-bold text-[#8b5a2b]">{formatPrice(product.discount_price || product.price)}</p></div>
+                  <button type="button" disabled={busySavedItem !== null} onClick={() => moveSavedItemToCart(savedItem)} className="rounded-lg bg-[#2C3E2D] px-2.5 py-2 text-[10px] font-semibold text-white transition hover:bg-[#1b2c20] disabled:cursor-wait disabled:opacity-50">{savedBusy ? 'Moving…' : 'Add'}</button>
+                  <button type="button" disabled={busySavedItem !== null} aria-label={`Remove ${product.name || 'saved product'} from wishlist`} onClick={() => removeSavedItem(id)} className="rounded-lg p-2 text-stone-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:cursor-wait"><Trash2 size={14}/></button>
+                </article>;
+              })}
+            </div>}
+          </section>}
         </div>
 
         {cartItems.length > 0 && <footer className="border-t border-[#e8dcc4] bg-white px-5 py-4 shadow-[0_-8px_24px_rgba(44,62,45,0.05)] sm:px-6">

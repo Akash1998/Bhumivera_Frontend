@@ -73,7 +73,7 @@ export function WishlistProvider({ children }) {
     try {
       localStorage.setItem('guest_wishlist', JSON.stringify(updated));
       setWishlist(updated);
-      toast.success('Product removed from your wishlist.');
+      if (notify) toast.success('Product removed from your wishlist.');
     } catch (storageError) {
       console.error('[WISHLIST_GUEST_REMOVE]', storageError);
       toast.error('Could not remove this product from your wishlist.');
@@ -82,7 +82,7 @@ export function WishlistProvider({ children }) {
     return true;
   }, [wishlist, user, token, fetchWishlistFromAPI, toast]);
 
-  const toggleWishlist = useCallback(async product => {
+  const toggleWishlist = useCallback(async (product, { notify = true } = {}) => {
     const productId = productIdOf(product);
     if (productId === undefined || productId === null) {
       toast.error('This product cannot be saved right now.');
@@ -92,7 +92,7 @@ export function WishlistProvider({ children }) {
 
     if (user && token) {
       try {
-        await wishlistApi.add(productId);
+        await wishlistApi.add(productId, { notify });
         setWishlist(current => current.some(item => String(productIdOf(item)) === String(productId)) ? current : [...current, product]);
         return true;
       } catch (requestError) {
@@ -106,7 +106,7 @@ export function WishlistProvider({ children }) {
     try {
       localStorage.setItem('guest_wishlist', JSON.stringify(updated));
       setWishlist(updated);
-      toast.success('Product added to your wishlist.');
+      if (notify) toast.success('Product added to your wishlist.');
     } catch (storageError) {
       console.error('[WISHLIST_GUEST_ADD]', storageError);
       toast.error('Could not save this product to your wishlist.');

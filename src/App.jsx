@@ -86,7 +86,6 @@ const WarehouseAdminLogin = lazyWithRetry(() => import("./pages/WarehouseAdminLo
 const Shop = lazyWithRetry(() => import("./pages/Shop.jsx"));
 const ProductDetail = lazyWithRetry(() => import("./pages/ProductDetail.jsx"));
 const Contact = lazyWithRetry(() => import("./pages/Contact.jsx"));
-const Cart = lazyWithRetry(() => import("./pages/Cart.jsx"));
 const OrderSuccess = lazyWithRetry(() => import("./pages/OrderSuccess.jsx"));
 const Login = lazyWithRetry(() => import("./pages/Login.jsx"));
 const Register = lazyWithRetry(() => import("./pages/Register.jsx"));
@@ -175,8 +174,9 @@ function AppContent() {
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);
-    if (!params.has('cartCheckout')) return;
-    sessionStorage.setItem('mini-cart-checkout', '1');
+    const shouldOpenCheckout = params.has('cartCheckout');
+    if (!shouldOpenCheckout && !params.has('openCart')) return;
+    if (shouldOpenCheckout) sessionStorage.setItem('mini-cart-checkout', '1');
     setIsCartOpen(true);
     navigate(location.pathname, { replace: true });
   }, [location.pathname, location.search, navigate, setIsCartOpen]);
@@ -241,7 +241,7 @@ function AppContent() {
 
             {/* Protected User Routes */}
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
-            <Route path="/cart" element={<ProtectedRoute><Cart /></ProtectedRoute>} />
+            <Route path="/cart" element={<Navigate to="/?openCart=1" replace />} />
             <Route path="/checkout" element={<Navigate to="/?cartCheckout=1" replace />} />
             <Route path="/order-success/:orderId?" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
             <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />

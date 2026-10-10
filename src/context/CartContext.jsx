@@ -80,8 +80,8 @@ export const CartProvider = ({ children }) => {
     const addProduct = prev => {
       const safeCart = Array.isArray(prev) ? prev : [];
       const updated = [...safeCart];
-      const idx = updated.findIndex(i => i.product_id === prodId || i.id === prodId);
-      if (idx > -1) updated[idx].quantity += qty;
+      const idx = updated.findIndex(i => String(i.product_id || i.id) === String(prodId));
+      if (idx > -1) updated[idx] = { ...updated[idx], quantity: (Number(updated[idx].quantity) || 0) + qty };
       else updated.push({ product_id: prodId, id: prodId, product, quantity: qty });
       return updated;
     };
@@ -115,56 +115,60 @@ export const CartProvider = ({ children }) => {
     return true;
   };
 
-  const updateQuantity = async (productId, newQty) => {
+  const updateQuantity = async (productId, newQty, { notify = true } = {}) => {
     if (newQty < 1) return removeFromCart(productId);
     
     // Optimistic Update
     const update = prev => {
       const safeCart = Array.isArray(prev) ? prev : [];
       const updated = [...safeCart];
-      const idx = updated.findIndex(i => i.product_id === productId || i.id === productId);
-      if (idx > -1) updated[idx].quantity = newQty;
+      const idx = updated.findIndex(i => String(i.product_id || i.id) === String(productId));
+      if (idx > -1) updated[idx] = { ...updated[idx], quantity: newQty };
       return updated;
     };
     if (isAuthenticated) setCart(prev => update(prev));
-    else if (!saveGuestCart(update(cart), 'Could not update the cart quantity.')) return;
+    else if (!saveGuestCart(update(cart), 'Could not update the cart quantity.')) return false;
     
     if (isAuthenticated) {
       try {
-        await cartApi.updateQuantity(productId, newQty);
+        await cartApi.updateQuantity(productId, newQty, { notify });
         await loadCart();
       } catch (err) {
         console.error("Quantity update failed", err);
         await loadCart();
         toast.error(err.normalized?.message || 'Could not update the cart quantity.');
+        return false;
       }
     } else {
-      toast.success('Cart quantity updated successfully.');
+      if (notify) toast.success('Cart quantity updated successfully.');
     }
+    return true;
   };
 
-  const removeFromCart = async (id) => {
+  const removeFromCart = async (id, { notify = true } = {}) => {
     // Optimistic Update
     const remove = prev => {
       const safeCart = Array.isArray(prev) ? prev : [];
-      const updated = safeCart.filter(i => i.product_id !== id && i.id !== id);
+      const updated = safeCart.filter(i => String(i.product_id || i.id) !== String(id));
       return updated;
     };
     if (isAuthenticated) setCart(prev => remove(prev));
-    else if (!saveGuestCart(remove(cart), 'Could not remove this item from your cart.')) return;
+    else if (!saveGuestCart(remove(cart), 'Could not remove this item from your cart.')) return false;
 
     if (isAuthenticated) {
       try {
-        await cartApi.remove(id);
+        await cartApi.remove(id, { notify });
         await loadCart();
       } catch (err) {
         console.error("Remove failed", err);
         await loadCart();
         toast.error(err.normalized?.message || 'Could not remove this item from your cart.');
+        return false;
       }
     } else {
-      toast.success('Item removed from your cart.');
+      if (notify) toast.success('Item removed from your cart.');
     }
+    return true;
   };
   
   const clearCart = async () => {

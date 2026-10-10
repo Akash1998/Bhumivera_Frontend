@@ -10,8 +10,9 @@ import { useCart } from '../context/CartContext';
 import { search } from '../services/api';
 
 export default function Navbar() {
-  const { user, logout } = useAuth(); 
-  const { cartItems } = useCart(); 
+  const { user } = useAuth();
+  const { cartItems, setIsCartOpen } = useCart();
+  const cartCount = cartItems.reduce((count, item) => count + (Number(item.quantity) || 1), 0);
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [suggestions, setSuggestions] = useState([]);
@@ -183,12 +184,12 @@ export default function Navbar() {
               <Link to="/login" className="hidden sm:flex px-6 py-2.5 bg-[#1a1a1a] rounded-full text-xs font-bold uppercase tracking-widest text-white transition-all shadow-sm">Sign In</Link>
             )}
 
-            <Link to="/cart" aria-label="Cart" className="relative p-2.5 text-[#8b5a2b] bg-white border border-[#e8dcc4] rounded-full hover:border-[#8b5a2b] transition-all group shadow-sm">
+            <button type="button" onClick={() => setIsCartOpen(true)} aria-label={`Open cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`} className="relative p-2.5 text-[#8b5a2b] bg-white border border-[#e8dcc4] rounded-full hover:border-[#8b5a2b] transition-all group shadow-sm">
               <ShoppingCart size={20} className="group-hover:scale-110 transition-transform" />
-              {cartItems?.length > 0 && (
-                <span className="absolute -top-2 -right-2 w-5 h-5 bg-[#8b5a2b] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">{cartItems.length}</span>
+              {cartCount > 0 && (
+                <span className="absolute -top-2 -right-2 w-5 h-5 bg-[#8b5a2b] text-white text-[10px] font-bold rounded-full flex items-center justify-center border-2 border-white shadow-sm">{cartCount}</span>
               )}
-            </Link>
+            </button>
           </div>
         </div>
       </nav>

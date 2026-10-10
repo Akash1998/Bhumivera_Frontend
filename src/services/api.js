@@ -309,7 +309,7 @@ export const users = { updateProfile: d => api.put('/users/profile', d), changeP
 export const products = { getAllActive: p => api.get("/products/active", { params: p }), getAllAdmin: () => api.get("/products"), getById: id => api.get(`/products/${id}`), getBySlug: s => api.get(`/products/slug/${s}`), create: (d, options) => api.post("/products", d, options), update: (id, d, options) => api.put(`/products/${id}`, d, options), toggleStatus: (id, s) => api.patch(`/products/${id}/status`, { status: s }), getUploadUrl: (f, t, options) => api.post("/products/presign", { filename: f, fileType: t }, options), saveImageKeys: (id, k, options) => api.post(`/products/${id}/images/save`, { imageKeys: k }, options), deleteImage: (id, image, options = {}) => api.delete(`/products/${id}/images`, { ...options, data: typeof image === 'object' ? { imageId: image.id, imagePath: image.file_path } : { imageId: image } }), addSerials: (id, s) => api.post(`/serials/${id}/add`, { serials: s }), delete: id => api.delete(`/products/${id}`) };
 export const categories = { getAll: () => api.get("/categories"), getById: id => api.get(`/categories/${id}`), create: d => api.post("/categories", d), update: (id, d) => api.put(`/categories/${id}`, d), delete: id => api.delete(`/categories/${id}`) };
 export const subcategories = { getAll: () => api.get("/subcategories"), getById: id => api.get(`/subcategories/${id}`), create: d => api.post("/subcategories", d), update: (id, d) => api.put(`/subcategories/${id}`, d), delete: id => api.delete(`/subcategories/${id}`) };
-export const cart = { get: () => api.get("/cart"), add: d => api.post("/cart", d), updateQuantity: (id, q) => api.put(`/cart/${id}`, { quantity: q }), remove: id => api.delete(`/cart/${id}`), clear: () => api.delete("/cart"), claimAbandonedCoupon: () => api.post('/cart/abandoned-coupon') };
+export const cart = { get: () => api.get("/cart"), add: d => api.post("/cart", d), updateQuantity: (id, q, options) => api.put(`/cart/${id}`, { quantity: q }, options), remove: (id, options) => api.delete(`/cart/${id}`, options), clear: () => api.delete("/cart"), claimAbandonedCoupon: () => api.post('/cart/abandoned-coupon') };
 export const cartRules = {
   list: () => api.get('/settings/cart-rules/list'),
   getLoyaltyTiers: () => api.get('/settings/cart-rules/loyalty-tiers'),
@@ -326,7 +326,7 @@ export const payments = {
   verifyPayment: data => api.post('/verify-payment', data, { notify: false }),
 };
 export const addresses = { getAll: () => api.get("/addresses"), create: d => api.post("/addresses", d), update: (id, d) => api.put(`/addresses/${id}`, d), delete: id => api.delete(`/addresses/${id}`), setDefault: id => api.patch(`/addresses/${id}/default`) };
-export const wishlist = { get: () => api.get("/wishlist"), add: p => api.post("/wishlist", { productId: p }), remove: (p, options) => api.delete(`/wishlist/${p}`, options) };
+export const wishlist = { get: () => api.get("/wishlist"), add: (p, options) => api.post("/wishlist", { productId: p }, options), remove: (p, options) => api.delete(`/wishlist/${p}`, options) };
 export const coupons = { getPublicActive: () => api.get("/coupons/public/active"), validate: (c, orderTotal = 0) => api.post("/coupons/validate", { code: c, orderTotal }), getAllAdmin: () => api.get("/coupons"), create: d => api.post("/coupons", d), update: (id, d) => api.put(`/coupons/${id}`, d), delete: id => api.delete(`/coupons/${id}`) };
 export const reviews = {
   getByProduct: productId => api.get(`/reviews/product/${productId}`),
