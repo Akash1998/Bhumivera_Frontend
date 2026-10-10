@@ -53,24 +53,6 @@ const ingredientStories = [
   },
 ];
 
-const ritualStories = [
-  {
-    title: 'A gentler beginning',
-    copy: 'The best rituals leave room to notice what your skin needs today.',
-    image: 'aloeveradrop.webp',
-  },
-  {
-    title: 'Curiosity, with care',
-    copy: 'Good questions belong beside beautiful botanicals.',
-    image: 'aloeverascience.webp',
-  },
-  {
-    title: 'A daily moment, made yours',
-    copy: 'Small, considered steps can make an everyday routine feel personal.',
-    image: 'charcoalFace wash.webp',
-  },
-];
-
 const campaignStories = [
   {
     image: 'Promo1.webp',
@@ -226,7 +208,7 @@ export default function PremiumHome() {
           src={image('seabuckthorn.webp')}
           alt="Bhumivera sea-buckthorn face wash among sea-buckthorn berries"
           fetchPriority="high"
-          className="absolute inset-0 -z-20 h-full w-full object-cover object-left sm:object-center"
+          className="absolute inset-0 -z-20 h-full w-full object-cover object-[45%_center] sm:object-center"
         />
         <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#101811]/95 via-[#101811]/72 to-[#101811]/20 lg:bg-gradient-to-r lg:from-[#101811]/90 lg:via-[#101811]/65 lg:to-[#101811]/10" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#101811]/65 via-[#101811]/30 to-transparent lg:hidden" />
@@ -401,42 +383,24 @@ export default function PremiumHome() {
         )}
       </section>
 
-      <section className="grid bg-[#19261e] text-white md:min-h-[540px] md:grid-cols-2">
-        <div className="flex flex-col justify-center px-5 py-14 sm:px-8 md:px-12 lg:px-20">
-          <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#dce7c5]">A promise of clarity</p>
-          <h2 className="mt-4 max-w-xl font-serif text-4xl leading-tight sm:text-5xl md:text-6xl">A beautiful ritual should feel good in every detail.</h2>
-          <p className="mt-5 max-w-lg text-sm leading-7 text-white/70">We believe care is more meaningful when the details are easy to find. Clear product pages, considered ingredients and an honest account of what is available—so you can make a choice that feels like yours.</p>
-          <Link to="/science" className="mt-7 inline-flex min-h-11 w-fit items-center gap-3 border-b border-[#dce7c5]/50 pb-2 text-xs font-bold uppercase tracking-[0.14em] text-[#e4ead7]">Our approach to ingredients <ArrowRight size={15} /></Link>
-        </div>
-        <div className="relative min-h-[300px] overflow-hidden bg-[#e8e5d9] sm:min-h-[400px] md:min-h-full">
-          <img src={image('aloeverabeaker.webp')} alt="Aloe vera in a clear beaker, reflecting Bhumivera's nature-first point of view" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-center" />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#101811]/55 via-transparent to-transparent md:bg-gradient-to-r md:from-[#19261e]/20 md:to-transparent" />
-          <span className="absolute bottom-5 left-5 text-[9px] font-semibold uppercase tracking-[0.2em] text-white/80 sm:bottom-7 sm:left-7">Rooted in care · guided by clarity</span>
-        </div>
-      </section>
-
-      <section className="bg-[#f4f1e9]">
-        <div className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16 lg:px-10 lg:py-20">
-          <div className="mb-7 grid gap-4 lg:mb-9 lg:grid-cols-[0.9fr_1.1fr] lg:items-end">
-            <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#687958]">A ritual, considered</p>
-              <h2 className="mt-3 max-w-xl font-serif text-3xl leading-tight sm:text-4xl lg:text-5xl">Let care be a little more intentional.</h2>
-            </div>
-            <p className="max-w-xl text-sm leading-7 text-stone-600 sm:text-base">A good routine is not about doing everything. It is a chance to pause, learn what works for you and make space for a small act of care.</p>
+      <section className="bg-[#e7e4d9] px-4 py-8 text-[#1b2921] sm:px-8 sm:py-12 lg:px-10 lg:py-16">
+        <div className="mx-auto grid max-w-7xl overflow-hidden rounded-2xl bg-[#dce1d2] md:grid-cols-[1fr_1fr]">
+          <div className="relative order-1 aspect-[16/10] overflow-hidden bg-[#26392c] md:order-2 md:aspect-auto md:min-h-[420px]">
+            <img src={image('river free.webp')} alt="Illustrative scene of people tending a leafy riverbank, not a verified Bhumivera field report" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-center" />
+            <span className="absolute bottom-3 left-3 bg-[#101811]/75 px-2.5 py-1.5 text-[8px] font-semibold uppercase tracking-[0.12em] text-[#e1e8ce] backdrop-blur-sm sm:bottom-5 sm:left-5 sm:px-3 sm:py-2 sm:text-[9px] sm:tracking-[0.16em]">A vision of care for land and water · illustrative image</span>
           </div>
-          <div className="grid gap-4 md:grid-cols-3">
-            {ritualStories.map((story, index) => (
-              <article key={story.title} className="group overflow-hidden bg-[#e7e4d9]">
-                <div className="overflow-hidden bg-[#dedbcf]">
-                  <img src={image(story.image)} alt={story.title} loading="lazy" className="aspect-[16/10] w-full object-cover transition-transform duration-700 group-hover:scale-[1.025] sm:aspect-[4/3]" />
-                </div>
-                <div className="p-4 sm:p-6">
-                  <span className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#77816d]">A note on care · 0{index + 1}</span>
-                  <h3 className="mt-2 font-serif text-xl sm:mt-3 sm:text-2xl">{story.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-stone-600">{story.copy}</p>
-                </div>
-              </article>
-            ))}
+          <div className="order-2 flex flex-col justify-center px-5 py-7 sm:px-8 sm:py-9 md:order-1 lg:px-12 lg:py-12 xl:px-16">
+            <p className="inline-flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.2em] text-[#56684d] sm:text-[10px] sm:tracking-[0.24em]"><Leaf size={14} /> A closer kind of care</p>
+            <h2 className="mt-3 max-w-xl font-serif text-3xl leading-[1.06] tracking-[-0.025em] sm:mt-4 sm:text-4xl lg:text-5xl">Care is a relationship with the living world.</h2>
+            <p className="mt-4 max-w-lg text-sm leading-6 text-[#53604e] sm:mt-5 sm:text-base sm:leading-7">
+              From the soil beneath our feet to the water that gives life, nature is not a backdrop to what we do. It is the source of our inspiration—and a responsibility we want to meet with respect.
+            </p>
+            <p className="mt-3 max-w-lg text-sm leading-6 text-[#53604e] sm:mt-4">
+              It shapes how we think about botanicals, the rituals we make room for, and the kind of future we hope to help grow.
+            </p>
+            <Link to="/about" className="mt-5 inline-flex min-h-11 w-fit items-center gap-3 border-b border-[#536b4d]/40 pb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#354933] sm:mt-6 sm:text-xs sm:tracking-[0.14em]">
+              Get to know our story <ArrowRight size={15} />
+            </Link>
           </div>
         </div>
       </section>
