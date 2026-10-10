@@ -5,8 +5,26 @@ import { ArrowRight, BadgeCheck, ChevronDown, ChevronUp, Gift, Leaf, MapPin, Min
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
-import { addresses as addressesApi, coupons as couponsApi, orders as ordersApi, products as productsApi, wallet as walletApi } from '../services/api';
+import { addresses as addressesApi, coupons as couponsApi, orders as ordersApi, payments as paymentsApi, products as productsApi, wallet as walletApi } from '../services/api';
 import { useToast } from '../context/ToastContext';
+
+let razorpayScriptPromise;
+const loadRazorpayScript = () => {
+  if (window.Razorpay) return Promise.resolve();
+  if (!razorpayScriptPromise) {
+    razorpayScriptPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve();
+      script.onerror = () => {
+        razorpayScriptPromise = null;
+        reject(new Error('Could not load Razorpay Checkout. Check your connection and try again.'));
+      };
+      document.body.appendChild(script);
+    });
+  }
+  return razorpayScriptPromise;
+};
 
 const getImageUrl = image => {
   let value = image;
@@ -238,16 +256,72 @@ export default function MiniCart() {
       return;
     }
     setPlacingOrder(true);
+    let paymentModalOpened = false;
     try {
-      const response = await ordersApi.create({
+      const checkoutDetails = {
         addressId: selectedAddress,
-        paymentMode,
         deliveryType: shippingMethod.toLowerCase(),
         couponCode: appliedCoupon?.code || undefined,
         impactAmount: paymentMode === 'COD' ? impactAmount : 0,
         impactProject: paymentMode === 'COD' && impactAmount > 0 ? impactProject : undefined,
         notes: orderNotes.trim() || undefined,
-      });
+      };
+      if (paymentMode === 'online') {
+        await loadRazorpayScript();
+        const { data: razorpayOrder } = await paymentsApi.createOrder({ amount: Math.round(finalTotal * 100), currency: 'INR' });
+        const key = import.meta.env.VITE_RAZORPAY_KEY_ID || razorpayOrder.key_id;
+        if (!key || !razorpayOrder.order_id) throw new Error('Razorpay checkout is not configured correctly.');
+        const checkout = new window.Razorpay({
+          key,
+          amount: razorpayOrder.amount,
+          currency: razorpayOrder.currency,
+          name: 'Bhumivera',
+          description: 'Secure checkout',
+          order_id: razorpayOrder.order_id,
+          prefill: {
+            name: user?.name || '',
+            email: user?.email || '',
+          },
+          theme: { color: '#2C3E2D' },
+          handler: async payment => {
+            try {
+              await paymentsApi.verifyPayment(payment);
+              const response = await ordersApi.create({
+                ...checkoutDetails,
+                paymentMode: 'online',
+                ...payment,
+              }, { notify: false });
+              const orderId = response.data?.orderId || response.data?.id;
+              if (!orderId) throw new Error('Payment was verified, but order confirmation was not returned. Contact support with your payment ID.');
+              await clearCart();
+              setIsCartOpen(false);
+              navigate(`/order-success/${orderId}`);
+            } catch (error) {
+              console.error('[MINI_CART_RAZORPAY_ORDER]', error);
+              const message = error.response?.data?.message || error.message || 'Payment could not be confirmed.';
+              toast.error(`${message} Payment ID: ${payment.razorpay_payment_id}. Contact support if you were charged.`);
+            } finally {
+              setPlacingOrder(false);
+            }
+          },
+          modal: {
+            ondismiss: () => {
+              setPlacingOrder(false);
+              toast.error('Payment was cancelled. Your cart is unchanged.');
+            },
+          },
+        });
+        checkout.on('payment.failed', event => {
+          const message = event.error?.description || event.error?.reason || 'Payment failed. Please try again.';
+          toast.error(message);
+          setPlacingOrder(false);
+        });
+        checkout.open();
+        paymentModalOpened = true;
+        return;
+      }
+
+      const response = await ordersApi.create({ ...checkoutDetails, paymentMode });
       const orderId = response.data?.orderId || response.data?.id;
       if (!orderId) throw new Error('Order confirmation was not returned. Please check your orders before trying again.');
       await clearCart();
@@ -257,7 +331,7 @@ export default function MiniCart() {
       console.error('[MINI_CART_PLACE_ORDER]', error);
       toast.error(error.response?.data?.message || error.message || 'We could not place your order. Please review your details and try again.');
     } finally {
-      setPlacingOrder(false);
+      if (!paymentModalOpened) setPlacingOrder(false);
     }
   };
 
@@ -362,6 +436,7 @@ export default function MiniCart() {
                 <div className="space-y-2">
                   <p className="text-xs font-bold text-[#35533c]">Payment method</p>
                   <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'COD'} onChange={() => setPaymentMode('COD')} className="accent-[#35533c]"/>Cash on delivery</label>
+                  <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'online'} onChange={() => { setPaymentMode('online'); setImpactAmount(0); }} className="accent-[#35533c]"/>Pay online with Razorpay</label>
                   <label className="flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><span className="flex items-center gap-2"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'WALLET'} onChange={() => { setPaymentMode('WALLET'); setImpactAmount(0); }} className="accent-[#35533c]"/>Bhumivera wallet</span><span className="text-stone-500">Balance {formatPrice(walletBalance)}</span></label>
                 </div>
 
@@ -418,7 +493,7 @@ export default function MiniCart() {
           {checkoutOpen
             ? <form onSubmit={placeOrder}>
               <button type="submit" disabled={placingOrder || !user || (paymentMode === 'WALLET' && walletBalance < finalTotal)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#2C3E2D] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-md transition hover:bg-[#1b2c20] disabled:cursor-not-allowed disabled:opacity-50">
-                {placingOrder ? 'Preparing your order…' : <>{paymentMode === 'COD' ? 'Place order · cash on delivery' : 'Place wallet order'} <ArrowRight size={16}/></>}
+                {placingOrder ? 'Preparing your order…' : <>{paymentMode === 'COD' ? 'Place order · cash on delivery' : paymentMode === 'online' ? 'Pay securely with Razorpay' : 'Place wallet order'} <ArrowRight size={16}/></>}
               </button>
               <button type="button" onClick={() => setCheckoutOpen(false)} className="mt-2 w-full py-2 text-xs font-semibold text-stone-500 hover:text-[#2C3E2D]">Back to cart</button>
               {paymentMode === 'WALLET' && walletBalance < finalTotal && <p className="mt-1 text-center text-[10px] text-rose-700">Add funds to your wallet or choose cash on delivery.</p>}
