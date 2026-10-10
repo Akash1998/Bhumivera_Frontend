@@ -162,19 +162,21 @@ const ProductGrid = ({ products = [], isLoading = false }) => {
             </div>
 
             <div className={`flex flex-col ${viewMode === 'list' ? 'justify-center py-4' : 'mt-6'}`}>
-              <div className="flex items-center gap-2 mb-2">
-                <div className="flex text-amber-400">
-                  {[...Array(5)].map((_, i) => (
-                    <Star 
-                      key={i} 
-                      size={14} 
-                      fill={i < Math.floor(product.rating || 5) ? "currentColor" : "none"} 
-                      className={i < Math.floor(product.rating || 5) ? "" : "text-slate-600"}
-                    />
-                  ))}
+              {Number(product.rating) > 0 && Number(product.reviews) > 0 && (
+                <div className="flex items-center gap-2 mb-2" aria-label={`Rated ${product.rating} out of 5 from ${product.reviews} reviews`}>
+                  <div className="flex text-amber-400">
+                    {[...Array(5)].map((_, i) => (
+                      <Star
+                        key={i}
+                        size={14}
+                        fill={i < Math.round(Number(product.rating)) ? "currentColor" : "none"}
+                        className={i < Math.round(Number(product.rating)) ? "" : "text-slate-600"}
+                      />
+                    ))}
+                  </div>
+                  <span className="text-slate-500 text-xs font-bold">({product.reviews})</span>
                 </div>
-                <span className="text-slate-500 text-xs font-bold">({product.reviews || 0})</span>
-              </div>
+              )}
               
               <h3 className="text-white font-bold text-lg mb-2 group-hover:text-emerald-500 transition-colors line-clamp-1">
                 {product.name}

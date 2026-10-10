@@ -13,7 +13,7 @@ export default function Affiliate() {
       <div className="bg-gradient-to-b from-slate-900 to-[#232f3e] text-white py-24 px-4 text-center">
         <h1 className="text-4xl md:text-6xl font-black mb-6 tracking-tight">Bhumivera Partner Program</h1>
         <p className="text-xl text-gray-300 max-w-2xl mx-auto font-medium">
-          Monetize your audience by partnering with the industry leader in premium car audio and automotive accessories.
+          Interested in working with Bhumivera? Contact us to ask about current partner opportunities and their written terms.
         </p>
         <div className="mt-10">
           <Link to="/contact" className="px-8 py-4 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-600/30">
@@ -26,10 +26,10 @@ export default function Affiliate() {
       <div className="max-w-7xl mx-auto px-4 mt-20">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { icon: DollarSign, title: "High Commissions", desc: "Earn highly competitive rates on every authentic Bhumivera product sold through your links." },
-            { icon: Award, title: "Premium Brand", desc: "Promote a brand recognized for uncompromising quality and scientific acoustic engineering." },
-            { icon: Target, title: "High Conversion", desc: "Benefit from our optimized checkout process, clear product information, and brand trust." },
-            { icon: TrendingUp, title: "Dedicated Support", desc: "Get access to exclusive marketing materials, product sheets, and partner support." }
+            { icon: DollarSign, title: "Commission terms", desc: "Any commission, eligibility rules and payment schedule depend on the specific written partner agreement." },
+            { icon: Award, title: "Product information", desc: "Review current product details and approved descriptions before sharing information with your audience." },
+            { icon: Target, title: "Partner links", desc: "Ask whether tracked links are currently available and how referrals and attribution are handled." },
+            { icon: TrendingUp, title: "Program details", desc: "Availability, support and promotional materials are confirmed individually; request the current terms before participating." }
           ].map((item, i) => (
             <div key={i} className="p-8 rounded-2xl bg-slate-50 border border-slate-100 hover:border-blue-200 transition-colors">
               <div className="w-12 h-12 bg-white rounded-xl shadow-sm flex items-center justify-center mb-6">

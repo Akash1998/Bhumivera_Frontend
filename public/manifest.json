@@ -1,7 +1,7 @@
 {
-  "name": "Bhumivera - Luxury Natural Skincare",
+  "name": "Bhumivera",
   "short_name": "Bhumivera",
-  "description": "Discover Bhumivera, the premier luxury skincare brand. Experience 200% natural, organic soaps and skincare products.",
+  "description": "Explore Bhumivera products and review product-specific details before choosing.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -28,19 +28,19 @@
       "purpose": "any maskable"
     }
   ],
-  "categories": ["shopping", "beauty", "health", "lifestyle"],
+  "categories": ["shopping", "beauty", "lifestyle"],
   "shortcuts": [
     {
       "name": "Shop Skincare",
       "short_name": "Shop",
-      "description": "Browse organic skincare products",
+      "description": "Browse products and review their individual details.",
       "url": "/shop",
       "icons": [{"src": "/favicon.ico", "sizes": "64x64"}]
     },
     {
       "name": "Bhumivera Science",
       "short_name": "Science",
-      "description": "Learn about our natural formulations",
+      "description": "Explore botanical information and product details.",
       "url": "/bhumivera-science",
       "icons": [{"src": "/favicon.ico", "sizes": "64x64"}]
     }

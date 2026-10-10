@@ -127,7 +127,7 @@ export default function Genuine_test() {
             </div>
             <h1 className="text-4xl font-bold text-slate-900 mb-4 tracking-tight">Product Genuinity Test</h1>
             <p className="text-slate-500 text-lg max-w-xl mx-auto">
-              Scan or enter your product Serial Number to verify authenticity and activate your registration benefits.
+              Scan or enter your product serial number to check for a matching record in Bhumivera's database and register warranty details where available.
             </p>
           </div>
         )}
@@ -194,7 +194,7 @@ export default function Genuine_test() {
             <div className="md:col-span-1 space-y-6">
               <div className="bg-white rounded-3xl p-6 shadow-lg border border-slate-100 relative overflow-hidden">
                 <div className="absolute top-0 right-0 bg-green-500 text-white text-xs font-bold px-3 py-1 rounded-bl-lg shadow-md flex items-center gap-1">
-                  <ShieldCheck size={12}/> Verified Authentic
+                  <ShieldCheck size={12}/> Serial Record Found
                 </div>
                 <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-4 mt-2">Available for Registration</p>
                 <img 
@@ -299,11 +299,12 @@ export default function Genuine_test() {
                 <CheckCircle className="text-green-600" size={28} />
                 <div>
                   <h3 className="font-bold text-lg">
-                    {productData?.status === 'registered' ? '100% Genuine Product Verified!' : 'Registration & Verification Successful!'}
+                    {productData?.status === 'registered' ? 'Registration record found' : 'Warranty registration submitted'}
                   </h3>
                   <p className="text-sm opacity-80">
-                    {productData?.status === 'registered' ? 'Your product is authentic and actively protected.' : 'Your product authenticity is confirmed.'}
+                    {productData?.status === 'registered' ? 'This serial number has a registration record in Bhumivera’s database.' : 'The warranty registration details have been saved.'}
                   </p>
+                  <p className="text-xs opacity-70 mt-1">A database record does not independently verify the physical product.</p>
                 </div>
               </div>
               <div className="flex gap-2">
@@ -333,16 +334,16 @@ export default function Genuine_test() {
                   <div className="flex flex-col md:flex-row justify-between items-center md:items-start border-b-2 border-slate-200 pb-8 mb-8 text-center md:text-left relative z-10">
                     <img src="/logo.webp" alt="Bhumivera Logo" className="h-16 md:h-20 mb-4 md:mb-0" />
                     <div className="md:text-right">
-                      <h1 className="text-3xl md:text-4xl font-serif text-slate-800 tracking-widest font-bold uppercase">Genuinity Verified</h1>
-                      <p className="text-yellow-600 font-bold tracking-widest uppercase text-sm md:text-md mt-1">Certificate of Authenticity</p>
+                      <h1 className="text-3xl md:text-4xl font-serif text-slate-800 tracking-widest font-bold uppercase">Warranty Record</h1>
+                      <p className="text-yellow-600 font-bold tracking-widest uppercase text-sm md:text-md mt-1">Serial & Registration Details</p>
                       <p className="text-slate-500 text-xs mt-2 font-mono bg-slate-100 inline-block px-3 py-1 rounded">REG ID: ANR-{registrationId}</p>
                     </div>
                   </div>
 
                   <div className="text-center py-6 relative z-10">
-                    <p className="text-slate-500 italic text-lg mb-2">This is to certify that the premium product</p>
+                    <p className="text-slate-500 italic text-lg mb-2">Product associated with this serial record</p>
                     <h2 className="text-3xl font-bold text-slate-800 uppercase tracking-wide">{productData?.product_name}</h2>
-                    <p className="text-slate-500 italic text-lg mt-8 mb-2">is officially genuine and registered to</p>
+                    <p className="text-slate-500 italic text-lg mt-8 mb-2">Registration details supplied for</p>
                     <h3 className="text-2xl font-bold text-slate-800 uppercase border-b border-slate-300 inline-block pb-1 px-8">{formData.customerName}</h3>
                   </div>
 
@@ -373,13 +374,8 @@ export default function Genuine_test() {
                       <a href="https://www.bhumivera.com" target="_blank" rel="noreferrer" className="hover:underline">www.bhumivera.com</a>
                     </div>
                     <p className="text-xs text-slate-400 max-w-xs leading-relaxed">
-                      This digital certificate verifies the authenticity of your product. For support, warranty claims, and exclusive accessories, visit our official website.
+                      This page displays serial and warranty registration details from Bhumivera's records. It does not independently verify the physical product.
                     </p>
-                  </div>
-                  <div className="text-center text-slate-800">
-                    <div className="font-signature text-3xl text-slate-800 mb-2 italic">Bhumivera Auth</div>
-                    <div className="w-48 h-px bg-slate-800 mx-auto mb-2"></div>
-                    <p className="text-xs font-bold uppercase tracking-widest">Authorized Signatory</p>
                   </div>
                 </div>
               </div>

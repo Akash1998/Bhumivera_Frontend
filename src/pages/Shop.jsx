@@ -28,26 +28,27 @@ const ProductCard = ({ product }) => {
         </div>
         {product.is_featured && (
           <div className="absolute top-6 left-6 px-4 py-1.5 bg-[#8b5a2b]/90 backdrop-blur-md text-white text-[9px] font-bold uppercase tracking-widest rounded-full border border-[#8b5a2b]">
-            Artisan Crafted
+            Featured
           </div>
         )}
       </Link>
       
       <div className="p-8 flex flex-col flex-1 text-center">
-        <div className="flex justify-center items-center mb-3 gap-1 text-[#8b5a2b]">
-          <Star size={12} fill="currentColor" />
-          <Star size={12} fill="currentColor" />
-          <Star size={12} fill="currentColor" />
-          <Star size={12} fill="currentColor" />
-          <Star size={12} fill="currentColor" />
-        </div>
+        {Number(product.rating) > 0 && Number(product.reviews) > 0 && (
+          <div className="flex justify-center items-center mb-3 gap-1 text-[#8b5a2b]" aria-label={`Rated ${product.rating} out of 5 from ${product.reviews} reviews`}>
+            {[...Array(5)].map((_, index) => (
+              <Star key={index} size={12} fill={index < Math.round(Number(product.rating)) ? 'currentColor' : 'none'} />
+            ))}
+            <span className="ml-1 text-[10px] text-[#5c4a3d]">({product.reviews})</span>
+          </div>
+        )}
         
         <h3 className="text-sm font-bold uppercase tracking-widest text-[#1a1a1a] group-hover:text-[#8b5a2b] transition-colors line-clamp-2 mb-2">
           {product.name}
         </h3>
         
         <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#5c4a3d] mb-6 block">
-          {product.category_name || "Botanical Blend"}
+          {product.category_name || "Product"}
         </span>
 
         <div className="mt-auto pt-6 border-t border-[#e8dcc4] flex flex-col gap-4">

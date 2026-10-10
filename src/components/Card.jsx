@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ShoppingCart, Eye, Heart, CheckCircle, AlertCircle, Star, Zap, Layers } from 'lucide-react';
+import { ShoppingCart, Eye, Heart, CheckCircle, AlertCircle, Star, Layers } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 export default function Card({ product }) {
@@ -74,18 +74,14 @@ export default function Card({ product }) {
           </div>
         </div>
 
-        <div className="flex items-center justify-between">
-           <div className="flex items-center space-x-1">
-             {[...Array(5)].map((_, i) => (
-               <Star key={i} size={10} className={i < (product.ratings || 4) ? 'text-emerald-500 fill-emerald-500' : 'text-slate-800'} />
-             ))}
-             <span className="text-[10px] font-bold text-slate-600 ml-2">({product.numReviews || 12})</span>
-           </div>
-           <div className="flex items-center space-x-2">
-              <Zap size={14} className="text-amber-500 fill-amber-500" />
-              <span className="text-[10px] font-black uppercase text-amber-500 tracking-widest">Flash Sale</span>
-           </div>
-        </div>
+        {Number(product.ratings) > 0 && Number(product.numReviews) > 0 && (
+          <div className="flex items-center space-x-1" aria-label={`Rated ${product.ratings} out of 5 from ${product.numReviews} reviews`}>
+            {[...Array(5)].map((_, i) => (
+              <Star key={i} size={10} className={i < Math.round(Number(product.ratings)) ? 'text-emerald-500 fill-emerald-500' : 'text-slate-800'} />
+            ))}
+            <span className="text-[10px] font-bold text-slate-600 ml-2">({product.numReviews})</span>
+          </div>
+        )}
 
         <button 
           onClick={() => addToCart(product)}

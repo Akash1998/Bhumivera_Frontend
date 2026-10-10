@@ -27,8 +27,8 @@ export default function Returns() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 relative">
           {[
             { step: "01", icon: Package, title: "Find Your Order", desc: "Open your account and select the delivered order you need help with." },
-            { step: "02", icon: HeadphonesIcon, title: "Contact Support", desc: "Reach out to our expert team to troubleshoot or authorize a return." },
-            { step: "03", icon: Package, title: "Pack & Ship", desc: "Securely pack the item in its original packaging and ship it to our facility." }
+            { step: "02", icon: HeadphonesIcon, title: "Contact Support", desc: "Ask the support team to confirm which return or replacement options apply to your order." },
+            { step: "03", icon: Package, title: "Follow the instructions", desc: "Wait for support to confirm the next steps before sending an item." }
           ].map((item, i) => (
             <div key={i} className="bg-white p-8 rounded-3xl shadow-sm border border-[#8B9D83]/20 text-center relative z-10 hover:shadow-md hover:border-[#D4AF37]/40 transition-all">
               <div className="text-6xl font-black text-[#D4AF37]/10 absolute top-4 right-4 z-0">{item.step}</div>
@@ -46,7 +46,7 @@ export default function Returns() {
       <div className="max-w-4xl mx-auto px-4 mt-20 text-center bg-white p-10 sm:p-12 rounded-3xl border border-[#8B9D83]/20 shadow-sm">
         <h2 className="text-2xl font-bold text-[#0B2419] mb-4">Ready to start a return?</h2>
         <p className="text-[#8B9D83] mb-8 max-w-xl mx-auto leading-relaxed">
-          Our specialized support team is ready to assist you with product diagnostics and the RMA (Return Merchandise Authorization) process.
+          Contact support with your order number. The team can explain the applicable process and any next steps.
         </p>
         <div className="flex flex-col sm:flex-row justify-center gap-4">
           <Link to="/profile" className="px-8 py-4 bg-[#0B2419] hover:bg-[#2C3E2D] text-[#FDFBF7] font-bold rounded-xl transition-colors shadow-sm inline-flex items-center justify-center">

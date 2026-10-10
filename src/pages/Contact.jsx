@@ -19,7 +19,7 @@ const FAQS = [
   },
   {
     q: "How long does shipping take?",
-    a: "Orders processed before 14:00 IST are dispatched the same day. Standard transit times are 2-4 business days, wrapped securely in our eco-conscious packaging."
+    a: "Dispatch and delivery estimates can vary by order and destination. Check your order confirmation and tracking page for the latest information, or contact support with your order number."
   },
   {
     q: "What is your return policy?",
@@ -66,13 +66,13 @@ export default function Contact() {
       {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-6 mb-20 text-center">
         <div className="inline-flex items-center gap-3 px-5 py-2 rounded-full border border-[#6b4226]/30 bg-[#1e1510]/5 text-[#6b4226] text-[10px] font-bold uppercase tracking-[0.2em] mb-8">
-          <Leaf size={14} /> Concierge Active
+          <Leaf size={14} /> Customer support
         </div>
         <h1 className="text-5xl md:text-7xl font-serif tracking-tight mb-6 text-[#1e1510]">
           Connect <span className="italic text-[#6b4226] font-light">With Us.</span>
         </h1>
         <p className="text-[#4a3628] font-light max-w-2xl mx-auto text-lg leading-relaxed">
-          Whether you need guidance on your botanical regimen, logistics support, or are interested in becoming a retail partner, our dedicated team is here to assist.
+          For product information, order assistance, or partnership enquiries, send our team a message.
         </p>
       </div>
 
@@ -100,7 +100,7 @@ export default function Contact() {
                 <h2 className="text-3xl font-serif tracking-tight mb-2 flex items-center gap-4 text-[#1e1510]">
                   <MessageSquare size={24} className="text-[#6b4226]" /> Drop us a note
                 </h2>
-                <p className="text-[10px] font-bold text-[#6b4226] uppercase tracking-[0.2em] mb-10">We usually reply within 24 hours</p>
+                <p className="text-[10px] font-bold text-[#6b4226] uppercase tracking-[0.2em] mb-10">Our team will reply to your email</p>
                 
                 <form onSubmit={handleSubmit} className="space-y-8 relative z-10">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

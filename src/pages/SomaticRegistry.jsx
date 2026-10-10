@@ -5,7 +5,6 @@ import { Link } from 'react-router-dom';
 const products = {
   face: {
     name: 'Charcoal face wash',
-    labelName: 'Facewash',
     search: 'face wash',
     description: 'A face-wash label supplied with your message lists charcoal and several other ingredients.',
     fragrance: 'listed',
@@ -25,29 +24,6 @@ const products = {
       { id: 'charcoal', label: 'I want to see a face wash listing charcoal', ingredient: 'Charcoal' },
       { id: 'glycerin', label: 'I want to see a face wash listing glycerin', ingredient: 'Glycerin' },
       { id: 'any', label: 'Show me the face-wash label details', ingredient: null },
-    ],
-  },
-  hair: {
-    name: 'Botanical shampoo',
-    labelName: 'Shampoo',
-    search: 'shampoo',
-    description: 'A shampoo label supplied with your message lists traditional plant ingredients and rosemary oil.',
-    fragrance: 'unclear',
-    ingredients: [
-      ['Triphala', '10 mg'],
-      ['Amla', '20 mg'],
-      ['Ritta (spelling as shown on label)', '25 mg'],
-      ['Shikhakai (spelling as shown on label)', '5 mg'],
-      ['Bringna (spelling as shown on label)', '10 mg'],
-      ['Rosemary oil', '10 mg'],
-      ['Neem', '10 mg'],
-      ['Aloe vera (label spelling: “Aleovera”)', '10 mg'],
-      ['Shampoo base', 'Quantity sufficient'],
-    ],
-    preferences: [
-      { id: 'amla', label: 'I want to see a shampoo listing amla', ingredient: 'Amla' },
-      { id: 'shikakai', label: 'I want to see a shampoo listing shikhakai', ingredient: 'Shikhakai' },
-      { id: 'any', label: 'Show me the shampoo label details', ingredient: null },
     ],
   },
 };
@@ -111,12 +87,12 @@ export default function SomaticRegistry() {
             Somatic Registry
           </h1>
           <p className="mt-5 max-w-2xl text-sm leading-7 text-white/65 sm:text-base">
-            Answer a few practical questions to see whether one of the two product labels you shared matches what you are looking for. This guide compares stated preferences with ingredients shown on those labels; it does not diagnose skin or scalp conditions or predict results.
+            Answer a few practical questions to see whether the face-wash details you shared match what you are looking for. Shampoo ingredient notes are not treated as a product listing here; share its product details when you are ready. This guide does not diagnose skin conditions or predict results.
           </p>
           <div className="mt-6 flex items-start gap-3 border-l border-[#d6dfbd]/60 pl-4 text-xs leading-6 text-white/55">
             <CircleHelp size={16} className="mt-1 shrink-0 text-[#d6dfbd]" aria-hidden="true" />
             <p>
-              The photos are not a substitute for clear, current packaging or a confirmed product listing. Ingredient names and amounts below are transcribed from the supplied images and should be checked against the item in hand.
+              The face-wash details below are transcribed from the supplied image and are not a substitute for clear, current packaging or a confirmed product listing. Check them against the item in hand.
             </p>
           </div>
         </div>
@@ -127,7 +103,7 @@ export default function SomaticRegistry() {
           <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#bdc9a4]">A few questions first</p>
           <h2 className="mt-3 font-serif text-3xl leading-tight sm:text-4xl">Start with your routine, not a diagnosis.</h2>
           <p className="mt-4 text-sm leading-7 text-white/55">
-            There are no scores, hidden health inferences or batch-authentication claims here. A result appears only when your selected category and ingredient preference match a label and you report no known concern.
+            There are no scores, hidden health inferences or batch-authentication claims here. A result appears only when your face-wash ingredient preference matches the supplied label details and you report no known concern.
           </p>
           <div className="mt-8 space-y-4 border-t border-white/10 pt-6 text-xs leading-6 text-white/50">
             <p className="flex gap-3"><ShieldCheck size={16} className="mt-1 shrink-0 text-[#bdc9a4]" aria-hidden="true" /> If you have a known allergy, recurring irritation, or need fragrance-free products, this guide will not recommend either label.</p>
@@ -140,7 +116,6 @@ export default function SomaticRegistry() {
             <legend className="mb-3 text-sm font-semibold text-white">1. What are you shopping for?</legend>
             <div className="grid gap-2 sm:grid-cols-2">
               <Choice name="Face wash" value="face" selected={routine === 'face'} onSelect={(value) => { setRoutine(value); setPreference(''); setSubmitted(false); }} />
-              <Choice name="Shampoo" value="hair" selected={routine === 'hair'} onSelect={(value) => { setRoutine(value); setPreference(''); setSubmitted(false); }} />
             </div>
           </fieldset>
 
@@ -194,7 +169,7 @@ export default function SomaticRegistry() {
                         </p>
                       )}
                       <p className="mt-3 text-xs leading-5 text-white/45">
-                        Fragrance note: {result.fragrance === 'listed' ? 'perfume is listed on the supplied face-wash label.' : 'fragrance-free status is not established by the supplied shampoo image.'}
+                        Fragrance note: perfume is listed on the supplied face-wash label.
                       </p>
                     </div>
                   </div>
@@ -221,7 +196,7 @@ export default function SomaticRegistry() {
                 <div className="border border-amber-200/20 bg-amber-100/[0.04] p-5">
                   <h3 className="font-serif text-xl text-[#e6d6b4]">No product shown for these answers.</h3>
                   <p className="mt-2 text-sm leading-6 text-white/60">
-                    The supplied face-wash label lists perfume; the shampoo photo does not establish fragrance-free status. A known sensitivity, allergy, fragrance-free need, or uncertainty is a reason not to rely on this guide for a match. Check the full current label and ask a qualified professional about personal sensitivities.
+                        The supplied face-wash label lists perfume. A known sensitivity, allergy, fragrance-free need, or uncertainty is a reason not to rely on this guide for a match. Check the full current label and ask a qualified professional about personal sensitivities.
                   </p>
                 </div>
               )}

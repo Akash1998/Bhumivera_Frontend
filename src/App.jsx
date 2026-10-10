@@ -97,6 +97,7 @@ const OrderTracking = lazyWithRetry(() => import("./pages/OrderTracking.jsx"));
 const Compare = lazyWithRetry(() => import("./pages/Compare.jsx"));
 const AddressBook = lazyWithRetry(() => import("./pages/AddressBook.jsx"));
 const Returns = lazyWithRetry(() => import("./pages/Returns.jsx"));
+const PurchaseProtection = lazyWithRetry(() => import("./pages/PurchaseProtection.jsx"));
 const Affiliate = lazyWithRetry(() => import("./pages/Affiliate.jsx"));
 const About = lazyWithRetry(() => import("./pages/About.jsx"));
 const Impact = lazyWithRetry(() => import("./pages/Impact.jsx"));
@@ -212,7 +213,7 @@ function AppContent() {
             
             {/* Bhumivera Brand Routes */}
             <Route path="/science" element={<BhumiveraScience />} />
-            <Route path="/purchase-protection" element={<Navigate to="/returns" replace />} />
+            <Route path="/purchase-protection" element={<PurchaseProtection />} />
             <Route path="/returns-centre" element={<ReturnsCentre />} />
 
             {/* Campaign Inbound Routes */}

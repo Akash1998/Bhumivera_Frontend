@@ -603,6 +603,9 @@ export default function ProductManagement() {
               <div className="p-6 min-h-[400px] max-h-[60vh] overflow-y-auto custom-scrollbar bg-[#081b15]/55 backdrop-blur-xl">
                 {activeTab === 'basic' && (
                   <div className="grid grid-cols-2 gap-5">
+                    <div className="col-span-2 border border-amber-500/25 bg-amber-500/[0.06] p-4 text-xs leading-5 text-amber-100/75">
+                      Publish only current product-label facts and claims supported for this exact item and sales market. Do not assign an “Ayurvedic”, “herbal”, “natural”, “organic”, medical or other regulated classification without the required documentation and review. AI text is only a draft and does not verify compliance.
+                    </div>
                     <div className="col-span-2">
                       <div className="flex justify-between items-center mb-2">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Product Name</label>
@@ -610,7 +613,7 @@ export default function ProductManagement() {
                           {isGeneratingAI ? <><RefreshCw size={12} className="animate-spin" /> Generating…</> : '✨ AI Auto-Fill'}
                         </button>
                       </div>
-                      <input required value={form.name} onChange={e=>setForm({...form, name:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="e.g. Aloe Vera Glow Serum" />
+                      <input required value={form.name} onChange={e=>setForm({...form, name:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="Use the exact approved product name and product type." />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Price (₹)</label>
@@ -633,7 +636,7 @@ export default function ProductManagement() {
                     </div>
                     <div className="col-span-2">
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Description</label>
-                      <textarea rows={5} value={form.description} onChange={e=>setForm({...form, description:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-slate-300 resize-y outline-none transition-colors" placeholder="Enter product details, features, and ingredients..." />
+                      <textarea rows={5} value={form.description} onChange={e=>setForm({...form, description:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-slate-300 resize-y outline-none transition-colors" placeholder="Use current label facts, verified product details, directions, and substantiated claims only." />
                     </div>
                   </div>
                 )}
@@ -642,8 +645,8 @@ export default function ProductManagement() {
                 {activeTab === 'seo' && (
                   <div className="grid grid-cols-2 gap-5">
                     <div className="col-span-2 bg-blue-500/10 border border-blue-500/20 p-4 rounded-xl mb-2">
-                      <h4 className="text-sm font-bold text-blue-400 flex items-center gap-2"><Globe size={16}/> Schema.org Discovery Engine</h4>
-                      <p className="text-[10px] text-slate-400 font-mono mt-1">Product name, price, brand, SKU, description, images, and stock are used for structured search data. AI can draft the description and SEO fields; review accuracy before saving.</p>
+                      <h4 className="text-sm font-bold text-blue-400 flex items-center gap-2"><Globe size={16}/> Product search details</h4>
+                      <p className="text-[10px] text-slate-400 font-mono mt-1">Product name, price, brand, SKU, description, images, and stock may appear in search previews and shopping feeds. AI can draft text but cannot verify a product claim; check each field against current documentation before saving.</p>
                     </div>
                     <div className="col-span-2 md:col-span-1">
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2 flex justify-between">URL Slug <span className="text-slate-600 font-mono lowercase">auto-generated if empty</span></label>
@@ -659,11 +662,11 @@ export default function ProductManagement() {
                     </div>
                     <div className="col-span-2 md:col-span-1">
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Search Tags (Comma separated)</label>
-                      <input value={form.tags} onChange={e=>setForm({...form, tags:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="natural, vegan, skincare" />
+                      <input value={form.tags} onChange={e=>setForm({...form, tags:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="Product name, product type, and verifiable attributes only." />
                     </div>
                     <div className="col-span-2">
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Meta Title (Google Search Head)</label>
-                      <input value={form.meta_title} onChange={e=>setForm({...form, meta_title:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="Buy Bhumivera Natural Serum Online" />
+                      <input value={form.meta_title} onChange={e=>setForm({...form, meta_title:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="Product name | Bhumivera" />
                     </div>
                     <div className="col-span-2">
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Meta Description (Snippet)</label>
