@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
 import { Leaf, Droplets, Sparkles, ShieldCheck, Heart, Feather, RefreshCw, Activity, Zap, Terminal, ArrowRight, Briefcase, Mic } from 'lucide-react';
 
@@ -89,7 +89,7 @@ export default function About() {
             <div className="aspect-[4/5] rounded-sm overflow-hidden shadow-2xl relative">
               <img 
                 src="/assets/images/aloeveradna.webp" 
-                alt="                A close study of a botanical leaf"
+                alt="A close study of a botanical leaf"
                 className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
                 onError={(e) => { e.target.src = '/logo.webp'; }}
               />
