@@ -32,6 +32,9 @@ export default function UserManagement() {
   const [ordersLoading, setOrdersLoading] = useState(false);
   const [noticeOpen, setNoticeOpen] = useState(false);
   const [noticeMode, setNoticeMode] = useState('notification');
+  const [campaignAudience, setCampaignAudience] = useState('selected');
+  const [campaignRecipientCount, setCampaignRecipientCount] = useState(null);
+  const [loadingCampaignRecipients, setLoadingCampaignRecipients] = useState(false);
   const [noticeTitle, setNoticeTitle] = useState('');
   const [noticeMessage, setNoticeMessage] = useState('');
   const [sendingNotice, setSendingNotice] = useState(false);
@@ -138,14 +141,21 @@ export default function UserManagement() {
 
   const sendNotification = async event => {
     event.preventDefault();
-    if (noticeMode === 'email' && !window.confirm('Send this email campaign to the selected customers who opted in?')) return;
+    if (noticeMode === 'email') {
+      const audienceDescription = campaignAudience === 'all_opted_in'
+        ? 'all active customers who opted in to promotional email'
+        : 'the selected customers who opted in to promotional email';
+      if (!window.confirm(`Send this email campaign to ${audienceDescription}?`)) return;
+    }
     setSendingNotice(true);
     try {
       const endpoint = noticeMode === 'email'
         ? '/admin/users/email-campaigns'
         : '/admin/users/notifications';
       const { data } = await api.post(endpoint, {
-        userIds: selectedIds,
+        ...(noticeMode === 'email' && campaignAudience === 'all_opted_in'
+          ? { audience: 'all_opted_in' }
+          : { userIds: selectedIds }),
         title: noticeTitle,
         message: noticeMessage,
         ...(noticeMode === 'notification' ? { type: 'promotion' } : {})
@@ -158,12 +168,30 @@ export default function UserManagement() {
       );
       setSelectedIds([]);
       setNoticeOpen(false);
+      setCampaignAudience('selected');
+      setCampaignRecipientCount(null);
       setNoticeTitle('');
       setNoticeMessage('');
     } catch (error) {
       showToast?.(error.response?.data?.message || 'Could not send customer notification.', 'error');
     } finally {
       setSendingNotice(false);
+    }
+  };
+
+  const openAllCustomerEmailCampaign = async () => {
+    setNoticeMode('email');
+    setCampaignAudience('all_opted_in');
+    setNoticeOpen(true);
+    setCampaignRecipientCount(null);
+    setLoadingCampaignRecipients(true);
+    try {
+      const { data } = await api.get('/admin/users/email-campaigns/recipients');
+      setCampaignRecipientCount(Number(data?.recipientCount) || 0);
+    } catch (error) {
+      showToast?.(error.response?.data?.message || 'Could not count customers opted in to promotional email.', 'error');
+    } finally {
+      setLoadingCampaignRecipients(false);
     }
   };
 
@@ -210,6 +238,9 @@ export default function UserManagement() {
           <p className="mt-2 text-sm text-slate-400">Search customer accounts, review their orders, and manage account access.</p>
         </div>
         <div className="flex gap-2">
+          <button onClick={openAllCustomerEmailCampaign} className="inline-flex items-center gap-2 rounded-xl border border-cyan-700 bg-cyan-950/40 px-4 py-2 text-sm font-bold text-cyan-100 hover:bg-cyan-900/60">
+            <Mail size={16} /> Email opted-in customers
+          </button>
           <button onClick={() => setRefreshKey(value => value + 1)} aria-label="Refresh customers" className="rounded-xl border border-slate-700 bg-[#10241f]/85 backdrop-blur-xl p-3 text-slate-300 hover:border-cyan-500">
             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
           </button>
@@ -254,7 +285,7 @@ export default function UserManagement() {
             <span className="text-sm font-semibold text-cyan-200">{selectedIds.length} customer(s) selected</span>
             <div className="flex gap-2">
               <button onClick={() => { setNoticeOpen(noticeMode === 'notification' ? !noticeOpen : true); setNoticeMode('notification'); }} className="inline-flex items-center gap-2 rounded-lg bg-cyan-500 px-3 py-2 text-sm font-bold text-slate-950"><Mail size={16} /> Send in-app promo</button>
-              <button onClick={() => { setNoticeOpen(noticeMode === 'email' ? !noticeOpen : true); setNoticeMode('email'); }} className="inline-flex items-center gap-2 rounded-lg border border-cyan-700 px-3 py-2 text-sm font-bold text-cyan-200 hover:bg-cyan-950"><Mail size={16} /> Email campaign</button>
+              <button onClick={() => { setNoticeOpen(noticeMode === 'email' && campaignAudience === 'selected' ? !noticeOpen : true); setNoticeMode('email'); setCampaignAudience('selected'); }} className="inline-flex items-center gap-2 rounded-lg border border-cyan-700 px-3 py-2 text-sm font-bold text-cyan-200 hover:bg-cyan-950"><Mail size={16} /> Email selected</button>
               <button onClick={() => setSelectedIds([])} className="rounded-lg border border-slate-700 px-3 py-2 text-sm">Clear</button>
             </div>
           </div>
@@ -263,12 +294,25 @@ export default function UserManagement() {
           <form onSubmit={sendNotification} className="grid gap-3 rounded-xl border border-slate-700 bg-[#081b15]/90 backdrop-blur-xl p-4">
             <p className="text-sm text-slate-400">
               {noticeMode === 'email'
-                ? 'Email is sent only to selected customers who explicitly opted in. Customers who have not opted in or have opted out are excluded. The email includes a link to manage preferences.'
+                ? campaignAudience === 'all_opted_in'
+                  ? 'This sends to every active customer with promotional email consent. Customers who did not opt in or opted out are excluded. Their consent is checked again when sending.'
+                  : 'This sends only to selected active customers with promotional email consent. Customers who did not opt in or opted out are excluded.'
                 : 'Send an in-app promotional notification to the selected customer accounts.'}
             </p>
+            {noticeMode === 'email' && (
+              <p className="text-xs text-cyan-200">
+                {campaignAudience === 'all_opted_in'
+                  ? loadingCampaignRecipients
+                    ? 'Counting eligible subscribers…'
+                    : campaignRecipientCount === null
+                      ? 'Subscriber count is unavailable; close and reopen the campaign to retry.'
+                      : `${campaignRecipientCount.toLocaleString()} active, opted-in email recipient(s).`
+                  : `${selectedIds.length} selected customer(s); the server excludes anyone who has not opted in.`}
+              </p>
+            )}
             <input value={noticeTitle} onChange={event => setNoticeTitle(event.target.value)} maxLength={noticeMode === 'email' ? 200 : 255} required placeholder={noticeMode === 'email' ? 'Email subject' : 'Notification title'} className="rounded-lg border border-slate-700 bg-[#10241f]/85 backdrop-blur-xl px-3 py-2 text-sm" />
             <textarea value={noticeMessage} onChange={event => setNoticeMessage(event.target.value)} maxLength={noticeMode === 'email' ? 10000 : 5000} required rows={3} placeholder={noticeMode === 'email' ? 'Email message' : 'Notification message'} className="rounded-lg border border-slate-700 bg-[#10241f]/85 backdrop-blur-xl px-3 py-2 text-sm" />
-            <div><button disabled={sendingNotice} className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-bold text-slate-950 disabled:opacity-50">{sendingNotice ? 'Sending…' : noticeMode === 'email' ? `Email selected customers who opted in` : `Send to ${selectedIds.length} selected`}</button></div>
+            <div><button disabled={sendingNotice || (noticeMode === 'email' && campaignAudience === 'all_opted_in' && (loadingCampaignRecipients || !campaignRecipientCount))} className="rounded-lg bg-emerald-500 px-4 py-2 text-sm font-bold text-slate-950 disabled:opacity-50">{sendingNotice ? 'Sending…' : noticeMode === 'email' ? campaignAudience === 'all_opted_in' ? 'Email all opted-in customers' : 'Email selected customers who opted in' : `Send to ${selectedIds.length} selected`}</button></div>
           </form>
         )}
 
