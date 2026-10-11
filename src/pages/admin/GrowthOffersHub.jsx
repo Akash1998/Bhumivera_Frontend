@@ -1,8 +1,7 @@
 import { lazy, Suspense, useState } from 'react';
-import { Award, FlaskConical, Gift, LoaderCircle, Megaphone, Users } from 'lucide-react';
+import { Award, Gift, LoaderCircle, Megaphone, Users } from 'lucide-react';
 
 const LoyaltyManagement = lazy(() => import('./LoyaltyManagement'));
-const AffiliateManagement = lazy(() => import('./AffiliateManagement'));
 const CouponManagement = lazy(() => import('./CouponManagement'));
 const FlashSalesManagement = lazy(() => import('./FlashSalesManagement'));
 const MinCartValueCenter = lazy(() => import('./MinCartValueCenter'));
@@ -10,7 +9,6 @@ const CartRulesEngine = lazy(() => import('./CartRulesEngine'));
 const GamificationStudio = lazy(() => import('./GamificationStudio'));
 const LifecycleOffers = lazy(() => import('./LifecycleOffers'));
 const PersonalizationCenter = lazy(() => import('./PersonalizationCenter'));
-const ABExperimentLab = lazy(() => import('./ABExperimentLab'));
 const LoyaltyTierForge = lazy(() => import('./LoyaltyTierForge'));
 
 const sections = [
@@ -34,7 +32,6 @@ const sections = [
     features: [
       { id: 'loyalty', label: 'Loyalty', purpose: 'See members and manage how customers earn and use points.', component: LoyaltyManagement },
       { id: 'loyalty-tiers', label: 'Loyalty tiers', purpose: 'Set point levels and benefits for each membership tier.', component: LoyaltyTierForge },
-      { id: 'affiliates', label: 'Affiliates', purpose: 'Manage referral partners, commissions, and payouts when that workflow is available.', component: AffiliateManagement, note: 'Partner and payout tools may be unavailable until their data is stored by the backend.' },
       { id: 'gamification', label: 'Reward activities', purpose: 'Turn storefront activities like reward spins and sale countdowns on or off.', component: GamificationStudio },
     ],
   },
@@ -45,8 +42,7 @@ const sections = [
     icon: Users,
     features: [
       { id: 'lifecycle', label: 'Lifecycle offers', purpose: 'Set gifts or coupons for moments such as a third order, a birthday, or an inactive customer.', component: LifecycleOffers },
-      { id: 'personalization', label: 'Personalization', purpose: 'Choose how much product suggestions use related, popular, and recently viewed items.', component: PersonalizationCenter },
-      { id: 'experiments', label: 'A/B experiments', purpose: 'Compare two versions of a page or offer to learn which performs better.', component: ABExperimentLab, note: 'Testing is disabled until customer assignment and results can be measured.' },
+      { id: 'personalization', label: 'Personalized suggestions', purpose: 'See how homepage recommendations are chosen for each signed-in customer.', component: PersonalizationCenter },
     ],
   },
 ];
@@ -127,7 +123,7 @@ export default function GrowthOffersHub() {
           );
         })}
       </section>
-      <p className="flex items-center gap-2 text-xs text-slate-500"><Gift size={14}/> Each tool keeps its own settings and save actions. <FlaskConical size={14} className="ml-2"/> A/B testing is not active yet.</p>
+      <p className="flex items-center gap-2 text-xs text-slate-500"><Gift size={14}/> Open a tool to see its settings. Changes are saved inside that tool.</p>
     </main>
   );
 }

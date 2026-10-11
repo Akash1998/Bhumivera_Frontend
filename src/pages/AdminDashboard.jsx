@@ -1,7 +1,7 @@
 import React, { useState, Suspense, Component, lazy } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Activity, Award, Bell, Boxes, ChartNoAxesCombined, FileText, FlaskConical,
+  Activity, Award, Bell, Boxes, ChartNoAxesCombined, FileText,
   Gamepad2, Gift, Leaf, LifeBuoy, Mail, Package, ScrollText, Settings2,
   ShoppingBag, SlidersHorizontal, Star, Tags, Truck, Users, Warehouse, Zap
 } from 'lucide-react';
@@ -21,7 +21,6 @@ const ReturnManagement = lazy(() => import('./admin/ReturnManagement'));
 const SupportManagement = lazy(() => import('./admin/SupportManagement'));
 const FlashSalesManagement = lazy(() => import('./admin/FlashSalesManagement'));
 const LoyaltyManagement = lazy(() => import('./admin/LoyaltyManagement'));
-const AffiliateManagement = lazy(() => import('./admin/AffiliateManagement'));
 const NotificationManagement = lazy(() => import('./admin/NotificationManagement'));
 const TaxManagement = lazy(() => import('./admin/TaxManagement'));
 const GSTAccounting = lazy(() => import('./admin/GSTAccounting'));
@@ -34,7 +33,6 @@ const CartRulesEngine = lazy(() => import('./admin/CartRulesEngine.jsx'));
 const GamificationStudio = lazy(() => import('./admin/GamificationStudio.jsx'));
 const LifecycleOffers = lazy(() => import('./admin/LifecycleOffers.jsx'));
 const PersonalizationCenter = lazy(() => import('./admin/PersonalizationCenter.jsx'));
-const ABExperimentLab = lazy(() => import('./admin/ABExperimentLab.jsx'));
 const LoyaltyTierForge = lazy(() => import('./admin/LoyaltyTierForge.jsx'));
 const ImpactManagement = lazy(() => import('./admin/ImpactManagement.jsx'));
 const GrowthOffersHub = lazy(() => import('./admin/GrowthOffersHub.jsx'));
@@ -81,7 +79,6 @@ const TAB_COMPONENTS = {
   inventory: InventoryManagement, orders: OrderManagement, returns: ReturnManagement,
   'flash-sales': FlashSalesManagement, coupons: CouponManagement, users: UserManagement,
   support: SupportManagement, reviews: ReviewManagement, loyalty: LoyaltyManagement,
-  affiliate: AffiliateManagement, 
   analytics: AnalyticsManagement,
   notifications: NotificationManagement,
   tax: TaxManagement, gst: GSTAccounting, shipping: ShippingManagement, logs: SystemLogs,
@@ -91,7 +88,6 @@ const TAB_COMPONENTS = {
   gamification: GamificationStudio,
   'lifecycle-offers': LifecycleOffers,
   personalization: PersonalizationCenter,
-  'ab-experiments': ABExperimentLab,
   'loyalty-tiers': LoyaltyTierForge,
   'growth-offers': GrowthOffersHub,
   impact: ImpactManagement,
@@ -103,7 +99,7 @@ const TAB_ICONS = {
   inventory: Tags, warehouse: Warehouse, loyalty: Award, affiliate: Users, coupons: Gift,
   'flash-sales': Zap, reviews: Star, 'min-cart-value': SlidersHorizontal, 'cart-rules': SlidersHorizontal,
   gamification: Gamepad2, 'lifecycle-offers': Mail, personalization: Users,
-  'ab-experiments': FlaskConical, 'loyalty-tiers': Award, support: LifeBuoy,
+  'loyalty-tiers': Award, support: LifeBuoy,
   'growth-offers': Gift,
   returns: Truck, settings: Settings2, tax: Tags, gst: FileText, users: Users
 };

@@ -11,7 +11,8 @@ import {
 import { Link } from 'react-router-dom';
 import { motion as Motion } from 'framer-motion';
 import SEO from '../components/SEO';
-import { categories as categoriesApi, products as productsApi, reviews as reviewsApi } from '../services/api';
+import { categories as categoriesApi, products as productsApi, recommendations as recommendationsApi, reviews as reviewsApi } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const IMAGE_BASE = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-22cd43cce9bc475680ad496e199706c4.r2.dev';
 
@@ -124,7 +125,13 @@ const questions = [
 ];
 
 export default function PremiumHome() {
+  const { user } = useAuth();
   const [products, setProducts] = useState([]);
+  const [recommendedProducts, setRecommendedProducts] = useState([]);
+  const [recommendationsPersonalized, setRecommendationsPersonalized] = useState(false);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [recommendationsError, setRecommendationsError] = useState(false);
+  const [recommendationsAttempt, setRecommendationsAttempt] = useState(0);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
   const [approvedReviews, setApprovedReviews] = useState([]);
@@ -132,6 +139,7 @@ export default function PremiumHome() {
   const [activeQuestion, setActiveQuestion] = useState('ingredients');
   const heroProduct = products.find(product => /sea.?buckthorn/i.test(product.name)) || products[0];
   const activeFaq = questions.find(question => question.key === activeQuestion) || questions[0];
+  const canPersonalize = Boolean(user?.id && !['admin', 'superadmin', 'warehouse_admin'].includes(user.role));
 
   useEffect(() => {
     let active = true;
@@ -159,6 +167,37 @@ export default function PremiumHome() {
     });
     return () => { active = false; };
   }, []);
+
+  useEffect(() => {
+    const currentProductId = Number(products[0]?.id || products[0]?._id);
+    if (!canPersonalize || !Number.isSafeInteger(currentProductId) || currentProductId < 1) {
+      setRecommendedProducts([]);
+      setRecommendationsError(false);
+      return undefined;
+    }
+
+    let active = true;
+    setRecommendationsLoading(true);
+    setRecommendationsError(false);
+    recommendationsApi.getForYou(currentProductId)
+      .then(({ data }) => {
+        if (!active) return;
+        setRecommendedProducts(Array.isArray(data?.products) ? data.products : []);
+        setRecommendationsPersonalized(data?.personalized === true);
+      })
+      .catch(error => {
+        console.error('[HOME_RECOMMENDATIONS]', error);
+        if (active) {
+          setRecommendedProducts([]);
+          setRecommendationsError(true);
+        }
+      })
+      .finally(() => {
+        if (active) setRecommendationsLoading(false);
+      });
+
+    return () => { active = false; };
+  }, [canPersonalize, products, recommendationsAttempt]);
 
   useEffect(() => {
     if (!products.length) return undefined;
@@ -382,6 +421,59 @@ export default function PremiumHome() {
           </div>
         )}
       </section>
+
+      {canPersonalize && (
+        <section aria-labelledby="for-you-title" className="border-y border-[#253b2f]/10 bg-[#e7e4d9]">
+          <div className="mx-auto max-w-7xl px-5 py-10 sm:px-8 sm:py-14 lg:px-10">
+            <div className="mb-6 flex flex-wrap items-end justify-between gap-4 border-b border-[#253b2f]/15 pb-5">
+              <div>
+                <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#687958]">
+                  {recommendationsPersonalized ? 'Chosen around your activity' : 'Popular with customers'}
+                </p>
+                <h2 id="for-you-title" className="mt-2 font-serif text-3xl text-[#1b2921] sm:text-4xl">A little more you.</h2>
+                <p className="mt-2 max-w-xl text-sm leading-6 text-stone-600">
+                  {recommendationsPersonalized
+                    ? 'Suggestions are shaped by products you have viewed, saved, reviewed, or purchased.'
+                    : 'Your suggestions will become more personal as you explore, save, review, and purchase products.'}
+                </p>
+              </div>
+              <Link to="/shop" className="inline-flex min-h-10 items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-[#354933]">
+                Explore all products <ArrowRight size={14}/>
+              </Link>
+            </div>
+
+            {recommendationsLoading ? (
+              <div role="status" className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+                {[0, 1, 2, 3].map(item => <div key={item} className="aspect-[4/5] animate-pulse bg-[#d9d7cc]"/> )}
+              </div>
+            ) : recommendationsError ? (
+              <div className="flex flex-wrap items-center justify-between gap-3 py-3">
+                <p className="text-sm text-stone-600">We couldn’t load your suggestions right now.</p>
+                <button type="button" onClick={() => setRecommendationsAttempt(value => value + 1)} className="min-h-10 border border-[#536b4d]/30 px-4 text-xs font-semibold text-[#354933] hover:bg-white/50">
+                  Try again
+                </button>
+              </div>
+            ) : recommendedProducts.length > 0 ? (
+              <div className="grid grid-cols-2 gap-x-3 gap-y-6 sm:grid-cols-4 sm:gap-5">
+                {recommendedProducts.slice(0, 4).map(product => (
+                  <article key={product.id || product._id} className="group min-w-0">
+                    <Link to={`/product/${product.slug || product.id}`} className="block overflow-hidden bg-[#d9d7cc]">
+                      <img src={productImage(product)} alt={product.name} loading="lazy" className="aspect-[4/5] w-full object-cover transition-transform duration-500 group-hover:scale-[1.035]" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}/>
+                    </Link>
+                    <h3 className="mt-3 line-clamp-2 font-serif text-base text-[#1b2921] sm:text-lg">{product.name}</h3>
+                    <p className="mt-1 text-sm font-semibold text-[#35533c]">₹{price(product)}</p>
+                    <Link to={`/product/${product.slug || product.id}`} className="mt-2 inline-flex min-h-8 items-center gap-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#3d553b]">
+                      View details <ArrowRight size={13}/>
+                    </Link>
+                  </article>
+                ))}
+              </div>
+            ) : (
+              <p className="py-3 text-sm text-stone-600">Explore the collection to get product suggestions made for you.</p>
+            )}
+          </div>
+        </section>
+      )}
 
       <section className="bg-[#e7e4d9] px-4 py-8 text-[#1b2921] sm:px-8 sm:py-12 lg:px-10 lg:py-16">
         <div className="mx-auto grid max-w-7xl overflow-hidden rounded-2xl bg-[#dce1d2] md:grid-cols-[1fr_1fr]">
