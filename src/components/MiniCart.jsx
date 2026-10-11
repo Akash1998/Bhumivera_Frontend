@@ -109,6 +109,35 @@ export default function MiniCart() {
     const cartIds = new Set(cartItems.map(item => String(item.product_id || item.product?.id || item.id)));
     return recommendations.filter(product => !cartIds.has(String(product.id || product._id))).slice(0, 4);
   }, [cartItems, recommendations]);
+  const offersToShow = useMemo(() => offers
+    .map(offer => {
+      const isReferralReward = offer.reward_type === 'referral_wallet';
+      const minimum = Number(offer.min_order_amount ?? offer.min_order_value) || 0;
+      const value = Number(offer.discount_value ?? offer.value) || 0;
+      let estimatedSaving = 0;
+      if (subtotal >= minimum) {
+        if (isReferralReward) {
+          const perOrderLimit = Number(offer.wallet_per_order_limit) || value;
+          const availableBalance = walletBalance === null ? perOrderLimit : walletBalance;
+          estimatedSaving = Math.min(availableBalance, perOrderLimit, Math.max(0, subtotal - discount));
+        } else {
+          const type = offer.discount_type || offer.type;
+          estimatedSaving = type === 'percentage'
+            ? subtotal * value / 100
+            : value;
+          if (Number(offer.max_discount) > 0) estimatedSaving = Math.min(estimatedSaving, Number(offer.max_discount));
+          estimatedSaving = Math.min(estimatedSaving, subtotal);
+          if (discount > 0 && !isReferralReward && !offer.is_personal &&
+              couponStackPolicy !== 'both' && couponStackPolicy !== 'coupon_first') {
+            estimatedSaving = 0;
+          }
+        }
+      }
+      return { ...offer, estimatedSaving };
+    })
+    .sort((first, second) => second.estimatedSaving - first.estimatedSaving), [
+    offers, subtotal, discount, walletBalance, couponStackPolicy,
+  ]);
 
   useEffect(() => {
     if (!isCartOpen) return undefined;
@@ -119,21 +148,31 @@ export default function MiniCart() {
         if (active) setRecommendations(Array.isArray(data) ? data : []);
       })
       .catch(error => console.error('[MINI_CART_RECOMMENDATIONS]', error));
-    Promise.all([
+    Promise.allSettled([
       couponsApi.getPublicActive(),
       user ? couponsApi.getMine() : Promise.resolve({ data: { coupons: [] } }),
     ])
-      .then(([publicResponse, personalResponse]) => {
-        const publicOffers = Array.isArray(publicResponse.data?.data) ? publicResponse.data.data : publicResponse.data;
-        const personalOffers = personalResponse.data?.coupons || [];
-        const personalCodes = new Set(personalOffers.map(offer => offer.code));
+      .then(([publicResult, personalResult]) => {
+        const publicData = publicResult.status === 'fulfilled' ? publicResult.value.data : [];
+        const publicOffers = Array.isArray(publicData?.data) ? publicData.data : publicData;
+        const personalData = personalResult.status === 'fulfilled' ? personalResult.value.data : {};
+        const personalOffers = Array.isArray(personalData?.coupons) ? personalData.coupons : [];
+        const personalCodes = new Set(personalOffers.map(offer => String(offer.code || '').toUpperCase()));
         const availablePublicOffers = Array.isArray(publicOffers)
-          ? publicOffers.filter(offer => !personalCodes.has(offer.code))
+          ? publicOffers.filter(offer => !personalCodes.has(String(offer.code || '').toUpperCase()))
           : [];
-        if (active) setOffers([
-          ...personalOffers.map(offer => ({ ...offer, is_personal: true })),
-          ...availablePublicOffers,
-        ]);
+        if (active) {
+          setOffers([
+            ...personalOffers.map(offer => ({ ...offer, is_personal: true })),
+            ...availablePublicOffers,
+          ]);
+          if (publicResult.status === 'rejected') {
+            console.error('[MINI_CART_PUBLIC_OFFERS]', publicResult.reason);
+          }
+          if (personalResult.status === 'rejected') {
+            console.error('[MINI_CART_PERSONAL_OFFERS]', personalResult.reason);
+          }
+        }
       })
       .catch(error => console.error('[MINI_CART_OFFERS]', error));
     return () => { active = false; };
@@ -152,6 +191,7 @@ export default function MiniCart() {
     if (!isCartOpen || sessionStorage.getItem('mini-cart-checkout') !== '1') return;
     sessionStorage.removeItem('mini-cart-checkout');
     setCheckoutOpen(true);
+    setOffersOpen(true);
     const pendingCoupon = sessionStorage.getItem('mini-cart-coupon');
     if (pendingCoupon) {
       setCouponCode(pendingCoupon);
@@ -241,9 +281,8 @@ export default function MiniCart() {
 
   if (!isCartOpen) return null;
 
-  const validateCoupon = async event => {
-    event.preventDefault();
-    const code = couponCode.trim().toUpperCase();
+  const applyCouponCode = async rawCode => {
+    const code = String(rawCode || '').trim().toUpperCase();
     if (!code) return;
     if (!user) {
       setCouponMessage('Sign in to apply a coupon to your order.');
@@ -275,12 +314,18 @@ export default function MiniCart() {
     }
   };
 
+  const validateCoupon = async event => {
+    event.preventDefault();
+    await applyCouponCode(couponCode);
+  };
+
   const continueToCheckout = () => {
     if (!user) {
       setIsCartOpen(false);
       navigate('/login', { state: { from: '/checkout', reopenCart: true } });
       return;
     }
+    setOffersOpen(true);
     setCheckoutOpen(true);
   };
 
@@ -627,7 +672,7 @@ export default function MiniCart() {
 
             <section className="overflow-hidden rounded-2xl border border-[#e8dcc4] bg-white">
               <button type="button" onClick={() => setOffersOpen(open => !open)} aria-expanded={offersOpen} className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
-                <span className="flex items-center gap-2"><span className="rounded-lg bg-[#f5f1e8] p-2 text-[#8b5a2b]"><Tag size={15}/></span><span><span className="block text-sm font-semibold text-[#2C3E2D]">Coupons &amp; offers</span><span className="block text-[10px] text-stone-500">{offers.length ? `${offers.length} available offers` : 'Enter a coupon code'}</span></span></span>
+                <span className="flex items-center gap-2"><span className="rounded-lg bg-[#f5f1e8] p-2 text-[#8b5a2b]"><Tag size={15}/></span><span><span className="block text-sm font-semibold text-[#2C3E2D]">Coupons &amp; offers</span><span className="block text-[10px] text-stone-500">{offersToShow.length ? `${offersToShow.length} available offers — best savings first` : 'Enter a coupon code'}</span></span></span>
                 {offersOpen ? <ChevronUp size={16} className="text-stone-500"/> : <ChevronDown size={16} className="text-stone-500"/>}
               </button>
               {offersOpen && <div className="border-t border-[#f0e8da] p-3">
@@ -636,8 +681,45 @@ export default function MiniCart() {
                   <button disabled={couponBusy || !couponCode.trim()} className="rounded-xl bg-[#2C3E2D] px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{couponBusy ? 'Checking…' : 'Apply'}</button>
                 </form>
                 {couponMessage && <p role="status" className={`mt-2 text-xs ${appliedCoupon ? 'text-emerald-700' : 'text-rose-700'}`}>{couponMessage}</p>}
-                {offers.length > 0 && <div className="mt-3 space-y-2">
-                {offers.slice(0, 4).map(offer => <button type="button" key={offer.code} onClick={() => { setCouponCode(offer.code); setCouponMessage(offer.is_personal ? 'Your account reward is selected. Apply it to check eligibility.' : 'Enter this code above and apply it to check eligibility.'); }} className="flex w-full items-center justify-between gap-2 rounded-lg bg-[#faf8f5] px-3 py-2 text-left text-xs hover:bg-[#f5f1e8]">                <span><strong className="font-mono text-[#2C3E2D]">{offer.code}</strong><span className="ml-2 text-stone-500">{offer.reward_type === 'referral_wallet' ? `Up to ${formatPrice(offer.wallet_per_order_limit || offer.discount_value)} referral credit per order` : offer.discount_type === 'percentage' || offer.type === 'percentage' ? `${offer.discount_value ?? offer.value}% off` : `${formatPrice(offer.discount_value ?? offer.value)} off`}</span></span><span className="text-[9px] font-bold uppercase tracking-wider text-[#8b5a2b]">{offer.is_personal ? 'Your reward' : 'Use'}</span></button>)}
+                {offersToShow.length > 0 && <div className="mt-3 space-y-2">
+                {offersToShow.map((offer, index) => {
+                  const minimum = Number(offer.min_order_amount ?? offer.min_order_value) || 0;
+                  const amountNeeded = Math.max(0, minimum - subtotal);
+                  const isReferralReward = offer.reward_type === 'referral_wallet';
+                  return (
+                    <button
+                      type="button"
+                      key={offer.code}
+                      disabled={couponBusy}
+                      onClick={() => {
+                        setCouponCode(offer.code);
+                        void applyCouponCode(offer.code);
+                      }}
+                      className="flex w-full items-center justify-between gap-3 rounded-lg bg-[#faf8f5] px-3 py-2 text-left text-xs hover:bg-[#f5f1e8] disabled:opacity-60"
+                    >
+                      <span className="min-w-0">
+                        <strong className="font-mono text-[#2C3E2D]">{offer.code}</strong>
+                        <span className="ml-2 text-stone-500">
+                          {isReferralReward
+                            ? `Use referral balance up to ${formatPrice(offer.wallet_per_order_limit || offer.discount_value)} per order`
+                            : offer.discount_type === 'percentage' || offer.type === 'percentage'
+                              ? `${offer.discount_value ?? offer.value}% off`
+                              : `${formatPrice(offer.discount_value ?? offer.value)} off`}
+                        </span>
+                        <span className="mt-1 block text-[10px] text-stone-500">
+                          {amountNeeded > 0
+                            ? `Add ${formatPrice(amountNeeded)} to meet the minimum order.`
+                            : offer.estimatedSaving > 0
+                              ? `Estimated saving ${formatPrice(offer.estimatedSaving)}${isReferralReward ? ' (uses your remaining referral balance)' : ''}`
+                              : 'Not eligible with the current cart discounts.'}
+                        </span>
+                      </span>
+                      <span className="shrink-0 text-right text-[9px] font-bold uppercase tracking-wider text-[#8b5a2b]">
+                        {index === 0 && offer.estimatedSaving > 0 ? 'Best saving' : offer.is_personal ? 'Your reward' : 'Apply'}
+                      </span>
+                    </button>
+                  );
+                })}
                 </div>}
               </div>}
             </section>
