@@ -261,6 +261,7 @@ api.interceptors.response.use(response => {
     const refreshable = !e.config?._retry &&
       (url.includes("/auth/profile") ||
        url.includes("/users/profile") ||
+       url.startsWith("/affiliate/referral/") ||
        url.startsWith("/settings/public") ||
        url.includes("/users/") ||
        isPathOrChild(url, "/orders") ||
@@ -293,7 +294,20 @@ api.interceptors.response.use(response => {
       }
     }
 
-    if (localStorage.getItem("token") || localStorage.getItem("ms_token")) {
+    const invalidSessionCodes = new Set([
+      'AUTH_TOKEN_MISSING',
+      'AUTH_TOKEN_INVALID',
+      'AUTH_SESSION_REAUTH_REQUIRED',
+      'AUTH_ACCOUNT_DISABLED',
+      'TOKEN_MISSING',
+      'TOKEN_INVALID',
+      'TOKEN_MALFORMED',
+      'SESSION_REAUTH_REQUIRED',
+    ]);
+    if (
+      invalidSessionCodes.has(e.response?.data?.code) &&
+      (localStorage.getItem("token") || localStorage.getItem("ms_token"))
+    ) {
       localStorage.removeItem("token");
       localStorage.removeItem("ms_token");
       localStorage.removeItem("user");
