@@ -78,8 +78,17 @@ const SECURITY_QUESTIONS = [
   "What is your favorite book?",
 ];
 
-const CANCELLABLE_STATUSES = ['pending', 'confirmed', 'processing', 'packed'];
+const CANCELLABLE_STATUSES = ['pending', 'confirmed'];
 const DELIVERED_STATUSES = ['delivered', 'completed'];
+const canCancelOrder = order => (
+  CANCELLABLE_STATUSES.includes((order.status || '').toLowerCase()) &&
+  !(order.payment_mode === 'online' && order.payment_status === 'paid')
+);
+const needsRefundSupport = order => (
+  CANCELLABLE_STATUSES.includes((order.status || '').toLowerCase()) &&
+  order.payment_mode === 'online' &&
+  order.payment_status === 'paid'
+);
 
 const faqItems = [
   { q: 'How do I track my order?', a: 'Go to the Orders tab above and click the "Track" button next to your order. You will see live status updates including processing, packed, shipped, out for delivery and delivered timelines.' },
@@ -983,7 +992,8 @@ export default function Profile() {
                       <tbody className="divide-y divide-stone-50">
                         {orders.map(o => {
                           const items = safeArr(o.items || o.order_items || o.Items);
-                          const canCancel = CANCELLABLE_STATUSES.includes((o.status||'').toLowerCase());
+                          const canCancel = canCancelOrder(o);
+                          const refundSupport = needsRefundSupport(o);
                           const delivered = DELIVERED_STATUSES.includes((o.status||'').toLowerCase());
                           const canReturn = delivered && canRequestReturn(o.id);
                           return (
@@ -1001,6 +1011,11 @@ export default function Profile() {
                                   {canCancel && (
                                     <button onClick={() => handleCancelOrder(o.id)} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-100">
                                       <X className="w-3.5 h-3.5"/> Cancel
+                                    </button>
+                                  )}
+                                  {refundSupport && (
+                                    <button onClick={() => setActiveTab('support')} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-100">
+                                      Contact support
                                     </button>
                                   )}
                                   {canReturn && (
@@ -1963,9 +1978,14 @@ export default function Profile() {
             <div className="border-t border-stone-200 bg-white px-6 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-3">
               <div className="text-xs text-stone-500">Need help? Visit the <button onClick={() => { setSelectedOrder(null); setActiveTab('support'); }} className="text-[#0B2419] font-semibold underline underline-offset-2">Support tab</button>.</div>
               <div className="flex flex-wrap gap-2">
-                {CANCELLABLE_STATUSES.includes((selectedOrder.status||'').toLowerCase()) && (
+                {canCancelOrder(selectedOrder) && (
                   <button onClick={() => handleCancelOrder(selectedOrder.id)} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-100 text-sm font-medium">
                     <X className="w-4 h-4"/> Cancel Order
+                  </button>
+                )}
+                {needsRefundSupport(selectedOrder) && (
+                  <button onClick={() => { setSelectedOrder(null); setActiveTab('support'); }} className="px-4 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-100 text-sm font-medium">
+                    Contact support about refund
                   </button>
                 )}
                 {DELIVERED_STATUSES.includes((selectedOrder.status||'').toLowerCase()) && canRequestReturn(selectedOrder.id) && (
