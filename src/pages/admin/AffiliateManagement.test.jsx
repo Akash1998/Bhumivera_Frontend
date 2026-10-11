@@ -38,6 +38,9 @@ describe('AffiliateManagement referral engine', () => {
       },
     });
     affiliate.decideAdminReferral.mockResolvedValue({ data: { success: true } });
+    affiliate.updateAdminConfig.mockResolvedValue({
+      data: { config: { enabled: 1, reward_mode: 'wallet', wallet_reward_amount: 250 } },
+    });
   });
 
   it('shows verified referral claims and issues the reward when approved', async () => {
@@ -57,5 +60,22 @@ describe('AffiliateManagement referral engine', () => {
         reason: null,
       });
     });
+  });
+
+  it('saves changed referral reward settings and keeps the saved values', async () => {
+    render(<ToastProvider><AffiliateManagement /></ToastProvider>);
+
+    const rewardInput = await screen.findByLabelText('Spendable wallet reward per approved referral (₹)');
+    fireEvent.change(rewardInput, { target: { value: '250' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save referral rewards' }));
+
+    await waitFor(() => {
+      expect(affiliate.updateAdminConfig).toHaveBeenCalledWith(expect.objectContaining({
+        reward_mode: 'wallet',
+        wallet_reward_amount: 250,
+        wallet_reward_per_order_limit: 100,
+      }));
+    });
+    expect(screen.getByLabelText('Spendable wallet reward per approved referral (₹)').value).toBe('250');
   });
 });

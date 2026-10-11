@@ -22,27 +22,42 @@ export default function AffiliateManagement() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [processingId, setProcessingId] = useState(null);
+  const [loadError, setLoadError] = useState('');
   const { showToast } = useToast() || {};
 
-  const load = useCallback(async (showLoader = true) => {
+  const load = useCallback(async (showLoader = true, includeConfig = true) => {
     if (showLoader) setLoading(true);
-    try {
-      const [settingsResponse, referralsResponse] = await Promise.all([
-        affiliateApi.getAdminConfig(),
-        affiliateApi.getAdminReferrals({ limit: 50 }),
-      ]);
-      setConfig({ ...DEFAULTS, ...readData(settingsResponse) });
-      setReferrals(referralsResponse.data?.referrals || []);
-    } catch (error) {
-      showToast?.(error.normalized?.message || 'Could not load referral settings.', 'error');
-    } finally {
-      if (showLoader) setLoading(false);
+    setLoadError('');
+    const requests = [
+      includeConfig ? affiliateApi.getAdminConfig() : Promise.resolve(null),
+      affiliateApi.getAdminReferrals({ limit: 50 }),
+    ];
+    const [settingsResult, referralsResult] = await Promise.allSettled(requests);
+    const errors = [];
+    if (includeConfig) {
+      if (settingsResult.status === 'fulfilled') {
+        setConfig({ ...DEFAULTS, ...readData(settingsResult.value) });
+      } else {
+        const error = settingsResult.reason;
+        errors.push(`Settings: ${error?.normalized?.message || error?.response?.data?.message || error?.message || 'could not load.'}`);
+      }
     }
+    if (referralsResult.status === 'fulfilled') {
+      setReferrals(referralsResult.value.data?.referrals || []);
+    } else {
+      const error = referralsResult.reason;
+      errors.push(`Referral queue: ${error?.normalized?.message || error?.response?.data?.message || error?.message || 'could not load.'}`);
+    }
+    if (errors.length) {
+      setLoadError(errors.join(' '));
+      if (showLoader) showToast?.(errors.join(' '), 'error');
+    }
+    if (showLoader) setLoading(false);
   }, [showToast]);
 
   useEffect(() => { load(); }, [load]);
   useEffect(() => {
-    const timer = window.setInterval(() => load(false), 15000);
+    const timer = window.setInterval(() => load(false, false), 15000);
     return () => window.clearInterval(timer);
   }, [load]);
 
@@ -62,9 +77,12 @@ export default function AffiliateManagement() {
         coupon_valid_days: Number(config.coupon_valid_days),
       });
       setConfig({ ...DEFAULTS, ...readData(response) });
+      setLoadError('');
       showToast?.('Referral rewards saved.', 'success');
     } catch (error) {
-      showToast?.(error.normalized?.message || 'Could not save referral rewards.', 'error');
+      const message = error.normalized?.message || error.response?.data?.message || error.message || 'Could not save referral rewards.';
+      setLoadError(message);
+      showToast?.(message, 'error');
     } finally {
       setSaving(false);
     }
@@ -82,7 +100,7 @@ export default function AffiliateManagement() {
     try {
       await affiliateApi.decideAdminReferral(referral.claim_id, { decision, reason });
       showToast?.(decision === 'approved' ? 'Referral approved and reward issued.' : 'Referral marked as not approved.', 'success');
-      await load();
+      await load(false, false);
     } catch (error) {
       showToast?.(error.normalized?.message || 'Could not review this referral.', 'error');
     } finally {
@@ -96,7 +114,7 @@ export default function AffiliateManagement() {
     try {
       const response = await affiliateApi.reissueAdminReferralCoupon(referral.claim_id);
       showToast?.(`Replacement coupon ${response.data?.couponCode || ''} issued.`, 'success');
-      await load();
+      await load(false, false);
     } catch (error) {
       showToast?.(error.normalized?.message || 'Could not reissue this referral coupon.', 'error');
     } finally {
@@ -112,6 +130,7 @@ export default function AffiliateManagement() {
         <h3 className="text-lg font-semibold text-white">Referral engine</h3>
         <p className="mt-1 text-sm leading-6 text-slate-400">Review a customer’s verified sign-up. Approve now to issue the configured reward, reject with a reason, or take no action and the referral will auto-approve one hour after the customer verifies their email.</p>
       </header>
+      {loadError && <p role="alert" className="rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">{loadError}</p>}
 
       <form onSubmit={save} className="space-y-5 rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
         <label className="flex items-start gap-3 text-sm text-white">
