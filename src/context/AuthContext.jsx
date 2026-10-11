@@ -3,15 +3,27 @@ import { auth as authApi, users as usersApi } from '../services/api';
 
 const AuthContext = createContext(null);
 const decodeJWT = t => { try { return JSON.parse(window.atob(t.split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))); } catch (e) { return null; } };
-const getStoredUser = () => {
+const getStoredUser = (key = 'user') => {
   try {
-    const rawUser = localStorage.getItem('user');
+    const rawUser = localStorage.getItem(key);
     return rawUser ? JSON.parse(rawUser) : null;
   } catch (error) {
     console.error('[AUTH_STORED_USER_PARSE]', error);
-    localStorage.removeItem('user');
+    localStorage.removeItem(key);
     return null;
   }
+};
+const getStoredAdminUser = () => {
+  const adminUser = getStoredUser('adminUser');
+  if (adminUser) return adminUser;
+  const storedUser = getStoredUser();
+  if (['admin', 'superadmin'].includes(storedUser?.role)) return storedUser;
+  const claims = decodeJWT(localStorage.getItem('adminToken'));
+  return ['admin', 'superadmin'].includes(claims?.role) ? claims : null;
+};
+const storeAdminUser = user => {
+  localStorage.setItem('adminUser', JSON.stringify(user));
+  localStorage.setItem('user', JSON.stringify(user));
 };
 
 export const AuthProvider = ({ children }) => {
@@ -43,9 +55,10 @@ export const AuthProvider = ({ children }) => {
         : customerToken || warehouseToken;
       if (anyT) {
         let role = 'user';
-        const storedUser = getStoredUser() || {};
+        let storedUser = {};
         try {
           const d = decodeJWT(anyT); role = d?.role || storedUser?.role || 'user';
+          storedUser = (role === 'admin' || role === 'superadmin' ? getStoredAdminUser() : getStoredUser()) || {};
           let fu = storedUser;
           if (role === 'admin' || role === 'superadmin') {
             fu = (await authApi.getAdminProfile()).data;
@@ -64,6 +77,7 @@ export const AuthProvider = ({ children }) => {
           if (role === 'admin' || role === 'superadmin') {
             const currentAdminToken = localStorage.getItem('adminToken') || anyT;
             localStorage.setItem('adminToken', currentAdminToken);
+            storeAdminUser(f);
             setToken(currentAdminToken);
           } else {
             setToken(anyT);
@@ -76,12 +90,13 @@ export const AuthProvider = ({ children }) => {
             } else {
               console.error('[ADMIN_PROFILE_RESTORE]', error);
               const claims = decodeJWT(localStorage.getItem('adminToken') || anyT) || {};
-              const restoredUser = storedUser && Object.keys(storedUser).length
-                ? { ...storedUser, role }
+              const adminUser = getStoredAdminUser();
+              const restoredUser = adminUser && Object.keys(adminUser).length
+                ? { ...adminUser, role }
                 : { id: claims.id, email: claims.email, role };
               const currentAdminToken = localStorage.getItem('adminToken') || anyT;
               localStorage.setItem('adminToken', currentAdminToken);
-              localStorage.setItem('user', JSON.stringify(restoredUser));
+              storeAdminUser(restoredUser);
               setUser(restoredUser);
               setToken(currentAdminToken);
             }
@@ -122,13 +137,13 @@ export const AuthProvider = ({ children }) => {
     return r;
   };
   const mobileLogin = async d => { const r = await authApi.mobileLoginVerify(d); const { token: nt, user: ud } = r.data; const p = decodeJWT(nt); const f = { ...ud, role: p?.role || ud?.role || 'user' }; localStorage.setItem('token', nt); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
-  const adminLogin = async c => { const r = await authApi.adminLogin(c); if (!r.data?.token) throw new Error(r.data?.message || 'Email verification is required for this browser.'); const { token: nt, admin: ad } = r.data; const f = { ...ad, role: ad?.role || 'admin' }; authExpiryHandled.current = false; localStorage.setItem('adminToken', nt); localStorage.setItem('adminLastActivity', String(Date.now())); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
+  const adminLogin = async c => { const r = await authApi.adminLogin(c); if (!r.data?.token) throw new Error(r.data?.message || 'Email verification is required for this browser.'); const { token: nt, admin: ad } = r.data; const f = { ...ad, role: ad?.role || 'admin' }; authExpiryHandled.current = false; localStorage.setItem('adminToken', nt); localStorage.setItem('adminLastActivity', String(Date.now())); storeAdminUser(f); setToken(nt); setUser(f); return f; };
   const adminOtpVerify = async d => {
     const adminData = d?.admin || d?.user || {};
     const f = { ...adminData, role: adminData.role || 'admin' };
     localStorage.setItem('adminToken', d.token);
     localStorage.setItem('adminLastActivity', String(Date.now()));
-    localStorage.setItem('user', JSON.stringify(f));
+    storeAdminUser(f);
     setToken(d.token);
     setUser(f);
     return f;
@@ -148,16 +163,20 @@ export const AuthProvider = ({ children }) => {
     if (isAdminLogout) {
       localStorage.removeItem('adminToken');
       localStorage.removeItem('adminLastActivity');
+      localStorage.removeItem('adminUser');
       setToken(null); setUser(null);
       if (isAdminPath) window.location.href = '/admin/login';
       return;
     }
     localStorage.removeItem('token');
     localStorage.removeItem('ms_token');
-    const currentUser = getStoredUser();
-    if (localStorage.getItem('adminToken') && ['admin', 'superadmin'].includes(currentUser?.role)) {
-      setToken(localStorage.getItem('adminToken'));
-      setUser(currentUser);
+    const adminToken = localStorage.getItem('adminToken');
+    const adminClaims = decodeJWT(adminToken);
+    if (adminToken && ['admin', 'superadmin'].includes(adminClaims?.role)) {
+      const adminUser = getStoredAdminUser() || adminClaims;
+      storeAdminUser(adminUser);
+      setToken(adminToken);
+      setUser(adminUser);
       return;
     }
     localStorage.removeItem('user');
