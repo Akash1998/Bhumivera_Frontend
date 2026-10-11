@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
-import { ArrowRight, BadgeCheck, ChevronDown, ChevronUp, Gift, Heart, Leaf, MapPin, Minus, Plus, ShieldCheck, ShoppingBag, Sparkles, Star, Tag, Trash2, Truck, X } from 'lucide-react';
+import { ArrowRight, BadgeCheck, ChevronDown, ChevronUp, Gift, Heart, Leaf, MapPin, MessageCircle, Minus, Plus, ShieldCheck, ShoppingBag, Sparkles, Star, Tag, Trash2, Truck, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import { useWishlist } from '../context/WishlistContext';
-import { addresses as addressesApi, coupons as couponsApi, orders as ordersApi, payments as paymentsApi, products as productsApi, wallet as walletApi } from '../services/api';
+import { addresses as addressesApi, coupons as couponsApi, notifications as notificationsApi, orders as ordersApi, payments as paymentsApi, products as productsApi, wallet as walletApi } from '../services/api';
 import { useToast } from '../context/ToastContext';
 
 let razorpayScriptPromise;
@@ -76,6 +76,8 @@ export default function MiniCart() {
   const [walletBalance, setWalletBalance] = useState(0);
   const [placingOrder, setPlacingOrder] = useState(false);
   const [orderNotes, setOrderNotes] = useState('');
+  const [whatsappUpdatesOptIn, setWhatsappUpdatesOptIn] = useState(false);
+  const [whatsappUpdatesAvailable, setWhatsappUpdatesAvailable] = useState(false);
   const [impactAmount, setImpactAmount] = useState(0);
   const [impactProject, setImpactProject] = useState('native-trees');
   const [celebrationEvent, setCelebrationEvent] = useState(null);
@@ -173,13 +175,19 @@ export default function MiniCart() {
         console.error('[MINI_CART_WALLET_BALANCE]', error);
         return { data: { balance: 0 } };
       }),
-    ]).then(([addressResponse, walletResponse]) => {
+      notificationsApi.getWhatsAppStatus().catch(error => {
+        console.error('[MINI_CART_WHATSAPP_STATUS]', error);
+        return { data: { available: false } };
+      }),
+    ]).then(([addressResponse, walletResponse, whatsappResponse]) => {
       if (!active) return;
       const list = addressResponse.data?.addresses || addressResponse.data?.data || addressResponse.data || [];
       const savedAddresses = Array.isArray(list) ? list : [];
       setAddresses(savedAddresses);
       setSelectedAddress(current => current || String((savedAddresses.find(address => address.is_default) || savedAddresses[0])?.id || ''));
       setWalletBalance(Math.max(0, Number(walletResponse.data?.balance) || 0));
+      setWhatsappUpdatesAvailable(whatsappResponse.data?.available === true);
+      if (whatsappResponse.data?.available !== true) setWhatsappUpdatesOptIn(false);
     }).catch(error => {
       console.error('[MINI_CART_CHECKOUT_DETAILS]', error);
       if (active) toast.error(error.response?.data?.message || 'Could not load checkout details. Please try again.');
@@ -308,6 +316,7 @@ export default function MiniCart() {
       setAddresses(savedAddresses);
       const newestAddress = savedAddresses.find(address => address.is_default) || savedAddresses[0];
       setSelectedAddress(String(newestAddress?.id || ''));
+      setWhatsappUpdatesOptIn(false);
       setAddressForm(blankAddress);
       setAddressFormOpen(false);
       toast.success('Delivery address saved.');
@@ -338,6 +347,7 @@ export default function MiniCart() {
         impactAmount: paymentMode === 'COD' ? impactAmount : 0,
         impactProject: paymentMode === 'COD' && impactAmount > 0 ? impactProject : undefined,
         notes: orderNotes.trim() || undefined,
+        whatsappUpdatesOptIn,
       };
       if (paymentMode === 'online') {
         await loadRazorpayScript();
@@ -497,7 +507,7 @@ export default function MiniCart() {
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-3"><p className="text-xs font-bold text-[#35533c]">Delivery address</p><button type="button" onClick={() => setAddressFormOpen(open => !open)} className="text-xs font-semibold text-[#8b5a2b] underline underline-offset-2">{addressFormOpen ? 'Cancel' : '+ Add address'}</button></div>
                   {addresses.length > 0 ? addresses.map(address => <label key={address.id} className={`flex cursor-pointer gap-2 rounded-xl border bg-white p-3 text-xs ${String(selectedAddress) === String(address.id) ? 'border-[#536b4d] ring-1 ring-[#536b4d]/30' : 'border-[#e8dcc4]'}`}>
-                    <input type="radio" name="mini-cart-address" value={address.id} checked={String(selectedAddress) === String(address.id)} onChange={() => setSelectedAddress(String(address.id))} className="mt-0.5 accent-[#35533c]"/>
+                    <input type="radio" name="mini-cart-address" value={address.id} checked={String(selectedAddress) === String(address.id)} onChange={() => { setSelectedAddress(String(address.id)); setWhatsappUpdatesOptIn(false); }} className="mt-0.5 accent-[#35533c]"/>
                     <span className="min-w-0"><strong className="block text-[#263d31]">{address.full_name || address.fullName} · {address.label || 'Address'}</strong><span className="mt-1 block leading-5 text-stone-500">{address.address_line1 || address.street_address || address.line1}{address.address_line2 ? `, ${address.address_line2}` : ''}, {address.city}, {address.state} {address.pincode || address.postal_code}</span><span className="mt-1 block text-stone-500">{address.phone || address.phone_number}</span></span>
                   </label>) : !addressFormOpen && <p className="rounded-xl border border-dashed border-[#d5cbb9] bg-white p-3 text-xs leading-5 text-stone-600">Add a delivery address here to finish your order without leaving the cart.</p>}
                   {addressFormOpen && <form onSubmit={saveAddress} className="grid grid-cols-2 gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3">
@@ -520,6 +530,17 @@ export default function MiniCart() {
                   <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'COD'} onChange={() => setPaymentMode('COD')} className="accent-[#35533c]"/>Cash on delivery</label>
                   <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'online'} onChange={() => { setPaymentMode('online'); setImpactAmount(0); }} className="accent-[#35533c]"/>Pay online with Razorpay</label>
                   <label className="flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><span className="flex items-center gap-2"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'WALLET'} onChange={() => { setPaymentMode('WALLET'); setImpactAmount(0); }} className="accent-[#35533c]"/>Bhumivera wallet</span><span className="text-stone-500">Balance {formatPrice(walletBalance)}</span></label>
+                </div>
+                <div className="rounded-xl border border-[#d7dfce] bg-white p-3 text-xs leading-5 text-stone-600">
+                  {whatsappUpdatesAvailable ? <label className="flex cursor-pointer items-start gap-2">
+                    <input
+                      type="checkbox"
+                      checked={whatsappUpdatesOptIn}
+                      onChange={event => setWhatsappUpdatesOptIn(event.target.checked)}
+                      className="mt-1 accent-[#35533c]"
+                    />
+                    <span><strong className="inline-flex items-center gap-1 text-[#35533c]"><MessageCircle size={13}/>WhatsApp order updates</strong><span className="block">Receive order confirmation, cancellation, status and shipment tracking messages at the selected delivery phone number. Optional; only for this order.</span></span>
+                  </label> : <p>WhatsApp order alerts are currently unavailable. You can still track orders from your account.</p>}
                 </div>
 
                 {paymentMode === 'COD' && <div className="rounded-xl border border-[#d7dfce] bg-white p-3">
