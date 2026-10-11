@@ -103,7 +103,7 @@ api.interceptors.request.use(c => {
     url.startsWith("/products") && c.method === "get" && !url.startsWith("/products/active") && !url.startsWith("/products/slug/") && !url.includes("/qa") && !/\/products\/\d+/.test(url) && !/\/products\/[a-f0-9]{24}/.test(url) ||
     url.startsWith("/categories") && (c.method === "post" || c.method === "put" || c.method === "delete") ||
     url.startsWith("/subcategories") && (c.method === "post" || c.method === "put" || c.method === "delete") ||
-    url.startsWith("/coupons") && !url.startsWith("/coupons/validate") && (c.method === "post" || c.method === "put" || c.method === "delete" || url.includes("/coupons") && c.method === "get" && !url.includes("/public/")) ||
+    url.startsWith("/coupons") && url !== "/coupons/mine" && !url.startsWith("/coupons/validate") && (c.method === "post" || c.method === "put" || c.method === "delete" || url.includes("/coupons") && c.method === "get" && !url.includes("/public/")) ||
     url.startsWith("/settings") ||
     url.startsWith("/shipping") && c.method !== "get" ||
     url.startsWith("/shipping/carriers") ||
@@ -147,6 +147,7 @@ const _resolveTokenKind = (url = '', method = '', adminAuth = false) => {
     url.startsWith("/shipping/carriers") ||
     url.startsWith("/shipping/labels") ||
     url.startsWith("/analytics/") ||
+    url.startsWith("/coupons") && url !== "/coupons/mine" && !url.startsWith("/coupons/public/") && !url.startsWith("/coupons/validate") ||
     url.startsWith("/settings") ||
     url.startsWith("/notifications/admin/") ||
     url.startsWith("/returns/admin/");
@@ -262,6 +263,7 @@ api.interceptors.response.use(response => {
       (url.includes("/auth/profile") ||
        url.includes("/users/profile") ||
        url.startsWith("/affiliate/referral/") ||
+       url === "/coupons/mine" ||
        url.startsWith("/settings/public") ||
        url.includes("/users/") ||
        isPathOrChild(url, "/orders") ||
