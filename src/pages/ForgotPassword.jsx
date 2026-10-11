@@ -55,7 +55,7 @@ export default function ForgotPassword() {
 
   const handleSubmitNewPw = async (e) => {
     e.preventDefault();
-    if (newPassword.length < 12) { toast.error('Password must be at least 12 characters'); return; }
+    if (newPassword.length < 8) { toast.error('Password must be at least 8 characters'); return; }
     if (newPassword !== confirmPassword) { toast.error('Passwords do not match'); return; }
     setLoading(true);
     try {
@@ -101,7 +101,7 @@ export default function ForgotPassword() {
           <p className="text-sm text-stone-500 mt-2">
             {step === 1 && "Enter the email linked to your account and we'll send a one-time code."}
             {step === 2 && `Enter the 6-digit code sent to ${email}.`}
-            {step === 3 && 'Choose a strong password at least 12 characters long.'}
+            {step === 3 && 'Choose a password at least 8 characters long.'}
           </p>
         </div>
 
@@ -196,7 +196,7 @@ export default function ForgotPassword() {
                     type={showNewPw ? 'text' : 'password'}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Min 12 characters"
+                    placeholder="Min 8 characters"
                     className="w-full pl-11 pr-11 py-3 bg-[#FAF8F5] border border-stone-200 rounded-xl text-[#0B2419] placeholder:text-stone-400 focus:outline-none focus:border-[#D4AF37]/60 focus:ring-2 focus:ring-[#D4AF37]/15 transition-all"
                     disabled={loading}
                     autoComplete="new-password"

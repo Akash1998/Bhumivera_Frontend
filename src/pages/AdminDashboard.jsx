@@ -28,8 +28,9 @@ const AdminSettings = lazy(() => import('./admin/AdminSettings.jsx'));
 const ImpactManagement = lazy(() => import('./admin/ImpactManagement.jsx'));
 const GrowthOffersHub = lazy(() => import('./admin/GrowthOffersHub.jsx'));
 const WalletManagement = lazy(() => import('./admin/WalletManagement.jsx'));
+const ReferralEngine = lazy(() => import('./admin/AffiliateManagement.jsx'));
 
-const GROWTH_TABS = ['flash-sales', 'coupons', 'loyalty', 'affiliate', 'min-cart-value', 'cart-rules', 'gamification', 'lifecycle-offers', 'personalization', 'ab-experiments', 'loyalty-tiers'];
+const GROWTH_TABS = ['flash-sales', 'coupons', 'loyalty', 'min-cart-value', 'cart-rules', 'gamification', 'lifecycle-offers', 'personalization', 'ab-experiments', 'loyalty-tiers'];
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -78,6 +79,7 @@ const TAB_COMPONENTS = {
   tax: TaxManagement, gst: GSTAccounting, shipping: ShippingManagement, logs: SystemLogs,
   warehouse: WarehouseManagement, settings: AdminSettings,
   ...Object.fromEntries(GROWTH_TABS.map(id => [id, GrowthOffersHub])),
+  affiliate: ReferralEngine, 'referral-engine': ReferralEngine,
   'growth-offers': GrowthOffersHub,
   'wallet-management': WalletManagement,
   impact: ImpactManagement,
@@ -128,6 +130,9 @@ export default function AdminDashboard() {
       title: 'Growth & offers', items: [{ id: 'growth-offers', label: 'Growth & offers' }]
     },
     {
+      title: 'Referral program', items: [{ id: 'referral-engine', label: 'Refer & earn engine' }]
+    },
+    {
       title: 'Platform', items: [
         { id: 'impact', label: 'Earth impact' }, { id: 'wallet-management', label: 'Customer wallets' }, { id: 'logs', label: 'System logs' },
         { id: 'settings', label: 'Settings' }
@@ -146,7 +151,8 @@ export default function AdminDashboard() {
       items: section.items.filter(item => item.label.toLowerCase().includes(normalizedSearch))
     }))
     .filter(section => section.items.length);
-  const activeLabel = allMenuItems.find(item => item.id === activeTab)?.label || (GROWTH_TABS.includes(activeTab) ? 'Growth & offers' : 'Dashboard');
+  const activeLabel = allMenuItems.find(item => item.id === activeTab)?.label ||
+    (['affiliate', 'referral-engine'].includes(activeTab) ? 'Refer & earn engine' : GROWTH_TABS.includes(activeTab) ? 'Growth & offers' : 'Dashboard');
   const ActiveComponent = TAB_COMPONENTS[activeTab] || DashboardOverview;
 
   return (

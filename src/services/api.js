@@ -398,6 +398,7 @@ export const affiliate = {
   getAdminConfig: () => api.get('/affiliate/admin/config', { adminAuth: true }),
   updateAdminConfig: data => api.put('/affiliate/admin/config', data, { adminAuth: true }),
   getAdminReferrals: params => api.get('/affiliate/admin/referrals', { params, adminAuth: true }),
+  decideAdminReferral: (claimId, data) => api.patch(`/affiliate/admin/referrals/${claimId}/decision`, data, { adminAuth: true }),
 };
 export const adminWallet = {
   getAccounts: params => api.get('/wallet/admin/accounts', { params, adminAuth: true }),

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import QRCode from 'qrcode';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import {
@@ -237,6 +238,7 @@ export default function Profile() {
   const [couponValidate, setCouponValidate] = useState({ code:'', result:null });
   const [affiliateCopied, setAffiliateCopied] = useState(false);
   const [referralData, setReferralData] = useState(null);
+  const [referralQr, setReferralQr] = useState('');
 
   const unreadCount = notifications.filter(n => !n.is_read && !n.read_at && n.status !== 'read').length;
 
@@ -399,7 +401,7 @@ export default function Profile() {
   const handleChangePassword = async (e) => {
     e.preventDefault();
     if (passwords.new !== passwords.confirm) { toast.error('New passwords do not match'); return; }
-    if ((passwords.new||'').length < 12) { toast.error('Password must be at least 12 characters'); return; }
+    if ((passwords.new||'').length < 8) { toast.error('Password must be at least 8 characters'); return; }
     try {
       await usersApi.changePassword({ currentPassword: passwords.current, newPassword: passwords.new });
       toast.success('Password changed');
@@ -757,6 +759,20 @@ export default function Profile() {
     };
   }, [activeTab, toast]);
   const referralUrl = referralData?.referralUrl || '';
+  useEffect(() => {
+    let active = true;
+    if (!referralUrl) {
+      setReferralQr('');
+      return () => { active = false; };
+    }
+    QRCode.toDataURL(referralUrl, { errorCorrectionLevel: 'H', margin: 2, width: 280 })
+      .then(dataUrl => { if (active) setReferralQr(dataUrl); })
+      .catch(error => {
+        console.error('[PROFILE_REFERRAL_QR]', error);
+        if (active) setReferralQr('');
+      });
+    return () => { active = false; };
+  }, [referralUrl]);
   const handleCopyRef = async () => {
     if (!referralUrl) { toast.error('Your referral link is still loading.'); return; }
     try { await navigator.clipboard.writeText(referralUrl); setAffiliateCopied(true); toast.success('Referral link copied'); setTimeout(() => setAffiliateCopied(false),2000); }
@@ -985,6 +1001,21 @@ export default function Profile() {
                           ))}
                         </div>
                       )}
+                    </div>
+                    <div className="mt-6 flex flex-col items-center gap-3 rounded-2xl border border-stone-200 bg-stone-50 p-5 text-center sm:flex-row sm:text-left">
+                      {referralQr ? (
+                        <img src={referralQr} alt="QR code for your Bhumivera referral link" className="h-40 w-40 rounded-lg bg-white p-2"/>
+                      ) : (
+                        <div role="status" className="grid h-40 w-40 place-items-center rounded-lg bg-white text-xs text-stone-500">
+                          {referralUrl ? 'Creating QR code…' : 'Loading referral link…'}
+                        </div>
+                      )}
+                      <div>
+                        <h3 className="font-semibold text-[#0B2419]">Share your QR code</h3>
+                        <p className="mt-1 max-w-md text-xs leading-5 text-stone-600">Friends can scan this code to open your sign-up link. The QR link expires after 90 days. Your referral code can still be entered manually after that.</p>
+                        {referralData?.referralExpiresAt && <p className="mt-2 text-xs text-stone-500">Link expires {new Date(referralData.referralExpiresAt).toLocaleDateString()}.</p>}
+                        {referralQr && <a href={referralQr} download="bhumivera-referral-qr.png" className="mt-3 inline-flex min-h-10 items-center rounded-lg bg-[#0B2419] px-4 py-2 text-sm font-semibold text-white">Download QR code</a>}
+                      </div>
                     </div>
                   </section>
                 </div>
@@ -1745,8 +1776,14 @@ export default function Profile() {
                               <span className="block text-sm font-medium text-[#0B2419]">{referral.name}</span>
                               <span className="text-xs text-stone-500">Joined {new Date(referral.created_at).toLocaleDateString()}</span>
                             </span>
-                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${referral.rewarded_at ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'}`}>
-                              {referral.rewarded_at ? 'Reward earned' : 'Waiting for first delivered order'}
+                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${['approved', 'auto_approved'].includes(referral.status) ? 'bg-emerald-50 text-emerald-800' : referral.status === 'rejected' ? 'bg-rose-50 text-rose-800' : 'bg-amber-50 text-amber-800'}`}>
+                              {referral.status === 'auto_approved'
+                                ? 'Automatically approved'
+                                : referral.status === 'approved'
+                                  ? 'Approved'
+                                  : referral.status === 'rejected'
+                                    ? `Not approved${referral.decision_reason ? ` · ${referral.decision_reason}` : ''}`
+                                    : `Under review. If no action is taken, the reward is decided automatically by ${new Date(referral.auto_approve_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`}
                             </span>
                           </li>
                         ))}

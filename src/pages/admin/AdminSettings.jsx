@@ -110,7 +110,7 @@ export default function AdminSettings() {
     }
 
     if (newPassword.length < 12) {
-      setError('New password must be at least 12 characters');
+      setError('New password must be at least 8 characters');
       return;
     }
 

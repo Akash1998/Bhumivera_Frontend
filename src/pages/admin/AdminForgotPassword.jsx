@@ -55,7 +55,7 @@ export default function AdminForgotPassword() {
 
   const handleSubmitNewPw = async (e) => {
     e.preventDefault();
-    if (newPassword.length < 12) { toast.error('Password must be at least 12 characters'); return; }
+    if (newPassword.length < 8) { toast.error('Password must be at least 8 characters'); return; }
     if (newPassword !== confirmPassword) { toast.error('Passwords do not match'); return; }
     setLoading(true);
     try {
@@ -196,7 +196,7 @@ export default function AdminForgotPassword() {
                     type={showNewPw ? 'text' : 'password'}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="Min 12 characters"
+                    placeholder="Min 8 characters"
                     className="admin-glass-control w-full rounded-lg py-3 pl-11 pr-11 font-mono focus:border-emerald-400"
                     disabled={loading}
                     autoComplete="new-password"

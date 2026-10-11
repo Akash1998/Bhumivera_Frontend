@@ -40,11 +40,8 @@ export default function Register() {
   const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || "0x4AAAAAAADBENLaxaG5Y9r6D";
 
   const passwordChecks = [
-    { label: '12–128 characters', valid: formData.password.length >= 12 && formData.password.length <= 128 },
-    { label: 'One uppercase letter (A–Z)', valid: /[A-Z]/.test(formData.password) },
-    { label: 'One lowercase letter (a–z)', valid: /[a-z]/.test(formData.password) },
-    { label: 'One number (0–9)', valid: /[0-9]/.test(formData.password) },
-    { label: 'One special character (e.g. ! @ # $ %)', valid: /[^A-Za-z0-9]/.test(formData.password) }
+    { label: 'At least 8 characters', valid: formData.password.length >= 8 },
+    { label: 'No more than 128 characters', valid: formData.password.length <= 128 }
   ];
   const passwordIsValid = passwordChecks.every(check => check.valid) && formData.password.length <= 128;
   const passwordStrength = passwordChecks.filter(check => check.valid).length;

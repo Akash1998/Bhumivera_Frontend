@@ -3,7 +3,6 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Award, FlaskConical, Gift, LoaderCircle, Megaphone, Users } from 'lucide-react';
 
 const LoyaltyManagement = lazy(() => import('./LoyaltyManagement'));
-const AffiliateManagement = lazy(() => import('./AffiliateManagement'));
 const CouponManagement = lazy(() => import('./CouponManagement'));
 const FlashSalesManagement = lazy(() => import('./FlashSalesManagement'));
 const MinCartValueCenter = lazy(() => import('./MinCartValueCenter'));
@@ -32,7 +31,6 @@ const groups = [
     features: [
       { id: 'loyalty', label: 'Loyalty', purpose: 'See members and manage how customers earn or use points.', steps: 'Review member points and update the available loyalty settings.', component: LoyaltyManagement },
       { id: 'loyalty-tiers', label: 'Loyalty tiers', purpose: 'Give customers better benefits as they earn more points.', steps: 'Create a tier, set the points needed to reach it, describe its benefits, and save.', component: LoyaltyTierForge },
-      { id: 'affiliate', label: 'Affiliates & referrals', purpose: 'Choose the reward customers get for bringing a friend.', steps: 'Turn referrals on, select wallet credit, a coupon, or both, set the reward, and save.', component: AffiliateManagement },
       { id: 'gamification', label: 'Reward activities', purpose: 'Enable activities such as reward spins and sale countdowns.', steps: 'Turn an activity on or off. Changes are saved as you make them.', component: GamificationStudio },
     ],
   },

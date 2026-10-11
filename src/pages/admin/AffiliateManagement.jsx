@@ -20,10 +20,11 @@ export default function AffiliateManagement() {
   const [referrals, setReferrals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [processingId, setProcessingId] = useState(null);
   const { showToast } = useToast() || {};
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (showLoader = true) => {
+    if (showLoader) setLoading(true);
     try {
       const [settingsResponse, referralsResponse] = await Promise.all([
         affiliateApi.getAdminConfig(),
@@ -34,11 +35,15 @@ export default function AffiliateManagement() {
     } catch (error) {
       showToast?.(error.normalized?.message || 'Could not load referral settings.', 'error');
     } finally {
-      setLoading(false);
+      if (showLoader) setLoading(false);
     }
   }, [showToast]);
 
   useEffect(() => { load(); }, [load]);
+  useEffect(() => {
+    const timer = window.setInterval(() => load(false), 15000);
+    return () => window.clearInterval(timer);
+  }, [load]);
 
   const change = (key, value) => setConfig(current => ({ ...current, [key]: value }));
 
@@ -63,13 +68,33 @@ export default function AffiliateManagement() {
     }
   };
 
+  const decide = async (referral, decision) => {
+    const reason = decision === 'rejected'
+      ? window.prompt('Why is this referral not approved? This reason will be recorded for the admin review.')
+      : null;
+    if (decision === 'rejected' && (reason === null || reason.trim().length < 5)) {
+      if (reason !== null) showToast?.('Enter a reason of at least 5 characters.', 'error');
+      return;
+    }
+    setProcessingId(referral.claim_id);
+    try {
+      await affiliateApi.decideAdminReferral(referral.claim_id, { decision, reason });
+      showToast?.(decision === 'approved' ? 'Referral approved and reward issued.' : 'Referral marked as not approved.', 'success');
+      await load();
+    } catch (error) {
+      showToast?.(error.normalized?.message || 'Could not review this referral.', 'error');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   if (loading) return <p role="status" className="flex items-center gap-2 text-sm text-slate-400"><LoaderCircle size={16} className="animate-spin"/>Loading referral settings…</p>;
 
   return (
     <div className="max-w-4xl space-y-6 text-slate-100">
       <header>
-        <h3 className="text-lg font-semibold text-white">Refer a friend</h3>
-        <p className="mt-1 text-sm leading-6 text-slate-400">Customers can share unlimited links. A reward is issued only after a referred customer’s first order is delivered. Referral credit and discount coupons cannot be withdrawn as cash.</p>
+        <h3 className="text-lg font-semibold text-white">Referral engine</h3>
+        <p className="mt-1 text-sm leading-6 text-slate-400">Review a customer’s verified sign-up. Approve now to issue the configured reward, reject with a reason, or take no action and the referral will auto-approve one hour after the customer verifies their email.</p>
       </header>
 
       <form onSubmit={save} className="space-y-5 rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
@@ -119,19 +144,37 @@ export default function AffiliateManagement() {
       <section className="space-y-3">
         <header className="flex items-center gap-2">
           <Users size={17} className="text-emerald-300"/>
-          <h3 className="font-semibold text-white">Recent referrals</h3>
-          <span className="text-xs text-slate-500">Latest 50 sign-ups</span>
+          <h3 className="font-semibold text-white">Referral review queue</h3>
+          <span className="text-xs text-slate-500">Refreshes every 15 seconds</span>
         </header>
         {referrals.length === 0 ? <p className="rounded-xl border border-white/10 p-4 text-sm text-slate-400">No one has joined through a referral yet.</p> : (
           <div className="overflow-x-auto rounded-xl border border-white/10">
             <table className="w-full min-w-[620px] text-left text-sm">
-              <thead className="bg-white/[0.04] text-xs text-slate-400"><tr><th className="p-3">Invited by</th><th className="p-3">New customer</th><th className="p-3">Reward status</th><th className="p-3">Reward</th></tr></thead>
+              <thead className="bg-white/[0.04] text-xs text-slate-400"><tr><th className="p-3">Invited by</th><th className="p-3">Verified customer</th><th className="p-3">Status</th><th className="p-3">Reward / action</th></tr></thead>
               <tbody className="divide-y divide-white/10">
-                {referrals.map(row => <tr key={row.referred_id}>
+                {referrals.map(row => <tr key={row.claim_id}>
                   <td className="p-3"><span className="block text-white">{row.referrer_name}</span><span className="text-xs text-slate-500">{row.referrer_email}</span></td>
-                  <td className="p-3"><span className="block text-white">{row.referred_name}</span><span className="text-xs text-slate-500">{row.referred_email}</span></td>
-                  <td className="p-3">{row.rewarded_at ? 'Order delivered' : 'Waiting for first delivered order'}</td>
-                  <td className="p-3">{row.rewarded_at ? [Number(row.wallet_amount) > 0 ? `₹${Number(row.wallet_amount).toFixed(2)} wallet` : '', row.coupon_code ? 'Coupon issued' : ''].filter(Boolean).join(' + ') : '—'}</td>
+                  <td className="p-3"><span className="block text-white">{row.referred_name}</span><span className="text-xs text-slate-500">{row.referred_email}</span><span className="mt-1 block text-[11px] text-slate-500">Verified {new Date(row.verified_at).toLocaleString()}</span></td>
+                  <td className="p-3">
+                    <span className={`rounded-full px-2 py-1 text-xs ${row.status === 'pending' ? 'bg-amber-300/10 text-amber-200' : row.status === 'rejected' ? 'bg-rose-300/10 text-rose-200' : 'bg-emerald-300/10 text-emerald-200'}`}>
+                      {row.status === 'pending' ? 'Verified · waiting review' : row.status === 'auto_approved' ? 'Auto-approved' : row.status === 'approved' ? 'Approved by admin' : 'Rejected'}
+                    </span>
+                    {row.status === 'pending' && <span className="mt-1 block text-[11px] text-slate-500">Auto-approval at {new Date(row.auto_approve_at).toLocaleTimeString()}</span>}
+                    {row.decision_reason && <span className="mt-1 block max-w-48 text-xs text-rose-200">{row.decision_reason}</span>}
+                  </td>
+                  <td className="p-3">
+                    {row.status === 'pending' ? (
+                      <div className="flex flex-wrap gap-2">
+                        <button type="button" disabled={processingId === row.claim_id} onClick={() => decide(row, 'approved')} className="rounded-lg bg-emerald-400 px-3 py-2 text-xs font-semibold text-slate-950 disabled:opacity-50">{processingId === row.claim_id ? 'Saving…' : 'Approve reward'}</button>
+                        <button type="button" disabled={processingId === row.claim_id} onClick={() => decide(row, 'rejected')} className="rounded-lg border border-rose-300/20 px-3 py-2 text-xs font-semibold text-rose-200 disabled:opacity-50">Reject</button>
+                      </div>
+                    ) : (
+                      <span className="text-xs text-slate-300">{[
+                        Number(row.wallet_amount) > 0 ? `₹${Number(row.wallet_amount).toFixed(2)} wallet` : '',
+                        row.coupon_code ? `Coupon ${row.coupon_code}` : '',
+                      ].filter(Boolean).join(' · ') || 'No reward issued'}</span>
+                    )}
+                  </td>
                 </tr>)}
               </tbody>
             </table>
