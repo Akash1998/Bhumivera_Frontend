@@ -118,7 +118,7 @@ export default function DashboardOverview() {
             Store performance
           </div>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">{greeting}</h1>
-          <p className="mt-1 text-sm text-slate-400">A clear snapshot of your store, orders, and revenue.</p>
+          <p className="mt-1 text-sm text-slate-400">A snapshot of your store and order totals. The order-value figures below are not reconciled net sales, collected cash, or profit.</p>
         </div>
         <div className="flex w-full gap-2 sm:w-auto">
           <button
@@ -187,7 +187,7 @@ export default function DashboardOverview() {
       ) : (
         <>
           <section aria-label="Store metrics" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <Metric label="Revenue" value={formatMoney(metrics.revenue)} detail="Excludes cancelled orders" icon={Activity} color="text-emerald-200 bg-emerald-400/10" />
+            <Metric label="Non-cancelled order value" value={formatMoney(metrics.revenue)} detail="Stored order totals; not net sales or cash received" icon={Activity} color="text-emerald-200 bg-emerald-400/10" />
             <Metric label="Orders" value={count.format(Number(metrics.orders) || 0)} detail="In selected period" icon={ShoppingCart} color="text-sky-200 bg-sky-400/10" />
             <Metric label="New customers" value={count.format(Number(metrics.newCustomers) || 0)} detail="Joined in selected period" icon={Users} color="text-violet-200 bg-violet-400/10" />
             <Metric label="Pending orders" value={count.format(Number(metrics.pendingOrders) || 0)} detail="Awaiting processing" icon={Package} color="text-amber-200 bg-amber-400/10" />
@@ -197,12 +197,12 @@ export default function DashboardOverview() {
             <article className="admin-glass-panel min-w-0 rounded-2xl p-4 sm:p-5">
               <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-bold text-white sm:text-lg">Revenue trend</h2>
-                  <p className="mt-1 text-xs text-slate-400">Order revenue by day, or by month for one year</p>
+                  <h2 className="text-base font-bold text-white sm:text-lg">Non-cancelled order value trend</h2>
+                  <p className="mt-1 text-xs text-slate-400">Stored order totals by creation date; refunds and payment settlement are not reconciled here.</p>
                 </div>
                 <span className="rounded-lg border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1 text-xs font-semibold text-emerald-200">INR · ₹</span>
               </div>
-              <div className="h-64 min-w-0 sm:h-80" aria-label="Revenue chart">
+              <div className="h-64 min-w-0 sm:h-80" aria-label="Non-cancelled order value chart">
                 {hasChartData ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={dashboard.chartData} margin={{ top: 8, right: 8, left: 4, bottom: 0 }}>
@@ -236,7 +236,7 @@ export default function DashboardOverview() {
                     <div>
                       <BarChart3 className="mx-auto text-slate-500" size={28} aria-hidden="true" />
                       <p className="mt-2 text-sm font-semibold text-slate-300">No orders in this period</p>
-                      <p className="mt-1 text-xs text-slate-500">Your revenue trend will appear here.</p>
+                      <p className="mt-1 text-xs text-slate-500">Order-value totals will appear here.</p>
                     </div>
                   </div>
                 )}
@@ -245,8 +245,8 @@ export default function DashboardOverview() {
 
             <article className="admin-glass-panel rounded-2xl p-4 sm:p-5">
               <div className="mb-5">
-                <h2 className="text-base font-bold text-white sm:text-lg">Revenue by category</h2>
-                <p className="mt-1 text-xs text-slate-400">Best-performing categories</p>
+                <h2 className="text-base font-bold text-white sm:text-lg">Non-cancelled order-item value by category</h2>
+                <p className="mt-1 text-xs text-slate-400">Product line totals from orders not marked cancelled</p>
               </div>
               {dashboard.categoryData.length ? (
                 <div className="space-y-5">
