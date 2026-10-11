@@ -359,9 +359,20 @@ export default function Profile() {
   };
   const loadCoupons = async () => {
     try {
-      const res = await couponsApi.getPublicActive();
-      setCoupons(safeArr(safeExtract(res, 'coupons')) || safeArr(safeExtract(res, 'data')) || safeArr(res?.data));
-    } catch (_) {}
+      const [publicRes, personalRes] = await Promise.all([
+        couponsApi.getPublicActive(),
+        couponsApi.getMine(),
+      ]);
+      const publicCoupons = Array.isArray(publicRes?.data) ? publicRes.data : publicRes?.data?.coupons || [];
+      const personalCoupons = personalRes?.data?.coupons || [];
+      const personalCodes = new Set(personalCoupons.map(coupon => coupon.code));
+      setCoupons([
+        ...personalCoupons,
+        ...publicCoupons.filter(coupon => !personalCodes.has(coupon.code)),
+      ]);
+    } catch (error) {
+      console.error('[PROFILE_COUPONS_LOAD]', error);
+    }
   };
   const loadReviews = async () => {
     try {
@@ -1452,7 +1463,7 @@ export default function Profile() {
                             <div className="flex items-start justify-between gap-4 pl-2">
                               <div className="min-w-0">
                                 <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-[#D4AF37]/15 text-[#8a6a12] text-[10px] font-bold uppercase tracking-wider mb-2">
-                                  <Ticket className="w-3 h-3"/> {valid ? 'Live' : 'Expired'}
+                                  <Ticket className="w-3 h-3"/> {c.is_personal ? 'Your reward' : valid ? 'Live' : 'Expired'}
                                 </div>
                                 <div className="font-mono text-2xl font-extrabold tracking-tight text-[#0B2419] mb-2">{c.code}</div>
                                 <div className="text-2xl sm:text-3xl font-bold text-[#8a6a12] mb-1 leading-none">

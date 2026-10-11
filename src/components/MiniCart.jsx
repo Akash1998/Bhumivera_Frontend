@@ -118,14 +118,25 @@ export default function MiniCart() {
         if (active) setRecommendations(Array.isArray(data) ? data : []);
       })
       .catch(error => console.error('[MINI_CART_RECOMMENDATIONS]', error));
-    couponsApi.getPublicActive()
-      .then(response => {
-        const data = response.data?.data || response.data;
-        if (active) setOffers(Array.isArray(data) ? data : []);
+    Promise.all([
+      couponsApi.getPublicActive(),
+      user ? couponsApi.getMine() : Promise.resolve({ data: { coupons: [] } }),
+    ])
+      .then(([publicResponse, personalResponse]) => {
+        const publicOffers = Array.isArray(publicResponse.data?.data) ? publicResponse.data.data : publicResponse.data;
+        const personalOffers = personalResponse.data?.coupons || [];
+        const personalCodes = new Set(personalOffers.map(offer => offer.code));
+        const availablePublicOffers = Array.isArray(publicOffers)
+          ? publicOffers.filter(offer => !personalCodes.has(offer.code))
+          : [];
+        if (active) setOffers([
+          ...personalOffers.map(offer => ({ ...offer, is_personal: true })),
+          ...availablePublicOffers,
+        ]);
       })
       .catch(error => console.error('[MINI_CART_OFFERS]', error));
     return () => { active = false; };
-  }, [isCartOpen]);
+  }, [isCartOpen, user?.id]);
 
   useEffect(() => {
     if (!isCartOpen) return undefined;
@@ -587,7 +598,7 @@ export default function MiniCart() {
 
             <section className="overflow-hidden rounded-2xl border border-[#e8dcc4] bg-white">
               <button type="button" onClick={() => setOffersOpen(open => !open)} aria-expanded={offersOpen} className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
-                <span className="flex items-center gap-2"><span className="rounded-lg bg-[#f5f1e8] p-2 text-[#8b5a2b]"><Tag size={15}/></span><span><span className="block text-sm font-semibold text-[#2C3E2D]">Coupons &amp; offers</span><span className="block text-[10px] text-stone-500">{offers.length ? `${offers.length} public offers available` : 'Enter a coupon code'}</span></span></span>
+                <span className="flex items-center gap-2"><span className="rounded-lg bg-[#f5f1e8] p-2 text-[#8b5a2b]"><Tag size={15}/></span><span><span className="block text-sm font-semibold text-[#2C3E2D]">Coupons &amp; offers</span><span className="block text-[10px] text-stone-500">{offers.length ? `${offers.length} available offers` : 'Enter a coupon code'}</span></span></span>
                 {offersOpen ? <ChevronUp size={16} className="text-stone-500"/> : <ChevronDown size={16} className="text-stone-500"/>}
               </button>
               {offersOpen && <div className="border-t border-[#f0e8da] p-3">
@@ -597,7 +608,7 @@ export default function MiniCart() {
                 </form>
                 {couponMessage && <p role="status" className={`mt-2 text-xs ${appliedCoupon ? 'text-emerald-700' : 'text-rose-700'}`}>{couponMessage}</p>}
                 {offers.length > 0 && <div className="mt-3 space-y-2">
-                  {offers.slice(0, 4).map(offer => <button type="button" key={offer.code} onClick={() => { setCouponCode(offer.code); setCouponMessage('Enter this code above and apply it to check eligibility.'); }} className="flex w-full items-center justify-between gap-2 rounded-lg bg-[#faf8f5] px-3 py-2 text-left text-xs hover:bg-[#f5f1e8]"><span><strong className="font-mono text-[#2C3E2D]">{offer.code}</strong><span className="ml-2 text-stone-500">{offer.discount_type === 'percentage' || offer.type === 'percentage' ? `${offer.discount_value ?? offer.value}% off` : `${formatPrice(offer.discount_value ?? offer.value)} off`}</span></span><span className="text-[9px] font-bold uppercase tracking-wider text-[#8b5a2b]">Use</span></button>)}
+                {offers.slice(0, 4).map(offer => <button type="button" key={offer.code} onClick={() => { setCouponCode(offer.code); setCouponMessage(offer.is_personal ? 'Your account reward is selected. Apply it to check eligibility.' : 'Enter this code above and apply it to check eligibility.'); }} className="flex w-full items-center justify-between gap-2 rounded-lg bg-[#faf8f5] px-3 py-2 text-left text-xs hover:bg-[#f5f1e8]"><span><strong className="font-mono text-[#2C3E2D]">{offer.code}</strong><span className="ml-2 text-stone-500">{offer.discount_type === 'percentage' || offer.type === 'percentage' ? `${offer.discount_value ?? offer.value}% off` : `${formatPrice(offer.discount_value ?? offer.value)} off`}</span></span><span className="text-[9px] font-bold uppercase tracking-wider text-[#8b5a2b]">{offer.is_personal ? 'Your reward' : 'Use'}</span></button>)}
                 </div>}
               </div>}
             </section>
