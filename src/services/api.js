@@ -370,7 +370,12 @@ export const analytics = {
   getKpis: (period = '30d') => api.get('/analytics/kpis', { params: { period } }),
   getRevenue: (period = '30d') => api.get('/analytics/revenue', { params: { period } })
 };
-export const wallet = { getBalance: () => api.get('/wallet/balance'), getHistory: () => api.get('/wallet/history'), pay: d => api.post('/wallet/pay', d) };
+export const wallet = {
+  getBalance: () => api.get('/wallet/balance'),
+  getHistory: () => api.get('/wallet/history'),
+  pay: d => api.post('/wallet/pay', d),
+  confirmTopUp: data => api.post('/wallet/top-up/confirm', data, { notify: false }),
+};
 export const settings = { get: () => api.get("/settings"), getPublic: () => api.get("/settings/public"), update: d => api.put("/settings", d) };
 export const clientErrors = { getAllAdmin: limit => api.get('/logs/client', { params: { limit } }) };
 export const newsletter = { subscribe: (email, source = 'site') => api.post('/newsletter/subscribe', { email, source }, { timeout: 5000 }) };
@@ -413,6 +418,7 @@ export const affiliate = {
   updateAdminConfig: data => api.put('/affiliate/admin/config', data, { adminAuth: true }),
   getAdminReferrals: params => api.get('/affiliate/admin/referrals', { params, adminAuth: true }),
   decideAdminReferral: (claimId, data) => api.patch(`/affiliate/admin/referrals/${claimId}/decision`, data, { adminAuth: true }),
+  reissueAdminReferralCoupon: claimId => api.post(`/affiliate/admin/referrals/${claimId}/reissue-coupon`, {}, { adminAuth: true }),
 };
 export const adminWallet = {
   getAccounts: params => api.get('/wallet/admin/accounts', { params, adminAuth: true }),

@@ -95,7 +95,7 @@ export default function MiniCart() {
   const subtotal = Number(getSubtotal()) || 0;
   const discount = Math.max(0, Number(rulePreview?.totalDiscount) || 0);
   const couponDiscount = appliedCoupon
-    ? couponStackPolicy === 'both' || couponStackPolicy === 'coupon_first' || discount <= 0
+    ? appliedCoupon.rewardType === 'referral_wallet' || couponStackPolicy === 'both' || couponStackPolicy === 'coupon_first' || discount <= 0
       ? appliedCoupon.discount
       : 0
     : 0;
@@ -241,8 +241,19 @@ export default function MiniCart() {
     try {
       const response = await couponsApi.validate(code, subtotal);
       const data = response.data?.data || response.data || {};
-      setAppliedCoupon({ code, discount: Number(data.discount) || 0 });
-      setCouponMessage(`Coupon applied — saving ${formatPrice(data.discount)}.`);
+      const referralWalletAmount = Number(data.referralWalletAmount) || 0;
+      const appliedDiscount = data.rewardType === 'referral_wallet'
+        ? Math.min(Number(data.discount) || 0, Math.max(0, subtotal - discount))
+        : Number(data.discount) || 0;
+      setAppliedCoupon({
+        code,
+        discount: appliedDiscount,
+        referralWalletAmount,
+        rewardType: data.rewardType || 'standard',
+      });
+      setCouponMessage(data.rewardType === 'referral_wallet'
+        ? `Referral reward applied — up to ${formatPrice(appliedDiscount)} from your restricted reward balance will be used for this order.`
+        : `Coupon applied — saving ${formatPrice(appliedDiscount)}.`);
     } catch (error) {
       setAppliedCoupon(null);
       setCouponMessage(error.response?.data?.message || 'This coupon could not be applied.');
@@ -608,7 +619,7 @@ export default function MiniCart() {
                 </form>
                 {couponMessage && <p role="status" className={`mt-2 text-xs ${appliedCoupon ? 'text-emerald-700' : 'text-rose-700'}`}>{couponMessage}</p>}
                 {offers.length > 0 && <div className="mt-3 space-y-2">
-                {offers.slice(0, 4).map(offer => <button type="button" key={offer.code} onClick={() => { setCouponCode(offer.code); setCouponMessage(offer.is_personal ? 'Your account reward is selected. Apply it to check eligibility.' : 'Enter this code above and apply it to check eligibility.'); }} className="flex w-full items-center justify-between gap-2 rounded-lg bg-[#faf8f5] px-3 py-2 text-left text-xs hover:bg-[#f5f1e8]"><span><strong className="font-mono text-[#2C3E2D]">{offer.code}</strong><span className="ml-2 text-stone-500">{offer.discount_type === 'percentage' || offer.type === 'percentage' ? `${offer.discount_value ?? offer.value}% off` : `${formatPrice(offer.discount_value ?? offer.value)} off`}</span></span><span className="text-[9px] font-bold uppercase tracking-wider text-[#8b5a2b]">{offer.is_personal ? 'Your reward' : 'Use'}</span></button>)}
+                {offers.slice(0, 4).map(offer => <button type="button" key={offer.code} onClick={() => { setCouponCode(offer.code); setCouponMessage(offer.is_personal ? 'Your account reward is selected. Apply it to check eligibility.' : 'Enter this code above and apply it to check eligibility.'); }} className="flex w-full items-center justify-between gap-2 rounded-lg bg-[#faf8f5] px-3 py-2 text-left text-xs hover:bg-[#f5f1e8]">                <span><strong className="font-mono text-[#2C3E2D]">{offer.code}</strong><span className="ml-2 text-stone-500">{offer.reward_type === 'referral_wallet' ? `Up to ${formatPrice(offer.wallet_per_order_limit || offer.discount_value)} referral credit per order` : offer.discount_type === 'percentage' || offer.type === 'percentage' ? `${offer.discount_value ?? offer.value}% off` : `${formatPrice(offer.discount_value ?? offer.value)} off`}</span></span><span className="text-[9px] font-bold uppercase tracking-wider text-[#8b5a2b]">{offer.is_personal ? 'Your reward' : 'Use'}</span></button>)}
                 </div>}
               </div>}
             </section>

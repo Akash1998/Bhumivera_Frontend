@@ -7,6 +7,7 @@ const DEFAULTS = {
   enabled: 1,
   reward_mode: 'wallet',
   wallet_reward_amount: 100,
+  wallet_reward_per_order_limit: 100,
   coupon_discount_type: 'fixed',
   coupon_discount_value: 100,
   coupon_min_order_amount: 0,
@@ -55,6 +56,7 @@ export default function AffiliateManagement() {
         ...config,
         enabled: Boolean(config.enabled),
         wallet_reward_amount: Number(config.wallet_reward_amount),
+        wallet_reward_per_order_limit: Number(config.wallet_reward_per_order_limit),
         coupon_discount_value: Number(config.coupon_discount_value),
         coupon_min_order_amount: Number(config.coupon_min_order_amount),
         coupon_valid_days: Number(config.coupon_valid_days),
@@ -88,6 +90,20 @@ export default function AffiliateManagement() {
     }
   };
 
+  const reissueCoupon = async referral => {
+    if (!window.confirm('Disable the old referral coupon and issue a replacement code for the remaining referral balance?')) return;
+    setProcessingId(referral.claim_id);
+    try {
+      const response = await affiliateApi.reissueAdminReferralCoupon(referral.claim_id);
+      showToast?.(`Replacement coupon ${response.data?.couponCode || ''} issued.`, 'success');
+      await load();
+    } catch (error) {
+      showToast?.(error.normalized?.message || 'Could not reissue this referral coupon.', 'error');
+    } finally {
+      setProcessingId(null);
+    }
+  };
+
   if (loading) return <p role="status" className="flex items-center gap-2 text-sm text-slate-400"><LoaderCircle size={16} className="animate-spin"/>Loading referral settings…</p>;
 
   return (
@@ -105,16 +121,24 @@ export default function AffiliateManagement() {
 
         <label className="block text-sm font-medium text-white">What should the referrer receive?
           <select value={config.reward_mode} onChange={event => change('reward_mode', event.target.value)} className="admin-glass-control mt-2 w-full rounded-lg px-3 py-2">
-            <option value="wallet">Wallet balance only</option>
+            <option value="wallet">Spendable wallet balance only</option>
             <option value="coupon">Coupon only</option>
-            <option value="wallet_coupon">Wallet balance and coupon</option>
+            <option value="wallet_coupon">Restricted referral balance + personal coupon</option>
           </select>
         </label>
 
         {['wallet', 'wallet_coupon'].includes(config.reward_mode) && (
-          <label className="block max-w-sm text-sm font-medium text-white">Wallet reward per delivered referral (₹)
-            <input type="number" min="0" max="100000" step="0.01" required value={config.wallet_reward_amount} onChange={event => change('wallet_reward_amount', event.target.value)} className="admin-glass-control mt-2 w-full rounded-lg px-3 py-2"/>
-          </label>
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm font-medium text-white">{config.reward_mode === 'wallet_coupon' ? 'Restricted referral credit per approved referral (₹)' : 'Spendable wallet reward per approved referral (₹)'}
+              <input type="number" min="0" max="100000" step="0.01" required value={config.wallet_reward_amount} onChange={event => change('wallet_reward_amount', event.target.value)} className="admin-glass-control mt-2 w-full rounded-lg px-3 py-2"/>
+            </label>
+            {config.reward_mode === 'wallet_coupon' && (
+              <label className="block text-sm font-medium text-white">Maximum referral balance used per order (₹)
+                <input type="number" min="0.01" max="100000" step="0.01" required value={config.wallet_reward_per_order_limit} onChange={event => change('wallet_reward_per_order_limit', event.target.value)} className="admin-glass-control mt-2 w-full rounded-lg px-3 py-2"/>
+                <span className="mt-1 block text-xs font-normal text-slate-400">The personal code is required. A ₹1,000 reward with a ₹100 limit can be used up to 10 times, until its balance or expiry runs out.</span>
+              </label>
+            )}
+          </div>
         )}
 
         {['coupon', 'wallet_coupon'].includes(config.reward_mode) && (
@@ -170,9 +194,19 @@ export default function AffiliateManagement() {
                       </div>
                     ) : (
                       <span className="text-xs text-slate-300">{[
-                        Number(row.wallet_amount) > 0 ? `₹${Number(row.wallet_amount).toFixed(2)} wallet` : '',
+                        Number(row.wallet_amount) > 0
+                          ? row.wallet_bucket === 'referral'
+                            ? `₹${Number(row.wallet_amount).toFixed(2)} restricted referral balance`
+                            : `₹${Number(row.wallet_amount).toFixed(2)} spendable wallet`
+                          : '',
                         row.coupon_code ? `Coupon ${row.coupon_code}` : '',
-                      ].filter(Boolean).join(' · ') || 'No reward issued'}</span>
+                      ].filter(Boolean).join(' · ') || 'No reward issued'}
+                      {row.wallet_bucket === 'referral' && Number(row.referral_wallet_balance) > 0 && (
+                        <button type="button" disabled={processingId === row.claim_id} onClick={() => reissueCoupon(row)} className="mt-2 block rounded-lg border border-amber-300/20 px-2 py-1 text-xs font-semibold text-amber-200 disabled:opacity-50">
+                          {processingId === row.claim_id ? 'Reissuing…' : 'Reissue lost coupon'}
+                        </button>
+                      )}
+                      </span>
                     )}
                   </td>
                 </tr>)}

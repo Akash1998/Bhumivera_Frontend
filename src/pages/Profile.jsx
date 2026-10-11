@@ -14,6 +14,7 @@ import {
   returns as returnsApi,
   notifications as notificationsApi,
   coupons as couponsApi,
+  payments as paymentsApi,
   reviews as reviewsApi,
   warranty as warrantyApi,
   serials as serialsApi,
@@ -70,6 +71,24 @@ const TABS = [
   { id: 'affiliate',     label: 'Affiliate',     icon: Share2 },
   { id: 'support',       label: 'Support',       icon: LifeBuoy },
 ];
+
+let profileRazorpayScriptPromise;
+const loadProfileRazorpay = () => {
+  if (window.Razorpay) return Promise.resolve();
+  if (!profileRazorpayScriptPromise) {
+    profileRazorpayScriptPromise = new Promise((resolve, reject) => {
+      const script = document.createElement('script');
+      script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+      script.onload = () => resolve();
+      script.onerror = () => {
+        profileRazorpayScriptPromise = null;
+        reject(new Error('Could not load secure payment. Please try again.'));
+      };
+      document.body.appendChild(script);
+    });
+  }
+  return profileRazorpayScriptPromise;
+};
 
 const SECURITY_QUESTIONS = [
   "What is your mother's maiden name?",
@@ -203,7 +222,9 @@ export default function Profile() {
   const [orders, setOrders] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [wishlistError, setWishlistError] = useState('');
-  const [wallet, setWallet] = useState({ balance: 0, transactions: [] });
+  const [wallet, setWallet] = useState({ balance: 0, referralBalance: 0, transactions: [] });
+  const [walletTopUpAmount, setWalletTopUpAmount] = useState('1000');
+  const [walletTopUpBusy, setWalletTopUpBusy] = useState(false);
   const [addresses, setAddresses] = useState([]);
   const [returns, setReturns] = useState([]);
   const [returnEligibility, setReturnEligibility] = useState([]);
@@ -328,9 +349,60 @@ export default function Profile() {
     try {
       const [balRes, histRes] = await Promise.all([walletApi.getBalance(), walletApi.getHistory()]);
       const balance = balRes?.data?.balance ?? balRes?.data?.data?.balance ?? 0;
+      const referralBalance = balRes?.data?.referralBalance ?? balRes?.data?.data?.referralBalance ?? 0;
       const transactions = safeArr(safeExtract(histRes, 'transactions')) || safeArr(safeExtract(histRes, 'history')) || safeArr(safeExtract(histRes, 'data')) || safeArr(histRes?.data);
-      setWallet({ balance: Number(balance)||0, transactions });
+      setWallet({ balance: Number(balance)||0, referralBalance: Number(referralBalance)||0, transactions });
     } catch (_) {}
+  };
+
+  const purchaseWalletBalance = async event => {
+    event.preventDefault();
+    const amount = Number(walletTopUpAmount);
+    if (!Number.isFinite(amount) || amount < 1 || amount > 100000) {
+      toast.error('Enter a wallet top-up amount between ₹1 and ₹1,00,000.');
+      return;
+    }
+    setWalletTopUpBusy(true);
+    try {
+      await loadProfileRazorpay();
+      const { data: razorpayOrder } = await paymentsApi.createOrder({
+        amount: Math.round(amount * 100),
+        currency: 'INR',
+        purpose: 'wallet_topup',
+      });
+      const key = import.meta.env.VITE_RAZORPAY_KEY_ID || razorpayOrder.key_id;
+      if (!key || !razorpayOrder.order_id) throw new Error('Secure wallet payment is not configured.');
+      const checkout = new window.Razorpay({
+        key,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        name: 'Bhumivera',
+        description: 'Add spendable wallet balance',
+        order_id: razorpayOrder.order_id,
+        prefill: { name: user?.name || '', email: user?.email || '' },
+        theme: { color: '#2C3E2D' },
+        handler: async payment => {
+          try {
+            await walletApi.confirmTopUp(payment);
+            await loadWallet();
+            toast.success(`₹${amount.toFixed(2)} was added to your spendable wallet.`);
+          } catch (error) {
+            toast.error(`${error.response?.data?.message || 'Payment needs support review.'} Payment ID: ${payment.razorpay_payment_id}`);
+          } finally {
+            setWalletTopUpBusy(false);
+          }
+        },
+        modal: { ondismiss: () => setWalletTopUpBusy(false) },
+      });
+      checkout.on('payment.failed', paymentEvent => {
+        toast.error(paymentEvent.error?.description || 'Wallet payment failed. Please try again.');
+        setWalletTopUpBusy(false);
+      });
+      checkout.open();
+    } catch (error) {
+      toast.error(error.response?.data?.message || error.message || 'Could not start wallet top-up.');
+      setWalletTopUpBusy(false);
+    }
   };
   const loadAddresses = async () => {
     try {
@@ -939,7 +1011,7 @@ export default function Profile() {
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   <StatCard icon={Package} label="Total Orders" value={orders.length} accent="earth" onClick={() => setActiveTab('orders')}/>
                   <StatCard icon={Heart} label="Wishlist Items" value={wishlist.length} accent="sage" onClick={() => setActiveTab('wishlist')}/>
-                  <StatCard icon={Wallet} label="Wallet Balance" value={`₹${Number(wallet.balance||0).toFixed(2)}`} accent="gold" onClick={() => setActiveTab('wallet')}/>
+                  <StatCard icon={Wallet} label="Spendable Wallet" value={`₹${Number(wallet.balance||0).toFixed(2)}`} hint={`+ ₹${Number(wallet.referralBalance||0).toFixed(2)} referral reward credit`} accent="gold" onClick={() => setActiveTab('wallet')}/>
                   <StatCard icon={Bell} label="Unread Notifications" value={unreadCount} accent="sage" onClick={() => setActiveTab('notifications')}/>
                 </div>
 
@@ -992,6 +1064,10 @@ export default function Profile() {
                       </div>
                       <div className="text-sm text-stone-300 mb-1.5">Available Balance</div>
                       <div className="text-3xl font-bold tracking-tight mb-4">₹{Number(wallet.balance||0).toFixed(2)}</div>
+                      <div className="mb-4 rounded-xl border border-amber-300/30 bg-amber-300/10 p-3 text-sm text-amber-100">
+                        Referral reward balance: <strong>₹{Number(wallet.referralBalance||0).toFixed(2)}</strong>
+                        <span className="mt-1 block text-xs text-amber-100/70">Use your personal referral coupon at checkout. The per-order limit is set by Bhumivera.</span>
+                      </div>
                       <button onClick={() => setActiveTab('wallet')} className="w-full py-2.5 rounded-xl bg-[#0B2419] text-[#FDFBF7] text-sm font-semibold hover:bg-[#2C3E2D] transition-colors flex items-center justify-center gap-2">
                         View Ledger <ChevronRight className="w-4 h-4"/>
                       </button>
@@ -1198,6 +1274,10 @@ export default function Profile() {
                         <div className="text-xs uppercase tracking-[0.22em] text-[#8B9D83] font-semibold mb-2">Bhumivera Wallet</div>
                         <div className="text-sm text-stone-300 mb-1.5">Available Balance</div>
                         <div className="text-4xl sm:text-5xl font-bold tracking-tight">₹{Number(wallet.balance||0).toFixed(2)}</div>
+                        <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
+                          Restricted referral rewards: <strong>₹{Number(wallet.referralBalance||0).toFixed(2)}</strong>
+                          <span className="mt-1 block text-xs text-amber-800">Apply your personal referral coupon to use up to the per-order limit configured by Bhumivera.</span>
+                        </div>
                       </div>
                       <div className="w-14 h-14 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center">
                         <PiggyBank className="w-7 h-7 text-[#D4AF37]"/>
@@ -1209,6 +1289,20 @@ export default function Profile() {
                   </div>
                 </div>
 
+                <form onSubmit={purchaseWalletBalance} className="mb-5 rounded-2xl border border-stone-200 bg-white p-5 shadow-sm">
+                  <h3 className="font-semibold text-[#0B2419]">Add spendable wallet balance</h3>
+                  <p className="mt-1 text-sm text-stone-500">Purchase wallet funds securely with Razorpay. Purchased funds remain separate from restricted referral rewards.</p>
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {[500, 1000, 2000].map(amount => (
+                      <button key={amount} type="button" aria-pressed={Number(walletTopUpAmount) === amount} onClick={() => setWalletTopUpAmount(String(amount))} className={`rounded-lg border px-3 py-2 text-sm font-medium ${Number(walletTopUpAmount) === amount ? 'border-[#2C3E2D] bg-[#2C3E2D] text-white' : 'border-stone-200 text-[#2C3E2D]'}`}>₹{amount}</button>
+                    ))}
+                  </div>
+                  <label className="mt-3 block text-sm text-stone-700">Or enter an amount (₹)
+                    <input type="number" min="1" max="100000" step="1" required value={walletTopUpAmount} onChange={event => setWalletTopUpAmount(event.target.value)} className="mt-1 w-full rounded-lg border border-stone-200 px-3 py-2"/>
+                  </label>
+                  <button type="submit" disabled={walletTopUpBusy} className="mt-3 min-h-10 rounded-lg bg-[#2C3E2D] px-4 py-2 text-sm font-semibold text-white disabled:opacity-50">{walletTopUpBusy ? 'Opening secure payment…' : `Pay ₹${(Number(walletTopUpAmount) || 0).toFixed(2)} and add to wallet`}</button>
+                </form>
+
                 <section className="rounded-2xl bg-white border border-stone-200 p-5 shadow-sm">
                   <h3 className="font-semibold text-[#0B2419] mb-4 text-lg">Transaction History</h3>
                   {wallet.transactions.length === 0 ? (
@@ -1219,6 +1313,7 @@ export default function Profile() {
                         <thead>
                           <tr className="text-left text-xs uppercase tracking-wider text-stone-500 border-b border-stone-100">
                             <th className="py-3 px-3 font-semibold">Date</th>
+                            <th className="py-3 px-3 font-semibold">Wallet</th>
                             <th className="py-3 px-3 font-semibold">Type</th>
                             <th className="py-3 px-3 font-semibold">Description</th>
                             <th className="py-3 px-3 font-semibold">Reference</th>
@@ -1230,8 +1325,13 @@ export default function Profile() {
                             const type = (t.type||'').toLowerCase();
                             const positive = type.includes('credit') || type.includes('add') || type.includes('refund') || t.amount > 0;
                             return (
-                              <tr key={t.id} className="hover:bg-stone-50/60">
+                              <tr key={`${t.wallet_bucket || 'cash'}-${t.id}`} className="hover:bg-stone-50/60">
                                 <td className="py-3.5 px-3 text-stone-600 whitespace-nowrap">{t.created_at? new Date(t.created_at).toLocaleString():'—'}</td>
+                                <td className="py-3.5 px-3">
+                                  <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${t.wallet_bucket === 'referral' ? 'border border-amber-200 bg-amber-50 text-amber-800' : 'border border-emerald-100 bg-emerald-50 text-emerald-700'}`}>
+                                    {t.wallet_bucket === 'referral' ? 'Referral reward' : 'Spendable wallet'}
+                                  </span>
+                                </td>
                                 <td className="py-3.5 px-3">
                                   <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${positive?'bg-emerald-50 text-emerald-700 border border-emerald-100':'bg-rose-50 text-rose-700 border border-rose-100'}`}>
                                     {positive ? <ArrowDownLeft className="w-3 h-3"/> : <ArrowUpRight className="w-3 h-3"/>}

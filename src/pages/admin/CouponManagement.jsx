@@ -348,8 +348,11 @@ export default function CouponManagement() {
                     </td>
                     <td className="p-6">
                       <p className={`text-sm font-black ${isPerc ? 'text-blue-400' : 'text-emerald-400'}`}>
-                        {isPerc ? `${coupon.discount_value}% OFF` : `₹${coupon.discount_value} FLAT`}
+                        {coupon.reward_type === 'referral_wallet'
+                          ? `Up to ₹${coupon.wallet_per_order_limit || coupon.discount_value} referral balance / order`
+                          : isPerc ? `${coupon.discount_value}% OFF` : `₹${coupon.discount_value} FLAT`}
                       </p>
+                      {coupon.restricted_user_id && <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-amber-300">Assigned to customer #{coupon.restricted_user_id}</p>}
                       {coupon.min_purchase && (
                         <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">
                           Min Cart: ₹{coupon.min_purchase}
@@ -382,25 +385,27 @@ export default function CouponManagement() {
                     </td>
                     <td className="p-6 text-right">
                       <div className="flex items-center justify-end gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                        <button 
+                        <button
                           onClick={() => toggleStatus(coupon.id || coupon._id, coupon.status)}
                           className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
                           title="Toggle Suspend/Active"
                         >
                           {coupon.status === 'active' ? <Clock size={14} /> : <Zap size={14} />}
                         </button>
-                        <button 
-                          onClick={() => openModal(coupon)}
-                          className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl text-blue-500 hover:bg-blue-500 hover:text-white transition-all"
-                        >
-                          <Edit2 size={14} />
-                        </button>
-                        <button 
-                          onClick={() => handleDelete(coupon.id || coupon._id)}
-                          className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
-                        >
-                          <Trash2 size={14} />
-                        </button>
+                        {coupon.reward_type !== 'referral_wallet' && <>
+                          <button
+                            onClick={() => openModal(coupon)}
+                            className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl text-blue-500 hover:bg-blue-500 hover:text-white transition-all"
+                          >
+                            <Edit2 size={14} />
+                          </button>
+                          <button 
+                            onClick={() => handleDelete(coupon.id || coupon._id)}
+                            className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </>}
                       </div>
                     </td>
                   </tr>
