@@ -43,9 +43,10 @@ export const AuthProvider = ({ children }) => {
         : customerToken || warehouseToken;
       if (anyT) {
         let role = 'user';
+        const storedUser = getStoredUser() || {};
         try {
-          const d = decodeJWT(anyT); const su = getStoredUser() || {}; role = d?.role || su?.role || 'user';
-          let fu = su;
+          const d = decodeJWT(anyT); role = d?.role || storedUser?.role || 'user';
+          let fu = storedUser;
           if (role === 'admin' || role === 'superadmin') {
             fu = (await authApi.getAdminProfile()).data;
           } else if (role !== 'warehouse_admin') {
@@ -55,18 +56,38 @@ export const AuthProvider = ({ children }) => {
             } catch (error) {
               if (error.response?.status === 401) throw error;
               console.error('[AUTH_PROFILE_RESTORE]', error);
-              fu = su;
+              fu = storedUser;
             }
           }
           const f = { ...fu, role };
           setUser(f);
           if (role === 'admin' || role === 'superadmin') {
-            localStorage.setItem('adminToken', anyT);
+            const currentAdminToken = localStorage.getItem('adminToken') || anyT;
+            localStorage.setItem('adminToken', currentAdminToken);
+            setToken(currentAdminToken);
+          } else {
+            setToken(anyT);
           }
           localStorage.setItem('user', JSON.stringify(f));
-          setToken(anyT);
-        } catch (e) {
-          void logout(role === 'admin' || role === 'superadmin' ? 'admin' : 'customer');
+        } catch (error) {
+          if (role === 'admin' || role === 'superadmin') {
+            if ([401, 403].includes(error.response?.status)) {
+              void logout('admin');
+            } else {
+              console.error('[ADMIN_PROFILE_RESTORE]', error);
+              const claims = decodeJWT(localStorage.getItem('adminToken') || anyT) || {};
+              const restoredUser = storedUser && Object.keys(storedUser).length
+                ? { ...storedUser, role }
+                : { id: claims.id, email: claims.email, role };
+              const currentAdminToken = localStorage.getItem('adminToken') || anyT;
+              localStorage.setItem('adminToken', currentAdminToken);
+              localStorage.setItem('user', JSON.stringify(restoredUser));
+              setUser(restoredUser);
+              setToken(currentAdminToken);
+            }
+          } else {
+            void logout('customer');
+          }
         }
       }
       setLoading(false);
