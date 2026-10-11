@@ -7,6 +7,8 @@ export default function AffiliateManagement() {
   const [withdrawals, setWithdrawals] = useState([]);
   const [config, setConfig] = useState({ commission_percent: 10, min_payout: 500 });
   const [loading, setLoading] = useState(true);
+  const [workflowAvailable, setWorkflowAvailable] = useState(false);
+  const [loadError, setLoadError] = useState('');
 
   useEffect(() => { fetchAll(); }, []);
 
@@ -17,8 +19,13 @@ export default function AffiliateManagement() {
       setPartners(partnersRes.data?.partners || partnersRes.data || []);
       setWithdrawals(withdrawalsRes.data?.withdrawals || withdrawalsRes.data || []);
       setConfig(configRes.data?.config || configRes.data || { commission_percent: 10, min_payout: 500 });
+      setWorkflowAvailable(true);
     } catch (err) {
-      console.error(err);
+      if (err.response?.status !== 501) console.error(err);
+      setWorkflowAvailable(false);
+      setLoadError(err.response?.status === 501
+        ? 'Affiliate partners, commissions, and payouts are not available yet because these workflows are not persisted.'
+        : 'Unable to check affiliate workflow availability. Refresh to try again.');
     } finally {
       setLoading(false);
     }
@@ -50,6 +57,26 @@ export default function AffiliateManagement() {
       alert('Failed: ' + err.message);
     }
   };
+
+  if (loading) {
+    return <div className="admin-glass-panel rounded-2xl p-6 text-sm text-slate-300" role="status">Checking affiliate workflow availability…</div>;
+  }
+
+  if (!workflowAvailable) {
+    return (
+      <section className="admin-glass-panel rounded-2xl border border-amber-300/20 p-6 text-slate-100" aria-labelledby="affiliate-unavailable-title">
+        <div className="flex flex-wrap items-start justify-between gap-4">
+          <div>
+            <h2 id="affiliate-unavailable-title" className="text-xl font-semibold text-white">Affiliate network unavailable</h2>
+            <p className="mt-2 max-w-2xl text-sm leading-6 text-amber-100">{loadError || 'Affiliate partners, commission settings, and payout requests are not persisted yet. No changes can be saved or approved from this page.'}</p>
+          </div>
+          <button onClick={fetchAll} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10">
+            <RefreshCw size={14} /> Check again
+          </button>
+        </div>
+      </section>
+    );
+  }
 
   return (
     <div className="space-y-5 text-slate-100">

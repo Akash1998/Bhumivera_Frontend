@@ -121,9 +121,9 @@ export default function AnalyticsManagement() {
 
   const exportReport = () => {
     const rows = [
-      ['Section', 'Name', 'Orders / Units', 'Revenue (INR)'],
-      ...data.revenue.map(item => ['Daily revenue', item.label, item.orders, item.value]),
-      ...data.products.map(item => ['Product', item.name, item.units, item.revenue])
+      ['Section', 'Name', 'Orders / Units', 'Non-cancelled order value (INR)'],
+      ...data.revenue.map(item => ['Daily non-cancelled order value', item.label, item.orders, item.value]),
+      ...data.products.map(item => ['Product item value', item.name, item.units, item.revenue])
     ];
     const csv = rows.map(row => row.map(value => `"${String(value ?? '').replaceAll('"', '""')}"`).join(',')).join('\n');
     const url = URL.createObjectURL(new Blob([csv], { type: 'text/csv;charset=utf-8' }));
@@ -149,7 +149,7 @@ export default function AnalyticsManagement() {
           </div>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">Analytics</h1>
           <p className="mt-1 max-w-2xl text-sm leading-6 text-slate-400">
-            Revenue, orders, and product performance in Indian Rupees.
+            Order totals and product performance in Indian Rupees. Order value includes all non-cancelled orders, regardless of payment status; it is not net sales, cash received, or profit.
           </p>
         </div>
         <div className="flex w-full flex-col gap-2 sm:flex-row lg:w-auto">
@@ -220,9 +220,9 @@ export default function AnalyticsManagement() {
       ) : (
         <>
           <section aria-label="Key business metrics" className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            <MetricCard title="Revenue" value={formatMoney(metrics.revenue)} caption="Excludes cancelled orders" icon={IndianRupee} tone="emerald" />
+            <MetricCard title="Non-cancelled order value" value={formatMoney(metrics.revenue)} caption="Stored order totals; not net sales or cash received" icon={IndianRupee} tone="emerald" />
             <MetricCard title="Orders" value={number.format(totalOrders)} caption="Non-cancelled orders" icon={ShoppingCart} tone="blue" />
-            <MetricCard title="Average order value" value={formatMoney(averageOrder)} caption="Revenue divided by orders" icon={Activity} tone="violet" />
+            <MetricCard title="Average order value" value={formatMoney(averageOrder)} caption="Order value divided by non-cancelled orders" icon={Activity} tone="violet" />
             <MetricCard title="New customers" value={number.format(Number(metrics.newCustomers) || 0)} caption="Joined in this period" icon={Users} tone="amber" />
           </section>
 
@@ -230,14 +230,14 @@ export default function AnalyticsManagement() {
             <article className="admin-glass-panel min-w-0 rounded-2xl p-4 sm:p-5">
               <div className="mb-4 flex flex-wrap items-start justify-between gap-3">
                 <div>
-                  <h2 className="text-base font-bold text-white sm:text-lg">Revenue over time</h2>
-                  <p className="mt-1 text-xs text-slate-400">Daily totals, or monthly totals for the one-year view</p>
+                  <h2 className="text-base font-bold text-white sm:text-lg">Non-cancelled order value over time</h2>
+                  <p className="mt-1 text-xs text-slate-400">Stored order totals by creation date; refunds and payment settlement are not reconciled here.</p>
                 </div>
                 <span className="rounded-lg border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1 text-xs font-semibold text-emerald-200">
                   INR · ₹
                 </span>
               </div>
-              <div className="h-64 min-w-0 sm:h-80" aria-label="Revenue chart">
+              <div className="h-64 min-w-0 sm:h-80" aria-label="Non-cancelled order value chart">
                 {hasChartData ? (
                   <ResponsiveContainer width="100%" height="100%">
                     <AreaChart data={data.revenue} margin={{ top: 8, right: 8, left: 4, bottom: 0 }}>
@@ -259,7 +259,7 @@ export default function AnalyticsManagement() {
                     <div>
                       <BarChart3 className="mx-auto text-slate-500" size={28} aria-hidden="true" />
                       <p className="mt-2 text-sm font-semibold text-slate-300">No orders in this period</p>
-                      <p className="mt-1 text-xs text-slate-500">Revenue data will appear here when orders are placed.</p>
+                      <p className="mt-1 text-xs text-slate-500">Order value data will appear here when orders are placed.</p>
                     </div>
                   </div>
                 )}
@@ -268,8 +268,8 @@ export default function AnalyticsManagement() {
 
             <article className="admin-glass-panel rounded-2xl p-4 sm:p-5">
               <div className="mb-5">
-                <h2 className="text-base font-bold text-white sm:text-lg">Revenue by category</h2>
-                <p className="mt-1 text-xs text-slate-400">Top categories for this period</p>
+                <h2 className="text-base font-bold text-white sm:text-lg">Non-cancelled order-item value by category</h2>
+                <p className="mt-1 text-xs text-slate-400">Product line totals from orders not marked cancelled</p>
               </div>
               {data.categories.length ? (
                 <div className="space-y-5">
@@ -310,7 +310,7 @@ export default function AnalyticsManagement() {
                       <th scope="col" className="px-4 py-3 font-semibold sm:px-5">Product</th>
                       <th scope="col" className="px-4 py-3 font-semibold">Category</th>
                       <th scope="col" className="px-4 py-3 text-right font-semibold">Units sold</th>
-                      <th scope="col" className="px-4 py-3 text-right font-semibold sm:px-5">Revenue</th>
+                      <th scope="col" className="px-4 py-3 text-right font-semibold sm:px-5">Non-cancelled item value</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/[0.06]">

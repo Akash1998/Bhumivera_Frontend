@@ -30,15 +30,11 @@ export default function CategoryManagement() {
   const [form, setForm] = useState({ name: '', slug: '', description: '', category_id: '', is_active: 1, image_url: '' });
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // --- MOCK AUDIT LOG (for extended UI depth) ---
-  const [auditLogs, setAuditLogs] = useState([]);
-
   const { showToast } = useToast() || {};
 
   // --- INITIALIZATION ---
   useEffect(() => { 
     fetchTaxonomy(); 
-    generateMockAuditLog();
   }, []);
 
   const fetchTaxonomy = async () => {
@@ -68,25 +64,6 @@ export default function CategoryManagement() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const generateMockAuditLog = () => {
-    const logs = [
-      { id: 1, action: 'SYSTEM_INIT', target: 'Taxonomy Engine', time: new Date(Date.now() - 86400000).toISOString(), user: 'ROOT' },
-      { id: 2, action: 'SYNC_COMPLETE', target: 'Master Categories', time: new Date(Date.now() - 3600000).toISOString(), user: 'SYSTEM' },
-      { id: 3, action: 'HEALTH_CHECK', target: 'SEO Meta Tags', time: new Date().toISOString(), user: 'CRON_JOB' },
-    ];
-    setAuditLogs(logs);
-  };
-
-  const logAction = (action, target) => {
-    setAuditLogs(prev => [{
-      id: Date.now(),
-      action,
-      target,
-      time: new Date().toISOString(),
-      user: 'ADMIN'
-    }, ...prev].slice(0, 10)); // Keep last 10 logs
   };
 
   // --- UTILITY FUNCTIONS ---
@@ -185,7 +162,6 @@ export default function CategoryManagement() {
 
   // --- DATA EXPORT PROTOCOL ---
   const exportTaxonomyCSV = () => {
-    logAction('EXPORT_DATA', 'Taxonomy CSV');
     
     const headers = ['access Level', 'ID', 'Name', 'Slug', 'Parent ID', 'SEO Score', 'Created At'];
     const rows = [];
@@ -253,11 +229,9 @@ export default function CategoryManagement() {
 
       if (editingItem) {
         await api.put(`${endpoint}/${editingItem.id || editingItem._id}`, payload);
-        logAction('UPDATE_access', payload.name);
         showToast?.(`${modalMode === 'category' ? 'Cluster' : 'Sub-access'} synchronized`, 'success');
       } else {
         await api.post(endpoint, payload);
-        logAction('DEPLOY_access', payload.name);
         showToast?.(`${modalMode === 'category' ? 'Cluster' : 'Sub-access'} deployed to matrix`, 'success');
       }
       setIsModalOpen(false);
@@ -284,7 +258,6 @@ export default function CategoryManagement() {
     try {
       const endpoint = isCategory ? `/categories/${id}` : `/subcategories/${id}`;
       await api.delete(endpoint);
-      logAction('PURGE_access', `ID: ${id}`);
       showToast?.('Entity purged from active memory', 'success');
       fetchTaxonomy();
     } catch (err) {
@@ -306,7 +279,6 @@ export default function CategoryManagement() {
         const mode = isCat ? 'category' : 'subcategory';
         await handleDelete(id, mode, true);
       }
-      logAction('BULK_PURGE', `${selectedaccesss.length} accesss`);
       setSelectedaccesss([]);
     } catch (error) {
       showToast?.('Bulk purge encountered an error.', 'error');
@@ -686,17 +658,10 @@ export default function CategoryManagement() {
           <div className="h-1/3 bg-[#081b15]/80 backdrop-blur-xl border-l border-t border-slate-800/80 flex flex-col">
             <div className="p-3 border-b border-slate-800/80 bg-[#10241f]/85 backdrop-blur-xl flex items-center gap-2">
               <Terminal size={14} className="text-emerald-500" />
-              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">System Event Log</h3>
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Audit history</h3>
             </div>
-            <div className="flex-1 overflow-y-auto p-3 space-y-2 content-scroll">
-              {auditLogs.map(log => (
-                <div key={log.id} className="text-[10px] font-mono leading-tight">
-                  <span className="text-slate-600">[{new Date(log.time).toLocaleTimeString()}]</span>{' '}
-                  <span className="text-blue-400">{log.user}</span>{' '}
-                  <span className="text-emerald-400">{log.action}</span>{' '}
-                  <span className="text-slate-300">{log.target}</span>
-                </div>
-              ))}
+            <div className="flex flex-1 items-center justify-center p-4 text-center text-xs leading-5 text-amber-100/75">
+              Category changes are not recorded in a persistent audit history yet. This panel does not show simulated events.
             </div>
           </div>
         </div>
