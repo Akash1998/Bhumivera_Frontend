@@ -71,9 +71,15 @@ export default function MiniCart() {
   const [addressForm, setAddressForm] = useState(blankAddress);
   const [addressFormOpen, setAddressFormOpen] = useState(false);
   const [addressSaving, setAddressSaving] = useState(false);
-  const [paymentMode, setPaymentMode] = useState('COD');
+  const [paymentMode, setPaymentMode] = useState('online');
   const [shippingMethod, setShippingMethod] = useState('STANDARD');
   const [walletBalance, setWalletBalance] = useState(0);
+  const [codEligibility, setCodEligibility] = useState({
+    eligible: false,
+    deliveredOrderCount: 0,
+    requiredDeliveredOrders: 2,
+    available: false,
+  });
   const [placingOrder, setPlacingOrder] = useState(false);
   const [orderNotes, setOrderNotes] = useState('');
   const [whatsappUpdatesOptIn, setWhatsappUpdatesOptIn] = useState(false);
@@ -183,7 +189,11 @@ export default function MiniCart() {
         console.error('[MINI_CART_WHATSAPP_PREFERENCE]', error);
         return { data: {} };
       }),
-    ]).then(([addressResponse, walletResponse, whatsappResponse, profileResponse]) => {
+      ordersApi.getCodEligibility().then(response => response.data).catch(error => {
+        console.error('[MINI_CART_COD_ELIGIBILITY]', error);
+        return null;
+      }),
+    ]).then(([addressResponse, walletResponse, whatsappResponse, profileResponse, eligibility]) => {
       if (!active) return;
       const list = addressResponse.data?.addresses || addressResponse.data?.data || addressResponse.data || [];
       const savedAddresses = Array.isArray(list) ? list : [];
@@ -195,6 +205,9 @@ export default function MiniCart() {
         whatsappResponse.data?.available === true &&
         Boolean(Number(profileResponse.data?.whatsapp_order_updates_opt_in))
       );
+      setCodEligibility(eligibility
+        ? { ...eligibility, available: true }
+        : { eligible: false, deliveredOrderCount: 0, requiredDeliveredOrders: 2, available: false });
     }).catch(error => {
       console.error('[MINI_CART_CHECKOUT_DETAILS]', error);
       if (active) toast.error(error.response?.data?.message || 'Could not load checkout details. Please try again.');
@@ -336,6 +349,10 @@ export default function MiniCart() {
 
   const placeOrder = async event => {
     event.preventDefault();
+    if (paymentMode === 'COD' && !codEligibility.eligible) {
+      toast.error('Cash on delivery is available after 2 orders have been successfully delivered.');
+      return;
+    }
     if (!selectedAddress) {
       toast.error('Choose or add a delivery address before placing your order.');
       return;
@@ -534,9 +551,16 @@ export default function MiniCart() {
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs font-bold text-[#35533c]">Payment method</p>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'COD'} onChange={() => setPaymentMode('COD')} className="accent-[#35533c]"/>Cash on delivery</label>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'online'} onChange={() => { setPaymentMode('online'); setImpactAmount(0); }} className="accent-[#35533c]"/>Pay online with Razorpay</label>
+                  <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'online'} onChange={() => { setPaymentMode('online'); setImpactAmount(0); }} className="accent-[#35533c]"/>Pay securely with Razorpay <span className="ml-auto text-[9px] font-bold uppercase tracking-wide text-emerald-700">Recommended</span></label>
                   <label className="flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><span className="flex items-center gap-2"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'WALLET'} onChange={() => { setPaymentMode('WALLET'); setImpactAmount(0); }} className="accent-[#35533c]"/>Bhumivera wallet</span><span className="text-stone-500">Balance {formatPrice(walletBalance)}</span></label>
+                  <label className={`flex items-center gap-2 rounded-xl border bg-white p-3 text-xs ${codEligibility.eligible ? 'cursor-pointer border-[#e8dcc4]' : 'cursor-not-allowed border-[#e8dcc4] opacity-70'}`}><input type="radio" name="mini-cart-payment" checked={paymentMode === 'COD'} disabled={!codEligibility.eligible} onChange={() => setPaymentMode('COD')} className="accent-[#35533c]"/>Cash on delivery</label>
+                  <p role="status" className="rounded-lg bg-[#f7f3ea] px-3 py-2 text-[10px] leading-4 text-stone-600">
+                    {!codEligibility.available
+                      ? 'Cash on delivery eligibility could not be checked. Please use Razorpay or Wallet, or try again shortly.'
+                      : codEligibility.eligible
+                        ? 'Cash on delivery is available because you have 2 successfully delivered orders.'
+                        : `Cash on delivery unlocks after 2 orders are successfully delivered. You have ${codEligibility.deliveredOrderCount} delivered order${codEligibility.deliveredOrderCount === 1 ? '' : 's'} so far. You can still place your order with Razorpay or Wallet.`}
+                  </p>
                 </div>
                 <div className="rounded-xl border border-[#d7dfce] bg-white p-3 text-xs leading-5 text-stone-600">
                   {whatsappUpdatesAvailable ? <label className="flex cursor-pointer items-start gap-2">
@@ -627,7 +651,7 @@ export default function MiniCart() {
                 {placingOrder ? 'Preparing your order…' : <>{paymentMode === 'COD' ? 'Place order · cash on delivery' : paymentMode === 'online' ? 'Pay securely with Razorpay' : 'Place wallet order'} <ArrowRight size={16}/></>}
               </button>
               <button type="button" onClick={() => setCheckoutOpen(false)} className="mt-2 w-full py-2 text-xs font-semibold text-stone-500 hover:text-[#2C3E2D]">Back to cart</button>
-              {paymentMode === 'WALLET' && walletBalance < finalTotal && <p className="mt-1 text-center text-[10px] text-rose-700">Add funds to your wallet or choose cash on delivery.</p>}
+              {paymentMode === 'WALLET' && walletBalance < finalTotal && <p className="mt-1 text-center text-[10px] text-rose-700">Add funds to your wallet or choose Razorpay.</p>}
               <p className="mt-1 text-center text-[9px] leading-4 text-stone-500">Your selected address, delivery, payment and pledge are confirmed before placing this order.</p>
             </form>
             : <button type="button" onClick={continueToCheckout} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#8b5a2b] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-md transition hover:bg-[#6b4421]">Continue to checkout <ArrowRight size={16}/></button>}

@@ -322,7 +322,7 @@ export const cartRules = {
   toggle: (id, status) => api.patch(`/settings/cart-rules/${id}/toggle`, { status }),
   preview: subtotal => api.get('/settings/cart-rules/preview', { params: { subtotal } }),
 };
-export const orders = { getMyOrders: () => api.get("/orders/my"), getById: id => api.get(`/orders/${id}`), create: (d, options) => api.post("/orders", d, options), getAllAdmin: () => api.get("/orders/all"), updateStatus: (id, s) => api.put(`/orders/${id}/status`, { status: s }), delete: id => api.delete(`/orders/${id}`), fastCheckout: d => api.post('/orders', d), cancel: id => api.post(`/orders/${id}/cancel`, {}), trackOrder: id => api.get(`/orders/${id}`) };
+export const orders = { getMyOrders: () => api.get("/orders/my"), getById: id => api.get(`/orders/${id}`), getCodEligibility: () => api.get('/orders/cod-eligibility'), create: (d, options) => api.post("/orders", d, options), getAllAdmin: () => api.get("/orders/all"), updateStatus: (id, s) => api.put(`/orders/${id}/status`, { status: s }), delete: id => api.delete(`/orders/${id}`), fastCheckout: d => api.post('/orders', d), cancel: id => api.post(`/orders/${id}/cancel`, {}), trackOrder: id => api.get(`/orders/${id}`) };
 export const payments = {
   createOrder: data => api.post('/create-order', data, { notify: false }),
   verifyPayment: data => api.post('/verify-payment', data, { notify: false }),
