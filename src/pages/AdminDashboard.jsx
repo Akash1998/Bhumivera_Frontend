@@ -37,6 +37,7 @@ const PersonalizationCenter = lazy(() => import('./admin/PersonalizationCenter.j
 const ABExperimentLab = lazy(() => import('./admin/ABExperimentLab.jsx'));
 const LoyaltyTierForge = lazy(() => import('./admin/LoyaltyTierForge.jsx'));
 const ImpactManagement = lazy(() => import('./admin/ImpactManagement.jsx'));
+const GrowthOffersHub = lazy(() => import('./admin/GrowthOffersHub.jsx'));
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -92,6 +93,7 @@ const TAB_COMPONENTS = {
   personalization: PersonalizationCenter,
   'ab-experiments': ABExperimentLab,
   'loyalty-tiers': LoyaltyTierForge,
+  'growth-offers': GrowthOffersHub,
   impact: ImpactManagement,
 };
 
@@ -102,6 +104,7 @@ const TAB_ICONS = {
   'flash-sales': Zap, reviews: Star, 'min-cart-value': SlidersHorizontal, 'cart-rules': SlidersHorizontal,
   gamification: Gamepad2, 'lifecycle-offers': Mail, personalization: Users,
   'ab-experiments': FlaskConical, 'loyalty-tiers': Award, support: LifeBuoy,
+  'growth-offers': Gift,
   returns: Truck, settings: Settings2, tax: Tags, gst: FileText, users: Users
 };
 
@@ -136,14 +139,7 @@ export default function AdminDashboard() {
       ]
     },
     {
-      title: 'Growth & offers', items: [
-        { id: 'loyalty', label: 'Loyalty' }, { id: 'affiliate', label: 'Affiliates' },
-        { id: 'coupons', label: 'Coupons' }, { id: 'flash-sales', label: 'Flash Sales' },
-        { id: 'min-cart-value', label: 'Cart minimums' }, { id: 'cart-rules', label: 'Cart rules' },
-        { id: 'gamification', label: 'Gamification' }, { id: 'lifecycle-offers', label: 'Lifecycle offers' },
-        { id: 'personalization', label: 'Personalization' }, { id: 'ab-experiments', label: 'A/B experiments' },
-        { id: 'loyalty-tiers', label: 'Loyalty tiers' }
-      ]
+      title: 'Growth & offers', items: [{ id: 'growth-offers', label: 'Growth & offers' }]
     },
     {
       title: 'Platform', items: [
@@ -153,7 +149,7 @@ export default function AdminDashboard() {
     },
   ];
 
-  const quickTabs = ['overview', 'orders', 'products', 'users', 'reviews', 'support', 'coupons'];
+  const quickTabs = ['overview', 'orders', 'products', 'users', 'reviews', 'support', 'growth-offers'];
   const allMenuItems = menuSections.flatMap(section => section.items);
   const quickItems = quickTabs.map(id => allMenuItems.find(item => item.id === id)).filter(Boolean);
   const normalizedSearch = navSearch.trim().toLowerCase();
