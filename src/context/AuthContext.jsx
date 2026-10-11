@@ -138,22 +138,29 @@ export const AuthProvider = ({ children }) => {
   const verifyEmail = async dt => { const r = await authApi.verifyEmail(dt); const { token: nt, user: ud } = r.data; const d = decodeJWT(nt); const f = { ...ud, role: d?.role || ud?.role || 'user' }; localStorage.setItem('token', nt); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
   const logout = async (scope) => {
     if (window.location.pathname.startsWith('/warehouse')) return;
-    const wp = window.location.pathname.startsWith('/warehouse');
-    if (wp) return;
     const isAdminPath = window.location.pathname.includes('/admin');
+    const isAdminLogout = scope === 'admin' || (!scope && isAdminPath);
     const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('TIMEOUT')), 300));
     try {
-      const serverFn = (scope === 'admin' || isAdminPath) ? authApi.adminLogout : authApi.logout;
+      const serverFn = isAdminLogout ? authApi.adminLogout : authApi.logout;
       await Promise.race([serverFn().catch(() => null), timeout]).catch(() => null);
     } catch (_) { }
-    if (scope === 'admin' || isAdminPath) {
+    if (isAdminLogout) {
       localStorage.removeItem('adminToken');
       localStorage.removeItem('adminLastActivity');
       setToken(null); setUser(null);
       if (isAdminPath) window.location.href = '/admin/login';
       return;
     }
-    ['token', 'ms_token', 'user'].forEach(k => localStorage.removeItem(k));
+    localStorage.removeItem('token');
+    localStorage.removeItem('ms_token');
+    const currentUser = getStoredUser();
+    if (localStorage.getItem('adminToken') && ['admin', 'superadmin'].includes(currentUser?.role)) {
+      setToken(localStorage.getItem('adminToken'));
+      setUser(currentUser);
+      return;
+    }
+    localStorage.removeItem('user');
     setToken(null); setUser(null);
   };
 

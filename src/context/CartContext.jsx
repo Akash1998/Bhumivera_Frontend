@@ -17,12 +17,14 @@ export const CartProvider = ({ children }) => {
   const [couponStackPolicy, setCouponStackPolicy] = useState('rule_first');
   const [rulePreviewLoading, setRulePreviewLoading] = useState(false);
   const previousRuleIds = useRef(null);
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
+  const isCustomerAuthenticated = isAuthenticated &&
+    !['admin', 'superadmin', 'warehouse_admin'].includes(user?.role);
   const { settings } = useSettings();
   const toast = useToast();
 
   const loadCart = useCallback(async () => {
-    if (isAuthenticated) {
+    if (isCustomerAuthenticated) {
       setCartLoading(true);
       setRulePreviewLoading(true);
       try {
@@ -55,7 +57,7 @@ export const CartProvider = ({ children }) => {
         setCart([]);
       }
     }
-  }, [isAuthenticated]);
+  }, [isCustomerAuthenticated]);
 
   const saveGuestCart = (nextCart, failureMessage) => {
     try {
@@ -86,7 +88,7 @@ export const CartProvider = ({ children }) => {
       return updated;
     };
 
-    if (isAuthenticated) setCart(prev => addProduct(prev));
+    if (isCustomerAuthenticated) setCart(prev => addProduct(prev));
     else if (!saveGuestCart(addProduct(cart), 'Could not add this product to your cart.')) return false;
 
     setIsCartOpen(true);
@@ -96,7 +98,7 @@ export const CartProvider = ({ children }) => {
     }
 
     // 3. Background DB Sync
-    if (isAuthenticated) {
+    if (isCustomerAuthenticated) {
       try {
         await cartApi.add({ productId: prodId, quantity: qty });
         await loadCart(); // Re-sync to assure accuracy
@@ -126,10 +128,10 @@ export const CartProvider = ({ children }) => {
       if (idx > -1) updated[idx] = { ...updated[idx], quantity: newQty };
       return updated;
     };
-    if (isAuthenticated) setCart(prev => update(prev));
+    if (isCustomerAuthenticated) setCart(prev => update(prev));
     else if (!saveGuestCart(update(cart), 'Could not update the cart quantity.')) return false;
     
-    if (isAuthenticated) {
+    if (isCustomerAuthenticated) {
       try {
         await cartApi.updateQuantity(productId, newQty, { notify });
         await loadCart();
@@ -152,10 +154,10 @@ export const CartProvider = ({ children }) => {
       const updated = safeCart.filter(i => String(i.product_id || i.id) !== String(id));
       return updated;
     };
-    if (isAuthenticated) setCart(prev => remove(prev));
+    if (isCustomerAuthenticated) setCart(prev => remove(prev));
     else if (!saveGuestCart(remove(cart), 'Could not remove this item from your cart.')) return false;
 
-    if (isAuthenticated) {
+    if (isCustomerAuthenticated) {
       try {
         await cartApi.remove(id, { notify });
         await loadCart();
@@ -174,7 +176,7 @@ export const CartProvider = ({ children }) => {
   const clearCart = async () => {
     const previousCart = cart;
     try {
-      if (isAuthenticated) {
+      if (isCustomerAuthenticated) {
         setCart([]);
         await cartApi.clear();
       } else {

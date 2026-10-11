@@ -20,6 +20,8 @@ function readGuestWishlist() {
 
 export function WishlistProvider({ children }) {
   const { user, token } = useAuth();
+  const isCustomerAuthenticated = Boolean(token) &&
+    !['admin', 'superadmin', 'warehouse_admin'].includes(user?.role);
   const toast = useToast();
   const [wishlist, setWishlist] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -42,14 +44,14 @@ export function WishlistProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    if (user && token) {
+    if (isCustomerAuthenticated) {
       fetchWishlistFromAPI();
     } else {
       setError('');
       setWishlist(readGuestWishlist());
       setLoading(false);
     }
-  }, [user, token, fetchWishlistFromAPI]);
+  }, [isCustomerAuthenticated, user, token, fetchWishlistFromAPI]);
 
   const isWishlisted = useCallback(productId => {
     return wishlist.some(item => String(productIdOf(item)) === String(productId));
@@ -57,7 +59,7 @@ export function WishlistProvider({ children }) {
 
   const removeFromWishlist = useCallback(async (productId, { notify = true } = {}) => {
     if (productId === undefined || productId === null) return false;
-    if (user && token) {
+    if (isCustomerAuthenticated) {
       setWishlist(current => current.filter(item => String(productIdOf(item)) !== String(productId)));
       try {
         await wishlistApi.remove(productId, { notify });
@@ -80,7 +82,7 @@ export function WishlistProvider({ children }) {
       return false;
     }
     return true;
-  }, [wishlist, user, token, fetchWishlistFromAPI, toast]);
+  }, [wishlist, isCustomerAuthenticated, fetchWishlistFromAPI, toast]);
 
   const toggleWishlist = useCallback(async (product, { notify = true } = {}) => {
     const productId = productIdOf(product);
@@ -90,7 +92,7 @@ export function WishlistProvider({ children }) {
     }
     if (isWishlisted(productId)) return removeFromWishlist(productId);
 
-    if (user && token) {
+    if (isCustomerAuthenticated) {
       try {
         await wishlistApi.add(productId, { notify });
         setWishlist(current => current.some(item => String(productIdOf(item)) === String(productId)) ? current : [...current, product]);
@@ -113,10 +115,10 @@ export function WishlistProvider({ children }) {
       return false;
     }
     return true;
-  }, [wishlist, user, token, isWishlisted, removeFromWishlist, toast]);
+  }, [wishlist, isCustomerAuthenticated, isWishlisted, removeFromWishlist, toast]);
 
   const clearWishlist = useCallback(async () => {
-    if (user && token) {
+    if (isCustomerAuthenticated) {
       const results = await Promise.all(wishlist.map(item => removeFromWishlist(productIdOf(item), { notify: false })));
       if (results.every(Boolean)) {
         toast.success('Wishlist cleared successfully.');
@@ -135,7 +137,7 @@ export function WishlistProvider({ children }) {
       return false;
     }
     return true;
-  }, [wishlist, user, token, removeFromWishlist, toast]);
+  }, [wishlist, isCustomerAuthenticated, removeFromWishlist, toast]);
 
   return (
     <WishlistContext.Provider value={{ wishlist, loading, error, isWishlisted, toggleWishlist, removeFromWishlist, clearWishlist, refreshWishlist: fetchWishlistFromAPI, count: wishlist.length }}>

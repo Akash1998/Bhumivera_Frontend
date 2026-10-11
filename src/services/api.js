@@ -298,8 +298,6 @@ api.interceptors.response.use(response => {
       localStorage.removeItem("ms_token");
       localStorage.removeItem("user");
       window.dispatchEvent(new Event('auth-expired'));
-    } else if (refreshable && !url.startsWith("/settings/public")) {
-      window.dispatchEvent(new Event('auth-expired'));
     }
   }
   notifyMutationFailure(e);
