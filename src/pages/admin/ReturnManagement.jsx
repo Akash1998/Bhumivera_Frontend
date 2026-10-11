@@ -45,6 +45,8 @@ export default function ReturnManagement() {
   const [conditionGrade, setConditionGrade] = useState('A');
   const [adminNotes, setAdminNotes] = useState('');
   const [refundOverride, setRefundOverride] = useState('');
+  const [returnLabels, setReturnLabels] = useState([]);
+  const [returnLabelForm, setReturnLabelForm] = useState({ provider: 'shiprocket', weight: '1', length: '20', width: '15', height: '10' });
 
   const { showToast } = useToast() || {};
 
@@ -63,6 +65,54 @@ export default function ReturnManagement() {
   useEffect(() => {
     fetchReturns();
   }, [fetchReturns]);
+
+  const loadReturnLabels = async returnId => {
+    try {
+      const response = await api.get('/shipping/labels', { params: { return_id: returnId } });
+      setReturnLabels(response.data || []);
+    } catch (err) {
+      showToast?.(err.response?.data?.message || 'Could not load return shipping labels.', 'error');
+    }
+  };
+
+  const handleCreateReturnLabel = async event => {
+    event.preventDefault();
+    if (!selectedRMA) return;
+    setIsUpdating(true);
+    try {
+      const response = await api.post('/shipping/labels', {
+        order_id: selectedRMA.order_id,
+        return_id: selectedRMA.id || selectedRMA._id,
+        direction: 'return',
+        provider: returnLabelForm.provider,
+        weight: Number(returnLabelForm.weight),
+        length: Number(returnLabelForm.length),
+        width: Number(returnLabelForm.width),
+        height: Number(returnLabelForm.height),
+      });
+      setReturnLabels(current => [response.data, ...current]);
+      showToast?.('Return pickup booked and label details saved.', 'success');
+    } catch (err) {
+      showToast?.(err.response?.data?.message || 'Could not book return pickup.', 'error');
+      await loadReturnLabels(selectedRMA.id || selectedRMA._id);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const downloadReturnLabel = async label => {
+    try {
+      const response = await api.get(`/shipping/labels/${label.id}/file`, { responseType: 'blob' });
+      const url = URL.createObjectURL(response.data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Bhumivera_return_label_${label.id}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      showToast?.(err.response?.data?.message || 'Could not download return label.', 'error');
+    }
+  };
 
   const getImageUrl = (img) => {
     if (!img) return '/logo.webp';
@@ -324,6 +374,8 @@ export default function ReturnManagement() {
                       <button 
                         onClick={() => {
                           setSelectedRMA(rma);
+                          setReturnLabels([]);
+                          loadReturnLabels(rma.id || rma._id);
                           setConditionGrade(rma.condition_grade || 'A');
                           setAdminNotes(rma.admin_notes || '');
                           setRefundOverride(rma.refund_amount || '');
@@ -523,6 +575,34 @@ export default function ReturnManagement() {
                           onClick={() => handleUpdateStatus(selectedRMA.id || selectedRMA._id, 'rejected')}
                           className="w-full py-3 bg-rose-600/15 text-rose-300 border border-rose-500/30 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-rose-600 hover:text-white transition-all disabled:opacity-50"
                         >Decline with reason (add note first)</button>
+                      </>}
+                      {selectedRMA.status === 'return_in_progress' && <>
+                        <form onSubmit={handleCreateReturnLabel} className="space-y-2 rounded-xl border border-slate-700 bg-white/[0.025] p-3">
+                          <p className="text-[10px] font-bold uppercase tracking-wider text-slate-300">Book customer return pickup</p>
+                          <select value={returnLabelForm.provider} onChange={event => setReturnLabelForm(current => ({ ...current, provider: event.target.value }))} className="w-full rounded-lg border border-slate-700 bg-[#081b15] p-2 text-xs text-white">
+                            <option value="shiprocket">Shiprocket</option>
+                            <option value="delhivery">Delhivery</option>
+                          </select>
+                          <div className="grid grid-cols-2 gap-2">
+                            {[
+                              ['weight', 'Weight (kg)'], ['length', 'Length (cm)'],
+                              ['width', 'Width (cm)'], ['height', 'Height (cm)'],
+                            ].map(([key, label]) => <label key={key} className="text-[10px] text-slate-400">{label}
+                              <input required type="number" min="0.01" step="0.01" value={returnLabelForm[key]} onChange={event => setReturnLabelForm(current => ({ ...current, [key]: event.target.value }))} className="mt-1 w-full rounded-lg border border-slate-700 bg-[#081b15] p-2 text-xs text-white" />
+                            </label>)}
+                          </div>
+                          <button disabled={isUpdating} className="w-full rounded-lg bg-rose-500/20 py-2 text-[10px] font-black uppercase tracking-wider text-rose-200 disabled:opacity-50">{isUpdating ? 'Booking pickup…' : 'Book reverse pickup & label'}</button>
+                        </form>
+                        <div className="space-y-2">
+                          {returnLabels.map(label => <div key={label.id} className="flex items-center justify-between gap-2 rounded-lg border border-slate-800 p-3 text-xs">
+                            <div><span className="capitalize text-white">{label.provider}</span><span className="ml-2 text-slate-400">{label.status}</span>
+                              {label.tracking_number && <p className="mt-1 text-slate-500">AWB: {label.tracking_number}</p>}
+                              {label.error_message && <p className="mt-1 text-rose-300">{label.error_message}</p>}
+                            </div>
+                            {label.status === 'booked' && <button type="button" onClick={() => downloadReturnLabel(label)} className="rounded border border-rose-500/40 px-2 py-1 text-rose-200">PDF</button>}
+                          </div>)}
+                          {!returnLabels.length && <p className="text-center text-[10px] text-slate-500">No return pickup label booked.</p>}
+                        </div>
                       </>}
                       {selectedRMA.status === 'return_in_progress' && <button
                         disabled={isUpdating}

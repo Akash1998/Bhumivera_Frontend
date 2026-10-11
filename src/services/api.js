@@ -106,6 +106,8 @@ api.interceptors.request.use(c => {
     url.startsWith("/coupons") && !url.startsWith("/coupons/validate") && (c.method === "post" || c.method === "put" || c.method === "delete" || url.includes("/coupons") && c.method === "get" && !url.includes("/public/")) ||
     url.startsWith("/settings") ||
     url.startsWith("/shipping") && c.method !== "get" ||
+    url.startsWith("/shipping/carriers") ||
+    url.startsWith("/shipping/labels") ||
     url.startsWith("/shipping/zones") && c.method === "get" && !url.includes("/active") ||
     url.startsWith("/contact") && c.method !== "post" && !url.startsWith("/contact/my") ||
     url.startsWith("/tax") && c.method !== "get" ||
@@ -142,6 +144,8 @@ const _resolveTokenKind = (url = '', method = '', adminAuth = false) => {
     (url.startsWith("/flash-sales/") && !url.startsWith("/flash-sales/active")) ||
     url.startsWith("/orders/all") ||
     url.startsWith("/orders/") && (method === 'put' || method === 'delete') ||
+    url.startsWith("/shipping/carriers") ||
+    url.startsWith("/shipping/labels") ||
     url.startsWith("/analytics/") ||
     url.startsWith("/settings") ||
     url.startsWith("/notifications/admin/") ||

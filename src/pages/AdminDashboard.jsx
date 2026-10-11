@@ -1,7 +1,7 @@
 import React, { useState, Suspense, Component, lazy } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Activity, Award, Bell, Boxes, ChartNoAxesCombined, FlaskConical,
+  Activity, Award, Bell, Boxes, ChartNoAxesCombined, FileText, FlaskConical,
   Gamepad2, Gift, Leaf, LifeBuoy, Mail, Package, ScrollText, Settings2,
   ShoppingBag, SlidersHorizontal, Star, Tags, Truck, Users, Warehouse, Zap
 } from 'lucide-react';
@@ -25,6 +25,7 @@ const LoyaltyManagement = lazy(() => import('./admin/LoyaltyManagement'));
 const AffiliateManagement = lazy(() => import('./admin/AffiliateManagement'));
 const NotificationManagement = lazy(() => import('./admin/NotificationManagement'));
 const TaxManagement = lazy(() => import('./admin/TaxManagement'));
+const GSTAccounting = lazy(() => import('./admin/GSTAccounting'));
 const SystemLogs = lazy(() => import('./admin/SystemLogs'));
 const WarehouseManagement = lazy(() => import('./admin/WarehouseManagement'));
 const ShippingManagement = lazy(() => import('./admin/ShippingManagement')); 
@@ -84,7 +85,7 @@ const TAB_COMPONENTS = {
   analytics: AnalyticsManagement,
   contact: ContactManagement,
   notifications: NotificationManagement,
-  tax: TaxManagement, shipping: ShippingManagement, logs: SystemLogs,
+  tax: TaxManagement, gst: GSTAccounting, shipping: ShippingManagement, logs: SystemLogs,
   warehouse: WarehouseManagement, settings: AdminSettings,
   'min-cart-value': MinCartValueCenter,
   'cart-rules': CartRulesEngine,
@@ -103,7 +104,7 @@ const TAB_ICONS = {
   'flash-sales': Zap, reviews: Star, 'min-cart-value': SlidersHorizontal, 'cart-rules': SlidersHorizontal,
   gamification: Gamepad2, 'lifecycle-offers': Mail, personalization: Users,
   'ab-experiments': FlaskConical, 'loyalty-tiers': Award, support: LifeBuoy,
-  returns: Truck, contact: Mail, settings: Settings2, tax: Tags, users: Users
+  returns: Truck, contact: Mail, settings: Settings2, tax: Tags, gst: FileText, users: Users
 };
 
 export default function AdminDashboard() {
@@ -133,7 +134,7 @@ export default function AdminDashboard() {
         { id: 'orders', label: 'Orders' }, { id: 'products', label: 'Products' },
         { id: 'categories', label: 'Categories' }, { id: 'inventory', label: 'Inventory' },
         { id: 'warehouse', label: 'Warehouse' }, { id: 'shipping', label: 'Shipping' },
-        { id: 'tax', label: 'Taxes' }
+        { id: 'tax', label: 'Taxes' }, { id: 'gst', label: 'GST & Books' }
       ]
     },
     {

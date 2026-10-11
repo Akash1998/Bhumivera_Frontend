@@ -50,6 +50,8 @@ export default function OrderManagement() {
   const [trackingNumber, setTrackingNumber] = useState('');
   const [courierName, setCourierName] = useState('');
   const [trackingStatus, setTrackingStatus] = useState('shipped');
+  const [shippingLabels, setShippingLabels] = useState([]);
+  const [labelForm, setLabelForm] = useState({ provider: 'shiprocket', weight: '1', length: '20', width: '15', height: '10' });
 
   const { showToast } = useToast() || {};
 
@@ -132,6 +134,57 @@ export default function OrderManagement() {
       showToast?.(err.normalized?.message || err.response?.data?.message || 'Failed to save tracking information.', 'error');
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const loadShippingLabels = async orderId => {
+    try {
+      const response = await api.get('/shipping/labels', { params: { order_id: orderId } });
+      setShippingLabels(response.data || []);
+    } catch (err) {
+      showToast?.(err.response?.data?.message || 'Could not load shipping labels.', 'error');
+    }
+  };
+
+  const handleCreateShippingLabel = async event => {
+    event.preventDefault();
+    if (!selectedOrder) return;
+    setIsUpdating(true);
+    try {
+      const response = await api.post('/shipping/labels', {
+        order_id: selectedOrder.id,
+        provider: labelForm.provider,
+        direction: 'forward',
+        weight: Number(labelForm.weight),
+        length: Number(labelForm.length),
+        width: Number(labelForm.width),
+        height: Number(labelForm.height),
+      });
+      setShippingLabels(current => [response.data, ...current]);
+      if (response.data.tracking_number) {
+        setTrackingNumber(response.data.tracking_number);
+        setCourierName(response.data.service_name || labelForm.provider);
+      }
+      showToast?.('Carrier shipment booked and label details saved.', 'success');
+    } catch (err) {
+      showToast?.(err.response?.data?.message || 'Could not book carrier shipment.', 'error');
+      await loadShippingLabels(selectedOrder.id);
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const downloadShippingLabel = async label => {
+    try {
+      const response = await api.get(`/shipping/labels/${label.id}/file`, { responseType: 'blob' });
+      const url = URL.createObjectURL(response.data);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `Bhumivera_${label.direction}_label_${label.id}.pdf`;
+      link.click();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      showToast?.(err.response?.data?.message || 'Could not download the shipping label.', 'error');
     }
   };
 
@@ -310,6 +363,8 @@ export default function OrderManagement() {
                           setTrackingNumber(order.tracking_number || '');
                           setCourierName(order.courier || '');
                           setTrackingStatus(order.status || 'shipped');
+                          setShippingLabels([]);
+                          loadShippingLabels(order.id);
                         }}
                         className="rounded-lg border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-emerald-400/30 hover:bg-emerald-400/10 hover:text-emerald-200"
                       >
@@ -461,6 +516,38 @@ export default function OrderManagement() {
                         {isUpdating ? 'Saving Pipeline...' : 'Apply Tracking & Status'}
                       </button>
                     </form>
+                  </div>
+                  <div className="rounded-2xl border border-white/10 bg-white/[0.025] p-5">
+                    <h3 className="mb-2 flex items-center gap-2 text-base font-semibold text-white"><Package size={18} /> Carrier label</h3>
+                    <p className="mb-4 text-xs text-slate-400">Booking a label does not mark the order as shipped. Update status after carrier handover.</p>
+                    {['confirmed', 'packed'].includes(selectedOrder.status) && (
+                      <form onSubmit={handleCreateShippingLabel} className="grid grid-cols-2 gap-3">
+                        <label className="col-span-2 text-xs text-slate-400">Carrier
+                          <select value={labelForm.provider} onChange={event => setLabelForm(current => ({ ...current, provider: event.target.value }))} className="admin-glass-control mt-1 w-full rounded-lg p-2 text-sm">
+                            <option value="shiprocket">Shiprocket</option>
+                            <option value="delhivery">Delhivery</option>
+                          </select>
+                        </label>
+                        {[
+                          ['weight', 'Weight (kg)'], ['length', 'Length (cm)'],
+                          ['width', 'Width (cm)'], ['height', 'Height (cm)'],
+                        ].map(([key, label]) => <label key={key} className="text-xs text-slate-400">{label}
+                          <input required type="number" min="0.01" step="0.01" value={labelForm[key]} onChange={event => setLabelForm(current => ({ ...current, [key]: event.target.value }))} className="admin-glass-control mt-1 w-full rounded-lg p-2 text-sm" />
+                        </label>)}
+                        <button disabled={isUpdating} className="col-span-2 rounded-lg bg-emerald-400 py-2.5 text-sm font-bold text-[#071a12] disabled:opacity-50">{isUpdating ? 'Booking…' : 'Book shipment & create label'}</button>
+                      </form>
+                    )}
+                    {!['confirmed', 'packed'].includes(selectedOrder.status) && <p className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 text-xs text-amber-100">Set the order to confirmed or packed before booking a forward shipment.</p>}
+                    <div className="mt-4 space-y-2">
+                      {shippingLabels.map(label => <div key={label.id} className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/[0.025] p-3 text-xs">
+                        <div><span className="font-bold capitalize text-white">{label.provider}</span><span className={`ml-2 ${label.status === 'booked' ? 'text-emerald-300' : label.status === 'failed' ? 'text-rose-300' : 'text-amber-200'}`}>{label.status}</span>
+                          {label.tracking_number && <p className="mt-1 text-slate-400">AWB: {label.tracking_number}</p>}
+                          {label.error_message && <p className="mt-1 text-rose-300">{label.error_message}</p>}
+                        </div>
+                        {label.status === 'booked' && <button type="button" onClick={() => downloadShippingLabel(label)} className="rounded border border-emerald-500/40 px-3 py-1.5 font-semibold text-emerald-200">Download PDF</button>}
+                      </div>)}
+                      {!shippingLabels.length && <p className="text-xs text-slate-500">No carrier label booked for this order.</p>}
+                    </div>
                   </div>
                 </div>
             </div>

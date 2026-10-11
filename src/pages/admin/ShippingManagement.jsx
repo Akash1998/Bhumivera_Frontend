@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Truck, Search, Plus, Edit2, Trash2, MapPin, X } from 'lucide-react';
+import { Truck, Search, Plus, Edit2, Trash2, MapPin, X, ShieldCheck, Save } from 'lucide-react';
 import api from '../../services/api';
 
 export default function ShippingManagement() {
@@ -9,8 +9,19 @@ export default function ShippingManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentZone, setCurrentZone] = useState(null);
   const [formData, setFormData] = useState({ name: '', regions: '', base_charge: '', is_active: 1 });
+  const [carriers, setCarriers] = useState([]);
+  const [carrierProvider, setCarrierProvider] = useState('shiprocket');
+  const [carrierForm, setCarrierForm] = useState({ enabled: true });
+  const [carrierBusy, setCarrierBusy] = useState(false);
+  const [carrierMessage, setCarrierMessage] = useState('');
+  const [carrierError, setCarrierError] = useState('');
 
   useEffect(() => { fetchZones(); }, []);
+  useEffect(() => {
+    api.get('/shipping/carriers')
+      .then(response => setCarriers(Array.isArray(response.data) ? response.data : []))
+      .catch(error => setCarrierError(error.response?.data?.message || 'Could not load carrier integrations.'));
+  }, []);
 
   const fetchZones = async () => {
     try {
@@ -37,13 +48,31 @@ export default function ShippingManagement() {
       if (currentZone) await api.put(`/shipping/zones/${currentZone.id}`, formData);
       else await api.post('/shipping/zones', formData);
       setIsModalOpen(false); fetchZones();
-    } catch (e) { alert("Failed to save shipping zone."); }
+    } catch { alert("Failed to save shipping zone."); }
   };
 
   const handleDelete = async (id) => {
     if (window.confirm('Delete this zone?')) {
       try { await api.delete(`/shipping/zones/${id}`); fetchZones(); }
       catch (e) { console.error("Delete error:", e); }
+    }
+  };
+
+  const saveCarrier = async event => {
+    event.preventDefault();
+    setCarrierBusy(true);
+    setCarrierMessage('');
+    setCarrierError('');
+    try {
+      const response = await api.put(`/shipping/carriers/${carrierProvider}`, carrierForm);
+      setCarrierMessage(response.data?.message || 'Carrier connected and credentials encrypted.');
+      setCarrierForm({ enabled: true });
+      const carriersResponse = await api.get('/shipping/carriers');
+      setCarriers(Array.isArray(carriersResponse.data) ? carriersResponse.data : []);
+    } catch (saveError) {
+      setCarrierError(saveError.response?.data?.message || 'Could not connect this carrier.');
+    } finally {
+      setCarrierBusy(false);
     }
   };
 
@@ -58,6 +87,67 @@ export default function ShippingManagement() {
         </div>
         <button onClick={() => openModal()} className="bg-emerald-500 hover:bg-emerald-600 text-slate-950 font-bold px-4 py-2 rounded-xl flex items-center gap-2 transition-all"><Plus size={18} /> Add Zone</button>
       </div>
+      <section className="bg-[#10241f]/55 backdrop-blur-xl border border-slate-800 rounded-2xl p-6 space-y-5">
+        <div>
+          <h3 className="text-lg font-bold text-white flex items-center gap-2"><ShieldCheck className="text-emerald-400" size={19} /> Carrier API connections</h3>
+          <p className="mt-1 text-xs text-slate-400">Credentials are encrypted by the backend and never sent back to this page. A server-side CARRIER_CREDENTIALS_KEY is required.</p>
+        </div>
+        {carrierError && <p role="alert" className="rounded-lg border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-200">{carrierError}</p>}
+        {carrierMessage && <p role="status" className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 text-sm text-emerald-200">{carrierMessage}</p>}
+        <div className="grid gap-3 sm:grid-cols-3">
+          {['shiprocket', 'delhivery', 'bluedart'].map(provider => {
+            const status = carriers.find(item => item.provider === provider);
+            return <button key={provider} type="button" onClick={() => {
+              setCarrierProvider(provider);
+              setCarrierForm({ enabled: true });
+              setCarrierError('');
+              setCarrierMessage('');
+            }} className={`rounded-xl border p-4 text-left capitalize ${carrierProvider === provider ? 'border-emerald-400 bg-emerald-500/10 text-white' : 'border-slate-800 text-slate-300'}`}>
+              <span className="font-bold">{provider === 'bluedart' ? 'Blue Dart' : provider}</span>
+              <span className={`mt-1 block text-xs ${status?.enabled ? 'text-emerald-300' : 'text-slate-500'}`}>{status?.enabled ? 'Connected' : 'Not connected'}</span>
+            </button>;
+          })}
+        </div>
+        {carrierProvider === 'bluedart' ? (
+          <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-sm text-amber-100">
+            Direct Blue Dart booking is deliberately not enabled yet: Blue Dart APIs use account-specific products and shipment schemas that could not be verified from public documentation. You can continue entering AWB and courier manually in order details. Do not enter credentials until its API documentation is confirmed.
+          </div>
+        ) : (
+          <form onSubmit={saveCarrier} className="grid gap-4 sm:grid-cols-2">
+            {(carrierProvider === 'shiprocket' ? [
+              ['email', 'API account email', 'email'],
+              ['password', 'API password', 'password'],
+              ['pickup_location', 'Pickup location name in Shiprocket', 'text'],
+              ['pickup_name', 'Pickup contact / seller name', 'text'],
+              ['pickup_address', 'Pickup address', 'text'],
+              ['pickup_city', 'Pickup city', 'text'],
+              ['pickup_state', 'Pickup state', 'text'],
+              ['pickup_pincode', 'Pickup pincode', 'text'],
+              ['pickup_phone', 'Pickup phone', 'tel'],
+            ] : [
+              ['api_token', 'Delhivery API token', 'password'],
+              ['client_name', 'Delhivery client name', 'text'],
+              ['pickup_name', 'Pickup contact / seller name', 'text'],
+              ['pickup_address', 'Pickup address', 'text'],
+              ['pickup_city', 'Pickup city', 'text'],
+              ['pickup_state', 'Pickup state', 'text'],
+              ['pickup_pincode', 'Pickup pincode', 'text'],
+              ['pickup_phone', 'Pickup phone', 'tel'],
+            ]).map(([key, label, type]) => <label key={key}>
+              <span className="mb-1 block text-xs font-semibold text-slate-400">{label}</span>
+              <input required type={type} autoComplete="off" value={carrierForm[key] || ''} onChange={event => setCarrierForm(current => ({ ...current, [key]: event.target.value }))} className="w-full rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400" />
+            </label>)}
+            <label className="flex items-center gap-2 self-end pb-2 text-sm text-slate-300">
+              <input type="checkbox" checked={carrierForm.enabled !== false} onChange={event => setCarrierForm(current => ({ ...current, enabled: event.target.checked }))} />
+              Enable for label booking
+            </label>
+            <div className="sm:col-span-2">
+              <button disabled={carrierBusy} className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2 font-bold text-slate-950 disabled:opacity-50"><Save size={16} /> {carrierBusy ? 'Checking & saving…' : 'Test and securely save'}</button>
+              <p className="mt-2 text-xs text-slate-500">A successful credential test is required before credentials are saved. API secrets are encrypted at rest.</p>
+            </div>
+          </form>
+        )}
+      </section>
       <div className="bg-[#10241f]/55 backdrop-blur-xl border border-slate-800 rounded-2xl overflow-hidden">
         <div className="p-6 border-b border-slate-800 flex justify-between items-center">
           <h3 className="text-lg font-bold text-white">Configured Zones</h3>
