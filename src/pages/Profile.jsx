@@ -789,6 +789,15 @@ export default function Profile() {
     try { await navigator.clipboard.writeText(referralUrl); setAffiliateCopied(true); toast.success('Referral link copied'); setTimeout(() => setAffiliateCopied(false),2000); }
     catch (_) { toast.error('Copy failed'); }
   };
+  const handleCopyReferralCode = async () => {
+    if (!referralData?.code) { toast.error('Your referral code is still loading.'); return; }
+    try {
+      await navigator.clipboard.writeText(referralData.code);
+      toast.success('Referral code copied');
+    } catch (_) {
+      toast.error('Could not copy your referral code.');
+    }
+  };
   const shareVia = (via) => {
     if (!referralUrl) { toast.error('Your referral link is still loading.'); return; }
     const text = `I'm shopping at Bhumivera. Join with my referral link: ${referralUrl}`;
@@ -1771,38 +1780,6 @@ export default function Profile() {
                       })}
                     </div>
                   </div>
-                  <div className="mt-6 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
-                    <div className="mb-4 flex items-center justify-between gap-3">
-                      <div>
-                        <h3 className="text-lg font-semibold text-[#0B2419]">People who joined with your link</h3>
-                        <p className="mt-1 text-xs text-stone-500">This list updates while this page is open. A referral counts after the friend verifies their account.</p>
-                      </div>
-                      <span className="rounded-full bg-[#0B2419]/5 px-3 py-1 text-sm font-semibold text-[#0B2419]">{referralData?.referrals ?? 0}</span>
-                    </div>
-                    {referralData?.referrals?.length ? (
-                      <ul className="divide-y divide-stone-100">
-                        {referralData.referrals.map(referral => (
-                          <li key={referral.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-                            <span>
-                              <span className="block text-sm font-medium text-[#0B2419]">{referral.name}</span>
-                              <span className="text-xs text-stone-500">Joined {new Date(referral.created_at).toLocaleDateString()}</span>
-                            </span>
-                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${['approved', 'auto_approved'].includes(referral.status) ? 'bg-emerald-50 text-emerald-800' : referral.status === 'rejected' ? 'bg-rose-50 text-rose-800' : 'bg-amber-50 text-amber-800'}`}>
-                              {referral.status === 'auto_approved'
-                                ? 'Automatically approved'
-                                : referral.status === 'approved'
-                                  ? 'Approved'
-                                  : referral.status === 'rejected'
-                                    ? `Not approved${referral.decision_reason ? ` · ${referral.decision_reason}` : ''}`
-                                    : `Under review. If no action is taken, the reward is decided automatically by ${new Date(referral.auto_approve_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}.`}
-                            </span>
-                          </li>
-                        ))}
-                      </ul>
-                    ) : (
-                      <p className="py-3 text-sm text-stone-500">No verified referrals yet. If your friend just signed up, ask them to finish email verification, then refresh this page.</p>
-                    )}
-                  </div>
                 </section>
 
                 <section className="rounded-2xl bg-white border border-stone-200 p-6 shadow-sm">
@@ -1810,7 +1787,6 @@ export default function Profile() {
                     <div className="w-11 h-11 rounded-xl bg-[#D4AF37]/15 text-[#8a6a12] flex items-center justify-center"><QrCode className="w-5 h-5"/></div>
                     <div><h3 className="font-semibold text-[#0B2419] text-lg">Validate & Register Warranty</h3><p className="text-xs text-stone-500">Enter the 16-digit serial from your product package or certificate.</p></div>
                   </div>
-                  {referralData?.code && <p className="mb-3 text-xs text-stone-600">Your referral code: <strong className="font-mono tracking-wider text-[#0B2419]">{referralData.code}</strong></p>}
                   <div className="flex flex-col sm:flex-row gap-3">
                     <div className="flex-1 flex items-center rounded-xl border border-stone-200 bg-stone-50 px-4 focus-within:border-[#D4AF37] focus-within:bg-white transition-colors">
                       <Hash className="w-4 h-4 text-stone-400 mr-2.5"/>
@@ -1902,12 +1878,29 @@ export default function Profile() {
                       <Zap className="w-3.5 h-3.5"/> Refer & Earn
                     </div>
                     <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0B2419] tracking-tight leading-tight mb-2">Share Bhumivera. Grow together.</h2>
-                    <p className="text-stone-600 max-w-2xl leading-relaxed mb-6">Share your personal link with as many friends as you like. Your chosen reward is earned once their first order is delivered.</p>
+                    <p className="text-stone-600 max-w-2xl leading-relaxed mb-6">Share your personal code or link with friends. After they verify their account, your reward is reviewed by an admin or automatically approved after one hour.</p>
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                      <StatCard icon={Users}      label="Friends referred" value={referralData?.referrals ?? '—'} accent="sage"/>
+                      <StatCard icon={Users}      label="Friends referred" value={referralData?.referralCount ?? '—'} accent="sage"/>
                       <StatCard icon={User}       label="Rewards earned"   value={referralData?.rewarded_referrals ?? '—'} accent="earth"/>
                       <StatCard icon={Coins}      label="Reward choice"    value={referralData?.rewardMode === 'wallet_coupon' ? 'Wallet + coupon' : referralData?.rewardMode === 'coupon' ? 'Coupon' : 'Wallet'} accent="gold"/>
                       <StatCard icon={Wallet}     label="Wallet earned"    value={`₹${Number(referralData?.wallet_earned || 0).toFixed(2)}`} accent="earth"/>
+                    </div>
+                  </div>
+                </section>
+
+                <section className="rounded-2xl bg-white border border-stone-200 p-6 shadow-sm">
+                  <div className="flex flex-wrap items-center justify-between gap-4">
+                    <div>
+                      <h3 className="font-semibold text-[#0B2419] text-lg">Your referral code</h3>
+                      <p className="mt-1 text-xs text-stone-500">Friends can enter this code during registration.</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <code className="rounded-xl border border-dashed border-stone-300 bg-stone-50 px-4 py-3 font-mono text-lg font-bold tracking-wider text-[#0B2419]">
+                        {referralData?.code || 'Loading…'}
+                      </code>
+                      <button type="button" onClick={handleCopyReferralCode} disabled={!referralData?.code} aria-label="Copy referral code" className="rounded-xl border border-stone-200 p-3 text-stone-600 hover:border-[#D4AF37] hover:text-[#0B2419] disabled:opacity-50">
+                        <Copy className="h-4 w-4"/>
+                      </button>
                     </div>
                   </div>
                 </section>
@@ -1926,6 +1919,17 @@ export default function Profile() {
                       {affiliateCopied ? <><CheckCircle2 className="w-4 h-4"/> Copied!</> : <><Copy className="w-4 h-4"/> Copy Link</>}
                     </button>
                   </div>
+                  <div className="mt-5 flex flex-col items-center gap-4 rounded-2xl border border-stone-200 bg-stone-50 p-5 text-center sm:flex-row sm:text-left">
+                    {referralQr
+                      ? <img src={referralQr} alt="QR code for your Bhumivera referral link" className="h-40 w-40 rounded-lg bg-white p-2"/>
+                      : <div role="status" className="grid h-40 w-40 shrink-0 place-items-center rounded-lg bg-white text-xs text-stone-500">{referralUrl ? 'Creating QR code…' : 'Loading referral link…'}</div>}
+                    <div>
+                      <h3 className="font-semibold text-[#0B2419]">Share your QR code</h3>
+                      <p className="mt-1 max-w-md text-xs leading-5 text-stone-600">Friends can scan this code to open your sign-up link. This link expires after 90 days; your referral code remains available for manual entry.</p>
+                      {referralData?.referralExpiresAt && <p className="mt-2 text-xs text-stone-500">Link expires {new Date(referralData.referralExpiresAt).toLocaleDateString()}.</p>}
+                      {referralQr && <a href={referralQr} download="bhumivera-referral-qr.png" className="mt-3 inline-flex min-h-10 items-center rounded-lg bg-[#0B2419] px-4 py-2 text-sm font-semibold text-white">Download QR code</a>}
+                    </div>
+                  </div>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
                     <button onClick={() => shareVia('wa')} className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-stone-200 hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors text-sm font-medium text-stone-700">
                       <MessageSquare className="w-4 h-4 text-emerald-500"/> WhatsApp
@@ -1940,6 +1944,46 @@ export default function Profile() {
                       <Send className="w-4 h-4"/> More
                     </button>
                   </div>
+                </section>
+
+                <section className="rounded-2xl bg-white border border-stone-200 p-6 shadow-sm">
+                  <div className="mb-4 flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-lg font-semibold text-[#0B2419]">Your referrals and rewards</h3>
+                      <p className="mt-1 text-xs text-stone-500">A referral appears after your friend verifies their account.</p>
+                    </div>
+                    <span className="rounded-full bg-[#0B2419]/5 px-3 py-1 text-sm font-semibold text-[#0B2419]">{referralData?.referralCount ?? 0}</span>
+                  </div>
+                  {referralData?.referrals?.length ? (
+                    <ul className="divide-y divide-stone-100">
+                      {referralData.referrals.map(referral => (
+                        <li key={referral.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                          <div>
+                            <span className="block text-sm font-medium text-[#0B2419]">{referral.name || 'New customer'}</span>
+                            <span className="text-xs text-stone-500">
+                              Verified {referral.verified_at ? new Date(referral.verified_at).toLocaleString() : '—'}
+                              {Number(referral.wallet_amount) > 0 && ` · ₹${Number(referral.wallet_amount).toFixed(2)} wallet`}
+                              {referral.coupon_code && ` · Coupon ${referral.coupon_code}`}
+                            </span>
+                          </div>
+                          <span className={`rounded-full px-3 py-1 text-xs font-semibold ${['approved', 'auto_approved'].includes(referral.status) ? 'bg-emerald-50 text-emerald-800' : referral.status === 'rejected' ? 'bg-rose-50 text-rose-800' : 'bg-amber-50 text-amber-800'}`}>
+                            {referral.status === 'auto_approved'
+                              ? 'Automatically approved'
+                              : referral.status === 'approved'
+                                ? 'Approved'
+                                : referral.status === 'rejected'
+                                  ? `Not approved${referral.decision_reason ? ` · ${referral.decision_reason}` : ''}`
+                                  : `Under review until ${new Date(referral.auto_approve_at).toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' })}`}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <p className="py-3 text-sm text-stone-500">No verified referrals yet. Ask your friend to finish registration and verify their email.</p>
+                  )}
+                  {referralData?.referralCount > (referralData?.referrals?.length || 0) && (
+                    <p className="mt-3 text-xs text-stone-500">Showing the latest {referralData.referrals.length} referrals.</p>
+                  )}
                 </section>
               </div>
             )}
