@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { support } from '../../services/api';
+import { useNavigate } from 'react-router-dom';
+import { returns, support } from '../../services/api';
 import { CheckCircle, Clock3, LifeBuoy, Mail, RefreshCw, Search, Send, Trash2 } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 
@@ -9,7 +10,7 @@ const formatDate = value => {
   return Number.isNaN(date.getTime()) ? '' : date.toLocaleString();
 };
 
-const isResolved = status => ['resolved', 'closed'].includes(String(status || '').toLowerCase());
+const isResolved = status => ['resolved', 'closed', 'refunded', 'rejected', 'replacement_sent'].includes(String(status || '').toLowerCase());
 
 export default function SupportManagement() {
   const [tickets, setTickets] = useState([]);
@@ -21,14 +22,25 @@ export default function SupportManagement() {
   const [reply, setReply] = useState('');
   const [saving, setSaving] = useState(false);
   const { showToast } = useToast() || {};
+  const navigate = useNavigate();
 
   const loadTickets = useCallback(async () => {
     setLoading(true);
     setError('');
     try {
-      const response = await support.getAllAdmin();
-      const data = response.data?.data || response.data?.tickets || response.data;
-      setTickets(Array.isArray(data) ? data : []);
+      const [supportResponse, returnsResponse] = await Promise.all([
+        support.getAllAdmin(),
+        returns.getAllAdmin(),
+      ]);
+      const supportData = supportResponse.data?.data || supportResponse.data?.tickets || supportResponse.data;
+      const returnData = returnsResponse.data?.returns || returnsResponse.data?.data || returnsResponse.data;
+      if (!Array.isArray(supportData) || !Array.isArray(returnData)) {
+        throw new Error('The support queue returned an invalid response.');
+      }
+      setTickets([
+        ...supportData.map(ticket => ({ ...ticket, queueType: 'support', queueId: `support-${ticket.id}` })),
+        ...returnData.map(ticket => ({ ...ticket, queueType: 'return', queueId: `return-${ticket.id}` })),
+      ]);
     } catch (requestError) {
       setError(requestError.response?.data?.message || 'Failed to load support requests.');
     } finally {
@@ -38,9 +50,9 @@ export default function SupportManagement() {
 
   useEffect(() => { loadTickets(); }, [loadTickets]);
 
-  const selectedTicket = tickets.find(ticket => ticket.id === selectedId);
+  const selectedTicket = tickets.find(ticket => ticket.queueId === selectedId);
   const filtered = useMemo(() => tickets.filter(ticket => {
-    const text = `${ticket.name || ''} ${ticket.email || ''} ${ticket.subject || ''} ${ticket.message || ''} ${ticket.order_id || ''} ${ticket.product_name || ''}`.toLowerCase();
+    const text = `${ticket.name || ticket.customer_name || ''} ${ticket.email || ticket.user_email || ''} ${ticket.subject || ticket.reason || ''} ${ticket.message || ticket.description || ''} ${ticket.order_id || ''} ${ticket.product_name || ''}`.toLowerCase();
     const matchesStatus = activeTab === 'all' ||
       (activeTab === 'open' && !isResolved(ticket.status)) ||
       (activeTab === 'resolved' && isResolved(ticket.status));
@@ -48,6 +60,7 @@ export default function SupportManagement() {
   }), [tickets, searchTerm, activeTab]);
 
   const saveStatus = async (ticket, status) => {
+    if (ticket.queueType !== 'support') return;
     try {
       await support.updateStatus(ticket.id, status);
       showToast?.(`Ticket marked ${status.replaceAll('_', ' ')}.`, 'success');
@@ -60,7 +73,7 @@ export default function SupportManagement() {
   const sendReply = async event => {
     event.preventDefault();
     const message = reply.trim();
-    if (!selectedTicket || !message) return;
+    if (!selectedTicket || selectedTicket.queueType !== 'support' || !message) return;
     setSaving(true);
     try {
       const response = await support.updateStatus(selectedTicket.id, 'in_progress', message);
@@ -79,10 +92,11 @@ export default function SupportManagement() {
   };
 
   const deleteTicket = async ticket => {
+    if (ticket.queueType !== 'support') return;
     if (!window.confirm(`Delete support ticket #${ticket.id}? This cannot be undone.`)) return;
     try {
       await support.delete(ticket.id);
-      if (selectedId === ticket.id) setSelectedId(null);
+      if (selectedId === ticket.queueId) setSelectedId(null);
       await loadTickets();
       showToast?.('Support ticket deleted.', 'success');
     } catch (requestError) {
@@ -132,16 +146,16 @@ export default function SupportManagement() {
           </div>
           <div className="max-h-[70vh] overflow-y-auto divide-y divide-slate-800">
             {filtered.map(ticket => (
-              <button key={ticket.id} onClick={() => { setSelectedId(ticket.id); setReply(''); }} className={`w-full p-4 text-left hover:bg-slate-800/60 ${selectedId === ticket.id ? 'bg-slate-800/80' : ''}`}>
+              <button key={ticket.queueId} onClick={() => { setSelectedId(ticket.queueId); setReply(''); }} className={`w-full p-4 text-left hover:bg-slate-800/60 ${selectedId === ticket.queueId ? 'bg-slate-800/80' : ''}`}>
                 <div className="flex items-start justify-between gap-3">
                   <div className="min-w-0">
-                    <p className="truncate font-semibold text-white">{ticket.subject || 'Support request'}</p>
-                    <p className="mt-1 truncate text-xs text-slate-400">{ticket.name} · {ticket.email}{ticket.order_id ? ` · Order #${ticket.order_id}` : ''}</p>
+                    <p className="truncate font-semibold text-white">{ticket.queueType === 'return' ? `Return request · ${ticket.reason || 'Customer return'}` : ticket.subject || 'Support request'}</p>
+                    <p className="mt-1 truncate text-xs text-slate-400">{ticket.name || ticket.customer_name} · {ticket.email || ticket.user_email}{ticket.order_id ? ` · Order #${ticket.order_id}` : ''}</p>
                     {ticket.product_name && <p className="mt-1 truncate text-[11px] text-cyan-300">Product: {ticket.product_name}</p>}
                   </div>
                   <span className={`shrink-0 rounded-full px-2 py-1 text-[10px] font-bold uppercase ${isResolved(ticket.status) ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/10 text-amber-300'}`}>{String(ticket.status || 'open').replaceAll('_', ' ')}</span>
                 </div>
-                <p className="mt-3 line-clamp-2 text-sm text-slate-400">{ticket.message}</p>
+                <p className="mt-3 line-clamp-2 text-sm text-slate-400">{ticket.message || ticket.description || 'No description provided.'}</p>
                 <p className="mt-3 flex items-center gap-1 text-[11px] text-slate-500"><Clock3 size={12} /> {formatDate(ticket.updated_at || ticket.created_at)}</p>
               </button>
             ))}
@@ -155,16 +169,22 @@ export default function SupportManagement() {
           ) : (
             <>
               <div className="flex flex-wrap items-start justify-between gap-3 border-b border-slate-800 p-5">
-                <div><p className="text-xs font-bold uppercase text-cyan-400">Ticket #{selectedTicket.id}{selectedTicket.order_id ? ` · Order #${selectedTicket.order_id}` : ''}</p><h2 className="mt-1 text-xl font-bold text-white">{selectedTicket.subject}</h2><p className="mt-1 text-sm text-slate-400">{selectedTicket.name} · <a className="hover:text-cyan-300" href={`mailto:${selectedTicket.email}`}>{selectedTicket.email}</a>{selectedTicket.product_name ? ` · Product: ${selectedTicket.product_name}` : ''}</p></div>
+                <div><p className="text-xs font-bold uppercase text-cyan-400">{selectedTicket.queueType === 'return' ? 'Return request' : 'Support ticket'} #{selectedTicket.id}{selectedTicket.order_id ? ` · Order #${selectedTicket.order_id}` : ''}</p><h2 className="mt-1 text-xl font-bold text-white">{selectedTicket.subject || selectedTicket.reason || 'Customer request'}</h2><p className="mt-1 text-sm text-slate-400">{selectedTicket.name || selectedTicket.customer_name} · <a className="hover:text-cyan-300" href={`mailto:${selectedTicket.email || selectedTicket.user_email}`}>{selectedTicket.email || selectedTicket.user_email}</a>{selectedTicket.product_name ? ` · Product: ${selectedTicket.product_name}` : ''}</p></div>
                 <div className="flex gap-2">
-                  <button onClick={() => saveStatus(selectedTicket, isResolved(selectedTicket.status) ? 'open' : 'resolved')} className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/30 px-3 py-2 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/10">
+                  {selectedTicket.queueType === 'return' ? <button onClick={() => navigate('/admin/dashboard/returns')} className="inline-flex items-center gap-2 rounded-lg border border-cyan-500/30 px-3 py-2 text-xs font-semibold text-cyan-300 hover:bg-cyan-500/10">Manage return</button> : <button onClick={() => saveStatus(selectedTicket, isResolved(selectedTicket.status) ? 'open' : 'resolved')} className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/30 px-3 py-2 text-xs font-semibold text-emerald-300 hover:bg-emerald-500/10">
                     <CheckCircle size={14} /> {isResolved(selectedTicket.status) ? 'Reopen' : 'Resolve'}
-                  </button>
-                  <button onClick={() => deleteTicket(selectedTicket)} className="rounded-lg border border-rose-500/30 p-2 text-rose-300 hover:bg-rose-500/10" aria-label="Delete ticket"><Trash2 size={15} /></button>
+                  </button>}
+                  {selectedTicket.queueType === 'support' && <button onClick={() => deleteTicket(selectedTicket)} className="rounded-lg border border-rose-500/30 p-2 text-rose-300 hover:bg-rose-500/10" aria-label="Delete ticket"><Trash2 size={15} /></button>}
                 </div>
               </div>
               <div className="flex-1 space-y-3 overflow-y-auto p-5">
-                {(selectedTicket.messages || []).map((message, index) => {
+                {selectedTicket.queueType === 'return' ? (
+                  <article className="max-w-[90%] rounded-xl border border-slate-700 bg-[#081b15]/90 p-4">
+                    <p className="mb-2 text-xs font-bold text-slate-200">{selectedTicket.customer_name || 'Customer'}</p>
+                    <p className="whitespace-pre-wrap break-words text-sm leading-relaxed text-slate-300">{selectedTicket.description || 'No description provided.'}</p>
+                    <p className="mt-3 text-xs text-slate-500">Resolution and refund actions are managed in the Returns workspace.</p>
+                  </article>
+                ) : (selectedTicket.messages || []).map((message, index) => {
                   const fromSupport = message.sender_type === 'admin';
                   return <article key={message.id || index} className={`max-w-[90%] rounded-xl border p-4 ${fromSupport ? 'mr-auto border-cyan-500/20 bg-cyan-500/5' : 'ml-auto border-slate-700 bg-[#081b15]/90 backdrop-blur-xl/70'}`}>
                     <div className="mb-2 flex flex-wrap items-center justify-between gap-2"><span className={`text-xs font-bold ${fromSupport ? 'text-cyan-300' : 'text-slate-200'}`}>{fromSupport ? 'Support team' : selectedTicket.name}</span><span className="text-[11px] text-slate-500">{formatDate(message.created_at)}</span></div>
@@ -172,7 +192,7 @@ export default function SupportManagement() {
                   </article>;
                 })}
               </div>
-              <form onSubmit={sendReply} className="space-y-3 border-t border-slate-800 bg-[#081b15]/55 backdrop-blur-xl p-5">
+              {selectedTicket.queueType === 'support' ? <form onSubmit={sendReply} className="space-y-3 border-t border-slate-800 bg-[#081b15]/55 backdrop-blur-xl p-5">
                 <label htmlFor="support-reply" className="text-xs font-bold uppercase tracking-wider text-slate-400">Reply to customer</label>
                 <textarea id="support-reply" required maxLength={10000} rows={4} value={reply} onChange={event => setReply(event.target.value)} placeholder="Write a reply. The customer can read and respond in Profile > Support." className="w-full rounded-xl border border-slate-700 bg-[#081b15]/90 backdrop-blur-xl p-3 text-sm text-white outline-none focus:border-cyan-500" />
                 <div className="flex flex-wrap items-center justify-between gap-3">
@@ -181,7 +201,7 @@ export default function SupportManagement() {
                     <Send size={15} /> {saving ? 'Sending…' : 'Send Reply'}
                   </button>
                 </div>
-              </form>
+              </form> : <div className="border-t border-slate-800 p-5 text-sm text-slate-400">For safe handling, return decisions and provider refund actions remain in the dedicated Returns workspace.</div>}
             </>
           )}
         </section>

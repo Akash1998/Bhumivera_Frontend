@@ -17,7 +17,6 @@ const AnalyticsManagement = lazy(() => import('./admin/AnalyticsManagement'));
 const InventoryManagement = lazy(() => import('./admin/InventoryManagement'));
 const CouponManagement = lazy(() => import('./admin/CouponManagement'));
 const ReviewManagement = lazy(() => import('./admin/ReviewManagement'));
-const ContactManagement = lazy(() => import('./admin/ContactManagement'));
 const ReturnManagement = lazy(() => import('./admin/ReturnManagement'));
 const SupportManagement = lazy(() => import('./admin/SupportManagement'));
 const FlashSalesManagement = lazy(() => import('./admin/FlashSalesManagement'));
@@ -83,7 +82,6 @@ const TAB_COMPONENTS = {
   support: SupportManagement, reviews: ReviewManagement, loyalty: LoyaltyManagement,
   affiliate: AffiliateManagement, 
   analytics: AnalyticsManagement,
-  contact: ContactManagement,
   notifications: NotificationManagement,
   tax: TaxManagement, gst: GSTAccounting, shipping: ShippingManagement, logs: SystemLogs,
   warehouse: WarehouseManagement, settings: AdminSettings,
@@ -104,14 +102,14 @@ const TAB_ICONS = {
   'flash-sales': Zap, reviews: Star, 'min-cart-value': SlidersHorizontal, 'cart-rules': SlidersHorizontal,
   gamification: Gamepad2, 'lifecycle-offers': Mail, personalization: Users,
   'ab-experiments': FlaskConical, 'loyalty-tiers': Award, support: LifeBuoy,
-  returns: Truck, contact: Mail, settings: Settings2, tax: Tags, gst: FileText, users: Users
+  returns: Truck, settings: Settings2, tax: Tags, gst: FileText, users: Users
 };
 
 export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { tab } = useParams();
-  const activeTab = tab || 'overview';
+  const activeTab = tab === 'contact' ? 'support' : tab || 'overview';
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [navSearch, setNavSearch] = useState('');
 
@@ -125,7 +123,7 @@ export default function AdminDashboard() {
     {
       title: 'Customer experience', items: [
         { id: 'reviews', label: 'Reviews' }, { id: 'support', label: 'Support inbox' },
-        { id: 'users', label: 'Customers' }, { id: 'contact', label: 'Messages' },
+        { id: 'users', label: 'Customers' },
         { id: 'returns', label: 'Returns' }
       ]
     },

@@ -14,7 +14,8 @@ const RMA_STATUS_MAP = {
   'pending_admin_review': { label: 'Needs admin review', color: 'amber', icon: Clock, next: 'return_in_progress' },
   'waiting_customer_service_review': { label: 'Customer service review', color: 'amber', icon: AlertCircle, next: 'return_in_progress' },
   'return_in_progress': { label: 'Return in progress', color: 'blue', icon: RotateCcw, next: 'received' },
-  'received': { label: 'Item Received', color: 'purple', icon: Package, next: 'refunded' },
+  'received': { label: 'Item Received', color: 'purple', icon: Package, next: null },
+  'refund_pending': { label: 'Refund Processing', color: 'blue', icon: Clock, next: null },
   'refunded': { label: 'Refund Issued', color: 'emerald', icon: IndianRupee, next: null },
   'replacement_sent': { label: 'Replacement Sent', color: 'emerald', icon: RotateCcw, next: null },
   'rejected': { label: 'RMA Denied', color: 'rose', icon: XCircle, next: null },
@@ -72,6 +73,82 @@ export default function ReturnManagement() {
       setReturnLabels(response.data || []);
     } catch (err) {
       showToast?.(err.response?.data?.message || 'Could not load return shipping labels.', 'error');
+    }
+  };
+
+  const handleIssueRefund = async () => {
+    if (!selectedRMA) return;
+    const amount = String(refundOverride || selectedRMA.refund_amount || '').trim();
+    if (!/^(0|[1-9]\d*)(?:\.\d{1,2})?$/.test(amount) || Number(amount) < 1) {
+      showToast?.('Enter an explicit refund amount of at least ₹1.00.', 'error');
+      return;
+    }
+    if (!window.confirm(`Issue a Razorpay refund of ₹${Number(amount).toFixed(2)}? This cannot be automatically reversed.`)) return;
+
+    const returnId = selectedRMA.id || selectedRMA._id;
+    setIsUpdating(true);
+    try {
+      const response = await api.post(`/returns/admin/${returnId}/refund`, {
+        refund_amount: amount,
+        admin_notes: adminNotes,
+      });
+      const result = response.data?.data;
+      const updated = {
+        ...selectedRMA,
+        status: result?.returnStatus || selectedRMA.status,
+        refund_amount: Number(result?.amountPaise || 0) / 100,
+        refund_receipt: result?.receipt,
+        provider_refund_id: result?.providerRefundId,
+      };
+      setReturns(current => current.map(item =>
+        String(item.id || item._id) === String(returnId) ? { ...item, ...updated } : item
+      ));
+      setSelectedRMA(updated);
+      showToast?.(response.status === 202
+        ? 'Refund submitted to Razorpay; waiting for provider confirmation.'
+        : 'Razorpay processed the refund.', response.status === 202 ? 'info' : 'success');
+    } catch (err) {
+      if (err.response?.data?.receipt) {
+        setSelectedRMA(current => current ? {
+          ...current,
+          status: 'refund_pending',
+          refund_receipt: err.response.data.receipt,
+        } : current);
+        await fetchReturns();
+      }
+      showToast?.(err.response?.data?.message || 'Razorpay refund request failed.', 'error');
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  const handleReconcileRefund = async () => {
+    if (!selectedRMA) return;
+    const returnId = selectedRMA.id || selectedRMA._id;
+    setIsUpdating(true);
+    try {
+      const response = await api.post(`/returns/admin/${returnId}/refund/reconcile`);
+      const result = response.data?.data;
+      const updated = {
+        ...selectedRMA,
+        status: result?.returnStatus || selectedRMA.status,
+        refund_amount: Number(result?.amountPaise || 0) / 100,
+        refund_receipt: result?.receipt,
+        provider_refund_id: result?.providerRefundId,
+      };
+      setSelectedRMA(updated);
+      setReturns(current => current.map(item =>
+        String(item.id || item._id) === String(returnId) ? { ...item, ...updated } : item
+      ));
+      showToast?.(result?.status === 'processed'
+        ? 'Razorpay confirms the refund is processed.'
+        : result?.status === 'failed'
+          ? 'Razorpay confirms the refund failed; it can be reviewed again.'
+          : 'Razorpay still reports the refund as processing.', result?.status === 'failed' ? 'error' : 'info');
+    } catch (err) {
+      showToast?.(err.response?.data?.message || 'Could not reconcile the refund with Razorpay.', 'error');
+    } finally {
+      setIsUpdating(false);
     }
   };
 
@@ -528,15 +605,17 @@ export default function ReturnManagement() {
 
                       <div className="grid grid-cols-2 gap-4 pt-2">
                         <div>
-                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-1 block mb-2">Base Valuation (₹)</label>
+                          <label className="text-[9px] font-black uppercase tracking-widest text-slate-500 ml-1 block mb-2">Previously recorded refund (₹)</label>
                           <input type="text" readOnly value={selectedRMA.refund_amount || 0} className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl p-3.5 text-xs text-slate-500 font-mono outline-none cursor-not-allowed" />
                         </div>
                         <div>
-                          <label className="text-[9px] font-black uppercase tracking-widest text-emerald-500 ml-1 block mb-2">Adjusted Refund (₹)</label>
+                          <label className="text-[9px] font-black uppercase tracking-widest text-emerald-500 ml-1 block mb-2">Admin-confirmed refund (₹)</label>
                           <input 
                             type="number" 
+                            min="1"
+                            step="0.01"
                             value={refundOverride} onChange={e => setRefundOverride(e.target.value)}
-                            placeholder="Override Amount"
+                            placeholder="Admin-confirmed amount"
                             className="w-full bg-emerald-500/5 border border-emerald-500/30 rounded-xl p-3.5 text-xs text-emerald-400 font-black outline-none focus:border-emerald-500"
                           />
                         </div>
@@ -609,11 +688,27 @@ export default function ReturnManagement() {
                         onClick={() => handleUpdateStatus(selectedRMA.id || selectedRMA._id, 'received')}
                         className="w-full py-3 bg-purple-600/20 text-purple-300 border border-purple-500/30 text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-purple-600 hover:text-white transition-all disabled:opacity-50"
                       >Mark returned item received</button>}
-                      {selectedRMA.status === 'received' && <div className="flex gap-3">
-                        <button disabled={isUpdating} onClick={() => handleUpdateStatus(selectedRMA.id || selectedRMA._id, 'refunded')} className="flex-1 py-4 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-500 transition-all disabled:opacity-50"><IndianRupee size={14} className="mr-1 inline"/>Mark refund issued</button>
-                        <button disabled={isUpdating} onClick={() => handleUpdateStatus(selectedRMA.id || selectedRMA._id, 'replacement_sent')} className="flex-1 py-4 bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-amber-500 transition-all disabled:opacity-50"><RotateCcw size={14} className="mr-1 inline"/>Mark replacement sent</button>
-                      </div>}
-                      {!['pending_admin_review', 'waiting_customer_service_review', 'return_in_progress', 'received'].includes(selectedRMA.status) && <p className="text-center text-xs text-slate-500">This request is closed.</p>}
+                      {selectedRMA.status === 'received' && <>
+                        {selectedRMA.refund_type === 'refund' &&
+                          selectedRMA.payment_mode === 'online' &&
+                          selectedRMA.payment_status === 'paid' && (
+                            <button disabled={isUpdating || !refundOverride} onClick={handleIssueRefund} className="w-full py-4 bg-emerald-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-500 transition-all disabled:opacity-50"><IndianRupee size={14} className="mr-1 inline"/>Issue Razorpay refund</button>
+                          )}
+                        {selectedRMA.refund_type === 'refund' &&
+                          (selectedRMA.payment_mode !== 'online' || selectedRMA.payment_status !== 'paid') && (
+                            <p className="text-center text-xs text-amber-200" role="status">Automated refunds require a captured online payment. This order is not eligible for a Razorpay refund.</p>
+                          )}
+                        {selectedRMA.refund_type !== 'refund' && <button disabled={isUpdating} onClick={() => handleUpdateStatus(selectedRMA.id || selectedRMA._id, 'replacement_sent')} className="w-full py-4 bg-amber-600 text-white text-[10px] font-black uppercase tracking-widest rounded-xl hover:bg-amber-500 transition-all disabled:opacity-50"><RotateCcw size={14} className="mr-1 inline"/>Mark replacement sent</button>}
+                      </>}
+                      {selectedRMA.status === 'refund_pending' && <>
+                        <p className="text-center text-xs text-blue-200" role="status">Razorpay is processing this refund. The status changes to Refund Issued only after provider confirmation.
+                          {selectedRMA.refund_receipt && <span className="mt-1 block font-mono text-[10px] text-slate-400">Receipt: {selectedRMA.refund_receipt}</span>}
+                        </p>
+                        <button disabled={isUpdating} onClick={handleReconcileRefund} className="w-full rounded-xl border border-blue-400/30 bg-blue-500/10 py-3 text-[10px] font-black uppercase tracking-widest text-blue-200 disabled:opacity-50">
+                          {isUpdating ? 'Checking Razorpay…' : 'Refresh refund status'}
+                        </button>
+                      </>}
+                      {!['pending_admin_review', 'waiting_customer_service_review', 'return_in_progress', 'received', 'refund_pending'].includes(selectedRMA.status) && <p className="text-center text-xs text-slate-500">This request is closed.</p>}
                     </div>
                   </div>
 

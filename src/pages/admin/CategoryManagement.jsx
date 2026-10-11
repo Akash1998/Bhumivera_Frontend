@@ -29,6 +29,9 @@ export default function CategoryManagement() {
   const [editingItem, setEditingItem] = useState(null);
   const [form, setForm] = useState({ name: '', slug: '', description: '', category_id: '', is_active: 1, image_url: '' });
   const [isProcessing, setIsProcessing] = useState(false);
+  const [auditEvents, setAuditEvents] = useState([]);
+  const [auditLoading, setAuditLoading] = useState(true);
+  const [auditError, setAuditError] = useState('');
 
   const { showToast } = useToast() || {};
 
@@ -36,6 +39,27 @@ export default function CategoryManagement() {
   useEffect(() => { 
     fetchTaxonomy(); 
   }, []);
+
+  useEffect(() => {
+    fetchAuditHistory();
+  }, []);
+
+  const fetchAuditHistory = async () => {
+    setAuditLoading(true);
+    setAuditError('');
+    try {
+      const response = await api.get('/categories/admin/audit?limit=30');
+      if (!Array.isArray(response.data?.data)) {
+        throw new Error('The category audit response was invalid.');
+      }
+      setAuditEvents(response.data.data);
+    } catch (err) {
+      console.error('Category audit history error:', err);
+      setAuditError('Audit history could not be loaded. Refresh to try again.');
+    } finally {
+      setAuditLoading(false);
+    }
+  };
 
   const fetchTaxonomy = async () => {
     setLoading(true);
@@ -236,6 +260,7 @@ export default function CategoryManagement() {
       }
       setIsModalOpen(false);
       fetchTaxonomy();
+      if (modalMode === 'category') fetchAuditHistory();
     } catch (err) {
       console.error("Mutation Error:", err);
       showToast?.('Taxonomy mutation failed due to core integrity fault.', 'error');
@@ -260,6 +285,7 @@ export default function CategoryManagement() {
       await api.delete(endpoint);
       showToast?.('Entity purged from active memory', 'success');
       fetchTaxonomy();
+      if (isCategory) fetchAuditHistory();
     } catch (err) {
       console.error("Purge Error:", err);
       showToast?.('Purge protocol failed.', 'error');
@@ -660,8 +686,31 @@ export default function CategoryManagement() {
               <Terminal size={14} className="text-emerald-500" />
               <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400">Audit history</h3>
             </div>
-            <div className="flex flex-1 items-center justify-center p-4 text-center text-xs leading-5 text-amber-100/75">
-              Category changes are not recorded in a persistent audit history yet. This panel does not show simulated events.
+            <div className="flex-1 overflow-y-auto p-3">
+              {auditLoading ? (
+                <p className="py-4 text-center text-xs text-slate-400" role="status">Loading saved category changes…</p>
+              ) : auditError ? (
+                <p className="py-4 text-center text-xs leading-5 text-rose-200" role="alert">{auditError}</p>
+              ) : auditEvents.length === 0 ? (
+                <p className="py-4 text-center text-xs leading-5 text-slate-400">No category changes have been recorded yet.</p>
+              ) : (
+                <ol className="space-y-3">
+                  {auditEvents.map(event => {
+                    const state = event.after_state || event.before_state;
+                    const categoryName = state?.name || `Category ${event.category_id}`;
+                    return (
+                      <li key={event.id} className="border-l border-emerald-500/40 pl-3 text-xs">
+                        <p className="font-semibold text-slate-200">
+                          {event.action} <span className="text-emerald-200">{categoryName}</span>
+                        </p>
+                        <p className="mt-1 text-[10px] text-slate-500">
+                          {event.actor_email || 'Admin'} · {new Date(event.created_at).toLocaleString()}
+                        </p>
+                      </li>
+                    );
+                  })}
+                </ol>
+              )}
             </div>
           </div>
         </div>

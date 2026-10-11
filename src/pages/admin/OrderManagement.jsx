@@ -45,6 +45,9 @@ export default function OrderManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [reconcilingPayments, setReconcilingPayments] = useState(false);
+  const [paymentReconciliation, setPaymentReconciliation] = useState(null);
+  const [paymentReconciliationError, setPaymentReconciliationError] = useState('');
   
   // Tracking Form States
   const [trackingNumber, setTrackingNumber] = useState('');
@@ -69,6 +72,8 @@ export default function OrderManagement() {
         } });
         if (!active) return;
         setOrders(res.data?.orders || []);
+        setPaymentReconciliation(null);
+        setPaymentReconciliationError('');
         setSummary(res.data?.summary || { totalOrders: 0, grossRevenue: 0, actionRequired: 0, inTransit: 0, completed: 0 });
         setPagination(current => ({ ...current, ...(res.data?.pagination || {}) }));
       } catch (err) {
@@ -106,6 +111,26 @@ export default function OrderManagement() {
       showToast?.(err.normalized?.message || err.response?.data?.message || 'Failed to update status.', 'error');
     } finally {
       setIsUpdating(false);
+    }
+  };
+
+  const reconcileVisiblePayments = async () => {
+    const orderIds = orders
+      .filter(order => order.payment_mode === 'online')
+      .slice(0, 25)
+      .map(order => order.id);
+    if (!orderIds.length || reconcilingPayments) return;
+    setReconcilingPayments(true);
+    setPaymentReconciliationError('');
+    try {
+      const response = await api.get('/orders/admin/reconciliation/payments', {
+        params: { order_ids: orderIds.join(',') },
+      });
+      setPaymentReconciliation(response.data?.rows || []);
+    } catch (err) {
+      setPaymentReconciliationError(err.normalized?.message || err.response?.data?.message || 'Could not check the selected payments against Razorpay.');
+    } finally {
+      setReconcilingPayments(false);
     }
   };
 
@@ -241,6 +266,9 @@ export default function OrderManagement() {
           </p>
         </div>
         <div className="flex gap-3">
+          <button onClick={reconcileVisiblePayments} disabled={reconcilingPayments || !orders.some(order => order.payment_mode === 'online')} title="Read-only check for up to 25 online orders on this page" className="flex items-center gap-2 rounded-xl border border-cyan-400/30 bg-cyan-400/10 px-4 py-3 font-semibold text-cyan-100 transition hover:bg-cyan-400/20 disabled:opacity-50">
+            <ShieldCheck size={16} /> {reconcilingPayments ? 'Checking payments…' : 'Check online orders'}
+          </button>
           <button onClick={() => setRefreshKey(key => key + 1)} aria-label="Refresh orders" title="Refresh orders" className="rounded-xl border border-white/10 bg-white/5 p-3 text-slate-200 backdrop-blur-xl transition hover:bg-white/10 disabled:opacity-50" disabled={loading}>
             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
           </button>
@@ -313,6 +341,26 @@ export default function OrderManagement() {
       </div>
 
       {loadError && <div role="alert" className="flex items-center justify-between gap-4 rounded-xl border border-rose-400/25 bg-rose-400/10 px-4 py-3 text-sm text-rose-100"><span>{loadError}</span><button onClick={() => setRefreshKey(key => key + 1)} className="font-bold underline">Retry</button></div>}
+      {paymentReconciliationError && <div role="alert" className="rounded-xl border border-rose-400/25 bg-rose-400/10 px-4 py-3 text-sm text-rose-100">{paymentReconciliationError}</div>}
+      {paymentReconciliation && <section className="admin-glass-panel space-y-3 rounded-2xl p-4" aria-label="Payment reconciliation results">
+        <div>
+          <h2 className="text-sm font-bold text-white">Read-only payment comparison</h2>
+          <p className="mt-1 text-xs text-slate-400">Compares the selected page with Razorpay. This check never changes order or payment records.</p>
+        </div>
+        <div className="max-h-72 overflow-auto">
+          <table className="w-full text-left text-xs">
+            <thead><tr className="border-b border-white/10 text-slate-400"><th className="p-2">Order</th><th className="p-2">Local payment</th><th className="p-2">Razorpay</th><th className="p-2">Result</th></tr></thead>
+            <tbody>{paymentReconciliation.map(row => (
+              <tr key={row.orderId} className="border-b border-white/5">
+                <td className="p-2 font-mono">#{row.orderId}</td>
+                <td className="p-2">{row.localStatus || '—'}</td>
+                <td className="p-2">{row.providerStatus || row.providerErrorCode || '—'}</td>
+                <td className={`p-2 font-semibold ${row.outcome === 'matched' ? 'text-emerald-300' : 'text-amber-200'}`}>{String(row.outcome).replaceAll('_', ' ')}</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        </div>
+      </section>}
 
       {/* Table */}
       <div className="admin-glass-panel overflow-hidden rounded-2xl">
