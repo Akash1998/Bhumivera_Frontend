@@ -740,14 +740,23 @@ export default function Profile() {
 
   const handleLogout = () => { if (window.confirm('Log out of your account?')) { logout(); navigate('/'); } };
 
-  const referralUrl = referralData?.referralUrl || '';
   useEffect(() => {
+    if (activeTab !== 'affiliate') return undefined;
     let active = true;
-    affiliateApi.getReferralSummary()
+    const refreshReferralSummary = () => affiliateApi.getReferralSummary()
       .then(({ data }) => { if (active) setReferralData(data?.data || null); })
-      .catch(error => console.error('[PROFILE_REFERRAL_SUMMARY]', error));
-    return () => { active = false; };
-  }, []);
+      .catch(error => {
+        console.error('[PROFILE_REFERRAL_SUMMARY]', error);
+        if (active) toast.error(error.normalized?.message || 'Could not refresh your referral information.');
+      });
+    refreshReferralSummary();
+    const refreshTimer = window.setInterval(refreshReferralSummary, 15000);
+    return () => {
+      active = false;
+      window.clearInterval(refreshTimer);
+    };
+  }, [activeTab, toast]);
+  const referralUrl = referralData?.referralUrl || '';
   const handleCopyRef = async () => {
     if (!referralUrl) { toast.error('Your referral link is still loading.'); return; }
     try { await navigator.clipboard.writeText(referralUrl); setAffiliateCopied(true); toast.success('Referral link copied'); setTimeout(() => setAffiliateCopied(false),2000); }
@@ -1719,6 +1728,32 @@ export default function Profile() {
                         );
                       })}
                     </div>
+                  </div>
+                  <div className="mt-6 rounded-2xl border border-stone-200 bg-white p-6 shadow-sm">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <div>
+                        <h3 className="text-lg font-semibold text-[#0B2419]">People who joined with your link</h3>
+                        <p className="mt-1 text-xs text-stone-500">This list updates while this page is open. A referral counts after the friend verifies their account.</p>
+                      </div>
+                      <span className="rounded-full bg-[#0B2419]/5 px-3 py-1 text-sm font-semibold text-[#0B2419]">{referralData?.referrals ?? 0}</span>
+                    </div>
+                    {referralData?.referrals?.length ? (
+                      <ul className="divide-y divide-stone-100">
+                        {referralData.referrals.map(referral => (
+                          <li key={referral.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
+                            <span>
+                              <span className="block text-sm font-medium text-[#0B2419]">{referral.name}</span>
+                              <span className="text-xs text-stone-500">Joined {new Date(referral.created_at).toLocaleDateString()}</span>
+                            </span>
+                            <span className={`rounded-full px-3 py-1 text-xs font-semibold ${referral.rewarded_at ? 'bg-emerald-50 text-emerald-800' : 'bg-amber-50 text-amber-800'}`}>
+                              {referral.rewarded_at ? 'Reward earned' : 'Waiting for first delivered order'}
+                            </span>
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      <p className="py-3 text-sm text-stone-500">No verified referrals yet. If your friend just signed up, ask them to finish email verification, then refresh this page.</p>
+                    )}
                   </div>
                 </section>
 

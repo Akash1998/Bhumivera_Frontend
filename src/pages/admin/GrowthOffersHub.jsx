@@ -1,7 +1,9 @@
-import { lazy, Suspense, useState } from 'react';
-import { Award, Gift, LoaderCircle, Megaphone, Users } from 'lucide-react';
+import { lazy, Suspense, useEffect, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { Award, FlaskConical, Gift, LoaderCircle, Megaphone, Users } from 'lucide-react';
 
 const LoyaltyManagement = lazy(() => import('./LoyaltyManagement'));
+const AffiliateManagement = lazy(() => import('./AffiliateManagement'));
 const CouponManagement = lazy(() => import('./CouponManagement'));
 const FlashSalesManagement = lazy(() => import('./FlashSalesManagement'));
 const MinCartValueCenter = lazy(() => import('./MinCartValueCenter'));
@@ -9,123 +11,127 @@ const CartRulesEngine = lazy(() => import('./CartRulesEngine'));
 const GamificationStudio = lazy(() => import('./GamificationStudio'));
 const LifecycleOffers = lazy(() => import('./LifecycleOffers'));
 const PersonalizationCenter = lazy(() => import('./PersonalizationCenter'));
-const AffiliateManagement = lazy(() => import('./AffiliateManagement'));
 const LoyaltyTierForge = lazy(() => import('./LoyaltyTierForge'));
 
-const sections = [
+const groups = [
   {
     id: 'offers',
     label: 'Offers & checkout',
-    description: 'Set discounts and rules that help customers complete an order.',
     icon: Megaphone,
     features: [
-      { id: 'coupons', label: 'Coupons', purpose: 'Create discount codes and choose when, where, and how often they can be used.', component: CouponManagement },
-      { id: 'flash-sales', label: 'Flash sales', purpose: 'Run a sale for selected products during a set time.', component: FlashSalesManagement },
-      { id: 'cart-minimums', label: 'Cart minimums', purpose: 'Set a minimum order amount and add benefits like a discount, gift, or free shipping.', component: MinCartValueCenter },
-      { id: 'cart-rules', label: 'Cart rules', purpose: 'Choose simple conditions for who gets a discount, gift, free shipping, or bonus points.', component: CartRulesEngine },
+      { id: 'coupons', label: 'Coupons', purpose: 'Give customers a code for a price discount.', steps: 'Create a code, choose its discount and dates, then save it.', component: CouponManagement },
+      { id: 'flash-sales', label: 'Flash sales', purpose: 'Discount selected products for a limited time.', steps: 'Create a sale, select products, set the start and end time, then save.', component: FlashSalesManagement },
+      { id: 'min-cart-value', label: 'Cart minimums', purpose: 'Offer a benefit when a cart reaches a certain value.', steps: 'Set the minimum amount, choose benefits, and save the rule.', component: MinCartValueCenter },
+      { id: 'cart-rules', label: 'Cart rules', purpose: 'Set conditions for discounts, free shipping, gifts, or bonus points.', steps: 'Choose the cart conditions and customer group, then create the rule.', component: CartRulesEngine },
     ],
   },
   {
     id: 'loyalty',
     label: 'Loyalty & referrals',
-    description: 'Reward repeat customers and manage ways people share your store.',
     icon: Award,
     features: [
-      { id: 'loyalty', label: 'Loyalty', purpose: 'See members and manage how customers earn and use points.', component: LoyaltyManagement },
-      { id: 'loyalty-tiers', label: 'Loyalty tiers', purpose: 'Set point levels and benefits for each membership tier.', component: LoyaltyTierForge },
-      { id: 'referrals', label: 'Refer a friend', purpose: 'Choose wallet and coupon rewards, then review referred customers and reward status.', component: AffiliateManagement },
-      { id: 'gamification', label: 'Reward activities', purpose: 'Turn storefront activities like reward spins and sale countdowns on or off.', component: GamificationStudio },
+      { id: 'loyalty', label: 'Loyalty', purpose: 'See members and manage how customers earn or use points.', steps: 'Review member points and update the available loyalty settings.', component: LoyaltyManagement },
+      { id: 'loyalty-tiers', label: 'Loyalty tiers', purpose: 'Give customers better benefits as they earn more points.', steps: 'Create a tier, set the points needed to reach it, describe its benefits, and save.', component: LoyaltyTierForge },
+      { id: 'affiliate', label: 'Affiliates & referrals', purpose: 'Choose the reward customers get for bringing a friend.', steps: 'Turn referrals on, select wallet credit, a coupon, or both, set the reward, and save.', component: AffiliateManagement },
+      { id: 'gamification', label: 'Reward activities', purpose: 'Enable activities such as reward spins and sale countdowns.', steps: 'Turn an activity on or off. Changes are saved as you make them.', component: GamificationStudio },
     ],
   },
   {
     id: 'customer-growth',
     label: 'Customer growth',
-    description: 'Bring customers back and improve their shopping experience.',
     icon: Users,
     features: [
-      { id: 'lifecycle', label: 'Lifecycle offers', purpose: 'Set gifts or coupons for moments such as a third order, a birthday, or an inactive customer.', component: LifecycleOffers },
-      { id: 'personalization', label: 'Personalized suggestions', purpose: 'See how homepage recommendations are chosen for each signed-in customer.', component: PersonalizationCenter },
+      { id: 'lifecycle-offers', label: 'Lifecycle offers', purpose: 'Offer a gift or coupon for events such as a birthday or a returning customer.', steps: 'Choose when the offer applies, select its gift or coupon, then save.', component: LifecycleOffers },
+      { id: 'personalization', label: 'Personalized suggestions', purpose: 'Show signed-in customers products related to their views, saved items, reviews, and orders.', steps: 'Suggestions run automatically. There are no extra settings to configure.', component: PersonalizationCenter },
+      { id: 'ab-experiments', label: 'A/B experiments', purpose: 'Compare two versions of an offer or page to see which works better.', unavailable: 'This feature is not ready. The system does not yet record which customers saw each version or measure results, so it cannot report a reliable winner.' },
     ],
   },
 ];
 
-export default function GrowthOffersHub() {
-  const [activeSection, setActiveSection] = useState(sections[0].id);
-  const [openFeature, setOpenFeature] = useState(sections[0].features[0].id);
-  const section = sections.find(item => item.id === activeSection) || sections[0];
+const allFeatures = groups.flatMap(group => group.features);
 
-  const changeSection = id => {
-    const nextSection = sections.find(item => item.id === id);
-    setActiveSection(id);
-    setOpenFeature(nextSection.features[0].id);
+export default function GrowthOffersHub() {
+  const navigate = useNavigate();
+  const { tab } = useParams();
+  const initialFeature = allFeatures.find(feature => feature.id === tab) || allFeatures[0];
+  const [selectedId, setSelectedId] = useState(initialFeature.id);
+  const [activeGroup, setActiveGroup] = useState(groups.find(group => group.features.some(feature => feature.id === initialFeature.id))?.id || groups[0].id);
+  const [mobileShowingTool, setMobileShowingTool] = useState(false);
+  const selected = allFeatures.find(feature => feature.id === selectedId) || allFeatures[0];
+  const Tool = selected.component;
+
+  useEffect(() => {
+    const feature = allFeatures.find(item => item.id === tab);
+    if (feature) {
+      setSelectedId(feature.id);
+      setActiveGroup(groups.find(group => group.features.some(item => item.id === feature.id))?.id || groups[0].id);
+      setMobileShowingTool(true);
+    }
+  }, [tab]);
+
+  const chooseFeature = feature => {
+    setSelectedId(feature.id);
+    setMobileShowingTool(true);
+    if (feature.id !== tab) navigate(`/admin/dashboard/${feature.id}`, { replace: true });
+  };
+
+  const chooseGroup = group => {
+    setActiveGroup(group.id);
+    const firstFeature = group.features[0];
+    chooseFeature(firstFeature);
   };
 
   return (
     <main className="space-y-5 text-slate-100">
       <header className="border-b border-white/10 pb-4">
-        <p className="text-xs font-bold uppercase tracking-widest text-emerald-300">Admin tools</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-emerald-300">Simple promotion controls</p>
         <h1 className="mt-2 text-2xl font-bold text-white">Growth & offers</h1>
-        <p className="mt-1 text-sm text-slate-400">Choose a section, then open the tool you need. Start with Offers & checkout for discounts and cart settings.</p>
+        <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-400">Pick a group, pick one tool, then follow the short instructions. Only the selected tool opens here.</p>
       </header>
 
-      <nav aria-label="Growth and offers sections" className="grid grid-cols-1 gap-2 sm:grid-cols-3">
-        {sections.map(item => {
-          const Icon = item.icon;
-          const selected = item.id === activeSection;
+      <nav aria-label="Growth tool groups" className="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        {groups.map(group => {
+          const Icon = group.icon;
+          const active = group.id === activeGroup;
           return (
-            <button
-              key={item.id}
-              type="button"
-              role="tab"
-              aria-selected={selected}
-              aria-controls="growth-offers-panel"
-              onClick={() => changeSection(item.id)}
-              className={`flex min-h-14 items-center gap-3 rounded-xl border px-4 py-3 text-left transition ${selected ? 'border-emerald-400/50 bg-emerald-400/10 text-emerald-200' : 'border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.07]'}`}
-            >
+            <button key={group.id} type="button" aria-pressed={active} onClick={() => chooseGroup(group)} className={`flex min-h-12 items-center gap-3 rounded-xl border px-4 py-3 text-left ${active ? 'border-emerald-400/50 bg-emerald-400/10 text-emerald-200' : 'border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.07]'}`}>
               <Icon size={18} aria-hidden="true"/>
-              <span className="text-sm font-semibold">{item.label}</span>
+              <span className="text-sm font-semibold">{group.label}</span>
             </button>
           );
         })}
       </nav>
 
-      <section id="growth-offers-panel" role="tabpanel" className="space-y-3">
-        <div className="pb-1">
-          <h2 className="text-lg font-semibold text-white">{section.label}</h2>
-          <p className="mt-1 text-sm text-slate-400">{section.description}</p>
-        </div>
+      <div className="grid gap-4 lg:grid-cols-[230px_minmax(0,1fr)]">
+        <nav aria-label={`${groups.find(group => group.id === activeGroup)?.label || 'Growth'} tools`} className={`${mobileShowingTool ? 'hidden lg:block' : 'block'} space-y-2`}>
+          {groups.find(group => group.id === activeGroup)?.features.map(feature => (
+            <button key={feature.id} type="button" aria-current={feature.id === selected.id ? 'page' : undefined} onClick={() => chooseFeature(feature)} className={`w-full rounded-xl border px-4 py-3 text-left ${feature.id === selected.id ? 'border-emerald-400/40 bg-emerald-400/10 text-white' : 'border-white/10 bg-white/[0.03] text-slate-300 hover:bg-white/[0.06]'}`}>
+              <span className="block text-sm font-semibold">{feature.label}</span>
+              <span className="mt-1 block text-xs leading-5 text-slate-400">{feature.purpose}</span>
+            </button>
+          ))}
+        </nav>
 
-        {section.features.map(feature => {
-          const Feature = feature.component;
-          const expanded = openFeature === feature.id;
-          return (
-            <article key={feature.id} className="overflow-hidden rounded-xl border border-white/10 bg-white/[0.03]">
-              <button
-                type="button"
-                aria-expanded={expanded}
-                aria-controls={`growth-feature-${feature.id}`}
-                onClick={() => setOpenFeature(expanded ? '' : feature.id)}
-                className="flex w-full items-start justify-between gap-4 px-4 py-3 text-left hover:bg-white/[0.04]"
-              >
-                <span>
-                  <span className="block text-sm font-semibold text-white">{feature.label}</span>
-                  <span className="mt-1 block text-xs leading-5 text-slate-400">{feature.purpose}</span>
-                  {feature.note && <span className="mt-1 block text-xs text-amber-200">{feature.note}</span>}
-                </span>
-                <span aria-hidden="true" className="pt-0.5 text-lg leading-none text-emerald-300">{expanded ? '−' : '+'}</span>
-              </button>
-              {expanded && (
-                <div id={`growth-feature-${feature.id}`} className="border-t border-white/10 p-4">
-                  <Suspense fallback={<p role="status" className="flex items-center gap-2 text-sm text-slate-400"><LoaderCircle size={16} className="animate-spin"/>Opening {feature.label.toLowerCase()}…</p>}>
-                    <Feature/>
-                  </Suspense>
-                </div>
-              )}
-            </article>
-          );
-        })}
-      </section>
-      <p className="flex items-center gap-2 text-xs text-slate-500"><Gift size={14}/> Open a tool to see its settings. Changes are saved inside that tool.</p>
+        <section aria-labelledby="growth-tool-title" className={`${mobileShowingTool ? 'block' : 'hidden lg:block'} min-w-0 rounded-xl border border-white/10 bg-white/[0.025] p-4 sm:p-5`}>
+          <button type="button" onClick={() => setMobileShowingTool(false)} className="mb-4 text-xs font-semibold text-emerald-300 lg:hidden">← All tools</button>
+          <header className="mb-5 border-b border-white/10 pb-4">
+            <h2 id="growth-tool-title" className="text-lg font-semibold text-white">{selected.label}</h2>
+            <p className="mt-1 text-sm leading-6 text-slate-400"><strong className="text-slate-300">What it does:</strong> {selected.purpose}</p>
+            {selected.steps && <p className="mt-1 text-sm leading-6 text-slate-400"><strong className="text-slate-300">How to use it:</strong> {selected.steps}</p>}
+          </header>
+          {selected.unavailable ? (
+            <div role="status" className="flex gap-3 rounded-lg border border-amber-300/20 bg-amber-300/5 p-4">
+              <FlaskConical size={18} className="mt-0.5 shrink-0 text-amber-200" aria-hidden="true"/>
+              <p className="text-sm leading-6 text-amber-100">{selected.unavailable}</p>
+            </div>
+          ) : (
+            <Suspense fallback={<p role="status" className="flex items-center gap-2 text-sm text-slate-400"><LoaderCircle size={16} className="animate-spin"/>Loading {selected.label.toLowerCase()}…</p>}>
+              <Tool/>
+            </Suspense>
+          )}
+        </section>
+      </div>
+      <p className="flex items-center gap-2 text-xs text-slate-500"><Gift size={14}/> Only real, connected actions are shown. A/B experiments are marked unavailable until results can be measured.</p>
     </main>
   );
 }

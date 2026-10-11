@@ -15,12 +15,9 @@ const OrderManagement = lazy(() => import('./admin/OrderManagement'));
 const UserManagement = lazy(() => import('./admin/UserManagement'));
 const AnalyticsManagement = lazy(() => import('./admin/AnalyticsManagement'));
 const InventoryManagement = lazy(() => import('./admin/InventoryManagement'));
-const CouponManagement = lazy(() => import('./admin/CouponManagement'));
 const ReviewManagement = lazy(() => import('./admin/ReviewManagement'));
 const ReturnManagement = lazy(() => import('./admin/ReturnManagement'));
 const SupportManagement = lazy(() => import('./admin/SupportManagement'));
-const FlashSalesManagement = lazy(() => import('./admin/FlashSalesManagement'));
-const LoyaltyManagement = lazy(() => import('./admin/LoyaltyManagement'));
 const NotificationManagement = lazy(() => import('./admin/NotificationManagement'));
 const TaxManagement = lazy(() => import('./admin/TaxManagement'));
 const GSTAccounting = lazy(() => import('./admin/GSTAccounting'));
@@ -28,15 +25,11 @@ const SystemLogs = lazy(() => import('./admin/SystemLogs'));
 const WarehouseManagement = lazy(() => import('./admin/WarehouseManagement'));
 const ShippingManagement = lazy(() => import('./admin/ShippingManagement')); 
 const AdminSettings = lazy(() => import('./admin/AdminSettings.jsx'));
-const MinCartValueCenter = lazy(() => import('./admin/MinCartValueCenter.jsx'));
-const CartRulesEngine = lazy(() => import('./admin/CartRulesEngine.jsx'));
-const GamificationStudio = lazy(() => import('./admin/GamificationStudio.jsx'));
-const LifecycleOffers = lazy(() => import('./admin/LifecycleOffers.jsx'));
-const PersonalizationCenter = lazy(() => import('./admin/PersonalizationCenter.jsx'));
-const LoyaltyTierForge = lazy(() => import('./admin/LoyaltyTierForge.jsx'));
 const ImpactManagement = lazy(() => import('./admin/ImpactManagement.jsx'));
 const GrowthOffersHub = lazy(() => import('./admin/GrowthOffersHub.jsx'));
 const WalletManagement = lazy(() => import('./admin/WalletManagement.jsx'));
+
+const GROWTH_TABS = ['flash-sales', 'coupons', 'loyalty', 'affiliate', 'min-cart-value', 'cart-rules', 'gamification', 'lifecycle-offers', 'personalization', 'ab-experiments', 'loyalty-tiers'];
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -78,18 +71,13 @@ const ComingSoon = ({ name }) => (
 const TAB_COMPONENTS = {
   overview: DashboardOverview, products: ProductManagement, categories: CategoryManagement,
   inventory: InventoryManagement, orders: OrderManagement, returns: ReturnManagement,
-  'flash-sales': FlashSalesManagement, coupons: CouponManagement, users: UserManagement,
-  support: SupportManagement, reviews: ReviewManagement, loyalty: LoyaltyManagement,
+  users: UserManagement,
+  support: SupportManagement, reviews: ReviewManagement,
   analytics: AnalyticsManagement,
   notifications: NotificationManagement,
   tax: TaxManagement, gst: GSTAccounting, shipping: ShippingManagement, logs: SystemLogs,
   warehouse: WarehouseManagement, settings: AdminSettings,
-  'min-cart-value': MinCartValueCenter,
-  'cart-rules': CartRulesEngine,
-  gamification: GamificationStudio,
-  'lifecycle-offers': LifecycleOffers,
-  personalization: PersonalizationCenter,
-  'loyalty-tiers': LoyaltyTierForge,
+  ...Object.fromEntries(GROWTH_TABS.map(id => [id, GrowthOffersHub])),
   'growth-offers': GrowthOffersHub,
   'wallet-management': WalletManagement,
   impact: ImpactManagement,
@@ -158,7 +146,7 @@ export default function AdminDashboard() {
       items: section.items.filter(item => item.label.toLowerCase().includes(normalizedSearch))
     }))
     .filter(section => section.items.length);
-  const activeLabel = allMenuItems.find(item => item.id === activeTab)?.label || 'Dashboard';
+  const activeLabel = allMenuItems.find(item => item.id === activeTab)?.label || (GROWTH_TABS.includes(activeTab) ? 'Growth & offers' : 'Dashboard');
   const ActiveComponent = TAB_COMPONENTS[activeTab] || DashboardOverview;
 
   return (
