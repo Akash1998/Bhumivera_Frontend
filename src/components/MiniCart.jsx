@@ -6,7 +6,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import { useWishlist } from '../context/WishlistContext';
-import { addresses as addressesApi, coupons as couponsApi, notifications as notificationsApi, orders as ordersApi, payments as paymentsApi, products as productsApi, wallet as walletApi } from '../services/api';
+import { addresses as addressesApi, coupons as couponsApi, notifications as notificationsApi, orders as ordersApi, payments as paymentsApi, products as productsApi, users as usersApi, wallet as walletApi } from '../services/api';
 import { useToast } from '../context/ToastContext';
 
 let razorpayScriptPromise;
@@ -179,7 +179,11 @@ export default function MiniCart() {
         console.error('[MINI_CART_WHATSAPP_STATUS]', error);
         return { data: { available: false } };
       }),
-    ]).then(([addressResponse, walletResponse, whatsappResponse]) => {
+      usersApi.getProfile().catch(error => {
+        console.error('[MINI_CART_WHATSAPP_PREFERENCE]', error);
+        return { data: {} };
+      }),
+    ]).then(([addressResponse, walletResponse, whatsappResponse, profileResponse]) => {
       if (!active) return;
       const list = addressResponse.data?.addresses || addressResponse.data?.data || addressResponse.data || [];
       const savedAddresses = Array.isArray(list) ? list : [];
@@ -187,7 +191,10 @@ export default function MiniCart() {
       setSelectedAddress(current => current || String((savedAddresses.find(address => address.is_default) || savedAddresses[0])?.id || ''));
       setWalletBalance(Math.max(0, Number(walletResponse.data?.balance) || 0));
       setWhatsappUpdatesAvailable(whatsappResponse.data?.available === true);
-      if (whatsappResponse.data?.available !== true) setWhatsappUpdatesOptIn(false);
+      setWhatsappUpdatesOptIn(
+        whatsappResponse.data?.available === true &&
+        Boolean(Number(profileResponse.data?.whatsapp_order_updates_opt_in))
+      );
     }).catch(error => {
       console.error('[MINI_CART_CHECKOUT_DETAILS]', error);
       if (active) toast.error(error.response?.data?.message || 'Could not load checkout details. Please try again.');

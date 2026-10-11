@@ -195,6 +195,9 @@ export default function Profile() {
   const mobileTabsRef = useRef(null);
 
   const [profileData, setProfileData] = useState({ name: '', phone: '', marketing_email_opt_in: false });
+  const [whatsappOrderUpdatesOptIn, setWhatsappOrderUpdatesOptIn] = useState(false);
+  const [whatsappPreferenceSaving, setWhatsappPreferenceSaving] = useState(false);
+  const [whatsappAlertsAvailable, setWhatsappAlertsAvailable] = useState(false);
   const [orders, setOrders] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [wishlistError, setWishlistError] = useState('');
@@ -282,13 +285,21 @@ export default function Profile() {
 
   const loadProfile = async () => {
     try {
-      const res = await usersApi.getProfile();
+      const [res, whatsappStatus] = await Promise.all([
+        usersApi.getProfile(),
+        notificationsApi.getWhatsAppStatus().catch(error => {
+          console.error('[PROFILE_WHATSAPP_STATUS]', error);
+          return { data: { available: false } };
+        }),
+      ]);
       const u = safeExtract(res, 'user') || safeExtract(res, 'data') || res?.data || {};
       setProfileData({
         name: u.name || u.first_name || u.full_name || '',
         phone: u.phone || u.mobile || u.phone_number || '',
         marketing_email_opt_in: Boolean(Number(u.marketing_email_opt_in)),
       });
+      setWhatsappOrderUpdatesOptIn(Boolean(Number(u.whatsapp_order_updates_opt_in)));
+      setWhatsappAlertsAvailable(whatsappStatus.data?.available === true);
       setTwoFactor(p => ({ ...p, isEnabled: !!u.two_factor_enabled || u.two_factor_enabled === 1 }));
       if (u.security_question) setSecQuestion(s => ({ ...s, question: u.security_question, answer: u.security_answer || s.answer }));
     } catch (_) {}
@@ -369,6 +380,20 @@ export default function Profile() {
       await usersApi.updateProfile(profileData);
       toast.success('Profile updated successfully');
     } catch (err) { toast.error(err.response?.data?.message || 'Failed to update profile'); }
+  };
+  const handleWhatsAppPreferenceChange = async enabled => {
+    setWhatsappPreferenceSaving(true);
+    try {
+      const response = await usersApi.updateWhatsAppPreference(enabled);
+      setWhatsappOrderUpdatesOptIn(response.data?.whatsapp_order_updates_opt_in === true);
+      toast.success(enabled
+        ? 'WhatsApp order updates enabled for orders you opt in to.'
+        : 'WhatsApp order updates disabled. No further WhatsApp order alerts will be sent.');
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Could not update your WhatsApp preference.');
+    } finally {
+      setWhatsappPreferenceSaving(false);
+    }
   };
   const handleChangePassword = async (e) => {
     e.preventDefault();
@@ -1439,6 +1464,35 @@ export default function Profile() {
                       </button>
                     </div>
                   </form>
+                </section>
+
+                <section className="rounded-2xl bg-white border border-stone-200 p-6 shadow-sm">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center"><Smartphone className="w-5 h-5"/></div>
+                    <div><h3 className="font-semibold text-[#0B2419] text-lg">WhatsApp Order Updates</h3><p className="text-xs text-stone-500">Choose whether Bhumivera may send order-status and tracking alerts</p></div>
+                  </div>
+                  <label className="flex items-start gap-3 rounded-xl border border-stone-200 bg-stone-50 p-4 text-sm text-stone-700">
+                    <input
+                      type="checkbox"
+                      checked={whatsappOrderUpdatesOptIn}
+                      disabled={whatsappPreferenceSaving}
+                      onChange={event => handleWhatsAppPreferenceChange(event.target.checked)}
+                      className="mt-0.5 accent-[#0B2419]"
+                    />
+                    <span>
+                      Opt in to WhatsApp order updates.
+                      <span className="block mt-1 text-xs text-stone-500">Optional. You can turn this off here at any time. This setting enables messages only for orders where you also chose WhatsApp updates at checkout; opting out stops alerts for all your orders. Promotional messages are not included.</span>
+                    </span>
+                  </label>
+                  <p className="mt-3 text-xs text-stone-500" role="status">
+                    {whatsappPreferenceSaving
+                      ? 'Saving your preference…'
+                      : whatsappOrderUpdatesOptIn
+                        ? whatsappAlertsAvailable
+                          ? 'You are opted in. New orders will start with the checkout WhatsApp option selected.'
+                          : 'Your opt-in is saved, but WhatsApp delivery is not configured yet. Alerts will not send until the service is enabled.'
+                        : 'You are opted out. WhatsApp order alerts are off.'}
+                  </p>
                 </section>
 
                 <section className="rounded-2xl bg-white border border-stone-200 p-6 shadow-sm">
