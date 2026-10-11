@@ -73,7 +73,8 @@ export default function MiniCart() {
   const [addressSaving, setAddressSaving] = useState(false);
   const [paymentMode, setPaymentMode] = useState('online');
   const [shippingMethod, setShippingMethod] = useState('STANDARD');
-  const [walletBalance, setWalletBalance] = useState(0);
+  const [walletBalance, setWalletBalance] = useState(null);
+  const [walletBalanceError, setWalletBalanceError] = useState('');
   const [codEligibility, setCodEligibility] = useState({
     eligible: false,
     deliveredOrderCount: 0,
@@ -190,7 +191,7 @@ export default function MiniCart() {
       addressesApi.getAll(),
       walletApi.getBalance().catch(error => {
         console.error('[MINI_CART_WALLET_BALANCE]', error);
-        return { data: { balance: 0 } };
+        return { walletBalanceError: error.response?.data?.message || 'Wallet balance could not be loaded.' };
       }),
       notificationsApi.getWhatsAppStatus().catch(error => {
         console.error('[MINI_CART_WHATSAPP_STATUS]', error);
@@ -210,7 +211,19 @@ export default function MiniCart() {
       const savedAddresses = Array.isArray(list) ? list : [];
       setAddresses(savedAddresses);
       setSelectedAddress(current => current || String((savedAddresses.find(address => address.is_default) || savedAddresses[0])?.id || ''));
-      setWalletBalance(Math.max(0, Number(walletResponse.data?.balance) || 0));
+      if (walletResponse.walletBalanceError) {
+        setWalletBalance(null);
+        setWalletBalanceError(walletResponse.walletBalanceError);
+      } else {
+        const balance = Number(walletResponse.data?.balance ?? walletResponse.data?.data?.balance);
+        if (!Number.isFinite(balance) || balance < 0) {
+          setWalletBalance(null);
+          setWalletBalanceError('Wallet balance could not be loaded. Please try again.');
+        } else {
+          setWalletBalance(balance);
+          setWalletBalanceError('');
+        }
+      }
       setWhatsappUpdatesAvailable(whatsappResponse.data?.available === true);
       setWhatsappUpdatesOptIn(
         whatsappResponse.data?.available === true &&
@@ -377,6 +390,10 @@ export default function MiniCart() {
     }
     if (!selectedAddress) {
       toast.error('Choose or add a delivery address before placing your order.');
+      return;
+    }
+    if (paymentMode === 'WALLET' && walletBalance === null) {
+      toast.error(walletBalanceError || 'Wallet balance is unavailable. Please reopen checkout and try again.');
       return;
     }
     if (paymentMode === 'WALLET' && walletBalance < finalTotal) {
@@ -574,7 +591,8 @@ export default function MiniCart() {
                 <div className="space-y-2">
                   <p className="text-xs font-bold text-[#35533c]">Payment method</p>
                   <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'online'} onChange={() => { setPaymentMode('online'); setImpactAmount(0); }} className="accent-[#35533c]"/>Pay securely with Razorpay <span className="ml-auto text-[9px] font-bold uppercase tracking-wide text-emerald-700">Recommended</span></label>
-                  <label className="flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><span className="flex items-center gap-2"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'WALLET'} onChange={() => { setPaymentMode('WALLET'); setImpactAmount(0); }} className="accent-[#35533c]"/>Bhumivera wallet</span><span className="text-stone-500">Balance {formatPrice(walletBalance)}</span></label>
+                  <label className="flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><span className="flex items-center gap-2"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'WALLET'} onChange={() => { setPaymentMode('WALLET'); setImpactAmount(0); }} className="accent-[#35533c]"/>Bhumivera wallet</span><span className="text-stone-500">{walletBalance === null ? 'Balance unavailable' : `Balance ${formatPrice(walletBalance)}`}</span></label>
+                  {walletBalanceError && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-[10px] text-rose-700">{walletBalanceError}</p>}
                   <label className={`flex items-center gap-2 rounded-xl border bg-white p-3 text-xs ${codEligibility.eligible ? 'cursor-pointer border-[#e8dcc4]' : 'cursor-not-allowed border-[#e8dcc4] opacity-70'}`}><input type="radio" name="mini-cart-payment" checked={paymentMode === 'COD'} disabled={!codEligibility.eligible} onChange={() => setPaymentMode('COD')} className="accent-[#35533c]"/>Cash on delivery</label>
                   <p role="status" className="rounded-lg bg-[#f7f3ea] px-3 py-2 text-[10px] leading-4 text-stone-600">
                     {!codEligibility.available
@@ -669,11 +687,11 @@ export default function MiniCart() {
           </div>
           {checkoutOpen
             ? <form onSubmit={placeOrder}>
-              <button type="submit" disabled={placingOrder || !user || (paymentMode === 'WALLET' && walletBalance < finalTotal)} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#2C3E2D] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-md transition hover:bg-[#1b2c20] disabled:cursor-not-allowed disabled:opacity-50">
+              <button type="submit" disabled={placingOrder || !user || (paymentMode === 'WALLET' && (walletBalance === null || walletBalance < finalTotal))} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#2C3E2D] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-md transition hover:bg-[#1b2c20] disabled:cursor-not-allowed disabled:opacity-50">
                 {placingOrder ? 'Preparing your order…' : <>{paymentMode === 'COD' ? 'Place order · cash on delivery' : paymentMode === 'online' ? 'Pay securely with Razorpay' : 'Place wallet order'} <ArrowRight size={16}/></>}
               </button>
               <button type="button" onClick={() => setCheckoutOpen(false)} className="mt-2 w-full py-2 text-xs font-semibold text-stone-500 hover:text-[#2C3E2D]">Back to cart</button>
-              {paymentMode === 'WALLET' && walletBalance < finalTotal && <p className="mt-1 text-center text-[10px] text-rose-700">Add funds to your wallet or choose Razorpay.</p>}
+              {paymentMode === 'WALLET' && walletBalance !== null && walletBalance < finalTotal && <p className="mt-1 text-center text-[10px] text-rose-700">Add funds to your wallet or choose Razorpay.</p>}
               <p className="mt-1 text-center text-[9px] leading-4 text-stone-500">Your selected address, delivery, payment and pledge are confirmed before placing this order.</p>
             </form>
             : <button type="button" onClick={continueToCheckout} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#8b5a2b] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-md transition hover:bg-[#6b4421]">Continue to checkout <ArrowRight size={16}/></button>}

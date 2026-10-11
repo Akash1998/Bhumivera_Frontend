@@ -222,7 +222,7 @@ export default function Profile() {
   const [orders, setOrders] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [wishlistError, setWishlistError] = useState('');
-  const [wallet, setWallet] = useState({ balance: 0, referralBalance: 0, transactions: [] });
+  const [wallet, setWallet] = useState({ balance: 0, referralBalance: 0, referralBalanceAvailable: true, transactions: [] });
   const [walletTopUpAmount, setWalletTopUpAmount] = useState('1000');
   const [walletTopUpBusy, setWalletTopUpBusy] = useState(false);
   const [addresses, setAddresses] = useState([]);
@@ -347,12 +347,30 @@ export default function Profile() {
   };
   const loadWallet = async () => {
     try {
-      const [balRes, histRes] = await Promise.all([walletApi.getBalance(), walletApi.getHistory()]);
+      const [balanceResult, historyResult] = await Promise.allSettled([
+        walletApi.getBalance(),
+        walletApi.getHistory(),
+      ]);
+      if (balanceResult.status === 'rejected') throw balanceResult.reason;
+      const balRes = balanceResult.value;
+      const histRes = historyResult.status === 'fulfilled' ? historyResult.value : null;
       const balance = balRes?.data?.balance ?? balRes?.data?.data?.balance ?? 0;
       const referralBalance = balRes?.data?.referralBalance ?? balRes?.data?.data?.referralBalance ?? 0;
       const transactions = safeArr(safeExtract(histRes, 'transactions')) || safeArr(safeExtract(histRes, 'history')) || safeArr(safeExtract(histRes, 'data')) || safeArr(histRes?.data);
-      setWallet({ balance: Number(balance)||0, referralBalance: Number(referralBalance)||0, transactions });
-    } catch (_) {}
+      setWallet({
+        balance: Number(balance) || 0,
+        referralBalance: Number(referralBalance) || 0,
+        referralBalanceAvailable: balRes?.data?.referralBalanceAvailable !== false,
+        transactions,
+      });
+      if (historyResult.status === 'rejected') {
+        console.error('[PROFILE_WALLET_HISTORY_LOAD]', historyResult.reason);
+        toast.error('Wallet balance loaded, but transaction history is temporarily unavailable.');
+      }
+    } catch (error) {
+      console.error('[PROFILE_WALLET_BALANCE_LOAD]', error);
+      toast.error(error.response?.data?.message || 'Could not load your wallet balance. Please try again.');
+    }
   };
 
   const purchaseWalletBalance = async event => {
@@ -1275,8 +1293,8 @@ export default function Profile() {
                         <div className="text-sm text-stone-300 mb-1.5">Available Balance</div>
                         <div className="text-4xl sm:text-5xl font-bold tracking-tight">₹{Number(wallet.balance||0).toFixed(2)}</div>
                         <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-                          Restricted referral rewards: <strong>₹{Number(wallet.referralBalance||0).toFixed(2)}</strong>
-                          <span className="mt-1 block text-xs text-amber-800">Apply your personal referral coupon to use up to the per-order limit configured by Bhumivera.</span>
+                          Restricted referral rewards: <strong>{wallet.referralBalanceAvailable ? `₹${Number(wallet.referralBalance||0).toFixed(2)}` : 'Temporarily unavailable'}</strong>
+                          <span className="mt-1 block text-xs text-amber-800">{wallet.referralBalanceAvailable ? 'Apply your personal referral coupon to use up to the per-order limit configured by Bhumivera.' : 'Your spendable wallet remains available. Referral rewards could not be loaded right now.'}</span>
                         </div>
                       </div>
                       <div className="w-14 h-14 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center">
