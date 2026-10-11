@@ -392,7 +392,18 @@ export const contact = {
   delete: id => api.delete(`/contact/${id}`)
 };
 export const adminManagement = { getAllUsers: () => api.get("/admin/users"), getUserDetails: id => api.get(`/admin/users/${id}`), updateUserStatus: (id, s) => api.patch(`/admin/users/${id}/status`, { status: s }), getAllOrders: () => api.get("/orders/all"), updateOrderStatus: (id, d) => api.put(`/orders/${id}/status`, d) };
-export const affiliate = { getAllPartners: () => api.get("/affiliate/partners"), getAllWithdrawals: () => api.get("/affiliate/withdrawals"), getConfig: () => api.get("/affiliate/config"), updatePartnerStatus: (id, s) => api.patch(`/affiliate/partners/${id}/status`, { status: s }), approveWithdrawal: id => api.patch(`/affiliate/withdrawals/${id}/approve`), updateConfig: d => api.put("/affiliate/config", d) };
+export const affiliate = {
+  getReferralLink: () => api.get('/affiliate/referral/link'),
+  getReferralSummary: () => api.get('/affiliate/referral/summary'),
+  getAdminConfig: () => api.get('/affiliate/admin/config', { adminAuth: true }),
+  updateAdminConfig: data => api.put('/affiliate/admin/config', data, { adminAuth: true }),
+  getAdminReferrals: params => api.get('/affiliate/admin/referrals', { params, adminAuth: true }),
+};
+export const adminWallet = {
+  getAccounts: params => api.get('/wallet/admin/accounts', { params, adminAuth: true }),
+  getTransactions: userId => api.get(`/wallet/admin/accounts/${userId}/transactions`, { adminAuth: true }),
+  adjust: (userId, data) => api.post(`/wallet/admin/accounts/${userId}/adjust`, data, { adminAuth: true }),
+};
 export const flashSales = { getAll: () => api.get("/flash-sales"), getAllAdmin: () => api.get("/flash-sales"), getActive: () => api.get("/flash-sales/active"), create: d => api.post("/flash-sales", d), update: (id, d) => api.put(`/flash-sales/${id}`, d), delete: id => api.delete(`/flash-sales/${id}`) };
 export const support = {
   getAllAdmin: () => api.get('/contact'),

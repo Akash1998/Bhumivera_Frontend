@@ -9,6 +9,7 @@ const CartRulesEngine = lazy(() => import('./CartRulesEngine'));
 const GamificationStudio = lazy(() => import('./GamificationStudio'));
 const LifecycleOffers = lazy(() => import('./LifecycleOffers'));
 const PersonalizationCenter = lazy(() => import('./PersonalizationCenter'));
+const AffiliateManagement = lazy(() => import('./AffiliateManagement'));
 const LoyaltyTierForge = lazy(() => import('./LoyaltyTierForge'));
 
 const sections = [
@@ -32,6 +33,7 @@ const sections = [
     features: [
       { id: 'loyalty', label: 'Loyalty', purpose: 'See members and manage how customers earn and use points.', component: LoyaltyManagement },
       { id: 'loyalty-tiers', label: 'Loyalty tiers', purpose: 'Set point levels and benefits for each membership tier.', component: LoyaltyTierForge },
+      { id: 'referrals', label: 'Refer a friend', purpose: 'Choose wallet and coupon rewards, then review referred customers and reward status.', component: AffiliateManagement },
       { id: 'gamification', label: 'Reward activities', purpose: 'Turn storefront activities like reward spins and sale countdowns on or off.', component: GamificationStudio },
     ],
   },

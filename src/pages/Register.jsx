@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, Lock, Mail, AlertTriangle, User, 
@@ -19,13 +19,15 @@ const viewVariants = {
 export default function Register() {
   const { register, verifyEmail } = useAuth();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const referralToken = searchParams.get('ref') || '';
 
   // 1. Create the Ref for the Turnstile widget
   const turnstileRef = useRef(null);
 
   const [view, setView] = useState('INIT');
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', securityAnswer: '', marketingEmailOptIn: false
+    name: '', email: '', password: '', securityAnswer: '', marketingEmailOptIn: false, referralCode: ''
   });
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const otpRefs = useRef([]);
@@ -82,7 +84,7 @@ export default function Register() {
     setError('');
     
     try {
-      await register({ ...formData, turnstileToken }); 
+      await register({ ...formData, referralToken: referralToken || undefined, turnstileToken });
       setView('OTP');
       setSuccessMsg(`Verification token dispatched to ${formData.email}`);
     } catch (err) {
@@ -167,6 +169,18 @@ export default function Register() {
                   <InputField icon={<User size={18}/>} type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Full Name" disabled={loading} />
                   
                   <InputField icon={<Mail size={18}/>} type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email Address" disabled={loading} />
+
+                  <div>
+                    <label htmlFor="referralCode" className="mb-2 block pl-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#0B2419]">Referral code <span className="font-normal normal-case tracking-normal text-[#0B2419]/50">Optional</span></label>
+                    {referralToken ? (
+                      <>
+                        <input id="referralCode" value="Referral link applied" readOnly aria-readonly="true" className="w-full rounded-2xl border border-emerald-700/20 bg-emerald-50 px-4 py-4 text-sm text-emerald-900"/>
+                        <p className="mt-1 pl-1 text-xs text-emerald-800">Your friend’s referral is linked to this sign-up and cannot be changed here.</p>
+                      </>
+                    ) : (
+                      <input id="referralCode" name="referralCode" type="text" autoComplete="off" maxLength={32} value={formData.referralCode} onChange={handleInputChange} placeholder="Enter a friend’s code" disabled={loading} className="w-full rounded-2xl border border-[#0B2419]/10 bg-[#F3F9F1] px-4 py-4 text-sm text-[#0B2419] outline-none focus:border-[#D4AF37] focus:bg-white disabled:opacity-50"/>
+                    )}
+                  </div>
                   
                   <div className="space-y-3">
                     <InputField icon={<Lock size={18}/>} type="password" name="password" value={formData.password} onChange={handleInputChange} placeholder="Password" disabled={loading} />

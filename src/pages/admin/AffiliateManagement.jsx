@@ -1,194 +1,143 @@
-import React, { useState, useEffect } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { affiliate as affiliateApi } from '../../services/api';
-import { Share2, DollarSign, Users, TrendingUp, CheckCircle, XCircle, RefreshCw, Eye } from 'lucide-react';
+import { useToast } from '../../context/ToastContext';
+import { LoaderCircle, Save, Users } from 'lucide-react';
+
+const DEFAULTS = {
+  enabled: 1,
+  reward_mode: 'wallet',
+  wallet_reward_amount: 100,
+  coupon_discount_type: 'fixed',
+  coupon_discount_value: 100,
+  coupon_min_order_amount: 0,
+  coupon_valid_days: 30,
+};
+
+const readData = response => response?.data?.config || response?.data?.data || response?.data || {};
 
 export default function AffiliateManagement() {
-  const [partners, setPartners] = useState([]);
-  const [withdrawals, setWithdrawals] = useState([]);
-  const [config, setConfig] = useState({ commission_percent: 10, min_payout: 500 });
+  const [config, setConfig] = useState(DEFAULTS);
+  const [referrals, setReferrals] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [workflowAvailable, setWorkflowAvailable] = useState(false);
-  const [loadError, setLoadError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const { showToast } = useToast() || {};
 
-  useEffect(() => { fetchAll(); }, []);
-
-  const fetchAll = async () => {
+  const load = useCallback(async () => {
     setLoading(true);
     try {
-      const [partnersRes, withdrawalsRes, configRes] = await Promise.all([affiliateApi.getAllPartners(), affiliateApi.getAllWithdrawals(), affiliateApi.getConfig()]);
-      setPartners(partnersRes.data?.partners || partnersRes.data || []);
-      setWithdrawals(withdrawalsRes.data?.withdrawals || withdrawalsRes.data || []);
-      setConfig(configRes.data?.config || configRes.data || { commission_percent: 10, min_payout: 500 });
-      setWorkflowAvailable(true);
-    } catch (err) {
-      if (err.response?.status !== 501) console.error(err);
-      setWorkflowAvailable(false);
-      setLoadError(err.response?.status === 501
-        ? 'Affiliate partners, commissions, and payouts are not available yet because these workflows are not persisted.'
-        : 'Unable to check affiliate workflow availability. Refresh to try again.');
+      const [settingsResponse, referralsResponse] = await Promise.all([
+        affiliateApi.getAdminConfig(),
+        affiliateApi.getAdminReferrals({ limit: 50 }),
+      ]);
+      setConfig({ ...DEFAULTS, ...readData(settingsResponse) });
+      setReferrals(referralsResponse.data?.referrals || []);
+    } catch (error) {
+      showToast?.(error.normalized?.message || 'Could not load referral settings.', 'error');
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
 
-  const updatePartnerStatus = async (id, status) => {
+  useEffect(() => { load(); }, [load]);
+
+  const change = (key, value) => setConfig(current => ({ ...current, [key]: value }));
+
+  const save = async event => {
+    event.preventDefault();
+    setSaving(true);
     try {
-      await affiliateApi.updatePartnerStatus(id, status);
-      fetchAll();
-    } catch (err) {
-      alert('Failed: ' + err.message);
+      const response = await affiliateApi.updateAdminConfig({
+        ...config,
+        enabled: Boolean(config.enabled),
+        wallet_reward_amount: Number(config.wallet_reward_amount),
+        coupon_discount_value: Number(config.coupon_discount_value),
+        coupon_min_order_amount: Number(config.coupon_min_order_amount),
+        coupon_valid_days: Number(config.coupon_valid_days),
+      });
+      setConfig({ ...DEFAULTS, ...readData(response) });
+      showToast?.('Referral rewards saved.', 'success');
+    } catch (error) {
+      showToast?.(error.normalized?.message || 'Could not save referral rewards.', 'error');
+    } finally {
+      setSaving(false);
     }
   };
 
-  const approveWithdrawal = async (id) => {
-    try {
-      await affiliateApi.approveWithdrawal(id);
-      fetchAll();
-    } catch (err) {
-      alert('Failed: ' + err.message);
-    }
-  };
-
-  const saveConfig = async () => {
-    try {
-      await affiliateApi.updateConfig(config);
-      alert('Config saved!');
-    } catch (err) {
-      alert('Failed: ' + err.message);
-    }
-  };
-
-  if (loading) {
-    return <div className="admin-glass-panel rounded-2xl p-6 text-sm text-slate-300" role="status">Checking affiliate workflow availability…</div>;
-  }
-
-  if (!workflowAvailable) {
-    return (
-      <section className="admin-glass-panel rounded-2xl border border-amber-300/20 p-6 text-slate-100" aria-labelledby="affiliate-unavailable-title">
-        <div className="flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h2 id="affiliate-unavailable-title" className="text-xl font-semibold text-white">Affiliate network unavailable</h2>
-            <p className="mt-2 max-w-2xl text-sm leading-6 text-amber-100">{loadError || 'Affiliate partners, commission settings, and payout requests are not persisted yet. No changes can be saved or approved from this page.'}</p>
-          </div>
-          <button onClick={fetchAll} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 transition hover:bg-white/10">
-            <RefreshCw size={14} /> Check again
-          </button>
-        </div>
-      </section>
-    );
-  }
+  if (loading) return <p role="status" className="flex items-center gap-2 text-sm text-slate-400"><LoaderCircle size={16} className="animate-spin"/>Loading referral settings…</p>;
 
   return (
-    <div className="space-y-5 text-slate-100">
-      <div className="flex items-center justify-between">
-        <div>
-          <h2 className="text-2xl font-semibold tracking-tight text-white">Affiliate network</h2>
-          <p className="mt-1 text-sm text-slate-400">Manage partners, commissions, and payout requests.</p>
-        </div>
-        <button onClick={fetchAll} className="flex items-center gap-2 rounded-xl border border-white/10 bg-white/5 px-4 py-2 text-sm font-semibold text-slate-200 backdrop-blur-xl transition hover:bg-white/10">
-          <RefreshCw size={14} /> Refresh
+    <div className="max-w-4xl space-y-6 text-slate-100">
+      <header>
+        <h3 className="text-lg font-semibold text-white">Refer a friend</h3>
+        <p className="mt-1 text-sm leading-6 text-slate-400">Customers can share unlimited links. A reward is issued only after a referred customer’s first order is delivered. Referral credit and discount coupons cannot be withdrawn as cash.</p>
+      </header>
+
+      <form onSubmit={save} className="space-y-5 rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
+        <label className="flex items-start gap-3 text-sm text-white">
+          <input type="checkbox" checked={Boolean(Number(config.enabled))} onChange={event => change('enabled', event.target.checked ? 1 : 0)} className="mt-0.5 h-4 w-4 accent-emerald-400"/>
+          <span><strong>Referral rewards are on</strong><span className="mt-1 block text-xs text-slate-400">Turn this off to stop issuing new rewards. Existing rewards remain in customer accounts.</span></span>
+        </label>
+
+        <label className="block text-sm font-medium text-white">What should the referrer receive?
+          <select value={config.reward_mode} onChange={event => change('reward_mode', event.target.value)} className="admin-glass-control mt-2 w-full rounded-lg px-3 py-2">
+            <option value="wallet">Wallet balance only</option>
+            <option value="coupon">Coupon only</option>
+            <option value="wallet_coupon">Wallet balance and coupon</option>
+          </select>
+        </label>
+
+        {['wallet', 'wallet_coupon'].includes(config.reward_mode) && (
+          <label className="block max-w-sm text-sm font-medium text-white">Wallet reward per delivered referral (₹)
+            <input type="number" min="0" max="100000" step="0.01" required value={config.wallet_reward_amount} onChange={event => change('wallet_reward_amount', event.target.value)} className="admin-glass-control mt-2 w-full rounded-lg px-3 py-2"/>
+          </label>
+        )}
+
+        {['coupon', 'wallet_coupon'].includes(config.reward_mode) && (
+          <div className="grid gap-4 sm:grid-cols-2">
+            <label className="block text-sm font-medium text-white">Coupon discount
+              <div className="mt-2 flex gap-2">
+                <select value={config.coupon_discount_type} onChange={event => change('coupon_discount_type', event.target.value)} className="admin-glass-control min-w-0 flex-1 rounded-lg px-3 py-2">
+                  <option value="fixed">Fixed ₹</option><option value="percentage">Percent %</option>
+                </select>
+                <input type="number" min="0.01" max={config.coupon_discount_type === 'percentage' ? 100 : 100000} step="0.01" required value={config.coupon_discount_value} onChange={event => change('coupon_discount_value', event.target.value)} className="admin-glass-control w-28 rounded-lg px-3 py-2"/>
+              </div>
+            </label>
+            <label className="block text-sm font-medium text-white">Minimum order for coupon (₹)
+              <input type="number" min="0" step="0.01" required value={config.coupon_min_order_amount} onChange={event => change('coupon_min_order_amount', event.target.value)} className="admin-glass-control mt-2 w-full rounded-lg px-3 py-2"/>
+            </label>
+            <label className="block text-sm font-medium text-white">Coupon validity (days)
+              <input type="number" min="1" max="365" step="1" required value={config.coupon_valid_days} onChange={event => change('coupon_valid_days', event.target.value)} className="admin-glass-control mt-2 w-full rounded-lg px-3 py-2"/>
+            </label>
+          </div>
+        )}
+
+        <button disabled={saving} type="submit" className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-emerald-400 px-4 py-2 text-sm font-semibold text-[#071a12] disabled:opacity-50">
+          <Save size={15}/>{saving ? 'Saving…' : 'Save referral rewards'}
         </button>
-      </div>
+      </form>
 
-      {/* Stats */}
-      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <div className="admin-glass-panel rounded-2xl p-4 text-center">
-          <div className="text-2xl font-bold text-white">{partners.length}</div>
-          <div className="mt-1 text-xs font-semibold uppercase text-slate-400">Partners</div>
-        </div>
-        <div className="admin-glass-panel rounded-2xl p-4 text-center">
-          <div className="text-2xl font-bold text-emerald-300">{partners.filter(p => p.status === 'active').length}</div>
-          <div className="mt-1 text-xs font-semibold uppercase text-slate-400">Active</div>
-        </div>
-        <div className="admin-glass-panel rounded-2xl p-4 text-center">
-          <div className="text-2xl font-bold text-amber-300">{withdrawals.filter(w => w.status === 'pending').length}</div>
-          <div className="mt-1 text-xs font-semibold uppercase text-slate-400">Pending payouts</div>
-        </div>
-        <div className="admin-glass-panel rounded-2xl p-4 text-center">
-          <div className="text-2xl font-bold text-sky-300">{config.commission_percent}%</div>
-          <div className="mt-1 text-xs font-semibold uppercase text-slate-400">Commission</div>
-        </div>
-      </div>
-
-      {/* Config */}
-      <div className="admin-glass-panel rounded-2xl p-5">
-        <h3 className="mb-4 text-base font-semibold text-white">Commission settings</h3>
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-          <div>
-            <label className="mb-1 block text-xs text-slate-400">Commission percentage</label>
-            <input type="number" value={config.commission_percent} onChange={e => setConfig({...config, commission_percent: parseFloat(e.target.value)})} className="admin-glass-control w-full rounded-xl px-4 py-2 text-sm" />
-          </div>
-          <div>
-            <label className="mb-1 block text-xs text-slate-400">Minimum payout (₹)</label>
-            <input type="number" value={config.min_payout} onChange={e => setConfig({...config, min_payout: parseFloat(e.target.value)})} className="admin-glass-control w-full rounded-xl px-4 py-2 text-sm" />
-          </div>
-        </div>
-        <button onClick={saveConfig} className="mt-4 rounded-xl bg-emerald-400 px-4 py-2 text-sm font-semibold text-[#071a12] transition hover:bg-emerald-300">Save config</button>
-      </div>
-
-      {/* Partners */}
-      <div className="admin-glass-panel rounded-2xl p-5">
-        <h3 className="mb-4 text-base font-semibold text-white">Affiliate partners</h3>
-        {loading ? <div className="text-center py-8 text-slate-400">Loading...</div> : partners.length === 0 ? <div className="text-center py-8 text-slate-400">No partners yet</div> : (
-          <div className="space-y-3">
-            {partners.map(p => (
-              <div key={p.id} className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.035] p-4 backdrop-blur-lg">
-                <div className="flex-1">
-                  <div className="font-semibold text-slate-100">{p.name || p.user_name || 'Partner #' + p.id}</div>
-                  <div className="text-xs text-slate-400">{p.email || p.user_email} • Code: {p.affiliate_code}</div>
-                  <div className="text-xs text-slate-400 mt-1">
-                    Total Earned: ₹{p.total_earnings || 0} • Pending: ₹{p.pending_amount || 0}
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <span className={`px-3 py-1 rounded-full text-xs font-semibold ${p.status === 'active' ? 'bg-emerald-400/10 text-emerald-300' : 'bg-rose-400/10 text-rose-300'}`}>
-                    {p.status || 'pending'}
-                  </span>
-                  {p.status === 'active' ? (
-                    <button onClick={() => updatePartnerStatus(p.id, 'suspended')} className="rounded-lg p-2 transition hover:bg-white/10" title="Suspend">
-                      <XCircle size={16} className="text-rose-500" />
-                    </button>
-                  ) : (
-                    <button onClick={() => updatePartnerStatus(p.id, 'active')} className="rounded-lg p-2 transition hover:bg-white/10" title="Activate">
-                      <CheckCircle size={16} className="text-emerald-500" />
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
+      <section className="space-y-3">
+        <header className="flex items-center gap-2">
+          <Users size={17} className="text-emerald-300"/>
+          <h3 className="font-semibold text-white">Recent referrals</h3>
+          <span className="text-xs text-slate-500">Latest 50 sign-ups</span>
+        </header>
+        {referrals.length === 0 ? <p className="rounded-xl border border-white/10 p-4 text-sm text-slate-400">No one has joined through a referral yet.</p> : (
+          <div className="overflow-x-auto rounded-xl border border-white/10">
+            <table className="w-full min-w-[620px] text-left text-sm">
+              <thead className="bg-white/[0.04] text-xs text-slate-400"><tr><th className="p-3">Invited by</th><th className="p-3">New customer</th><th className="p-3">Reward status</th><th className="p-3">Reward</th></tr></thead>
+              <tbody className="divide-y divide-white/10">
+                {referrals.map(row => <tr key={row.referred_id}>
+                  <td className="p-3"><span className="block text-white">{row.referrer_name}</span><span className="text-xs text-slate-500">{row.referrer_email}</span></td>
+                  <td className="p-3"><span className="block text-white">{row.referred_name}</span><span className="text-xs text-slate-500">{row.referred_email}</span></td>
+                  <td className="p-3">{row.rewarded_at ? 'Order delivered' : 'Waiting for first delivered order'}</td>
+                  <td className="p-3">{row.rewarded_at ? [Number(row.wallet_amount) > 0 ? `₹${Number(row.wallet_amount).toFixed(2)} wallet` : '', row.coupon_code ? 'Coupon issued' : ''].filter(Boolean).join(' + ') : '—'}</td>
+                </tr>)}
+              </tbody>
+            </table>
           </div>
         )}
-      </div>
-
-      {/* Withdrawals */}
-      <div className="admin-glass-panel rounded-2xl p-5">
-        <h3 className="mb-4 text-base font-semibold text-white">Withdrawal requests</h3>
-        {loading ? <div className="text-center py-8 text-slate-400">Loading...</div> : withdrawals.length === 0 ? <div className="text-center py-8 text-slate-400">No requests</div> : (
-          <div className="space-y-3">
-            {withdrawals.map(w => (
-              <div key={w.id} className="flex items-center justify-between rounded-xl border border-white/5 bg-white/[0.035] p-4 backdrop-blur-lg">
-                <div className="flex-1">
-                  <div className="text-sm font-semibold text-slate-100">{w.partner_name || 'Partner #' + w.partner_id}</div>
-                  <div className="text-xs text-slate-400">Requested: {new Date(w.created_at).toLocaleDateString('en-IN')}</div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="text-right">
-                    <div className="font-semibold text-emerald-300">₹{w.amount}</div>
-                    <div className={`text-xs font-semibold ${w.status === 'approved' ? 'text-emerald-300' : w.status === 'pending' ? 'text-amber-300' : 'text-slate-400'}`}>
-                      {w.status}
-                    </div>
-                  </div>
-                  {w.status === 'pending' && (
-                    <button onClick={() => approveWithdrawal(w.id)} className="rounded-xl bg-emerald-400 px-3 py-2 text-xs font-semibold text-[#071a12] transition hover:bg-emerald-300">
-                      Approve
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </div>
+      </section>
     </div>
   );
 }

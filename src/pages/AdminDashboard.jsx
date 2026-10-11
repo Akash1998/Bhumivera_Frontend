@@ -3,7 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import {
   Activity, Award, Bell, Boxes, ChartNoAxesCombined, FileText,
   Gamepad2, Gift, Leaf, LifeBuoy, Mail, Package, ScrollText, Settings2,
-  ShoppingBag, SlidersHorizontal, Star, Tags, Truck, Users, Warehouse, Zap
+  ShoppingBag, SlidersHorizontal, Star, Tags, Truck, Users, Wallet, Warehouse, Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -36,6 +36,7 @@ const PersonalizationCenter = lazy(() => import('./admin/PersonalizationCenter.j
 const LoyaltyTierForge = lazy(() => import('./admin/LoyaltyTierForge.jsx'));
 const ImpactManagement = lazy(() => import('./admin/ImpactManagement.jsx'));
 const GrowthOffersHub = lazy(() => import('./admin/GrowthOffersHub.jsx'));
+const WalletManagement = lazy(() => import('./admin/WalletManagement.jsx'));
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -90,6 +91,7 @@ const TAB_COMPONENTS = {
   personalization: PersonalizationCenter,
   'loyalty-tiers': LoyaltyTierForge,
   'growth-offers': GrowthOffersHub,
+  'wallet-management': WalletManagement,
   impact: ImpactManagement,
 };
 
@@ -100,7 +102,7 @@ const TAB_ICONS = {
   'flash-sales': Zap, reviews: Star, 'min-cart-value': SlidersHorizontal, 'cart-rules': SlidersHorizontal,
   gamification: Gamepad2, 'lifecycle-offers': Mail, personalization: Users,
   'loyalty-tiers': Award, support: LifeBuoy,
-  'growth-offers': Gift,
+  'growth-offers': Gift, 'wallet-management': Wallet,
   returns: Truck, settings: Settings2, tax: Tags, gst: FileText, users: Users
 };
 
@@ -139,7 +141,7 @@ export default function AdminDashboard() {
     },
     {
       title: 'Platform', items: [
-        { id: 'impact', label: 'Earth impact' }, { id: 'logs', label: 'System logs' },
+        { id: 'impact', label: 'Earth impact' }, { id: 'wallet-management', label: 'Customer wallets' }, { id: 'logs', label: 'System logs' },
         { id: 'settings', label: 'Settings' }
       ]
     },

@@ -8,6 +8,7 @@ import {
   wishlist as wishlistApi,
   contact as contactApi,
   wallet as walletApi,
+  affiliate as affiliateApi,
   addresses as addressesApi,
   returns as returnsApi,
   notifications as notificationsApi,
@@ -235,9 +236,9 @@ export default function Profile() {
   const [warrantyCheck, setWarrantyCheck] = useState(null);
   const [couponValidate, setCouponValidate] = useState({ code:'', result:null });
   const [affiliateCopied, setAffiliateCopied] = useState(false);
+  const [referralData, setReferralData] = useState(null);
 
   const unreadCount = notifications.filter(n => !n.is_read && !n.read_at && n.status !== 'read').length;
-  const userId = user?.id || user?.userId || (() => { try { const u = JSON.parse(localStorage.getItem('user')||'{}'); return u.id||u.userId; } catch (_) { return null; }})();
 
   useEffect(() => { fetchAllForActiveTab(); }, [activeTab]);
   useEffect(() => {
@@ -739,13 +740,22 @@ export default function Profile() {
 
   const handleLogout = () => { if (window.confirm('Log out of your account?')) { logout(); navigate('/'); } };
 
-  const referralUrl = `${window.location.origin}/register?ref=BHUMI${userId || 'REFER'}`;
+  const referralUrl = referralData?.referralUrl || '';
+  useEffect(() => {
+    let active = true;
+    affiliateApi.getReferralSummary()
+      .then(({ data }) => { if (active) setReferralData(data?.data || null); })
+      .catch(error => console.error('[PROFILE_REFERRAL_SUMMARY]', error));
+    return () => { active = false; };
+  }, []);
   const handleCopyRef = async () => {
+    if (!referralUrl) { toast.error('Your referral link is still loading.'); return; }
     try { await navigator.clipboard.writeText(referralUrl); setAffiliateCopied(true); toast.success('Referral link copied'); setTimeout(() => setAffiliateCopied(false),2000); }
     catch (_) { toast.error('Copy failed'); }
   };
   const shareVia = (via) => {
-    const text = `I'm shopping at Bhumivera. Use my link to sign up & earn rewards: ${referralUrl}`;
+    if (!referralUrl) { toast.error('Your referral link is still loading.'); return; }
+    const text = `I'm shopping at Bhumivera. Join with my referral link: ${referralUrl}`;
     try {
       if (via === 'wa') { window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank'); return; }
       if (via === 'email') { window.open(`mailto:?subject=${encodeURIComponent('Check out Bhumivera')}&body=${encodeURIComponent(text)}`, '_blank'); return; }
@@ -1717,6 +1727,7 @@ export default function Profile() {
                     <div className="w-11 h-11 rounded-xl bg-[#D4AF37]/15 text-[#8a6a12] flex items-center justify-center"><QrCode className="w-5 h-5"/></div>
                     <div><h3 className="font-semibold text-[#0B2419] text-lg">Validate & Register Warranty</h3><p className="text-xs text-stone-500">Enter the 16-digit serial from your product package or certificate.</p></div>
                   </div>
+                  {referralData?.code && <p className="mb-3 text-xs text-stone-600">Your referral code: <strong className="font-mono tracking-wider text-[#0B2419]">{referralData.code}</strong></p>}
                   <div className="flex flex-col sm:flex-row gap-3">
                     <div className="flex-1 flex items-center rounded-xl border border-stone-200 bg-stone-50 px-4 focus-within:border-[#D4AF37] focus-within:bg-white transition-colors">
                       <Hash className="w-4 h-4 text-stone-400 mr-2.5"/>
@@ -1808,12 +1819,12 @@ export default function Profile() {
                       <Zap className="w-3.5 h-3.5"/> Refer & Earn
                     </div>
                     <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0B2419] tracking-tight leading-tight mb-2">Share Bhumivera. Grow together.</h2>
-                    <p className="text-stone-600 max-w-2xl leading-relaxed mb-6">Every friend that signs up and shops through your link unlocks commissions and perks for you. Rewards are credited directly to your wallet.</p>
+                    <p className="text-stone-600 max-w-2xl leading-relaxed mb-6">Share your personal link with as many friends as you like. Your chosen reward is earned once their first order is delivered.</p>
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                      <StatCard icon={Users}      label="Total Clicks"      value="—" accent="sage"/>
-                      <StatCard icon={User}       label="Referrals"        value="—" accent="earth"/>
-                      <StatCard icon={Coins}      label="Commission Rate"  value="10%" accent="gold"/>
-                      <StatCard icon={Wallet}     label="Total Earnings"   value="₹0.00" accent="earth"/>
+                      <StatCard icon={Users}      label="Friends referred" value={referralData?.referrals ?? '—'} accent="sage"/>
+                      <StatCard icon={User}       label="Rewards earned"   value={referralData?.rewarded_referrals ?? '—'} accent="earth"/>
+                      <StatCard icon={Coins}      label="Reward choice"    value={referralData?.rewardMode === 'wallet_coupon' ? 'Wallet + coupon' : referralData?.rewardMode === 'coupon' ? 'Coupon' : 'Wallet'} accent="gold"/>
+                      <StatCard icon={Wallet}     label="Wallet earned"    value={`₹${Number(referralData?.wallet_earned || 0).toFixed(2)}`} accent="earth"/>
                     </div>
                   </div>
                 </section>
@@ -1826,7 +1837,7 @@ export default function Profile() {
                   <div className="flex flex-col sm:flex-row gap-3">
                     <div className="flex-1 flex items-center rounded-xl bg-stone-50 border border-stone-200 px-4 py-3 overflow-hidden">
                       <ExternalLink className="w-4 h-4 text-stone-400 mr-2.5 shrink-0"/>
-                      <code className="flex-1 text-sm text-[#0B2419] font-mono truncate">{referralUrl}</code>
+                      <code className="flex-1 text-sm text-[#0B2419] font-mono truncate">{referralUrl || 'Preparing your secure referral link…'}</code>
                     </div>
                     <button onClick={handleCopyRef} className={`px-6 py-3 rounded-xl text-sm font-semibold transition-all inline-flex items-center justify-center gap-2 ${affiliateCopied ? 'bg-emerald-500 text-white' : 'bg-[#0B2419] text-[#FDFBF7] hover:bg-[#1e4031]'}`}>
                       {affiliateCopied ? <><CheckCircle2 className="w-4 h-4"/> Copied!</> : <><Copy className="w-4 h-4"/> Copy Link</>}
