@@ -264,7 +264,18 @@ export default function Register() {
                     <Turnstile
                       ref={turnstileRef}
                       siteKey={TURNSTILE_SITE_KEY}
-                      onSuccess={(token) => setTurnstileToken(token)}
+                      onSuccess={token => {
+                        setTurnstileToken(token);
+                        setError('');
+                      }}
+                      onExpire={() => {
+                        setTurnstileToken('');
+                        setError('Security verification expired. Please complete the challenge again.');
+                      }}
+                      onError={() => {
+                        setTurnstileToken('');
+                        setError('Security verification could not load. Refresh the page and try again.');
+                      }}
                       options={{ theme: 'light' }}
                     />
                   </div>
