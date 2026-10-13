@@ -2,23 +2,21 @@
   "appId": "com.bhumivera.app",
   "appName": "Bhumivera",
   "webDir": "dist",
-  "bundledWebRuntime": false,
   "server": {
     "androidScheme": "https",
-    "iosScheme": "capacitor",
-    "cleartext": true
+    "iosScheme": "capacitor"
   },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 2000,
       "launchAutoHide": true,
-      "backgroundColor": "#0b2419",
+      "backgroundColor": "#14251c",
       "androidScaleType": "CENTER_CROP",
       "showSpinner": false
     },
     "StatusBar": {
-      "style": "DARK",
-      "backgroundColor": "#0b2419"
+      "style": "LIGHT",
+      "backgroundColor": "#14251c"
     },
     "PushNotifications": {
       "presentationOptions": [
@@ -32,9 +30,5 @@
       "style": "DARK",
       "resizeOnFullScreen": true
     }
-  },
-  "android": {
-    "allowMixedContent": true,
-    "captureInput": true
   }
 }

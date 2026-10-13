@@ -11,7 +11,7 @@ import { useCart } from '../context/CartContext';
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
   return (
-    <div className="group relative flex flex-col bg-white border border-[#e8dcc4] rounded-[2.5rem] overflow-hidden hover:shadow-[0_20px_50px_rgba(139,90,43,0.1)] hover:border-[#8b5a2b]/30 transition-all duration-700">
+    <div className="group relative flex flex-col bg-white border border-[#e8dcc4] rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden hover:shadow-[0_20px_50px_rgba(139,90,43,0.1)] hover:border-[#8b5a2b]/30 transition-all duration-700">
       <Link to={`/product/${product.slug || product.id}`} className="relative aspect-[4/5] overflow-hidden bg-[#faf8f5]">
         <img 
           src={product.image_url || '/logo.webp'} 
@@ -33,7 +33,7 @@ const ProductCard = ({ product }) => {
         )}
       </Link>
       
-      <div className="p-8 flex flex-col flex-1 text-center">
+      <div className="p-4 sm:p-8 flex flex-col flex-1 text-center">
         {Number(product.rating) > 0 && Number(product.reviews) > 0 && (
           <div className="flex justify-center items-center mb-3 gap-1 text-[#8b5a2b]" aria-label={`Rated ${product.rating} out of 5 from ${product.reviews} reviews`}>
             {[...Array(5)].map((_, index) => (
@@ -71,7 +71,7 @@ const ProductCard = ({ product }) => {
 };
 
 export default function Shop() {
-  const [searchParams, setSearchParams] = useSearchParams();
+  const [searchParams] = useSearchParams();
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -85,12 +85,20 @@ export default function Shop() {
     const fetchData = async () => {
       setLoading(true);
       try {
-        const [prodRes, catRes] = await Promise.all([
+        const [prodResult, catResult] = await Promise.allSettled([
           productsApi.getAllActive(),
           categoriesApi.getAll()
         ]);
-        setProducts(prodRes.data?.data || prodRes.data || []);
-        setCategories(catRes.data?.data || catRes.data || []);
+        if (prodResult.status === 'fulfilled') {
+          setProducts(prodResult.value.data?.data || prodResult.value.data || []);
+        } else {
+          throw prodResult.reason;
+        }
+        if (catResult.status === 'fulfilled') {
+          setCategories(catResult.value.data?.data || catResult.value.data || []);
+        } else {
+          console.warn('[SHOP_CATEGORIES_LOAD_ERROR]', catResult.reason);
+        }
       } catch (err) {
         console.error("Shop fetch error:", err);
       } finally {
@@ -98,6 +106,8 @@ export default function Shop() {
       }
     };
     fetchData();
+    window.addEventListener('online', fetchData);
+    return () => window.removeEventListener('online', fetchData);
   }, []);
 
   const filteredProducts = useMemo(() => {
@@ -125,7 +135,7 @@ export default function Shop() {
   };
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] text-[#1a1a1a] pt-40 pb-32 font-sans">
+    <div className="min-h-screen bg-[#faf8f5] text-[#1a1a1a] pt-20 sm:pt-28 lg:pt-40 pb-28 font-sans">
       <SEO 
         title="Botanical Collection | Bhumivera"
         description="Browse Bhumivera's skincare collection and review product-specific details, ingredients and directions."
@@ -134,10 +144,10 @@ export default function Shop() {
       />
       <div className="max-w-7xl mx-auto px-6">
         
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-12 mb-20">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 lg:gap-12 mb-10 lg:mb-20">
           <div className="max-w-xl">
             <h2 className="text-[10px] font-bold text-[#8b5a2b] uppercase tracking-[0.5em] mb-4">Curated Offerings</h2>
-            <h1 className="text-5xl md:text-7xl font-serif text-[#1a1a1a] leading-none mb-6">
+            <h1 className="text-4xl sm:text-5xl md:text-7xl font-serif text-[#1a1a1a] leading-none mb-5 md:mb-6">
               The <span className="text-[#8b5a2b] italic">Collection.</span>
             </h1>
             <p className="text-[#5c4a3d] font-light text-lg">

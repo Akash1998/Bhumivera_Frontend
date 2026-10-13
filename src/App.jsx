@@ -1,5 +1,6 @@
 import React, { lazy, Suspense, useMemo, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from "react-router-dom";
+import { Capacitor } from "@capacitor/core";
 import Navbar from "./components/Navbar.jsx";
 import MobileBottomNav from "./components/MobileBottomNav.jsx";
 import { useNativeBackButton } from "./hooks/useNativeBackButton.js";
@@ -131,6 +132,67 @@ const PageLoader = () => (
   </div>
 );
 
+function NetworkStatus() {
+  const [isOnline, setIsOnline] = React.useState(navigator.onLine);
+  const [savedCatalogAt, setSavedCatalogAt] = React.useState(null);
+
+  useEffect(() => {
+    const updateConnection = () => setIsOnline(navigator.onLine);
+    const showSavedCatalog = event => setSavedCatalogAt(event.detail?.savedAt || Date.now());
+    const showFreshCatalog = () => setSavedCatalogAt(null);
+    window.addEventListener('online', updateConnection);
+    window.addEventListener('offline', updateConnection);
+    window.addEventListener('bhumivera:offline-catalog', showSavedCatalog);
+    window.addEventListener('bhumivera:online-catalog', showFreshCatalog);
+    return () => {
+      window.removeEventListener('online', updateConnection);
+      window.removeEventListener('offline', updateConnection);
+      window.removeEventListener('bhumivera:offline-catalog', showSavedCatalog);
+      window.removeEventListener('bhumivera:online-catalog', showFreshCatalog);
+    };
+  }, []);
+
+  if (isOnline && !savedCatalogAt) return null;
+  return (
+    <div className="connection-status" role="status" aria-live="polite">
+      {isOnline
+        ? `Connection interrupted. Showing saved product details from ${new Date(savedCatalogAt).toLocaleString()}; prices and availability may have changed.`
+        : 'You are offline. Saved product details may be out of date; live stock, account actions, and checkout need a connection.'}
+    </div>
+  );
+}
+
+function OnlineCheckout({ children }) {
+  const [isOnline, setIsOnline] = React.useState(navigator.onLine);
+
+  useEffect(() => {
+    const updateConnection = () => setIsOnline(navigator.onLine);
+    window.addEventListener('online', updateConnection);
+    window.addEventListener('offline', updateConnection);
+    return () => {
+      window.removeEventListener('online', updateConnection);
+      window.removeEventListener('offline', updateConnection);
+    };
+  }, []);
+
+  if (isOnline) return children;
+  return (
+    <section className="flex min-h-[50vh] flex-col items-center justify-center px-6 text-center text-[#14251c]">
+      <h1 className="font-serif text-3xl">Reconnect to continue checkout</h1>
+      <p className="mt-3 max-w-md text-sm leading-6 text-stone-600">
+        Your cart has not been submitted. Reconnect so we can load its current contents and confirm prices, stock, and payment details.
+      </p>
+      <button
+        type="button"
+        onClick={() => window.location.reload()}
+        className="mt-6 min-h-11 rounded-full bg-[#14251c] px-5 py-3 text-sm font-semibold text-white"
+      >
+        Try again
+      </button>
+    </section>
+  );
+}
+
 function ScrollToTop() {
   const { pathname } = useLocation();
 
@@ -172,10 +234,29 @@ function WarehouseRoute({ children }) {
   return children;
 }
 
+function WebOnlyManagement({ children }) {
+  return Capacitor.isNativePlatform() ? <Navigate to="/" replace /> : children;
+}
+
 function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const { setIsCartOpen } = useCart();
+
+  useEffect(() => {
+    const handleDeepLink = event => {
+      const target = event.detail?.target;
+      if (typeof target === 'string' && target.startsWith('/') && !target.startsWith('//')) {
+        navigate(target);
+        window.__bhumiveraPendingDeepLink = null;
+      }
+    };
+    window.addEventListener('bhumivera:deep-link', handleDeepLink);
+    if (window.__bhumiveraPendingDeepLink) {
+      handleDeepLink({ detail: { target: window.__bhumiveraPendingDeepLink } });
+    }
+    return () => window.removeEventListener('bhumivera:deep-link', handleDeepLink);
+  }, [navigate]);
 
   // Native mobile Android back button handling
   useNativeBackButton();
@@ -211,6 +292,7 @@ function AppContent() {
   return (
     <div className={`flex min-h-screen flex-col ${isManagementView ? 'management-shell' : 'site-shell'}`}>
       {!isManagementView && <Navbar />}
+      {!isManagementView && <NetworkStatus />}
       
       <main id="main-content" className="flex-1 w-full flex flex-col">
         <ScrollToTop /> 
@@ -253,12 +335,12 @@ function AppContent() {
             {/* Public Auth Password Reset Routes */}
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
-            <Route path="/admin/forgot-password" element={<AdminForgotPassword />} />
+            <Route path="/admin/forgot-password" element={<WebOnlyManagement><AdminForgotPassword /></WebOnlyManagement>} />
 
             {/* Protected User Routes */}
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/cart" element={<Navigate to="/?openCart=1" replace />} />
-            <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+            <Route path="/checkout" element={<ProtectedRoute><OnlineCheckout><CheckoutPage /></OnlineCheckout></ProtectedRoute>} />
             <Route path="/order-success/:orderId?" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
             <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
             <Route path="/address-book" element={<ProtectedRoute><AddressBook /></ProtectedRoute>} />
@@ -266,19 +348,19 @@ function AppContent() {
             <Route path="/affiliate" element={<ProtectedRoute><Affiliate /></ProtectedRoute>} />
 
             {/* Warehouse System */}
-            <Route path="/warehouse" element={<WarehouseRoute><Warehouse /></WarehouseRoute>} />
-            <Route path="/warehouse/admin" element={<WarehouseRoute><WarehouseAdmin /></WarehouseRoute>} />
-            <Route path="/warehouse/management" element={<WarehouseRoute><WarehouseManagement /></WarehouseRoute>} />
-            <Route path="/warehouseadmin" element={<WarehouseAdminLogin />} />
+            <Route path="/warehouse" element={<WebOnlyManagement><WarehouseRoute><Warehouse /></WarehouseRoute></WebOnlyManagement>} />
+            <Route path="/warehouse/admin" element={<WebOnlyManagement><WarehouseRoute><WarehouseAdmin /></WarehouseRoute></WebOnlyManagement>} />
+            <Route path="/warehouse/management" element={<WebOnlyManagement><WarehouseRoute><WarehouseManagement /></WarehouseRoute></WebOnlyManagement>} />
+            <Route path="/warehouseadmin" element={<WebOnlyManagement><WarehouseAdminLogin /></WebOnlyManagement>} />
             
             {/* Admin System */}
-            <Route path="/admin/login" element={<AdminLogin />} />
-            <Route path="/admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-            <Route path="/admin/dashboard/:tab" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
-            <Route path="/admin/*" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+            <Route path="/admin/login" element={<WebOnlyManagement><AdminLogin /></WebOnlyManagement>} />
+            <Route path="/admin" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />
+            <Route path="/admin/dashboard/:tab" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />
+            <Route path="/admin/*" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />
 
             {/* Backward-compat redirects (old bookmarks) */}
-            <Route path="/admin-login" element={<Navigate to="/admin/login" replace />} />
+            <Route path="/admin-login" element={<WebOnlyManagement><Navigate to="/admin/login" replace /></WebOnlyManagement>} />
 
             {/* Global Redirect */}
             <Route path="*" element={<Navigate to="/" replace />} />

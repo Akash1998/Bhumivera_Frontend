@@ -173,6 +173,8 @@ export default function ProductDetail() {
     };
     
     fetchProductData();
+    window.addEventListener('online', fetchProductData);
+    return () => window.removeEventListener('online', fetchProductData);
   }, [id]);
 
   useEffect(() => {

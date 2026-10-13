@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { Home, Compass, Sparkles, Heart, User, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -13,6 +13,16 @@ export default function MobileBottomNav() {
   const location = useLocation();
 
   const cartCount = cartItems.reduce((acc, i) => acc + (Number(i.quantity) || 1), 0);
+
+  useEffect(() => {
+    const closeVisualSearch = event => {
+      if (!visualModalOpen || event.detail.handled) return;
+      event.detail.handled = true;
+      setVisualModalOpen(false);
+    };
+    window.addEventListener('bhumivera:native-back', closeVisualSearch);
+    return () => window.removeEventListener('bhumivera:native-back', closeVisualSearch);
+  }, [visualModalOpen]);
 
   // Hide on admin and warehouse routes
   if (location.pathname.startsWith('/admin') || location.pathname.startsWith('/warehouse')) {

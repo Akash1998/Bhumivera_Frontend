@@ -81,6 +81,8 @@ export const CartProvider = ({ children }) => {
 
   useEffect(() => {
     loadCart();
+    window.addEventListener('online', loadCart);
+    return () => window.removeEventListener('online', loadCart);
   }, [loadCart]);
 
   // ZERO-LATENCY OPTIMISTIC UPDATE

@@ -1,5 +1,12 @@
 import axios from "axios";
+import { Capacitor } from "@capacitor/core";
 import { notifyOperation } from "../utils/operationFeedback";
+import {
+  getPublicCatalogCacheKey,
+  isCacheablePublicCatalogResponse,
+  readPublicCatalogResponse,
+  savePublicCatalogResponse,
+} from "../utils/offlineCatalogCache";
 
 let b = import.meta.env.VITE_BASE_URL || "https://service.Bhumivera.com";
 if (b.startsWith("http://") && !b.includes("localhost")) b = b.replace("http://", "https://");
@@ -80,6 +87,9 @@ const notifyMutationFailure = error => {
 };
 
 api.interceptors.request.use(c => {
+  if (Capacitor.isNativePlatform()) {
+    c.headers['X-Client-Platform'] = Capacitor.getPlatform();
+  }
   const url = c.url || "";
   const isAdminCall = c.adminAuth === true || url.startsWith("/admin/") ||
     url === "/auth/profile" ||
@@ -186,12 +196,49 @@ const _attemptRefresh = async (kind = 'user') => {
   return _refreshPromises[kind];
 };
 
-api.interceptors.response.use(response => {
+api.interceptors.response.use(async response => {
+  const cacheKey = getPublicCatalogCacheKey(response.config);
+  if (
+    cacheKey &&
+    response.status >= 200 &&
+    response.status < 300 &&
+    isCacheablePublicCatalogResponse(cacheKey, response.data)
+  ) {
+    window.dispatchEvent(new Event('bhumivera:online-catalog'));
+    try {
+      await savePublicCatalogResponse(cacheKey, response.data);
+    } catch (error) {
+      console.warn('[OFFLINE_CATALOG_CACHE_WRITE_ERROR]', error);
+    }
+  }
+
   if (shouldNotifyMutation(response.config)) {
     notifyOperation('success', getSuccessMessage(response));
   }
   return response;
 }, async (e) => {
+  const cacheKey = getPublicCatalogCacheKey(e.config);
+  if (cacheKey && !e.response && !axios.isCancel(e)) {
+    try {
+      const cached = await readPublicCatalogResponse(cacheKey);
+      if (cached) {
+        window.dispatchEvent(new CustomEvent('bhumivera:offline-catalog', {
+          detail: { savedAt: cached.savedAt },
+        }));
+        return {
+          config: e.config,
+          data: cached.data,
+          headers: { 'x-bhumivera-offline-cache': 'stale' },
+          request: e.request,
+          status: 200,
+          statusText: 'OK',
+        };
+      }
+    } catch (cacheError) {
+      console.warn('[OFFLINE_CATALOG_CACHE_READ_ERROR]', cacheError);
+    }
+  }
+
   const retryConfig = e.config;
   const requestMethod = String(retryConfig?.method || '').toLowerCase();
   const serviceUnavailableRetries = Number(retryConfig?._serviceUnavailableRetries) || 0;

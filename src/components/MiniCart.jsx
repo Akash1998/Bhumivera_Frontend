@@ -90,6 +90,7 @@ export default function MiniCart() {
     freeShippingThreshold, couponStackPolicy, referralReward, loyalty,
   } = useCart();
   const { user } = useAuth();
+  const userId = user?.id;
   const { settings } = useSettings();
   const { wishlist, isWishlisted, toggleWishlist, removeFromWishlist } = useWishlist();
   const navigate = useNavigate();
@@ -208,7 +209,7 @@ export default function MiniCart() {
       .catch(error => console.error('[MINI_CART_RECOMMENDATIONS]', error));
     Promise.allSettled([
       couponsApi.getPublicActive(),
-      user ? couponsApi.getMine() : Promise.resolve({ data: { coupons: [] } }),
+      userId ? couponsApi.getMine() : Promise.resolve({ data: { coupons: [] } }),
     ])
       .then(([publicResult, personalResult]) => {
         const publicData = publicResult.status === 'fulfilled' ? publicResult.value.data : [];
@@ -236,7 +237,7 @@ export default function MiniCart() {
       })
       .catch(error => console.error('[MINI_CART_OFFERS]', error));
     return () => { active = false; };
-  }, [isCartOpen, user?.id]);
+  }, [isCartOpen, userId]);
 
   useEffect(() => {
     if (!isCartOpen) return undefined;
@@ -245,6 +246,16 @@ export default function MiniCart() {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
+  }, [isCartOpen, setIsCartOpen]);
+
+  useEffect(() => {
+    const closeCartOnNativeBack = event => {
+      if (!isCartOpen || event.detail.handled) return;
+      event.detail.handled = true;
+      setIsCartOpen(false);
+    };
+    window.addEventListener('bhumivera:native-back', closeCartOnNativeBack);
+    return () => window.removeEventListener('bhumivera:native-back', closeCartOnNativeBack);
   }, [isCartOpen, setIsCartOpen]);
 
   useEffect(() => {

@@ -5,6 +5,22 @@ import "./index.css";
 import App from "./App.jsx";
 import { SettingsProvider } from "./context/SettingsContext.jsx";
 import { reportClientError } from "./services/api.js";
+import { initializeNativeApp } from "./utils/nativeApp.js";
+import { Capacitor } from "@capacitor/core";
+
+void initializeNativeApp();
+
+if (
+  import.meta.env.PROD &&
+  !Capacitor.isNativePlatform() &&
+  'serviceWorker' in navigator
+) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('/sw.js').catch(error => {
+      console.error('[SERVICE_WORKER_REGISTRATION_ERROR]', error);
+    });
+  }, { once: true });
+}
 
 if (!window.__bhumiveraErrorReporterInstalled) {
   window.__bhumiveraErrorReporterInstalled = true;

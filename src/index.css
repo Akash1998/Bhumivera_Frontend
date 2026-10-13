@@ -177,3 +177,36 @@ body {
   transform: scale(0.97);
   transition: transform 0.1s ease-in-out;
 }
+
+.connection-status {
+  position: relative;
+  z-index: 90;
+  padding: 0.65rem 1rem;
+  background: #f4eedc;
+  color: #14251c;
+  text-align: center;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+html.native-app body {
+  overscroll-behavior-y: none;
+}
+
+html.native-app .site-shell {
+  min-height: 100dvh;
+}
+
+html.native-app #main-content {
+  padding-bottom: calc(68px + var(--sab));
+}
+
+html.native-app .mobile-bottom-nav {
+  display: flex !important;
+  height: calc(68px + var(--sab));
+  padding-bottom: var(--sab);
+}
+
+html.native-app .site-shell > footer {
+  display: none;
+}
