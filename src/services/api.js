@@ -436,10 +436,15 @@ export const support = {
 };
 export const loyalty = { getSystemConfig: () => api.get("/settings"), updateSystemConfig: d => api.put("/settings", d), getMembers: () => api.get("/admin/users"), adjustPoints: (u, d) => api.patch(`/admin/users/${u}/status`, d) };
 export const loyaltyTiers = {
-  list: () => api.get('/users/loyalty/tiers'),
-  create: data => api.post('/users/loyalty/tiers', data),
-  update: (id, data) => api.put(`/users/loyalty/tiers/${id}`, data),
-  remove: id => api.delete(`/users/loyalty/tiers/${id}`),
+  list: () => api.get('/users/loyalty/tiers', { adminAuth: true }),
+  getMatrix: () => api.get('/users/loyalty/matrix', { adminAuth: true }),
+  saveMatrix: data => api.put('/users/loyalty/matrix/config', data, { adminAuth: true }),
+  getMembers: () => api.get('/users/loyalty/matrix/members', { adminAuth: true }),
+  getTransactions: params => api.get('/users/loyalty/matrix/transactions', { params, adminAuth: true }),
+  adjustMember: (id, data) => api.patch(`/users/loyalty/matrix/members/${id}`, data, { adminAuth: true }),
+  create: data => api.post('/users/loyalty/tiers', data, { adminAuth: true }),
+  update: (id, data) => api.put(`/users/loyalty/tiers/${id}`, data, { adminAuth: true }),
+  remove: id => api.delete(`/users/loyalty/tiers/${id}`, { adminAuth: true }),
 };
 export const fetchProductQA = p => api.get(`/products/${p}/qa`);
 export const submitProductQuestion = (p, d) => api.post(`/products/${p}/qa`, d);

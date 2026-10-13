@@ -54,12 +54,40 @@ const calculateReferralReward = (balance, orderSubtotal, eligibleSubtotal, tiers
     .sort((first, second) => toCents(second.min_order_amount) - toCents(first.min_order_amount))[0];
   return tier ? Math.min(toCents(balance), toCents(eligibleSubtotal), toCents(tier.referral_amount)) / 100 : 0;
 };
+const calculateTierDiscount = (subtotal, priorDiscounts, tier, enabled) => {
+  if (!enabled || !tier) return 0;
+  const toCents = value => Math.round(Math.max(0, Number(value) || 0) * 100);
+  const merchandiseCents = toCents(subtotal);
+  const remainingCents = Math.max(0, merchandiseCents - toCents(priorDiscounts));
+  const percent = Math.max(0, Math.min(100, Number(tier.tier_discount_percent) || 0));
+  return Math.min(remainingCents, Math.floor(merchandiseCents * percent / 100)) / 100;
+};
+const calculatePointsRedemption = (loyalty, eligibleSubtotal) => {
+  const toCents = value => Math.round(Math.max(0, Number(value) || 0) * 100);
+  const balance = Math.floor(Math.max(0, Number(loyalty?.pointsBalance) || 0));
+  const pointsPerRupee = Math.max(1, Math.trunc(Number(loyalty?.redemptionPointsPerRupee) || 1));
+  const minimum = Math.max(0, Math.trunc(Number(loyalty?.minimumRedemptionPoints) || 0));
+  if (!loyalty?.enabled || balance < minimum) return { points: 0, discount: 0 };
+  const eligibleCents = toCents(eligibleSubtotal);
+  const maximumDiscountCents = Math.floor(eligibleCents * Math.max(0, Math.min(100, Number(loyalty?.maxRedemptionPercent) || 0)) / 100);
+  const points = Math.min(balance, Math.floor(maximumDiscountCents * pointsPerRupee / 100));
+  if (points < minimum) return { points: 0, discount: 0 };
+  return { points, discount: Math.min(maximumDiscountCents, Math.floor(points * 100 / pointsPerRupee)) / 100 };
+};
+const estimateLoyaltyPoints = (eligibleSpend, loyalty, ruleBonusPoints = 0) => {
+  if (!loyalty?.enabled) return 0;
+  const spend = Math.max(0, Number(eligibleSpend) || 0);
+  const base = Math.floor(spend * Math.max(0, Number(loyalty.pointsPerRupee) || 0) * Math.max(0, Number(loyalty.currentTier?.points_multiplier) || 1));
+  const cashback = Math.floor(spend * Math.max(0, Number(loyalty.currentTier?.cashback_percent) || 0) / 100 * Math.max(1, Number(loyalty.redemptionPointsPerRupee) || 1));
+  const bonus = spend > 0 ? Math.max(0, Math.trunc(Number(loyalty.currentTier?.bonus_points) || 0)) + Math.max(0, Math.trunc(Number(ruleBonusPoints) || 0)) : 0;
+  return Math.min(1000000, base + cashback + bonus);
+};
 
 export default function MiniCart() {
   const {
     cartItems = [], isCartOpen, setIsCartOpen, removeFromCart, updateQuantity,
     getSubtotal, addToCart, clearCart, rulePreview, rulePreviewLoading, shippingProgress, cartAddEvent,
-    freeShippingThreshold, couponStackPolicy, referralReward,
+    freeShippingThreshold, couponStackPolicy, referralReward, loyalty,
   } = useCart();
   const { user } = useAuth();
   const { settings } = useSettings();
@@ -110,17 +138,31 @@ export default function MiniCart() {
       ? appliedCoupon.discount
       : 0
     : 0;
+  const tierDiscount = calculateTierDiscount(subtotal, discount + couponDiscount, loyalty?.currentTier, loyalty?.enabled);
   const referralWalletAmount = calculateReferralReward(
     referralReward?.balance,
     subtotal,
-    Math.max(0, subtotal - discount - couponDiscount),
+    Math.max(0, subtotal - discount - couponDiscount - tierDiscount),
     referralReward?.tiers
   );
-  const amountToFreeShipping = Math.max(0, Number(freeShippingThreshold) - subtotal);
+  const pointsRedemption = calculatePointsRedemption(
+    loyalty,
+    Math.max(0, subtotal - discount - couponDiscount - tierDiscount - referralWalletAmount)
+  );
+  const [redeemLoyaltyPoints, setRedeemLoyaltyPoints] = useState(true);
+  const loyaltyPointsToRedeem = redeemLoyaltyPoints ? pointsRedemption.points : 0;
+  const loyaltyDiscount = redeemLoyaltyPoints ? pointsRedemption.discount : 0;
+  const loyaltyPointsEarnedEstimate = estimateLoyaltyPoints(
+    subtotal - discount - couponDiscount - tierDiscount - referralWalletAmount - loyaltyDiscount,
+    loyalty,
+    rulePreview?.loyaltyBonusPoints
+  );
+  const loyaltyFreeShipping = Boolean(loyalty?.enabled && Number(loyalty?.currentTier?.free_shipping) === 1);
+  const amountToFreeShipping = rulePreview?.freeShipping || loyaltyFreeShipping ? 0 : Math.max(0, Number(freeShippingThreshold) - subtotal);
   const standardShippingCost = Math.max(0, Number(settings?.standard_charge ?? settings?.default_shipping_charge ?? 50) || 0);
   const expressShippingCost = Math.max(0, Number(settings?.express_charge ?? 150) || 0);
-  const shippingCost = rulePreview?.freeShipping ? 0 : shippingMethod === 'EXPRESS' ? expressShippingCost : standardShippingCost;
-  const finalTotal = Math.max(0, subtotal + shippingCost - discount - couponDiscount - referralWalletAmount + (paymentMode === 'COD' ? impactAmount : 0));
+  const shippingCost = rulePreview?.freeShipping || loyaltyFreeShipping ? 0 : shippingMethod === 'EXPRESS' ? expressShippingCost : standardShippingCost;
+  const finalTotal = Math.max(0, subtotal + shippingCost - discount - couponDiscount - tierDiscount - referralWalletAmount - loyaltyDiscount + (paymentMode === 'COD' ? impactAmount : 0));
   const recommendationsToShow = useMemo(() => {
     const cartIds = new Set(cartItems.map(item => String(item.product_id || item.product?.id || item.id)));
     return recommendations.filter(product => !cartIds.has(String(product.id || product._id))).slice(0, 4);
@@ -487,6 +529,7 @@ export default function MiniCart() {
         notes: orderNotes.trim() || undefined,
         whatsappUpdatesOptIn,
         termsAccepted,
+        loyaltyPointsToRedeem,
       };
       if (paymentMode === 'online') {
         await loadRazorpayScript();
@@ -708,6 +751,7 @@ export default function MiniCart() {
               </button>
               {offersOpen && <div className="border-t border-[#f0e8da] p-3">
                 {Number(referralReward?.balance) > 0 && <p className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-5 text-emerald-800">Referral balance {formatPrice(referralReward.balance)}{referralWalletAmount > 0 ? ` · ${formatPrice(referralWalletAmount)} automatically applied` : ' · applied automatically when an order tier is reached'}</p>}
+                {loyalty?.enabled && <p className="mb-3 rounded-lg border border-[#dce7c5] bg-[#f4f7ed] px-3 py-2 text-xs leading-5 text-[#35533c]">{loyalty.currentTier?.name || 'Loyalty member'} · {Number(loyalty.lifetimePoints || 0).toLocaleString()} lifetime tier points · {Number(loyalty.pointsBalance || 0).toLocaleString()} points available to redeem{loyalty.nextTier ? ` · ${Number(loyalty.nextTier.min_points) - Number(loyalty.lifetimePoints || 0)} to ${loyalty.nextTier.name}` : ''}</p>}
                 <form onSubmit={validateCoupon} className="flex gap-2">
                   <input value={couponCode} onChange={event => setCouponCode(event.target.value)} aria-label="Coupon code" placeholder="Enter coupon code" className="min-w-0 flex-1 rounded-xl border border-dashed border-stone-300 px-3 py-2.5 text-sm outline-none focus:border-[#8b5a2b]"/>
                   <button disabled={couponBusy || !couponCode.trim()} className="rounded-xl bg-[#2C3E2D] px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{couponBusy ? 'Checking…' : 'Apply'}</button>
@@ -795,10 +839,13 @@ export default function MiniCart() {
             <div className="flex justify-between text-stone-600"><span>Subtotal</span><strong className="text-[#1A1C18]">{formatPrice(subtotal)}</strong></div>
             {discount > 0 && <div className="flex justify-between font-semibold text-emerald-700"><span>Cart rewards</span><span>−{formatPrice(discount)}</span></div>}
             {appliedCoupon?.discount > 0 && <div className="flex justify-between font-semibold text-emerald-700"><span>Coupon ({appliedCoupon.code})</span><span>{couponDiscount > 0 ? `−${formatPrice(couponDiscount)}` : 'Not stacked with cart rewards'}</span></div>}
+            {tierDiscount > 0 && <div className="flex justify-between font-semibold text-emerald-700"><span>{loyalty?.currentTier?.name} tier benefit</span><span>−{formatPrice(tierDiscount)}</span></div>}
             {referralWalletAmount > 0 && <div className="flex justify-between font-semibold text-emerald-700"><span>Referral balance · automatic</span><span>−{formatPrice(referralWalletAmount)}</span></div>}
+            {loyalty?.enabled && Number(loyalty?.pointsBalance) >= Number(loyalty?.minimumRedemptionPoints) && pointsRedemption.points > 0 && <label className="flex items-center justify-between gap-3 font-semibold text-emerald-700"><span className="flex items-center gap-2"><input type="checkbox" checked={redeemLoyaltyPoints} onChange={event => setRedeemLoyaltyPoints(event.target.checked)} className="accent-[#35533c]"/>Use {(redeemLoyaltyPoints ? loyaltyPointsToRedeem : pointsRedemption.points).toLocaleString()} loyalty points</span><span>{loyaltyDiscount > 0 ? `−${formatPrice(loyaltyDiscount)}` : 'Not applied'}</span></label>}
+            {loyaltyPointsEarnedEstimate > 0 && <div className="flex justify-between text-[10px] text-stone-500"><span>Estimated points after order confirmation</span><span>+{loyaltyPointsEarnedEstimate.toLocaleString()}</span></div>}
             {checkoutOpen && <div className="flex justify-between text-stone-600"><span>{shippingMethod === 'EXPRESS' ? 'Express delivery' : 'Standard delivery'}</span><span>{shippingCost ? formatPrice(shippingCost) : 'Free'}</span></div>}
             {checkoutOpen && impactAmount > 0 && paymentMode === 'COD' && <div className="flex justify-between text-[#536b4d]"><span>Optional nature pledge</span><span>{formatPrice(impactAmount)}</span></div>}
-            <div className="flex justify-between border-t border-[#f0e8da] pt-2 text-sm font-bold text-[#2C3E2D]"><span>{checkoutOpen ? 'Order total' : 'Estimated total*'}</span><span>{formatPrice(checkoutOpen ? finalTotal : Math.max(0, subtotal - discount - couponDiscount - referralWalletAmount))}</span></div>
+            <div className="flex justify-between border-t border-[#f0e8da] pt-2 text-sm font-bold text-[#2C3E2D]"><span>{checkoutOpen ? 'Order total' : 'Estimated total*'}</span><span>{formatPrice(checkoutOpen ? finalTotal : Math.max(0, subtotal - discount - couponDiscount - tierDiscount - referralWalletAmount - loyaltyDiscount))}</span></div>
           </div>
           {checkoutOpen
             ? <form onSubmit={placeOrder}>

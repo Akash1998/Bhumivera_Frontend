@@ -493,6 +493,10 @@ export default function OrderManagement() {
                       <div className="flex justify-between text-slate-300"><span>Shipping</span><span>₹{Number(selectedOrder.shipping_cost || 0).toLocaleString()}</span></div>
                       {Number(selectedOrder.impact_amount) > 0 && <div className="flex justify-between gap-3 text-emerald-200"><span>Cause pledge · {selectedOrder.impact_project?.replaceAll('-', ' ') || 'Impact fund'}</span><span>₹{Number(selectedOrder.impact_amount).toLocaleString()}</span></div>}
                       {Number(selectedOrder.discount) > 0 && <div className="flex justify-between text-emerald-300"><span>Discount</span><span>- ₹{Number(selectedOrder.discount).toLocaleString()}</span></div>}
+                      {Number(selectedOrder.tier_discount) > 0 && <div className="flex justify-between text-emerald-300"><span>Loyalty tier benefit</span><span>- ₹{Number(selectedOrder.tier_discount).toLocaleString()}</span></div>}
+                      {Number(selectedOrder.referral_wallet_amount) > 0 && <div className="flex justify-between text-emerald-300"><span>Referral balance</span><span>- ₹{Number(selectedOrder.referral_wallet_amount).toLocaleString()}</span></div>}
+                      {Number(selectedOrder.loyalty_points_redeemed) > 0 && <div className="flex justify-between text-emerald-300"><span>Loyalty points redeemed</span><span>{Number(selectedOrder.loyalty_points_redeemed).toLocaleString()} pts</span></div>}
+                      {Number(selectedOrder.loyalty_points_awarded) > 0 && <div className="flex justify-between text-slate-400"><span>Points after confirmation</span><span>+{Number(selectedOrder.loyalty_points_awarded).toLocaleString()} pts</span></div>}
                       <div className="mt-3 flex justify-between border-t border-white/10 pt-3 text-lg font-bold text-white">
                         <span>Total Paid</span>
                         <span className="text-emerald-300">₹{parseFloat(selectedOrder.total || 0).toLocaleString()}</span>

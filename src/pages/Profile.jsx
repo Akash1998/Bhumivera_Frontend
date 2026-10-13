@@ -114,7 +114,7 @@ const needsRefundSupport = order => (
 const faqItems = [
   { q: 'How do I track my order?', a: 'Go to the Orders tab above and click the "Track" button next to your order. You will see live status updates including processing, packed, shipped, out for delivery and delivered timelines.' },
   { q: 'What is your return policy?', a: "Return requests open 30 minutes after verified delivery and follow the store's configured return window. Choose the order and item, add photos if helpful, and submit it for review. The order is not marked returned unless the team accepts the request." },
-  { q: 'How does the wallet work?', a: 'Your wallet holds store credits and loyalty rewards. Available balances are applied during checkout. No demo add-funds capability is available at this time.' },
+  { q: 'How do Wallet and loyalty points work?', a: 'Spendable Wallet funds are a payment method. Loyalty points are separate, non-cash rewards that can only discount eligible website purchases at checkout. Referral balance is also order-only and applies under the current referral thresholds.' },
   { q: 'Is my account secure?', a: 'Yes. We use bcrypt password hashing, signed JWT tokens and optional TOTP-based 2FA. We recommend enabling 2FA from the Security tab and setting a security question for password-recovery fallback.' },
   { q: 'How do I join the affiliate program?', a: 'Your referral link is available on the Affiliate tab. Share it with friends. Every signup and purchase made through your link tracks to your account. See the Affiliate tab for live stats and share buttons.' },
 ];
@@ -223,6 +223,7 @@ export default function Profile() {
   const [wishlist, setWishlist] = useState([]);
   const [wishlistError, setWishlistError] = useState('');
   const [wallet, setWallet] = useState({ balance: 0, referralBalance: 0, referralBalanceAvailable: true, transactions: [] });
+  const [loyaltyData, setLoyaltyData] = useState({ points: 0, lifetimePoints: 0, tier: null });
   const [walletTopUpAmount, setWalletTopUpAmount] = useState('1000');
   const [walletTopUpBusy, setWalletTopUpBusy] = useState(false);
   const [addresses, setAddresses] = useState([]);
@@ -321,6 +322,11 @@ export default function Profile() {
         name: u.name || u.first_name || u.full_name || '',
         phone: u.phone || u.mobile || u.phone_number || '',
         marketing_email_opt_in: Boolean(Number(u.marketing_email_opt_in)),
+      });
+      setLoyaltyData({
+        points: Math.max(0, Number(u.loyalty_points) || 0),
+        lifetimePoints: Math.max(0, Number(u.loyalty_lifetime_points) || 0),
+        tier: u.loyalty || u.loyaltyProgress || null,
       });
       setWhatsappOrderUpdatesOptIn(Boolean(Number(u.whatsapp_order_updates_opt_in)));
       setWhatsappAlertsAvailable(whatsappStatus.data?.available === true);
@@ -1026,10 +1032,11 @@ export default function Profile() {
             {activeTab === 'overview' && (
               <div className="space-y-7">
                 {/* Stats */}
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
                   <StatCard icon={Package} label="Total Orders" value={orders.length} accent="earth" onClick={() => setActiveTab('orders')}/>
                   <StatCard icon={Heart} label="Wishlist Items" value={wishlist.length} accent="sage" onClick={() => setActiveTab('wishlist')}/>
                   <StatCard icon={Wallet} label="Spendable Wallet" value={`₹${Number(wallet.balance||0).toFixed(2)}`} hint={`+ ₹${Number(wallet.referralBalance||0).toFixed(2)} referral reward credit`} accent="gold" onClick={() => setActiveTab('wallet')}/>
+                  <StatCard icon={Award} label="Loyalty points" value={Number(loyaltyData.points).toLocaleString()} hint={`${loyaltyData.tier?.currentTier || 'Entry tier'} · ${Number(loyaltyData.lifetimePoints).toLocaleString()} lifetime`} accent="sage"/>
                   <StatCard icon={Bell} label="Unread Notifications" value={unreadCount} accent="sage" onClick={() => setActiveTab('notifications')}/>
                 </div>
 
@@ -1084,7 +1091,7 @@ export default function Profile() {
                       <div className="text-3xl font-bold tracking-tight mb-4">₹{Number(wallet.balance||0).toFixed(2)}</div>
                       <div className="mb-4 rounded-xl border border-amber-300/30 bg-amber-300/10 p-3 text-sm text-amber-100">
                         Referral reward balance: <strong>₹{Number(wallet.referralBalance||0).toFixed(2)}</strong>
-                        <span className="mt-1 block text-xs text-amber-100/70">Use your personal referral coupon at checkout. The per-order limit is set by Bhumivera.</span>
+                        <span className="mt-1 block text-xs text-amber-100/70">Order-only referral credit applies automatically when your basket reaches an eligible tier. It is separate from your spendable Wallet and loyalty points.</span>
                       </div>
                       <button onClick={() => setActiveTab('wallet')} className="w-full py-2.5 rounded-xl bg-[#0B2419] text-[#FDFBF7] text-sm font-semibold hover:bg-[#2C3E2D] transition-colors flex items-center justify-center gap-2">
                         View Ledger <ChevronRight className="w-4 h-4"/>
@@ -1294,7 +1301,7 @@ export default function Profile() {
                         <div className="text-4xl sm:text-5xl font-bold tracking-tight">₹{Number(wallet.balance||0).toFixed(2)}</div>
                         <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
                           Restricted referral rewards: <strong>{wallet.referralBalanceAvailable ? `₹${Number(wallet.referralBalance||0).toFixed(2)}` : 'Temporarily unavailable'}</strong>
-                          <span className="mt-1 block text-xs text-amber-800">{wallet.referralBalanceAvailable ? 'Apply your personal referral coupon to use up to the per-order limit configured by Bhumivera.' : 'Your spendable wallet remains available. Referral rewards could not be loaded right now.'}</span>
+                          <span className="mt-1 block text-xs text-amber-800">{wallet.referralBalanceAvailable ? 'Order-only referral balance applies automatically when your basket reaches an eligible tier. It is separate from your spendable Wallet and loyalty points.' : 'Your spendable wallet remains available. Referral rewards could not be loaded right now.'}</span>
                         </div>
                       </div>
                       <div className="w-14 h-14 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center">
@@ -1302,7 +1309,7 @@ export default function Profile() {
                       </div>
                     </div>
                     <div className="mt-6 text-xs text-stone-400 border-t border-white/10 pt-5">
-                      Store credits and loyalty rewards are applied during checkout when available.
+                      Store credits, loyalty points, and order-only referral balance are separate. Loyalty points can only be redeemed against eligible website purchases at checkout.
                     </div>
                   </div>
                 </div>
@@ -2264,6 +2271,10 @@ export default function Profile() {
                     <div className="flex justify-between"><span className="text-stone-600">Shipping</span><span className="text-[#0B2419] font-medium">₹{Number(selectedOrder.shipping_fee || selectedOrder.shipping || 0).toFixed(2)}</span></div>
                     <div className="flex justify-between"><span className="text-stone-600">Tax</span><span className="text-[#0B2419] font-medium">₹{Number(selectedOrder.tax || 0).toFixed(2)}</span></div>
                     {(selectedOrder.discount || 0) > 0 && <div className="flex justify-between"><span className="text-stone-600">Discount</span><span className="text-emerald-700 font-medium">- ₹{Number(selectedOrder.discount||0).toFixed(2)}</span></div>}
+                    {Number(selectedOrder.tier_discount) > 0 && <div className="flex justify-between"><span className="text-stone-600">Loyalty tier benefit</span><span className="text-emerald-700 font-medium">- ₹{Number(selectedOrder.tier_discount).toFixed(2)}</span></div>}
+                    {Number(selectedOrder.referral_wallet_amount) > 0 && <div className="flex justify-between"><span className="text-stone-600">Referral balance</span><span className="text-emerald-700 font-medium">- ₹{Number(selectedOrder.referral_wallet_amount).toFixed(2)}</span></div>}
+                    {Number(selectedOrder.loyalty_points_redeemed) > 0 && <div className="flex justify-between"><span className="text-stone-600">Loyalty points redeemed</span><span className="text-emerald-700 font-medium">{Number(selectedOrder.loyalty_points_redeemed).toLocaleString()} pts</span></div>}
+                    {Number(selectedOrder.loyalty_points_awarded) > 0 && <div className="flex justify-between"><span className="text-stone-600">Points after order confirmation</span><span className="text-stone-600 font-medium">+{Number(selectedOrder.loyalty_points_awarded).toLocaleString()} pts</span></div>}
                     <div className="pt-2.5 mt-2 border-t border-stone-100 flex justify-between items-baseline">
                       <span className="text-stone-700 font-semibold">Total Paid</span>
                       <span className="text-xl font-bold text-[#0B2419] tracking-tight">₹{Number(selectedOrder.total_amount || selectedOrder.total || 0).toFixed(2)}</span>

@@ -30,7 +30,7 @@ const GrowthOffersHub = lazy(() => import('./admin/GrowthOffersHub.jsx'));
 const WalletManagement = lazy(() => import('./admin/WalletManagement.jsx'));
 const ReferralEngine = lazy(() => import('./admin/AffiliateManagement.jsx'));
 
-const GROWTH_TABS = ['flash-sales', 'coupons', 'loyalty', 'min-cart-value', 'cart-rules', 'gamification', 'lifecycle-offers', 'personalization', 'ab-experiments', 'loyalty-tiers'];
+const GROWTH_TABS = ['flash-sales', 'coupons', 'loyalty', 'loyalty-matrix', 'loyalty-tiers', 'min-cart-value', 'cart-rules', 'gamification', 'lifecycle-offers', 'personalization', 'ab-experiments'];
 
 class ErrorBoundary extends Component {
   constructor(props) {
@@ -92,6 +92,7 @@ const TAB_ICONS = {
   'flash-sales': Zap, reviews: Star, 'min-cart-value': SlidersHorizontal, 'cart-rules': SlidersHorizontal,
   gamification: Gamepad2, 'lifecycle-offers': Mail, personalization: Users,
   'loyalty-tiers': Award, support: LifeBuoy,
+  'loyalty-matrix': Award,
   'growth-offers': Gift, 'wallet-management': Wallet,
   returns: Truck, settings: Settings2, tax: Tags, gst: FileText, users: Users
 };
@@ -127,7 +128,10 @@ export default function AdminDashboard() {
       ]
     },
     {
-      title: 'Growth & offers', items: [{ id: 'growth-offers', label: 'Growth & offers' }]
+      title: 'Growth & offers', items: [
+        { id: 'growth-offers', label: 'Growth & offers' },
+        { id: 'loyalty-matrix', label: 'Loyalty Matrix' },
+      ]
     },
     {
       title: 'Referral program', items: [{ id: 'referral-engine', label: 'Refer & earn engine' }]
@@ -140,7 +144,7 @@ export default function AdminDashboard() {
     },
   ];
 
-  const quickTabs = ['overview', 'orders', 'products', 'users', 'reviews', 'support', 'growth-offers'];
+  const quickTabs = ['overview', 'orders', 'products', 'users', 'reviews', 'support', 'growth-offers', 'loyalty-matrix'];
   const allMenuItems = menuSections.flatMap(section => section.items);
   const quickItems = quickTabs.map(id => allMenuItems.find(item => item.id === id)).filter(Boolean);
   const normalizedSearch = navSearch.trim().toLowerCase();

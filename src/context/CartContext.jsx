@@ -14,6 +14,7 @@ export const CartProvider = ({ children }) => {
   const [upsells, setUpsells] = useState([]); 
   const [rulePreview, setRulePreview] = useState(null);
   const [referralReward, setReferralReward] = useState({ balance: 0, estimatedAmount: 0, tiers: [] });
+  const [loyalty, setLoyalty] = useState(null);
   const [abandonment, setAbandonment] = useState(null);
   const [couponStackPolicy, setCouponStackPolicy] = useState('both');
   const [rulePreviewLoading, setRulePreviewLoading] = useState(false);
@@ -34,6 +35,7 @@ export const CartProvider = ({ children }) => {
         setCart(Array.isArray(fetchedData) ? fetchedData : []);
         setRulePreview(res.data?.rulePreview || null);
         setReferralReward(res.data?.referralReward || { balance: 0, estimatedAmount: 0, tiers: [] });
+        setLoyalty(res.data?.loyalty || null);
         setAbandonment(res.data?.abandonment || null);
         setCouponStackPolicy(res.data?.couponStackPolicy || 'both');
       } catch (err) {
@@ -41,6 +43,7 @@ export const CartProvider = ({ children }) => {
         setCart([]);
         setRulePreview(null);
         setReferralReward({ balance: 0, estimatedAmount: 0, tiers: [] });
+        setLoyalty(null);
         setAbandonment(null);
         setCouponStackPolicy('both');
       } finally {
@@ -54,6 +57,7 @@ export const CartProvider = ({ children }) => {
         setCart(Array.isArray(parsed) ? parsed : []);
         setRulePreview(null);
         setReferralReward({ balance: 0, estimatedAmount: 0, tiers: [] });
+        setLoyalty(null);
         setAbandonment(null);
         setCouponStackPolicy('both');
       } catch (e) {
@@ -241,6 +245,7 @@ export const CartProvider = ({ children }) => {
       freeShippingThreshold,
       rulePreview,
       referralReward,
+      loyalty,
       couponStackPolicy,
       rulePreviewLoading,
       abandonment,

@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Award, FlaskConical, Gift, LoaderCircle, Megaphone, Users } from 'lucide-react';
 
-const LoyaltyManagement = lazy(() => import('./LoyaltyManagement'));
+const LoyaltyMembers = lazy(() => import('./LoyaltyMembers'));
 const CouponManagement = lazy(() => import('./CouponManagement'));
 const FlashSalesManagement = lazy(() => import('./FlashSalesManagement'));
 const MinCartValueCenter = lazy(() => import('./MinCartValueCenter'));
@@ -26,11 +26,11 @@ const groups = [
   },
   {
     id: 'loyalty',
-    label: 'Loyalty & referrals',
+    label: 'Loyalty Matrix',
     icon: Award,
     features: [
-      { id: 'loyalty', label: 'Loyalty', purpose: 'See members and manage how customers earn or use points.', steps: 'Review member points and update the available loyalty settings.', component: LoyaltyManagement },
-      { id: 'loyalty-tiers', label: 'Loyalty tiers', purpose: 'Give customers better benefits as they earn more points.', steps: 'Create a tier, set the points needed to reach it, describe its benefits, and save.', component: LoyaltyTierForge },
+      { id: 'loyalty-matrix', label: 'Matrix controls', purpose: 'Set point earning, redemption safeguards, lifetime tiers, and real tier benefits.', steps: 'Configure the program and redemption caps, then define each tier’s qualifying points and checkout benefits.', component: LoyaltyTierForge },
+      { id: 'loyalty', label: 'Members & points', purpose: 'Review member balances and make reasoned point adjustments.', steps: 'Search a member and record a points or lifetime-tier adjustment with a reason.', component: LoyaltyMembers },
       { id: 'gamification', label: 'Reward activities', purpose: 'Enable activities such as reward spins and sale countdowns.', steps: 'Turn an activity on or off. Changes are saved as you make them.', component: GamificationStudio },
     ],
   },
@@ -51,7 +51,7 @@ const allFeatures = groups.flatMap(group => group.features);
 export default function GrowthOffersHub() {
   const navigate = useNavigate();
   const { tab } = useParams();
-  const initialFeature = allFeatures.find(feature => feature.id === tab) || allFeatures[0];
+  const initialFeature = allFeatures.find(feature => feature.id === (tab === 'loyalty-tiers' ? 'loyalty-matrix' : tab)) || allFeatures[0];
   const [selectedId, setSelectedId] = useState(initialFeature.id);
   const [activeGroup, setActiveGroup] = useState(groups.find(group => group.features.some(feature => feature.id === initialFeature.id))?.id || groups[0].id);
   const [mobileShowingTool, setMobileShowingTool] = useState(false);
@@ -59,13 +59,17 @@ export default function GrowthOffersHub() {
   const Tool = selected.component;
 
   useEffect(() => {
+    if (tab === 'loyalty-tiers') {
+      navigate('/admin/dashboard/loyalty-matrix', { replace: true });
+      return;
+    }
     const feature = allFeatures.find(item => item.id === tab);
     if (feature) {
       setSelectedId(feature.id);
       setActiveGroup(groups.find(group => group.features.some(item => item.id === feature.id))?.id || groups[0].id);
       setMobileShowingTool(true);
     }
-  }, [tab]);
+  }, [tab, navigate]);
 
   const chooseFeature = feature => {
     setSelectedId(feature.id);
