@@ -18,6 +18,7 @@ import {
   reviews as reviewsApi,
   warranty as warrantyApi,
   serials as serialsApi,
+  auth as authApi,
 } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import compressImageForUpload from '../utils/compressImageForUpload';
@@ -30,9 +31,10 @@ import {
   QrCode, Smartphone, HelpCircle, MessageSquare, Phone, Mail, ShoppingCart,
   Filter, Calendar, Hash, Truck, PackageCheck, RotateCcw,
   ChevronDown, ChevronUp, Gift, PiggyBank, ShoppingBag,
-  Leaf, Zap, Users, Coins, ExternalLink, Key, Camera, Image as ImageIcon,
+  Leaf, Zap, Users, Coins, ExternalLink, Key, Camera, Image as ImageIcon, Fingerprint,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { registerPasskey, isPasskeySupported } from '../utils/webauthnClient';
 import SupportCenter from '../components/SupportCenter';
 
 const getProfileImageUrl = image => {
@@ -236,6 +238,41 @@ export default function Profile() {
 
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
   const [secQuestion, setSecQuestion] = useState({ question: SECURITY_QUESTIONS[0], answer: '' });
+  const [passkeys, setPasskeys] = useState([]);
+  const [loadingPasskey, setLoadingPasskey] = useState(false);
+
+  useEffect(() => {
+    if (activeTab === 'security') {
+      authApi.listPasskeys()
+        .then(res => setPasskeys(res.data?.passkeys || []))
+        .catch(() => {});
+    }
+  }, [activeTab]);
+
+  const handleRegisterPasskey = async () => {
+    setLoadingPasskey(true);
+    try {
+      await registerPasskey('Touch ID / Face ID (' + (navigator.platform || 'Device') + ')');
+      toast.success('Passkey registered successfully! You can now use biometrics to sign in.');
+      const res = await authApi.listPasskeys();
+      setPasskeys(res.data?.passkeys || []);
+    } catch (err) {
+      toast.error(err.message || 'Passkey registration cancelled or failed.');
+    } finally {
+      setLoadingPasskey(false);
+    }
+  };
+
+  const handleDeletePasskey = async (id) => {
+    try {
+      await authApi.deletePasskey(id);
+      toast.success('Passkey removed.');
+      setPasskeys(prev => prev.filter(p => p.id !== id));
+    } catch (err) {
+      toast.error('Could not remove passkey.');
+    }
+  };
+
   const [twoFactor, setTwoFactor] = useState({ isEnabled: false, qrCode: '', secret: '', otp: '' });
   const [supportTicket, setSupportTicket] = useState({ subject: '', message: '', order_id: '', product_id: '' });
 
@@ -1778,6 +1815,63 @@ export default function Profile() {
                       )}
                     </div>
                   )}
+                </section>
+
+                
+                {/* Passkeys & Biometrics Section */}
+                <section className="rounded-2xl bg-white border border-stone-200 p-6 shadow-sm mb-6">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-5 pb-5 border-b border-stone-100">
+                    <div className="flex items-center gap-3">
+                      <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+                        <Fingerprint className="w-5 h-5" />
+                      </div>
+                      <div>
+                        <h3 className="font-semibold text-[#0B2419] text-lg">Passkeys & Biometric Login</h3>
+                        <p className="text-xs text-stone-500">Sign in securely with Touch ID, Face ID, or Windows Hello without typing passwords.</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleRegisterPasskey}
+                      disabled={loadingPasskey}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B2419] text-[#D4AF37] text-xs font-bold uppercase tracking-wider hover:bg-[#1e4031] transition-all disabled:opacity-60 shrink-0"
+                    >
+                      <Plus className="w-4 h-4" />
+                      {loadingPasskey ? 'Registering…' : 'Add Passkey'}
+                    </button>
+                  </div>
+
+                  <div className="space-y-3">
+                    {passkeys.length > 0 ? (
+                      passkeys.map(pk => (
+                        <div key={pk.id} className="flex items-center justify-between p-3.5 rounded-xl bg-[#FAF8F5] border border-stone-200/60">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-lg bg-white border border-stone-200 flex items-center justify-center text-[#0B2419]">
+                              <Key className="w-4 h-4 text-[#D4AF37]" />
+                            </div>
+                            <div>
+                              <div className="font-semibold text-xs text-[#0B2419]">{pk.device_name || 'Passkey Device'}</div>
+                              <div className="text-[11px] text-stone-400">Added on {new Date(pk.created_at).toLocaleDateString()} {pk.last_used_at ? "· Used " + new Date(pk.last_used_at).toLocaleDateString() : ""}</div>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleDeletePasskey(pk.id)}
+                            className="p-2 text-stone-400 hover:text-rose-600 transition-colors rounded-lg hover:bg-white"
+                            title="Remove Passkey"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="text-center py-6 border border-dashed border-stone-200 rounded-xl bg-[#FDFBF7]">
+                        <Fingerprint className="w-8 h-8 text-stone-300 mx-auto mb-2" />
+                        <p className="text-xs text-stone-500 font-medium">No passkeys registered on this account yet.</p>
+                        <p className="text-[11px] text-stone-400 mt-0.5">Add your device for faster, passwordless biometric access.</p>
+                      </div>
+                    )}
+                  </div>
                 </section>
 
                 <section className="rounded-2xl bg-white border border-stone-200 p-6 shadow-sm">

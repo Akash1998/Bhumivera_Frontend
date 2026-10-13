@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import api, { auth } from '../services/api';
 import { toast } from 'react-hot-toast';
-import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft, Fingerprint, Key } from 'lucide-react';
+import { loginWithPasskey, storeBrowserPassword } from '../utils/webauthnClient';
 
 const Login = () => {
   const [mode, setMode] = useState('OTP'); // OTP | PASSWORD
@@ -90,6 +91,24 @@ const Login = () => {
     }
   };
 
+  const handlePasskeyLogin = async () => {
+    setLoading(true);
+    try {
+      const res = await loginWithPasskey(email);
+      if (res?.token) {
+        _persistAndRedirect(res);
+        toast.success('Biometric authentication verified!');
+      } else {
+        toast.error('Passkey sign-in failed. Please try again.');
+      }
+    } catch (err) {
+      console.error('[PASSKEY_LOGIN_ERROR]', err);
+      toast.error(err.message || 'Passkey sign-in failed. Please use your password.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handlePasswordLogin = async (e) => {
     e.preventDefault();
     setShowLockoutBanner(false);
@@ -104,6 +123,7 @@ const Login = () => {
         return;
       }
       if (res.data?.token) {
+        storeBrowserPassword(email, password, res.data.user?.name);
         _persistAndRedirect(res.data);
       } else {
         toast.error('Login failed. Please try again.');
@@ -256,6 +276,18 @@ const Login = () => {
                       <>SIGN IN <ShieldCheck size={17} /></>
                     )}
                   </button>
+                  <div className="relative my-4 flex items-center justify-center">
+                    <div className="w-full border-t border-[#8B9D83]/20"></div>
+                    <span className="bg-[#FDFBF7] px-3 text-[11px] font-bold uppercase tracking-wider text-[#8B9D83]">or</span>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={handlePasskeyLogin}
+                    disabled={loading}
+                    className="w-full bg-[#FAF8F5] border border-[#D4AF37]/50 text-[#0B2419] font-bold py-3.5 rounded-2xl hover:bg-[#D4AF37]/10 transition-all flex justify-center items-center gap-2.5 text-xs uppercase tracking-wider disabled:opacity-60"
+                  >
+                    <Fingerprint size={18} className="text-[#D4AF37]" /> Sign In with Passkey / Face ID
+                  </button>
                 </form>
               ) : (
                 <form onSubmit={handleRequestOTP} className="space-y-5">
@@ -281,6 +313,18 @@ const Login = () => {
                     className="w-full bg-[#0B2419] text-[#D4AF37] font-bold py-4 rounded-2xl hover:bg-[#2C3E2D] transition-all shadow-lg flex justify-center items-center"
                   >
                     {loading ? 'Sending...' : 'CONTINUE WITH OTP'}
+                  </button>
+                  <div className="relative my-4 flex items-center justify-center">
+                    <div className="w-full border-t border-[#8B9D83]/20"></div>
+                    <span className="bg-[#FDFBF7] px-3 text-[11px] font-bold uppercase tracking-wider text-[#8B9D83]">or</span>
+                  </div>
+                  <button 
+                    type="button"
+                    onClick={handlePasskeyLogin}
+                    disabled={loading}
+                    className="w-full bg-[#FAF8F5] border border-[#D4AF37]/50 text-[#0B2419] font-bold py-3.5 rounded-2xl hover:bg-[#D4AF37]/10 transition-all flex justify-center items-center gap-2.5 text-xs uppercase tracking-wider disabled:opacity-60"
+                  >
+                    <Fingerprint size={18} className="text-[#D4AF37]" /> Sign In with Passkey / Face ID
                   </button>
                 </form>
               )}
