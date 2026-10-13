@@ -46,7 +46,7 @@ const createFavicon = async () => {
   await fs.promises.writeFile(path.join(root, 'public', 'favicon.ico'), Buffer.concat([header, ...images]));
 };
 
-const createPwaIcon = async size => {
+const createPwaIcon = async (size, fileName = `icon-${size}.png`) => {
   const logoSize = Math.round(size * 0.72);
   const logo = await sharp(source)
     .resize(logoSize, logoSize, { fit: 'contain' })
@@ -63,10 +63,31 @@ const createPwaIcon = async size => {
   })
     .composite([{ input: logo, gravity: 'centre' }])
     .png()
-    .toFile(path.join(root, 'public', `icon-${size}.png`));
+    .toFile(path.join(root, 'public', fileName));
+};
+
+const fixAdaptiveIconBackgrounds = async () => {
+  const launcherIcon = `<?xml version="1.0" encoding="utf-8"?>
+<adaptive-icon xmlns:android="http://schemas.android.com/apk/res/android">
+    <background android:drawable="@mipmap/ic_launcher_background" />
+    <foreground>
+        <inset android:drawable="@mipmap/ic_launcher_foreground" android:inset="16.7%" />
+    </foreground>
+</adaptive-icon>
+`;
+  const iconDirectory = path.join(root, 'android', 'app', 'src', 'main', 'res', 'mipmap-anydpi-v26');
+
+  await Promise.all(['ic_launcher.xml', 'ic_launcher_round.xml'].map(file =>
+    fs.promises.writeFile(path.join(iconDirectory, file), launcherIcon)
+  ));
 };
 
 const main = async () => {
+  if (process.argv.includes('--fix-adaptive-icons')) {
+    await fixAdaptiveIconBackgrounds();
+    return;
+  }
+
   if (!fs.existsSync(source)) {
     throw new Error(`Brand logo source is missing: ${source}`);
   }
@@ -77,6 +98,7 @@ const main = async () => {
     fs.promises.copyFile(source, path.join(root, 'resources', 'logo.png')),
     createPwaIcon(192),
     createPwaIcon(512),
+    createPwaIcon(512, 'icon-maskable-512.png'),
     createFavicon(),
   ]);
 };
