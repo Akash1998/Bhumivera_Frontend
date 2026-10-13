@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { 
   Bell, CheckCheck, AlertTriangle, Info, ShieldAlert, Send, 
   Plus, Search, CheckCircle, X, Clock, Activity, Zap
@@ -8,10 +8,11 @@ import { notifications as notificationsApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 
 export default function NotificationManagement() {
-  const { user, token } = useAuth();
+  const { token } = useAuth();
   const toast = useToast();
   const [alerts, setAlerts] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState('');
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [isComposing, setIsComposing] = useState(false);
@@ -20,29 +21,32 @@ export default function NotificationManagement() {
 
   // ARCHITECT FIX: Hydration Guard implemented. 
   // Wait for the AuthContext token to initialize before hitting protected Admin endpoints.
-  useEffect(() => {
-    if (!token) return;
-    fetchAlerts();
-  }, [token]);
-
-  const fetchAlerts = async () => {
+  const fetchAlerts = useCallback(async () => {
     try {
       setLoading(true);
+      setLoadError('');
       const { data } = await notificationsApi.getAllAdmin();
       setAlerts(data || []);
     } catch (error) {
       console.error('Telemetry Sync Error:', error);
-      toast.error(error.normalized?.message || 'Could not load notifications.');
+      const message = error.normalized?.message || error.response?.data?.message || 'Could not load notifications.';
+      setLoadError(message);
+      toast.error(message);
       setAlerts([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [toast]);
+
+  useEffect(() => {
+    if (!token) return;
+    fetchAlerts();
+  }, [token, fetchAlerts]);
 
   const handleMarkRead = async (id) => {
     try {
       await notificationsApi.markRead(id);
-      setAlerts(alerts.map(a => a.id === id ? { ...a, is_read: true } : a));
+      setAlerts(current => current.map(a => a.id === id ? { ...a, is_read: true } : a));
     } catch (err) {
       console.error('Mark read failed', err);
       toast.error(err.normalized?.message || 'Could not mark the notification as read.');
@@ -52,7 +56,7 @@ export default function NotificationManagement() {
   const handleMarkAllRead = async () => {
     try {
       await notificationsApi.markAllRead();
-      setAlerts(alerts.map(a => ({ ...a, is_read: true })));
+      setAlerts(current => current.map(a => ({ ...a, is_read: true })));
     } catch (err) {
       console.error('Mark all read failed', err);
       toast.error(err.normalized?.message || 'Could not mark notifications as read.');
@@ -80,7 +84,7 @@ export default function NotificationManagement() {
   };
 
   const filteredAlerts = alerts.filter(a => {
-    const matchesSearch = a.title.toLowerCase().includes(searchQuery.toLowerCase()) || a.message.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = String(a.title || '').toLowerCase().includes(searchQuery.toLowerCase()) || String(a.message || '').toLowerCase().includes(searchQuery.toLowerCase());
     if (!matchesSearch) return false;
     if (filter === 'unread') return !a.is_read;
     if (filter === 'system') return a.type === 'info' || a.is_global;
@@ -132,11 +136,11 @@ export default function NotificationManagement() {
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {[
-          { label: 'Total Recorded Logs', value: alerts.length, icon: Activity, color: 'text-cyan-400' },
-          { label: 'Unacknowledged Logs', value: unreadCount, icon: Zap, color: 'text-emerald-400' },
-          { label: 'Critical Exceptions', value: securityCount, icon: ShieldAlert, color: 'text-rose-400' }
-        ].map((stat, i) => (
-          <div key={i} className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 flex items-center justify-between shadow-xl">
+          { label: 'Total Recorded Logs', value: alerts.length, icon: Activity, color: 'text-cyan-400', filter: 'all' },
+          { label: 'Unacknowledged Logs', value: unreadCount, icon: Zap, color: 'text-emerald-400', filter: 'unread' },
+          { label: 'Critical Exceptions', value: securityCount, icon: ShieldAlert, color: 'text-rose-400', filter: 'security' }
+        ].map(stat => (
+          <button key={stat.label} type="button" onClick={() => setFilter(stat.filter)} aria-label={`Show ${stat.label.toLowerCase()}`} className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/50 rounded-2xl p-6 flex items-center justify-between text-left shadow-xl transition hover:border-emerald-500/30 hover:bg-[#10241f]/75 focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-400">
             <div>
               <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest mb-1">{stat.label}</p>
               <h3 className="text-3xl font-black text-white">{stat.value}</h3>
@@ -144,7 +148,7 @@ export default function NotificationManagement() {
             <div className={`p-3 rounded-xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 shadow-inner ${stat.color}`}>
               <stat.icon size={24} />
             </div>
-          </div>
+          </button>
         ))}
       </div>
 
@@ -180,7 +184,13 @@ export default function NotificationManagement() {
         </div>
 
         <div className="flex-1 overflow-y-auto p-4 space-y-3 content-scroll bg-[#0a0a0a]">
-          {filteredAlerts.length === 0 ? (
+          {loadError ? (
+            <div role="alert" className="flex h-full flex-col items-center justify-center gap-3 text-center">
+              <ShieldAlert size={36} className="text-rose-400" />
+              <p className="max-w-lg text-sm text-rose-200">{loadError}</p>
+              <button type="button" onClick={fetchAlerts} className="rounded-lg border border-white/10 px-4 py-2 text-xs font-semibold text-white hover:bg-white/5">Retry loading notifications</button>
+            </div>
+          ) : filteredAlerts.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-slate-500">
               <CheckCircle size={48} className="mb-4 opacity-20" />
               <p className="font-mono text-sm uppercase tracking-widest">No matching telemetry</p>

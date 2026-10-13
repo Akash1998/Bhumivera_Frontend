@@ -380,6 +380,10 @@ export const wallet = {
 };
 export const settings = { get: () => api.get("/settings"), getPublic: () => api.get("/settings/public"), update: d => api.put("/settings", d) };
 export const clientErrors = { getAllAdmin: limit => api.get('/logs/client', { params: { limit } }) };
+export const systemAdmin = {
+  getHealth: () => api.get('/admin/system/health'),
+  setModuleEnabled: (moduleId, enabled) => api.patch(`/admin/system/modules/${moduleId}`, { enabled }),
+};
 export const newsletter = { subscribe: (email, source = 'site') => api.post('/newsletter/subscribe', { email, source }, { timeout: 5000 }) };
 export const reportClientError = error => {
   const source = typeof error?.source === 'string' ? error.source.split(/[?#]/, 1)[0] : null;

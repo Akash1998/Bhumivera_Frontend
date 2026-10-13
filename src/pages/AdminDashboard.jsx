@@ -22,6 +22,7 @@ const NotificationManagement = lazy(() => import('./admin/NotificationManagement
 const TaxManagement = lazy(() => import('./admin/TaxManagement'));
 const GSTAccounting = lazy(() => import('./admin/GSTAccounting'));
 const SystemLogs = lazy(() => import('./admin/SystemLogs'));
+const SystemHealth = lazy(() => import('./admin/SystemHealth'));
 const WarehouseManagement = lazy(() => import('./admin/WarehouseManagement'));
 const ShippingManagement = lazy(() => import('./admin/ShippingManagement')); 
 const AdminSettings = lazy(() => import('./admin/AdminSettings.jsx'));
@@ -76,7 +77,7 @@ const TAB_COMPONENTS = {
   support: SupportManagement, reviews: ReviewManagement,
   analytics: AnalyticsManagement,
   notifications: NotificationManagement,
-  tax: TaxManagement, gst: GSTAccounting, shipping: ShippingManagement, logs: SystemLogs,
+  tax: TaxManagement, gst: GSTAccounting, shipping: ShippingManagement, logs: SystemLogs, 'system-health': SystemHealth,
   warehouse: WarehouseManagement, settings: AdminSettings,
   ...Object.fromEntries(GROWTH_TABS.map(id => [id, GrowthOffersHub])),
   affiliate: ReferralEngine, 'referral-engine': ReferralEngine,
@@ -86,7 +87,7 @@ const TAB_COMPONENTS = {
 };
 
 const TAB_ICONS = {
-  overview: Activity, analytics: ChartNoAxesCombined, notifications: Bell, logs: ScrollText,
+  overview: Activity, analytics: ChartNoAxesCombined, notifications: Bell, logs: ScrollText, 'system-health': Activity,
   orders: ShoppingBag, shipping: Truck, impact: Leaf, products: Package, categories: Boxes,
   inventory: Tags, warehouse: Warehouse, loyalty: Award, affiliate: Users, coupons: Gift,
   'flash-sales': Zap, reviews: Star, 'min-cart-value': SlidersHorizontal, 'cart-rules': SlidersHorizontal,
@@ -138,7 +139,7 @@ export default function AdminDashboard() {
     },
     {
       title: 'Platform', items: [
-        { id: 'impact', label: 'Earth impact' }, { id: 'wallet-management', label: 'Customer wallets' }, { id: 'logs', label: 'System logs' },
+        { id: 'impact', label: 'Earth impact' }, { id: 'wallet-management', label: 'Customer wallets' }, { id: 'system-health', label: 'System health' }, { id: 'logs', label: 'System logs' },
         { id: 'settings', label: 'Settings' }
       ]
     },

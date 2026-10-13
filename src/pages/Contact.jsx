@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { 
   Send, Mail, Phone, MessageSquare, 
   HelpCircle, FileText, RefreshCw,
@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import api from '../services/api';
 import { useToast } from '../context/ToastContext';
+import { useAuth } from '../context/AuthContext';
 
 const FAQS = [
   {
@@ -29,6 +30,7 @@ const FAQS = [
 
 export default function Contact() {
   const location = useLocation();
+  const { user, loading: authLoading } = useAuth();
   const [form, setForm] = useState({
     name: '', email: '', phone: '', order_id: '', subject: 'product_inquiry', message: ''
   });
@@ -45,6 +47,15 @@ export default function Contact() {
     }
   }, [location]);
 
+  useEffect(() => {
+    if (!user) return;
+    setForm(prev => ({
+      ...prev,
+      name: prev.name || user.name || '',
+      email: user.email || prev.email,
+    }));
+  }, [user]);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -54,7 +65,7 @@ export default function Contact() {
       showToast?.('Inquiry submitted successfully.', 'success');
       setForm({ name: '', email: '', phone: '', order_id: '', subject: 'product_inquiry', message: '' });
     } catch (err) {
-      showToast?.('Failed to submit your inquiry. Please try again.', 'error');
+      showToast?.(err.normalized?.message || err.response?.data?.message || 'Failed to submit your inquiry. Please try again.', 'error');
     } finally {
       setIsSubmitting(false);
     }
@@ -81,8 +92,18 @@ export default function Contact() {
         {/* Support Ticket Form */}
         <div className="lg:col-span-7">
           <div className="bg-white border border-[#dccfb8] rounded-[3rem] p-8 md:p-14 relative shadow-sm hover:shadow-xl transition-shadow duration-700">
-            
-            {ticketGenerated ? (
+            {authLoading ? (
+              <div className="py-16 text-center text-sm text-[#4a3628]">Checking your sign-in…</div>
+            ) : !user ? (
+              <div className="py-12 text-center">
+                <div className="mx-auto mb-6 flex h-16 w-16 items-center justify-center rounded-full bg-[#6b4226]/10 text-[#6b4226]"><MessageSquare size={28} /></div>
+                <h2 className="text-3xl font-serif text-[#1e1510]">Sign in to contact support</h2>
+                <p className="mx-auto mt-4 max-w-md text-sm leading-6 text-[#4a3628]">Your support requests and replies are kept together in your account, so please sign in before sending a message.</p>
+                <Link to="/login" state={{ from: `${location.pathname}${location.search}` }} className="mt-8 inline-flex min-h-12 items-center justify-center gap-2 rounded-full bg-[#1e1510] px-8 text-xs font-bold uppercase tracking-[0.15em] text-white hover:bg-[#6b4226]">
+                  Sign in to continue <ArrowRight size={15} />
+                </Link>
+              </div>
+            ) : ticketGenerated ? (
               <div className="flex flex-col items-center justify-center text-center py-20 animate-in zoom-in duration-700">
                 <div className="w-24 h-24 bg-[#6b4226]/10 border border-[#6b4226]/20 rounded-full flex items-center justify-center text-[#6b4226] mb-8">
                   <CheckCircle size={40} />
@@ -109,8 +130,8 @@ export default function Contact() {
                       <input required type="text" value={form.name} onChange={e => setForm({...form, name: e.target.value})} className="w-full bg-[#faf8f5] border border-[#dccfb8] rounded-2xl p-5 text-sm text-[#1e1510] outline-none focus:border-[#6b4226] focus:bg-white transition-all shadow-inner" />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#4a3628] ml-2 block mb-3">Email Address</label>
-                      <input required type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="w-full bg-[#faf8f5] border border-[#dccfb8] rounded-2xl p-5 text-sm text-[#1e1510] outline-none focus:border-[#6b4226] focus:bg-white transition-all shadow-inner" />
+                      <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#4a3628] ml-2 block mb-3">Account Email</label>
+                      <input required readOnly type="email" value={form.email} className="w-full bg-[#f4f1eb] border border-[#dccfb8] rounded-2xl p-5 text-sm text-[#1e1510] outline-none shadow-inner" />
                     </div>
                   </div>
 
