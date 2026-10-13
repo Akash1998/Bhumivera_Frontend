@@ -53,7 +53,7 @@ export default function CouponManagement() {
   const fetchCoupons = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/coupons').catch(() => api.get('/admin/coupons'));
+      const res = await api.get('/coupons', { adminAuth: true });
       setCoupons(res.data?.coupons || res.data?.data || res.data || []);
     } catch (err) {
       showToast?.('Failed to synchronize campaign matrix.', 'error');
@@ -151,7 +151,7 @@ export default function CouponManagement() {
   const toggleStatus = async (id, currentStatus) => {
     try {
       const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-      await api.patch(`/coupons/${id}/status`, { status: newStatus }).catch(() => api.put(`/coupons/${id}`, { status: newStatus }));
+      await api.put(`/coupons/${id}`, { status: newStatus }));
       fetchCoupons();
       showToast?.(`Campaign ${newStatus === 'active' ? 'activated' : 'suspended'}`, 'success');
     } catch (err) {}

@@ -195,9 +195,9 @@ export default function Register() {
                 {error && <AlertBox type="error" msg={error} />}
 
                 <form onSubmit={handleRegisterInit} className="space-y-5 relative z-10">
-                  <InputField icon={<User size={18}/>} type="text" name="name" value={formData.name} onChange={handleInputChange} placeholder="Full Name" disabled={loading} />
+                  <InputField icon={<User size={18}/>} type="text" name="name" autoComplete="name" value={formData.name} onChange={handleInputChange} placeholder="Full Name" disabled={loading} />
                   
-                  <InputField icon={<Mail size={18}/>} type="email" name="email" value={formData.email} onChange={handleInputChange} placeholder="Email Address" disabled={loading} />
+                  <InputField icon={<Mail size={18}/>} type="email" name="email" autoComplete="username" value={formData.email} onChange={handleInputChange} placeholder="Email Address" disabled={loading} />
 
                   <div>
                     <label htmlFor="referralCode" className="mb-2 block pl-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#0B2419]">Referral code <span className="font-normal normal-case tracking-normal text-[#0B2419]/50">Optional</span></label>
@@ -215,7 +215,7 @@ export default function Register() {
                   </div>
                   
                   <div className="space-y-3">
-                    <InputField icon={<Lock size={18}/>} type="password" name="password" value={formData.password} onChange={handleInputChange} placeholder="Password" disabled={loading} />
+                    <InputField icon={<Lock size={18}/>} type="password" name="password" autoComplete="new-password" value={formData.password} onChange={handleInputChange} placeholder="Password" disabled={loading} />
                     <div className="px-1" aria-live="polite">
                       <div className="mb-2 flex items-center justify-between gap-2">
                         <p className="text-xs font-semibold text-[#0B2419]">Password requirements</p>

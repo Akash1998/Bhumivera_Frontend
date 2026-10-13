@@ -14,7 +14,7 @@ import SEO from '../components/SEO';
 import { categories as categoriesApi, products as productsApi, recommendations as recommendationsApi, reviews as reviewsApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-const IMAGE_BASE = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-22cd43cce9bc475680ad496e199706c4.r2.dev';
+const IMAGE_BASE = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev';
 
 const productImage = product => {
   const source = product?.images?.[0] || product?.image_url || product?.image;

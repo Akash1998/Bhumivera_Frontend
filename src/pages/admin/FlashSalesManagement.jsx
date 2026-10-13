@@ -52,7 +52,7 @@ export default function FlashSalesManagement() {
       // Parallel fetch: Get campaigns and all products for linkage
       const [campRes, prodRes] = await Promise.all([
         api.get('/flash-sales/admin').catch(() => ({ data: { data: [] } })),
-        api.get('/products').catch(() => api.get('/admin/products')).catch(() => ({ data: { data: [] } }))
+        api.get('/products', { adminAuth: true }).catch(() => ({ data: { data: [] } }))
       ]);
       
       setCampaigns(campRes.data?.data || campRes.data?.campaigns || campRes.data || []);

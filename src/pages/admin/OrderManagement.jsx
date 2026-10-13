@@ -90,7 +90,7 @@ export default function OrderManagement() {
     let path = typeof img === 'object' ? (img.file_path || img.url || img.path) : img;
     if (!path) return '/logo.webp';
     if (path.startsWith('http')) return path;
-    const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-22cd43cce9bc475680ad496e199706c4.r2.dev';
+    const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev';
     return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
   };
 

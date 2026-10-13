@@ -205,6 +205,8 @@ const Login = () => {
                       <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B9D83]" />
                       <input 
                         type="email" 
+                        name="email"
+                        autoComplete="username"
                         required
                         className="w-full pl-12 pr-4 py-3.5 bg-[#FDFBF7] border border-[#8B9D83]/20 focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 rounded-2xl outline-none transition-all text-[#0B2419]"
                         placeholder="you@example.com"
@@ -222,6 +224,8 @@ const Login = () => {
                       <Lock size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B9D83]" />
                       <input 
                         type={showPassword ? 'text' : 'password'}
+                        name="password"
+                        autoComplete="current-password"
                         required
                         className="w-full pl-12 pr-12 py-3.5 bg-[#FDFBF7] border border-[#8B9D83]/20 focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 rounded-2xl outline-none transition-all text-[#0B2419]"
                         placeholder="Enter your password"
@@ -261,6 +265,8 @@ const Login = () => {
                       <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B9D83]" />
                       <input 
                         type="email" 
+                        name="email"
+                        autoComplete="username"
                         required
                         className="w-full pl-12 pr-4 py-3.5 bg-[#FDFBF7] border border-[#8B9D83]/20 focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 rounded-2xl outline-none transition-all text-[#0B2419]"
                         placeholder="you@example.com"
