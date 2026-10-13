@@ -1,4 +1,6 @@
 import SEO from '../components/SEO';
+import PincodeChecker from '../components/PincodeChecker';
+import SEOStructuredData from '../components/SEOStructuredData';
 import React, { useState, useEffect } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
@@ -281,6 +283,7 @@ export default function ProductDetail() {
 
   return (
     <div className="bg-[#f4f2eb] text-[#1b2821] min-h-screen selection:bg-[#253b2f] selection:text-white pt-24 pb-32 font-sans relative">
+      <SEOStructuredData product={product} />
       <SEO 
         title={`${product.name} | Bhumivera`}
         description={product.description?.substring(0, 155)}
@@ -427,6 +430,10 @@ export default function ProductDetail() {
                   <CheckCircle2 size={16} /> Added to Cart
                 </span>
               </button>
+
+              <div className="w-full mt-4">
+                <PincodeChecker />
+              </div>
             </div>
           </div>
 

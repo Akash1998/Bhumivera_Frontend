@@ -3,11 +3,13 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
   ShoppingCart, User, Search, Menu, X, Sparkles, Heart,
   ChevronDown, Package, Gift, GitCompareArrows,
-  MapPin, Activity, Droplets, Leaf
+  MapPin, Activity, Droplets, Leaf, Camera, Mic, MicOff
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { search } from '../services/api';
+import VisualSearchModal from './VisualSearchModal';
+import { useVoiceSearch } from '../hooks/useVoiceSearch';
 
 export default function Navbar() {
   const { user } = useAuth();
@@ -15,6 +17,11 @@ export default function Navbar() {
   const cartCount = cartItems.reduce((count, item) => count + (Number(item.quantity) || 1), 0);
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [visualModalOpen, setVisualModalOpen] = useState(false);
+  const { isListening, startListening } = useVoiceSearch((text) => {
+    setSearchQuery(text);
+    navigate(`/shop?q=${encodeURIComponent(text)}`);
+  });
   const [suggestions, setSuggestions] = useState([]);
   const [isAiPowered, setIsAiPowered] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -158,8 +165,28 @@ export default function Navbar() {
                 onFocus={() => { if(searchQuery.length > 2) setShowSearchDropdown(true); }}
                 placeholder="Search skincare, hair care, ingredients..."
                 aria-label="Search skincare products"
-                className="w-full rounded-full border border-[#dedfd4] bg-white py-3.5 pl-12 pr-6 text-sm text-[#14251c] shadow-sm outline-none transition-all placeholder:text-[#526b4d]/60 focus:border-[#526b4d]"
+                className="w-full rounded-full border border-[#dedfd4] bg-white py-3.5 pl-12 pr-28 text-sm text-[#14251c] shadow-sm outline-none transition-all placeholder:text-[#526b4d]/60 focus:border-[#526b4d]"
               />
+              <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-[#526b4d]">
+                <button
+                  type="button"
+                  onClick={startListening}
+                  title="Voice Search"
+                  aria-label="Voice Search"
+                  className={`p-1 rounded-full hover:bg-stone-100 transition ${isListening ? 'text-red-500 animate-pulse' : 'text-[#526b4d]'}`}
+                >
+                  <Mic size={16} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setVisualModalOpen(true)}
+                  title="AI Visual Lens"
+                  aria-label="AI Visual Search"
+                  className="p-1 rounded-full hover:bg-stone-100 text-[#526b4d] transition"
+                >
+                  <Camera size={16} />
+                </button>
+              </div>
               <button type="submit" aria-label="Search" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-[#14251c] px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-white opacity-0 transition-colors group-focus-within:opacity-100 hover:bg-[#354c3b]">
                 Discover
               </button>
@@ -281,6 +308,7 @@ export default function Navbar() {
             </div>
           </div>
       </div>
+      <VisualSearchModal isOpen={visualModalOpen} onClose={() => setVisualModalOpen(false)} />
     </>
   );
 }

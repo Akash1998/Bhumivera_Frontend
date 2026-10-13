@@ -1,6 +1,10 @@
+import Checkout from './pages/Checkout.jsx';
 import React, { lazy, Suspense, useMemo, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
+import MobileBottomNav from "./components/MobileBottomNav.jsx";
+import { useNativeBackButton } from "./hooks/useNativeBackButton.js";
+import { initPushNotifications } from "./utils/pushNotifications.js";
 import Footer from "./components/Footer.jsx";
 import MiniCart from "./components/MiniCart.jsx";
 import { CartProvider, useCart } from "./context/CartContext.jsx";
@@ -173,6 +177,17 @@ function AppContent() {
   const navigate = useNavigate();
   const { setIsCartOpen } = useCart();
 
+  // Native mobile Android back button handling
+  useNativeBackButton();
+
+  // Native push notifications registration
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      initPushNotifications(token);
+    }
+  }, []);
+
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     const shouldOpenCheckout = params.has('cartCheckout');
@@ -243,7 +258,9 @@ function AppContent() {
             {/* Protected User Routes */}
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/cart" element={<Navigate to="/?openCart=1" replace />} />
-            <Route path="/checkout" element={<Navigate to="/?cartCheckout=1" replace />} />
+            const CheckoutPage = React.lazy(() => import("./pages/Checkout.jsx"));
+// ... route:
+<Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
             <Route path="/order-success/:orderId?" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
             <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
             <Route path="/address-book" element={<ProtectedRoute><AddressBook /></ProtectedRoute>} />
@@ -268,6 +285,7 @@ function AppContent() {
             {/* Global Redirect */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
+            <MobileBottomNav />
         </Suspense>
       </main>
 

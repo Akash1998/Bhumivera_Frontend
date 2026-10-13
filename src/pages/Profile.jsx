@@ -243,25 +243,18 @@ export default function Profile() {
 
   useEffect(() => {
     if (activeTab === 'security') {
-      authApi.listPasskeys(['admin', 'superadmin'].includes(user?.role) ? 'admin' : 'customer')
+      authApi.listPasskeys()
         .then(res => setPasskeys(res.data?.passkeys || []))
-        .catch(error => {
-          console.error('[PROFILE_PASSKEY_LIST]', error);
-          setPasskeys([]);
-        });
+        .catch(() => {});
     }
-  }, [activeTab, user?.role]);
+  }, [activeTab]);
 
   const handleRegisterPasskey = async () => {
     setLoadingPasskey(true);
-    const accountType = ['admin', 'superadmin'].includes(user?.role) ? 'admin' : 'customer';
     try {
-      await registerPasskey({
-        accountType,
-        name: `Passkey (${navigator.platform || 'Device'})`,
-      });
+      await registerPasskey('Touch ID / Face ID (' + (navigator.platform || 'Device') + ')');
       toast.success('Passkey registered successfully! You can now use biometrics to sign in.');
-      const res = await authApi.listPasskeys(accountType);
+      const res = await authApi.listPasskeys();
       setPasskeys(res.data?.passkeys || []);
     } catch (err) {
       toast.error(err.message || 'Passkey registration cancelled or failed.');
@@ -271,9 +264,8 @@ export default function Profile() {
   };
 
   const handleDeletePasskey = async (id) => {
-    const accountType = ['admin', 'superadmin'].includes(user?.role) ? 'admin' : 'customer';
     try {
-      await authApi.deletePasskey(id, accountType);
+      await authApi.deletePasskey(id);
       toast.success('Passkey removed.');
       setPasskeys(prev => prev.filter(p => p.id !== id));
     } catch (err) {
@@ -1835,18 +1827,17 @@ export default function Profile() {
                       </div>
                       <div>
                         <h3 className="font-semibold text-[#0B2419] text-lg">Passkeys & Biometric Login</h3>
-                        <p className="text-xs text-stone-500">Sign in securely with Touch ID, Face ID, or Windows Hello without typing passwords. If Google Password Manager is unavailable, choose “Save another way” and use Windows Hello or a security key.</p>
+                        <p className="text-xs text-stone-500">Sign in securely with Touch ID, Face ID, or Windows Hello without typing passwords.</p>
                       </div>
                     </div>
                     <button
                       type="button"
                       onClick={handleRegisterPasskey}
-                      disabled={loadingPasskey || !isPasskeySupported()}
-                      title={isPasskeySupported() ? 'Add a passkey for biometric sign-in' : 'Passkeys require a supported browser and a secure website connection'}
+                      disabled={loadingPasskey}
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B2419] text-[#D4AF37] text-xs font-bold uppercase tracking-wider hover:bg-[#1e4031] transition-all disabled:opacity-60 shrink-0"
                     >
                       <Plus className="w-4 h-4" />
-                      {loadingPasskey ? 'Registering…' : isPasskeySupported() ? 'Add Passkey' : 'Passkeys not supported'}
+                      {loadingPasskey ? 'Registering…' : 'Add Passkey'}
                     </button>
                   </div>
 

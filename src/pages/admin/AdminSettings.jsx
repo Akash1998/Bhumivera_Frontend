@@ -1,8 +1,7 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { auth as authApi, settings as settingsApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { isPasskeySupported, registerPasskey } from '../../utils/webauthnClient';
-import { FiLock, FiSave, FiAlertCircle, FiCheckCircle, FiKey } from 'react-icons/fi';
+import { FiLock, FiSave, FiAlertCircle, FiCheckCircle } from 'react-icons/fi';
 
 export default function AdminSettings() {
   const { adminOtpVerify } = useAuth();
@@ -25,8 +24,6 @@ export default function AdminSettings() {
   const [cartSettingsLoading, setCartSettingsLoading] = useState(true);
   const [cartSettingsSaving, setCartSettingsSaving] = useState(false);
   const [returnPolicyDays, setReturnPolicyDays] = useState('7');
-  const [passkeys, setPasskeys] = useState([]);
-  const [passkeyLoading, setPasskeyLoading] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -54,53 +51,6 @@ export default function AdminSettings() {
       .finally(() => { if (active) setCartSettingsLoading(false); });
     return () => { active = false; };
   }, []);
-
-  const loadPasskeys = useCallback(async () => {
-    try {
-      const response = await authApi.listPasskeys('admin');
-      setPasskeys(response.data?.passkeys || []);
-    } catch (loadError) {
-      console.error('[ADMIN_PASSKEY_LIST]', loadError);
-      setError(loadError.response?.data?.message || 'Could not load admin passkeys.');
-    }
-  }, []);
-
-  useEffect(() => {
-    loadPasskeys();
-  }, [loadPasskeys]);
-
-  const addPasskey = async () => {
-    setPasskeyLoading(true);
-    setError(null);
-    setMessage(null);
-    try {
-      await registerPasskey({
-        accountType: 'admin',
-        name: `Admin passkey (${navigator.platform || 'Device'})`,
-      });
-      setMessage('Passkey added. Use it from the Passkey option on the admin sign-in page.');
-      await loadPasskeys();
-    } catch (addError) {
-      setError(addError.response?.data?.message || addError.message || 'Could not add an admin passkey.');
-    } finally {
-      setPasskeyLoading(false);
-    }
-  };
-
-  const removePasskey = async id => {
-    setPasskeyLoading(true);
-    setError(null);
-    setMessage(null);
-    try {
-      await authApi.deletePasskey(id, 'admin');
-      setPasskeys(current => current.filter(passkey => passkey.id !== id));
-      setMessage('Admin passkey removed.');
-    } catch (removeError) {
-      setError(removeError.response?.data?.message || 'Could not remove this admin passkey.');
-    } finally {
-      setPasskeyLoading(false);
-    }
-  };
 
   const saveCartSettings = async event => {
     event.preventDefault();
@@ -213,53 +163,6 @@ export default function AdminSettings() {
           {error}
         </div>
       )}
-
-      <div className="admin-glass-panel mb-6 rounded-2xl p-6">
-        <div className="mb-4 flex flex-wrap items-start justify-between gap-4">
-          <div>
-            <h3 className="flex items-center gap-2 text-lg font-semibold text-white">
-              <FiKey className="text-cyan-400" /> Passkeys
-            </h3>
-            <p className="mt-1 max-w-xl text-sm text-gray-400">
-              Add or remove passkeys for password-free admin sign-in with Windows Hello, Face ID, a device PIN, or a security key.
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={addPasskey}
-            disabled={passkeyLoading || !isPasskeySupported()}
-            title={isPasskeySupported() ? 'Register a passkey on this device' : 'Passkeys require a supported browser and secure website connection'}
-            className="rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-400 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {passkeyLoading ? 'Working…' : 'Add passkey'}
-          </button>
-        </div>
-        {passkeys.length ? (
-          <ul className="divide-y divide-gray-800">
-            {passkeys.map(passkey => (
-              <li key={passkey.id} className="flex items-center justify-between gap-3 py-3">
-                <div>
-                  <p className="text-sm font-medium text-gray-200">{passkey.device_name || 'Passkey device'}</p>
-                  <p className="text-xs text-gray-500">
-                    {passkey.created_at ? `Added ${new Date(passkey.created_at).toLocaleDateString()}` : 'Registered passkey'}
-                    {passkey.last_used_at ? ` · Last used ${new Date(passkey.last_used_at).toLocaleDateString()}` : ''}
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => removePasskey(passkey.id)}
-                  disabled={passkeyLoading}
-                  className="rounded-lg border border-rose-500/30 px-3 py-1.5 text-xs font-semibold text-rose-300 hover:bg-rose-500/10 disabled:opacity-50"
-                >
-                  Remove
-                </button>
-              </li>
-            ))}
-          </ul>
-        ) : (
-          <p className="text-sm text-gray-500">No admin passkeys registered yet.</p>
-        )}
-      </div>
 
       <div className="admin-glass-panel rounded-2xl p-6">
         <h3 className="text-lg font-semibold text-white mb-4">Change Password</h3>

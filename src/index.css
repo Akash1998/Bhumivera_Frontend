@@ -141,3 +141,39 @@ body {
     transform: rotate(360deg); 
   }
 }
+
+/* --- MOBILE SAFE AREA & HARDWARE BRIDGE ENHANCEMENTS --- */
+:root {
+  --sat: env(safe-area-inset-top, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+}
+
+body {
+  padding-top: var(--sat);
+  padding-bottom: var(--sab);
+  padding-left: var(--sal);
+  padding-right: var(--sar);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.mobile-bottom-nav {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: calc(60px + var(--sab));
+  padding-bottom: var(--sab);
+  background: #ffffff;
+  border-top: 1px solid #e7e5e4;
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  z-index: 40;
+}
+
+.mobile-tap-active:active {
+  transform: scale(0.97);
+  transition: transform 0.1s ease-in-out;
+}
