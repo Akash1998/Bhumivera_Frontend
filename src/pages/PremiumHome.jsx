@@ -56,26 +56,18 @@ const ingredientStories = [
 
 const campaignStories = [
   {
-    image: 'Promo1.webp',
-    number: '01',
     title: 'Nature’s precision. Planet first.',
     copy: 'A reminder to look closer: the natural world is intricate, generous and worth treating with care.',
   },
   {
-    image: 'Promo2.webp',
-    number: '02',
     title: 'Where science meets soil.',
     copy: 'Curiosity helps us understand what goes into a formula—and keep the conversation grounded in nature.',
   },
   {
-    image: 'Promo3.webp',
-    number: '03',
     title: 'Change, made thoughtfully.',
     copy: 'Better choices are built into everyday life, one considered decision at a time.',
   },
   {
-    image: 'Promo4.webp',
-    number: '04',
     title: 'Where nature meets logic.',
     copy: 'Botanical inspiration and careful thinking can belong in the same story.',
   },
@@ -475,54 +467,28 @@ export default function PremiumHome() {
         </section>
       )}
 
-      <section className="bg-[#e7e4d9] px-4 py-8 text-[#1b2921] sm:px-8 sm:py-12 lg:px-10 lg:py-16">
-        <div className="mx-auto grid max-w-7xl overflow-hidden rounded-2xl bg-[#dce1d2] md:grid-cols-[1fr_1fr]">
-          <div className="relative order-1 aspect-[16/10] overflow-hidden bg-[#26392c] md:order-2 md:aspect-auto md:min-h-[420px]">
-            <img src={image('river free.webp')} alt="Illustrative scene of people tending a leafy riverbank, not a verified Bhumivera field report" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-center" />
-            <span className="absolute bottom-3 left-3 bg-[#101811]/75 px-2.5 py-1.5 text-[8px] font-semibold uppercase tracking-[0.12em] text-[#e1e8ce] backdrop-blur-sm sm:bottom-5 sm:left-5 sm:px-3 sm:py-2 sm:text-[9px] sm:tracking-[0.16em]">A vision of care for land and water · illustrative image</span>
-          </div>
-          <div className="order-2 flex flex-col justify-center px-5 py-7 sm:px-8 sm:py-9 md:order-1 lg:px-12 lg:py-12 xl:px-16">
-            <p className="inline-flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.2em] text-[#56684d] sm:text-[10px] sm:tracking-[0.24em]"><Leaf size={14} /> A closer kind of care</p>
-            <h2 className="mt-3 max-w-xl font-serif text-3xl leading-[1.06] tracking-[-0.025em] sm:mt-4 sm:text-4xl lg:text-5xl">Care is a relationship with the living world.</h2>
-            <p className="mt-4 max-w-lg text-sm leading-6 text-[#53604e] sm:mt-5 sm:text-base sm:leading-7">
-              From the soil beneath our feet to the water that gives life, nature is not a backdrop to what we do. It is the source of our inspiration—and a responsibility we want to meet with respect.
-            </p>
-            <p className="mt-3 max-w-lg text-sm leading-6 text-[#53604e] sm:mt-4">
-              It shapes how we think about botanicals, the rituals we make room for, and the kind of future we hope to help grow.
-            </p>
-            <Link to="/about" className="mt-5 inline-flex min-h-11 w-fit items-center gap-3 border-b border-[#536b4d]/40 pb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#354933] sm:mt-6 sm:text-xs sm:tracking-[0.14em]">
-              Get to know our story <ArrowRight size={15} />
-            </Link>
-          </div>
-        </div>
-      </section>
-
-      <section className="bg-[#e7e4d9] text-[#1b2921]">
+      <section className="bg-[#14251c] text-[#f4f1e9]">
         <div className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16 lg:px-10 lg:py-20">
-          <div className="mb-7 grid gap-4 border-b border-[#26392c]/20 pb-5 lg:mb-10 lg:grid-cols-[1fr_0.65fr] lg:items-end lg:pb-9">
+          <div className="grid gap-5 border-b border-white/20 pb-7 sm:pb-9 lg:grid-cols-[1.1fr_0.7fr] lg:items-end">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#687958]">A Bhumivera visual story</p>
-              <h2 className="mt-3 max-w-2xl font-serif text-3xl leading-tight sm:text-4xl lg:text-5xl">Four notes on care.</h2>
+              <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-[#d6c990]"><Leaf size={14} /> A Bhumivera point of view</p>
+              <h2 className="mt-4 max-w-3xl font-serif text-4xl leading-[1.04] tracking-[-0.025em] sm:text-5xl lg:text-6xl">Care is most beautiful when it is considered.</h2>
             </div>
-            <p className="max-w-lg text-sm leading-7 text-stone-600 sm:text-base">From the intelligence of nature to the choices we make each day, these campaign frames share one thought: care is most beautiful when it is considered.</p>
+            <p className="max-w-lg text-sm leading-7 text-white/70 sm:text-base">
+              From the intelligence of nature to the choices we make each day, our approach begins with attention, curiosity and respect for the living world.
+            </p>
           </div>
-          <div className="grid gap-4 lg:grid-cols-2 lg:gap-5">
+          <div className="grid gap-x-8 sm:grid-cols-2 lg:grid-cols-4">
             {campaignStories.map(story => (
-              <article key={story.number} className="group grid min-h-[220px] grid-cols-[minmax(112px,0.72fr)_1fr] overflow-hidden border border-[#26392c]/15 bg-[#f4f1e9] sm:min-h-[340px] sm:grid-cols-[minmax(170px,0.78fr)_1fr]">
-                <div className="relative overflow-hidden bg-[#17231d]">
-                  <img src={image(story.image)} alt={`${story.title} — Bhumivera campaign artwork`} loading="lazy" className="h-full min-h-[270px] w-full object-cover object-center transition-transform duration-700 group-hover:scale-[1.025] sm:min-h-[340px]" />
-                  <span className="absolute left-2 top-2 bg-[#111c17]/85 px-2 py-1.5 font-mono text-[9px] tracking-[0.12em] text-[#e1e8ce] sm:left-3 sm:top-3 sm:px-3 sm:text-[10px]">{story.number} / 04</span>
-                </div>
-                <div className="flex flex-col justify-center p-3 sm:p-6 lg:p-8">
-                  <span className="text-[8px] font-bold uppercase tracking-[0.14em] text-[#77816d] sm:text-[9px] sm:tracking-[0.2em]">A note on care</span>
-                  <h3 className="mt-2 font-serif text-lg leading-tight sm:mt-3 sm:text-2xl lg:text-3xl">{story.title}</h3>
-                  <p className="mt-2 text-[11px] leading-4 text-stone-600 sm:mt-4 sm:text-sm sm:leading-6">{story.copy}</p>
-                  <span className="mt-5 h-px w-10 bg-[#879477] sm:mt-7" aria-hidden="true" />
-                </div>
+              <article key={story.title} className="border-b border-white/20 py-6 sm:py-7 lg:border-b-0 lg:border-r lg:py-8 lg:pr-6 last:lg:border-r-0">
+                <h3 className="font-serif text-2xl leading-tight text-[#f4f1e9] sm:text-[1.7rem]">{story.title}</h3>
+                <p className="mt-3 text-sm leading-6 text-white/65">{story.copy}</p>
               </article>
             ))}
           </div>
-          <p className="mt-6 text-[10px] leading-5 text-stone-500">Campaign artwork and brand perspective; not a record of completed field activity.</p>
+          <Link to="/science" className="group mt-7 inline-flex min-h-11 items-center gap-3 border-b border-[#d6c990]/50 pb-2 text-xs font-bold uppercase tracking-[0.14em] text-[#e1d7aa] transition-colors hover:text-white sm:mt-9">
+            Explore our ingredient notes <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+          </Link>
         </div>
       </section>
 

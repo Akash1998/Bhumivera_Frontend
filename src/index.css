@@ -5,12 +5,81 @@
 :root {
   --olive-stripe: rgba(128, 128, 0, 0.06);
   --alabaster: #FDFDFB;
+  --bhumivera-forest: #14251c;
+  --bhumivera-leaf: #526b4d;
+  --bhumivera-gold: #c4aa67;
+  --bhumivera-paper: #f4f1e9;
+  --bhumivera-line: #dedfd4;
 }
 
 body {
   background-color: var(--alabaster);
   color: #1A1C18;
   overflow-x: hidden;
+}
+
+.site-shell {
+  color: var(--bhumivera-forest);
+  background-color: var(--bhumivera-paper);
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.site-shell :focus-visible {
+  outline: 2px solid var(--bhumivera-leaf);
+  outline-offset: 3px;
+}
+
+.site-shell input,
+.site-shell select,
+.site-shell textarea {
+  max-width: 100%;
+}
+
+.site-shell nav a,
+.site-shell nav button {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.site-shell [class~="text-[#8b5a2b]"],
+.site-shell [class~="text-[#8B5A2B]"] {
+  color: var(--bhumivera-leaf);
+}
+
+.site-shell [class~="bg-[#8b5a2b]"],
+.site-shell [class~="bg-[#8B5A2B]"] {
+  background-color: var(--bhumivera-forest);
+}
+
+.site-shell [class~="border-[#8b5a2b]"],
+.site-shell [class~="border-[#8B5A2B]"] {
+  border-color: var(--bhumivera-leaf);
+}
+
+.site-shell [class~="text-[#D4AF37]"] {
+  color: var(--bhumivera-gold);
+}
+
+.site-shell [class~="bg-[#D4AF37]"] {
+  background-color: var(--bhumivera-gold);
+}
+
+.site-shell [class~="border-[#D4AF37]"] {
+  border-color: var(--bhumivera-gold);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .site-shell *,
+  .site-shell *::before,
+  .site-shell *::after {
+    scroll-behavior: auto !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
 }
 
 @layer components {

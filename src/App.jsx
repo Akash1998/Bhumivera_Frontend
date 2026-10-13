@@ -194,7 +194,7 @@ function AppContent() {
   }, [location.pathname]);
 
   return (
-    <div className="flex flex-col min-h-screen">
+    <div className={`flex min-h-screen flex-col ${isManagementView ? 'management-shell' : 'site-shell'}`}>
       {!isManagementView && <Navbar />}
       
       <main id="main-content" className="flex-1 w-full flex flex-col">
