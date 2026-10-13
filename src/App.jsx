@@ -1,4 +1,3 @@
-import Checkout from './pages/Checkout.jsx';
 import React, { lazy, Suspense, useMemo, useEffect } from "react";
 import { BrowserRouter, Routes, Route, useLocation, useNavigate, Navigate } from "react-router-dom";
 import Navbar from "./components/Navbar.jsx";
@@ -124,6 +123,7 @@ const SpinRegistration = lazyWithRetry(() => import("./pages/SpinRegistration.js
 const ForgotPassword = lazyWithRetry(() => import("./pages/ForgotPassword.jsx"));
 const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword.jsx"));
 const AdminForgotPassword = lazyWithRetry(() => import("./pages/admin/AdminForgotPassword.jsx"));
+const CheckoutPage = lazyWithRetry(() => import("./pages/Checkout.jsx"));
 
 const PageLoader = () => (
   <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
@@ -258,9 +258,7 @@ function AppContent() {
             {/* Protected User Routes */}
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/cart" element={<Navigate to="/?openCart=1" replace />} />
-            const CheckoutPage = React.lazy(() => import("./pages/Checkout.jsx"));
-// ... route:
-<Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
+            <Route path="/checkout" element={<ProtectedRoute><CheckoutPage /></ProtectedRoute>} />
             <Route path="/order-success/:orderId?" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
             <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
             <Route path="/address-book" element={<ProtectedRoute><AddressBook /></ProtectedRoute>} />
