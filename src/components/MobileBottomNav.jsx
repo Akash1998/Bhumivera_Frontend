@@ -1,28 +1,15 @@
-import React, { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Compass, Sparkles, Heart, User, ShoppingBag } from 'lucide-react';
+import { Home, Compass, User, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
-import VisualSearchModal from './VisualSearchModal';
 import { haptics } from '../utils/haptics';
 
 export default function MobileBottomNav() {
   const { cartItems, setIsCartOpen } = useCart();
   const { user } = useAuth();
-  const [visualModalOpen, setVisualModalOpen] = useState(false);
   const location = useLocation();
 
   const cartCount = cartItems.reduce((acc, i) => acc + (Number(i.quantity) || 1), 0);
-
-  useEffect(() => {
-    const closeVisualSearch = event => {
-      if (!visualModalOpen || event.detail.handled) return;
-      event.detail.handled = true;
-      setVisualModalOpen(false);
-    };
-    window.addEventListener('bhumivera:native-back', closeVisualSearch);
-    return () => window.removeEventListener('bhumivera:native-back', closeVisualSearch);
-  }, [visualModalOpen]);
 
   // Hide on admin and warehouse routes
   if (location.pathname.startsWith('/admin') || location.pathname.startsWith('/warehouse')) {
@@ -60,19 +47,6 @@ export default function MobileBottomNav() {
 
         <button
           onClick={() => {
-            haptics.impactMedium();
-            setVisualModalOpen(true);
-          }}
-          className="flex -translate-y-2 flex-col items-center justify-center gap-1 text-[10px] font-medium text-emerald-800"
-        >
-          <div className="flex h-11 w-11 items-center justify-center rounded-full bg-[#0b2419] text-white shadow-lg">
-            <Sparkles className="h-5 w-5" />
-          </div>
-          <span className="font-semibold text-[#0b2419]">AI Lens</span>
-        </button>
-
-        <button
-          onClick={() => {
             haptics.impactLight();
             setIsCartOpen(true);
           }}
@@ -103,7 +77,6 @@ export default function MobileBottomNav() {
         </NavLink>
       </nav>
 
-      <VisualSearchModal isOpen={visualModalOpen} onClose={() => setVisualModalOpen(false)} />
     </>
   );
 }
