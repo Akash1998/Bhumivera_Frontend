@@ -9,9 +9,10 @@
     "lint": "eslint .",
     "test": "vitest run",
     "preview": "vite preview",
-    "android:sync": "npm run build && cap sync android",
+    "android:assets": "node scripts/generate-brand-assets.cjs && capacitor-assets generate --android --assetPath resources --iconBackgroundColor=\"#14251c\" --iconBackgroundColorDark=\"#14251c\" --splashBackgroundColor=\"#14251c\" --splashBackgroundColorDark=\"#14251c\" --logoSplashScale 0.45",
+    "android:sync": "npm run android:assets && npm run build && cap sync android",
     "android:open": "cap open android",
-    "android:run": "npm run build && cap sync android && cap run android"
+    "android:run": "npm run android:assets && npm run build && cap sync android && cap run android"
   },
   "dependencies": {
     "@capacitor-community/speech-recognition": "^6.0.1",

@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'bhumivera-offline-';
-const CACHE_NAME = `${CACHE_PREFIX}shell-v3`;
+const CACHE_NAME = `${CACHE_PREFIX}shell-v4`;
 const SHELL_URLS = ['/', '/index.html', '/manifest.json', '/logo.webp', '/favicon.ico', '/icon-192.png', '/icon-512.png'];
 const PRIVATE_PATHS = ['/api', '/admin', '/warehouse', '/warehouseadmin', '/admin-login'];
 
