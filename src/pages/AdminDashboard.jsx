@@ -1,9 +1,9 @@
-import React, { useState, Suspense, Component, lazy } from 'react';
+import React, { useEffect, useRef, useState, Suspense, Component, lazy } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Activity, Award, Bell, Boxes, ChartNoAxesCombined, FileText,
-  Gamepad2, Gift, Leaf, LifeBuoy, Mail, Package, ScrollText, Settings2,
-  ShoppingBag, SlidersHorizontal, Star, Tags, Truck, Users, Wallet, Warehouse, Zap
+  Activity, Award, Bell, Boxes, ChartNoAxesCombined, ChevronDown, FileText,
+  Gamepad2, Gift, Leaf, LifeBuoy, LogOut, Mail, Package, ScrollText, Settings2,
+  ShieldCheck, ShoppingBag, SlidersHorizontal, Star, Tags, Truck, Users, Wallet, Warehouse, Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
@@ -102,9 +102,38 @@ export default function AdminDashboard() {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { tab } = useParams();
+  const [isAccountMenuOpen, setAccountMenuOpen] = useState(false);
+  const accountMenuRef = useRef(null);
   const activeTab = tab === 'contact' ? 'support' : tab || 'overview';
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [navSearch, setNavSearch] = useState('');
+
+  useEffect(() => {
+    if (!isAccountMenuOpen) return undefined;
+    const closeOnOutsideClick = event => {
+      if (!accountMenuRef.current?.contains(event.target)) setAccountMenuOpen(false);
+    };
+    const closeOnEscape = event => {
+      if (event.key === 'Escape') setAccountMenuOpen(false);
+    };
+    document.addEventListener('pointerdown', closeOnOutsideClick);
+    document.addEventListener('keydown', closeOnEscape);
+    return () => {
+      document.removeEventListener('pointerdown', closeOnOutsideClick);
+      document.removeEventListener('keydown', closeOnEscape);
+    };
+  }, [isAccountMenuOpen]);
+
+  const openAdminSection = section => {
+    setAccountMenuOpen(false);
+    navigate(`/admin/dashboard/${section}`);
+  };
+
+  const signOut = () => {
+    setAccountMenuOpen(false);
+    logout('admin');
+    navigate('/admin/login');
+  };
 
   const menuSections = [
     {
@@ -262,7 +291,7 @@ export default function AdminDashboard() {
           <div className="p-3 border-t border-[#d4af37]/15 bg-[#071a12] sticky bottom-0 z-10">
             <button
               type="button"
-              onClick={() => { logout('admin'); navigate('/admin/login'); }}
+              onClick={signOut}
               className={`w-full min-h-9 flex items-center py-2 rounded-lg transition-colors border border-transparent text-slate-400 hover:bg-rose-500/10 hover:text-rose-300 ${!isSidebarOpen ? 'justify-center px-0' : 'px-3 gap-2.5'}`}
             >
               <svg className="flex-shrink-0" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
@@ -292,14 +321,49 @@ export default function AdminDashboard() {
                   <h1 className="truncate text-lg font-semibold text-white md:text-xl">{activeLabel}</h1>
                 </div>
               </div>
-              <div className="flex items-center gap-2 border-l border-white/10 pl-3 md:gap-3 md:pl-5">
-                <div className="hidden text-right sm:block">
-                  <p className="max-w-40 truncate text-xs font-semibold text-white">{user?.name || user?.email || 'Administrator'}</p>
-                  <p className="text-[10px] capitalize text-slate-400">{user?.role || 'admin'}</p>
-                </div>
-                <div className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d4af37]/40 bg-[#d4af37]/10 text-sm font-bold text-[#f3d77b]" aria-hidden="true">
-                  {(user?.name || user?.email || 'A')[0].toUpperCase()}
-                </div>
+              <div className="relative border-l border-white/10 pl-3 md:pl-5" ref={accountMenuRef}>
+                <button
+                  type="button"
+                  aria-expanded={isAccountMenuOpen}
+                  aria-controls="admin-account-menu"
+                  aria-label="Open admin account menu"
+                  onClick={() => setAccountMenuOpen(open => !open)}
+                  className="flex min-h-10 items-center gap-2 rounded-xl px-1.5 text-left transition hover:bg-white/5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4af37] md:gap-3"
+                >
+                  <span className="hidden max-w-40 text-right sm:block">
+                    <span className="block truncate text-xs font-semibold text-white">{user?.name || user?.email || 'Administrator'}</span>
+                    <span className="block text-[10px] capitalize text-slate-400">{user?.role || 'admin'}</span>
+                  </span>
+                  <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d4af37]/40 bg-[#d4af37]/10 text-sm font-bold text-[#f3d77b]">
+                    {(user?.name || user?.email || 'A')[0].toUpperCase()}
+                  </span>
+                  <ChevronDown size={14} className={`text-slate-400 transition-transform ${isAccountMenuOpen ? 'rotate-180' : ''}`} aria-hidden="true" />
+                </button>
+                {isAccountMenuOpen && (
+                  <div id="admin-account-menu" role="group" aria-label="Admin account actions" className="absolute right-0 top-full z-30 mt-2 w-72 overflow-hidden rounded-xl border border-[#d4af37]/25 bg-[#071a12] p-2 shadow-2xl shadow-black/50">
+                    <div className="border-b border-white/10 px-3 py-3">
+                      <p className="truncate text-sm font-semibold text-white">{user?.name || user?.email || 'Administrator'}</p>
+                      {user?.name && <p className="truncate text-xs text-slate-400">{user?.email}</p>}
+                      <span className="mt-2 inline-flex rounded-full border border-[#d4af37]/25 bg-[#d4af37]/10 px-2 py-0.5 text-[10px] font-semibold capitalize text-[#f3d77b]">{user?.role || 'admin'}</span>
+                    </div>
+                    <button type="button" onClick={() => openAdminSection('settings')} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-200 transition hover:bg-white/5 hover:text-white">
+                      <ShieldCheck size={16} className="text-emerald-300" aria-hidden="true" />
+                      <span><span className="block font-medium">Security &amp; account</span><span className="block text-[11px] text-slate-500">2FA, passkeys, password</span></span>
+                    </button>
+                    <button type="button" onClick={() => openAdminSection('system-health')} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-200 transition hover:bg-white/5 hover:text-white">
+                      <Activity size={16} className="text-cyan-300" aria-hidden="true" />System health
+                    </button>
+                    <button type="button" onClick={() => openAdminSection('logs')} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-200 transition hover:bg-white/5 hover:text-white">
+                      <ScrollText size={16} className="text-amber-200" aria-hidden="true" />System activity logs
+                    </button>
+                    <button type="button" onClick={() => openAdminSection('orders')} className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-200 transition hover:bg-white/5 hover:text-white">
+                      <ShoppingBag size={16} className="text-slate-300" aria-hidden="true" />Orders &amp; fulfillment
+                    </button>
+                    <button type="button" onClick={signOut} className="mt-1 flex w-full items-center gap-3 rounded-lg border-t border-white/10 px-3 py-2.5 text-left text-sm font-semibold text-rose-300 transition hover:bg-rose-500/10">
+                      <LogOut size={16} aria-hidden="true" />Sign out
+                    </button>
+                  </div>
+                )}
               </div>
             </div>
             <nav aria-label="Frequently used admin sections" className="flex gap-1 overflow-x-auto px-4 pb-3 md:px-6">

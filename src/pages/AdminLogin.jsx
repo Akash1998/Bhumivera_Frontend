@@ -14,6 +14,8 @@ const AdminLogin = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
+  const [authenticatorCode, setAuthenticatorCode] = useState('');
+  const [twoFactorChallenge, setTwoFactorChallenge] = useState('');
   const [status, setStatus] = useState({ type: '', message: '' });
   const [loading, setLoading] = useState(false);
   const [showLockoutBanner, setShowLockoutBanner] = useState(false);
@@ -69,6 +71,30 @@ const AdminLogin = () => {
       console.error('[ADMIN_PASSKEY_LIST]', error);
     }
     navigate('/admin');
+  };
+
+  const beginTwoFactorVerification = data => {
+    setTwoFactorChallenge(data.challengeToken);
+    setAuthenticatorCode('');
+    setStep(4);
+    setStatus({ type: 'success', message: data.message || 'Enter the code from your authenticator app.' });
+  };
+
+  const handleVerifyAdminTwoFactor = async event => {
+    event.preventDefault();
+    setLoading(true);
+    setStatus({ type: '', message: '' });
+    try {
+      const { data } = await authApi.verifyAdminTwoFactorLogin({
+        challengeToken: twoFactorChallenge,
+        token: authenticatorCode,
+      });
+      await finishAdminSignIn(data);
+    } catch (error) {
+      setStatus({ type: 'error', message: error.response?.data?.message || error.message || 'Could not verify authenticator code.' });
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handlePasskeyLogin = async () => {
@@ -136,6 +162,10 @@ const AdminLogin = () => {
         await finishAdminSignIn(data);
         return;
       }
+      if (data.requires2FA && data.challengeToken) {
+        beginTwoFactorVerification(data);
+        return;
+      }
       setResendSeconds(45);
       setStatus({ type: 'success', message: 'Your email provider accepted the sign-in code request. Check your inbox and spam folder.' });
       setStep(2);
@@ -173,7 +203,10 @@ const AdminLogin = () => {
         return;
       }
       if (!res.ok) throw new Error(data.message || 'Invalid or expired OTP.');
-      
+      if (data.requires2FA && data.challengeToken) {
+        beginTwoFactorVerification(data);
+        return;
+      }
       await finishAdminSignIn(data);
     } catch (err) {
       setStatus({ type: 'error', message: err.message || 'Authentication failed.' });
@@ -232,6 +265,45 @@ const AdminLogin = () => {
               Continue to admin portal
             </button>
           </div>
+        ) : step === 4 ? (
+          <form onSubmit={handleVerifyAdminTwoFactor} className="admin-login-form">
+            <div className="admin-login-hint">
+              <h2>Authenticator verification</h2>
+              <p>Enter the current 6-digit code from your authenticator app to finish signing in.</p>
+            </div>
+            <div className="form-group">
+              <label className="admin-login-label" htmlFor="admin-authenticator-code">AUTHENTICATOR CODE</label>
+              <input
+                id="admin-authenticator-code"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]{6}"
+                value={authenticatorCode}
+                onChange={event => setAuthenticatorCode(event.target.value.replace(/\D/g, '').slice(0, 6))}
+                placeholder="000000"
+                autoComplete="one-time-code"
+                required
+                className="admin-login-input text-center tracking-widest"
+              />
+            </div>
+            <button type="submit" disabled={loading || authenticatorCode.length !== 6} className="admin-login-btn">
+              {loading ? 'VERIFYING CODE...' : 'VERIFY & CONTINUE'}
+            </button>
+            <button
+              type="button"
+              className="admin-login-back"
+              disabled={loading}
+              onClick={() => {
+                setStep(1);
+                setLoginMode('PASSWORD');
+                setTwoFactorChallenge('');
+                setAuthenticatorCode('');
+                setStatus({ type: '', message: '' });
+              }}
+            >
+              Return to sign in
+            </button>
+          </form>
         ) : step === 1 && loginMode === 'PASSKEY' ? (
           <div className="admin-login-form">
             <div className="admin-login-hint">
