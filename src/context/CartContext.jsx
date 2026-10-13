@@ -15,7 +15,7 @@ export const CartProvider = ({ children }) => {
   const [rulePreview, setRulePreview] = useState(null);
   const [referralReward, setReferralReward] = useState({ balance: 0, estimatedAmount: 0, tiers: [] });
   const [abandonment, setAbandonment] = useState(null);
-  const [couponStackPolicy, setCouponStackPolicy] = useState('rule_first');
+  const [couponStackPolicy, setCouponStackPolicy] = useState('both');
   const [rulePreviewLoading, setRulePreviewLoading] = useState(false);
   const previousRuleIds = useRef(null);
   const { isAuthenticated, user } = useAuth();
@@ -35,14 +35,14 @@ export const CartProvider = ({ children }) => {
         setRulePreview(res.data?.rulePreview || null);
         setReferralReward(res.data?.referralReward || { balance: 0, estimatedAmount: 0, tiers: [] });
         setAbandonment(res.data?.abandonment || null);
-        setCouponStackPolicy(res.data?.couponStackPolicy || 'rule_first');
+        setCouponStackPolicy(res.data?.couponStackPolicy || 'both');
       } catch (err) {
         console.error("Cart sync failed:", err);
         setCart([]);
         setRulePreview(null);
         setReferralReward({ balance: 0, estimatedAmount: 0, tiers: [] });
         setAbandonment(null);
-        setCouponStackPolicy('rule_first');
+        setCouponStackPolicy('both');
       } finally {
         setCartLoading(false);
         setRulePreviewLoading(false);
@@ -55,7 +55,7 @@ export const CartProvider = ({ children }) => {
         setRulePreview(null);
         setReferralReward({ balance: 0, estimatedAmount: 0, tiers: [] });
         setAbandonment(null);
-        setCouponStackPolicy('rule_first');
+        setCouponStackPolicy('both');
       } catch (e) {
         console.error("Local cart parse failed:", e);
         setCart([]);

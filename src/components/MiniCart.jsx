@@ -91,6 +91,7 @@ export default function MiniCart() {
   });
   const [placingOrder, setPlacingOrder] = useState(false);
   const [orderNotes, setOrderNotes] = useState('');
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [whatsappUpdatesOptIn, setWhatsappUpdatesOptIn] = useState(false);
   const [whatsappUpdatesAvailable, setWhatsappUpdatesAvailable] = useState(false);
   const [impactAmount, setImpactAmount] = useState(0);
@@ -327,7 +328,10 @@ export default function MiniCart() {
         discount: appliedDiscount,
         rewardType: 'standard',
       });
-      setCouponMessage(`Coupon applied — saving ${formatPrice(appliedDiscount)}.`);
+      const couponStacks = couponStackPolicy === 'both' || couponStackPolicy === 'coupon_first' || discount <= 0;
+      setCouponMessage(couponStacks
+        ? `Coupon applied — saving ${formatPrice(appliedDiscount)}.`
+        : 'Coupon is valid, but cart rewards take priority under the current stacking policy.');
     } catch (error) {
       setAppliedCoupon(null);
       setCouponMessage(error.response?.data?.message || 'This coupon could not be applied.');
@@ -459,6 +463,10 @@ export default function MiniCart() {
       toast.error('Choose or add a delivery address before placing your order.');
       return;
     }
+    if (!termsAccepted) {
+      toast.error('Accept the Conditions of Sale before placing your order.');
+      return;
+    }
     if (paymentMode === 'WALLET' && walletBalance === null) {
       toast.error(walletBalanceError || 'Wallet balance is unavailable. Please reopen checkout and try again.');
       return;
@@ -478,6 +486,7 @@ export default function MiniCart() {
         impactProject: paymentMode === 'COD' && impactAmount > 0 ? impactProject : undefined,
         notes: orderNotes.trim() || undefined,
         whatsappUpdatesOptIn,
+        termsAccepted,
       };
       if (paymentMode === 'online') {
         await loadRazorpayScript();
@@ -703,7 +712,7 @@ export default function MiniCart() {
                   <input value={couponCode} onChange={event => setCouponCode(event.target.value)} aria-label="Coupon code" placeholder="Enter coupon code" className="min-w-0 flex-1 rounded-xl border border-dashed border-stone-300 px-3 py-2.5 text-sm outline-none focus:border-[#8b5a2b]"/>
                   <button disabled={couponBusy || !couponCode.trim()} className="rounded-xl bg-[#2C3E2D] px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{couponBusy ? 'Checking…' : 'Apply'}</button>
                 </form>
-                {couponMessage && <p role="status" className={`mt-2 text-xs ${appliedCoupon ? 'text-emerald-700' : 'text-rose-700'}`}>{couponMessage}</p>}
+                {couponMessage && <p role="status" className={`mt-2 text-xs ${appliedCoupon && couponDiscount > 0 ? 'text-emerald-700' : appliedCoupon ? 'text-amber-700' : 'text-rose-700'}`}>{couponMessage}</p>}
                 {offersToShow.length > 0 && <div className="mt-3 space-y-2">
                 {offersToShow.map((offer, index) => {
                   const minimum = Number(offer.min_order_amount ?? offer.min_order_value) || 0;
@@ -798,6 +807,7 @@ export default function MiniCart() {
               </button>
               <button type="button" onClick={() => setCheckoutOpen(false)} className="mt-2 w-full py-2 text-xs font-semibold text-stone-500 hover:text-[#2C3E2D]">Back to cart</button>
               {paymentMode === 'WALLET' && walletBalance !== null && walletBalance < finalTotal && <p className="mt-1 text-center text-[10px] text-rose-700">Add funds to your wallet or choose Razorpay.</p>}
+              <label className="mt-2 flex items-start gap-2 text-[10px] leading-4 text-stone-600"><input type="checkbox" checked={termsAccepted} onChange={event => setTermsAccepted(event.target.checked)} className="mt-0.5 accent-[#35533c]"/><span>I agree to the <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold underline">Conditions of Sale</Link> and acknowledge the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline">Privacy Notice</Link>.</span></label>
               <p className="mt-1 text-center text-[9px] leading-4 text-stone-500">Your selected address, delivery, payment and pledge are confirmed before placing this order.</p>
             </form>
             : <button type="button" onClick={continueToCheckout} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#8b5a2b] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-md transition hover:bg-[#6b4421]">Continue to checkout <ArrowRight size={16}/></button>}

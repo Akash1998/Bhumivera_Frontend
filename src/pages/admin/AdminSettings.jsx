@@ -12,7 +12,7 @@ export default function AdminSettings() {
   const [message, setMessage] = useState(null);
   const [error, setError] = useState(null);
   const [cartSettings, setCartSettings] = useState({
-    coupon_stack_policy: 'rule_first',
+    coupon_stack_policy: 'both',
     enforce_cart_rule_minimum: '0',
     cart_abandonment_coupon_enabled: '1',
     cart_abandonment_coupon_percent: '5',
@@ -36,7 +36,7 @@ export default function AdminSettings() {
         setShippingSettings(current => ({ ...current, ...shipping }));
         setReturnPolicyDays(policy.return_policy_days || response.data?.general?.return_policy_days || '7');
         setCartSettings({
-          coupon_stack_policy: values.coupon_stack_policy || 'rule_first',
+          coupon_stack_policy: values.coupon_stack_policy || 'both',
           enforce_cart_rule_minimum: values.enforce_cart_rule_minimum || '0',
           cart_abandonment_coupon_enabled: values.cart_abandonment_coupon_enabled || '1',
           cart_abandonment_coupon_percent: values.cart_abandonment_coupon_percent || '5',

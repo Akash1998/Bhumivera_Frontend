@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { useAuth } from '../context/AuthContext';
+import { affiliate } from '../services/api';
 
 const MotionDiv = motion.div;
 
@@ -21,6 +22,7 @@ export default function Register() {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const referralToken = searchParams.get('ref') || '';
+  const [referralPreview, setReferralPreview] = useState({ loading: false, valid: false, referrerName: '' });
 
   // 1. Create the Ref for the Turnstile widget
   const turnstileRef = useRef(null);
@@ -33,11 +35,37 @@ export default function Register() {
   const otpRefs = useRef([]);
 
   const [loading, setLoading] = useState(false);
+  const [termsAccepted, setTermsAccepted] = useState(false);
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
 
   const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || "0x4AAAAAAADBENLaxaG5Y9r6D";
+
+  useEffect(() => {
+    let active = true;
+    const code = formData.referralCode.trim();
+    if (!referralToken && !code) {
+      setReferralPreview({ loading: false, valid: false, referrerName: '' });
+      return undefined;
+    }
+    setReferralPreview(current => ({ ...current, loading: true }));
+    const timer = window.setTimeout(() => {
+      affiliate.previewReferral(referralToken ? { token: referralToken } : { code })
+        .then(response => {
+          if (!active) return;
+          const data = response.data?.data || response.data || {};
+          setReferralPreview({ loading: false, valid: data.valid === true, referrerName: data.referrerName || '' });
+        })
+        .catch(() => {
+          if (active) setReferralPreview({ loading: false, valid: false, referrerName: '' });
+        });
+    }, 300);
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [referralToken, formData.referralCode]);
 
   const passwordChecks = [
     { label: 'At least 8 characters', valid: formData.password.length >= 8 },
@@ -70,6 +98,7 @@ export default function Register() {
     e.preventDefault();
 
     if (!turnstileToken) return setError('Please complete the botanical identity verification.');
+    if (!termsAccepted) return setError('Please accept the Conditions of Use and acknowledge the Privacy Notice.');
     if (!passwordIsValid) {
       const unmetRequirements = passwordChecks.filter(check => !check.valid).map(check => check.label);
       if (formData.password.length > 128) unmetRequirements.push('No more than 128 characters');
@@ -81,7 +110,7 @@ export default function Register() {
     setError('');
     
     try {
-      await register({ ...formData, referralToken: referralToken || undefined, turnstileToken });
+      await register({ ...formData, termsAccepted, referralToken: referralToken || undefined, turnstileToken });
       setView('OTP');
       setSuccessMsg(`Verification token dispatched to ${formData.email}`);
     } catch (err) {
@@ -156,7 +185,7 @@ export default function Register() {
             {view === 'INIT' && (
               <MotionDiv key="INIT" variants={viewVariants} initial="initial" animate="animate" exit="exit">
                 <div className="text-center mb-8 relative z-10">
-                  <div className="mx-auto mb-4 inline-flex h-[76px] w-[76px] items-center justify-center overflow-hidden bg-[#14251c] shadow-lg">
+                  <div className="mx-auto mb-4 inline-flex h-[76px] w-[76px] items-center justify-center">
                     <img src="/logo.webp" alt="Bhumivera tree emblem" width="72" height="72" fetchPriority="high" decoding="async" className="h-[72px] w-[72px] object-contain" />
                   </div>
                   <h1 className="text-4xl font-serif text-[#0B2419] tracking-tight mb-2">Create Account</h1>
@@ -175,10 +204,13 @@ export default function Register() {
                     {referralToken ? (
                       <>
                         <input id="referralCode" value="Referral link applied" readOnly aria-readonly="true" className="w-full rounded-2xl border border-emerald-700/20 bg-emerald-50 px-4 py-4 text-sm text-emerald-900"/>
-                        <p className="mt-1 pl-1 text-xs text-emerald-800">Your friend’s referral is linked to this sign-up and cannot be changed here.</p>
+                        <p className="mt-1 pl-1 text-xs text-emerald-800">{referralPreview.loading ? 'Checking referral link…' : referralPreview.valid ? `Referred by ${referralPreview.referrerName}. Both accounts may earn the configured referral balance after approval.` : 'This referral link is invalid or expired. Ask your friend for a current link.'}</p>
                       </>
                     ) : (
-                      <input id="referralCode" name="referralCode" type="text" autoComplete="off" maxLength={32} value={formData.referralCode} onChange={handleInputChange} placeholder="Enter a friend’s code" disabled={loading} className="w-full rounded-2xl border border-[#0B2419]/10 bg-[#F3F9F1] px-4 py-4 text-sm text-[#0B2419] outline-none focus:border-[#D4AF37] focus:bg-white disabled:opacity-50"/>
+                      <>
+                        <input id="referralCode" name="referralCode" type="text" autoComplete="off" maxLength={32} value={formData.referralCode} onChange={handleInputChange} placeholder="Enter a friend’s code" disabled={loading} className="w-full rounded-2xl border border-[#0B2419]/10 bg-[#F3F9F1] px-4 py-4 text-sm text-[#0B2419] outline-none focus:border-[#D4AF37] focus:bg-white disabled:opacity-50"/>
+                        {formData.referralCode.trim() && <p aria-live="polite" className={`mt-1 pl-1 text-xs ${referralPreview.valid ? 'text-emerald-800' : 'text-[#8B5A2B]'}`}>{referralPreview.loading ? 'Checking referral code…' : referralPreview.valid ? `Referred by ${referralPreview.referrerName}. Both accounts may earn the configured referral balance after approval.` : 'Referral code not found. Check the code before continuing.'}</p>}
+                      </>
                     )}
                   </div>
                   
@@ -220,6 +252,11 @@ export default function Register() {
                       className="mt-0.5 accent-[#0B2419]"
                     />
                     <span>Send me emails and product updates. This is optional; I can change this preference in my profile at any time. Order and account emails are not affected.</span>
+                  </label>
+
+                  <label className="flex items-start gap-3 rounded-xl border border-[#0B2419]/10 bg-white p-4 text-xs leading-relaxed text-[#0B2419]/75">
+                    <input type="checkbox" required checked={termsAccepted} onChange={event => setTermsAccepted(event.target.checked)} disabled={loading} className="mt-0.5 accent-[#0B2419]"/>
+                    <span>I agree to the <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold underline">Conditions of Use &amp; Sale</Link> and acknowledge the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline">Privacy Notice</Link>.</span>
                   </label>
 
                   <div className="flex justify-center pt-2">

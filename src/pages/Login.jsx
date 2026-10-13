@@ -163,7 +163,7 @@ const Login = () => {
       <div className="w-full max-w-md relative">
         <div className="bg-white/85 backdrop-blur-md border border-[#0B2419]/10 rounded-3xl shadow-2xl p-7 md:p-8 overflow-hidden">
           <div className="text-center mb-7">
-            <div className="mx-auto mb-4 inline-flex h-[76px] w-[76px] items-center justify-center overflow-hidden bg-[#14251c] shadow-lg">
+            <div className="mx-auto mb-4 inline-flex h-[76px] w-[76px] items-center justify-center">
               <img src="/logo.webp" alt="Bhumivera tree emblem" width="72" height="72" fetchPriority="high" decoding="async" className="h-[72px] w-[72px] object-contain" />
             </div>
             <h1 className="text-3xl font-serif text-[#14251c] tracking-tight">Bhumivera</h1>

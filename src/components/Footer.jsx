@@ -72,9 +72,9 @@ export default function Footer() {
             <span className="font-serif text-sm tracking-[0.16em] text-white/75">BHUMIVERA</span>
           </Link>
           <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-[10px] text-white/45 sm:text-xs">
-            <Link to="/legal" className="transition-colors hover:text-[#c8d6aa]">Conditions of Use</Link>
-            <Link to="/legal" className="transition-colors hover:text-[#c8d6aa]">Privacy Notice</Link>
-            <Link to="/legal" className="transition-colors hover:text-[#c8d6aa]">Interest-Based Ads</Link>
+            <Link to="/legal?section=terms" className="transition-colors hover:text-[#c8d6aa]">Conditions of Use &amp; Sale</Link>
+            <Link to="/legal?section=privacy" className="transition-colors hover:text-[#c8d6aa]">Privacy Notice</Link>
+            <Link to="/legal?section=referrals" className="transition-colors hover:text-[#c8d6aa]">Referral rewards</Link>
           </div>
           <p className="text-center text-[9px] font-semibold uppercase tracking-[0.14em] text-white/35 sm:text-right">
             © {currentYear} Bhumivera · Care, returned to its source

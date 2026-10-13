@@ -7,6 +7,7 @@ const DEFAULTS = {
   enabled: 1,
   reward_mode: 'wallet_coupon',
   wallet_reward_amount: 500,
+  referred_reward_amount: 500,
   wallet_reward_per_order_limit: 100,
   coupon_discount_type: 'fixed',
   coupon_discount_value: 100,
@@ -75,6 +76,7 @@ export default function AffiliateManagement() {
         ...config,
         enabled: Boolean(config.enabled),
         wallet_reward_amount: Number(config.wallet_reward_amount),
+        referred_reward_amount: Number(config.referred_reward_amount),
         wallet_reward_per_order_limit: Number(config.wallet_reward_per_order_limit),
         coupon_discount_value: Number(config.coupon_discount_value),
         coupon_min_order_amount: Number(config.coupon_min_order_amount),
@@ -146,7 +148,7 @@ export default function AffiliateManagement() {
           <span><strong>Referral rewards are on</strong><span className="mt-1 block text-xs text-slate-400">Turn this off to stop issuing new rewards. Existing rewards remain in customer accounts.</span></span>
         </label>
 
-        <label className="block text-sm font-medium text-white">What should the referrer receive?
+        <label className="block text-sm font-medium text-white">How should each referral be rewarded?
           <select value={config.reward_mode} onChange={event => change('reward_mode', event.target.value)} className="admin-glass-control mt-2 w-full rounded-lg px-3 py-2">
             <option value="wallet">Spendable wallet balance only</option>
             <option value="coupon">Coupon only</option>
@@ -156,9 +158,12 @@ export default function AffiliateManagement() {
 
         {['wallet', 'wallet_coupon'].includes(config.reward_mode) && (
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block text-sm font-medium text-white">{config.reward_mode === 'wallet_coupon' ? 'Order-only referral credit per approved referral (₹)' : 'Spendable wallet reward per approved referral (₹)'}
+            <label className="block text-sm font-medium text-white">{config.reward_mode === 'wallet_coupon' ? 'Referrer order-only balance (₹)' : 'Referrer spendable wallet reward (₹)'}
               <input type="number" min="0" max="100000" step="0.01" required value={config.wallet_reward_amount} onChange={event => change('wallet_reward_amount', event.target.value)} className="admin-glass-control mt-2 w-full rounded-lg px-3 py-2"/>
             </label>
+            {config.reward_mode === 'wallet_coupon' && <label className="block text-sm font-medium text-white">New customer order-only balance (₹)
+              <input type="number" min="0" max="100000" step="0.01" required value={config.referred_reward_amount} onChange={event => change('referred_reward_amount', event.target.value)} className="admin-glass-control mt-2 w-full rounded-lg px-3 py-2"/>
+            </label>}
           </div>
         )}
 
@@ -234,9 +239,12 @@ export default function AffiliateManagement() {
                             ? `₹${Number(row.wallet_amount).toFixed(2)} restricted referral balance`
                             : `₹${Number(row.wallet_amount).toFixed(2)} spendable wallet`
                           : '',
+                        Number(row.referred_wallet_amount) > 0
+                          ? `₹${Number(row.referred_wallet_amount).toFixed(2)} new-customer referral balance`
+                          : '',
                         row.coupon_code ? `Coupon ${row.coupon_code}` : '',
                       ].filter(Boolean).join(' · ') || 'No reward issued'}
-                      {row.wallet_bucket === 'referral' && Number(row.referral_wallet_balance) > 0 && (
+                      {row.wallet_bucket === 'referral' && row.coupon_code && Number(row.referral_wallet_balance) > 0 && (
                         <button type="button" disabled={processingId === row.claim_id} onClick={() => reissueCoupon(row)} className="mt-2 block rounded-lg border border-amber-300/20 px-2 py-1 text-xs font-semibold text-amber-200 disabled:opacity-50">
                           {processingId === row.claim_id ? 'Reissuing…' : 'Reissue lost coupon'}
                         </button>

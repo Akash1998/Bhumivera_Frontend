@@ -414,6 +414,7 @@ export const contact = {
 };
 export const adminManagement = { getAllUsers: () => api.get("/admin/users"), getUserDetails: id => api.get(`/admin/users/${id}`), updateUserStatus: (id, s) => api.patch(`/admin/users/${id}/status`, { status: s }), getAllOrders: () => api.get("/orders/all"), updateOrderStatus: (id, d) => api.put(`/orders/${id}/status`, d) };
 export const affiliate = {
+  previewReferral: params => api.get('/affiliate/referral/preview', { params }),
   getReferralLink: () => api.get('/affiliate/referral/link'),
   getReferralSummary: () => api.get('/affiliate/referral/summary'),
   getAdminConfig: () => api.get('/affiliate/admin/config', { adminAuth: true }),

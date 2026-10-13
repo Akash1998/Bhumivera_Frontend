@@ -1,5 +1,6 @@
 import React from 'react';
 import { Truck, Mail } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const OrderSummary = ({ cartItems = [], subtotal = 0, shipping = 0, tax = 0 }) => {
   const total = subtotal + shipping + tax;
@@ -61,7 +62,7 @@ const OrderSummary = ({ cartItems = [], subtotal = 0, shipping = 0, tax = 0 }) =
 
       <p className="mt-8 text-[10px] text-center text-slate-600 font-medium leading-relaxed uppercase tracking-widest">
         By completing your order, you agree to our <br/>
-        <span className="text-slate-400 hover:text-white cursor-pointer underline transition-colors">Terms of Service</span> and <span className="text-slate-400 hover:text-white cursor-pointer underline transition-colors">Privacy Policy</span>
+        <Link to="/legal?section=terms" className="text-slate-400 hover:text-white underline transition-colors">Terms of Sale</Link> and <Link to="/legal?section=privacy" className="text-slate-400 hover:text-white underline transition-colors">Privacy Policy</Link>
       </p>
     </div>
   );

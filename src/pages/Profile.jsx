@@ -1996,11 +1996,11 @@ export default function Profile() {
                       <Zap className="w-3.5 h-3.5"/> Refer & Earn
                     </div>
                     <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0B2419] tracking-tight leading-tight mb-2">Share Bhumivera. Grow together.</h2>
-                    <p className="text-stone-600 max-w-2xl leading-relaxed mb-6">Share your personal code or link with friends. After they verify their account, your reward is reviewed by an admin or automatically approved after one hour.</p>
+                    <p className="text-stone-600 max-w-2xl leading-relaxed mb-6">Share your personal code or link. After approval, you and your friend can each receive {referralData?.rewardMode === 'wallet_coupon' ? `₹${Number(referralData?.referrerRewardAmount || 500).toFixed(0)} and ₹${Number(referralData?.referredRewardAmount || 500).toFixed(0)} in order-only referral balance` : 'the reward configured for the current program'}. Verified referrals are reviewed or automatically approved after one hour.</p>
                     <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                       <StatCard icon={Users}      label="Friends referred" value={referralData?.referralCount ?? '—'} accent="sage"/>
                       <StatCard icon={User}       label="Rewards earned"   value={referralData?.rewarded_referrals ?? '—'} accent="earth"/>
-                      <StatCard icon={Coins}      label="Reward choice"    value={referralData?.rewardMode === 'wallet_coupon' ? 'Wallet + coupon' : referralData?.rewardMode === 'coupon' ? 'Coupon' : 'Wallet'} accent="gold"/>
+                      <StatCard icon={Coins}      label="Reward choice"    value={referralData?.rewardMode === 'wallet_coupon' ? 'Order-only balance' : referralData?.rewardMode === 'coupon' ? 'Coupon' : 'Wallet'} accent="gold"/>
                       <StatCard icon={Wallet}     label="Wallet earned"    value={`₹${Number(referralData?.wallet_earned || 0).toFixed(2)}`} accent="earth"/>
                     </div>
                   </div>
