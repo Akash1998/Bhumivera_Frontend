@@ -5,13 +5,17 @@ import { LoaderCircle, Save, Users } from 'lucide-react';
 
 const DEFAULTS = {
   enabled: 1,
-  reward_mode: 'wallet',
-  wallet_reward_amount: 100,
+  reward_mode: 'wallet_coupon',
+  wallet_reward_amount: 500,
   wallet_reward_per_order_limit: 100,
   coupon_discount_type: 'fixed',
   coupon_discount_value: 100,
   coupon_min_order_amount: 0,
   coupon_valid_days: 30,
+  referral_redemption_tiers: [
+    { min_order_amount: 700, referral_amount: 100 },
+    { min_order_amount: 1100, referral_amount: 200 },
+  ],
 };
 
 const readData = response => response?.data?.config || response?.data?.data || response?.data || {};
@@ -75,6 +79,10 @@ export default function AffiliateManagement() {
         coupon_discount_value: Number(config.coupon_discount_value),
         coupon_min_order_amount: Number(config.coupon_min_order_amount),
         coupon_valid_days: Number(config.coupon_valid_days),
+        referral_redemption_tiers: config.referral_redemption_tiers.map(tier => ({
+          min_order_amount: Number(tier.min_order_amount),
+          referral_amount: Number(tier.referral_amount),
+        })),
       });
       setConfig({ ...DEFAULTS, ...readData(response) });
       setLoadError('');
@@ -142,25 +150,33 @@ export default function AffiliateManagement() {
           <select value={config.reward_mode} onChange={event => change('reward_mode', event.target.value)} className="admin-glass-control mt-2 w-full rounded-lg px-3 py-2">
             <option value="wallet">Spendable wallet balance only</option>
             <option value="coupon">Coupon only</option>
-            <option value="wallet_coupon">Restricted referral balance + personal coupon</option>
+            <option value="wallet_coupon">Restricted referral balance, auto-applied to orders</option>
           </select>
         </label>
 
         {['wallet', 'wallet_coupon'].includes(config.reward_mode) && (
           <div className="grid gap-4 sm:grid-cols-2">
-            <label className="block text-sm font-medium text-white">{config.reward_mode === 'wallet_coupon' ? 'Restricted referral credit per approved referral (₹)' : 'Spendable wallet reward per approved referral (₹)'}
+            <label className="block text-sm font-medium text-white">{config.reward_mode === 'wallet_coupon' ? 'Order-only referral credit per approved referral (₹)' : 'Spendable wallet reward per approved referral (₹)'}
               <input type="number" min="0" max="100000" step="0.01" required value={config.wallet_reward_amount} onChange={event => change('wallet_reward_amount', event.target.value)} className="admin-glass-control mt-2 w-full rounded-lg px-3 py-2"/>
             </label>
-            {config.reward_mode === 'wallet_coupon' && (
-              <label className="block text-sm font-medium text-white">Maximum referral balance used per order (₹)
-                <input type="number" min="0.01" max="100000" step="0.01" required value={config.wallet_reward_per_order_limit} onChange={event => change('wallet_reward_per_order_limit', event.target.value)} className="admin-glass-control mt-2 w-full rounded-lg px-3 py-2"/>
-                <span className="mt-1 block text-xs font-normal text-slate-400">The personal code is required. A ₹1,000 reward with a ₹100 limit can be used up to 10 times, until its balance or expiry runs out.</span>
-              </label>
-            )}
           </div>
         )}
 
-        {['coupon', 'wallet_coupon'].includes(config.reward_mode) && (
+        {config.reward_mode === 'wallet_coupon' && (
+          <section className="space-y-3 rounded-lg border border-white/10 p-3">
+            <div><h4 className="text-sm font-semibold text-white">Automatic order redemption</h4><p className="mt-1 text-xs text-slate-400">The highest matching order threshold applies. Redemption is capped by the remaining referral balance and eligible order value.</p></div>
+            {config.referral_redemption_tiers.map((tier, index) => (
+              <div key={index} className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
+                <label className="text-xs text-slate-300">Minimum order (₹)<input type="number" min="0" max="1000000" step="0.01" required value={tier.min_order_amount} onChange={event => setConfig(current => ({ ...current, referral_redemption_tiers: current.referral_redemption_tiers.map((item, itemIndex) => itemIndex === index ? { ...item, min_order_amount: event.target.value } : item) }))} className="admin-glass-control mt-1 w-full rounded-lg px-2.5 py-2"/></label>
+                <label className="text-xs text-slate-300">Referral used (₹)<input type="number" min="0.01" max="100000" step="0.01" required value={tier.referral_amount} onChange={event => setConfig(current => ({ ...current, referral_redemption_tiers: current.referral_redemption_tiers.map((item, itemIndex) => itemIndex === index ? { ...item, referral_amount: event.target.value } : item) }))} className="admin-glass-control mt-1 w-full rounded-lg px-2.5 py-2"/></label>
+                <button type="button" aria-label="Remove redemption tier" disabled={config.referral_redemption_tiers.length <= 1} onClick={() => setConfig(current => ({ ...current, referral_redemption_tiers: current.referral_redemption_tiers.filter((_, itemIndex) => itemIndex !== index) }))} className="mb-0.5 rounded-lg border border-rose-300/20 px-3 py-2 text-xs text-rose-200 disabled:opacity-40">Remove</button>
+              </div>
+            ))}
+            <button type="button" disabled={config.referral_redemption_tiers.length >= 10} onClick={() => change('referral_redemption_tiers', [...config.referral_redemption_tiers, { min_order_amount: '', referral_amount: '' }])} className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-white disabled:opacity-40">Add order tier</button>
+          </section>
+        )}
+
+        {config.reward_mode === 'coupon' && (
           <div className="grid gap-4 sm:grid-cols-2">
             <label className="block text-sm font-medium text-white">Coupon discount
               <div className="mt-2 flex gap-2">

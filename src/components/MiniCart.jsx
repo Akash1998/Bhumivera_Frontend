@@ -46,12 +46,20 @@ const getImageUrl = image => {
 
 const formatPrice = value => `₹${(Number(value) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const blankAddress = { label: 'Home', fullName: '', phone: '', addressLine1: '', addressLine2: '', city: '', state: '', pincode: '', country: 'India', isDefault: false };
+const calculateReferralReward = (balance, orderSubtotal, eligibleSubtotal, tiers) => {
+  const toCents = value => Math.round(Math.max(0, Number(value) || 0) * 100);
+  const orderCents = toCents(orderSubtotal);
+  const tier = (Array.isArray(tiers) ? tiers : [])
+    .filter(item => orderCents >= toCents(item.min_order_amount))
+    .sort((first, second) => toCents(second.min_order_amount) - toCents(first.min_order_amount))[0];
+  return tier ? Math.min(toCents(balance), toCents(eligibleSubtotal), toCents(tier.referral_amount)) / 100 : 0;
+};
 
 export default function MiniCart() {
   const {
     cartItems = [], isCartOpen, setIsCartOpen, removeFromCart, updateQuantity,
     getSubtotal, addToCart, clearCart, rulePreview, rulePreviewLoading, shippingProgress, cartAddEvent,
-    freeShippingThreshold, couponStackPolicy,
+    freeShippingThreshold, couponStackPolicy, referralReward,
   } = useCart();
   const { user } = useAuth();
   const { settings } = useSettings();
@@ -94,17 +102,24 @@ export default function MiniCart() {
   const cartCount = cartItems.reduce((count, item) => count + (Number(item.quantity) || 1), 0);
 
   const subtotal = Number(getSubtotal()) || 0;
-  const discount = Math.max(0, Number(rulePreview?.totalDiscount) || 0);
+  const ruleDiscount = Math.max(0, Number(rulePreview?.totalDiscount) || 0);
+  const discount = appliedCoupon && couponStackPolicy === 'coupon_first' ? 0 : ruleDiscount;
   const couponDiscount = appliedCoupon
-    ? appliedCoupon.rewardType === 'referral_wallet' || couponStackPolicy === 'both' || couponStackPolicy === 'coupon_first' || discount <= 0
+    ? couponStackPolicy === 'both' || couponStackPolicy === 'coupon_first' || discount <= 0
       ? appliedCoupon.discount
       : 0
     : 0;
+  const referralWalletAmount = calculateReferralReward(
+    referralReward?.balance,
+    subtotal,
+    Math.max(0, subtotal - discount - couponDiscount),
+    referralReward?.tiers
+  );
   const amountToFreeShipping = Math.max(0, Number(freeShippingThreshold) - subtotal);
   const standardShippingCost = Math.max(0, Number(settings?.standard_charge ?? settings?.default_shipping_charge ?? 50) || 0);
   const expressShippingCost = Math.max(0, Number(settings?.express_charge ?? 150) || 0);
   const shippingCost = rulePreview?.freeShipping ? 0 : shippingMethod === 'EXPRESS' ? expressShippingCost : standardShippingCost;
-  const finalTotal = Math.max(0, subtotal + shippingCost - discount - couponDiscount + (paymentMode === 'COD' ? impactAmount : 0));
+  const finalTotal = Math.max(0, subtotal + shippingCost - discount - couponDiscount - referralWalletAmount + (paymentMode === 'COD' ? impactAmount : 0));
   const recommendationsToShow = useMemo(() => {
     const cartIds = new Set(cartItems.map(item => String(item.product_id || item.product?.id || item.id)));
     return recommendations.filter(product => !cartIds.has(String(product.id || product._id))).slice(0, 4);
@@ -156,7 +171,9 @@ export default function MiniCart() {
         const publicData = publicResult.status === 'fulfilled' ? publicResult.value.data : [];
         const publicOffers = Array.isArray(publicData?.data) ? publicData.data : publicData;
         const personalData = personalResult.status === 'fulfilled' ? personalResult.value.data : {};
-        const personalOffers = Array.isArray(personalData?.coupons) ? personalData.coupons : [];
+        const personalOffers = Array.isArray(personalData?.coupons)
+          ? personalData.coupons.filter(offer => offer.reward_type !== 'referral_wallet')
+          : [];
         const personalCodes = new Set(personalOffers.map(offer => String(offer.code || '').toUpperCase()));
         const availablePublicOffers = Array.isArray(publicOffers)
           ? publicOffers.filter(offer => !personalCodes.has(String(offer.code || '').toUpperCase()))
@@ -202,8 +219,13 @@ export default function MiniCart() {
         .then(response => {
           if (!active) return;
           const data = response.data?.data || response.data || {};
-          setAppliedCoupon({ code: pendingCoupon, discount: Number(data.discount) || 0 });
-          setCouponMessage(`Coupon applied — saving ${formatPrice(data.discount)}.`);
+          if (data.rewardType === 'referral_wallet') {
+            setAppliedCoupon(null);
+            setCouponMessage('Referral credit is applied automatically when your order meets an eligible tier.');
+          } else {
+            setAppliedCoupon({ code: pendingCoupon, discount: Number(data.discount) || 0 });
+            setCouponMessage(`Coupon applied — saving ${formatPrice(data.discount)}.`);
+          }
         })
         .catch(error => {
           if (!active) return;
@@ -293,19 +315,19 @@ export default function MiniCart() {
     try {
       const response = await couponsApi.validate(code, subtotal);
       const data = response.data?.data || response.data || {};
-      const referralWalletAmount = Number(data.referralWalletAmount) || 0;
-      const appliedDiscount = data.rewardType === 'referral_wallet'
-        ? Math.min(Number(data.discount) || 0, Math.max(0, subtotal - discount))
-        : Number(data.discount) || 0;
+      if (data.rewardType === 'referral_wallet') {
+        setAppliedCoupon(null);
+        setCouponCode('');
+        setCouponMessage('Referral credit is applied automatically when your order meets an eligible tier.');
+        return;
+      }
+      const appliedDiscount = Number(data.discount) || 0;
       setAppliedCoupon({
         code,
         discount: appliedDiscount,
-        referralWalletAmount,
-        rewardType: data.rewardType || 'standard',
+        rewardType: 'standard',
       });
-      setCouponMessage(data.rewardType === 'referral_wallet'
-        ? `Referral reward applied — up to ${formatPrice(appliedDiscount)} from your restricted reward balance will be used for this order.`
-        : `Coupon applied — saving ${formatPrice(appliedDiscount)}.`);
+      setCouponMessage(`Coupon applied — saving ${formatPrice(appliedDiscount)}.`);
     } catch (error) {
       setAppliedCoupon(null);
       setCouponMessage(error.response?.data?.message || 'This coupon could not be applied.');
@@ -676,6 +698,7 @@ export default function MiniCart() {
                 {offersOpen ? <ChevronUp size={16} className="text-stone-500"/> : <ChevronDown size={16} className="text-stone-500"/>}
               </button>
               {offersOpen && <div className="border-t border-[#f0e8da] p-3">
+                {Number(referralReward?.balance) > 0 && <p className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-5 text-emerald-800">Referral balance {formatPrice(referralReward.balance)}{referralWalletAmount > 0 ? ` · ${formatPrice(referralWalletAmount)} automatically applied` : ' · applied automatically when an order tier is reached'}</p>}
                 <form onSubmit={validateCoupon} className="flex gap-2">
                   <input value={couponCode} onChange={event => setCouponCode(event.target.value)} aria-label="Coupon code" placeholder="Enter coupon code" className="min-w-0 flex-1 rounded-xl border border-dashed border-stone-300 px-3 py-2.5 text-sm outline-none focus:border-[#8b5a2b]"/>
                   <button disabled={couponBusy || !couponCode.trim()} className="rounded-xl bg-[#2C3E2D] px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{couponBusy ? 'Checking…' : 'Apply'}</button>
@@ -763,9 +786,10 @@ export default function MiniCart() {
             <div className="flex justify-between text-stone-600"><span>Subtotal</span><strong className="text-[#1A1C18]">{formatPrice(subtotal)}</strong></div>
             {discount > 0 && <div className="flex justify-between font-semibold text-emerald-700"><span>Cart rewards</span><span>−{formatPrice(discount)}</span></div>}
             {appliedCoupon?.discount > 0 && <div className="flex justify-between font-semibold text-emerald-700"><span>Coupon ({appliedCoupon.code})</span><span>{couponDiscount > 0 ? `−${formatPrice(couponDiscount)}` : 'Not stacked with cart rewards'}</span></div>}
+            {referralWalletAmount > 0 && <div className="flex justify-between font-semibold text-emerald-700"><span>Referral balance · automatic</span><span>−{formatPrice(referralWalletAmount)}</span></div>}
             {checkoutOpen && <div className="flex justify-between text-stone-600"><span>{shippingMethod === 'EXPRESS' ? 'Express delivery' : 'Standard delivery'}</span><span>{shippingCost ? formatPrice(shippingCost) : 'Free'}</span></div>}
             {checkoutOpen && impactAmount > 0 && paymentMode === 'COD' && <div className="flex justify-between text-[#536b4d]"><span>Optional nature pledge</span><span>{formatPrice(impactAmount)}</span></div>}
-            <div className="flex justify-between border-t border-[#f0e8da] pt-2 text-sm font-bold text-[#2C3E2D]"><span>{checkoutOpen ? 'Order total' : 'Estimated total*'}</span><span>{formatPrice(checkoutOpen ? finalTotal : Math.max(0, subtotal - discount - couponDiscount))}</span></div>
+            <div className="flex justify-between border-t border-[#f0e8da] pt-2 text-sm font-bold text-[#2C3E2D]"><span>{checkoutOpen ? 'Order total' : 'Estimated total*'}</span><span>{formatPrice(checkoutOpen ? finalTotal : Math.max(0, subtotal - discount - couponDiscount - referralWalletAmount))}</span></div>
           </div>
           {checkoutOpen
             ? <form onSubmit={placeOrder}>

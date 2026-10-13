@@ -13,6 +13,7 @@ export const CartProvider = ({ children }) => {
   const [cartAddEvent, setCartAddEvent] = useState(null);
   const [upsells, setUpsells] = useState([]); 
   const [rulePreview, setRulePreview] = useState(null);
+  const [referralReward, setReferralReward] = useState({ balance: 0, estimatedAmount: 0, tiers: [] });
   const [abandonment, setAbandonment] = useState(null);
   const [couponStackPolicy, setCouponStackPolicy] = useState('rule_first');
   const [rulePreviewLoading, setRulePreviewLoading] = useState(false);
@@ -32,12 +33,14 @@ export const CartProvider = ({ children }) => {
         const fetchedData = res.data?.items || res.data;
         setCart(Array.isArray(fetchedData) ? fetchedData : []);
         setRulePreview(res.data?.rulePreview || null);
+        setReferralReward(res.data?.referralReward || { balance: 0, estimatedAmount: 0, tiers: [] });
         setAbandonment(res.data?.abandonment || null);
         setCouponStackPolicy(res.data?.couponStackPolicy || 'rule_first');
       } catch (err) {
         console.error("Cart sync failed:", err);
         setCart([]);
         setRulePreview(null);
+        setReferralReward({ balance: 0, estimatedAmount: 0, tiers: [] });
         setAbandonment(null);
         setCouponStackPolicy('rule_first');
       } finally {
@@ -50,6 +53,7 @@ export const CartProvider = ({ children }) => {
         const parsed = saved ? JSON.parse(saved) : [];
         setCart(Array.isArray(parsed) ? parsed : []);
         setRulePreview(null);
+        setReferralReward({ balance: 0, estimatedAmount: 0, tiers: [] });
         setAbandonment(null);
         setCouponStackPolicy('rule_first');
       } catch (e) {
@@ -236,6 +240,7 @@ export const CartProvider = ({ children }) => {
       shippingProgress,
       freeShippingThreshold,
       rulePreview,
+      referralReward,
       couponStackPolicy,
       rulePreviewLoading,
       abandonment,
