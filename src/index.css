@@ -216,10 +216,15 @@ html.native-app .site-shell > footer {
   overscroll-behavior: contain;
 }
 
+.mini-cart-backdrop {
+  animation: mini-cart-backdrop-in 140ms ease-out both;
+}
+
 .mini-cart-panel {
   padding-top: var(--sat);
   padding-bottom: var(--sab);
   box-shadow: -24px 0 80px rgba(9, 25, 17, 0.2);
+  animation: mini-cart-drawer-in 180ms cubic-bezier(0.2, 0.75, 0.25, 1) both;
 }
 
 .mini-cart-header {
@@ -274,7 +279,7 @@ html.native-app .site-shell > footer {
 }
 
 .mini-cart-orbit-one {
-  animation: mini-cart-orbit 18s linear infinite;
+  opacity: 0.65;
 }
 
 .mini-cart-orbit-two {
@@ -282,7 +287,15 @@ html.native-app .site-shell > footer {
   height: 300px;
   border-style: dashed;
   border-color: rgba(196, 170, 103, 0.13);
-  animation: mini-cart-orbit 28s linear infinite reverse;
+  opacity: 0.65;
+}
+
+.mini-cart-progress-fill {
+  transition: width 220ms ease-out;
+}
+
+.mini-cart-empty-icon {
+  animation: mini-cart-icon-in 240ms ease-out both;
 }
 
 .mini-cart-checkout {
@@ -314,18 +327,135 @@ html.native-app .site-shell > footer {
   transform: translateX(120%);
 }
 
-.mini-cart-terms input {
-  accent-color: var(--bhumivera-forest);
-}
-
 .mini-cart-footer {
   padding-bottom: calc(1rem + var(--sab));
 }
 
-@keyframes mini-cart-orbit {
-  to {
-    transform: rotate(360deg);
-  }
+.mobile-menu-overlay {
+  overscroll-behavior: contain;
+}
+
+.mobile-menu-panel {
+  padding-bottom: calc(2rem + var(--sab));
+  overscroll-behavior: contain;
+  scrollbar-color: #bdc7b5 transparent;
+  scrollbar-width: thin;
+}
+
+.mobile-menu-panel::-webkit-scrollbar {
+  width: 4px;
+}
+
+.mobile-menu-panel::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #bdc7b5;
+}
+
+.mobile-menu-intro {
+  position: relative;
+  background:
+    radial-gradient(ellipse at 92% 10%, rgba(82, 107, 77, 0.14), transparent 48%),
+    linear-gradient(120deg, #fbfaf5, #eef1e8);
+}
+
+.mobile-menu-glow {
+  position: absolute;
+  right: 2rem;
+  top: -2.5rem;
+  width: 7rem;
+  height: 7rem;
+  border-radius: 50%;
+  background: rgba(196, 170, 103, 0.1);
+  filter: blur(28px);
+  pointer-events: none;
+}
+
+.mobile-menu-search {
+  filter: drop-shadow(0 3px 6px rgba(20, 37, 28, 0.035));
+}
+
+.mobile-menu-tile {
+  box-shadow: 0 2px 8px rgba(20, 37, 28, 0.025);
+  transition: transform 220ms ease, box-shadow 220ms ease, border-color 220ms ease, background-color 220ms ease;
+}
+
+.mobile-menu-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 9px 20px rgba(20, 37, 28, 0.09);
+}
+
+.mobile-menu-tile-forest {
+  border-color: #14251c;
+  background: #14251c;
+  color: #fbfaf5;
+}
+
+.mobile-menu-tile-forest .mobile-menu-icon {
+  background: rgba(255, 255, 255, 0.1);
+  color: #e5d8b8;
+}
+
+.mobile-menu-tile-forest:hover {
+  background: #20392b;
+}
+
+.mobile-menu-tile-gold {
+  border-color: rgba(196, 170, 103, 0.5);
+  background: linear-gradient(120deg, #fbfaf5, #f5f0df);
+  color: #24382b;
+}
+
+.mobile-menu-tile-gold .mobile-menu-icon {
+  background: rgba(196, 170, 103, 0.16);
+  color: #806c37;
+}
+
+.mobile-menu-tile-gold:hover,
+.mobile-menu-tile-paper:hover,
+.mobile-menu-tile-leaf:hover {
+  border-color: #8ca080;
+  background-color: #f0f2e9;
+}
+
+.mobile-menu-tile-paper,
+.mobile-menu-tile-leaf {
+  border-color: #dedfd4;
+  background: #fbfaf5;
+  color: #26382c;
+}
+
+.mobile-menu-tile-paper .mobile-menu-icon,
+.mobile-menu-tile-leaf .mobile-menu-icon {
+  background: #f0f2e9;
+  color: #526b4d;
+}
+
+.mobile-menu-tile-leaf {
+  background: linear-gradient(120deg, #fbfaf5, #f1f4eb);
+}
+
+.mobile-menu-account > div + div .mobile-menu-account-link {
+  border-top: 1px solid #e8e8dd;
+}
+
+.mobile-menu-account-link:hover {
+  color: #14251c;
+  background: #f5f6f0;
+}
+
+@keyframes mini-cart-backdrop-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes mini-cart-drawer-in {
+  from { transform: translate3d(100%, 0, 0); }
+  to { transform: translate3d(0, 0, 0); }
+}
+
+@keyframes mini-cart-icon-in {
+  from { opacity: 0; transform: scale(0.92); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 @media (max-width: 480px) {
@@ -335,8 +465,16 @@ html.native-app .site-shell > footer {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .mini-cart-orbit-one,
-  .mini-cart-orbit-two {
+  .mini-cart-backdrop,
+  .mini-cart-panel,
+  .mini-cart-empty-icon,
+  .mini-cart-progress-fill {
     animation: none;
+    transition: none;
+  }
+
+  .mobile-menu-tile,
+  .mobile-menu-account-link {
+    transition: none;
   }
 }

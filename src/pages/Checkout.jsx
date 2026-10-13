@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { CheckCircle2, MapPin, CreditCard, ShieldCheck, ArrowRight, Truck, Wallet } from 'lucide-react';
 import { useCart } from '../context/CartContext';
@@ -18,7 +18,6 @@ export default function Checkout() {
   const [selectedAddressId, setSelectedAddressId] = useState(null);
   const [paymentMode, setPaymentMode] = useState('online');
   const [walletBalance, setWalletBalance] = useState(0);
-  const [termsAccepted, setTermsAccepted] = useState(true);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
 
@@ -63,11 +62,6 @@ export default function Checkout() {
       setStep(1);
       return;
     }
-    if (!termsAccepted) {
-      setError('Please accept the Conditions of Sale to proceed.');
-      return;
-    }
-
     setLoading(true);
     setError(null);
     haptics.impactMedium();
@@ -300,19 +294,15 @@ export default function Checkout() {
                     <Truck className="h-5 w-5 text-stone-400" />
                   </label>
 
-                  <div className="mt-4 flex items-center gap-2 text-xs text-stone-600">
-                    <input
-                      type="checkbox"
-                      id="terms"
-                      checked={termsAccepted}
-                      onChange={(e) => setTermsAccepted(e.target.checked)}
-                      className="rounded text-[#0b2419] focus:ring-[#0b2419]"
-                    />
-                    <label htmlFor="terms">I accept the Conditions of Sale and Environmental Impact Pledge.</label>
-                  </div>
+                  <p className="mt-4 text-center text-xs leading-5 text-stone-600">
+                    By placing your order, you agree to our{' '}
+                    <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold text-[#35533c] underline underline-offset-2">Conditions of Sale</Link>
+                    {' '}and acknowledge the{' '}
+                    <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold text-[#35533c] underline underline-offset-2">Privacy Notice</Link>.
+                  </p>
 
                   <button
-                    disabled={loading || !termsAccepted}
+                    disabled={loading}
                     onClick={handlePlaceOrder}
                     className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#0b2419] py-3.5 text-sm font-semibold uppercase tracking-wider text-white shadow-md hover:bg-[#153e2c] disabled:opacity-50"
                   >

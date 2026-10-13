@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { AnimatePresence, MotionConfig, motion as Motion } from 'framer-motion';
 import { 
   ShoppingCart, User, Search, Menu, X, Sparkles, Heart,
-  ChevronDown, Package, Gift, GitCompareArrows,
-  MapPin, Activity, Droplets, Leaf, Camera, Mic, MicOff
+  ChevronDown, Package, Gift, GitCompareArrows, ArrowRight,
+  MapPin, Activity, Droplets, Leaf, Camera, Mic, FlaskConical, Compass,
+  HeartHandshake, Truck, CircleUserRound, BadgePercent
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -40,13 +42,16 @@ export default function Navbar() {
   useEffect(() => {
     if (!isMenuOpen) return undefined;
     const previousOverflow = document.body.style.overflow;
+    const previousDocumentOverflow = document.documentElement.style.overflow;
     const closeOnEscape = event => {
       if (event.key === 'Escape') setMenuOpen(false);
     };
     document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
     document.addEventListener('keydown', closeOnEscape);
     return () => {
       document.body.style.overflow = previousOverflow;
+      document.documentElement.style.overflow = previousDocumentOverflow;
       document.removeEventListener('keydown', closeOnEscape);
     };
   }, [isMenuOpen]);
@@ -250,15 +255,47 @@ export default function Navbar() {
           </div>
         </div>
       </nav>
-      <div className="fixed inset-x-0 bottom-0 top-[68px] z-[110] md:hidden" id="mobile-navigation" hidden={!isMenuOpen}>
-          <button
+      <MotionConfig reducedMotion="user">
+      <AnimatePresence>
+        {isMenuOpen && <Motion.div
+          id="mobile-navigation"
+          key="mobile-navigation"
+          className="mobile-menu-overlay fixed inset-x-0 bottom-0 top-[68px] z-[110] md:hidden"
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: 0.2 }}
+        >
+          <Motion.button
             type="button"
             aria-label="Close navigation menu"
             onClick={() => setMenuOpen(false)}
-            className="absolute inset-0 h-full w-full bg-[#14251c]/35 backdrop-blur-[2px]"
+            className="absolute inset-0 h-full w-full bg-[#14251c]/45 backdrop-blur-[3px]"
           />
-          <div className="relative max-h-full overflow-y-auto border-b border-[#dedfd4] bg-[#fbfaf5] px-5 pb-8 pt-5 shadow-xl">
-            <form onSubmit={executeFullSearch} role="search" className="relative">
+          <Motion.div
+            initial={{ opacity: 0, y: -22, scale: 0.985 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -16, scale: 0.99 }}
+            transition={{ type: 'spring', stiffness: 360, damping: 32 }}
+            className="mobile-menu-panel relative max-h-full overflow-y-auto border-b border-[#dedfd4] bg-[#f4f1e9] px-5 pb-8 pt-5 shadow-2xl"
+          >
+            <div className="mobile-menu-intro mb-5 flex items-center justify-between overflow-hidden rounded-2xl border border-[#dce1d5] px-4 py-3.5">
+              <div className="relative z-10">
+                <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-[#526b4d]">A more thoughtful ritual</p>
+                <p className="mt-1 font-serif text-lg text-[#14251c]">Find your kind of care.</p>
+              </div>
+              <Motion.span
+                aria-hidden="true"
+                animate={{ y: [0, -4, 0], rotate: [0, 5, 0] }}
+                transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+                className="relative z-10 flex h-11 w-11 items-center justify-center rounded-full border border-[#dce1d5] bg-[#fbfaf5] text-[#526b4d] shadow-sm"
+              >
+                <Leaf size={20} strokeWidth={1.6}/>
+                <Sparkles size={11} className="absolute -right-0.5 -top-0.5 text-[#b39a58]"/>
+              </Motion.span>
+              <span className="mobile-menu-glow" aria-hidden="true"/>
+            </div>
+            <form onSubmit={executeFullSearch} role="search" className="mobile-menu-search relative">
               <Search size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#526b4d]" />
               <input
                 type="search"
@@ -266,48 +303,78 @@ export default function Navbar() {
                 onChange={handleSearch}
                 placeholder="Search products and ingredients"
                 aria-label="Search products and ingredients"
-                className="min-h-12 w-full rounded-full border border-[#dedfd4] bg-white py-3 pl-11 pr-4 text-sm text-[#14251c] outline-none placeholder:text-[#526b4d]/60 focus:border-[#526b4d]"
+                className="min-h-12 w-full rounded-full border border-[#dedfd4] bg-[#fbfaf5] py-3 pl-11 pr-4 text-sm text-[#14251c] outline-none placeholder:text-[#82907c] transition focus:border-[#526b4d] focus:ring-4 focus:ring-[#526b4d]/10"
               />
             </form>
-            <p className="mb-3 mt-6 text-[10px] font-bold uppercase tracking-[0.2em] text-[#74806e]">Explore Bhumivera</p>
-            <div className="grid grid-cols-2 gap-2">
-              {[
-                { to: '/shop', label: 'Shop all', icon: Package },
-                { to: '/shop?category=Skincare', label: 'Skin care', icon: Droplets },
-                { to: '/shop?category=Hair%20Care', label: 'Hair care', icon: Sparkles },
-                { to: '/flash-sales', label: 'Offers', icon: Gift },
-                { to: '/science', label: 'Our science', icon: Sparkles },
-                { to: '/about', label: 'Our story', icon: Leaf },
-                { to: '/impact', label: 'Our impact', icon: Droplets },
-                { to: '/contact', label: 'Help & support', icon: MapPin },
-              ].map(({ to, label, icon: Icon }) => (
-                <Link key={to} to={to} onClick={() => setMenuOpen(false)} className="flex min-h-12 items-center gap-3 rounded-xl border border-[#dedfd4] bg-white px-3 py-3 text-sm font-semibold text-[#14251c] transition-colors hover:border-[#526b4d]/50 hover:bg-[#f4f1e9]">
-                  {React.createElement(Icon, { size: 17, className: 'shrink-0 text-[#526b4d]' })}
-                  {label}
-                </Link>
-              ))}
+            <div className="mb-3 mt-6 flex items-center justify-between">
+              <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-[#74806e]">Explore Bhumivera</p>
+              <span className="text-[9px] font-medium text-[#82907c]">Thoughtfully made, every day</span>
             </div>
-            <p className="mb-3 mt-7 text-[10px] font-bold uppercase tracking-[0.2em] text-[#74806e]">Your account</p>
-            <div className="divide-y divide-[#dedfd4] border-y border-[#dedfd4]">
+            <Motion.div
+              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.055, delayChildren: 0.05 } } }}
+              initial="hidden"
+              animate="visible"
+              className="grid grid-cols-2 gap-2.5"
+            >
               {[
-                ...(user ? [{ to: '/profile', label: 'My account', icon: User }] : [
+                { to: '/shop', label: 'Shop all', detail: 'All products', icon: Compass, tone: 'forest' },
+                { to: '/flash-sales', label: 'Offers', detail: 'Fresh offers', icon: BadgePercent, tone: 'gold' },
+                { to: '/science', label: 'Our science', detail: 'Plant science', icon: FlaskConical, tone: 'leaf' },
+                { to: '/about', label: 'Our story', detail: 'Our roots', icon: Leaf, tone: 'paper' },
+                { to: '/impact', label: 'Our impact', detail: 'Giving back', icon: HeartHandshake, tone: 'paper' },
+                { to: '/contact', label: 'Help & support', detail: 'We’re here', icon: MapPin, tone: 'paper' },
+              ].map(({ to, label, detail, icon: Icon, tone }) => (
+                <Motion.div
+                  key={to}
+                  variants={{ hidden: { opacity: 0, y: 12, scale: 0.97 }, visible: { opacity: 1, y: 0, scale: 1 } }}
+                  transition={{ type: 'spring', stiffness: 340, damping: 25 }}
+                >
+                  <Link to={to} onClick={() => setMenuOpen(false)} className={`mobile-menu-tile mobile-menu-tile-${tone} group flex min-h-[86px] items-center gap-2.5 rounded-2xl border px-3 py-3 transition`}>
+                    <span className="mobile-menu-icon flex h-9 w-9 shrink-0 items-center justify-center rounded-xl">{React.createElement(Icon, { size: 18, strokeWidth: 1.7 })}</span>
+                    <span className="min-w-0 flex-1"><span className="block text-[12px] font-semibold">{label}</span><span className="mt-0.5 block truncate text-[8px] opacity-65">{detail}</span></span>
+                    <ArrowRight size={12} className="mobile-menu-arrow shrink-0 opacity-45 transition duration-300 group-hover:translate-x-0.5 group-hover:opacity-100"/>
+                  </Link>
+                </Motion.div>
+              ))}
+            </Motion.div>
+            <div className="mb-3 mt-7 flex items-center justify-between">
+              <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-[#74806e]">Your account</p>
+              <span className="text-[9px] font-medium text-[#82907c]">Orders, saved care &amp; more</span>
+            </div>
+            <Motion.div
+              variants={{ hidden: {}, visible: { transition: { staggerChildren: 0.045, delayChildren: 0.12 } } }}
+              initial="hidden"
+              animate="visible"
+              className="mobile-menu-account overflow-hidden rounded-2xl border border-[#dedfd4] bg-[#fbfaf5]"
+            >
+              {[
+                ...(user ? [{ to: '/profile', label: 'My account', icon: CircleUserRound }] : [
                   { to: '/login', label: 'Sign in', icon: User },
                   { to: '/register', label: 'Create an account', icon: Gift },
                 ]),
-                { to: '/order-tracking', label: 'Track an order', icon: MapPin },
+                { to: '/order-tracking', label: 'Track an order', icon: Truck },
                 { to: '/wishlist', label: 'Wishlist', icon: Heart },
                 { to: '/compare', label: 'Compare products', icon: GitCompareArrows },
                 { to: '/returns-centre', label: 'Returns & exchanges', icon: Package },
               ].map(({ to, label, icon: Icon }) => (
-                <Link key={to} to={to} onClick={() => setMenuOpen(false)} className="flex min-h-12 items-center gap-3 py-3 text-sm font-medium text-[#26382c] transition-colors hover:text-[#526b4d]">
-                  {React.createElement(Icon, { size: 17, className: 'text-[#526b4d]' })}
-                  {label}
-                  <ChevronDown size={15} className="-rotate-90 ml-auto text-[#82907c]" />
-                </Link>
+                <Motion.div
+                  key={to}
+                  variants={{ hidden: { opacity: 0, x: -8 }, visible: { opacity: 1, x: 0 } }}
+                  transition={{ duration: 0.22, ease: 'easeOut' }}
+                >
+                  <Link to={to} onClick={() => setMenuOpen(false)} className="mobile-menu-account-link group flex min-h-[54px] items-center gap-3 px-3.5 py-2.5 text-[13px] font-medium text-[#26382c] transition">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-lg bg-[#f0f2e9] text-[#526b4d] transition group-hover:bg-[#14251c] group-hover:text-[#f4f1e9]">{React.createElement(Icon, { size: 16, strokeWidth: 1.7 })}</span>
+                    <span className="flex-1">{label}</span>
+                    <ChevronDown size={15} className="-rotate-90 text-[#82907c] transition group-hover:translate-x-0.5 group-hover:text-[#14251c]" />
+                  </Link>
+                </Motion.div>
               ))}
-            </div>
-          </div>
-      </div>
+            </Motion.div>
+            <p className="mt-4 text-center text-[9px] font-medium tracking-wide text-[#82907c]">Made with care · rooted in nature</p>
+          </Motion.div>
+        </Motion.div>}
+      </AnimatePresence>
+      </MotionConfig>
       <VisualSearchModal isOpen={visualModalOpen} onClose={() => setVisualModalOpen(false)} />
     </>
   );

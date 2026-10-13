@@ -96,6 +96,11 @@ export default function MiniCart() {
   const navigate = useNavigate();
   const toast = useToast();
   const [recommendations, setRecommendations] = useState([]);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [recommendationsLoaded, setRecommendationsLoaded] = useState(false);
+  const [recommendationsError, setRecommendationsError] = useState('');
+  const [recommendationsRetry, setRecommendationsRetry] = useState(0);
+  const [recommendationsOpen, setRecommendationsOpen] = useState(false);
   const [offers, setOffers] = useState([]);
   const [offersOpen, setOffersOpen] = useState(false);
   const [couponCode, setCouponCode] = useState('');
@@ -120,7 +125,6 @@ export default function MiniCart() {
   });
   const [placingOrder, setPlacingOrder] = useState(false);
   const [orderNotes, setOrderNotes] = useState('');
-  const [termsAccepted, setTermsAccepted] = useState(false);
   const [whatsappUpdatesOptIn, setWhatsappUpdatesOptIn] = useState(false);
   const [whatsappUpdatesAvailable, setWhatsappUpdatesAvailable] = useState(false);
   const [celebrationEvent, setCelebrationEvent] = useState(null);
@@ -197,14 +201,34 @@ export default function MiniCart() {
   ]);
 
   useEffect(() => {
-    if (!isCartOpen) return undefined;
+    if (!isCartOpen || !recommendationsOpen || cartItems.length === 0 || recommendationsLoaded) return undefined;
     let active = true;
+    setRecommendationsLoading(true);
+    setRecommendationsError('');
     productsApi.getAllActive({ sort: 'rating' })
       .then(response => {
         const data = response.data?.products || response.data?.data || response.data;
-        if (active) setRecommendations(Array.isArray(data) ? data : []);
+        if (active) {
+          setRecommendations(Array.isArray(data) ? data : []);
+          setRecommendationsLoaded(true);
+          setRecommendationsLoading(false);
+        }
       })
-      .catch(error => console.error('[MINI_CART_RECOMMENDATIONS]', error));
+      .catch(error => {
+        console.error('[MINI_CART_RECOMMENDATIONS]', error);
+        if (active) {
+          setRecommendationsError('Recommendations could not be loaded. Please try again.');
+          setRecommendationsLoading(false);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [isCartOpen, recommendationsOpen, cartItems.length, recommendationsLoaded, recommendationsRetry]);
+
+  useEffect(() => {
+    if (!isCartOpen || !offersOpen) return undefined;
+    let active = true;
     Promise.allSettled([
       couponsApi.getPublicActive(),
       userId ? couponsApi.getMine() : Promise.resolve({ data: { coupons: [] } }),
@@ -235,7 +259,7 @@ export default function MiniCart() {
       })
       .catch(error => console.error('[MINI_CART_OFFERS]', error));
     return () => { active = false; };
-  }, [isCartOpen, userId]);
+  }, [isCartOpen, offersOpen, userId]);
 
   useEffect(() => {
     if (!isCartOpen) return undefined;
@@ -522,10 +546,6 @@ export default function MiniCart() {
       toast.error('Choose or add a delivery address before placing your order.');
       return;
     }
-    if (!termsAccepted) {
-      toast.error('Accept the Conditions of Sale before placing your order.');
-      return;
-    }
     if (paymentMode === 'WALLET' && walletBalance === null) {
       toast.error(walletBalanceError || 'Wallet balance is unavailable. Please reopen checkout and try again.');
       return;
@@ -543,7 +563,7 @@ export default function MiniCart() {
         couponCode: appliedCoupon?.code || undefined,
         notes: orderNotes.trim() || undefined,
         whatsappUpdatesOptIn,
-        termsAccepted,
+        termsAccepted: true,
         loyaltyPointsToRedeem,
       };
       if (paymentMode === 'online') {
@@ -616,15 +636,12 @@ export default function MiniCart() {
   };
 
   return (
-    <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mini-cart-overlay fixed inset-0 z-[200] overflow-hidden" role="presentation">
-      <Motion.button type="button" aria-label="Close cart" className="absolute inset-0 h-full w-full bg-[#14251c]/55 backdrop-blur-sm" onClick={() => setIsCartOpen(false)} />
-      <Motion.aside
+    <div className="mini-cart-overlay fixed inset-0 z-[200] overflow-hidden" role="presentation">
+      <button type="button" aria-label="Close cart" className="mini-cart-backdrop absolute inset-0 h-full w-full bg-[#14251c]/55" onClick={() => setIsCartOpen(false)} />
+      <aside
         role="dialog"
         aria-modal="true"
         aria-labelledby="mini-cart-title"
-        initial={{ x: '100%' }}
-        animate={{ x: 0 }}
-        transition={{ type: 'spring', damping: 34, stiffness: 320 }}
         className="mini-cart-panel absolute inset-y-0 right-0 flex w-full max-w-[480px] flex-col border-l border-[#dedfd4] bg-[#f4f1e9] text-[#14251c] shadow-2xl"
       >
         <AnimatePresence>
@@ -637,7 +654,7 @@ export default function MiniCart() {
         </AnimatePresence>
         <header className="mini-cart-header relative flex items-center justify-between border-b border-[#dedfd4] px-5 py-5 sm:px-7">
           <div className="flex items-center gap-3">
-            <Motion.span initial={{ scale: 0.7, rotate: -12 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 260, damping: 14 }} className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#14251c] text-[#e2d6b8] shadow-lg shadow-[#14251c]/15"><ShoppingBag size={19}/></Motion.span>
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#14251c] text-[#e2d6b8] shadow-lg shadow-[#14251c]/15"><ShoppingBag size={19}/></span>
             <div><h2 id="mini-cart-title" className="font-serif text-xl text-[#14251c]">Your cart <span className="font-sans text-sm font-medium text-[#687466]">({cartCount} {cartCount === 1 ? 'item' : 'items'})</span></h2><p className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-[#526b4d]">A little care, on its way</p></div>
           </div>
           <button type="button" aria-label="Close cart" onClick={() => setIsCartOpen(false)} className="rounded-full border border-[#dedfd4] bg-white/80 p-2.5 text-[#526b4d] shadow-sm transition hover:-rotate-90 hover:bg-[#14251c] hover:text-white"><X size={18}/></button>
@@ -648,7 +665,7 @@ export default function MiniCart() {
           {rulePreview?.tiers?.length > 0 && <div className="mb-3 space-y-2.5">
             {rulePreview.tiers.slice(0, 3).map(tier => <div key={tier.id}>
               <div className="mb-1 flex justify-between gap-3 text-[10px] font-bold uppercase tracking-wider"><span className="truncate text-stone-600">{tier.badge || tier.name}</span><span className={tier.unlocked ? 'text-emerald-700' : 'text-[#526b4d]'}>{tier.unlocked ? 'Unlocked' : `Add ${formatPrice(tier.missingAmount)}`}</span></div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-[#e8e8dd]"><Motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, Math.max(0, Number(tier.progressPct) || 0))}%` }} transition={{ duration: 0.8, ease: 'easeOut' }} className={`h-full ${tier.unlocked ? 'bg-emerald-600' : 'bg-[#526b4d]'}`}/></div>
+              <div className="mini-cart-progress-track h-1.5 overflow-hidden rounded-full bg-[#e8e8dd]"><div style={{ width: `${Math.min(100, Math.max(0, Number(tier.progressPct) || 0))}%` }} className={`mini-cart-progress-fill h-full ${tier.unlocked ? 'bg-emerald-600' : 'bg-[#526b4d]'}`}/></div>
             </div>)}
           </div>}
           {rulePreview?.gifts?.length > 0 && <div className="flex items-center gap-2 text-xs font-semibold text-emerald-800"><Gift size={15}/>{rulePreview.gifts[0].productName ? `${rulePreview.gifts[0].productName} unlocked` : 'A free gift is unlocked'}{rulePreview.gifts.length > 1 ? ` + ${rulePreview.gifts.length - 1} more` : ''}</div>}
@@ -657,21 +674,20 @@ export default function MiniCart() {
             <span className="flex items-center gap-1.5 text-stone-500"><Truck size={13}/>{amountToFreeShipping > 0 ? `Add ${formatPrice(amountToFreeShipping)} for free delivery` : 'Free delivery unlocked'}</span>
             <span className={amountToFreeShipping > 0 ? 'text-[#8b5a2b]' : 'text-emerald-700'}>{Math.round(Math.max(0, Math.min(100, Number(shippingProgress) || 0)))}%</span>
           </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#e8e8dd]"><Motion.div initial={{ width: 0 }} animate={{ width: `${Math.max(0, Math.min(100, Number(shippingProgress) || 0))}%` }} transition={{ duration: 0.8, ease: 'easeOut' }} className={`h-full ${amountToFreeShipping > 0 ? 'bg-[#526b4d]' : 'bg-emerald-600'}`}/></div>
+          <div className="mini-cart-progress-track mt-2 h-1.5 overflow-hidden rounded-full bg-[#e8e8dd]"><div style={{ width: `${Math.max(0, Math.min(100, Number(shippingProgress) || 0))}%` }} className={`mini-cart-progress-fill h-full ${amountToFreeShipping > 0 ? 'bg-[#526b4d]' : 'bg-emerald-600'}`}/></div>
         </div>}
 
         <div className="mini-cart-scroll flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:px-7">
           {cartItems.length === 0 && <div className="mini-cart-empty relative flex min-h-[360px] flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-[#dedfd4] bg-[#fbfaf5] px-8 text-center shadow-sm">
             <span className="mini-cart-orbit mini-cart-orbit-one" aria-hidden="true"/>
             <span className="mini-cart-orbit mini-cart-orbit-two" aria-hidden="true"/>
-            <Motion.span initial={{ scale: 0.7, y: 12 }} animate={{ scale: 1, y: 0 }} transition={{ type: 'spring', stiffness: 180, damping: 15 }} className="relative flex h-20 w-20 items-center justify-center rounded-full border border-[#d7dfce] bg-white text-[#526b4d] shadow-[0_12px_36px_rgba(20,37,28,0.1)]"><ShoppingBag size={31} strokeWidth={1.4}/><Sparkles size={15} className="absolute -right-1 top-1 text-[#b39a58]"/></Motion.span>
+            <span className="mini-cart-empty-icon relative flex h-20 w-20 items-center justify-center rounded-full border border-[#d7dfce] bg-white text-[#526b4d] shadow-[0_12px_36px_rgba(20,37,28,0.1)]"><ShoppingBag size={31} strokeWidth={1.4}/><Sparkles size={15} className="absolute -right-1 top-1 text-[#b39a58]"/></span>
             <p className="relative mt-6 text-[9px] font-bold uppercase tracking-[0.24em] text-[#526b4d]">Your next ritual starts here</p>
             <p className="relative mt-2 font-serif text-2xl text-[#14251c]">Your cart is taking a breath</p>
             <p className="relative mt-2 max-w-[250px] text-sm leading-6 text-[#687466]">Discover thoughtfully made essentials, chosen to feel good every day.</p>
             <button type="button" onClick={() => setIsCartOpen(false)} className="relative mt-7 inline-flex items-center gap-2 rounded-full bg-[#14251c] px-6 py-3 text-[10px] font-bold uppercase tracking-[0.16em] text-white shadow-lg shadow-[#14251c]/15 transition duration-300 hover:-translate-y-0.5 hover:bg-[#294434]">Explore the collection <ArrowRight size={14}/></button>
           </div>}
           {cartItems.length > 0 && <>
-            <AnimatePresence initial={false}>
             {cartItems.map(item => {
               const product = item.product || item;
               const id = item.product_id || product.id || product._id;
@@ -679,7 +695,7 @@ export default function MiniCart() {
               const price = Number(product.discount_price || item.unit_price || product.price) || 0;
               const itemBusy = busyCartItems.has(String(id));
               const saved = isWishlisted(id);
-              return <Motion.article layout initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, x: 28, scale: 0.97 }} transition={{ type: 'spring', stiffness: 280, damping: 24 }} key={id} className={`mini-cart-item flex gap-3 rounded-2xl border border-[#e1e3d9] bg-[#fffefa] p-3.5 transition-opacity ${itemBusy ? 'opacity-60' : ''}`}>
+              return <article key={id} className={`mini-cart-item flex gap-3 rounded-2xl border border-[#e1e3d9] bg-[#fffefa] p-3.5 transition-opacity ${itemBusy ? 'opacity-60' : ''}`}>
                 <div className="mini-cart-product-image flex h-[82px] w-[82px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#e5e7de] bg-[#f0f2e9]"><img src={getImageUrl(image)} alt={product.name || 'Cart product'} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-full w-full object-contain p-2 transition-transform duration-500 hover:scale-110"/></div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2"><h3 className="line-clamp-2 text-sm font-semibold leading-snug text-[#2C3E2D]">{product.name || 'Bhumivera product'}</h3><button type="button" aria-label={`Remove ${product.name || 'product'}`} disabled={itemBusy} onClick={() => removeCartItem(id)} className="shrink-0 rounded-lg p-1.5 text-stone-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:cursor-wait"><Trash2 size={15}/></button></div>
@@ -700,9 +716,8 @@ export default function MiniCart() {
                     {saved ? 'Saved · remove from cart' : 'Save for later'}
                   </button>
                 </div>
-              </Motion.article>;
+              </article>;
             })}
-            </AnimatePresence>
 
             <div className="grid grid-cols-2 gap-2 rounded-xl border border-[#e8dcc4] bg-[#fffdf8] p-3 text-[10px] font-semibold text-[#35533c]">
               <span className="flex items-center gap-1.5"><ShieldCheck size={14} className="text-[#8b5a2b]"/>Secure checkout</span>
@@ -819,16 +834,24 @@ export default function MiniCart() {
               </div>}
             </section>
 
-            {recommendationsToShow.length > 0 && <section>
-              <h3 className="mb-2 text-xs font-bold uppercase tracking-widest text-[#2C3E2D]">Recommended for you</h3>
-              <div className="grid grid-cols-2 gap-2">
-                {recommendationsToShow.slice(0, 2).map(product => <article key={product.id || product._id} className="flex min-w-0 items-center gap-2 rounded-xl border border-[#e8dcc4] bg-white p-2">
-                  <img src={getImageUrl(product.image_url || product.images?.[0] || product.image)} alt={product.name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-12 w-12 shrink-0 rounded-lg bg-[#faf8f5] object-contain p-1"/>
-                  <div className="min-w-0 flex-1"><p className="line-clamp-2 text-[10px] font-semibold leading-tight text-[#2C3E2D]">{product.name}</p><p className="mt-1 text-[10px] font-bold text-[#8b5a2b]">{formatPrice(product.discount_price || product.price)}</p></div>
-                  <button type="button" aria-label={`Add ${product.name} to cart`} onClick={() => addToCart(product)} className="shrink-0 rounded-lg border border-[#e8dcc4] p-1.5 text-[#8b5a2b] hover:bg-[#8b5a2b] hover:text-white"><Plus size={14}/></button>
-                </article>)}
-              </div>
-            </section>}
+            <section className="overflow-hidden rounded-2xl border border-[#e1e3d9] bg-[#fffefa]">
+              <button type="button" aria-expanded={recommendationsOpen} onClick={() => setRecommendationsOpen(open => !open)} className="flex w-full items-center justify-between px-4 py-3 text-left">
+                <span><span className="block text-xs font-bold uppercase tracking-wider text-[#2C3E2D]">A little more to love</span><span className="mt-0.5 block text-[10px] text-stone-500">Thoughtful picks for your routine</span></span>
+                {recommendationsOpen ? <ChevronUp size={16} className="text-[#526b4d]"/> : <ChevronDown size={16} className="text-[#526b4d]"/>}
+              </button>
+              {recommendationsOpen && <div className="space-y-2 border-t border-[#e5e7de] p-3">
+                {recommendationsLoading && <p className="text-xs text-stone-500">Finding a few good fits…</p>}
+                {recommendationsError && <div className="flex items-center justify-between gap-3 text-xs text-rose-700"><p role="alert">{recommendationsError}</p><button type="button" onClick={() => setRecommendationsRetry(retry => retry + 1)} className="shrink-0 font-semibold underline underline-offset-2">Retry</button></div>}
+                {!recommendationsLoading && !recommendationsError && recommendationsToShow.length === 0 && <p className="text-xs text-stone-500">We’ll have more thoughtful picks for you soon.</p>}
+                <div className="grid grid-cols-2 gap-2">
+                  {recommendationsToShow.slice(0, 2).map(product => <article key={product.id || product._id} className="flex min-w-0 items-center gap-2 rounded-xl border border-[#e8dcc4] bg-white p-2">
+                    <img src={getImageUrl(product.image_url || product.images?.[0] || product.image)} alt={product.name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-12 w-12 shrink-0 rounded-lg bg-[#faf8f5] object-contain p-1"/>
+                    <div className="min-w-0 flex-1"><p className="line-clamp-2 text-[10px] font-semibold leading-tight text-[#2C3E2D]">{product.name}</p><p className="mt-1 text-[10px] font-bold text-[#8b5a2b]">{formatPrice(product.discount_price || product.price)}</p></div>
+                    <button type="button" aria-label={`Add ${product.name} to cart`} onClick={() => addToCart(product)} className="shrink-0 rounded-lg border border-[#e8dcc4] p-1.5 text-[#8b5a2b] hover:bg-[#8b5a2b] hover:text-white"><Plus size={14}/></button>
+                  </article>)}
+                </div>
+              </div>}
+            </section>
           </>}
 
           {wishlist.length > 0 && <section className="overflow-hidden rounded-2xl border border-[#e8dcc4] bg-white" aria-label="Saved for later items">
@@ -871,13 +894,13 @@ export default function MiniCart() {
                 {placingOrder ? 'Preparing your order…' : !user ? <>Sign in to continue <ArrowRight size={16}/></> : <>{paymentMode === 'COD' ? 'Place order · cash on delivery' : paymentMode === 'online' ? 'Pay securely with Razorpay' : 'Place wallet order'} <ArrowRight size={16}/></>}
               </button>
               {paymentMode === 'WALLET' && walletBalance !== null && walletBalance < finalTotal && <p className="mt-1 text-center text-[10px] text-rose-700">Add funds to your wallet or choose Razorpay.</p>}
-              <label className="mini-cart-terms mt-3 flex cursor-pointer items-start gap-2.5 rounded-xl border border-[#e5e7de] bg-white px-3 py-2.5 text-[10px] leading-4 text-[#59665a]"><input type="checkbox" checked={termsAccepted} onChange={event => setTermsAccepted(event.target.checked)} className="mt-0.5 accent-[#14251c]"/><span>I agree to the <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold text-[#294434] underline underline-offset-2">Conditions of Sale</Link> and acknowledge the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold text-[#294434] underline underline-offset-2">Privacy Notice</Link>.</span></label>
+              <p className="mt-3 text-center text-[10px] leading-4 text-[#687466]">By placing your order, you agree to our <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold text-[#294434] underline underline-offset-2">Conditions of Sale</Link> and acknowledge the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold text-[#294434] underline underline-offset-2">Privacy Notice</Link>.</p>
               <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-[9px] font-medium text-[#687466]"><ShieldCheck size={12} className="text-[#526b4d]"/>{paymentMode === 'online' ? 'Payment details are handled securely by Razorpay.' : 'Your order total is shown clearly before confirmation.'}</p>
             </form>
             : <button type="button" onClick={continueToCheckout} className="mini-cart-primary-action mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#14251c] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-lg shadow-[#14251c]/15 transition">Continue to checkout <ArrowRight size={16}/></button>}
           {!checkoutOpen && <p className="mt-2 text-center text-[9px] text-stone-400">Shipping and final discounts are confirmed at checkout.</p>}
         </footer>}
-      </Motion.aside>
-    </Motion.div>
+      </aside>
+    </div>
   );
 }
