@@ -151,10 +151,12 @@ export default function CouponManagement() {
   const toggleStatus = async (id, currentStatus) => {
     try {
       const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-      await api.put(`/coupons/${id}`, { status: newStatus }));
+      await api.put(`/coupons/${id}`, { status: newStatus });
       fetchCoupons();
       showToast?.(`Campaign ${newStatus === 'active' ? 'activated' : 'suspended'}`, 'success');
-    } catch (err) {}
+    } catch (err) {
+      showToast?.('Unable to update campaign status', 'error');
+    }
   };
 
   // --- TELEMETRY & ANALYTICS ---
