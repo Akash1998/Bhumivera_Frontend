@@ -7,12 +7,12 @@ export const isPasskeySupported = () => (
   window.isSecureContext !== false
 );
 
-export const loginWithPasskey = async (email, accountType = 'customer') => {
+export const loginWithPasskey = async (email = '', accountType = 'customer') => {
   if (!isPasskeySupported()) {
     throw new Error('Passkeys require a supported browser and a secure website connection.');
   }
 
-  const challenge = await auth.getPasskeyLoginChallenge(email, accountType);
+  const challenge = await auth.getPasskeyLoginChallenge(email.trim(), accountType);
   const response = await startAuthentication({ optionsJSON: challenge.data.options });
   const verification = await auth.verifyPasskeyLogin({
     challengeId: challenge.data.challengeId,

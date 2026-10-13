@@ -1835,7 +1835,7 @@ export default function Profile() {
                       </div>
                       <div>
                         <h3 className="font-semibold text-[#0B2419] text-lg">Passkeys & Biometric Login</h3>
-                        <p className="text-xs text-stone-500">Sign in securely with Touch ID, Face ID, or Windows Hello without typing passwords.</p>
+                        <p className="text-xs text-stone-500">Sign in securely with Touch ID, Face ID, or Windows Hello without typing passwords. If Google Password Manager is unavailable, choose “Save another way” and use Windows Hello or a security key.</p>
                       </div>
                     </div>
                     <button

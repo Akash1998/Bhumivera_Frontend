@@ -335,7 +335,7 @@ Object.assign(auth, {
   ),
   getPasskeyLoginChallenge: (email, accountType = 'customer') => api.post(
     '/auth/passkey/login-challenge',
-    { email, accountType }
+    { ...(email ? { email } : {}), accountType }
   ),
   verifyPasskeyLogin: data => api.post('/auth/passkey/login-verify', data),
   listPasskeys: (accountType = 'customer') => api.get(

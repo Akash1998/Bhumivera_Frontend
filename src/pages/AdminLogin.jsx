@@ -3,13 +3,14 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Fingerprint } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { auth as authApi } from '../services/api';
-import { loginWithPasskey, registerPasskey } from '../utils/webauthnClient';
+import { isPasskeySupported, loginWithPasskey, registerPasskey } from '../utils/webauthnClient';
 import './AdminLogin.css';
 
 const API = import.meta.env.VITE_API_URL || 'https://service.Bhumivera.com';
 
 const AdminLogin = () => {
   const [step, setStep] = useState(1);
+  const [loginMode, setLoginMode] = useState('PASSWORD');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [otp, setOtp] = useState('');
@@ -72,8 +73,8 @@ const AdminLogin = () => {
 
   const handlePasskeyLogin = async () => {
     setStatus({ type: '', message: '' });
-    if (!validateEmail(email)) {
-      setStatus({ type: 'error', message: 'Enter your authorized admin email to use passkey sign-in.' });
+    if (email && !validateEmail(email)) {
+      setStatus({ type: 'error', message: 'Enter a valid admin email or leave it blank to find your passkey automatically.' });
       return;
     }
     setLoading(true);
@@ -197,6 +198,27 @@ const AdminLogin = () => {
           <span className="admin-login-badge">SECURE ADMIN PORTAL</span>
         </div>
 
+        {step === 1 && (
+          <div className="mb-6 grid grid-cols-2 gap-2 rounded-xl border border-white/10 bg-black/20 p-1">
+            <button
+              type="button"
+              onClick={() => { setLoginMode('PASSWORD'); setStatus({ type: '', message: '' }); }}
+              className={`rounded-lg px-3 py-2.5 text-xs font-bold transition-colors ${loginMode === 'PASSWORD' ? 'bg-emerald-500 text-emerald-950' : 'text-gray-300 hover:bg-white/5'}`}
+            >
+              PASSWORD + EMAIL CODE
+            </button>
+            <button
+              type="button"
+              onClick={() => { setLoginMode('PASSKEY'); setStatus({ type: '', message: '' }); }}
+              disabled={!isPasskeySupported()}
+              title={isPasskeySupported() ? 'Sign in using your passkey' : 'Passkeys require a supported browser and secure website connection'}
+              className={`rounded-lg px-3 py-2.5 text-xs font-bold transition-colors disabled:opacity-50 ${loginMode === 'PASSKEY' ? 'bg-emerald-500 text-emerald-950' : 'text-gray-300 hover:bg-white/5'}`}
+            >
+              PASSKEY
+            </button>
+          </div>
+        )}
+
         {step === 3 ? (
           <div className="admin-login-form">
             <div className="admin-login-hint">
@@ -208,6 +230,28 @@ const AdminLogin = () => {
             </button>
             <button type="button" disabled={loading} className="admin-login-back" onClick={() => navigate('/admin')}>
               Continue to admin portal
+            </button>
+          </div>
+        ) : step === 1 && loginMode === 'PASSKEY' ? (
+          <div className="admin-login-form">
+            <div className="admin-login-hint">
+              <h2>Passkey sign-in</h2>
+              <p>Continue with Windows Hello, Face ID, your device PIN, or a security key. You do not need to enter a password.</p>
+            </div>
+            <div className="form-group">
+              <label className="admin-login-label">ADMIN EMAIL (OPTIONAL)</label>
+              <input
+                type="email"
+                value={email}
+                onChange={event => setEmail(event.target.value)}
+                placeholder="Leave blank to find passkey automatically"
+                autoComplete="username webauthn"
+                className="admin-login-input"
+              />
+            </div>
+            <button type="button" disabled={loading} className="admin-login-btn" onClick={handlePasskeyLogin}>
+              <Fingerprint size={18} className="inline mr-2" aria-hidden="true" />
+              {loading ? 'VERIFYING PASSKEY...' : 'SIGN IN WITH PASSKEY'}
             </button>
           </div>
         ) : step === 1 ? (
@@ -239,11 +283,6 @@ const AdminLogin = () => {
 
             <button type="submit" disabled={loading} className="admin-login-btn">
               {loading ? 'DEPLOYING OTP...' : 'REQUEST SECURE ACCESS'}
-            </button>
-            <div className="admin-login-hint">or</div>
-            <button type="button" disabled={loading} className="admin-login-btn" onClick={handlePasskeyLogin}>
-              <Fingerprint size={18} aria-hidden="true" />
-              {loading ? 'VERIFYING PASSKEY...' : 'SIGN IN WITH PASSKEY / FACE ID'}
             </button>
           </form>
         ) : (

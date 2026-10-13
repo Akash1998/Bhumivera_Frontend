@@ -6,7 +6,7 @@ import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft, Fingerprint, Key } fro
 import { loginWithPasskey } from '../utils/webauthnClient';
 
 const Login = () => {
-  const [mode, setMode] = useState('OTP'); // OTP | PASSWORD
+  const [mode, setMode] = useState('OTP'); // OTP | PASSWORD | PASSKEY
   const [step, setStep] = useState('FORM'); // FORM | OTP | 2FA
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -92,14 +92,11 @@ const Login = () => {
   };
 
   const handlePasskeyLogin = async () => {
-    if (!email.trim()) {
-      toast.error('Enter your email address to use passkey sign-in.');
-      return;
-    }
     setLoading(true);
     try {
       const res = await loginWithPasskey(email, 'customer');
       if (res?.requires2FA) {
+        if (res.email) setEmail(res.email);
         setTwoFactorMethod(res.factor || 'authenticator');
         setStep('2FA');
         toast(res.message || 'Enter your verification code to continue.', { icon: 'ℹ️' });
@@ -221,9 +218,51 @@ const Login = () => {
                 >
                   <Mail size={15} /> Email OTP
                 </button>
+                <button
+                  type="button"
+                  onClick={() => switchMode('PASSKEY')}
+                  className={`flex-1 py-2.5 rounded-xl text-sm font-semibold transition-all flex items-center justify-center gap-1.5 ${
+                    mode === 'PASSKEY'
+                      ? 'bg-[#0B2419] text-[#FDFBF7] shadow-md'
+                      : 'text-[#2C3E2D] hover:text-[#0B2419]'
+                  }`}
+                >
+                  <Fingerprint size={15} /> Passkey
+                </button>
               </div>
 
-              {mode === 'PASSWORD' ? (
+              {mode === 'PASSKEY' ? (
+                <div className="space-y-4">
+                  <div className="text-center">
+                    <h2 className="text-lg font-semibold text-[#0B2419]">Sign in with a passkey</h2>
+                    <p className="mt-1 text-sm text-[#0B2419]/60">Use your device’s fingerprint, face recognition, PIN, or security key. No password required.</p>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold text-[#0B2419] uppercase tracking-widest mb-2">Email (optional)</label>
+                    <div className="relative">
+                      <Mail size={18} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#8B9D83]" />
+                      <input
+                        type="email"
+                        autoComplete="username webauthn"
+                        className="w-full pl-12 pr-4 py-3.5 bg-[#FDFBF7] border border-[#8B9D83]/20 focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 rounded-2xl outline-none transition-all text-[#0B2419]"
+                        placeholder="Only needed for older passkeys"
+                        value={email}
+                        onChange={event => setEmail(event.target.value)}
+                      />
+                    </div>
+                    <p className="mt-2 text-xs text-[#0B2419]/50">Leave blank to let your device find your passkey automatically.</p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handlePasskeyLogin}
+                    disabled={loading}
+                    className="w-full bg-[#0B2419] text-[#D4AF37] font-bold py-4 rounded-2xl hover:bg-[#2C3E2D] transition-all shadow-lg flex justify-center items-center gap-2 disabled:opacity-60"
+                  >
+                    <Fingerprint size={18} />
+                    {loading ? 'VERIFYING PASSKEY...' : 'CONTINUE WITH PASSKEY'}
+                  </button>
+                </div>
+              ) : mode === 'PASSWORD' ? (
                 <form onSubmit={handlePasswordLogin} className="space-y-4">
                   <div>
                     <label className="block text-xs font-bold text-[#0B2419] uppercase tracking-widest mb-2">Email Address</label>
@@ -282,18 +321,6 @@ const Login = () => {
                       <>SIGN IN <ShieldCheck size={17} /></>
                     )}
                   </button>
-                  <div className="relative my-4 flex items-center justify-center">
-                    <div className="w-full border-t border-[#8B9D83]/20"></div>
-                    <span className="bg-[#FDFBF7] px-3 text-[11px] font-bold uppercase tracking-wider text-[#8B9D83]">or</span>
-                  </div>
-                  <button 
-                    type="button"
-                    onClick={handlePasskeyLogin}
-                    disabled={loading}
-                    className="w-full bg-[#FAF8F5] border border-[#D4AF37]/50 text-[#0B2419] font-bold py-3.5 rounded-2xl hover:bg-[#D4AF37]/10 transition-all flex justify-center items-center gap-2.5 text-xs uppercase tracking-wider disabled:opacity-60"
-                  >
-                    <Fingerprint size={18} className="text-[#D4AF37]" /> Sign In with Passkey / Face ID
-                  </button>
                 </form>
               ) : (
                 <form onSubmit={handleRequestOTP} className="space-y-5">
@@ -319,18 +346,6 @@ const Login = () => {
                     className="w-full bg-[#0B2419] text-[#D4AF37] font-bold py-4 rounded-2xl hover:bg-[#2C3E2D] transition-all shadow-lg flex justify-center items-center"
                   >
                     {loading ? 'Sending...' : 'CONTINUE WITH OTP'}
-                  </button>
-                  <div className="relative my-4 flex items-center justify-center">
-                    <div className="w-full border-t border-[#8B9D83]/20"></div>
-                    <span className="bg-[#FDFBF7] px-3 text-[11px] font-bold uppercase tracking-wider text-[#8B9D83]">or</span>
-                  </div>
-                  <button 
-                    type="button"
-                    onClick={handlePasskeyLogin}
-                    disabled={loading}
-                    className="w-full bg-[#FAF8F5] border border-[#D4AF37]/50 text-[#0B2419] font-bold py-3.5 rounded-2xl hover:bg-[#D4AF37]/10 transition-all flex justify-center items-center gap-2.5 text-xs uppercase tracking-wider disabled:opacity-60"
-                  >
-                    <Fingerprint size={18} className="text-[#D4AF37]" /> Sign In with Passkey / Face ID
                   </button>
                 </form>
               )}
