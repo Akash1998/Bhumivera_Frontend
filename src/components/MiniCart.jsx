@@ -1,12 +1,12 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AnimatePresence, motion as Motion } from 'framer-motion';
-import { ArrowRight, BadgeCheck, ChevronDown, ChevronUp, Gift, Heart, Leaf, MapPin, MessageCircle, Minus, Plus, ShieldCheck, ShoppingBag, Sparkles, Star, Tag, Trash2, Truck, X } from 'lucide-react';
+import { ArrowRight, BadgeCheck, ChevronDown, ChevronUp, Gift, Heart, Leaf, MapPin, Minus, Plus, ShieldCheck, ShoppingBag, Sparkles, Star, Tag, Trash2, Truck, X } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { useSettings } from '../context/SettingsContext';
 import { useWishlist } from '../context/WishlistContext';
-import { addresses as addressesApi, coupons as couponsApi, notifications as notificationsApi, orders as ordersApi, payments as paymentsApi, products as productsApi, users as usersApi, wallet as walletApi } from '../services/api';
+import { addresses as addressesApi, coupons as couponsApi, orders as ordersApi, payments as paymentsApi, products as productsApi, wallet as walletApi } from '../services/api';
 import { useToast } from '../context/ToastContext';
 
 let razorpayScriptPromise;
@@ -74,19 +74,10 @@ const calculatePointsRedemption = (loyalty, eligibleSubtotal) => {
   if (points < minimum) return { points: 0, discount: 0 };
   return { points, discount: Math.min(maximumDiscountCents, Math.floor(points * 100 / pointsPerRupee)) / 100 };
 };
-const estimateLoyaltyPoints = (eligibleSpend, loyalty, ruleBonusPoints = 0) => {
-  if (!loyalty?.enabled) return 0;
-  const spend = Math.max(0, Number(eligibleSpend) || 0);
-  const base = Math.floor(spend * Math.max(0, Number(loyalty.pointsPerRupee) || 0) * Math.max(0, Number(loyalty.currentTier?.points_multiplier) || 1));
-  const cashback = Math.floor(spend * Math.max(0, Number(loyalty.currentTier?.cashback_percent) || 0) / 100 * Math.max(1, Number(loyalty.redemptionPointsPerRupee) || 1));
-  const bonus = spend > 0 ? Math.max(0, Math.trunc(Number(loyalty.currentTier?.bonus_points) || 0)) + Math.max(0, Math.trunc(Number(ruleBonusPoints) || 0)) : 0;
-  return Math.min(1000000, base + cashback + bonus);
-};
-
 export default function MiniCart() {
   const {
     cartItems = [], isCartOpen, setIsCartOpen, removeFromCart, updateQuantity,
-    getSubtotal, addToCart, clearCart, rulePreview, rulePreviewLoading, shippingProgress, cartAddEvent,
+    getSubtotal, addToCart, clearCart, rulePreview, rulePreviewLoading, cartAddEvent,
     freeShippingThreshold, couponStackPolicy, referralReward, loyalty,
   } = useCart();
   const { user } = useAuth();
@@ -107,7 +98,8 @@ export default function MiniCart() {
   const [couponMessage, setCouponMessage] = useState('');
   const [couponBusy, setCouponBusy] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
-  const [checkoutOpen, setCheckoutOpen] = useState(false);
+  const [checkoutStep, setCheckoutStep] = useState(0);
+  const checkoutOpen = checkoutStep > 0;
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState('');
   const [addressForm, setAddressForm] = useState(blankAddress);
@@ -125,8 +117,6 @@ export default function MiniCart() {
   });
   const [placingOrder, setPlacingOrder] = useState(false);
   const [orderNotes, setOrderNotes] = useState('');
-  const [whatsappUpdatesOptIn, setWhatsappUpdatesOptIn] = useState(false);
-  const [whatsappUpdatesAvailable, setWhatsappUpdatesAvailable] = useState(false);
   const [celebrationEvent, setCelebrationEvent] = useState(null);
   const [savedListOpen, setSavedListOpen] = useState(false);
   const [busyCartItems, setBusyCartItems] = useState(() => new Set());
@@ -155,11 +145,6 @@ export default function MiniCart() {
   const [redeemLoyaltyPoints, setRedeemLoyaltyPoints] = useState(true);
   const loyaltyPointsToRedeem = redeemLoyaltyPoints ? pointsRedemption.points : 0;
   const loyaltyDiscount = redeemLoyaltyPoints ? pointsRedemption.discount : 0;
-  const loyaltyPointsEarnedEstimate = estimateLoyaltyPoints(
-    subtotal - discount - couponDiscount - tierDiscount - referralWalletAmount - loyaltyDiscount,
-    loyalty,
-    rulePreview?.loyaltyBonusPoints
-  );
   const loyaltyFreeShipping = Boolean(loyalty?.enabled && Number(loyalty?.currentTier?.free_shipping) === 1);
   const amountToFreeShipping = rulePreview?.freeShipping || loyaltyFreeShipping ? 0 : Math.max(0, Number(freeShippingThreshold) - subtotal);
   const standardShippingCost = Math.max(0, Number(settings?.standard_charge ?? settings?.default_shipping_charge ?? 50) || 0);
@@ -199,9 +184,14 @@ export default function MiniCart() {
     .sort((first, second) => second.estimatedSaving - first.estimatedSaving), [
     offers, subtotal, discount, walletBalance, couponStackPolicy,
   ]);
+  const upcomingCartReward = (rulePreview?.tiers || [])
+    .filter(tier => !tier.unlocked && Number(tier.missingAmount) > 0)
+    .sort((first, second) => Number(first.missingAmount) - Number(second.missingAmount))[0];
+  const unlockedCartReward = (rulePreview?.tiers || []).find(tier => tier.unlocked);
+  const selectedAddressDetails = addresses.find(address => String(address.id) === String(selectedAddress));
 
   useEffect(() => {
-    if (!isCartOpen || !recommendationsOpen || cartItems.length === 0 || recommendationsLoaded) return undefined;
+    if (!isCartOpen || checkoutOpen || !recommendationsOpen || cartItems.length === 0 || recommendationsLoaded) return undefined;
     let active = true;
     setRecommendationsLoading(true);
     setRecommendationsError('');
@@ -224,10 +214,10 @@ export default function MiniCart() {
     return () => {
       active = false;
     };
-  }, [isCartOpen, recommendationsOpen, cartItems.length, recommendationsLoaded, recommendationsRetry]);
+  }, [isCartOpen, checkoutOpen, recommendationsOpen, cartItems.length, recommendationsLoaded, recommendationsRetry]);
 
   useEffect(() => {
-    if (!isCartOpen || !offersOpen) return undefined;
+    if (!isCartOpen || checkoutOpen || !offersOpen) return undefined;
     let active = true;
     Promise.allSettled([
       couponsApi.getPublicActive(),
@@ -259,7 +249,7 @@ export default function MiniCart() {
       })
       .catch(error => console.error('[MINI_CART_OFFERS]', error));
     return () => { active = false; };
-  }, [isCartOpen, offersOpen, userId]);
+  }, [isCartOpen, checkoutOpen, offersOpen, userId]);
 
   useEffect(() => {
     if (!isCartOpen) return undefined;
@@ -291,8 +281,7 @@ export default function MiniCart() {
   useEffect(() => {
     if (!isCartOpen || sessionStorage.getItem('mini-cart-checkout') !== '1') return;
     sessionStorage.removeItem('mini-cart-checkout');
-    setCheckoutOpen(true);
-    setOffersOpen(true);
+    setCheckoutStep(1);
     const pendingCoupon = sessionStorage.getItem('mini-cart-coupon');
     if (pendingCoupon) {
       setCouponCode(pendingCoupon);
@@ -339,19 +328,11 @@ export default function MiniCart() {
         console.error('[MINI_CART_WALLET_BALANCE]', error);
         return { walletBalanceError: error.response?.data?.message || 'Wallet balance could not be loaded.' };
       }),
-      notificationsApi.getWhatsAppStatus().catch(error => {
-        console.error('[MINI_CART_WHATSAPP_STATUS]', error);
-        return { data: { available: false } };
-      }),
-      usersApi.getProfile().catch(error => {
-        console.error('[MINI_CART_WHATSAPP_PREFERENCE]', error);
-        return { data: {} };
-      }),
       ordersApi.getCodEligibility().then(response => response.data).catch(error => {
         console.error('[MINI_CART_COD_ELIGIBILITY]', error);
         return null;
       }),
-    ]).then(([addressResponse, walletResponse, whatsappResponse, profileResponse, eligibility]) => {
+    ]).then(([addressResponse, walletResponse, eligibility]) => {
       if (!active) return;
       const list = addressResponse.data?.addresses || addressResponse.data?.data || addressResponse.data || [];
       const savedAddresses = Array.isArray(list) ? list : [];
@@ -370,11 +351,6 @@ export default function MiniCart() {
           setWalletBalanceError('');
         }
       }
-      setWhatsappUpdatesAvailable(whatsappResponse.data?.available === true);
-      setWhatsappUpdatesOptIn(
-        whatsappResponse.data?.available === true &&
-        Boolean(Number(profileResponse.data?.whatsapp_order_updates_opt_in))
-      );
       setCodEligibility(eligibility
         ? { ...eligibility, available: true }
         : { eligible: false, deliveredOrderCount: 0, requiredDeliveredOrders: 2, available: false });
@@ -434,8 +410,15 @@ export default function MiniCart() {
       navigate('/login', { state: { from: '/checkout', reopenCart: true } });
       return;
     }
-    setOffersOpen(true);
-    setCheckoutOpen(true);
+    setCheckoutStep(1);
+  };
+
+  const continueToPayment = () => {
+    if (!selectedAddress) {
+      toast.error('Choose or add a delivery address before continuing.');
+      return;
+    }
+    setCheckoutStep(2);
   };
 
   const withBusyCartItem = async (productId, operation) => {
@@ -525,7 +508,6 @@ export default function MiniCart() {
       setAddresses(savedAddresses);
       const newestAddress = savedAddresses.find(address => address.is_default) || savedAddresses[0];
       setSelectedAddress(String(newestAddress?.id || ''));
-      setWhatsappUpdatesOptIn(false);
       setAddressForm(blankAddress);
       setAddressFormOpen(false);
       toast.success('Delivery address saved.');
@@ -562,7 +544,6 @@ export default function MiniCart() {
         deliveryType: shippingMethod.toLowerCase(),
         couponCode: appliedCoupon?.code || undefined,
         notes: orderNotes.trim() || undefined,
-        whatsappUpdatesOptIn,
         termsAccepted: true,
         loyaltyPointsToRedeem,
       };
@@ -660,23 +641,6 @@ export default function MiniCart() {
           <button type="button" aria-label="Close cart" onClick={() => setIsCartOpen(false)} className="rounded-full border border-[#dedfd4] bg-white/80 p-2.5 text-[#526b4d] shadow-sm transition hover:-rotate-90 hover:bg-[#14251c] hover:text-white"><X size={18}/></button>
         </header>
 
-        {cartItems.length > 0 && <div className="mini-cart-perks border-b border-[#dedfd4] px-5 py-4 sm:px-7">
-          {rulePreview?.membershipTier && <p className="mb-3 border border-[#D4AF37]/35 bg-[#FFF8E7] px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#765d17]">{rulePreview.membershipTier} member benefits</p>}
-          {rulePreview?.tiers?.length > 0 && <div className="mb-3 space-y-2.5">
-            {rulePreview.tiers.slice(0, 3).map(tier => <div key={tier.id}>
-              <div className="mb-1 flex justify-between gap-3 text-[10px] font-bold uppercase tracking-wider"><span className="truncate text-stone-600">{tier.badge || tier.name}</span><span className={tier.unlocked ? 'text-emerald-700' : 'text-[#526b4d]'}>{tier.unlocked ? 'Unlocked' : `Add ${formatPrice(tier.missingAmount)}`}</span></div>
-              <div className="mini-cart-progress-track h-1.5 overflow-hidden rounded-full bg-[#e8e8dd]"><div style={{ width: `${Math.min(100, Math.max(0, Number(tier.progressPct) || 0))}%` }} className={`mini-cart-progress-fill h-full ${tier.unlocked ? 'bg-emerald-600' : 'bg-[#526b4d]'}`}/></div>
-            </div>)}
-          </div>}
-          {rulePreview?.gifts?.length > 0 && <div className="flex items-center gap-2 text-xs font-semibold text-emerald-800"><Gift size={15}/>{rulePreview.gifts[0].productName ? `${rulePreview.gifts[0].productName} unlocked` : 'A free gift is unlocked'}{rulePreview.gifts.length > 1 ? ` + ${rulePreview.gifts.length - 1} more` : ''}</div>}
-          {rulePreviewLoading && <p className="mt-2 text-[10px] text-stone-400">Refreshing your rewards…</p>}
-          <div className="mt-3 flex items-center justify-between gap-3 text-[10px] font-bold uppercase tracking-wider">
-            <span className="flex items-center gap-1.5 text-stone-500"><Truck size={13}/>{amountToFreeShipping > 0 ? `Add ${formatPrice(amountToFreeShipping)} for free delivery` : 'Free delivery unlocked'}</span>
-            <span className={amountToFreeShipping > 0 ? 'text-[#8b5a2b]' : 'text-emerald-700'}>{Math.round(Math.max(0, Math.min(100, Number(shippingProgress) || 0)))}%</span>
-          </div>
-          <div className="mini-cart-progress-track mt-2 h-1.5 overflow-hidden rounded-full bg-[#e8e8dd]"><div style={{ width: `${Math.max(0, Math.min(100, Number(shippingProgress) || 0))}%` }} className={`mini-cart-progress-fill h-full ${amountToFreeShipping > 0 ? 'bg-[#526b4d]' : 'bg-emerald-600'}`}/></div>
-        </div>}
-
         <div className="mini-cart-scroll flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:px-7">
           {cartItems.length === 0 && <div className="mini-cart-empty relative flex min-h-[360px] flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-[#dedfd4] bg-[#fbfaf5] px-8 text-center shadow-sm">
             <span className="mini-cart-orbit mini-cart-orbit-one" aria-hidden="true"/>
@@ -688,7 +652,27 @@ export default function MiniCart() {
             <button type="button" onClick={() => setIsCartOpen(false)} className="relative mt-7 inline-flex items-center gap-2 rounded-full bg-[#14251c] px-6 py-3 text-[10px] font-bold uppercase tracking-[0.16em] text-white shadow-lg shadow-[#14251c]/15 transition duration-300 hover:-translate-y-0.5 hover:bg-[#294434]">Explore the collection <ArrowRight size={14}/></button>
           </div>}
           {cartItems.length > 0 && <>
-            {cartItems.map(item => {
+            {!checkoutOpen && <section className="mini-cart-benefits rounded-2xl border border-[#dfe3d8] bg-[#fffefa] px-4 py-3" aria-label="Cart rewards and delivery">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#526b4d]">Your cart benefits</span>
+                {rulePreview?.membershipTier && <span className="rounded-full bg-[#f4f1e9] px-2.5 py-1 text-[10px] font-semibold text-[#765d17]">{rulePreview.membershipTier} member</span>}
+              </div>
+              <div className="mt-2 flex items-start gap-2 text-xs leading-5 text-[#526b4d]">
+                {rulePreview?.gifts?.length > 0
+                  ? <><Gift size={14} className="mt-0.5 shrink-0 text-[#8b5a2b]"/><span>{rulePreview.gifts[0].productName ? `${rulePreview.gifts[0].productName} unlocked` : 'A free gift is unlocked'}{rulePreview.gifts.length > 1 ? ` and ${rulePreview.gifts.length - 1} more` : ''}</span></>
+                  : upcomingCartReward
+                    ? <><Gift size={14} className="mt-0.5 shrink-0 text-[#8b5a2b]"/><span>Add {formatPrice(upcomingCartReward.missingAmount)} to unlock {upcomingCartReward.badge || upcomingCartReward.name}</span></>
+                    : unlockedCartReward
+                      ? <><Gift size={14} className="mt-0.5 shrink-0 text-[#8b5a2b]"/><span>{unlockedCartReward.badge || unlockedCartReward.name} reward unlocked</span></>
+                      : <><ShieldCheck size={14} className="mt-0.5 shrink-0"/><span>Rewards are applied automatically when your cart qualifies.</span></>}
+              </div>
+              <div className="mt-2 flex items-center gap-2 border-t border-[#edf0e9] pt-2 text-xs text-[#526b4d]">
+                <Truck size={14} className="shrink-0"/>
+                <span>{amountToFreeShipping > 0 ? `Add ${formatPrice(amountToFreeShipping)} for free delivery` : 'Free delivery unlocked'}</span>
+                {rulePreviewLoading && <span className="ml-auto text-[10px] text-stone-400">Updating…</span>}
+              </div>
+            </section>}
+            {!checkoutOpen && cartItems.map(item => {
               const product = item.product || item;
               const id = item.product_id || product.id || product._id;
               const image = product.image_url || item.image_url || item.image || product.image || product.images?.[0];
@@ -719,18 +703,33 @@ export default function MiniCart() {
               </article>;
             })}
 
-            <div className="grid grid-cols-2 gap-2 rounded-xl border border-[#e8dcc4] bg-[#fffdf8] p-3 text-[10px] font-semibold text-[#35533c]">
+            {!checkoutOpen && <div className="grid grid-cols-2 gap-2 rounded-xl border border-[#e8dcc4] bg-[#fffdf8] p-3 text-[10px] font-semibold text-[#35533c]">
               <span className="flex items-center gap-1.5"><ShieldCheck size={14} className="text-[#8b5a2b]"/>Secure checkout</span>
               <span className="flex items-center gap-1.5"><BadgeCheck size={14} className="text-[#8b5a2b]"/>Customer-approved reviews</span>
-            </div>
+            </div>}
 
             {checkoutOpen && <section className="mini-cart-checkout space-y-4 rounded-2xl border border-[#d9dfd2] bg-[#f8f8f2] p-4" aria-labelledby="mini-checkout-title">
-              <div className="flex items-center justify-between gap-3"><div><p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#526b4d]">One last step</p><h3 id="mini-checkout-title" className="mt-1 flex items-center gap-2 font-serif text-lg text-[#14251c]"><MapPin size={17}/>Delivery &amp; payment</h3></div><button type="button" onClick={() => setCheckoutOpen(false)} className="rounded-full border border-[#dfe3d8] bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#526b4d] transition hover:border-[#14251c] hover:bg-[#14251c] hover:text-white">Edit cart</button></div>
+              <nav aria-label="Checkout progress" className="grid grid-cols-2 gap-2">
+                {['Delivery', 'Payment'].map((label, index) => {
+                  const step = index + 1;
+                  const active = checkoutStep === step;
+                  const complete = checkoutStep > step;
+                  return <button type="button" key={label} disabled={step > checkoutStep} onClick={() => setCheckoutStep(step)} aria-current={active ? 'step' : undefined} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold ${active ? 'bg-[#14251c] text-white' : complete ? 'bg-[#e8eee3] text-[#35533c]' : 'bg-white text-stone-400'}`}>
+                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/15 text-[10px]">{complete ? '✓' : step}</span>{label}
+                  </button>;
+                })}
+              </nav>
+              <div className="flex items-center justify-between gap-3 border-b border-[#e5e7de] pb-3">
+                <div><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-[#526b4d]">Step {checkoutStep} of 2</p><h3 id="mini-checkout-title" className="mt-1 flex items-center gap-2 font-serif text-lg text-[#14251c]">{checkoutStep === 1 ? <><MapPin size={17}/>Delivery details</> : <><ShieldCheck size={17}/>Payment &amp; review</>}</h3></div>
+                <button type="button" onClick={() => setCheckoutStep(0)} className="rounded-full border border-[#dfe3d8] bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#526b4d] transition hover:border-[#14251c] hover:bg-[#14251c] hover:text-white">Edit cart</button>
+              </div>
+              <p className="text-[11px] text-stone-500">{cartCount} {cartCount === 1 ? 'item' : 'items'} <span aria-hidden="true">·</span> Order total {formatPrice(finalTotal)}</p>
               {!user ? <button type="button" onClick={() => { setIsCartOpen(false); navigate('/login', { state: { from: '/checkout', reopenCart: true } }); }} className="w-full rounded-xl bg-[#2C3E2D] px-4 py-3 text-sm font-semibold text-white">Sign in to continue</button> : <>
+                {checkoutStep === 1 && <>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-3"><p className="text-xs font-bold text-[#35533c]">Delivery address</p><button type="button" onClick={() => setAddressFormOpen(open => !open)} className="text-xs font-semibold text-[#8b5a2b] underline underline-offset-2">{addressFormOpen ? 'Cancel' : '+ Add address'}</button></div>
                   {addresses.length > 0 ? addresses.map(address => <label key={address.id} className={`flex cursor-pointer gap-2 rounded-xl border bg-white p-3 text-xs ${String(selectedAddress) === String(address.id) ? 'border-[#536b4d] ring-1 ring-[#536b4d]/30' : 'border-[#e8dcc4]'}`}>
-                    <input type="radio" name="mini-cart-address" value={address.id} checked={String(selectedAddress) === String(address.id)} onChange={() => { setSelectedAddress(String(address.id)); setWhatsappUpdatesOptIn(false); }} className="mt-0.5 accent-[#35533c]"/>
+                    <input type="radio" name="mini-cart-address" value={address.id} checked={String(selectedAddress) === String(address.id)} onChange={() => setSelectedAddress(String(address.id))} className="mt-0.5 accent-[#35533c]"/>
                     <span className="min-w-0"><strong className="block text-[#263d31]">{address.full_name || address.fullName} · {address.label || 'Address'}</strong><span className="mt-1 block leading-5 text-stone-500">{address.address_line1 || address.street_address || address.line1}{address.address_line2 ? `, ${address.address_line2}` : ''}, {address.city}, {address.state} {address.pincode || address.postal_code}</span><span className="mt-1 block text-stone-500">{address.phone || address.phone_number}</span></span>
                   </label>) : !addressFormOpen && <p className="rounded-xl border border-dashed border-[#d5cbb9] bg-white p-3 text-xs leading-5 text-stone-600">Add a delivery address here to finish your order without leaving the cart.</p>}
                   {addressFormOpen && <form onSubmit={saveAddress} className="grid grid-cols-2 gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3">
@@ -748,6 +747,12 @@ export default function MiniCart() {
                 <div className="grid grid-cols-2 gap-2">
                   {[['STANDARD', 'Standard', shippingCost === 0 ? 'Free' : formatPrice(standardShippingCost)], ['EXPRESS', 'Express', rulePreview?.freeShipping ? 'Free' : formatPrice(expressShippingCost)]].map(([value, label, cost]) => <button type="button" key={value} onClick={() => setShippingMethod(value)} aria-pressed={shippingMethod === value} className={`rounded-xl border bg-white p-3 text-left ${shippingMethod === value ? 'border-[#536b4d] ring-1 ring-[#536b4d]/30' : 'border-[#e8dcc4]'}`}><span className="block text-xs font-semibold text-[#263d31]">{label}</span><span className="mt-1 block text-[10px] text-stone-500">{cost}</span></button>)}
                 </div>
+                </>}
+                {checkoutStep === 2 && <>
+                <div className="flex items-start justify-between gap-3 rounded-xl border border-[#e1e3d9] bg-white p-3 text-xs">
+                  <div className="min-w-0"><p className="font-semibold text-[#35533c]">{selectedAddressDetails?.full_name || selectedAddressDetails?.fullName || 'Delivery address'} · {selectedAddressDetails?.label || 'Address'}</p><p className="mt-1 truncate text-stone-500">{selectedAddressDetails ? `${selectedAddressDetails.address_line1 || selectedAddressDetails.street_address || selectedAddressDetails.line1}, ${selectedAddressDetails.city}, ${selectedAddressDetails.state} ${selectedAddressDetails.pincode || selectedAddressDetails.postal_code}` : 'Address selected'}</p><p className="mt-1 text-stone-500">{shippingMethod === 'EXPRESS' ? 'Express delivery' : 'Standard delivery'} · {shippingCost ? formatPrice(shippingCost) : 'Free'}</p></div>
+                  <button type="button" onClick={() => setCheckoutStep(1)} className="shrink-0 font-semibold text-[#8b5a2b] underline underline-offset-2">Edit</button>
+                </div>
                 <div className="space-y-2">
                   <p className="text-xs font-bold text-[#35533c]">Payment method</p>
                   <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'online'} onChange={() => setPaymentMode('online')} className="accent-[#35533c]"/>Pay securely with Razorpay <span className="ml-auto text-[9px] font-bold uppercase tracking-wide text-emerald-700">Recommended</span></label>
@@ -762,23 +767,13 @@ export default function MiniCart() {
                         : `Cash on delivery unlocks after 2 orders are successfully delivered. You have ${codEligibility.deliveredOrderCount} delivered order${codEligibility.deliveredOrderCount === 1 ? '' : 's'} so far. You can still place your order with Razorpay or Wallet.`}
                   </p>
                 </div>
-                <div className="rounded-xl border border-[#d7dfce] bg-white p-3 text-xs leading-5 text-stone-600">
-                  {whatsappUpdatesAvailable ? <label className="flex cursor-pointer items-start gap-2">
-                    <input
-                      type="checkbox"
-                      checked={whatsappUpdatesOptIn}
-                      onChange={event => setWhatsappUpdatesOptIn(event.target.checked)}
-                      className="mt-1 accent-[#35533c]"
-                    />
-                    <span><strong className="inline-flex items-center gap-1 text-[#35533c]"><MessageCircle size={13}/>WhatsApp order updates</strong><span className="block">Receive order confirmation, cancellation, status and shipment tracking messages at the selected delivery phone number. Optional; only for this order.</span></span>
-                  </label> : <p>WhatsApp order alerts are currently unavailable. You can still track orders from your account.</p>}
-                </div>
 
                 <label className="block text-[10px] font-semibold text-stone-600">Delivery note (optional)<textarea rows={2} value={orderNotes} onChange={event => setOrderNotes(event.target.value)} className="mt-1 w-full resize-none rounded-lg border border-stone-200 bg-white px-3 py-2 text-xs" placeholder="Anything the delivery team should know?"/></label>
+                </>}
               </>}
             </section>}
 
-            <section className="overflow-hidden rounded-2xl border border-[#e8dcc4] bg-white">
+            {!checkoutOpen && <section className="overflow-hidden rounded-2xl border border-[#e8dcc4] bg-white">
               <button type="button" onClick={() => setOffersOpen(open => !open)} aria-expanded={offersOpen} className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
                 <span className="flex items-center gap-2"><span className="rounded-lg bg-[#f5f1e8] p-2 text-[#8b5a2b]"><Tag size={15}/></span><span><span className="block text-sm font-semibold text-[#2C3E2D]">Coupons &amp; offers</span><span className="block text-[10px] text-stone-500">{offersToShow.length ? `${offersToShow.length} available offers — best savings first` : 'Enter a coupon code'}</span></span></span>
                 {offersOpen ? <ChevronUp size={16} className="text-stone-500"/> : <ChevronDown size={16} className="text-stone-500"/>}
@@ -832,9 +827,9 @@ export default function MiniCart() {
                 })}
                 </div>}
               </div>}
-            </section>
+            </section>}
 
-            <section className="overflow-hidden rounded-2xl border border-[#e1e3d9] bg-[#fffefa]">
+            {!checkoutOpen && <section className="overflow-hidden rounded-2xl border border-[#e1e3d9] bg-[#fffefa]">
               <button type="button" aria-expanded={recommendationsOpen} onClick={() => setRecommendationsOpen(open => !open)} className="flex w-full items-center justify-between px-4 py-3 text-left">
                 <span><span className="block text-xs font-bold uppercase tracking-wider text-[#2C3E2D]">A little more to love</span><span className="mt-0.5 block text-[10px] text-stone-500">Thoughtful picks for your routine</span></span>
                 {recommendationsOpen ? <ChevronUp size={16} className="text-[#526b4d]"/> : <ChevronDown size={16} className="text-[#526b4d]"/>}
@@ -851,10 +846,10 @@ export default function MiniCart() {
                   </article>)}
                 </div>
               </div>}
-            </section>
+            </section>}
           </>}
 
-          {wishlist.length > 0 && <section className="overflow-hidden rounded-2xl border border-[#e8dcc4] bg-white" aria-label="Saved for later items">
+          {!checkoutOpen && wishlist.length > 0 && <section className="overflow-hidden rounded-2xl border border-[#e8dcc4] bg-white" aria-label="Saved for later items">
             <h3 id="saved-items-title" className="sr-only">Saved for later</h3>
             <button type="button" aria-expanded={savedListOpen} aria-controls="mini-cart-saved-items" onClick={() => setSavedListOpen(open => !open)} className="flex w-full items-center justify-between gap-3 p-4 text-left">
               <span className="flex items-center gap-2 text-sm font-semibold text-[#2C3E2D]"><Heart size={16} className="text-[#8b5a2b]"/>Saved for later <span className="rounded-full bg-[#f5f0e8] px-2 py-0.5 text-[10px] text-stone-600">{wishlist.length}</span></span>
@@ -879,25 +874,26 @@ export default function MiniCart() {
         {cartItems.length > 0 && <footer className="mini-cart-footer border-t border-[#dedfd4] bg-[#fbfaf5] px-5 py-4 shadow-[0_-10px_30px_rgba(20,37,28,0.08)] sm:px-7">
           <div className="space-y-2 text-xs">
             <div className="flex justify-between text-stone-600"><span>Subtotal</span><strong className="text-[#1A1C18]">{formatPrice(subtotal)}</strong></div>
-            {discount > 0 && <div className="flex justify-between font-semibold text-emerald-700"><span>Cart rewards</span><span>−{formatPrice(discount)}</span></div>}
-            {appliedCoupon?.discount > 0 && <div className="flex justify-between font-semibold text-emerald-700"><span>Coupon ({appliedCoupon.code})</span><span>{couponDiscount > 0 ? `−${formatPrice(couponDiscount)}` : 'Not stacked with cart rewards'}</span></div>}
-            {tierDiscount > 0 && <div className="flex justify-between font-semibold text-emerald-700"><span>{loyalty?.currentTier?.name} tier benefit</span><span>−{formatPrice(tierDiscount)}</span></div>}
-            {referralWalletAmount > 0 && <div className="flex justify-between font-semibold text-emerald-700"><span>Referral balance · automatic</span><span>−{formatPrice(referralWalletAmount)}</span></div>}
+            {discount + couponDiscount + tierDiscount + referralWalletAmount + loyaltyDiscount > 0 && <div className="flex justify-between font-semibold text-emerald-700"><span>Savings applied</span><span>−{formatPrice(discount + couponDiscount + tierDiscount + referralWalletAmount + loyaltyDiscount)}</span></div>}
             {loyalty?.enabled && Number(loyalty?.pointsBalance) >= Number(loyalty?.minimumRedemptionPoints) && pointsRedemption.points > 0 && <label className="flex items-center justify-between gap-3 font-semibold text-emerald-700"><span className="flex items-center gap-2"><input type="checkbox" checked={redeemLoyaltyPoints} onChange={event => setRedeemLoyaltyPoints(event.target.checked)} className="accent-[#35533c]"/>Use {(redeemLoyaltyPoints ? loyaltyPointsToRedeem : pointsRedemption.points).toLocaleString()} loyalty points</span><span>{loyaltyDiscount > 0 ? `−${formatPrice(loyaltyDiscount)}` : 'Not applied'}</span></label>}
-            {loyaltyPointsEarnedEstimate > 0 && <div className="flex justify-between text-[10px] text-stone-500"><span>Estimated points after order confirmation</span><span>+{loyaltyPointsEarnedEstimate.toLocaleString()}</span></div>}
             {checkoutOpen && <div className="flex justify-between text-stone-600"><span>{shippingMethod === 'EXPRESS' ? 'Express delivery' : 'Standard delivery'}</span><span>{shippingCost ? formatPrice(shippingCost) : 'Free'}</span></div>}
             <div className="flex justify-between border-t border-[#e5e7de] pt-2 text-sm font-bold text-[#14251c]"><span>{checkoutOpen ? 'Order total' : 'Estimated total*'}</span><span>{formatPrice(checkoutOpen ? finalTotal : Math.max(0, subtotal - discount - couponDiscount - tierDiscount - referralWalletAmount - loyaltyDiscount))}</span></div>
           </div>
-          {checkoutOpen
-            ? <form onSubmit={placeOrder}>
-              <button type={user ? 'submit' : 'button'} onClick={!user ? continueToCheckout : undefined} disabled={placingOrder || (user && paymentMode === 'WALLET' && (walletBalance === null || walletBalance < finalTotal))} className="mini-cart-primary-action mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#14251c] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-lg shadow-[#14251c]/15 transition disabled:cursor-not-allowed disabled:opacity-50">
+          {!checkoutOpen
+            ? <button type="button" onClick={continueToCheckout} className="mini-cart-primary-action mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#14251c] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-lg shadow-[#14251c]/15 transition">Continue to checkout <ArrowRight size={16}/></button>
+            : checkoutStep === 1
+              ? <button type="button" onClick={continueToPayment} className="mini-cart-primary-action mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#14251c] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-lg shadow-[#14251c]/15 transition">Continue to payment <ArrowRight size={16}/></button>
+              : <form onSubmit={placeOrder}>
+              <div className="mb-2 flex items-center justify-between">
+                <button type="button" onClick={() => setCheckoutStep(1)} className="text-[10px] font-semibold text-[#526b4d] underline underline-offset-2">Back to delivery</button>
+              </div>
+              <button type={user ? 'submit' : 'button'} onClick={!user ? continueToCheckout : undefined} disabled={placingOrder || (user && paymentMode === 'WALLET' && (walletBalance === null || walletBalance < finalTotal))} className="mini-cart-primary-action flex w-full items-center justify-center gap-2 rounded-xl bg-[#14251c] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-lg shadow-[#14251c]/15 transition disabled:cursor-not-allowed disabled:opacity-50">
                 {placingOrder ? 'Preparing your order…' : !user ? <>Sign in to continue <ArrowRight size={16}/></> : <>{paymentMode === 'COD' ? 'Place order · cash on delivery' : paymentMode === 'online' ? 'Pay securely with Razorpay' : 'Place wallet order'} <ArrowRight size={16}/></>}
               </button>
               {paymentMode === 'WALLET' && walletBalance !== null && walletBalance < finalTotal && <p className="mt-1 text-center text-[10px] text-rose-700">Add funds to your wallet or choose Razorpay.</p>}
               <p className="mt-3 text-center text-[10px] leading-4 text-[#687466]">By placing your order, you agree to our <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold text-[#294434] underline underline-offset-2">Conditions of Sale</Link> and acknowledge the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold text-[#294434] underline underline-offset-2">Privacy Notice</Link>.</p>
               <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-[9px] font-medium text-[#687466]"><ShieldCheck size={12} className="text-[#526b4d]"/>{paymentMode === 'online' ? 'Payment details are handled securely by Razorpay.' : 'Your order total is shown clearly before confirmation.'}</p>
-            </form>
-            : <button type="button" onClick={continueToCheckout} className="mini-cart-primary-action mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#14251c] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-lg shadow-[#14251c]/15 transition">Continue to checkout <ArrowRight size={16}/></button>}
+            </form>}
           {!checkoutOpen && <p className="mt-2 text-center text-[9px] text-stone-400">Shipping and final discounts are confirmed at checkout.</p>}
         </footer>}
       </aside>
