@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Package, LogOut, Server } from 'lucide-react';
-import api from '../services/api';
-import { useToast } from '../context/ToastContext';
+import api from './services/api';
+import { useToast } from './context/ToastContext';
 import { useNavigate } from 'react-router-dom';
 
 export default function Warehouse() {

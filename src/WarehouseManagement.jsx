@@ -3,8 +3,8 @@ import {
   Store, ShieldCheck, Ban, Activity, DollarSign, Package, 
   Calendar, Search, RefreshCw, Plus, XCircle, TrendingUp 
 } from 'lucide-react';
-import api from '../../services/api';
-import { useToast } from '../../context/ToastContext';
+import api from './services/api';
+import { useToast } from './context/ToastContext';
 
 export default function WarehouseManagement() {
   const [activeTab, setActiveTab] = useState('analytics'); // 'analytics' or 'access'
