@@ -123,8 +123,6 @@ export default function MiniCart() {
   const [termsAccepted, setTermsAccepted] = useState(false);
   const [whatsappUpdatesOptIn, setWhatsappUpdatesOptIn] = useState(false);
   const [whatsappUpdatesAvailable, setWhatsappUpdatesAvailable] = useState(false);
-  const [impactAmount, setImpactAmount] = useState(0);
-  const [impactProject, setImpactProject] = useState('native-trees');
   const [celebrationEvent, setCelebrationEvent] = useState(null);
   const [savedListOpen, setSavedListOpen] = useState(false);
   const [busyCartItems, setBusyCartItems] = useState(() => new Set());
@@ -163,7 +161,7 @@ export default function MiniCart() {
   const standardShippingCost = Math.max(0, Number(settings?.standard_charge ?? settings?.default_shipping_charge ?? 50) || 0);
   const expressShippingCost = Math.max(0, Number(settings?.express_charge ?? 150) || 0);
   const shippingCost = rulePreview?.freeShipping || loyaltyFreeShipping ? 0 : shippingMethod === 'EXPRESS' ? expressShippingCost : standardShippingCost;
-  const finalTotal = Math.max(0, subtotal + shippingCost - discount - couponDiscount - tierDiscount - referralWalletAmount - loyaltyDiscount + (paymentMode === 'COD' ? impactAmount : 0));
+  const finalTotal = Math.max(0, subtotal + shippingCost - discount - couponDiscount - tierDiscount - referralWalletAmount - loyaltyDiscount);
   const recommendationsToShow = useMemo(() => {
     const cartIds = new Set(cartItems.map(item => String(item.product_id || item.product?.id || item.id)));
     return recommendations.filter(product => !cartIds.has(String(product.id || product._id))).slice(0, 4);
@@ -241,11 +239,19 @@ export default function MiniCart() {
 
   useEffect(() => {
     if (!isCartOpen) return undefined;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousDocumentOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
     const onKeyDown = event => {
       if (event.key === 'Escape') setIsCartOpen(false);
     };
     window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousDocumentOverflow;
+      window.removeEventListener('keydown', onKeyDown);
+    };
   }, [isCartOpen, setIsCartOpen]);
 
   useEffect(() => {
@@ -535,8 +541,6 @@ export default function MiniCart() {
         addressId: selectedAddress,
         deliveryType: shippingMethod.toLowerCase(),
         couponCode: appliedCoupon?.code || undefined,
-        impactAmount: paymentMode === 'COD' ? impactAmount : 0,
-        impactProject: paymentMode === 'COD' && impactAmount > 0 ? impactProject : undefined,
         notes: orderNotes.trim() || undefined,
         whatsappUpdatesOptIn,
         termsAccepted,
@@ -612,9 +616,17 @@ export default function MiniCart() {
   };
 
   return (
-    <div className="fixed inset-0 z-[200] overflow-hidden" role="presentation">
-      <button type="button" aria-label="Close cart" className="absolute inset-0 h-full w-full bg-[#13241b]/55 backdrop-blur-sm" onClick={() => setIsCartOpen(false)} />
-      <aside role="dialog" aria-modal="true" aria-labelledby="mini-cart-title" className="absolute inset-y-0 right-0 flex w-full max-w-[460px] flex-col border-l border-[#e8dcc4] bg-[#FDFBF7] text-[#1A1C18] shadow-2xl animate-in slide-in-from-right duration-300">
+    <Motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="mini-cart-overlay fixed inset-0 z-[200] overflow-hidden" role="presentation">
+      <Motion.button type="button" aria-label="Close cart" className="absolute inset-0 h-full w-full bg-[#14251c]/55 backdrop-blur-sm" onClick={() => setIsCartOpen(false)} />
+      <Motion.aside
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="mini-cart-title"
+        initial={{ x: '100%' }}
+        animate={{ x: 0 }}
+        transition={{ type: 'spring', damping: 34, stiffness: 320 }}
+        className="mini-cart-panel absolute inset-y-0 right-0 flex w-full max-w-[480px] flex-col border-l border-[#dedfd4] bg-[#f4f1e9] text-[#14251c] shadow-2xl"
+      >
         <AnimatePresence>
           {celebrationEvent && <Motion.div key={celebrationEvent.id} initial={{ opacity: 0, y: -18, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -12 }} className="absolute left-4 right-4 top-20 z-30 overflow-hidden rounded-2xl border border-[#c8d6ae] bg-[#f1f5e8] p-4 text-[#263d31] shadow-xl" aria-live="polite">
             <div className="absolute inset-0 pointer-events-none">
@@ -623,20 +635,20 @@ export default function MiniCart() {
             <div className="relative flex items-start gap-3"><span className="rounded-full bg-white p-2 text-[#536b4d]"><Sparkles size={17}/></span><div><p className="text-xs font-bold uppercase tracking-widest">A thoughtful choice</p><p className="mt-1 text-xs leading-5">We’ve added {celebrationEvent.productName} to your cart. Thank you for choosing with care.</p>{rulePreview?.gifts?.length > 0 && <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-800"><Gift size={14}/>Your cart includes an admin-configured gift reward.</p>}</div></div>
           </Motion.div>}
         </AnimatePresence>
-        <header className="flex items-center justify-between border-b border-[#e8dcc4] px-5 py-4 sm:px-6">
+        <header className="mini-cart-header relative flex items-center justify-between border-b border-[#dedfd4] px-5 py-5 sm:px-7">
           <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#8b5a2b]/10 text-[#8b5a2b]"><ShoppingBag size={19}/></span>
-            <div><h2 id="mini-cart-title" className="font-serif text-xl text-[#2C3E2D]">Your Cart <span className="font-sans text-sm text-stone-500">({cartCount} {cartCount === 1 ? 'item' : 'items'})</span></h2><p className="text-[10px] font-bold uppercase tracking-widest text-[#8b5a2b]">Thoughtfully chosen for you</p></div>
+            <Motion.span initial={{ scale: 0.7, rotate: -12 }} animate={{ scale: 1, rotate: 0 }} transition={{ type: 'spring', stiffness: 260, damping: 14 }} className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#14251c] text-[#e2d6b8] shadow-lg shadow-[#14251c]/15"><ShoppingBag size={19}/></Motion.span>
+            <div><h2 id="mini-cart-title" className="font-serif text-xl text-[#14251c]">Your cart <span className="font-sans text-sm font-medium text-[#687466]">({cartCount} {cartCount === 1 ? 'item' : 'items'})</span></h2><p className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-[#526b4d]">A little care, on its way</p></div>
           </div>
-          <button type="button" aria-label="Close cart" onClick={() => setIsCartOpen(false)} className="rounded-full p-2 text-stone-500 transition hover:bg-white hover:text-[#2C3E2D]"><X size={20}/></button>
+          <button type="button" aria-label="Close cart" onClick={() => setIsCartOpen(false)} className="rounded-full border border-[#dedfd4] bg-white/80 p-2.5 text-[#526b4d] shadow-sm transition hover:-rotate-90 hover:bg-[#14251c] hover:text-white"><X size={18}/></button>
         </header>
 
-        {cartItems.length > 0 && <div className="border-b border-[#e8dcc4] bg-white px-5 py-4 sm:px-6">
+        {cartItems.length > 0 && <div className="mini-cart-perks border-b border-[#dedfd4] px-5 py-4 sm:px-7">
           {rulePreview?.membershipTier && <p className="mb-3 border border-[#D4AF37]/35 bg-[#FFF8E7] px-3 py-2 text-[10px] font-bold uppercase tracking-widest text-[#765d17]">{rulePreview.membershipTier} member benefits</p>}
           {rulePreview?.tiers?.length > 0 && <div className="mb-3 space-y-2.5">
             {rulePreview.tiers.slice(0, 3).map(tier => <div key={tier.id}>
-              <div className="mb-1 flex justify-between gap-3 text-[10px] font-bold uppercase tracking-wider"><span className="truncate text-stone-600">{tier.badge || tier.name}</span><span className={tier.unlocked ? 'text-emerald-700' : 'text-[#8b5a2b]'}>{tier.unlocked ? 'Unlocked' : `Add ${formatPrice(tier.missingAmount)}`}</span></div>
-              <div className="h-1.5 overflow-hidden rounded-full bg-[#f3efe7]"><div className={`h-full transition-all ${tier.unlocked ? 'bg-emerald-500' : 'bg-[#8b5a2b]'}`} style={{ width: `${Math.min(100, Math.max(0, Number(tier.progressPct) || 0))}%` }}/></div>
+              <div className="mb-1 flex justify-between gap-3 text-[10px] font-bold uppercase tracking-wider"><span className="truncate text-stone-600">{tier.badge || tier.name}</span><span className={tier.unlocked ? 'text-emerald-700' : 'text-[#526b4d]'}>{tier.unlocked ? 'Unlocked' : `Add ${formatPrice(tier.missingAmount)}`}</span></div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-[#e8e8dd]"><Motion.div initial={{ width: 0 }} animate={{ width: `${Math.min(100, Math.max(0, Number(tier.progressPct) || 0))}%` }} transition={{ duration: 0.8, ease: 'easeOut' }} className={`h-full ${tier.unlocked ? 'bg-emerald-600' : 'bg-[#526b4d]'}`}/></div>
             </div>)}
           </div>}
           {rulePreview?.gifts?.length > 0 && <div className="flex items-center gap-2 text-xs font-semibold text-emerald-800"><Gift size={15}/>{rulePreview.gifts[0].productName ? `${rulePreview.gifts[0].productName} unlocked` : 'A free gift is unlocked'}{rulePreview.gifts.length > 1 ? ` + ${rulePreview.gifts.length - 1} more` : ''}</div>}
@@ -645,15 +657,18 @@ export default function MiniCart() {
             <span className="flex items-center gap-1.5 text-stone-500"><Truck size={13}/>{amountToFreeShipping > 0 ? `Add ${formatPrice(amountToFreeShipping)} for free delivery` : 'Free delivery unlocked'}</span>
             <span className={amountToFreeShipping > 0 ? 'text-[#8b5a2b]' : 'text-emerald-700'}>{Math.round(Math.max(0, Math.min(100, Number(shippingProgress) || 0)))}%</span>
           </div>
-          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#f3efe7]"><div className={`h-full transition-all ${amountToFreeShipping > 0 ? 'bg-[#8b5a2b]' : 'bg-emerald-500'}`} style={{ width: `${Math.max(0, Math.min(100, Number(shippingProgress) || 0))}%` }}/></div>
+          <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-[#e8e8dd]"><Motion.div initial={{ width: 0 }} animate={{ width: `${Math.max(0, Math.min(100, Number(shippingProgress) || 0))}%` }} transition={{ duration: 0.8, ease: 'easeOut' }} className={`h-full ${amountToFreeShipping > 0 ? 'bg-[#526b4d]' : 'bg-emerald-600'}`}/></div>
         </div>}
 
-        <div className="flex-1 space-y-4 overflow-y-auto px-5 py-4 sm:px-6">
-          {cartItems.length === 0 && <div className="flex min-h-56 flex-col items-center justify-center text-center">
-            <ShoppingBag size={42} className="text-[#8b5a2b]/40"/>
-            <p className="mt-4 font-serif text-xl text-[#2C3E2D]">Your cart is waiting</p>
-            <p className="mt-1 text-sm text-stone-500">Explore botanicals and add something you love.</p>
-            <button type="button" onClick={() => setIsCartOpen(false)} className="mt-5 rounded-xl bg-[#8b5a2b] px-5 py-3 text-xs font-bold uppercase tracking-widest text-white">Continue shopping</button>
+        <div className="mini-cart-scroll flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:px-7">
+          {cartItems.length === 0 && <div className="mini-cart-empty relative flex min-h-[360px] flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-[#dedfd4] bg-[#fbfaf5] px-8 text-center shadow-sm">
+            <span className="mini-cart-orbit mini-cart-orbit-one" aria-hidden="true"/>
+            <span className="mini-cart-orbit mini-cart-orbit-two" aria-hidden="true"/>
+            <Motion.span initial={{ scale: 0.7, y: 12 }} animate={{ scale: 1, y: 0 }} transition={{ type: 'spring', stiffness: 180, damping: 15 }} className="relative flex h-20 w-20 items-center justify-center rounded-full border border-[#d7dfce] bg-white text-[#526b4d] shadow-[0_12px_36px_rgba(20,37,28,0.1)]"><ShoppingBag size={31} strokeWidth={1.4}/><Sparkles size={15} className="absolute -right-1 top-1 text-[#b39a58]"/></Motion.span>
+            <p className="relative mt-6 text-[9px] font-bold uppercase tracking-[0.24em] text-[#526b4d]">Your next ritual starts here</p>
+            <p className="relative mt-2 font-serif text-2xl text-[#14251c]">Your cart is taking a breath</p>
+            <p className="relative mt-2 max-w-[250px] text-sm leading-6 text-[#687466]">Discover thoughtfully made essentials, chosen to feel good every day.</p>
+            <button type="button" onClick={() => setIsCartOpen(false)} className="relative mt-7 inline-flex items-center gap-2 rounded-full bg-[#14251c] px-6 py-3 text-[10px] font-bold uppercase tracking-[0.16em] text-white shadow-lg shadow-[#14251c]/15 transition duration-300 hover:-translate-y-0.5 hover:bg-[#294434]">Explore the collection <ArrowRight size={14}/></button>
           </div>}
           {cartItems.length > 0 && <>
             <AnimatePresence initial={false}>
@@ -664,8 +679,8 @@ export default function MiniCart() {
               const price = Number(product.discount_price || item.unit_price || product.price) || 0;
               const itemBusy = busyCartItems.has(String(id));
               const saved = isWishlisted(id);
-              return <Motion.article layout initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, x: 24 }} key={id} className={`flex gap-3 rounded-2xl border border-[#e8dcc4] bg-white p-3 transition-opacity ${itemBusy ? 'opacity-60' : ''}`}>
-                <img src={getImageUrl(image)} alt={product.name || 'Cart product'} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-[76px] w-[76px] shrink-0 rounded-xl border border-[#f0e8da] bg-[#faf8f5] object-contain p-1"/>
+              return <Motion.article layout initial={{ opacity: 0, y: 16, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, x: 28, scale: 0.97 }} transition={{ type: 'spring', stiffness: 280, damping: 24 }} key={id} className={`mini-cart-item flex gap-3 rounded-2xl border border-[#e1e3d9] bg-[#fffefa] p-3.5 transition-opacity ${itemBusy ? 'opacity-60' : ''}`}>
+                <div className="mini-cart-product-image flex h-[82px] w-[82px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#e5e7de] bg-[#f0f2e9]"><img src={getImageUrl(image)} alt={product.name || 'Cart product'} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-full w-full object-contain p-2 transition-transform duration-500 hover:scale-110"/></div>
                 <div className="min-w-0 flex-1">
                   <div className="flex items-start justify-between gap-2"><h3 className="line-clamp-2 text-sm font-semibold leading-snug text-[#2C3E2D]">{product.name || 'Bhumivera product'}</h3><button type="button" aria-label={`Remove ${product.name || 'product'}`} disabled={itemBusy} onClick={() => removeCartItem(id)} className="shrink-0 rounded-lg p-1.5 text-stone-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:cursor-wait"><Trash2 size={15}/></button></div>
                   {product.sku && <p className="mt-1 text-[9px] font-bold uppercase tracking-wider text-stone-400">SKU: {product.sku}</p>}
@@ -673,12 +688,12 @@ export default function MiniCart() {
                     <Star size={11} fill="currentColor"/> {Number(product.rating).toFixed(1)} <span className="text-stone-500">({Number(product.review_count)} reviews)</span>
                   </button>}
                   <div className="mt-2 flex items-center justify-between gap-2">
-                    <div className="flex items-center rounded-lg border border-[#e8dcc4] bg-[#faf8f5]">
-                      <button type="button" aria-label="Decrease quantity" disabled={itemBusy || Number(item.quantity || 1) <= 1} onClick={() => changeCartQuantity(id, Number(item.quantity || 1) - 1)} className="p-1.5 text-stone-600 hover:text-[#8b5a2b] disabled:cursor-not-allowed disabled:opacity-40"><Minus size={13}/></button>
-                      <span className="min-w-7 text-center text-xs font-bold">{item.quantity || 1}</span>
-                      <button type="button" aria-label="Increase quantity" disabled={itemBusy} onClick={() => changeCartQuantity(id, Number(item.quantity || 1) + 1)} className="p-1.5 text-stone-600 hover:text-[#8b5a2b] disabled:cursor-wait disabled:opacity-40"><Plus size={13}/></button>
+                    <div className="mini-cart-quantity flex items-center rounded-full border border-[#dfe3d8] bg-[#f5f6f0]">
+                      <button type="button" aria-label="Decrease quantity" disabled={itemBusy || Number(item.quantity || 1) <= 1} onClick={() => changeCartQuantity(id, Number(item.quantity || 1) - 1)} className="rounded-full p-1.5 text-[#526b4d] transition hover:bg-[#14251c] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"><Minus size={12}/></button>
+                      <span className="min-w-7 text-center text-xs font-bold text-[#14251c]">{item.quantity || 1}</span>
+                      <button type="button" aria-label="Increase quantity" disabled={itemBusy} onClick={() => changeCartQuantity(id, Number(item.quantity || 1) + 1)} className="rounded-full p-1.5 text-[#526b4d] transition hover:bg-[#14251c] hover:text-white disabled:cursor-wait disabled:opacity-40"><Plus size={12}/></button>
                     </div>
-                    <span className="text-sm font-bold text-[#8b5a2b]">{formatPrice(price * (Number(item.quantity) || 1))}</span>
+                    <span className="text-sm font-bold text-[#14251c]">{formatPrice(price * (Number(item.quantity) || 1))}</span>
                   </div>
                   <button type="button" disabled={itemBusy} onClick={() => saveForLater(item)} className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-semibold text-stone-500 transition hover:text-[#8b5a2b] disabled:cursor-wait">
                     <Heart size={13} fill={saved ? 'currentColor' : 'none'} className={saved ? 'text-[#8b5a2b]' : ''}/>
@@ -694,8 +709,8 @@ export default function MiniCart() {
               <span className="flex items-center gap-1.5"><BadgeCheck size={14} className="text-[#8b5a2b]"/>Customer-approved reviews</span>
             </div>
 
-            {checkoutOpen && <section className="space-y-4 rounded-2xl border border-[#c9d4bd] bg-[#f5f6ef] p-4" aria-labelledby="mini-checkout-title">
-              <div><p className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#72825f]">A calm, considered finish</p><h3 id="mini-checkout-title" className="mt-1 flex items-center gap-2 font-serif text-lg text-[#263d31]"><MapPin size={17}/>Delivery &amp; payment</h3></div>
+            {checkoutOpen && <section className="mini-cart-checkout space-y-4 rounded-2xl border border-[#d9dfd2] bg-[#f8f8f2] p-4" aria-labelledby="mini-checkout-title">
+              <div className="flex items-center justify-between gap-3"><div><p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#526b4d]">One last step</p><h3 id="mini-checkout-title" className="mt-1 flex items-center gap-2 font-serif text-lg text-[#14251c]"><MapPin size={17}/>Delivery &amp; payment</h3></div><button type="button" onClick={() => setCheckoutOpen(false)} className="rounded-full border border-[#dfe3d8] bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#526b4d] transition hover:border-[#14251c] hover:bg-[#14251c] hover:text-white">Edit cart</button></div>
               {!user ? <button type="button" onClick={() => { setIsCartOpen(false); navigate('/login', { state: { from: '/checkout', reopenCart: true } }); }} className="w-full rounded-xl bg-[#2C3E2D] px-4 py-3 text-sm font-semibold text-white">Sign in to continue</button> : <>
                 <div className="space-y-2">
                   <div className="flex items-center justify-between gap-3"><p className="text-xs font-bold text-[#35533c]">Delivery address</p><button type="button" onClick={() => setAddressFormOpen(open => !open)} className="text-xs font-semibold text-[#8b5a2b] underline underline-offset-2">{addressFormOpen ? 'Cancel' : '+ Add address'}</button></div>
@@ -720,8 +735,8 @@ export default function MiniCart() {
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs font-bold text-[#35533c]">Payment method</p>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'online'} onChange={() => { setPaymentMode('online'); setImpactAmount(0); }} className="accent-[#35533c]"/>Pay securely with Razorpay <span className="ml-auto text-[9px] font-bold uppercase tracking-wide text-emerald-700">Recommended</span></label>
-                  <label className="flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><span className="flex items-center gap-2"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'WALLET'} onChange={() => { setPaymentMode('WALLET'); setImpactAmount(0); }} className="accent-[#35533c]"/>Bhumivera wallet</span><span className="text-stone-500">{walletBalance === null ? 'Balance unavailable' : `Balance ${formatPrice(walletBalance)}`}</span></label>
+                  <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'online'} onChange={() => setPaymentMode('online')} className="accent-[#35533c]"/>Pay securely with Razorpay <span className="ml-auto text-[9px] font-bold uppercase tracking-wide text-emerald-700">Recommended</span></label>
+                  <label className="flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><span className="flex items-center gap-2"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'WALLET'} onChange={() => setPaymentMode('WALLET')} className="accent-[#35533c]"/>Bhumivera wallet</span><span className="text-stone-500">{walletBalance === null ? 'Balance unavailable' : `Balance ${formatPrice(walletBalance)}`}</span></label>
                   {walletBalanceError && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-[10px] text-rose-700">{walletBalanceError}</p>}
                   <label className={`flex items-center gap-2 rounded-xl border bg-white p-3 text-xs ${codEligibility.eligible ? 'cursor-pointer border-[#e8dcc4]' : 'cursor-not-allowed border-[#e8dcc4] opacity-70'}`}><input type="radio" name="mini-cart-payment" checked={paymentMode === 'COD'} disabled={!codEligibility.eligible} onChange={() => setPaymentMode('COD')} className="accent-[#35533c]"/>Cash on delivery</label>
                   <p role="status" className="rounded-lg bg-[#f7f3ea] px-3 py-2 text-[10px] leading-4 text-stone-600">
@@ -744,13 +759,6 @@ export default function MiniCart() {
                   </label> : <p>WhatsApp order alerts are currently unavailable. You can still track orders from your account.</p>}
                 </div>
 
-                {paymentMode === 'COD' && <div className="rounded-xl border border-[#d7dfce] bg-white p-3">
-                  <p className="flex items-center gap-2 text-xs font-semibold text-[#35533c]"><Leaf size={15}/>An optional pledge, with a clear record</p>
-                  <p className="mt-1 text-[10px] leading-4 text-stone-500">Your purchase alone is not counted as an environmental contribution. If you choose to pledge, it is recorded after delivery and cash reconciliation; see the public ledger for verified updates.</p>
-                  <Link to="/impact" onClick={() => setIsCartOpen(false)} className="mt-2 inline-block text-[10px] font-semibold text-[#536b4d] underline">Read the impact ledger</Link>
-                  <div className="mt-2 flex flex-wrap gap-1.5">{[0, 50, 100, 250].map(amount => <button key={amount} type="button" aria-pressed={impactAmount === amount} onClick={() => setImpactAmount(amount)} className={`rounded-lg border px-2.5 py-1.5 text-[10px] font-semibold ${impactAmount === amount ? 'border-[#35533c] bg-[#35533c] text-white' : 'border-[#e8dcc4] text-[#35533c]'}`}>{amount ? formatPrice(amount) : 'No pledge'}</button>)}</div>
-                  {impactAmount > 0 && <select aria-label="Choose pledge focus" value={impactProject} onChange={event => setImpactProject(event.target.value)} className="mt-2 w-full rounded-lg border border-stone-200 bg-white px-2.5 py-2 text-xs"><option value="native-trees">Native tree restoration</option><option value="river-care">River care</option><option value="community-care">Community care</option></select>}
-                </div>}
                 <label className="block text-[10px] font-semibold text-stone-600">Delivery note (optional)<textarea rows={2} value={orderNotes} onChange={event => setOrderNotes(event.target.value)} className="mt-1 w-full resize-none rounded-lg border border-stone-200 bg-white px-3 py-2 text-xs" placeholder="Anything the delivery team should know?"/></label>
               </>}
             </section>}
@@ -845,7 +853,7 @@ export default function MiniCart() {
           </section>}
         </div>
 
-        {cartItems.length > 0 && <footer className="border-t border-[#e8dcc4] bg-white px-5 py-4 shadow-[0_-8px_24px_rgba(44,62,45,0.05)] sm:px-6">
+        {cartItems.length > 0 && <footer className="mini-cart-footer border-t border-[#dedfd4] bg-[#fbfaf5] px-5 py-4 shadow-[0_-10px_30px_rgba(20,37,28,0.08)] sm:px-7">
           <div className="space-y-2 text-xs">
             <div className="flex justify-between text-stone-600"><span>Subtotal</span><strong className="text-[#1A1C18]">{formatPrice(subtotal)}</strong></div>
             {discount > 0 && <div className="flex justify-between font-semibold text-emerald-700"><span>Cart rewards</span><span>−{formatPrice(discount)}</span></div>}
@@ -855,23 +863,21 @@ export default function MiniCart() {
             {loyalty?.enabled && Number(loyalty?.pointsBalance) >= Number(loyalty?.minimumRedemptionPoints) && pointsRedemption.points > 0 && <label className="flex items-center justify-between gap-3 font-semibold text-emerald-700"><span className="flex items-center gap-2"><input type="checkbox" checked={redeemLoyaltyPoints} onChange={event => setRedeemLoyaltyPoints(event.target.checked)} className="accent-[#35533c]"/>Use {(redeemLoyaltyPoints ? loyaltyPointsToRedeem : pointsRedemption.points).toLocaleString()} loyalty points</span><span>{loyaltyDiscount > 0 ? `−${formatPrice(loyaltyDiscount)}` : 'Not applied'}</span></label>}
             {loyaltyPointsEarnedEstimate > 0 && <div className="flex justify-between text-[10px] text-stone-500"><span>Estimated points after order confirmation</span><span>+{loyaltyPointsEarnedEstimate.toLocaleString()}</span></div>}
             {checkoutOpen && <div className="flex justify-between text-stone-600"><span>{shippingMethod === 'EXPRESS' ? 'Express delivery' : 'Standard delivery'}</span><span>{shippingCost ? formatPrice(shippingCost) : 'Free'}</span></div>}
-            {checkoutOpen && impactAmount > 0 && paymentMode === 'COD' && <div className="flex justify-between text-[#536b4d]"><span>Optional nature pledge</span><span>{formatPrice(impactAmount)}</span></div>}
-            <div className="flex justify-between border-t border-[#f0e8da] pt-2 text-sm font-bold text-[#2C3E2D]"><span>{checkoutOpen ? 'Order total' : 'Estimated total*'}</span><span>{formatPrice(checkoutOpen ? finalTotal : Math.max(0, subtotal - discount - couponDiscount - tierDiscount - referralWalletAmount - loyaltyDiscount))}</span></div>
+            <div className="flex justify-between border-t border-[#e5e7de] pt-2 text-sm font-bold text-[#14251c]"><span>{checkoutOpen ? 'Order total' : 'Estimated total*'}</span><span>{formatPrice(checkoutOpen ? finalTotal : Math.max(0, subtotal - discount - couponDiscount - tierDiscount - referralWalletAmount - loyaltyDiscount))}</span></div>
           </div>
           {checkoutOpen
             ? <form onSubmit={placeOrder}>
-              <button type="submit" disabled={placingOrder || !user || (paymentMode === 'WALLET' && (walletBalance === null || walletBalance < finalTotal))} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#2C3E2D] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-md transition hover:bg-[#1b2c20] disabled:cursor-not-allowed disabled:opacity-50">
-                {placingOrder ? 'Preparing your order…' : <>{paymentMode === 'COD' ? 'Place order · cash on delivery' : paymentMode === 'online' ? 'Pay securely with Razorpay' : 'Place wallet order'} <ArrowRight size={16}/></>}
+              <button type={user ? 'submit' : 'button'} onClick={!user ? continueToCheckout : undefined} disabled={placingOrder || (user && paymentMode === 'WALLET' && (walletBalance === null || walletBalance < finalTotal))} className="mini-cart-primary-action mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#14251c] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-lg shadow-[#14251c]/15 transition disabled:cursor-not-allowed disabled:opacity-50">
+                {placingOrder ? 'Preparing your order…' : !user ? <>Sign in to continue <ArrowRight size={16}/></> : <>{paymentMode === 'COD' ? 'Place order · cash on delivery' : paymentMode === 'online' ? 'Pay securely with Razorpay' : 'Place wallet order'} <ArrowRight size={16}/></>}
               </button>
-              <button type="button" onClick={() => setCheckoutOpen(false)} className="mt-2 w-full py-2 text-xs font-semibold text-stone-500 hover:text-[#2C3E2D]">Back to cart</button>
               {paymentMode === 'WALLET' && walletBalance !== null && walletBalance < finalTotal && <p className="mt-1 text-center text-[10px] text-rose-700">Add funds to your wallet or choose Razorpay.</p>}
-              <label className="mt-2 flex items-start gap-2 text-[10px] leading-4 text-stone-600"><input type="checkbox" checked={termsAccepted} onChange={event => setTermsAccepted(event.target.checked)} className="mt-0.5 accent-[#35533c]"/><span>I agree to the <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold underline">Conditions of Sale</Link> and acknowledge the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline">Privacy Notice</Link>.</span></label>
-              <p className="mt-1 text-center text-[9px] leading-4 text-stone-500">Your selected address, delivery, payment and pledge are confirmed before placing this order.</p>
+              <label className="mini-cart-terms mt-3 flex cursor-pointer items-start gap-2.5 rounded-xl border border-[#e5e7de] bg-white px-3 py-2.5 text-[10px] leading-4 text-[#59665a]"><input type="checkbox" checked={termsAccepted} onChange={event => setTermsAccepted(event.target.checked)} className="mt-0.5 accent-[#14251c]"/><span>I agree to the <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold text-[#294434] underline underline-offset-2">Conditions of Sale</Link> and acknowledge the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold text-[#294434] underline underline-offset-2">Privacy Notice</Link>.</span></label>
+              <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-[9px] font-medium text-[#687466]"><ShieldCheck size={12} className="text-[#526b4d]"/>{paymentMode === 'online' ? 'Payment details are handled securely by Razorpay.' : 'Your order total is shown clearly before confirmation.'}</p>
             </form>
-            : <button type="button" onClick={continueToCheckout} className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#8b5a2b] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.16em] text-white shadow-md transition hover:bg-[#6b4421]">Continue to checkout <ArrowRight size={16}/></button>}
+            : <button type="button" onClick={continueToCheckout} className="mini-cart-primary-action mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#14251c] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-lg shadow-[#14251c]/15 transition">Continue to checkout <ArrowRight size={16}/></button>}
           {!checkoutOpen && <p className="mt-2 text-center text-[9px] text-stone-400">Shipping and final discounts are confirmed at checkout.</p>}
         </footer>}
-      </aside>
-    </div>
+      </Motion.aside>
+    </Motion.div>
   );
 }

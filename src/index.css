@@ -210,3 +210,133 @@ html.native-app .mobile-bottom-nav {
 html.native-app .site-shell > footer {
   display: none;
 }
+
+.mini-cart-overlay {
+  isolation: isolate;
+  overscroll-behavior: contain;
+}
+
+.mini-cart-panel {
+  padding-top: var(--sat);
+  padding-bottom: var(--sab);
+  box-shadow: -24px 0 80px rgba(9, 25, 17, 0.2);
+}
+
+.mini-cart-header {
+  background:
+    radial-gradient(ellipse at 92% 0%, rgba(82, 107, 77, 0.12), transparent 44%),
+    linear-gradient(135deg, #fbfaf5 0%, #f4f1e9 100%);
+}
+
+.mini-cart-perks {
+  background: linear-gradient(180deg, #fbfaf5 0%, #f2f3eb 100%);
+}
+
+.mini-cart-scroll {
+  overscroll-behavior: contain;
+  scrollbar-color: #bdc7b5 transparent;
+  scrollbar-width: thin;
+}
+
+.mini-cart-scroll::-webkit-scrollbar {
+  width: 5px;
+}
+
+.mini-cart-scroll::-webkit-scrollbar-thumb {
+  border-radius: 999px;
+  background: #bdc7b5;
+}
+
+.mini-cart-item {
+  box-shadow: 0 3px 12px rgba(20, 37, 28, 0.035);
+  transition: border-color 180ms ease, box-shadow 220ms ease, transform 220ms ease;
+}
+
+.mini-cart-item:hover {
+  transform: translateY(-2px);
+  border-color: #bdc7b5;
+  box-shadow: 0 12px 28px rgba(20, 37, 28, 0.09);
+}
+
+.mini-cart-empty {
+  background:
+    radial-gradient(ellipse at 50% 0%, rgba(82, 107, 77, 0.09), transparent 52%),
+    #fbfaf5;
+}
+
+.mini-cart-orbit {
+  position: absolute;
+  width: 230px;
+  height: 230px;
+  border: 1px solid rgba(82, 107, 77, 0.1);
+  border-radius: 50%;
+  pointer-events: none;
+}
+
+.mini-cart-orbit-one {
+  animation: mini-cart-orbit 18s linear infinite;
+}
+
+.mini-cart-orbit-two {
+  width: 300px;
+  height: 300px;
+  border-style: dashed;
+  border-color: rgba(196, 170, 103, 0.13);
+  animation: mini-cart-orbit 28s linear infinite reverse;
+}
+
+.mini-cart-checkout {
+  box-shadow: inset 0 1px rgba(255, 255, 255, 0.85), 0 8px 24px rgba(20, 37, 28, 0.04);
+}
+
+.mini-cart-primary-action {
+  position: relative;
+  overflow: hidden;
+  transition: background-color 180ms ease, box-shadow 180ms ease, transform 180ms ease;
+}
+
+.mini-cart-primary-action::after {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(110deg, transparent 25%, rgba(255, 255, 255, 0.14) 48%, transparent 70%);
+  content: "";
+  transform: translateX(-120%);
+  transition: transform 600ms ease;
+}
+
+.mini-cart-primary-action:hover:not(:disabled) {
+  transform: translateY(-1px);
+  background-color: #294434;
+  box-shadow: 0 12px 24px rgba(20, 37, 28, 0.2);
+}
+
+.mini-cart-primary-action:hover:not(:disabled)::after {
+  transform: translateX(120%);
+}
+
+.mini-cart-terms input {
+  accent-color: var(--bhumivera-forest);
+}
+
+.mini-cart-footer {
+  padding-bottom: calc(1rem + var(--sab));
+}
+
+@keyframes mini-cart-orbit {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+@media (max-width: 480px) {
+  .mini-cart-panel {
+    border-left: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mini-cart-orbit-one,
+  .mini-cart-orbit-two {
+    animation: none;
+  }
+}
