@@ -68,7 +68,7 @@ export default function Footer() {
       <div className="border-t border-white/10 bg-[#0c1410]">
         <div className="mx-auto flex max-w-7xl flex-col items-center gap-5 px-5 py-7 sm:flex-row sm:justify-between sm:px-8 md:px-10">
           <Link to="/" aria-label="Bhumivera home" className="flex items-center gap-3">
-            <img src="/logo.webp" alt="" className="h-9 w-auto object-contain" />
+            <img src="/logo.webp" alt="" width="48" height="48" loading="lazy" decoding="async" className="h-12 w-12 object-contain" />
             <span className="font-serif text-sm tracking-[0.16em] text-white/75">BHUMIVERA</span>
           </Link>
           <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-[10px] text-white/45 sm:text-xs">

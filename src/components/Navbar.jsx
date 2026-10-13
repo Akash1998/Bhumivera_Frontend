@@ -134,7 +134,15 @@ export default function Navbar() {
           </button>
 
           <Link to="/" className="flex items-center space-x-3 group shrink-0" aria-label="Bhumivera Home">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-[#14251c] font-serif text-xl text-[#e0d4a6] shadow-sm transition-transform group-hover:scale-105">B</div>
+            <img
+              src="/logo.webp"
+              alt=""
+              width="44"
+              height="44"
+              fetchPriority="high"
+              decoding="async"
+              className="h-11 w-11 object-contain transition-transform group-hover:scale-105"
+            />
             <span className="hidden font-serif text-2xl uppercase tracking-[0.16em] text-[#14251c] sm:block">Bhumivera</span>
           </Link>
 

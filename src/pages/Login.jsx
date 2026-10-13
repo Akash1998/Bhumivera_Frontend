@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import api, { auth } from '../services/api';
 import { toast } from 'react-hot-toast';
-import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft, Leaf } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft } from 'lucide-react';
 
 const Login = () => {
   const [mode, setMode] = useState('OTP'); // OTP | PASSWORD
@@ -163,10 +163,10 @@ const Login = () => {
       <div className="w-full max-w-md relative">
         <div className="bg-white/85 backdrop-blur-md border border-[#0B2419]/10 rounded-3xl shadow-2xl p-7 md:p-8 overflow-hidden">
           <div className="text-center mb-7">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-[#0B2419] mb-4 shadow-lg">
-              <Leaf size={28} className="text-[#D4AF37]" />
+            <div className="mx-auto mb-4 inline-flex h-[76px] w-[76px] items-center justify-center overflow-hidden bg-[#14251c] shadow-lg">
+              <img src="/logo.webp" alt="Bhumivera tree emblem" width="72" height="72" fetchPriority="high" decoding="async" className="h-[72px] w-[72px] object-contain" />
             </div>
-            <h1 className="text-3xl font-serif text-[#0B2419] tracking-tight">Bhumivera</h1>
+            <h1 className="text-3xl font-serif text-[#14251c] tracking-tight">Bhumivera</h1>
             <p className="text-[#0B2419]/60 text-sm mt-2">Natural Purity. Premium Care.</p>
           </div>
 

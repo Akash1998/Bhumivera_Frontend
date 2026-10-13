@@ -156,6 +156,9 @@ export default function Register() {
             {view === 'INIT' && (
               <MotionDiv key="INIT" variants={viewVariants} initial="initial" animate="animate" exit="exit">
                 <div className="text-center mb-8 relative z-10">
+                  <div className="mx-auto mb-4 inline-flex h-[76px] w-[76px] items-center justify-center overflow-hidden bg-[#14251c] shadow-lg">
+                    <img src="/logo.webp" alt="Bhumivera tree emblem" width="72" height="72" fetchPriority="high" decoding="async" className="h-[72px] w-[72px] object-contain" />
+                  </div>
                   <h1 className="text-4xl font-serif text-[#0B2419] tracking-tight mb-2">Create Account</h1>
                   <p className="text-[#0B2419]/60 text-sm italic">Join the Bhumivera Botanical Registry</p>
                 </div>
