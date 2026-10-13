@@ -243,18 +243,25 @@ export default function Profile() {
 
   useEffect(() => {
     if (activeTab === 'security') {
-      authApi.listPasskeys()
+      authApi.listPasskeys(['admin', 'superadmin'].includes(user?.role) ? 'admin' : 'customer')
         .then(res => setPasskeys(res.data?.passkeys || []))
-        .catch(() => {});
+        .catch(error => {
+          console.error('[PROFILE_PASSKEY_LIST]', error);
+          setPasskeys([]);
+        });
     }
-  }, [activeTab]);
+  }, [activeTab, user?.role]);
 
   const handleRegisterPasskey = async () => {
     setLoadingPasskey(true);
+    const accountType = ['admin', 'superadmin'].includes(user?.role) ? 'admin' : 'customer';
     try {
-      await registerPasskey('Touch ID / Face ID (' + (navigator.platform || 'Device') + ')');
+      await registerPasskey({
+        accountType,
+        name: `Passkey (${navigator.platform || 'Device'})`,
+      });
       toast.success('Passkey registered successfully! You can now use biometrics to sign in.');
-      const res = await authApi.listPasskeys();
+      const res = await authApi.listPasskeys(accountType);
       setPasskeys(res.data?.passkeys || []);
     } catch (err) {
       toast.error(err.message || 'Passkey registration cancelled or failed.');
@@ -264,8 +271,9 @@ export default function Profile() {
   };
 
   const handleDeletePasskey = async (id) => {
+    const accountType = ['admin', 'superadmin'].includes(user?.role) ? 'admin' : 'customer';
     try {
-      await authApi.deletePasskey(id);
+      await authApi.deletePasskey(id, accountType);
       toast.success('Passkey removed.');
       setPasskeys(prev => prev.filter(p => p.id !== id));
     } catch (err) {
@@ -1833,11 +1841,12 @@ export default function Profile() {
                     <button
                       type="button"
                       onClick={handleRegisterPasskey}
-                      disabled={loadingPasskey}
+                      disabled={loadingPasskey || !isPasskeySupported()}
+                      title={isPasskeySupported() ? 'Add a passkey for biometric sign-in' : 'Passkeys require a supported browser and a secure website connection'}
                       className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B2419] text-[#D4AF37] text-xs font-bold uppercase tracking-wider hover:bg-[#1e4031] transition-all disabled:opacity-60 shrink-0"
                     >
                       <Plus className="w-4 h-4" />
-                      {loadingPasskey ? 'Registering…' : 'Add Passkey'}
+                      {loadingPasskey ? 'Registering…' : isPasskeySupported() ? 'Add Passkey' : 'Passkeys not supported'}
                     </button>
                   </div>
 

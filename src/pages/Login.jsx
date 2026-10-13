@@ -3,7 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import api, { auth } from '../services/api';
 import { toast } from 'react-hot-toast';
 import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft, Fingerprint, Key } from 'lucide-react';
-import { loginWithPasskey, storeBrowserPassword } from '../utils/webauthnClient';
+import { loginWithPasskey } from '../utils/webauthnClient';
 
 const Login = () => {
   const [mode, setMode] = useState('OTP'); // OTP | PASSWORD
@@ -92,12 +92,19 @@ const Login = () => {
   };
 
   const handlePasskeyLogin = async () => {
+    if (!email.trim()) {
+      toast.error('Enter your email address to use passkey sign-in.');
+      return;
+    }
     setLoading(true);
     try {
-      const res = await loginWithPasskey(email);
-      if (res?.token) {
-        _persistAndRedirect(res);
-        toast.success('Biometric authentication verified!');
+      const res = await loginWithPasskey(email, 'customer');
+      if (res?.requires2FA) {
+        setTwoFactorMethod(res.factor || 'authenticator');
+        setStep('2FA');
+        toast(res.message || 'Enter your verification code to continue.', { icon: 'ℹ️' });
+      } else if (res?.token) {
+        _persistAndRedirect(res, 'Biometric authentication verified!');
       } else {
         toast.error('Passkey sign-in failed. Please try again.');
       }

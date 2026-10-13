@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { Fingerprint } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { auth as authApi } from '../services/api';
+import { loginWithPasskey, registerPasskey } from '../utils/webauthnClient';
 import './AdminLogin.css';
 
 const API = import.meta.env.VITE_API_URL || 'https://service.Bhumivera.com';
@@ -51,6 +54,56 @@ const AdminLogin = () => {
     return regex.test(emailStr);
   };
 
+  const finishAdminSignIn = async data => {
+    await adminOtpVerify(data);
+    try {
+      const { data: passkeyData } = await authApi.listPasskeys('admin');
+      if (!passkeyData.passkeys?.length) {
+        setPassword('');
+        setStatus({ type: 'success', message: 'Sign-in complete. Set up a passkey now or continue to the admin portal.' });
+        setStep(3);
+        return;
+      }
+    } catch (error) {
+      console.error('[ADMIN_PASSKEY_LIST]', error);
+    }
+    navigate('/admin');
+  };
+
+  const handlePasskeyLogin = async () => {
+    setStatus({ type: '', message: '' });
+    if (!validateEmail(email)) {
+      setStatus({ type: 'error', message: 'Enter your authorized admin email to use passkey sign-in.' });
+      return;
+    }
+    setLoading(true);
+    try {
+      const data = await loginWithPasskey(email, 'admin');
+      if (!data?.token || !data.admin) throw new Error('Passkey sign-in did not return an admin session.');
+      await finishAdminSignIn(data);
+    } catch (error) {
+      setStatus({ type: 'error', message: error.response?.data?.message || error.message || 'Passkey sign-in failed.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRegisterPasskey = async () => {
+    setLoading(true);
+    setStatus({ type: '', message: '' });
+    try {
+      await registerPasskey({
+        accountType: 'admin',
+        name: `Admin passkey (${navigator.platform || 'Device'})`,
+      });
+      navigate('/admin');
+    } catch (error) {
+      setStatus({ type: 'error', message: error.response?.data?.message || error.message || 'Passkey setup failed.' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleRequestOtp = async (e) => {
     e.preventDefault();
     setShowLockoutBanner(false);
@@ -79,8 +132,7 @@ const AdminLogin = () => {
       }
       if (!res.ok) throw new Error(data.message || 'Failed to trigger OTP.');
       if (data.token) {
-        await adminOtpVerify(data);
-        navigate('/admin');
+        await finishAdminSignIn(data);
         return;
       }
       setResendSeconds(45);
@@ -121,9 +173,7 @@ const AdminLogin = () => {
       }
       if (!res.ok) throw new Error(data.message || 'Invalid or expired OTP.');
       
-      await adminOtpVerify(data);
-      setPassword('');
-      navigate('/admin');
+      await finishAdminSignIn(data);
     } catch (err) {
       setStatus({ type: 'error', message: err.message || 'Authentication failed.' });
     } finally {
@@ -147,7 +197,20 @@ const AdminLogin = () => {
           <span className="admin-login-badge">SECURE ADMIN PORTAL</span>
         </div>
 
-        {step === 1 ? (
+        {step === 3 ? (
+          <div className="admin-login-form">
+            <div className="admin-login-hint">
+              <h2>Enable passkey sign-in</h2>
+              <p>Use your device’s fingerprint, Face ID, screen lock, or a security key the next time you sign in.</p>
+            </div>
+            <button type="button" disabled={loading} className="admin-login-btn" onClick={handleRegisterPasskey}>
+              {loading ? 'SETTING UP PASSKEY...' : 'SET UP PASSKEY'}
+            </button>
+            <button type="button" disabled={loading} className="admin-login-back" onClick={() => navigate('/admin')}>
+              Continue to admin portal
+            </button>
+          </div>
+        ) : step === 1 ? (
           <form onSubmit={handleRequestOtp} className="admin-login-form">
             <div className="form-group">
               <label className="admin-login-label">ADMIN PASSWORD</label>
@@ -176,6 +239,11 @@ const AdminLogin = () => {
 
             <button type="submit" disabled={loading} className="admin-login-btn">
               {loading ? 'DEPLOYING OTP...' : 'REQUEST SECURE ACCESS'}
+            </button>
+            <div className="admin-login-hint">or</div>
+            <button type="button" disabled={loading} className="admin-login-btn" onClick={handlePasskeyLogin}>
+              <Fingerprint size={18} aria-hidden="true" />
+              {loading ? 'VERIFYING PASSKEY...' : 'SIGN IN WITH PASSKEY / FACE ID'}
             </button>
           </form>
         ) : (
