@@ -123,7 +123,6 @@ const Login = () => {
         return;
       }
       if (res.data?.token) {
-        storeBrowserPassword(email, password, res.data.user?.name);
         _persistAndRedirect(res.data);
       } else {
         toast.error('Login failed. Please try again.');

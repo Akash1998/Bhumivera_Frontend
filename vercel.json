@@ -5,6 +5,10 @@
       "source": "/((?!api|assets|.*\\..*).*)",
       "headers": [
         {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
           "key": "Cache-Control",
           "value": "no-cache, no-store, must-revalidate"
         }
@@ -13,6 +17,10 @@
     {
       "source": "/(.*).(webp|jpg|png|svg|xml|txt|css|js)",
       "headers": [
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
         {
           "key": "Cache-Control",
           "value": "public, max-age=31536000, immutable"
@@ -23,6 +31,10 @@
       "source": "/assets/(.*)",
       "headers": [
         {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
           "key": "Cache-Control",
           "value": "public, max-age=31536000, immutable"
         }
@@ -31,6 +43,10 @@
     {
       "source": "/index.html",
       "headers": [
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
         {
           "key": "Cache-Control",
           "value": "no-cache, no-store, must-revalidate"
@@ -45,6 +61,10 @@
       "source": "/(.*)",
       "headers": [
         {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
           "key": "Content-Security-Policy",
           "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://vercel.live https://www.google-analytics.com https://ssl.google-analytics.com https://www.googletagmanager.com https://overbridgenet.com https://checkout.razorpay.com https://cdn.razorpay.com blob:; script-src-elem 'self' 'unsafe-inline' 'unsafe-eval' https://challenges.cloudflare.com https://vercel.live https://www.google-analytics.com https://ssl.google-analytics.com https://www.googletagmanager.com https://overbridgenet.com https://checkout.razorpay.com https://cdn.razorpay.com blob:; worker-src 'self' blob:; frame-src 'self' https://challenges.cloudflare.com https://vercel.live https://*.google.com https://www.youtube-nocookie.com https://www.instagram.com https://checkout.razorpay.com https://api.razorpay.com; connect-src 'self' https://challenges.cloudflare.com https://vercel.live https://bhumivera-backend.railway.app https://bhumiverabackend-production.up.railway.app https://service.bhumivera.com https://www.google-analytics.com https://analytics.google.com https://*.google-analytics.com https://*.analytics.google.com https://*.r2.cloudflarestorage.com https://overbridgenet.com https://api.razorpay.com https://lumberjack.razorpay.com; img-src 'self' data: blob: https: https://*.google-analytics.com https://*.analytics.google.com https://*.razorpay.com; style-src 'self' 'unsafe-inline';"
         },
@@ -54,7 +74,7 @@
         },
         {
           "key": "X-Frame-Options",
-          "value": "SAMEORIGIN"
+          "value": "DENY"
         },
         {
           "key": "X-XSS-Protection",

@@ -28,22 +28,19 @@ export const isPasskeySupported = () => {
   return Boolean(hasCredentials && window.isSecureContext !== false);
 };
 
-export const storeBrowserPassword = (email, password, name) => {
-  if (typeof window === 'undefined') return false;
-  try {
-    const store = JSON.parse(localStorage.getItem('savedPasswords') || '{}');
-    store[email?.trim().toLowerCase()] = {
-      email: email?.trim().toLowerCase(),
-      password,
-      name,
-      savedAt: new Date().toISOString(),
-    };
-    localStorage.setItem('savedPasswords', JSON.stringify(store));
-    return true;
-  } catch (error) {
-    console.warn('[STORE_BROWSER_PASSWORD_ERROR]', error);
-    return false;
+/**
+ * Defensive Stub: Scrubbed to conform to ASVS Level 3 / Client-side Data Protection.
+ * Plaintext passwords must NEVER be persisted in browser local storage.
+ */
+export const storeBrowserPassword = () => {
+  if (typeof window !== 'undefined' && window.localStorage) {
+    try {
+      window.localStorage.removeItem('savedPasswords');
+    } catch {
+      // LocalStorage access restricted
+    }
   }
+  return false;
 };
 
 export const loginWithPasskey = async email => {
