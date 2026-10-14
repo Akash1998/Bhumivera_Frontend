@@ -29,7 +29,7 @@ import {
   ChevronRight, LayoutDashboard, Home, Building2, Map,
   Eye, X, Plus, Edit2, Trash2, Clock, CheckCircle2, AlertTriangle,
   Search, EyeOff, Copy, Send, ArrowRight, ArrowUpRight, ArrowDownLeft,
-  QrCode, Smartphone, HelpCircle, MessageSquare, Phone, Mail, ShoppingCart,
+  QrCode, Smartphone, HelpCircle, Phone, Mail, ShoppingCart,
   Filter, Calendar, Hash, Truck, PackageCheck, RotateCcw,
   ChevronDown, ChevronUp, Gift, PiggyBank, ShoppingBag,
   Leaf, Zap, Users, Coins, ExternalLink, Key, Camera, Image as ImageIcon, Fingerprint,
@@ -932,7 +932,6 @@ export default function Profile() {
     if (!referralUrl) { toast.error('Your referral link is still loading.'); return; }
     const text = `I'm shopping at Bhumivera. Join with my referral link: ${referralUrl}`;
     try {
-      if (via === 'wa') { window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank'); return; }
       if (via === 'email') { window.open(`mailto:?subject=${encodeURIComponent('Check out Bhumivera')}&body=${encodeURIComponent(text)}`, '_blank'); return; }
       if (via === 'x') { window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}`, '_blank'); return; }
       if (via === 'native' && navigator.share) { navigator.share({ title: 'Bhumivera', text, url: referralUrl }); return; }
@@ -2130,10 +2129,7 @@ export default function Profile() {
                       {referralQr && <a href={referralQr} download="bhumivera-referral-qr.png" className="mt-3 inline-flex min-h-10 items-center rounded-lg bg-[#0B2419] px-4 py-2 text-sm font-semibold text-white">Download QR code</a>}
                     </div>
                   </div>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5">
-                    <button onClick={() => shareVia('wa')} className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-stone-200 hover:border-emerald-300 hover:bg-emerald-50/50 transition-colors text-sm font-medium text-stone-700">
-                      <MessageSquare className="w-4 h-4 text-emerald-500"/> WhatsApp
-                    </button>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-5">
                     <button onClick={() => shareVia('email')} className="flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-stone-200 hover:border-rose-300 hover:bg-rose-50/50 transition-colors text-sm font-medium text-stone-700">
                       <Mail className="w-4 h-4 text-rose-500"/> Email
                     </button>
