@@ -242,6 +242,16 @@ function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const { setIsCartOpen } = useCart();
+  const [pwaUpdateWorker, setPwaUpdateWorker] = React.useState(null);
+
+  useEffect(() => {
+    const showUpdateNotice = event => setPwaUpdateWorker(event.detail?.worker || null);
+    window.addEventListener('bhumivera:pwa-update-ready', showUpdateNotice);
+    if (window.__bhumiveraWaitingWorker) {
+      setPwaUpdateWorker(window.__bhumiveraWaitingWorker);
+    }
+    return () => window.removeEventListener('bhumivera:pwa-update-ready', showUpdateNotice);
+  }, []);
 
   useEffect(() => {
     const handleDeepLink = event => {
@@ -291,6 +301,21 @@ function AppContent() {
 
   return (
     <div className={`flex min-h-screen flex-col ${isManagementView ? 'management-shell' : 'site-shell'}`}>
+      {pwaUpdateWorker && <div role="status" className="fixed inset-x-3 top-3 z-[300] mx-auto flex max-w-lg items-center justify-between gap-3 rounded-xl border border-[#c8d6ae] bg-[#fbfaf5] px-4 py-3 text-sm text-[#14251c] shadow-xl">
+        <span>A Bhumivera update is ready.</span>
+        <button
+          type="button"
+          onClick={() => {
+            window.dispatchEvent(new CustomEvent('bhumivera:pwa-apply-update', {
+              detail: { worker: pwaUpdateWorker },
+            }));
+            setPwaUpdateWorker(null);
+          }}
+          className="shrink-0 rounded-lg bg-[#14251c] px-3 py-2 text-xs font-bold text-white"
+        >
+          Update now
+        </button>
+      </div>}
       {!isManagementView && <Navbar />}
       {!isManagementView && <NetworkStatus />}
       

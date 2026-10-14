@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'bhumivera-offline-';
-const CACHE_NAME = `${CACHE_PREFIX}shell-v6`;
+const CACHE_NAME = `${CACHE_PREFIX}shell-v7`;
 const SHELL_URLS = ['/', '/index.html', '/manifest.json', '/logo.webp', '/favicon.ico', '/icon-192.png', '/icon-512.png', '/icon-maskable-512.png'];
 const PRIVATE_PATHS = ['/api', '/admin', '/warehouse', '/warehouseadmin', '/admin-login'];
 
@@ -7,8 +7,13 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => cache.addAll(SHELL_URLS))
-      .then(() => self.skipWaiting())
   );
+});
+
+self.addEventListener('message', event => {
+  if (event.data?.type === 'SKIP_WAITING') {
+    event.waitUntil(self.skipWaiting());
+  }
 });
 
 self.addEventListener('activate', event => {

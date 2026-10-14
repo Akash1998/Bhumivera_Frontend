@@ -903,8 +903,8 @@ export default function MiniCart() {
           </section>}
         </div>
 
-        {cartItems.length > 0 && <footer className={`mini-cart-footer shrink-0 border-t border-[#dedfd4] bg-[#fbfaf5] px-5 py-4 shadow-[0_-10px_30px_rgba(20,37,28,0.08)] sm:px-7 ${checkoutOpen ? 'flex h-[min(52vh,460px)] flex-col' : ''}`}>
-          <div className={checkoutOpen ? 'flex min-h-0 flex-1 flex-col text-xs' : 'space-y-2 text-xs'}>
+        {cartItems.length > 0 && <footer className={`mini-cart-footer shrink-0 border-t border-[#dedfd4] bg-[#fbfaf5] px-5 py-4 shadow-[0_-10px_30px_rgba(20,37,28,0.08)] sm:px-7 ${checkoutOpen ? `flex flex-col ${summaryExpanded ? 'h-[min(52vh,460px)]' : ''}` : ''}`}>
+          <div className={checkoutOpen && summaryExpanded ? 'flex min-h-0 flex-1 flex-col text-xs' : 'space-y-2 text-xs'}>
             <div className="flex items-center justify-between text-stone-600">
               <span className="flex items-center gap-2">
                 <span>Subtotal</span>
@@ -923,7 +923,7 @@ export default function MiniCart() {
             </div>
             <div
               id="mini-cart-summary-details"
-              className={`${checkoutOpen ? 'min-h-0 flex-1 overflow-y-auto pr-1' : ''} ${checkoutOpen && !summaryExpanded ? 'hidden' : 'space-y-2'}`}
+              className={`${checkoutOpen && summaryExpanded ? 'min-h-0 flex-1 overflow-y-auto pr-1' : ''} ${checkoutOpen && !summaryExpanded ? 'hidden' : 'space-y-2'}`}
             >
             {discount > 0 && <div className="flex justify-between text-[#526b4d]"><span>Cart offers</span><span>−{formatPrice(discount)}</span></div>}
             {couponDiscount > 0 && <div className="flex justify-between gap-3 font-extrabold text-[#8b5a2b]"><span className="min-w-0 truncate">Coupon{appliedCoupon?.code ? ` · ${appliedCoupon.code}` : ''}</span><span className="shrink-0">−{formatPrice(couponDiscount)}</span></div>}
