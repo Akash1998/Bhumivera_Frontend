@@ -148,6 +148,9 @@ export default function SystemLogs() {
                     <p className="mt-3 text-xs text-slate-400">Missing backend variables: {config?.missing?.join(', ') || 'provider credentials'}. Add these to the Railway backend service variables.</p>
                   ) : data.records?.length ? (
                     <div className="mt-3 overflow-auto">
+                      {data.sampleWindowMs ? (
+                        <p className="mb-2 text-[11px] text-slate-500">Stream sampled until idle ({(data.sampleWindowMs / 1000).toFixed(1)}s); records shown are the events returned during this sample.</p>
+                      ) : null}
                       <table className="w-full min-w-[600px] text-left text-xs">
                         <thead className="text-[10px] uppercase tracking-wider text-slate-500">
                           <tr><th className="p-2">Time</th><th className="p-2">Type / Status</th><th className="p-2">Details</th></tr>
@@ -165,7 +168,11 @@ export default function SystemLogs() {
                     </div>
                   ) : (
                     <p className="mt-3 text-xs text-slate-400">
-                      {provider === 'railway' ? 'No failing HTTP requests were returned for the last hour.' : 'No records were returned for this deployment.'}
+                      {provider === 'railway'
+                        ? 'No failing HTTP requests were returned for the last hour.'
+                        : provider === 'vercelRuntime'
+                          ? `No runtime log events were received in the ${((data.sampleWindowMs || 1500) / 1000).toFixed(1)}-second stream sample. This does not confirm that the deployment had no logs.`
+                          : 'No records were returned for this deployment.'}
                     </p>
                   )}
                 </section>
