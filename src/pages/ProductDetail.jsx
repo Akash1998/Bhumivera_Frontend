@@ -434,7 +434,7 @@ export default function ProductDetail() {
               </button>
 
               <div className="w-full mt-4">
-                <PincodeChecker />
+                <PincodeChecker useSavedAddress />
               </div>
             </div>
           </div>

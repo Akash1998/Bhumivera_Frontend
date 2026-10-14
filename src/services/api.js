@@ -474,7 +474,13 @@ export const reportClientError = error => {
     stack: typeof error?.stack === 'string' ? error.stack.slice(0, 8000) : null,
   }, { timeout: 3000 }).catch(() => null);
 };
-export const shipping = { getAll: () => api.get("/shipping"), create: d => api.post("/shipping", d), update: (id, d) => api.put(`/shipping/${id}`, d), delete: id => api.delete(`/shipping/${id}`) };
+export const shipping = {
+  getAll: () => api.get("/shipping"),
+  checkPincode: pincode => api.get(`/shipping/pincode/${encodeURIComponent(pincode)}`),
+  create: d => api.post("/shipping", d),
+  update: (id, d) => api.put(`/shipping/${id}`, d),
+  delete: id => api.delete(`/shipping/${id}`),
+};
 export const returns = { getMyReturns: () => api.get("/returns/my"), getEligibility: () => api.get("/returns/eligibility"), createUploadUrl: data => api.post('/returns/upload-url', data), submit: d => api.post("/returns", d), getAllAdmin: () => api.get("/returns/admin/all"), updateStatus: (id, data) => api.put(`/returns/admin/${id}`, typeof data === 'string' ? { status: data } : data) };
 export const inventory = { get: () => api.get("/inventory"), updateStock: (p, q) => api.put(`/inventory/${p}/stock`, { stock: q }) };
 export const warranty = { register: d => api.post("/warranty/register", d), getMyWarranties: () => api.get("/warranty/my"), getAllAdmin: () => api.get("/warranty"), updateStatus: (id, s) => api.patch(`/warranty/${id}/status`, { status: s }) };

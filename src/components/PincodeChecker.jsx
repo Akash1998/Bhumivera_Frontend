@@ -1,39 +1,88 @@
-import React, { useState } from 'react';
-import axios from 'axios';
+import React, { useCallback, useEffect, useState } from 'react';
 import { MapPin, CheckCircle2, AlertCircle, Clock, Truck } from 'lucide-react';
-import { BASE_URL } from '../services/api';
+import { addresses, shipping } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
-export default function PincodeChecker({ onPincodeVerified }) {
+export default function PincodeChecker({ onPincodeVerified, useSavedAddress = false }) {
+  const { user, loading: authLoading } = useAuth();
   const [pincode, setPincode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [addressLoading, setAddressLoading] = useState(useSavedAddress);
+  const [savedAddressLabel, setSavedAddressLabel] = useState('');
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
 
-  const checkPincode = async (e) => {
-    e?.preventDefault();
+  const checkPincodeValue = useCallback(async value => {
     setError(null);
     setResult(null);
 
-    const cleanPincode = pincode.trim();
+    const cleanPincode = String(value || '').trim();
     if (!/^[1-9][0-9]{5}$/.test(cleanPincode)) {
       setError('Please enter a valid 6-digit Indian postal code.');
-      return;
+      return false;
     }
 
+    setPincode(cleanPincode);
     setLoading(true);
     try {
-      const { data } = await axios.get(`${BASE_URL}/api/shipping/pincode/${cleanPincode}`);
+      const { data } = await shipping.checkPincode(cleanPincode);
       if (data.success && data.serviceable) {
         setResult(data);
         if (onPincodeVerified) onPincodeVerified(data);
+        return true;
       } else {
         setError(data.message || 'Delivery is currently not available for this pincode.');
+        return false;
       }
     } catch (err) {
       setError(err.response?.data?.message || 'Could not verify delivery pincode.');
+      return false;
     } finally {
       setLoading(false);
     }
+  }, [onPincodeVerified]);
+
+  useEffect(() => {
+    if (!useSavedAddress || authLoading) return undefined;
+    if (!user?.id || ['admin', 'superadmin', 'warehouse_admin'].includes(user.role)) {
+      setAddressLoading(false);
+      return undefined;
+    }
+
+    let active = true;
+    setAddressLoading(true);
+    addresses.getAll()
+      .then(({ data }) => {
+        if (!active) return;
+        const savedAddresses = data?.addresses || data?.data || [];
+        const defaultAddress = savedAddresses.find(address => address.is_default || address.default) ||
+          savedAddresses[0];
+        const savedPincode = String(
+          defaultAddress?.postal_code || defaultAddress?.pincode || defaultAddress?.zip || ''
+        ).trim();
+
+        if (!defaultAddress || !/^[1-9][0-9]{5}$/.test(savedPincode)) return;
+        setPincode(savedPincode);
+        setSavedAddressLabel(defaultAddress.label || 'Saved address');
+        void checkPincodeValue(savedPincode);
+      })
+      .catch(loadError => {
+        console.error('[PINCODE_SAVED_ADDRESS_LOAD]', loadError);
+        if (active) setError('Could not load your saved address. You can enter a pincode to check delivery.');
+      })
+      .finally(() => {
+        if (active) setAddressLoading(false);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [authLoading, checkPincodeValue, user?.id, user?.role, useSavedAddress]);
+
+  const checkPincode = event => {
+    event.preventDefault();
+    setSavedAddressLabel('');
+    void checkPincodeValue(pincode);
   };
 
   return (
@@ -49,19 +98,32 @@ export default function PincodeChecker({ onPincodeVerified }) {
             type="text"
             maxLength={6}
             value={pincode}
-            onChange={(e) => setPincode(e.target.value.replace(/\D/g, ''))}
+            onChange={(e) => {
+              setPincode(e.target.value.replace(/\D/g, ''));
+              setSavedAddressLabel('');
+            }}
             placeholder="Enter 6-digit Pincode (e.g. 713301)"
             className="w-full rounded-lg border border-stone-300 bg-white py-2 pl-9 pr-3 text-sm focus:border-[#607552] focus:outline-none focus:ring-1 focus:ring-[#607552]"
           />
         </div>
         <button
           type="submit"
-          disabled={loading || pincode.length !== 6}
+          disabled={loading || addressLoading || pincode.length !== 6}
           className="rounded-lg bg-[#0b2419] px-4 py-2 text-xs font-semibold uppercase tracking-wider text-white hover:bg-[#153e2c] disabled:opacity-50"
         >
           {loading ? 'Checking...' : 'Check'}
         </button>
       </form>
+
+      {savedAddressLabel && (
+        <p className="mt-2 text-[11px] text-stone-500">
+          Checking the pincode from your {savedAddressLabel.toLowerCase()} address.
+        </p>
+      )}
+
+      {addressLoading && (
+        <p className="mt-2 text-[11px] text-stone-500">Loading your saved delivery address...</p>
+      )}
 
       {error && (
         <div className="mt-2.5 flex items-center gap-1.5 text-xs text-red-600">
