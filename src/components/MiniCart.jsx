@@ -664,7 +664,7 @@ export default function MiniCart() {
           <button type="button" aria-label="Close cart" onClick={() => setIsCartOpen(false)} className="rounded-full border border-[#dedfd4] bg-white/80 p-2.5 text-[#526b4d] shadow-sm transition hover:-rotate-90 hover:bg-[#14251c] hover:text-white"><X size={18}/></button>
         </header>
 
-        <div className="mini-cart-scroll flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:px-7">
+        <div className="mini-cart-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:px-7">
           {cartItems.length === 0 && <div className="mini-cart-empty relative flex min-h-[360px] flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-[#dedfd4] bg-[#fbfaf5] px-8 text-center shadow-sm">
             <span className="mini-cart-orbit mini-cart-orbit-one" aria-hidden="true"/>
             <span className="mini-cart-orbit mini-cart-orbit-two" aria-hidden="true"/>
@@ -917,7 +917,7 @@ export default function MiniCart() {
           </section>}
         </div>
 
-        {cartItems.length > 0 && <footer className="mini-cart-footer border-t border-[#dedfd4] bg-[#fbfaf5] px-5 py-4 shadow-[0_-10px_30px_rgba(20,37,28,0.08)] sm:px-7">
+        {cartItems.length > 0 && <footer className="mini-cart-footer shrink-0 border-t border-[#dedfd4] bg-[#fbfaf5] px-5 py-4 shadow-[0_-10px_30px_rgba(20,37,28,0.08)] sm:px-7">
           <div className="space-y-2 text-xs">
             <div className="flex items-center justify-between text-stone-600">
               <span className="flex items-center gap-2">
