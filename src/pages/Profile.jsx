@@ -210,7 +210,7 @@ const StarsInput = ({ value, onChange, size='md', readonly=false }) => {
 
 export default function Profile() {
   const toast = useToast();
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
   const { addToCart } = useCart();
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('overview');
@@ -218,6 +218,8 @@ export default function Profile() {
   const mobileTabsRef = useRef(null);
 
   const [profileData, setProfileData] = useState({ name: '', phone: '', marketing_email_opt_in: false });
+  const [adPersonalizationOptIn, setAdPersonalizationOptIn] = useState(false);
+  const [adPreferenceSaving, setAdPreferenceSaving] = useState(false);
   const [whatsappOrderUpdatesOptIn, setWhatsappOrderUpdatesOptIn] = useState(false);
   const [whatsappPreferenceSaving, setWhatsappPreferenceSaving] = useState(false);
   const [whatsappAlertsAvailable, setWhatsappAlertsAvailable] = useState(false);
@@ -360,6 +362,7 @@ export default function Profile() {
         phone: u.phone || u.mobile || u.phone_number || '',
         marketing_email_opt_in: Boolean(Number(u.marketing_email_opt_in)),
       });
+      setAdPersonalizationOptIn(Boolean(Number(u.ad_personalization_opt_in)));
       setLoyaltyData({
         points: Math.max(0, Number(u.loyalty_points) || 0),
         lifetimePoints: Math.max(0, Number(u.loyalty_lifetime_points) || 0),
@@ -527,6 +530,24 @@ export default function Profile() {
       await usersApi.updateProfile(profileData);
       toast.success('Profile updated successfully');
     } catch (err) { toast.error(err.response?.data?.message || 'Failed to update profile'); }
+  };
+  const handleAdPersonalizationChange = async enabled => {
+    const previousValue = adPersonalizationOptIn;
+    setAdPersonalizationOptIn(enabled);
+    setAdPreferenceSaving(true);
+    try {
+      const response = await usersApi.updateAdPersonalizationPreference(enabled);
+      updateUser({
+        ad_personalization_opt_in: response.data?.ad_personalization_opt_in ? 1 : 0,
+        ad_personalization_consent_version: response.data?.ad_personalization_consent_version || null,
+      });
+      toast.success(enabled ? 'Personalized recommendations enabled.' : 'Personalization consent withdrawn.');
+    } catch (err) {
+      setAdPersonalizationOptIn(previousValue);
+      toast.error(err.response?.data?.message || 'Could not update the personalization preference.');
+    } finally {
+      setAdPreferenceSaving(false);
+    }
   };
   const handleWhatsAppPreferenceChange = async enabled => {
     setWhatsappPreferenceSaving(true);
@@ -1688,6 +1709,19 @@ export default function Profile() {
                       <span>
                         Email me promotional offers and product updates.
                         <span className="block mt-1 text-xs text-stone-500">Optional. You can change this preference any time. Order and account emails are not affected.</span>
+                      </span>
+                    </label>
+                    <label className="sm:col-span-2 flex items-start gap-3 rounded-xl border border-emerald-900/15 bg-emerald-50/60 p-4 text-sm text-stone-700">
+                      <input
+                        type="checkbox"
+                        checked={adPersonalizationOptIn}
+                        disabled={adPreferenceSaving}
+                        onChange={e => handleAdPersonalizationChange(e.target.checked)}
+                        className="mt-0.5 accent-[#0B2419]"
+                      />
+                      <span>
+                        Allow first-party product recommendations based on my purchases, saved products, approved reviews and product views while opted in.
+                        <span className="mt-1 block text-xs text-stone-500">Optional and separate from promotional email. Withdraw at any time by unchecking; stored product-view signals are deleted on withdrawal. This does not enable paid ads or third-party ad-network sharing. We do not collect Wi-Fi names, precise location, device fingerprints or raw IP for recommendations.</span>
                       </span>
                     </label>
                     <div className="sm:col-span-2">

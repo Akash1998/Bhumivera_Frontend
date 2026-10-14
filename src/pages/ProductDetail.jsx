@@ -93,7 +93,12 @@ export default function ProductDetail() {
   const { addToCart } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { user } = useAuth();
-  const canPersonalize = Boolean(user?.id && !['admin', 'superadmin', 'warehouse_admin'].includes(user.role));
+  const canPersonalize = Boolean(
+    user?.id &&
+    Number(user.ad_personalization_opt_in) === 1 &&
+    user.ad_personalization_consent_version === 'product-recommendations-v2' &&
+    !['admin', 'superadmin', 'warehouse_admin'].includes(user.role)
+  );
   
   const [product, setProduct] = useState(null);
   const [reviewsData, setReviewsData] = useState([]);

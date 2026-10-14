@@ -131,7 +131,12 @@ export default function PremiumHome() {
   const [activeQuestion, setActiveQuestion] = useState('ingredients');
   const heroProduct = products.find(product => /sea.?buckthorn/i.test(product.name)) || products[0];
   const activeFaq = questions.find(question => question.key === activeQuestion) || questions[0];
-  const canPersonalize = Boolean(user?.id && !['admin', 'superadmin', 'warehouse_admin'].includes(user.role));
+  const canPersonalize = Boolean(
+    user?.id &&
+    Number(user.ad_personalization_opt_in) === 1 &&
+    user.ad_personalization_consent_version === 'product-recommendations-v2' &&
+    !['admin', 'superadmin', 'warehouse_admin'].includes(user.role)
+  );
 
   useEffect(() => {
     let active = true;

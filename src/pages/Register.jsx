@@ -29,7 +29,8 @@ export default function Register() {
 
   const [view, setView] = useState('INIT');
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', securityAnswer: '', marketingEmailOptIn: false, referralCode: ''
+    name: '', email: '', password: '', securityAnswer: '', marketingEmailOptIn: false,
+    adPersonalizationOptIn: false, referralCode: ''
   });
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const otpRefs = useRef([]);
@@ -252,6 +253,20 @@ export default function Register() {
                       className="mt-0.5 accent-[#0B2419]"
                     />
                     <span>Send me emails and product updates. This is optional; I can change this preference in my profile at any time. Order and account emails are not affected.</span>
+                  </label>
+
+                  <label className="flex items-start gap-3 rounded-xl border border-emerald-800/20 bg-emerald-50/70 p-4 text-xs leading-relaxed text-[#0B2419]/75">
+                    <input
+                      type="checkbox"
+                      checked={formData.adPersonalizationOptIn}
+                      onChange={event => setFormData({ ...formData, adPersonalizationOptIn: event.target.checked })}
+                      disabled={loading}
+                      className="mt-0.5 accent-[#0B2419]"
+                    />
+                    <span>
+                      <strong className="block text-[#0B2419]">Optional: personalize Bhumivera product recommendations.</strong>
+                      If I opt in, Bhumivera may use my purchases, saved products, approved reviews, and product views recorded while I am opted in to tailor product recommendations on Bhumivera services. This is separate from promotional email consent and is not required to register. I can withdraw it later in Profile; stored product-view signals will then be deleted. It does not authorize selling this data or sharing it with third-party advertising networks. We do not collect Wi-Fi names, precise location, device fingerprints, or raw IP for recommendations; see the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline">Privacy Notice</Link>.
+                    </span>
                   </label>
 
                   <label className="flex items-start gap-3 rounded-xl border border-[#0B2419]/10 bg-white p-4 text-xs leading-relaxed text-[#0B2419]/75">

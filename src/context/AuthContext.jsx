@@ -151,6 +151,14 @@ export const AuthProvider = ({ children }) => {
   const warehouseLoginVerify = d => { const p = d.admin || d.user || d; const f = { ...p, role: p.role || 'warehouse_admin' }; const t = d.token || d.warehouseToken || d.ms_token; localStorage.setItem('warehouseToken', t); localStorage.setItem('token', t); localStorage.setItem('user', JSON.stringify(f)); setToken(t); setUser(f); return f; };
   const register = async d => (await authApi.register(d)).data;
   const verifyEmail = async dt => { const r = await authApi.verifyEmail(dt); const { token: nt, user: ud } = r.data; const d = decodeJWT(nt); const f = { ...ud, role: d?.role || ud?.role || 'user' }; localStorage.setItem('token', nt); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
+  const updateUser = updates => {
+    setUser(current => {
+      if (!current) return current;
+      const updated = { ...current, ...updates };
+      localStorage.setItem('user', JSON.stringify(updated));
+      return updated;
+    });
+  };
   const logout = async (scope) => {
     if (window.location.pathname.startsWith('/warehouse')) return;
     const isAdminPath = window.location.pathname.includes('/admin');
@@ -232,7 +240,7 @@ export const AuthProvider = ({ children }) => {
     };
   }, [user?.role, token]);
 
-  return <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, loading, login, mobileLogin, adminLogin, adminOtpVerify, warehouseLoginVerify, register, verifyEmail, logout }}>{!loading && children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, loading, login, mobileLogin, adminLogin, adminOtpVerify, warehouseLoginVerify, register, verifyEmail, updateUser, logout }}>{!loading && children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => useContext(AuthContext);

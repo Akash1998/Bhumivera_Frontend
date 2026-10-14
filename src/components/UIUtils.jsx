@@ -50,8 +50,7 @@ export function CookieConsent() {
         <div className="flex-1">
           <p className="text-white text-sm font-medium mb-1">🍪 We use cookies</p>
           <p className="text-gray-400 text-xs">
-            We use cookies to enhance your browsing experience, serve personalized ads or content, and analyze our traffic.
-            By clicking "Accept All", you consent to our use of cookies.
+            Essential browser storage supports sign-in and your cart. Personalized product recommendations are separately optional in your account settings. We do not use advertising cookies for this feature.
           </p>
         </div>
         <div className="flex gap-3 flex-shrink-0">
@@ -65,7 +64,7 @@ export function CookieConsent() {
             onClick={accept}
             className="px-5 py-2 bg-cyan-500 hover:bg-cyan-600 text-white text-sm font-semibold rounded-lg transition-colors"
           >
-            Accept All
+            Okay
           </button>
         </div>
       </div>
