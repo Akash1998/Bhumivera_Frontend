@@ -101,7 +101,7 @@ export default function MiniCart() {
   const [couponBusy, setCouponBusy] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [checkoutStep, setCheckoutStep] = useState(0);
-  const [checkoutDetailsExpanded, setCheckoutDetailsExpanded] = useState(false);
+  const [summaryExpanded, setSummaryExpanded] = useState(true);
   const checkoutOpen = checkoutStep > 0;
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState('');
@@ -302,7 +302,6 @@ export default function MiniCart() {
     if (!isCartOpen || sessionStorage.getItem('mini-cart-checkout') !== '1') return;
     sessionStorage.removeItem('mini-cart-checkout');
     setCheckoutStep(1);
-    setCheckoutDetailsExpanded(false);
     const pendingCoupon = sessionStorage.getItem('mini-cart-coupon');
     if (pendingCoupon) {
       setCouponCode(pendingCoupon);
@@ -432,7 +431,6 @@ export default function MiniCart() {
       return;
     }
     setCheckoutStep(1);
-    setCheckoutDetailsExpanded(false);
   };
 
   const continueToPayment = () => {
@@ -441,7 +439,6 @@ export default function MiniCart() {
       return;
     }
     setCheckoutStep(2);
-    setCheckoutDetailsExpanded(true);
   };
 
   const withBusyCartItem = async (productId, operation) => {
@@ -732,22 +729,13 @@ export default function MiniCart() {
             </div>}
 
             {checkoutOpen && <section className="mini-cart-checkout" aria-label="Checkout details">
-              <AnimatePresence initial={false}>
-              {checkoutDetailsExpanded && <Motion.div
-                id="mini-checkout-drawer"
-                initial={{ height: 0, opacity: 0 }}
-                animate={{ height: 'auto', opacity: 1 }}
-                exit={{ height: 0, opacity: 0 }}
-                transition={{ duration: 0.22, ease: 'easeInOut' }}
-                className="overflow-hidden"
-              >
               <div className="space-y-4 rounded-2xl border border-[#d9dfd2] bg-[#f8f8f2] p-4">
               <nav aria-label="Checkout progress" className="grid grid-cols-2 gap-2">
                 {['Delivery', 'Payment'].map((label, index) => {
                   const step = index + 1;
                   const active = checkoutStep === step;
                   const complete = checkoutStep > step;
-                  return <button type="button" key={label} disabled={step > checkoutStep} onClick={() => { setCheckoutStep(step); setCheckoutDetailsExpanded(true); }} aria-current={active ? 'step' : undefined} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold ${active ? 'bg-[#14251c] text-white' : complete ? 'bg-[#e8eee3] text-[#35533c]' : 'bg-white text-stone-400'}`}>
+                  return <button type="button" key={label} disabled={step > checkoutStep} onClick={() => setCheckoutStep(step)} aria-current={active ? 'step' : undefined} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold ${active ? 'bg-[#14251c] text-white' : complete ? 'bg-[#e8eee3] text-[#35533c]' : 'bg-white text-stone-400'}`}>
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/15 text-[10px]">{complete ? '✓' : step}</span>{label}
                   </button>;
                 })}
@@ -815,8 +803,6 @@ export default function MiniCart() {
                 </>}
               </>}
               </div>
-              </Motion.div>}
-              </AnimatePresence>
             </section>}
 
             {!checkoutOpen && <section className="overflow-hidden rounded-2xl border border-[#e8dcc4] bg-white">
@@ -917,24 +903,28 @@ export default function MiniCart() {
           </section>}
         </div>
 
-        {cartItems.length > 0 && <footer className="mini-cart-footer shrink-0 border-t border-[#dedfd4] bg-[#fbfaf5] px-5 py-4 shadow-[0_-10px_30px_rgba(20,37,28,0.08)] sm:px-7">
-          <div className="space-y-2 text-xs">
+        {cartItems.length > 0 && <footer className={`mini-cart-footer shrink-0 border-t border-[#dedfd4] bg-[#fbfaf5] px-5 py-4 shadow-[0_-10px_30px_rgba(20,37,28,0.08)] sm:px-7 ${checkoutOpen ? 'flex h-[min(52vh,460px)] flex-col' : ''}`}>
+          <div className={checkoutOpen ? 'flex min-h-0 flex-1 flex-col text-xs' : 'space-y-2 text-xs'}>
             <div className="flex items-center justify-between text-stone-600">
               <span className="flex items-center gap-2">
                 <span>Subtotal</span>
                 {checkoutOpen && <button
                   type="button"
-                  aria-label={checkoutDetailsExpanded ? 'Hide delivery details' : 'Show delivery details'}
-                  aria-expanded={checkoutDetailsExpanded}
-                  aria-controls="mini-checkout-drawer"
-                  onClick={() => setCheckoutDetailsExpanded(open => !open)}
+                  aria-label={summaryExpanded ? 'Hide order summary details' : 'Show order summary details'}
+                  aria-expanded={summaryExpanded}
+                  aria-controls="mini-cart-summary-details"
+                  onClick={() => setSummaryExpanded(open => !open)}
                   className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-[#d9dfd2] bg-white text-[#526b4d] shadow-sm transition hover:border-[#536b4d] hover:bg-[#f3f7ed] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536b4d]"
                 >
-                  {checkoutDetailsExpanded ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
+                  {summaryExpanded ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
                 </button>}
               </span>
               <strong className="text-[#1A1C18]">{formatPrice(subtotal)}</strong>
             </div>
+            <div
+              id="mini-cart-summary-details"
+              className={`${checkoutOpen ? 'min-h-0 flex-1 overflow-y-auto pr-1' : ''} ${checkoutOpen && !summaryExpanded ? 'hidden' : 'space-y-2'}`}
+            >
             {discount > 0 && <div className="flex justify-between text-[#526b4d]"><span>Cart offers</span><span>−{formatPrice(discount)}</span></div>}
             {couponDiscount > 0 && <div className="flex justify-between gap-3 font-extrabold text-[#8b5a2b]"><span className="min-w-0 truncate">Coupon{appliedCoupon?.code ? ` · ${appliedCoupon.code}` : ''}</span><span className="shrink-0">−{formatPrice(couponDiscount)}</span></div>}
             {tierDiscount > 0 && <div className="flex justify-between text-[#526b4d]"><span>Membership saving</span><span>−{formatPrice(tierDiscount)}</span></div>}
@@ -959,12 +949,13 @@ export default function MiniCart() {
               </div>
             </div>}
             {checkoutStep === 1 && shoppingWalletRewardEstimate > 0 && <div className="flex justify-between gap-3 text-[10px] text-[#526b4d]"><span>Est. shopping wallet reward after order</span><span className="shrink-0 font-bold">+{formatPrice(shoppingWalletRewardEstimate)}</span></div>}
-            <div className="flex justify-between border-t border-[#e5e7de] pt-2 text-sm font-extrabold text-[#14251c]"><span>{checkoutOpen ? 'Order total' : 'Estimated total*'}</span><span>{checkoutOpen ? formatPrice(finalTotal) : formatPrice(estimatedTotal)}</span></div>
+            </div>
+            <div className={`flex justify-between border-t border-[#e5e7de] pt-2 text-sm font-extrabold text-[#14251c] ${checkoutOpen ? 'mt-2 shrink-0' : ''}`}><span>{checkoutOpen ? 'Order total' : 'Estimated total*'}</span><span>{checkoutOpen ? formatPrice(finalTotal) : formatPrice(estimatedTotal)}</span></div>
           </div>
           {!checkoutOpen
-            ? <button type="button" onClick={continueToCheckout} className="mini-cart-primary-action mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#14251c] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-lg shadow-[#14251c]/15 transition">Continue to checkout <ArrowRight size={16}/></button>
+            ? <button type="button" onClick={continueToCheckout} className="mini-cart-primary-action mt-3 flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#14251c] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-lg shadow-[#14251c]/15 transition">Continue to checkout <ArrowRight size={16}/></button>
             : checkoutStep === 1
-              ? <button type="button" onClick={continueToPayment} className="mini-cart-primary-action mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#14251c] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-lg shadow-[#14251c]/15 transition">Continue to payment <ArrowRight size={16}/></button>
+              ? <button type="button" onClick={continueToPayment} className="mini-cart-primary-action mt-3 flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#14251c] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-lg shadow-[#14251c]/15 transition">Continue to payment <ArrowRight size={16}/></button>
               : <form onSubmit={placeOrder}>
               <div className="mb-2 flex items-center justify-between">
                 <button type="button" onClick={() => setCheckoutStep(1)} className="text-[10px] font-semibold text-[#526b4d] underline underline-offset-2">Back to delivery</button>
