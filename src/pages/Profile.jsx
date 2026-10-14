@@ -116,7 +116,7 @@ const needsRefundSupport = order => (
 const faqItems = [
   { q: 'How do I track my order?', a: 'Go to the Orders tab above and click the "Track" button next to your order. You will see live status updates including processing, packed, shipped, out for delivery and delivered timelines.' },
   { q: 'What is your return policy?', a: "Return requests open 30 minutes after verified delivery and follow the store's configured return window. Choose the order and item, add photos if helpful, and submit it for review. The order is not marked returned unless the team accepts the request." },
-  { q: 'How do Wallet and loyalty points work?', a: 'Spendable Wallet funds are a payment method. Loyalty points are separate, non-cash rewards that can only discount eligible website purchases at checkout. Referral balance is also order-only and applies under the current referral thresholds.' },
+  { q: 'How do Wallet and loyalty points work?', a: 'Spendable Wallet funds are a payment method. Shopping rewards and referral balance are non-withdrawable credits for website purchases; they apply automatically under the current eligible order thresholds. Loyalty points are separate, non-cash rewards that can only discount eligible website purchases at checkout.' },
   { q: 'Is my account secure?', a: 'Yes. We use bcrypt password hashing, signed JWT tokens and optional TOTP-based 2FA. We recommend enabling 2FA from the Security tab and setting a security question for password-recovery fallback.' },
   { q: 'How do I join the affiliate program?', a: 'Your referral link is available on the Affiliate tab. Share it with friends. Every signup and purchase made through your link tracks to your account. See the Affiliate tab for live stats and share buttons.' },
 ];
@@ -1358,8 +1358,8 @@ export default function Profile() {
                         <div className="text-sm text-stone-300 mb-1.5">Available Balance</div>
                         <div className="text-4xl sm:text-5xl font-bold tracking-tight">₹{Number(wallet.balance||0).toFixed(2)}</div>
                         <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
-                          Restricted referral rewards: <strong>{wallet.referralBalanceAvailable ? `₹${Number(wallet.referralBalance||0).toFixed(2)}` : 'Temporarily unavailable'}</strong>
-                          <span className="mt-1 block text-xs text-amber-800">{wallet.referralBalanceAvailable ? 'Order-only referral balance applies automatically when your basket reaches an eligible tier. It is separate from your spendable Wallet and loyalty points.' : 'Your spendable wallet remains available. Referral rewards could not be loaded right now.'}</span>
+                          Shopping and referral rewards: <strong>{wallet.referralBalanceAvailable ? `₹${Number(wallet.referralBalance||0).toFixed(2)}` : 'Temporarily unavailable'}</strong>
+                          <span className="mt-1 block text-xs text-amber-800">{wallet.referralBalanceAvailable ? 'Non-withdrawable, order-only balance applies automatically to eligible shopping. It is separate from your spendable Wallet and loyalty points.' : 'Your spendable wallet remains available. Shopping and referral rewards could not be loaded right now.'}</span>
                         </div>
                       </div>
                       <div className="w-14 h-14 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center">
@@ -1411,8 +1411,8 @@ export default function Profile() {
                               <tr key={`${t.wallet_bucket || 'cash'}-${t.id}`} className="hover:bg-stone-50/60">
                                 <td className="py-3.5 px-3 text-stone-600 whitespace-nowrap">{t.created_at? new Date(t.created_at).toLocaleString():'—'}</td>
                                 <td className="py-3.5 px-3">
-                                  <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${t.wallet_bucket === 'referral' ? 'border border-amber-200 bg-amber-50 text-amber-800' : 'border border-emerald-100 bg-emerald-50 text-emerald-700'}`}>
-                                    {t.wallet_bucket === 'referral' ? 'Referral reward' : 'Spendable wallet'}
+                                  <span className={`rounded-full px-2.5 py-1 text-xs font-medium ${t.wallet_bucket === 'cash' ? 'border border-emerald-100 bg-emerald-50 text-emerald-700' : 'border border-amber-200 bg-amber-50 text-amber-800'}`}>
+                                    {t.wallet_bucket === 'shopping' ? 'Shopping reward' : t.wallet_bucket === 'referral' ? 'Referral reward' : 'Spendable wallet'}
                                   </span>
                                 </td>
                                 <td className="py-3.5 px-3">

@@ -127,7 +127,7 @@ export default function WalletManagement() {
               <tbody className="divide-y divide-white/10">
                 {transactions.map(transaction => <tr key={`${transaction.wallet_bucket || 'cash'}-${transaction.id}`}>
                   <td className="p-3 text-xs text-slate-400">{new Date(transaction.created_at).toLocaleString()}</td>
-                  <td className={`p-3 text-xs ${transaction.wallet_bucket === 'referral' ? 'text-amber-200' : 'text-emerald-200'}`}>{transaction.wallet_bucket === 'referral' ? 'Referral reward' : 'Spendable'}</td>
+                  <td className={`p-3 text-xs ${transaction.wallet_bucket === 'cash' ? 'text-emerald-200' : 'text-amber-200'}`}>{transaction.wallet_bucket === 'shopping' ? 'Shopping reward' : transaction.wallet_bucket === 'referral' ? 'Referral reward' : 'Spendable'}</td>
                   <td className="p-3 text-slate-200">{transaction.description}</td>
                   <td className="p-3 capitalize text-slate-300">{transaction.type}</td>
                   <td className={`p-3 text-right font-medium ${transaction.type === 'credit' ? 'text-emerald-300' : 'text-rose-300'}`}>{transaction.type === 'credit' ? '+' : '−'}₹{Number(transaction.amount).toFixed(2)}</td>
