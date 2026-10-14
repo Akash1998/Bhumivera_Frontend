@@ -6,10 +6,10 @@ import { useToast } from '../../context/ToastContext';
 
 const statusLabel = status => String(status || 'unknown').replaceAll('_', ' ');
 const statusClass = status => {
-  if (['healthy', 'enabled', 'configured', 'redis_configured', 'no_recent_errors'].includes(status)) {
+  if (['healthy', 'enabled', 'configured', 'connected', 'redis_configured', 'no_recent_errors'].includes(status)) {
     return 'border-emerald-500/25 bg-emerald-500/10 text-emerald-300';
   }
-  if (status === 'paused') return 'border-amber-500/25 bg-amber-500/10 text-amber-200';
+  if (['paused', 'process_local'].includes(status)) return 'border-amber-500/25 bg-amber-500/10 text-amber-200';
   return 'border-rose-500/25 bg-rose-500/10 text-rose-300';
 };
 
@@ -22,6 +22,7 @@ export default function SystemHealth() {
   const [updatingModule, setUpdatingModule] = useState('');
   const [requestFilter, setRequestFilter] = useState('');
   const [requestSearch, setRequestSearch] = useState('');
+  const [activeHealthCard, setActiveHealthCard] = useState(null);
 
   const loadHealth = useCallback(async ({ quiet = false } = {}) => {
     if (!quiet) setLoading(true);
@@ -64,6 +65,89 @@ export default function SystemHealth() {
 
   const services = health?.services || {};
   const metrics = health?.requestMetrics || {};
+  const serviceCards = [
+    {
+      key: 'database',
+      label: 'Database',
+      service: services.database,
+      summary: services.database?.status === 'healthy' ? 'Connection check passed.' : 'Connection check failed.',
+      details: [
+        `Status: ${statusLabel(services.database?.status)}`,
+        `Application connection-pool limit: ${health?.databaseUsage?.connectionLimit ?? 'unknown'}`,
+        `Maximum idle pool connections: ${health?.databaseUsage?.maxIdleConnections ?? 'unknown'}`,
+        `Queued database calls allowed before rejecting: ${health?.databaseUsage?.queueLimit ?? 'unbounded'}`,
+        'This connection pool is the backend application-to-MySQL limit, not the Railway MySQL service RAM graph.',
+        'Railway MySQL service memory is not exposed by the database SQL health check. Review Railway Metrics for the actual server RAM graph.',
+      ],
+    },
+    {
+      key: 'email',
+      label: 'Email configuration',
+      service: services.email,
+      summary: services.email?.note || 'Email provider configuration.',
+      details: [
+        services.email?.note,
+        `${services.email?.deliveryMetrics?.acceptedCount ?? 0} accepted, ${services.email?.deliveryMetrics?.failedCount ?? 0} failed, ${services.email?.deliveryMetrics?.recipientCount ?? 0} recipients since this process started.`,
+        services.email?.deliveryMetrics?.lastFailureCode
+          ? `Most recent failure code: ${services.email.deliveryMetrics.lastFailureCode}`
+          : 'No email failure code is recorded for this process.',
+      ].filter(Boolean),
+    },
+    {
+      key: 'payments',
+      label: 'Payments configuration',
+      service: services.payments,
+      summary: services.payments?.status === 'configured' ? 'Credentials are present; no payment was attempted.' : 'Credentials are missing; checkout may be unavailable.',
+      details: [
+        `Status: ${statusLabel(services.payments?.status)}`,
+        'This is a configuration check only. It does not contact the payment provider or create a test transaction.',
+      ],
+    },
+    {
+      key: 'rateLimits',
+      label: 'Rate-limit store',
+      service: services.rateLimits,
+      summary: services.rateLimits?.note || 'Rate-limit storage status.',
+      details: [
+        `Status: ${statusLabel(services.rateLimits?.status)}`,
+        services.rateLimits?.sharedAcrossInstances
+          ? 'Rate-limit counters are stored in shared Redis across application instances.'
+          : 'Counters are process-local and are not shared across application instances.',
+      ],
+    },
+    {
+      key: 'responseCache',
+      label: 'Redis response cache',
+      service: services.responseCache,
+      summary: services.responseCache?.note || 'Response-cache status.',
+      details: [
+        `Status: ${statusLabel(services.responseCache?.status)}`,
+        services.responseCache?.configured
+          ? `TTL: ${services.responseCache.ttlSeconds} seconds; responses larger than ${Math.round(services.responseCache.maxCacheableResponseBytes / 1024)} KiB are skipped.`
+          : 'Configure REDIS_URL or CACHE_REDIS_URL to cache eligible anonymous API responses.',
+        `Process counters: ${services.responseCache?.metrics?.hits ?? 0} hits (${services.responseCache?.metrics?.hitRatePercent ?? 0}% hit rate), ${services.responseCache?.metrics?.misses ?? 0} misses, ${services.responseCache?.metrics?.writes ?? 0} writes, ${services.responseCache?.metrics?.readErrors ?? 0} read errors, ${services.responseCache?.metrics?.writeErrors ?? 0} write errors.`,
+        'Redis caching reduces repeated eligible reads. It does not change Railway MySQL RAM limits or replace persistent database records.',
+      ],
+    },
+  ];
+  const openHealthOverview = () => setActiveHealthCard({
+    key: 'overall',
+    label: 'System health overview',
+    service: { status: health?.status },
+    summary: health?.status === 'healthy' ? 'No degraded health conditions were reported.' : 'The backend reports degraded health; review each listed cause.',
+    details: [
+      `Checked: ${health?.checkedAt ? new Date(health.checkedAt).toLocaleString() : 'unknown'}`,
+      `Process uptime: ${Math.floor((health?.process?.uptimeSeconds || 0) / 60)} minutes`,
+      `Node.js heap used: ${health?.process?.heapUsed == null ? 'unknown' : `${Math.round(health.process.heapUsed / 1024 / 1024)} MiB`}`,
+      `Node.js resident set size: ${health?.process?.rss == null ? 'unknown' : `${Math.round(health.process.rss / 1024 / 1024)} MiB`}`,
+      `HTTP 5xx errors in the last ${metrics.windowMinutes || 15} minutes: ${metrics.serverErrorCount ?? 0}`,
+      ...(metrics.recentServerErrors || []).slice(0, 10).map(error =>
+        `HTTP ${error.statusCode} · ${error.method} ${error.path} · ${new Date(error.occurredAt).toLocaleString()} · request ${error.requestId}`
+      ),
+      ...(health?.healthIssues || []).map(issue => `${String(issue.severity || 'info').toUpperCase()} · ${issue.message}`),
+      ...(!health?.healthIssues?.length ? ['No health issues are currently reported.'] : []),
+    ],
+  });
   const filteredRequests = (metrics.recentRequests || []).filter(request => {
     if (requestFilter === 'errors' && request.statusCode < 500) return false;
     const query = requestSearch.trim().toLowerCase();
@@ -107,7 +191,7 @@ export default function SystemHealth() {
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[#d4af37]">Operations</p>
           <h2 className="mt-1 flex items-center gap-2 text-2xl font-semibold text-white">
             <Activity size={23} className="text-emerald-400" /> System health
-            {health && <span className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize ${statusClass(health.status)}`}>{statusLabel(health.status)}</span>}
+            {health && <button type="button" onClick={openHealthOverview} className={`rounded-full border px-2.5 py-1 text-[11px] font-semibold capitalize hover:brightness-125 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400 ${statusClass(health.status)}`} aria-label="Open system health overview">{statusLabel(health.status)} · details</button>}
           </h2>
           <p className="mt-1 max-w-2xl text-sm text-slate-400">Live backend checks, recent server errors, and controls for registered API modules.</p>
         </div>
@@ -120,27 +204,53 @@ export default function SystemHealth() {
 
       {health && (
         <>
-          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-            {[
-              ['Database', services.database?.status],
-              ['Email configuration', services.email?.status],
-              ['Payments configuration', services.payments?.status],
-              ['Rate-limit store', services.rateLimits?.status],
-            ].map(([label, status]) => (
-              <article key={label} className="rounded-xl border border-white/10 bg-white/[0.035] p-4">
+          {health.healthIssues?.length > 0 && (
+            <button type="button" onClick={openHealthOverview} className="w-full rounded-xl border border-amber-400/25 bg-amber-400/[0.06] p-4 text-left hover:border-amber-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
+              <span className="flex items-center gap-2 font-semibold text-amber-100"><AlertTriangle size={16}/> Why health is degraded · click for causes</span>
+              <span className="mt-1 block text-xs leading-5 text-amber-100/70">{health.healthIssues.map(issue => issue.message).join(' ')}</span>
+            </button>
+          )}
+
+          <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {serviceCards.map(({ key, label, service, summary }) => (
+              <button key={key} type="button" onClick={() => setActiveHealthCard({ key, label, service, summary, details: serviceCards.find(card => card.key === key)?.details || [] })} className="rounded-xl border border-white/10 bg-white/[0.035] p-4 text-left transition hover:border-cyan-400/40 hover:bg-cyan-400/[0.04] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-cyan-400">
                 <p className="text-xs font-medium text-slate-400">{label}</p>
-                <span className={`mt-3 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${statusClass(status)}`}>{statusLabel(status)}</span>
-                {label === 'Email configuration' && <p className="mt-2 text-xs leading-5 text-slate-500">{services.email?.note}</p>}
-                {label === 'Email configuration' && services.email?.deliveryMetrics && (
+                <span className={`mt-3 inline-flex rounded-full border px-2.5 py-1 text-xs font-semibold capitalize ${statusClass(service?.status)}`}>{statusLabel(service?.status)}</span>
+                <p className="mt-2 text-xs leading-5 text-slate-500">{summary}</p>
+                {key === 'email' && service?.deliveryMetrics && (
                   <p className="mt-2 text-xs leading-5 text-slate-400">
-                    {services.email.deliveryMetrics.acceptedCount} accepted · {services.email.deliveryMetrics.failedCount} failed · {services.email.deliveryMetrics.recipientCount} recipients since this process started.
-                    {services.email.deliveryMetrics.lastFailureCode ? ` Last failure: ${services.email.deliveryMetrics.lastFailureCode}.` : ''}
+                    {service.deliveryMetrics.acceptedCount} accepted · {service.deliveryMetrics.failedCount} failed · {service.deliveryMetrics.recipientCount} recipients since this process started.
+                    {service.deliveryMetrics.lastFailureCode ? ` Last failure: ${service.deliveryMetrics.lastFailureCode}.` : ''}
                   </p>
                 )}
-                {label === 'Rate-limit store' && services.rateLimits?.note && <p className="mt-2 text-xs leading-5 text-slate-500">{services.rateLimits.note}</p>}
-              </article>
+                <span className="mt-3 block text-[11px] font-semibold text-cyan-200">Click to inspect details →</span>
+              </button>
             ))}
           </section>
+
+          {activeHealthCard && (
+            <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/70 p-0 backdrop-blur-sm sm:items-center sm:p-4" onMouseDown={event => { if (event.target === event.currentTarget) setActiveHealthCard(null); }}>
+              <section role="dialog" aria-modal="true" aria-labelledby="health-detail-title" className="max-h-[85vh] w-full max-w-2xl overflow-auto rounded-t-2xl border border-white/10 bg-[#0b1e17] p-5 shadow-2xl sm:rounded-2xl">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-xs font-semibold uppercase tracking-wider text-cyan-200">Detailed overview</p>
+                    <h3 id="health-detail-title" className="mt-1 text-lg font-semibold text-white">{activeHealthCard.label}</h3>
+                    <p className="mt-2 text-sm leading-6 text-slate-300">{activeHealthCard.summary}</p>
+                  </div>
+                  <button type="button" onClick={() => setActiveHealthCard(null)} aria-label="Close health details" className="inline-flex min-h-9 min-w-9 items-center justify-center rounded-lg border border-white/10 text-slate-300 hover:bg-white/5"><X size={16}/></button>
+                </div>
+                <ul className="mt-5 space-y-2">
+                  {(activeHealthCard.details || []).map((detail, index) => <li key={`${index}-${detail}`} className="rounded-lg border border-white/[0.07] bg-white/[0.025] p-3 text-sm leading-6 text-slate-300">{detail}</li>)}
+                </ul>
+                {activeHealthCard.key === 'overall' && health?.healthIssues?.length > 0 && (
+                  <div className="mt-5">
+                    <h4 className="mb-2 text-sm font-semibold text-white">Current causes</h4>
+                    <ul className="space-y-2">{health.healthIssues.map(issue => <li key={issue.code} className="rounded-lg border border-amber-400/15 bg-amber-400/[0.04] p-3 text-sm text-amber-100"><strong>{issue.code}</strong><p className="mt-1 leading-5">{issue.message}</p></li>)}</ul>
+                  </div>
+                )}
+              </section>
+            </div>
+          )}
 
           <section className="grid gap-3 sm:grid-cols-3">
             {[
