@@ -916,7 +916,7 @@ export default function MiniCart() {
                   onClick={() => setSummaryExpanded(open => !open)}
                   className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-[#d9dfd2] bg-white text-[#526b4d] shadow-sm transition hover:border-[#536b4d] hover:bg-[#f3f7ed] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536b4d]"
                 >
-                  {summaryExpanded ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
+                  {summaryExpanded ? <ChevronDown size={14}/> : <ChevronUp size={14}/>}
                 </button>}
               </span>
               <strong className="text-[#1A1C18]">{formatPrice(subtotal)}</strong>
