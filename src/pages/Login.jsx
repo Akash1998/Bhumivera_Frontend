@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, Navigate, useLocation } from 'react-router-dom';
 import api, { auth } from '../services/api';
 import { toast } from 'react-hot-toast';
 import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft, Fingerprint, Key } from 'lucide-react';
 import { loginWithPasskey, storeBrowserPassword } from '../utils/webauthnClient';
+import { useAuth } from '../context/AuthContext';
 
 const Login = () => {
+  const { isAuthenticated, user } = useAuth() || {};
   const [mode, setMode] = useState('OTP'); // OTP | PASSWORD
   const [step, setStep] = useState('FORM'); // FORM | OTP | 2FA
   const [email, setEmail] = useState('');
@@ -53,7 +55,7 @@ const Login = () => {
       ? location.state.from
       : '/profile';
     const destination = location.state?.reopenCart ? '/?cartCheckout=1' : requestedPath;
-    setTimeout(() => { window.location.href = destination; }, 300);
+    setTimeout(() => { window.location.replace(destination); }, 300);
   };
 
   const handleRequestOTP = async (e) => {
@@ -173,6 +175,15 @@ const Login = () => {
     setTwoFactorCode('');
     setTwoFactorMethod('authenticator');
   };
+
+  if (isAuthenticated) {
+    const destination = ['admin', 'superadmin'].includes(user?.role)
+      ? '/admin'
+      : user?.role === 'warehouse_admin'
+        ? '/warehouse'
+        : '/profile';
+    return <Navigate to={destination} replace />;
+  }
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center p-4 font-sans relative overflow-hidden">
