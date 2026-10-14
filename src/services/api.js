@@ -419,7 +419,7 @@ Object.assign(auth, {
 });
 export const adminLogin = async c => (await api.post("/auth/admin/login", c)).data;
 export const search = { query: q => api.get('/products/active', { params: { search: q } }), global: q => api.get('/products', { params: { search: q } }) };
-export const users = { updateProfile: d => api.put('/users/profile', d), updateWhatsAppPreference: enabled => api.patch('/users/profile/whatsapp-preference', { whatsapp_order_updates_opt_in: enabled }), updateAdPersonalizationPreference: enabled => api.patch('/users/profile/ad-personalization-preference', { ad_personalization_opt_in: enabled }), changePassword: d => api.post('/users/change-password', d), getProfile: () => api.get('/users/profile'), generate2FA: () => api.post('/users/2fa/generate-setup'), verifyAndEnable2FA: d => api.post('/users/2fa/enable', d), disable2FA: () => api.post('/users/2fa/disable'), updateSecurityQuestion: d => api.put('/users/security-question', d) };
+export const users = { updateProfile: d => api.put('/users/profile', d), updateAdPersonalizationPreference: enabled => api.patch('/users/profile/ad-personalization-preference', { ad_personalization_opt_in: enabled }), changePassword: d => api.post('/users/change-password', d), getProfile: () => api.get('/users/profile'), generate2FA: () => api.post('/users/2fa/generate-setup'), verifyAndEnable2FA: d => api.post('/users/2fa/enable', d), disable2FA: () => api.post('/users/2fa/disable'), updateSecurityQuestion: d => api.put('/users/security-question', d) };
 export const products = { getAllActive: p => api.get("/products/active", { params: p }), getAllAdmin: () => api.get("/products"), getById: id => api.get(`/products/${id}`), getBySlug: s => api.get(`/products/slug/${s}`), create: (d, options) => api.post("/products", d, options), update: (id, d, options) => api.put(`/products/${id}`, d, options), toggleStatus: (id, s) => api.patch(`/products/${id}/status`, { status: s }), getUploadUrl: (f, t, options) => api.post("/products/presign", { filename: f, fileType: t }, options), saveImageKeys: (id, k, options) => api.post(`/products/${id}/images/save`, { imageKeys: k }, options), deleteImage: (id, image, options = {}) => api.delete(`/products/${id}/images`, { ...options, data: typeof image === 'object' ? { imageId: image.id, imagePath: image.file_path } : { imageId: image } }), addSerials: (id, s) => api.post(`/serials/${id}/add`, { serials: s }), delete: id => api.delete(`/products/${id}`) };
 export const categories = { getAll: () => api.get("/categories"), getById: id => api.get(`/categories/${id}`), create: d => api.post("/categories", d), update: (id, d) => api.put(`/categories/${id}`, d), delete: id => api.delete(`/categories/${id}`) };
 export const subcategories = { getAll: () => api.get("/subcategories"), getById: id => api.get(`/subcategories/${id}`), create: d => api.post("/subcategories", d), update: (id, d) => api.put(`/subcategories/${id}`, d), delete: id => api.delete(`/subcategories/${id}`) };
@@ -460,7 +460,12 @@ export const recommendations = {
   recordProductView: productId => api.post('/recommendations/view', { product_id: productId }, { notify: false }),
   getForYou: productId => api.get('/recommendations/for-you', { params: { product_id: productId } })
 };
-export const notifications = { get: () => api.get("/notifications"), getWhatsAppStatus: () => api.get("/notifications/whatsapp-status"), getAllAdmin: () => api.get("/notifications/admin/all"), markRead: id => api.patch(`/notifications/${id}/read`), markAllRead: () => api.patch("/notifications/read-all"), delete: id => api.delete(`/notifications/${id}`), createBroadcast: data => api.post("/notifications/admin/create", data), send: d => api.post("/notifications", d) };
+export const notifications = { get: () => api.get("/notifications"), getAllAdmin: () => api.get("/notifications/admin/all"), markRead: id => api.patch(`/notifications/${id}/read`), markAllRead: () => api.patch("/notifications/read-all"), delete: id => api.delete(`/notifications/${id}`), createBroadcast: data => api.post("/notifications/admin/create", data), send: d => api.post("/notifications", d) };
+export const gamification = {
+  spin: data => api.post('/gamification/spin', data),
+  getOrderSpin: orderId => api.get(`/gamification/order-spin/${orderId}`),
+  claimOrderSpin: orderId => api.post(`/gamification/order-spin/${orderId}`),
+};
 export const analytics = {
   getDashboard: (period = '30d') => api.get('/analytics/dashboard', { params: { period } }),
   getSales: (period = '30d') => api.get('/analytics/sales', { params: { period } }),
@@ -502,7 +507,6 @@ export const shipping = {
 export const returns = { getMyReturns: () => api.get("/returns/my"), getEligibility: () => api.get("/returns/eligibility"), createUploadUrl: data => api.post('/returns/upload-url', data), submit: d => api.post("/returns", d), getAllAdmin: () => api.get("/returns/admin/all"), updateStatus: (id, data) => api.put(`/returns/admin/${id}`, typeof data === 'string' ? { status: data } : data) };
 export const inventory = { get: () => api.get("/inventory"), updateStock: (p, q) => api.put(`/inventory/${p}/stock`, { stock: q }) };
 export const warranty = { register: d => api.post("/warranty/register", d), getMyWarranties: () => api.get("/warranty/my"), getAllAdmin: () => api.get("/warranty"), updateStatus: (id, s) => api.patch(`/warranty/${id}/status`, { status: s }) };
-export const gamification = { spin: data => api.post('/gamification/spin', data) };
 export const impact = {
   getPublic: () => api.get('/impact/public'),
   getAdminContributions: () => api.get('/impact/admin/contributions', { adminAuth: true }),

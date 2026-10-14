@@ -7,6 +7,7 @@ import {
   Clock, ShieldCheck, Mail, Phone, FileText, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import api from '../../services/api';
+import { formatOrderNumber } from '../../utils/formatOrderNumber';
 import { useToast } from '../../context/ToastContext';
 
 const STATUS_MAP = {
@@ -28,8 +29,7 @@ const STATUS_BADGE = {
 };
 const STATUS_RANK = { pending: 0, confirmed: 1, packed: 2, shipped: 3, delivered: 4, cancelled: 5, returned: 5, archived: 6 };
 
-// FIX: Dynamic 10-digit padding for professional Order IDs
-const formatId = (id) => String(id).padStart(10, '0');
+const formatId = formatOrderNumber;
 
 export default function OrderManagement() {
   const [orders, setOrders] = useState([]);
@@ -225,7 +225,7 @@ export default function OrderManagement() {
         allOrders.push(...(response.data?.orders || []));
       }
       const worksheetData = allOrders.map(o => ({
-        'Order ID': formatId(o.id), 'Date': new Date(o.created_at).toLocaleString(),
+        'Order ID': formatId(o.order_number || o.id), 'Date': new Date(o.created_at).toLocaleString(),
         'Customer': o.user_name || o.address_snapshot?.full_name || 'Guest', 'Email': o.user_email || 'N/A',
         'Total (₹)': Number(o.total || 0), 'Payment Method': o.payment_mode || 'COD',
         'Cause Pledge (₹)': Number(o.impact_amount || 0), 'Cause Project': o.impact_project || 'N/A',
@@ -387,7 +387,7 @@ export default function OrderManagement() {
                 const status = STATUS_MAP[order.status] || STATUS_MAP['pending'];
                 return (
                   <tr key={order.id} className="transition-colors hover:bg-white/[0.035]">
-                    <td className="p-5 font-bold font-mono text-slate-100">#{formatId(order.id)}</td>
+                    <td className="p-5 font-bold font-mono text-slate-100">#{formatId(order.order_number || order.id)}</td>
                     <td className="p-5">
                       <p className="font-semibold text-slate-100">{order.address_snapshot?.full_name || order.user_name || 'Guest'}</p>
                       <p className="text-xs text-slate-500">{order.user_email || 'No email'}</p>
@@ -399,7 +399,7 @@ export default function OrderManagement() {
                         <span className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold ${STATUS_BADGE[status.color]}`}>
                           {status.label}
                         </span>
-                        <select aria-label={`Update order ${formatId(order.id)} status`} value={order.status} onChange={event => handleUpdateStatus(order.id, event.target.value)} disabled={isUpdating} className="admin-glass-control max-w-full rounded-md px-2 py-1 text-xs disabled:opacity-50">
+                        <select aria-label={`Update order ${formatId(order.order_number || order.id)} status`} value={order.status} onChange={event => handleUpdateStatus(order.id, event.target.value)} disabled={isUpdating} className="admin-glass-control max-w-full rounded-md px-2 py-1 text-xs disabled:opacity-50">
                           {Object.entries(STATUS_MAP).filter(([key]) => STATUS_RANK[key] >= STATUS_RANK[order.status]).map(([key, value]) => <option key={key} value={key}>{value.label}</option>)}
                         </select>
                       </div>
@@ -447,7 +447,7 @@ export default function OrderManagement() {
             <div className="flex items-center justify-between border-b border-white/10 bg-white/[0.035] p-5 md:p-6">
               <div>
                 <h2 className="text-xl font-semibold text-white font-mono tracking-tight">
-                  Order #{formatId(selectedOrder.id)}
+                  Order #{formatId(selectedOrder.order_number || selectedOrder.id)}
                 </h2>
                 <p className="text-sm text-slate-400 mt-1">
                   Placed on {new Date(selectedOrder.created_at).toLocaleString()}

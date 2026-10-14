@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
 import { useAuth } from '../context/AuthContext';
+import { formatOrderNumber } from '../utils/formatOrderNumber';
 import { useCart } from '../context/CartContext';
 import {
   BASE_URL,
@@ -220,9 +221,6 @@ export default function Profile() {
   const [profileData, setProfileData] = useState({ name: '', phone: '', marketing_email_opt_in: false });
   const [adPersonalizationOptIn, setAdPersonalizationOptIn] = useState(false);
   const [adPreferenceSaving, setAdPreferenceSaving] = useState(false);
-  const [whatsappOrderUpdatesOptIn, setWhatsappOrderUpdatesOptIn] = useState(false);
-  const [whatsappPreferenceSaving, setWhatsappPreferenceSaving] = useState(false);
-  const [whatsappAlertsAvailable, setWhatsappAlertsAvailable] = useState(false);
   const [orders, setOrders] = useState([]);
   const [wishlist, setWishlist] = useState([]);
   const [wishlistError, setWishlistError] = useState('');
@@ -349,13 +347,7 @@ export default function Profile() {
 
   const loadProfile = async () => {
     try {
-      const [res, whatsappStatus] = await Promise.all([
-        usersApi.getProfile(),
-        notificationsApi.getWhatsAppStatus().catch(error => {
-          console.error('[PROFILE_WHATSAPP_STATUS]', error);
-          return { data: { available: false } };
-        }),
-      ]);
+      const res = await usersApi.getProfile();
       const u = safeExtract(res, 'user') || safeExtract(res, 'data') || res?.data || {};
       setProfileData({
         name: u.name || u.first_name || u.full_name || '',
@@ -368,8 +360,6 @@ export default function Profile() {
         lifetimePoints: Math.max(0, Number(u.loyalty_lifetime_points) || 0),
         tier: u.loyalty || u.loyaltyProgress || null,
       });
-      setWhatsappOrderUpdatesOptIn(Boolean(Number(u.whatsapp_order_updates_opt_in)));
-      setWhatsappAlertsAvailable(whatsappStatus.data?.available === true);
       setTwoFactor(p => ({ ...p, isEnabled: !!u.two_factor_enabled || u.two_factor_enabled === 1 }));
       if (u.security_question) setSecQuestion(s => ({ ...s, question: u.security_question, answer: u.security_answer || s.answer }));
     } catch (_) {}
@@ -547,20 +537,6 @@ export default function Profile() {
       toast.error(err.response?.data?.message || 'Could not update the personalization preference.');
     } finally {
       setAdPreferenceSaving(false);
-    }
-  };
-  const handleWhatsAppPreferenceChange = async enabled => {
-    setWhatsappPreferenceSaving(true);
-    try {
-      const response = await usersApi.updateWhatsAppPreference(enabled);
-      setWhatsappOrderUpdatesOptIn(response.data?.whatsapp_order_updates_opt_in === true);
-      toast.success(enabled
-        ? 'WhatsApp order updates enabled for orders you opt in to.'
-        : 'WhatsApp order updates disabled. No further WhatsApp order alerts will be sent.');
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Could not update your WhatsApp preference.');
-    } finally {
-      setWhatsappPreferenceSaving(false);
     }
   };
   const handleChangePassword = async (e) => {
@@ -1116,7 +1092,7 @@ export default function Profile() {
                             <div className="flex items-center gap-3 min-w-0">
                               <div className="w-11 h-11 rounded-xl bg-[#8B9D83]/15 flex items-center justify-center shrink-0"><Package className="w-5 h-5 text-[#3f503c]"/></div>
                               <div className="min-w-0">
-                                <div className="font-medium text-sm text-[#0B2419] truncate">Order #{o.id}</div>
+                                <div className="font-medium text-sm text-[#0B2419] truncate">Order #{formatOrderNumber(o.order_number || o.id)}</div>
                                 <div className="text-xs text-stone-500 flex items-center gap-2 mt-0.5">
                                   <Calendar className="w-3 h-3"/>
                                   {o.created_at ? new Date(o.created_at).toLocaleDateString() : '—'}
@@ -1733,35 +1709,6 @@ export default function Profile() {
                 </section>
 
                 <section className="rounded-2xl bg-white border border-stone-200 p-6 shadow-sm">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-11 h-11 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center"><Smartphone className="w-5 h-5"/></div>
-                    <div><h3 className="font-semibold text-[#0B2419] text-lg">WhatsApp Order Updates</h3><p className="text-xs text-stone-500">Choose whether Bhumivera may send order-status and tracking alerts</p></div>
-                  </div>
-                  <label className="flex items-start gap-3 rounded-xl border border-stone-200 bg-stone-50 p-4 text-sm text-stone-700">
-                    <input
-                      type="checkbox"
-                      checked={whatsappOrderUpdatesOptIn}
-                      disabled={whatsappPreferenceSaving}
-                      onChange={event => handleWhatsAppPreferenceChange(event.target.checked)}
-                      className="mt-0.5 accent-[#0B2419]"
-                    />
-                    <span>
-                      Opt in to WhatsApp order updates.
-                      <span className="block mt-1 text-xs text-stone-500">Optional. You can turn this off here at any time. This setting enables messages only for orders where you also chose WhatsApp updates at checkout; opting out stops alerts for all your orders. Promotional messages are not included.</span>
-                    </span>
-                  </label>
-                  <p className="mt-3 text-xs text-stone-500" role="status">
-                    {whatsappPreferenceSaving
-                      ? 'Saving your preference…'
-                      : whatsappOrderUpdatesOptIn
-                        ? whatsappAlertsAvailable
-                          ? 'You are opted in. New orders will start with the checkout WhatsApp option selected.'
-                          : 'Your opt-in is saved, but WhatsApp delivery is not configured yet. Alerts will not send until the service is enabled.'
-                        : 'You are opted out. WhatsApp order alerts are off.'}
-                  </p>
-                </section>
-
-                <section className="rounded-2xl bg-white border border-stone-200 p-6 shadow-sm">
                   <div className="flex items-center gap-3 mb-5">
                     <div className="w-11 h-11 rounded-xl bg-rose-50 text-rose-600 flex items-center justify-center"><Key className="w-5 h-5"/></div>
                     <div><h3 className="font-semibold text-[#0B2419] text-lg">Change Password</h3><p className="text-xs text-stone-500">Use a strong password that's at least 6 characters</p></div>
@@ -2290,7 +2237,7 @@ export default function Profile() {
                   <span className="font-semibold text-sm text-[#0B2419]">Tracking #</span>
                 </div>
                 <code className="font-mono text-sm text-stone-600 bg-stone-50 border border-stone-200 px-3 py-1 rounded-lg">
-                  {selectedOrder.tracking_number || selectedOrder.tracking_no || `BHVM${selectedOrder.id.toString().padStart(8,'0')}`}
+                  {selectedOrder.tracking_number || selectedOrder.tracking_no || `BHVM${formatOrderNumber(selectedOrder.order_number || selectedOrder.id)}`}
                 </code>
               </div>
             </div>
@@ -2368,7 +2315,7 @@ export default function Profile() {
                               onClick={() => {
                                 const productName = it.product_name || it.name || `Product #${productId}`;
                                 setSupportTicket({
-                                  subject: `Help with ${productName} · Order #${selectedOrder.id}`.slice(0, 200),
+                                  subject: `Help with ${productName} · Order #${formatOrderNumber(selectedOrder.order_number || selectedOrder.id)}`.slice(0, 200),
                                   message: `I need help with ${productName} from order #${selectedOrder.id}.\n\n`,
                                   order_id: String(selectedOrder.id),
                                   product_id: Number.isSafeInteger(productId) && productId > 0 ? String(productId) : ''
@@ -2458,7 +2405,7 @@ export default function Profile() {
             <div className="flex items-center gap-4 bg-gradient-to-br from-[#0B2419] to-[#2C3E2D] px-6 py-5 text-white">
               {reviewSubmission.image && <img src={reviewSubmission.image} alt="" className="h-14 w-14 rounded-xl bg-white object-contain p-1"/>}
               <div className="min-w-0 flex-1">
-                <div className="text-xs font-semibold uppercase tracking-widest text-[#D4AF37]">Order #{reviewSubmission.orderId}</div>
+                <div className="text-xs font-semibold uppercase tracking-widest text-[#D4AF37]">Order #{formatOrderNumber(selectedOrder?.order_number || reviewSubmission.orderId)}</div>
                 <h3 className="truncate text-lg font-bold">{reviewSubmission.productName}</h3>
               </div>
               <button type="button" disabled={reviewSubmitting} onClick={closeReviewForm} aria-label="Close review form" className="rounded-lg p-2 hover:bg-white/10 disabled:opacity-50"><X className="h-5 w-5"/></button>
@@ -2549,7 +2496,7 @@ export default function Profile() {
                   }}
                     className="w-full px-4 py-2.5 rounded-xl border border-stone-200 focus:border-sky-600 focus:ring-4 focus:ring-sky-100 bg-white text-sm">
                     {deliveredOrders.map(o => (
-                      <option key={o.id} value={o.id}>Order #{o.id} — ₹{Number(o.total_amount||o.total||0).toFixed(2)} ({o.created_at? new Date(o.created_at).toLocaleDateString():''})</option>
+                      <option key={o.id} value={o.id}>Order #{formatOrderNumber(o.order_number || o.id)} — ₹{Number(o.total_amount||o.total||0).toFixed(2)} ({o.created_at? new Date(o.created_at).toLocaleDateString():''})</option>
                     ))}
                     {deliveredOrders.length === 0 && <option value="">No currently eligible delivered orders</option>}
                   </select>

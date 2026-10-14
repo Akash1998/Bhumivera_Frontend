@@ -65,7 +65,10 @@ describe('AffiliateManagement referral engine', () => {
   it('saves changed referral reward settings and keeps the saved values', async () => {
     render(<ToastProvider><AffiliateManagement /></ToastProvider>);
 
-    const rewardInput = await screen.findByLabelText('Spendable wallet reward per approved referral (₹)');
+    fireEvent.change(await screen.findByLabelText('How should each referral be rewarded?'), {
+      target: { value: 'wallet' },
+    });
+    const rewardInput = await screen.findByLabelText('Referrer spendable wallet reward (₹)');
     fireEvent.change(rewardInput, { target: { value: '250' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save referral rewards' }));
 
@@ -76,6 +79,6 @@ describe('AffiliateManagement referral engine', () => {
         wallet_reward_per_order_limit: 100,
       }));
     });
-    expect(screen.getByLabelText('Spendable wallet reward per approved referral (₹)').value).toBe('250');
+    expect(screen.getByLabelText('Referrer spendable wallet reward (₹)').value).toBe('250');
   });
 });
