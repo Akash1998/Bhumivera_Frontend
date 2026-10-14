@@ -13,6 +13,7 @@ if (b.startsWith("http://") && !b.includes("localhost")) b = b.replace("http://"
 export const BASE_URL = b;
 
 const api = axios.create({ baseURL: `${BASE_URL}/api`, withCredentials: true });
+let lastReportedApiFailureAt = 0;
 
 const isMutation = method => ['post', 'put', 'patch', 'delete'].includes(String(method || '').toLowerCase());
 
@@ -267,6 +268,23 @@ api.interceptors.response.use(async response => {
   };
   const status = e.response?.status;
   const url = e.config?.url || "";
+  if (
+    !axios.isCancel(e) &&
+    !url.startsWith('/client-log') &&
+    (!e.response || status >= 500) &&
+    Date.now() - lastReportedApiFailureAt >= 5000
+  ) {
+    lastReportedApiFailureAt = Date.now();
+    void reportClientError({
+      message: e.response
+        ? `API request returned HTTP ${status} (${e.normalized.code}).`
+        : `API network request failed (${e.code || 'NETWORK_ERROR'}).`,
+      source: String(url).split(/[?#]/, 1)[0],
+      stack: e.response?.headers?.['x-request-id']
+        ? `Request ID: ${e.response.headers['x-request-id']}`
+        : null,
+    });
+  }
   if (status === 401) {
     const isCredentialSubmission = /^\/auth\/(login|register|verify-email|login-request-otp|2fa\/verify|forgot-password|verify-otp|reset-password|mobile-login(?:\/|$)|security-question\/|admin\/(login|request-otp|verify-otp|forgot-password|verify-reset-otp|reset-password|change-password))(\/|$)/.test(url);
     if (isCredentialSubmission) {
@@ -460,6 +478,7 @@ export const settings = { get: () => api.get("/settings"), getPublic: () => api.
 export const clientErrors = { getAllAdmin: limit => api.get('/logs/client', { params: { limit } }) };
 export const systemAdmin = {
   getHealth: () => api.get('/admin/system/health'),
+  getLogs: (limit = 100) => api.get('/admin/system/logs', { params: { limit } }),
   setModuleEnabled: (moduleId, enabled) => api.patch(`/admin/system/modules/${moduleId}`, { enabled }),
 };
 export const newsletter = { subscribe: (email, source = 'site') => api.post('/newsletter/subscribe', { email, source }, { timeout: 5000 }) };
