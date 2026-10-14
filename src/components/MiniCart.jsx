@@ -8,7 +8,8 @@ import { useSettings } from '../context/SettingsContext';
 import { useWishlist } from '../context/WishlistContext';
 import { addresses as addressesApi, coupons as couponsApi, orders as ordersApi, payments as paymentsApi, products as productsApi, wallet as walletApi } from '../services/api';
 import { useToast } from '../context/ToastContext';
-import { NEW_CUSTOMER_BONUS_PERCENT, SHOPPING_WALLET_REWARD_CAP, SHOPPING_WALLET_REWARD_PERCENT, estimateShoppingWalletReward } from '../utils/shoppingWalletReward';
+import { estimateShoppingWalletReward } from '../utils/shoppingWalletReward';
+import { calculateDeliveryCosts, PREMIUM_DELIVERY_SURCHARGE, PREMIUM_DELIVERY_THRESHOLD } from '../utils/shippingOptions';
 
 let razorpayScriptPromise;
 const loadRazorpayScript = () => {
@@ -100,6 +101,7 @@ export default function MiniCart() {
   const [couponBusy, setCouponBusy] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [checkoutStep, setCheckoutStep] = useState(0);
+  const [checkoutDetailsExpanded, setCheckoutDetailsExpanded] = useState(false);
   const checkoutOpen = checkoutStep > 0;
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState('');
@@ -149,10 +151,17 @@ export default function MiniCart() {
   const loyaltyDiscount = redeemLoyaltyPoints ? pointsRedemption.discount : 0;
   const loyaltyFreeShipping = Boolean(loyalty?.enabled && Number(loyalty?.currentTier?.free_shipping) === 1);
   const amountToFreeShipping = rulePreview?.freeShipping || loyaltyFreeShipping ? 0 : Math.max(0, Number(freeShippingThreshold) - subtotal);
-  const standardShippingCost = Math.max(0, Number(settings?.standard_charge ?? settings?.default_shipping_charge ?? 50) || 0);
-  const expressShippingCost = Math.max(0, Number(settings?.express_charge ?? 150) || 0);
-  const shippingCost = rulePreview?.freeShipping || loyaltyFreeShipping ? 0 : shippingMethod === 'EXPRESS' ? expressShippingCost : standardShippingCost;
-  const finalTotal = Math.max(0, subtotal + shippingCost - discount - couponDiscount - tierDiscount - referralWalletAmount - loyaltyDiscount);
+  const { standardCost: standardDeliveryCost, premiumCost: premiumDeliveryCost } = calculateDeliveryCosts({
+    subtotal,
+    standardCharge: settings?.standard_charge ?? settings?.default_shipping_charge ?? 50,
+    premiumCharge: settings?.express_charge ?? 150,
+    freeShippingThreshold,
+    freeShipping: Boolean(rulePreview?.freeShipping || loyaltyFreeShipping),
+  });
+  const shippingCost = shippingMethod === 'PREMIUM' ? premiumDeliveryCost : standardDeliveryCost;
+  const totalSavings = discount + couponDiscount + tierDiscount + referralWalletAmount + loyaltyDiscount;
+  const estimatedTotal = Math.max(0, subtotal - totalSavings);
+  const finalTotal = Math.max(0, subtotal + shippingCost - totalSavings);
   const shoppingWalletRewardEligibleSubtotal = Math.max(
     0,
     subtotal - discount - couponDiscount - tierDiscount - referralWalletAmount - loyaltyDiscount,
@@ -162,9 +171,6 @@ export default function MiniCart() {
     shoppingWalletRewardEligibleSubtotal,
     isNewCustomer,
   );
-  const newCustomerBonusEstimate = isNewCustomer
-    ? Math.max(0, shoppingWalletRewardEstimate - estimateShoppingWalletReward(shoppingWalletRewardEligibleSubtotal))
-    : 0;
   const recommendationsToShow = useMemo(() => {
     const cartIds = new Set(cartItems.map(item => String(item.product_id || item.product?.id || item.id)));
     return recommendations.filter(product => !cartIds.has(String(product.id || product._id))).slice(0, 4);
@@ -296,6 +302,7 @@ export default function MiniCart() {
     if (!isCartOpen || sessionStorage.getItem('mini-cart-checkout') !== '1') return;
     sessionStorage.removeItem('mini-cart-checkout');
     setCheckoutStep(1);
+    setCheckoutDetailsExpanded(false);
     const pendingCoupon = sessionStorage.getItem('mini-cart-coupon');
     if (pendingCoupon) {
       setCouponCode(pendingCoupon);
@@ -425,6 +432,7 @@ export default function MiniCart() {
       return;
     }
     setCheckoutStep(1);
+    setCheckoutDetailsExpanded(false);
   };
 
   const continueToPayment = () => {
@@ -433,6 +441,7 @@ export default function MiniCart() {
       return;
     }
     setCheckoutStep(2);
+    setCheckoutDetailsExpanded(true);
   };
 
   const withBusyCartItem = async (productId, operation) => {
@@ -555,7 +564,7 @@ export default function MiniCart() {
     try {
       const checkoutDetails = {
         addressId: selectedAddress,
-        deliveryType: shippingMethod.toLowerCase(),
+        deliveryType: shippingMethod === 'PREMIUM' ? 'express' : 'standard',
         couponCode: appliedCoupon?.code || undefined,
         notes: orderNotes.trim() || undefined,
         termsAccepted: true,
@@ -722,13 +731,41 @@ export default function MiniCart() {
               <span className="flex items-center gap-1.5"><BadgeCheck size={14} className="text-[#8b5a2b]"/>Customer-approved reviews</span>
             </div>}
 
-            {checkoutOpen && <section className="mini-cart-checkout space-y-4 rounded-2xl border border-[#d9dfd2] bg-[#f8f8f2] p-4" aria-labelledby="mini-checkout-title">
+            {checkoutOpen && <section className="mini-cart-checkout overflow-hidden rounded-2xl border border-[#d9dfd2] bg-[#f8f8f2]" aria-label="Checkout details">
+              <button
+                type="button"
+                aria-expanded={checkoutDetailsExpanded}
+                aria-controls="mini-checkout-drawer"
+                onClick={() => setCheckoutDetailsExpanded(open => !open)}
+                className="flex w-full items-center justify-between gap-3 bg-white/70 px-4 py-3 text-left transition hover:bg-white"
+              >
+                <span className="min-w-0">
+                  <span className="block text-[9px] font-bold uppercase tracking-[0.16em] text-[#526b4d]">Step {checkoutStep} of 2 · {checkoutDetailsExpanded ? 'Tap to hide details' : 'Tap to view details'}</span>
+                  <span className="mt-1 block truncate font-serif text-base text-[#14251c]">{checkoutStep === 1 ? 'Delivery details' : 'Payment & review'}</span>
+                </span>
+                <span className="flex shrink-0 items-center gap-2">
+                  <span className="text-xs font-bold text-[#263d31]">{formatPrice(finalTotal)}</span>
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[#d9dfd2] bg-white text-[#526b4d] shadow-sm">
+                    {checkoutDetailsExpanded ? <ChevronUp size={17}/> : <ChevronDown size={17}/>}
+                  </span>
+                </span>
+              </button>
+              <AnimatePresence initial={false}>
+              {checkoutDetailsExpanded && <Motion.div
+                id="mini-checkout-drawer"
+                initial={{ height: 0, opacity: 0 }}
+                animate={{ height: 'auto', opacity: 1 }}
+                exit={{ height: 0, opacity: 0 }}
+                transition={{ duration: 0.22, ease: 'easeInOut' }}
+                className="overflow-hidden"
+              >
+              <div className="space-y-4 border-t border-[#d9dfd2] p-4">
               <nav aria-label="Checkout progress" className="grid grid-cols-2 gap-2">
                 {['Delivery', 'Payment'].map((label, index) => {
                   const step = index + 1;
                   const active = checkoutStep === step;
                   const complete = checkoutStep > step;
-                  return <button type="button" key={label} disabled={step > checkoutStep} onClick={() => setCheckoutStep(step)} aria-current={active ? 'step' : undefined} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold ${active ? 'bg-[#14251c] text-white' : complete ? 'bg-[#e8eee3] text-[#35533c]' : 'bg-white text-stone-400'}`}>
+                  return <button type="button" key={label} disabled={step > checkoutStep} onClick={() => { setCheckoutStep(step); setCheckoutDetailsExpanded(true); }} aria-current={active ? 'step' : undefined} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold ${active ? 'bg-[#14251c] text-white' : complete ? 'bg-[#e8eee3] text-[#35533c]' : 'bg-white text-stone-400'}`}>
                     <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/15 text-[10px]">{complete ? '✓' : step}</span>{label}
                   </button>;
                 })}
@@ -759,12 +796,22 @@ export default function MiniCart() {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                  {[['STANDARD', 'Standard', shippingCost === 0 ? 'Free' : formatPrice(standardShippingCost)], ['EXPRESS', 'Express', rulePreview?.freeShipping ? 'Free' : formatPrice(expressShippingCost)]].map(([value, label, cost]) => <button type="button" key={value} onClick={() => setShippingMethod(value)} aria-pressed={shippingMethod === value} className={`rounded-xl border bg-white p-3 text-left ${shippingMethod === value ? 'border-[#536b4d] ring-1 ring-[#536b4d]/30' : 'border-[#e8dcc4]'}`}><span className="block text-xs font-semibold text-[#263d31]">{label}</span><span className="mt-1 block text-[10px] text-stone-500">{cost}</span></button>)}
+                  <button type="button" onClick={() => setShippingMethod('STANDARD')} aria-pressed={shippingMethod === 'STANDARD'} className={`rounded-xl border bg-white p-3 text-left ${shippingMethod === 'STANDARD' ? 'border-[#536b4d] ring-1 ring-[#536b4d]/30' : 'border-[#e8dcc4]'}`}>
+                    <span className="block text-xs font-semibold text-[#263d31]">Standard</span>
+                    <span className="mt-1 block text-[10px] text-stone-500">5–7 days · {standardDeliveryCost ? formatPrice(standardDeliveryCost) : 'Free'}</span>
+                  </button>
+                  {(subtotal >= PREMIUM_DELIVERY_THRESHOLD || shippingMethod === 'PREMIUM') && <button type="button" onClick={() => setShippingMethod('PREMIUM')} aria-pressed={shippingMethod === 'PREMIUM'} className={`rounded-xl border bg-white p-3 text-left ${shippingMethod === 'PREMIUM' ? 'border-[#536b4d] ring-1 ring-[#536b4d]/30' : 'border-[#e8dcc4]'}`}>
+                    <span className="block text-xs font-semibold text-[#263d31]">Premium</span>
+                    <span className="mt-1 block text-[10px] text-stone-500">3–5 days · {premiumDeliveryCost ? formatPrice(premiumDeliveryCost) : 'Free'}</span>
+                  </button>}
                 </div>
+                {subtotal < PREMIUM_DELIVERY_THRESHOLD && shippingMethod === 'STANDARD' && <button type="button" onClick={() => setShippingMethod('PREMIUM')} className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#8b5a2b] underline underline-offset-2">
+                  Want it sooner? Upgrade to Premium for {formatPrice(PREMIUM_DELIVERY_SURCHARGE)} extra <ArrowRight size={12}/>
+                </button>}
                 </>}
                 {checkoutStep === 2 && <>
                 <div className="flex items-start justify-between gap-3 rounded-xl border border-[#e1e3d9] bg-white p-3 text-xs">
-                  <div className="min-w-0"><p className="font-semibold text-[#35533c]">{selectedAddressDetails?.full_name || selectedAddressDetails?.fullName || 'Delivery address'} · {selectedAddressDetails?.label || 'Address'}</p><p className="mt-1 truncate text-stone-500">{selectedAddressDetails ? `${selectedAddressDetails.address_line1 || selectedAddressDetails.street_address || selectedAddressDetails.line1}, ${selectedAddressDetails.city}, ${selectedAddressDetails.state} ${selectedAddressDetails.pincode || selectedAddressDetails.postal_code}` : 'Address selected'}</p><p className="mt-1 text-stone-500">{shippingMethod === 'EXPRESS' ? 'Express delivery' : 'Standard delivery'} · {shippingCost ? formatPrice(shippingCost) : 'Free'}</p></div>
+                  <div className="min-w-0"><p className="font-semibold text-[#35533c]">{selectedAddressDetails?.full_name || selectedAddressDetails?.fullName || 'Delivery address'} · {selectedAddressDetails?.label || 'Address'}</p><p className="mt-1 truncate text-stone-500">{selectedAddressDetails ? `${selectedAddressDetails.address_line1 || selectedAddressDetails.street_address || selectedAddressDetails.line1}, ${selectedAddressDetails.city}, ${selectedAddressDetails.state} ${selectedAddressDetails.pincode || selectedAddressDetails.postal_code}` : 'Address selected'}</p><p className="mt-1 text-stone-500">{shippingMethod === 'PREMIUM' ? 'Premium delivery · 3–5 days' : 'Standard delivery · 5–7 days'} · {shippingCost ? formatPrice(shippingCost) : 'Free'}</p></div>
                   <button type="button" onClick={() => setCheckoutStep(1)} className="shrink-0 font-semibold text-[#8b5a2b] underline underline-offset-2">Edit</button>
                 </div>
                 <div className="space-y-2">
@@ -785,6 +832,9 @@ export default function MiniCart() {
                 <label className="block text-[10px] font-semibold text-stone-600">Delivery note (optional)<textarea rows={2} value={orderNotes} onChange={event => setOrderNotes(event.target.value)} className="mt-1 w-full resize-none rounded-lg border border-stone-200 bg-white px-3 py-2 text-xs" placeholder="Anything the delivery team should know?"/></label>
                 </>}
               </>}
+              </div>
+              </Motion.div>}
+              </AnimatePresence>
             </section>}
 
             {!checkoutOpen && <section className="overflow-hidden rounded-2xl border border-[#e8dcc4] bg-white">
@@ -888,47 +938,31 @@ export default function MiniCart() {
         {cartItems.length > 0 && <footer className="mini-cart-footer border-t border-[#dedfd4] bg-[#fbfaf5] px-5 py-4 shadow-[0_-10px_30px_rgba(20,37,28,0.08)] sm:px-7">
           <div className="space-y-2 text-xs">
             <div className="flex justify-between text-stone-600"><span>Subtotal</span><strong className="text-[#1A1C18]">{formatPrice(subtotal)}</strong></div>
-            {discount + couponDiscount + tierDiscount + referralWalletAmount + loyaltyDiscount > 0 && <div className="flex items-center justify-between rounded-lg bg-emerald-50 px-2.5 py-2 text-sm font-extrabold text-emerald-800"><span>Savings applied</span><span className="text-base font-black">−{formatPrice(discount + couponDiscount + tierDiscount + referralWalletAmount + loyaltyDiscount)}</span></div>}
+            {discount > 0 && <div className="flex justify-between text-[#526b4d]"><span>Cart offers</span><span>−{formatPrice(discount)}</span></div>}
+            {couponDiscount > 0 && <div className="flex justify-between gap-3 font-extrabold text-[#8b5a2b]"><span className="min-w-0 truncate">Coupon{appliedCoupon?.code ? ` · ${appliedCoupon.code}` : ''}</span><span className="shrink-0">−{formatPrice(couponDiscount)}</span></div>}
+            {tierDiscount > 0 && <div className="flex justify-between text-[#526b4d]"><span>Membership saving</span><span>−{formatPrice(tierDiscount)}</span></div>}
+            {referralWalletAmount > 0 && <div className="flex justify-between font-semibold text-[#526b4d]"><span>Shopping wallet applied</span><span>−{formatPrice(referralWalletAmount)}</span></div>}
             {loyalty?.enabled && Number(loyalty?.pointsBalance) >= Number(loyalty?.minimumRedemptionPoints) && pointsRedemption.points > 0 && <label className="flex items-center justify-between gap-3 font-semibold text-emerald-700"><span className="flex items-center gap-2"><input type="checkbox" checked={redeemLoyaltyPoints} onChange={event => setRedeemLoyaltyPoints(event.target.checked)} className="accent-[#35533c]"/>Use {(redeemLoyaltyPoints ? loyaltyPointsToRedeem : pointsRedemption.points).toLocaleString()} loyalty points</span><span>{loyaltyDiscount > 0 ? `−${formatPrice(loyaltyDiscount)}` : 'Not applied'}</span></label>}
-            {checkoutOpen && <div className="flex justify-between text-stone-600"><span>{shippingMethod === 'EXPRESS' ? 'Express delivery' : 'Standard delivery'}</span><span>{shippingCost ? formatPrice(shippingCost) : 'Free'}</span></div>}
+            {totalSavings > 0 && <div className="flex items-center justify-between rounded-lg bg-emerald-50 px-2.5 py-2 text-sm font-extrabold text-emerald-800"><span>Savings applied</span><span className="text-base font-black">−{formatPrice(totalSavings)}</span></div>}
+            {checkoutOpen && <div className="flex justify-between text-stone-600"><span>{shippingMethod === 'PREMIUM' ? 'Premium delivery · 3–5 days' : 'Standard delivery · 5–7 days'}</span><span>{shippingCost ? formatPrice(shippingCost) : 'Free'}</span></div>}
             {checkoutStep === 1 && <div className="space-y-2 border-t border-[#e5e7de] pt-2">
-              <div>
-                <p className="text-xs font-bold text-[#263d31]">Shopping wallet rewards</p>
-                <p className="mt-0.5 text-[9px] text-stone-500">Earned after eligible payment; wallet credit is non-withdrawable and usable only for shopping.</p>
-              </div>
-              <div className="grid grid-cols-3 gap-1.5">
-                <article className="min-w-0 rounded-lg border border-[#d9e4cf] bg-[#f3f7ed] p-2">
-                  <p className="text-[8px] font-bold uppercase leading-3 tracking-wide text-[#526b4d]">{SHOPPING_WALLET_REWARD_PERCENT}% every order</p>
-                  <p className="mt-1 text-xs font-extrabold text-[#14251c]">{formatPrice(estimateShoppingWalletReward(shoppingWalletRewardEligibleSubtotal))}</p>
-                  <p className="mt-1 text-[8px] leading-3 text-stone-600">Estimated wallet credit</p>
-                </article>
-                <article className="min-w-0 rounded-lg border border-[#e8dcc4] bg-white p-2">
-                  <p className="text-[8px] font-bold uppercase leading-3 tracking-wide text-[#8b5a2b]">+{NEW_CUSTOMER_BONUS_PERCENT}% welcome</p>
-                  <p className="mt-1 text-xs font-extrabold text-[#14251c]">{isNewCustomer ? `+${formatPrice(newCustomerBonusEstimate)}` : codEligibility.available ? 'First order only' : 'Checking eligibility'}</p>
-                  <p className="mt-1 text-[8px] leading-3 text-stone-600">Extra credit for new customers, within the {formatPrice(SHOPPING_WALLET_REWARD_CAP)} reward cap</p>
-                </article>
-                <article className="min-w-0 rounded-lg border border-[#e8dcc4] bg-white p-2">
-                  <p className="text-[8px] font-bold uppercase leading-3 tracking-wide text-[#526b4d]">Shopping wallet</p>
-                  <p className="mt-1 truncate text-xs font-extrabold text-[#14251c]">{formatPrice(referralReward?.balance)}</p>
-                  <p className="mt-1 text-[8px] leading-3 text-stone-600">Non-withdrawable; used toward shopping</p>
-                </article>
-              </div>
               <div className="rounded-lg border border-[#e8dcc4] bg-white p-2.5">
-                <p className="mb-1.5 text-[10px] font-semibold text-[#35533c]">Coupons and discounts</p>
+                <p className="mb-1.5 text-[11px] font-extrabold text-[#263d31]">Coupons &amp; offers</p>
                 <form onSubmit={validateCoupon} className="flex gap-2">
                   <input value={couponCode} onChange={event => setCouponCode(event.target.value)} aria-label="Coupon code" placeholder="Enter coupon code" className="min-w-0 flex-1 rounded-lg border border-dashed border-stone-300 px-2.5 py-2 text-xs outline-none focus:border-[#8b5a2b]"/>
                   <button disabled={couponBusy || !couponCode.trim()} className="rounded-lg bg-[#2C3E2D] px-3 py-2 text-[10px] font-bold text-white disabled:opacity-50">{couponBusy ? 'Checking…' : 'Apply'}</button>
                 </form>
                 {couponMessage && <p role="status" className={`mt-1.5 text-[10px] ${appliedCoupon && couponDiscount > 0 ? 'text-emerald-700' : appliedCoupon ? 'text-amber-700' : 'text-rose-700'}`}>{couponMessage}</p>}
-                {offersToShow.length > 0 && <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5">
-                  {offersToShow.slice(0, 3).map(offer => <button type="button" key={offer.code} disabled={couponBusy} onClick={() => { setCouponCode(offer.code); void applyCouponCode(offer.code); }} className="shrink-0 rounded-md bg-[#faf8f5] px-2 py-1.5 text-left text-[9px] text-[#2C3E2D] disabled:opacity-60">
-                    <span className="block font-mono font-bold">{offer.code}</span>
-                    <span className="block text-stone-600">{offer.reward_type === 'coupon_credit' ? `${formatPrice(offer.discount_value)} reward coupon` : offer.discount_type === 'percentage' ? `${offer.discount_value}% off` : `${formatPrice(offer.discount_value)} off`}</span>
+                {offersToShow.length > 0 && <div className="mt-2 grid gap-1.5">
+                  {offersToShow.slice(0, 3).map(offer => <button type="button" key={offer.code} disabled={couponBusy} onClick={() => { setCouponCode(offer.code); void applyCouponCode(offer.code); }} className="flex w-full items-center justify-between gap-3 rounded-lg border border-[#e8dcc4] bg-[#faf8f5] px-3 py-2 text-left text-[11px] font-bold text-[#2C3E2D] transition hover:border-[#8b5a2b] hover:bg-[#f5f1e8] disabled:opacity-60">
+                    <span className="min-w-0"><span className="block font-mono font-extrabold">{offer.code}</span><span className="mt-0.5 block text-[10px] font-semibold text-stone-600">{offer.reward_type === 'coupon_credit' ? `${formatPrice(offer.discount_value)} reward coupon` : offer.reward_type === 'referral_wallet' ? 'Shopping wallet reward' : offer.discount_type === 'percentage' ? `${offer.discount_value}% off` : `${formatPrice(offer.discount_value)} off`}</span></span>
+                    <span className="shrink-0 text-right text-[10px] font-extrabold text-[#8b5a2b]">{offer.estimatedSaving > 0 ? `Save ${formatPrice(offer.estimatedSaving)}` : 'Apply'}</span>
                   </button>)}
                 </div>}
               </div>
             </div>}
-            <div className="flex justify-between border-t border-[#e5e7de] pt-2 text-sm font-bold text-[#14251c]"><span>{checkoutOpen ? 'Order total' : 'Estimated total*'}</span><span>{formatPrice(checkoutOpen ? finalTotal : Math.max(0, subtotal - discount - couponDiscount - tierDiscount - referralWalletAmount - loyaltyDiscount))}</span></div>
+            {checkoutStep === 1 && shoppingWalletRewardEstimate > 0 && <div className="flex justify-between gap-3 text-[10px] text-[#526b4d]"><span>Est. shopping wallet reward after order</span><span className="shrink-0 font-bold">+{formatPrice(shoppingWalletRewardEstimate)}</span></div>}
+            <div className="flex justify-between border-t border-[#e5e7de] pt-2 text-sm font-extrabold text-[#14251c]"><span>{checkoutOpen ? 'Order total' : 'Estimated total*'}</span><span>{checkoutOpen ? formatPrice(finalTotal) : formatPrice(estimatedTotal)}</span></div>
           </div>
           {!checkoutOpen
             ? <button type="button" onClick={continueToCheckout} className="mini-cart-primary-action mt-3 flex w-full items-center justify-center gap-2 rounded-xl bg-[#14251c] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-lg shadow-[#14251c]/15 transition">Continue to checkout <ArrowRight size={16}/></button>

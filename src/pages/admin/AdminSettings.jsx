@@ -480,7 +480,7 @@ export default function AdminSettings() {
         <form onSubmit={saveShippingSettings} className="grid gap-4 sm:grid-cols-3">
           {[
             ['standard_charge', 'Standard delivery'],
-            ['express_charge', 'Express delivery'],
+            ['express_charge', 'Premium delivery'],
             ['free_shipping_threshold', 'Free delivery threshold'],
           ].map(([key, label]) => <label key={key} className="text-sm text-gray-300">{label} (₹)
             <input type="number" min="0" value={shippingSettings[key]} onChange={event => setShippingSettings(current => ({ ...current, [key]: event.target.value }))} className="admin-glass-control mt-2 w-full rounded-lg px-3 py-2 focus:border-cyan-400"/>
