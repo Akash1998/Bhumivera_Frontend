@@ -1,12 +1,13 @@
 import SEO from '../components/SEO';
 import SEOStructuredData from '../components/SEOStructuredData';
+import ProductDeliveryPromise from '../components/ProductDeliveryPromise';
 import React, { useRef, useState, useEffect } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { 
   Star, Leaf, Heart, Shield, ChevronRight, ChevronLeft,
   Minus, Plus, CheckCircle2, AlertCircle, Microscope, Package, Tag,
-  BadgeCheck, Play, Truck, X
+  BadgeCheck, Play, X
 } from 'lucide-react';
 import { 
   products as productsApi, 
@@ -16,7 +17,6 @@ import {
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
-import { getDeliveryEstimate } from '../utils/deliveryEstimate';
 
 const splitUrls = value => {
   if (Array.isArray(value)) return value.filter(item => typeof item === 'string');
@@ -436,15 +436,7 @@ export default function ProductDetail() {
               </button>
 
             </div>
-            <div className="mt-4 flex items-start gap-3 border-t border-stone-200 pt-4 text-stone-700 sm:mt-5">
-              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#eff3ec] text-[#607552]">
-                <Truck size={17} aria-hidden="true" />
-              </span>
-              <div>
-                <p className="text-xs font-semibold">Estimated delivery</p>
-                <p className="mt-1 text-sm font-medium">{getDeliveryEstimate()} <span className="font-normal text-stone-500">(5–7 days if ordered today)</span></p>
-              </div>
-            </div>
+            <ProductDeliveryPromise isOutOfStock={isOutOfStock} />
           </div>
 
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
