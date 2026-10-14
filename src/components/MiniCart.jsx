@@ -731,25 +731,7 @@ export default function MiniCart() {
               <span className="flex items-center gap-1.5"><BadgeCheck size={14} className="text-[#8b5a2b]"/>Customer-approved reviews</span>
             </div>}
 
-            {checkoutOpen && <section className="mini-cart-checkout overflow-hidden rounded-2xl border border-[#d9dfd2] bg-[#f8f8f2]" aria-label="Checkout details">
-              <button
-                type="button"
-                aria-expanded={checkoutDetailsExpanded}
-                aria-controls="mini-checkout-drawer"
-                onClick={() => setCheckoutDetailsExpanded(open => !open)}
-                className="flex w-full items-center justify-between gap-3 bg-white/70 px-4 py-3 text-left transition hover:bg-white"
-              >
-                <span className="min-w-0">
-                  <span className="block text-[9px] font-bold uppercase tracking-[0.16em] text-[#526b4d]">Step {checkoutStep} of 2 · {checkoutDetailsExpanded ? 'Tap to hide details' : 'Tap to view details'}</span>
-                  <span className="mt-1 block truncate font-serif text-base text-[#14251c]">{checkoutStep === 1 ? 'Delivery details' : 'Payment & review'}</span>
-                </span>
-                <span className="flex shrink-0 items-center gap-2">
-                  <span className="text-xs font-bold text-[#263d31]">{formatPrice(finalTotal)}</span>
-                  <span className="flex h-8 w-8 items-center justify-center rounded-full border border-[#d9dfd2] bg-white text-[#526b4d] shadow-sm">
-                    {checkoutDetailsExpanded ? <ChevronUp size={17}/> : <ChevronDown size={17}/>}
-                  </span>
-                </span>
-              </button>
+            {checkoutOpen && <section className="mini-cart-checkout" aria-label="Checkout details">
               <AnimatePresence initial={false}>
               {checkoutDetailsExpanded && <Motion.div
                 id="mini-checkout-drawer"
@@ -759,7 +741,7 @@ export default function MiniCart() {
                 transition={{ duration: 0.22, ease: 'easeInOut' }}
                 className="overflow-hidden"
               >
-              <div className="space-y-4 border-t border-[#d9dfd2] p-4">
+              <div className="space-y-4 rounded-2xl border border-[#d9dfd2] bg-[#f8f8f2] p-4">
               <nav aria-label="Checkout progress" className="grid grid-cols-2 gap-2">
                 {['Delivery', 'Payment'].map((label, index) => {
                   const step = index + 1;
@@ -937,7 +919,22 @@ export default function MiniCart() {
 
         {cartItems.length > 0 && <footer className="mini-cart-footer border-t border-[#dedfd4] bg-[#fbfaf5] px-5 py-4 shadow-[0_-10px_30px_rgba(20,37,28,0.08)] sm:px-7">
           <div className="space-y-2 text-xs">
-            <div className="flex justify-between text-stone-600"><span>Subtotal</span><strong className="text-[#1A1C18]">{formatPrice(subtotal)}</strong></div>
+            <div className="flex items-center justify-between text-stone-600">
+              <span className="flex items-center gap-2">
+                <span>Subtotal</span>
+                {checkoutOpen && <button
+                  type="button"
+                  aria-label={checkoutDetailsExpanded ? 'Hide delivery details' : 'Show delivery details'}
+                  aria-expanded={checkoutDetailsExpanded}
+                  aria-controls="mini-checkout-drawer"
+                  onClick={() => setCheckoutDetailsExpanded(open => !open)}
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-[#d9dfd2] bg-white text-[#526b4d] shadow-sm transition hover:border-[#536b4d] hover:bg-[#f3f7ed] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536b4d]"
+                >
+                  {checkoutDetailsExpanded ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
+                </button>}
+              </span>
+              <strong className="text-[#1A1C18]">{formatPrice(subtotal)}</strong>
+            </div>
             {discount > 0 && <div className="flex justify-between text-[#526b4d]"><span>Cart offers</span><span>−{formatPrice(discount)}</span></div>}
             {couponDiscount > 0 && <div className="flex justify-between gap-3 font-extrabold text-[#8b5a2b]"><span className="min-w-0 truncate">Coupon{appliedCoupon?.code ? ` · ${appliedCoupon.code}` : ''}</span><span className="shrink-0">−{formatPrice(couponDiscount)}</span></div>}
             {tierDiscount > 0 && <div className="flex justify-between text-[#526b4d]"><span>Membership saving</span><span>−{formatPrice(tierDiscount)}</span></div>}
