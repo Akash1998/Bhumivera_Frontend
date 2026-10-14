@@ -8,6 +8,7 @@ import { useSettings } from '../context/SettingsContext';
 import { useWishlist } from '../context/WishlistContext';
 import { addresses as addressesApi, coupons as couponsApi, orders as ordersApi, payments as paymentsApi, products as productsApi, wallet as walletApi } from '../services/api';
 import { useToast } from '../context/ToastContext';
+import { COUPON_CREDIT_CAP, COUPON_CREDIT_PERCENT, COUPON_CREDIT_VALID_DAYS, estimateCouponCredit } from '../utils/couponCredit';
 
 let razorpayScriptPromise;
 const loadRazorpayScript = () => {
@@ -151,6 +152,12 @@ export default function MiniCart() {
   const expressShippingCost = Math.max(0, Number(settings?.express_charge ?? 150) || 0);
   const shippingCost = rulePreview?.freeShipping || loyaltyFreeShipping ? 0 : shippingMethod === 'EXPRESS' ? expressShippingCost : standardShippingCost;
   const finalTotal = Math.max(0, subtotal + shippingCost - discount - couponDiscount - tierDiscount - referralWalletAmount - loyaltyDiscount);
+  const couponCreditEligibleSubtotal = Math.max(
+    0,
+    subtotal - discount - couponDiscount - tierDiscount - referralWalletAmount - loyaltyDiscount,
+  );
+  const couponCreditEstimate = estimateCouponCredit(couponCreditEligibleSubtotal);
+  const appliedSavings = discount + couponDiscount + tierDiscount + referralWalletAmount + loyaltyDiscount;
   const recommendationsToShow = useMemo(() => {
     const cartIds = new Set(cartItems.map(item => String(item.product_id || item.product?.id || item.id)));
     return recommendations.filter(product => !cartIds.has(String(product.id || product._id))).slice(0, 4);
@@ -217,7 +224,7 @@ export default function MiniCart() {
   }, [isCartOpen, checkoutOpen, recommendationsOpen, cartItems.length, recommendationsLoaded, recommendationsRetry]);
 
   useEffect(() => {
-    if (!isCartOpen || checkoutOpen || !offersOpen) return undefined;
+    if (!isCartOpen || (!offersOpen && checkoutStep !== 1)) return undefined;
     let active = true;
     Promise.allSettled([
       couponsApi.getPublicActive(),
@@ -249,7 +256,7 @@ export default function MiniCart() {
       })
       .catch(error => console.error('[MINI_CART_OFFERS]', error));
     return () => { active = false; };
-  }, [isCartOpen, checkoutOpen, offersOpen, userId]);
+  }, [isCartOpen, checkoutStep, offersOpen, userId]);
 
   useEffect(() => {
     if (!isCartOpen) return undefined;
@@ -385,7 +392,7 @@ export default function MiniCart() {
       setAppliedCoupon({
         code,
         discount: appliedDiscount,
-        rewardType: 'standard',
+        rewardType: data.rewardType || 'standard',
       });
       const couponStacks = couponStackPolicy === 'both' || couponStackPolicy === 'coupon_first' || discount <= 0;
       setCouponMessage(couponStacks
@@ -747,6 +754,79 @@ export default function MiniCart() {
                 <div className="grid grid-cols-2 gap-2">
                   {[['STANDARD', 'Standard', shippingCost === 0 ? 'Free' : formatPrice(standardShippingCost)], ['EXPRESS', 'Express', rulePreview?.freeShipping ? 'Free' : formatPrice(expressShippingCost)]].map(([value, label, cost]) => <button type="button" key={value} onClick={() => setShippingMethod(value)} aria-pressed={shippingMethod === value} className={`rounded-xl border bg-white p-3 text-left ${shippingMethod === value ? 'border-[#536b4d] ring-1 ring-[#536b4d]/30' : 'border-[#e8dcc4]'}`}><span className="block text-xs font-semibold text-[#263d31]">{label}</span><span className="mt-1 block text-[10px] text-stone-500">{cost}</span></button>)}
                 </div>
+                <section className="space-y-3" aria-labelledby="checkout-benefits-title">
+                  <div>
+                    <h4 id="checkout-benefits-title" className="text-sm font-semibold text-[#263d31]">Offers and rewards</h4>
+                    <p className="mt-1 text-[10px] leading-4 text-stone-500">Clear totals now, and a real coupon reward after eligible payment.</p>
+                  </div>
+                  <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                    <article className="rounded-xl border border-[#d9e4cf] bg-[#f3f7ed] p-3">
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-[#526b4d]">Estimated coupon credit</p>
+                      <p className="mt-1 text-lg font-bold text-[#14251c]">{formatPrice(couponCreditEstimate)}</p>
+                      <p className="mt-1 text-[10px] leading-4 text-stone-600">
+                        {COUPON_CREDIT_PERCENT}% of eligible merchandise, capped at {formatPrice(COUPON_CREDIT_CAP)}. {paymentMode === 'COD' ? 'Issued after successful COD delivery.' : 'Issued after payment is confirmed.'}
+                      </p>
+                      <p className="mt-2 text-[9px] leading-4 text-stone-500">
+                        Personal, non-withdrawable coupon; valid {COUPON_CREDIT_VALID_DAYS} days. Excludes shipping, taxes, gifts and applied discounts or credits. Refunds reverse the proportional reward; any used portion offsets future rewards.
+                      </p>
+                    </article>
+                    <article className="rounded-xl border border-[#e8dcc4] bg-white p-3">
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-[#526b4d]">Savings applied to this order</p>
+                      <p className="mt-1 text-lg font-bold text-emerald-700">{formatPrice(appliedSavings)}</p>
+                      <p className="mt-1 text-[10px] leading-4 text-stone-600">Already reflected in the order total. No future reward is counted as a current saving.</p>
+                    </article>
+                    <article className="rounded-xl border border-[#e8dcc4] bg-white p-3">
+                      <p className="text-[9px] font-bold uppercase tracking-wider text-[#526b4d]">Delivery and cart rewards</p>
+                      <p className="mt-1 text-sm font-semibold text-[#14251c]">{shippingCost === 0 ? 'Free delivery selected' : `${shippingMethod === 'EXPRESS' ? 'Express' : 'Standard'} delivery`}</p>
+                      <p className="mt-1 text-[10px] leading-4 text-stone-600">
+                        {rulePreview?.gifts?.length
+                          ? `${rulePreview.gifts.length} cart reward${rulePreview.gifts.length === 1 ? '' : 's'} currently unlocked.`
+                          : amountToFreeShipping > 0
+                            ? `Add ${formatPrice(amountToFreeShipping)} for free standard delivery.`
+                            : 'Your cart rewards are checked again before payment.'}
+                      </p>
+                    </article>
+                  </div>
+                  <div className="rounded-xl border border-[#e8dcc4] bg-white p-3">
+                    <p className="mb-2 text-xs font-semibold text-[#35533c]">Available coupons</p>
+                    <form onSubmit={validateCoupon} className="flex gap-2">
+                      <input value={couponCode} onChange={event => setCouponCode(event.target.value)} aria-label="Coupon code" placeholder="Enter coupon code" className="min-w-0 flex-1 rounded-xl border border-dashed border-stone-300 px-3 py-2.5 text-sm outline-none focus:border-[#8b5a2b]"/>
+                      <button disabled={couponBusy || !couponCode.trim()} className="rounded-xl bg-[#2C3E2D] px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{couponBusy ? 'Checking…' : 'Apply'}</button>
+                    </form>
+                    {couponMessage && <p role="status" className={`mt-2 text-xs ${appliedCoupon && couponDiscount > 0 ? 'text-emerald-700' : appliedCoupon ? 'text-amber-700' : 'text-rose-700'}`}>{couponMessage}</p>}
+                    {offersToShow.length > 0
+                      ? <div className="mt-3 grid gap-2 sm:grid-cols-2">
+                        {offersToShow.map(offer => (
+                          <button
+                            type="button"
+                            key={offer.code}
+                            disabled={couponBusy}
+                            onClick={() => {
+                              setCouponCode(offer.code);
+                              void applyCouponCode(offer.code);
+                            }}
+                            className="flex min-w-0 items-start justify-between gap-2 rounded-lg bg-[#faf8f5] px-3 py-2 text-left text-xs hover:bg-[#f5f1e8] disabled:opacity-60"
+                          >
+                            <span className="min-w-0">
+                              <strong className="block truncate font-mono text-[#2C3E2D]">{offer.code}</strong>
+                              <span className="mt-1 block text-stone-600">
+                                {offer.reward_type === 'coupon_credit'
+                                  ? `${formatPrice(offer.discount_value)} coupon credit`
+                                  : offer.reward_type === 'referral_wallet'
+                                    ? `Referral credit up to ${formatPrice(offer.wallet_per_order_limit || offer.discount_value)}`
+                                    : offer.discount_type === 'percentage'
+                                      ? `${offer.discount_value}% off`
+                                      : `${formatPrice(offer.discount_value)} off`}
+                              </span>
+                              {offer.expires_at && <span className="mt-1 block text-[9px] text-stone-500">Expires {new Date(offer.expires_at).toLocaleDateString()}</span>}
+                            </span>
+                            <span className="shrink-0 text-[9px] font-bold uppercase tracking-wide text-[#8b5a2b]">Apply</span>
+                          </button>
+                        ))}
+                      </div>
+                      : <p className="mt-2 text-[10px] text-stone-500">{user ? 'No additional coupons are available right now.' : 'Sign in to see personal coupons and rewards.'}</p>}
+                  </div>
+                </section>
                 </>}
                 {checkoutStep === 2 && <>
                 <div className="flex items-start justify-between gap-3 rounded-xl border border-[#e1e3d9] bg-white p-3 text-xs">
