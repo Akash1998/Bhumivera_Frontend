@@ -82,6 +82,14 @@ body {
   }
 }
 
+@media (max-width: 767px) {
+  .site-shell nav.sticky {
+    background-color: #fbfaf5;
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
 @layer components {
   .admin-glass-panel {
     @apply border border-white/10 bg-[#10241f]/65 shadow-[0_14px_40px_rgba(0,0,0,0.18)] backdrop-blur-2xl;

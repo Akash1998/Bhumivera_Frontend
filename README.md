@@ -14,6 +14,12 @@ npm run build
 
 The production website registers `public/sw.js`. It caches the app shell and static assets, and IndexedDB keeps a bounded set of public product-list/detail responses. Saved catalog content is informational and can be stale; cart/account writes, live inventory checks, and checkout are not cached or queued for later.
 
+### Install from a browser
+
+- On supported Android browsers, open the site over HTTPS, open the mobile navigation menu, and choose **Install Bhumivera** when the browser offers installation.
+- On iPhone or iPad, open the site in Safari, open the Share menu, choose **Add to Home Screen**, then confirm with **Add**.
+- Browser-installed apps still use web platform capabilities. Checkout, account actions, notifications, and some device integrations may behave differently from a native application; offline support is limited to the app shell and previously saved public catalog details.
+
 ## Android development
 
 Requirements:

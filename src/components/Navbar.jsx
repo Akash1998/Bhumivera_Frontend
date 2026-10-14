@@ -4,7 +4,7 @@ import { AnimatePresence, MotionConfig, motion as Motion } from 'framer-motion';
 import { 
   ShoppingCart, User, Search, Menu, X, Sparkles, Heart,
   ChevronDown, Package, Gift, GitCompareArrows, ArrowRight,
-  MapPin, Activity, Droplets, Leaf, Mic, FlaskConical, Compass,
+  MapPin, Activity, Droplets, Leaf, Mic, FlaskConical, Compass, Download,
   HeartHandshake, Truck, CircleUserRound, BadgePercent
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -26,12 +26,50 @@ export default function Navbar() {
   const [isAiPowered, setIsAiPowered] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [showSearchDropdown, setShowSearchDropdown] = useState(false);
+  const [installPrompt, setInstallPrompt] = useState(null);
+  const [showIosInstallHelp, setShowIosInstallHelp] = useState(false);
   const searchTimeout = useRef(null);
   const [isGarageActive, setGarageActive] = useState(false);
   const [garageData, setGarageData] = useState(null);
   const navigate = useNavigate(); 
   const location = useLocation();
   const searchDropdownRef = useRef(null);
+  const isIosDevice = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true;
+
+  useEffect(() => {
+    const handleInstallAvailable = event => {
+      event.preventDefault();
+      setInstallPrompt(event);
+    };
+    const handleInstalled = () => {
+      setInstallPrompt(null);
+      setShowIosInstallHelp(false);
+    };
+    window.addEventListener('beforeinstallprompt', handleInstallAvailable);
+    window.addEventListener('appinstalled', handleInstalled);
+    return () => {
+      window.removeEventListener('beforeinstallprompt', handleInstallAvailable);
+      window.removeEventListener('appinstalled', handleInstalled);
+    };
+  }, []);
+
+  const handleInstallApp = async () => {
+    if (!installPrompt) {
+      setShowIosInstallHelp(value => !value);
+      return;
+    }
+    try {
+      await installPrompt.prompt();
+      await installPrompt.userChoice;
+    } catch (error) {
+      console.error('[PWA_INSTALL_PROMPT_ERROR]', error);
+    } finally {
+      setInstallPrompt(null);
+    }
+  };
 
   useEffect(() => {
     setMenuOpen(false);
@@ -359,6 +397,23 @@ export default function Navbar() {
                 </Motion.div>
               ))}
             </Motion.div>
+            {!isStandalone && (installPrompt || isIosDevice) && (
+              <div className="mt-4">
+                <button
+                  type="button"
+                  onClick={handleInstallApp}
+                  className="flex min-h-12 w-full items-center justify-center gap-2 rounded-full border border-[#526b4d]/30 bg-[#eaf0e4] px-4 py-3 text-sm font-semibold text-[#14251c] transition-colors hover:bg-[#dfe8d8]"
+                >
+                  <Download size={17} />
+                  {isIosDevice ? 'Add Bhumivera to Home Screen' : 'Install Bhumivera'}
+                </button>
+                {showIosInstallHelp && isIosDevice && (
+                  <p className="mt-2 rounded-xl bg-white/70 px-4 py-3 text-xs leading-5 text-[#526b4d]" role="status">
+                    In Safari, tap Share, choose “Add to Home Screen”, then tap “Add”.
+                  </p>
+                )}
+              </div>
+            )}
             <p className="mt-4 text-center text-[9px] font-medium tracking-wide text-[#82907c]">Made with care · rooted in nature</p>
           </Motion.div>
         </Motion.div>}

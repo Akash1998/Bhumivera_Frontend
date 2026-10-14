@@ -6,6 +6,8 @@ import { useToast } from './ToastContext';
 
 const CartContext = createContext();
 
+export const getCartProductId = product => product?.product_id ?? product?._id ?? product?.id;
+
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
   const [cartLoading, setCartLoading] = useState(false);
@@ -87,7 +89,11 @@ export const CartProvider = ({ children }) => {
 
   // ZERO-LATENCY OPTIMISTIC UPDATE
   const addToCart = async (product, qty = 1) => {
-    const prodId = product._id || product.id;
+    const prodId = getCartProductId(product);
+    if (prodId === undefined || prodId === null) {
+      toast.error('This product cannot be added to your cart right now.');
+      return false;
+    }
     
     const addProduct = prev => {
       const safeCart = Array.isArray(prev) ? prev : [];
