@@ -5,7 +5,6 @@ import { CheckCircle2, MapPin, CreditCard, ShieldCheck, ArrowRight, Truck, Walle
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { BASE_URL, orders, addresses, wallet } from '../services/api';
-import PincodeChecker from '../components/PincodeChecker';
 import { haptics } from '../utils/haptics';
 
 export default function Checkout() {
@@ -209,10 +208,6 @@ export default function Checkout() {
                       ))}
                     </div>
                   )}
-
-                  <div className="mt-4">
-                    <PincodeChecker />
-                  </div>
 
                   <button
                     disabled={!selectedAddressId}

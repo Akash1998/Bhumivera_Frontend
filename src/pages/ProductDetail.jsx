@@ -1,13 +1,12 @@
 import SEO from '../components/SEO';
-import PincodeChecker from '../components/PincodeChecker';
 import SEOStructuredData from '../components/SEOStructuredData';
-import React, { useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
-import { motion, AnimatePresence, useScroll, useTransform } from 'framer-motion';
+import { motion, AnimatePresence, useInView } from 'framer-motion';
 import { 
   Star, Leaf, Heart, Shield, ChevronRight, ChevronLeft,
   Minus, Plus, CheckCircle2, AlertCircle, Microscope, Package, Tag,
-  BadgeCheck, Play, X
+  BadgeCheck, Play, Truck, X
 } from 'lucide-react';
 import { 
   products as productsApi, 
@@ -17,6 +16,7 @@ import {
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
+import { getDeliveryEstimate } from '../utils/deliveryEstimate';
 
 const splitUrls = value => {
   if (Array.isArray(value)) return value.filter(item => typeof item === 'string');
@@ -108,10 +108,8 @@ export default function ProductDetail() {
   const [activeVideo, setActiveVideo] = useState(null);
   const [reviewRatingFilter, setReviewRatingFilter] = useState('all');
   const [reviewSort, setReviewSort] = useState('newest');
-
-  const { scrollY } = useScroll();
-  const showStickyBar = useTransform(scrollY, [0, 800], [0, 1]);
-  const stickyYOffset = useTransform(showStickyBar, [0, 1], [50, 0]);
+  const purchaseSectionRef = useRef(null);
+  const isPurchaseSectionVisible = useInView(purchaseSectionRef, { amount: 0.2 });
 
   useEffect(() => {
     if (location.hash === '#product-reviews') setActiveTab('reviews');
@@ -284,7 +282,7 @@ export default function ProductDetail() {
   };
 
   return (
-    <div className="bg-[#f4f2eb] text-[#1b2821] min-h-screen selection:bg-[#253b2f] selection:text-white pt-24 pb-32 font-sans relative">
+    <div className="relative min-h-screen bg-[#f4f2eb] pb-28 pt-20 font-sans text-[#1b2821] selection:bg-[#253b2f] selection:text-white md:pb-32 md:pt-24">
       <SEOStructuredData product={product} />
       <SEO 
         title={`${product.name} | Bhumivera`}
@@ -295,25 +293,27 @@ export default function ProductDetail() {
         schema={productSchema} 
       />
 
-      <div className="max-w-7xl mx-auto px-6 mb-8 flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-stone-500 relative z-10">
+      <div className="relative z-10 mx-auto mb-4 flex max-w-7xl items-center gap-1.5 overflow-hidden px-4 text-[9px] font-bold uppercase tracking-[0.12em] text-stone-500 md:mb-8 md:gap-2 md:px-6 md:text-xs md:tracking-widest">
         <Link to="/" className="hover:text-[#8b5a2b] transition-colors">Home</Link>
-        <ChevronRight size={14} />
-        <Link to={`/shop?category=${product.category_id}`} className="hover:text-[#8b5a2b] transition-colors">{product.category_name || 'Botanicals'}</Link>
-        <ChevronRight size={14} />
-        <span className="text-[#35533c] truncate max-w-[200px]">{product.name}</span>
+        <ChevronRight size={12} className="shrink-0 md:h-[14px] md:w-[14px]" />
+        <Link to={`/shop?category=${product.category_id}`} className="shrink-0 hover:text-[#8b5a2b] transition-colors">{product.category_name || 'Botanicals'}</Link>
+        <ChevronRight size={12} className="shrink-0 md:h-[14px] md:w-[14px]" />
+        <span className="truncate text-[#35533c]">{product.name}</span>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 relative z-10">
+      <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 gap-6 md:gap-10 lg:grid-cols-12 lg:gap-16">
         
-        <div className="lg:col-span-7 flex flex-col-reverse md:flex-row gap-6 relative">
-          <div className="flex md:flex-col gap-4 overflow-x-auto md:overflow-y-auto md:w-24 shrink-0 no-scrollbar py-1">
+        <div className="relative flex flex-col-reverse gap-3 md:flex-row md:gap-5 lg:col-span-7">
+          <div className="no-scrollbar flex shrink-0 gap-2 overflow-x-auto px-4 py-1 md:w-20 md:flex-col md:gap-3 md:overflow-y-auto md:px-0 lg:w-24">
             {product.images?.map((media, idx) => {
               const url = getImageUrl(media);
               return (
                 <button 
                   key={media.id || `${url}-${idx}`}
                   onClick={() => setActiveMedia(media)}
-                  className={`relative w-20 h-20 md:w-24 md:h-24 rounded-none overflow-hidden border-2 transition-all duration-300 shrink-0 ${
+                  aria-label={`View ${product.name} image ${idx + 1}`}
+                  aria-pressed={getImageUrl(activeMedia) === url}
+                  className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-300 sm:h-16 sm:w-16 md:h-20 md:w-20 md:rounded-2xl lg:h-24 lg:w-24 ${
                     getImageUrl(activeMedia) === url ? 'border-[#8b5a2b] shadow-[2px_2px_0px_#6b4421]' : 'border-stone-200 hover:border-stone-300'
                   }`}
                 >
@@ -323,7 +323,7 @@ export default function ProductDetail() {
             })}
           </div>
 
-          <div className="relative w-full aspect-square md:aspect-auto md:h-[680px] bg-[#e9e8df] border border-[#253b2f]/10 shadow-sm overflow-hidden flex items-center justify-center lg:sticky lg:top-32 group">
+          <div className="group relative aspect-[0.94] w-full overflow-hidden border-y border-[#253b2f]/10 bg-[#e9e8df] shadow-sm sm:aspect-square sm:rounded-2xl sm:border md:sticky md:top-28 md:aspect-auto md:h-[min(72vh,680px)] md:min-h-[500px] md:self-start lg:top-32">
             <AnimatePresence mode="wait">
               <motion.div
                 key={getImageUrl(activeMedia)}
@@ -331,7 +331,7 @@ export default function ProductDetail() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.8 }}
-                className="w-full h-full p-8 md:p-12"
+                className="h-full w-full p-5 sm:p-8 md:p-10 lg:p-12"
               >
                 <img src={getImageUrl(activeMedia)} alt={product.name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-contain mix-blend-multiply transition-transform duration-700 group-hover:scale-[1.025]" />
               </motion.div>
@@ -339,13 +339,13 @@ export default function ProductDetail() {
 
             {product.images?.length > 1 && (
               <>
-                <button type="button" onClick={() => showAdjacentImage(-1)} aria-label="Previous product image" className="absolute left-4 top-1/2 z-20 -translate-y-1/2 rounded-full border border-stone-200 bg-white/90 p-3 text-[#35533c] shadow-lg transition hover:bg-white">
-                  <ChevronLeft size={20}/>
+                <button type="button" onClick={() => showAdjacentImage(-1)} aria-label="Previous product image" className="absolute left-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-stone-200 bg-white/90 p-2.5 text-[#35533c] shadow-lg transition hover:bg-white sm:left-4 sm:p-3">
+                  <ChevronLeft size={18} className="sm:h-5 sm:w-5"/>
                 </button>
-                <button type="button" onClick={() => showAdjacentImage(1)} aria-label="Next product image" className="absolute right-4 top-1/2 z-20 -translate-y-1/2 rounded-full border border-stone-200 bg-white/90 p-3 text-[#35533c] shadow-lg transition hover:bg-white">
-                  <ChevronRight size={20}/>
+                <button type="button" onClick={() => showAdjacentImage(1)} aria-label="Next product image" className="absolute right-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-stone-200 bg-white/90 p-2.5 text-[#35533c] shadow-lg transition hover:bg-white sm:right-4 sm:p-3">
+                  <ChevronRight size={18} className="sm:h-5 sm:w-5"/>
                 </button>
-                <div className="absolute bottom-5 left-1/2 z-20 flex -translate-x-1/2 gap-2 rounded-full bg-white/80 px-3 py-2">
+                <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2 rounded-full bg-white/85 px-3 py-2 shadow-sm backdrop-blur">
                   {product.images.map((image, index) => (
                     <button key={image.id || `${getImageUrl(image)}-${index}`} type="button" onClick={() => setActiveMedia(image)} aria-label={`Show product image ${index + 1}`} aria-current={index === activeImageIndex} className={`h-2 rounded-full transition-all ${index === activeImageIndex ? 'w-6 bg-[#8b5a2b]' : 'w-2 bg-stone-400 hover:bg-stone-600'}`}/>
                   ))}
@@ -353,102 +353,110 @@ export default function ProductDetail() {
               </>
             )}
 
-            <div className="absolute top-6 left-6 flex flex-col gap-3 z-10">
-              {product.is_featured === 1 && <span className="bg-[#8b5a2b] text-white px-4 py-1.5 text-[10px] font-mono uppercase tracking-widest">Premium Selection</span>}
+            <div className="absolute left-3 top-3 z-10 flex flex-col gap-3 sm:left-6 sm:top-6">
+              {product.is_featured === 1 && <span className="rounded-full bg-[#8b5a2b] px-3 py-1.5 font-mono text-[9px] uppercase tracking-widest text-white shadow-sm sm:px-4 sm:text-[10px]">Premium Selection</span>}
             </div>
             
-            <button onClick={() => toggleWishlist(product)} aria-label={isWishlisted(product.id) ? 'Remove from saved products' : 'Save product'} aria-pressed={isWishlisted(product.id)} className="absolute top-6 right-6 w-12 h-12 bg-white border border-stone-200 rounded-full flex items-center justify-center text-stone-500 hover:text-[#35533c] hover:border-[#536b4d] transition-all duration-300 z-10">
-              <Heart size={20} fill={isWishlisted(product.id) ? 'currentColor' : 'none'} />
+            <button onClick={() => toggleWishlist(product)} aria-label={isWishlisted(product.id) ? 'Remove from saved products' : 'Save product'} aria-pressed={isWishlisted(product.id)} className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 bg-white/95 text-stone-500 shadow-sm transition-all duration-300 hover:border-[#536b4d] hover:text-[#35533c] sm:right-6 sm:top-6 sm:h-12 sm:w-12">
+              <Heart size={18} fill={isWishlisted(product.id) ? 'currentColor' : 'none'} />
             </button>
           </div>
         </div>
 
-        <div className="lg:col-span-5 flex flex-col relative">
-          <div className="mb-8 border-b border-[#253b2f]/15 pb-8">
-            <div className="flex items-center gap-3 mb-3">
-               <span className="text-[#536b4d] font-mono text-[10px] uppercase tracking-[0.2em] block">
+        <div className="relative flex flex-col px-4 md:px-0 lg:col-span-5">
+          <div className="mb-5 border-b border-[#253b2f]/15 pb-5 md:mb-8 md:pb-8">
+            <div className="mb-3 flex flex-wrap items-center gap-2 sm:gap-3">
+               <span className="block font-mono text-[9px] uppercase tracking-[0.16em] text-[#536b4d] sm:text-[10px] sm:tracking-[0.2em]">
                  SKU: {product.sku || 'N/A'}
                </span>
                {product.brand && (
-                  <span className="bg-stone-100 px-3 py-1 text-[10px] font-bold text-stone-600 uppercase tracking-widest rounded-full flex items-center gap-1">
+                  <span className="flex items-center gap-1 rounded-full bg-stone-100 px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-stone-600 sm:px-3 sm:text-[10px]">
                     <Tag size={12} /> {product.brand}
                   </span>
                )}
             </div>
             
-            <h1 className="font-serif text-4xl md:text-5xl leading-[1.05] mb-5 text-[#17251c]">
+            <h1 className="mb-3 font-serif text-[2rem] leading-[1.08] text-[#17251c] sm:text-4xl md:mb-5 md:text-5xl">
               {product.name}
             </h1>
 
-            {productRating > 0 && <a href="#product-reviews" onClick={() => setActiveTab('reviews')} className="mb-5 inline-flex items-center gap-2 text-sm text-[#526b4c] hover:text-[#8b5a2b]">
-              <span className="flex" aria-label={`${productRating.toFixed(1)} out of 5 stars`}>{[1, 2, 3, 4, 5].map(star => <Star key={star} size={14} fill={star <= Math.round(productRating) ? 'currentColor' : 'none'} />)}</span>
+            {productRating > 0 && <a href="#product-reviews" onClick={() => setActiveTab('reviews')} className="mb-4 inline-flex min-h-10 items-center gap-2 text-xs text-[#526b4c] hover:text-[#8b5a2b] sm:text-sm">
+              <span className="flex" aria-label={`${productRating.toFixed(1)} out of 5 stars`}>{[1, 2, 3, 4, 5].map(star => <Star key={star} size={13} fill={star <= Math.round(productRating) ? 'currentColor' : 'none'} />)}</span>
               <span>{productRating.toFixed(1)}{reviewCount > 0 ? ` · ${reviewCount} reviews` : ''}</span>
             </a>}
             
-            <div className="flex flex-col gap-2 mb-5">
-              <div className="flex items-end gap-4">
-                <span className="font-serif text-4xl text-[#35533c]">
+            <div className="mb-4 flex flex-col gap-2 md:mb-5">
+              <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+                <span className="font-serif text-3xl text-[#35533c] sm:text-4xl">
                   ₹{product.discount_price || product.price}
                 </span>
                 {product.discount_price && (
-                  <span className="text-xl font-medium text-stone-400 line-through mb-1">₹{product.price}</span>
+                  <span className="text-base font-medium text-stone-400 line-through sm:text-xl">₹{product.price}</span>
                 )}
               </div>
             </div>
 
-            <p className="text-stone-600 text-sm leading-7">
+            <p className="line-clamp-3 text-sm leading-6 text-stone-600 md:line-clamp-none md:leading-7">
               {product.description}
             </p>
           </div>
 
-          <div className="bg-white border border-[#253b2f]/15 p-6 md:p-8 mb-8 relative">
-            <div className="flex items-center justify-between gap-4 mb-6">
-              <span className={`flex items-center gap-2 text-xs font-mono uppercase tracking-widest ${isOutOfStock ? 'text-red-500' : 'text-[#8b5a2b]'}`}>
+          <div ref={purchaseSectionRef} className="relative mb-6 rounded-2xl border border-[#253b2f]/10 bg-white p-4 shadow-[0_12px_40px_rgba(28,41,34,0.07)] sm:p-6 md:mb-8 md:rounded-3xl md:p-7">
+            <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
+              <span className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 py-1.5 text-[9px] font-mono uppercase tracking-[0.12em] sm:text-[10px] sm:tracking-widest ${isOutOfStock ? 'bg-red-50 text-red-600' : 'bg-[#eff3ec] text-[#526b4c]'}`}>
                 {isOutOfStock ? <AlertCircle size={16}/> : <Package size={16}/>}
                 {isOutOfStock ? 'Currently unavailable' : product.quantity <= 5 ? `Only ${product.quantity} left` : 'Available to order'}
               </span>
+              <span className="shrink-0 text-[10px] font-medium text-stone-500">Secure checkout</span>
             </div>
 
-            <div className="flex gap-4">
-              <div className="flex items-center justify-between bg-stone-50 border border-stone-200 w-32 px-2 py-1">
-                <button onClick={() => setQuantity(q => Math.max(1, q - 1))} className="w-10 h-10 flex items-center justify-center text-stone-500 hover:text-[#8b5a2b] transition-colors">
+            <div className="flex flex-col gap-3 sm:flex-row">
+              <div className="flex h-12 w-full items-center justify-between rounded-xl border border-stone-200 bg-[#faf9f6] px-2 sm:h-auto sm:w-32">
+                <button type="button" aria-label="Decrease quantity" disabled={quantity <= 1} onClick={() => setQuantity(q => Math.max(1, q - 1))} className="flex h-10 w-10 items-center justify-center rounded-lg text-stone-500 transition-colors hover:bg-white hover:text-[#8b5a2b] disabled:opacity-40">
                   <Minus size={16} />
                 </button>
-                <span className="font-mono text-lg w-8 text-center">{quantity}</span>
-                <button onClick={() => setQuantity(q => q + 1)} disabled={quantity >= product.quantity} className="w-10 h-10 flex items-center justify-center text-stone-500 hover:text-[#8b5a2b] transition-colors disabled:opacity-50">
+                <span aria-live="polite" className="w-8 text-center font-mono text-base">{quantity}</span>
+                <button type="button" aria-label="Increase quantity" onClick={() => setQuantity(q => q + 1)} disabled={quantity >= product.quantity} className="flex h-10 w-10 items-center justify-center rounded-lg text-stone-500 transition-colors hover:bg-white hover:text-[#8b5a2b] disabled:opacity-40">
                   <Plus size={16} />
                 </button>
               </div>
 
               <button 
+                type="button"
                 onClick={handleAddToCart} 
                 disabled={isOutOfStock || isAdding}
-                className="flex-1 bg-[#8b5a2b] hover:bg-[#6b4421] text-white font-mono uppercase tracking-widest text-xs transition-all flex items-center justify-center gap-3 disabled:opacity-50 disabled:cursor-not-allowed relative overflow-hidden shadow-[4px_4px_0px_rgba(0,0,0,0.1)] active:shadow-none active:translate-y-1 active:translate-x-1"
+                className="relative flex min-h-12 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl bg-[#35533c] px-4 text-xs font-bold uppercase tracking-[0.12em] text-white shadow-[0_8px_18px_rgba(53,83,60,0.2)] transition-all hover:bg-[#253b2f] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-14 sm:tracking-widest"
               >
                 <span className={`flex items-center gap-2 transition-transform duration-300 ${isAdding ? '-translate-y-12' : ''}`}>
-                  <Leaf size={16} /> Add to Cart
+                  <Leaf size={16} /> {isAdding ? 'Adding...' : 'Add to Cart'}
                 </span>
                 <span className={`absolute inset-0 flex items-center justify-center gap-2 bg-[#6b4421] transition-transform duration-300 ${isAdding ? 'translate-y-0' : 'translate-y-12'}`}>
                   <CheckCircle2 size={16} /> Added to Cart
                 </span>
               </button>
 
-              <div className="w-full mt-4">
-                <PincodeChecker useSavedAddress />
+            </div>
+            <div className="mt-4 flex items-start gap-3 border-t border-stone-200 pt-4 text-stone-700 sm:mt-5">
+              <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-[#eff3ec] text-[#607552]">
+                <Truck size={17} aria-hidden="true" />
+              </span>
+              <div>
+                <p className="text-xs font-semibold">Estimated delivery</p>
+                <p className="mt-1 text-sm font-medium">{getDeliveryEstimate()} <span className="font-normal text-stone-500">(5–7 days if ordered today)</span></p>
               </div>
             </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
             {[
               { icon: <Shield />, title: 'Product support', sub: 'Help with orders and product questions', to: '/contact' },
               { icon: <Leaf />, title: 'Care beyond the product', sub: 'See the public, verified field ledger', to: '/impact' },
             ].map((item, i) => (
-              <Link to={item.to} key={i} className="flex flex-col gap-2 p-6 bg-white border border-[#253b2f]/15 hover:border-[#536b4d]/60 transition-colors group cursor-pointer">
+              <Link to={item.to} key={i} className="group flex min-h-24 flex-row items-center gap-4 rounded-2xl border border-[#253b2f]/10 bg-white p-4 transition-colors hover:border-[#536b4d]/60 sm:min-h-36 sm:flex-col sm:items-start sm:p-5 md:p-6">
                 <div className="text-[#8b5a2b] group-hover:scale-110 transition-transform origin-left">{item.icon}</div>
                 <div>
                   <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-800">{item.title}</h4>
-                  <p className="text-[9px] leading-4 text-stone-500 mt-1">{item.sub}</p>
+                  <p className="mt-1 text-[10px] leading-4 text-stone-500 sm:text-xs">{item.sub}</p>
                 </div>
               </Link>
             ))}
@@ -456,13 +464,13 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto px-6 mt-32 relative z-10">
-        <div className="flex border-b border-stone-200 mb-12 relative overflow-x-auto no-scrollbar">
+      <div className="relative z-10 mx-auto mt-16 max-w-7xl px-4 md:mt-28 md:px-6">
+        <div className="no-scrollbar relative mb-8 flex overflow-x-auto border-b border-stone-200 sm:mb-12">
           {['details', 'specifications', 'reviews'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`pb-6 px-8 text-xs font-mono uppercase tracking-widest transition-colors whitespace-nowrap relative ${
+              className={`relative min-h-12 whitespace-nowrap px-5 pb-3 text-[10px] font-mono uppercase tracking-widest transition-colors sm:px-8 sm:pb-6 sm:text-xs ${
                 activeTab === tab ? 'text-[#8b5a2b]' : 'text-stone-400 hover:text-stone-800'
               }`}
             >
@@ -650,29 +658,35 @@ export default function ProductDetail() {
         </motion.div>}
       </AnimatePresence>
 
-      <motion.div 
-        style={{ opacity: showStickyBar, y: stickyYOffset }}
-        className="fixed bottom-0 left-0 w-full z-50 p-4 pointer-events-none"
-      >
-        <div className="max-w-4xl mx-auto bg-white/90 backdrop-blur-xl border border-[#8b5a2b]/20 p-3 shadow-lg flex items-center justify-between pointer-events-auto">
-          <div className="hidden md:flex items-center gap-4 pl-2">
-            <div className="w-10 h-10 border border-stone-200 overflow-hidden bg-white">
-              <img src={getImageUrl(activeMedia)} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-contain mix-blend-multiply" alt="sticky" />
-            </div>
-            <div>
-              <h4 className="text-xs font-medium italic text-stone-800 line-clamp-1">{product.name}</h4>
-              <p className="text-[#8b5a2b] font-mono text-[10px] tracking-widest">₹{product.discount_price || product.price}</p>
-            </div>
-          </div>
-          <button 
-            onClick={handleAddToCart}
-            disabled={isOutOfStock}
-            className="w-full md:w-auto px-8 py-3 bg-[#8b5a2b] text-white font-mono uppercase tracking-widest text-[10px] hover:bg-[#6b4421] transition-colors disabled:opacity-50"
+      <AnimatePresence>
+        {!isPurchaseSectionVisible && (
+          <motion.div
+            initial={{ opacity: 0, y: 24 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: 24 }}
+            transition={{ duration: 0.2 }}
+            className="pointer-events-none fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5"
           >
-            Add to Cart
-          </button>
-        </div>
-      </motion.div>
+            <div className="pointer-events-auto mx-auto flex max-w-xl items-center gap-3 rounded-2xl border border-[#253b2f]/10 bg-white/95 p-2.5 shadow-[0_10px_40px_rgba(23,37,28,0.2)] backdrop-blur-xl sm:gap-4 sm:p-3 md:max-w-4xl">
+              <div className="h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-stone-200 bg-[#f4f2eb] sm:h-12 sm:w-12">
+                <img src={getImageUrl(activeMedia)} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-full w-full object-contain mix-blend-multiply" alt="" />
+              </div>
+              <div className="min-w-0 flex-1 md:flex md:items-center md:gap-4">
+                <h4 className="truncate text-xs font-medium text-stone-800 sm:text-sm">{product.name}</h4>
+                <p className="text-sm font-semibold text-[#35533c] md:text-base">₹{product.discount_price || product.price}</p>
+              </div>
+              <button
+                type="button"
+                onClick={handleAddToCart}
+                disabled={isOutOfStock || isAdding}
+                className="flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#35533c] px-4 text-[10px] font-bold uppercase tracking-wider text-white transition-colors hover:bg-[#253b2f] disabled:cursor-not-allowed disabled:opacity-50 sm:px-6 sm:text-xs"
+              >
+                {isAdding ? 'Adding...' : <><Leaf size={15} /> Add to cart</>}
+              </button>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

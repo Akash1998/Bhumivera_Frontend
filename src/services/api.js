@@ -476,7 +476,6 @@ export const reportClientError = error => {
 };
 export const shipping = {
   getAll: () => api.get("/shipping"),
-  checkPincode: pincode => api.get(`/shipping/pincode/${encodeURIComponent(pincode)}`),
   create: d => api.post("/shipping", d),
   update: (id, d) => api.put(`/shipping/${id}`, d),
   delete: id => api.delete(`/shipping/${id}`),
