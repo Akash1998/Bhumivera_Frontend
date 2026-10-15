@@ -36,6 +36,7 @@ import {
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { aiSupport as aiSupportApi, BASE_URL } from '../services/api';
+import { normalizeTelegramBotUrl } from '../utils/telegramUrl';
 
 const STORAGE_KEY = 'bhumivera_ai_support_state_v2';
 const SESSION_TOKEN_KEY = 'bhumivera_ai_support_token_v2';
@@ -499,7 +500,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       }
       setAssignedAgentName(data.session?.assignedAgentName || null);
       if (data.hasPlacedOrder !== undefined) setHasPlacedOrder(Boolean(data.hasPlacedOrder));
-      if (data.telegramBotUrl) setTelegramBotUrl(data.telegramBotUrl);
+      if (data.telegramBotUrl) setTelegramBotUrl(normalizeTelegramBotUrl(data.telegramBotUrl));
       if (forceNew) {
         setCsatRating(0);
         setCsatSubmitted(false);

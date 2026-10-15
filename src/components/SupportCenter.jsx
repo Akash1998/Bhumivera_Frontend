@@ -1,5 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { aiSupport, contact as contactApi } from '../services/api';
+import { normalizeTelegramBotUrl } from '../utils/telegramUrl';
 import { useToast } from '../context/ToastContext';
 import {
   LifeBuoy,
@@ -72,7 +73,7 @@ export default function SupportCenter({
       setSessionData(data.session || null);
       setChatMessages(data.messages || []);
       setHasPlacedOrder(Boolean(data.hasPlacedOrder || orders.length > 0));
-      if (data.telegramBotUrl) setTelegramUrl(data.telegramBotUrl);
+      if (data.telegramBotUrl) setTelegramUrl(normalizeTelegramBotUrl(data.telegramBotUrl));
       setTickets(Array.isArray(ticketRes.data?.data) ? ticketRes.data.data : []);
     } catch {
       // Fallback silently
