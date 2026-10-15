@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import api, { products as productsApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
+import { getProductImageUrl } from '../../utils/productImage';
 
 export default function InventoryManagement() {
   const [products, setProducts] = useState([]);
@@ -57,15 +58,6 @@ export default function InventoryManagement() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const getImageUrl = (img) => {
-    if (!img) return '/logo.webp';
-    let path = typeof img === 'object' ? (img.file_path || img.url || img.path) : img;
-    if (!path) return '/logo.webp';
-    if (path.startsWith('http')) return path;
-    const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev';
-    return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
   };
 
   // --- INLINE QUICK UPDATE PROTOCOL ---
@@ -336,7 +328,7 @@ export default function InventoryManagement() {
                     <td className="p-3">
                       <div className="flex items-center gap-3">
                         <img 
-                          src={getImageUrl(product.images?.[0])} 
+                          src={getProductImageUrl(product.images?.[0])}
                           className="w-10 h-10 object-cover rounded-lg bg-[#081b15]/90 backdrop-blur-xl border border-slate-800"
                           onError={(e) => { e.target.src = '/logo.webp'; }}
                         />
