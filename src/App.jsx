@@ -125,6 +125,7 @@ const SpinRegistration = lazyWithRetry(() => import("./pages/SpinRegistration.js
 const ForgotPassword = lazyWithRetry(() => import("./pages/ForgotPassword.jsx"));
 const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword.jsx"));
 const SupportPortal = lazyWithRetry(() => import("./pages/SupportPortal.jsx"));
+const SuperAdminSupport = lazyWithRetry(() => import("./pages/SuperAdminSupport.jsx"));
 const AdminForgotPassword = lazyWithRetry(() => import("./pages/admin/AdminForgotPassword.jsx"));
 const CheckoutPage = lazyWithRetry(() => import("./pages/Checkout.jsx"));
 
@@ -296,6 +297,7 @@ function AppContent() {
       path.startsWith("/admin") || 
       path.startsWith("/warehouse") || 
       path.startsWith("/support") ||
+      path.startsWith("/superadminsupport") ||
       path === "/warehouseadmin" || 
       path === "/earn-from-home" || 
       path === "/mpgebusiness"
@@ -365,6 +367,8 @@ function AppContent() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin/forgot-password" element={<WebOnlyManagement><AdminForgotPassword /></WebOnlyManagement>} />
             <Route path="/support/*" element={<WebOnlyManagement><SupportPortal /></WebOnlyManagement>} />
+            <Route path="/superadminsupport" element={<WebOnlyManagement><SuperAdminSupport /></WebOnlyManagement>} />
+            <Route path="/superadminsupport/*" element={<WebOnlyManagement><SuperAdminSupport /></WebOnlyManagement>} />
 
             {/* Protected User Routes */}
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />

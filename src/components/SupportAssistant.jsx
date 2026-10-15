@@ -25,31 +25,104 @@ import {
   Check,
   ChevronRight,
   Image as ImageIcon,
+  PlusCircle,
+  HelpCircle,
+  Star,
+  Lock,
+  Unlock,
+  Eye,
+  PauseCircle,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { aiSupport as aiSupportApi, BASE_URL } from '../services/api';
 
-const STORAGE_KEY = 'bhumivera_ai_support_state_v1';
-const SESSION_TOKEN_KEY = 'bhumivera_ai_support_token_v1';
-const PROACTIVE_TRIGGERED_KEY = 'bhumivera_ai_proactive_shown_v1';
-const LINGER_THRESHOLD_MS = 45000; // 45 seconds
+const STORAGE_KEY = 'bhumivera_ai_support_state_v2';
+const SESSION_TOKEN_KEY = 'bhumivera_ai_support_token_v2';
+const PROACTIVE_TRIGGERED_KEY = 'bhumivera_ai_proactive_shown_v2';
+const LINGER_THRESHOLD_MS = 45000;
 
 const DEFAULT_CHIPS = [
   { id: 'track_order', label: 'Where is my order?', prompt: 'Where is my order?' },
-  { id: 'initiate_return', label: 'Initiate Return', prompt: 'I want to initiate a return or replacement for my delivered order.' },
+  { id: 'initiate_return', label: 'Initiate Return / Replace', prompt: 'I want to initiate a return or replacement for my delivered order.' },
   { id: 'cancel_order', label: 'Cancel Order', prompt: 'I need help cancelling my recent order.' },
-  { id: 'refund_status', label: 'Check Refund Status', prompt: 'What is my current refund or RMA status?' },
+  { id: 'refund_status', label: 'Check Refund / RMA', prompt: 'What is my current refund or RMA status?' },
+  { id: 'wallet_loyalty', label: 'Wallet & Loyalty', prompt: 'What is my current wallet balance and loyalty points?' },
+  { id: 'active_coupons', label: 'Available Coupons', prompt: 'Show me active coupons and offers for my account.' },
   { id: 'shipping_policy', label: 'Shipping Policy', prompt: 'What are your shipping charges and delivery timelines?' },
   { id: 'talk_to_human', label: 'Talk to Human', prompt: 'Please connect me with a human support agent.' },
 ];
 
 const ORDER_STEPS = ['Placed', 'Confirmed', 'Packed', 'Shipped', 'Delivered'];
 
-/**
- * Synthesizes a subtle, pleasant two-tone notification chime using the Web Audio API
- * (Zero external audio file dependencies).
- */
+const STATUS_META = {
+  active: {
+    label: 'Active Chat',
+    badgeClass: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40',
+    description: 'Live conversation in progress with AI Concierge or assigned specialist.',
+  },
+  pending: {
+    label: 'Pending',
+    badgeClass: 'bg-amber-500/20 text-amber-300 border-amber-400/40',
+    description: 'Conversation paused while awaiting order details, photos, or verification.',
+  },
+  waiting_for_review: {
+    label: 'Waiting for Review',
+    badgeClass: 'bg-sky-500/20 text-sky-300 border-sky-400/40',
+    description: 'Queued for a Support Supervisor or Quality Lead to review and approve.',
+  },
+  escalated: {
+    label: 'Escalated',
+    badgeClass: 'bg-rose-500/20 text-rose-300 border-rose-400/40',
+    description: 'High-priority escalation routed to our Senior Specialist / Manager desk.',
+  },
+  resolved: {
+    label: 'Resolved',
+    badgeClass: 'bg-teal-500/20 text-teal-300 border-teal-400/40',
+    description: 'Issue marked solved. You can rate your experience or reopen anytime.',
+  },
+  closed: {
+    label: 'Closed',
+    badgeClass: 'bg-stone-500/20 text-stone-300 border-stone-400/40',
+    description: 'Chat session ended and archived. Click Reopen or Start New Chat anytime.',
+  },
+};
+
+const WIDGET_BUTTON_GUIDE = [
+  {
+    button: 'New Chat (+)',
+    whatItDoes: 'Starts a brand-new support session with a fresh token while keeping your previous order records safe.',
+  },
+  {
+    button: 'Status: Active / Reopen',
+    whatItDoes: 'Marks the conversation as Active or reopens a Resolved/Closed chat so you can continue chatting.',
+  },
+  {
+    button: 'Status: Mark Pending',
+    whatItDoes: 'Pauses the chat in Pending state while you gather order numbers, bank statements, or package photos.',
+  },
+  {
+    button: 'Status: Waiting for Review',
+    whatItDoes: 'Flags your chat for a Support Supervisor to review exceptions (such as special return windows or refund checks).',
+  },
+  {
+    button: 'Status: Escalate (Phone Icon)',
+    whatItDoes: 'Immediately creates a high-priority human ticket and alerts our Senior Concierge team via Email, WhatsApp, and Telegram.',
+  },
+  {
+    button: 'Status: Mark Resolved',
+    whatItDoes: 'Marks your issue as solved and unlocks the 1–5 Star CSAT feedback bar.',
+  },
+  {
+    button: 'Status: Close Chat',
+    whatItDoes: 'Formally closes the current chat transcript. You can still reopen it or start a new chat with one click.',
+  },
+  {
+    button: 'Attach Photo (Paperclip)',
+    whatItDoes: 'Attaches up to 3 photos (JPEG/PNG/WebP) of damaged, leaking, or wrong items for instant RMA verification.',
+  },
+];
+
 function playSupportChime(enabled = true) {
   if (!enabled || typeof window === 'undefined') return;
   try {
@@ -60,8 +133,8 @@ function playSupportChime(enabled = true) {
     const osc = ctx.createOscillator();
     const gain = ctx.createGain();
     osc.type = 'sine';
-    osc.frequency.setValueAtTime(587.33, now); // D5
-    osc.frequency.exponentialRampToValueAtTime(880, now + 0.14); // A5
+    osc.frequency.setValueAtTime(587.33, now);
+    osc.frequency.exponentialRampToValueAtTime(880, now + 0.14);
     gain.gain.setValueAtTime(0.06, now);
     gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.28);
     osc.connect(gain);
@@ -69,15 +142,9 @@ function playSupportChime(enabled = true) {
     osc.start(now);
     osc.stop(now + 0.29);
     setTimeout(() => ctx.close().catch(() => {}), 400);
-  } catch {
-    // Ignore audio context autoplay restrictions
-  }
+  } catch {}
 }
 
-/**
- * Lightweight, XSS-safe Markdown Renderer for Support Assistant Messages.
- * Supports bold, italic, inline code, internal/external links, and bullet lists.
- */
 function FormattedMarkdown({ content, isDark, onNavigate }) {
   const renderInline = (text, keyPrefix) => {
     if (!text) return null;
@@ -161,9 +228,6 @@ function FormattedMarkdown({ content, isDark, onNavigate }) {
   );
 }
 
-/**
- * Interactive Rich Order Card rendered inside the chat timeline.
- */
 function ChatOrderCard({ order, isDark, onQuickPrompt }) {
   const [copied, setCopied] = useState(false);
   const status = String(order.status || 'pending').toLowerCase();
@@ -207,7 +271,6 @@ function ChatOrderCard({ order, isDark, onQuickPrompt }) {
         </div>
       </div>
 
-      {/* 5-Step Progress Bar */}
       {!isTerminal && (
         <div className="py-3">
           <div className="grid grid-cols-5 gap-1 text-[9px] font-medium text-center">
@@ -228,7 +291,6 @@ function ChatOrderCard({ order, isDark, onQuickPrompt }) {
         </div>
       )}
 
-      {/* Delivery Estimate & Tracking */}
       <div className="space-y-1 text-[11px] opacity-85 pt-1">
         {order.deliveryEstimate && (
           <div className="flex items-center gap-1.5">
@@ -256,7 +318,6 @@ function ChatOrderCard({ order, isDark, onQuickPrompt }) {
         )}
       </div>
 
-      {/* Order Items Preview */}
       {Array.isArray(order.items) && order.items.length > 0 && (
         <div className="mt-2.5 pt-2 border-t border-current/10 space-y-1.5">
           {order.items.slice(0, 2).map((item, idx) => (
@@ -273,7 +334,6 @@ function ChatOrderCard({ order, isDark, onQuickPrompt }) {
         </div>
       )}
 
-      {/* Self-Service Action Buttons */}
       <div className="mt-3 pt-2 border-t border-current/10 flex flex-wrap gap-1.5">
         {order.cancellable && (
           <button
@@ -316,9 +376,6 @@ function ChatOrderCard({ order, isDark, onQuickPrompt }) {
   );
 }
 
-/**
- * Error Boundary to guarantee zero storefront regression even if a rendering error occurs.
- */
 class SupportWidgetErrorBoundary extends React.Component {
   constructor(props) {
     super(props);
@@ -353,7 +410,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   const { user } = useAuth() || {};
   const { cart = [], isCartOpen = false } = useCart() || {};
 
-  // Load persisted widget state from localStorage / sessionStorage
   const persisted = useMemo(() => {
     if (typeof window === 'undefined') return {};
     try {
@@ -366,6 +422,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
 
   const [isOpen, setIsOpen] = useState(Boolean(persisted.isOpen));
   const [isMaximized, setIsMaximized] = useState(false);
+  const [showButtonGuide, setShowButtonGuide] = useState(false);
   const [isDark, setIsDark] = useState(() => {
     if (typeof persisted.isDark === 'boolean') return persisted.isDark;
     return typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
@@ -374,6 +431,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   const [sessionToken, setSessionToken] = useState(
     () => localStorage.getItem(SESSION_TOKEN_KEY) || sessionStorage.getItem(SESSION_TOKEN_KEY) || null
   );
+  const [chatStatus, setChatStatus] = useState(persisted.chatStatus || 'active');
+  const [assignedAgentName, setAssignedAgentName] = useState(persisted.assignedAgentName || null);
   const [messages, setMessages] = useState(() => (Array.isArray(persisted.messages) ? persisted.messages : []));
   const [quickActions, setQuickActions] = useState(() =>
     Array.isArray(persisted.quickActions) && persisted.quickActions.length ? persisted.quickActions : DEFAULT_CHIPS
@@ -385,13 +444,14 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   const [unreadCount, setUnreadCount] = useState(0);
   const [proactiveBubble, setProactiveBubble] = useState(null);
   const [sentimentBadge, setSentimentBadge] = useState(null);
+  const [csatRating, setCsatRating] = useState(0);
+  const [csatSubmitted, setCsatSubmitted] = useState(false);
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const clickTrackerRef = useRef([]);
   const sessionInitializedRef = useRef(false);
 
-  // Sync state to localStorage + sessionStorage across refreshes
   useEffect(() => {
     if (typeof window === 'undefined') return;
     try {
@@ -399,7 +459,9 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         isOpen,
         isDark,
         soundEnabled,
-        messages: messages.slice(-40),
+        chatStatus,
+        assignedAgentName,
+        messages: messages.slice(-50),
         quickActions,
       });
       localStorage.setItem(STORAGE_KEY, snapshot);
@@ -408,19 +470,15 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         localStorage.setItem(SESSION_TOKEN_KEY, sessionToken);
         sessionStorage.setItem(SESSION_TOKEN_KEY, sessionToken);
       }
-    } catch {
-      // Ignore storage quota errors
-    }
-  }, [isOpen, isDark, soundEnabled, messages, quickActions, sessionToken]);
+    } catch {}
+  }, [isOpen, isDark, soundEnabled, chatStatus, assignedAgentName, messages, quickActions, sessionToken]);
 
-  // Smooth auto-scroll on new messages
   useEffect(() => {
     if (isOpen && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, [messages, isTyping, isOpen]);
 
-  // Build current page context for backend context injection
   const currentPageContext = useMemo(() => ({
     pathname: location.pathname,
     search: location.search,
@@ -429,18 +487,29 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     authenticated: Boolean(user?.id),
   }), [location.pathname, location.search, isCartOpen, cart, user?.id]);
 
-  // Initialize or restore session with backend on first open
-  const ensureSession = useCallback(async (customContext = {}) => {
+  const ensureSession = useCallback(async ({ forceNew = false, customContext = {} } = {}) => {
     try {
       const response = await aiSupportApi.initSession({
-        sessionToken,
+        sessionToken: forceNew ? null : sessionToken,
+        forceNew,
         pageContext: { ...currentPageContext, ...customContext },
       });
       const data = response?.data || {};
       if (data.sessionToken) {
         setSessionToken(data.sessionToken);
       }
-      if (Array.isArray(data.messages) && data.messages.length > 0 && messages.length === 0) {
+      if (data.session?.status) {
+        setChatStatus(data.session.status);
+      } else if (forceNew) {
+        setChatStatus('active');
+      }
+      setAssignedAgentName(data.session?.assignedAgentName || null);
+      if (forceNew) {
+        setCsatRating(0);
+        setCsatSubmitted(false);
+        setSentimentBadge(null);
+      }
+      if (Array.isArray(data.messages) && data.messages.length > 0 && (forceNew || messages.length === 0)) {
         setMessages(data.messages);
       }
       if (Array.isArray(data.quickActions) && data.quickActions.length > 0) {
@@ -448,13 +517,15 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       }
       return data.sessionToken || sessionToken;
     } catch {
-      if (messages.length === 0) {
+      if (forceNew || messages.length === 0) {
+        setChatStatus('active');
         setMessages([
           {
             id: Date.now(),
             sender: 'assistant',
+            senderName: 'Bhumivera AI Concierge',
             content:
-              "Namaste! I'm your Bhumivera AI Support Concierge. I can check live order status, initiate returns or cancellations, verify Razorpay refunds, or answer product & shipping questions.",
+              "Namaste! I'm your Bhumivera 20X AI Support Concierge. I can check live order status, initiate returns or cancellations, verify Razorpay refunds, inspect your Wallet & Loyalty points, or connect you with our human team.",
             quickActions: DEFAULT_CHIPS,
             orderCards: [],
             createdAt: new Date().toISOString(),
@@ -474,7 +545,29 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     }
   }, [isOpen, ensureSession]);
 
-  // PROACTIVE TRIGGER 1: Linger >45s on Checkout, Cart, Order Tracking, or Returns pages
+  // Poll for live human agent/supervisor/manager replies or status updates when widget is open
+  useEffect(() => {
+    if (!isOpen || !sessionToken || typeof aiSupportApi.getHistory !== 'function') return undefined;
+    const interval = window.setInterval(async () => {
+      if (isTyping) return;
+      try {
+        const res = await aiSupportApi.getHistory(sessionToken);
+        const remoteSession = res?.data?.session;
+        const remoteMessages = res?.data?.messages;
+        if (remoteSession?.status) setChatStatus(remoteSession.status);
+        if (remoteSession?.assignedAgentName !== undefined) {
+          setAssignedAgentName(remoteSession.assignedAgentName || null);
+        }
+        if (Array.isArray(remoteMessages) && remoteMessages.length > messages.length) {
+          setMessages(remoteMessages);
+          playSupportChime(soundEnabled);
+        }
+      } catch {}
+    }, 8000);
+    return () => window.clearInterval(interval);
+  }, [isOpen, sessionToken, isTyping, messages.length, soundEnabled]);
+
+  // PROACTIVE TRIGGER 1: Linger >45s
   useEffect(() => {
     const path = location.pathname;
     const isHighIntentPage =
@@ -510,9 +603,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         });
         if (res.data?.proactiveMessage) nudge = res.data.proactiveMessage;
         if (Array.isArray(res.data?.quickActions)) setQuickActions(res.data.quickActions);
-      } catch {
-        // Fallback to local contextual nudge
-      }
+      } catch {}
 
       setProactiveBubble({ text: nudge, triggerType });
       setUnreadCount(prev => Math.max(1, prev));
@@ -522,7 +613,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     return () => window.clearTimeout(timer);
   }, [location.pathname, isCartOpen, isOpen, lingerThresholdMs, sessionToken, currentPageContext, soundEnabled]);
 
-  // PROACTIVE TRIGGER 2: Rage-Click / Dead-End Detection (4+ rapid clicks within 1.5s in same 60px zone)
+  // PROACTIVE TRIGGER 2: Rage-Click Detection
   useEffect(() => {
     const handleDocumentClick = event => {
       if (isOpen) return;
@@ -548,7 +639,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     return () => window.removeEventListener('click', handleDocumentClick);
   }, [isOpen]);
 
-  // Handle image attachment selection & preview
   const handleFileChange = event => {
     const files = Array.from(event.target.files || []);
     if (!files.length) return;
@@ -573,9 +663,58 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   };
 
   /**
-   * Sends a user message with optimistic UI update, attempting SSE streaming first
-   * and gracefully falling back to standard JSON POST if streaming is unavailable.
+   * Transitions the chat session status ('active', 'pending', 'waiting_for_review', 'escalated', 'resolved', 'closed')
    */
+  const handleStatusTransition = async nextStatus => {
+    if (isTyping || !nextStatus) return;
+    if (nextStatus === 'escalated') {
+      await handleInstantEscalate();
+      return;
+    }
+    setChatStatus(nextStatus);
+    if (!sessionToken || typeof aiSupportApi.updateSessionStatus !== 'function') {
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `sys-${Date.now()}`,
+          sender: 'system',
+          senderName: 'System Concierge',
+          content: `Chat status updated to **${nextStatus.replace(/_/g, ' ').toUpperCase()}**.`,
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+      return;
+    }
+    try {
+      const res = await aiSupportApi.updateSessionStatus(sessionToken, { status: nextStatus });
+      const sysMsg = res?.data?.systemMessage;
+      if (sysMsg) {
+        setMessages(prev => [...prev, sysMsg]);
+      }
+    } catch {
+      // Optimistic status already set
+    }
+  };
+
+  const handleStartNewChat = async () => {
+    if (isTyping) return;
+    localStorage.removeItem(SESSION_TOKEN_KEY);
+    sessionStorage.removeItem(SESSION_TOKEN_KEY);
+    setSessionToken(null);
+    setMessages([]);
+    await ensureSession({ forceNew: true });
+  };
+
+  const handleSubmitCsat = async star => {
+    setCsatRating(star);
+    setCsatSubmitted(true);
+    if (sessionToken && typeof aiSupportApi.submitRating === 'function') {
+      try {
+        await aiSupportApi.submitRating(sessionToken, { rating: star });
+      } catch {}
+    }
+  };
+
   const sendMessage = useCallback(async (overridePrompt = null) => {
     const text = String(overridePrompt !== null ? overridePrompt : input).trim();
     if ((!text && attachments.length === 0) || isTyping) return;
@@ -584,12 +723,16 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     if (overridePrompt === null) setInput('');
     setAttachments([]);
     setProactiveBubble(null);
+    if (['resolved', 'closed'].includes(chatStatus)) {
+      setChatStatus('active');
+    }
 
     const userMsgId = `user-${Date.now()}`;
     const assistantStreamId = `assistant-${Date.now() + 1}`;
     const optimisticUserMsg = {
       id: userMsgId,
       sender: 'user',
+      senderName: user?.name || 'You',
       content: text || '[Attached Photo]',
       attachments: currentAttachments,
       createdAt: new Date().toISOString(),
@@ -597,12 +740,11 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
 
     setMessages(prev => [...prev, optimisticUserMsg]);
     setIsTyping(true);
-    setStatusLabel('Checking records…');
+    setStatusLabel('Checking live Bhumivera records…');
 
     const authToken = localStorage.getItem('token') || localStorage.getItem('ms_token') || '';
 
     try {
-      // Attempt SSE Streaming endpoint first when fetch + ReadableStream are available
       if (typeof window !== 'undefined' && typeof window.fetch === 'function' && !aiSupportApi._forceJsonMode) {
         const streamResponse = await window.fetch(`${BASE_URL}/api/support/chat/stream`, {
           method: 'POST',
@@ -627,12 +769,12 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           let assembledReply = '';
           let streamMeta = {};
 
-          // Insert placeholder assistant message for live streaming tokens
           setMessages(prev => [
             ...prev,
             {
               id: assistantStreamId,
               sender: 'assistant',
+              senderName: 'Bhumivera AI Concierge',
               content: '',
               orderCards: [],
               quickActions: [],
@@ -672,6 +814,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               } else if (eventType === 'metadata') {
                 streamMeta = parsedData;
                 if (parsedData.sessionToken) setSessionToken(parsedData.sessionToken);
+                if (parsedData.status) setChatStatus(parsedData.status);
                 if (Array.isArray(parsedData.quickActions) && parsedData.quickActions.length) {
                   setQuickActions(parsedData.quickActions);
                 }
@@ -701,7 +844,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         }
       }
 
-      // Fallback / Standard JSON API call
       const response = await aiSupportApi.sendMessage({
         sessionToken,
         message: text,
@@ -711,6 +853,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
 
       const data = response?.data || {};
       if (data.sessionToken) setSessionToken(data.sessionToken);
+      if (data.status) setChatStatus(data.status);
       if (Array.isArray(data.quickActions) && data.quickActions.length) {
         setQuickActions(data.quickActions);
       }
@@ -721,6 +864,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         {
           id: data.message?.id || assistantStreamId,
           sender: 'assistant',
+          senderName: 'Bhumivera AI Concierge',
           content: data.reply || data.message?.content || 'How else can I help you today?',
           orderCards: data.orderCards || [],
           quickActions: data.quickActions || [],
@@ -730,12 +874,13 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         },
       ]);
       playSupportChime(soundEnabled);
-    } catch (error) {
+    } catch {
       setMessages(prev => [
         ...prev,
         {
           id: assistantStreamId,
           sender: 'assistant',
+          senderName: 'Bhumivera AI Concierge',
           content:
             'I encountered a temporary connection delay while reaching our support servers. You can retry your message right here, or contact our Senior Concierge directly at **support@bhumivera.com** or WhatsApp **+91 7430985647**.',
           orderCards: [],
@@ -747,7 +892,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       setIsTyping(false);
       setStatusLabel('');
     }
-  }, [input, attachments, isTyping, sessionToken, currentPageContext, user?.id, soundEnabled]);
+  }, [input, attachments, isTyping, chatStatus, sessionToken, currentPageContext, user?.name, soundEnabled]);
 
   const handleInstantEscalate = async () => {
     if (isTyping) return;
@@ -760,11 +905,13 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         message: input || 'Please connect me with a human support specialist.',
       });
       const data = res?.data || {};
+      setChatStatus('escalated');
       setMessages(prev => [
         ...prev,
         {
           id: `esc-${Date.now()}`,
           sender: 'assistant',
+          senderName: 'Bhumivera Senior Concierge',
           content:
             data.reply ||
             'Your conversation has been escalated to our Senior Concierge team. A specialist will reach out shortly.',
@@ -789,6 +936,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       setStatusLabel('');
     }
   };
+
+  const activeStatusMeta = STATUS_META[chatStatus] || STATUS_META.active;
 
   return (
     <div
@@ -840,8 +989,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           aria-label="Bhumivera AI Support Assistant"
           className={`flex flex-col overflow-hidden rounded-3xl border shadow-[0_24px_60px_rgba(0,0,0,0.28)] transition-all duration-200 ${
             isMaximized
-              ? 'w-[calc(100vw-2rem)] h-[calc(100vh-7rem)] md:w-[540px] md:h-[680px]'
-              : 'w-[calc(100vw-2rem)] sm:w-[390px] h-[540px] max-h-[calc(100vh-7.5rem)]'
+              ? 'w-[calc(100vw-1.5rem)] h-[calc(100vh-6rem)] md:w-[580px] md:h-[720px]'
+              : 'w-[calc(100vw-1.5rem)] sm:w-[410px] h-[590px] max-h-[calc(100vh-7rem)]'
           } ${
             isDark
               ? 'bg-[#071510] border-white/15 text-stone-100'
@@ -849,7 +998,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           }`}
         >
           {/* Header */}
-          <header className="bg-gradient-to-r from-[#0B2419] via-[#14251c] to-[#2C3E2D] px-4 py-3.5 text-[#FDFBF7] flex items-center justify-between gap-2 border-b border-[#D4AF37]/30 shrink-0">
+          <header className="bg-gradient-to-r from-[#0B2419] via-[#14251c] to-[#2C3E2D] px-4 py-3 text-[#FDFBF7] flex items-center justify-between gap-2 border-b border-[#D4AF37]/30 shrink-0">
             <div className="flex items-center gap-2.5 min-w-0">
               <div className="w-9 h-9 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/50 flex items-center justify-center shrink-0">
                 <Sparkles className="w-4 h-4 text-[#D4AF37]" />
@@ -857,20 +1006,42 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
                   <h2 className="font-serif text-base font-bold tracking-wide truncate">Bhumivera Concierge</h2>
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" title="Online" />
+                  <span
+                    className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${activeStatusMeta.badgeClass}`}
+                    title={activeStatusMeta.description}
+                  >
+                    {activeStatusMeta.label}
+                  </span>
                 </div>
-                <p className="text-[11px] text-stone-300 truncate">
-                  Autonomous Order, Return & Botanical Care Desk
+                <p className="text-[10px] text-stone-300 truncate">
+                  {assignedAgentName
+                    ? `Assigned Specialist: ${assignedAgentName}`
+                    : '20X Autonomous Order, Return, Wallet & Care Desk'}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-1 shrink-0">
-              {sentimentBadge?.priority && ['High', 'Critical'].includes(sentimentBadge.priority) && (
-                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-rose-500/20 text-rose-200 border border-rose-400/30">
-                  {sentimentBadge.priority} Priority
-                </span>
-              )}
+              <button
+                type="button"
+                onClick={handleStartNewChat}
+                title="Start a brand-new chat session"
+                aria-label="Start New Chat"
+                className="p-1.5 rounded-lg text-stone-200 hover:bg-white/10 hover:text-[#D4AF37] transition-colors"
+              >
+                <PlusCircle className="w-4 h-4" />
+              </button>
+              <button
+                type="button"
+                onClick={() => setShowButtonGuide(prev => !prev)}
+                title="What do these buttons do? (Interactive Guide)"
+                aria-label="What do these buttons do?"
+                className={`p-1.5 rounded-lg transition-colors ${
+                  showButtonGuide ? 'bg-[#D4AF37] text-[#0B2419]' : 'text-stone-200 hover:bg-white/10 hover:text-[#D4AF37]'
+                }`}
+              >
+                <HelpCircle className="w-4 h-4" />
+              </button>
               <button
                 type="button"
                 onClick={handleInstantEscalate}
@@ -919,6 +1090,104 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             </div>
           </header>
 
+          {/* Amazon/Flipkart-Grade Chat Lifecycle Control Bar */}
+          <div
+            className={`px-3 py-1.5 border-b flex items-center justify-between gap-1.5 overflow-x-auto no-scrollbar text-[10px] shrink-0 ${
+              isDark ? 'bg-[#0a1c15] border-white/10 text-stone-300' : 'bg-[#f4f1e9] border-[#0B2419]/10 text-[#0B2419]'
+            }`}
+          >
+            <div className="flex items-center gap-1 shrink-0">
+              {['resolved', 'closed'].includes(chatStatus) ? (
+                <button
+                  type="button"
+                  onClick={() => void handleStatusTransition('active')}
+                  title="Reopen this conversation to Active status"
+                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30"
+                >
+                  <Unlock className="w-3 h-3" /> Reopen Chat
+                </button>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => void handleStatusTransition('pending')}
+                    title="Mark chat as Pending (waiting on your details)"
+                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-md font-semibold border transition-colors ${
+                      chatStatus === 'pending'
+                        ? 'bg-amber-500/25 border-amber-500/50 text-amber-700 dark:text-amber-200'
+                        : 'border-current/15 hover:bg-current/5'
+                    }`}
+                  >
+                    <PauseCircle className="w-3 h-3" /> Pending
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleStatusTransition('waiting_for_review')}
+                    title="Request Supervisor Review for this conversation"
+                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-md font-semibold border transition-colors ${
+                      chatStatus === 'waiting_for_review'
+                        ? 'bg-sky-500/25 border-sky-500/50 text-sky-700 dark:text-sky-200'
+                        : 'border-current/15 hover:bg-current/5'
+                    }`}
+                  >
+                    <Eye className="w-3 h-3" /> Waiting Review
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleStatusTransition('resolved')}
+                    title="Mark your issue as Resolved"
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md font-semibold border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/15"
+                  >
+                    <CheckCircle2 className="w-3 h-3" /> Resolved
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void handleStatusTransition('closed')}
+                    title="Close and archive this chat session"
+                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md font-semibold border border-rose-500/30 text-rose-600 dark:text-rose-300 hover:bg-rose-500/15"
+                  >
+                    <Lock className="w-3 h-3" /> Close Chat
+                  </button>
+                </>
+              )}
+            </div>
+            {sentimentBadge?.priority && ['High', 'Critical'].includes(sentimentBadge.priority) && (
+              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/20 text-rose-500 border border-rose-500/30 shrink-0">
+                {sentimentBadge.priority} Priority
+              </span>
+            )}
+          </div>
+
+          {/* Interactive "What does this button do?" Explainer Drawer */}
+          {showButtonGuide && (
+            <div
+              className={`px-4 py-3 border-b max-h-52 overflow-y-auto text-xs space-y-2 shrink-0 ${
+                isDark ? 'bg-[#10241f] border-[#D4AF37]/30 text-stone-200' : 'bg-[#fffdf7] border-[#D4AF37]/50 text-[#0B2419]'
+              }`}
+            >
+              <div className="flex items-center justify-between">
+                <span className="font-bold text-[11px] uppercase tracking-wider text-[#D4AF37]">
+                  Interactive Guide: What Each Button Does
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowButtonGuide(false)}
+                  className="text-[11px] underline opacity-75 hover:opacity-100"
+                >
+                  Hide Guide
+                </button>
+              </div>
+              <div className="space-y-1.5">
+                {WIDGET_BUTTON_GUIDE.map(item => (
+                  <div key={item.button} className="rounded-xl p-2 bg-current/5 border border-current/10">
+                    <span className="font-bold text-[#D4AF37] block text-[11px]">{item.button}</span>
+                    <span className="text-[11px] opacity-85 leading-snug">{item.whatItDoes}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Messages Stream */}
           <div
             className={`flex-1 overflow-y-auto px-4 py-3.5 space-y-3.5 ${
@@ -927,15 +1196,35 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           >
             {messages.map((msg, idx) => {
               const isUser = msg.sender === 'user';
+              const isSystem = msg.sender === 'system';
+              const isHumanStaff = ['agent', 'supervisor', 'manager', 'superadmin'].includes(msg.sender);
+
+              if (isSystem) {
+                return (
+                  <div key={msg.id || idx} className="flex justify-center">
+                    <div className="max-w-[92%] rounded-xl px-3 py-1.5 text-[11px] text-center bg-[#D4AF37]/15 border border-[#D4AF37]/30">
+                      <FormattedMarkdown content={msg.content} isDark={isDark} onNavigate={href => navigate(href)} />
+                    </div>
+                  </div>
+                );
+              }
+
               return (
                 <div
                   key={msg.id || idx}
                   className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}
                 >
+                  {!isUser && msg.senderName && (
+                    <span className="text-[10px] font-semibold uppercase tracking-wider text-[#D4AF37] mb-1 pl-1">
+                      {msg.senderName}
+                    </span>
+                  )}
                   <div
                     className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 ${
                       isUser
                         ? 'bg-[#0B2419] text-[#FDFBF7] rounded-br-sm shadow-sm'
+                        : isHumanStaff
+                        ? 'bg-emerald-950 text-emerald-50 border border-emerald-400/40 rounded-bl-sm shadow-md'
                         : isDark
                         ? 'bg-[#10241f] text-stone-100 border border-white/10 rounded-bl-sm'
                         : 'bg-white text-[#0B2419] border border-[#0B2419]/10 rounded-bl-sm shadow-sm'
@@ -943,11 +1232,10 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   >
                     <FormattedMarkdown
                       content={msg.content}
-                      isDark={isUser || isDark}
+                      isDark={isUser || isHumanStaff || isDark}
                       onNavigate={href => navigate(href)}
                     />
 
-                    {/* Attached Photos Preview */}
                     {Array.isArray(msg.attachments) && msg.attachments.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-1.5">
                         {msg.attachments.map((att, aIdx) => (
@@ -962,7 +1250,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                       </div>
                     )}
 
-                    {/* Rich Order Cards */}
                     {Array.isArray(msg.orderCards) &&
                       msg.orderCards.map(order => (
                         <ChatOrderCard
@@ -973,7 +1260,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                         />
                       ))}
 
-                    {/* Escalation Status Banner */}
                     {msg.escalation?.escalated && (
                       <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-amber-500/15 border border-amber-500/30 px-3 py-2 text-[11px] font-medium text-amber-700 dark:text-amber-300">
                         <ShieldAlert className="w-4 h-4 shrink-0" />
@@ -987,7 +1273,52 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               );
             })}
 
-            {/* Typing / Tool Execution Indicator */}
+            {/* CSAT 1–5 Star Rating Card when Resolved or Closed */}
+            {['resolved', 'closed'].includes(chatStatus) && (
+              <div
+                className={`rounded-2xl border p-3.5 text-center space-y-2 ${
+                  isDark ? 'bg-[#10241f] border-[#D4AF37]/30' : 'bg-white border-[#0B2419]/15 shadow-sm'
+                }`}
+              >
+                <p className="text-xs font-semibold">
+                  {csatSubmitted ? 'Thank you for rating your experience!' : 'How was your support experience today?'}
+                </p>
+                <div className="flex items-center justify-center gap-1.5">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => void handleSubmitCsat(star)}
+                      aria-label={`Rate ${star} stars`}
+                      className="p-1 hover:scale-110 transition-transform"
+                    >
+                      <Star
+                        className={`w-5 h-5 ${
+                          star <= csatRating ? 'fill-[#D4AF37] text-[#D4AF37]' : 'text-stone-400'
+                        }`}
+                      />
+                    </button>
+                  ))}
+                </div>
+                <div className="pt-1 flex justify-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => void handleStatusTransition('active')}
+                    className="px-3 py-1 rounded-lg text-[11px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-300"
+                  >
+                    Reopen This Chat
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleStartNewChat}
+                    className="px-3 py-1 rounded-lg text-[11px] font-semibold bg-[#D4AF37]/20 text-[#8a6a12] dark:text-[#D4AF37]"
+                  >
+                    Start New Chat
+                  </button>
+                </div>
+              </div>
+            )}
+
             {isTyping && (
               <div className="flex items-center gap-2 text-xs opacity-75 pl-1">
                 <div className="flex items-center gap-1 px-3 py-2 rounded-2xl bg-[#0B2419]/10 dark:bg-white/10">
@@ -1085,7 +1416,11 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               type="text"
               value={input}
               onChange={e => setInput(e.target.value)}
-              placeholder="Ask about an order, return, refund, or product…"
+              placeholder={
+                chatStatus === 'closed'
+                  ? 'Type a message to reopen this chat…'
+                  : 'Ask about an order, return, refund, wallet, or product…'
+              }
               maxLength={2000}
               aria-label="Message Bhumivera AI Support"
               className={`flex-1 min-w-0 px-3.5 py-2 rounded-xl border text-xs outline-none transition-colors ${

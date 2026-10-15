@@ -550,12 +550,14 @@ export const support = {
   delete: id => api.delete(`/contact/${id}`)
 };
 const supportClient = axios.create({ baseURL: `${BASE_URL}/api`, withCredentials: true });
+const getSupportOrAdminToken = () =>
+  localStorage.getItem('supportToken') || localStorage.getItem('adminToken') || '';
 const supportRequest = (method, path, data) => supportClient.request({
   method,
   url: `/support${path}`,
   ...(data === undefined ? {} : { data }),
-  headers: localStorage.getItem('supportToken')
-    ? { Authorization: `Bearer ${localStorage.getItem('supportToken')}` }
+  headers: getSupportOrAdminToken()
+    ? { Authorization: `Bearer ${getSupportOrAdminToken()}` }
     : {},
 });
 export const supportPortal = {
@@ -568,17 +570,42 @@ export const supportPortal = {
   createPasswordResetLink: id => supportRequest('post', `/customers/${id}/password-reset-link`, {}),
   tickets: () => supportRequest('get', '/tickets'),
   updateTicket: (id, data) => supportRequest('patch', `/tickets/${id}`, data),
+  sessions: (params = {}) => {
+    const qs = new URLSearchParams();
+    if (params.status) qs.set('status', params.status);
+    if (params.priority) qs.set('priority', params.priority);
+    if (params.search) qs.set('search', params.search);
+    if (params.assignedAgentId) qs.set('assignedAgentId', params.assignedAgentId);
+    const queryStr = qs.toString();
+    return supportRequest('get', `/sessions${queryStr ? `?${queryStr}` : ''}`);
+  },
+  sessionDetail: sessionToken => supportRequest('get', `/sessions/${encodeURIComponent(sessionToken)}`),
+  replySession: (sessionToken, data) => supportRequest('post', `/sessions/${encodeURIComponent(sessionToken)}/reply`, data),
+  updateSessionStatus: (sessionToken, data) => supportRequest('patch', `/sessions/${encodeURIComponent(sessionToken)}/status`, data),
+  executeSessionAction: (sessionToken, data) => supportRequest('post', `/sessions/${encodeURIComponent(sessionToken)}/execute-action`, data),
+  escalations: (params = {}) => supportRequest('get', `/ai-escalations${params?.status ? `?status=${encodeURIComponent(params.status)}` : ''}`),
 };
 export const supportAgents = {
   list: () => api.get('/support/agents', { adminAuth: true }),
   create: data => api.post('/support/agents', data, { adminAuth: true }),
+  update: (id, data) => api.patch(`/support/agents/${id}`, data, { adminAuth: true }),
   setActive: (id, is_active) => api.patch(`/support/agents/${id}/status`, { is_active }, { adminAuth: true }),
+};
+export const superAdminSupport = {
+  getOverview: () => supportRequest('get', '/superadmin/overview'),
+  getFeatures: () => supportRequest('get', '/superadmin/features'),
+  updateFeatures: data => supportRequest('put', '/superadmin/features', data),
+  listAgents: () => supportRequest('get', '/agents'),
+  createAgent: data => supportRequest('post', '/agents', data),
+  updateAgent: (id, data) => supportRequest('patch', `/agents/${id}`, data),
 };
 export const aiSupport = {
   initSession: data => api.post('/support/chat/session', data, { notify: false }),
   sendMessage: data => api.post('/support/chat/message', data, { notify: false }),
   updateContext: data => api.post('/support/chat/context', data, { notify: false }),
   getHistory: sessionToken => api.get(`/support/chat/history/${encodeURIComponent(sessionToken)}`, { notify: false }),
+  updateSessionStatus: (sessionToken, data) => api.patch(`/support/chat/session/${encodeURIComponent(sessionToken)}/status`, data, { notify: false }),
+  submitRating: (sessionToken, data) => api.post(`/support/chat/session/${encodeURIComponent(sessionToken)}/rating`, data, { notify: false }),
   escalate: data => api.post('/support/chat/escalate', data, { notify: false }),
   listEscalations: params => supportRequest('get', `/ai-escalations${params?.status ? `?status=${encodeURIComponent(params.status)}` : ''}`),
 };
