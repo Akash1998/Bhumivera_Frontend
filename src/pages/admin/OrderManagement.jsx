@@ -7,7 +7,6 @@ import {
   Clock, ShieldCheck, Mail, Phone, FileText, ChevronLeft, ChevronRight
 } from 'lucide-react';
 import api from '../../services/api';
-import { getProductImageUrl } from '../../utils/productImage';
 import { formatOrderNumber } from '../../utils/formatOrderNumber';
 import { useToast } from '../../context/ToastContext';
 
@@ -85,6 +84,15 @@ export default function OrderManagement() {
     }, 250);
     return () => { active = false; clearTimeout(timer); };
   }, [searchTerm, statusFilter, currentPage, pagination.limit, refreshKey]);
+
+  const getImageUrl = (img) => {
+    if (!img) return '/logo.webp';
+    let path = typeof img === 'object' ? (img.file_path || img.url || img.path) : img;
+    if (!path) return '/logo.webp';
+    if (path.startsWith('http')) return path;
+    const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev';
+    return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
+  };
 
   const handleUpdateStatus = async (orderId, newStatus) => {
     if (['cancelled', 'returned'].includes(newStatus) && !window.confirm(`Mark this order as ${newStatus}? Inventory will be restocked.`)) return;
@@ -466,7 +474,7 @@ export default function OrderManagement() {
                     <div className="space-y-4">
                       {selectedOrder.items?.map((item, i) => (
                         <div key={i} className="flex items-center gap-4 border-b border-white/10 py-4 last:border-0 last:pb-0">
-                          <img src={getProductImageUrl(item.image)} alt="product" className="h-16 w-16 rounded-lg border border-white/10 bg-white/5 object-contain p-1" />
+                          <img src={getImageUrl(item.image)} alt="product" className="h-16 w-16 rounded-lg border border-white/10 bg-white/5 object-contain p-1" />
                           <div className="flex-1">
                             <p className="font-semibold text-slate-100">{item.name}</p>
                             <p className="text-sm text-slate-500">Qty: {item.quantity}</p>

@@ -94,28 +94,16 @@ const WIDGET_BUTTON_GUIDE = [
     whatItDoes: 'Starts a brand-new support session with a fresh token while keeping your previous order records safe.',
   },
   {
-    button: 'Status: Active / Reopen',
-    whatItDoes: 'Marks the conversation as Active or reopens a Resolved/Closed chat so you can continue chatting.',
+    button: 'Live Support Status Badge (Read-Only)',
+    whatItDoes: 'Shows the real-time status set by Bhumivera Customer Support (Active, Pending, Waiting for Review, Escalated, Resolved, or Closed). Status transitions are managed exclusively by our Support Executive team.',
   },
   {
-    button: 'Status: Mark Pending',
-    whatItDoes: 'Pauses the chat in Pending state while you gather order numbers, bank statements, or package photos.',
+    button: 'Escalate to Specialist (Phone Icon)',
+    whatItDoes: 'Requests a human support specialist and alerts our Senior Concierge team via Email, WhatsApp, and Telegram.',
   },
   {
-    button: 'Status: Waiting for Review',
-    whatItDoes: 'Flags your chat for a Support Supervisor to review exceptions (such as special return windows or refund checks).',
-  },
-  {
-    button: 'Status: Escalate (Phone Icon)',
-    whatItDoes: 'Immediately creates a high-priority human ticket and alerts our Senior Concierge team via Email, WhatsApp, and Telegram.',
-  },
-  {
-    button: 'Status: Mark Resolved',
-    whatItDoes: 'Marks your issue as solved and unlocks the 1–5 Star CSAT feedback bar.',
-  },
-  {
-    button: 'Status: Close Chat',
-    whatItDoes: 'Formally closes the current chat transcript. You can still reopen it or start a new chat with one click.',
+    button: 'Quick-Action Chips',
+    whatItDoes: 'Triggers 1-click real-time order tracking, self-service returns (RMA), cancellations, refund status checks, wallet/loyalty lookups, and active coupon checks.',
   },
   {
     button: 'Attach Photo (Paperclip)',
@@ -1090,73 +1078,23 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             </div>
           </header>
 
-          {/* Amazon/Flipkart-Grade Chat Lifecycle Control Bar */}
-          <div
-            className={`px-3 py-1.5 border-b flex items-center justify-between gap-1.5 overflow-x-auto no-scrollbar text-[10px] shrink-0 ${
-              isDark ? 'bg-[#0a1c15] border-white/10 text-stone-300' : 'bg-[#f4f1e9] border-[#0B2419]/10 text-[#0B2419]'
-            }`}
-          >
-            <div className="flex items-center gap-1 shrink-0">
-              {['resolved', 'closed'].includes(chatStatus) ? (
-                <button
-                  type="button"
-                  onClick={() => void handleStatusTransition('active')}
-                  title="Reopen this conversation to Active status"
-                  className="inline-flex items-center gap-1 px-2 py-1 rounded-md font-bold bg-emerald-500/20 text-emerald-600 dark:text-emerald-300 border border-emerald-500/30 hover:bg-emerald-500/30"
-                >
-                  <Unlock className="w-3 h-3" /> Reopen Chat
-                </button>
-              ) : (
-                <>
-                  <button
-                    type="button"
-                    onClick={() => void handleStatusTransition('pending')}
-                    title="Mark chat as Pending (waiting on your details)"
-                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-md font-semibold border transition-colors ${
-                      chatStatus === 'pending'
-                        ? 'bg-amber-500/25 border-amber-500/50 text-amber-700 dark:text-amber-200'
-                        : 'border-current/15 hover:bg-current/5'
-                    }`}
-                  >
-                    <PauseCircle className="w-3 h-3" /> Pending
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleStatusTransition('waiting_for_review')}
-                    title="Request Supervisor Review for this conversation"
-                    className={`inline-flex items-center gap-1 px-2 py-1 rounded-md font-semibold border transition-colors ${
-                      chatStatus === 'waiting_for_review'
-                        ? 'bg-sky-500/25 border-sky-500/50 text-sky-700 dark:text-sky-200'
-                        : 'border-current/15 hover:bg-current/5'
-                    }`}
-                  >
-                    <Eye className="w-3 h-3" /> Waiting Review
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleStatusTransition('resolved')}
-                    title="Mark your issue as Resolved"
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md font-semibold border border-emerald-500/30 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/15"
-                  >
-                    <CheckCircle2 className="w-3 h-3" /> Resolved
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => void handleStatusTransition('closed')}
-                    title="Close and archive this chat session"
-                    className="inline-flex items-center gap-1 px-2 py-1 rounded-md font-semibold border border-rose-500/30 text-rose-600 dark:text-rose-300 hover:bg-rose-500/15"
-                  >
-                    <Lock className="w-3 h-3" /> Close Chat
-                  </button>
-                </>
+          {/* Read-Only Support Status Banner (Managed Exclusively by Customer Support Staff) */}
+          {(chatStatus !== 'active' || assignedAgentName) && (
+            <div
+              className={`px-3.5 py-1.5 border-b flex items-center justify-between gap-2 text-[11px] shrink-0 ${
+                isDark ? 'bg-[#0a1c15] border-white/10 text-stone-200' : 'bg-[#f4f1e9] border-[#0B2419]/10 text-[#0B2419]'
+              }`}
+            >
+              <span className="truncate">
+                <strong>Support Status:</strong> {activeStatusMeta.label} — {activeStatusMeta.description}
+              </span>
+              {sentimentBadge?.priority && ['High', 'Critical'].includes(sentimentBadge.priority) && (
+                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/20 text-rose-500 border border-rose-500/30 shrink-0">
+                  {sentimentBadge.priority} Priority
+                </span>
               )}
             </div>
-            {sentimentBadge?.priority && ['High', 'Critical'].includes(sentimentBadge.priority) && (
-              <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/20 text-rose-500 border border-rose-500/30 shrink-0">
-                {sentimentBadge.priority} Priority
-              </span>
-            )}
-          </div>
+          )}
 
           {/* Interactive "What does this button do?" Explainer Drawer */}
           {showButtonGuide && (
@@ -1301,13 +1239,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   ))}
                 </div>
                 <div className="pt-1 flex justify-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => void handleStatusTransition('active')}
-                    className="px-3 py-1 rounded-lg text-[11px] font-semibold bg-emerald-500/15 text-emerald-600 dark:text-emerald-300"
-                  >
-                    Reopen This Chat
-                  </button>
                   <button
                     type="button"
                     onClick={handleStartNewChat}

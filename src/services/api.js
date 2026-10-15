@@ -125,16 +125,25 @@ api.interceptors.request.use(c => {
     url.startsWith("/flash-sales") && (c.method === "post" || c.method === "put" || c.method === "patch" || c.method === "delete");
 
   const isWarehouseCall = url.startsWith("/warehouse/") && !url.startsWith("/warehouse/login");
+  const isSupportStaffCall = (url === "/support" || url.startsWith("/support/")) &&
+    !url.startsWith("/support/chat") &&
+    !url.startsWith("/support/login");
 
-  let token = null;
-  if (isAdminCall) {
-    token = localStorage.getItem("adminToken");
-  } else if (isWarehouseCall) {
-    token = localStorage.getItem("warehouseToken") || localStorage.getItem("adminToken") || localStorage.getItem("token");
-  } else {
-    token = localStorage.getItem("token") || localStorage.getItem("ms_token");
+  // Preserve explicit Authorization header if caller already supplied one
+  const explicitAuth = c.headers?.Authorization || c.headers?.authorization;
+  if (!explicitAuth) {
+    let token = null;
+    if (isSupportStaffCall) {
+      token = localStorage.getItem("supportToken") || localStorage.getItem("adminToken");
+    } else if (isAdminCall) {
+      token = localStorage.getItem("adminToken") || localStorage.getItem("supportToken");
+    } else if (isWarehouseCall) {
+      token = localStorage.getItem("warehouseToken") || localStorage.getItem("adminToken") || localStorage.getItem("token");
+    } else {
+      token = localStorage.getItem("token") || localStorage.getItem("ms_token");
+    }
+    if (token) c.headers.Authorization = `Bearer ${token}`;
   }
-  if (token) c.headers.Authorization = `Bearer ${token}`;
   return c;
 }, e => Promise.reject(e));
 
@@ -143,6 +152,7 @@ const _refreshPromises = { user: null, admin: null };
 const isPathOrChild = (url, path) => url === path || url.startsWith(`${path}/`);
 
 const _resolveTokenKind = (url = '', method = '', adminAuth = false) => {
+  if ((url === "/support" || url.startsWith("/support/")) && !url.startsWith("/support/chat")) return 'support';
   if (adminAuth) return 'admin';
   const isAdminUrl = url.startsWith("/admin/") ||
     url === "/auth/profile" ||
@@ -315,6 +325,10 @@ api.interceptors.response.use(async response => {
         }
       }
       window.dispatchEvent(new Event('admin-auth-expired'));
+      notifyMutationFailure(e);
+      return Promise.reject(e);
+    }
+    if (kind === 'support') {
       notifyMutationFailure(e);
       return Promise.reject(e);
     }
@@ -550,17 +564,16 @@ export const support = {
   delete: id => api.delete(`/contact/${id}`)
 };
 const supportClient = axios.create({ baseURL: `${BASE_URL}/api`, withCredentials: true });
-const getSupportOrAdminToken = token =>
-  token || localStorage.getItem('supportToken') || localStorage.getItem('adminToken') || '';
-const supportRequest = (method, path, data, token) => {
-  const supportToken = getSupportOrAdminToken(token);
-  return supportClient.request({
-    method,
-    url: `/support${path}`,
-    ...(data === undefined ? {} : { data }),
-    headers: supportToken ? { Authorization: `Bearer ${supportToken}` } : {},
-  });
-};
+const getSupportOrAdminToken = () =>
+  localStorage.getItem('supportToken') || localStorage.getItem('adminToken') || '';
+const supportRequest = (method, path, data) => supportClient.request({
+  method,
+  url: `/support${path}`,
+  ...(data === undefined ? {} : { data }),
+  headers: getSupportOrAdminToken()
+    ? { Authorization: `Bearer ${getSupportOrAdminToken()}` }
+    : {},
+});
 export const supportPortal = {
   login: credentials => supportRequest('post', '/login', credentials),
   me: () => supportRequest('get', '/me'),
@@ -593,29 +606,12 @@ export const supportAgents = {
   setActive: (id, is_active) => api.patch(`/support/agents/${id}/status`, { is_active }, { adminAuth: true }),
 };
 export const superAdminSupport = {
-  getOverview: token => supportRequest('get', '/superadmin/overview', undefined, token),
-  getFeatures: token => supportRequest('get', '/superadmin/features', undefined, token),
-  updateFeatures: (data, token) => supportRequest('put', '/superadmin/features', data, token),
-  listAgents: token => supportRequest('get', '/agents', undefined, token),
-  createAgent: (data, token) => supportRequest('post', '/agents', data, token),
-  updateAgent: (id, data, token) => supportRequest('patch', `/agents/${id}`, data, token),
-  listSessions: (params = {}, token) => {
-    const qs = new URLSearchParams();
-    if (params.status) qs.set('status', params.status);
-    if (params.priority) qs.set('priority', params.priority);
-    if (params.search) qs.set('search', params.search);
-    if (params.limit) qs.set('limit', String(params.limit));
-    const query = qs.toString();
-    return supportRequest('get', `/sessions${query ? `?${query}` : ''}`, undefined, token);
-  },
-  sessionDetail: (sessionToken, token) =>
-    supportRequest('get', `/sessions/${encodeURIComponent(sessionToken)}`, undefined, token),
-  replySession: (sessionToken, data, token) =>
-    supportRequest('post', `/sessions/${encodeURIComponent(sessionToken)}/reply`, data, token),
-  updateSessionStatus: (sessionToken, data, token) =>
-    supportRequest('patch', `/sessions/${encodeURIComponent(sessionToken)}/status`, data, token),
-  executeSessionAction: (sessionToken, data, token) =>
-    supportRequest('post', `/sessions/${encodeURIComponent(sessionToken)}/execute-action`, data, token),
+  getOverview: () => supportRequest('get', '/superadmin/overview'),
+  getFeatures: () => supportRequest('get', '/superadmin/features'),
+  updateFeatures: data => supportRequest('put', '/superadmin/features', data),
+  listAgents: () => supportRequest('get', '/agents'),
+  createAgent: data => supportRequest('post', '/agents', data),
+  updateAgent: (id, data) => supportRequest('patch', `/agents/${id}`, data),
 };
 export const aiSupport = {
   initSession: data => api.post('/support/chat/session', data, { notify: false }),
