@@ -39,7 +39,7 @@ export default function SupportCenter({
   const [sessionData, setSessionData] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [hasPlacedOrder, setHasPlacedOrder] = useState(orders.length > 0);
-  const [telegramUrl, setTelegramUrl] = useState('https://t.me/BhumiveraBot');
+  const [telegramUrl, setTelegramUrl] = useState('https://web.telegram.org/k/#@BhumiveraBot');
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
