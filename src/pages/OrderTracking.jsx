@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { orders as ordersApi } from '../services/api';
+import { getProductImageUrl } from '../utils/productImageUrl';
 import { Package, CheckCircle2, Truck, ShoppingBag, PartyPopper, Settings, ArrowRight, Loader2, AlertCircle, LogIn } from 'lucide-react';
 
 const STATUS_STEPS = [
@@ -218,8 +219,13 @@ export default function OrderTracking() {
                         {items.slice(0, 3).map((item, i) => (
                           <div key={i} className="flex items-center gap-4 bg-[#FDFBF7] border border-[#8B9D83]/10 rounded-2xl p-3 hover:border-[#D4AF37]/40 transition-colors">
                             <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-lg border border-[#8B9D83]/10 shrink-0">
-                              {item.image ? (
-                                <img src={item.image} alt={item.name} className="w-full h-full object-cover rounded-xl" />
+                              {getProductImageUrl(item.image || item.image_url) ? (
+                                <img
+                                  src={getProductImageUrl(item.image || item.image_url)}
+                                  alt={item.name || item.product_name || 'Product'}
+                                  onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}
+                                  className="w-full h-full object-cover rounded-xl"
+                                />
                               ) : <Package className="w-5 h-5 text-[#8B9D83]" />}
                             </div>
                             <div className="flex-1 min-w-0">

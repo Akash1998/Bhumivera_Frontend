@@ -6,6 +6,7 @@ import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { BASE_URL, orders, addresses, wallet } from '../services/api';
 import { haptics } from '../utils/haptics';
+import { getProductImageUrl } from '../utils/productImageUrl';
 
 export default function Checkout() {
   const { cartItems, clearCart } = useCart();
@@ -316,7 +317,7 @@ export default function Checkout() {
                 <div key={item.id || item.product_id} className="flex items-center justify-between py-2 text-xs">
                   <div className="flex items-center gap-2">
                     <img
-                      src={item.image || item.images?.[0] || '/placeholder.png'}
+                      src={getProductImageUrl(item.image || item.image_url || item.images?.[0]) || '/placeholder.png'}
                       alt={item.name}
                       className="h-10 w-10 rounded object-cover"
                     />

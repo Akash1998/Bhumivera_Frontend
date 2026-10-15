@@ -61,10 +61,17 @@ function getInitialValidStaffToken() {
     localStorage.getItem('supportToken'),
     localStorage.getItem('adminToken'),
   ];
-  for (const tok of candidates) {
-    if (decodeStaffOrAdminJwt(tok)) return tok;
-  }
-  return '';
+  return candidates
+    .map(token => ({ token, payload: decodeStaffOrAdminJwt(token) }))
+    .filter(candidate => candidate.payload)
+    .sort((first, second) => {
+      const rank = payload => {
+        if (['admin', 'superadmin'].includes(payload.role)) return 2;
+        if (payload.scope === 'support-agent' && payload.role === 'manager') return 1;
+        return 0;
+      };
+      return rank(second.payload) - rank(first.payload);
+    })[0]?.token || '';
 }
 
 const STATUS_BADGES = {
@@ -366,6 +373,10 @@ export default function SuperAdminSupport() {
 
   const handleCreateAgent = async e => {
     e.preventDefault();
+    if (!canManageAgents) {
+      showNotice('error', 'Only a Website Admin, SuperAdmin, or Support Manager can create staff accounts.');
+      return;
+    }
     try {
       const res = await api.post('/support/agents', newAgent, requestConfig);
       setAgents(prev => [res.data.agent, ...prev]);
@@ -387,6 +398,10 @@ export default function SuperAdminSupport() {
   };
 
   const handleUpdateAgent = async (agentId, patch) => {
+    if (!canManageAgents) {
+      showNotice('error', 'Only a Website Admin, SuperAdmin, or Support Manager can change roles and permissions.');
+      return;
+    }
     try {
       const res = await api.patch(`/support/agents/${agentId}`, patch, requestConfig);
       setAgents(prev => prev.map(a => (a.id === agentId ? res.data.agent : a)));
@@ -731,6 +746,8 @@ export default function SuperAdminSupport() {
   }
 
   const statusBreakdown = overview?.metrics?.statusCounts || {};
+  const canManageAgents = ['admin', 'superadmin', 'manager'].includes(overview?.viewer?.role) ||
+    overview?.viewer?.permissions?.can_manage_agents === true;
   const roleCounts = agents.reduce(
     (acc, a) => {
       const r = a.role || 'agent';
@@ -1871,10 +1888,18 @@ export default function SuperAdminSupport() {
                   Create dedicated login credentials and assign the role of <strong>Agent</strong>,{' '}
                   <strong>Supervisor</strong>, or <strong>Manager</strong>.
                 </p>
-              </div>
+                  {!canManageAgents && (
+                    <p className="mt-3 rounded-lg border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-100">
+                      Signed in as <strong>{overview?.viewer?.role || 'support staff'}</strong>. This account can view
+                      support data but cannot manage staff. Sign in with a Website
+                      Admin/SuperAdmin account or a Support Manager account to create staff, assign roles, or configure access.
+                    </p>
+                  )}
+                </div>
 
-              <form onSubmit={handleCreateAgent} className="space-y-3.5 text-xs">
-                <div>
+                <form onSubmit={handleCreateAgent} className="space-y-3.5 text-xs">
+                  <fieldset disabled={!canManageAgents} className="contents">
+                  <div>
                   <label className="block text-emerald-100/80 mb-1">Login User ID (username)</label>
                   <input
                     type="text"
@@ -1952,7 +1977,6 @@ export default function SuperAdminSupport() {
                     className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-white"
                   />
                 </div>
-
                 <button
                   type="submit"
                   className="w-full py-2.5 rounded-lg bg-[#D4AF37] hover:bg-[#c49f2f] text-[#071510] font-semibold flex items-center justify-center gap-2"
@@ -1960,6 +1984,7 @@ export default function SuperAdminSupport() {
                   <Plus className="w-4 h-4" />
                   Create {newAgent.role.toUpperCase()} Login ID
                 </button>
+                </fieldset>
               </form>
             </div>
 
@@ -1969,6 +1994,11 @@ export default function SuperAdminSupport() {
                 Click <strong>Configure Access</strong> on any login ID to promote/demote roles, reset passwords, or
                 customize individual permissions.
               </p>
+              {!canManageAgents && (
+                <p className="rounded-lg border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-100">
+                  Staff role and permission changes require a Website Admin/SuperAdmin or Support Manager login.
+                </p>
+              )}
 
               <div className="space-y-3 max-h-[620px] overflow-y-auto pr-1">
                 {agents.map(agent => {
@@ -2007,6 +2037,7 @@ export default function SuperAdminSupport() {
                         <div className="flex items-center gap-2">
                           <select
                             value={agent.role}
+                            disabled={!canManageAgents}
                             onChange={e => handleUpdateAgent(agent.id, { role: e.target.value })}
                             className="px-2.5 py-1 rounded bg-black/50 border border-white/15 text-xs text-white"
                           >
@@ -2017,6 +2048,7 @@ export default function SuperAdminSupport() {
 
                           <button
                             type="button"
+                            disabled={!canManageAgents}
                             onClick={() => setEditingAgent(isEditing ? null : agent)}
                             className="px-3 py-1 rounded bg-white/10 hover:bg-white/15 text-xs text-white"
                           >
@@ -2025,6 +2057,7 @@ export default function SuperAdminSupport() {
 
                           <button
                             type="button"
+                            disabled={!canManageAgents}
                             onClick={() => handleUpdateAgent(agent.id, { is_active: !agent.is_active })}
                             className={`px-2.5 py-1 rounded text-xs font-medium ${
                               agent.is_active
@@ -2046,6 +2079,7 @@ export default function SuperAdminSupport() {
                             <div className="flex items-center gap-1.5">
                               <input
                                 type="password"
+                                disabled={!canManageAgents}
                                 value={resetAgentPassword}
                                 onChange={e => setResetAgentPassword(e.target.value)}
                                 placeholder="New password (8+ chars)"
@@ -2053,6 +2087,7 @@ export default function SuperAdminSupport() {
                               />
                               <button
                                 type="button"
+                                disabled={!canManageAgents}
                                 onClick={() => {
                                   if (resetAgentPassword.trim().length >= 8) {
                                     handleUpdateAgent(agent.id, { password: resetAgentPassword.trim() });
@@ -2073,6 +2108,7 @@ export default function SuperAdminSupport() {
                                 <button
                                   key={permKey}
                                   type="button"
+                                  disabled={!canManageAgents}
                                   onClick={() =>
                                     handleUpdateAgent(agent.id, {
                                       permissions: {

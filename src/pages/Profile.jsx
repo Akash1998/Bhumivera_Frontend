@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { formatOrderNumber } from '../utils/formatOrderNumber';
 import { useCart } from '../context/CartContext';
 import {
-  BASE_URL,
   users as usersApi,
   orders as ordersApi,
   wishlist as wishlistApi,
@@ -37,28 +36,9 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { registerPasskey, isPasskeySupported } from '../utils/webauthnClient';
 import SupportCenter from '../components/SupportCenter';
+import { getProductImageUrl } from '../utils/productImageUrl';
 
-const getProfileImageUrl = image => {
-  let value = image;
-  if (typeof value === 'string') {
-    try {
-      const parsed = JSON.parse(value);
-      value = Array.isArray(parsed) ? parsed[0] : parsed;
-    } catch {
-      // Keep plain image URLs and object-storage keys as-is.
-    }
-  }
-  const path = typeof value === 'object' && value !== null
-    ? value.url || value.file_path || value.path
-    : value;
-  if (typeof path !== 'string' || !path.trim()) return null;
-  if (/^(https?:|data:|blob:)/i.test(path)) return path;
-  if (path.startsWith('uploads/')) return `${BASE_URL.replace(/\/$/, '')}/${path.replace(/^\/+/, '')}`;
-  const imageBase = import.meta.env.VITE_R2_PUBLIC_URL ||
-    import.meta.env.VITE_IMAGE_BASE_URL ||
-    'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev/bhumivera';
-  return `${imageBase.replace(/\/$/, '')}/${path.replace(/^\/+/, '')}`;
-};
+const getProfileImageUrl = getProductImageUrl;
 
 const TABS = [
   { id: 'overview',      label: 'Overview',      icon: LayoutDashboard },
