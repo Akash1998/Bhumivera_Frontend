@@ -7,6 +7,7 @@ import { useNativeBackButton } from "./hooks/useNativeBackButton.js";
 import { initPushNotifications } from "./utils/pushNotifications.js";
 import Footer from "./components/Footer.jsx";
 import MiniCart from "./components/MiniCart.jsx";
+import SupportAssistant from "./components/SupportAssistant.jsx";
 import { CartProvider, useCart } from "./context/CartContext.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { ToastProvider } from "./context/ToastContext.jsx";
@@ -401,6 +402,7 @@ function AppContent() {
 
       {!isManagementView && <Footer />}
       {!isManagementView && <MiniCart />}
+      {!isManagementView && <SupportAssistant />}
     </div>
   );
 }

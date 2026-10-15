@@ -574,6 +574,14 @@ export const supportAgents = {
   create: data => api.post('/support/agents', data, { adminAuth: true }),
   setActive: (id, is_active) => api.patch(`/support/agents/${id}/status`, { is_active }, { adminAuth: true }),
 };
+export const aiSupport = {
+  initSession: data => api.post('/support/chat/session', data, { notify: false }),
+  sendMessage: data => api.post('/support/chat/message', data, { notify: false }),
+  updateContext: data => api.post('/support/chat/context', data, { notify: false }),
+  getHistory: sessionToken => api.get(`/support/chat/history/${encodeURIComponent(sessionToken)}`, { notify: false }),
+  escalate: data => api.post('/support/chat/escalate', data, { notify: false }),
+  listEscalations: params => supportRequest('get', `/ai-escalations${params?.status ? `?status=${encodeURIComponent(params.status)}` : ''}`),
+};
 export const loyalty = { getSystemConfig: () => api.get("/settings"), updateSystemConfig: d => api.put("/settings", d), getMembers: () => api.get("/admin/users"), adjustPoints: (u, d) => api.patch(`/admin/users/${u}/status`, d) };
 export const loyaltyTiers = {
   list: () => api.get('/users/loyalty/tiers', { adminAuth: true }),
