@@ -305,21 +305,23 @@ export default function PremiumHome() {
         </div>
       </section>
 
-      <section id="story" className="mx-auto grid max-w-7xl gap-5 px-5 py-10 sm:gap-8 sm:px-8 sm:py-14 lg:grid-cols-[0.65fr_1.35fr] lg:gap-16 lg:px-10 lg:py-20">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#687958]">The Bhumivera point of view</p>
-          <p className="mt-3 font-serif text-3xl leading-tight sm:mt-4 sm:text-4xl">Care should feel like coming back to yourself.</p>
-        </div>
-        <div className="max-w-3xl">
-          <p className="font-serif text-2xl leading-snug text-[#26352b] sm:text-3xl lg:text-4xl">
-            We begin with the living world, then bring curiosity to every detail.
-          </p>
-          <p className="mt-5 max-w-2xl text-sm leading-7 text-stone-600 sm:text-base">
-            Aloe vera, tulsi, charcoal and sea buckthorn each bring a different character to our story. We pair that botanical curiosity with contemporary skin care knowledge—without louder promises or more steps than you need.
-          </p>
-          <Link to="/about" className="mt-6 inline-flex items-center gap-2 border-b border-[#667956]/50 pb-2 text-xs font-bold uppercase tracking-[0.16em] text-[#354933] hover:border-[#354933]">
-            Read the Bhumivera story <ArrowRight size={14} />
-          </Link>
+      <section id="story" className="bg-[#f4f1e9] px-5 py-14 text-[#1b2921] sm:px-8 sm:py-16 lg:px-10 lg:py-24">
+        <div className="mx-auto grid max-w-7xl gap-8 sm:gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#687958]">The Bhumivera point of view</p>
+            <h2 className="mt-4 max-w-lg font-editorial text-5xl leading-[0.98] tracking-[-0.035em] sm:text-6xl lg:text-7xl">Care should feel like coming back to yourself.</h2>
+          </div>
+          <div className="max-w-3xl">
+            <p className="font-editorial text-3xl leading-[1.08] tracking-[-0.02em] text-[#26352b] sm:text-4xl lg:text-5xl">
+              We begin with the living world, then bring curiosity to every detail.
+            </p>
+            <p className="mt-6 max-w-2xl text-sm leading-7 text-[#53604e] sm:text-base sm:leading-8">
+              Aloe vera, tulsi, charcoal and sea buckthorn each bring a different character to our story. We pair that botanical curiosity with contemporary skin care knowledge—without louder promises or more steps than you need.
+            </p>
+            <Link to="/about" className="mt-7 inline-flex min-h-11 items-center gap-3 border-b border-[#667956]/50 pb-2 text-xs font-bold uppercase tracking-[0.16em] text-[#354933] transition-colors hover:border-[#354933]">
+              Read the Bhumivera story <ArrowRight size={14} />
+            </Link>
+          </div>
         </div>
       </section>
 
