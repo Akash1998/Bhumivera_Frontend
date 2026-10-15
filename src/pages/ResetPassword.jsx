@@ -9,6 +9,7 @@ export default function ResetPassword() {
   const [params] = useSearchParams();
   const emailFromLink = params.get('email');
   const modeFromLink = params.get('mode');
+  const supportToken = params.get('token');
 
   const [step, setStep] = useState(1);
   const [email, setEmail] = useState('');
@@ -22,12 +23,17 @@ export default function ResetPassword() {
   const [resetSuccess, setResetSuccess] = useState(false);
 
   useEffect(() => {
+    if (modeFromLink === 'support' && supportToken) {
+      setResetJwt(supportToken);
+      setStep(3);
+      return;
+    }
     if (modeFromLink === 'email' && emailFromLink) {
       setEmail(emailFromLink);
       setStep(2);
       toast('Enter the OTP sent to your email');
     }
-  }, [modeFromLink, emailFromLink]);
+  }, [modeFromLink, emailFromLink, supportToken]);
 
   const handleSubmitEmail = async (e) => {
     e.preventDefault();
@@ -71,7 +77,8 @@ export default function ResetPassword() {
     if (newPassword !== confirmPassword) { toast.error('Passwords do not match'); return; }
     setLoading(true);
     try {
-      await auth.resetPasswordBearer(resetJwt, newPassword);
+      if (modeFromLink === 'support') await auth.supportResetPassword(resetJwt, newPassword);
+      else await auth.resetPasswordBearer(resetJwt, newPassword);
       setResetSuccess(true);
       toast.success('Password reset successfully! Redirecting you to login in 3s…');
       setTimeout(() => navigate('/login'), 2500);
@@ -251,7 +258,7 @@ export default function ResetPassword() {
         </div>
 
         <p className="text-center text-xs text-stone-400 mt-6 leading-relaxed">
-          Protected by Bhumivera security. Your reset token expires in 5 minutes and is never stored on your device.
+          Protected by Bhumivera security. {modeFromLink === 'support' ? 'This one-time support link expires in 30 minutes.' : 'Your reset token expires in 5 minutes.'}
         </p>
       </div>
     </div>

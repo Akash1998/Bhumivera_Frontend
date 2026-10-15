@@ -3,6 +3,7 @@ import { auth as authApi, settings as settingsApi } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { isPasskeySupported, registerPasskey } from '../../utils/webauthnClient';
 import { FiLock, FiSave, FiAlertCircle, FiCheckCircle, FiShield, FiKey, FiTrash2 } from 'react-icons/fi';
+import SupportAgentManagement from './SupportAgentManagement';
 
 export default function AdminSettings() {
   const { adminOtpVerify } = useAuth();
@@ -520,6 +521,7 @@ export default function AdminSettings() {
             <span className="text-white">Standard, Express</span>
           </div>
         </div>
+        <SupportAgentManagement />
       </div>
     </div>
   );

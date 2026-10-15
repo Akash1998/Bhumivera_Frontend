@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState, Suspense, Component, lazy } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Activity, ArrowLeft, Award, Bell, Boxes, ChartNoAxesCombined, ChevronDown, FileText,
-  Gamepad2, Gift, Leaf, LifeBuoy, LogOut, Mail, Package, ScrollText, Settings2,
+  Activity, Award, Bell, Boxes, ChartNoAxesCombined, ChevronDown, FileText,
+  Gamepad2, Gift, Leaf, LogOut, Mail, Package, ScrollText, Settings2,
   ShieldCheck, ShoppingBag, SlidersHorizontal, Star, Tags, Truck, Users, Wallet, Warehouse, Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -17,7 +17,6 @@ const AnalyticsManagement = lazy(() => import('./admin/AnalyticsManagement'));
 const InventoryManagement = lazy(() => import('./admin/InventoryManagement'));
 const ReviewManagement = lazy(() => import('./admin/ReviewManagement'));
 const ReturnManagement = lazy(() => import('./admin/ReturnManagement'));
-const SupportManagement = lazy(() => import('./admin/SupportManagement'));
 const NotificationManagement = lazy(() => import('./admin/NotificationManagement'));
 const TaxManagement = lazy(() => import('./admin/TaxManagement'));
 const GSTAccounting = lazy(() => import('./admin/GSTAccounting'));
@@ -74,7 +73,7 @@ const TAB_COMPONENTS = {
   overview: DashboardOverview, products: ProductManagement, categories: CategoryManagement,
   inventory: InventoryManagement, orders: OrderManagement, returns: ReturnManagement,
   users: UserManagement,
-  support: SupportManagement, reviews: ReviewManagement,
+  reviews: ReviewManagement,
   analytics: AnalyticsManagement,
   notifications: NotificationManagement,
   tax: TaxManagement, gst: GSTAccounting, shipping: ShippingManagement, logs: SystemLogs, 'system-health': SystemHealth,
@@ -92,7 +91,7 @@ const TAB_ICONS = {
   inventory: Tags, warehouse: Warehouse, loyalty: Award, affiliate: Users, coupons: Gift,
   'flash-sales': Zap, reviews: Star, 'min-cart-value': SlidersHorizontal, 'cart-rules': SlidersHorizontal,
   gamification: Gamepad2, 'lifecycle-offers': Mail, personalization: Users,
-  'loyalty-tiers': Award, support: LifeBuoy,
+  'loyalty-tiers': Award,
   'loyalty-matrix': Award,
   'growth-offers': Gift, 'wallet-management': Wallet,
   returns: Truck, settings: Settings2, tax: Tags, gst: FileText, users: Users
@@ -104,7 +103,7 @@ export default function AdminDashboard() {
   const { tab } = useParams();
   const [isAccountMenuOpen, setAccountMenuOpen] = useState(false);
   const accountMenuRef = useRef(null);
-  const activeTab = tab === 'contact' ? 'support' : tab || 'overview';
+  const activeTab = tab || 'overview';
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [navSearch, setNavSearch] = useState('');
 
@@ -144,7 +143,7 @@ export default function AdminDashboard() {
     },
     {
       title: 'Customer experience', items: [
-        { id: 'reviews', label: 'Reviews' }, { id: 'support', label: 'Support inbox' },
+        { id: 'reviews', label: 'Reviews' },
         { id: 'users', label: 'Customers' },
         { id: 'returns', label: 'Returns' }
       ]
@@ -174,7 +173,7 @@ export default function AdminDashboard() {
     },
   ];
 
-  const quickTabs = ['overview', 'orders', 'products', 'users', 'reviews', 'support', 'growth-offers', 'loyalty-matrix'];
+  const quickTabs = ['overview', 'orders', 'products', 'users', 'reviews', 'growth-offers', 'loyalty-matrix'];
   const allMenuItems = menuSections.flatMap(section => section.items);
   const quickItems = quickTabs.map(id => allMenuItems.find(item => item.id === id)).filter(Boolean);
   const normalizedSearch = navSearch.trim().toLowerCase();
@@ -306,16 +305,6 @@ export default function AdminDashboard() {
           <header className="relative z-10 border-b border-[#d4af37]/15 bg-[#0b2419]">
             <div className="flex min-h-[4.25rem] items-center justify-between gap-4 px-4 py-3 md:px-6">
               <div className="flex min-w-0 items-center gap-3">
-                {activeTab !== 'overview' && (
-                  <button
-                    type="button"
-                    onClick={() => navigate('/admin')}
-                    aria-label="Back to admin dashboard"
-                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 transition hover:border-[#d4af37]/50 hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4af37]"
-                  >
-                    <ArrowLeft size={18} aria-hidden="true" />
-                  </button>
-                )}
                 <button
                   type="button"
                   onClick={() => setSidebarOpen(!isSidebarOpen)}

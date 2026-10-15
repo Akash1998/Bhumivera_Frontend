@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Compass, User, ShoppingCart } from 'lucide-react';
+import { Home, Compass, User, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { haptics } from '../utils/haptics';
@@ -53,7 +53,7 @@ export default function MobileBottomNav() {
           className="relative flex flex-col items-center justify-center gap-1 text-[10px] font-medium text-stone-500"
         >
           <div className="relative">
-            <ShoppingCart className="h-5 w-5" />
+            <ShoppingBag className="h-5 w-5" />
             {cartCount > 0 && (
               <span className="absolute -right-2 -top-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-[#8b5a2b] text-[9px] font-bold text-white">
                 {cartCount}

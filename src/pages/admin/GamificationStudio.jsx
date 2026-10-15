@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { settings as settingsApi } from '../../services/api';
-import { Flame, Gift, LoaderCircle, Save, Sparkles } from 'lucide-react';
+import { Flame, Gift, LoaderCircle, Plus, Save, Sparkles, Trash2 } from 'lucide-react';
 import { useToast } from '../../context/ToastContext';
 
 const HOOKS = [
@@ -10,12 +10,12 @@ const HOOKS = [
 ];
 
 const DEFAULT_SPIN_REWARDS = [
-  { label: '₹50 off', discountType: 'fixed', discountValue: 50, minimumOrderAmount: 500, maxDiscount: '', chance: 35, expiryDays: 30 },
-  { label: '5% off (up to ₹200)', discountType: 'percentage', discountValue: 5, minimumOrderAmount: 500, maxDiscount: 200, chance: 25, expiryDays: 30 },
-  { label: '₹100 off', discountType: 'fixed', discountValue: 100, minimumOrderAmount: 1000, maxDiscount: '', chance: 18, expiryDays: 30 },
-  { label: '10% off (up to ₹500)', discountType: 'percentage', discountValue: 10, minimumOrderAmount: 1500, maxDiscount: 500, chance: 12, expiryDays: 30 },
-  { label: '₹250 off', discountType: 'fixed', discountValue: 250, minimumOrderAmount: 2500, maxDiscount: '', chance: 7, expiryDays: 30 },
-  { label: '₹500 off', discountType: 'fixed', discountValue: 500, minimumOrderAmount: 5000, maxDiscount: '', chance: 3, expiryDays: 30 },
+  { label: '₹50 off', rewardType: 'discount', discountType: 'fixed', discountValue: 50, minimumOrderAmount: 500, maxDiscount: '', chance: 35, expiryDays: 30 },
+  { label: '5% off (up to ₹200)', rewardType: 'discount', discountType: 'percentage', discountValue: 5, minimumOrderAmount: 500, maxDiscount: 200, chance: 25, expiryDays: 30 },
+  { label: '₹100 off', rewardType: 'discount', discountType: 'fixed', discountValue: 100, minimumOrderAmount: 1000, maxDiscount: '', chance: 18, expiryDays: 30 },
+  { label: '10% off (up to ₹500)', rewardType: 'discount', discountType: 'percentage', discountValue: 10, minimumOrderAmount: 1500, maxDiscount: 500, chance: 12, expiryDays: 30 },
+  { label: '₹250 off', rewardType: 'discount', discountType: 'fixed', discountValue: 250, minimumOrderAmount: 2500, maxDiscount: '', chance: 7, expiryDays: 30 },
+  { label: '₹500 off', rewardType: 'discount', discountType: 'fixed', discountValue: 500, minimumOrderAmount: 5000, maxDiscount: '', chance: 3, expiryDays: 30 },
 ];
 
 export default function GamificationStudio() {
@@ -38,6 +38,7 @@ export default function GamificationStudio() {
           if (Array.isArray(parsedRewards) && parsedRewards.length === 6) {
             setSpinRewards(parsedRewards.map(reward => ({
               ...reward,
+              rewardType: reward.rewardType || 'discount',
               maxDiscount: reward.maxDiscount ?? '',
             })));
           }
@@ -55,8 +56,8 @@ export default function GamificationStudio() {
   const chanceTotal = spinRewards.reduce((sum, reward) => sum + (Number(reward.chance) || 0), 0);
 
   const saveSpinRewards = async () => {
-    if (spinRewards.length !== 6 || chanceTotal !== 100) {
-      showToast?.('Keep six rewards and make their chances total exactly 100%.', 'error');
+    if (spinRewards.length < 1 || spinRewards.length > 12 || chanceTotal !== 100) {
+      showToast?.('Configure 1–12 rewards and make their chances total exactly 100%.', 'error');
       return;
     }
     setSavingSpinRewards(true);
@@ -64,11 +65,17 @@ export default function GamificationStudio() {
       await settingsApi.update({
         gamification_order_spin_rewards: JSON.stringify(spinRewards.map(reward => ({
           ...reward,
-          discountValue: Number(reward.discountValue),
-          minimumOrderAmount: Number(reward.minimumOrderAmount),
-          maxDiscount: reward.maxDiscount === '' ? null : Number(reward.maxDiscount),
           chance: Number(reward.chance),
-          expiryDays: Number(reward.expiryDays),
+          ...(reward.rewardType === 'points'
+            ? { points: Number(reward.points) }
+            : {
+              minimumOrderAmount: Number(reward.minimumOrderAmount),
+              expiryDays: Number(reward.expiryDays),
+              ...(reward.rewardType === 'discount' ? {
+                discountValue: Number(reward.discountValue),
+                maxDiscount: reward.maxDiscount === '' ? null : Number(reward.maxDiscount),
+              } : {}),
+            }),
         }))),
       });
       showToast?.('All six spin rewards and chances saved.', 'success');
@@ -81,8 +88,24 @@ export default function GamificationStudio() {
 
   const updateSpinReward = (index, key, value) => {
     setSpinRewards(current => current.map((reward, rewardIndex) => (
-      rewardIndex === index ? { ...reward, [key]: value } : reward
+      rewardIndex === index
+        ? { ...reward, [key]: value, ...(key === 'rewardType' && value === 'points' ? { points: reward.points || 100 } : {}) }
+        : reward
     )));
+  };
+
+  const addSpinReward = () => {
+    if (spinRewards.length >= 12) return;
+    setSpinRewards(current => [...current, {
+      label: 'New reward',
+      rewardType: 'discount',
+      discountType: 'fixed',
+      discountValue: 50,
+      minimumOrderAmount: 0,
+      maxDiscount: '',
+      chance: 0,
+      expiryDays: 30,
+    }]);
   };
 
   const update = async (key, value) => {
@@ -137,7 +160,7 @@ export default function GamificationStudio() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-start gap-3">
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-300"><Gift size={17}/></span>
-            <div><h3 className="text-sm font-bold text-white">Post-order spin rewards</h3><p className="mt-1 max-w-2xl text-xs leading-5 text-slate-400">Customers can spin once after an eligible order. Rewards are personal-use coupons. Set six prizes; chances must total exactly 100%. Percentage discounts honor the optional maximum.</p></div>
+            <div><h3 className="text-sm font-bold text-white">Post-order spin rewards</h3><p className="mt-1 max-w-2xl text-xs leading-5 text-slate-400">Customers can spin once after an eligible order. Configure 1–12 discount coupons, free-shipping codes, or loyalty-point awards. Chances must total exactly 100%; coupons are added to the customer’s next-cart offers.</p></div>
           </div>
           <span className={`rounded-full px-3 py-1 text-xs font-bold ${chanceTotal === 100 ? 'bg-emerald-400/10 text-emerald-300' : 'bg-amber-400/10 text-amber-200'}`}>Chance total: {chanceTotal}%</span>
         </div>
@@ -145,9 +168,21 @@ export default function GamificationStudio() {
           {spinRewards.map((reward, index) => (
             <fieldset key={index} className="grid gap-3 rounded-xl border border-white/10 bg-black/10 p-3 sm:grid-cols-2">
               <legend className="px-1 text-xs font-bold text-emerald-200">Prize {index + 1}</legend>
+              <button type="button" onClick={() => setSpinRewards(current => current.filter((_, rewardIndex) => rewardIndex !== index))} disabled={spinRewards.length <= 1} aria-label={`Remove reward ${index + 1}`} className="inline-flex items-center gap-1 text-xs text-rose-300 disabled:opacity-40"><Trash2 size={13}/>Remove</button>
               <label className="text-[11px] font-semibold text-slate-400 sm:col-span-2">Reward shown to customer
                 <input value={reward.label} maxLength={120} onChange={event => updateSpinReward(index, 'label', event.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/50"/>
               </label>
+              <label className="text-[11px] font-semibold text-slate-400">Reward type
+                <select value={reward.rewardType || 'discount'} onChange={event => updateSpinReward(index, 'rewardType', event.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/50">
+                  <option value="discount">Discount coupon</option><option value="free_shipping">Free shipping coupon</option><option value="points">Loyalty points</option>
+                </select>
+              </label>
+              {reward.rewardType === 'points' ? <>
+                <label className="text-[11px] font-semibold text-slate-400">Points awarded
+                  <input type="number" min="1" max="100000" step="1" value={reward.points ?? 100} onChange={event => updateSpinReward(index, 'points', event.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/50"/>
+                </label>
+              </> : <>
+              {reward.rewardType === 'discount' && <>
               <label className="text-[11px] font-semibold text-slate-400">Discount type
                 <select value={reward.discountType} onChange={event => updateSpinReward(index, 'discountType', event.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/50">
                   <option value="fixed">Fixed amount (₹)</option><option value="percentage">Percentage</option>
@@ -156,25 +191,30 @@ export default function GamificationStudio() {
               <label className="text-[11px] font-semibold text-slate-400">Discount value
                 <input type="number" min="0.01" max={reward.discountType === 'percentage' ? 100 : undefined} step="0.01" value={reward.discountValue} onChange={event => updateSpinReward(index, 'discountValue', event.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/50"/>
               </label>
-              <label className="text-[11px] font-semibold text-slate-400">Minimum order (₹)
-                <input type="number" min="0" step="1" value={reward.minimumOrderAmount} onChange={event => updateSpinReward(index, 'minimumOrderAmount', event.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/50"/>
-              </label>
               <label className="text-[11px] font-semibold text-slate-400">Maximum discount (₹, optional)
                 <input type="number" min="0" step="1" value={reward.maxDiscount ?? ''} disabled={reward.discountType === 'fixed'} onChange={event => updateSpinReward(index, 'maxDiscount', event.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/50 disabled:opacity-40"/>
+              </label>
+              </>}
+              <label className="text-[11px] font-semibold text-slate-400">Minimum order (₹)
+                <input type="number" min="0" step="1" value={reward.minimumOrderAmount ?? 0} onChange={event => updateSpinReward(index, 'minimumOrderAmount', event.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/50"/>
               </label>
               <label className="text-[11px] font-semibold text-slate-400">Win chance (%)
                 <input type="number" min="0" max="100" step="1" value={reward.chance} onChange={event => updateSpinReward(index, 'chance', event.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/50"/>
               </label>
-              <label className="text-[11px] font-semibold text-slate-400">Coupon expiry (days)
+              <label className="text-[11px] font-semibold text-slate-400">Reward expiry (days)
                 <input type="number" min="1" max="365" step="1" value={reward.expiryDays} onChange={event => updateSpinReward(index, 'expiryDays', event.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/50"/>
               </label>
+              </>}
             </fieldset>
           ))}
         </div>
-        <button type="button" onClick={saveSpinRewards} disabled={savingSpinRewards || chanceTotal !== 100} className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50">
-          {savingSpinRewards ? <LoaderCircle size={16} className="animate-spin"/> : <Save size={16}/>}
-          Save six rewards
-        </button>
+        <div className="flex flex-wrap gap-2">
+          <button type="button" onClick={addSpinReward} disabled={spinRewards.length >= 12} className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/30 px-4 py-2.5 text-sm font-bold text-emerald-200 disabled:opacity-50"><Plus size={16}/>Add reward</button>
+          <button type="button" onClick={saveSpinRewards} disabled={savingSpinRewards || chanceTotal !== 100} className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50">
+            {savingSpinRewards ? <LoaderCircle size={16} className="animate-spin"/> : <Save size={16}/>}
+            Save rewards
+          </button>
+        </div>
       </section>
     </div>
   );

@@ -64,7 +64,7 @@ export default function OrderSuccess() {
       const { data } = await gamificationApi.claimOrderSpin(orderId);
       setSpinRotation(rotation => rotation + 1800 + (Number(data.rewardIndex) % 6) * 60);
       await new Promise(resolve => window.setTimeout(resolve, 4200));
-      setSpinClaim({ reward: data.reward, couponCode: data.couponCode });
+      setSpinClaim({ reward: data.reward, couponCode: data.couponCode, rewardType: data.rewardType, pointsAwarded: data.pointsAwarded });
       setSpinStatus('claimed');
     } catch (error) {
       console.error('[ORDER_SUCCESS_SPIN_CLAIM]', error);
@@ -88,7 +88,7 @@ export default function OrderSuccess() {
           <div className="flex flex-wrap items-start justify-between gap-3">
             <div className="flex items-start gap-3">
               <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e8efdf] text-[#35533c]"><Gift size={20}/></span>
-              <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#526b4d]">A little thank-you</p><h2 className="mt-1 font-serif text-2xl text-[#14251c]">{spinClaim ? 'Your reward is ready' : 'Your order comes with a reward spin'}</h2><p className="mt-1 max-w-xl text-sm leading-5 text-stone-600">Spin once to reveal a personal coupon for a future Bhumivera order.</p></div>
+              <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#526b4d]">A little thank-you</p><h2 className="mt-1 font-serif text-2xl text-[#14251c]">{spinClaim ? 'Your reward is ready' : 'Your order comes with a reward spin'}</h2><p className="mt-1 max-w-xl text-sm leading-5 text-stone-600">Spin once to reveal a personal offer, free delivery, or loyalty points for a future order.</p></div>
             </div>
             <button type="button" onClick={() => setSpinDismissed(true)} className="rounded-full border border-[#d9dfd2] bg-white p-2 text-[#526b4d] hover:bg-[#f3f7ed]" aria-label="Close reward spin"><span aria-hidden="true">×</span></button>
           </div>
@@ -112,8 +112,10 @@ export default function OrderSuccess() {
           </div>}
           {spinClaim && <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-950">
             <p className="text-sm font-extrabold">You won: {spinClaim.reward}</p>
-            <p className="mt-1 text-sm">Your personal coupon code is <code className="rounded bg-white px-2 py-1 font-mono font-bold">{spinClaim.couponCode}</code></p>
-            <p className="mt-2 text-xs text-emerald-800">Use it on a future order before it expires. This reward is account-specific.</p>
+            {spinClaim.rewardType === 'points'
+              ? <p className="mt-1 text-sm">{spinClaim.pointsAwarded} loyalty points have been added to your account.</p>
+              : <p className="mt-1 text-sm">Your personal reward code is <code className="rounded bg-white px-2 py-1 font-mono font-bold">{spinClaim.couponCode}</code></p>}
+            <p className="mt-2 text-xs text-emerald-800">{spinClaim.rewardType === 'points' ? 'Your updated points balance is available in your profile.' : 'Find your spin reward in Coupons & offers when you open your next cart. This reward is account-specific.'}</p>
           </div>}
         </section>}
 

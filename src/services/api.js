@@ -388,6 +388,11 @@ api.interceptors.response.use(async response => {
 export const auth = { getPasskeyRegisterChallenge: () => api.post('/auth/passkey/register-challenge'), verifyPasskeyRegister: d => api.post('/auth/passkey/register-verify', d), getPasskeyLoginChallenge: email => api.post('/auth/passkey/login-challenge', { email }), verifyPasskeyLogin: d => api.post('/auth/passkey/login-verify', d), listPasskeys: () => api.get('/auth/passkey/list'), deletePasskey: id => api.delete(`/auth/passkey/${id}`), login: d => api.post('/auth/login', d), logout: () => api.post('/auth/logout'), adminLogout: () => { const t = localStorage.getItem('adminToken'); return axios.post(`${BASE_URL}/api/auth/logout`, {}, t ? { headers: { Authorization: `Bearer ${t}` } } : {}).catch(() => ({ data: {} })); }, register: d => api.post('/auth/register', d), verifyEmail: d => api.post('/auth/verify-email', { email: d.email, otp: d.otp, securityAnswer: d.securityAnswer }), getProfile: () => api.get('/auth/profile'), updateProfile: d => api.put('/auth/profile', d), verify2FA: d => api.post('/auth/2fa/verify', d), requestPasswordReset: d => api.post('/auth/forgot-password', d), verifyResetOtp: d => api.post('/auth/verify-otp', d), resetPassword: d => api.post('/auth/reset-password', d), verifySecurityQuestion: d => api.post('/auth/security-question/verify', d), adminLogin: d => api.post('/auth/admin/login', d), changeAdminPassword: d => api.post('/auth/admin/change-password', d, { adminAuth: true }), getAdminProfile: () => api.get('/auth/profile'), sendAdminOtp: (email, password) => api.post('/auth/admin/request-otp', { email, password }), verifyAdminOtp: (email, otp) => api.post('/auth/admin/verify-otp', { email, otp }), mobileLoginRequest: email => api.post('/auth/mobile-login/request', { email }), mobileLoginVerify: d => api.post('/auth/mobile-login/verify', d), verifyPremiumResetOtp: d => api.post('/auth/verify-reset-otp', d), verifySecurityQuestionForReset: d => api.post('/auth/security-question/verify-for-reset', d), resetPasswordBearer: (resetJwt, newPassword) => api.post('/auth/reset-password', { newPassword }, { headers: { Authorization: `Bearer ${resetJwt}` } }), adminForgotPassword: d => api.post('/auth/admin/forgot-password', d), adminVerifyResetOtp: d => api.post('/auth/admin/verify-reset-otp', d), adminResetPasswordBearer: (resetJwt, newPassword) => api.post('/auth/admin/reset-password', { newPassword }, { headers: { Authorization: `Bearer ${resetJwt}` } }) };
 const passkeyOwnerConfig = accountType => accountType === 'admin' ? { adminAuth: true } : undefined;
 Object.assign(auth, {
+  supportResetPassword: (resetJwt, newPassword) => axios.post(
+    `${BASE_URL}/api/auth/reset-password`,
+    { newPassword },
+    { headers: { Authorization: `Bearer ${resetJwt}` }, withCredentials: true }
+  ),
   getAdminSecurity: () => api.get('/auth/admin/security', { adminAuth: true }),
   startAdminTwoFactorSetup: () => api.post('/auth/admin/2fa/setup', {}, { adminAuth: true }),
   enableAdminTwoFactor: data => api.post('/auth/admin/2fa/enable', data, { adminAuth: true }),
@@ -543,6 +548,31 @@ export const support = {
   getAllAdmin: () => api.get('/contact'),
   updateStatus: (id, s, adminReply) => api.patch(`/contact/${id}/status`, { status: String(s).replaceAll('-', '_'), ...(adminReply ? { admin_reply: adminReply } : {}) }),
   delete: id => api.delete(`/contact/${id}`)
+};
+const supportClient = axios.create({ baseURL: `${BASE_URL}/api`, withCredentials: true });
+const supportRequest = (method, path, data) => supportClient.request({
+  method,
+  url: `/support${path}`,
+  ...(data === undefined ? {} : { data }),
+  headers: localStorage.getItem('supportToken')
+    ? { Authorization: `Bearer ${localStorage.getItem('supportToken')}` }
+    : {},
+});
+export const supportPortal = {
+  login: credentials => supportRequest('post', '/login', credentials),
+  me: () => supportRequest('get', '/me'),
+  customers: search => supportRequest('get', `/customers?search=${encodeURIComponent(search)}`),
+  customer: id => supportRequest('get', `/customers/${id}`),
+  updateCustomerStatus: (id, status) => supportRequest('patch', `/customers/${id}/status`, { status }),
+  sendCustomerEmail: (id, data) => supportRequest('post', `/customers/${id}/email`, data),
+  createPasswordResetLink: id => supportRequest('post', `/customers/${id}/password-reset-link`, {}),
+  tickets: () => supportRequest('get', '/tickets'),
+  updateTicket: (id, data) => supportRequest('patch', `/tickets/${id}`, data),
+};
+export const supportAgents = {
+  list: () => api.get('/support/agents', { adminAuth: true }),
+  create: data => api.post('/support/agents', data, { adminAuth: true }),
+  setActive: (id, is_active) => api.patch(`/support/agents/${id}/status`, { is_active }, { adminAuth: true }),
 };
 export const loyalty = { getSystemConfig: () => api.get("/settings"), updateSystemConfig: d => api.put("/settings", d), getMembers: () => api.get("/admin/users"), adjustPoints: (u, d) => api.patch(`/admin/users/${u}/status`, d) };
 export const loyaltyTiers = {

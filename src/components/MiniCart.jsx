@@ -155,13 +155,14 @@ export default function MiniCart() {
   const loyaltyPointsToRedeem = redeemLoyaltyPoints ? pointsRedemption.points : 0;
   const loyaltyDiscount = redeemLoyaltyPoints ? pointsRedemption.discount : 0;
   const loyaltyFreeShipping = Boolean(loyalty?.enabled && Number(loyalty?.currentTier?.free_shipping) === 1);
-  const amountToFreeShipping = rulePreview?.freeShipping || loyaltyFreeShipping ? 0 : Math.max(0, Number(freeShippingThreshold) - subtotal);
+  const couponFreeShipping = appliedCoupon?.rewardType === 'free_shipping';
+  const amountToFreeShipping = rulePreview?.freeShipping || loyaltyFreeShipping || couponFreeShipping ? 0 : Math.max(0, Number(freeShippingThreshold) - subtotal);
   const { standardCost: standardDeliveryCost, premiumCost: premiumDeliveryCost } = calculateDeliveryCosts({
     subtotal,
     standardCharge: settings?.standard_charge ?? settings?.default_shipping_charge ?? 50,
     premiumCharge: settings?.express_charge ?? 150,
     freeShippingThreshold,
-    freeShipping: Boolean(rulePreview?.freeShipping || loyaltyFreeShipping),
+    freeShipping: Boolean(rulePreview?.freeShipping || loyaltyFreeShipping || couponFreeShipping),
   });
   const shippingCost = shippingMethod === 'PREMIUM' ? premiumDeliveryCost : standardDeliveryCost;
   const totalSavings = discount + couponDiscount + tierDiscount + referralWalletAmount + loyaltyDiscount;
@@ -199,6 +200,8 @@ export default function MiniCart() {
           const perOrderLimit = Number(offer.wallet_per_order_limit) || value;
           const availableBalance = referralReward?.balance === null ? perOrderLimit : Number(referralReward?.balance) || 0;
           estimatedSaving = Math.min(availableBalance, perOrderLimit, Math.max(0, subtotal - discount));
+        } else if (offer.reward_type === 'free_shipping') {
+          estimatedSaving = shippingCost;
         } else {
           const type = offer.discount_type || offer.type;
           estimatedSaving = type === 'percentage'
@@ -215,7 +218,7 @@ export default function MiniCart() {
       return { ...offer, estimatedSaving };
     })
     .sort((first, second) => second.estimatedSaving - first.estimatedSaving), [
-    offers, subtotal, discount, referralReward?.balance, couponStackPolicy,
+    offers, subtotal, discount, referralReward?.balance, couponStackPolicy, shippingCost,
   ]);
   const upcomingCartReward = (rulePreview?.tiers || [])
     .filter(tier => !tier.unlocked && Number(tier.missingAmount) > 0)
@@ -421,7 +424,9 @@ export default function MiniCart() {
         rewardType: data.rewardType || 'standard',
       });
       const couponStacks = couponStackPolicy === 'both' || couponStackPolicy === 'coupon_first' || discount <= 0;
-      setCouponMessage(couponStacks
+      setCouponMessage(data.rewardType === 'free_shipping'
+        ? 'Free-shipping reward applied to this order.'
+        : couponStacks
         ? `Coupon applied — saving ${formatPrice(appliedDiscount)}.`
         : 'Coupon is valid, but cart rewards take priority under the current stacking policy.');
     } catch (error) {
@@ -842,6 +847,8 @@ export default function MiniCart() {
                   const minimum = Number(offer.min_order_amount ?? offer.min_order_value) || 0;
                   const amountNeeded = Math.max(0, minimum - subtotal);
                   const isReferralReward = offer.reward_type === 'referral_wallet';
+                  const isFreeShipping = offer.reward_type === 'free_shipping';
+                  const isSpinReward = String(offer.description || '').startsWith('order_spin_reward:');
                   return (
                     <button
                       type="button"
@@ -858,6 +865,8 @@ export default function MiniCart() {
                         <span className="ml-2 text-stone-500">
                           {isReferralReward
                             ? `Use shopping reward balance up to ${formatPrice(offer.wallet_per_order_limit || offer.discount_value)} per order`
+                            : isFreeShipping
+                              ? 'Free shipping on your next order'
                             : offer.discount_type === 'percentage' || offer.type === 'percentage'
                               ? `${offer.discount_value ?? offer.value}% off`
                               : `${formatPrice(offer.discount_value ?? offer.value)} off`}
@@ -867,11 +876,13 @@ export default function MiniCart() {
                             ? `Add ${formatPrice(amountNeeded)} to meet the minimum order.`
                             : offer.estimatedSaving > 0
                               ? `Estimated saving ${formatPrice(offer.estimatedSaving)}${isReferralReward ? ' (uses your remaining shopping reward balance)' : ''}`
-                              : 'Not eligible with the current cart discounts.'}
+                              : isFreeShipping && amountNeeded === 0
+                                ? 'Free shipping reward'
+                                : 'Not eligible with the current cart discounts.'}
                         </span>
                       </span>
                       <span className="shrink-0 text-right text-[9px] font-bold uppercase tracking-wider text-[#8b5a2b]">
-                        {index === 0 && offer.estimatedSaving > 0 ? 'Best saving' : offer.is_personal ? 'Your reward' : 'Apply'}
+                        {isSpinReward ? 'Spin reward' : index === 0 && offer.estimatedSaving > 0 ? 'Best saving' : offer.is_personal ? 'Your reward' : 'Apply'}
                       </span>
                     </button>
                   );

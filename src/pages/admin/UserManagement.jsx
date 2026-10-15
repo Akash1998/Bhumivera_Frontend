@@ -195,15 +195,15 @@ export default function UserManagement() {
     }
   };
 
-  const sendPasswordResetOtp = async customer => {
+  const sendPasswordResetLink = async customer => {
     if (customer.role !== 'customer') return;
-    if (!window.confirm(`Send a password reset OTP to ${customer.email}?`)) return;
+    if (!window.confirm(`Send a secure 30-minute password reset link to ${customer.email}?`)) return;
     setResettingPasswordId(Number(customer.id));
     try {
       const { data } = await api.post(`/admin/users/${customer.id}/reset-password`);
-      showToast?.(data?.message || `Password reset OTP sent to ${customer.email}.`, 'success');
+      showToast?.(data?.message || `Password reset link sent to ${customer.email}.`, 'success');
     } catch (error) {
-      showToast?.(error.response?.data?.message || 'Could not send password reset OTP.', 'error');
+      showToast?.(error.response?.data?.message || 'Could not send password reset link.', 'error');
     } finally {
       setResettingPasswordId(null);
     }
@@ -366,7 +366,7 @@ export default function UserManagement() {
           <div className="my-auto max-h-[90vh] w-full max-w-3xl overflow-y-auto rounded-2xl border border-slate-700 bg-[#10241f]/85 backdrop-blur-xl shadow-2xl">
             <div className="sticky top-0 flex items-start justify-between border-b border-slate-700 bg-[#10241f]/85 backdrop-blur-xl p-5">
               <div><h2 className="text-xl font-bold text-white">{selectedUser.name}</h2><p className="mt-1 text-sm text-slate-400">{selectedUser.email} {selectedUser.phone ? `· ${selectedUser.phone}` : ''}</p>
-                {selectedUser.role === 'customer' && <button disabled={resettingPasswordId === Number(selectedUser.id)} onClick={() => sendPasswordResetOtp(selectedUser)} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-cyan-300 hover:border-cyan-500 disabled:opacity-50"><Key size={14} />{resettingPasswordId === Number(selectedUser.id) ? 'Sending OTP…' : 'Send password reset OTP'}</button>}
+                {selectedUser.role === 'customer' && <button disabled={resettingPasswordId === Number(selectedUser.id)} onClick={() => sendPasswordResetLink(selectedUser)} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-slate-700 px-3 py-2 text-xs font-semibold text-cyan-300 hover:border-cyan-500 disabled:opacity-50"><Key size={14} />{resettingPasswordId === Number(selectedUser.id) ? 'Sending link…' : 'Send 30-minute reset link'}</button>}
               </div>
               <button aria-label="Close customer details" onClick={() => setSelectedUser(null)} className="rounded-lg p-2 text-slate-400 hover:bg-slate-800"><X size={20} /></button>
             </div>

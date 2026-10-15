@@ -12,7 +12,6 @@ import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { ToastProvider } from "./context/ToastContext.jsx";
 import { WishlistProvider } from "./context/WishlistContext.jsx";
 import { CompareProvider } from "./context/CompareContext.jsx";
-import { ArrowLeft } from "lucide-react";
 import "./index.css";
 
 const CHUNK_RELOAD_KEY = 'page-chunk-reload-attempted';
@@ -124,6 +123,7 @@ const SpinRegistration = lazyWithRetry(() => import("./pages/SpinRegistration.js
 // NEW: Premium password reset pages
 const ForgotPassword = lazyWithRetry(() => import("./pages/ForgotPassword.jsx"));
 const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword.jsx"));
+const SupportPortal = lazyWithRetry(() => import("./pages/SupportPortal.jsx"));
 const AdminForgotPassword = lazyWithRetry(() => import("./pages/admin/AdminForgotPassword.jsx"));
 const CheckoutPage = lazyWithRetry(() => import("./pages/Checkout.jsx"));
 
@@ -202,37 +202,6 @@ function ScrollToTop() {
   }, [pathname]);
 
   return null;
-}
-
-function RouteBackControl({ pathname }) {
-  const navigate = useNavigate();
-  const isAdminDashboard = pathname.startsWith('/admin') &&
-    pathname !== '/admin/login' && pathname !== '/admin/forgot-password';
-
-  if (pathname === '/' || isAdminDashboard) return null;
-
-  const fallbackPath = pathname.startsWith('/product/')
-    ? '/shop'
-    : pathname.startsWith('/warehouse/')
-      ? '/warehouse'
-      : '/';
-
-  return (
-    <div className="route-backbar">
-      <button
-        type="button"
-        onClick={() => {
-          if (window.history.state?.idx > 0) navigate(-1);
-          else navigate(fallbackPath, { replace: true });
-        }}
-        className="route-back-button"
-        aria-label="Go back"
-      >
-        <ArrowLeft size={17} aria-hidden="true" />
-        <span>Back</span>
-      </button>
-    </div>
-  );
 }
 
 function ProtectedRoute({ children }) {
@@ -325,6 +294,7 @@ function AppContent() {
     return (
       path.startsWith("/admin") || 
       path.startsWith("/warehouse") || 
+      path.startsWith("/support") ||
       path === "/warehouseadmin" || 
       path === "/earn-from-home" || 
       path === "/mpgebusiness"
@@ -353,7 +323,6 @@ function AppContent() {
       
       <main id="main-content" className="flex-1 w-full flex flex-col">
         <ScrollToTop /> 
-        <RouteBackControl pathname={location.pathname} />
         
         <Suspense fallback={<PageLoader />}>
           <Routes>
@@ -394,6 +363,7 @@ function AppContent() {
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin/forgot-password" element={<WebOnlyManagement><AdminForgotPassword /></WebOnlyManagement>} />
+            <Route path="/support/*" element={<WebOnlyManagement><SupportPortal /></WebOnlyManagement>} />
 
             {/* Protected User Routes */}
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
@@ -414,6 +384,8 @@ function AppContent() {
             {/* Admin System */}
             <Route path="/admin/login" element={<WebOnlyManagement><AdminLogin /></WebOnlyManagement>} />
             <Route path="/admin" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />
+            <Route path="/admin/dashboard/support" element={<Navigate to="/support" replace />} />
+            <Route path="/admin/dashboard/contact" element={<Navigate to="/support" replace />} />
             <Route path="/admin/dashboard/:tab" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />
             <Route path="/admin/*" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />
 
