@@ -432,8 +432,14 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   const [unreadCount, setUnreadCount] = useState(0);
   const [proactiveBubble, setProactiveBubble] = useState(null);
   const [sentimentBadge, setSentimentBadge] = useState(null);
-  const [csatRating, setCsatRating] = useState(0);
+  const [csatRating, setCsatRating] = useState(5);
+  const [csatFeedback, setCsatFeedback] = useState('');
   const [csatSubmitted, setCsatSubmitted] = useState(false);
+  const [hasPlacedOrder, setHasPlacedOrder] = useState(false);
+  const [telegramBotUrl, setTelegramBotUrl] = useState('https://t.me/BhumiveraBot');
+  const [showAsyncForm, setShowAsyncForm] = useState(false);
+  const [asyncSubject, setAsyncSubject] = useState('Support Inquiry');
+  const [asyncBody, setAsyncBody] = useState('');
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -492,6 +498,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         setChatStatus('active');
       }
       setAssignedAgentName(data.session?.assignedAgentName || null);
+      if (data.hasPlacedOrder !== undefined) setHasPlacedOrder(Boolean(data.hasPlacedOrder));
+      if (data.telegramBotUrl) setTelegramBotUrl(data.telegramBotUrl);
       if (forceNew) {
         setCsatRating(0);
         setCsatSubmitted(false);
@@ -513,7 +521,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             sender: 'assistant',
             senderName: 'Bhumivera AI Concierge',
             content:
-              "Namaste! I'm your Bhumivera 20X AI Support Concierge. I can check live order status, initiate returns or cancellations, verify Razorpay refunds, inspect your Wallet & Loyalty points, or connect you with our human team.",
+              "Namaste! I'm your Bhumivera Support Assistant. I can check live order status, initiate returns or cancellations, verify Razorpay refunds, inspect your Wallet & Loyalty points, or connect you with our human team.",
             quickActions: DEFAULT_CHIPS,
             orderCards: [],
             createdAt: new Date().toISOString(),
@@ -908,22 +916,43 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         },
       ]);
       playSupportChime(soundEnabled);
-    } catch {
-      setMessages(prev => [
-        ...prev,
-        {
-          id: `esc-err-${Date.now()}`,
-          sender: 'assistant',
-          content:
-            'You can reach our Senior Concierge desk immediately at **support@bhumivera.com** or via WhatsApp at **+91 7430985647**.',
-          createdAt: new Date().toISOString(),
-        },
-      ]);
+    } catch (err) {
+      if (err?.response?.data?.code === 'ORDER_REQUIRED_FOR_LIVE_AGENT') {
+        setShowAsyncForm(true);
+        setMessages(prev => [
+          ...prev,
+          {
+            id: `esc-order-gate-${Date.now()}`,
+            sender: 'assistant',
+            senderName: 'Bhumivera Support',
+            content:
+              err.response.data.message ||
+              'Live human agents are available once an order is placed after payment. You can chat with our AI Assistant or leave a message below — we will reply to your Email and Mobile App inbox.',
+            createdAt: new Date().toISOString(),
+          },
+        ]);
+      } else {
+        setShowAsyncForm(true);
+      }
     } finally {
       setIsTyping(false);
       setStatusLabel('');
     }
   };
+
+  useEffect(() => {
+    const handleExternalOpen = event => {
+      const detail = event?.detail || {};
+      setIsOpen(true);
+      setProactiveBubble(null);
+      setUnreadCount(0);
+      if (detail.prompt) {
+        setInput(detail.prompt);
+      }
+    };
+    window.addEventListener('bhumivera:open-support-chat', handleExternalOpen);
+    return () => window.removeEventListener('bhumivera:open-support-chat', handleExternalOpen);
+  }, []);
 
   const activeStatusMeta = STATUS_META[chatStatus] || STATUS_META.active;
 
@@ -1004,7 +1033,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                 <p className="text-[10px] text-stone-300 truncate">
                   {assignedAgentName
                     ? `Assigned Specialist: ${assignedAgentName}`
-                    : '20X Autonomous Order, Return, Wallet & Care Desk'}
+                    : 'Order Tracking, Returns & Customer Care'}
                 </p>
               </div>
             </div>
@@ -1211,8 +1240,135 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               );
             })}
 
-            {/* CSAT 1–5 Star Rating Card when Resolved or Closed */}
-            {['resolved', 'closed'].includes(chatStatus) && (
+            {/* Customer Satisfaction End-Chat & Review Bar */}
+            {(messages.length > 1 || ['resolved', 'closed'].includes(chatStatus)) && (
+              <div
+                className={`rounded-2xl border p-3.5 space-y-2 ${
+                  isDark ? 'bg-[#10241f] border-[#D4AF37]/30' : 'bg-white border-[#0B2419]/15 shadow-sm'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className="text-[11px] font-bold">
+                    {csatSubmitted ? 'Thank you! Your review was saved.' : 'Satisfied with support? Rate & End Chat:'}
+                  </span>
+                  <a
+                    href={telegramBotUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-[10px] font-semibold text-[#D4AF37] underline"
+                  >
+                    Telegram (@BhumiveraBot) ↗
+                  </a>
+                </div>
+                {!csatSubmitted && (
+                  <>
+                    <div className="flex items-center gap-1">
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <button
+                          key={star}
+                          type="button"
+                          onClick={() => setCsatRating(star)}
+                          className="p-0.5 hover:scale-110 transition-transform"
+                        >
+                          <Star
+                            className={`w-4 h-4 ${
+                              star <= csatRating ? 'fill-[#D4AF37] text-[#D4AF37]' : 'text-stone-400'
+                            }`}
+                          />
+                        </button>
+                      ))}
+                    </div>
+                    <div className="flex gap-1.5">
+                      <input
+                        type="text"
+                        value={csatFeedback}
+                        onChange={e => setCsatFeedback(e.target.value)}
+                        placeholder="Write a short review of our support…"
+                        className={`flex-1 px-2.5 py-1.5 rounded-lg border text-[11px] ${
+                          isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-stone-50 border-stone-200 text-[#0B2419]'
+                        }`}
+                      />
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            await aiSupportApi.endSatisfied?.(sessionToken, {
+                              rating: csatRating,
+                              feedback: csatFeedback || 'Satisfied with support',
+                            });
+                            setCsatSubmitted(true);
+                            setChatStatus('resolved');
+                          } catch {}
+                        }}
+                        className="px-2.5 py-1.5 rounded-lg bg-[#0B2419] text-[#D4AF37] text-[10px] font-bold shrink-0"
+                      >
+                        End Chat & Save
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            )}
+
+            {/* Inline Async Message Form when customer has not placed an order yet */}
+            {showAsyncForm && (
+              <div
+                className={`rounded-2xl border p-3.5 space-y-2 ${
+                  isDark ? 'bg-[#10241f] border-amber-400/40' : 'bg-amber-50/70 border-amber-300'
+                }`}
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[11px] font-bold text-[#D4AF37]">
+                    Send Message to Support (Replies via Email & App)
+                  </span>
+                  <button type="button" onClick={() => setShowAsyncForm(false)} className="text-xs opacity-70">✕</button>
+                </div>
+                <input
+                  type="text"
+                  value={asyncSubject}
+                  onChange={e => setAsyncSubject(e.target.value)}
+                  placeholder="Subject"
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 text-xs text-[#0B2419] bg-white"
+                />
+                <textarea
+                  rows={2}
+                  value={asyncBody}
+                  onChange={e => setAsyncBody(e.target.value)}
+                  placeholder="Write your message — we will reply to your email and mobile app…"
+                  className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 text-xs text-[#0B2419] bg-white"
+                />
+                <button
+                  type="button"
+                  onClick={async () => {
+                    if (!asyncBody.trim()) return;
+                    try {
+                      const res = await aiSupportApi.sendAsyncMessage?.({
+                        sessionToken,
+                        subject: asyncSubject,
+                        message: asyncBody.trim(),
+                      });
+                      setShowAsyncForm(false);
+                      setAsyncBody('');
+                      setMessages(prev => [
+                        ...prev,
+                        {
+                          id: `async-${Date.now()}`,
+                          sender: 'assistant',
+                          senderName: 'Bhumivera Support',
+                          content: res?.data?.reply || 'Message sent! We will reply to your Email and Mobile App inbox.',
+                          createdAt: new Date().toISOString(),
+                        },
+                      ]);
+                    } catch {}
+                  }}
+                  className="w-full py-1.5 rounded-lg bg-[#0B2419] text-[#D4AF37] font-bold text-xs"
+                >
+                  Send Message to Support
+                </button>
+              </div>
+            )}
+
+            {false && ['resolved', 'closed'].includes(chatStatus) && (
               <div
                 className={`rounded-2xl border p-3.5 text-center space-y-2 ${
                   isDark ? 'bg-[#10241f] border-[#D4AF37]/30' : 'bg-white border-[#0B2419]/15 shadow-sm'
@@ -1267,7 +1423,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           {/* Quick-Action Chips Bar */}
           {Array.isArray(quickActions) && quickActions.length > 0 && (
             <div
-              className={`px-3.5 py-2 border-t flex items-center gap-1.5 overflow-x-auto no-scrollbar shrink-0 ${
+              className={`px-3.5 py-2 border-t flex flex-wrap items-center gap-1.5 shrink-0 ${
                 isDark ? 'bg-[#0a1c15] border-white/10' : 'bg-[#f4f1e9] border-[#0B2419]/10'
               }`}
             >

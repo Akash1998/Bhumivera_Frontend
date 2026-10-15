@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import { formatOrderNumber } from '../utils/formatOrderNumber';
 import { useCart } from '../context/CartContext';
 import {
+  BASE_URL,
   users as usersApi,
   orders as ordersApi,
   wishlist as wishlistApi,
@@ -36,9 +37,28 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { registerPasskey, isPasskeySupported } from '../utils/webauthnClient';
 import SupportCenter from '../components/SupportCenter';
-import { getProductImageUrl } from '../utils/productImageUrl';
 
-const getProfileImageUrl = getProductImageUrl;
+const getProfileImageUrl = image => {
+  let value = image;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      value = Array.isArray(parsed) ? parsed[0] : parsed;
+    } catch {
+      // Keep plain image URLs and object-storage keys as-is.
+    }
+  }
+  const path = typeof value === 'object' && value !== null
+    ? value.url || value.file_path || value.path
+    : value;
+  if (typeof path !== 'string' || !path.trim()) return null;
+  if (/^(https?:|data:|blob:)/i.test(path)) return path;
+  if (path.startsWith('uploads/')) return `${BASE_URL.replace(/\/$/, '')}/${path.replace(/^\/+/, '')}`;
+  const imageBase = import.meta.env.VITE_R2_PUBLIC_URL ||
+    import.meta.env.VITE_IMAGE_BASE_URL ||
+    'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev/bhumivera';
+  return `${imageBase.replace(/\/$/, '')}/${path.replace(/^\/+/, '')}`;
+};
 
 const TABS = [
   { id: 'overview',      label: 'Overview',      icon: LayoutDashboard },
@@ -2290,14 +2310,23 @@ export default function Profile() {
                             <button
                               onClick={() => {
                                 const productName = it.product_name || it.name || `Product #${productId}`;
+                                const ordNum = formatOrderNumber(selectedOrder.order_number || selectedOrder.id);
                                 setSupportTicket({
-                                  subject: `Help with ${productName} · Order #${formatOrderNumber(selectedOrder.order_number || selectedOrder.id)}`.slice(0, 200),
-                                  message: `I need help with ${productName} from order #${selectedOrder.id}.\n\n`,
+                                  subject: `Help with ${productName} · Order #${ordNum}`.slice(0, 200),
+                                  message: `I need help with ${productName} from Order #${ordNum}.`,
                                   order_id: String(selectedOrder.id),
                                   product_id: Number.isSafeInteger(productId) && productId > 0 ? String(productId) : ''
                                 });
                                 setSelectedOrder(null);
                                 setActiveTab('support');
+                                window.dispatchEvent(new CustomEvent('bhumivera:open-support-chat', {
+                                  detail: {
+                                    orderId: selectedOrder.id,
+                                    orderNumber: ordNum,
+                                    productName,
+                                    prompt: `I need help with ${productName} from Order #${ordNum}.`,
+                                  }
+                                }));
                               }}
                               className="mt-1 inline-flex items-center gap-1 text-xs font-semibold text-[#0B5B78] hover:text-[#0B2419]"
                             >
@@ -2348,7 +2377,7 @@ export default function Profile() {
               </div>
             </div>
             <div className="border-t border-stone-200 bg-white px-6 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-3">
-              <div className="text-xs text-stone-500">Need help? Visit the <button onClick={() => { setSelectedOrder(null); setActiveTab('support'); }} className="text-[#0B2419] font-semibold underline underline-offset-2">Support tab</button>.</div>
+              <div className="text-xs text-stone-500">Need help with this order? <button onClick={() => { const ordNum = formatOrderNumber(selectedOrder.order_number || selectedOrder.id); setSelectedOrder(null); setActiveTab('support'); window.dispatchEvent(new CustomEvent('bhumivera:open-support-chat', { detail: { orderId: selectedOrder.id, orderNumber: ordNum, prompt: `I need help with Order #${ordNum}.` } })); }} className="text-[#0B2419] font-semibold underline underline-offset-2">Open Live Order Support Chat</button>.</div>
               <div className="flex flex-wrap gap-2">
                 {canCancelOrder(selectedOrder) && (
                   <button onClick={() => handleCancelOrder(selectedOrder.id)} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-100 text-sm font-medium">

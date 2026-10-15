@@ -14,14 +14,14 @@ import {
   HelpCircle,
   AlertTriangle,
   CheckCircle2,
-  Clock,
   Lock,
-  Eye,
   RotateCcw,
   Ban,
   Gift,
-  Sparkles,
-  Crown,
+  Package,
+  Truck,
+  KeyRound,
+  ExternalLink,
 } from 'lucide-react';
 
 const TICKET_STATUSES = ['open', 'in_progress', 'resolved', 'closed'];
@@ -29,41 +29,65 @@ const CHAT_STATUSES = ['active', 'pending', 'waiting_for_review', 'escalated', '
 const formatDate = value => (value ? new Date(value).toLocaleString() : '—');
 const errorText = error => error?.response?.data?.message || error?.message || 'The request could not be completed.';
 
-const SUPPORT_PORTAL_BUTTON_GUIDE = [
+const ROLE_LIMIT_RULES = {
+  agent: {
+    title: 'Support Executive (L1)',
+    maxCouponPct: 10,
+    maxWalletCredit: 0,
+    canCancelOrder: false,
+    canDeleteChat: false,
+    summary: 'Can search by Order ID / Tracking ID / Email / Phone, verify customer identity, view full order details, reply to live & Telegram chats, create RMAs, and issue at most ONE courtesy coupon (max 10% off) per customer.',
+  },
+  supervisor: {
+    title: 'Support Supervisor (L2)',
+    maxCouponPct: 12,
+    maxWalletCredit: 150,
+    canCancelOrder: true,
+    canDeleteChat: false,
+    summary: 'Includes all L1 permissions + Order Cancellations, Chat Reassignment, at most ONE courtesy coupon (max 12% off) per customer, and at most ONE goodwill wallet credit (max ₹150) per customer.',
+  },
+  manager: {
+    title: 'Support Manager (L3)',
+    maxCouponPct: 15,
+    maxWalletCredit: 250,
+    canCancelOrder: true,
+    canDeleteChat: false,
+    summary: 'Includes all L2 permissions + Staff Management, at most ONE courtesy coupon (max 15% off) per customer, and at most ONE goodwill wallet credit (max ₹250) per customer.',
+  },
+  superadmin: {
+    title: 'SuperAdmin / Owner',
+    maxCouponPct: 50,
+    maxWalletCredit: 2000,
+    canCancelOrder: true,
+    canDeleteChat: true,
+    summary: 'Unrestricted access: Can delete resolved chats, issue multiple coupons without per-customer limits, and manage all security & Telegram settings.',
+  },
+};
+
+const HELP_TERMS_GUIDE = [
   {
-    name: 'Live Chats Tab',
-    role: 'Agent / Supervisor / Manager',
-    desc: 'Monitors real-time customer AI & human chat sessions. Click any session to view its transcript, order cards, and sentiment score.',
+    term: 'Order / Tracking / Email / Phone Search',
+    meaning: 'Finds any customer order immediately using the Order ID (#20), 9-digit Order Number (815899599), Courier Tracking ID (BHVM815899599), Customer Email, or 10-digit Phone Number.',
   },
   {
-    name: 'Send Live Reply vs. Whisper Note',
-    role: 'Agent / Supervisor / Manager',
-    desc: 'Live Reply sends your message directly into the customer’s floating chat widget. Whisper Note saves an internal yellow note visible only to support staff.',
+    term: 'Customer Identity Verification Checklist',
+    meaning: 'Before sharing sensitive order details or issuing a return/coupon, verify at least 2 details with the customer (Registered Name, Email, Phone Number, or Delivery City/Pincode) and click "Mark Customer Verified".',
   },
   {
-    name: 'Chat Status Selector (Active / Pending / Waiting for Review / Escalated / Resolved / Closed)',
-    role: 'Agent / Supervisor / Manager',
-    desc: 'Transitions the live chat lifecycle state and notifies the customer in real time.',
+    term: 'Status: Pending vs. Waiting for Review vs. Resolved',
+    meaning: 'Pending means Support is waiting for the customer to reply. Waiting for Review sends the case to a Supervisor/Manager. Resolved means the issue is solved (unlocks the customer’s 1–5 star review prompt).',
   },
   {
-    name: 'Initiate Return (RMA)',
-    role: 'Agent / Supervisor / Manager',
-    desc: 'Generates an official RMA-XXXXXXXX return or replacement record for a delivered order directly from the chat desk.',
+    term: 'Internal Note (Hidden from Customer)',
+    meaning: 'Saves a private yellow note inside the chat transcript that only other support staff and managers can read.',
   },
   {
-    name: 'Cancel Customer Order',
-    role: 'Supervisor / Manager Only',
-    desc: 'Cancels a pending/confirmed order and restores inventory (or queues a priority Razorpay refund for paid online orders).',
+    term: 'One-Time Courtesy Coupon (Anti-Abuse Protected)',
+    meaning: 'Generates a single-use discount code for the customer. Support staff can issue a coupon ONLY ONCE per customer (capped at 10%–15% by role). Only SuperAdmin can issue multiple coupons.',
   },
   {
-    name: 'Issue Goodwill Wallet Credit (₹)',
-    role: 'Supervisor / Manager Only',
-    desc: 'Credits instant compensation (₹1–₹2,000) to the customer’s Bhumivera Wallet and posts confirmation in chat.',
-  },
-  {
-    name: 'SuperAdmin Command Center Link',
-    role: 'Manager / SuperAdmin Only',
-    desc: 'Opens /superadminsupport to create new staff login IDs, assign Agent/Supervisor/Manager roles, and control AI feature flags.',
+    term: 'Telegram Sync (@BhumiveraBot)',
+    meaning: 'Pulls customer messages sent to @BhumiveraBot on Telegram and delivers your replies straight back to their Telegram app.',
   },
 ];
 
@@ -73,8 +97,14 @@ export default function SupportPortal() {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
-  const [section, setSection] = useState('chats');
+  const [section, setSection] = useState('search');
   const [showHelpGuide, setShowHelpGuide] = useState(false);
+
+  // Universal Search & Customer Verification state
+  const [universalQuery, setUniversalQuery] = useState('');
+  const [searchResults, setSearchResults] = useState({ orders: [], customers: [] });
+  const [selectedOrderDetail, setSelectedOrderDetail] = useState(null);
+  const [verifiedOrderIds, setVerifiedOrderIds] = useState({});
 
   // Live Chat Sessions state
   const [chatSessions, setChatSessions] = useState([]);
@@ -85,6 +115,7 @@ export default function SupportPortal() {
   const [isWhisperMode, setIsWhisperMode] = useState(false);
   const [actionOrderId, setActionOrderId] = useState('');
   const [goodwillAmount, setGoodwillAmount] = useState('100');
+  const [couponPct, setCouponPct] = useState('10');
 
   // Tickets & Customers state
   const [tickets, setTickets] = useState([]);
@@ -101,6 +132,8 @@ export default function SupportPortal() {
   const [loading, setLoading] = useState(Boolean(token));
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
+
+  const roleRule = ROLE_LIMIT_RULES[agent?.role || 'agent'] || ROLE_LIMIT_RULES.agent;
 
   const loadWorkspaceData = useCallback(async () => {
     const [inboxRes, sessionsRes] = await Promise.all([
@@ -140,60 +173,25 @@ export default function SupportPortal() {
     };
   }, [token]);
 
-  useEffect(() => {
-    if (!token || !agent) return undefined;
-    const timer = window.setInterval(() => {
-      loadWorkspaceData().catch(requestError => setError(errorText(requestError)));
-    }, 10000);
-    return () => window.clearInterval(timer);
-  }, [token, agent, loadWorkspaceData]);
-
   const loadSessionDetail = useCallback(async sessionTok => {
     if (!sessionTok || !supportPortal.sessionDetail) return;
     try {
       const res = await supportPortal.sessionDetail(sessionTok);
       setSelectedSessionDetail(res.data);
       const firstOrder = res.data?.customerSummary?.orders?.[0];
-      if (firstOrder && !actionOrderId) {
+      if (firstOrder) {
         setActionOrderId(String(firstOrder.orderNumber || firstOrder.id));
       }
     } catch (err) {
       setError(errorText(err));
     }
-  }, [actionOrderId]);
+  }, []);
 
   useEffect(() => {
     if (selectedSessionToken) {
       void loadSessionDetail(selectedSessionToken);
     }
   }, [selectedSessionToken, loadSessionDetail]);
-
-  useEffect(() => {
-    if (section !== 'customers' || search.trim().length < 2) {
-      setCustomers([]);
-      return undefined;
-    }
-    let active = true;
-    const timer = window.setTimeout(() => {
-      supportPortal
-        .customers(search.trim())
-        .then(response => {
-          if (active) setCustomers(response.data.customers || []);
-        })
-        .catch(requestError => {
-          if (active) setError(errorText(requestError));
-        });
-    }, 250);
-    return () => {
-      active = false;
-      window.clearTimeout(timer);
-    };
-  }, [section, search]);
-
-  const selectedTicket = useMemo(
-    () => tickets.find(ticket => ticket.id === selectedTicketId),
-    [tickets, selectedTicketId]
-  );
 
   const signIn = async event => {
     event.preventDefault();
@@ -219,8 +217,42 @@ export default function SupportPortal() {
     setAgent(null);
     setTickets([]);
     setChatSessions([]);
-    setSelectedTicketId(null);
-    setSelectedSessionToken(null);
+  };
+
+  const handleUniversalSearch = async event => {
+    event?.preventDefault();
+    if (!universalQuery.trim()) return;
+    setBusy(true);
+    setError('');
+    try {
+      const res = await supportPortal.universalSearch(universalQuery.trim());
+      const ordersFound = res.data?.orders || [];
+      const customersFound = res.data?.customers || [];
+      setSearchResults({ orders: ordersFound, customers: customersFound });
+      if (ordersFound.length > 0) {
+        setSelectedOrderDetail(ordersFound[0]);
+      } else {
+        setSelectedOrderDetail(null);
+      }
+    } catch (err) {
+      setError(errorText(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleSyncTelegram = async () => {
+    setBusy(true);
+    setError('');
+    try {
+      const res = await supportPortal.syncTelegram();
+      await loadWorkspaceData();
+      setNotice(`Synced Telegram (@BhumiveraBot) — ${res.data?.synced || 0} new message(s) pulled.`);
+    } catch (err) {
+      setError(errorText(err));
+    } finally {
+      setBusy(false);
+    }
   };
 
   const handleSendChatReply = async event => {
@@ -237,7 +269,11 @@ export default function SupportPortal() {
       setChatReply('');
       await loadSessionDetail(selectedSessionToken);
       await loadWorkspaceData();
-      setNotice(isWhisperMode ? 'Internal whisper note saved.' : 'Live reply delivered to customer chat.');
+      setNotice(
+        isWhisperMode
+          ? 'Private staff note saved.'
+          : 'Reply delivered to customer (Web, Mobile App & Telegram if linked).'
+      );
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -254,7 +290,7 @@ export default function SupportPortal() {
       await supportPortal.updateSessionStatus(selectedSessionToken, { status: nextStatus });
       await loadSessionDetail(selectedSessionToken);
       await loadWorkspaceData();
-      setNotice(`Chat marked as ${nextStatus.replace(/_/g, ' ')}.`);
+      setNotice(`Chat marked as ${nextStatus.replace(/_/g, ' ').toUpperCase()}.`);
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -272,6 +308,7 @@ export default function SupportPortal() {
         action: actionType,
         orderId: actionOrderId,
         goodwillAmount: Number(goodwillAmount) || 100,
+        discountPercent: Number(couponPct) || 10,
       });
       setNotice(res.data?.message || 'Action completed.');
       await loadSessionDetail(selectedSessionToken);
@@ -297,6 +334,11 @@ export default function SupportPortal() {
     }
   };
 
+  const selectedTicket = useMemo(
+    () => tickets.find(t => t.id === selectedTicketId) || tickets[0] || null,
+    [tickets, selectedTicketId]
+  );
+
   const updateTicket = async (status, message) => {
     if (!selectedTicket) return;
     setBusy(true);
@@ -309,70 +351,7 @@ export default function SupportPortal() {
       });
       setReply('');
       await loadWorkspaceData();
-      setNotice(
-        response.data.emailSent === false
-          ? 'Reply saved, but the customer email could not be sent.'
-          : response.data.message
-      );
-    } catch (requestError) {
-      setError(errorText(requestError));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const submitReply = event => {
-    event.preventDefault();
-    const message = reply.trim();
-    if (!message) return;
-    updateTicket('in_progress', message);
-  };
-
-  const sendEmail = async event => {
-    event.preventDefault();
-    if (!selectedCustomer || !emailSubject.trim() || !emailMessage.trim()) return;
-    setBusy(true);
-    setError('');
-    setNotice('');
-    try {
-      const response = await supportPortal.sendCustomerEmail(selectedCustomer.id, {
-        subject: emailSubject.trim(),
-        message: emailMessage.trim(),
-      });
-      setEmailSubject('');
-      setEmailMessage('');
-      setNotice(response.data.message);
-    } catch (requestError) {
-      setError(errorText(requestError));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const sendResetLink = async () => {
-    if (!selectedCustomer) return;
-    setBusy(true);
-    setError('');
-    setNotice('');
-    try {
-      const response = await supportPortal.createPasswordResetLink(selectedCustomer.id);
-      setNotice(response.data.message);
-    } catch (requestError) {
-      setError(errorText(requestError));
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const toggleCustomerStatus = async () => {
-    if (!customerDetails?.customer) return;
-    const status = Number(customerDetails.customer.is_active) ? 'disabled' : 'active';
-    setBusy(true);
-    setError('');
-    try {
-      await supportPortal.updateCustomerStatus(customerDetails.customer.id, status);
-      await selectCustomer(customerDetails.customer);
-      setNotice(`Customer account ${status}.`);
+      setNotice(response.data.message || 'Ticket updated.');
     } catch (requestError) {
       setError(errorText(requestError));
     } finally {
@@ -382,750 +361,790 @@ export default function SupportPortal() {
 
   if (loading) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#07150f] text-slate-300">
-        Loading secure support desk…
-      </main>
+      <div className="min-h-screen bg-[#071510] text-white flex items-center justify-center">
+        Loading Bhumivera Support Workspace…
+      </div>
     );
   }
 
   if (!token || !agent) {
     return (
-      <main className="flex min-h-screen items-center justify-center bg-[#07150f] px-4 text-slate-100">
-        <form
-          onSubmit={signIn}
-          className="w-full max-w-md space-y-5 rounded-3xl border border-emerald-400/20 bg-[#10241b] p-8 shadow-2xl"
-        >
-          <div className="flex items-center gap-3">
-            <span className="rounded-xl bg-emerald-400/10 p-3 text-emerald-300">
-              <LifeBuoy />
-            </span>
+      <main className="min-h-screen bg-[#071510] px-4 py-12 text-[#FDFBF7] flex items-center justify-center">
+        <div className="w-full max-w-md rounded-3xl border border-[#D4AF37]/30 bg-[#0B2419] p-8 shadow-2xl">
+          <div className="flex items-center gap-3 mb-5">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#D4AF37]">
+              <LifeBuoy className="h-6 w-6" />
+            </div>
             <div>
-              <p className="text-xs font-bold uppercase tracking-[.2em] text-emerald-300">Bhumivera</p>
-              <h1 className="text-2xl font-black">Support Desk</h1>
+              <p className="text-[11px] uppercase tracking-[0.2em] text-[#D4AF37] font-bold">
+                bhumivera.com/support
+              </p>
+              <h1 className="font-serif text-2xl font-bold text-white">Customer Support Portal</h1>
             </div>
           </div>
-          <p className="text-sm leading-6 text-slate-400">
-            Sign in with your assigned Support Login ID (<strong>Agent</strong>, <strong>Supervisor</strong>, or{' '}
-            <strong>Manager</strong>).
+          <p className="text-xs text-emerald-100/75 mb-5 leading-relaxed">
+            Sign in with your Support Executive, Supervisor, or Manager ID to search orders, verify customers, and
+            manage live Web & Telegram chats.
           </p>
           {error && (
-            <p role="alert" className="rounded-lg border border-rose-400/30 bg-rose-400/10 p-3 text-sm text-rose-200">
+            <p role="alert" className="mb-4 rounded-xl bg-rose-500/15 border border-rose-500/30 p-3 text-xs text-rose-200">
               {error}
             </p>
           )}
-          <label className="block text-sm text-slate-300">
-            Support user ID
-            <input
-              required
-              autoComplete="username"
-              value={username}
-              onChange={event => setUsername(event.target.value)}
-              className="mt-2 w-full rounded-xl border border-slate-700 bg-[#081a13] px-4 py-3 text-white outline-none focus:border-emerald-400"
-            />
-          </label>
-          <label className="block text-sm text-slate-300">
-            Password
-            <input
-              required
-              type="password"
-              autoComplete="current-password"
-              value={password}
-              onChange={event => setPassword(event.target.value)}
-              className="mt-2 w-full rounded-xl border border-slate-700 bg-[#081a13] px-4 py-3 text-white outline-none focus:border-emerald-400"
-            />
-          </label>
-          <button
-            disabled={busy}
-            className="w-full rounded-xl bg-emerald-400 px-4 py-3 font-bold text-[#07150f] disabled:opacity-50"
-          >
-            {busy ? 'Signing in…' : 'Sign in securely'}
-          </button>
-          <div className="flex items-center justify-between pt-2 text-xs text-slate-400">
-            <span className="flex items-center gap-1.5">
-              <ShieldCheck size={14} className="text-emerald-400" /> Role-gated 8h session
-            </span>
-            <Link to="/superadminsupport" className="text-emerald-300 hover:underline font-semibold">
-              SuperAdmin Command Center →
-            </Link>
-          </div>
-        </form>
+          <form onSubmit={signIn} className="space-y-4">
+            <label className="block text-xs text-emerald-100/80">
+              Support Login ID or Email
+              <input
+                required
+                value={username}
+                onChange={event => setUsername(event.target.value)}
+                placeholder="e.g. concierge_lead or agent.rahul"
+                className="mt-1.5 w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2.5 text-sm text-white focus:border-[#D4AF37] focus:outline-none"
+              />
+            </label>
+            <label className="block text-xs text-emerald-100/80">
+              Password
+              <input
+                required
+                type="password"
+                value={password}
+                onChange={event => setPassword(event.target.value)}
+                placeholder="••••••••••••"
+                className="mt-1.5 w-full rounded-xl border border-white/15 bg-black/40 px-3.5 py-2.5 text-sm text-white focus:border-[#D4AF37] focus:outline-none"
+              />
+            </label>
+            <button
+              disabled={busy}
+              className="w-full rounded-xl bg-[#D4AF37] hover:bg-[#c49f2f] py-3 text-sm font-bold text-[#071510] transition disabled:opacity-50"
+            >
+              {busy ? 'Signing in…' : 'Sign In to Support Desk'}
+            </button>
+          </form>
+        </div>
       </main>
     );
   }
 
-  const roleBadgeColor =
-    agent.role === 'manager' || agent.role === 'superadmin'
-      ? 'bg-amber-400/20 text-amber-300 border-amber-400/40'
-      : agent.role === 'supervisor'
-      ? 'bg-sky-400/20 text-sky-300 border-sky-400/40'
-      : 'bg-emerald-400/20 text-emerald-300 border-emerald-400/40';
-
   return (
-    <main className="min-h-screen bg-[#07150f] text-slate-100">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 bg-[#0b1d15] px-4 py-4 md:px-8">
-        <div className="flex items-center gap-3">
-          <LifeBuoy className="text-emerald-300" />
-          <div>
-            <div className="flex items-center gap-2">
-              <p className="text-xs font-bold uppercase tracking-[.18em] text-emerald-300">Bhumivera Concierge</p>
-              <span className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${roleBadgeColor}`}>
-                {agent.role || 'agent'}
-              </span>
+    <div className="min-h-screen bg-[#071510] text-[#FDFBF7] flex flex-col">
+      {/* Luxury Header */}
+      <header className="bg-[#0B2419] border-b border-[#D4AF37]/25 px-6 py-4">
+        <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
+              <ShieldCheck className="w-5 h-5" />
             </div>
-            <h1 className="text-xl font-black">Customer Support Workspace</h1>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] uppercase tracking-[0.18em] px-2 py-0.5 rounded bg-[#D4AF37]/20 text-[#D4AF37] font-bold">
+                  {roleRule.title}
+                </span>
+                <span className="text-xs text-emerald-100/70">
+                  Signed in as <strong>{agent.name}</strong> (@{agent.username})
+                </span>
+              </div>
+              <h1 className="text-lg font-serif font-bold text-white">
+                Bhumivera Customer Support & Order Verification Desk
+              </h1>
+            </div>
           </div>
-        </div>
-        <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            type="button"
-            onClick={() => setShowHelpGuide(prev => !prev)}
-            className={`inline-flex items-center gap-1.5 rounded-lg border px-3 py-2 text-xs font-bold transition-colors ${
-              showHelpGuide
-                ? 'border-amber-400 bg-amber-400 text-[#07150f]'
-                : 'border-white/15 text-amber-300 hover:bg-white/5'
-            }`}
-          >
-            <HelpCircle size={14} /> What does each button do?
-          </button>
-          {(agent.role === 'manager' || agent.role === 'superadmin' || agent.permissions?.can_manage_agents) && (
-            <Link
-              to="/superadminsupport"
-              className="inline-flex items-center gap-1.5 rounded-lg bg-amber-400/20 border border-amber-400/40 px-3 py-2 text-xs font-bold text-amber-200 hover:bg-amber-400/30"
+
+          <div className="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setShowHelpGuide(prev => !prev)}
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-semibold border transition ${
+                showHelpGuide
+                  ? 'bg-[#D4AF37] text-[#071510] border-[#D4AF37]'
+                  : 'bg-white/5 text-emerald-100 border-white/15 hover:border-[#D4AF37]/50'
+              }`}
             >
-              <Crown size={14} /> SuperAdmin Support Center
-            </Link>
-          )}
-          <span className="text-sm text-slate-400">
-            {agent.name} · @{agent.username}
-          </span>
-          <button
-            type="button"
-            onClick={signOut}
-            className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm hover:bg-white/5"
-          >
-            <LogOut size={15} /> Sign out
-          </button>
+              <HelpCircle className="w-4 h-4" />
+              ? Help & Role Rules
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSyncTelegram}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 text-xs text-sky-200 font-semibold"
+              title="Pull latest customer messages from @BhumiveraBot on Telegram"
+            >
+              <Send className="w-3.5 h-3.5" />
+              Sync Telegram (@BhumiveraBot)
+            </button>
+
+            {['manager', 'superadmin'].includes(agent.role) && (
+              <Link
+                to="/superadminsupport"
+                className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-purple-500/20 border border-purple-400/40 text-xs text-purple-200 font-semibold"
+              >
+                SuperAdmin Center (/superadminsupport)
+                <ExternalLink className="w-3 h-3" />
+              </Link>
+            )}
+
+            <button
+              type="button"
+              onClick={loadWorkspaceData}
+              className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-emerald-100"
+              title="Refresh queues"
+            >
+              <RefreshCw className={`w-4 h-4 ${busy ? 'animate-spin text-[#D4AF37]' : ''}`} />
+            </button>
+
+            <button
+              type="button"
+              onClick={signOut}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-xs text-rose-200"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              Sign Out
+            </button>
+          </div>
         </div>
       </header>
 
-      {/* Interactive Button Explainer Panel */}
+      {/* Role Benchmark & Help Drawer */}
       {showHelpGuide && (
-        <section className="border-b border-amber-400/30 bg-[#10241b] px-4 py-4 md:px-8">
-          <div className="flex items-center justify-between mb-3">
-            <h2 className="text-sm font-bold uppercase tracking-wider text-amber-300 flex items-center gap-2">
-              <Sparkles size={15} /> Interactive Support Workspace Control Guide
-            </h2>
-            <button
-              type="button"
-              onClick={() => setShowHelpGuide(false)}
-              className="text-xs text-slate-300 underline"
-            >
-              Close Guide
-            </button>
-          </div>
-          <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-            {SUPPORT_PORTAL_BUTTON_GUIDE.map(item => (
-              <div key={item.name} className="rounded-xl border border-white/10 bg-[#07150f]/80 p-3 text-xs">
-                <div className="flex items-center justify-between gap-2 mb-1">
-                  <span className="font-bold text-emerald-300">{item.name}</span>
-                  <span className="text-[10px] px-2 py-0.5 rounded bg-white/10 text-amber-200">{item.role}</span>
+        <div className="bg-[#0B2419]/90 border-b border-[#D4AF37]/30 px-6 py-4">
+          <div className="max-w-[1600px] mx-auto space-y-3">
+            <div className="p-3.5 rounded-2xl bg-black/30 border border-[#D4AF37]/30 text-xs">
+              <strong className="text-[#D4AF37]">Your Role Benchmark ({roleRule.title}):</strong>{' '}
+              <span className="text-emerald-100/90">{roleRule.summary}</span>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              {HELP_TERMS_GUIDE.map(item => (
+                <div key={item.term} className="p-3 rounded-xl bg-black/30 border border-white/10 text-xs">
+                  <div className="font-bold text-[#D4AF37] mb-1">? {item.term}</div>
+                  <p className="text-emerald-100/80 text-[11px] leading-relaxed">{item.meaning}</p>
                 </div>
-                <p className="text-slate-300 leading-relaxed">{item.desc}</p>
-              </div>
-            ))}
+              ))}
+            </div>
           </div>
-        </section>
+        </div>
       )}
 
-      <div className="grid min-h-[calc(100vh-73px)] lg:grid-cols-[240px_minmax(0,1fr)]">
-        <aside className="border-b border-white/10 p-4 lg:border-b-0 lg:border-r space-y-5">
-          <nav className="flex gap-2 lg:flex-col">
-            {[
-              ['chats', `Live AI & Human Chats (${chatSessions.length})`],
-              ['inbox', `Support Tickets (${tickets.length})`],
-              ['customers', 'Customer 360° Lookup'],
-            ].map(([id, label]) => (
-              <button
-                key={id}
-                type="button"
-                onClick={() => {
-                  setSection(id);
-                  setSearch('');
-                  setNotice('');
-                }}
-                className={`rounded-xl px-4 py-3 text-left text-sm font-semibold ${
-                  section === id ? 'bg-emerald-400 text-[#07150f]' : 'text-slate-400 hover:bg-white/5 hover:text-white'
-                }`}
-              >
-                {label}
-              </button>
-            ))}
-          </nav>
-
-          {/* Active Role Permissions Summary Card */}
-          <div className="hidden lg:block rounded-xl border border-white/10 bg-[#0b1d15] p-4 text-xs space-y-2">
-            <p className="font-bold uppercase tracking-wider text-emerald-300">
-              Your Role: {String(agent.role || 'agent').toUpperCase()}
-            </p>
-            <p className="text-slate-400">Department: {agent.department || 'General Concierge'}</p>
-            <ul className="space-y-1 text-[11px] text-slate-300 pt-1">
-              <li>✓ View & Reply Live Chats</li>
-              <li>✓ Initiate Return RMAs</li>
-              <li className={agent.permissions?.can_cancel_orders ? 'text-emerald-300' : 'text-slate-500'}>
-                {agent.permissions?.can_cancel_orders ? '✓' : '✗'} Cancel Orders (Supervisor+)
-              </li>
-              <li className={agent.permissions?.can_adjust_wallet_goodwill ? 'text-emerald-300' : 'text-slate-500'}>
-                {agent.permissions?.can_adjust_wallet_goodwill ? '✓' : '✗'} Goodwill Wallet Credit (Supervisor+)
-              </li>
-              <li className={agent.permissions?.can_reassign_chats ? 'text-emerald-300' : 'text-slate-500'}>
-                {agent.permissions?.can_reassign_chats ? '✓' : '✗'} Reassign Chats (Supervisor+)
-              </li>
-            </ul>
-          </div>
-        </aside>
-
-        <section className="min-w-0 p-4 md:p-7">
+      {(error || notice) && (
+        <div className="max-w-[1600px] w-full mx-auto px-6 pt-4">
           {error && (
-            <p role="alert" className="mb-4 rounded-xl border border-rose-400/30 bg-rose-400/10 p-3 text-sm text-rose-200">
+            <div className="p-3 rounded-xl bg-rose-500/20 border border-rose-500/40 text-xs text-rose-200">
               {error}
-            </p>
+            </div>
           )}
           {notice && (
-            <p
-              role="status"
-              className="mb-4 rounded-xl border border-emerald-400/30 bg-emerald-400/10 p-3 text-sm text-emerald-200"
-            >
+            <div className="p-3 rounded-xl bg-emerald-500/20 border border-emerald-500/40 text-xs text-emerald-200">
               {notice}
-            </p>
+            </div>
           )}
+        </div>
+      )}
 
-          {section === 'chats' && (
-            <div className="space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3">
+      {/* Navigation Tabs (Flex-Wrap — Zero White Scrollbar) */}
+      <div className="bg-[#0B2419]/60 border-b border-white/10 px-6 py-3">
+        <div className="max-w-[1600px] mx-auto flex flex-wrap items-center gap-2">
+          {[
+            { id: 'search', label: '1. Order, Tracking, Email & Phone Search (Verify Customer)', icon: Search },
+            { id: 'chats', label: `2. Live Customer & Telegram Chats (${chatSessions.length})`, icon: MessageSquare },
+            { id: 'tickets', label: `3. Support Tickets (${tickets.length})`, icon: Mail },
+            { id: 'customers', label: '4. Customer Accounts & Password Reset', icon: UserRound },
+          ].map(tab => {
+            const Icon = tab.icon;
+            const active = section === tab.id;
+            return (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => setSection(tab.id)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold border transition ${
+                  active
+                    ? 'bg-[#D4AF37] text-[#071510] border-[#D4AF37]'
+                    : 'bg-white/5 text-emerald-100/80 border-white/10 hover:bg-white/10'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
+                {tab.label}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Main Content */}
+      <main className="flex-1 max-w-[1600px] w-full mx-auto p-6">
+        {/* ===================================================================
+            SECTION 1: DEEP SEARCH BY ORDER ID, TRACKING ID, EMAIL OR PHONE
+           =================================================================== */}
+        {section === 'search' && (
+          <div className="space-y-6">
+            <form
+              onSubmit={handleUniversalSearch}
+              className="p-5 rounded-2xl bg-[#0B2419] border border-[#D4AF37]/30 space-y-3"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
-                  <h2 className="text-2xl font-bold">Live Omnichannel Chat Queue</h2>
-                  <p className="text-sm text-slate-400">
-                    Monitor AI conversations, take over escalated sessions, or transition chat status.
+                  <h2 className="text-base font-serif font-bold text-white">
+                    Search Order ID, Tracking Number, Customer Email, or Phone Number
+                  </h2>
+                  <p className="text-xs text-emerald-100/70">
+                    Enter an Order ID (e.g. <code>#20</code> or <code>815899599</code>), Tracking ID (e.g.{' '}
+                    <code>BHVM815899599</code>), Email, or 10-digit Phone to authenticate the customer and inspect full
+                    order details.
                   </p>
                 </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  {['all', ...CHAT_STATUSES].map(st => (
-                    <button
-                      key={st}
-                      type="button"
-                      onClick={() => setChatStatusFilter(st)}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-semibold capitalize border ${
-                        chatStatusFilter === st
-                          ? 'bg-emerald-400 text-[#07150f] border-emerald-400'
-                          : 'border-white/10 text-slate-300 hover:bg-white/5'
-                      }`}
-                    >
-                      {st.replace(/_/g, ' ')}
-                    </button>
-                  ))}
-                  <button
-                    type="button"
-                    onClick={() => loadWorkspaceData().catch(err => setError(errorText(err)))}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-white/10 px-3 py-1.5 text-xs hover:bg-white/5"
-                  >
-                    <RefreshCw size={14} /> Refresh
-                  </button>
-                </div>
               </div>
-
-              <div className="grid min-h-[68vh] gap-4 xl:grid-cols-[minmax(280px,.85fr)_minmax(0,1.6fr)]">
-                {/* Chat Sessions List */}
-                <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b1d15]">
-                  <div className="max-h-[68vh] divide-y divide-white/5 overflow-auto">
-                    {chatSessions
-                      .filter(s => chatStatusFilter === 'all' || s.status === chatStatusFilter)
-                      .map(sess => (
-                        <button
-                          key={sess.sessionToken}
-                          type="button"
-                          onClick={() => {
-                            setSelectedSessionToken(sess.sessionToken);
-                            setNotice('');
-                          }}
-                          className={`w-full p-4 text-left hover:bg-white/5 ${
-                            selectedSessionToken === sess.sessionToken ? 'bg-white/10' : ''
-                          }`}
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-semibold text-white truncate">
-                              {sess.guestName || sess.guestEmail || `Session #${sess.id}`}
-                            </span>
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase bg-emerald-400/15 text-emerald-300">
-                              {sess.status?.replace(/_/g, ' ')}
-                            </span>
-                          </div>
-                          <div className="mt-1 flex items-center justify-between text-xs text-slate-400">
-                            <span>Priority: {sess.priority}</span>
-                            <span>Frustration: {sess.frustrationScore || 0}/100</span>
-                          </div>
-                          {sess.assignedAgentName && (
-                            <p className="mt-1 text-[11px] text-amber-300">
-                              Assigned: {sess.assignedAgentName} ({sess.assignedRole || 'agent'})
-                            </p>
-                          )}
-                          <p className="mt-1.5 text-[10px] text-slate-500">{formatDate(sess.updatedAt)}</p>
-                        </button>
-                      ))}
-                    {!chatSessions.length && (
-                      <p className="p-5 text-sm text-slate-500">No active chat sessions match the current filter.</p>
-                    )}
-                  </div>
-                </section>
-
-                {/* Active Chat Inspector & Takeover Console */}
-                <section className="flex min-h-[68vh] flex-col rounded-2xl border border-white/10 bg-[#0b1d15]">
-                  {!selectedSessionDetail?.session ? (
-                    <div className="m-auto text-sm text-slate-500">
-                      Select a live chat session on the left to inspect or take over.
-                    </div>
-                  ) : (
-                    <>
-                      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 p-4">
-                        <div>
-                          <h3 className="font-bold text-white">
-                            {selectedSessionDetail.session.guestName ||
-                              selectedSessionDetail.session.guestEmail ||
-                              `Session #${selectedSessionDetail.session.id}`}
-                          </h3>
-                          <p className="text-xs text-slate-400">
-                            Status:{' '}
-                            <strong className="text-emerald-300 uppercase">
-                              {selectedSessionDetail.session.status?.replace(/_/g, ' ')}
-                            </strong>{' '}
-                            · Priority: <strong>{selectedSessionDetail.session.priority}</strong> · Frustration:{' '}
-                            <strong>{selectedSessionDetail.session.frustrationScore}/100</strong>
-                          </p>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-1.5">
-                          {CHAT_STATUSES.map(st => (
-                            <button
-                              key={st}
-                              type="button"
-                              disabled={busy}
-                              onClick={() => void handleUpdateChatStatus(st)}
-                              className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold uppercase border ${
-                                selectedSessionDetail.session.status === st
-                                  ? 'bg-emerald-400 text-[#07150f] border-emerald-400'
-                                  : 'border-white/10 text-slate-300 hover:bg-white/5'
-                              }`}
-                            >
-                              {st.replace(/_/g, ' ')}
-                            </button>
-                          ))}
-                        </div>
-                      </header>
-
-                      {/* Role-Gated Quick Resolution Bar */}
-                      <div className="border-b border-white/10 bg-[#081711] px-4 py-2.5 flex flex-wrap items-center gap-2 text-xs">
-                        <input
-                          value={actionOrderId}
-                          onChange={e => setActionOrderId(e.target.value)}
-                          placeholder="Order # (e.g. 918273646)"
-                          className="w-40 rounded-lg border border-white/10 bg-[#07150f] px-2.5 py-1.5 text-xs text-white"
-                        />
-                        <button
-                          type="button"
-                          disabled={busy || !actionOrderId}
-                          onClick={() => void handleExecuteChatAction('initiate_return')}
-                          title="Generate an official RMA return request for this order"
-                          className="inline-flex items-center gap-1 rounded-lg bg-amber-400/15 border border-amber-400/30 px-2.5 py-1.5 text-amber-200 font-semibold hover:bg-amber-400/25 disabled:opacity-40"
-                        >
-                          <RotateCcw size={13} /> Initiate Return RMA
-                        </button>
-                        <button
-                          type="button"
-                          disabled={busy || !actionOrderId || !agent.permissions?.can_cancel_orders}
-                          onClick={() => void handleExecuteChatAction('cancel_order')}
-                          title={
-                            agent.permissions?.can_cancel_orders
-                              ? 'Cancel this order immediately'
-                              : 'Requires Supervisor or Manager role'
-                          }
-                          className="inline-flex items-center gap-1 rounded-lg bg-rose-400/15 border border-rose-400/30 px-2.5 py-1.5 text-rose-200 font-semibold hover:bg-rose-400/25 disabled:opacity-40"
-                        >
-                          <Ban size={13} /> Cancel Order
-                        </button>
-                        {agent.permissions?.can_adjust_wallet_goodwill && (
-                          <div className="flex items-center gap-1 ml-auto">
-                            <input
-                              type="number"
-                              min="1"
-                              max="2000"
-                              value={goodwillAmount}
-                              onChange={e => setGoodwillAmount(e.target.value)}
-                              className="w-20 rounded-lg border border-white/10 bg-[#07150f] px-2 py-1.5 text-xs text-white"
-                            />
-                            <button
-                              type="button"
-                              disabled={busy}
-                              onClick={() => void handleExecuteChatAction('goodwill_wallet_credit')}
-                              className="inline-flex items-center gap-1 rounded-lg bg-emerald-400/15 border border-emerald-400/30 px-2.5 py-1.5 text-emerald-200 font-semibold hover:bg-emerald-400/25"
-                            >
-                              <Gift size={13} /> Credit Wallet ₹
-                            </button>
-                          </div>
-                        )}
-                      </div>
-
-                      {/* Messages Transcript */}
-                      <div className="flex-1 space-y-3 overflow-y-auto p-4 max-h-[45vh]">
-                        {(selectedSessionDetail.messages || []).map(m => (
-                          <article
-                            key={m.id}
-                            className={`max-w-[88%] rounded-2xl p-3 text-sm ${
-                              m.isInternalNote || m.sender === 'whisper'
-                                ? 'bg-amber-500/15 border border-amber-400/40 text-amber-100 mx-auto w-full'
-                                : m.sender === 'user'
-                                ? 'bg-white/5 text-slate-200'
-                                : 'ml-auto bg-emerald-400/10 border border-emerald-400/20 text-emerald-100'
-                            }`}
-                          >
-                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
-                              {m.isInternalNote ? '🔒 INTERNAL WHISPER NOTE · ' : ''}
-                              {m.senderName || m.sender} · {formatDate(m.createdAt)}
-                            </p>
-                            <p className="whitespace-pre-wrap">{m.content}</p>
-                          </article>
-                        ))}
-                      </div>
-
-                      {/* Reply / Whisper Composer */}
-                      <form onSubmit={handleSendChatReply} className="border-t border-white/10 p-3 space-y-2">
-                        <div className="flex items-center justify-between text-xs">
-                          <label className="inline-flex items-center gap-2 cursor-pointer text-amber-300">
-                            <input
-                              type="checkbox"
-                              checked={isWhisperMode}
-                              onChange={e => setIsWhisperMode(e.target.checked)}
-                              className="rounded"
-                            />
-                            <span>Internal Whisper Note (hidden from customer)</span>
-                          </label>
-                        </div>
-                        <div className="flex gap-2">
-                          <textarea
-                            required
-                            maxLength={10000}
-                            rows={2}
-                            value={chatReply}
-                            onChange={e => setChatReply(e.target.value)}
-                            placeholder={
-                              isWhisperMode
-                                ? 'Write an internal note for Supervisors/Managers…'
-                                : 'Write a live reply to the customer…'
-                            }
-                            className="min-w-0 flex-1 resize-y rounded-xl border border-white/10 bg-[#07150f] p-3 text-sm outline-none focus:border-emerald-400"
-                          />
-                          <button
-                            disabled={busy || !chatReply.trim()}
-                            aria-label="Send chat reply"
-                            className="self-end rounded-xl bg-emerald-400 p-3 text-[#07150f] font-bold disabled:opacity-50"
-                          >
-                            <Send size={18} />
-                          </button>
-                        </div>
-                      </form>
-                    </>
-                  )}
-                </section>
-              </div>
-            </div>
-          )}
-
-          {section === 'inbox' && (
-            <div>
-              <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                <div>
-                  <h2 className="text-2xl font-bold">Support inbox</h2>
-                  <p className="mt-1 text-sm text-slate-500">Ticket conversations refresh automatically.</p>
-                </div>
+              <div className="flex flex-col sm:flex-row gap-2.5">
+                <input
+                  type="text"
+                  value={universalQuery}
+                  onChange={e => setUniversalQuery(e.target.value)}
+                  placeholder="Enter Order ID (#20 / 815899599), Tracking ID (BHVM...), Email, or Phone…"
+                  className="flex-1 px-4 py-2.5 rounded-xl bg-black/40 border border-white/15 text-sm text-white focus:border-[#D4AF37] focus:outline-none"
+                />
                 <button
-                  type="button"
-                  onClick={() => loadWorkspaceData().catch(requestError => setError(errorText(requestError)))}
-                  className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-sm hover:bg-white/5"
+                  type="submit"
+                  disabled={busy}
+                  className="px-6 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#c49f2f] text-[#071510] font-bold text-xs"
                 >
-                  <RefreshCw size={15} /> Refresh
+                  {busy ? 'Searching…' : 'Search & Verify'}
                 </button>
               </div>
-              <div className="grid min-h-[68vh] gap-4 xl:grid-cols-[minmax(270px,.75fr)_minmax(0,1.5fr)]">
-                <section className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b1d15]">
-                  <label className="relative block border-b border-white/10 p-3">
-                    <Search size={16} className="absolute left-6 top-6 text-slate-500" />
-                    <input
-                      value={search}
-                      onChange={event => setSearch(event.target.value)}
-                      placeholder="Filter tickets"
-                      className="w-full rounded-lg border border-white/10 bg-[#07150f] py-2.5 pl-9 pr-3 text-sm outline-none focus:border-emerald-400"
-                    />
-                  </label>
-                  <div className="max-h-[68vh] divide-y divide-white/5 overflow-auto">
-                    {tickets
-                      .filter(ticket =>
-                        `${ticket.name} ${ticket.email} ${ticket.subject}`.toLowerCase().includes(search.toLowerCase())
-                      )
-                      .map(ticket => (
-                        <button
-                          key={ticket.id}
-                          type="button"
-                          onClick={() => {
-                            setSelectedTicketId(ticket.id);
-                            setNotice('');
-                          }}
-                          className={`w-full p-4 text-left hover:bg-white/5 ${
-                            selectedTicketId === ticket.id ? 'bg-white/5' : ''
-                          }`}
-                        >
-                          <div className="flex justify-between gap-2">
-                            <span className="truncate font-semibold text-white">{ticket.subject}</span>
-                            <span className="shrink-0 text-[10px] uppercase text-emerald-300">
-                              {ticket.status?.replaceAll('_', ' ')}
-                            </span>
-                          </div>
-                          <p className="mt-1 truncate text-xs text-slate-400">
-                            {ticket.name} · {ticket.email}
-                          </p>
-                          <p className="mt-2 line-clamp-2 text-xs text-slate-500">{ticket.message}</p>
-                          <p className="mt-2 text-[10px] text-slate-600">
-                            #{ticket.id} · {formatDate(ticket.updated_at)}
-                          </p>
-                        </button>
-                      ))}
-                    {!tickets.length && <p className="p-5 text-sm text-slate-500">No support tickets yet.</p>}
-                  </div>
-                </section>
-                <section className="flex min-h-[68vh] flex-col rounded-2xl border border-white/10 bg-[#0b1d15]">
-                  {!selectedTicket ? (
-                    <div className="m-auto text-sm text-slate-500">Select a conversation to review it.</div>
-                  ) : (
-                    <>
-                      <header className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 p-4">
-                        <div>
-                          <h3 className="font-semibold">{selectedTicket.subject}</h3>
-                          <p className="mt-1 text-xs text-slate-500">
-                            {selectedTicket.name} · {selectedTicket.email}
-                            {selectedTicket.order_id ? ` · Order #${selectedTicket.order_id}` : ''}
-                          </p>
-                        </div>
-                        <select
-                          aria-label="Ticket status"
-                          disabled={busy}
-                          value={selectedTicket.status}
-                          onChange={event => updateTicket(event.target.value)}
-                          className="rounded-lg border border-white/10 bg-[#07150f] px-3 py-2 text-xs"
-                        >
-                          {TICKET_STATUSES.map(status => (
-                            <option key={status} value={status}>
-                              {status.replaceAll('_', ' ')}
-                            </option>
-                          ))}
-                        </select>
-                      </header>
-                      <div className="flex-1 space-y-3 overflow-y-auto p-4">
-                        {(selectedTicket.messages || []).map(message => (
-                          <article
-                            key={message.id}
-                            className={`max-w-[88%] rounded-2xl p-3 text-sm ${
-                              message.sender_type === 'customer'
-                                ? 'bg-white/5 text-slate-200'
-                                : 'ml-auto bg-emerald-400/10 text-emerald-100'
-                            }`}
-                          >
-                            <p className="mb-1 text-[10px] font-bold uppercase tracking-wider text-slate-500">
-                              {message.sender_type === 'customer' ? selectedTicket.name : 'Support'} ·{' '}
-                              {formatDate(message.created_at)}
-                            </p>
-                            <p className="whitespace-pre-wrap">{message.message}</p>
-                          </article>
-                        ))}
-                      </div>
-                      <form onSubmit={submitReply} className="border-t border-white/10 p-3">
-                        <div className="flex gap-2">
-                          <textarea
-                            required
-                            maxLength={10000}
-                            rows={3}
-                            value={reply}
-                            onChange={event => setReply(event.target.value)}
-                            placeholder="Write a reply…"
-                            className="min-w-0 flex-1 resize-y rounded-xl border border-white/10 bg-[#07150f] p-3 text-sm outline-none focus:border-emerald-400"
-                          />
-                          <button
-                            disabled={busy || !reply.trim()}
-                            aria-label="Send reply"
-                            className="self-end rounded-xl bg-emerald-400 p-3 text-[#07150f] disabled:opacity-50"
-                          >
-                            <Send size={18} />
-                          </button>
-                        </div>
-                      </form>
-                    </>
-                  )}
-                </section>
-              </div>
-            </div>
-          )}
+            </form>
 
-          {section === 'customers' && (
-            <div className="grid gap-4 xl:grid-cols-[minmax(260px,.75fr)_minmax(0,1.5fr)]">
-              <section className="rounded-2xl border border-white/10 bg-[#0b1d15] p-3">
-                <label className="relative block">
-                  <Search size={16} className="absolute left-3 top-3 text-slate-500" />
-                  <input
-                    value={search}
-                    onChange={event => setSearch(event.target.value)}
-                    placeholder="Name, email, phone…"
-                    className="w-full rounded-lg border border-white/10 bg-[#07150f] py-2.5 pl-9 pr-3 text-sm outline-none focus:border-emerald-400"
-                  />
-                </label>
-                <div className="mt-2 divide-y divide-white/5">
-                  {customers.map(customer => (
-                    <button
-                      key={customer.id}
-                      type="button"
-                      onClick={() => selectCustomer(customer)}
-                      className={`w-full rounded-lg p-3 text-left hover:bg-white/5 ${
-                        selectedCustomer?.id === customer.id ? 'bg-white/5' : ''
-                      }`}
-                    >
-                      <p className="font-semibold">{customer.name}</p>
-                      <p className="mt-1 text-xs text-slate-500">{customer.email}</p>
-                      <p className="mt-1 text-xs text-slate-600">
-                        {customer.phone || 'No phone'} · #{customer.id}
-                      </p>
-                    </button>
-                  ))}
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Matching Orders List */}
+              <div className="lg:col-span-4 bg-[#0B2419] border border-white/10 rounded-2xl p-4 space-y-3">
+                <h3 className="text-sm font-bold text-white">
+                  Matching Orders ({searchResults.orders.length})
+                </h3>
+                <div className="space-y-2 max-h-[540px] overflow-y-auto pr-1">
+                  {searchResults.orders.length === 0 ? (
+                    <p className="text-xs text-emerald-100/60 py-8 text-center">
+                      Search above to load matching orders and customer verification details.
+                    </p>
+                  ) : (
+                    searchResults.orders.map(ord => (
+                      <button
+                        key={ord.id}
+                        type="button"
+                        onClick={() => setSelectedOrderDetail(ord)}
+                        className={`w-full text-left p-3.5 rounded-xl border text-xs transition ${
+                          selectedOrderDetail?.id === ord.id
+                            ? 'bg-[#D4AF37]/15 border-[#D4AF37]'
+                            : 'bg-black/30 border-white/10 hover:border-white/25'
+                        }`}
+                      >
+                        <div className="flex items-center justify-between font-bold text-white">
+                          <span>
+                            Order #{ord.orderNumber} (ID: #{ord.id})
+                          </span>
+                          <span className="text-[#D4AF37]">₹{ord.total}</span>
+                        </div>
+                        <div className="text-[11px] text-emerald-100/75 mt-1">
+                          {ord.customerName} · {ord.customerEmail || ord.customerPhone || 'Guest'}
+                        </div>
+                        <div className="flex items-center justify-between text-[10px] text-emerald-100/60 mt-1.5">
+                          <span className="uppercase font-semibold text-emerald-300">{ord.status}</span>
+                          <span>Tracking: {ord.trackingNumber || 'Pending'}</span>
+                        </div>
+                      </button>
+                    ))
+                  )}
                 </div>
-                {search.trim().length < 2 && <p className="p-3 text-xs text-slate-500">Type at least two characters.</p>}
-                {search.trim().length >= 2 && !customers.length && (
-                  <p className="p-3 text-xs text-slate-500">No matching customers.</p>
-                )}
-              </section>
-              <section className="space-y-4">
-                {!selectedCustomer ? (
-                  <div className="rounded-2xl border border-white/10 bg-[#0b1d15] p-8 text-center text-sm text-slate-500">
-                    <UserRound className="mx-auto mb-3 text-slate-600" />
-                    Choose a customer to see their profile, orders, returns, and previous cases.
+              </div>
+
+              {/* Customer Authentication & Full Order Details Inspector */}
+              <div className="lg:col-span-8 bg-[#0B2419] border border-white/10 rounded-2xl p-6 space-y-5">
+                {!selectedOrderDetail ? (
+                  <div className="py-20 text-center text-xs text-emerald-100/60">
+                    Select an order from the search results to authenticate the customer and view full item, payment,
+                    and tracking details.
                   </div>
                 ) : (
                   <>
-                    <article className="rounded-2xl border border-white/10 bg-[#0b1d15] p-5">
-                      <div className="flex flex-wrap items-start justify-between gap-4">
+                    {/* Customer Authentication Verification Box */}
+                    <div className="p-4 rounded-2xl bg-black/40 border border-[#D4AF37]/40 space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
-                          <h3 className="text-xl font-bold">{customerDetails?.customer?.name || selectedCustomer.name}</h3>
-                          <p className="mt-1 text-sm text-slate-400">
-                            {selectedCustomer.email} · {selectedCustomer.phone || 'No phone'} · Customer #{selectedCustomer.id}
-                          </p>
-                          <p className="mt-2 text-xs text-slate-500">
-                            Joined {formatDate(customerDetails?.customer?.created_at)} · Wallet ₹
-                            {customerDetails?.customer?.wallet_balance ?? '—'} · Loyalty{' '}
-                            {customerDetails?.customer?.loyalty_points ?? '—'} points
-                          </p>
+                          <span className="text-[10px] uppercase tracking-wider text-[#D4AF37] font-bold">
+                            Step 1 · Real Customer Identity Verification
+                          </span>
+                          <h4 className="text-sm font-bold text-white">
+                            Confirm at least 2 details below with the customer before sharing sensitive info
+                          </h4>
                         </div>
                         <button
                           type="button"
-                          disabled={busy || !customerDetails}
-                          onClick={toggleCustomerStatus}
-                          className="rounded-lg border border-amber-400/30 px-3 py-2 text-xs text-amber-200 disabled:opacity-50"
+                          onClick={() =>
+                            setVerifiedOrderIds(prev => ({
+                              ...prev,
+                              [selectedOrderDetail.id]: !prev[selectedOrderDetail.id],
+                            }))
+                          }
+                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                            verifiedOrderIds[selectedOrderDetail.id]
+                              ? 'bg-emerald-500 text-[#071510]'
+                              : 'bg-[#D4AF37] text-[#071510]'
+                          }`}
                         >
-                          {Number(customerDetails?.customer?.is_active) ? 'Disable account' : 'Enable account'}
+                          {verifiedOrderIds[selectedOrderDetail.id]
+                            ? '✓ Customer Identity Verified'
+                            : 'Mark Customer Verified'}
                         </button>
                       </div>
-                      <div className="mt-4 flex flex-wrap gap-2">
-                        <button
-                          type="button"
-                          disabled={busy}
-                          onClick={sendResetLink}
-                          className="inline-flex items-center gap-2 rounded-lg bg-emerald-400 px-3 py-2 text-xs font-bold text-[#07150f] disabled:opacity-50"
-                        >
-                          <ShieldCheck size={14} /> Email 30-minute reset link
-                        </button>
-                        <a
-                          href={`mailto:${selectedCustomer.email}`}
-                          className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs hover:bg-white/5"
-                        >
-                          <Mail size={14} /> Open email
-                        </a>
-                      </div>
-                    </article>
-                    <article className="rounded-2xl border border-white/10 bg-[#0b1d15] p-5">
-                      <h4 className="mb-3 font-semibold">Order history</h4>
-                      {customerDetails?.orders?.length ? (
-                        <div className="overflow-x-auto">
-                          <table className="w-full min-w-[760px] text-left text-xs">
-                            <thead className="text-slate-500">
-                              <tr>
-                                <th className="pb-2">Order</th>
-                                <th className="pb-2">Date</th>
-                                <th className="pb-2">Items</th>
-                                <th className="pb-2">Status</th>
-                                <th className="pb-2">Payment</th>
-                                <th className="pb-2">Tracking</th>
-                                <th className="pb-2 text-right">Total</th>
-                              </tr>
-                            </thead>
-                            <tbody className="divide-y divide-white/5">
-                              {customerDetails.orders.map(order => (
-                                <tr key={order.id}>
-                                  <td className="py-3">#{order.order_number || order.id}</td>
-                                  <td className="py-3">{formatDate(order.created_at)}</td>
-                                  <td className="max-w-52 py-3">
-                                    {order.items?.map(item => `${item.name} × ${item.quantity}`).join(', ') || '—'}
-                                  </td>
-                                  <td className="py-3 capitalize">{order.status}</td>
-                                  <td className="py-3 capitalize">{order.payment_status || order.payment_mode || '—'}</td>
-                                  <td className="py-3">
-                                    {order.courier || ''} {order.tracking_number || '—'}
-                                  </td>
-                                  <td className="py-3 text-right">₹{order.total ?? '—'}</td>
-                                </tr>
-                              ))}
-                            </tbody>
-                          </table>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                        <div className="p-2.5 rounded-lg bg-white/5 border border-white/10">
+                          <span className="text-[10px] text-emerald-100/60 block">Registered Name</span>
+                          <strong className="text-white">
+                            {selectedOrderDetail.verificationChecklist?.registeredName}
+                          </strong>
                         </div>
-                      ) : (
-                        <p className="text-sm text-slate-500">{busy ? 'Loading profile…' : 'No orders found.'}</p>
-                      )}
-                    </article>
-                    <article className="rounded-2xl border border-white/10 bg-[#0b1d15] p-5">
-                      <h4 className="mb-3 font-semibold">Send customer email</h4>
-                      <form onSubmit={sendEmail} className="space-y-3">
-                        <input
-                          required
-                          maxLength={200}
-                          value={emailSubject}
-                          onChange={event => setEmailSubject(event.target.value)}
-                          placeholder="Subject"
-                          className="w-full rounded-lg border border-white/10 bg-[#07150f] px-3 py-2 text-sm outline-none focus:border-emerald-400"
-                        />
-                        <textarea
-                          required
-                          maxLength={10000}
-                          rows={4}
-                          value={emailMessage}
-                          onChange={event => setEmailMessage(event.target.value)}
-                          placeholder="Message"
-                          className="w-full rounded-lg border border-white/10 bg-[#07150f] p-3 text-sm outline-none focus:border-emerald-400"
-                        />
-                        <button
-                          disabled={busy}
-                          className="rounded-lg border border-white/10 px-4 py-2 text-sm hover:bg-white/5 disabled:opacity-50"
-                        >
-                          Send email
-                        </button>
-                      </form>
-                    </article>
+                        <div className="p-2.5 rounded-lg bg-white/5 border border-white/10">
+                          <span className="text-[10px] text-emerald-100/60 block">Registered Email</span>
+                          <strong className="text-white">
+                            {selectedOrderDetail.verificationChecklist?.registeredEmail}
+                          </strong>
+                        </div>
+                        <div className="p-2.5 rounded-lg bg-white/5 border border-white/10">
+                          <span className="text-[10px] text-emerald-100/60 block">Registered Phone</span>
+                          <strong className="text-white">
+                            {selectedOrderDetail.verificationChecklist?.registeredPhone}
+                          </strong>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Step 2: Full Order Details */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                      <div className="p-4 rounded-xl bg-black/30 border border-white/10 space-y-1.5">
+                        <div className="text-[#D4AF37] font-bold uppercase text-[10px] flex items-center gap-1.5">
+                          <Truck className="w-3.5 h-3.5" /> Shipment & Tracking Details
+                        </div>
+                        <div>
+                          Order Number: <strong>#{selectedOrderDetail.orderNumber}</strong> (Internal ID: #
+                          {selectedOrderDetail.id})
+                        </div>
+                        <div>
+                          Status: <strong className="uppercase text-emerald-300">{selectedOrderDetail.status}</strong>
+                        </div>
+                        <div>
+                          Tracking ID: <strong>{selectedOrderDetail.trackingNumber || 'Not assigned yet'}</strong>
+                        </div>
+                        <div>
+                          Courier Partner: <strong>{selectedOrderDetail.courier || 'Standard Dispatch'}</strong>
+                        </div>
+                        <div>Placed At: {formatDate(selectedOrderDetail.createdAt)}</div>
+                      </div>
+
+                      <div className="p-4 rounded-xl bg-black/30 border border-white/10 space-y-1.5">
+                        <div className="text-[#D4AF37] font-bold uppercase text-[10px] flex items-center gap-1.5">
+                          <Package className="w-3.5 h-3.5" /> Payment & Delivery Address
+                        </div>
+                        <div>
+                          Payment: <strong>{selectedOrderDetail.paymentMode}</strong> (
+                          {selectedOrderDetail.paymentStatus})
+                        </div>
+                        <div>
+                          Subtotal: ₹{selectedOrderDetail.subtotal} · Discount: -₹{selectedOrderDetail.discount} ·
+                          Shipping: ₹{selectedOrderDetail.shippingCost}
+                        </div>
+                        <div className="text-sm font-bold text-[#D4AF37]">
+                          Total Paid: ₹{selectedOrderDetail.total}
+                        </div>
+                        <div className="text-emerald-100/75 pt-1">
+                          Address:{' '}
+                          {[
+                            selectedOrderDetail.shippingAddress?.address ||
+                              selectedOrderDetail.shippingAddress?.line1,
+                            selectedOrderDetail.shippingAddress?.city,
+                            selectedOrderDetail.shippingAddress?.state,
+                            selectedOrderDetail.shippingAddress?.pincode,
+                          ]
+                            .filter(Boolean)
+                            .join(', ') || 'On file'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Line Items in Order */}
+                    <div className="space-y-2">
+                      <h4 className="text-xs font-bold text-[#D4AF37] uppercase">
+                        Ordered Items ({selectedOrderDetail.items?.length || 0})
+                      </h4>
+                      <div className="divide-y divide-white/10 rounded-xl border border-white/10 bg-black/30">
+                        {(selectedOrderDetail.items || []).map(item => (
+                          <div key={item.id} className="p-3 flex items-center justify-between text-xs">
+                            <div>
+                              <div className="font-bold text-white">{item.name}</div>
+                              <div className="text-[11px] text-emerald-100/60">
+                                SKU: {item.sku || 'N/A'} · Qty: {item.quantity} × ₹{item.price}
+                              </div>
+                            </div>
+                            <div className="font-bold text-[#D4AF37]">
+                              ₹{(Number(item.price || 0) * Number(item.quantity || 1)).toFixed(2)}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </>
                 )}
-              </section>
+              </div>
             </div>
-          )}
-        </section>
-      </div>
-    </main>
+          </div>
+        )}
+
+        {/* ===================================================================
+            SECTION 2: LIVE CUSTOMER & TELEGRAM CHATS
+           =================================================================== */}
+        {section === 'chats' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-4 bg-[#0B2419] border border-white/10 rounded-2xl p-4 flex flex-col h-[720px]">
+              <div className="flex flex-wrap gap-1.5 pb-3 border-b border-white/10">
+                {['all', ...CHAT_STATUSES].map(st => (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => setChatStatusFilter(st)}
+                    className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold border ${
+                      chatStatusFilter === st
+                        ? 'bg-[#D4AF37] text-[#071510] border-[#D4AF37]'
+                        : 'bg-black/30 text-emerald-100/70 border-white/10'
+                    }`}
+                  >
+                    {st.replace(/_/g, ' ').toUpperCase()}
+                  </button>
+                ))}
+              </div>
+
+              <div className="flex-1 overflow-y-auto space-y-2 mt-3 pr-1">
+                {chatSessions.map(sess => (
+                  <button
+                    key={sess.sessionToken}
+                    type="button"
+                    onClick={() => setSelectedSessionToken(sess.sessionToken)}
+                    className={`w-full text-left p-3.5 rounded-xl border text-xs transition ${
+                      selectedSessionToken === sess.sessionToken
+                        ? 'bg-[#D4AF37]/15 border-[#D4AF37]'
+                        : 'bg-black/30 border-white/10 hover:border-white/25'
+                    }`}
+                  >
+                    <div className="flex items-center justify-between font-bold text-white">
+                      <span>{sess.customerName || sess.guestName || 'Guest Customer'}</span>
+                      <span className="text-[10px] uppercase text-[#D4AF37]">{sess.status}</span>
+                    </div>
+                    <div className="text-[11px] text-emerald-100/60 mt-1">
+                      {sess.customerEmail || sess.guestEmail || 'Web / Telegram Session'}
+                    </div>
+                    {sess.lastMessagePreview && (
+                      <p className="text-[11px] text-emerald-100/80 mt-1.5 line-clamp-1 bg-black/25 px-2 py-1 rounded">
+                        {sess.lastMessagePreview}
+                      </p>
+                    )}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="lg:col-span-8 bg-[#0B2419] border border-white/10 rounded-2xl p-5 flex flex-col h-[720px]">
+              {!selectedSessionDetail?.session ? (
+                <div className="flex-1 flex items-center justify-center text-xs text-emerald-100/60">
+                  Select a live chat session on the left to reply, verify orders, or update status.
+                </div>
+              ) : (
+                <>
+                  <div className="pb-3 border-b border-white/10 space-y-2.5">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div>
+                        <h3 className="text-sm font-bold text-white">
+                          {selectedSessionDetail.session.guestName || 'Customer'} (
+                          {selectedSessionDetail.session.guestEmail || 'Live Chat'})
+                        </h3>
+                        {selectedSessionDetail.session.csatRating && (
+                          <span className="text-xs text-[#D4AF37] font-bold">
+                            ★ Customer Rating: {selectedSessionDetail.session.csatRating}/5 — "
+                            {selectedSessionDetail.session.csatFeedback || 'Satisfied'}"
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex flex-wrap gap-1.5">
+                        {CHAT_STATUSES.map(st => (
+                          <button
+                            key={st}
+                            type="button"
+                            onClick={() => handleUpdateChatStatus(st)}
+                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase border ${
+                              selectedSessionDetail.session.status === st
+                                ? 'bg-[#D4AF37] text-[#071510] border-[#D4AF37]'
+                                : 'bg-black/30 text-emerald-100 border-white/15'
+                            }`}
+                          >
+                            {st.replace(/_/g, ' ')}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Role-Benchmark Protected Actions */}
+                    <div className="flex flex-wrap items-center gap-2 pt-1 text-xs">
+                      <input
+                        type="text"
+                        value={actionOrderId}
+                        onChange={e => setActionOrderId(e.target.value)}
+                        placeholder="Order # or ID"
+                        className="px-2.5 py-1 rounded-lg bg-black/40 border border-white/15 text-white w-28"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => handleExecuteChatAction('initiate_return')}
+                        className="px-2.5 py-1 rounded-lg bg-sky-500/15 border border-sky-400/30 text-sky-200 text-[11px]"
+                      >
+                        <RotateCcw className="w-3 h-3 inline mr-1" />
+                        Create Return RMA
+                      </button>
+
+                      {roleRule.canCancelOrder && (
+                        <button
+                          type="button"
+                          onClick={() => handleExecuteChatAction('cancel_order')}
+                          className="px-2.5 py-1 rounded-lg bg-rose-500/15 border border-rose-400/30 text-rose-200 text-[11px]"
+                        >
+                          <Ban className="w-3 h-3 inline mr-1" />
+                          Cancel Order
+                        </button>
+                      )}
+
+                      {/* 1-Time Courtesy Coupon (Strictly Capped & Audited) */}
+                      <div className="flex items-center gap-1">
+                        <input
+                          type="number"
+                          min="5"
+                          max={roleRule.maxCouponPct}
+                          value={couponPct}
+                          onChange={e => setCouponPct(e.target.value)}
+                          className="px-2 py-1 rounded-lg bg-black/40 border border-white/15 text-white w-14"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => handleExecuteChatAction('issue_apology_coupon')}
+                          className="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-400/30 text-amber-200 text-[11px]"
+                          title="Support staff can issue a courtesy coupon ONCE per customer"
+                        >
+                          <Gift className="w-3 h-3 inline mr-1" />
+                          Issue 1-Time Coupon (Max {roleRule.maxCouponPct}%)
+                        </button>
+                      </div>
+
+                      {roleRule.maxWalletCredit > 0 && (
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            min="10"
+                            max={roleRule.maxWalletCredit}
+                            value={goodwillAmount}
+                            onChange={e => setGoodwillAmount(e.target.value)}
+                            className="px-2 py-1 rounded-lg bg-black/40 border border-white/15 text-white w-16"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleExecuteChatAction('goodwill_wallet_credit')}
+                            className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-400/30 text-emerald-200 text-[11px]"
+                          >
+                            + Wallet Credit (Max ₹{roleRule.maxWalletCredit})
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div className="flex-1 overflow-y-auto space-y-3 py-3 pr-1">
+                    {(selectedSessionDetail.messages || []).map(msg => {
+                      const isNote = msg.isInternalNote || msg.sender === 'whisper';
+                      const isUser = msg.sender === 'user';
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`p-3 rounded-xl text-xs max-w-[88%] ${
+                            isNote
+                              ? 'ml-auto bg-amber-500/15 border border-amber-500/40 text-amber-100'
+                              : isUser
+                              ? 'bg-black/40 border border-white/10 text-white'
+                              : 'ml-auto bg-emerald-950/80 border border-emerald-500/30 text-emerald-50'
+                          }`}
+                        >
+                          <div className="flex justify-between text-[10px] opacity-70 mb-1">
+                            <span className="font-bold uppercase">
+                              {isNote ? `🔒 PRIVATE STAFF NOTE (${msg.senderName})` : isUser ? 'CUSTOMER' : msg.senderName}
+                            </span>
+                            <span>{formatDate(msg.createdAt)}</span>
+                          </div>
+                          <div className="whitespace-pre-wrap">{msg.content}</div>
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <form onSubmit={handleSendChatReply} className="pt-3 border-t border-white/10 space-y-2">
+                    <label className="flex items-center gap-2 text-xs cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={isWhisperMode}
+                        onChange={e => setIsWhisperMode(e.target.checked)}
+                      />
+                      <span className={isWhisperMode ? 'text-amber-300 font-bold' : 'text-emerald-100/70'}>
+                        🔒 Private Internal Note (Hidden from Customer)
+                      </span>
+                    </label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={chatReply}
+                        onChange={e => setChatReply(e.target.value)}
+                        placeholder="Type reply to customer (delivers to Web, App & Telegram)…"
+                        className="flex-1 px-3.5 py-2 rounded-xl bg-black/40 border border-white/15 text-xs text-white"
+                      />
+                      <button
+                        type="submit"
+                        disabled={busy}
+                        className="px-5 py-2 rounded-xl bg-[#D4AF37] text-[#071510] font-bold text-xs"
+                      >
+                        Send
+                      </button>
+                    </div>
+                  </form>
+                </>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================
+            SECTION 3: SUPPORT TICKETS
+           =================================================================== */}
+        {section === 'tickets' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-5 bg-[#0B2419] border border-white/10 rounded-2xl p-4 space-y-2 max-h-[680px] overflow-y-auto">
+              {tickets.map(t => (
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setSelectedTicketId(t.id)}
+                  className={`w-full text-left p-3.5 rounded-xl border text-xs ${
+                    selectedTicket?.id === t.id
+                      ? 'bg-[#D4AF37]/15 border-[#D4AF37]'
+                      : 'bg-black/30 border-white/10'
+                  }`}
+                >
+                  <div className="flex justify-between font-bold text-white">
+                    <span>#{t.id} · {t.subject}</span>
+                    <span className="uppercase text-[#D4AF37]">{t.status}</span>
+                  </div>
+                  <div className="text-[11px] text-emerald-100/70 mt-1">
+                    {t.name} ({t.email})
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            <div className="lg:col-span-7 bg-[#0B2419] border border-white/10 rounded-2xl p-5 space-y-4">
+              {selectedTicket ? (
+                <>
+                  <h3 className="text-base font-bold text-white">
+                    Ticket #{selectedTicket.id}: {selectedTicket.subject}
+                  </h3>
+                  <p className="text-xs text-emerald-100/80 whitespace-pre-wrap">{selectedTicket.message}</p>
+                  <textarea
+                    rows={4}
+                    value={reply}
+                    onChange={e => setReply(e.target.value)}
+                    placeholder="Write email reply to customer…"
+                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/15 text-xs text-white"
+                  />
+                  <div className="flex flex-wrap gap-2">
+                    {TICKET_STATUSES.map(st => (
+                      <button
+                        key={st}
+                        type="button"
+                        onClick={() => updateTicket(st, reply)}
+                        className="px-3.5 py-2 rounded-xl bg-[#D4AF37] text-[#071510] font-bold text-xs uppercase"
+                      >
+                        {reply.trim() ? `Send & Mark ${st}` : `Mark ${st}`}
+                      </button>
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <p className="text-xs text-emerald-100/60">Select a ticket to view and reply.</p>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================
+            SECTION 4: CUSTOMER ACCOUNTS & PASSWORD RESET
+           =================================================================== */}
+        {section === 'customers' && (
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            <div className="lg:col-span-4 bg-[#0B2419] border border-white/10 rounded-2xl p-4 space-y-3">
+              <input
+                type="text"
+                value={search}
+                onChange={e => {
+                  const val = e.target.value;
+                  setSearch(val);
+                  if (val.trim().length >= 2) {
+                    supportPortal.customers(val.trim()).then(r => setCustomers(r.data?.customers || []));
+                  }
+                }}
+                placeholder="Search customer by name, email, or phone…"
+                className="w-full px-3.5 py-2 rounded-xl bg-black/40 border border-white/15 text-xs text-white"
+              />
+              <div className="space-y-2 max-h-[540px] overflow-y-auto">
+                {customers.map(c => (
+                  <button
+                    key={c.id}
+                    type="button"
+                    onClick={() => selectCustomer(c)}
+                    className="w-full text-left p-3 rounded-xl bg-black/30 border border-white/10 text-xs"
+                  >
+                    <div className="font-bold text-white">{c.name}</div>
+                    <div className="text-[11px] text-emerald-100/70">{c.email} · {c.phone}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="lg:col-span-8 bg-[#0B2419] border border-white/10 rounded-2xl p-5 space-y-4">
+              {customerDetails?.customer ? (
+                <>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <h3 className="text-base font-bold text-white">{customerDetails.customer.name}</h3>
+                      <p className="text-xs text-emerald-100/70">
+                        {customerDetails.customer.email} · Wallet: ₹{customerDetails.customer.wallet_balance || 0}
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() =>
+                        supportPortal
+                          .createPasswordResetLink(customerDetails.customer.id)
+                          .then(r => setNotice(r.data?.message || 'Reset link sent.'))
+                      }
+                      className="px-3.5 py-2 rounded-xl bg-[#D4AF37] text-[#071510] font-bold text-xs flex items-center gap-1.5"
+                    >
+                      <KeyRound className="w-3.5 h-3.5" /> Send Password Reset Link
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <p className="text-xs text-emerald-100/60">Search and select a customer to view details.</p>
+              )}
+            </div>
+          </div>
+        )}
+      </main>
+    </div>
   );
 }

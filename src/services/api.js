@@ -598,6 +598,9 @@ export const supportPortal = {
   updateSessionStatus: (sessionToken, data) => supportRequest('patch', `/sessions/${encodeURIComponent(sessionToken)}/status`, data),
   executeSessionAction: (sessionToken, data) => supportRequest('post', `/sessions/${encodeURIComponent(sessionToken)}/execute-action`, data),
   escalations: (params = {}) => supportRequest('get', `/ai-escalations${params?.status ? `?status=${encodeURIComponent(params.status)}` : ''}`),
+  universalSearch: query => supportRequest('get', `/universal-search?q=${encodeURIComponent(query)}`),
+  deleteSession: sessionToken => supportRequest('delete', `/sessions/${encodeURIComponent(sessionToken)}`),
+  syncTelegram: () => supportRequest('post', '/telegram/sync', {}),
 };
 export const supportAgents = {
   list: () => api.get('/support/agents', { adminAuth: true }),
@@ -620,6 +623,8 @@ export const aiSupport = {
   getHistory: sessionToken => api.get(`/support/chat/history/${encodeURIComponent(sessionToken)}`, { notify: false }),
   updateSessionStatus: (sessionToken, data) => api.patch(`/support/chat/session/${encodeURIComponent(sessionToken)}/status`, data, { notify: false }),
   submitRating: (sessionToken, data) => api.post(`/support/chat/session/${encodeURIComponent(sessionToken)}/rating`, data, { notify: false }),
+  endSatisfied: (sessionToken, data) => api.post(`/support/chat/session/${encodeURIComponent(sessionToken)}/end-satisfied`, data, { notify: false }),
+  sendAsyncMessage: data => api.post('/support/chat/async-message', data, { notify: false }),
   escalate: data => api.post('/support/chat/escalate', data, { notify: false }),
   listEscalations: params => supportRequest('get', `/ai-escalations${params?.status ? `?status=${encodeURIComponent(params.status)}` : ''}`),
 };

@@ -486,3 +486,29 @@ html.native-app .site-shell > footer {
     transition: none;
   }
 }
+
+
+/* Hide ugly white horizontal scrollbars across all support & admin panels */
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+.management-shell ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+.management-shell ::-webkit-scrollbar-track {
+  background: #071510;
+}
+.management-shell ::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.35);
+  border-radius: 9999px;
+}
+.management-shell ::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.6);
+}

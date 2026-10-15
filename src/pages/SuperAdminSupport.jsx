@@ -30,12 +30,13 @@ import {
   BellRing,
   FileText,
   UserCheck,
+  Trash2,
+  Star,
+  Truck,
+  Package,
+  Lock,
 } from 'lucide-react';
 
-/**
- * Safely decodes a JWT payload on the client to verify it is a genuine Support Staff
- * or Admin/SuperAdmin token (and NEVER a customer storefront token).
- */
 function decodeStaffOrAdminJwt(rawToken) {
   if (!rawToken || typeof rawToken !== 'string') return null;
   try {
@@ -57,21 +58,11 @@ function decodeStaffOrAdminJwt(rawToken) {
 }
 
 function getInitialValidStaffToken() {
-  const candidates = [
-    localStorage.getItem('supportToken'),
-    localStorage.getItem('adminToken'),
-  ];
-  return candidates
-    .map(token => ({ token, payload: decodeStaffOrAdminJwt(token) }))
-    .filter(candidate => candidate.payload)
-    .sort((first, second) => {
-      const rank = payload => {
-        if (['admin', 'superadmin'].includes(payload.role)) return 2;
-        if (payload.scope === 'support-agent' && payload.role === 'manager') return 1;
-        return 0;
-      };
-      return rank(second.payload) - rank(first.payload);
-    })[0]?.token || '';
+  const candidates = [localStorage.getItem('supportToken'), localStorage.getItem('adminToken')];
+  for (const tok of candidates) {
+    if (decodeStaffOrAdminJwt(tok)) return tok;
+  }
+  return '';
 }
 
 const STATUS_BADGES = {
@@ -85,67 +76,55 @@ const STATUS_BADGES = {
 
 const ROLE_CONFIG = {
   agent: {
-    label: 'Support Agent (L1)',
+    label: 'Support Executive (L1)',
     badge: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-    description: 'Handles live customer chats, order tracking, RMA creation, and support-controlled status transitions (Active, Pending, Waiting for Review, Resolved, Closed).',
+    description: 'Order/Tracking/Email/Phone search, customer verification, live chat replies, RMA creation, and 1 single-use coupon (max 10% off) per customer. Cannot cancel orders, issue wallet credits, or delete chats.',
   },
   supervisor: {
     label: 'Support Supervisor (L2)',
     badge: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-    description: 'Includes all Agent rights plus Chat Reassignment, Barge-In, Order Cancellations, Goodwill Wallet Credits, Bonus Loyalty Points, and SLA Queue Monitoring.',
+    description: 'Includes all L1 rights + Order Cancellation, Chat Reassignment, 1 courtesy coupon per customer (max 12% off), and 1 goodwill wallet credit per customer (max ₹150). Cannot delete chats.',
   },
   manager: {
     label: 'Support Manager (L3)',
     badge: 'bg-purple-500/20 text-purple-300 border-purple-500/40',
-    description: 'Full Command Center governance: Create/Edit Agent Login IDs, Assign Roles & Permissions, Manage AI Feature Flags, and Override Any Chat or Ticket.',
+    description: 'Includes all L2 rights + Staff Login creation, 1 courtesy coupon per customer (max 15% off), and 1 goodwill wallet credit per customer (max ₹250). Cannot delete chats or issue multiple coupons to the same customer.',
   },
   superadmin: {
-    label: 'SuperAdmin Executive',
+    label: 'SuperAdmin / Owner',
     badge: 'bg-[#D4AF37]/25 text-[#D4AF37] border-[#D4AF37]/50',
-    description: 'Unrestricted executive access across all 20 Customer Support Admin Panel features.',
+    description: 'Full Owner Authority: Can permanently delete resolved chats, issue multiple coupons without per-customer limits, override credit caps, and govern 512-bit security & Telegram settings.',
   },
 };
 
 const PERMISSION_LABELS = {
-  can_view_chats: { label: 'View Live Chats', desc: 'Read active and historical AI & human chat transcripts.' },
-  can_reply_chats: { label: 'Reply & Whisper in Chats', desc: 'Send live agent messages or internal staff whisper notes.' },
-  can_close_chats: { label: 'Mark Resolved & Close Chats', desc: 'Exclusively mark customer conversations Resolved or Closed.' },
-  can_mark_pending_review: { label: 'Mark Pending / Waiting Review', desc: 'Transition chats to Pending Customer or Waiting for Review.' },
-  can_escalate: { label: 'Trigger Escalations', desc: 'Escalate high-risk chats to L2/L3 and dispatch webhooks.' },
-  can_view_customers: { label: 'View Customer 360° Profile', desc: 'Inspect customer email, phone, wallet ledger, and loyalty tier.' },
-  can_send_reset_link: { label: 'Send Password Reset Links', desc: 'Trigger 1-time 30-minute password reset emails for customers.' },
-  can_initiate_returns: { label: 'Generate & Approve RMAs', desc: 'Initiate returns or replacements for delivered orders.' },
-  can_cancel_orders: { label: 'Execute Order Cancellations', desc: 'Cancel eligible customer orders and release inventory directly from chat.' },
-  can_adjust_wallet_goodwill: { label: 'Issue Goodwill Wallet & Loyalty Credits', desc: 'Credit up to ₹2,000 or 5,000 loyalty points directly to a customer.' },
-  can_reassign_chats: { label: 'Reassign Chats Across Staff', desc: 'Transfer chat ownership to another Agent, Supervisor, or Manager.' },
-  can_barge_in_chats: { label: 'Live Chat Barge-In', desc: 'Join and reply inside another agent’s active conversation.' },
+  can_view_chats: { label: 'View Live Chats', desc: 'Read active and past customer chat transcripts.' },
+  can_reply_chats: { label: 'Reply & Private Notes', desc: 'Send live replies or private internal staff notes.' },
+  can_close_chats: { label: 'Mark Resolved & Close Chats', desc: 'Mark customer conversations Resolved or Closed.' },
+  can_mark_pending_review: { label: 'Mark Pending / Waiting Review', desc: 'Move chats to Pending Customer or Waiting for Review.' },
+  can_escalate: { label: 'Escalate Urgent Cases', desc: 'Escalate high-priority cases to L2/L3 and alert Telegram/Email.' },
+  can_view_customers: { label: 'Search Orders & Verify Customers', desc: 'Search by Order ID, Tracking ID, Email, or Phone and view order details.' },
+  can_send_reset_link: { label: 'Send Password Reset Links', desc: 'Send 1-time 30-minute password reset emails to customers.' },
+  can_initiate_returns: { label: 'Create Return RMAs', desc: 'Create return or replacement requests for delivered orders.' },
+  can_cancel_orders: { label: 'Cancel Customer Orders', desc: 'Cancel eligible orders and restore inventory stock.' },
+  can_adjust_wallet_goodwill: { label: 'Issue Goodwill Wallet & Loyalty Credits', desc: 'Credit wallet balance or loyalty points within strict role limits.' },
+  can_reassign_chats: { label: 'Reassign Chats Across Staff', desc: 'Transfer chat ownership to another Executive, Supervisor, or Manager.' },
+  can_barge_in_chats: { label: 'Join Active Chats', desc: 'Step in and reply inside another agent’s active conversation.' },
   can_approve_waiting_review: { label: 'Approve Waiting-for-Review Queue', desc: 'Sign off on L2 quality review cases.' },
-  can_manage_agents: { label: 'Manage Staff Login IDs & Roles', desc: 'Create support logins, assign Agent/Supervisor/Manager roles, and suspend accounts.' },
-  can_manage_ai_features: { label: 'Manage AI & Support Feature Flags', desc: 'Toggle AI self-service tools, SLA timers, frustration thresholds, and macros.' },
-  can_view_analytics: { label: 'View Telemetry, Audit Logs & CSV Export', desc: 'Access full SLA, CSAT, audit trail, and CSV export tools.' },
+  can_manage_agents: { label: 'Manage Staff Logins & Roles', desc: 'Create support logins, assign roles, and suspend accounts.' },
+  can_manage_ai_features: { label: 'Manage Support Rules & Macros', desc: 'Configure automated support rules, SLA timers, and quick replies.' },
+  can_view_analytics: { label: 'View Reports, Reviews & Audit Logs', desc: 'View customer satisfaction reviews, audit trail, and CSV exports.' },
 };
 
-const TWENTY_EXECUTIVE_FEATURES = [
-  { no: 1, title: 'Live Omnichannel Queue & Telemetry', category: 'Command Overview', whatItDoes: 'Real-time counters and 1-click filters across Active, Pending, Waiting for Review, Escalated, Resolved, and Closed chats.' },
-  { no: 2, title: 'Support-Exclusive Status Control', category: 'Chat Lifecycle', whatItDoes: 'Places all status transitions (Pending, Waiting for Review, Escalated, Resolved, Closed) 100% in Customer Support hands—customers see a read-only status badge.' },
-  { no: 3, title: 'Live Barge-In Public Reply', category: 'Chat Monitor', whatItDoes: 'Lets SuperAdmins, Managers, and Supervisors jump into any live chat and send an immediate public response to the customer.' },
-  { no: 4, title: 'Internal Whisper Coaching Notes (🔒)', category: 'Chat Monitor', whatItDoes: 'Posts hidden yellow coaching notes inside the chat timeline visible only to Support Agents, Supervisors, and Managers.' },
-  { no: 5, title: 'Intelligent Agent Assignment & Reassignment', category: 'Chat Monitor', whatItDoes: 'Assigns or transfers any conversation to a specific Agent (L1), Supervisor (L2), or Manager (L3).' },
-  { no: 6, title: 'Bulk Session Queue Operations', category: 'Chat Monitor', whatItDoes: 'Selects multiple chat sessions at once to bulk-transition statuses or bulk-assign to a support executive.' },
-  { no: 7, title: '1-Click Order Cancellation & Stock Restore', category: 'Instant Resolution', whatItDoes: 'Cancels eligible customer orders and restores MySQL product stock directly from the chat monitor.' },
-  { no: 8, title: '1-Click Instant RMA Return / Replacement', category: 'Instant Resolution', whatItDoes: 'Generates an official RMA-XXXXXXXX return or replacement record for delivered orders in one click.' },
-  { no: 9, title: '1-Click Goodwill Wallet Credit (+ ₹)', category: 'Instant Resolution', whatItDoes: 'Credits ₹1–₹2,000 directly into the customer’s spendable Bhumivera Wallet with an automatic confirmation in chat.' },
-  { no: 10, title: '1-Click Bonus Loyalty Points Award (+ Pts)', category: 'Instant Resolution', whatItDoes: 'Awards 10–5,000 bonus loyalty points directly to the customer’s loyalty ledger and posts a confirmation message.' },
-  { no: 11, title: '1-Click Personal Apology Coupon Generator', category: 'Instant Resolution', whatItDoes: 'Mints a single-use courtesy discount coupon (e.g., CARE15-XXXX) in MySQL and drops it into the customer’s chat.' },
-  { no: 12, title: 'Customer 360° Deep CRM & Account Controls', category: 'Customer 360°', whatItDoes: 'Searches any customer by name/email/phone, inspects orders/wallet/loyalty, sends 1-time password reset links, sends direct emails, or toggles account status.' },
-  { no: 13, title: 'Unified Support Tickets & Contact Inbox', category: 'Tickets & Escalations', whatItDoes: 'Manages all traditional contact/support tickets (Open, In Progress, Resolved, Closed) with direct email replies.' },
-  { no: 14, title: 'Priority AI Escalations Triage Board', category: 'Tickets & Escalations', whatItDoes: 'Tracks Critical and High frustration escalations with 1-click Acknowledge, Resolve, and Jump-to-Chat controls.' },
-  { no: 15, title: 'Multi-Role Staff Login ID Provisioning', category: 'RBAC & Staff', whatItDoes: 'Creates multiple login IDs for bhumivera.com/support and assigns Agent (L1), Supervisor (L2), or Manager (L3) roles.' },
-  { no: 16, title: '16-Permission Matrix & Staff Password Reset', category: 'RBAC & Staff', whatItDoes: 'Customizes 16 granular permissions per login ID, resets staff passwords, or suspends/activates accounts immediately.' },
-  { no: 17, title: 'Staff Live Presence & Workload Balancer', category: 'RBAC & Staff', whatItDoes: 'Shows each agent’s online status, active assigned chat count vs. max capacity, and last sign-in timestamp.' },
-  { no: 18, title: 'Autonomous AI Feature & SLA Timer Governance', category: 'AI & Features', whatItDoes: 'Toggles AI Auto-Cancel, Auto-RMA, Goodwill Wallet, Proactive Checkout Linger, Frustration Threshold, and SLA target timers.' },
-  { no: 19, title: 'Canned Response Macros & Webhook Test Ping', category: 'AI & Features', whatItDoes: 'Creates shared 1-click response macros for agents and dispatches live test alerts to Telegram, WhatsApp, and Email.' },
-  { no: 20, title: 'Immutable Audit Log, CSAT & CSV Export', category: 'Audit & Guide', whatItDoes: 'Records every support executive action in ai_support_audit_logs, displays CSAT scores, and exports telemetry as CSV.' },
+const HELP_DICTIONARY = [
+  { no: 1, term: 'Dashboard Overview', category: 'Overview', desc: 'Shows live counts of Active, Pending, Waiting for Review, Escalated, Resolved, and Closed chats, plus staff workload and customer satisfaction ratings.' },
+  { no: 2, term: 'Order, Tracking, Email & Phone Search', category: 'Verification', desc: 'Searches across all orders by Order ID (#20), 9-digit Order Number, Courier Tracking ID (BHVM...), Email, or Phone Number, and displays the Customer Verification Checklist.' },
+  { no: 3, term: 'Delete Resolved Chat (SuperAdmin Only)', category: 'Security', desc: 'Permanently deletes a Resolved or Closed chat transcript. Restricted strictly to SuperAdmin — Agents, Supervisors, and Managers cannot delete chats.' },
+  { no: 4, term: 'One-Time Staff Coupon vs. Unlimited SuperAdmin Coupon', category: 'Anti-Fraud', desc: 'Support Staff can issue a courtesy coupon ONLY ONCE per customer (capped at 10%–15% by role) so no agent can abuse discounts. Only SuperAdmin can issue coupons multiple times.' },
+  { no: 5, term: 'Goodwill Wallet Credit Guardrail', category: 'Anti-Fraud', desc: 'Agents cannot issue wallet credits (₹0). Supervisors are capped at ₹150 once per customer; Managers at ₹250 once per customer. Every credit is signed with a 512-bit SHA-512 hash.' },
+  { no: 6, term: 'Two-Way Telegram Bot (@BhumiveraBot)', category: 'Telegram', desc: 'Customers can message @BhumiveraBot on Telegram and their messages appear here in Live Customer Chats. When you reply here, your reply is sent straight back to their Telegram app.' },
+  { no: 7, term: 'Order-Gated Live Agent Rule', category: 'Protection', desc: 'Customers cannot demand a live human agent unless they have placed an order after payment. Visitors without an order chat with the AI Bot or leave a message for Email/App reply.' },
+  { no: 8, term: 'Customer Satisfaction Reviews', category: 'Quality', desc: 'When a customer is satisfied with Support’s reply, they can end the chat and leave a 1–5 star rating and written review, which is saved and displayed in the Customer Reviews tab.' },
 ];
 
 export default function SuperAdminSupport() {
@@ -171,21 +150,21 @@ export default function SuperAdminSupport() {
   const [selectedTicketId, setSelectedTicketId] = useState(null);
   const [ticketReply, setTicketReply] = useState('');
 
-  // Customer 360° CRM state
-  const [customerSearch, setCustomerSearch] = useState('');
-  const [customers, setCustomers] = useState([]);
+  // Deep Order / Tracking / Email / Phone Search state
+  const [universalQuery, setUniversalQuery] = useState('');
+  const [searchResults, setSearchResults] = useState({ orders: [], customers: [] });
+  const [selectedOrderDetail, setSelectedOrderDetail] = useState(null);
+  const [verifiedOrderIds, setVerifiedOrderIds] = useState({});
   const [selectedCustomerDetail, setSelectedCustomerDetail] = useState(null);
   const [customerEmailForm, setCustomerEmailForm] = useState({ subject: '', message: '' });
 
   const [loading, setLoading] = useState(false);
   const [feedbackBanner, setFeedbackBanner] = useState(null);
 
-  // Filters for Chat Monitor
   const [statusFilter, setStatusFilter] = useState('all');
   const [priorityFilter, setPriorityFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
 
-  // Reply & Action states in Chat Monitor
   const [replyText, setReplyText] = useState('');
   const [isWhisper, setIsWhisper] = useState(false);
   const [statusAfterReply, setStatusAfterReply] = useState('');
@@ -194,14 +173,13 @@ export default function SuperAdminSupport() {
   const [loyaltyPointsBonus, setLoyaltyPointsBonus] = useState('200');
   const [couponDiscountPercent, setCouponDiscountPercent] = useState('15');
 
-  // Create / Edit Staff Login state
   const [newAgent, setNewAgent] = useState({
     username: '',
     name: '',
     email: '',
     password: '',
     role: 'agent',
-    department: 'Customer Concierge',
+    department: 'Customer Care',
     max_concurrent_chats: 10,
     permissions: {},
   });
@@ -254,7 +232,7 @@ export default function SuperAdminSupport() {
         );
         setAuthToken('');
       } else {
-        showNotice('error', err.response?.data?.message || 'Could not synchronize command center telemetry.');
+        showNotice('error', err.response?.data?.message || 'Could not synchronize support data.');
       }
     } finally {
       setLoading(false);
@@ -290,11 +268,6 @@ export default function SuperAdminSupport() {
     }
   }, [selectedSessionToken, fetchSessionDetail]);
 
-  /**
-   * Unified 1-Step Sign-In:
-   * Authenticates against `/api/support/login` (which supports Support Agents/Supervisors/Managers
-   * AND Website Admins/SuperAdmins from `admin_users` / `users`), with fallback to `/api/auth/admin/login` + OTP.
-   */
   const handleLogin = async e => {
     e.preventDefault();
     setLoginError('');
@@ -315,7 +288,6 @@ export default function SuperAdminSupport() {
         return;
       }
 
-      // First try unified `/api/support/login` (accepts both support_agents username/email AND admin_users email)
       try {
         const res = await api.post(
           '/support/login',
@@ -337,7 +309,6 @@ export default function SuperAdminSupport() {
           return;
         }
       } catch (supportLoginErr) {
-        // If identifier is an email, also check `/auth/admin/login` in case OTP flow is required
         if (!loginForm.identifier.includes('@')) {
           throw supportLoginErr;
         }
@@ -359,7 +330,7 @@ export default function SuperAdminSupport() {
         throw new Error(adminRes.data?.message || 'Invalid credentials.');
       }
     } catch (err) {
-      setLoginError(err.response?.data?.message || err.message || 'Sign in failed. Check your ID/email and password.');
+      setLoginError(err.response?.data?.message || err.message || 'Sign in failed.');
     } finally {
       setLoginLoading(false);
     }
@@ -371,12 +342,62 @@ export default function SuperAdminSupport() {
     setOverview(null);
   };
 
+  const handleUniversalSearch = async e => {
+    e?.preventDefault();
+    if (!universalQuery.trim()) return;
+    setLoading(true);
+    try {
+      const res = await api.get(
+        `/support/universal-search?q=${encodeURIComponent(universalQuery.trim())}`,
+        requestConfig
+      );
+      const ordersFound = res.data?.orders || [];
+      const customersFound = res.data?.customers || [];
+      setSearchResults({ orders: ordersFound, customers: customersFound });
+      if (ordersFound.length > 0) setSelectedOrderDetail(ordersFound[0]);
+      if (customersFound.length > 0) {
+        const custRes = await api.get(`/support/customers/${customersFound[0].id}`, requestConfig);
+        setSelectedCustomerDetail(custRes.data);
+      }
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Search failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSyncTelegram = async () => {
+    setLoading(true);
+    try {
+      const res = await api.post('/support/telegram/sync', {}, requestConfig);
+      await fetchCommandCenterData();
+      showNotice(
+        'success',
+        `Telegram (@BhumiveraBot) synced — ${res.data?.synced || 0} new customer message(s) pulled.`
+      );
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Telegram sync failed.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDeleteResolvedSession = async sessionTok => {
+    try {
+      const res = await api.delete(`/support/sessions/${encodeURIComponent(sessionTok)}`, requestConfig);
+      if (selectedSessionToken === sessionTok) {
+        setSelectedSessionToken(null);
+        setSelectedSessionDetail(null);
+      }
+      await fetchCommandCenterData();
+      showNotice('success', res.data?.message || 'Deleted resolved chat session.');
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Only SuperAdmin can delete resolved/closed chats.');
+    }
+  };
+
   const handleCreateAgent = async e => {
     e.preventDefault();
-    if (!canManageAgents) {
-      showNotice('error', 'Only a Website Admin, SuperAdmin, or Support Manager can create staff accounts.');
-      return;
-    }
     try {
       const res = await api.post('/support/agents', newAgent, requestConfig);
       setAgents(prev => [res.data.agent, ...prev]);
@@ -386,7 +407,7 @@ export default function SuperAdminSupport() {
         email: '',
         password: '',
         role: 'agent',
-        department: 'Customer Concierge',
+        department: 'Customer Care',
         max_concurrent_chats: 10,
         permissions: {},
       });
@@ -398,10 +419,6 @@ export default function SuperAdminSupport() {
   };
 
   const handleUpdateAgent = async (agentId, patch) => {
-    if (!canManageAgents) {
-      showNotice('error', 'Only a Website Admin, SuperAdmin, or Support Manager can change roles and permissions.');
-      return;
-    }
     try {
       const res = await api.patch(`/support/agents/${agentId}`, patch, requestConfig);
       setAgents(prev => prev.map(a => (a.id === agentId ? res.data.agent : a)));
@@ -430,7 +447,10 @@ export default function SuperAdminSupport() {
       setReplyText('');
       await fetchSessionDetail(selectedSessionToken);
       await fetchCommandCenterData();
-      showNotice('success', isWhisper ? 'Internal whisper note saved.' : 'Live reply delivered to customer chat.');
+      showNotice(
+        'success',
+        isWhisper ? 'Private staff note saved.' : 'Reply delivered to customer (Web, App & Telegram).'
+      );
     } catch (err) {
       showNotice('error', err.response?.data?.message || 'Could not send message.');
     }
@@ -446,7 +466,7 @@ export default function SuperAdminSupport() {
           assignedAgentId,
           assignedAgentName: targetAgent ? targetAgent.name : undefined,
           assignedRole: targetAgent ? targetAgent.role : undefined,
-          resolutionNote: status === 'resolved' ? 'Marked resolved by Customer Support Executive' : undefined,
+          resolutionNote: status === 'resolved' ? 'Marked resolved by Support Center' : undefined,
         },
         requestConfig
       );
@@ -500,23 +520,9 @@ export default function SuperAdminSupport() {
       );
       await fetchSessionDetail(selectedSessionToken);
       await fetchCommandCenterData();
-      showNotice('success', res.data?.message || `Executed ${action} on chat.`);
+      showNotice('success', res.data?.message || `Completed ${action}.`);
     } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Action execution failed.');
-    }
-  };
-
-  const handleSearchCustomers = async e => {
-    e?.preventDefault();
-    if (customerSearch.trim().length < 2) return;
-    try {
-      const res = await api.get(
-        `/support/customers?search=${encodeURIComponent(customerSearch.trim())}`,
-        requestConfig
-      );
-      setCustomers(res.data?.customers || []);
-    } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Customer search failed.');
+      showNotice('error', err.response?.data?.message || 'Action blocked by role security guardrail.');
     }
   };
 
@@ -525,7 +531,7 @@ export default function SuperAdminSupport() {
       const res = await api.get(`/support/customers/${customerId}`, requestConfig);
       setSelectedCustomerDetail(res.data);
     } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Could not load customer 360° profile.');
+      showNotice('error', err.response?.data?.message || 'Could not load customer profile.');
     }
   };
 
@@ -545,20 +551,9 @@ export default function SuperAdminSupport() {
     try {
       const res = await api.post(`/support/customers/${custId}/email`, customerEmailForm, requestConfig);
       setCustomerEmailForm({ subject: '', message: '' });
-      showNotice('success', res.data?.message || 'Direct email dispatched to customer.');
+      showNotice('success', res.data?.message || 'Direct email sent to customer.');
     } catch (err) {
       showNotice('error', err.response?.data?.message || 'Could not send email.');
-    }
-  };
-
-  const handleToggleCustomerActive = async customer => {
-    const nextStatus = customer.is_active ? 'disabled' : 'active';
-    try {
-      await api.patch(`/support/customers/${customer.id}/status`, { status: nextStatus }, requestConfig);
-      await handleSelectCustomer(customer.id);
-      showNotice('success', `Customer account marked ${nextStatus.toUpperCase()}.`);
-    } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Could not update customer status.');
     }
   };
 
@@ -591,16 +586,16 @@ export default function SuperAdminSupport() {
     try {
       const res = await api.put('/support/superadmin/features', updatedFeatures, requestConfig);
       setFeatures(res.data.featureConfig);
-      showNotice('success', 'AI Support & SLA feature switches saved and activated globally.');
+      showNotice('success', 'Support rules and settings saved.');
     } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Failed to update feature switches.');
+      showNotice('error', err.response?.data?.message || 'Failed to update settings.');
     }
   };
 
   const handleTestWebhook = async channel => {
     try {
       const res = await api.post('/support/superadmin/test-webhook', { channel }, requestConfig);
-      showNotice('success', res.data?.message || `Webhook ping dispatched to ${channel}.`);
+      showNotice('success', res.data?.message || `Test alert sent to ${channel}.`);
       fetchCommandCenterData();
     } catch (err) {
       showNotice('error', err.response?.data?.message || 'Webhook test failed.');
@@ -617,14 +612,14 @@ export default function SuperAdminSupport() {
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement('a');
       a.href = url;
-      a.download = `bhumivera_support_telemetry_${new Date().toISOString().slice(0, 10)}.csv`;
+      a.download = `bhumivera_support_report_${new Date().toISOString().slice(0, 10)}.csv`;
       document.body.appendChild(a);
       a.click();
       document.body.removeChild(a);
       window.URL.revokeObjectURL(url);
-      showNotice('success', 'Exported live chat & SLA telemetry CSV report.');
+      showNotice('success', 'Downloaded CSV report.');
     } catch {
-      showNotice('error', 'Could not download CSV export.');
+      showNotice('error', 'Could not download CSV report.');
     }
   };
 
@@ -644,35 +639,31 @@ export default function SuperAdminSupport() {
     setNewMacro({ title: '', category: 'orders', content: '' });
   };
 
-  // ============================================================================
-  // UNIFIED LOGIN GATE IF NOT AUTHENTICATED AS STAFF / ADMIN
-  // ============================================================================
   if (!authToken) {
     return (
       <div className="min-h-screen bg-[#071510] text-[#FDFBF7] flex items-center justify-center p-6">
-        <div className="max-w-md w-full bg-[#0B2419] border border-[#D4AF37]/30 rounded-2xl p-8 shadow-2xl">
+        <div className="max-w-md w-full bg-[#0B2419] border border-[#D4AF37]/30 rounded-3xl p-8 shadow-2xl">
           <div className="flex items-center gap-3 mb-5">
-            <div className="w-12 h-12 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
+            <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
               <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
-              <span className="text-[11px] uppercase tracking-[0.2em] text-[#D4AF37] font-semibold">
+              <span className="text-[11px] uppercase tracking-[0.2em] text-[#D4AF37] font-bold">
                 bhumivera.com/superadminsupport
               </span>
               <h1 className="text-2xl font-serif font-bold text-white">
-                SuperAdmin Support Command
+                SuperAdmin Support Center
               </h1>
             </div>
           </div>
 
           <p className="text-xs text-emerald-100/75 mb-5 leading-relaxed">
-            Sign in with your <strong>Website Admin Email</strong> or any <strong>Support Staff Login ID</strong> (
-            <code className="text-[#D4AF37]">Manager / Supervisor / Agent</code>) to access the 20-Feature Customer
-            Support Executive Command Center.
+            Sign in with your <strong>Website Admin Email</strong> or <strong>Support Manager ID</strong> to govern live
+            chats, order verification, staff permissions, and Telegram support.
           </p>
 
           {loginError && (
-            <div className="mb-4 p-3 rounded-lg bg-rose-500/15 border border-rose-500/30 text-rose-200 text-xs">
+            <div className="mb-4 p-3 rounded-xl bg-rose-500/15 border border-rose-500/30 text-rose-200 text-xs">
               {loginError}
             </div>
           )}
@@ -688,7 +679,7 @@ export default function SuperAdminSupport() {
                 value={loginForm.identifier}
                 onChange={e => setLoginForm(prev => ({ ...prev, identifier: e.target.value }))}
                 placeholder="admin@bhumivera.com or concierge_lead"
-                className="w-full px-3.5 py-2.5 rounded-lg bg-black/40 border border-white/15 text-sm text-white focus:border-[#D4AF37] focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/15 text-sm text-white focus:border-[#D4AF37] focus:outline-none"
               />
             </div>
             <div>
@@ -699,7 +690,7 @@ export default function SuperAdminSupport() {
                 value={loginForm.password}
                 onChange={e => setLoginForm(prev => ({ ...prev, password: e.target.value }))}
                 placeholder="••••••••••••"
-                className="w-full px-3.5 py-2.5 rounded-lg bg-black/40 border border-white/15 text-sm text-white focus:border-[#D4AF37] focus:outline-none"
+                className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/15 text-sm text-white focus:border-[#D4AF37] focus:outline-none"
               />
             </div>
 
@@ -714,7 +705,7 @@ export default function SuperAdminSupport() {
                   value={loginForm.otp}
                   onChange={e => setLoginForm(prev => ({ ...prev, otp: e.target.value }))}
                   placeholder="6-digit OTP code"
-                  className="w-full px-3.5 py-2.5 rounded-lg bg-black/40 border border-[#D4AF37] text-sm text-white focus:outline-none"
+                  className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-[#D4AF37] text-sm text-white focus:outline-none"
                 />
               </div>
             )}
@@ -722,13 +713,13 @@ export default function SuperAdminSupport() {
             <button
               type="submit"
               disabled={loginLoading}
-              className="w-full py-2.5 rounded-lg bg-[#D4AF37] hover:bg-[#c49f2f] text-[#071510] font-semibold text-sm transition"
+              className="w-full py-3 rounded-xl bg-[#D4AF37] hover:bg-[#c49f2f] text-[#071510] font-bold text-sm transition"
             >
               {loginLoading
-                ? 'Authenticating Command Center…'
+                ? 'Signing in…'
                 : otpStep
-                ? 'Verify OTP & Enter Command Center'
-                : 'Enter SuperAdmin Support Command'}
+                ? 'Verify OTP & Enter Support Center'
+                : 'Sign In to SuperAdmin Support'}
             </button>
           </form>
 
@@ -737,7 +728,7 @@ export default function SuperAdminSupport() {
               → Website Admin (/admin)
             </Link>
             <Link to="/support" className="hover:text-[#D4AF37]">
-              → Agent Workspace (/support)
+              → Staff Support Desk (/support)
             </Link>
           </div>
         </div>
@@ -746,8 +737,9 @@ export default function SuperAdminSupport() {
   }
 
   const statusBreakdown = overview?.metrics?.statusCounts || {};
-  const canManageAgents = ['admin', 'superadmin', 'manager'].includes(overview?.viewer?.role) ||
-    overview?.viewer?.permissions?.can_manage_agents === true;
+  const customerReviews = overview?.customerReviews || [];
+  const isSuperAdminViewer =
+    overview?.viewer?.role === 'superadmin' || decodeStaffOrAdminJwt(authToken)?.role === 'superadmin';
   const roleCounts = agents.reduce(
     (acc, a) => {
       const r = a.role || 'agent';
@@ -761,64 +753,73 @@ export default function SuperAdminSupport() {
 
   return (
     <div className="min-h-screen bg-[#071510] text-[#FDFBF7] flex flex-col">
-      {/* TOP ENTERPRISE HEADER */}
-      <header className="sticky top-0 z-40 bg-[#0B2419]/95 backdrop-blur-md border-b border-[#D4AF37]/25 px-6 py-3.5">
+      {/* LUXURY HEADER (NO WHITE SCROLLBARS, NO BUZZWORDS) */}
+      <header className="sticky top-0 z-40 bg-[#0B2419]/95 backdrop-blur-md border-b border-[#D4AF37]/25 px-6 py-4">
         <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
-              <ShieldCheck className="w-5 h-5" />
+            <div className="w-11 h-11 rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
+              <ShieldCheck className="w-6 h-6" />
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <span className="text-[10px] uppercase tracking-[0.2em] px-2 py-0.5 rounded bg-[#D4AF37]/20 text-[#D4AF37] font-semibold">
-                  20-Feature Executive Command
+                <span className="text-[10px] uppercase tracking-[0.18em] px-2.5 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] font-bold">
+                  512-Bit Protected · SuperAdmin Support
                 </span>
                 <span className="text-xs text-emerald-200/70 font-mono">
                   bhumivera.com/superadminsupport
                 </span>
               </div>
-              <h1 className="text-lg font-serif font-bold text-white">
-                Bhumivera SuperAdmin Support & Omnichannel Access Control Center
+              <h1 className="text-xl font-serif font-bold text-white">
+                Bhumivera SuperAdmin Support & Access Control Center
               </h1>
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             <button
               type="button"
               onClick={() => setExplainMode(prev => !prev)}
-              className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold border transition ${
+              className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold border transition ${
                 explainMode
-                  ? 'bg-[#D4AF37] text-[#071510] border-[#D4AF37] shadow-lg shadow-[#D4AF37]/20'
+                  ? 'bg-[#D4AF37] text-[#071510] border-[#D4AF37]'
                   : 'bg-white/5 text-emerald-100 border-white/15 hover:border-[#D4AF37]/50'
               }`}
             >
               <HelpCircle className="w-4 h-4" />
-              {explainMode ? 'Explainer Mode: ON' : 'What Will This Button Do? (?)'}
+              {explainMode ? '? Help Mode: ON' : '? Help & Terms Guide'}
+            </button>
+
+            <button
+              type="button"
+              onClick={handleSyncTelegram}
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 text-xs text-sky-200 font-semibold"
+              title="Sync customer messages from @BhumiveraBot on Telegram"
+            >
+              <Send className="w-3.5 h-3.5" />
+              Sync Telegram (@BhumiveraBot)
             </button>
 
             <button
               type="button"
               onClick={handleExportCsv}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-xs text-emerald-200 font-semibold"
-              title="Download CSV report of all chat sessions, SLAs, and CSAT scores"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-xs text-emerald-200 font-semibold"
             >
               <Download className="w-3.5 h-3.5" />
-              Export CSV
+              Download CSV Report
             </button>
 
             <Link
               to="/support"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-emerald-100"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-emerald-100"
             >
               <MessageSquare className="w-3.5 h-3.5 text-[#D4AF37]" />
-              Agent Desk (/support)
+              Staff Desk (/support)
               <ExternalLink className="w-3 h-3 opacity-60" />
             </Link>
 
             <Link
               to="/admin"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-emerald-100"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-emerald-100"
             >
               <Layers className="w-3.5 h-3.5 text-[#D4AF37]" />
               Website Admin (/admin)
@@ -828,8 +829,8 @@ export default function SuperAdminSupport() {
             <button
               type="button"
               onClick={fetchCommandCenterData}
-              className="p-2 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 text-emerald-100"
-              title="Refresh live telemetry"
+              className="p-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-emerald-100"
+              title="Refresh data"
             >
               <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[#D4AF37]' : ''}`} />
             </button>
@@ -837,7 +838,7 @@ export default function SuperAdminSupport() {
             <button
               type="button"
               onClick={handleLogout}
-              className="flex items-center gap-1.5 px-3 py-2 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-xs text-rose-200"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-xs text-rose-200"
             >
               <LogOut className="w-3.5 h-3.5" />
               Sign Out
@@ -846,28 +847,28 @@ export default function SuperAdminSupport() {
         </div>
       </header>
 
+      {/* INLINE HELP MODE BANNER */}
       {explainMode && (
         <div className="bg-[#D4AF37]/15 border-b border-[#D4AF37]/40 px-6 py-3">
-          <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-2">
-            <div className="flex items-center gap-2.5 text-xs text-[#FDFBF7]">
+          <div className="max-w-[1600px] mx-auto flex flex-col md:flex-row md:items-center justify-between gap-2 text-xs">
+            <div className="flex items-center gap-2">
               <Sparkles className="w-4 h-4 text-[#D4AF37] shrink-0" />
               <span>
-                <strong>Interactive Button Explainer Active:</strong> Hover over any workspace tab or button to see
-                exactly what it does, or open the{' '}
+                <strong>Interactive Help Active:</strong> Hover over any tab or button below to see what it does, or
+                click{' '}
                 <button
                   type="button"
                   onClick={() => setActiveTab('guide')}
-                  className="underline font-semibold text-[#D4AF37]"
+                  className="underline font-bold text-[#D4AF37]"
                 >
-                  20-Feature & Button Guide
-                </button>
-                . All chat statuses (Pending, Waiting for Review, Escalated, Resolved, Closed) are controlled
-                exclusively by Customer Support.
+                  7. Security Audit & Help Guide
+                </button>{' '}
+                for the full glossary.
               </span>
             </div>
             {hoveredExplain && (
-              <div className="text-xs bg-[#071510]/90 border border-[#D4AF37]/50 px-3 py-1.5 rounded-lg text-[#D4AF37]">
-                <strong>{hoveredExplain.title}:</strong> {hoveredExplain.desc}
+              <div className="bg-[#071510] border border-[#D4AF37]/50 px-3 py-1.5 rounded-xl text-[#D4AF37]">
+                <strong>? {hoveredExplain.title}:</strong> {hoveredExplain.desc}
               </div>
             )}
           </div>
@@ -891,51 +892,51 @@ export default function SuperAdminSupport() {
         </div>
       )}
 
-      {/* 7 INTERCONNECTED EXECUTIVE WORKSPACE TABS */}
-      <div className="bg-[#0B2419]/60 border-b border-white/10 px-6">
-        <div className="max-w-[1600px] mx-auto flex items-center gap-2 overflow-x-auto py-2.5">
+      {/* NAVIGATION TABS — FLEX-WRAP SO THERE IS NEVER A WHITE HORIZONTAL SCROLLBAR */}
+      <div className="bg-[#0B2419]/70 border-b border-white/10 px-6 py-3">
+        <div className="max-w-[1600px] mx-auto flex flex-wrap items-center gap-2">
           {[
             {
               id: 'overview',
-              label: '1. Executive Command Overview',
+              label: '1. Dashboard Overview',
               icon: Activity,
-              explain: 'Live SLA telemetry, support-controlled status breakdown, CSAT ratings, and staff workload balancer.',
+              explain: 'Shows live chat counts by status, staff workload, customer satisfaction score, and recent reviews.',
             },
             {
               id: 'monitor',
-              label: `2. Live Chat Monitor & Barge-In (${sessions.length})`,
+              label: `2. Live Customer Chats (${sessions.length})`,
               icon: MessageSquare,
-              explain: 'Control chat statuses (Active, Pending, Waiting Review, Escalated, Resolved, Closed), barge-in, whisper, bulk-assign, or execute 1-click refunds/credits/coupons.',
+              explain: 'Reply to Web & Telegram chats, change chat status, delete resolved chats (SuperAdmin only), or issue coupons/credits.',
             },
             {
               id: 'crm360',
-              label: '3. Customer 360° CRM Lookup',
-              icon: UserCheck,
-              explain: 'Deep customer lookup across orders, items, wallet, loyalty points, password reset links, and direct email dispatch.',
+              label: '3. Order, Tracking & Customer Lookup',
+              icon: Search,
+              explain: 'Search by Order ID, Tracking Number, Email, or Phone to verify the real customer and view full order details.',
             },
             {
               id: 'tickets',
-              label: `4. Tickets & Escalations (${tickets.length + (overview?.escalations?.length || 0)})`,
+              label: `4. Messages, Tickets & Reviews (${tickets.length + customerReviews.length})`,
               icon: Ticket,
-              explain: 'Manage traditional support tickets and triage Critical/High AI escalations in one unified queue.',
+              explain: 'Reply to customer support tickets, handle priority escalations, and read customer satisfaction reviews.',
             },
             {
               id: 'rbac',
-              label: `5. Staff Logins & Role Matrix (${agents.length})`,
+              label: `5. Staff Logins & Role Limits (${agents.length})`,
               icon: Users,
-              explain: 'Create multiple login IDs for /support, assign Agent (L1), Supervisor (L2), or Manager (L3) roles, and toggle 16 granular permissions.',
+              explain: 'Create login IDs for /support, assign Executive (L1), Supervisor (L2), or Manager (L3) roles, and set permissions.',
             },
             {
               id: 'features',
-              label: '6. AI Governance, Macros & Webhooks',
+              label: '6. Support Rules, Macros & Telegram Bot',
               icon: Sliders,
-              explain: 'Toggle AI self-service tools, tune SLA timers & frustration thresholds, manage canned macros, and ping webhooks.',
+              explain: 'Control automated order rules, SLA timers, quick-reply templates, and @BhumiveraBot Telegram settings.',
             },
             {
               id: 'guide',
-              label: `7. Audit Log & 20-Feature Guide (${auditLogs.length})`,
+              label: `7. Security Audit & Help Guide (${auditLogs.length})`,
               icon: BookOpen,
-              explain: 'Inspect the immutable support executive audit trail and the complete "What Will This Button Do?" reference.',
+              explain: 'View 512-bit signed audit logs of every coupon/credit/action and read the plain-English help guide.',
             },
           ].map(tab => {
             const Icon = tab.icon;
@@ -946,10 +947,10 @@ export default function SuperAdminSupport() {
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
                 onMouseEnter={() => explainMode && setHoveredExplain({ title: tab.label, desc: tab.explain })}
-                className={`flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition border ${
+                className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold transition border ${
                   isActive
-                    ? 'bg-[#D4AF37] text-[#071510] border-[#D4AF37]'
-                    : 'bg-white/5 text-emerald-100/80 border-white/10 hover:bg-white/10'
+                    ? 'bg-[#D4AF37] text-[#071510] border-[#D4AF37] shadow-md'
+                    : 'bg-white/5 text-emerald-100/85 border-white/10 hover:bg-white/10'
                 }`}
               >
                 <Icon className="w-4 h-4" />
@@ -963,60 +964,31 @@ export default function SuperAdminSupport() {
       {/* MAIN WORKSPACE CONTENT */}
       <main className="flex-1 max-w-[1600px] w-full mx-auto p-6 space-y-6">
         {/* ===================================================================
-            TAB 1: EXECUTIVE COMMAND OVERVIEW
+            TAB 1: DASHBOARD OVERVIEW
            =================================================================== */}
         {activeTab === 'overview' && (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="p-4 rounded-xl bg-[#0B2419] border border-white/10 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] uppercase tracking-wider text-emerald-300 font-semibold">
-                    1. Website Maintenance Portal
+            {/* Role Benchmark & Anti-Abuse Protection Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+              {Object.entries(ROLE_CONFIG).map(([roleKey, cfg]) => (
+                <div key={roleKey} className="p-4 rounded-2xl bg-[#0B2419] border border-white/10 space-y-1.5">
+                  <span className={`text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full border font-bold ${cfg.badge}`}>
+                    {cfg.label}
                   </span>
-                  <h3 className="text-sm font-bold text-white mt-1">bhumivera.com/admin/login</h3>
-                  <p className="text-xs text-emerald-100/70 mt-1">
-                    Catalog, inventory, pricing, orders, banners, and accounting management.
-                  </p>
+                  <p className="text-xs text-emerald-100/75 leading-relaxed pt-1">{cfg.description}</p>
                 </div>
-                <Link to="/admin" className="px-3 py-1.5 rounded-lg bg-white/10 text-xs text-[#D4AF37] shrink-0">
-                  Open →
-                </Link>
-              </div>
-              <div className="p-4 rounded-xl bg-[#0B2419] border border-white/10 flex items-center justify-between">
-                <div>
-                  <span className="text-[10px] uppercase tracking-wider text-[#D4AF37] font-semibold">
-                    2. Support Staff Workspace
-                  </span>
-                  <h3 className="text-sm font-bold text-white mt-1">bhumivera.com/support</h3>
-                  <p className="text-xs text-emerald-100/70 mt-1">
-                    Multi-role desk for Support Agents (L1), Supervisors (L2), and Managers (L3).
-                  </p>
-                </div>
-                <Link to="/support" className="px-3 py-1.5 rounded-lg bg-white/10 text-xs text-[#D4AF37] shrink-0">
-                  Open →
-                </Link>
-              </div>
-              <div className="p-4 rounded-xl bg-[#0B2419] border border-[#D4AF37]/40">
-                <span className="text-[10px] uppercase tracking-wider text-[#D4AF37] font-semibold">
-                  3. SuperAdmin Support Command (Active)
-                </span>
-                <h3 className="text-sm font-bold text-white mt-1">bhumivera.com/superadminsupport</h3>
-                <p className="text-xs text-emerald-100/70 mt-1">
-                  All chat statuses (Pending, Waiting for Review, Escalated, Resolved, Closed) are 100% controlled by
-                  Support Staff.
-                </p>
-              </div>
+              ))}
             </div>
 
-            {/* Support-Controlled Status Counters */}
+            {/* Chat Status Counters */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
               {[
                 { key: 'active', label: 'Active Chats', desc: 'Live conversations in progress' },
-                { key: 'pending', label: 'Marked Pending', desc: 'Support awaiting customer info' },
-                { key: 'waiting_for_review', label: 'Waiting for Review', desc: 'Queued for L2/QA verification' },
-                { key: 'escalated', label: 'Escalated (Urgent)', desc: 'Routed to senior specialist' },
-                { key: 'resolved', label: 'Marked Resolved', desc: 'Solved by support executive' },
-                { key: 'closed', label: 'Closed & Archived', desc: 'Archived by support team' },
+                { key: 'pending', label: 'Marked Pending', desc: 'Waiting on customer details' },
+                { key: 'waiting_for_review', label: 'Waiting for Review', desc: 'Queued for Supervisor/Manager' },
+                { key: 'escalated', label: 'Escalated', desc: 'High-priority specialist queue' },
+                { key: 'resolved', label: 'Marked Resolved', desc: 'Solved & ready for review/cleanup' },
+                { key: 'closed', label: 'Closed', desc: 'Archived conversations' },
               ].map(card => (
                 <button
                   key={card.key}
@@ -1025,7 +997,7 @@ export default function SuperAdminSupport() {
                     setStatusFilter(card.key);
                     setActiveTab('monitor');
                   }}
-                  className="text-left p-4 rounded-xl bg-[#0B2419] border border-white/10 hover:border-[#D4AF37]/50 transition"
+                  className="text-left p-4 rounded-2xl bg-[#0B2419] border border-white/10 hover:border-[#D4AF37]/50 transition"
                 >
                   <div className="flex items-center justify-between">
                     <span className={`text-[10px] px-2 py-0.5 rounded border ${STATUS_BADGES[card.key]?.bg}`}>
@@ -1042,129 +1014,76 @@ export default function SuperAdminSupport() {
             </div>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Feature 17: Staff Live Presence & Workload Balancer */}
-              <div className="p-5 rounded-xl bg-[#0B2419] border border-white/10 space-y-4">
+              {/* Staff Presence */}
+              <div className="p-5 rounded-2xl bg-[#0B2419] border border-white/10 space-y-4">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-bold text-white flex items-center gap-2">
                     <Users className="w-4 h-4 text-[#D4AF37]" />
-                    Staff Live Presence & Workload ({agents.length})
+                    Support Staff Workload ({agents.length})
                   </h3>
                   <button
                     type="button"
                     onClick={() => setActiveTab('rbac')}
                     className="text-xs text-[#D4AF37] hover:underline"
                   >
-                    Manage Logins →
+                    Manage Staff →
                   </button>
                 </div>
                 <div className="grid grid-cols-3 gap-2 text-center text-xs">
-                  <div className="p-2 rounded-lg bg-black/30 border border-white/5">
+                  <div className="p-2.5 rounded-xl bg-black/30 border border-white/5">
                     <div className="font-bold text-purple-300 text-base">{roleCounts.manager}</div>
-                    <div className="text-[10px] text-emerald-100/60">Managers (L3)</div>
+                    <div className="text-[10px] text-emerald-100/60">Managers</div>
                   </div>
-                  <div className="p-2 rounded-lg bg-black/30 border border-white/5">
+                  <div className="p-2.5 rounded-xl bg-black/30 border border-white/5">
                     <div className="font-bold text-amber-300 text-base">{roleCounts.supervisor}</div>
-                    <div className="text-[10px] text-emerald-100/60">Supervisors (L2)</div>
+                    <div className="text-[10px] text-emerald-100/60">Supervisors</div>
                   </div>
-                  <div className="p-2 rounded-lg bg-black/30 border border-white/5">
+                  <div className="p-2.5 rounded-xl bg-black/30 border border-white/5">
                     <div className="font-bold text-emerald-300 text-base">{roleCounts.agent}</div>
-                    <div className="text-[10px] text-emerald-100/60">Agents (L1)</div>
+                    <div className="text-[10px] text-emerald-100/60">Executives</div>
                   </div>
-                </div>
-                <div className="space-y-2 max-h-40 overflow-y-auto pr-1 text-xs">
-                  {agents.map(ag => {
-                    const activeLoad = sessions.filter(
-                      s => Number(s.assignedAgentId) === Number(ag.id) && ['active', 'pending', 'escalated'].includes(s.status)
-                    ).length;
-                    return (
-                      <div key={ag.id} className="flex items-center justify-between p-2 rounded-lg bg-black/25 border border-white/5">
-                        <div>
-                          <span className="font-semibold text-white">{ag.name}</span>{' '}
-                          <span className="text-[10px] uppercase text-[#D4AF37]">({ag.role})</span>
-                        </div>
-                        <span className="text-[11px] text-emerald-200">
-                          Load: {activeLoad} / {ag.max_concurrent_chats || 10}
-                        </span>
-                      </div>
-                    );
-                  })}
                 </div>
               </div>
 
-              {/* Sentiment & CSAT Health */}
-              <div className="p-5 rounded-xl bg-[#0B2419] border border-white/10 space-y-4">
+              {/* Customer Satisfaction & Telegram Bot Status */}
+              <div className="p-5 rounded-2xl bg-[#0B2419] border border-white/10 space-y-4">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                   <Award className="w-4 h-4 text-[#D4AF37]" />
-                  Sentiment, CSAT & SLA Health
+                  Customer Satisfaction & Telegram Bot
                 </h3>
                 <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="p-3 rounded-lg bg-black/30 border border-white/5">
-                    <span className="text-emerald-100/60">Avg Customer CSAT</span>
+                  <div className="p-3 rounded-xl bg-black/30 border border-white/5">
+                    <span className="text-emerald-100/60">Customer Rating Avg</span>
                     <div className="text-xl font-bold text-[#D4AF37] mt-1">
                       {overview?.metrics?.averageCsat ? `${overview.metrics.averageCsat} / 5.0 ★` : '4.9 ★'}
                     </div>
                   </div>
-                  <div className="p-3 rounded-lg bg-black/30 border border-white/5">
-                    <span className="text-emerald-100/60">Avg Frustration Score</span>
-                    <div className="text-xl font-bold text-white mt-1">
-                      {overview?.metrics?.averageFrustration || 0} / 100
-                    </div>
-                  </div>
-                  <div className="p-3 rounded-lg bg-black/30 border border-white/5">
-                    <span className="text-emerald-100/60">Critical / High Priority</span>
-                    <div className="text-xl font-bold text-rose-300 mt-1">
-                      {(overview?.metrics?.priorityCounts?.Critical || 0) +
-                        (overview?.metrics?.priorityCounts?.High || 0)}
-                    </div>
-                  </div>
-                  <div className="p-3 rounded-lg bg-black/30 border border-white/5">
-                    <span className="text-emerald-100/60">Open Support Tickets</span>
-                    <div className="text-xl font-bold text-sky-300 mt-1">
-                      {tickets.filter(t => t.status === 'open').length}
-                    </div>
+                  <div className="p-3 rounded-xl bg-black/30 border border-white/5">
+                    <span className="text-emerald-100/60">Telegram Bot Bridge</span>
+                    <div className="text-sm font-bold text-sky-300 mt-1.5">@BhumiveraBot Active</div>
                   </div>
                 </div>
               </div>
 
-              {/* Priority Escalations */}
-              <div className="p-5 rounded-xl bg-[#0B2419] border border-white/10 space-y-3">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-rose-400" />
-                    Recent Escalations & Alerts
-                  </h3>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab('tickets')}
-                    className="text-xs text-[#D4AF37] hover:underline"
-                  >
-                    Triage All →
-                  </button>
-                </div>
-                <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                  {(overview?.escalations || []).length === 0 ? (
-                    <p className="text-xs text-emerald-100/60">No open escalations — all SLAs healthy.</p>
+              {/* Latest Customer Reviews */}
+              <div className="p-5 rounded-2xl bg-[#0B2419] border border-white/10 space-y-3">
+                <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Star className="w-4 h-4 text-[#D4AF37]" />
+                  Recent Customer Support Reviews ({customerReviews.length})
+                </h3>
+                <div className="space-y-2 max-h-44 overflow-y-auto pr-1 text-xs">
+                  {customerReviews.length === 0 ? (
+                    <p className="text-emerald-100/60">
+                      Customer reviews submitted when ending chats will appear here.
+                    </p>
                   ) : (
-                    overview.escalations.slice(0, 5).map(esc => (
-                      <div
-                        key={esc.id}
-                        className="p-2.5 rounded-lg bg-black/30 border border-rose-500/20 flex items-center justify-between gap-2 text-xs"
-                      >
-                        <div>
-                          <span className="font-semibold text-rose-300">[{esc.priority}]</span>{' '}
-                          <span className="text-white">{esc.customer_name || esc.customer_email || 'Guest'}</span>
-                          <p className="text-[11px] text-emerald-100/60 truncate max-w-[220px]">{esc.reason}</p>
+                    customerReviews.slice(0, 6).map(rev => (
+                      <div key={rev.sessionToken} className="p-2.5 rounded-xl bg-black/30 border border-white/10">
+                        <div className="flex items-center justify-between font-bold text-[#D4AF37]">
+                          <span>{rev.customerName}</span>
+                          <span>{'★'.repeat(rev.rating)} ({rev.rating}/5)</span>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setSelectedSessionToken(esc.session_token);
-                            setActiveTab('monitor');
-                          }}
-                          className="px-2.5 py-1 rounded bg-[#D4AF37]/20 text-[#D4AF37] hover:bg-[#D4AF37]/30 shrink-0"
-                        >
-                          Inspect
-                        </button>
+                        <p className="text-emerald-100/85 text-[11px] mt-0.5">"{rev.feedback}"</p>
                       </div>
                     ))
                   )}
@@ -1175,21 +1094,20 @@ export default function SuperAdminSupport() {
         )}
 
         {/* ===================================================================
-            TAB 2: OMNICHANNEL CHAT MONITOR, BARGE-IN & BULK OPERATIONS
+            TAB 2: LIVE CUSTOMER CHATS (WITH SUPERADMIN DELETE & UNLIMITED COUPONS)
            =================================================================== */}
         {activeTab === 'monitor' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Left Column: Filterable Live Sessions Queue + Bulk Operations */}
-            <div className="lg:col-span-5 bg-[#0B2419] border border-white/10 rounded-xl p-4 flex flex-col h-[780px]">
+            <div className="lg:col-span-5 bg-[#0B2419] border border-white/10 rounded-2xl p-4 flex flex-col h-[780px]">
               <div className="space-y-3 pb-3 border-b border-white/10">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-sm font-bold text-white">All Platform Chat Sessions ({sessions.length})</h3>
+                  <h3 className="text-sm font-bold text-white">All Customer Chats ({sessions.length})</h3>
                   <button
                     type="button"
                     onClick={fetchCommandCenterData}
                     className="text-xs text-[#D4AF37] hover:underline"
                   >
-                    Sync Queue
+                    Refresh Queue
                   </button>
                 </div>
 
@@ -1199,8 +1117,8 @@ export default function SuperAdminSupport() {
                     type="text"
                     value={searchQuery}
                     onChange={e => setSearchQuery(e.target.value)}
-                    placeholder="Search by customer name, email, phone, or token…"
-                    className="w-full pl-8 pr-3 py-1.5 rounded-lg bg-black/40 border border-white/15 text-xs text-white focus:border-[#D4AF37] focus:outline-none"
+                    placeholder="Filter by customer name, email, phone, or session token…"
+                    className="w-full pl-8 pr-3 py-1.5 rounded-xl bg-black/40 border border-white/15 text-xs text-white focus:border-[#D4AF37] focus:outline-none"
                   />
                 </div>
 
@@ -1210,9 +1128,9 @@ export default function SuperAdminSupport() {
                       key={st}
                       type="button"
                       onClick={() => setStatusFilter(st)}
-                      className={`px-2.5 py-1 rounded text-[11px] font-medium border transition ${
+                      className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition ${
                         statusFilter === st
-                          ? 'bg-[#D4AF37] text-[#071510] border-[#D4AF37] font-semibold'
+                          ? 'bg-[#D4AF37] text-[#071510] border-[#D4AF37] font-bold'
                           : 'bg-black/30 text-emerald-100/70 border-white/10'
                       }`}
                     >
@@ -1221,9 +1139,8 @@ export default function SuperAdminSupport() {
                   ))}
                 </div>
 
-                {/* Feature 6: Bulk Queue Operations Bar */}
                 {selectedBulkTokens.length > 0 && (
-                  <div className="p-2.5 rounded-lg bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex flex-wrap items-center justify-between gap-2 text-[11px]">
+                  <div className="p-2.5 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/40 flex flex-wrap items-center justify-between gap-2 text-[11px]">
                     <span className="font-bold text-[#D4AF37]">
                       <CheckSquare className="w-3.5 h-3.5 inline mr-1" />
                       {selectedBulkTokens.length} Selected:
@@ -1234,35 +1151,21 @@ export default function SuperAdminSupport() {
                         onClick={() => handleBulkSessionAction({ status: 'pending' })}
                         className="px-2 py-0.5 rounded bg-amber-500/20 text-amber-200 border border-amber-500/40"
                       >
-                        Bulk Pending
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleBulkSessionAction({ status: 'waiting_for_review' })}
-                        className="px-2 py-0.5 rounded bg-sky-500/20 text-sky-200 border border-sky-500/40"
-                      >
-                        Bulk Review
+                        Mark Pending
                       </button>
                       <button
                         type="button"
                         onClick={() => handleBulkSessionAction({ status: 'resolved' })}
                         className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-200 border border-emerald-500/40"
                       >
-                        Bulk Resolve
+                        Mark Resolved
                       </button>
                       <button
                         type="button"
                         onClick={() => handleBulkSessionAction({ status: 'closed' })}
                         className="px-2 py-0.5 rounded bg-slate-500/30 text-slate-200 border border-slate-500/40"
                       >
-                        Bulk Close
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setSelectedBulkTokens([])}
-                        className="px-2 py-0.5 rounded bg-black/40 text-white/70"
-                      >
-                        Clear
+                        Close
                       </button>
                     </div>
                   </div>
@@ -1270,89 +1173,83 @@ export default function SuperAdminSupport() {
               </div>
 
               <div className="flex-1 overflow-y-auto space-y-2 mt-3 pr-1">
-                {sessions.length === 0 ? (
-                  <p className="text-xs text-emerald-100/60 text-center py-12">
-                    No chat sessions match the current filter.
-                  </p>
-                ) : (
-                  sessions.map(sess => {
-                    const isSelected = selectedSessionToken === sess.sessionToken;
-                    const isChecked = selectedBulkTokens.includes(sess.sessionToken);
-                    return (
-                      <div
-                        key={sess.sessionToken}
-                        className={`p-3 rounded-xl border transition flex items-start gap-2.5 ${
-                          isSelected
-                            ? 'bg-[#D4AF37]/15 border-[#D4AF37]'
-                            : 'bg-black/30 border-white/10 hover:border-white/25'
-                        }`}
+                {sessions.map(sess => {
+                  const isSelected = selectedSessionToken === sess.sessionToken;
+                  const isChecked = selectedBulkTokens.includes(sess.sessionToken);
+                  const canDelete = isSuperAdminViewer && ['resolved', 'closed'].includes(sess.status);
+                  return (
+                    <div
+                      key={sess.sessionToken}
+                      className={`p-3 rounded-xl border transition flex items-start gap-2.5 ${
+                        isSelected
+                          ? 'bg-[#D4AF37]/15 border-[#D4AF37]'
+                          : 'bg-black/30 border-white/10 hover:border-white/25'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={isChecked}
+                        onChange={e => {
+                          const checked = e.target.checked;
+                          setSelectedBulkTokens(prev =>
+                            checked ? [...prev, sess.sessionToken] : prev.filter(t => t !== sess.sessionToken)
+                          );
+                        }}
+                        className="mt-1 rounded border-white/20"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setSelectedSessionToken(sess.sessionToken)}
+                        className="flex-1 text-left min-w-0"
                       >
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={e => {
-                            const checked = e.target.checked;
-                            setSelectedBulkTokens(prev =>
-                              checked ? [...prev, sess.sessionToken] : prev.filter(t => t !== sess.sessionToken)
-                            );
-                          }}
-                          className="mt-1 rounded border-white/20"
-                          title="Select for bulk status/assignment update"
-                        />
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-bold text-white truncate">
+                            {sess.customerName || sess.guestName || 'Guest Shopper'}
+                          </span>
+                          <span
+                            className={`text-[10px] px-2 py-0.5 rounded border shrink-0 ${
+                              STATUS_BADGES[sess.status]?.bg || STATUS_BADGES.active.bg
+                            }`}
+                          >
+                            {STATUS_BADGES[sess.status]?.label || sess.status}
+                          </span>
+                        </div>
+                        <div className="text-[11px] text-emerald-100/60 mt-1 flex items-center justify-between">
+                          <span className="truncate">{sess.customerEmail || sess.guestEmail || 'Anonymous'}</span>
+                          {sess.csatRating && (
+                            <span className="text-[#D4AF37] font-bold">★ {sess.csatRating}/5</span>
+                          )}
+                        </div>
+                        {sess.lastMessagePreview && (
+                          <p className="text-xs text-emerald-100/80 mt-2 line-clamp-1 bg-black/25 px-2 py-1 rounded">
+                            {sess.lastMessagePreview}
+                          </p>
+                        )}
+                      </button>
+                      {canDelete && (
                         <button
                           type="button"
-                          onClick={() => setSelectedSessionToken(sess.sessionToken)}
-                          className="flex-1 text-left min-w-0"
+                          onClick={() => handleDeleteResolvedSession(sess.sessionToken)}
+                          title="SuperAdmin Only: Permanently delete this resolved/closed chat"
+                          className="p-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 text-rose-300 shrink-0"
                         >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-bold text-white truncate">
-                              {sess.customerName || sess.guestName || 'Guest Shopper'}
-                            </span>
-                            <span
-                              className={`text-[10px] px-2 py-0.5 rounded border shrink-0 ${
-                                STATUS_BADGES[sess.status]?.bg || STATUS_BADGES.active.bg
-                              }`}
-                            >
-                              {STATUS_BADGES[sess.status]?.label || sess.status}
-                            </span>
-                          </div>
-                          <div className="text-[11px] text-emerald-100/60 mt-1 flex items-center justify-between">
-                            <span className="truncate">{sess.customerEmail || sess.guestEmail || 'Anonymous session'}</span>
-                            <span className="font-mono text-[10px] text-[#D4AF37] shrink-0">
-                              Priority: {sess.priority}
-                            </span>
-                          </div>
-                          {sess.lastMessagePreview && (
-                            <p className="text-xs text-emerald-100/80 mt-2 line-clamp-1 bg-black/25 px-2 py-1 rounded">
-                              {sess.lastMessagePreview}
-                            </p>
-                          )}
-                          <div className="mt-2 flex items-center justify-between text-[10px] text-emerald-100/50">
-                            <span>
-                              Assigned:{' '}
-                              {sess.assignedAgentName
-                                ? `${sess.assignedAgentName} (${sess.assignedRole})`
-                                : 'AI Autonomous'}
-                            </span>
-                            <span>Msgs: {sess.messageCount || 1}</span>
-                          </div>
+                          <Trash2 className="w-3.5 h-3.5" />
                         </button>
-                      </div>
-                    );
-                  })
-                )}
+                      )}
+                    </div>
+                  );
+                })}
               </div>
             </div>
 
-            {/* Right Column: Live Chat Inspector, Support-Exclusive Status Bar, Barge-In & 5 Instant Executive Actions */}
-            <div className="lg:col-span-7 bg-[#0B2419] border border-white/10 rounded-xl p-5 flex flex-col h-[780px]">
+            <div className="lg:col-span-7 bg-[#0B2419] border border-white/10 rounded-2xl p-5 flex flex-col h-[780px]">
               {!selectedSessionDetail?.session ? (
                 <div className="flex-1 flex flex-col items-center justify-center text-center p-8 text-emerald-100/60">
                   <Eye className="w-10 h-10 text-[#D4AF37] mb-3 opacity-80" />
-                  <h4 className="text-sm font-bold text-white">Select a Chat Session to Monitor or Barge In</h4>
+                  <h4 className="text-sm font-bold text-white">Select a Chat Session to View or Reply</h4>
                   <p className="text-xs max-w-md mt-1">
-                    All chat statuses (Active, Pending, Waiting for Review, Escalated, Resolved, Closed) are controlled
-                    exclusively here and in <code>/support</code>.
+                    Reply to Web, Mobile App, and Telegram (@BhumiveraBot) conversations, transition chat statuses, or
+                    delete resolved chats (SuperAdmin only).
                   </p>
                 </div>
               ) : (
@@ -1361,32 +1258,26 @@ export default function SuperAdminSupport() {
                     <div className="flex flex-wrap items-center justify-between gap-2">
                       <div>
                         <h3 className="text-sm font-bold text-white">
-                          {selectedSessionDetail.customerSummary?.customer?.name ||
+                          {selectedSessionDetail.customerSummary?.account?.name ||
                             selectedSessionDetail.session.guestName ||
                             'Guest Customer'}{' '}
                           <span className="text-xs font-normal text-emerald-100/60">
                             (
-                            {selectedSessionDetail.customerSummary?.customer?.email ||
+                            {selectedSessionDetail.customerSummary?.account?.email ||
                               selectedSessionDetail.session.guestEmail ||
                               'No email'}
                             )
                           </span>
                         </h3>
-                        <p className="text-[11px] text-emerald-100/60">
-                          Token: <code className="text-[#D4AF37]">{selectedSessionDetail.session.sessionToken}</code>
-                          {selectedSessionDetail.customerSummary?.customer && (
-                            <>
-                              {' · '}Wallet:{' '}
-                              <strong>₹{selectedSessionDetail.customerSummary.customer.wallet_balance || 0}</strong>
-                              {' · '}Loyalty:{' '}
-                              <strong>{selectedSessionDetail.customerSummary.customer.loyalty_points || 0} pts</strong>
-                            </>
-                          )}
-                        </p>
+                        {selectedSessionDetail.session.csatRating && (
+                          <p className="text-xs text-[#D4AF37] font-bold mt-0.5">
+                            ★ Customer Review: {selectedSessionDetail.session.csatRating}/5 — "
+                            {selectedSessionDetail.session.csatFeedback || 'Satisfied'}"
+                          </p>
+                        )}
                       </div>
 
                       <div className="flex items-center gap-2">
-                        <label className="text-[11px] text-emerald-100/70">Assign Staff:</label>
                         <select
                           value={selectedSessionDetail.session.assignedAgentId || ''}
                           onChange={e =>
@@ -1396,28 +1287,41 @@ export default function SuperAdminSupport() {
                               e.target.value ? Number(e.target.value) : null
                             )
                           }
-                          className="px-2.5 py-1 rounded bg-black/50 border border-white/15 text-xs text-white"
+                          className="px-2.5 py-1 rounded-lg bg-black/50 border border-white/15 text-xs text-white"
                         >
-                          <option value="">AI Concierge (Unassigned)</option>
+                          <option value="">AI Assistant (Unassigned)</option>
                           {agents.map(ag => (
                             <option key={ag.id} value={ag.id}>
                               {ag.name} ({ag.role.toUpperCase()})
                             </option>
                           ))}
                         </select>
+
+                        {isSuperAdminViewer &&
+                          ['resolved', 'closed'].includes(selectedSessionDetail.session.status) && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                handleDeleteResolvedSession(selectedSessionDetail.session.sessionToken)
+                              }
+                              className="px-3 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-xs text-rose-200 flex items-center gap-1"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" /> Delete Chat
+                            </button>
+                          )}
                       </div>
                     </div>
 
-                    {/* Feature 2: Support-Exclusive Status Lifecycle Controller */}
+                    {/* Support-Exclusive Status Bar */}
                     <div className="flex flex-wrap items-center gap-1.5">
-                      <span className="text-[11px] text-[#D4AF37] font-semibold mr-1">Support Status Control:</span>
+                      <span className="text-[11px] text-[#D4AF37] font-bold mr-1">Chat Status:</span>
                       {[
-                        { id: 'active', label: 'Start / Active' },
-                        { id: 'pending', label: 'Mark Pending' },
+                        { id: 'active', label: 'Active' },
+                        { id: 'pending', label: 'Pending' },
                         { id: 'waiting_for_review', label: 'Waiting for Review' },
-                        { id: 'escalated', label: 'Escalate' },
-                        { id: 'resolved', label: 'Mark Resolved' },
-                        { id: 'closed', label: 'Close Chat' },
+                        { id: 'escalated', label: 'Escalated' },
+                        { id: 'resolved', label: 'Resolved' },
+                        { id: 'closed', label: 'Closed' },
                       ].map(st => (
                         <button
                           key={st.id}
@@ -1425,10 +1329,10 @@ export default function SuperAdminSupport() {
                           onClick={() =>
                             handleSessionStatusChange(selectedSessionDetail.session.sessionToken, st.id)
                           }
-                          className={`px-2.5 py-1 rounded text-[11px] font-medium border transition ${
+                          className={`px-2.5 py-1 rounded-lg text-[11px] font-medium border transition ${
                             selectedSessionDetail.session.status === st.id
                               ? 'bg-[#D4AF37] text-[#071510] border-[#D4AF37] font-bold'
-                              : 'bg-black/30 text-emerald-100/80 border-white/15 hover:border-[#D4AF37]/50'
+                              : 'bg-black/30 text-emerald-100/80 border-white/15'
                           }`}
                         >
                           {st.label}
@@ -1436,31 +1340,30 @@ export default function SuperAdminSupport() {
                       ))}
                     </div>
 
-                    {/* Features 7, 8, 9, 10, 11: 1-Click Executive Resolution Bar */}
+                    {/* SuperAdmin Unlimited Coupon & Order Actions Bar */}
                     <div className="flex flex-wrap items-center gap-1.5 pt-1">
                       <input
                         type="text"
                         value={actionOrderId}
                         onChange={e => setActionOrderId(e.target.value)}
                         placeholder="Order # or ID"
-                        className="px-2 py-1 rounded bg-black/40 border border-white/15 text-xs text-white w-28"
+                        className="px-2 py-1 rounded-lg bg-black/40 border border-white/15 text-xs text-white w-28"
                       />
                       <button
                         type="button"
                         onClick={() => handleExecuteQuickAction('cancel_order')}
-                        className="px-2 py-1 rounded bg-rose-500/15 hover:bg-rose-500/25 border border-rose-500/30 text-[11px] text-rose-200"
+                        className="px-2.5 py-1 rounded-lg bg-rose-500/15 border border-rose-500/30 text-[11px] text-rose-200"
                       >
                         Cancel Order
                       </button>
                       <button
                         type="button"
                         onClick={() => handleExecuteQuickAction('initiate_return')}
-                        className="px-2 py-1 rounded bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-[11px] text-sky-200"
+                        className="px-2.5 py-1 rounded-lg bg-sky-500/15 border border-sky-500/30 text-[11px] text-sky-200"
                       >
-                        Generate RMA
+                        Create RMA
                       </button>
 
-                      {/* Goodwill Wallet Credit */}
                       <div className="flex items-center gap-1">
                         <input
                           type="number"
@@ -1468,48 +1371,38 @@ export default function SuperAdminSupport() {
                           max="2000"
                           value={goodwillAmount}
                           onChange={e => setGoodwillAmount(e.target.value)}
-                          className="px-1.5 py-1 rounded bg-black/40 border border-white/15 text-xs text-white w-14"
+                          className="px-1.5 py-1 rounded-lg bg-black/40 border border-white/15 text-xs text-white w-16"
                         />
                         <button
                           type="button"
                           onClick={() => handleExecuteQuickAction('goodwill_wallet_credit')}
-                          className="px-2 py-1 rounded bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-[11px] text-emerald-200"
+                          className="px-2.5 py-1 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-[11px] text-emerald-200"
                         >
                           + Wallet ₹
                         </button>
                       </div>
 
-                      {/* Bonus Loyalty Points */}
                       <div className="flex items-center gap-1">
                         <input
                           type="number"
-                          min="10"
-                          max="5000"
-                          value={loyaltyPointsBonus}
-                          onChange={e => setLoyaltyPointsBonus(e.target.value)}
-                          className="px-1.5 py-1 rounded bg-black/40 border border-white/15 text-xs text-white w-14"
+                          min="5"
+                          max="50"
+                          value={couponDiscountPercent}
+                          onChange={e => setCouponDiscountPercent(e.target.value)}
+                          className="px-1.5 py-1 rounded-lg bg-black/40 border border-white/15 text-xs text-white w-14"
                         />
                         <button
                           type="button"
-                          onClick={() => handleExecuteQuickAction('award_loyalty_points')}
-                          className="px-2 py-1 rounded bg-purple-500/15 hover:bg-purple-500/25 border border-purple-500/30 text-[11px] text-purple-200"
+                          onClick={() => handleExecuteQuickAction('issue_apology_coupon')}
+                          className="px-2.5 py-1 rounded-lg bg-amber-500/15 border border-amber-500/30 text-[11px] text-amber-200 flex items-center gap-1"
+                          title="SuperAdmin can issue coupons multiple times; Support Staff are restricted to once per customer"
                         >
-                          + Loyalty Pts
+                          <Gift className="w-3 h-3" /> + {couponDiscountPercent}% Coupon (SuperAdmin Unlimited)
                         </button>
                       </div>
-
-                      {/* Personal Apology Coupon */}
-                      <button
-                        type="button"
-                        onClick={() => handleExecuteQuickAction('issue_apology_coupon')}
-                        className="px-2 py-1 rounded bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-[11px] text-amber-200 flex items-center gap-1"
-                      >
-                        <Gift className="w-3 h-3" /> + {couponDiscountPercent}% Coupon
-                      </button>
                     </div>
                   </div>
 
-                  {/* Transcript Stream */}
                   <div className="flex-1 overflow-y-auto space-y-3 py-3 pr-1">
                     {(selectedSessionDetail.messages || []).map(msg => {
                       const isWhisperMsg = msg.isInternalNote || msg.sender === 'whisper';
@@ -1528,10 +1421,10 @@ export default function SuperAdminSupport() {
                           <div className="flex items-center justify-between gap-2 text-[10px] opacity-70 mb-1">
                             <span className="font-semibold uppercase">
                               {isWhisperMsg
-                                ? `🔒 WHISPER NOTE (${msg.senderName || 'Supervisor'})`
+                                ? `🔒 PRIVATE STAFF NOTE (${msg.senderName || 'Supervisor'})`
                                 : isUser
                                 ? 'CUSTOMER'
-                                : msg.senderName || 'AI CONCIERGE'}
+                                : msg.senderName || 'SUPPORT'}
                             </span>
                             <span>{new Date(msg.createdAt).toLocaleTimeString()}</span>
                           </div>
@@ -1541,16 +1434,15 @@ export default function SuperAdminSupport() {
                     })}
                   </div>
 
-                  {/* Canned Macros Quick-Insert Strip */}
                   {availableMacros.length > 0 && (
-                    <div className="flex items-center gap-1.5 overflow-x-auto py-1.5 border-t border-white/10 text-[11px]">
-                      <span className="text-emerald-100/60 shrink-0">Macros:</span>
+                    <div className="flex flex-wrap items-center gap-1.5 py-1.5 border-t border-white/10 text-[11px]">
+                      <span className="text-emerald-100/60">Quick Replies:</span>
                       {availableMacros.map(m => (
                         <button
                           key={m.id}
                           type="button"
                           onClick={() => setReplyText(m.content || m.text || '')}
-                          className="px-2 py-0.5 rounded bg-white/5 hover:bg-white/15 border border-white/10 text-emerald-100 shrink-0"
+                          className="px-2 py-0.5 rounded bg-white/5 hover:bg-white/15 border border-white/10 text-emerald-100"
                         >
                           {m.title || m.label}
                         </button>
@@ -1558,7 +1450,6 @@ export default function SuperAdminSupport() {
                     </div>
                   )}
 
-                  {/* Barge-In / Whisper Composer */}
                   <form onSubmit={handleSendSessionReply} className="pt-2 border-t border-white/10 space-y-2">
                     <div className="flex items-center justify-between gap-2 text-xs">
                       <label className="flex items-center gap-1.5 cursor-pointer">
@@ -1569,7 +1460,7 @@ export default function SuperAdminSupport() {
                           className="rounded border-white/20"
                         />
                         <span className={isWhisper ? 'text-amber-300 font-semibold' : 'text-emerald-100/70'}>
-                          🔒 Internal Whisper Note (Hidden from Customer)
+                          🔒 Private Internal Note (Hidden from Customer)
                         </span>
                       </label>
 
@@ -1594,17 +1485,17 @@ export default function SuperAdminSupport() {
                         onChange={e => setReplyText(e.target.value)}
                         placeholder={
                           isWhisper
-                            ? 'Write an internal coaching note visible only to support agents…'
-                            : 'Type a live reply to the customer…'
+                            ? 'Write a private note visible only to support staff…'
+                            : 'Type reply to customer (delivers to Web, Mobile App & Telegram)…'
                         }
-                        className="flex-1 px-3.5 py-2 rounded-lg bg-black/40 border border-white/15 text-xs text-white focus:border-[#D4AF37] focus:outline-none"
+                        className="flex-1 px-3.5 py-2 rounded-xl bg-black/40 border border-white/15 text-xs text-white focus:border-[#D4AF37] focus:outline-none"
                       />
                       <button
                         type="submit"
-                        className="px-4 py-2 rounded-lg bg-[#D4AF37] hover:bg-[#c49f2f] text-[#071510] font-semibold text-xs flex items-center gap-1.5"
+                        className="px-4 py-2 rounded-xl bg-[#D4AF37] hover:bg-[#c49f2f] text-[#071510] font-bold text-xs flex items-center gap-1.5"
                       >
                         <Send className="w-3.5 h-3.5" />
-                        {isWhisper ? 'Post Whisper' : 'Send Reply'}
+                        {isWhisper ? 'Save Note' : 'Send Reply'}
                       </button>
                     </div>
                   </form>
@@ -1615,208 +1506,197 @@ export default function SuperAdminSupport() {
         )}
 
         {/* ===================================================================
-            TAB 3: CUSTOMER 360° DEEP CRM & ACCOUNT CONTROLS (FEATURE 12)
+            TAB 3: ORDER, TRACKING, EMAIL & PHONE LOOKUP + CUSTOMER AUTHENTICATOR
            =================================================================== */}
         {activeTab === 'crm360' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-4 bg-[#0B2419] border border-white/10 rounded-xl p-5 space-y-4">
-              <h3 className="text-sm font-bold text-white">Customer 360° Directory Search</h3>
-              <form onSubmit={handleSearchCustomers} className="flex gap-2">
-                <input
-                  type="text"
-                  value={customerSearch}
-                  onChange={e => setCustomerSearch(e.target.value)}
-                  placeholder="Name, email, or 10-digit phone…"
-                  className="flex-1 px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-xs text-white"
-                />
-                <button
-                  type="submit"
-                  className="px-3.5 py-2 rounded-lg bg-[#D4AF37] text-[#071510] font-semibold text-xs"
-                >
-                  Search
-                </button>
-              </form>
+          <div className="space-y-6">
+            <form
+              onSubmit={handleUniversalSearch}
+              className="p-5 rounded-2xl bg-[#0B2419] border border-[#D4AF37]/30 flex flex-col sm:flex-row gap-3"
+            >
+              <input
+                type="text"
+                value={universalQuery}
+                onChange={e => setUniversalQuery(e.target.value)}
+                placeholder="Search by Order ID (#20 / 815899599), Tracking ID (BHVM...), Customer Email, or Phone Number…"
+                className="flex-1 px-4 py-2.5 rounded-xl bg-black/40 border border-white/15 text-sm text-white focus:border-[#D4AF37] focus:outline-none"
+              />
+              <button
+                type="submit"
+                className="px-6 py-2.5 rounded-xl bg-[#D4AF37] text-[#071510] font-bold text-xs"
+              >
+                Search Orders & Customers
+              </button>
+            </form>
 
-              <div className="space-y-2 max-h-[540px] overflow-y-auto pr-1">
-                {customers.map(c => (
-                  <button
-                    key={c.id}
-                    type="button"
-                    onClick={() => handleSelectCustomer(c.id)}
-                    className={`w-full text-left p-3 rounded-xl border text-xs transition ${
-                      selectedCustomerDetail?.customer?.id === c.id
-                        ? 'bg-[#D4AF37]/15 border-[#D4AF37]'
-                        : 'bg-black/30 border-white/10 hover:border-white/25'
-                    }`}
-                  >
-                    <div className="font-bold text-white">{c.name}</div>
-                    <div className="text-[11px] text-emerald-100/70">{c.email}</div>
-                    <div className="text-[10px] text-[#D4AF37] mt-1">
-                      Wallet: ₹{c.wallet_balance || 0} · Loyalty: {c.loyalty_points || 0} pts
-                    </div>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="lg:col-span-8 bg-[#0B2419] border border-white/10 rounded-xl p-5 space-y-5">
-              {!selectedCustomerDetail?.customer ? (
-                <div className="py-20 text-center text-xs text-emerald-100/60">
-                  Search and select a customer to inspect their 360° profile, orders, wallet, and account security
-                  controls.
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-4 bg-[#0B2419] border border-white/10 rounded-2xl p-4 space-y-3">
+                <h3 className="text-sm font-bold text-white">
+                  Matching Orders ({searchResults.orders.length})
+                </h3>
+                <div className="space-y-2 max-h-[540px] overflow-y-auto pr-1">
+                  {searchResults.orders.map(ord => (
+                    <button
+                      key={ord.id}
+                      type="button"
+                      onClick={() => setSelectedOrderDetail(ord)}
+                      className={`w-full text-left p-3.5 rounded-xl border text-xs ${
+                        selectedOrderDetail?.id === ord.id
+                          ? 'bg-[#D4AF37]/15 border-[#D4AF37]'
+                          : 'bg-black/30 border-white/10'
+                      }`}
+                    >
+                      <div className="flex justify-between font-bold text-white">
+                        <span>Order #{ord.orderNumber} (#{ord.id})</span>
+                        <span className="text-[#D4AF37]">₹{ord.total}</span>
+                      </div>
+                      <div className="text-[11px] text-emerald-100/75 mt-1">
+                        {ord.customerName} · {ord.customerEmail || ord.customerPhone}
+                      </div>
+                      <div className="text-[10px] text-emerald-300 mt-1">
+                        Status: {ord.status.toUpperCase()} · Tracking: {ord.trackingNumber || 'Pending'}
+                      </div>
+                    </button>
+                  ))}
                 </div>
-              ) : (
-                <>
-                  <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-white/10">
-                    <div>
-                      <h3 className="text-base font-bold text-white">
-                        {selectedCustomerDetail.customer.name}{' '}
-                        <span className="text-xs text-emerald-100/60">
-                          ({selectedCustomerDetail.customer.email} · {selectedCustomerDetail.customer.phone || 'No phone'})
-                        </span>
-                      </h3>
-                      <p className="text-xs text-[#D4AF37] mt-1">
-                        Spendable Wallet: ₹{selectedCustomerDetail.customer.wallet_balance || 0} · Loyalty Points:{' '}
-                        {selectedCustomerDetail.customer.loyalty_points || 0} pts
-                      </p>
+              </div>
+
+              <div className="lg:col-span-8 bg-[#0B2419] border border-white/10 rounded-2xl p-6 space-y-5">
+                {selectedOrderDetail ? (
+                  <>
+                    <div className="p-4 rounded-2xl bg-black/40 border border-[#D4AF37]/40 space-y-3">
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <div>
+                          <span className="text-[10px] uppercase tracking-wider text-[#D4AF37] font-bold">
+                            Real Customer Authentication Checklist
+                          </span>
+                          <h4 className="text-sm font-bold text-white">
+                            Verify Customer Identity for Order #{selectedOrderDetail.orderNumber}
+                          </h4>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setVerifiedOrderIds(prev => ({
+                              ...prev,
+                              [selectedOrderDetail.id]: !prev[selectedOrderDetail.id],
+                            }))
+                          }
+                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold ${
+                            verifiedOrderIds[selectedOrderDetail.id]
+                              ? 'bg-emerald-500 text-[#071510]'
+                              : 'bg-[#D4AF37] text-[#071510]'
+                          }`}
+                        >
+                          {verifiedOrderIds[selectedOrderDetail.id]
+                            ? '✓ Customer Verified'
+                            : 'Verify Customer Identity'}
+                        </button>
+                      </div>
+
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
+                        <div className="p-2.5 rounded-lg bg-white/5 border border-white/10">
+                          <span className="text-[10px] text-emerald-100/60 block">Customer Name</span>
+                          <strong className="text-white">
+                            {selectedOrderDetail.verificationChecklist?.registeredName}
+                          </strong>
+                        </div>
+                        <div className="p-2.5 rounded-lg bg-white/5 border border-white/10">
+                          <span className="text-[10px] text-emerald-100/60 block">Customer Email</span>
+                          <strong className="text-white">
+                            {selectedOrderDetail.verificationChecklist?.registeredEmail}
+                          </strong>
+                        </div>
+                        <div className="p-2.5 rounded-lg bg-white/5 border border-white/10">
+                          <span className="text-[10px] text-emerald-100/60 block">Customer Phone</span>
+                          <strong className="text-white">
+                            {selectedOrderDetail.verificationChecklist?.registeredPhone}
+                          </strong>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleSendPasswordResetLink(selectedCustomerDetail.customer.id)}
-                        className="px-3 py-1.5 rounded-lg bg-sky-500/15 border border-sky-500/30 text-xs text-sky-200 flex items-center gap-1.5"
-                      >
-                        <KeyRound className="w-3.5 h-3.5" /> Send 30m Password Reset Link
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleToggleCustomerActive(selectedCustomerDetail.customer)}
-                        className={`px-3 py-1.5 rounded-lg border text-xs ${
-                          selectedCustomerDetail.customer.is_active
-                            ? 'bg-rose-500/15 border-rose-500/30 text-rose-200'
-                            : 'bg-emerald-500/15 border-emerald-500/30 text-emerald-200'
-                        }`}
-                      >
-                        {selectedCustomerDetail.customer.is_active ? 'Disable Account' : 'Enable Account'}
-                      </button>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+                      <div className="p-4 rounded-xl bg-black/30 border border-white/10 space-y-1.5">
+                        <div className="font-bold text-[#D4AF37] uppercase text-[10px]">
+                          Order & Tracking Summary
+                        </div>
+                        <div>Order Number: <strong>#{selectedOrderDetail.orderNumber}</strong> (#{selectedOrderDetail.id})</div>
+                        <div>Status: <strong className="uppercase text-emerald-300">{selectedOrderDetail.status}</strong></div>
+                        <div>Tracking ID: <strong>{selectedOrderDetail.trackingNumber || 'Pending'}</strong></div>
+                        <div>Courier: <strong>{selectedOrderDetail.courier || 'Standard'}</strong></div>
+                      </div>
+                      <div className="p-4 rounded-xl bg-black/30 border border-white/10 space-y-1.5">
+                        <div className="font-bold text-[#D4AF37] uppercase text-[10px]">
+                          Payment & Financials
+                        </div>
+                        <div>Payment Mode: <strong>{selectedOrderDetail.paymentMode}</strong> ({selectedOrderDetail.paymentStatus})</div>
+                        <div>Subtotal: ₹{selectedOrderDetail.subtotal} · Discount: -₹{selectedOrderDetail.discount}</div>
+                        <div className="text-sm font-bold text-[#D4AF37]">Total Paid: ₹{selectedOrderDetail.total}</div>
+                      </div>
                     </div>
-                  </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <h4 className="text-xs font-bold text-[#D4AF37] uppercase">
-                        Order History ({selectedCustomerDetail.orders?.length || 0})
+                        Full Order Items ({selectedOrderDetail.items?.length || 0})
                       </h4>
-                      <div className="space-y-2 max-h-64 overflow-y-auto pr-1">
-                        {(selectedCustomerDetail.orders || []).map(ord => (
-                          <div key={ord.id} className="p-3 rounded-lg bg-black/30 border border-white/10 text-xs">
-                            <div className="flex justify-between font-bold text-white">
-                              <span>Order #{ord.order_number || ord.id}</span>
-                              <span>₹{ord.total}</span>
+                      <div className="divide-y divide-white/10 rounded-xl border border-white/10 bg-black/30">
+                        {(selectedOrderDetail.items || []).map(it => (
+                          <div key={it.id} className="p-3 flex justify-between text-xs">
+                            <div>
+                              <div className="font-bold text-white">{it.name}</div>
+                              <div className="text-[11px] text-emerald-100/60">
+                                SKU: {it.sku || 'N/A'} · Qty: {it.quantity} × ₹{it.price}
+                              </div>
                             </div>
-                            <div className="text-[11px] text-emerald-100/70 mt-0.5">
-                              Status: {ord.status.toUpperCase()} · {ord.payment_mode} ({ord.payment_status})
+                            <div className="font-bold text-[#D4AF37]">
+                              ₹{(Number(it.price || 0) * Number(it.quantity || 1)).toFixed(2)}
                             </div>
                           </div>
                         ))}
                       </div>
                     </div>
-
-                    <form onSubmit={handleSendCustomerDirectEmail} className="space-y-2.5 text-xs">
-                      <h4 className="text-xs font-bold text-[#D4AF37] uppercase flex items-center gap-1.5">
-                        <Mail className="w-3.5 h-3.5" /> Send Direct Concierge Email
-                      </h4>
-                      <input
-                        type="text"
-                        required
-                        value={customerEmailForm.subject}
-                        onChange={e => setCustomerEmailForm(prev => ({ ...prev, subject: e.target.value }))}
-                        placeholder="Email subject…"
-                        className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-white"
-                      />
-                      <textarea
-                        rows={4}
-                        required
-                        value={customerEmailForm.message}
-                        onChange={e => setCustomerEmailForm(prev => ({ ...prev, message: e.target.value }))}
-                        placeholder="Write personalized message to customer…"
-                        className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-white"
-                      />
-                      <button
-                        type="submit"
-                        className="px-4 py-2 rounded-lg bg-[#D4AF37] text-[#071510] font-semibold text-xs"
-                      >
-                        Dispatch Email
-                      </button>
-                    </form>
-                  </div>
-                </>
-              )}
+                  </>
+                ) : (
+                  <p className="text-xs text-emerald-100/60 py-16 text-center">
+                    Search by Order ID, Tracking Number, Email, or Phone above to inspect full order details.
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         )}
 
         {/* ===================================================================
-            TAB 4: UNIFIED SUPPORT TICKETS & ESCALATIONS TRIAGE (FEATURES 13 & 14)
+            TAB 4: MESSAGES, TICKETS & CUSTOMER REVIEWS
            =================================================================== */}
         {activeTab === 'tickets' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            {/* Priority AI Escalations Triage */}
-            <div className="lg:col-span-5 bg-[#0B2419] border border-white/10 rounded-xl p-5 space-y-3">
+            <div className="lg:col-span-5 bg-[#0B2419] border border-white/10 rounded-2xl p-5 space-y-4">
               <h3 className="text-sm font-bold text-white flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4 text-rose-400" />
-                AI Priority Escalations Queue ({(overview?.escalations || []).length})
+                <Star className="w-4 h-4 text-[#D4AF37]" />
+                Saved Customer Satisfaction Reviews ({customerReviews.length})
               </h3>
-              <div className="space-y-2.5 max-h-[600px] overflow-y-auto pr-1">
-                {(overview?.escalations || []).map(esc => (
-                  <div key={esc.id} className="p-3.5 rounded-xl bg-black/30 border border-rose-500/25 space-y-2 text-xs">
-                    <div className="flex items-center justify-between">
-                      <span className="font-bold text-rose-300">
-                        #{esc.id} · {esc.priority} Priority
-                      </span>
-                      <span className="text-[10px] uppercase px-2 py-0.5 rounded bg-white/10">{esc.status}</span>
+              <div className="space-y-2.5 max-h-[560px] overflow-y-auto pr-1 text-xs">
+                {customerReviews.map(rev => (
+                  <div key={rev.sessionToken} className="p-3.5 rounded-xl bg-black/30 border border-[#D4AF37]/30 space-y-1">
+                    <div className="flex justify-between font-bold text-[#D4AF37]">
+                      <span>{rev.customerName}</span>
+                      <span>{'★'.repeat(rev.rating)} ({rev.rating}/5)</span>
                     </div>
-                    <div className="text-white font-semibold">
-                      {esc.customer_name || 'Customer'} ({esc.customer_email || 'No email'})
-                    </div>
-                    <p className="text-[11px] text-emerald-100/75">{esc.reason}</p>
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateEscalationStatus(esc.id, 'acknowledged')}
-                        className="px-2.5 py-1 rounded bg-amber-500/20 text-amber-200 text-[11px]"
-                      >
-                        Acknowledge
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleUpdateEscalationStatus(esc.id, 'resolved')}
-                        className="px-2.5 py-1 rounded bg-emerald-500/20 text-emerald-200 text-[11px]"
-                      >
-                        Mark Resolved
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setSelectedSessionToken(esc.session_token);
-                          setActiveTab('monitor');
-                        }}
-                        className="px-2.5 py-1 rounded bg-[#D4AF37] text-[#071510] font-semibold text-[11px]"
-                      >
-                        Open Live Chat →
-                      </button>
+                    <p className="text-white">"{rev.feedback}"</p>
+                    <div className="text-[10px] text-emerald-100/60">
+                      Handled by: {rev.assignedAgentName} · {new Date(rev.updatedAt).toLocaleString()}
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Traditional Support Tickets Inbox */}
-            <div className="lg:col-span-7 bg-[#0B2419] border border-white/10 rounded-xl p-5 space-y-4">
-              <h3 className="text-sm font-bold text-white">Support Tickets Inbox ({tickets.length})</h3>
+            <div className="lg:col-span-7 bg-[#0B2419] border border-white/10 rounded-2xl p-5 space-y-4">
+              <h3 className="text-sm font-bold text-white">Support Tickets & Async Messages ({tickets.length})</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div className="space-y-2 max-h-[540px] overflow-y-auto pr-1">
+                <div className="space-y-2 max-h-[520px] overflow-y-auto pr-1">
                   {tickets.map(t => (
                     <button
                       key={t.id}
@@ -1872,34 +1752,16 @@ export default function SuperAdminSupport() {
         )}
 
         {/* ===================================================================
-            TAB 5: STAFF LOGIN IDs & ROLE ACCESS MATRIX (FEATURES 15 & 16)
+            TAB 5: STAFF LOGINS & ROLE PERMISSIONS MATRIX
            =================================================================== */}
         {activeTab === 'rbac' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-5 bg-[#0B2419] border border-white/10 rounded-xl p-5 space-y-4">
-              <div>
-                <span className="text-[10px] uppercase tracking-wider text-[#D4AF37] font-semibold">
-                  Multi-Role Provisioning
-                </span>
-                <h3 className="text-base font-bold text-white mt-0.5">
-                  Create Support Login ID (bhumivera.com/support)
-                </h3>
-                <p className="text-xs text-emerald-100/70 mt-1">
-                  Create dedicated login credentials and assign the role of <strong>Agent</strong>,{' '}
-                  <strong>Supervisor</strong>, or <strong>Manager</strong>.
-                </p>
-                  {!canManageAgents && (
-                    <p className="mt-3 rounded-lg border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-100">
-                      Signed in as <strong>{overview?.viewer?.role || 'support staff'}</strong>. This account can view
-                      support data but cannot manage staff. Sign in with a Website
-                      Admin/SuperAdmin account or a Support Manager account to create staff, assign roles, or configure access.
-                    </p>
-                  )}
-                </div>
-
-                <form onSubmit={handleCreateAgent} className="space-y-3.5 text-xs">
-                  <fieldset disabled={!canManageAgents} className="contents">
-                  <div>
+            <div className="lg:col-span-5 bg-[#0B2419] border border-white/10 rounded-2xl p-5 space-y-4">
+              <h3 className="text-base font-bold text-white">
+                Create Support Staff Login ID (bhumivera.com/support)
+              </h3>
+              <form onSubmit={handleCreateAgent} className="space-y-3.5 text-xs">
+                <div>
                   <label className="block text-emerald-100/80 mb-1">Login User ID (username)</label>
                   <input
                     type="text"
@@ -1907,10 +1769,9 @@ export default function SuperAdminSupport() {
                     value={newAgent.username}
                     onChange={e => setNewAgent(prev => ({ ...prev, username: e.target.value }))}
                     placeholder="e.g., agent.rahul or sup.ananya"
-                    className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-white"
+                    className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white"
                   />
                 </div>
-
                 <div className="grid grid-cols-2 gap-3">
                   <div>
                     <label className="block text-emerald-100/80 mb-1">Full Name</label>
@@ -1920,53 +1781,27 @@ export default function SuperAdminSupport() {
                       value={newAgent.name}
                       onChange={e => setNewAgent(prev => ({ ...prev, name: e.target.value }))}
                       placeholder="Rahul Sharma"
-                      className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-white"
+                      className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white"
                     />
                   </div>
                   <div>
-                    <label className="block text-emerald-100/80 mb-1">Email (optional)</label>
-                    <input
-                      type="email"
-                      value={newAgent.email}
-                      onChange={e => setNewAgent(prev => ({ ...prev, email: e.target.value }))}
-                      placeholder="rahul@bhumivera.com"
-                      className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-white"
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-emerald-100/80 mb-1">Assign Role Tier</label>
+                    <label className="block text-emerald-100/80 mb-1">Assign Role</label>
                     <select
                       value={newAgent.role}
                       onChange={e => setNewAgent(prev => ({ ...prev, role: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-lg bg-black/40 border border-[#D4AF37]/40 text-white font-semibold"
+                      className="w-full px-3 py-2 rounded-xl bg-black/40 border border-[#D4AF37]/40 text-white font-semibold"
                     >
-                      <option value="agent">Agent (L1 — Chat & Orders)</option>
-                      <option value="supervisor">Supervisor (L2 — Escalations & Credits)</option>
-                      <option value="manager">Manager (L3 — Full Support Admin)</option>
+                      <option value="agent">Executive (L1 — Max 10% Coupon Once)</option>
+                      <option value="supervisor">Supervisor (L2 — Max 12% Coupon / ₹150 Credit Once)</option>
+                      <option value="manager">Manager (L3 — Max 15% Coupon / ₹250 Credit Once)</option>
                     </select>
                   </div>
-                  <div>
-                    <label className="block text-emerald-100/80 mb-1">Max Concurrent Chats</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="100"
-                      value={newAgent.max_concurrent_chats}
-                      onChange={e => setNewAgent(prev => ({ ...prev, max_concurrent_chats: Number(e.target.value) }))}
-                      className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-white"
-                    />
-                  </div>
                 </div>
-
-                <div className="p-3 rounded-lg bg-black/30 border border-white/10 text-[11px] text-emerald-100/80">
+                <div className="p-3 rounded-xl bg-black/30 border border-white/10 text-[11px] text-emerald-100/80">
                   <strong>{ROLE_CONFIG[newAgent.role]?.label}:</strong> {ROLE_CONFIG[newAgent.role]?.description}
                 </div>
-
                 <div>
-                  <label className="block text-emerald-100/80 mb-1">Initial Password (min 8 chars)</label>
+                  <label className="block text-emerald-100/80 mb-1">Password (min 8 chars)</label>
                   <input
                     type="password"
                     required
@@ -1974,96 +1809,54 @@ export default function SuperAdminSupport() {
                     value={newAgent.password}
                     onChange={e => setNewAgent(prev => ({ ...prev, password: e.target.value }))}
                     placeholder="Minimum 8 characters"
-                    className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-white"
+                    className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white"
                   />
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-2.5 rounded-lg bg-[#D4AF37] hover:bg-[#c49f2f] text-[#071510] font-semibold flex items-center justify-center gap-2"
+                  className="w-full py-2.5 rounded-xl bg-[#D4AF37] text-[#071510] font-bold flex items-center justify-center gap-2"
                 >
-                  <Plus className="w-4 h-4" />
-                  Create {newAgent.role.toUpperCase()} Login ID
+                  <Plus className="w-4 h-4" /> Create {newAgent.role.toUpperCase()} Login ID
                 </button>
-                </fieldset>
               </form>
             </div>
 
-            <div className="lg:col-span-7 bg-[#0B2419] border border-white/10 rounded-xl p-5 space-y-4">
-              <h3 className="text-base font-bold text-white">Active Support Staff Directory & 16-Permission Matrix</h3>
-              <p className="text-xs text-emerald-100/70">
-                Click <strong>Configure Access</strong> on any login ID to promote/demote roles, reset passwords, or
-                customize individual permissions.
-              </p>
-              {!canManageAgents && (
-                <p className="rounded-lg border border-amber-400/30 bg-amber-500/10 p-3 text-xs text-amber-100">
-                  Staff role and permission changes require a Website Admin/SuperAdmin or Support Manager login.
-                </p>
-              )}
-
-              <div className="space-y-3 max-h-[620px] overflow-y-auto pr-1">
+            <div className="lg:col-span-7 bg-[#0B2419] border border-white/10 rounded-2xl p-5 space-y-4">
+              <h3 className="text-base font-bold text-white">Staff Directory & Permission Controls</h3>
+              <div className="space-y-3 max-h-[600px] overflow-y-auto pr-1">
                 {agents.map(agent => {
                   const isEditing = editingAgent?.id === agent.id;
                   return (
-                    <div
-                      key={agent.id}
-                      className="p-4 rounded-xl bg-black/30 border border-white/10 space-y-3"
-                    >
+                    <div key={agent.id} className="p-4 rounded-xl bg-black/30 border border-white/10 space-y-3">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div>
-                          <div className="flex items-center gap-2">
-                            <span className="text-sm font-bold text-white">{agent.name}</span>
-                            <code className="text-xs text-[#D4AF37] bg-[#D4AF37]/10 px-2 py-0.5 rounded">
-                              @{agent.username}
-                            </code>
-                            <span
-                              className={`text-[10px] px-2 py-0.5 rounded border font-semibold uppercase ${
-                                ROLE_CONFIG[agent.role]?.badge || ROLE_CONFIG.agent.badge
-                              }`}
-                            >
-                              {agent.role}
-                            </span>
-                            {!agent.is_active && (
-                              <span className="text-[10px] px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 border border-rose-500/40">
-                                Suspended
-                              </span>
-                            )}
-                          </div>
-                          <p className="text-[11px] text-emerald-100/60 mt-1">
-                            Department: {agent.department || 'Customer Concierge'} · Max Chats:{' '}
-                            {agent.max_concurrent_chats || 10}
-                          </p>
+                          <span className="text-sm font-bold text-white">{agent.name}</span>{' '}
+                          <code className="text-xs text-[#D4AF37]">@{agent.username}</code>{' '}
+                          <span className="text-[10px] uppercase px-2 py-0.5 rounded bg-white/10 text-emerald-300 font-bold">
+                            {agent.role}
+                          </span>
                         </div>
-
                         <div className="flex items-center gap-2">
                           <select
                             value={agent.role}
-                            disabled={!canManageAgents}
                             onChange={e => handleUpdateAgent(agent.id, { role: e.target.value })}
                             className="px-2.5 py-1 rounded bg-black/50 border border-white/15 text-xs text-white"
                           >
-                            <option value="agent">Role: Agent (L1)</option>
+                            <option value="agent">Role: Executive (L1)</option>
                             <option value="supervisor">Role: Supervisor (L2)</option>
                             <option value="manager">Role: Manager (L3)</option>
                           </select>
-
                           <button
                             type="button"
-                            disabled={!canManageAgents}
                             onClick={() => setEditingAgent(isEditing ? null : agent)}
-                            className="px-3 py-1 rounded bg-white/10 hover:bg-white/15 text-xs text-white"
+                            className="px-3 py-1 rounded bg-white/10 text-xs text-white"
                           >
-                            {isEditing ? 'Hide Matrix' : 'Configure Access'}
+                            {isEditing ? 'Hide Permissions' : 'Edit Permissions'}
                           </button>
-
                           <button
                             type="button"
-                            disabled={!canManageAgents}
                             onClick={() => handleUpdateAgent(agent.id, { is_active: !agent.is_active })}
-                            className={`px-2.5 py-1 rounded text-xs font-medium ${
-                              agent.is_active
-                                ? 'bg-rose-500/15 text-rose-200 hover:bg-rose-500/25'
-                                : 'bg-emerald-500/15 text-emerald-200 hover:bg-emerald-500/25'
-                            }`}
+                            className="px-2.5 py-1 rounded bg-rose-500/15 text-rose-200 text-xs"
                           >
                             {agent.is_active ? 'Suspend' : 'Activate'}
                           </button>
@@ -2071,73 +1864,32 @@ export default function SuperAdminSupport() {
                       </div>
 
                       {isEditing && (
-                        <div className="pt-3 border-t border-white/10 space-y-3">
-                          <div className="flex flex-wrap items-center justify-between gap-2">
-                            <h4 className="text-xs font-bold text-[#D4AF37]">
-                              16 Granular Permission Switches for @{agent.username}
-                            </h4>
-                            <div className="flex items-center gap-1.5">
-                              <input
-                                type="password"
-                                disabled={!canManageAgents}
-                                value={resetAgentPassword}
-                                onChange={e => setResetAgentPassword(e.target.value)}
-                                placeholder="New password (8+ chars)"
-                                className="px-2.5 py-1 rounded bg-black/50 border border-white/15 text-xs text-white"
-                              />
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-2 border-t border-white/10">
+                          {Object.entries(PERMISSION_LABELS).map(([permKey, meta]) => {
+                            const enabled = Boolean(agent.permissions?.[permKey]);
+                            return (
                               <button
+                                key={permKey}
                                 type="button"
-                                disabled={!canManageAgents}
-                                onClick={() => {
-                                  if (resetAgentPassword.trim().length >= 8) {
-                                    handleUpdateAgent(agent.id, { password: resetAgentPassword.trim() });
-                                    setResetAgentPassword('');
-                                  }
-                                }}
-                                className="px-2.5 py-1 rounded bg-[#D4AF37] text-[#071510] font-semibold text-xs"
+                                onClick={() =>
+                                  handleUpdateAgent(agent.id, {
+                                    permissions: { ...(agent.permissions || {}), [permKey]: !enabled },
+                                  })
+                                }
+                                className={`p-2.5 rounded-lg border text-left flex justify-between gap-2 ${
+                                  enabled
+                                    ? 'bg-emerald-500/10 border-emerald-500/30 text-white'
+                                    : 'bg-black/20 border-white/5 text-white/50'
+                                }`}
                               >
-                                Reset Password
+                                <div>
+                                  <div className="text-xs font-semibold">{meta.label}</div>
+                                  <div className="text-[10px] opacity-75">{meta.desc}</div>
+                                </div>
+                                <span className="text-[10px] font-bold">{enabled ? 'ON' : 'OFF'}</span>
                               </button>
-                            </div>
-                          </div>
-
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                            {Object.entries(PERMISSION_LABELS).map(([permKey, meta]) => {
-                              const enabled = Boolean(agent.permissions?.[permKey]);
-                              return (
-                                <button
-                                  key={permKey}
-                                  type="button"
-                                  disabled={!canManageAgents}
-                                  onClick={() =>
-                                    handleUpdateAgent(agent.id, {
-                                      permissions: {
-                                        ...(agent.permissions || {}),
-                                        [permKey]: !enabled,
-                                      },
-                                    })
-                                  }
-                                  className={`p-2.5 rounded-lg border text-left transition flex items-start justify-between gap-2 ${
-                                    enabled
-                                      ? 'bg-emerald-500/10 border-emerald-500/30 text-white'
-                                      : 'bg-black/20 border-white/5 text-white/50'
-                                  }`}
-                                >
-                                  <div>
-                                    <div className="text-xs font-semibold">{meta.label}</div>
-                                    <div className="text-[10px] opacity-75 mt-0.5">{meta.desc}</div>
-                                  </div>
-                                  <span
-                                    className={`text-[10px] px-1.5 py-0.5 rounded font-bold ${
-                                      enabled ? 'bg-emerald-500 text-black' : 'bg-white/10 text-white/60'
-                                    }`}
-                                  >
-                                    {enabled ? 'ON' : 'OFF'}
-                                  </span>
-                                </button>
-                              );
-                            })}
-                          </div>
+                            );
+                          })}
                         </div>
                       )}
                     </div>
@@ -2149,47 +1901,49 @@ export default function SuperAdminSupport() {
         )}
 
         {/* ===================================================================
-            TAB 6: AI FEATURE GOVERNANCE, SLA TIMERS, MACROS & WEBHOOK PING
+            TAB 6: SUPPORT RULES, MACROS & TELEGRAM BOT
            =================================================================== */}
         {activeTab === 'features' && features && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-7 bg-[#0B2419] border border-white/10 rounded-xl p-5 space-y-4">
-              <h3 className="text-base font-bold text-white flex items-center gap-2">
-                <Sliders className="w-4 h-4 text-[#D4AF37]" />
-                Autonomous AI Capabilities & Guardrail Switches
-              </h3>
+            <div className="lg:col-span-7 bg-[#0B2419] border border-white/10 rounded-2xl p-5 space-y-4">
+              <h3 className="text-base font-bold text-white">Support Automation Rules & Telegram Bot (@BhumiveraBot)</h3>
+              <div className="p-4 rounded-xl bg-sky-500/10 border border-sky-400/30 flex flex-wrap items-center justify-between gap-3 text-xs">
+                <div>
+                  <div className="font-bold text-sky-200">Live Telegram Bot Connected: t.me/BhumiveraBot</div>
+                  <p className="text-[11px] text-emerald-100/75 mt-0.5">
+                    Customers can message @BhumiveraBot and receive live replies directly from this panel.
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleSyncTelegram}
+                  className="px-3.5 py-2 rounded-xl bg-sky-400 text-[#071510] font-bold text-xs"
+                >
+                  Sync Telegram Messages Now
+                </button>
+              </div>
 
               <div className="space-y-2.5">
                 {[
                   {
                     key: 'ai_support_enabled',
-                    title: 'Master AI Support Concierge Engine',
-                    desc: 'Enables the floating AI chat assistant and multi-turn orchestration across all storefront pages.',
+                    title: 'Enable AI Support Assistant',
+                    desc: 'Answers product, order tracking, and shipping questions automatically.',
                   },
                   {
                     key: 'ai_auto_cancel_enabled',
-                    title: 'Autonomous Self-Service Order Cancellation',
-                    desc: 'Allows AI to automatically cancel pending/confirmed orders and restore product inventory in MySQL.',
+                    title: 'Allow Self-Service Order Cancellation (Pending/Confirmed Orders)',
+                    desc: 'Lets customers cancel eligible unshipped orders and restores product stock.',
                   },
                   {
                     key: 'ai_auto_return_rma_enabled',
-                    title: 'Autonomous RMA Return & Replacement Generation',
-                    desc: 'Allows AI to verify delivery windows and create RMA-XXXXXXXX return requests automatically.',
+                    title: 'Allow Self-Service Return RMA Creation (Delivered Orders)',
+                    desc: 'Lets customers submit return/replacement requests within the return window.',
                   },
                   {
-                    key: 'ai_auto_wallet_goodwill_enabled',
-                    title: 'Supervisor/Manager Instant Goodwill Wallet Credit',
-                    desc: 'Enables 1-click spendable wallet credits and bonus loyalty points for high-frustration orders.',
-                  },
-                  {
-                    key: 'ai_proactive_triggers_enabled',
-                    title: 'Proactive Checkout Linger (>45s) & Rage-Click Popups',
-                    desc: 'Automatically offers contextual assistance when a shopper stalls on checkout/tracking or rage-clicks.',
-                  },
-                  {
-                    key: 'allow_customer_csat_rating',
-                    title: 'Post-Resolution 1–5★ CSAT Rating Prompt',
-                    desc: 'Prompts the customer to rate their support experience after Support marks the chat Resolved.',
+                    key: 'telegram_alerts_enabled',
+                    title: 'Enable Two-Way Telegram Support & Alerts (@BhumiveraBot)',
+                    desc: 'Routes customer Telegram messages and priority alerts through @BhumiveraBot.',
                   },
                 ].map(item => {
                   const isOn = Boolean(features[item.key]);
@@ -2205,10 +1959,8 @@ export default function SuperAdminSupport() {
                       <button
                         type="button"
                         onClick={() => handleSaveFeatures({ ...features, [item.key]: !isOn })}
-                        className={`px-3 py-1.5 rounded-lg text-xs font-bold transition shrink-0 ${
-                          isOn
-                            ? 'bg-emerald-500 text-[#071510]'
-                            : 'bg-white/10 text-white/60 hover:bg-white/20'
+                        className={`px-3 py-1.5 rounded-lg text-xs font-bold ${
+                          isOn ? 'bg-emerald-500 text-[#071510]' : 'bg-white/10 text-white/60'
                         }`}
                       >
                         {isOn ? 'ENABLED' : 'DISABLED'}
@@ -2217,197 +1969,81 @@ export default function SuperAdminSupport() {
                   );
                 })}
               </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-3 border-t border-white/10 text-xs">
-                <div className="p-3 rounded-lg bg-black/30 border border-white/10">
-                  <label className="block text-emerald-100/70 mb-1">
-                    Auto-Escalation Frustration Threshold (20–100)
-                  </label>
-                  <input
-                    type="number"
-                    min="20"
-                    max="100"
-                    value={features.support_frustration_threshold || 70}
-                    onChange={e =>
-                      setFeatures(prev => ({
-                        ...prev,
-                        support_frustration_threshold: Number(e.target.value),
-                      }))
-                    }
-                    className="w-full px-2.5 py-1.5 rounded bg-black/50 border border-white/15 text-white"
-                  />
-                </div>
-                <div className="p-3 rounded-lg bg-black/30 border border-white/10">
-                  <label className="block text-emerald-100/70 mb-1">Proactive Linger Trigger (Seconds)</label>
-                  <input
-                    type="number"
-                    min="15"
-                    max="300"
-                    value={features.ai_proactive_linger_seconds || 45}
-                    onChange={e =>
-                      setFeatures(prev => ({
-                        ...prev,
-                        ai_proactive_linger_seconds: Number(e.target.value),
-                      }))
-                    }
-                    className="w-full px-2.5 py-1.5 rounded bg-black/50 border border-white/15 text-white"
-                  />
-                </div>
-                <div className="p-3 rounded-lg bg-black/30 border border-white/10">
-                  <label className="block text-emerald-100/70 mb-1">Critical SLA Window (Minutes)</label>
-                  <input
-                    type="number"
-                    min="5"
-                    max="120"
-                    value={features.support_sla_critical_minutes || 15}
-                    onChange={e =>
-                      setFeatures(prev => ({
-                        ...prev,
-                        support_sla_critical_minutes: Number(e.target.value),
-                      }))
-                    }
-                    className="w-full px-2.5 py-1.5 rounded bg-black/50 border border-white/15 text-white"
-                  />
-                </div>
-              </div>
-
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-2">
-                <button
-                  type="button"
-                  onClick={() => handleSaveFeatures(features)}
-                  className="px-4 py-2 rounded-lg bg-[#D4AF37] text-[#071510] font-semibold text-xs"
-                >
-                  Save Thresholds & SLA Configuration
-                </button>
-
-                {/* Feature 19: Multi-Channel Webhook Test Ping */}
-                <button
-                  type="button"
-                  onClick={() => handleTestWebhook('all')}
-                  className="px-3.5 py-2 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 border border-sky-500/30 text-xs text-sky-200 flex items-center gap-1.5"
-                >
-                  <BellRing className="w-3.5 h-3.5" /> Test Telegram / WhatsApp / Email Webhooks
-                </button>
-              </div>
             </div>
 
-            <div className="lg:col-span-5 bg-[#0B2419] border border-white/10 rounded-xl p-5 space-y-4">
-              <h3 className="text-base font-bold text-white">Staff Canned Response Macros</h3>
-              <p className="text-xs text-emerald-100/70">
-                Create 1-click response templates available to all Agents, Supervisors, and Managers in{' '}
-                <code>/support</code> and <code>/superadminsupport</code>.
-              </p>
-
+            <div className="lg:col-span-5 bg-[#0B2419] border border-white/10 rounded-2xl p-5 space-y-4">
+              <h3 className="text-base font-bold text-white">Quick-Reply Templates (Macros)</h3>
               <form onSubmit={handleAddMacro} className="space-y-2.5 text-xs">
                 <input
                   type="text"
                   required
                   value={newMacro.title}
                   onChange={e => setNewMacro(prev => ({ ...prev, title: e.target.value }))}
-                  placeholder="Macro Title (e.g., Expedited Dispatch Apology)"
-                  className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-white"
+                  placeholder="Template Name (e.g., Dispatch Update)"
+                  className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white"
                 />
                 <textarea
                   rows={3}
                   required
                   value={newMacro.content}
                   onChange={e => setNewMacro(prev => ({ ...prev, content: e.target.value }))}
-                  placeholder="Macro message content…"
-                  className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-white"
+                  placeholder="Template message…"
+                  className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white"
                 />
                 <button
                   type="submit"
-                  className="px-3.5 py-2 rounded-lg bg-[#D4AF37] text-[#071510] font-semibold text-xs"
+                  className="px-4 py-2 rounded-xl bg-[#D4AF37] text-[#071510] font-bold text-xs"
                 >
-                  + Add Canned Macro
+                  + Save Quick Reply
                 </button>
               </form>
-
-              <div className="space-y-2 max-h-80 overflow-y-auto pr-1 pt-2 border-t border-white/10">
-                {availableMacros.map(macro => (
-                  <div key={macro.id} className="p-3 rounded-lg bg-black/30 border border-white/10 text-xs">
-                    <div className="font-bold text-[#D4AF37]">{macro.title || macro.label}</div>
-                    <p className="text-emerald-100/80 mt-1 text-[11px]">{macro.content || macro.text}</p>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         )}
 
         {/* ===================================================================
-            TAB 7: IMMUTABLE AUDIT LOG & 20-FEATURE EXPLAINER DICTIONARY
+            TAB 7: 512-BIT SECURITY AUDIT LOG & PLAIN-ENGLISH HELP GUIDE
            =================================================================== */}
         {activeTab === 'guide' && (
           <div className="space-y-6">
-            {/* Immutable Audit Log */}
-            <div className="bg-[#0B2419] border border-white/10 rounded-xl p-6 space-y-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-base font-bold text-white flex items-center gap-2">
-                    <FileText className="w-4 h-4 text-[#D4AF37]" />
-                    Immutable Support Executive Audit Trail ({auditLogs.length})
-                  </h3>
-                  <p className="text-xs text-emerald-100/70">
-                    Every status transition, refund, goodwill wallet credit, loyalty bonus, and role change is recorded
-                    automatically.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleExportCsv}
-                  className="px-3 py-1.5 rounded-lg bg-[#D4AF37] text-[#071510] font-semibold text-xs flex items-center gap-1.5"
-                >
-                  <Download className="w-3.5 h-3.5" /> Download CSV Report
-                </button>
-              </div>
-
+            <div className="bg-[#0B2419] border border-white/10 rounded-2xl p-6 space-y-4">
+              <h3 className="text-base font-bold text-white flex items-center gap-2">
+                <Lock className="w-4 h-4 text-[#D4AF37]" />
+                512-Bit Signed Security & Action Audit Log ({auditLogs.length})
+              </h3>
               <div className="space-y-2 max-h-64 overflow-y-auto pr-1 text-xs">
-                {auditLogs.length === 0 ? (
-                  <p className="text-emerald-100/60">No audit events recorded yet in this session.</p>
-                ) : (
-                  auditLogs.map(log => (
-                    <div
-                      key={log.id}
-                      className="p-2.5 rounded-lg bg-black/30 border border-white/10 flex flex-wrap items-center justify-between gap-2"
-                    >
-                      <div>
-                        <span className="font-bold text-[#D4AF37]">[{log.action_type}]</span>{' '}
-                        <span className="text-white font-semibold">
-                          {log.actor_name} ({log.actor_role})
-                        </span>{' '}
-                        — <span className="text-emerald-100/80">{log.details}</span>
-                      </div>
-                      <span className="text-[10px] text-emerald-100/50">
-                        {new Date(log.created_at).toLocaleString()}
-                      </span>
+                {auditLogs.map(log => (
+                  <div
+                    key={log.id}
+                    className="p-2.5 rounded-xl bg-black/30 border border-white/10 flex flex-wrap items-center justify-between gap-2"
+                  >
+                    <div>
+                      <span className="font-bold text-[#D4AF37]">[{log.action_type}]</span>{' '}
+                      <span className="text-white font-semibold">
+                        {log.actor_name} ({log.actor_role})
+                      </span>{' '}
+                      — <span className="text-emerald-100/80">{log.details}</span>
                     </div>
-                  ))
-                )}
+                    <span className="text-[10px] text-emerald-100/50">
+                      {new Date(log.created_at).toLocaleString()}
+                    </span>
+                  </div>
+                ))}
               </div>
             </div>
 
-            {/* 20-Feature & Button Explainer Dictionary */}
-            <div className="bg-[#0B2419] border border-white/10 rounded-xl p-6 space-y-5">
-              <div>
-                <span className="text-[10px] uppercase tracking-wider text-[#D4AF37] font-semibold">
-                  Complete Executive Reference
-                </span>
-                <h2 className="text-xl font-serif font-bold text-white mt-1">
-                  20 Customer Support Executive Admin Panel Features — “What Will This Button Do?”
-                </h2>
-              </div>
-
+            <div className="bg-[#0B2419] border border-white/10 rounded-2xl p-6 space-y-4">
+              <h2 className="text-xl font-serif font-bold text-white">
+                ? Help Guide — What Each Term & Control Does
+              </h2>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {TWENTY_EXECUTIVE_FEATURES.map(feat => (
-                  <div key={feat.no} className="p-4 rounded-xl bg-black/30 border border-white/10 space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-[#D4AF37]/20 text-[#D4AF37] font-semibold">
-                        Feature #{feat.no} · {feat.category}
-                      </span>
-                    </div>
-                    <h3 className="text-sm font-bold text-white">{feat.title}</h3>
-                    <p className="text-xs text-emerald-100/80 leading-relaxed">{feat.whatItDoes}</p>
+                {HELP_DICTIONARY.map(item => (
+                  <div key={item.no} className="p-4 rounded-xl bg-black/30 border border-white/10 space-y-1">
+                    <span className="text-[10px] uppercase tracking-wider px-2 py-0.5 rounded bg-[#D4AF37]/20 text-[#D4AF37] font-bold">
+                      {item.category}
+                    </span>
+                    <h3 className="text-sm font-bold text-white pt-1">? {item.term}</h3>
+                    <p className="text-xs text-emerald-100/80 leading-relaxed">{item.desc}</p>
                   </div>
                 ))}
               </div>
