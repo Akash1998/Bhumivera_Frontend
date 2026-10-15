@@ -1,6 +1,6 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
-import api from '../services/api';
+import api, { superAdminSupport } from '../services/api';
 import {
   ShieldCheck,
   Users,
@@ -166,14 +166,6 @@ export default function SuperAdminSupport() {
   const [editingAgent, setEditingAgent] = useState(null);
   const [newMacro, setNewMacro] = useState({ title: '', category: 'orders', content: '' });
 
-  const requestConfig = useMemo(
-    () => ({
-      headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
-      notify: false,
-    }),
-    [authToken]
-  );
-
   const showNotice = (type, message) => {
     setFeedbackBanner({ type, message });
     setTimeout(() => {
@@ -186,13 +178,15 @@ export default function SuperAdminSupport() {
     setLoading(true);
     try {
       const [overviewRes, sessionsRes, agentsRes, featuresRes] = await Promise.all([
-        api.get('/support/superadmin/overview', requestConfig),
-        api.get(
-          `/support/sessions?status=${statusFilter}&priority=${priorityFilter}&search=${encodeURIComponent(searchQuery)}&limit=80`,
-          requestConfig
-        ),
-        api.get('/support/agents', requestConfig),
-        api.get('/support/superadmin/features', requestConfig),
+        superAdminSupport.getOverview(authToken),
+        superAdminSupport.listSessions({
+          status: statusFilter,
+          priority: priorityFilter,
+          search: searchQuery,
+          limit: 80,
+        }, authToken),
+        superAdminSupport.listAgents(authToken),
+        superAdminSupport.getFeatures(authToken),
       ]);
 
       setOverview(overviewRes.data);
@@ -212,19 +206,19 @@ export default function SuperAdminSupport() {
     } finally {
       setLoading(false);
     }
-  }, [authToken, requestConfig, statusFilter, priorityFilter, searchQuery]);
+  }, [authToken, statusFilter, priorityFilter, searchQuery]);
 
   const fetchSessionDetail = useCallback(
     async token => {
       if (!token || !authToken) return;
       try {
-        const res = await api.get(`/support/sessions/${token}`, requestConfig);
+        const res = await superAdminSupport.sessionDetail(token, authToken);
         setSelectedSessionDetail(res.data);
       } catch (err) {
         showNotice('error', err.response?.data?.message || 'Could not load chat transcript.');
       }
     },
-    [authToken, requestConfig]
+    [authToken]
   );
 
   useEffect(() => {
@@ -281,7 +275,7 @@ export default function SuperAdminSupport() {
   const handleCreateAgent = async e => {
     e.preventDefault();
     try {
-      const res = await api.post('/support/agents', newAgent, requestConfig);
+      const res = await superAdminSupport.createAgent(newAgent, authToken);
       setAgents(prev => [res.data.agent, ...prev]);
       setNewAgent({
         username: '',
@@ -301,7 +295,7 @@ export default function SuperAdminSupport() {
 
   const handleUpdateAgent = async (agentId, patch) => {
     try {
-      const res = await api.patch(`/support/agents/${agentId}`, patch, requestConfig);
+      const res = await superAdminSupport.updateAgent(agentId, patch, authToken);
       setAgents(prev => prev.map(a => (a.id === agentId ? res.data.agent : a)));
       if (editingAgent?.id === agentId) {
         setEditingAgent(res.data.agent);
@@ -316,14 +310,14 @@ export default function SuperAdminSupport() {
     e.preventDefault();
     if (!selectedSessionToken || !replyText.trim()) return;
     try {
-      await api.post(
-        `/support/sessions/${selectedSessionToken}/reply`,
+      await superAdminSupport.replySession(
+        selectedSessionToken,
         {
           message: replyText.trim(),
           isInternalNote: isWhisper,
           nextStatus: statusAfterReply || undefined,
         },
-        requestConfig
+        authToken
       );
       setReplyText('');
       await fetchSessionDetail(selectedSessionToken);
@@ -337,8 +331,8 @@ export default function SuperAdminSupport() {
   const handleSessionStatusChange = async (sessionToken, status, assignedAgentId = undefined) => {
     try {
       const targetAgent = assignedAgentId ? agents.find(a => a.id === Number(assignedAgentId)) : null;
-      await api.patch(
-        `/support/sessions/${sessionToken}/status`,
+      await superAdminSupport.updateSessionStatus(
+        sessionToken,
         {
           status,
           assignedAgentId,
@@ -346,7 +340,7 @@ export default function SuperAdminSupport() {
           assignedRole: targetAgent ? targetAgent.role : undefined,
           resolutionNote: status === 'resolved' ? 'Marked resolved by SuperAdmin Command Center' : undefined,
         },
-        requestConfig
+        authToken
       );
       if (selectedSessionToken === sessionToken) {
         await fetchSessionDetail(sessionToken);
@@ -361,15 +355,15 @@ export default function SuperAdminSupport() {
   const handleExecuteQuickAction = async (action, extra = {}) => {
     if (!selectedSessionToken) return;
     try {
-      const res = await api.post(
-        `/support/sessions/${selectedSessionToken}/execute-action`,
+      const res = await superAdminSupport.executeSessionAction(
+        selectedSessionToken,
         {
           action,
           orderId: actionOrderId || undefined,
           goodwillAmount: Number(goodwillAmount) || 100,
           ...extra,
         },
-        requestConfig
+        authToken
       );
       await fetchSessionDetail(selectedSessionToken);
       showNotice('success', res.data?.message || `Executed ${action} on chat.`);
@@ -380,7 +374,7 @@ export default function SuperAdminSupport() {
 
   const handleSaveFeatures = async updatedFeatures => {
     try {
-      const res = await api.put('/support/superadmin/features', updatedFeatures, requestConfig);
+      const res = await superAdminSupport.updateFeatures(updatedFeatures, authToken);
       setFeatures(res.data.featureConfig);
       showNotice('success', 'AI Support & SLA feature switches saved and activated globally.');
     } catch (err) {

@@ -550,16 +550,17 @@ export const support = {
   delete: id => api.delete(`/contact/${id}`)
 };
 const supportClient = axios.create({ baseURL: `${BASE_URL}/api`, withCredentials: true });
-const getSupportOrAdminToken = () =>
-  localStorage.getItem('supportToken') || localStorage.getItem('adminToken') || '';
-const supportRequest = (method, path, data) => supportClient.request({
-  method,
-  url: `/support${path}`,
-  ...(data === undefined ? {} : { data }),
-  headers: getSupportOrAdminToken()
-    ? { Authorization: `Bearer ${getSupportOrAdminToken()}` }
-    : {},
-});
+const getSupportOrAdminToken = token =>
+  token || localStorage.getItem('supportToken') || localStorage.getItem('adminToken') || '';
+const supportRequest = (method, path, data, token) => {
+  const supportToken = getSupportOrAdminToken(token);
+  return supportClient.request({
+    method,
+    url: `/support${path}`,
+    ...(data === undefined ? {} : { data }),
+    headers: supportToken ? { Authorization: `Bearer ${supportToken}` } : {},
+  });
+};
 export const supportPortal = {
   login: credentials => supportRequest('post', '/login', credentials),
   me: () => supportRequest('get', '/me'),
@@ -592,12 +593,29 @@ export const supportAgents = {
   setActive: (id, is_active) => api.patch(`/support/agents/${id}/status`, { is_active }, { adminAuth: true }),
 };
 export const superAdminSupport = {
-  getOverview: () => supportRequest('get', '/superadmin/overview'),
-  getFeatures: () => supportRequest('get', '/superadmin/features'),
-  updateFeatures: data => supportRequest('put', '/superadmin/features', data),
-  listAgents: () => supportRequest('get', '/agents'),
-  createAgent: data => supportRequest('post', '/agents', data),
-  updateAgent: (id, data) => supportRequest('patch', `/agents/${id}`, data),
+  getOverview: token => supportRequest('get', '/superadmin/overview', undefined, token),
+  getFeatures: token => supportRequest('get', '/superadmin/features', undefined, token),
+  updateFeatures: (data, token) => supportRequest('put', '/superadmin/features', data, token),
+  listAgents: token => supportRequest('get', '/agents', undefined, token),
+  createAgent: (data, token) => supportRequest('post', '/agents', data, token),
+  updateAgent: (id, data, token) => supportRequest('patch', `/agents/${id}`, data, token),
+  listSessions: (params = {}, token) => {
+    const qs = new URLSearchParams();
+    if (params.status) qs.set('status', params.status);
+    if (params.priority) qs.set('priority', params.priority);
+    if (params.search) qs.set('search', params.search);
+    if (params.limit) qs.set('limit', String(params.limit));
+    const query = qs.toString();
+    return supportRequest('get', `/sessions${query ? `?${query}` : ''}`, undefined, token);
+  },
+  sessionDetail: (sessionToken, token) =>
+    supportRequest('get', `/sessions/${encodeURIComponent(sessionToken)}`, undefined, token),
+  replySession: (sessionToken, data, token) =>
+    supportRequest('post', `/sessions/${encodeURIComponent(sessionToken)}/reply`, data, token),
+  updateSessionStatus: (sessionToken, data, token) =>
+    supportRequest('patch', `/sessions/${encodeURIComponent(sessionToken)}/status`, data, token),
+  executeSessionAction: (sessionToken, data, token) =>
+    supportRequest('post', `/sessions/${encodeURIComponent(sessionToken)}/execute-action`, data, token),
 };
 export const aiSupport = {
   initSession: data => api.post('/support/chat/session', data, { notify: false }),
