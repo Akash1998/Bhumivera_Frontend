@@ -28,6 +28,8 @@ vi.mock('../services/api', () => ({
     updateContext: vi.fn(),
     getHistory: vi.fn(),
     escalate: vi.fn(),
+    endSatisfied: vi.fn(),
+    submitRating: vi.fn(),
   },
 }));
 
@@ -38,11 +40,12 @@ describe('SupportAssistant floating AI widget', () => {
     localStorage.clear();
     sessionStorage.clear();
     vi.clearAllMocks();
+    Element.prototype.scrollIntoView = vi.fn();
 
     aiSupport.initSession.mockResolvedValue({
       data: {
         sessionToken: 'sess_test_12345',
-        greeting: 'Namaste Aarav! How can I help with your Bhumivera order today?',
+        greeting: 'Hi Aarav, how can I help you today?',
         quickActions: [
           { id: 'track_order', label: 'Where is my order?', prompt: 'Where is my order?' },
           { id: 'initiate_return', label: 'Initiate Return', prompt: 'Initiate return' },
@@ -51,7 +54,7 @@ describe('SupportAssistant floating AI widget', () => {
           {
             id: 1,
             sender: 'assistant',
-            content: 'Namaste Aarav! How can I help with your Bhumivera order today?',
+            content: 'Hi Aarav, how can I help you today?',
             orderCards: [],
             quickActions: [],
             createdAt: new Date().toISOString(),
@@ -101,14 +104,14 @@ describe('SupportAssistant floating AI widget', () => {
       </MemoryRouter>
     );
 
-    const launcher = screen.getByRole('button', { name: /Open Bhumivera AI Support Concierge/i });
+    const launcher = screen.getByRole('button', { name: /Open Bhumivera Support/i });
     fireEvent.click(launcher);
 
     await waitFor(() => {
       expect(aiSupport.initSession).toHaveBeenCalledTimes(1);
     });
 
-    expect(await screen.findByText(/Namaste Aarav!/i)).toBeTruthy();
+    expect(await screen.findByText(/Hi Aarav, how can I help you today/i)).toBeTruthy();
 
     const quickChip = screen.getByRole('button', { name: /Where is my order\?/i });
     fireEvent.click(quickChip);
@@ -117,8 +120,48 @@ describe('SupportAssistant floating AI widget', () => {
       expect(aiSupport.sendMessage).toHaveBeenCalled();
     });
 
-    expect(await screen.findByText(/#918273646/i)).toBeTruthy();
+    expect((await screen.findAllByText(/#918273646/i)).length).toBeGreaterThan(0);
     expect(screen.getByText(/DLV99881122/i)).toBeTruthy();
+    expect(screen.queryByText(/How was your support experience/i)).toBeNull();
+    expect(screen.getByRole('button', { name: 'End chat' })).toBeTruthy();
+  });
+
+  it('shows the rating form only after the customer ends the chat', async () => {
+    aiSupport.endSatisfied.mockResolvedValue({
+      data: {
+        status: 'resolved',
+        systemMessage: {
+          id: 2,
+          sender: 'system',
+          content: 'This chat has ended.',
+        },
+      },
+    });
+    aiSupport.submitRating.mockResolvedValue({ data: { success: true } });
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <SupportAssistant />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Open Bhumivera Support/i }));
+    await screen.findByText(/Hi Aarav, how can I help you today/i);
+    fireEvent.click(screen.getByRole('button', { name: /Where is my order\?/i }));
+    await waitFor(() => expect(aiSupport.sendMessage).toHaveBeenCalled());
+
+    expect(screen.queryByText(/How was your support experience/i)).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'End chat' }));
+
+    expect(await screen.findByText(/How was your support experience/i)).toBeTruthy();
+    expect(aiSupport.endSatisfied).toHaveBeenCalledWith('sess_test_12345', {});
+
+    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
+    await waitFor(() => expect(aiSupport.submitRating).toHaveBeenCalledWith(
+      'sess_test_12345',
+      { rating: 5, feedback: '' }
+    ));
+    expect(await screen.findByText(/Thank you for your feedback/i)).toBeTruthy();
   });
 
   it('triggers proactive assistance bubble when lingering on checkout page', async () => {

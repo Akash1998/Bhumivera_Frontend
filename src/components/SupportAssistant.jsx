@@ -51,7 +51,7 @@ const DEFAULT_CHIPS = [
   { id: 'wallet_loyalty', label: 'Wallet & Loyalty', prompt: 'What is my current wallet balance and loyalty points?' },
   { id: 'active_coupons', label: 'Available Coupons', prompt: 'Show me active coupons and offers for my account.' },
   { id: 'shipping_policy', label: 'Shipping Policy', prompt: 'What are your shipping charges and delivery timelines?' },
-  { id: 'talk_to_human', label: 'Talk to Human', prompt: 'Please connect me with a human support agent.' },
+  { id: 'talk_to_human', label: 'Talk to Support', prompt: 'Please connect me with a support specialist.' },
 ];
 
 const ORDER_STEPS = ['Placed', 'Confirmed', 'Packed', 'Shipped', 'Delivered'];
@@ -60,7 +60,7 @@ const STATUS_META = {
   active: {
     label: 'Active Chat',
     badgeClass: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40',
-    description: 'Live conversation in progress with AI Concierge or assigned specialist.',
+    description: 'Live conversation with Bhumivera Support.',
   },
   pending: {
     label: 'Pending',
@@ -75,7 +75,7 @@ const STATUS_META = {
   escalated: {
     label: 'Escalated',
     badgeClass: 'bg-rose-500/20 text-rose-300 border-rose-400/40',
-    description: 'High-priority escalation routed to our Senior Specialist / Manager desk.',
+    description: 'Your request has been sent to a support specialist.',
   },
   resolved: {
     label: 'Resolved',
@@ -100,7 +100,7 @@ const WIDGET_BUTTON_GUIDE = [
   },
   {
     button: 'Escalate to Specialist (Phone Icon)',
-    whatItDoes: 'Requests a human support specialist and alerts our Senior Concierge team via Email, WhatsApp, and Telegram.',
+    whatItDoes: 'Asks a support specialist to follow up with you.',
   },
   {
     button: 'Quick-Action Chips',
@@ -384,7 +384,7 @@ class SupportWidgetErrorBoundary extends React.Component {
             href="/contact"
             className="inline-flex items-center gap-2 rounded-full bg-[#0B2419] px-4 py-3 text-xs font-semibold text-[#FDFBF7] shadow-xl border border-[#D4AF37]/40"
           >
-            <MessageSquare className="w-4 h-4 text-[#D4AF37]" /> Support Concierge
+            <MessageSquare className="w-4 h-4 text-[#D4AF37]" /> Support
           </a>
         </div>
       );
@@ -436,6 +436,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   const [csatRating, setCsatRating] = useState(5);
   const [csatFeedback, setCsatFeedback] = useState('');
   const [csatSubmitted, setCsatSubmitted] = useState(false);
+  const [csatSubmitting, setCsatSubmitting] = useState(false);
+  const [csatError, setCsatError] = useState('');
   const [hasPlacedOrder, setHasPlacedOrder] = useState(false);
   const [telegramBotUrl, setTelegramBotUrl] = useState('https://t.me/BhumiveraBot');
   const [showAsyncForm, setShowAsyncForm] = useState(false);
@@ -504,6 +506,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       if (forceNew) {
         setCsatRating(0);
         setCsatSubmitted(false);
+        setCsatFeedback('');
+        setCsatError('');
         setSentimentBadge(null);
       }
       if (Array.isArray(data.messages) && data.messages.length > 0 && (forceNew || messages.length === 0)) {
@@ -520,9 +524,10 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           {
             id: Date.now(),
             sender: 'assistant',
-            senderName: 'Bhumivera AI Concierge',
-            content:
-              "Namaste! I'm your Bhumivera Support Assistant. I can check live order status, initiate returns or cancellations, verify Razorpay refunds, inspect your Wallet & Loyalty points, or connect you with our human team.",
+            senderName: 'Bhumivera Support',
+            content: user?.name
+              ? `Hi ${user.name.split(' ')[0]}, how can I help you today?`
+              : 'Hi, how can I help you today?',
             quickActions: DEFAULT_CHIPS,
             orderCards: [],
             createdAt: new Date().toISOString(),
@@ -531,7 +536,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       }
       return sessionToken;
     }
-  }, [sessionToken, currentPageContext, messages.length]);
+  }, [sessionToken, currentPageContext, messages.length, user?.name]);
 
   useEffect(() => {
     if (isOpen && !sessionInitializedRef.current) {
@@ -675,7 +680,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         {
           id: `sys-${Date.now()}`,
           sender: 'system',
-          senderName: 'System Concierge',
+          senderName: 'Bhumivera Support',
           content: `Chat status updated to **${nextStatus.replace(/_/g, ' ').toUpperCase()}**.`,
           createdAt: new Date().toISOString(),
         },
@@ -702,13 +707,43 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     await ensureSession({ forceNew: true });
   };
 
-  const handleSubmitCsat = async star => {
-    setCsatRating(star);
-    setCsatSubmitted(true);
-    if (sessionToken && typeof aiSupportApi.submitRating === 'function') {
-      try {
-        await aiSupportApi.submitRating(sessionToken, { rating: star });
-      } catch {}
+  const handleEndChat = async () => {
+    if (!sessionToken) {
+      setCsatError('This chat could not be ended. Please start a new chat and try again.');
+      return;
+    }
+    setCsatSubmitting(true);
+    setCsatError('');
+    try {
+      const response = await aiSupportApi.endSatisfied(sessionToken, {});
+      setChatStatus('resolved');
+      if (response?.data?.systemMessage) {
+        setMessages(prev => [...prev, response.data.systemMessage]);
+      }
+    } catch (error) {
+      setCsatError(error?.response?.data?.message || 'We couldn’t end the chat. Please try again.');
+    } finally {
+      setCsatSubmitting(false);
+    }
+  };
+
+  const handleSubmitCsat = async () => {
+    if (!sessionToken) {
+      setCsatError('This rating could not be saved. Please start a new chat and try again.');
+      return;
+    }
+    setCsatSubmitting(true);
+    setCsatError('');
+    try {
+      await aiSupportApi.submitRating(sessionToken, {
+        rating: csatRating,
+        feedback: csatFeedback.trim(),
+      });
+      setCsatSubmitted(true);
+    } catch (error) {
+      setCsatError(error?.response?.data?.message || 'We couldn’t save your rating. Please try again.');
+    } finally {
+      setCsatSubmitting(false);
     }
   };
 
@@ -771,7 +806,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             {
               id: assistantStreamId,
               sender: 'assistant',
-              senderName: 'Bhumivera AI Concierge',
+              senderName: 'Bhumivera Support',
               content: '',
               orderCards: [],
               quickActions: [],
@@ -861,7 +896,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         {
           id: data.message?.id || assistantStreamId,
           sender: 'assistant',
-          senderName: 'Bhumivera AI Concierge',
+          senderName: 'Bhumivera Support',
           content: data.reply || data.message?.content || 'How else can I help you today?',
           orderCards: data.orderCards || [],
           quickActions: data.quickActions || [],
@@ -877,9 +912,9 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         {
           id: assistantStreamId,
           sender: 'assistant',
-          senderName: 'Bhumivera AI Concierge',
+          senderName: 'Bhumivera Support',
           content:
-            'I encountered a temporary connection delay while reaching our support servers. You can retry your message right here, or contact our Senior Concierge directly at **support@bhumivera.com** or WhatsApp **+91 7430985647**.',
+            'Sorry, I couldn’t connect just now. Please try again or contact support@bhumivera.com or WhatsApp +91 7430985647.',
           orderCards: [],
           quickActions: DEFAULT_CHIPS,
           createdAt: new Date().toISOString(),
@@ -894,7 +929,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   const handleInstantEscalate = async () => {
     if (isTyping) return;
     setIsTyping(true);
-    setStatusLabel('Connecting Senior Concierge…');
+    setStatusLabel('Connecting you to support…');
     try {
       const res = await aiSupportApi.escalate({
         sessionToken,
@@ -908,10 +943,10 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         {
           id: `esc-${Date.now()}`,
           sender: 'assistant',
-          senderName: 'Bhumivera Senior Concierge',
+          senderName: 'Bhumivera Support',
           content:
             data.reply ||
-            'Your conversation has been escalated to our Senior Concierge team. A specialist will reach out shortly.',
+            'I’ve sent your request to a support specialist. They’ll be in touch as soon as possible.',
           escalation: data.escalation || { escalated: true, priority: 'High' },
           createdAt: new Date().toISOString(),
         },
@@ -928,7 +963,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             senderName: 'Bhumivera Support',
             content:
               err.response.data.message ||
-              'Live human agents are available once an order is placed after payment. You can chat with our AI Assistant or leave a message below — we will reply to your Email and Mobile App inbox.',
+              'A support specialist can help once you have a paid order. You can still ask us about products or shipping here, or leave a message and our team will reply by email or in the app.',
             createdAt: new Date().toISOString(),
           },
         ]);
@@ -975,7 +1010,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         >
           <div className="flex items-start justify-between gap-2">
             <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#D4AF37]">
-              <Sparkles className="w-3.5 h-3.5" /> Bhumivera Concierge
+              <Sparkles className="w-3.5 h-3.5" /> Bhumivera Support
             </div>
             <button
               type="button"
@@ -996,7 +1031,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             }}
             className="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-[#D4AF37] hover:underline"
           >
-            Open Concierge <ChevronRight className="w-3.5 h-3.5" />
+            Open Support <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
@@ -1004,7 +1039,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       {/* Expanded Chat Window */}
       {isOpen && (
         <section
-          aria-label="Bhumivera AI Support Assistant"
+          aria-label="Bhumivera Support"
           className={`flex flex-col overflow-hidden rounded-3xl border shadow-[0_24px_60px_rgba(0,0,0,0.28)] transition-all duration-200 ${
             isMaximized
               ? 'w-[calc(100vw-1.5rem)] h-[calc(100vh-6rem)] md:w-[580px] md:h-[720px]'
@@ -1023,7 +1058,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-1.5">
-                  <h2 className="font-serif text-base font-bold tracking-wide truncate">Bhumivera Concierge</h2>
+                  <h2 className="font-serif text-base font-bold tracking-wide truncate">Bhumivera Support</h2>
                   <span
                     className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${activeStatusMeta.badgeClass}`}
                     title={activeStatusMeta.description}
@@ -1063,8 +1098,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               <button
                 type="button"
                 onClick={handleInstantEscalate}
-                title="Escalate to Human Specialist"
-                aria-label="Escalate to Human Specialist"
+                title="Request a support specialist"
+                aria-label="Request a support specialist"
                 className="p-1.5 rounded-lg text-stone-200 hover:bg-white/10 hover:text-[#D4AF37] transition-colors"
               >
                 <PhoneCall className="w-4 h-4" />
@@ -1099,8 +1134,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                title="Minimize Concierge"
-                aria-label="Minimize Concierge"
+                title="Minimize chat"
+                aria-label="Minimize chat"
                 className="p-1.5 rounded-lg text-stone-200 hover:bg-white/10 transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -1184,7 +1219,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                 >
                   {!isUser && msg.senderName && (
                     <span className="text-[10px] font-semibold uppercase tracking-wider text-[#D4AF37] mb-1 pl-1">
-                      {msg.senderName}
+                      {msg.senderName.replace(/AI (?:Concierge|Assistant)/, 'Support')}
                     </span>
                   )}
                   <div
@@ -1232,7 +1267,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                       <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-amber-500/15 border border-amber-500/30 px-3 py-2 text-[11px] font-medium text-amber-700 dark:text-amber-300">
                         <ShieldAlert className="w-4 h-4 shrink-0" />
                         <span>
-                          Senior Concierge Ticket {msg.escalation.ticketId ? `#${msg.escalation.ticketId}` : ''} active ({msg.escalation.priority} Priority)
+                          Your support request{msg.escalation.ticketId ? ` #${msg.escalation.ticketId}` : ''} has been sent to a specialist.
                         </span>
                       </div>
                     )}
@@ -1241,8 +1276,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               );
             })}
 
-            {/* Customer Satisfaction End-Chat & Review Bar */}
-            {(messages.length > 1 || ['resolved', 'closed'].includes(chatStatus)) && (
+            {['resolved', 'closed'].includes(chatStatus) && (
               <div
                 className={`rounded-2xl border p-3.5 space-y-2 ${
                   isDark ? 'bg-[#10241f] border-[#D4AF37]/30' : 'bg-white border-[#0B2419]/15 shadow-sm'
@@ -1250,7 +1284,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[11px] font-bold">
-                    {csatSubmitted ? 'Thank you! Your review was saved.' : 'Satisfied with support? Rate & End Chat:'}
+                    {csatSubmitted ? 'Thank you for your feedback.' : 'How was your support experience?'}
                   </span>
                   <a
                     href={telegramBotUrl}
@@ -1258,7 +1292,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                     rel="noopener noreferrer"
                     className="text-[10px] font-semibold text-[#D4AF37] underline"
                   >
-                    Telegram (@BhumiveraBot) ↗
+                    Telegram support
                   </a>
                 </div>
                 {!csatSubmitted && (
@@ -1269,7 +1303,9 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                           key={star}
                           type="button"
                           onClick={() => setCsatRating(star)}
-                          className="p-0.5 hover:scale-110 transition-transform"
+                          disabled={csatSubmitting}
+                          aria-label={`Rate ${star} stars`}
+                          className="p-0.5 hover:scale-110 transition-transform disabled:opacity-60"
                         >
                           <Star
                             className={`w-4 h-4 ${
@@ -1291,23 +1327,30 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                       />
                       <button
                         type="button"
-                        onClick={async () => {
-                          try {
-                            await aiSupportApi.endSatisfied?.(sessionToken, {
-                              rating: csatRating,
-                              feedback: csatFeedback || 'Satisfied with support',
-                            });
-                            setCsatSubmitted(true);
-                            setChatStatus('resolved');
-                          } catch {}
-                        }}
-                        className="px-2.5 py-1.5 rounded-lg bg-[#0B2419] text-[#D4AF37] text-[10px] font-bold shrink-0"
+                        onClick={() => void handleSubmitCsat()}
+                        disabled={csatSubmitting}
+                        className="px-2.5 py-1.5 rounded-lg bg-[#0B2419] text-[#D4AF37] text-[10px] font-bold shrink-0 disabled:opacity-60"
                       >
-                        End Chat & Save
+                        {csatSubmitting ? 'Saving…' : 'Send'}
                       </button>
                     </div>
                   </>
                 )}
+                {csatError && <p role="alert" className="text-[11px] text-red-600">{csatError}</p>}
+              </div>
+            )}
+
+            {!['resolved', 'closed'].includes(chatStatus) && messages.length > 1 && (
+              <div className="flex justify-end">
+                <button
+                  type="button"
+                  onClick={() => void handleEndChat()}
+                  disabled={csatSubmitting || isTyping}
+                  className="rounded-lg border border-[#0B2419]/15 px-3 py-1.5 text-[11px] font-semibold text-[#0B2419] hover:bg-[#0B2419]/5 disabled:opacity-60 dark:text-stone-100 dark:border-white/15"
+                >
+                  {csatSubmitting ? 'Ending chat…' : 'End chat'}
+                </button>
+                {csatError && <p role="alert" className="ml-2 self-center text-[11px] text-red-600">{csatError}</p>}
               </div>
             )}
 
@@ -1366,44 +1409,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                 >
                   Send Message to Support
                 </button>
-              </div>
-            )}
-
-            {false && ['resolved', 'closed'].includes(chatStatus) && (
-              <div
-                className={`rounded-2xl border p-3.5 text-center space-y-2 ${
-                  isDark ? 'bg-[#10241f] border-[#D4AF37]/30' : 'bg-white border-[#0B2419]/15 shadow-sm'
-                }`}
-              >
-                <p className="text-xs font-semibold">
-                  {csatSubmitted ? 'Thank you for rating your experience!' : 'How was your support experience today?'}
-                </p>
-                <div className="flex items-center justify-center gap-1.5">
-                  {[1, 2, 3, 4, 5].map(star => (
-                    <button
-                      key={star}
-                      type="button"
-                      onClick={() => void handleSubmitCsat(star)}
-                      aria-label={`Rate ${star} stars`}
-                      className="p-1 hover:scale-110 transition-transform"
-                    >
-                      <Star
-                        className={`w-5 h-5 ${
-                          star <= csatRating ? 'fill-[#D4AF37] text-[#D4AF37]' : 'text-stone-400'
-                        }`}
-                      />
-                    </button>
-                  ))}
-                </div>
-                <div className="pt-1 flex justify-center gap-2">
-                  <button
-                    type="button"
-                    onClick={handleStartNewChat}
-                    className="px-3 py-1 rounded-lg text-[11px] font-semibold bg-[#D4AF37]/20 text-[#8a6a12] dark:text-[#D4AF37]"
-                  >
-                    Start New Chat
-                  </button>
-                </div>
               </div>
             )}
 
@@ -1510,7 +1515,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   : 'Ask about an order, return, refund, wallet, or product…'
               }
               maxLength={2000}
-              aria-label="Message Bhumivera AI Support"
+              aria-label="Message Bhumivera Support"
               className={`flex-1 min-w-0 px-3.5 py-2 rounded-xl border text-xs outline-none transition-colors ${
                 isDark
                   ? 'bg-[#10241f] border-white/15 text-stone-100 placeholder:text-stone-400 focus:border-[#D4AF37]'
@@ -1538,7 +1543,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             setUnreadCount(0);
             setProactiveBubble(null);
           }}
-          aria-label="Open Bhumivera AI Support Concierge"
+          aria-label="Open Bhumivera Support"
           className="group relative flex items-center gap-2.5 rounded-full bg-gradient-to-r from-[#0B2419] to-[#1e4031] px-4 py-3.5 text-[#FDFBF7] shadow-[0_14px_34px_rgba(11,36,25,0.45)] border border-[#D4AF37]/45 hover:scale-[1.03] active:scale-[0.98] transition-all"
         >
           <div className="relative flex items-center justify-center">
@@ -1549,7 +1554,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               </span>
             )}
           </div>
-          <span className="text-xs font-semibold tracking-wide pr-0.5">AI Concierge</span>
+          <span className="text-xs font-semibold tracking-wide pr-0.5">Support</span>
         </button>
       )}
     </div>

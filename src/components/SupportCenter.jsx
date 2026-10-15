@@ -165,7 +165,7 @@ export default function SupportCenter({
             <p className="text-xs text-emerald-100/80 leading-relaxed mb-5">
               {hasPlacedOrder
                 ? 'Your account has verified order history. You have full access to Live Support Chat, Instant Order/RMA Self-Service, and Two-Way Telegram Support.'
-                : 'Chat instantly with our AI Product & Order Assistant, or send a message below — our support team will reply directly to your Email and Mobile App inbox.'}
+                : 'Get help with products and orders here, or send a message below — our support team will reply by email or in the app.'}
             </p>
 
             <div className="space-y-2.5">
