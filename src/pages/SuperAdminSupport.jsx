@@ -58,9 +58,9 @@ function decodeStaffOrAdminJwt(rawToken) {
 }
 
 function getInitialValidStaffToken() {
-  const candidates = [localStorage.getItem('supportToken'), localStorage.getItem('adminToken')];
-  for (const tok of candidates) {
-    if (decodeStaffOrAdminJwt(tok)) return tok;
+  const candidates = [localStorage.getItem('adminToken'), localStorage.getItem('supportToken')];
+  for (const token of candidates) {
+    if (decodeStaffOrAdminJwt(token)) return token;
   }
   return '';
 }
