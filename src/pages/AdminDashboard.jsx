@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState, Suspense, Component, lazy } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Activity, Award, Bell, Boxes, ChartNoAxesCombined, ChevronDown, FileText,
+  Activity, ArrowLeft, Award, Bell, Boxes, ChartNoAxesCombined, ChevronDown, FileText,
   Gamepad2, Gift, Leaf, LifeBuoy, LogOut, Mail, Package, ScrollText, Settings2,
   ShieldCheck, ShoppingBag, SlidersHorizontal, Star, Tags, Truck, Users, Wallet, Warehouse, Zap
 } from 'lucide-react';
@@ -306,6 +306,16 @@ export default function AdminDashboard() {
           <header className="relative z-10 border-b border-[#d4af37]/15 bg-[#0b2419]">
             <div className="flex min-h-[4.25rem] items-center justify-between gap-4 px-4 py-3 md:px-6">
               <div className="flex min-w-0 items-center gap-3">
+                {activeTab !== 'overview' && (
+                  <button
+                    type="button"
+                    onClick={() => navigate('/admin')}
+                    aria-label="Back to admin dashboard"
+                    className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 transition hover:border-[#d4af37]/50 hover:bg-white/10 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4af37]"
+                  >
+                    <ArrowLeft size={18} aria-hidden="true" />
+                  </button>
+                )}
                 <button
                   type="button"
                   onClick={() => setSidebarOpen(!isSidebarOpen)}

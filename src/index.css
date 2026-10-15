@@ -44,6 +44,39 @@ body {
   -webkit-tap-highlight-color: transparent;
 }
 
+.route-backbar {
+  position: relative;
+  z-index: 5;
+  display: flex;
+  width: 100%;
+  min-height: 3.5rem;
+  align-items: center;
+  border-bottom: 1px solid rgba(20, 37, 28, 0.08);
+  background: linear-gradient(90deg, rgba(251, 250, 245, 0.96), rgba(244, 241, 233, 0.7));
+  padding: 0.375rem max(1rem, calc((100vw - 88rem) / 2));
+}
+
+.route-back-button {
+  display: inline-flex;
+  min-height: 2.75rem;
+  align-items: center;
+  gap: 0.5rem;
+  border: 1px solid rgba(20, 37, 28, 0.12);
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.72);
+  padding: 0.625rem 1rem;
+  color: var(--bhumivera-forest);
+  font-size: 0.8125rem;
+  font-weight: 650;
+  transition: background-color 160ms ease, border-color 160ms ease, color 160ms ease, transform 160ms ease;
+}
+
+.route-back-button:hover {
+  border-color: rgba(82, 107, 77, 0.4);
+  background: white;
+  color: var(--bhumivera-leaf);
+}
+
 .site-shell [class~="text-[#8b5a2b]"],
 .site-shell [class~="text-[#8B5A2B]"] {
   color: var(--bhumivera-leaf);
@@ -69,6 +102,40 @@ body {
 
 .site-shell [class~="border-[#D4AF37]"] {
   border-color: var(--bhumivera-gold);
+}
+
+.site-shell button:not(:disabled),
+.management-shell button:not(:disabled) {
+  -webkit-tap-highlight-color: transparent;
+}
+
+.site-shell button:not(:disabled):active,
+.management-shell button:not(:disabled):active {
+  transform: scale(0.98);
+}
+
+.site-shell :focus-visible,
+.management-shell :focus-visible {
+  outline: 2px solid var(--bhumivera-leaf);
+  outline-offset: 3px;
+}
+
+.management-shell button:focus-visible,
+.management-shell a:focus-visible {
+  outline-color: var(--bhumivera-gold);
+}
+
+@media (max-width: 767px) {
+  .route-backbar {
+    min-height: 3.25rem;
+    padding-inline: 1rem;
+  }
+
+  .site-shell input:not([type="checkbox"]):not([type="radio"]),
+  .site-shell select,
+  .site-shell textarea {
+    font-size: 16px;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {

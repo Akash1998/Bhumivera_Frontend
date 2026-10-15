@@ -12,6 +12,7 @@ import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { ToastProvider } from "./context/ToastContext.jsx";
 import { WishlistProvider } from "./context/WishlistContext.jsx";
 import { CompareProvider } from "./context/CompareContext.jsx";
+import { ArrowLeft } from "lucide-react";
 import "./index.css";
 
 const CHUNK_RELOAD_KEY = 'page-chunk-reload-attempted';
@@ -203,6 +204,37 @@ function ScrollToTop() {
   return null;
 }
 
+function RouteBackControl({ pathname }) {
+  const navigate = useNavigate();
+  const isAdminDashboard = pathname.startsWith('/admin') &&
+    pathname !== '/admin/login' && pathname !== '/admin/forgot-password';
+
+  if (pathname === '/' || isAdminDashboard) return null;
+
+  const fallbackPath = pathname.startsWith('/product/')
+    ? '/shop'
+    : pathname.startsWith('/warehouse/')
+      ? '/warehouse'
+      : '/';
+
+  return (
+    <div className="route-backbar">
+      <button
+        type="button"
+        onClick={() => {
+          if (window.history.state?.idx > 0) navigate(-1);
+          else navigate(fallbackPath, { replace: true });
+        }}
+        className="route-back-button"
+        aria-label="Go back"
+      >
+        <ArrowLeft size={17} aria-hidden="true" />
+        <span>Back</span>
+      </button>
+    </div>
+  );
+}
+
 function ProtectedRoute({ children }) {
   const { loading } = useAuth() || {};
   const t = localStorage.getItem('token');
@@ -321,6 +353,7 @@ function AppContent() {
       
       <main id="main-content" className="flex-1 w-full flex flex-col">
         <ScrollToTop /> 
+        <RouteBackControl pathname={location.pathname} />
         
         <Suspense fallback={<PageLoader />}>
           <Routes>

@@ -309,10 +309,10 @@ export default function PremiumHome() {
         <div className="mx-auto grid max-w-7xl gap-8 sm:gap-10 lg:grid-cols-[0.8fr_1.2fr] lg:gap-20">
           <div>
             <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#687958]">The Bhumivera point of view</p>
-            <h2 className="mt-4 max-w-lg font-editorial text-5xl leading-[0.98] tracking-[-0.035em] sm:text-6xl lg:text-7xl">Care should feel like coming back to yourself.</h2>
+            <h2 className="mt-4 max-w-lg font-editorial text-4xl leading-[1.02] tracking-[-0.025em] sm:text-5xl lg:text-6xl">Care should feel like coming back to yourself.</h2>
           </div>
           <div className="max-w-3xl">
-            <p className="font-editorial text-3xl leading-[1.08] tracking-[-0.02em] text-[#26352b] sm:text-4xl lg:text-5xl">
+            <p className="font-editorial text-2xl leading-[1.15] tracking-[-0.01em] text-[#26352b] sm:text-3xl lg:text-4xl">
               We begin with the living world, then bring curiosity to every detail.
             </p>
             <p className="mt-6 max-w-2xl text-sm leading-7 text-[#53604e] sm:text-base sm:leading-8">
