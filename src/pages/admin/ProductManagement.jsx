@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import api, { products as productsApi, categories as categoriesApi, serials as serialsApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
+import { getProductImageUrl as getImageUrl } from '../../utils/productImageUrl';
 import compressImageForUpload from '../../utils/compressImageForUpload';
 
 const INITIAL_PRODUCT_STATE = {
@@ -103,16 +104,6 @@ export default function ProductManagement() {
     setImagePreviews(previews);
     return () => previews.forEach(URL.revokeObjectURL);
   }, [images]);
-
-  // --- Utility Functions ---
-  const getImageUrl = (img) => {
-    if (!img) return '/logo.webp';
-    let path = typeof img === 'object' ? (img.url || img.file_path || img.path) : img;
-    if (!path) return '/logo.webp';
-    if (path.startsWith('http')) return path;
-    const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev/bhumivera';
-    return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
-  };
 
   // --- Handlers: Product Operations ---
   const handleToggleStatus = async (id, currentStatus) => {
@@ -497,7 +488,7 @@ export default function ProductManagement() {
                 <tr key={product._id || product.id} className="hover:bg-slate-800/40 transition-colors group">
                   <td className="p-4 flex items-center gap-4">
                     <div className="relative">
-                      <img src={getImageUrl(product.images?.[0])} className="w-12 h-12 object-cover rounded-xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 shadow-sm" onError={(e) => { e.target.src = '/logo.webp'; }} alt={product.name}/>
+                      <img src={getImageUrl(product.image_url || product.images || product.image) || '/logo.webp'} className="w-12 h-12 object-cover rounded-xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 shadow-sm" onError={(e) => { e.target.src = '/logo.webp'; }} alt={product.name}/>
                       {product.video_urls && <Video size={12} className="absolute -bottom-1 -right-1 text-blue-400 bg-[#10241f]/85 backdrop-blur-xl rounded-full" />}
                     </div>
                     <div>

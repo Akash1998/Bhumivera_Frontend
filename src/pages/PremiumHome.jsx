@@ -13,16 +13,11 @@ import { motion as Motion } from 'framer-motion';
 import SEO from '../components/SEO';
 import { categories as categoriesApi, products as productsApi, recommendations as recommendationsApi, reviews as reviewsApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { getProductImageUrl } from '../utils/productImageUrl';
 
-const IMAGE_BASE = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev';
-
-const productImage = product => {
-  const source = product?.images?.[0] || product?.image_url || product?.image;
-  if (!source) return '/logo.webp';
-  const path = typeof source === 'object' ? source.url || source.file_path || source.path : source;
-  if (!path) return '/logo.webp';
-  return /^https?:\/\//i.test(path) ? path : `${IMAGE_BASE.replace(/\/$/, '')}/${String(path).replace(/^\//, '')}`;
-};
+const productImage = product => getProductImageUrl(
+  product?.image_url || product?.images || product?.image
+) || '/logo.webp';
 
 const price = product => Number(product.discount_price || product.price || 0).toLocaleString('en-IN');
 const image = name => `/assets/images/${name}`;

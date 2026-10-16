@@ -26,6 +26,7 @@ import api from '../../services/api';
 import { formatOrderNumber } from '../../utils/formatOrderNumber';
 import { useToast } from '../../context/ToastContext';
 import LuxuryTaxInvoiceModal from '../../components/LuxuryTaxInvoiceModal';
+import { getProductImageUrl as getImageUrl } from '../../utils/productImageUrl';
 
 const STATUS_MAP = {
   pending: { label: 'Pending', color: 'amber', icon: Clock },
@@ -258,15 +259,6 @@ export default function OrderManagement() {
       clearTimeout(timer);
     };
   }, [searchTerm, statusFilter, currentPage, pagination.limit, refreshKey]);
-
-  const getImageUrl = img => {
-    if (!img) return '/logo.webp';
-    let path = typeof img === 'object' ? img.file_path || img.url || img.path : img;
-    if (!path) return '/logo.webp';
-    if (path.startsWith('http')) return path;
-    const baseUrl = import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev';
-    return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
-  };
 
   const handleUpdateStatus = async (orderId, newStatus) => {
     if (
@@ -856,7 +848,7 @@ export default function OrderManagement() {
                         className="flex items-center gap-4 border-b border-white/10 py-4 last:border-0 last:pb-0"
                       >
                         <img
-                          src={getImageUrl(item.image)}
+                          src={getImageUrl(item.image || item.image_url || item.images) || '/logo.webp'}
                           alt="product"
                           className="h-16 w-16 rounded-lg border border-white/10 bg-white/5 object-contain p-1"
                         />

@@ -11,6 +11,7 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { search } from '../services/api';
 import { useVoiceSearch } from '../hooks/useVoiceSearch';
+import { getProductImageUrl } from '../utils/productImageUrl';
 
 export default function Navbar() {
   const { user } = useAuth();
@@ -239,7 +240,7 @@ export default function Navbar() {
                    ) : (
                      suggestions.map(s => (
                        <Link key={s.id || s._id} to={`/product/${s.slug || s.id || s._id}`} onClick={() => setShowSearchDropdown(false)} className="group flex items-center border-b border-[#dedfd4]/70 p-4 transition-colors hover:bg-[#f4f1e9] last:border-none">
-                          <img src={s.images?.[0] || s.image_url || '/logo.webp'} className="mr-4 h-12 w-12 rounded-full border border-[#dedfd4] bg-white object-cover p-1" alt={s.name} />
+                          <img src={getProductImageUrl(s.image_url || s.images || s.image) || '/logo.webp'} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="mr-4 h-12 w-12 rounded-full border border-[#dedfd4] bg-white object-cover p-1" alt={s.name} />
                           <div className="flex-1">
                              <div className="truncate text-sm font-bold uppercase text-[#14251c] group-hover:text-[#526b4d]">{s.name}</div>
                              <div className="mt-1 font-serif text-xs text-[#526b4d]">₹{s.discount_price || s.price}</div>

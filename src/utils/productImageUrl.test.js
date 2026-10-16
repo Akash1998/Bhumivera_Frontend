@@ -1,5 +1,7 @@
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { getProductImageUrl } from './productImageUrl';
+
+afterEach(() => vi.unstubAllEnvs());
 
 describe('getProductImageUrl', () => {
   it('uses the API-provided URL before a product image storage key', () => {
@@ -12,6 +14,13 @@ describe('getProductImageUrl', () => {
   it('resolves product storage keys against the configured public image base', () => {
     expect(getProductImageUrl('products/item.webp')).toMatch(
       /^https:\/\/pub-70fdb5d94df347c4bed417c28b066c02\.r2\.dev\/bhumivera\/products\/item\.webp$/
+    );
+  });
+
+  it('adds the R2 bucket path when the configured public URL is only the bucket host', () => {
+    vi.stubEnv('VITE_R2_PUBLIC_URL', 'https://images.example.r2.dev/');
+    expect(getProductImageUrl({ file_path: 'products/item.webp' })).toBe(
+      'https://images.example.r2.dev/bhumivera/products/item.webp'
     );
   });
 

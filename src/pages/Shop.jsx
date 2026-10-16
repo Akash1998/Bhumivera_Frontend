@@ -16,6 +16,7 @@ import {
 import { products as productsApi, categories as categoriesApi } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { getProductImageUrl } from '../utils/productImageUrl';
 
 const ProductCard = ({ product }) => {
   const { addToCart } = useCart();
@@ -27,9 +28,10 @@ const ProductCard = ({ product }) => {
     <div className="group relative flex flex-col bg-white border border-[#e8dcc4] rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden hover:shadow-[0_20px_50px_rgba(139,90,43,0.1)] hover:border-[#8b5a2b]/30 transition-all duration-700">
       <Link to={`/product/${product.slug || product.id}`} className="relative aspect-[4/5] overflow-hidden bg-[#faf8f5]">
         <img
-          src={product.image_url || '/logo.webp'}
+          src={getProductImageUrl(product.image_url || product.images || product.image) || '/logo.webp'}
           className="w-full h-full object-cover p-8 group-hover:scale-105 transition-transform duration-[2000ms] ease-out mix-blend-multiply"
           alt={product.name}
+          onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}
         />
         <div className="absolute top-6 right-6 flex flex-col gap-3 translate-x-12 group-hover:translate-x-0 opacity-0 group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]">
           <button

@@ -1,12 +1,13 @@
 import React from 'react';
 import { Minus, Plus, X } from 'lucide-react';
+import { getProductImageUrl } from '../utils/productImageUrl';
 
 const CartItem = ({ item, onUpdateQuantity, onRemove }) => {
   return (
     <div className="flex gap-6 py-6 border-b border-white/5 group transition-all duration-500 hover:bg-white/[0.02] -mx-4 px-4 rounded-2xl">
       <div className="relative w-24 h-24 rounded-2xl overflow-hidden bg-white/5 border border-white/10 group-hover:border-white/20 transition-colors shrink-0">
         <img 
-          src={item.image} 
+          src={getProductImageUrl(item.image || item.image_url || item.images) || '/logo.webp'}
           alt={item.name}
           className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700"
         />

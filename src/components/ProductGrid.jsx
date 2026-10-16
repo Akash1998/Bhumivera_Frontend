@@ -15,35 +15,7 @@ import {
 import SkeletonLoader from './SkeletonLoader';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
-
-const getImageUrl = (img) => {
-  if (!img) return '/logo.webp';
-  
-  let parsedImg = img;
-  if (typeof img === 'string') {
-    try {
-      parsedImg = JSON.parse(img);
-    } catch (e) {
-      parsedImg = img; 
-    }
-  }
-
-  if (Array.isArray(parsedImg)) {
-    parsedImg = parsedImg[0];
-  }
-
-  if (!parsedImg) return '/logo.webp';
-
-  let path = typeof parsedImg === 'object' && parsedImg !== null 
-    ? (parsedImg.url || parsedImg.file_path || parsedImg.path) 
-    : parsedImg;
-  
-  if (!path || typeof path !== 'string') return '/logo.webp';
-  if (path.startsWith('http') || path.startsWith('data:')) return path;
-  
-  const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev/bhumivera';
-  return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
-};
+import { getProductImageUrl } from '../utils/productImageUrl';
 
 const ProductGrid = ({ products = [], isLoading = false }) => {
   const { addToCart } = useCart() || {};
@@ -163,7 +135,7 @@ const ProductGrid = ({ products = [], isLoading = false }) => {
             >
               <div className={`${viewMode === 'list' ? 'md:w-72 shrink-0' : 'w-full'} relative aspect-square overflow-hidden rounded-2xl bg-slate-800`}>
                 <img 
-                  src={getImageUrl(product.images || product.image_url || product.image)} 
+                  src={getProductImageUrl(product.image_url || product.images || product.image) || '/logo.webp'}
                   alt={product.name}
                   onError={(e) => { 
                     e.target.onerror = null; 

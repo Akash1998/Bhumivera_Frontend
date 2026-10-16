@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Eye, Heart, CheckCircle, AlertCircle, Star, Layers } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
+import { getProductImageUrl } from '../utils/productImageUrl';
 
 export default function Card({ product }) {
   const { addToCart } = useCart();
@@ -47,9 +48,10 @@ export default function Card({ product }) {
 
       <div className="aspect-[4/5] overflow-hidden relative">
         <img 
-          src={product.images?.[0] || 'https://via.placeholder.com/400x500'} 
+          src={getProductImageUrl(product.image_url || product.images || product.image) || '/logo.webp'}
           className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-80 group-hover:opacity-100" 
           alt={product.name} 
+          onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}
         />
         
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-4">

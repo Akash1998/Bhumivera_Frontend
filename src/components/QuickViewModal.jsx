@@ -3,6 +3,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { X, ShoppingCart, Star, Check, Minus, Plus, ExternalLink, Tag, Package } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { getProductImageUrl } from '../utils/productImageUrl';
 
 const FALLBACK = 'https://images.unsplash.com/photo-1601362840469-51e4d8d58785?auto=format&fit=crop&w=400&q=60';
 
@@ -15,9 +16,12 @@ export default function QuickViewModal({ product, onClose }) {
 
   if (!product) return null;
 
-  const images = Array.isArray(product.images) && product.images.length > 0
-    ? product.images.map(i => typeof i === 'string' ? i : i.url || i.file_path)
-    : [product.image || FALLBACK];
+  const productImages = Array.isArray(product.images)
+    ? product.images.map(getProductImageUrl).filter(Boolean)
+    : [];
+  const images = productImages.length
+    ? productImages
+    : [getProductImageUrl(product.image_url || product.image) || FALLBACK];
 
   const price = Number(product.discount_price || product.price || 0);
   const original = Number(product.price || 0);

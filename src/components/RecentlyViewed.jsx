@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Clock, Eye, ShoppingCart, Trash2, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '../context/ToastContext';
+import { getProductImageUrl } from '../utils/productImageUrl';
 
 const STORAGE_KEY = 'Bhumivera_recently_viewed';
 const MAX_ITEMS = 8;
@@ -16,7 +17,7 @@ export function addToRecentlyViewed(product) {
     const itemToAdd = {
       id: productId,
       name: product.name,
-      image: Array.isArray(product.images) ? product.images[0] : (product.image || product.file_path),
+      image: product.image_url || (Array.isArray(product.images) ? product.images[0] : product.images) || product.image || product.file_path,
       price: product.price,
       discount_price: product.discount_price,
       slug: product.slug
@@ -74,7 +75,7 @@ export default function RecentlyViewed({ currentId }) {
               return (
                 <motion.div layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ delay: idx * 0.05 }} key={item.id} className="group relative bg-[#080808] border border-gray-900 rounded-2xl overflow-hidden hover:border-cyan-500/30 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-500/5 active:scale-95">
                   <Link to={`/product/${item.slug || item.id}`} className="block">
-                    <div className="aspect-[4/5] bg-[#0A0A0A] overflow-hidden relative p-3"><img src={item.image} alt={item.name} className="w-full h-full object-contain mix-blend-lighten transition-transform duration-700 group-hover:scale-110" loading="lazy" />{discount > 0 && (<div className="absolute top-2 left-2 bg-gradient-to-r from-red-600 to-pink-600 text-white text-[9px] font-black px-2 py-1 rounded-lg shadow-xl uppercase tracking-tighter z-10">{discount}% OFF</div>)}</div>
+                    <div className="aspect-[4/5] bg-[#0A0A0A] overflow-hidden relative p-3"><img src={getProductImageUrl(item.image) || '/logo.webp'} alt={item.name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-contain mix-blend-lighten transition-transform duration-700 group-hover:scale-110" loading="lazy" />{discount > 0 && (<div className="absolute top-2 left-2 bg-gradient-to-r from-red-600 to-pink-600 text-white text-[9px] font-black px-2 py-1 rounded-lg shadow-xl uppercase tracking-tighter z-10">{discount}% OFF</div>)}</div>
                     <div className="p-3 bg-gradient-to-t from-black to-[#080808]"><h4 className="text-gray-400 text-[10px] font-bold truncate group-hover:text-white transition-colors uppercase tracking-tight mb-1">{item.name}</h4><div className="flex items-center gap-1.5"><span className="text-white font-black text-xs">₹{selling.toLocaleString()}</span>{discount > 0 && (<span className="text-gray-700 text-[9px] line-through font-bold">₹{original.toLocaleString()}</span>)}</div></div>
                   </Link>
                 </motion.div>

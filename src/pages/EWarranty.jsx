@@ -2,7 +2,8 @@ import React, { useState } from 'react';
 import { 
   ShieldCheck, Search, CheckCircle, AlertCircle, Cpu, ArrowRight, Printer, ExternalLink, Gift, Youtube, BoxSelect, RefreshCcw
 } from 'lucide-react';
-import api, { BASE_URL } from "../services/api";
+import api from "../services/api";
+import { getProductImageUrl } from "../utils/productImageUrl";
 
 export default function Genuine_test() {
   const [serial, setSerial] = useState('');
@@ -198,13 +199,7 @@ export default function Genuine_test() {
                 </div>
                 <p className="text-xs font-bold text-blue-600 uppercase tracking-widest mb-4 mt-2">Available for Registration</p>
                 <img 
-                  src={
-                    productData.images?.[0] 
-                      ? (productData.images[0].startsWith('http') 
-                          ? productData.images[0] 
-                          : `${BASE_URL}/${productData.images[0].replace(/^[\/\\]/, '').startsWith('uploads/') ? '' : 'uploads/'}${productData.images[0].replace(/^[\/\\]/, '')}`)
-                      : FALLBACK_IMAGE
-                  } 
+                  src={getProductImageUrl(productData.image_url || productData.images || productData.image) || FALLBACK_IMAGE}
                   alt={productData.product_name}
                   className="w-full aspect-square object-contain bg-slate-50 rounded-2xl mb-4"
                 />

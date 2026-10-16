@@ -17,6 +17,7 @@ import {
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
+import { getProductImageUrl } from '../utils/productImageUrl';
 
 const splitUrls = value => {
   if (Array.isArray(value)) return value.filter(item => typeof item === 'string');
@@ -64,28 +65,7 @@ const getSecureExternalUrl = value => {
   }
 };
 
-// Robust parsing for JSON-stringified arrays from MySQL
-const getImageUrl = (img) => {
-  if (!img) return '/logo.webp';
-  let parsedImg = img;
-  
-  if (typeof img === 'string') {
-    try {
-      const parsed = JSON.parse(img);
-      parsedImg = Array.isArray(parsed) ? parsed[0] : parsed;
-    } catch (e) {
-      parsedImg = img; // Normal string fallback
-    }
-  }
-
-  let path = typeof parsedImg === 'object' && parsedImg !== null ? (parsedImg.url || parsedImg.file_path || parsedImg.path) : parsedImg;
-  
-  if (!path || typeof path !== 'string') return '/logo.webp';
-  if (path.startsWith('http') || path.startsWith('data:')) return path;
-  
-  const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev/bhumivera';
-  return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\/+/, '')}`;
-};
+const getImageUrl = image => getProductImageUrl(image) || '/logo.webp';
 
 export default function ProductDetail() {
   const { id } = useParams();

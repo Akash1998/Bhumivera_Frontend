@@ -5,17 +5,12 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { Link } from 'react-router-dom';
 import { useToast } from '../context/ToastContext';
+import { getProductImageUrl } from '../utils/productImageUrl';
 
-const IMAGE_BASE = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev/bhumivera';
 const FALLBACK = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%230f172a'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%23334155' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E`;
 
 function getImageUrl(product) {
-  const image = product.image_url || product.images?.[0] || product.image;
-  if (!image) return '/logo.webp';
-  const path = typeof image === 'object' ? image.url || image.file_path || image.path : image;
-  if (typeof path !== 'string' || !path) return '/logo.webp';
-  if (/^(https?:|data:)/i.test(path)) return path;
-  return `${IMAGE_BASE.replace(/\/$/, '')}/${path.replace(/^\/+/, '')}`;
+  return getProductImageUrl(product.image_url || product.images || product.image) || '/logo.webp';
 }
 
 export default function Wishlist() {

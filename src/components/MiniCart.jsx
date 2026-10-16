@@ -8,6 +8,7 @@ import { useSettings } from '../context/SettingsContext';
 import { useWishlist } from '../context/WishlistContext';
 import { addresses as addressesApi, coupons as couponsApi, orders as ordersApi, payments as paymentsApi, products as productsApi, wallet as walletApi } from '../services/api';
 import { useToast } from '../context/ToastContext';
+import { getProductImageUrl } from '../utils/productImageUrl';
 import {
   estimateShoppingWalletReward,
   NEW_CUSTOMER_BONUS_PERCENT,
@@ -34,22 +35,7 @@ const loadRazorpayScript = () => {
   return razorpayScriptPromise;
 };
 
-const getImageUrl = image => {
-  let value = image;
-  if (typeof value === 'string') {
-    try {
-      value = JSON.parse(value);
-    } catch {
-      // Plain image keys are expected for cart records.
-    }
-  }
-  if (Array.isArray(value)) value = value.find(item => item?.type !== 'video' && item?.media_type !== 'video') || value[0];
-  value = value && typeof value === 'object' ? value.url || value.file_path || value.path : value;
-  if (typeof value !== 'string' || !value.trim()) return '/logo.webp';
-  if (/^(https?:|data:|blob:)/i.test(value)) return value;
-  const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev/bhumivera';
-  return `${baseUrl.replace(/\/$/, '')}/${value.replace(/^\/+/, '')}`;
-};
+const getImageUrl = image => getProductImageUrl(image) || '/logo.webp';
 
 const formatPrice = value => `₹${(Number(value) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const blankAddress = { label: 'Home', fullName: '', phone: '', addressLine1: '', addressLine2: '', city: '', state: '', pincode: '', country: 'India', isDefault: false };
@@ -902,7 +888,7 @@ export default function MiniCart() {
                 {!recommendationsLoading && !recommendationsError && recommendationsToShow.length === 0 && <p className="text-xs text-stone-500">We’ll have more thoughtful picks for you soon.</p>}
                 <div className="grid grid-cols-2 gap-2">
                   {recommendationsToShow.slice(0, 2).map(product => <article key={product.id || product._id} className="flex min-w-0 items-center gap-2 rounded-xl border border-[#e8dcc4] bg-white p-2">
-                    <img src={getImageUrl(product.image_url || product.images?.[0] || product.image)} alt={product.name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-12 w-12 shrink-0 rounded-lg bg-[#faf8f5] object-contain p-1"/>
+                    <img src={getImageUrl(product.image_url || product.images || product.image)} alt={product.name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-12 w-12 shrink-0 rounded-lg bg-[#faf8f5] object-contain p-1"/>
                     <div className="min-w-0 flex-1"><p className="line-clamp-2 text-[10px] font-semibold leading-tight text-[#2C3E2D]">{product.name}</p><p className="mt-1 text-[10px] font-bold text-[#8b5a2b]">{formatPrice(product.discount_price || product.price)}</p></div>
                     <button type="button" aria-label={`Add ${product.name} to cart`} onClick={() => addToCart(product)} className="shrink-0 rounded-lg border border-[#e8dcc4] p-1.5 text-[#8b5a2b] hover:bg-[#8b5a2b] hover:text-white"><Plus size={14}/></button>
                   </article>)}
@@ -923,7 +909,7 @@ export default function MiniCart() {
                 const id = savedItem.product_id || product.id || product._id;
                 const savedBusy = busySavedItem === String(id);
                 return <article key={id} className="flex items-center gap-2 rounded-xl bg-[#faf8f5] p-2">
-                  <img src={getImageUrl(product.image_url || product.images?.[0] || product.image)} alt={product.name || 'Saved product'} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-11 w-11 shrink-0 rounded-lg bg-white object-contain p-1"/>
+                  <img src={getImageUrl(product.image_url || product.images || product.image)} alt={product.name || 'Saved product'} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-11 w-11 shrink-0 rounded-lg bg-white object-contain p-1"/>
                   <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-[#2C3E2D]">{product.name || 'Saved product'}</p><p className="mt-1 text-[10px] font-bold text-[#8b5a2b]">{formatPrice(product.discount_price || product.price)}</p></div>
                   <button type="button" disabled={busySavedItem !== null} onClick={() => moveSavedItemToCart(savedItem)} className="rounded-lg bg-[#2C3E2D] px-2.5 py-2 text-[10px] font-semibold text-white transition hover:bg-[#1b2c20] disabled:cursor-wait disabled:opacity-50">{savedBusy ? 'Moving…' : 'Add'}</button>
                   <button type="button" disabled={busySavedItem !== null} aria-label={`Remove ${product.name || 'saved product'} from wishlist`} onClick={() => removeSavedItem(id)} className="rounded-lg p-2 text-stone-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:cursor-wait"><Trash2 size={14}/></button>

@@ -4,7 +4,6 @@ import { useAuth } from '../context/AuthContext';
 import { formatOrderNumber } from '../utils/formatOrderNumber';
 import { useCart } from '../context/CartContext';
 import {
-  BASE_URL,
   users as usersApi,
   orders as ordersApi,
   wishlist as wishlistApi,
@@ -37,28 +36,9 @@ import {
 import { useNavigate } from 'react-router-dom';
 import { registerPasskey, isPasskeySupported } from '../utils/webauthnClient';
 import SupportCenter from '../components/SupportCenter';
+import { getProductImageUrl } from '../utils/productImageUrl';
 
-const getProfileImageUrl = image => {
-  let value = image;
-  if (typeof value === 'string') {
-    try {
-      const parsed = JSON.parse(value);
-      value = Array.isArray(parsed) ? parsed[0] : parsed;
-    } catch {
-      // Keep plain image URLs and object-storage keys as-is.
-    }
-  }
-  const path = typeof value === 'object' && value !== null
-    ? value.url || value.file_path || value.path
-    : value;
-  if (typeof path !== 'string' || !path.trim()) return null;
-  if (/^(https?:|data:|blob:)/i.test(path)) return path;
-  if (path.startsWith('uploads/')) return `${BASE_URL.replace(/\/$/, '')}/${path.replace(/^\/+/, '')}`;
-  const imageBase = import.meta.env.VITE_R2_PUBLIC_URL ||
-    import.meta.env.VITE_IMAGE_BASE_URL ||
-    'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev/bhumivera';
-  return `${imageBase.replace(/\/$/, '')}/${path.replace(/^\/+/, '')}`;
-};
+const getProfileImageUrl = getProductImageUrl;
 
 const TABS = [
   { id: 'overview',      label: 'Overview',      icon: LayoutDashboard },
@@ -1381,7 +1361,9 @@ export default function Profile() {
                         <tbody className="divide-y divide-stone-50">
                           {wallet.transactions.map(t => {
                             const type = (t.type||'').toLowerCase();
-                            const positive = type.includes('credit') || type.includes('add') || type.includes('refund') || t.amount > 0;
+                            const isCredit = type === 'credit';
+                            const isDebit = type === 'debit';
+                            const amountColor = isCredit ? 'text-emerald-700' : isDebit ? 'text-rose-700' : 'text-stone-600';
                             return (
                               <tr key={`${t.wallet_bucket || 'cash'}-${t.id}`} className="hover:bg-stone-50/60">
                                 <td className="py-3.5 px-3 text-stone-600 whitespace-nowrap">{t.created_at? new Date(t.created_at).toLocaleString():'—'}</td>
@@ -1391,15 +1373,19 @@ export default function Profile() {
                                   </span>
                                 </td>
                                 <td className="py-3.5 px-3">
-                                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${positive?'bg-emerald-50 text-emerald-700 border border-emerald-100':'bg-rose-50 text-rose-700 border border-rose-100'}`}>
-                                    {positive ? <ArrowDownLeft className="w-3 h-3"/> : <ArrowUpRight className="w-3 h-3"/>}
-                                    {(t.type||'txn').replace(/_/g,' ')}
+                                  <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium ${
+                                    isCredit ? 'bg-emerald-50 text-emerald-700 border border-emerald-100' :
+                                    isDebit ? 'bg-rose-50 text-rose-700 border border-rose-100' :
+                                    'bg-stone-50 text-stone-600 border border-stone-200'
+                                  }`}>
+                                    {isCredit ? <ArrowDownLeft className="w-3 h-3"/> : isDebit ? <ArrowUpRight className="w-3 h-3"/> : null}
+                                    {type.replace(/_/g,' ') || 'txn'}
                                   </span>
                                 </td>
                                 <td className="py-3.5 px-3 text-stone-700">{t.description||'—'}</td>
                                 <td className="py-3.5 px-3 font-mono text-xs text-stone-500">{t.reference_id || t.order_id || '—'}</td>
-                                <td className={`py-3.5 px-3 text-right font-semibold ${positive?'text-emerald-700':'text-rose-700'}`}>
-                                  {positive?'+':'-'}₹{Math.abs(Number(t.amount||0)).toFixed(2)}
+                                <td className={`py-3.5 px-3 text-right font-semibold ${amountColor}`}>
+                                  {isCredit ? '+' : isDebit ? '−' : ''}₹{Math.abs(Number(t.amount||0)).toFixed(2)}
                                 </td>
                               </tr>
                             );

@@ -8,6 +8,7 @@ import {
 } from 'lucide-react';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
+import { getProductImageUrl as getImageUrl } from '../../utils/productImageUrl';
 
 // --- CONFIGURATION MAPS ---
 const RMA_STATUS_MAP = {
@@ -189,15 +190,6 @@ export default function ReturnManagement() {
     } catch (err) {
       showToast?.(err.response?.data?.message || 'Could not download return label.', 'error');
     }
-  };
-
-  const getImageUrl = (img) => {
-    if (!img) return '/logo.webp';
-    let path = typeof img === 'object' ? (img.file_path || img.url || img.path) : img;
-    if (!path) return '/logo.webp';
-    if (path.startsWith('http')) return path;
-    const baseUrl = import.meta.env.VITE_R2_PUBLIC_URL || import.meta.env.VITE_IMAGE_BASE_URL || 'https://pub-70fdb5d94df347c4bed417c28b066c02.r2.dev/bhumivera';
-    return `${baseUrl.replace(/\/$/, '')}/${path.replace(/^\//, '')}`;
   };
 
   // --- MUTATION PROTOCOLS ---

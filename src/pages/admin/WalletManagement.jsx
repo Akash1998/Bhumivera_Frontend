@@ -367,34 +367,39 @@ export default function WalletManagement() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-white/10">
-                {filteredTransactions.map(transaction => (
-                  <tr key={`${transaction.wallet_bucket || 'cash'}-${transaction.id}`}>
-                    <td className="p-3 font-mono text-xs text-slate-500">#{transaction.id}</td>
-                    <td className="p-3 text-xs text-slate-400">
-                      {new Date(transaction.created_at).toLocaleString()}
-                    </td>
-                    <td
-                      className={`p-3 text-xs ${
-                        transaction.wallet_bucket === 'cash' ? 'text-emerald-200' : 'text-amber-200'
-                      }`}
-                    >
-                      {transaction.wallet_bucket === 'shopping'
-                        ? 'Shopping reward'
-                        : transaction.wallet_bucket === 'referral'
-                        ? 'Referral reward'
-                        : 'Spendable'}
-                    </td>
-                    <td className="p-3 text-slate-200">{transaction.description}</td>
-                    <td className="p-3 capitalize text-slate-300">{transaction.type}</td>
-                    <td
-                      className={`p-3 text-right font-medium ${
-                        transaction.type === 'credit' ? 'text-emerald-300' : 'text-rose-300'
-                      }`}
-                    >
-                      {transaction.type === 'credit' ? '+' : '−'}₹{Number(transaction.amount).toFixed(2)}
-                    </td>
-                  </tr>
-                ))}
+                {filteredTransactions.map(transaction => {
+                  const type = String(transaction.type || '').toLowerCase();
+                  const isCredit = type === 'credit';
+                  const isDebit = type === 'debit';
+                  return (
+                    <tr key={`${transaction.wallet_bucket || 'cash'}-${transaction.id}`}>
+                      <td className="p-3 font-mono text-xs text-slate-500">#{transaction.id}</td>
+                      <td className="p-3 text-xs text-slate-400">
+                        {new Date(transaction.created_at).toLocaleString()}
+                      </td>
+                      <td
+                        className={`p-3 text-xs ${
+                          transaction.wallet_bucket === 'cash' ? 'text-emerald-200' : 'text-amber-200'
+                        }`}
+                      >
+                        {transaction.wallet_bucket === 'shopping'
+                          ? 'Shopping reward'
+                          : transaction.wallet_bucket === 'referral'
+                          ? 'Referral reward'
+                          : 'Spendable'}
+                      </td>
+                      <td className="p-3 text-slate-200">{transaction.description}</td>
+                      <td className={`p-3 capitalize ${isCredit ? 'text-emerald-300' : isDebit ? 'text-rose-300' : 'text-slate-300'}`}>{type || 'unknown'}</td>
+                      <td
+                        className={`p-3 text-right font-medium ${
+                          isCredit ? 'text-emerald-300' : isDebit ? 'text-rose-300' : 'text-slate-300'
+                        }`}
+                      >
+                        {isCredit ? '+' : isDebit ? '−' : ''}₹{Math.abs(Number(transaction.amount) || 0).toFixed(2)}
+                      </td>
+                    </tr>
+                  );
+                })}
               </tbody>
             </table>
           </div>
