@@ -215,6 +215,66 @@ export const FRONTEND_INGREDIENT_MEMORY = [
     aliases: ['turmeric', 'curcuma', 'curcuma longa'],
     description: 'Organic Turmeric rhizome extract (0.5%) standardized for curcuminoids, providing radiance, calming redness, and defending against photo-oxidative stress.',
   },
+  {
+    id: 'cucumber',
+    name: 'Cucumber Extract',
+    aliases: ['cucumber', 'cucumis sativus', 'kheera'],
+    description: 'Cold-processed botanical extract (0.5%) rich in polysaccharides and caffeic acid that calms cutaneous microcirculation and relieves facial redness.',
+  },
+  {
+    id: 'manjistha',
+    name: 'Manjistha (Indian Madder)',
+    aliases: ['manjishta', 'rubia cordifolia', 'indian madder'],
+    description: 'Classical Ayurvedic root extract (0.5%) rich in bioavailable anthraquinones that clarify hyperpigmentation and even out dull skin tone.',
+  },
+  {
+    id: 'rosemary',
+    name: 'Rosemary Oil',
+    aliases: ['rosemary oil', 'rosmarinus officinalis', 'rosemary'],
+    description: 'Therapeutic botanical oil (10mg) containing carnosic acid and 1,8-cineole that stimulate scalp microcapillary perfusion and revitalize hair follicles.',
+  },
+  {
+    id: 'bhringraj',
+    name: 'Bhringraj (False Daisy)',
+    aliases: ['eclipta alba', 'keshraj', 'eclipta prostrata', 'bhringraj'],
+    description: 'Ayurvedic King of Hair (10mg) rich in wedelolactone that encourages dormant hair follicles to transition back into active anagen growth.',
+  },
+  {
+    id: 'amla',
+    name: 'Amla (Indian Gooseberry)',
+    aliases: ['phyllanthus emblica', 'amalaki', 'indian gooseberry', 'amla'],
+    description: 'Potent Ayurvedic rasayana (20mg) delivering bioavailable Vitamin C and tannins that strengthen follicular roots and defend keratin protein fibers.',
+  },
+  {
+    id: 'shikakai',
+    name: 'Shikakai',
+    aliases: ['acacia concinna', 'fruit for hair', 'shikakai'],
+    description: 'Natural botanical fruit extract (5mg) with low acidic pH and plant mucilage that smooths down the cuticle and detangles hair fibers.',
+  },
+  {
+    id: 'reetha',
+    name: 'Reetha (Soapnut)',
+    aliases: ['sapindus mukorossi', 'soapnut', 'reetha'],
+    description: 'Saponin-rich botanical (25mg) that mildly emulsifies scalp sebum without disrupting the acid mantle or stripping natural moisture.',
+  },
+  {
+    id: 'triphala',
+    name: 'Triphala',
+    aliases: ['amla haritaki bibhitaki', 'three fruits', 'triphala'],
+    description: 'Synergistic trinity of Amla, Haritaki, and Bibhitaki (10mg) rich in gallic acid that clarifies buildup and soothes scalp irritation.',
+  },
+  {
+    id: 'kumkumadi',
+    name: 'Kumkumadi Tailam (Night Elixir)',
+    aliases: ['kumkumadi', 'kumkumadi tailam', 'kumkumadi oil', 'night elixir'],
+    description: 'Classical 26-herb Ayurvedic elixir infused with Kashmiri Saffron and Red Sandalwood to restore cellular moisture and impart golden luminosity.',
+  },
+  {
+    id: 'saffron',
+    name: 'Kashmiri Saffron (Kesar)',
+    aliases: ['kesar', 'crocus sativus', 'zafran', 'saffron'],
+    description: 'Gold standard botanical (Crocus sativus) rich in crocin and safranal that accelerates the fading of dark spots and reveals radiant clarity.',
+  },
 ];
 
 const makePrompts = product => ({
@@ -387,7 +447,61 @@ export function resolveClientSideConciergeFallback(message) {
     normalizedQuery.includes(item.id.replace(/_/g, ' '))
   );
 
-  if (/\b(when|what time|how often|how long|routine|use|usage|apply|application)\b/.test(normalizedQuery) && (product || normalizedQuery.includes('face wash'))) {
+  const isRitualQuery = /\b(when|what\s*time|how\s*often|how\s*long|routine|ritual|rituals|step\s*by\s*step|morning\s*ritual|evening\s*ritual|daily\s*ritual|skincare\s*ritual|am\s*ritual|pm\s*ritual|use|usage|apply|application)\b/.test(normalizedQuery);
+
+  const ingredientQuery = product
+    ? normalizedQuery.replace(product.name.replace(/^Bhumivera\s+/i, '').toLowerCase(), '')
+    : normalizedQuery;
+  const ingredient = FRONTEND_INGREDIENT_MEMORY.find(item =>
+    [item.name, ...item.aliases].some(name => ingredientQuery.includes(name.toLowerCase()))
+  );
+
+  if (ingredient && isRitualQuery) {
+    const prodName = product ? product.name.replace(/^Bhumivera\s+/i, '') : 'Sea Buckthorn Face Wash';
+    return {
+      reply: `**${ingredient.name} — Botanical Profile & Daily Step-by-Step Ritual:**\n\n` +
+        `• **🌿 Botanical Active Profile & Mechanism:**\n` +
+        `  ${ingredient.description}\n\n` +
+        `• **🛡️ Role in the Bhumivera Cleansing Ritual (${prodName}):**\n` +
+        `  Calibrated and formulated to work synergistically with skin barrier lipids, soothing inflammation and preserving natural cellular hydration.\n\n` +
+        `• **💧 The Signature 5-Step Cleansing & Soothing Ritual:**\n` +
+        `  1. **Lukewarm Water Preparation:** Splash face with comfortable lukewarm water (never hot).\n` +
+        `  2. **Micro-Bubble Lather:** Dispense 1 to 2 coin-sized pumps into clean, damp palms and work into a rich micro-bubble lather.\n` +
+        `  3. **30–45 Second Mindful Massage:** Gently massage over face and neck in upward circular sweeps for 30 to 45 seconds, focusing on congested zones without friction.\n` +
+        `  4. **Cool Water Rinse & Muslin Blot:** Rinse thoroughly with cool water to refresh pores and pat gently with a clean muslin towel, leaving skin slightly damp.\n` +
+        `  5. **The 60-Second Layering Rule:** Within 60 seconds of patting dry, mist with hydrating toner, follow with active serum (Niacinamide / Hyaluronic Acid), and finish with moisturizer or SPF 50 (AM) or 2–3 drops of Kumkumadi Night Elixir (PM).\n\n` +
+        `• **☀️ AM vs. 🌙 PM Ritual:**\n` +
+        `  In the morning, use to sweep away overnight sebum and prime your antioxidant shield; in the evening, use to lift away urban grime and sunscreen.`,
+      quickActions: [
+        {
+          id: 'post_wash_layering',
+          label: '🧴 Post-Wash Layering Guide',
+          prompt: `What skincare products should I apply right after using ${prodName}?`,
+          category: 'post_wash_routine',
+        },
+        {
+          id: 'active_synergy',
+          label: '🌿 Active Synergy',
+          prompt: `How do Sea Buckthorn and Niacinamide work together in ${prodName}?`,
+          category: 'ingredient_synergy',
+        },
+        {
+          id: 'kumkumadi_pairing',
+          label: '🌙 Pair with Kumkumadi Night Elixir',
+          prompt: 'How do I pair my cleanser with Bhumivera Kumkumadi Night Elixir?',
+          category: 'product_pairing',
+        },
+        {
+          id: 'skin_compatibility',
+          label: '⚖️ Sensitive & Acne-Prone Skin Guide',
+          prompt: `Is ${prodName} safe for sensitive or acne-prone skin?`,
+          category: 'skin_compatibility',
+        },
+      ],
+    };
+  }
+
+  if (isRitualQuery && (product || normalizedQuery.includes('face wash'))) {
     const targetProduct = product || FRONTEND_PRODUCTS_GUIDE[0];
     return {
       reply: `**Best Time to Use & Daily Skincare Ritual for ${targetProduct.name}:**\n\n` +
@@ -408,12 +522,25 @@ export function resolveClientSideConciergeFallback(message) {
     };
   }
 
-  const ingredientQuery = product
-    ? normalizedQuery.replace(product.name.replace(/^Bhumivera\s+/i, '').toLowerCase(), '')
-    : normalizedQuery;
-  const ingredient = FRONTEND_INGREDIENT_MEMORY.find(item =>
-    [item.name, ...item.aliases].some(name => ingredientQuery.includes(name.toLowerCase()))
-  );
+  if (isRitualQuery && !ingredient) {
+    const targetProduct = FRONTEND_PRODUCTS_GUIDE[0];
+    return {
+      reply: `**The Signature Bhumivera Daily Skincare Ritual (AM & PM):**\n\n` +
+        `Our clean botanical rituals are engineered to cleanse, balance, and rejuvenate your skin barrier without aggressive chemicals or tight after-feel:\n\n` +
+        `• **☀️ Morning (AM) Ritual — Antioxidant Shield & Hydration:**\n` +
+        `  1. **Purify:** Cleanse with **${targetProduct.name}** for 30–45 seconds with lukewarm water to remove overnight sebum and activate the Omega-7 and Niacinamide (1%) antioxidant shield.\n` +
+        `  2. **Hydrate:** Within 60 seconds of patting dry, apply botanical toner or hydrating mist to damp skin.\n` +
+        `  3. **Treat:** Dispense 3–4 drops of active serum (Hyaluronic Acid or Niacinamide) and pat into skin.\n` +
+        `  4. **Protect:** Seal with lightweight moisturizer and finish with a broad-spectrum **SPF 50 sunscreen**.\n\n` +
+        `• **🌙 Evening (PM) Ritual — Restorative Barrier Reset & Cellular Renewal:**\n` +
+        `  1. **Purify:** Massage **${targetProduct.name}** over damp skin to dissolve accumulated dust, environmental pollutants, and daytime sunscreen.\n` +
+        `  2. **Rinse & Blot:** Rinse with cool water to soothe pores and lightly blot with a soft muslin towel.\n` +
+        `  3. **Elixir Press:** Warm 2 to 3 drops of **Bhumivera Kumkumadi Night Elixir** (authentic 26-herb Kashmiri Saffron formula) between your palms and gently press into face and neck for deep overnight restoration.\n\n` +
+        `• **🌿 Safety & Skin Compatibility:**\n` +
+        `  Formulated at physiological **pH 5.5**, SLS/SLES sulphate-free, non-comedogenic, and dermatologically tested for all skin types including sensitive and acne-prone skin.`,
+      quickActions: buildClientUsageFollowUps(targetProduct.name.replace(/^Bhumivera\s+/i, '')),
+    };
+  }
 
   if (ingredient) {
     const prodName = product ? product.name.replace(/^Bhumivera\s+/i, '') : 'Sea Buckthorn Face Wash';
