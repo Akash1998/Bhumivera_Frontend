@@ -37,6 +37,12 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { aiSupport as aiSupportApi, BASE_URL } from '../services/api';
 import { normalizeTelegramBotUrl } from '../utils/telegramUrl';
+import {
+  AI_COPILOT_ADD_CART_RETRY_EVENT,
+  AI_COPILOT_EVENT,
+  COMPLETE_SITE_NAVIGATION_DIRECTORY,
+  analyzePasswordForAiGuide,
+} from '../utils/aiCopilotBus';
 
 const STORAGE_KEY = 'bhumivera_ai_support_state_v2';
 const SESSION_TOKEN_KEY = 'bhumivera_ai_support_token_v2';
@@ -441,6 +447,11 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   const [hasPlacedOrder, setHasPlacedOrder] = useState(false);
   const [telegramBotUrl, setTelegramBotUrl] = useState('https://web.telegram.org/k/#@BhumiveraBot');
   const [showAsyncForm, setShowAsyncForm] = useState(false);
+  const [copilotRescue, setCopilotRescue] = useState(null);
+  const [showSiteDirectory, setShowSiteDirectory] = useState(false);
+  const [siteDirectoryFilter, setSiteDirectoryFilter] = useState('');
+  const [copilotEmailInput, setCopilotEmailInput] = useState('');
+  const [copilotSendingReset, setCopilotSendingReset] = useState(false);
   const [asyncSubject, setAsyncSubject] = useState('Support Inquiry');
   const [asyncBody, setAsyncBody] = useState('');
 
@@ -568,6 +579,69 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     }, 8000);
     return () => window.clearInterval(interval);
   }, [isOpen, sessionToken, isTyping, messages.length, soundEnabled]);
+
+  // 100X AI CO-PILOT FRICTION RESCUE LISTENER (Cart, Password, Login, Checkout)
+  useEffect(() => {
+    if (typeof window === 'undefined') return undefined;
+    const handleAiCopilotAssist = async event => {
+      const detail = event?.detail || {};
+      if (detail.email) setCopilotEmailInput(detail.email);
+      else if (user?.email) setCopilotEmailInput(user.email);
+
+      const initialRescue = {
+        frictionType: detail.frictionType || 'general',
+        headline: detail.headline || 'AI Co-Pilot Guided Assistance',
+        explanation:
+          detail.explanation ||
+          detail.errorMessage ||
+          'I detected an issue and prepared step-by-step guidance to resolve it immediately.',
+        steps: Array.isArray(detail.steps) && detail.steps.length
+          ? detail.steps
+          : [
+              'Review the diagnostic details below.',
+              'Click one of the 1-click quick fixes to resolve the issue immediately.',
+            ],
+        productId: detail.productId || null,
+        productName: detail.productName || '',
+        requestedQuantity: detail.requestedQuantity || 1,
+        maxAddable: detail.maxAddable ?? null,
+        email: detail.email || user?.email || '',
+        passwordDiagnostics: detail.candidatePassword
+          ? analyzePasswordForAiGuide(detail.candidatePassword, detail.email || user?.email || '')
+          : null,
+        alternatives: [],
+        quickFixes: [],
+      };
+
+      setCopilotRescue(initialRescue);
+      if (detail.autoOpen !== false) {
+        setIsOpen(true);
+        setUnreadCount(0);
+        setProactiveBubble(null);
+      }
+
+      if (typeof aiSupportApi.diagnoseFriction === 'function') {
+        try {
+          const res = await aiSupportApi.diagnoseFriction({
+            ...detail,
+            pagePath: location.pathname,
+          });
+          if (res?.data?.success) {
+            setCopilotRescue(prev => ({
+              ...prev,
+              ...res.data,
+              passwordDiagnostics: res.data.passwordDiagnostics || prev?.passwordDiagnostics || null,
+            }));
+          }
+        } catch {
+          // Keep client-side diagnostic card if offline
+        }
+      }
+    };
+
+    window.addEventListener(AI_COPILOT_EVENT, handleAiCopilotAssist);
+    return () => window.removeEventListener(AI_COPILOT_EVENT, handleAiCopilotAssist);
+  }, [location.pathname, user?.email]);
 
   // PROACTIVE TRIGGER 1: Linger >45s
   useEffect(() => {
@@ -1086,6 +1160,19 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               </button>
               <button
                 type="button"
+                onClick={() => setShowSiteDirectory(prev => !prev)}
+                title="All Website Links & AI Site Navigator"
+                aria-label="Open All Website Links Directory"
+                className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-colors border ${
+                  showSiteDirectory
+                    ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37]'
+                    : 'border-[#D4AF37]/40 text-[#D4AF37] hover:bg-white/10'
+                }`}
+              >
+                All Links
+              </button>
+              <button
+                type="button"
                 onClick={() => setShowButtonGuide(prev => !prev)}
                 title="What do these buttons do? (Interactive Guide)"
                 aria-label="What do these buttons do?"
@@ -1187,6 +1274,204 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                     <span className="text-[11px] opacity-85 leading-snug">{item.whatItDoes}</span>
                   </div>
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Complete A-to-Z Website Links & Missing Link Directory Drawer */}
+          {showSiteDirectory && (
+            <div
+              className={`px-4 py-3 border-b max-h-60 overflow-y-auto text-xs space-y-2.5 shrink-0 ${
+                isDark ? 'bg-[#0d2119] border-[#D4AF37]/40 text-stone-100' : 'bg-[#fffdf7] border-[#D4AF37]/50 text-[#0B2419]'
+              }`}
+            >
+              <div className="flex items-center justify-between gap-2">
+                <span className="font-bold text-[11px] uppercase tracking-wider text-[#D4AF37]">
+                  Complete Bhumivera Website Directory ({COMPLETE_SITE_NAVIGATION_DIRECTORY.length} Pages)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowSiteDirectory(false)}
+                  className="text-[11px] underline opacity-75 hover:opacity-100"
+                >
+                  Close
+                </button>
+              </div>
+              <input
+                type="text"
+                value={siteDirectoryFilter}
+                onChange={e => setSiteDirectoryFilter(e.target.value)}
+                placeholder="Filter links (e.g. GST, warranty, returns, password, shop)…"
+                className="w-full rounded-lg border border-current/20 bg-black/10 px-2.5 py-1.5 text-[11px] outline-none"
+              />
+              <div className="grid grid-cols-1 gap-1.5">
+                {COMPLETE_SITE_NAVIGATION_DIRECTORY.filter(
+                  item =>
+                    !siteDirectoryFilter.trim() ||
+                    item.title.toLowerCase().includes(siteDirectoryFilter.toLowerCase()) ||
+                    item.description.toLowerCase().includes(siteDirectoryFilter.toLowerCase()) ||
+                    item.path.toLowerCase().includes(siteDirectoryFilter.toLowerCase())
+                ).map(item => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    onClick={() => {
+                      setShowSiteDirectory(false);
+                      navigate(item.path);
+                    }}
+                    className="text-left rounded-xl p-2 bg-current/5 hover:bg-[#D4AF37]/15 border border-current/10 transition flex items-center justify-between gap-2"
+                  >
+                    <div className="min-w-0">
+                      <div className="font-bold text-[11px] truncate">{item.title}</div>
+                      <div className="text-[10px] opacity-75 truncate">{item.description}</div>
+                    </div>
+                    <span className="shrink-0 rounded bg-[#D4AF37]/20 px-1.5 py-0.5 font-mono text-[9px] font-bold text-[#D4AF37]">
+                      {item.path}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* 100X AI Co-Pilot Friction Rescue Card (Cart / Password / Login / Checkout) */}
+          {copilotRescue && (
+            <div
+              className={`px-4 py-3 border-b max-h-64 overflow-y-auto text-xs space-y-2.5 shrink-0 ${
+                isDark
+                  ? 'bg-gradient-to-br from-[#122b22] to-[#0a1c15] border-[#D4AF37]/50 text-stone-100'
+                  : 'bg-[#fffbeb] border-[#D4AF37] text-[#0B2419]'
+              }`}
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div>
+                  <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[#D4AF37]">
+                    <Sparkles className="w-3 h-3" /> 100X AI Co-Pilot Live Rescue
+                  </span>
+                  <h3 className="font-bold text-xs mt-0.5">{copilotRescue.headline}</h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={() => setCopilotRescue(null)}
+                  className="text-[11px] opacity-70 hover:opacity-100"
+                >
+                  ✕
+                </button>
+              </div>
+
+              <p className="text-[11px] leading-relaxed opacity-90">{copilotRescue.explanation}</p>
+
+              {Array.isArray(copilotRescue.steps) && copilotRescue.steps.length > 0 && (
+                <ul className="space-y-1 text-[11px] pl-1">
+                  {copilotRescue.steps.map((st, idx) => (
+                    <li key={idx} className="flex items-start gap-1.5">
+                      <span className="font-bold text-[#D4AF37]">{idx + 1}.</span>
+                      <span>{st}</span>
+                    </li>
+                  ))}
+                </ul>
+              )}
+
+              {/* Password rescue direct email link sender */}
+              {String(copilotRescue.frictionType || '').includes('password') ||
+              String(copilotRescue.frictionType || '').includes('login') ? (
+                <div className="pt-1 space-y-1.5">
+                  <div className="flex gap-1.5">
+                    <input
+                      type="email"
+                      value={copilotEmailInput}
+                      onChange={e => setCopilotEmailInput(e.target.value)}
+                      placeholder="Your email for 1-click password setup link…"
+                      className="flex-1 rounded-lg border border-current/20 bg-black/10 px-2.5 py-1 text-[11px] outline-none"
+                    />
+                    <button
+                      type="button"
+                      disabled={copilotSendingReset || !copilotEmailInput.trim()}
+                      onClick={async () => {
+                        setCopilotSendingReset(true);
+                        try {
+                          const res = await aiSupportApi.passwordRescue?.({
+                            email: copilotEmailInput.trim(),
+                            sendRecoveryLink: true,
+                            stage: 'ai_copilot_widget',
+                          });
+                          setCopilotRescue(prev => ({
+                            ...prev,
+                            explanation:
+                              res?.data?.recoveryNotice ||
+                              `Sent a 30-minute one-click password setup link to ${copilotEmailInput.trim()}!`,
+                          }));
+                        } catch {
+                          navigate('/forgot-password');
+                        } finally {
+                          setCopilotSendingReset(false);
+                        }
+                      }}
+                      className="rounded-lg bg-[#D4AF37] px-2.5 py-1 text-[10px] font-black uppercase text-[#0B2419] disabled:opacity-50"
+                    >
+                      {copilotSendingReset ? 'Sending…' : 'Send 1-Click Link'}
+                    </button>
+                  </div>
+                </div>
+              ) : null}
+
+              {/* Cart rescue 1-click actions */}
+              <div className="flex flex-wrap gap-1.5 pt-1">
+                {copilotRescue.productId && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const qtyToAdd =
+                        copilotRescue.maxAddable && copilotRescue.maxAddable > 0
+                          ? copilotRescue.maxAddable
+                          : 1;
+                      window.dispatchEvent(
+                        new CustomEvent(AI_COPILOT_ADD_CART_RETRY_EVENT, {
+                          detail: {
+                            productId: copilotRescue.productId,
+                            productName: copilotRescue.productName,
+                            quantity: qtyToAdd,
+                          },
+                        })
+                      );
+                      setCopilotRescue(null);
+                    }}
+                    className="rounded-lg bg-emerald-500 px-2.5 py-1 text-[10px] font-black uppercase text-[#071510]"
+                  >
+                    {copilotRescue.maxAddable && copilotRescue.maxAddable > 0
+                      ? `Add ${copilotRescue.maxAddable} Available Unit(s)`
+                      : 'Retry Add 1 Unit to Cart'}
+                  </button>
+                )}
+
+                {Array.isArray(copilotRescue.alternatives) &&
+                  copilotRescue.alternatives.slice(0, 2).map(alt => (
+                    <button
+                      key={alt.id}
+                      type="button"
+                      onClick={() => {
+                        setCopilotRescue(null);
+                        navigate(`/product/${alt.slug || alt.id}`);
+                      }}
+                      className="rounded-lg border border-[#D4AF37]/50 bg-[#D4AF37]/15 px-2.5 py-1 text-[10px] font-bold text-[#D4AF37]"
+                    >
+                      In-Stock: {alt.name} (₹{alt.price})
+                    </button>
+                  ))}
+
+                <button
+                  type="button"
+                  onClick={() => {
+                    const q =
+                      copilotRescue.headline ||
+                      'Please help me resolve my issue with adding to cart or setting my password';
+                    setCopilotRescue(null);
+                    void sendMessage(q);
+                  }}
+                  className="rounded-lg border border-current/25 px-2.5 py-1 text-[10px] font-bold"
+                >
+                  Ask AI in Chat
+                </button>
               </div>
             </div>
           )}

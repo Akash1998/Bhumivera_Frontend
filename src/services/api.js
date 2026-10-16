@@ -581,9 +581,12 @@ export const supportPortal = {
   customer: id => supportRequest('get', `/customers/${id}`),
   updateCustomerStatus: (id, status) => supportRequest('patch', `/customers/${id}/status`, { status }),
   sendCustomerEmail: (id, data) => supportRequest('post', `/customers/${id}/email`, data),
+  emailCustomer: (id, data) => supportRequest('post', `/customers/${id}/email`, data),
   createPasswordResetLink: id => supportRequest('post', `/customers/${id}/password-reset-link`, {}),
   tickets: () => supportRequest('get', '/tickets'),
   updateTicket: (id, data) => supportRequest('patch', `/tickets/${id}`, data),
+  deleteTicket: id => supportRequest('delete', `/tickets/${id}`),
+  bulkDeleteTickets: ticketIds => supportRequest('post', '/tickets/bulk-delete', { ticketIds }),
   sessions: (params = {}) => {
     const qs = new URLSearchParams();
     if (params.status) qs.set('status', params.status);
@@ -627,6 +630,10 @@ export const aiSupport = {
   sendAsyncMessage: data => api.post('/support/chat/async-message', data, { notify: false }),
   escalate: data => api.post('/support/chat/escalate', data, { notify: false }),
   listEscalations: params => supportRequest('get', `/ai-escalations${params?.status ? `?status=${encodeURIComponent(params.status)}` : ''}`),
+  diagnoseFriction: data => api.post('/support/ai-copilot/diagnose', data, { notify: false }),
+  cartRescue: data => api.post('/support/ai-copilot/cart-rescue', data, { notify: false }),
+  passwordRescue: data => api.post('/support/ai-copilot/password-rescue', data, { notify: false }),
+  getNavigationMap: q => api.get('/support/ai-copilot/navigation-map', { params: q ? { q } : {}, notify: false }),
 };
 export const loyalty = { getSystemConfig: () => api.get("/settings"), updateSystemConfig: d => api.put("/settings", d), getMembers: () => api.get("/admin/users"), adjustPoints: (u, d) => api.patch(`/admin/users/${u}/status`, d) };
 export const loyaltyTiers = {

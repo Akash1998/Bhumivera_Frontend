@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { supportPortal } from '../services/api';
+import { COMPLETE_SITE_NAVIGATION_DIRECTORY } from '../utils/aiCopilotBus';
 import {
   LifeBuoy,
   LogOut,
@@ -19,6 +20,12 @@ import {
   Truck,
   KeyRound,
   ExternalLink,
+  Trash2,
+  Download,
+  Sparkles,
+  CheckCircle2,
+  Compass,
+  Copy,
 } from 'lucide-react';
 
 const TICKET_STATUSES = ['open', 'in_progress', 'resolved', 'closed'];
@@ -33,6 +40,7 @@ const ROLE_LIMIT_RULES = {
     maxWalletCredit: 0,
     canCancelOrder: false,
     canDeleteChat: false,
+    canDeleteTicket: false,
     summary: 'Can search by Order ID / Tracking ID / Email / Phone, verify customer identity, view full order details, reply to live & Telegram chats, create RMAs, and issue at most ONE courtesy coupon (max 10% off) per customer.',
   },
   supervisor: {
@@ -41,6 +49,7 @@ const ROLE_LIMIT_RULES = {
     maxWalletCredit: 150,
     canCancelOrder: true,
     canDeleteChat: false,
+    canDeleteTicket: false,
     summary: 'Includes all L1 permissions + Order Cancellations, Chat Reassignment, at most ONE courtesy coupon (max 12% off) per customer, and at most ONE goodwill wallet credit (max ₹150) per customer.',
   },
   manager: {
@@ -49,6 +58,7 @@ const ROLE_LIMIT_RULES = {
     maxWalletCredit: 250,
     canCancelOrder: true,
     canDeleteChat: false,
+    canDeleteTicket: false,
     summary: 'Includes all L2 permissions + Staff Management, at most ONE courtesy coupon (max 15% off) per customer, and at most ONE goodwill wallet credit (max ₹250) per customer.',
   },
   superadmin: {
@@ -57,7 +67,8 @@ const ROLE_LIMIT_RULES = {
     maxWalletCredit: 2000,
     canCancelOrder: true,
     canDeleteChat: true,
-    summary: 'Unrestricted access: Can delete resolved chats, issue multiple coupons without per-customer limits, and manage all security & Telegram settings.',
+    canDeleteTicket: true,
+    summary: 'Unrestricted access: Can permanently delete support tickets (single & bulk) and resolved chats with 512-bit SHA-512 audit logging, issue multiple coupons without per-customer limits, and manage all security & Telegram settings.',
   },
 };
 
@@ -75,16 +86,16 @@ const HELP_TERMS_GUIDE = [
     meaning: 'Pending means Support is waiting for the customer to reply. Waiting for Review sends the case to a Supervisor/Manager. Resolved means the issue is solved (unlocks the customer’s 1–5 star review prompt).',
   },
   {
-    term: 'Internal Note (Hidden from Customer)',
-    meaning: 'Saves a private yellow note inside the chat transcript that only other support staff and managers can read.',
+    term: 'SuperAdmin Ticket Deletion (Single & Bulk Purge)',
+    meaning: 'SuperAdmins can permanently delete spam, test, or duplicate support tickets individually or in bulk. Every deletion writes a 512-bit SHA-512 cryptographic audit log entry.',
   },
   {
     term: 'One-Time Courtesy Coupon (Anti-Abuse Protected)',
     meaning: 'Generates a single-use discount code for the customer. Support staff can issue a coupon ONLY ONCE per customer (capped at 10%–15% by role). Only SuperAdmin can issue multiple coupons.',
   },
   {
-    term: 'Telegram Sync (@BhumiveraBot)',
-    meaning: 'Pulls customer messages sent to @BhumiveraBot on Telegram and delivers your replies straight back to their Telegram app.',
+    term: '100X AI Co-Pilot & Complete Site Links Directory',
+    meaning: 'Tab 5 provides a 1-click AI Password Rescue Link dispatcher, Cart Friction Diagnostic engine, and a searchable directory of all 24 Bhumivera routes to copy and share with customers.',
   },
 ];
 
@@ -114,9 +125,15 @@ export default function SupportPortal() {
   const [goodwillAmount, setGoodwillAmount] = useState('100');
   const [couponPct, setCouponPct] = useState('10');
 
-  // Tickets & Customers state
+  // Tickets & SuperAdmin Deletion state
   const [tickets, setTickets] = useState([]);
   const [selectedTicketId, setSelectedTicketId] = useState(null);
+  const [selectedTicketIdsForDelete, setSelectedTicketIdsForDelete] = useState([]);
+  const [ticketFilterStatus, setTicketFilterStatus] = useState('all');
+  const [ticketSearchQuery, setTicketSearchQuery] = useState('');
+  const [ticketDeleteReason, setTicketDeleteReason] = useState('Spam / duplicate support ticket');
+
+  // Customers state
   const [search, setSearch] = useState('');
   const [customers, setCustomers] = useState([]);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
@@ -125,12 +142,19 @@ export default function SupportPortal() {
   const [emailSubject, setEmailSubject] = useState('');
   const [emailMessage, setEmailMessage] = useState('');
 
+  // AI Co-Pilot & Links Directory state
+  const [copilotEmail, setCopilotEmail] = useState('');
+  const [copilotDiagMessage, setCopilotDiagMessage] = useState('');
+  const [copilotDiagResult, setCopilotDiagResult] = useState(null);
+  const [linkFilter, setLinkFilter] = useState('');
+
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(Boolean(token));
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
 
   const roleRule = ROLE_LIMIT_RULES[agent?.role || 'agent'] || ROLE_LIMIT_RULES.agent;
+  const isSuperAdmin = agent?.role === 'superadmin';
 
   const loadWorkspaceData = useCallback(async () => {
     const [inboxRes, sessionsRes] = await Promise.all([
@@ -353,9 +377,26 @@ export default function SupportPortal() {
     }
   };
 
+  const filteredTickets = useMemo(() => {
+    return tickets.filter(t => {
+      if (ticketFilterStatus !== 'all' && String(t.status || '').toLowerCase() !== ticketFilterStatus) {
+        return false;
+      }
+      if (!ticketSearchQuery.trim()) return true;
+      const q = ticketSearchQuery.trim().toLowerCase();
+      return (
+        String(t.id).includes(q) ||
+        String(t.subject || '').toLowerCase().includes(q) ||
+        String(t.name || '').toLowerCase().includes(q) ||
+        String(t.email || '').toLowerCase().includes(q) ||
+        String(t.message || '').toLowerCase().includes(q)
+      );
+    });
+  }, [tickets, ticketFilterStatus, ticketSearchQuery]);
+
   const selectedTicket = useMemo(
-    () => tickets.find(t => t.id === selectedTicketId) || tickets[0] || null,
-    [tickets, selectedTicketId]
+    () => filteredTickets.find(t => t.id === selectedTicketId) || tickets.find(t => t.id === selectedTicketId) || filteredTickets[0] || null,
+    [filteredTickets, tickets, selectedTicketId]
   );
 
   const updateTicket = async (status, message) => {
@@ -377,6 +418,151 @@ export default function SupportPortal() {
       setBusy(false);
     }
   };
+
+  const handleDeleteSingleTicket = async ticketId => {
+    if (!isSuperAdmin || !ticketId) return;
+    if (!window.confirm(`Permanently delete support ticket #${ticketId}? This action is logged with a 512-bit SHA-512 cryptographic audit digest.`)) {
+      return;
+    }
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      const res = await supportPortal.deleteSupportTicket(ticketId, ticketDeleteReason);
+      setSelectedTicketIdsForDelete(prev => prev.filter(id => id !== ticketId));
+      if (selectedTicketId === ticketId) setSelectedTicketId(null);
+      await loadWorkspaceData();
+      setNotice(res.data?.message || `Ticket #${ticketId} permanently deleted by SuperAdmin.`);
+    } catch (err) {
+      setError(errorText(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleBulkDeleteTickets = async () => {
+    if (!isSuperAdmin || selectedTicketIdsForDelete.length === 0) return;
+    if (!window.confirm(`Permanently delete ${selectedTicketIdsForDelete.length} selected support ticket(s)?`)) {
+      return;
+    }
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      const res = await supportPortal.bulkDeleteSupportTickets(selectedTicketIdsForDelete, ticketDeleteReason);
+      setSelectedTicketIdsForDelete([]);
+      await loadWorkspaceData();
+      setNotice(res.data?.message || `Deleted ${res.data?.deletedCount || 0} support ticket(s).`);
+    } catch (err) {
+      setError(errorText(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const toggleTicketSelection = ticketId => {
+    setSelectedTicketIdsForDelete(prev =>
+      prev.includes(ticketId) ? prev.filter(id => id !== ticketId) : [...prev, ticketId]
+    );
+  };
+
+  const handleExportTicketsCsv = () => {
+    const headers = [
+      'Ticket ID',
+      'Subject',
+      'Customer Name',
+      'Customer Email',
+      'Status',
+      'Priority',
+      'Assigned Agent ID',
+      'Created At',
+      'Updated At',
+      'Message',
+    ];
+    const escapeCell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const rows = filteredTickets.map(t =>
+      [
+        t.id,
+        t.subject,
+        t.name,
+        t.email,
+        t.status,
+        t.priority || 'normal',
+        t.assigned_agent_id || '',
+        t.created_at || t.createdAt || '',
+        t.updated_at || t.updatedAt || '',
+        t.message || '',
+      ]
+        .map(escapeCell)
+        .join(',')
+    );
+    const csvContent = `\uFEFF${headers.map(escapeCell).join(',')}\n${rows.join('\n')}`;
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bhumivera-support-tickets-${new Date().toISOString().slice(0, 10)}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleRunCopilotDiagnosis = async e => {
+    e.preventDefault();
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      const res = await supportPortal.diagnoseAiFriction({
+        type: 'universal',
+        email: copilotEmail.trim() || undefined,
+        errorMessage: copilotDiagMessage.trim(),
+        query: copilotDiagMessage.trim(),
+      });
+      setCopilotDiagResult(res.data?.diagnosis || res.data);
+      setNotice('100X AI Co-Pilot diagnosis completed.');
+    } catch (err) {
+      setError(errorText(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleDispatchAiPasswordRescue = async () => {
+    if (!copilotEmail.trim()) {
+      setError('Enter the customer email address first.');
+      return;
+    }
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      const res = await supportPortal.requestAiPasswordRescue({
+        email: copilotEmail.trim(),
+        sendRecoveryLink: true,
+        errorCode: 'OTP_NOT_RECEIVED',
+      });
+      setCopilotDiagResult(res.data?.rescue || res.data);
+      setNotice(res.data?.recoveryDispatch?.message || `AI Password Recovery Link dispatched to ${copilotEmail.trim()}.`);
+    } catch (err) {
+      setError(errorText(err));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const filteredSiteLinks = useMemo(() => {
+    const q = linkFilter.trim().toLowerCase();
+    if (!q) return COMPLETE_SITE_NAVIGATION_DIRECTORY;
+    return COMPLETE_SITE_NAVIGATION_DIRECTORY.filter(
+      item =>
+        item.label.toLowerCase().includes(q) ||
+        item.path.toLowerCase().includes(q) ||
+        item.category.toLowerCase().includes(q) ||
+        item.description.toLowerCase().includes(q)
+    );
+  }, [linkFilter]);
 
   if (loading) {
     return (
@@ -402,8 +588,8 @@ export default function SupportPortal() {
             </div>
           </div>
           <p className="text-xs text-emerald-100/75 mb-5 leading-relaxed">
-            Sign in with your Support Executive, Supervisor, or Manager ID to search orders, verify customers, and
-            manage live Web & Telegram chats.
+            Sign in with your Support Executive, Supervisor, Manager, or SuperAdmin ID to search orders, verify customers,
+            manage live Web & Telegram chats, and run 100X AI Co-Pilot diagnostics.
           </p>
           {error && (
             <p role="alert" className="mb-4 rounded-xl bg-rose-500/15 border border-rose-500/30 p-3 text-xs text-rose-200">
@@ -439,6 +625,17 @@ export default function SupportPortal() {
               {busy ? 'Signing in…' : 'Sign In to Support Desk'}
             </button>
           </form>
+          <div className="mt-5 pt-4 border-t border-white/10 flex flex-wrap justify-between gap-2 text-[11px] text-emerald-100/70">
+            <Link to="/superadminsupport" className="text-[#D4AF37] hover:underline">
+              SuperAdmin Command Center →
+            </Link>
+            <Link to="/admin/dashboard" className="text-emerald-200 hover:underline">
+              Admin Dashboard →
+            </Link>
+            <Link to="/" className="text-emerald-200 hover:underline">
+              Storefront Home →
+            </Link>
+          </div>
         </div>
       </main>
     );
@@ -463,7 +660,7 @@ export default function SupportPortal() {
                 </span>
               </div>
               <h1 className="text-lg font-serif font-bold text-white">
-                Bhumivera Customer Support & Order Verification Desk
+                Bhumivera Customer Support, AI Rescue & Order Verification Desk
               </h1>
             </div>
           </div>
@@ -501,6 +698,14 @@ export default function SupportPortal() {
                 <ExternalLink className="w-3 h-3" />
               </Link>
             )}
+
+            <Link
+              to="/admin/dashboard/gst"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500/15 border border-amber-400/30 text-xs text-amber-200 font-semibold"
+            >
+              GST & Invoices
+              <ExternalLink className="w-3 h-3" />
+            </Link>
 
             <button
               type="button"
@@ -558,7 +763,7 @@ export default function SupportPortal() {
         </div>
       )}
 
-      {/* Navigation Tabs (Flex-Wrap — Zero White Scrollbar) */}
+      {/* Navigation Tabs */}
       <div className="bg-[#0B2419]/60 border-b border-white/10 px-6 py-3">
         <div className="max-w-[1600px] mx-auto flex flex-wrap items-center gap-2">
           {[
@@ -566,6 +771,7 @@ export default function SupportPortal() {
             { id: 'chats', label: `2. Live Customer & Telegram Chats (${chatSessions.length})`, icon: MessageSquare },
             { id: 'tickets', label: `3. Support Tickets (${tickets.length})`, icon: Mail },
             { id: 'customers', label: '4. Customer Accounts & Password Reset', icon: UserRound },
+            { id: 'copilot', label: '5. 100X AI Co-Pilot & Complete Site Links Directory', icon: Sparkles },
           ].map(tab => {
             const Icon = tab.icon;
             const active = section === tab.id;
@@ -946,7 +1152,7 @@ export default function SupportPortal() {
                         </button>
                       )}
 
-                      {/* 1-Time Courtesy Coupon (Strictly Capped & Audited) */}
+                      {/* 1-Time Courtesy Coupon */}
                       <div className="flex items-center gap-1">
                         <input
                           type="number"
@@ -1051,63 +1257,180 @@ export default function SupportPortal() {
         )}
 
         {/* ===================================================================
-            SECTION 3: SUPPORT TICKETS
+            SECTION 3: SUPPORT TICKETS (WITH SUPERADMIN SINGLE & BULK DELETE)
            =================================================================== */}
         {section === 'tickets' && (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div className="lg:col-span-5 bg-[#0B2419] border border-white/10 rounded-2xl p-4 space-y-2 max-h-[680px] overflow-y-auto">
-              {tickets.map(t => (
+          <div className="space-y-4">
+            {/* Ticket Filters, CSV Export & SuperAdmin Bulk Purge Toolbar */}
+            <div className="p-4 rounded-2xl bg-[#0B2419] border border-white/10 flex flex-wrap items-center justify-between gap-3">
+              <div className="flex flex-wrap items-center gap-2">
+                <input
+                  type="text"
+                  value={ticketSearchQuery}
+                  onChange={e => setTicketSearchQuery(e.target.value)}
+                  placeholder="Search ticket ID, subject, name, email…"
+                  className="px-3.5 py-2 rounded-xl bg-black/40 border border-white/15 text-xs text-white w-64"
+                />
+                {['all', ...TICKET_STATUSES].map(st => (
+                  <button
+                    key={st}
+                    type="button"
+                    onClick={() => setTicketFilterStatus(st)}
+                    className={`px-2.5 py-1.5 rounded-lg text-[11px] font-bold uppercase border ${
+                      ticketFilterStatus === st
+                        ? 'bg-[#D4AF37] text-[#071510] border-[#D4AF37]'
+                        : 'bg-black/30 text-emerald-100/70 border-white/10'
+                    }`}
+                  >
+                    {st.replace(/_/g, ' ')}
+                  </button>
+                ))}
                 <button
-                  key={t.id}
                   type="button"
-                  onClick={() => setSelectedTicketId(t.id)}
-                  className={`w-full text-left p-3.5 rounded-xl border text-xs ${
-                    selectedTicket?.id === t.id
-                      ? 'bg-[#D4AF37]/15 border-[#D4AF37]'
-                      : 'bg-black/30 border-white/10'
-                  }`}
+                  onClick={handleExportTicketsCsv}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-400/30 text-emerald-200 text-xs font-bold flex items-center gap-1.5"
                 >
-                  <div className="flex justify-between font-bold text-white">
-                    <span>#{t.id} · {t.subject}</span>
-                    <span className="uppercase text-[#D4AF37]">{t.status}</span>
-                  </div>
-                  <div className="text-[11px] text-emerald-100/70 mt-1">
-                    {t.name} ({t.email})
-                  </div>
+                  <Download className="w-3.5 h-3.5" />
+                  Export Tickets CSV ({filteredTickets.length})
                 </button>
-              ))}
+              </div>
+
+              {isSuperAdmin && (
+                <div className="flex flex-wrap items-center gap-2">
+                  <input
+                    type="text"
+                    value={ticketDeleteReason}
+                    onChange={e => setTicketDeleteReason(e.target.value)}
+                    placeholder="Audit reason for ticket deletion…"
+                    className="px-3 py-1.5 rounded-xl bg-black/40 border border-rose-500/30 text-xs text-white w-56"
+                  />
+                  <button
+                    type="button"
+                    disabled={busy || selectedTicketIdsForDelete.length === 0}
+                    onClick={handleBulkDeleteTickets}
+                    className="px-3.5 py-1.5 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-200 text-xs font-bold flex items-center gap-1.5 disabled:opacity-40"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                    Bulk Delete Selected ({selectedTicketIdsForDelete.length})
+                  </button>
+                </div>
+              )}
             </div>
 
-            <div className="lg:col-span-7 bg-[#0B2419] border border-white/10 rounded-2xl p-5 space-y-4">
-              {selectedTicket ? (
-                <>
-                  <h3 className="text-base font-bold text-white">
-                    Ticket #{selectedTicket.id}: {selectedTicket.subject}
-                  </h3>
-                  <p className="text-xs text-emerald-100/80 whitespace-pre-wrap">{selectedTicket.message}</p>
-                  <textarea
-                    rows={4}
-                    value={reply}
-                    onChange={e => setReply(e.target.value)}
-                    placeholder="Write email reply to customer…"
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/15 text-xs text-white"
-                  />
-                  <div className="flex flex-wrap gap-2">
-                    {TICKET_STATUSES.map(st => (
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              <div className="lg:col-span-5 bg-[#0B2419] border border-white/10 rounded-2xl p-4 space-y-2 max-h-[680px] overflow-y-auto">
+                {filteredTickets.length === 0 ? (
+                  <p className="text-xs text-emerald-100/60 py-8 text-center">No matching support tickets found.</p>
+                ) : (
+                  filteredTickets.map(t => (
+                    <div
+                      key={t.id}
+                      className={`p-3.5 rounded-xl border text-xs transition flex items-start gap-2.5 ${
+                        selectedTicket?.id === t.id
+                          ? 'bg-[#D4AF37]/15 border-[#D4AF37]'
+                          : 'bg-black/30 border-white/10 hover:border-white/25'
+                      }`}
+                    >
+                      {isSuperAdmin && (
+                        <input
+                          type="checkbox"
+                          checked={selectedTicketIdsForDelete.includes(t.id)}
+                          onChange={() => toggleTicketSelection(t.id)}
+                          aria-label={`Select ticket #${t.id}`}
+                          className="mt-1 accent-rose-500"
+                        />
+                      )}
                       <button
-                        key={st}
                         type="button"
-                        onClick={() => updateTicket(st, reply)}
-                        className="px-3.5 py-2 rounded-xl bg-[#D4AF37] text-[#071510] font-bold text-xs uppercase"
+                        onClick={() => setSelectedTicketId(t.id)}
+                        className="flex-1 text-left"
                       >
-                        {reply.trim() ? `Send & Mark ${st}` : `Mark ${st}`}
+                        <div className="flex justify-between font-bold text-white">
+                          <span>#{t.id} · {t.subject}</span>
+                          <span className="uppercase text-[#D4AF37]">{t.status}</span>
+                        </div>
+                        <div className="text-[11px] text-emerald-100/70 mt-1">
+                          {t.name} ({t.email})
+                        </div>
+                        <div className="text-[10px] text-emerald-100/50 mt-0.5">
+                          Created: {formatDate(t.created_at || t.createdAt)}
+                        </div>
                       </button>
-                    ))}
-                  </div>
-                </>
-              ) : (
-                <p className="text-xs text-emerald-100/60">Select a ticket to view and reply.</p>
-              )}
+                      {isSuperAdmin && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSingleTicket(t.id)}
+                          title={`Permanently delete ticket #${t.id}`}
+                          className="p-1.5 rounded-lg bg-rose-500/15 hover:bg-rose-500/30 border border-rose-500/30 text-rose-200"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+
+              <div className="lg:col-span-7 bg-[#0B2419] border border-white/10 rounded-2xl p-5 space-y-4">
+                {selectedTicket ? (
+                  <>
+                    <div className="flex flex-wrap items-start justify-between gap-3 pb-3 border-b border-white/10">
+                      <div>
+                        <span className="text-[10px] uppercase tracking-wider text-[#D4AF37] font-bold">
+                          Support Ticket #{selectedTicket.id} · Status: {selectedTicket.status}
+                        </span>
+                        <h3 className="text-base font-bold text-white mt-0.5">
+                          {selectedTicket.subject}
+                        </h3>
+                        <p className="text-xs text-emerald-100/70 mt-0.5">
+                          From: <strong>{selectedTicket.name}</strong> ({selectedTicket.email}) · Created:{' '}
+                          {formatDate(selectedTicket.created_at || selectedTicket.createdAt)}
+                        </p>
+                      </div>
+
+                      {isSuperAdmin && (
+                        <button
+                          type="button"
+                          disabled={busy}
+                          onClick={() => handleDeleteSingleTicket(selectedTicket.id)}
+                          className="px-3.5 py-2 rounded-xl bg-rose-500/20 hover:bg-rose-500/30 border border-rose-500/40 text-rose-200 text-xs font-bold flex items-center gap-1.5"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          Delete Ticket #{selectedTicket.id} (SuperAdmin)
+                        </button>
+                      )}
+                    </div>
+
+                    <div className="p-4 rounded-xl bg-black/30 border border-white/10">
+                      <p className="text-xs text-emerald-100/90 whitespace-pre-wrap leading-relaxed">
+                        {selectedTicket.message}
+                      </p>
+                    </div>
+
+                    <textarea
+                      rows={4}
+                      value={reply}
+                      onChange={e => setReply(e.target.value)}
+                      placeholder="Write email reply to customer…"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-black/40 border border-white/15 text-xs text-white"
+                    />
+                    <div className="flex flex-wrap gap-2">
+                      {TICKET_STATUSES.map(st => (
+                        <button
+                          key={st}
+                          type="button"
+                          onClick={() => updateTicket(st, reply)}
+                          className="px-3.5 py-2 rounded-xl bg-[#D4AF37] text-[#071510] font-bold text-xs uppercase"
+                        >
+                          {reply.trim() ? `Send & Mark ${st}` : `Mark ${st}`}
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-xs text-emerald-100/60">Select a ticket to view, reply, or delete.</p>
+                )}
+              </div>
             </div>
           </div>
         )}
@@ -1237,6 +1560,158 @@ export default function SupportPortal() {
               ) : (
                 <p className="text-xs text-emerald-100/60">Search and select a customer to view details, order history, or send a password reset link.</p>
               )}
+            </div>
+          </div>
+        )}
+
+        {/* ===================================================================
+            SECTION 5: 100X AI CO-PILOT & COMPLETE SITE LINKS DIRECTORY
+           =================================================================== */}
+        {section === 'copilot' && (
+          <div className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Left: AI Friction Diagnosis & 1-Click Password Rescue */}
+              <div className="lg:col-span-5 bg-[#0B2419] border border-[#D4AF37]/30 rounded-2xl p-5 space-y-4">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-[#D4AF37]" />
+                  <div>
+                    <h2 className="text-base font-serif font-bold text-white">
+                      100X AI Customer Friction & Password Rescue Engine
+                    </h2>
+                    <p className="text-xs text-emerald-100/70">
+                      Diagnose Add-to-Cart failures, OTP/Password blocks, or Checkout friction and dispatch instant recovery links.
+                    </p>
+                  </div>
+                </div>
+
+                <form onSubmit={handleRunCopilotDiagnosis} className="space-y-3">
+                  <div>
+                    <label className="text-[11px] font-semibold text-emerald-100/80 block mb-1">
+                      Customer Email (for Password Rescue or Cart Diagnosis)
+                    </label>
+                    <input
+                      type="email"
+                      value={copilotEmail}
+                      onChange={e => setCopilotEmail(e.target.value)}
+                      placeholder="customer@example.com"
+                      className="w-full px-3.5 py-2 rounded-xl bg-black/40 border border-white/15 text-xs text-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-[11px] font-semibold text-emerald-100/80 block mb-1">
+                      Describe Customer Issue (Cart error, Password rule failure, Coupon/Checkout block)
+                    </label>
+                    <textarea
+                      rows={3}
+                      value={copilotDiagMessage}
+                      onChange={e => setCopilotDiagMessage(e.target.value)}
+                      placeholder="e.g. Customer unable to add Malabar Black Pepper 500g to cart or unable to set password…"
+                      className="w-full px-3.5 py-2 rounded-xl bg-black/40 border border-white/15 text-xs text-white"
+                    />
+                  </div>
+
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="submit"
+                      disabled={busy}
+                      className="px-4 py-2 rounded-xl bg-[#D4AF37] text-[#071510] font-bold text-xs flex items-center gap-1.5"
+                    >
+                      <Sparkles className="w-3.5 h-3.5" />
+                      Run AI Diagnosis
+                    </button>
+                    <button
+                      type="button"
+                      disabled={busy}
+                      onClick={handleDispatchAiPasswordRescue}
+                      className="px-4 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-emerald-200 font-bold text-xs flex items-center gap-1.5"
+                    >
+                      <KeyRound className="w-3.5 h-3.5" />
+                      Send 30-Min AI Password Setup Link
+                    </button>
+                  </div>
+                </form>
+
+                {copilotDiagResult && (
+                  <div className="p-4 rounded-xl bg-black/40 border border-[#D4AF37]/30 space-y-2 text-xs">
+                    <div className="flex items-center gap-1.5 text-[#D4AF37] font-bold">
+                      <CheckCircle2 className="w-4 h-4" />
+                      {copilotDiagResult.headline || copilotDiagResult.title || 'AI Co-Pilot Guidance Ready'}
+                    </div>
+                    {copilotDiagResult.explanation && (
+                      <p className="text-emerald-100/85 leading-relaxed">{copilotDiagResult.explanation}</p>
+                    )}
+                    {Array.isArray(copilotDiagResult.stepByStepGuide) && (
+                      <ul className="list-disc pl-4 space-y-1 text-emerald-100/80">
+                        {copilotDiagResult.stepByStepGuide.map((step, idx) => (
+                          <li key={idx}>{step}</li>
+                        ))}
+                      </ul>
+                    )}
+                  </div>
+                )}
+              </div>
+
+              {/* Right: Complete Site Navigation & Missing Links Directory */}
+              <div className="lg:col-span-7 bg-[#0B2419] border border-white/10 rounded-2xl p-5 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <Compass className="w-5 h-5 text-[#D4AF37]" />
+                    <div>
+                      <h2 className="text-base font-serif font-bold text-white">
+                        Complete Bhumivera Site Links Directory ({filteredSiteLinks.length} Routes)
+                      </h2>
+                      <p className="text-xs text-emerald-100/70">
+                        Click any route to open or copy its link to send directly to a customer.
+                      </p>
+                    </div>
+                  </div>
+                  <input
+                    type="text"
+                    value={linkFilter}
+                    onChange={e => setLinkFilter(e.target.value)}
+                    placeholder="Filter routes (e.g. password, gst, warranty)…"
+                    className="px-3.5 py-1.5 rounded-xl bg-black/40 border border-white/15 text-xs text-white w-64"
+                  />
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2.5 max-h-[520px] overflow-y-auto pr-1">
+                  {filteredSiteLinks.map(item => (
+                    <div
+                      key={item.path}
+                      className="p-3 rounded-xl bg-black/30 border border-white/10 flex items-start justify-between gap-2 text-xs"
+                    >
+                      <div>
+                        <span className="text-[10px] uppercase tracking-wider text-[#D4AF37] font-bold">
+                          {item.category}
+                        </span>
+                        <div className="font-bold text-white">{item.label}</div>
+                        <code className="text-[11px] text-emerald-300">{item.path}</code>
+                        <p className="text-[11px] text-emerald-100/65 mt-0.5">{item.description}</p>
+                      </div>
+                      <div className="flex flex-col gap-1.5">
+                        <Link
+                          to={item.path}
+                          className="p-1.5 rounded-lg bg-[#D4AF37]/20 hover:bg-[#D4AF37]/35 text-[#D4AF37]"
+                          title={`Open ${item.path}`}
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                        </Link>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            navigator.clipboard?.writeText(`${window.location.origin}${item.path}`);
+                            setNotice(`Copied ${item.path} to clipboard.`);
+                          }}
+                          className="p-1.5 rounded-lg bg-white/10 hover:bg-white/20 text-emerald-100"
+                          title={`Copy ${item.path}`}
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
         )}

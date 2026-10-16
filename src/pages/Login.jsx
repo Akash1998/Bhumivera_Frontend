@@ -5,6 +5,7 @@ import { toast } from 'react-hot-toast';
 import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft, Fingerprint, Key } from 'lucide-react';
 import { loginWithPasskey, storeBrowserPassword } from '../utils/webauthnClient';
 import { useAuth } from '../context/AuthContext';
+import { triggerAiCopilotAssist } from '../utils/aiCopilotBus';
 
 const Login = () => {
   const { isAuthenticated, user } = useAuth() || {};
@@ -141,7 +142,15 @@ const Login = () => {
         setStep('2FA');
         toast(error.response.data.message || 'Enter your verification code to continue.', { icon: 'ℹ️' });
       } else {
-        toast.error(d?.message || error.message || 'Invalid email or password');
+        const msg = d?.message || error.message || 'Invalid email or password';
+        toast.error(msg);
+        triggerAiCopilotAssist({
+          frictionType: 'login',
+          stage: 'login',
+          email,
+          errorMessage: msg,
+          autoOpen: true,
+        });
       }
     } finally {
       setLoading(false);

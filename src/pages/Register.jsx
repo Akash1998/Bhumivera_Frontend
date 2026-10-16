@@ -8,6 +8,7 @@ import {
 import { Turnstile } from '@marsidev/react-turnstile';
 import { useAuth } from '../context/AuthContext';
 import { affiliate } from '../services/api';
+import { analyzePasswordForAiGuide, triggerAiCopilotAssist } from '../utils/aiCopilotBus';
 
 const MotionDiv = motion.div;
 
@@ -103,7 +104,16 @@ export default function Register() {
     if (!passwordIsValid) {
       const unmetRequirements = passwordChecks.filter(check => !check.valid).map(check => check.label);
       if (formData.password.length > 128) unmetRequirements.push('No more than 128 characters');
-      return setError(`Please update your password: ${unmetRequirements.join('; ')}.`);
+      const msg = `Please update your password: ${unmetRequirements.join('; ')}.`;
+      triggerAiCopilotAssist({
+        frictionType: 'password_auth',
+        stage: 'register',
+        email: formData.email,
+        candidatePassword: formData.password,
+        errorMessage: msg,
+        autoOpen: true,
+      });
+      return setError(msg);
     }
     if (!formData.securityAnswer) return setError("Security answer is required for account protection.");
 

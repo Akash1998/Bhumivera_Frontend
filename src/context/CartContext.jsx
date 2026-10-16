@@ -3,6 +3,11 @@ import { useAuth } from "./AuthContext";
 import { useSettings } from "./SettingsContext";
 import { cart as cartApi } from "../services/api";
 import { useToast } from './ToastContext';
+import {
+  AI_COPILOT_ADD_CART_RETRY_EVENT,
+  classifyCartErrorForAiGuide,
+  triggerAiCopilotAssist,
+} from "../utils/aiCopilotBus";
 
 const CartContext = createContext();
 
@@ -87,14 +92,62 @@ export const CartProvider = ({ children }) => {
     return () => window.removeEventListener('online', loadCart);
   }, [loadCart]);
 
-  // ZERO-LATENCY OPTIMISTIC UPDATE
+  // ZERO-LATENCY OPTIMISTIC UPDATE WITH 100X AI CO-PILOT RESCUE
   const addToCart = async (product, qty = 1) => {
     const prodId = getCartProductId(product);
     if (prodId === undefined || prodId === null) {
-      toast.error('This product cannot be added to your cart right now.');
+      const msg = 'This product cannot be added to your cart right now.';
+      toast.error(msg);
+      const diag = classifyCartErrorForAiGuide(msg, product, qty, 0);
+      triggerAiCopilotAssist({
+        ...diag,
+        requestedQuantity: qty,
+        currentCartQuantity: 0,
+        errorMessage: msg,
+        autoOpen: true,
+      });
       return false;
     }
-    
+
+    const existingItem = (Array.isArray(cart) ? cart : []).find(
+      i => String(i.product_id || i.id) === String(prodId)
+    );
+    const currentQty = Number(existingItem?.quantity || 0);
+    const knownStock =
+      product?.stock !== undefined
+        ? Number(product.stock)
+        : product?.quantity !== undefined && product?.product_id === undefined
+        ? Number(product.quantity)
+        : null;
+
+    if (knownStock !== null && Number.isFinite(knownStock) && knownStock <= 0) {
+      const msg = `${product?.name || 'This item'} is currently out of stock.`;
+      toast.error(msg);
+      const diag = classifyCartErrorForAiGuide(msg, product, qty, currentQty);
+      triggerAiCopilotAssist({
+        ...diag,
+        requestedQuantity: qty,
+        currentCartQuantity: currentQty,
+        errorMessage: msg,
+        autoOpen: true,
+      });
+      return false;
+    }
+
+    if (knownStock !== null && Number.isFinite(knownStock) && currentQty + qty > knownStock) {
+      const msg = `Only ${knownStock} unit(s) of ${product?.name || 'this item'} available in stock.`;
+      toast.error(msg);
+      const diag = classifyCartErrorForAiGuide(msg, product, qty, currentQty);
+      triggerAiCopilotAssist({
+        ...diag,
+        requestedQuantity: qty,
+        currentCartQuantity: currentQty,
+        errorMessage: msg,
+        autoOpen: true,
+      });
+      return false;
+    }
+
     const addProduct = prev => {
       const safeCart = Array.isArray(prev) ? prev : [];
       const updated = [...safeCart];
@@ -105,7 +158,18 @@ export const CartProvider = ({ children }) => {
     };
 
     if (isCustomerAuthenticated) setCart(prev => addProduct(prev));
-    else if (!saveGuestCart(addProduct(cart), 'Could not add this product to your cart.')) return false;
+    else if (!saveGuestCart(addProduct(cart), 'Could not add this product to your cart.')) {
+      triggerAiCopilotAssist({
+        frictionType: 'cart_general',
+        headline: 'Unable to save item to your cart',
+        explanation: 'Your browser storage may be full or restricted. Let me guide you through completing your purchase.',
+        productId: prodId,
+        productName: product?.name || 'Selected Product',
+        requestedQuantity: qty,
+        autoOpen: true,
+      });
+      return false;
+    }
 
     setIsCartOpen(true);
 
@@ -124,7 +188,16 @@ export const CartProvider = ({ children }) => {
       } catch (err) {
         console.error("Failed to sync cart add to DB, reverting state", err);
         await loadCart(); // Auto-revert if offline/error
-        toast.error(err.normalized?.message || 'Could not add this product to your cart.');
+        const errMsg = err.normalized?.message || err.response?.data?.message || 'Could not add this product to your cart.';
+        toast.error(errMsg);
+        const diag = classifyCartErrorForAiGuide(err, product, qty, currentQty);
+        triggerAiCopilotAssist({
+          ...diag,
+          requestedQuantity: qty,
+          currentCartQuantity: currentQty,
+          errorMessage: errMsg,
+          autoOpen: true,
+        });
         return false;
       }
     }
@@ -132,6 +205,20 @@ export const CartProvider = ({ children }) => {
     toast.success('Added to cart successfully.');
     return true;
   };
+
+  // Allow AI Co-Pilot rescue drawer to trigger 1-click Add to Cart retries
+  useEffect(() => {
+    const onRetry = e => {
+      const detail = e?.detail || {};
+      if (detail.product) {
+        void addToCart(detail.product, Number(detail.quantity || 1));
+      } else if (detail.productId) {
+        void addToCart({ id: detail.productId, name: detail.productName || 'Product' }, Number(detail.quantity || 1));
+      }
+    };
+    window.addEventListener(AI_COPILOT_ADD_CART_RETRY_EVENT, onRetry);
+    return () => window.removeEventListener(AI_COPILOT_ADD_CART_RETRY_EVENT, onRetry);
+  });
 
   const updateQuantity = async (productId, newQty, { notify = true } = {}) => {
     if (newQty < 1) return removeFromCart(productId);
@@ -154,7 +241,17 @@ export const CartProvider = ({ children }) => {
       } catch (err) {
         console.error("Quantity update failed", err);
         await loadCart();
-        toast.error(err.normalized?.message || 'Could not update the cart quantity.');
+        const errMsg = err.normalized?.message || err.response?.data?.message || 'Could not update the cart quantity.';
+        toast.error(errMsg);
+        triggerAiCopilotAssist({
+          frictionType: 'cart_stock_limit',
+          headline: 'Unable to increase cart quantity',
+          explanation: errMsg,
+          productId,
+          requestedQuantity: newQty,
+          errorMessage: errMsg,
+          autoOpen: true,
+        });
         return false;
       }
     } else {
@@ -164,7 +261,6 @@ export const CartProvider = ({ children }) => {
   };
 
   const removeFromCart = async (id, { notify = true } = {}) => {
-    // Optimistic Update
     const remove = prev => {
       const safeCart = Array.isArray(prev) ? prev : [];
       const updated = safeCart.filter(i => String(i.product_id || i.id) !== String(id));

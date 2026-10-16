@@ -148,6 +148,7 @@ export default function SuperAdminSupport() {
   const [auditLogs, setAuditLogs] = useState([]);
   const [tickets, setTickets] = useState([]);
   const [selectedTicketId, setSelectedTicketId] = useState(null);
+  const [selectedBulkTicketIds, setSelectedBulkTicketIds] = useState([]);
   const [ticketReply, setTicketReply] = useState('');
 
   // Deep Order / Tracking / Email / Phone Search state
@@ -554,6 +555,49 @@ export default function SuperAdminSupport() {
       showNotice('success', res.data?.message || 'Direct email sent to customer.');
     } catch (err) {
       showNotice('error', err.response?.data?.message || 'Could not send email.');
+    }
+  };
+
+  const handleDeleteSupportTicket = async ticketId => {
+    if (!isSuperAdminViewer) {
+      showNotice('error', 'Only SuperAdmin can permanently delete support tickets.');
+      return;
+    }
+    if (!window.confirm(`SuperAdmin Action: Permanently delete support ticket #${ticketId}? This cannot be undone.`)) {
+      return;
+    }
+    try {
+      const res = await api.delete(`/support/tickets/${ticketId}`, requestConfig);
+      setSelectedBulkTicketIds(prev => prev.filter(id => id !== ticketId));
+      if (selectedTicketId === ticketId) setSelectedTicketId(null);
+      await fetchCommandCenterData();
+      showNotice('success', res.data?.message || `Ticket #${ticketId} permanently deleted.`);
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Could not delete support ticket.');
+    }
+  };
+
+  const handleBulkDeleteSupportTickets = async () => {
+    if (!isSuperAdminViewer || !selectedBulkTicketIds.length) return;
+    if (
+      !window.confirm(
+        `SuperAdmin Action: Permanently delete ${selectedBulkTicketIds.length} selected support ticket(s)? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+    try {
+      const res = await api.post(
+        '/support/tickets/bulk-delete',
+        { ticketIds: selectedBulkTicketIds },
+        requestConfig
+      );
+      setSelectedBulkTicketIds([]);
+      setSelectedTicketId(null);
+      await fetchCommandCenterData();
+      showNotice('success', res.data?.message || 'Selected support tickets deleted.');
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Bulk ticket delete failed.');
     }
   };
 
@@ -1739,35 +1783,104 @@ export default function SuperAdminSupport() {
             </div>
 
             <div className="lg:col-span-7 bg-[#0B2419] border border-white/10 rounded-2xl p-5 space-y-4">
-              <h3 className="text-sm font-bold text-white">Support Tickets & Async Messages ({tickets.length})</h3>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <h3 className="text-sm font-bold text-white">Support Tickets & Async Messages ({tickets.length})</h3>
+                {isSuperAdminViewer && (
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setSelectedBulkTicketIds(prev =>
+                          prev.length === tickets.length ? [] : tickets.map(t => t.id)
+                        )
+                      }
+                      className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/15 text-[11px] text-emerald-100"
+                    >
+                      {selectedBulkTicketIds.length === tickets.length && tickets.length > 0
+                        ? 'Unselect All'
+                        : 'Select All Tickets'}
+                    </button>
+                    {selectedBulkTicketIds.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleBulkDeleteSupportTickets}
+                        className="px-3 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 border border-rose-500/40 text-[11px] font-bold text-rose-200 flex items-center gap-1"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" /> Delete Selected ({selectedBulkTicketIds.length})
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2 max-h-[520px] overflow-y-auto pr-1">
-                  {tickets.map(t => (
-                    <button
-                      key={t.id}
-                      type="button"
-                      onClick={() => setSelectedTicketId(t.id)}
-                      className={`w-full text-left p-3 rounded-xl border text-xs ${
-                        selectedTicket?.id === t.id
-                          ? 'bg-[#D4AF37]/15 border-[#D4AF37]'
-                          : 'bg-black/30 border-white/10'
-                      }`}
-                    >
-                      <div className="flex justify-between font-bold text-white">
-                        <span>#{t.id} · {t.subject}</span>
-                        <span className="uppercase text-[10px] text-[#D4AF37]">{t.status}</span>
+                  {tickets.map(t => {
+                    const isChecked = selectedBulkTicketIds.includes(t.id);
+                    return (
+                      <div
+                        key={t.id}
+                        className={`p-3 rounded-xl border text-xs flex items-start gap-2.5 ${
+                          selectedTicket?.id === t.id
+                            ? 'bg-[#D4AF37]/15 border-[#D4AF37]'
+                            : 'bg-black/30 border-white/10'
+                        }`}
+                      >
+                        {isSuperAdminViewer && (
+                          <input
+                            type="checkbox"
+                            checked={isChecked}
+                            onChange={e =>
+                              setSelectedBulkTicketIds(prev =>
+                                e.target.checked ? [...prev, t.id] : prev.filter(id => id !== t.id)
+                              )
+                            }
+                            className="mt-1 rounded border-white/20"
+                          />
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => setSelectedTicketId(t.id)}
+                          className="flex-1 text-left min-w-0"
+                        >
+                          <div className="flex justify-between font-bold text-white gap-2">
+                            <span className="truncate">#{t.id} · {t.subject}</span>
+                            <span className="uppercase text-[10px] text-[#D4AF37] shrink-0">{t.status}</span>
+                          </div>
+                          <div className="text-[11px] text-emerald-100/70 mt-1 truncate">
+                            {t.name} ({t.email})
+                          </div>
+                        </button>
+                        {isSuperAdminViewer && (
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteSupportTicket(t.id)}
+                            title="SuperAdmin Only: Permanently delete this support ticket"
+                            className="p-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 text-rose-300 shrink-0"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
                       </div>
-                      <div className="text-[11px] text-emerald-100/70 mt-1">
-                        {t.name} ({t.email})
-                      </div>
-                    </button>
-                  ))}
+                    );
+                  })}
                 </div>
 
                 {selectedTicket && (
                   <div className="p-4 rounded-xl bg-black/30 border border-white/10 space-y-3 text-xs">
-                    <div className="font-bold text-white text-sm">
-                      Ticket #{selectedTicket.id}: {selectedTicket.subject}
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="font-bold text-white text-sm">
+                        Ticket #{selectedTicket.id}: {selectedTicket.subject}
+                      </div>
+                      {isSuperAdminViewer && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteSupportTicket(selectedTicket.id)}
+                          className="px-2.5 py-1 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 border border-rose-500/40 text-[11px] font-bold text-rose-200 flex items-center gap-1 shrink-0"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" /> Delete Ticket
+                        </button>
+                      )}
                     </div>
                     <p className="text-emerald-100/80 whitespace-pre-wrap">{selectedTicket.message}</p>
                     <textarea
