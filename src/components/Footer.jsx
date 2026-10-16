@@ -192,7 +192,7 @@ export default function Footer() {
 
         <div>
           <h3 className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-[#c8d6aa] sm:mb-5 sm:text-xs">
-            Connect &amp; Portals
+            Connect with us
           </h3>
           <ul className="space-y-3 text-xs leading-5 text-white/60 sm:text-sm">
             <li>
@@ -224,21 +224,6 @@ export default function Footer() {
               >
                 X (Twitter)
               </a>
-            </li>
-            <li>
-              <Link to="/support" className="transition-colors hover:text-[#c8d6aa]">
-                Support Agent Desk (/support)
-              </Link>
-            </li>
-            <li>
-              <Link to="/superadminsupport" className="transition-colors hover:text-[#c8d6aa]">
-                SuperAdmin Support (/superadminsupport)
-              </Link>
-            </li>
-            <li>
-              <Link to="/admin/dashboard" className="transition-colors hover:text-[#c8d6aa]">
-                Admin Workspace (/admin)
-              </Link>
             </li>
           </ul>
         </div>

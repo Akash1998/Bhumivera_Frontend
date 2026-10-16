@@ -40,7 +40,6 @@ import { normalizeTelegramBotUrl } from '../utils/telegramUrl';
 import {
   AI_COPILOT_ADD_CART_RETRY_EVENT,
   AI_COPILOT_EVENT,
-  COMPLETE_SITE_NAVIGATION_DIRECTORY,
   analyzePasswordForAiGuide,
 } from '../utils/aiCopilotBus';
 
@@ -140,7 +139,14 @@ function playSupportChime(enabled = true) {
   } catch {}
 }
 
-function FormattedMarkdown({ content, isDark, onNavigate }) {
+function FormattedMarkdown({ content, isDark }) {
+  const customerContent = String(content || '')
+    .replace(/\[([^\]]+)\]\((?:https?:\/\/|\/)[^)]+\)/gi, '$1')
+    .replace(/\b(?:https?:\/\/|www\.)[^\s<>()]+/gi, '')
+    .replace(/\/(?:admin(?:\/[^\s]*)?|superadminsupport(?:\/[^\s]*)?|support(?:\/[^\s]*)?)/gi, '')
+    .replace(/\/(?:shop|checkout|profile|order-tracking|returns-centre|returns|legal|contact|about|science|wishlist|cart|login|register|forgot-password|ewarranty|e-warranty)(?:\/[^\s]*)?/gi, '')
+    .replace(/[ \t]{2,}/g, ' ')
+    .replace(/[ \t]+([,.;])/g, '$1');
   const renderInline = (text, keyPrefix) => {
     if (!text) return null;
     const pattern = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|\*[^*]+\*)/g;
@@ -165,25 +171,7 @@ function FormattedMarkdown({ content, isDark, onNavigate }) {
       if (part.startsWith('[') && part.includes('](') && part.endsWith(')')) {
         const match = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
         if (match) {
-          const [, label, href] = match;
-          const isInternal = href.startsWith('/');
-          return (
-            <a
-              key={key}
-              href={href}
-              onClick={e => {
-                if (isInternal && onNavigate) {
-                  e.preventDefault();
-                  onNavigate(href);
-                }
-              }}
-              target={isInternal ? undefined : '_blank'}
-              rel={isInternal ? undefined : 'noopener noreferrer'}
-              className="underline underline-offset-2 font-medium text-[#D4AF37] hover:opacity-80"
-            >
-              {label}
-            </a>
-          );
+          return <span key={key} className="font-medium">{match[1]}</span>;
         }
       }
       if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
@@ -193,7 +181,7 @@ function FormattedMarkdown({ content, isDark, onNavigate }) {
     });
   };
 
-  const blocks = String(content || '').split(/\n{2,}/);
+  const blocks = customerContent.split(/\n{2,}/);
   return (
     <div className="space-y-2 text-[13px] leading-relaxed">
       {blocks.map((block, bIdx) => {
@@ -448,8 +436,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   const [telegramBotUrl, setTelegramBotUrl] = useState('https://web.telegram.org/k/#@BhumiveraBot');
   const [showAsyncForm, setShowAsyncForm] = useState(false);
   const [copilotRescue, setCopilotRescue] = useState(null);
-  const [showSiteDirectory, setShowSiteDirectory] = useState(false);
-  const [siteDirectoryFilter, setSiteDirectoryFilter] = useState('');
   const [copilotEmailInput, setCopilotEmailInput] = useState('');
   const [copilotSendingReset, setCopilotSendingReset] = useState(false);
   const [asyncSubject, setAsyncSubject] = useState('Support Inquiry');
@@ -1160,19 +1146,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               </button>
               <button
                 type="button"
-                onClick={() => setShowSiteDirectory(prev => !prev)}
-                title="All Website Links & AI Site Navigator"
-                aria-label="Open All Website Links Directory"
-                className={`px-2 py-1 rounded-lg text-[10px] font-bold transition-colors border ${
-                  showSiteDirectory
-                    ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37]'
-                    : 'border-[#D4AF37]/40 text-[#D4AF37] hover:bg-white/10'
-                }`}
-              >
-                All Links
-              </button>
-              <button
-                type="button"
                 onClick={() => setShowButtonGuide(prev => !prev)}
                 title="What do these buttons do? (Interactive Guide)"
                 aria-label="What do these buttons do?"
@@ -1273,62 +1246,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                     <span className="font-bold text-[#D4AF37] block text-[11px]">{item.button}</span>
                     <span className="text-[11px] opacity-85 leading-snug">{item.whatItDoes}</span>
                   </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Complete A-to-Z Website Links & Missing Link Directory Drawer */}
-          {showSiteDirectory && (
-            <div
-              className={`px-4 py-3 border-b max-h-60 overflow-y-auto text-xs space-y-2.5 shrink-0 ${
-                isDark ? 'bg-[#0d2119] border-[#D4AF37]/40 text-stone-100' : 'bg-[#fffdf7] border-[#D4AF37]/50 text-[#0B2419]'
-              }`}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="font-bold text-[11px] uppercase tracking-wider text-[#D4AF37]">
-                  Complete Bhumivera Website Directory ({COMPLETE_SITE_NAVIGATION_DIRECTORY.length} Pages)
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowSiteDirectory(false)}
-                  className="text-[11px] underline opacity-75 hover:opacity-100"
-                >
-                  Close
-                </button>
-              </div>
-              <input
-                type="text"
-                value={siteDirectoryFilter}
-                onChange={e => setSiteDirectoryFilter(e.target.value)}
-                placeholder="Filter links (e.g. GST, warranty, returns, password, shop)…"
-                className="w-full rounded-lg border border-current/20 bg-black/10 px-2.5 py-1.5 text-[11px] outline-none"
-              />
-              <div className="grid grid-cols-1 gap-1.5">
-                {COMPLETE_SITE_NAVIGATION_DIRECTORY.filter(
-                  item =>
-                    !siteDirectoryFilter.trim() ||
-                    item.title.toLowerCase().includes(siteDirectoryFilter.toLowerCase()) ||
-                    item.description.toLowerCase().includes(siteDirectoryFilter.toLowerCase()) ||
-                    item.path.toLowerCase().includes(siteDirectoryFilter.toLowerCase())
-                ).map(item => (
-                  <button
-                    key={item.id}
-                    type="button"
-                    onClick={() => {
-                      setShowSiteDirectory(false);
-                      navigate(item.path);
-                    }}
-                    className="text-left rounded-xl p-2 bg-current/5 hover:bg-[#D4AF37]/15 border border-current/10 transition flex items-center justify-between gap-2"
-                  >
-                    <div className="min-w-0">
-                      <div className="font-bold text-[11px] truncate">{item.title}</div>
-                      <div className="text-[10px] opacity-75 truncate">{item.description}</div>
-                    </div>
-                    <span className="shrink-0 rounded bg-[#D4AF37]/20 px-1.5 py-0.5 font-mono text-[9px] font-bold text-[#D4AF37]">
-                      {item.path}
-                    </span>
-                  </button>
                 ))}
               </div>
             </div>
@@ -1491,7 +1408,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                 return (
                   <div key={msg.id || idx} className="flex justify-center">
                     <div className="max-w-[92%] rounded-xl px-3 py-1.5 text-[11px] text-center bg-[#D4AF37]/15 border border-[#D4AF37]/30">
-                      <FormattedMarkdown content={msg.content} isDark={isDark} onNavigate={href => navigate(href)} />
+                      <FormattedMarkdown content={msg.content} isDark={isDark} />
                     </div>
                   </div>
                 );
@@ -1521,7 +1438,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                     <FormattedMarkdown
                       content={msg.content}
                       isDark={isUser || isHumanStaff || isDark}
-                      onNavigate={href => navigate(href)}
                     />
 
                     {Array.isArray(msg.attachments) && msg.attachments.length > 0 && (
