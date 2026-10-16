@@ -116,6 +116,66 @@ const WORKSPACE_COMPONENT_MAP = {
   'ab-experiments': GrowthOffersHub,
 };
 
+const CONTROL_CENTRE_SECTION_MAP = {
+  'orders.superadmin_cancellation': { key: 'section:order_cancellation', section: 'order_cancellation', label: 'Order Cancellation & Refund Ledger' },
+  'governance.staff_rbac_matrix': { key: 'section:rbac_matrix', section: 'rbac_matrix', label: 'Staff RBAC Matrix' },
+  'governance.module_pause_switchboard': { key: 'section:telemetry', section: 'telemetry', label: 'Real-Time Telemetry & Health' },
+  'governance.realtime_api_telemetry': { key: 'section:telemetry', section: 'telemetry', label: 'Real-Time Telemetry & Health' },
+  'governance.infrastructure_logs': { key: 'section:telemetry', section: 'telemetry', label: 'Real-Time Telemetry & Health' },
+  'governance.security_vault_config': { key: 'section:vault_settings', section: 'vault_settings', label: 'Security Vault & Audit Log' },
+  'concierge.escalation_tickets': { key: 'section:escalations', section: 'escalations', label: 'Verified Escalations' },
+};
+
+const WORKSPACE_LABEL_MAP = {
+  overview: 'Overview',
+  products: 'Products',
+  categories: 'Categories',
+  inventory: 'Inventory',
+  orders: 'Orders',
+  returns: 'Returns',
+  users: 'Client Directory',
+  reviews: 'Reviews',
+  analytics: 'Analytics',
+  notifications: 'Notifications',
+  tax: 'Tax',
+  gst: 'GST Accounting',
+  shipping: 'Shipping',
+  warehouse: 'Warehouse',
+  settings: 'Settings',
+  'growth-offers': 'Growth Offers',
+  coupons: 'Coupons',
+  'loyalty-tiers': 'Loyalty Tiers',
+  'loyalty-members': 'Loyalty Members',
+  personalization: 'Personalization',
+  'lifecycle-offers': 'Lifecycle Offers',
+  'referral-engine': 'Referral Program',
+  'wallet-management': 'Wallet Management',
+  impact: 'Impact',
+  contacts: 'Contact Management',
+  ewarranty: 'E-Warranty',
+  'support-agents': 'Support Agents',
+};
+
+function getModuleWorkspaceTarget(module) {
+  const controlCentreSection = CONTROL_CENTRE_SECTION_MAP[module.key];
+  if (controlCentreSection) return { ...controlCentreSection, type: 'section' };
+
+  if (module.portal === 'support' || module.portal === 'superadminsupport') return null;
+
+  const component = WORKSPACE_COMPONENT_MAP[module.adminTab];
+  if (!component) return null;
+
+  const componentTab = Object.entries(WORKSPACE_COMPONENT_MAP)
+    .find(([, WorkspaceComponent]) => WorkspaceComponent === component)?.[0] || module.adminTab;
+  return {
+    key: `component:${componentTab}`,
+    type: 'component',
+    component,
+    tab: componentTab,
+    label: WORKSPACE_LABEL_MAP[componentTab] || componentTab,
+  };
+}
+
 const CATEGORY_ICON_MAP = {
   'Main Storefront': Globe,
   Orders: ShoppingBag,
@@ -761,7 +821,7 @@ export default function SuperAdminControlCentre() {
     setOverview(null);
   };
 
-  // Filtered 108-Module Catalog for Card-Grid Dashboard
+  // Filtered platform module catalog for the card-grid dashboard
   const modulesCatalog = overview?.modulesCatalog || [];
   const moduleCategories = useMemo(
     () => ['ALL', ...Array.from(new Set(modulesCatalog.map(m => m.category)))],
@@ -782,6 +842,22 @@ export default function SuperAdminControlCentre() {
       );
     });
   }, [modulesCatalog, selectedCategory, selectedPortalFilter, moduleSearch]);
+  const workspaceGroups = useMemo(() => {
+    const groups = new Map();
+    filteredModules.forEach(module => {
+      const target = getModuleWorkspaceTarget(module);
+      const groupKey = target?.key || `unavailable:${module.portal}:${module.adminTab || 'unassigned'}`;
+      if (!groups.has(groupKey)) {
+        groups.set(groupKey, {
+          key: groupKey,
+          target,
+          modules: [],
+        });
+      }
+      groups.get(groupKey).modules.push(module);
+    });
+    return Array.from(groups.values());
+  }, [filteredModules]);
 
   // ═══════════════════════════════════════════════════════════════════════════
   // UNAUTHENTICATED VIEW: FORTRESS MULTI-FACTOR LOGIN OR FIRST-TIME ONBOARDING
@@ -1121,8 +1197,8 @@ export default function SuperAdminControlCentre() {
   const escalationTickets = overview?.escalationTickets || [];
   const auditLogs = overview?.auditLogs || [];
 
-  const ActiveModalComponent = activeWorkspaceModal?.adminTab
-    ? WORKSPACE_COMPONENT_MAP[activeWorkspaceModal.adminTab] || DashboardOverview
+  const ActiveModalComponent = activeWorkspaceModal
+    ? getModuleWorkspaceTarget(activeWorkspaceModal)?.component
     : null;
 
   return (
@@ -1152,7 +1228,7 @@ export default function SuperAdminControlCentre() {
           {/* Primary Navigation Pills */}
           <nav aria-label="Control Centre Workspaces" className="flex flex-wrap items-center gap-1.5">
             {[
-              { id: 'card_grid', label: `All Modules (${kpis.totalModules || 108})`, icon: Boxes },
+              { id: 'card_grid', label: `All Modules (${kpis.totalModules ?? modulesCatalog.length})`, icon: Boxes },
               { id: 'rbac_matrix', label: `Staff RBAC Matrix (${staffAccounts.length})`, icon: Users },
               { id: 'order_cancellation', label: 'Order Cancellation & Refund Ledger', icon: RotateCcw },
               { id: 'escalations', label: `Verified Escalations (${kpis.openEscalations || 0})`, icon: PhoneCall },
@@ -1262,16 +1338,16 @@ export default function SuperAdminControlCentre() {
           ))}
         </section>
 
-        {/* ── VIEW 1: 108-MODULE SINGLE-PAGE CARD-GRID DASHBOARD ──────────── */}
+        {/* ── VIEW 1: SINGLE-PAGE CARD-GRID DASHBOARD ───────────────────── */}
         {activeTopSection === 'card_grid' && (
           <section className="space-y-5">
             <div className="rounded-2xl border border-white/10 bg-[#091d15] p-4 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
                 <h2 className="text-lg font-bold text-white">
-                  Master Platform Module Grid ({filteredModules.length} of {modulesCatalog.length} Modules)
+                  Platform Workspaces ({workspaceGroups.length}) · Registered Capabilities ({filteredModules.length} of {modulesCatalog.length})
                 </h2>
                 <p className="text-xs text-stone-400 mt-0.5">
-                  Click any card to open its dedicated full-screen workspace with Unsaved Changes (Dirty-State) protection, or toggle live API availability.
+                  Capabilities that use the same existing screen are grouped together. Each workspace button opens a real screen; capabilities without an integrated screen are listed without a fake destination.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2.5">
@@ -1281,7 +1357,7 @@ export default function SuperAdminControlCentre() {
                     type="text"
                     value={moduleSearch}
                     onChange={e => setModuleSearch(e.target.value)}
-                    placeholder="Search 108 modules, routes, or domains…"
+                    placeholder="Search modules, routes, or domains…"
                     className="w-full rounded-xl border border-white/15 bg-black/40 pl-9 pr-3 py-2 text-xs text-white outline-none focus:border-[#d4af37]"
                   />
                 </div>
@@ -1315,94 +1391,83 @@ export default function SuperAdminControlCentre() {
               ))}
             </div>
 
-            {/* Categorized Luxury Dashboard Cards */}
+            {/* Group capabilities by the real workspace that manages them. */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3.5">
-              {filteredModules.map(mod => {
-                const Icon = CATEGORY_ICON_MAP[mod.category] || Server;
-                const isPaused = mod.status === 'paused';
+              {workspaceGroups.map(group => {
+                const representative = group.modules[0];
+                const Icon = CATEGORY_ICON_MAP[representative.category] || Server;
                 return (
                   <article
-                    key={mod.key}
-                    className={`group rounded-2xl border p-4 flex flex-col justify-between gap-3 transition ${
-                      isPaused
-                        ? 'bg-amber-950/20 border-amber-500/40'
-                        : 'bg-[#091d15] border-white/10 hover:border-[#d4af37]/50 hover:bg-[#0c251b]'
-                    }`}
+                    key={group.key}
+                    className="rounded-2xl border border-white/10 bg-[#091d15] p-4 flex flex-col gap-3"
                   >
                     <div>
                       <div className="flex items-start justify-between gap-2">
                         <span className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-[#d4af37]">
                           <Icon size={13} />
-                          {mod.category}
+                          {representative.portal} workspace
                         </span>
-                        <span
-                          className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase border ${
-                            isPaused
-                              ? 'bg-amber-500/20 text-amber-200 border-amber-500/40'
-                              : mod.status === 'degraded'
-                              ? 'bg-rose-500/20 text-rose-200 border-rose-500/40'
-                              : 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30'
-                          }`}
-                        >
-                          {mod.status}
+                        <span className="rounded-full border border-white/15 px-2 py-0.5 text-[9px] font-bold uppercase text-stone-300">
+                          {group.modules.length} {group.modules.length === 1 ? 'capability' : 'capabilities'}
                         </span>
                       </div>
-                      <h3 className="font-serif text-base font-bold text-white mt-2 group-hover:text-[#f3d77b] transition-colors">
-                        {mod.title}
+                      <h3 className="font-serif text-base font-bold text-white mt-2">
+                        {group.target?.label || 'Workspace not integrated'}
                       </h3>
-                      <p className="font-mono text-[10px] text-stone-400 mt-1 truncate">{mod.key}</p>
+                      <p className="text-[11px] text-stone-400 mt-1">
+                        {group.target
+                          ? 'Shared existing workspace for the capabilities listed below.'
+                          : `No ${representative.portal} workspace is integrated into this Control Centre yet.`}
+                      </p>
                     </div>
 
-                    <div className="space-y-2.5 pt-2 border-t border-white/10">
-                      <div className="flex items-center justify-between text-[10px] text-stone-400">
-                        <span>Portal: <strong className="text-stone-200 uppercase">{mod.portal}</strong></span>
-                        <span>
-                          Latency: <strong className="text-emerald-300">{mod.telemetry?.avgLatencyMs || 0} ms</strong>
-                        </span>
-                      </div>
+                    <ul className="max-h-64 space-y-2 overflow-y-auto border-y border-white/10 py-2">
+                      {group.modules.map(module => (
+                        <li key={module.key} className="flex items-start justify-between gap-2 text-[11px]">
+                          <span className="min-w-0">
+                            <span className="block text-stone-200">{module.title}</span>
+                            <span className="block truncate font-mono text-[9px] text-stone-500">{module.key}</span>
+                          </span>
+                          {module.pauseKey && (
+                            <button
+                              type="button"
+                              onClick={() => handleToggleModulePause(module)}
+                              title={module.enabled ? `Pause ${module.title}` : `Resume ${module.title}`}
+                              aria-label={module.enabled ? `Pause ${module.title}` : `Resume ${module.title}`}
+                              className={`shrink-0 rounded-lg border p-1.5 ${
+                                module.enabled
+                                  ? 'border-amber-500/30 text-amber-200 hover:bg-amber-500/15'
+                                  : 'border-emerald-500/30 text-emerald-200 hover:bg-emerald-500/15'
+                              }`}
+                            >
+                              {module.enabled ? <Pause size={12} /> : <Play size={12} />}
+                            </button>
+                          )}
+                        </li>
+                      ))}
+                    </ul>
 
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            if (mod.key === 'orders.superadmin_cancellation') {
-                              setActiveTopSection('order_cancellation');
-                            } else if (mod.key === 'governance.staff_rbac_matrix') {
-                              setActiveTopSection('rbac_matrix');
-                            } else if (
-                              mod.key === 'governance.realtime_api_telemetry' ||
-                              mod.key === 'governance.infrastructure_logs'
-                            ) {
-                              setActiveTopSection('telemetry');
-                            } else if (mod.key === 'concierge.escalation_tickets') {
-                              setActiveTopSection('escalations');
-                            } else if (mod.key === 'governance.security_vault_config') {
-                              setActiveTopSection('vault_settings');
-                            } else {
-                              setIsWorkspaceDirty(false);
-                              setActiveWorkspaceModal(mod);
-                            }
-                          }}
-                          className="flex-1 rounded-xl bg-[#d4af37]/15 hover:bg-[#d4af37] text-[#f3d77b] hover:text-[#071510] border border-[#d4af37]/35 py-2 px-3 text-xs font-bold transition"
-                        >
-                          Open Workspace
-                        </button>
-                        {mod.pauseKey && (
-                          <button
-                            type="button"
-                            onClick={() => handleToggleModulePause(mod)}
-                            title={mod.enabled ? 'Pause Module Traffic' : 'Resume Module Traffic'}
-                            className={`p-2 rounded-xl border text-xs transition ${
-                              mod.enabled
-                                ? 'border-amber-500/30 text-amber-200 hover:bg-amber-500/15'
-                                : 'border-emerald-500/30 text-emerald-200 hover:bg-emerald-500/15'
-                            }`}
-                          >
-                            {mod.enabled ? <Pause size={14} /> : <Play size={14} />}
-                          </button>
-                        )}
-                      </div>
-                    </div>
+                    {group.target && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (group.target.type === 'section') {
+                            setActiveTopSection(group.target.section);
+                          } else {
+                            setIsWorkspaceDirty(false);
+                            setActiveWorkspaceModal(representative);
+                          }
+                        }}
+                        className="w-full rounded-xl border border-[#d4af37]/35 bg-[#d4af37]/15 px-3 py-2 text-xs font-bold text-[#f3d77b] hover:bg-[#d4af37] hover:text-[#071510]"
+                      >
+                        Open {group.target.label}
+                      </button>
+                    )}
+                    {!group.target && (
+                      <p className="text-[10px] text-stone-500">
+                        This entry remains in the capability and access-control registry; no destination is wired.
+                      </p>
+                    )}
                   </article>
                 );
               })}
@@ -1410,7 +1475,7 @@ export default function SuperAdminControlCentre() {
           </section>
         )}
 
-        {/* ── VIEW 2: GRANULAR RBAC & 108-MODULE PERMISSION MATRIX ────────── */}
+        {/* ── VIEW 2: GRANULAR RBAC & PLATFORM MODULE PERMISSION MATRIX ─── */}
         {activeTopSection === 'rbac_matrix' && (
           <section className="space-y-5">
             <div className="rounded-2xl border border-white/10 bg-[#091d15] p-5 flex flex-wrap items-center justify-between gap-4">
@@ -1419,7 +1484,7 @@ export default function SuperAdminControlCentre() {
                   Granular Role-Based Access Control (RBAC) &amp; Dynamic Per-User Permission Matrix
                 </h2>
                 <p className="text-xs text-stone-400 mt-1">
-                  Manage {staffAccounts.length} staff logins across Admin, Warehouse, and Support. Toggle any of the 108 platform functions between Hidden, Read-Only, Write / Edit, and Full Control.
+                  Manage {staffAccounts.length} staff logins across Admin, Warehouse, and Support. Toggle any registered platform function between Hidden, Read-Only, Write / Edit, and Full Control.
                 </p>
               </div>
               <div className="flex items-center gap-2.5">
@@ -1577,13 +1642,13 @@ export default function SuperAdminControlCentre() {
                 })}
               </div>
 
-              {/* Dynamic 108-Module Permission Matrix Editor */}
+              {/* Dynamic platform module permission matrix editor */}
               {selectedStaff && (
                 <div className="rounded-2xl border border-white/10 bg-[#091d15] p-5 space-y-4">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
                     <div>
                       <span className="text-[10px] font-bold uppercase tracking-widest text-[#d4af37]">
-                        Editing 108-Module Permission Matrix
+                        Editing Platform Module Permission Matrix
                       </span>
                       <h3 className="text-base font-bold text-white mt-0.5">
                         {selectedStaff.fullName} ({selectedStaff.email})
