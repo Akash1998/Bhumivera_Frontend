@@ -467,7 +467,7 @@ export default function OrderManagement() {
             Order Management
           </h1>
           <p className="text-slate-400 text-sm mt-1">
-            View, track, reconcile payments, and print 10X Luxury Branded GST Tax Invoices with Bhumivera logo.
+            View, track, reconcile payments, and print Bhumivera Maison GST Tax Invoices with Bhumivera logo.
           </p>
         </div>
         <div className="flex flex-wrap gap-3">
@@ -665,7 +665,7 @@ export default function OrderManagement() {
                 <th className="p-4 text-xs font-bold text-slate-500 uppercase">Courier / AWB</th>
                 <th className="p-4 text-xs font-bold text-slate-500 uppercase">Total</th>
                 <th className="p-4 text-xs font-bold text-slate-500 uppercase">Status</th>
-                <th className="p-4 text-xs font-bold text-slate-500 uppercase text-right">Actions &amp; 10X Invoice</th>
+                <th className="p-4 text-xs font-bold text-slate-500 uppercase text-right">Actions &amp; Tax Invoice</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-white/10">
@@ -742,7 +742,7 @@ export default function OrderManagement() {
                             className="rounded-lg border border-[#d4af37]/40 bg-[#d4af37]/15 px-3 py-2 text-xs font-bold text-[#f3d77b] transition-colors hover:bg-[#d4af37]/25"
                           >
                             <Printer size={13} className="inline mr-1" />
-                            10X Invoice
+                            Tax Invoice
                           </button>
                           <button
                             onClick={() => {
@@ -821,7 +821,7 @@ export default function OrderManagement() {
                   className="inline-flex items-center gap-2 rounded-xl border border-[#d4af37]/40 bg-[#d4af37]/15 px-3.5 py-2 text-xs font-bold text-[#f3d77b] transition-colors hover:bg-[#d4af37]/25"
                 >
                   <Printer size={16} />
-                  Print 10X Luxury GST Invoice (with Logo)
+                  Print Maison GST Tax Invoice (with Logo)
                 </button>
                 <button
                   onClick={() => setSelectedOrder(null)}
@@ -1121,7 +1121,7 @@ export default function OrderManagement() {
         </div>
       )}
 
-      {/* 10X LUXURY GST TAX INVOICE MODAL WITH BHUMIVERA LOGO */}
+      {/* MAISON GST TAX INVOICE MODAL WITH BHUMIVERA LOGO */}
       {luxuryInvoiceDoc && (
         <LuxuryTaxInvoiceModal
           document={luxuryInvoiceDoc}

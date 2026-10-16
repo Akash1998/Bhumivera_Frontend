@@ -228,7 +228,7 @@ export default function PersonalizationCenter() {
   const handleSaveWeights = e => {
     e.preventDefault();
     setSavedNotice(
-      `AI Personalization & Cart-Rescue scoring weights updated (${totalWeight}% total signal normalization).`
+      `Bespoke Client Curation & Cart-Rescue scoring weights updated (${totalWeight}% total signal normalization).`
     );
   };
 
@@ -286,7 +286,7 @@ export default function PersonalizationCenter() {
           </span>
           <div>
             <p className="text-[11px] font-bold uppercase tracking-widest text-[#d4af37]">
-              100X Privacy-First AI Recommendation &amp; Cart Rescue Studio
+              Bespoke Client Curation &amp; Recommendation Studio
             </p>
             <h3 id="personalization-title" className="text-xl font-bold text-white mt-0.5">
               Automatic product suggestions

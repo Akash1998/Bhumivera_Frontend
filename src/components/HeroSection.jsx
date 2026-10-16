@@ -8,8 +8,8 @@ const slides = [
     subtitle: "Experience Audio Excellence",
     description: "Upgrade your vehicle with studio-grade amplifiers and basstubes designed for the audiophile in you.",
     image: "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=2070",
-    cta: "Shop Audio",
-    link: "/shop?category=Audio",
+    cta: "Explore the Collection",
+    link: "/products",
     accent: "emerald"
   },
   {
@@ -17,8 +17,8 @@ const slides = [
     subtitle: "Next-Gen Android Players",
     description: "Seamless integration with Carplay and Android Auto. High-definition displays for your dashboard.",
     image: "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&q=80&w=2066",
-    cta: "Explore Players",
-    link: "/shop?category=Android%20Players",
+    cta: "Explore the Collection",
+    link: "/products",
     accent: "blue"
   },
   {
@@ -26,8 +26,8 @@ const slides = [
     subtitle: "High-Intensity LED Systems",
     description: "Safety meets style with our advanced LED headlight kits. Precision engineered for maximum visibility.",
     image: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=2066",
-    cta: "View Lights",
-    link: "/shop?category=Lights",
+    cta: "Explore the Collection",
+    link: "/products",
     accent: "purple"
   }
 ];

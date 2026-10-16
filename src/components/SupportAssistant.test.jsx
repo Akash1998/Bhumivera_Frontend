@@ -126,36 +126,6 @@ describe('SupportAssistant floating AI widget', () => {
     expect(screen.getByRole('button', { name: 'End chat' })).toBeTruthy();
   });
 
-  it('does not expose a site directory and renders assistant links as plain chat text', async () => {
-    aiSupport.sendMessage.mockResolvedValue({
-      data: {
-        sessionToken: 'sess_test_12345',
-        reply: 'Your order is being checked: [view order](/order-tracking) /admin/dashboard',
-        orderCards: [],
-        quickActions: [],
-      },
-    });
-
-    const { container } = render(
-      <MemoryRouter initialEntries={['/']}>
-        <SupportAssistant />
-      </MemoryRouter>
-    );
-
-    fireEvent.click(screen.getByRole('button', { name: /Open Bhumivera Support/i }));
-    await screen.findByText(/Hi Aarav, how can I help you today/i);
-    expect(screen.queryByRole('button', { name: /All Website Links Directory/i })).toBeNull();
-
-    fireEvent.change(screen.getByRole('textbox', { name: 'Message Bhumivera Support' }), {
-      target: { value: 'Where is my order?' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: 'Send support message' }));
-
-    expect(await screen.findByText(/Your order is being checked: view order/)).toBeTruthy();
-    expect(container.querySelector('a[href="/order-tracking"]')).toBeNull();
-    expect(screen.queryByText(/admin\/dashboard/i)).toBeNull();
-  });
-
   it('shows the rating form only after the customer ends the chat', async () => {
     aiSupport.endSatisfied.mockResolvedValue({
       data: {

@@ -82,7 +82,7 @@ const lazyWithRetry = (componentImport) =>
     }
   });
 
-// Existing Pages
+// Storefront & Portal Pages
 const Home = lazyWithRetry(() => import("./pages/PremiumHome.jsx"));
 const Warehouse = lazyWithRetry(() => import("./pages/Warehouse.jsx"));
 const WarehouseAdmin = lazyWithRetry(() => import("./pages/admin/WarehouseAdmin.jsx"));
@@ -107,25 +107,18 @@ const Affiliate = lazyWithRetry(() => import("./pages/Affiliate.jsx"));
 const About = lazyWithRetry(() => import("./pages/About.jsx"));
 const Impact = lazyWithRetry(() => import("./pages/Impact.jsx"));
 const Legal = lazyWithRetry(() => import("./pages/Legal.jsx"));
-
-// NEW: Bhumivera Specific Pages using lazyWithRetry
 const BhumiveraScience = lazyWithRetry(() => import("./pages/BhumiveraScience.jsx"));
 const ReturnsCentre = lazyWithRetry(() => import("./pages/ReturnsCentre.jsx"));
-
-// NEW: MPGEBusiness Landing Route
 const MPGEBusinessLanding = lazyWithRetry(() => import("./pages/MPGEBusinessLanding.jsx"));
-
-// NEW: Orphan pages routeability
 const FlashSales = lazyWithRetry(() => import("./pages/FlashSales.jsx"));
 const SomaticRegistry = lazyWithRetry(() => import("./pages/SomaticRegistry.jsx"));
 const ProvenanceEngine = lazyWithRetry(() => import("./pages/ProvenanceEngine.jsx"));
 const SpinRegistration = lazyWithRetry(() => import("./pages/SpinRegistration.jsx"));
-
-// NEW: Premium password reset pages
 const ForgotPassword = lazyWithRetry(() => import("./pages/ForgotPassword.jsx"));
 const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword.jsx"));
 const SupportPortal = lazyWithRetry(() => import("./pages/SupportPortal.jsx"));
 const SuperAdminSupport = lazyWithRetry(() => import("./pages/SuperAdminSupport.jsx"));
+const SuperAdminControlCentre = lazyWithRetry(() => import("./pages/SuperAdminControlCentre.jsx"));
 const AdminForgotPassword = lazyWithRetry(() => import("./pages/admin/AdminForgotPassword.jsx"));
 const CheckoutPage = lazyWithRetry(() => import("./pages/Checkout.jsx"));
 
@@ -271,10 +264,8 @@ function AppContent() {
     return () => window.removeEventListener('bhumivera:deep-link', handleDeepLink);
   }, [navigate]);
 
-  // Native mobile Android back button handling
   useNativeBackButton();
 
-  // Native push notifications registration
   useEffect(() => {
     const token = localStorage.getItem('token');
     if (token) {
@@ -298,6 +289,7 @@ function AppContent() {
       path.startsWith("/warehouse") || 
       path.startsWith("/support") ||
       path.startsWith("/superadminsupport") ||
+      path.startsWith("/superadmin/controlcentre") ||
       path === "/warehouseadmin" || 
       path === "/earn-from-home" || 
       path === "/mpgebusiness"
@@ -329,9 +321,12 @@ function AppContent() {
         
         <Suspense fallback={<PageLoader />}>
           <Routes>
-            {/* Public Routes */}
+            {/* Public Storefront & Collection Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/shop" element={<Shop />} />
+            <Route path="/products" element={<Shop />} />
+            <Route path="/collections" element={<Shop />} />
+            <Route path="/category/:slug" element={<Shop />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
@@ -352,7 +347,7 @@ function AppContent() {
             <Route path="/order-tracking" element={<OrderTracking />} />
             <Route path="/compare" element={<Compare />} />
 
-            {/* Orphan pages reachability */}
+            {/* Special Pages */}
             <Route path="/flash-sales" element={<FlashSales />} />
             <Route path="/somatic-registry" element={<SomaticRegistry />} />
             <Route path="/provenance-engine" element={<ProvenanceEngine />} />
@@ -361,11 +356,13 @@ function AppContent() {
             {/* Auth Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
-
-            {/* Public Auth Password Reset Routes */}
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin/forgot-password" element={<WebOnlyManagement><AdminForgotPassword /></WebOnlyManagement>} />
+
+            {/* Unified Master Control Centre & Support Portals */}
+            <Route path="/superadmin/controlcentre" element={<WebOnlyManagement><SuperAdminControlCentre /></WebOnlyManagement>} />
+            <Route path="/superadmin/controlcentre/*" element={<WebOnlyManagement><SuperAdminControlCentre /></WebOnlyManagement>} />
             <Route path="/support/*" element={<WebOnlyManagement><SupportPortal /></WebOnlyManagement>} />
             <Route path="/superadminsupport" element={<WebOnlyManagement><SuperAdminSupport /></WebOnlyManagement>} />
             <Route path="/superadminsupport/*" element={<WebOnlyManagement><SuperAdminSupport /></WebOnlyManagement>} />
@@ -386,15 +383,17 @@ function AppContent() {
             <Route path="/warehouse/management" element={<WebOnlyManagement><WarehouseRoute><WarehouseManagement /></WarehouseRoute></WebOnlyManagement>} />
             <Route path="/warehouseadmin" element={<WebOnlyManagement><WarehouseAdminLogin /></WebOnlyManagement>} />
             
-            {/* Admin System */}
+            {/* Executive Admin System */}
             <Route path="/admin/login" element={<WebOnlyManagement><AdminLogin /></WebOnlyManagement>} />
             <Route path="/admin" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />
             <Route path="/admin/dashboard/support" element={<Navigate to="/support" replace />} />
             <Route path="/admin/dashboard/contact" element={<Navigate to="/support" replace />} />
+            <Route path="/admin/dashboard/system-health" element={<Navigate to="/superadmin/controlcentre" replace />} />
+            <Route path="/admin/dashboard/logs" element={<Navigate to="/superadmin/controlcentre" replace />} />
             <Route path="/admin/dashboard/:tab" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />
             <Route path="/admin/*" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />
 
-            {/* Backward-compat redirects (old bookmarks) */}
+            {/* Backward-compat redirects */}
             <Route path="/admin-login" element={<WebOnlyManagement><Navigate to="/admin/login" replace /></WebOnlyManagement>} />
 
             {/* Global Redirect */}

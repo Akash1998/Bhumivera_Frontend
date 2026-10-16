@@ -238,7 +238,7 @@ export default function CouponManagement() {
 
       if (editingCoupon) {
         await couponApi.update(editingCoupon.id, payload);
-        flashNotice(`Updated coupon ${payload.code} with 512-bit tamper-proof rules.`);
+        flashNotice(`Updated coupon ${payload.code} with tamper-proof promotional rules.`);
       } else {
         await couponApi.create(payload);
         flashNotice(`Created coupon ${payload.code} (Max ${payload.per_user_limit || 'Unlimited'} use(s) per customer).`);
@@ -344,7 +344,7 @@ export default function CouponManagement() {
         <div>
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
-              <ShieldCheck size={12} /> 512-Bit Tamper-Proof Coupon Engine
+              <ShieldCheck size={12} /> Tamper-Proof Promotional Engine
             </span>
           </div>
           <h1 className="text-2xl font-bold text-white flex items-center gap-2 mt-1">
@@ -775,7 +775,7 @@ export default function CouponManagement() {
                   {editingCoupon ? `Edit Coupon: ${editingCoupon.code}` : 'Create Tamper-Proof Coupon'}
                 </h3>
                 <p className="text-xs text-slate-400">
-                  Protected by atomic per-user locking and 512-bit SHA-512 redemption signatures.
+                  Protected by atomic per-user locking and cryptographic SHA-512 redemption signatures.
                 </p>
               </div>
               <button type="button" onClick={handleCloseModal} className="text-slate-400 hover:text-white">
@@ -917,7 +917,7 @@ export default function CouponManagement() {
                       onChange={handleChange}
                       className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
                     />
-                    <span className="text-[10px] text-slate-500">Default 1 (prevents 10x reuse). Set 0 for unlimited.</span>
+                    <span className="text-[10px] text-slate-500">Default 1 (prevents duplicate reuse). Set 0 for unlimited.</span>
                   </div>
 
                   <div>

@@ -439,7 +439,7 @@ export function normalizeInvoiceDocument(inputDoc, businessProfile = null) {
 }
 
 /**
- * Generates standalone print-ready HTML for the 10X Luxury Branded GST Tax Invoice.
+ * Generates standalone print-ready HTML for the Bhumivera Maison GST Tax Invoice.
  */
 export function buildPrintableLuxuryInvoiceHtml(normalized) {
   if (!normalized) return '';
@@ -666,7 +666,7 @@ export default function LuxuryTaxInvoiceModal({
           <div className="flex items-center gap-2.5">
             <Sparkles size={17} className="text-[#d4af37]" />
             <span className="text-xs font-black uppercase tracking-widest text-[#d4af37]">
-              10X Luxury Branded GST {isCreditNote ? 'Credit Note' : 'Tax Invoice'}
+              Bhumivera Maison GST {isCreditNote ? 'Credit Note' : 'Tax Invoice'}
             </span>
             <span className="rounded-full bg-emerald-500/20 border border-emerald-400/40 px-2.5 py-0.5 text-[10px] font-bold text-emerald-300">
               {invoice.supply_type} · {invoice.is_interstate ? 'IGST' : 'CGST + SGST'}
@@ -986,7 +986,7 @@ export default function LuxuryTaxInvoiceModal({
                     <QrCode size={28} />
                   </div>
                   <div className="text-[10px] text-[#52665c]">
-                    <div className="font-bold text-[#071510]">512-Bit Verified Tax Record</div>
+                    <div className="font-bold text-[#071510]">Cryptographically Verified Tax Record</div>
                     <div className="font-mono">{String(invoice.sha512_signature).slice(0, 22)}…</div>
                   </div>
                 </div>

@@ -57,14 +57,14 @@ const formatMoney = value => currency.format(Number(value) || 0);
 
 const modules = [
   {
-    title: 'Orders & 10X Invoices',
-    description: 'Fulfil orders, reconcile Razorpay & print 10X Luxury GST Invoices with logo',
+    title: 'Orders & GST Tax Invoices',
+    description: 'Fulfil orders, reconcile Razorpay & print Maison GST Tax Invoices with logo',
     icon: ShoppingCart,
     href: '/admin/dashboard/orders',
     color: 'text-violet-200 bg-violet-400/10',
   },
   {
-    title: '10X GST & Books Portal',
+    title: 'Financial Ledger & GST Compliance',
     description: '48-col CSV, 6-sheet Excel, GSTR-1/3B & Luxury Branded Tax Invoices',
     icon: FileText,
     href: '/admin/dashboard/gst',
@@ -106,14 +106,14 @@ const modules = [
     color: 'text-rose-200 bg-rose-400/10',
   },
   {
-    title: 'Loyalty Matrix & Tier Forge',
+    title: 'Clientele Privilege & Tiers',
     description: 'Configure lifetime tiers, 45% max redemption, and member points',
     icon: Award,
     href: '/admin/dashboard/loyalty-tiers',
     color: 'text-emerald-200 bg-emerald-400/10',
   },
   {
-    title: 'AI Personalization Studio',
+    title: 'Bespoke Client Curation',
     description: 'Privacy-first AI product suggestions & out-of-stock cart rescue',
     icon: Sparkles,
     href: '/admin/dashboard/personalization',
@@ -174,7 +174,7 @@ const API_VERIFICATION_SUITE = [
   },
   {
     id: 'api-copilot-nav',
-    module: '100X AI Co-Pilot Navigation Directory',
+    module: 'Bhumivera Client Concierge Route Directory',
     method: 'GET',
     endpoint: '/support/ai-copilot/navigation-map',
     authScope: 'Public / Storefront AI',
@@ -198,7 +198,7 @@ const API_VERIFICATION_SUITE = [
   },
   {
     id: 'api-gst-settings',
-    module: '10X GST Portal & Seller Profile',
+    module: 'Financial Ledger & GST Compliance',
     method: 'GET',
     endpoint: '/gst/settings',
     authScope: 'Admin JWT',
@@ -222,7 +222,7 @@ const API_VERIFICATION_SUITE = [
   },
   {
     id: 'api-loyalty',
-    module: 'Loyalty Matrix & Tier Forge',
+    module: 'Clientele Privilege & Tiers',
     method: 'GET',
     endpoint: '/loyalty-tiers/matrix',
     authScope: 'Admin JWT',
@@ -413,7 +413,7 @@ export default function DashboardOverview() {
         <div className="min-w-0">
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.15em] text-emerald-300">
             <Activity size={16} aria-hidden="true" />
-            Store performance &amp; 100X Command Center
+            Store performance &amp; Maison Executive Suite
           </div>
           <h1 className="mt-2 text-2xl font-bold tracking-tight text-white sm:text-3xl">{greeting}</h1>
           <p className="mt-1 text-sm text-slate-400">

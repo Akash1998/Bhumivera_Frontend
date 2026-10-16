@@ -6,7 +6,6 @@ import {
   ArrowUpRight,
   Droplets,
   Leaf,
-  ShoppingBag,
   Sparkles,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -14,7 +13,6 @@ import { motion as Motion } from 'framer-motion';
 import SEO from '../components/SEO';
 import { categories as categoriesApi, products as productsApi, recommendations as recommendationsApi, reviews as reviewsApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
-import { useCart } from '../context/CartContext';
 import { getProductImageUrl } from '../utils/productImageUrl';
 
 const productImage = product => getProductImageUrl(
@@ -84,7 +82,7 @@ const questions = [
     label: 'Choosing a ritual',
     question: 'Where should I begin?',
     answer: 'Begin with the product that fits a routine you already enjoy. Read its details, check current availability, and add one considered step at a time. There is no need to build a complicated routine.',
-    link: '/shop',
+    link: '/products',
     linkLabel: 'Browse the collection',
   },
   {
@@ -115,7 +113,6 @@ const questions = [
 
 export default function PremiumHome() {
   const { user } = useAuth();
-  const { addToCart } = useCart();
   const [products, setProducts] = useState([]);
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [recommendationsPersonalized, setRecommendationsPersonalized] = useState(false);
@@ -264,8 +261,8 @@ export default function PremiumHome() {
               From botanicals shaped by the natural world to the care we choose to give it, discover a more considered way to make your everyday ritual your own.
             </p>
             <div className="mt-6 flex flex-col gap-3 min-[380px]:flex-row sm:mt-8">
-              <Link to="/shop" className="group inline-flex min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap bg-[#e0e8ce] px-3 py-3 text-xs font-semibold text-[#19271e] transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-[380px]:w-auto sm:gap-3 sm:px-5 sm:text-sm">
-                Discover the collection <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
+              <Link to="/products" className="group inline-flex min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap bg-[#e0e8ce] px-3 py-3 text-xs font-semibold text-[#19271e] transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white min-[380px]:w-auto sm:gap-3 sm:px-5 sm:text-sm">
+                Explore the Collection <ArrowRight size={16} className="transition-transform group-hover:translate-x-1" />
               </Link>
               <Link to="/about" className="inline-flex min-h-12 w-full items-center justify-center gap-2 whitespace-nowrap border border-white/45 bg-white/[0.04] px-3 py-3 text-xs font-semibold text-white transition-colors hover:bg-white/10 min-[380px]:w-auto sm:gap-3 sm:px-5 sm:text-sm">
                 Our story <ArrowUpRight size={16} />
@@ -390,7 +387,7 @@ export default function PremiumHome() {
             <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#687958]">The considered collection</p>
             <h2 className="mt-3 font-serif text-3xl sm:text-4xl lg:text-5xl">Find your daily ritual.</h2>
           </div>
-          <Link to="/shop" className="inline-flex items-center gap-2 pb-1 text-xs font-bold uppercase tracking-[0.14em] text-[#354933]">View all <ArrowRight size={15} /></Link>
+          <Link to="/products" className="inline-flex items-center gap-2 pb-1 text-xs font-bold uppercase tracking-[0.14em] text-[#354933]">View all <ArrowRight size={15} /></Link>
         </div>
         {loading ? (
           <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">{[0, 1, 2, 3].map(item => <div key={item} className="aspect-[4/5] animate-pulse bg-[#e8e5dc]" />)}</div>
@@ -406,12 +403,7 @@ export default function PremiumHome() {
                   <div className="min-w-0"><p className="truncate text-[8px] font-semibold uppercase tracking-[0.15em] text-[#71806a] sm:text-[10px]">{product.category_name || 'Bhumivera ritual'}</p><h3 className="mt-1 line-clamp-2 font-serif text-base leading-snug sm:text-xl">{product.name}</h3></div>
                   <span className="text-xs font-semibold sm:shrink-0 sm:pt-4 sm:text-sm">₹{price(product)}</span>
                 </div>
-                <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
-                  <Link to={`/product/${product.slug || product.id}`} className="inline-flex min-h-8 items-center gap-2 text-[9px] font-bold uppercase tracking-[0.13em] text-[#3d553b] sm:text-[10px]">Discover details <ArrowRight size={13} /></Link>
-                  <button type="button" onClick={() => addToCart(product)} className="inline-flex min-h-9 items-center justify-center gap-2 border border-[#253b2f]/25 px-3 text-[9px] font-semibold uppercase tracking-[0.1em] text-[#253b2f] transition-colors hover:border-[#253b2f] hover:bg-[#253b2f] hover:text-white sm:text-[10px]">
-                    <ShoppingBag size={13} /> Add to bag
-                  </button>
-                </div>
+                <Link to={`/product/${product.slug || product.id}`} className="mt-3 inline-flex min-h-8 items-center gap-2 text-[9px] font-bold uppercase tracking-[0.13em] text-[#3d553b] sm:text-[10px]">Discover details <ArrowRight size={13} /></Link>
               </Motion.article>
             ))}
           </div>
@@ -419,7 +411,7 @@ export default function PremiumHome() {
           <div className="border-y border-[#253b2f]/15 py-10 sm:py-14">
             <p className="font-serif text-2xl sm:text-3xl">A collection worth taking your time with.</p>
             <p className="mt-3 max-w-xl text-sm leading-6 text-stone-600">The live collection is being refreshed. Visit the shop to see current product availability.</p>
-            <Link to="/shop" className="mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#354933]">Visit the shop <ArrowRight size={14} /></Link>
+            <Link to="/products" className="mt-5 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.14em] text-[#354933]">Visit the shop <ArrowRight size={14} /></Link>
           </div>
         )}
       </section>
@@ -439,7 +431,7 @@ export default function PremiumHome() {
                     : 'Your suggestions will become more personal as you explore, save, review, and purchase products.'}
                 </p>
               </div>
-              <Link to="/shop" className="inline-flex min-h-10 items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-[#354933]">
+              <Link to="/products" className="inline-flex min-h-10 items-center gap-2 text-xs font-bold uppercase tracking-[0.12em] text-[#354933]">
                 Explore all products <ArrowRight size={14}/>
               </Link>
             </div>
@@ -507,7 +499,7 @@ export default function PremiumHome() {
           <div className="mx-auto max-w-7xl px-5 py-14 sm:px-8 md:px-10 md:py-20">
             <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
               <div><p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#687958]">Notes from our community</p><h2 className="mt-3 font-serif text-4xl sm:text-5xl">Shared, in their own words.</h2></div>
-              <Link to="/shop" className="inline-flex items-center gap-2 text-xs font-semibold text-[#354933]">Explore products <ArrowRight size={14} /></Link>
+              <Link to="/products" className="inline-flex items-center gap-2 text-xs font-semibold text-[#354933]">Explore products <ArrowRight size={14} /></Link>
             </div>
             <div className="grid gap-5 sm:grid-cols-2">
               {approvedReviews.map((review, index) => (

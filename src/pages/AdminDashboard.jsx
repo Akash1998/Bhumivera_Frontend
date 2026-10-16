@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, Suspense, Component, lazy } from 'r
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   Activity, Award, Bell, Boxes, ChartNoAxesCombined, ChevronDown, Compass, ExternalLink, FileText,
-  Gamepad2, Gift, Headphones, Leaf, LogOut, Mail, MessageSquare, Package, ScrollText, Settings2,
+  Gamepad2, Gift, Headphones, Leaf, LogOut, Mail, MessageSquare, Package, Settings2,
   ShieldCheck, ShoppingBag, SlidersHorizontal, Sparkles, Star, Tags, Truck, Users, Wallet, Warehouse, Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -21,8 +21,6 @@ const ReturnManagement = lazy(() => import('./admin/ReturnManagement'));
 const NotificationManagement = lazy(() => import('./admin/NotificationManagement'));
 const TaxManagement = lazy(() => import('./admin/TaxManagement'));
 const GSTAccounting = lazy(() => import('./admin/GSTAccounting'));
-const SystemLogs = lazy(() => import('./admin/SystemLogs'));
-const SystemHealth = lazy(() => import('./admin/SystemHealth'));
 const WarehouseManagement = lazy(() => import('./admin/WarehouseManagement'));
 const ShippingManagement = lazy(() => import('./admin/ShippingManagement'));
 const AdminSettings = lazy(() => import('./admin/AdminSettings.jsx'));
@@ -65,7 +63,7 @@ class ErrorBoundary extends Component {
     if (this.state.hasError) {
       return (
         <div className="flex flex-col items-center justify-center min-h-[60vh] text-center p-8 bg-slate-950/50 backdrop-blur-md rounded-2xl border border-rose-500/20">
-          <h2 className="text-xl font-bold text-rose-400 mb-2 tracking-wide">Kernel Panic in Module</h2>
+          <h2 className="text-xl font-bold text-rose-400 mb-2 tracking-wide">Workspace Module Interruption</h2>
           <p className="text-slate-400 mb-6 max-w-md text-sm font-mono">
             {this.state.error?.message || 'Module execution halted.'}
           </p>
@@ -73,7 +71,7 @@ class ErrorBoundary extends Component {
             onClick={() => this.setState({ hasError: false, error: null })}
             className="px-6 py-2.5 bg-gradient-to-r from-emerald-500 to-cyan-500 text-black font-black uppercase tracking-widest rounded-xl transition-all duration-300"
           >
-            Reboot Module
+            Reload Module
           </button>
         </div>
       );
@@ -96,8 +94,6 @@ const TAB_COMPONENTS = {
   tax: TaxManagement,
   gst: GSTAccounting,
   shipping: ShippingManagement,
-  logs: SystemLogs,
-  'system-health': SystemHealth,
   warehouse: WarehouseManagement,
   settings: AdminSettings,
   ...Object.fromEntries(GROWTH_TABS.map(id => [id, GrowthOffersHub])),
@@ -120,8 +116,6 @@ const TAB_ICONS = {
   overview: Activity,
   analytics: ChartNoAxesCombined,
   notifications: Bell,
-  logs: ScrollText,
-  'system-health': Activity,
   orders: ShoppingBag,
   shipping: Truck,
   impact: Leaf,
@@ -194,6 +188,7 @@ export default function AdminDashboard() {
     navigate('/admin/login');
   };
 
+  // Luxury E-Commerce Nomenclature Overhaul (Static System Health, Pause Modules, and raw Logs removed from standard sidebar)
   const menuSections = [
     {
       title: 'Workspace',
@@ -204,19 +199,19 @@ export default function AdminDashboard() {
       ],
     },
     {
-      title: 'Customer experience',
+      title: 'Client Experience',
       items: [
-        { id: 'users', label: 'Customers' },
+        { id: 'users', label: 'Client Directory' },
         { id: 'reviews', label: 'Reviews' },
         { id: 'returns', label: 'Returns' },
-        { id: 'support', label: 'Support & Returns Hub' },
+        { id: 'support', label: 'Bhumivera Client Concierge' },
         { id: 'contacts', label: 'Contact & Inquiries' },
         { id: 'ewarranty', label: 'E-Warranty Registry' },
         { id: 'support-agents', label: 'Support Staff Roster' },
       ],
     },
     {
-      title: 'Store operations',
+      title: 'Store Operations',
       items: [
         { id: 'orders', label: 'Orders' },
         { id: 'products', label: 'Products' },
@@ -225,31 +220,28 @@ export default function AdminDashboard() {
         { id: 'warehouse', label: 'Warehouse' },
         { id: 'shipping', label: 'Shipping' },
         { id: 'tax', label: 'Taxes' },
-        { id: 'gst', label: 'GST & Books (10X)' },
+        { id: 'gst', label: 'Financial Ledger & GST Compliance' },
       ],
     },
     {
-      title: 'Growth, AI & Loyalty',
+      title: 'Privilege & Bespoke Curation',
       items: [
-        { id: 'growth-offers', label: 'Growth & offers' },
-        { id: 'loyalty-matrix', label: 'Loyalty Matrix' },
-        { id: 'loyalty-tiers', label: 'Loyalty Tier Forge' },
-        { id: 'loyalty-members', label: 'Loyalty Members' },
-        { id: 'personalization', label: 'AI Personalization' },
+        { id: 'growth-offers', label: 'Promotions & Offers' },
+        { id: 'loyalty-tiers', label: 'Clientele Privilege & Tiers' },
+        { id: 'loyalty-members', label: 'Privilege Members' },
+        { id: 'personalization', label: 'Bespoke Client Curation' },
         { id: 'lifecycle-offers', label: 'Lifecycle Automations' },
       ],
     },
     {
-      title: 'Referral program',
-      items: [{ id: 'referral-engine', label: 'Refer & earn engine' }],
+      title: 'Ambassador Relations',
+      items: [{ id: 'referral-engine', label: 'Brand Ambassador Program' }],
     },
     {
-      title: 'Platform',
+      title: 'Maison Governance',
       items: [
-        { id: 'impact', label: 'Earth impact' },
-        { id: 'wallet-management', label: 'Customer wallets' },
-        { id: 'system-health', label: 'System health' },
-        { id: 'logs', label: 'System logs' },
+        { id: 'impact', label: 'Earth Impact' },
+        { id: 'wallet-management', label: 'Client Wallets' },
         { id: 'settings', label: 'Settings' },
       ],
     },
@@ -279,9 +271,11 @@ export default function AdminDashboard() {
   const activeLabel =
     allMenuItems.find(item => item.id === activeTab)?.label ||
     (['affiliate', 'referral-engine'].includes(activeTab)
-      ? 'Refer & earn engine'
+      ? 'Brand Ambassador Program'
+      : ['loyalty-matrix', 'loyalty-tiers'].includes(activeTab)
+      ? 'Clientele Privilege & Tiers'
       : GROWTH_TABS.includes(activeTab)
-      ? 'Growth & offers'
+      ? 'Promotions & Offers'
       : 'Dashboard');
   const ActiveComponent = TAB_COMPONENTS[activeTab] || DashboardOverview;
 
@@ -346,12 +340,12 @@ export default function AdminDashboard() {
             </div>
             <div
               className={`overflow-hidden transition-all duration-300 ${
-                isSidebarOpen ? 'w-36 opacity-100' : 'w-0 opacity-0'
+                isSidebarOpen ? 'w-40 opacity-100' : 'w-0 opacity-0'
               }`}
             >
               <span className="text-white font-black tracking-[0.12em] text-sm block">Bhumivera</span>
-              <span className="text-[#d4af37] font-semibold text-[10px] uppercase tracking-widest block">
-                100X Admin Command
+              <span className="text-[#d4af37] font-semibold text-[9px] uppercase tracking-widest block">
+                Maison Executive Suite
               </span>
             </div>
           </div>
@@ -425,8 +419,15 @@ export default function AdminDashboard() {
           {isSidebarOpen && (
             <div className="px-3 py-2 border-t border-[#d4af37]/15 space-y-1 text-[11px]">
               <p className="px-2 pb-1 text-[9px] font-bold text-[#d4af37] uppercase tracking-widest">
-                Direct Portals & Links
+                Maison Portals
               </p>
+              <Link
+                to="/superadmin/controlcentre"
+                className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[#f3d77b] bg-[#d4af37]/10 hover:bg-[#d4af37]/20 font-semibold"
+              >
+                <span>SuperAdmin Control Centre</span>
+                <ExternalLink size={12} />
+              </Link>
               <Link
                 to="/superadminsupport"
                 className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-purple-200 hover:bg-purple-500/15"
@@ -438,14 +439,14 @@ export default function AdminDashboard() {
                 to="/support"
                 className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-emerald-200 hover:bg-emerald-500/15"
               >
-                <span>Support Agent Desk</span>
+                <span>Customer Support Desk</span>
                 <ExternalLink size={12} />
               </Link>
               <Link
                 to="/"
                 className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-amber-200 hover:bg-amber-500/15"
               >
-                <span>Live Storefront</span>
+                <span>Main Storefront</span>
                 <ExternalLink size={12} />
               </Link>
             </div>
@@ -508,7 +509,7 @@ export default function AdminDashboard() {
                 </button>
                 <div className="min-w-0">
                   <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#d4af37]">
-                    Bhumivera 100X Admin
+                    Bhumivera Maison Executive Suite
                   </p>
                   <h1 className="truncate text-lg font-semibold text-white md:text-xl">{activeLabel}</h1>
                 </div>
@@ -521,14 +522,14 @@ export default function AdminDashboard() {
                   className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-[#d4af37]/30 bg-[#d4af37]/10 px-3 py-1.5 text-xs font-semibold text-[#f3d77b] hover:bg-[#d4af37]/20"
                 >
                   <Compass size={14} />
-                  All Site & Admin Links (24)
+                  Maison Route Registry
                 </button>
 
                 <Link
-                  to="/superadminsupport"
-                  className="hidden md:inline-flex items-center gap-1.5 rounded-xl border border-purple-400/30 bg-purple-500/15 px-3 py-1.5 text-xs font-semibold text-purple-200 hover:bg-purple-500/25"
+                  to="/superadmin/controlcentre"
+                  className="hidden md:inline-flex items-center gap-1.5 rounded-xl border border-[#d4af37]/40 bg-[#d4af37]/15 px-3 py-1.5 text-xs font-semibold text-[#f3d77b] hover:bg-[#d4af37]/25"
                 >
-                  SuperAdmin Tickets
+                  Control Centre
                   <ExternalLink size={12} />
                 </Link>
 
@@ -589,23 +590,18 @@ export default function AdminDashboard() {
                         className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-200 transition hover:bg-white/5 hover:text-white"
                       >
                         <FileText size={16} className="text-[#d4af37]" aria-hidden="true" />
-                        10X GST Portal &amp; Luxury Invoices
+                        Financial Ledger &amp; GST Compliance
                       </button>
                       <button
                         type="button"
-                        onClick={() => openAdminSection('system-health')}
+                        onClick={() => {
+                          setAccountMenuOpen(false);
+                          navigate('/superadmin/controlcentre');
+                        }}
                         className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-200 transition hover:bg-white/5 hover:text-white"
                       >
                         <Activity size={16} className="text-cyan-300" aria-hidden="true" />
-                        System health
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => openAdminSection('logs')}
-                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-200 transition hover:bg-white/5 hover:text-white"
-                      >
-                        <ScrollText size={16} className="text-amber-200" aria-hidden="true" />
-                        System activity logs
+                        SuperAdmin Control Centre
                       </button>
                       <button
                         type="button"
@@ -681,7 +677,7 @@ export default function AdminDashboard() {
                   Complete Platform Link Registry
                 </p>
                 <h2 className="text-lg font-bold text-white">
-                  All Storefront, Account, Support, Policy & Admin Links ({filteredDirectoryLinks.length})
+                  All Storefront, Account, Support, Policy &amp; Executive Links ({filteredDirectoryLinks.length})
                 </h2>
               </div>
               <div className="flex items-center gap-2">

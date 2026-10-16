@@ -208,9 +208,9 @@ export default function LoyaltyTierForge() {
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-emerald-400">
-            Earn, status and checkout redemption · 100X Tier Forge
+            Earn, status and checkout redemption · Clientele Privilege & Tiers
           </p>
-          <h2 className="mt-2 text-2xl font-bold text-white">Loyalty Matrix</h2>
+          <h2 className="mt-2 text-2xl font-bold text-white">Clientele Privilege & Tiers</h2>
         </div>
         <div className="flex items-center gap-2">
           <button

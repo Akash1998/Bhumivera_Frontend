@@ -101,7 +101,7 @@ export default function LoyaltyManagement() {
   if (loading) return (
     <div className="flex items-center justify-center h-64">
       <Loader2 className="animate-spin text-cyan-400" size={32} />
-      <span className="ml-3 text-gray-400 font-mono text-sm">Synchronizing Loyalty Matrix...</span>
+      <span className="ml-3 text-gray-400 font-mono text-sm">Synchronizing Clientele Privilege & Tiers...</span>
     </div>
   );
 

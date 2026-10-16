@@ -601,7 +601,7 @@ export default function ProductManagement() {
                       <div className="flex justify-between items-center mb-2">
                         <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Product Name</label>
                         <button type="button" onClick={handleAIEnhance} disabled={isGeneratingAI || !form.name.trim()} className="text-[10px] text-emerald-400 font-bold uppercase flex items-center gap-1 hover:text-emerald-300 disabled:opacity-50 disabled:cursor-not-allowed">
-                          {isGeneratingAI ? <><RefreshCw size={12} className="animate-spin" /> Generating…</> : '✨ AI Auto-Fill'}
+                          {isGeneratingAI ? <><RefreshCw size={12} className="animate-spin" /> Generating…</> : '✨ Generate Editorial Copy'}
                         </button>
                       </div>
                       <input required value={form.name} onChange={e=>setForm({...form, name:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder="Use the exact approved product name and product type." />

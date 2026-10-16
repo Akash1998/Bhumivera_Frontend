@@ -10,7 +10,6 @@ import {
   Package,
   Truck,
   RotateCcw,
-  Ban,
   ShieldAlert,
   Volume2,
   VolumeX,
@@ -25,17 +24,13 @@ import {
   Check,
   ChevronRight,
   Image as ImageIcon,
-  PlusCircle,
-  HelpCircle,
   Star,
-  Lock,
-  Unlock,
-  Eye,
-  PauseCircle,
+  Mail,
+  ShieldCheck,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
-import { aiSupport as aiSupportApi, BASE_URL } from '../services/api';
+import api, { aiSupport as aiSupportApi, BASE_URL } from '../services/api';
 import { normalizeTelegramBotUrl } from '../utils/telegramUrl';
 import {
   AI_COPILOT_ADD_CART_RETRY_EVENT,
@@ -43,79 +38,61 @@ import {
   analyzePasswordForAiGuide,
 } from '../utils/aiCopilotBus';
 
-const STORAGE_KEY = 'bhumivera_ai_support_state_v2';
-const SESSION_TOKEN_KEY = 'bhumivera_ai_support_token_v2';
-const PROACTIVE_TRIGGERED_KEY = 'bhumivera_ai_proactive_shown_v2';
+const STORAGE_KEY = 'bhumivera_client_concierge_state_v3';
+const SESSION_TOKEN_KEY = 'bhumivera_client_concierge_token_v3';
+const PROACTIVE_TRIGGERED_KEY = 'bhumivera_concierge_proactive_v3';
 const LINGER_THRESHOLD_MS = 45000;
 
-const DEFAULT_CHIPS = [
-  { id: 'track_order', label: 'Where is my order?', prompt: 'Where is my order?' },
-  { id: 'initiate_return', label: 'Initiate Return / Replace', prompt: 'I want to initiate a return or replacement for my delivered order.' },
-  { id: 'cancel_order', label: 'Cancel Order', prompt: 'I need help cancelling my recent order.' },
-  { id: 'refund_status', label: 'Check Refund / RMA', prompt: 'What is my current refund or RMA status?' },
-  { id: 'wallet_loyalty', label: 'Wallet & Loyalty', prompt: 'What is my current wallet balance and loyalty points?' },
-  { id: 'active_coupons', label: 'Available Coupons', prompt: 'Show me active coupons and offers for my account.' },
-  { id: 'shipping_policy', label: 'Shipping Policy', prompt: 'What are your shipping charges and delivery timelines?' },
-  { id: 'talk_to_human', label: 'Talk to Support', prompt: 'Please connect me with a support specialist.' },
+const PUBLIC_GENERAL_CHIPS = [
+  { id: 'ingredients', label: 'Botanical Ingredients', prompt: 'What botanical ingredients and actives are used in Bhumivera formulations?' },
+  { id: 'brand_story', label: 'Maison Story', prompt: 'Tell me about the Bhumivera brand story and philosophy.' },
+  { id: 'shipping_policy', label: 'Shipping & Delivery', prompt: 'What are your shipping charges and delivery timelines?' },
+  { id: 'how_to_join', label: 'Brand Ambassador Program', prompt: 'How do I join the Bhumivera Brand Ambassador Program?' },
+  { id: 'verify_order', label: 'Order Support & Verification', prompt: '__OPEN_VERIFICATION_FLOW__' },
+];
+
+const VERIFIED_BUYER_CHIPS = [
+  { id: 'track_order', label: 'Track My Order', prompt: 'Where is my latest order?' },
+  { id: 'initiate_return', label: 'Return or Replacement', prompt: 'I want to initiate a return or replacement for my delivered order.' },
+  { id: 'order_assistance', label: 'Order Modification / Escalation', prompt: '__OPEN_VERIFICATION_FLOW__' },
+  { id: 'wallet_loyalty', label: 'Wallet & Privilege Tier', prompt: 'What is my current wallet balance and loyalty points?' },
+  { id: 'active_coupons', label: 'Available Offers', prompt: 'Show me active coupons and offers for my account.' },
+];
+
+const CALLBACK_SLOTS = [
+  'Morning (10 AM–1 PM)',
+  'Afternoon (1 PM–5 PM)',
+  'Evening (5 PM–8 PM)',
 ];
 
 const ORDER_STEPS = ['Placed', 'Confirmed', 'Packed', 'Shipped', 'Delivered'];
 
 const STATUS_META = {
   active: {
-    label: 'Active Chat',
-    badgeClass: 'bg-emerald-500/20 text-emerald-300 border-emerald-400/40',
-    description: 'Live conversation with Bhumivera Support.',
+    label: 'Concierge Online',
+    badgeClass: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/40',
   },
   pending: {
-    label: 'Pending',
-    badgeClass: 'bg-amber-500/20 text-amber-300 border-amber-400/40',
-    description: 'Conversation paused while awaiting order details, photos, or verification.',
+    label: 'Awaiting Details',
+    badgeClass: 'bg-amber-500/20 text-amber-200 border-amber-400/40',
   },
   waiting_for_review: {
-    label: 'Waiting for Review',
-    badgeClass: 'bg-sky-500/20 text-sky-300 border-sky-400/40',
-    description: 'Queued for a Support Supervisor or Quality Lead to review and approve.',
+    label: 'Specialist Review',
+    badgeClass: 'bg-sky-500/20 text-sky-200 border-sky-400/40',
   },
   escalated: {
-    label: 'Escalated',
-    badgeClass: 'bg-rose-500/20 text-rose-300 border-rose-400/40',
-    description: 'Your request has been sent to a support specialist.',
+    label: 'Specialist Assigned',
+    badgeClass: 'bg-rose-500/20 text-rose-200 border-rose-400/40',
   },
   resolved: {
     label: 'Resolved',
-    badgeClass: 'bg-teal-500/20 text-teal-300 border-teal-400/40',
-    description: 'Issue marked solved. You can rate your experience or reopen anytime.',
+    badgeClass: 'bg-teal-500/20 text-teal-200 border-teal-400/40',
   },
   closed: {
-    label: 'Closed',
-    badgeClass: 'bg-stone-500/20 text-stone-300 border-stone-400/40',
-    description: 'Chat session ended and archived. Click Reopen or Start New Chat anytime.',
+    label: 'Archived',
+    badgeClass: 'bg-stone-500/20 text-stone-200 border-stone-400/40',
   },
 };
-
-const WIDGET_BUTTON_GUIDE = [
-  {
-    button: 'New Chat (+)',
-    whatItDoes: 'Starts a brand-new support session with a fresh token while keeping your previous order records safe.',
-  },
-  {
-    button: 'Live Support Status Badge (Read-Only)',
-    whatItDoes: 'Shows the real-time status set by Bhumivera Customer Support (Active, Pending, Waiting for Review, Escalated, Resolved, or Closed). Status transitions are managed exclusively by our Support Executive team.',
-  },
-  {
-    button: 'Escalate to Specialist (Phone Icon)',
-    whatItDoes: 'Asks a support specialist to follow up with you.',
-  },
-  {
-    button: 'Quick-Action Chips',
-    whatItDoes: 'Triggers 1-click real-time order tracking, self-service returns (RMA), cancellations, refund status checks, wallet/loyalty lookups, and active coupon checks.',
-  },
-  {
-    button: 'Attach Photo (Paperclip)',
-    whatItDoes: 'Attaches up to 3 photos (JPEG/PNG/WebP) of damaged, leaking, or wrong items for instant RMA verification.',
-  },
-];
 
 function playSupportChime(enabled = true) {
   if (!enabled || typeof window === 'undefined') return;
@@ -139,14 +116,7 @@ function playSupportChime(enabled = true) {
   } catch {}
 }
 
-function FormattedMarkdown({ content, isDark }) {
-  const customerContent = String(content || '')
-    .replace(/\[([^\]]+)\]\((?:https?:\/\/|\/)[^)]+\)/gi, '$1')
-    .replace(/\b(?:https?:\/\/|www\.)[^\s<>()]+/gi, '')
-    .replace(/\/(?:admin(?:\/[^\s]*)?|superadminsupport(?:\/[^\s]*)?|support(?:\/[^\s]*)?)/gi, '')
-    .replace(/\/(?:shop|checkout|profile|order-tracking|returns-centre|returns|legal|contact|about|science|wishlist|cart|login|register|forgot-password|ewarranty|e-warranty)(?:\/[^\s]*)?/gi, '')
-    .replace(/[ \t]{2,}/g, ' ')
-    .replace(/[ \t]+([,.;])/g, '$1');
+function FormattedMarkdown({ content, isDark, onNavigate }) {
   const renderInline = (text, keyPrefix) => {
     if (!text) return null;
     const pattern = /(\*\*[^*]+\*\*|`[^`]+`|\[[^\]]+\]\([^)]+\)|\*[^*]+\*)/g;
@@ -171,7 +141,25 @@ function FormattedMarkdown({ content, isDark }) {
       if (part.startsWith('[') && part.includes('](') && part.endsWith(')')) {
         const match = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
         if (match) {
-          return <span key={key} className="font-medium">{match[1]}</span>;
+          const [, label, href] = match;
+          const isInternal = href.startsWith('/');
+          return (
+            <a
+              key={key}
+              href={href}
+              onClick={e => {
+                if (isInternal && onNavigate) {
+                  e.preventDefault();
+                  onNavigate(href);
+                }
+              }}
+              target={isInternal ? undefined : '_blank'}
+              rel={isInternal ? undefined : 'noopener noreferrer'}
+              className="underline underline-offset-2 font-medium text-[#D4AF37] hover:opacity-80"
+            >
+              {label}
+            </a>
+          );
         }
       }
       if (part.startsWith('*') && part.endsWith('*') && part.length > 2) {
@@ -181,7 +169,7 @@ function FormattedMarkdown({ content, isDark }) {
     });
   };
 
-  const blocks = customerContent.split(/\n{2,}/);
+  const blocks = String(content || '').split(/\n{2,}/);
   return (
     <div className="space-y-2 text-[13px] leading-relaxed">
       {blocks.map((block, bIdx) => {
@@ -211,7 +199,7 @@ function FormattedMarkdown({ content, isDark }) {
   );
 }
 
-function ChatOrderCard({ order, isDark, onQuickPrompt }) {
+function ChatOrderCard({ order, isDark, onQuickPrompt, onRequestOrderIntervention }) {
   const [copied, setCopied] = useState(false);
   const status = String(order.status || 'pending').toLowerCase();
   const isTerminal = ['cancelled', 'returned'].includes(status);
@@ -317,14 +305,15 @@ function ChatOrderCard({ order, isDark, onQuickPrompt }) {
         </div>
       )}
 
+      {/* Strict Order Policy: Self-service cancellation is disabled; customers use Verified Specialist Escalation */}
       <div className="mt-3 pt-2 border-t border-current/10 flex flex-wrap gap-1.5">
-        {order.cancellable && (
+        {!isTerminal && status !== 'delivered' && (
           <button
             type="button"
-            onClick={() => onQuickPrompt(`Cancel my order #${order.orderNumber}`)}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-rose-500/10 text-rose-600 dark:text-rose-400 hover:bg-rose-500/20 transition-colors"
+            onClick={() => onRequestOrderIntervention?.(order.orderNumber || order.id)}
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-[#D4AF37]/15 text-[#8a6a12] dark:text-[#D4AF37] hover:bg-[#D4AF37]/25 transition-colors"
           >
-            <Ban className="w-3 h-3" /> Cancel Order
+            <PhoneCall className="w-3 h-3" /> Request Specialist Assistance
           </button>
         )}
         {order.canReturn && (
@@ -378,7 +367,7 @@ class SupportWidgetErrorBoundary extends React.Component {
             href="/contact"
             className="inline-flex items-center gap-2 rounded-full bg-[#0B2419] px-4 py-3 text-xs font-semibold text-[#FDFBF7] shadow-xl border border-[#D4AF37]/40"
           >
-            <MessageSquare className="w-4 h-4 text-[#D4AF37]" /> Support
+            <MessageSquare className="w-4 h-4 text-[#D4AF37]" /> Client Concierge
           </a>
         </div>
       );
@@ -405,7 +394,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
 
   const [isOpen, setIsOpen] = useState(Boolean(persisted.isOpen));
   const [isMaximized, setIsMaximized] = useState(false);
-  const [showButtonGuide, setShowButtonGuide] = useState(false);
   const [isDark, setIsDark] = useState(() => {
     if (typeof persisted.isDark === 'boolean') return persisted.isDark;
     return typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
@@ -417,8 +405,11 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   const [chatStatus, setChatStatus] = useState(persisted.chatStatus || 'active');
   const [assignedAgentName, setAssignedAgentName] = useState(persisted.assignedAgentName || null);
   const [messages, setMessages] = useState(() => (Array.isArray(persisted.messages) ? persisted.messages : []));
+  const [hasPlacedOrder, setHasPlacedOrder] = useState(Boolean(persisted.hasPlacedOrder));
   const [quickActions, setQuickActions] = useState(() =>
-    Array.isArray(persisted.quickActions) && persisted.quickActions.length ? persisted.quickActions : DEFAULT_CHIPS
+    Array.isArray(persisted.quickActions) && persisted.quickActions.length
+      ? persisted.quickActions
+      : PUBLIC_GENERAL_CHIPS
   );
   const [input, setInput] = useState('');
   const [attachments, setAttachments] = useState([]);
@@ -426,24 +417,34 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   const [statusLabel, setStatusLabel] = useState('');
   const [unreadCount, setUnreadCount] = useState(0);
   const [proactiveBubble, setProactiveBubble] = useState(null);
-  const [sentimentBadge, setSentimentBadge] = useState(null);
   const [csatRating, setCsatRating] = useState(5);
   const [csatFeedback, setCsatFeedback] = useState('');
   const [csatSubmitted, setCsatSubmitted] = useState(false);
   const [csatSubmitting, setCsatSubmitting] = useState(false);
   const [csatError, setCsatError] = useState('');
-  const [hasPlacedOrder, setHasPlacedOrder] = useState(false);
   const [telegramBotUrl, setTelegramBotUrl] = useState('https://web.telegram.org/k/#@BhumiveraBot');
-  const [showAsyncForm, setShowAsyncForm] = useState(false);
   const [copilotRescue, setCopilotRescue] = useState(null);
   const [copilotEmailInput, setCopilotEmailInput] = useState('');
   const [copilotSendingReset, setCopilotSendingReset] = useState(false);
-  const [asyncSubject, setAsyncSubject] = useState('Support Inquiry');
-  const [asyncBody, setAsyncBody] = useState('');
+
+  // 3-Step Legitimate Customer Verification & Specialist Escalation Flow State
+  const [escalationWizard, setEscalationWizard] = useState({
+    open: false,
+    step: 1, // 1 = Verify Order ID + Email/Phone, 2 = Contact Preference (Email vs Phone Call + Slot), 3 = Confirmed
+    orderId: '',
+    emailOrPhone: '',
+    verifiedOrder: null,
+    contactPreference: 'email', // 'email' | 'phone_call'
+    callbackPhone: '',
+    callbackTimeSlot: CALLBACK_SLOTS[0],
+    queryDetails: '',
+    busy: false,
+    error: '',
+    ticketReference: '',
+  });
 
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
-  const clickTrackerRef = useRef([]);
   const sessionInitializedRef = useRef(false);
 
   useEffect(() => {
@@ -455,6 +456,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         soundEnabled,
         chatStatus,
         assignedAgentName,
+        hasPlacedOrder,
         messages: messages.slice(-50),
         quickActions,
       });
@@ -465,13 +467,13 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         sessionStorage.setItem(SESSION_TOKEN_KEY, sessionToken);
       }
     } catch {}
-  }, [isOpen, isDark, soundEnabled, chatStatus, assignedAgentName, messages, quickActions, sessionToken]);
+  }, [isOpen, isDark, soundEnabled, chatStatus, assignedAgentName, hasPlacedOrder, messages, quickActions, sessionToken]);
 
   useEffect(() => {
     if (isOpen && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
-  }, [messages, isTyping, isOpen]);
+  }, [messages, isTyping, isOpen, escalationWizard.open]);
 
   const currentPageContext = useMemo(() => ({
     pathname: location.pathname,
@@ -481,11 +483,12 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     authenticated: Boolean(user?.id),
   }), [location.pathname, location.search, isCartOpen, cart, user?.id]);
 
-  const ensureSession = useCallback(async ({ forceNew = false, customContext = {} } = {}) => {
+  // Single Persistent Thread Initialization (Never creates duplicate threads)
+  const ensureSession = useCallback(async ({ customContext = {} } = {}) => {
     try {
       const response = await aiSupportApi.initSession({
-        sessionToken: forceNew ? null : sessionToken,
-        forceNew,
+        sessionToken,
+        forceNew: false,
         pageContext: { ...currentPageContext, ...customContext },
       });
       const data = response?.data || {};
@@ -494,38 +497,28 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       }
       if (data.session?.status) {
         setChatStatus(data.session.status);
-      } else if (forceNew) {
-        setChatStatus('active');
       }
       setAssignedAgentName(data.session?.assignedAgentName || null);
-      if (data.hasPlacedOrder !== undefined) setHasPlacedOrder(Boolean(data.hasPlacedOrder));
+      const buyerVerified = Boolean(data.hasPlacedOrder);
+      setHasPlacedOrder(buyerVerified);
       if (data.telegramBotUrl) setTelegramBotUrl(normalizeTelegramBotUrl(data.telegramBotUrl));
-      if (forceNew) {
-        setCsatRating(0);
-        setCsatSubmitted(false);
-        setCsatFeedback('');
-        setCsatError('');
-        setSentimentBadge(null);
-      }
-      if (Array.isArray(data.messages) && data.messages.length > 0 && (forceNew || messages.length === 0)) {
+      if (Array.isArray(data.messages) && data.messages.length > 0 && messages.length === 0) {
         setMessages(data.messages);
       }
-      if (Array.isArray(data.quickActions) && data.quickActions.length > 0) {
-        setQuickActions(data.quickActions);
-      }
+      setQuickActions(buyerVerified ? VERIFIED_BUYER_CHIPS : PUBLIC_GENERAL_CHIPS);
       return data.sessionToken || sessionToken;
     } catch {
-      if (forceNew || messages.length === 0) {
+      if (messages.length === 0) {
         setChatStatus('active');
         setMessages([
           {
             id: Date.now(),
             sender: 'assistant',
-            senderName: 'Bhumivera Support',
+            senderName: 'Bhumivera Client Concierge',
             content: user?.name
-              ? `Hi ${user.name.split(' ')[0]}, how can I help you today?`
-              : 'Hi, how can I help you today?',
-            quickActions: DEFAULT_CHIPS,
+              ? `Welcome back, ${user.name.split(' ')[0]}. How may the Bhumivera Client Concierge assist you today?`
+              : 'Welcome to Bhumivera. Ask about our botanical ingredients, shipping policies, Brand Ambassador Program, or verify an Order ID for dedicated order support.',
+            quickActions: PUBLIC_GENERAL_CHIPS,
             orderCards: [],
             createdAt: new Date().toISOString(),
           },
@@ -544,9 +537,9 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     }
   }, [isOpen, ensureSession]);
 
-  // Poll for live human agent/supervisor/manager replies or status updates when widget is open
+  // Poll for live specialist replies ONLY when buyer has a verified order thread
   useEffect(() => {
-    if (!isOpen || !sessionToken || typeof aiSupportApi.getHistory !== 'function') return undefined;
+    if (!isOpen || !sessionToken || !hasPlacedOrder || typeof aiSupportApi.getHistory !== 'function') return undefined;
     const interval = window.setInterval(async () => {
       if (isTyping) return;
       try {
@@ -562,11 +555,11 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           playSupportChime(soundEnabled);
         }
       } catch {}
-    }, 8000);
+    }, 10000);
     return () => window.clearInterval(interval);
-  }, [isOpen, sessionToken, isTyping, messages.length, soundEnabled]);
+  }, [isOpen, sessionToken, hasPlacedOrder, isTyping, messages.length, soundEnabled]);
 
-  // 100X AI CO-PILOT FRICTION RESCUE LISTENER (Cart, Password, Login, Checkout)
+  // Client Concierge Friction Rescue Listener
   useEffect(() => {
     if (typeof window === 'undefined') return undefined;
     const handleAiCopilotAssist = async event => {
@@ -576,17 +569,12 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
 
       const initialRescue = {
         frictionType: detail.frictionType || 'general',
-        headline: detail.headline || 'AI Co-Pilot Guided Assistance',
+        headline: detail.headline || 'Bhumivera Client Concierge Assistance',
         explanation:
           detail.explanation ||
           detail.errorMessage ||
-          'I detected an issue and prepared step-by-step guidance to resolve it immediately.',
-        steps: Array.isArray(detail.steps) && detail.steps.length
-          ? detail.steps
-          : [
-              'Review the diagnostic details below.',
-              'Click one of the 1-click quick fixes to resolve the issue immediately.',
-            ],
+          'Here is step-by-step guidance to complete your action smoothly.',
+        steps: Array.isArray(detail.steps) && detail.steps.length ? detail.steps : [],
         productId: detail.productId || null,
         productName: detail.productName || '',
         requestedQuantity: detail.requestedQuantity || 1,
@@ -596,7 +584,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           ? analyzePasswordForAiGuide(detail.candidatePassword, detail.email || user?.email || '')
           : null,
         alternatives: [],
-        quickFixes: [],
       };
 
       setCopilotRescue(initialRescue);
@@ -605,31 +592,13 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         setUnreadCount(0);
         setProactiveBubble(null);
       }
-
-      if (typeof aiSupportApi.diagnoseFriction === 'function') {
-        try {
-          const res = await aiSupportApi.diagnoseFriction({
-            ...detail,
-            pagePath: location.pathname,
-          });
-          if (res?.data?.success) {
-            setCopilotRescue(prev => ({
-              ...prev,
-              ...res.data,
-              passwordDiagnostics: res.data.passwordDiagnostics || prev?.passwordDiagnostics || null,
-            }));
-          }
-        } catch {
-          // Keep client-side diagnostic card if offline
-        }
-      }
     };
 
     window.addEventListener(AI_COPILOT_EVENT, handleAiCopilotAssist);
     return () => window.removeEventListener(AI_COPILOT_EVENT, handleAiCopilotAssist);
-  }, [location.pathname, user?.email]);
+  }, [user?.email]);
 
-  // PROACTIVE TRIGGER 1: Linger >45s
+  // Subtle Linger Nudge on High-Intent Pages
   useEffect(() => {
     const path = location.pathname;
     const isHighIntentPage =
@@ -639,67 +608,20 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       Boolean(isCartOpen);
 
     if (!isHighIntentPage || isOpen) return undefined;
-
     const alreadyTriggeredForPath = sessionStorage.getItem(`${PROACTIVE_TRIGGERED_KEY}:${path}`);
     if (alreadyTriggeredForPath) return undefined;
 
-    const timer = window.setTimeout(async () => {
+    const timer = window.setTimeout(() => {
       sessionStorage.setItem(`${PROACTIVE_TRIGGERED_KEY}:${path}`, '1');
-      const triggerType = path.startsWith('/checkout') || isCartOpen
-        ? 'checkout_linger'
-        : path.startsWith('/order-tracking')
-        ? 'tracking_linger'
-        : 'returns_linger';
-
-      let nudge =
-        triggerType === 'checkout_linger'
-          ? 'Need help with shipping, coupons, or payment at checkout? Ask me anything!'
-          : triggerType === 'tracking_linger'
-          ? 'Looking for live tracking on your Bhumivera order? I can look it up right now.'
-          : 'Need to start a return, replacement, or check your refund status?';
-
-      try {
-        const res = await aiSupportApi.updateContext({
-          sessionToken,
-          pageContext: { ...currentPageContext, proactiveTrigger: triggerType },
-        });
-        if (res.data?.proactiveMessage) nudge = res.data.proactiveMessage;
-        if (Array.isArray(res.data?.quickActions)) setQuickActions(res.data.quickActions);
-      } catch {}
-
-      setProactiveBubble({ text: nudge, triggerType });
+      const nudge = path.startsWith('/checkout') || isCartOpen
+        ? 'Need assistance with shipping timelines, privilege points, or payment at checkout?'
+        : 'Looking for live tracking or order assistance? Our Client Concierge is here.';
+      setProactiveBubble({ text: nudge });
       setUnreadCount(prev => Math.max(1, prev));
-      playSupportChime(soundEnabled);
     }, lingerThresholdMs);
 
     return () => window.clearTimeout(timer);
-  }, [location.pathname, isCartOpen, isOpen, lingerThresholdMs, sessionToken, currentPageContext, soundEnabled]);
-
-  // PROACTIVE TRIGGER 2: Rage-Click Detection
-  useEffect(() => {
-    const handleDocumentClick = event => {
-      if (isOpen) return;
-      const now = Date.now();
-      const { clientX = 0, clientY = 0 } = event;
-      const recent = clickTrackerRef.current.filter(
-        c => now - c.t < 1500 && Math.hypot(c.x - clientX, c.y - clientY) < 60
-      );
-      recent.push({ t: now, x: clientX, y: clientY });
-      clickTrackerRef.current = recent;
-
-      if (recent.length >= 4) {
-        clickTrackerRef.current = [];
-        setProactiveBubble({
-          text: 'Having trouble on this page? Tap here for instant assistance or human support.',
-          triggerType: 'rage_click',
-        });
-        setUnreadCount(prev => Math.max(1, prev));
-      }
-    };
-
-    window.addEventListener('click', handleDocumentClick, { passive: true });
-    return () => window.removeEventListener('click', handleDocumentClick);
-  }, [isOpen]);
+  }, [location.pathname, isCartOpen, isOpen, lingerThresholdMs]);
 
   const handleFileChange = event => {
     const files = Array.from(event.target.files || []);
@@ -724,54 +646,154 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     event.target.value = '';
   };
 
-  /**
-   * Transitions the chat session status ('active', 'pending', 'waiting_for_review', 'escalated', 'resolved', 'closed')
-   */
-  const handleStatusTransition = async nextStatus => {
-    if (isTyping || !nextStatus) return;
-    if (nextStatus === 'escalated') {
-      await handleInstantEscalate();
+  // Opens the 3-Step Legitimate Customer Verification & Callback/Email Escalation Wizard
+  const openVerificationFlow = useCallback((prefillOrderId = '') => {
+    setEscalationWizard({
+      open: true,
+      step: 1,
+      orderId: prefillOrderId ? String(prefillOrderId) : '',
+      emailOrPhone: user?.email || user?.phone || '',
+      verifiedOrder: null,
+      contactPreference: 'email',
+      callbackPhone: user?.phone ? String(user.phone).replace(/\D/g, '').slice(-10) : '',
+      callbackTimeSlot: CALLBACK_SLOTS[0],
+      queryDetails: '',
+      busy: false,
+      error: '',
+      ticketReference: '',
+    });
+  }, [user?.email, user?.phone]);
+
+  // Step 1 Handler: Verify Order ID + Registered Email/Phone against backend database
+  const handleVerifyOrderStep1 = async e => {
+    e.preventDefault();
+    if (!escalationWizard.orderId.trim() || !escalationWizard.emailOrPhone.trim()) {
+      setEscalationWizard(prev => ({
+        ...prev,
+        error: 'Please enter both your Order ID (e.g., BHVM...) and your registered Email or 10-digit Phone Number.',
+      }));
       return;
     }
-    setChatStatus(nextStatus);
-    if (!sessionToken || typeof aiSupportApi.updateSessionStatus !== 'function') {
+
+    setEscalationWizard(prev => ({ ...prev, busy: true, error: '' }));
+    try {
+      const res = await api.post(
+        '/support/chat/verify-escalation',
+        {
+          sessionToken,
+          step: 'verify_order',
+          orderId: escalationWizard.orderId.trim(),
+          emailOrPhone: escalationWizard.emailOrPhone.trim(),
+        },
+        { notify: false }
+      );
+      const verifiedOrder = res.data?.order;
+      setHasPlacedOrder(true);
+      setQuickActions(VERIFIED_BUYER_CHIPS);
+      setEscalationWizard(prev => ({
+        ...prev,
+        busy: false,
+        step: 2,
+        verifiedOrder,
+        callbackPhone: verifiedOrder?.verifiedPhone || prev.callbackPhone,
+        error: '',
+      }));
       setMessages(prev => [
         ...prev,
         {
-          id: `sys-${Date.now()}`,
-          sender: 'system',
-          senderName: 'Bhumivera Support',
-          content: `Chat status updated to **${nextStatus.replace(/_/g, ' ').toUpperCase()}**.`,
+          id: `ver-step2-${Date.now()}`,
+          sender: 'assistant',
+          senderName: 'Bhumivera Client Concierge',
+          content:
+            res.data?.conciergePrompt ||
+            'Our specialist team will reach out to you within 12 hours. Would you prefer to receive our update via Email or a Direct Phone Call?',
           createdAt: new Date().toISOString(),
         },
       ]);
-      return;
-    }
-    try {
-      const res = await aiSupportApi.updateSessionStatus(sessionToken, { status: nextStatus });
-      const sysMsg = res?.data?.systemMessage;
-      if (sysMsg) {
-        setMessages(prev => [...prev, sysMsg]);
-      }
-    } catch {
-      // Optimistic status already set
+    } catch (err) {
+      setEscalationWizard(prev => ({
+        ...prev,
+        busy: false,
+        error:
+          err.response?.data?.message ||
+          'Could not verify Order ID with the provided Email/Phone. Please check your details and try again.',
+      }));
     }
   };
 
-  const handleStartNewChat = async () => {
-    if (isTyping) return;
-    localStorage.removeItem(SESSION_TOKEN_KEY);
-    sessionStorage.removeItem(SESSION_TOKEN_KEY);
-    setSessionToken(null);
-    setMessages([]);
-    await ensureSession({ forceNew: true });
+  // Step 2 & 3 Handler: Submit Contact Preference (Email vs Phone Call + Slot) & Create Single Verified Ticket
+  const handleSubmitEscalationStep2 = async e => {
+    e.preventDefault();
+    const {
+      orderId,
+      emailOrPhone,
+      contactPreference,
+      callbackPhone,
+      callbackTimeSlot,
+      queryDetails,
+    } = escalationWizard;
+
+    const cleanPhone = String(callbackPhone || '').replace(/\D/g, '').slice(-10);
+    if (contactPreference === 'phone_call' && cleanPhone.length !== 10) {
+      setEscalationWizard(prev => ({
+        ...prev,
+        error: 'Please enter a valid 10-digit Phone Number for your callback.',
+      }));
+      return;
+    }
+
+    setEscalationWizard(prev => ({ ...prev, busy: true, error: '' }));
+    try {
+      const res = await api.post(
+        '/support/chat/verify-escalation',
+        {
+          sessionToken,
+          step: 'submit_preference',
+          orderId,
+          emailOrPhone,
+          contactPreference,
+          callbackPhone: cleanPhone,
+          callbackTimeSlot,
+          queryDetails: queryDetails.trim() || `Verified assistance request for Order #${orderId}`,
+        },
+        { notify: false }
+      );
+      const data = res.data || {};
+      setChatStatus('escalated');
+      setEscalationWizard(prev => ({
+        ...prev,
+        busy: false,
+        step: 3,
+        ticketReference: data.ticketReference || data.ticketId || 'VERIFIED',
+      }));
+      setMessages(prev => [
+        ...prev,
+        {
+          id: `esc-done-${Date.now()}`,
+          sender: 'assistant',
+          senderName: 'Bhumivera Client Concierge',
+          content:
+            data.reply ||
+            'Your verified specialist request has been logged. Our team will reach out within 12 hours via your chosen preference.',
+          escalation: {
+            escalated: true,
+            ticketId: data.ticketReference || data.ticketId,
+          },
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+      playSupportChime(soundEnabled);
+    } catch (err) {
+      setEscalationWizard(prev => ({
+        ...prev,
+        busy: false,
+        error: err.response?.data?.message || 'Could not submit specialist escalation request.',
+      }));
+    }
   };
 
   const handleEndChat = async () => {
-    if (!sessionToken) {
-      setCsatError('This chat could not be ended. Please start a new chat and try again.');
-      return;
-    }
+    if (!sessionToken) return;
     setCsatSubmitting(true);
     setCsatError('');
     try {
@@ -781,17 +803,14 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         setMessages(prev => [...prev, response.data.systemMessage]);
       }
     } catch (error) {
-      setCsatError(error?.response?.data?.message || 'We couldn’t end the chat. Please try again.');
+      setCsatError(error?.response?.data?.message || 'Could not close the conversation.');
     } finally {
       setCsatSubmitting(false);
     }
   };
 
   const handleSubmitCsat = async () => {
-    if (!sessionToken) {
-      setCsatError('This rating could not be saved. Please start a new chat and try again.');
-      return;
-    }
+    if (!sessionToken) return;
     setCsatSubmitting(true);
     setCsatError('');
     try {
@@ -801,15 +820,29 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       });
       setCsatSubmitted(true);
     } catch (error) {
-      setCsatError(error?.response?.data?.message || 'We couldn’t save your rating. Please try again.');
+      setCsatError(error?.response?.data?.message || 'Could not save your feedback.');
     } finally {
       setCsatSubmitting(false);
     }
   };
 
   const sendMessage = useCallback(async (overridePrompt = null) => {
+    if (overridePrompt === '__OPEN_VERIFICATION_FLOW__') {
+      openVerificationFlow('');
+      return;
+    }
+
     const text = String(overridePrompt !== null ? overridePrompt : input).trim();
     if ((!text && attachments.length === 0) || isTyping) return;
+
+    // Intercept direct cancellation or human escalation phrases to open the 3-Step Verification Wizard if not yet verified
+    if (
+      /\b(cancel\s*(?:my\s*|this\s*|the\s*)?order|connect\s*me\s*to\s*an?\s*associate|speak\s*to\s*(?:a\s*)?(?:human|agent|specialist)|human\s*agent)\b/i.test(text) &&
+      !escalationWizard.verifiedOrder
+    ) {
+      const matchOrd = text.match(/(?:BHVM[-_\s]*)?(\d{6,12})\b/i);
+      openVerificationFlow(matchOrd?.[1] || '');
+    }
 
     const currentAttachments = [...attachments];
     if (overridePrompt === null) setInput('');
@@ -832,110 +865,9 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
 
     setMessages(prev => [...prev, optimisticUserMsg]);
     setIsTyping(true);
-    setStatusLabel('Checking live Bhumivera records…');
-
-    const authToken = localStorage.getItem('token') || localStorage.getItem('ms_token') || '';
+    setStatusLabel('Consulting Bhumivera Client Concierge…');
 
     try {
-      if (typeof window !== 'undefined' && typeof window.fetch === 'function' && !aiSupportApi._forceJsonMode) {
-        const streamResponse = await window.fetch(`${BASE_URL}/api/support/chat/stream`, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            Accept: 'text/event-stream',
-            ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
-          },
-          body: JSON.stringify({
-            sessionToken,
-            message: text,
-            attachments: currentAttachments.map(a => ({ name: a.name, url: a.url, type: a.type })),
-            pageContext: currentPageContext,
-          }),
-        });
-
-        const contentType = streamResponse.headers?.get?.('content-type') || '';
-        if (streamResponse.ok && contentType.includes('text/event-stream') && streamResponse.body?.getReader) {
-          const reader = streamResponse.body.getReader();
-          const decoder = new TextDecoder();
-          let buffer = '';
-          let assembledReply = '';
-          let streamMeta = {};
-
-          setMessages(prev => [
-            ...prev,
-            {
-              id: assistantStreamId,
-              sender: 'assistant',
-              senderName: 'Bhumivera Support',
-              content: '',
-              orderCards: [],
-              quickActions: [],
-              createdAt: new Date().toISOString(),
-            },
-          ]);
-
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-            buffer += decoder.decode(value, { stream: true });
-            const frames = buffer.split('\n\n');
-            buffer = frames.pop() || '';
-
-            for (const frame of frames) {
-              const eventMatch = frame.match(/^event:\s*(.+)$/m);
-              const dataMatch = frame.match(/^data:\s*(.+)$/m);
-              if (!eventMatch || !dataMatch) continue;
-              const eventType = eventMatch[1].trim();
-              let parsedData = {};
-              try {
-                parsedData = JSON.parse(dataMatch[1]);
-              } catch {
-                continue;
-              }
-
-              if (eventType === 'status') {
-                setStatusLabel(parsedData.detail || 'Processing…');
-              } else if (eventType === 'tool_call') {
-                setStatusLabel(`Running ${String(parsedData.name || 'lookup').replace(/_/g, ' ')}…`);
-              } else if (eventType === 'token' && parsedData.delta) {
-                assembledReply += parsedData.delta;
-                const snapshotReply = assembledReply;
-                setMessages(prev =>
-                  prev.map(m => (m.id === assistantStreamId ? { ...m, content: snapshotReply } : m))
-                );
-              } else if (eventType === 'metadata') {
-                streamMeta = parsedData;
-                if (parsedData.sessionToken) setSessionToken(parsedData.sessionToken);
-                if (parsedData.status) setChatStatus(parsedData.status);
-                if (Array.isArray(parsedData.quickActions) && parsedData.quickActions.length) {
-                  setQuickActions(parsedData.quickActions);
-                }
-                if (parsedData.sentiment) setSentimentBadge(parsedData.sentiment);
-              }
-            }
-          }
-
-          setMessages(prev =>
-            prev.map(m =>
-              m.id === assistantStreamId
-                ? {
-                    ...m,
-                    content: assembledReply || 'How else can I assist you today?',
-                    orderCards: streamMeta.orderCards || [],
-                    quickActions: streamMeta.quickActions || [],
-                    sentiment: streamMeta.sentiment || null,
-                    escalation: streamMeta.escalation || null,
-                  }
-                : m
-            )
-          );
-          playSupportChime(soundEnabled);
-          setIsTyping(false);
-          setStatusLabel('');
-          return;
-        }
-      }
-
       const response = await aiSupportApi.sendMessage({
         sessionToken,
         message: text,
@@ -946,21 +878,23 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       const data = response?.data || {};
       if (data.sessionToken) setSessionToken(data.sessionToken);
       if (data.status) setChatStatus(data.status);
-      if (Array.isArray(data.quickActions) && data.quickActions.length) {
-        setQuickActions(data.quickActions);
+      if (Array.isArray(data.orderCards) && data.orderCards.length > 0) {
+        setHasPlacedOrder(true);
       }
-      if (data.sentiment) setSentimentBadge(data.sentiment);
+
+      if (data.escalation?.verificationStep === 'STEP_1_VERIFY_ORDER') {
+        openVerificationFlow('');
+      }
 
       setMessages(prev => [
         ...prev,
         {
           id: data.message?.id || assistantStreamId,
           sender: 'assistant',
-          senderName: 'Bhumivera Support',
-          content: data.reply || data.message?.content || 'How else can I help you today?',
+          senderName: 'Bhumivera Client Concierge',
+          content: data.reply || data.message?.content || 'How else may I assist you today?',
           orderCards: data.orderCards || [],
           quickActions: data.quickActions || [],
-          sentiment: data.sentiment || null,
           escalation: data.escalation || null,
           createdAt: new Date().toISOString(),
         },
@@ -972,11 +906,11 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         {
           id: assistantStreamId,
           sender: 'assistant',
-          senderName: 'Bhumivera Support',
+          senderName: 'Bhumivera Client Concierge',
           content:
-            'Sorry, I couldn’t connect just now. Please try again or contact support@bhumivera.com or WhatsApp +91 7430985647.',
+            'Our concierge connection experienced a brief interruption. Please try again or reach us at support@bhumivera.com.',
           orderCards: [],
-          quickActions: DEFAULT_CHIPS,
+          quickActions: hasPlacedOrder ? VERIFIED_BUYER_CHIPS : PUBLIC_GENERAL_CHIPS,
           createdAt: new Date().toISOString(),
         },
       ]);
@@ -984,57 +918,19 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       setIsTyping(false);
       setStatusLabel('');
     }
-  }, [input, attachments, isTyping, chatStatus, sessionToken, currentPageContext, user?.name, soundEnabled]);
-
-  const handleInstantEscalate = async () => {
-    if (isTyping) return;
-    setIsTyping(true);
-    setStatusLabel('Connecting you to support…');
-    try {
-      const res = await aiSupportApi.escalate({
-        sessionToken,
-        reason: 'Customer clicked Instant Human Escalation in widget',
-        message: input || 'Please connect me with a human support specialist.',
-      });
-      const data = res?.data || {};
-      setChatStatus('escalated');
-      setMessages(prev => [
-        ...prev,
-        {
-          id: `esc-${Date.now()}`,
-          sender: 'assistant',
-          senderName: 'Bhumivera Support',
-          content:
-            data.reply ||
-            'I’ve sent your request to a support specialist. They’ll be in touch as soon as possible.',
-          escalation: data.escalation || { escalated: true, priority: 'High' },
-          createdAt: new Date().toISOString(),
-        },
-      ]);
-      playSupportChime(soundEnabled);
-    } catch (err) {
-      if (err?.response?.data?.code === 'ORDER_REQUIRED_FOR_LIVE_AGENT') {
-        setShowAsyncForm(true);
-        setMessages(prev => [
-          ...prev,
-          {
-            id: `esc-order-gate-${Date.now()}`,
-            sender: 'assistant',
-            senderName: 'Bhumivera Support',
-            content:
-              err.response.data.message ||
-              'A support specialist can help once you have a paid order. You can still ask us about products or shipping here, or leave a message and our team will reply by email or in the app.',
-            createdAt: new Date().toISOString(),
-          },
-        ]);
-      } else {
-        setShowAsyncForm(true);
-      }
-    } finally {
-      setIsTyping(false);
-      setStatusLabel('');
-    }
-  };
+  }, [
+    input,
+    attachments,
+    isTyping,
+    chatStatus,
+    sessionToken,
+    currentPageContext,
+    user?.name,
+    soundEnabled,
+    hasPlacedOrder,
+    escalationWizard.verifiedOrder,
+    openVerificationFlow,
+  ]);
 
   useEffect(() => {
     const handleExternalOpen = event => {
@@ -1042,13 +938,15 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       setIsOpen(true);
       setProactiveBubble(null);
       setUnreadCount(0);
-      if (detail.prompt) {
+      if (detail.verifyOrderId) {
+        openVerificationFlow(detail.verifyOrderId);
+      } else if (detail.prompt) {
         setInput(detail.prompt);
       }
     };
     window.addEventListener('bhumivera:open-support-chat', handleExternalOpen);
     return () => window.removeEventListener('bhumivera:open-support-chat', handleExternalOpen);
-  }, []);
+  }, [openVerificationFlow]);
 
   const activeStatusMeta = STATUS_META[chatStatus] || STATUS_META.active;
 
@@ -1057,20 +955,20 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       data-testid="bhumivera-support-assistant"
       className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-[250] flex flex-col items-end font-sans"
     >
-      {/* Proactive Assistance Nudge Bubble */}
+      {/* Subtle Luxury Assistance Nudge */}
       {!isOpen && proactiveBubble && (
         <div
           role="status"
           aria-live="polite"
-          className={`mb-3 max-w-xs rounded-2xl border p-3.5 shadow-2xl transition-all ${
+          className={`mb-3 max-w-xs rounded-2xl border p-4 shadow-2xl transition-all ${
             isDark
               ? 'bg-[#0B2419] border-[#D4AF37]/40 text-[#FDFBF7]'
               : 'bg-white border-[#0B2419]/15 text-[#0B2419]'
           }`}
         >
           <div className="flex items-start justify-between gap-2">
-            <div className="flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-wider text-[#D4AF37]">
-              <Sparkles className="w-3.5 h-3.5" /> Bhumivera Support
+            <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#D4AF37]">
+              <Sparkles className="w-3.5 h-3.5" /> Bhumivera Client Concierge
             </div>
             <button
               type="button"
@@ -1081,7 +979,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               <X className="w-3.5 h-3.5" />
             </button>
           </div>
-          <p className="mt-1.5 text-xs leading-relaxed">{proactiveBubble.text}</p>
+          <p className="mt-2 text-xs leading-relaxed">{proactiveBubble.text}</p>
           <button
             type="button"
             onClick={() => {
@@ -1091,45 +989,43 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             }}
             className="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-[#D4AF37] hover:underline"
           >
-            Open Support <ChevronRight className="w-3.5 h-3.5" />
+            Open Concierge <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
       )}
 
-      {/* Expanded Chat Window */}
+      {/* Expanded Luxury Concierge Window */}
       {isOpen && (
         <section
-          aria-label="Bhumivera Support"
+          aria-label="Bhumivera Client Concierge"
           className={`flex flex-col overflow-hidden rounded-3xl border shadow-[0_24px_60px_rgba(0,0,0,0.28)] transition-all duration-200 ${
             isMaximized
-              ? 'w-[calc(100vw-1.5rem)] h-[calc(100vh-6rem)] md:w-[580px] md:h-[720px]'
-              : 'w-[calc(100vw-1.5rem)] sm:w-[410px] h-[590px] max-h-[calc(100vh-7rem)]'
+              ? 'w-[calc(100vw-1.5rem)] h-[calc(100vh-6rem)] md:w-[560px] md:h-[700px]'
+              : 'w-[calc(100vw-1.5rem)] sm:w-[410px] h-[580px] max-h-[calc(100vh-7rem)]'
           } ${
             isDark
               ? 'bg-[#071510] border-white/15 text-stone-100'
               : 'bg-[#FDFBF7] border-[#0B2419]/15 text-[#0B2419]'
           }`}
         >
-          {/* Header */}
-          <header className="bg-gradient-to-r from-[#0B2419] via-[#14251c] to-[#2C3E2D] px-4 py-3 text-[#FDFBF7] flex items-center justify-between gap-2 border-b border-[#D4AF37]/30 shrink-0">
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-9 h-9 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/50 flex items-center justify-center shrink-0">
+          {/* Minimal Luxury Header (No '+' New Chat Spam Button) */}
+          <header className="bg-gradient-to-r from-[#0B2419] via-[#14251c] to-[#1f3528] px-5 py-3.5 text-[#FDFBF7] flex items-center justify-between gap-3 border-b border-[#D4AF37]/30 shrink-0">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-9 h-9 rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/45 flex items-center justify-center shrink-0">
                 <Sparkles className="w-4 h-4 text-[#D4AF37]" />
               </div>
               <div className="min-w-0">
-                <div className="flex items-center gap-1.5">
-                  <h2 className="font-serif text-base font-bold tracking-wide truncate">Bhumivera Support</h2>
-                  <span
-                    className={`px-2 py-0.5 rounded-full text-[9px] font-bold uppercase tracking-wider border ${activeStatusMeta.badgeClass}`}
-                    title={activeStatusMeta.description}
-                  >
-                    {activeStatusMeta.label}
-                  </span>
+                <div className="flex items-center gap-2">
+                  <h2 className="font-serif text-base font-semibold tracking-wide truncate">
+                    Bhumivera Client Concierge
+                  </h2>
                 </div>
-                <p className="text-[10px] text-stone-300 truncate">
+                <p className="text-[10px] text-[#d6dfd9] truncate">
                   {assignedAgentName
-                    ? `Assigned Specialist: ${assignedAgentName}`
-                    : 'Order Tracking, Returns & Customer Care'}
+                    ? `Specialist: ${assignedAgentName}`
+                    : hasPlacedOrder
+                    ? 'Verified Order Concierge · Single Active Thread'
+                    : 'Botanical Guidance, Policies & Order Verification'}
                 </p>
               </div>
             </div>
@@ -1137,38 +1033,18 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             <div className="flex items-center gap-1 shrink-0">
               <button
                 type="button"
-                onClick={handleStartNewChat}
-                title="Start a brand-new chat session"
-                aria-label="Start New Chat"
-                className="p-1.5 rounded-lg text-stone-200 hover:bg-white/10 hover:text-[#D4AF37] transition-colors"
+                onClick={() => openVerificationFlow('')}
+                title="Verify Order ID for Specialist Callback or Email Assistance"
+                aria-label="Verify Order for Specialist Escalation"
+                className="px-2.5 py-1 rounded-xl text-[10px] font-semibold tracking-wider uppercase border border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/15 transition-colors"
               >
-                <PlusCircle className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={() => setShowButtonGuide(prev => !prev)}
-                title="What do these buttons do? (Interactive Guide)"
-                aria-label="What do these buttons do?"
-                className={`p-1.5 rounded-lg transition-colors ${
-                  showButtonGuide ? 'bg-[#D4AF37] text-[#0B2419]' : 'text-stone-200 hover:bg-white/10 hover:text-[#D4AF37]'
-                }`}
-              >
-                <HelpCircle className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={handleInstantEscalate}
-                title="Request a support specialist"
-                aria-label="Request a support specialist"
-                className="p-1.5 rounded-lg text-stone-200 hover:bg-white/10 hover:text-[#D4AF37] transition-colors"
-              >
-                <PhoneCall className="w-4 h-4" />
+                Verify Order
               </button>
               <button
                 type="button"
                 onClick={() => setSoundEnabled(prev => !prev)}
-                title={soundEnabled ? 'Mute sound chimes' : 'Enable sound chimes'}
-                aria-label={soundEnabled ? 'Mute sound chimes' : 'Enable sound chimes'}
+                title={soundEnabled ? 'Mute chimes' : 'Enable chimes'}
+                aria-label={soundEnabled ? 'Mute chimes' : 'Enable chimes'}
                 className="p-1.5 rounded-lg text-stone-200 hover:bg-white/10 transition-colors"
               >
                 {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4 opacity-60" />}
@@ -1176,8 +1052,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               <button
                 type="button"
                 onClick={() => setIsDark(prev => !prev)}
-                title={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
-                aria-label={isDark ? 'Switch to light mode' : 'Switch to dark mode'}
+                title={isDark ? 'Light mode' : 'Dark mode'}
+                aria-label={isDark ? 'Light mode' : 'Dark mode'}
                 className="p-1.5 rounded-lg text-stone-200 hover:bg-white/10 transition-colors"
               >
                 {isDark ? <Sun className="w-4 h-4 text-[#D4AF37]" /> : <Moon className="w-4 h-4" />}
@@ -1194,8 +1070,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                title="Minimize chat"
-                aria-label="Minimize chat"
+                title="Minimize Concierge"
+                aria-label="Minimize Concierge"
                 className="p-1.5 rounded-lg text-stone-200 hover:bg-white/10 transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -1203,58 +1079,195 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             </div>
           </header>
 
-          {/* Read-Only Support Status Banner (Managed Exclusively by Customer Support Staff) */}
-          {(chatStatus !== 'active' || assignedAgentName) && (
+          {/* Two-Tier Status Bar */}
+          <div
+            className={`px-4 py-2 border-b flex items-center justify-between gap-2 text-[11px] shrink-0 ${
+              isDark ? 'bg-[#0a1c15] border-white/10 text-stone-300' : 'bg-[#f4f1e9] border-[#0B2419]/10 text-[#1b2921]'
+            }`}
+          >
+            <span className="inline-flex items-center gap-1.5 truncate">
+              <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
+              {hasPlacedOrder ? (
+                <span><strong>Verified Buyer Concierge:</strong> Dedicated Order Thread Active</span>
+              ) : (
+                <span><strong>General Inquiry Mode:</strong> Verify an Order ID to unlock live specialist support</span>
+              )}
+            </span>
+            <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider border shrink-0 ${activeStatusMeta.badgeClass}`}>
+              {activeStatusMeta.label}
+            </span>
+          </div>
+
+          {/* 3-Step Legitimate Customer Verification & Specialist Callback/Email Drawer */}
+          {escalationWizard.open && (
             <div
-              className={`px-3.5 py-1.5 border-b flex items-center justify-between gap-2 text-[11px] shrink-0 ${
-                isDark ? 'bg-[#0a1c15] border-white/10 text-stone-200' : 'bg-[#f4f1e9] border-[#0B2419]/10 text-[#0B2419]'
+              className={`px-4 py-3.5 border-b space-y-3 text-xs shrink-0 max-h-80 overflow-y-auto ${
+                isDark ? 'bg-[#0d2219] border-[#D4AF37]/40 text-stone-100' : 'bg-[#fbf9f2] border-[#D4AF37]/50 text-[#0B2419]'
               }`}
             >
-              <span className="truncate">
-                <strong>Support Status:</strong> {activeStatusMeta.label} — {activeStatusMeta.description}
-              </span>
-              {sentimentBadge?.priority && ['High', 'Critical'].includes(sentimentBadge.priority) && (
-                <span className="px-2 py-0.5 rounded-full text-[9px] font-bold bg-rose-500/20 text-rose-500 border border-rose-500/30 shrink-0">
-                  {sentimentBadge.priority} Priority
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#D4AF37]">
+                  {escalationWizard.step === 1
+                    ? 'Step 1 of 2 · Customer Order Verification'
+                    : escalationWizard.step === 2
+                    ? 'Step 2 of 2 · Specialist Contact Preference (12-Hr SLA)'
+                    : 'Verified Specialist Request Logged'}
                 </span>
+                <button
+                  type="button"
+                  onClick={() => setEscalationWizard(prev => ({ ...prev, open: false }))}
+                  className="text-xs opacity-70 hover:opacity-100"
+                >
+                  ✕
+                </button>
+              </div>
+
+              {escalationWizard.error && (
+                <div className="rounded-xl bg-rose-500/15 border border-rose-500/30 px-3 py-2 text-[11px] text-rose-500 dark:text-rose-300">
+                  {escalationWizard.error}
+                </div>
+              )}
+
+              {escalationWizard.step === 1 && (
+                <form onSubmit={handleVerifyOrderStep1} className="space-y-2.5">
+                  <p className="text-[11px] opacity-85 leading-relaxed">
+                    To protect your account and prevent automated spam, please validate your <strong>Order ID</strong> and <strong>Registered Email or 10-Digit Phone Number</strong>.
+                  </p>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                    <input
+                      type="text"
+                      required
+                      value={escalationWizard.orderId}
+                      onChange={e => setEscalationWizard(prev => ({ ...prev, orderId: e.target.value }))}
+                      placeholder="Order ID (e.g. BHVM815899599)"
+                      className={`px-3 py-2 rounded-xl border text-xs outline-none ${
+                        isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-white border-stone-300 text-[#0B2419]'
+                      }`}
+                    />
+                    <input
+                      type="text"
+                      required
+                      value={escalationWizard.emailOrPhone}
+                      onChange={e => setEscalationWizard(prev => ({ ...prev, emailOrPhone: e.target.value }))}
+                      placeholder="Registered Email or 10-Digit Phone"
+                      className={`px-3 py-2 rounded-xl border text-xs outline-none ${
+                        isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-white border-stone-300 text-[#0B2419]'
+                      }`}
+                    />
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={escalationWizard.busy}
+                    className="w-full py-2 rounded-xl bg-[#0B2419] text-[#D4AF37] border border-[#D4AF37]/40 font-semibold text-xs hover:bg-[#163829] disabled:opacity-50"
+                  >
+                    {escalationWizard.busy ? 'Verifying Order Record…' : 'Verify Order & Continue'}
+                  </button>
+                </form>
+              )}
+
+              {escalationWizard.step === 2 && (
+                <form onSubmit={handleSubmitEscalationStep2} className="space-y-2.5">
+                  <p className="text-[11px] leading-relaxed">
+                    Verified <strong>Order #{escalationWizard.verifiedOrder?.orderNumber}</strong>. Our specialist team will reach out to you within 12 hours. Would you prefer to receive our update via <strong>Email</strong> or a <strong>Direct Phone Call</strong>?
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setEscalationWizard(prev => ({ ...prev, contactPreference: 'email' }))}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border text-xs font-semibold transition ${
+                        escalationWizard.contactPreference === 'email'
+                          ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37]'
+                          : 'border-current/20 opacity-80'
+                      }`}
+                    >
+                      <Mail className="w-3.5 h-3.5" /> Email Update
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setEscalationWizard(prev => ({ ...prev, contactPreference: 'phone_call' }))}
+                      className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border text-xs font-semibold transition ${
+                        escalationWizard.contactPreference === 'phone_call'
+                          ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37]'
+                          : 'border-current/20 opacity-80'
+                      }`}
+                    >
+                      <PhoneCall className="w-3.5 h-3.5" /> Direct Phone Call
+                    </button>
+                  </div>
+
+                  {escalationWizard.contactPreference === 'phone_call' && (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <input
+                        type="tel"
+                        required
+                        maxLength={10}
+                        value={escalationWizard.callbackPhone}
+                        onChange={e =>
+                          setEscalationWizard(prev => ({
+                            ...prev,
+                            callbackPhone: e.target.value.replace(/\D/g, '').slice(0, 10),
+                          }))
+                        }
+                        placeholder="10-Digit Phone Number"
+                        className={`px-3 py-2 rounded-xl border text-xs outline-none ${
+                          isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-white border-stone-300 text-[#0B2419]'
+                        }`}
+                      />
+                      <select
+                        value={escalationWizard.callbackTimeSlot}
+                        onChange={e => setEscalationWizard(prev => ({ ...prev, callbackTimeSlot: e.target.value }))}
+                        className={`px-3 py-2 rounded-xl border text-xs outline-none ${
+                          isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-white border-stone-300 text-[#0B2419]'
+                        }`}
+                      >
+                        {CALLBACK_SLOTS.map(slot => (
+                          <option key={slot} value={slot}>
+                            {slot}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <textarea
+                    rows={2}
+                    required
+                    value={escalationWizard.queryDetails}
+                    onChange={e => setEscalationWizard(prev => ({ ...prev, queryDetails: e.target.value }))}
+                    placeholder="Briefly describe how our specialist team may assist with this order…"
+                    className={`w-full px-3 py-2 rounded-xl border text-xs outline-none ${
+                      isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-white border-stone-300 text-[#0B2419]'
+                    }`}
+                  />
+
+                  <button
+                    type="submit"
+                    disabled={escalationWizard.busy}
+                    className="w-full py-2 rounded-xl bg-[#0B2419] text-[#D4AF37] border border-[#D4AF37]/40 font-semibold text-xs hover:bg-[#163829] disabled:opacity-50"
+                  >
+                    {escalationWizard.busy ? 'Logging Verified Request…' : 'Confirm & Schedule Specialist Outreach'}
+                  </button>
+                </form>
+              )}
+
+              {escalationWizard.step === 3 && (
+                <div className="space-y-2 py-1">
+                  <div className="flex items-center gap-2 text-emerald-500 font-semibold">
+                    <CheckCircle2 className="w-4 h-4" />
+                    <span>Escalation Ticket #{escalationWizard.ticketReference} Confirmed</span>
+                  </div>
+                  <p className="text-[11px] opacity-85">
+                    Our specialist team will reach out within 12 hours via your selected preference.
+                  </p>
+                </div>
               )}
             </div>
           )}
 
-          {/* Interactive "What does this button do?" Explainer Drawer */}
-          {showButtonGuide && (
-            <div
-              className={`px-4 py-3 border-b max-h-52 overflow-y-auto text-xs space-y-2 shrink-0 ${
-                isDark ? 'bg-[#10241f] border-[#D4AF37]/30 text-stone-200' : 'bg-[#fffdf7] border-[#D4AF37]/50 text-[#0B2419]'
-              }`}
-            >
-              <div className="flex items-center justify-between">
-                <span className="font-bold text-[11px] uppercase tracking-wider text-[#D4AF37]">
-                  Interactive Guide: What Each Button Does
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setShowButtonGuide(false)}
-                  className="text-[11px] underline opacity-75 hover:opacity-100"
-                >
-                  Hide Guide
-                </button>
-              </div>
-              <div className="space-y-1.5">
-                {WIDGET_BUTTON_GUIDE.map(item => (
-                  <div key={item.button} className="rounded-xl p-2 bg-current/5 border border-current/10">
-                    <span className="font-bold text-[#D4AF37] block text-[11px]">{item.button}</span>
-                    <span className="text-[11px] opacity-85 leading-snug">{item.whatItDoes}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* 100X AI Co-Pilot Friction Rescue Card (Cart / Password / Login / Checkout) */}
+          {/* Client Concierge Friction Rescue Card */}
           {copilotRescue && (
             <div
-              className={`px-4 py-3 border-b max-h-64 overflow-y-auto text-xs space-y-2.5 shrink-0 ${
+              className={`px-4 py-3 border-b max-h-56 overflow-y-auto text-xs space-y-2 shrink-0 ${
                 isDark
                   ? 'bg-gradient-to-br from-[#122b22] to-[#0a1c15] border-[#D4AF37]/50 text-stone-100'
                   : 'bg-[#fffbeb] border-[#D4AF37] text-[#0B2419]'
@@ -1262,8 +1275,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             >
               <div className="flex items-start justify-between gap-2">
                 <div>
-                  <span className="inline-flex items-center gap-1 text-[10px] font-black uppercase tracking-widest text-[#D4AF37]">
-                    <Sparkles className="w-3 h-3" /> 100X AI Co-Pilot Live Rescue
+                  <span className="inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]">
+                    <Sparkles className="w-3 h-3" /> Bhumivera Client Concierge
                   </span>
                   <h3 className="font-bold text-xs mt-0.5">{copilotRescue.headline}</h3>
                 </div>
@@ -1275,127 +1288,76 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   ✕
                 </button>
               </div>
-
               <p className="text-[11px] leading-relaxed opacity-90">{copilotRescue.explanation}</p>
-
-              {Array.isArray(copilotRescue.steps) && copilotRescue.steps.length > 0 && (
-                <ul className="space-y-1 text-[11px] pl-1">
-                  {copilotRescue.steps.map((st, idx) => (
-                    <li key={idx} className="flex items-start gap-1.5">
-                      <span className="font-bold text-[#D4AF37]">{idx + 1}.</span>
-                      <span>{st}</span>
-                    </li>
-                  ))}
-                </ul>
-              )}
-
-              {/* Password rescue direct email link sender */}
               {String(copilotRescue.frictionType || '').includes('password') ||
               String(copilotRescue.frictionType || '').includes('login') ? (
-                <div className="pt-1 space-y-1.5">
-                  <div className="flex gap-1.5">
-                    <input
-                      type="email"
-                      value={copilotEmailInput}
-                      onChange={e => setCopilotEmailInput(e.target.value)}
-                      placeholder="Your email for 1-click password setup link…"
-                      className="flex-1 rounded-lg border border-current/20 bg-black/10 px-2.5 py-1 text-[11px] outline-none"
-                    />
-                    <button
-                      type="button"
-                      disabled={copilotSendingReset || !copilotEmailInput.trim()}
-                      onClick={async () => {
-                        setCopilotSendingReset(true);
-                        try {
-                          const res = await aiSupportApi.passwordRescue?.({
-                            email: copilotEmailInput.trim(),
-                            sendRecoveryLink: true,
-                            stage: 'ai_copilot_widget',
-                          });
-                          setCopilotRescue(prev => ({
-                            ...prev,
-                            explanation:
-                              res?.data?.recoveryNotice ||
-                              `Sent a 30-minute one-click password setup link to ${copilotEmailInput.trim()}!`,
-                          }));
-                        } catch {
-                          navigate('/forgot-password');
-                        } finally {
-                          setCopilotSendingReset(false);
-                        }
-                      }}
-                      className="rounded-lg bg-[#D4AF37] px-2.5 py-1 text-[10px] font-black uppercase text-[#0B2419] disabled:opacity-50"
-                    >
-                      {copilotSendingReset ? 'Sending…' : 'Send 1-Click Link'}
-                    </button>
-                  </div>
-                </div>
-              ) : null}
-
-              {/* Cart rescue 1-click actions */}
-              <div className="flex flex-wrap gap-1.5 pt-1">
-                {copilotRescue.productId && (
+                <div className="pt-1 flex gap-1.5">
+                  <input
+                    type="email"
+                    value={copilotEmailInput}
+                    onChange={e => setCopilotEmailInput(e.target.value)}
+                    placeholder="Your registered email…"
+                    className="flex-1 rounded-lg border border-current/20 bg-black/10 px-2.5 py-1 text-[11px] outline-none"
+                  />
                   <button
                     type="button"
-                    onClick={() => {
-                      const qtyToAdd =
-                        copilotRescue.maxAddable && copilotRescue.maxAddable > 0
-                          ? copilotRescue.maxAddable
-                          : 1;
-                      window.dispatchEvent(
-                        new CustomEvent(AI_COPILOT_ADD_CART_RETRY_EVENT, {
-                          detail: {
-                            productId: copilotRescue.productId,
-                            productName: copilotRescue.productName,
-                            quantity: qtyToAdd,
-                          },
-                        })
-                      );
-                      setCopilotRescue(null);
+                    disabled={copilotSendingReset || !copilotEmailInput.trim()}
+                    onClick={async () => {
+                      setCopilotSendingReset(true);
+                      try {
+                        const res = await aiSupportApi.passwordRescue?.({
+                          email: copilotEmailInput.trim(),
+                          sendRecoveryLink: true,
+                          stage: 'concierge_widget',
+                        });
+                        setCopilotRescue(prev => ({
+                          ...prev,
+                          explanation:
+                            res?.data?.recoveryNotice ||
+                            `Dispatched a 30-minute password setup link to ${copilotEmailInput.trim()}.`,
+                        }));
+                      } catch {
+                        navigate('/forgot-password');
+                      } finally {
+                        setCopilotSendingReset(false);
+                      }
                     }}
-                    className="rounded-lg bg-emerald-500 px-2.5 py-1 text-[10px] font-black uppercase text-[#071510]"
+                    className="rounded-lg bg-[#D4AF37] px-2.5 py-1 text-[10px] font-bold uppercase text-[#0B2419] disabled:opacity-50"
                   >
-                    {copilotRescue.maxAddable && copilotRescue.maxAddable > 0
-                      ? `Add ${copilotRescue.maxAddable} Available Unit(s)`
-                      : 'Retry Add 1 Unit to Cart'}
+                    {copilotSendingReset ? 'Sending…' : 'Send Reset Link'}
                   </button>
-                )}
-
-                {Array.isArray(copilotRescue.alternatives) &&
-                  copilotRescue.alternatives.slice(0, 2).map(alt => (
-                    <button
-                      key={alt.id}
-                      type="button"
-                      onClick={() => {
-                        setCopilotRescue(null);
-                        navigate(`/product/${alt.slug || alt.id}`);
-                      }}
-                      className="rounded-lg border border-[#D4AF37]/50 bg-[#D4AF37]/15 px-2.5 py-1 text-[10px] font-bold text-[#D4AF37]"
-                    >
-                      In-Stock: {alt.name} (₹{alt.price})
-                    </button>
-                  ))}
-
+                </div>
+              ) : null}
+              {copilotRescue.productId && (
                 <button
                   type="button"
                   onClick={() => {
-                    const q =
-                      copilotRescue.headline ||
-                      'Please help me resolve my issue with adding to cart or setting my password';
+                    const qtyToAdd =
+                      copilotRescue.maxAddable && copilotRescue.maxAddable > 0
+                        ? copilotRescue.maxAddable
+                        : 1;
+                    window.dispatchEvent(
+                      new CustomEvent(AI_COPILOT_ADD_CART_RETRY_EVENT, {
+                        detail: {
+                          productId: copilotRescue.productId,
+                          productName: copilotRescue.productName,
+                          quantity: qtyToAdd,
+                        },
+                      })
+                    );
                     setCopilotRescue(null);
-                    void sendMessage(q);
                   }}
-                  className="rounded-lg border border-current/25 px-2.5 py-1 text-[10px] font-bold"
+                  className="rounded-lg bg-emerald-500 px-2.5 py-1 text-[10px] font-bold uppercase text-[#071510]"
                 >
-                  Ask AI in Chat
+                  Add Available Quantity to Cart
                 </button>
-              </div>
+              )}
             </div>
           )}
 
           {/* Messages Stream */}
           <div
-            className={`flex-1 overflow-y-auto px-4 py-3.5 space-y-3.5 ${
+            className={`flex-1 overflow-y-auto px-5 py-4 space-y-4 ${
               isDark ? 'bg-[#071510]' : 'bg-[#FDFBF7]'
             }`}
           >
@@ -1407,8 +1369,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               if (isSystem) {
                 return (
                   <div key={msg.id || idx} className="flex justify-center">
-                    <div className="max-w-[92%] rounded-xl px-3 py-1.5 text-[11px] text-center bg-[#D4AF37]/15 border border-[#D4AF37]/30">
-                      <FormattedMarkdown content={msg.content} isDark={isDark} />
+                    <div className="max-w-[92%] rounded-xl px-3.5 py-2 text-[11px] text-center bg-[#D4AF37]/15 border border-[#D4AF37]/30">
+                      <FormattedMarkdown content={msg.content} isDark={isDark} onNavigate={href => navigate(href)} />
                     </div>
                   </div>
                 );
@@ -1419,13 +1381,13 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   key={msg.id || idx}
                   className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}
                 >
-                  {!isUser && msg.senderName && (
-                    <span className="text-[10px] font-semibold uppercase tracking-wider text-[#D4AF37] mb-1 pl-1">
-                      {msg.senderName.replace(/AI (?:Concierge|Assistant)/, 'Support')}
+                  {!isUser && (
+                    <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#D4AF37] mb-1 pl-1">
+                      {isHumanStaff ? msg.senderName || 'Bhumivera Specialist' : 'Bhumivera Client Concierge'}
                     </span>
                   )}
                   <div
-                    className={`max-w-[88%] rounded-2xl px-3.5 py-2.5 ${
+                    className={`max-w-[88%] rounded-2xl px-4 py-3 ${
                       isUser
                         ? 'bg-[#0B2419] text-[#FDFBF7] rounded-br-sm shadow-sm'
                         : isHumanStaff
@@ -1438,6 +1400,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                     <FormattedMarkdown
                       content={msg.content}
                       isDark={isUser || isHumanStaff || isDark}
+                      onNavigate={href => navigate(href)}
                     />
 
                     {Array.isArray(msg.attachments) && msg.attachments.length > 0 && (
@@ -1461,6 +1424,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                           order={order}
                           isDark={isDark}
                           onQuickPrompt={promptText => void sendMessage(promptText)}
+                          onRequestOrderIntervention={ordRef => openVerificationFlow(ordRef)}
                         />
                       ))}
 
@@ -1468,7 +1432,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                       <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-amber-500/15 border border-amber-500/30 px-3 py-2 text-[11px] font-medium text-amber-700 dark:text-amber-300">
                         <ShieldAlert className="w-4 h-4 shrink-0" />
                         <span>
-                          Your support request{msg.escalation.ticketId ? ` #${msg.escalation.ticketId}` : ''} has been sent to a specialist.
+                          Verified Specialist Ticket{msg.escalation.ticketId ? ` #${msg.escalation.ticketId}` : ''} logged (12-hour response guarantee).
                         </span>
                       </div>
                     )}
@@ -1485,7 +1449,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[11px] font-bold">
-                    {csatSubmitted ? 'Thank you for your feedback.' : 'How was your support experience?'}
+                    {csatSubmitted ? 'Thank you for your feedback.' : 'How was your concierge experience?'}
                   </span>
                   <a
                     href={telegramBotUrl}
@@ -1493,7 +1457,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                     rel="noopener noreferrer"
                     className="text-[10px] font-semibold text-[#D4AF37] underline"
                   >
-                    Telegram support
+                    Telegram Concierge
                   </a>
                 </div>
                 {!csatSubmitted && (
@@ -1521,7 +1485,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                         type="text"
                         value={csatFeedback}
                         onChange={e => setCsatFeedback(e.target.value)}
-                        placeholder="Write a short review of our support…"
+                        placeholder="Share a note on your experience…"
                         className={`flex-1 px-2.5 py-1.5 rounded-lg border text-[11px] ${
                           isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-stone-50 border-stone-200 text-[#0B2419]'
                         }`}
@@ -1541,7 +1505,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               </div>
             )}
 
-            {!['resolved', 'closed'].includes(chatStatus) && messages.length > 1 && (
+            {!['resolved', 'closed'].includes(chatStatus) && hasPlacedOrder && messages.length > 2 && (
               <div className="flex justify-end">
                 <button
                   type="button"
@@ -1549,66 +1513,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   disabled={csatSubmitting || isTyping}
                   className="rounded-lg border border-[#0B2419]/15 px-3 py-1.5 text-[11px] font-semibold text-[#0B2419] hover:bg-[#0B2419]/5 disabled:opacity-60 dark:text-stone-100 dark:border-white/15"
                 >
-                  {csatSubmitting ? 'Ending chat…' : 'End chat'}
-                </button>
-                {csatError && <p role="alert" className="ml-2 self-center text-[11px] text-red-600">{csatError}</p>}
-              </div>
-            )}
-
-            {/* Inline Async Message Form when customer has not placed an order yet */}
-            {showAsyncForm && (
-              <div
-                className={`rounded-2xl border p-3.5 space-y-2 ${
-                  isDark ? 'bg-[#10241f] border-amber-400/40' : 'bg-amber-50/70 border-amber-300'
-                }`}
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-[11px] font-bold text-[#D4AF37]">
-                    Send Message to Support (Replies via Email & App)
-                  </span>
-                  <button type="button" onClick={() => setShowAsyncForm(false)} className="text-xs opacity-70">✕</button>
-                </div>
-                <input
-                  type="text"
-                  value={asyncSubject}
-                  onChange={e => setAsyncSubject(e.target.value)}
-                  placeholder="Subject"
-                  className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 text-xs text-[#0B2419] bg-white"
-                />
-                <textarea
-                  rows={2}
-                  value={asyncBody}
-                  onChange={e => setAsyncBody(e.target.value)}
-                  placeholder="Write your message — we will reply to your email and mobile app…"
-                  className="w-full px-2.5 py-1.5 rounded-lg border border-stone-300 text-xs text-[#0B2419] bg-white"
-                />
-                <button
-                  type="button"
-                  onClick={async () => {
-                    if (!asyncBody.trim()) return;
-                    try {
-                      const res = await aiSupportApi.sendAsyncMessage?.({
-                        sessionToken,
-                        subject: asyncSubject,
-                        message: asyncBody.trim(),
-                      });
-                      setShowAsyncForm(false);
-                      setAsyncBody('');
-                      setMessages(prev => [
-                        ...prev,
-                        {
-                          id: `async-${Date.now()}`,
-                          sender: 'assistant',
-                          senderName: 'Bhumivera Support',
-                          content: res?.data?.reply || 'Message sent! We will reply to your Email and Mobile App inbox.',
-                          createdAt: new Date().toISOString(),
-                        },
-                      ]);
-                    } catch {}
-                  }}
-                  className="w-full py-1.5 rounded-lg bg-[#0B2419] text-[#D4AF37] font-bold text-xs"
-                >
-                  Send Message to Support
+                  {csatSubmitting ? 'Closing…' : 'Mark Inquiry Resolved'}
                 </button>
               </div>
             )}
@@ -1627,10 +1532,10 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Quick-Action Chips Bar */}
+          {/* Curated Quick-Action Chips */}
           {Array.isArray(quickActions) && quickActions.length > 0 && (
             <div
-              className={`px-3.5 py-2 border-t flex flex-wrap items-center gap-1.5 shrink-0 ${
+              className={`px-4 py-2.5 border-t flex flex-wrap items-center gap-1.5 shrink-0 ${
                 isDark ? 'bg-[#0a1c15] border-white/10' : 'bg-[#f4f1e9] border-[#0B2419]/10'
               }`}
             >
@@ -1640,7 +1545,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   type="button"
                   disabled={isTyping}
                   onClick={() => void sendMessage(chip.prompt || chip.label)}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-semibold border transition-all ${
+                  className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all ${
                     isDark
                       ? 'bg-[#10241f] border-[#D4AF37]/30 text-stone-200 hover:border-[#D4AF37] hover:text-[#D4AF37]'
                       : 'bg-white border-[#0B2419]/15 text-[#0B2419] hover:border-[#0B2419] hover:bg-[#0B2419] hover:text-white'
@@ -1654,7 +1559,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
 
           {/* Pending Image Attachments Bar */}
           {attachments.length > 0 && (
-            <div className="px-3.5 py-1.5 border-t border-current/10 flex items-center gap-2 overflow-x-auto shrink-0">
+            <div className="px-4 py-1.5 border-t border-current/10 flex items-center gap-2 overflow-x-auto shrink-0">
               {attachments.map((att, idx) => (
                 <div
                   key={idx}
@@ -1680,7 +1585,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               e.preventDefault();
               void sendMessage();
             }}
-            className={`p-3 border-t flex items-center gap-2 shrink-0 ${
+            className={`p-3.5 border-t flex items-center gap-2 shrink-0 ${
               isDark ? 'bg-[#071510] border-white/10' : 'bg-white border-[#0B2419]/10'
             }`}
           >
@@ -1696,7 +1601,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              title="Attach photo for return or damage inspection"
+              title="Attach photo for return inspection"
               aria-label="Attach photo"
               className={`p-2 rounded-xl border transition-colors ${
                 isDark
@@ -1711,12 +1616,12 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               value={input}
               onChange={e => setInput(e.target.value)}
               placeholder={
-                chatStatus === 'closed'
-                  ? 'Type a message to reopen this chat…'
-                  : 'Ask about an order, return, refund, wallet, or product…'
+                hasPlacedOrder
+                  ? 'Ask about your order, returns, or botanical rituals…'
+                  : 'Ask about ingredients, shipping, or verify an Order ID…'
               }
               maxLength={2000}
-              aria-label="Message Bhumivera Support"
+              aria-label="Message Bhumivera Client Concierge"
               className={`flex-1 min-w-0 px-3.5 py-2 rounded-xl border text-xs outline-none transition-colors ${
                 isDark
                   ? 'bg-[#10241f] border-white/15 text-stone-100 placeholder:text-stone-400 focus:border-[#D4AF37]'
@@ -1726,7 +1631,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             <button
               type="submit"
               disabled={isTyping || (!input.trim() && attachments.length === 0)}
-              aria-label="Send support message"
+              aria-label="Send message"
               className="p-2.5 rounded-xl bg-[#0B2419] text-[#D4AF37] hover:bg-[#1e4031] disabled:opacity-40 transition-colors shrink-0"
             >
               <Send className="w-4 h-4" />
@@ -1735,7 +1640,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         </section>
       )}
 
-      {/* Floating Launcher Button */}
+      {/* Floating Concierge Launcher */}
       {!isOpen && (
         <button
           type="button"
@@ -1744,7 +1649,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             setUnreadCount(0);
             setProactiveBubble(null);
           }}
-          aria-label="Open Bhumivera Support"
+          aria-label="Open Bhumivera Client Concierge"
           className="group relative flex items-center gap-2.5 rounded-full bg-gradient-to-r from-[#0B2419] to-[#1e4031] px-4 py-3.5 text-[#FDFBF7] shadow-[0_14px_34px_rgba(11,36,25,0.45)] border border-[#D4AF37]/45 hover:scale-[1.03] active:scale-[0.98] transition-all"
         >
           <div className="relative flex items-center justify-center">
@@ -1755,7 +1660,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               </span>
             )}
           </div>
-          <span className="text-xs font-semibold tracking-wide pr-0.5">Support</span>
+          <span className="text-xs font-semibold tracking-wide pr-0.5">Client Concierge</span>
         </button>
       )}
     </div>

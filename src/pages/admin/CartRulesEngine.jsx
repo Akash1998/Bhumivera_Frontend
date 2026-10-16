@@ -171,7 +171,7 @@ export default function CartRulesEngine() {
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-white/10 pb-5">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-emerald-300">
-            Cart policy &amp; 100X Dynamic Thresholds
+            Cart policy &amp; Dynamic Cart Thresholds
           </p>
           <h2 className="mt-2 text-2xl font-semibold text-white">Cart rules</h2>
         </div>

@@ -489,10 +489,10 @@ export default function GSTAccounting() {
             </span>
             <div>
               <h2 className="text-2xl font-black text-white tracking-tight">
-                GST &amp; Books · 100X Tax &amp; Luxury Invoice Command Center
+                GST &amp; Books · Financial Ledger &amp; GST Compliance
               </h2>
               <p className="text-xs text-slate-400">
-                10X Branded GST Tax Invoices (with Logo, QR &amp; HSN Summary), GSTR-1 / GSTR-3B Working Tables, ITC Ledger &amp; 42-Column Master Exports
+                Maison Branded GST Tax Invoices (with Logo, QR &amp; HSN Summary), GSTR-1 / GSTR-3B Working Tables, ITC Ledger &amp; 42-Column Master Exports
               </p>
             </div>
           </div>
@@ -538,7 +538,7 @@ export default function GSTAccounting() {
       <div className="rounded-2xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs leading-relaxed text-amber-100 flex items-start gap-3">
         <ShieldCheck size={18} className="text-amber-300 shrink-0 mt-0.5" />
         <div>
-          <strong>Statutory &amp; CA Working Paper Notice:</strong> This module generates GST-compliant Tax Invoices, Credit Notes, HSN Summaries, and GSTR-1 / GSTR-3B working schedules. Issued documents are cryptographically signed (512-bit SHA-512) and locked against mutation; adjustments are recorded via linked Credit Notes.
+          <strong>Statutory &amp; CA Working Paper Notice:</strong> This module generates GST-compliant Tax Invoices, Credit Notes, HSN Summaries, and GSTR-1 / GSTR-3B working schedules. Issued documents are cryptographically signed (cryptographic SHA-512) and locked against mutation; adjustments are recorded via linked Credit Notes.
         </div>
       </div>
 
@@ -648,7 +648,7 @@ export default function GSTAccounting() {
                 CA Working Papers &amp; Issued GST Documents ({filteredDocuments.length})
               </h3>
               <p className="text-xs text-slate-400">
-                Every column is expanded below. Click <strong>Luxury Invoice</strong> on any row to view or print the 10X Branded Tax Invoice with Bhumivera Logo &amp; HSN Summary.
+                Every column is expanded below. Click <strong>Luxury Invoice</strong> on any row to view or print the Maison Branded Tax Invoice with Bhumivera Logo &amp; HSN Summary.
               </p>
             </div>
 
@@ -791,7 +791,7 @@ export default function GSTAccounting() {
                             type="button"
                             onClick={() => openLuxuryInvoiceModal(document)}
                             className="inline-flex items-center gap-1 rounded-lg bg-[#d4af37] px-2.5 py-1.5 text-[11px] font-black text-[#071510] hover:bg-[#e5c247]"
-                            title="Open 10X Luxury Branded GST Tax Invoice with Logo"
+                            title="Open Bhumivera Maison GST Tax Invoice with Logo"
                           >
                             <Eye size={13} /> Luxury Invoice
                           </button>
@@ -1185,7 +1185,7 @@ export default function GSTAccounting() {
                   onClick={() => handleBulkClassifyProducts(true)}
                   className="ml-1 inline-flex items-center gap-1 rounded-lg bg-emerald-500 px-2.5 py-1 text-[11px] font-bold text-slate-950 hover:bg-emerald-400 disabled:opacity-50"
                 >
-                  <Wand2 size={12} /> Auto-Fill Unset ({unclassifiedProductCount})
+                  <Wand2 size={12} /> Classify Unset HSN ({unclassifiedProductCount})
                 </button>
               </div>
 
@@ -1440,7 +1440,7 @@ export default function GSTAccounting() {
       {(activeSection === 'all' || activeSection === 'profile') && (
         <section className="rounded-2xl border border-slate-800 bg-[#10241f]/60 p-5">
           <h3 className="mb-4 text-lg font-bold text-white">
-            GST Business Profile &amp; 10X Luxury Invoice Branding
+            GST Business Profile &amp; Maison Invoice Branding
           </h3>
           <form onSubmit={saveProfile} className="grid gap-4 md:grid-cols-3">
             {[
@@ -1532,7 +1532,7 @@ export default function GSTAccounting() {
         </section>
       )}
 
-      {/* 10X LUXURY TAX INVOICE PREVIEW & PRINT MODAL */}
+      {/* MAISON GST TAX INVOICE PREVIEW & PRINT MODAL */}
       {previewInvoiceDoc && (
         <LuxuryTaxInvoiceModal
           document={previewInvoiceDoc}

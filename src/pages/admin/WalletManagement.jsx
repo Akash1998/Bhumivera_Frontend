@@ -151,7 +151,7 @@ export default function WalletManagement() {
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-white/10 pb-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-emerald-300">
-            100X Customer Float &amp; Store Credit Treasury
+            Client Wallet Float &amp; Store Credit Treasury
           </p>
           <h2 className="text-xl font-semibold text-white mt-1">Customer wallets</h2>
           <p className="mt-1 text-sm text-slate-400">

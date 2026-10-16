@@ -11,7 +11,7 @@ export default function Footer() {
         <div className="mx-auto flex max-w-7xl flex-col gap-5 px-5 py-8 sm:px-8 md:flex-row md:items-center md:justify-between md:px-10 md:py-10">
           <div className="max-w-2xl">
             <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-[#c8d6aa]">
-              Curiosity, carried further · 100X AI Co-Pilot Ready
+              Curiosity, carried further · Bhumivera Client Concierge
             </p>
             <h2 className="mt-2 font-serif text-2xl leading-tight sm:text-3xl">
               Get to know the details behind your ritual.
@@ -27,14 +27,14 @@ export default function Footer() {
               onClick={() =>
                 triggerAiCopilotAssist({
                   mode: 'navigation_rescue',
-                  title: '100X AI Co-Pilot & Complete Site Guide',
+                  title: 'Bhumivera Client Concierge & Site Guide',
                   message:
                     'How can I assist you today? I can help you add items to your cart, set or reset your password, track an order, or jump to any page on Bhumivera.',
                 })
               }
               className="inline-flex min-h-11 items-center gap-2 bg-[#d4af37] px-4 py-2 text-xs font-bold text-[#071a12] transition-colors hover:bg-[#e5c247]"
             >
-              ✦ Ask 100X AI Co-Pilot
+              ✦ Bhumivera Client Concierge
             </button>
             <Link
               to="/science#ingredients"
@@ -192,7 +192,7 @@ export default function Footer() {
 
         <div>
           <h3 className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-[#c8d6aa] sm:mb-5 sm:text-xs">
-            Connect with us
+            Connect &amp; Portals
           </h3>
           <ul className="space-y-3 text-xs leading-5 text-white/60 sm:text-sm">
             <li>
@@ -224,6 +224,21 @@ export default function Footer() {
               >
                 X (Twitter)
               </a>
+            </li>
+            <li>
+              <Link to="/support" className="transition-colors hover:text-[#c8d6aa]">
+                Support Agent Desk (/support)
+              </Link>
+            </li>
+            <li>
+              <Link to="/superadminsupport" className="transition-colors hover:text-[#c8d6aa]">
+                SuperAdmin Support (/superadminsupport)
+              </Link>
+            </li>
+            <li>
+              <Link to="/admin/dashboard" className="transition-colors hover:text-[#c8d6aa]">
+                Admin Workspace (/admin)
+              </Link>
             </li>
           </ul>
         </div>

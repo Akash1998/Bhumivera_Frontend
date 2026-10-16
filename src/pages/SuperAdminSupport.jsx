@@ -93,7 +93,7 @@ const ROLE_CONFIG = {
   superadmin: {
     label: 'SuperAdmin / Owner',
     badge: 'bg-[#D4AF37]/25 text-[#D4AF37] border-[#D4AF37]/50',
-    description: 'Full Owner Authority: Can permanently delete resolved chats, issue multiple coupons without per-customer limits, override credit caps, and govern 512-bit security & Telegram settings.',
+    description: 'Full Owner Authority: Can permanently delete resolved chats, issue multiple coupons without per-customer limits, override credit caps, and govern cryptographic security & Telegram settings.',
   },
 };
 
@@ -121,7 +121,7 @@ const HELP_DICTIONARY = [
   { no: 2, term: 'Order, Tracking, Email & Phone Search', category: 'Verification', desc: 'Searches across all orders by Order ID (#20), 9-digit Order Number, Courier Tracking ID (BHVM...), Email, or Phone Number, and displays the Customer Verification Checklist.' },
   { no: 3, term: 'Delete Resolved Chat (SuperAdmin Only)', category: 'Security', desc: 'Permanently deletes a Resolved or Closed chat transcript. Restricted strictly to SuperAdmin — Agents, Supervisors, and Managers cannot delete chats.' },
   { no: 4, term: 'One-Time Staff Coupon vs. Unlimited SuperAdmin Coupon', category: 'Anti-Fraud', desc: 'Support Staff can issue a courtesy coupon ONLY ONCE per customer (capped at 10%–15% by role) so no agent can abuse discounts. Only SuperAdmin can issue coupons multiple times.' },
-  { no: 5, term: 'Goodwill Wallet Credit Guardrail', category: 'Anti-Fraud', desc: 'Agents cannot issue wallet credits (₹0). Supervisors are capped at ₹150 once per customer; Managers at ₹250 once per customer. Every credit is signed with a 512-bit SHA-512 hash.' },
+  { no: 5, term: 'Goodwill Wallet Credit Guardrail', category: 'Anti-Fraud', desc: 'Agents cannot issue wallet credits (₹0). Supervisors are capped at ₹150 once per customer; Managers at ₹250 once per customer. Every credit is signed with a cryptographic SHA-512 hash.' },
   { no: 6, term: 'Two-Way Telegram Bot (@BhumiveraBot)', category: 'Telegram', desc: 'Customers can message @BhumiveraBot on Telegram and their messages appear here in Live Customer Chats. When you reply here, your reply is sent straight back to their Telegram app.' },
   { no: 7, term: 'Order-Gated Live Agent Rule', category: 'Protection', desc: 'Customers cannot demand a live human agent unless they have placed an order after payment. Visitors without an order chat with the AI Bot or leave a message for Email/App reply.' },
   { no: 8, term: 'Customer Satisfaction Reviews', category: 'Quality', desc: 'When a customer is satisfied with Support’s reply, they can end the chat and leave a 1–5 star rating and written review, which is saved and displayed in the Customer Reviews tab.' },
@@ -807,7 +807,7 @@ export default function SuperAdminSupport() {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] uppercase tracking-[0.18em] px-2.5 py-0.5 rounded-full bg-[#D4AF37]/20 text-[#D4AF37] font-bold">
-                  512-Bit Protected · SuperAdmin Support
+                  SuperAdmin Support Center
                 </span>
                 <span className="text-xs text-emerald-200/70 font-mono">
                   bhumivera.com/superadminsupport
@@ -980,7 +980,7 @@ export default function SuperAdminSupport() {
               id: 'guide',
               label: `7. Security Audit & Help Guide (${auditLogs.length})`,
               icon: BookOpen,
-              explain: 'View 512-bit signed audit logs of every coupon/credit/action and read the plain-English help guide.',
+              explain: 'View cryptographic audit logs of every coupon/credit/action and read the plain-English help guide.',
             },
           ].map(tab => {
             const Icon = tab.icon;
@@ -1408,7 +1408,7 @@ export default function SuperAdminSupport() {
                       />
                       <button
                         type="button"
-                        onClick={() => handleExecuteQuickAction('cancel_order')}
+                        disabled={!isSuperAdminViewer} onClick={() => handleExecuteQuickAction('cancel_order')}
                         className="px-2.5 py-1 rounded-lg bg-rose-500/15 border border-rose-500/30 text-[11px] text-rose-200"
                       >
                         Cancel Order
@@ -2198,7 +2198,7 @@ export default function SuperAdminSupport() {
             <div className="bg-[#0B2419] border border-white/10 rounded-2xl p-6 space-y-4">
               <h3 className="text-base font-bold text-white flex items-center gap-2">
                 <Lock className="w-4 h-4 text-[#D4AF37]" />
-                512-Bit Signed Security & Action Audit Log ({auditLogs.length})
+                Cryptographic Security & Action Audit Log ({auditLogs.length})
               </h3>
               <div className="space-y-2 max-h-64 overflow-y-auto pr-1 text-xs">
                 {auditLogs.map(log => (

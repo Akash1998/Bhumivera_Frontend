@@ -184,7 +184,7 @@ export default function LoyaltyMembers() {
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-white/10 pb-4">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-emerald-300">
-            Member ledger &amp; 100X Tier Progression
+            Member ledger &amp; Clientele Privilege Progression
           </p>
           <h2 className="mt-2 text-2xl font-bold text-white">Loyalty members</h2>
           <p className="mt-1 text-sm text-slate-400">

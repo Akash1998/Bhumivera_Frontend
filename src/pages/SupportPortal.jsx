@@ -47,19 +47,19 @@ const ROLE_LIMIT_RULES = {
     title: 'Support Supervisor (L2)',
     maxCouponPct: 12,
     maxWalletCredit: 150,
-    canCancelOrder: true,
+    canCancelOrder: false,
     canDeleteChat: false,
     canDeleteTicket: false,
-    summary: 'Includes all L1 permissions + Order Cancellations, Chat Reassignment, at most ONE courtesy coupon (max 12% off) per customer, and at most ONE goodwill wallet credit (max ₹150) per customer.',
+    summary: 'Includes all L1 permissions + Chat Reassignment, at most ONE courtesy coupon (max 12% off) per customer, and at most ONE goodwill wallet credit (max ₹150) per customer. Cannot cancel orders.',
   },
   manager: {
     title: 'Support Manager (L3)',
     maxCouponPct: 15,
     maxWalletCredit: 250,
-    canCancelOrder: true,
+    canCancelOrder: false,
     canDeleteChat: false,
     canDeleteTicket: false,
-    summary: 'Includes all L2 permissions + Staff Management, at most ONE courtesy coupon (max 15% off) per customer, and at most ONE goodwill wallet credit (max ₹250) per customer.',
+    summary: 'Includes all L2 permissions + Staff Management, at most ONE courtesy coupon (max 15% off) per customer, and at most ONE goodwill wallet credit (max ₹250) per customer. Cannot cancel orders.',
   },
   superadmin: {
     title: 'SuperAdmin / Owner',
@@ -68,7 +68,7 @@ const ROLE_LIMIT_RULES = {
     canCancelOrder: true,
     canDeleteChat: true,
     canDeleteTicket: true,
-    summary: 'Unrestricted access: Can permanently delete support tickets (single & bulk) and resolved chats with 512-bit SHA-512 audit logging, issue multiple coupons without per-customer limits, and manage all security & Telegram settings.',
+    summary: 'Unrestricted access: Can permanently delete support tickets (single & bulk) and resolved chats with cryptographic SHA-512 audit logging, issue multiple coupons without per-customer limits, and manage all security & Telegram settings.',
   },
 };
 
@@ -87,14 +87,14 @@ const HELP_TERMS_GUIDE = [
   },
   {
     term: 'SuperAdmin Ticket Deletion (Single & Bulk Purge)',
-    meaning: 'SuperAdmins can permanently delete spam, test, or duplicate support tickets individually or in bulk. Every deletion writes a 512-bit SHA-512 cryptographic audit log entry.',
+    meaning: 'SuperAdmins can permanently delete spam, test, or duplicate support tickets individually or in bulk. Every deletion writes a cryptographic SHA-512 cryptographic audit log entry.',
   },
   {
     term: 'One-Time Courtesy Coupon (Anti-Abuse Protected)',
     meaning: 'Generates a single-use discount code for the customer. Support staff can issue a coupon ONLY ONCE per customer (capped at 10%–15% by role). Only SuperAdmin can issue multiple coupons.',
   },
   {
-    term: '100X AI Co-Pilot & Complete Site Links Directory',
+    term: 'Bhumivera Client Concierge & Route Directory',
     meaning: 'Tab 5 provides a 1-click AI Password Rescue Link dispatcher, Cart Friction Diagnostic engine, and a searchable directory of all 24 Bhumivera routes to copy and share with customers.',
   },
 ];
@@ -421,7 +421,7 @@ export default function SupportPortal() {
 
   const handleDeleteSingleTicket = async ticketId => {
     if (!isSuperAdmin || !ticketId) return;
-    if (!window.confirm(`Permanently delete support ticket #${ticketId}? This action is logged with a 512-bit SHA-512 cryptographic audit digest.`)) {
+    if (!window.confirm(`Permanently delete support ticket #${ticketId}? This action is logged with a cryptographic SHA-512 cryptographic audit digest.`)) {
       return;
     }
     setBusy(true);
@@ -521,7 +521,7 @@ export default function SupportPortal() {
         query: copilotDiagMessage.trim(),
       });
       setCopilotDiagResult(res.data?.diagnosis || res.data);
-      setNotice('100X AI Co-Pilot diagnosis completed.');
+      setNotice('Bhumivera Client Concierge diagnosis completed.');
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -589,7 +589,7 @@ export default function SupportPortal() {
           </div>
           <p className="text-xs text-emerald-100/75 mb-5 leading-relaxed">
             Sign in with your Support Executive, Supervisor, Manager, or SuperAdmin ID to search orders, verify customers,
-            manage live Web & Telegram chats, and run 100X AI Co-Pilot diagnostics.
+            manage live Web & Telegram chats, and run Bhumivera Client Concierge diagnostics.
           </p>
           {error && (
             <p role="alert" className="mb-4 rounded-xl bg-rose-500/15 border border-rose-500/30 p-3 text-xs text-rose-200">
@@ -771,7 +771,7 @@ export default function SupportPortal() {
             { id: 'chats', label: `2. Live Customer & Telegram Chats (${chatSessions.length})`, icon: MessageSquare },
             { id: 'tickets', label: `3. Support Tickets (${tickets.length})`, icon: Mail },
             { id: 'customers', label: '4. Customer Accounts & Password Reset', icon: UserRound },
-            { id: 'copilot', label: '5. 100X AI Co-Pilot & Complete Site Links Directory', icon: Sparkles },
+            { id: 'copilot', label: '5. Bhumivera Client Concierge & Route Directory', icon: Sparkles },
           ].map(tab => {
             const Icon = tab.icon;
             const active = section === tab.id;
@@ -1565,7 +1565,7 @@ export default function SupportPortal() {
         )}
 
         {/* ===================================================================
-            SECTION 5: 100X AI CO-PILOT & COMPLETE SITE LINKS DIRECTORY
+            SECTION 5: BHUMIVERA CLIENT CONCIERGE & SITE DIRECTORY
            =================================================================== */}
         {section === 'copilot' && (
           <div className="space-y-6">
@@ -1576,7 +1576,7 @@ export default function SupportPortal() {
                   <Sparkles className="w-5 h-5 text-[#D4AF37]" />
                   <div>
                     <h2 className="text-base font-serif font-bold text-white">
-                      100X AI Customer Friction & Password Rescue Engine
+                      Bhumivera Client Concierge Friction & Recovery Engine
                     </h2>
                     <p className="text-xs text-emerald-100/70">
                       Diagnose Add-to-Cart failures, OTP/Password blocks, or Checkout friction and dispatch instant recovery links.

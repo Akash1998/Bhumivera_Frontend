@@ -673,7 +673,7 @@ export default function MiniCart() {
             <p className="relative mt-6 text-[9px] font-bold uppercase tracking-[0.24em] text-[#526b4d]">Your next ritual starts here</p>
             <p className="relative mt-2 font-serif text-2xl text-[#14251c]">Your cart is taking a breath</p>
             <p className="relative mt-2 max-w-[250px] text-sm leading-6 text-[#687466]">Discover thoughtfully made essentials, chosen to feel good every day.</p>
-            <button type="button" onClick={() => setIsCartOpen(false)} className="relative mt-7 inline-flex items-center gap-2 rounded-full bg-[#14251c] px-6 py-3 text-[10px] font-bold uppercase tracking-[0.16em] text-white shadow-lg shadow-[#14251c]/15 transition duration-300 hover:-translate-y-0.5 hover:bg-[#294434]">Explore the collection <ArrowRight size={14}/></button>
+            <button type="button" onClick={() => { setIsCartOpen(false); navigate("/products"); }} className="relative mt-7 inline-flex items-center gap-2 rounded-full bg-[#14251c] px-6 py-3 text-[10px] font-bold uppercase tracking-[0.16em] text-white shadow-lg shadow-[#14251c]/15 transition duration-300 hover:-translate-y-0.5 hover:bg-[#294434]">Explore the Collection <ArrowRight size={14}/></button>
           </div>}
           {cartItems.length > 0 && <>
             {!checkoutOpen && <section className="mini-cart-benefits rounded-2xl border border-[#dfe3d8] bg-[#fffefa] px-4 py-3" aria-label="Cart rewards and delivery">

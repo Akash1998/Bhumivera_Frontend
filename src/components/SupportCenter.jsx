@@ -205,7 +205,7 @@ export default function SupportCenter({
           </div>
 
           <div className="mt-6 pt-4 border-t border-white/10 text-[11px] text-emerald-100/70 flex items-center justify-between">
-            <span>512-Bit Encrypted Support Ledger</span>
+            <span>Encrypted Concierge Ledger</span>
             <span>Status: {sessionData?.status ? sessionData.status.toUpperCase() : 'ACTIVE'}</span>
           </div>
         </div>

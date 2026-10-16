@@ -253,7 +253,7 @@ export default function TaxManagement() {
             Taxation Matrix &amp; Statutory GST Slabs
           </h2>
           <p className="text-slate-400 text-sm mt-2 font-mono uppercase tracking-widest text-[10px]">
-            Global &amp; Regional Fiscal Configuration · Linked with 10X GST Portal
+            Global &amp; Regional Fiscal Configuration · Linked with Financial Ledger & GST Compliance
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
@@ -261,7 +261,7 @@ export default function TaxManagement() {
             to="/admin/dashboard/gst"
             className="bg-[#d4af37]/15 border border-[#d4af37]/40 text-[#f3d77b] font-bold px-4 py-2.5 rounded-xl flex items-center gap-2 text-xs hover:bg-[#d4af37]/25"
           >
-            <FileText size={15} /> Open 10X GST &amp; Luxury Invoice Portal <ExternalLink size={13} />
+            <FileText size={15} /> Open Financial Ledger &amp; GST Compliance <ExternalLink size={13} />
           </Link>
           <button
             type="button"
@@ -440,7 +440,7 @@ export default function TaxManagement() {
               Statutory CBIC / GST Council HSN &amp; SAC Reference Schedule (Bhumivera Catalog)
             </h3>
             <p className="text-xs text-slate-400">
-              Standard HSN codes and CGST/SGST/IGST splits used by the 10X GST Portal &amp; Luxury Tax Invoice Engine.
+              Standard HSN codes and CGST/SGST/IGST splits used by the Financial Ledger & GST Compliance &amp; Luxury Tax Invoice Engine.
             </p>
           </div>
           <Link to="/admin/dashboard/gst" className="text-xs font-bold text-[#d4af37] hover:underline">

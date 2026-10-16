@@ -5,7 +5,7 @@ import { ArrowRight, Sparkles } from 'lucide-react';
 const CategoryCard = ({ category }) => {
   return (
     <Link 
-      to={`/category/${category.slug}`}
+      to={category?.id ? `/products?category=${category.id}` : `/products`}
       className="group relative block aspect-[4/5] overflow-hidden rounded-[2.5rem] bg-slate-900 border border-slate-800/50 transition-all duration-700 hover:border-emerald-500/30 hover:shadow-[0_0_80px_-20px_rgba(16,185,129,0.15)]"
     >
       {/* Background Image */}

@@ -566,10 +566,12 @@ export default function Profile() {
     try { await usersApi.disable2FA(); setTwoFactor(p => ({ ...p, isEnabled:false })); toast.success('2FA disabled'); }
     catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
   };
-  const handleCancelOrder = async (orderId) => {
-    if (!window.confirm('Cancel this order?')) return;
-    try { await ordersApi.cancel(orderId); toast.success('Order cancelled'); await loadOrders(); if (selectedOrder?.id === orderId) setSelectedOrder(null); }
-    catch (err) { toast.error(err.response?.data?.message || 'Cannot cancel'); }
+  const handleCancelOrder = (orderId) => {
+    window.dispatchEvent(
+      new CustomEvent('bhumivera:open-support-chat', {
+        detail: { verifyOrderId: orderId },
+      })
+    );
   };
   const handleRemoveWishlist = async (productId) => {
     try { await wishlistApi.remove(productId); setWishlist(w => w.filter(item => String(item.product_id || item.id || item._id) !== String(productId))); toast.success('Removed from wishlist'); }
@@ -2060,7 +2062,7 @@ export default function Profile() {
                   <div className="absolute -top-20 right-0 w-72 h-72 rounded-full bg-[#D4AF37]/20 blur-3xl"/>
                   <div className="relative">
                     <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/70 backdrop-blur border border-white text-[#3f503c] text-xs font-bold uppercase tracking-wider mb-4 shadow-sm">
-                      <Zap className="w-3.5 h-3.5"/> Refer & Earn
+                      <Zap className="w-3.5 h-3.5"/> Brand Ambassador Program
                     </div>
                     <h2 className="text-3xl sm:text-4xl font-extrabold text-[#0B2419] tracking-tight leading-tight mb-2">Share Bhumivera. Grow together.</h2>
                     <p className="text-stone-600 max-w-2xl leading-relaxed mb-6">Share your personal code or link. After approval, you and your friend can each receive {referralData?.rewardMode === 'wallet_coupon' ? `₹${Number(referralData?.referrerRewardAmount || 500).toFixed(0)} and ₹${Number(referralData?.referredRewardAmount || 500).toFixed(0)} in order-only referral balance` : 'the reward configured for the current program'}. Verified referrals are reviewed or automatically approved after one hour.</p>

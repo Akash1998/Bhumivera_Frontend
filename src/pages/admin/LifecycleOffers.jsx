@@ -129,14 +129,14 @@ const LIFECYCLE_JOURNEY_BLUEPRINTS = [
     stageName: 'Cart & Password Friction Instant Rescue',
     triggerEvent: 'Add-to-Cart Failure or Password/OTP Block',
     delayWindow: 'Real-Time (< 500ms)',
-    channelMix: '100X AI Co-Pilot Drawer + 30-Min Rescue Link',
+    channelMix: 'Bhumivera Client Concierge Drawer + 30-Min Rescue Link',
     defaultIncentive: 'Instant Alternative SKU / 1-Click Password Setup',
     targetCohort: 'All Active Storefront Visitors',
     guardrail: 'Cryptographic JWT & stock validation',
     estOpenRate: '88.2%',
     estConversionRate: '36.4%',
     avgOrderValueInr: 1490,
-    status: 'Always On (100X AI)',
+    status: 'Always On (Client Concierge)',
   },
 ];
 
@@ -260,7 +260,7 @@ export default function LifecycleOffers() {
         <header className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-800 pb-5">
           <div>
             <p className="text-xs font-bold uppercase tracking-widest text-emerald-400">
-              Promotion controls &amp; 100X Retention Engine
+              Promotion controls &amp; Client Retention Studio
             </p>
             <h2 className="mt-2 text-2xl font-black text-white">Lifecycle Offers</h2>
             <p className="mt-1 text-xs text-slate-400">

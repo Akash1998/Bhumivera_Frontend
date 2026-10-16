@@ -629,6 +629,7 @@ export const aiSupport = {
   endSatisfied: (sessionToken, data) => api.post(`/support/chat/session/${encodeURIComponent(sessionToken)}/end-satisfied`, data, { notify: false }),
   sendAsyncMessage: data => api.post('/support/chat/async-message', data, { notify: false }),
   escalate: data => api.post('/support/chat/escalate', data, { notify: false }),
+  verifyEscalation: data => api.post('/support/chat/verify-escalation', data, { notify: false }),
   listEscalations: params => supportRequest('get', `/ai-escalations${params?.status ? `?status=${encodeURIComponent(params.status)}` : ''}`),
   diagnoseFriction: data => api.post('/support/ai-copilot/diagnose', data, { notify: false }),
   cartRescue: data => api.post('/support/ai-copilot/cart-rescue', data, { notify: false }),

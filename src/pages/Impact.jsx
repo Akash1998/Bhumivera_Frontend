@@ -58,7 +58,7 @@ export default function Impact() {
           <p className="mb-5 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#b4c68a]"><Leaf size={15}/> Bhumivera · our impact</p>
           <h1 className="max-w-4xl font-serif text-5xl leading-[1.04] md:text-7xl">Care should leave a record.</h1>
           <p className="mt-6 max-w-xl text-base leading-7 text-white/75 md:text-lg">A considered daily ritual. An optional contribution. A clear account of what was collected and what was actually done.</p>
-          <Link to="/shop" className="mt-8 inline-flex w-fit items-center gap-3 border border-[#c2d09f]/60 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#c2d09f] hover:text-[#101a17]">Explore the collection <ArrowRight size={16}/></Link>
+          <Link to="/products" className="mt-8 inline-flex w-fit items-center gap-3 border border-[#c2d09f]/60 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#c2d09f] hover:text-[#101a17]">Explore the collection <ArrowRight size={16}/></Link>
         </div>
         <a href="#ledger" className="absolute bottom-7 right-8 hidden items-center gap-2 text-xs uppercase tracking-widest text-white/70 md:flex">Explore our impact <ArrowDownRight size={16}/></a>
       </section>
@@ -174,7 +174,7 @@ export default function Impact() {
         <div className="absolute inset-0 -z-10 bg-[#0b120e]/65" />
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 px-6 py-16 md:flex-row md:items-end md:py-24">
           <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b4c68a]">Begin with care</p><h2 className="mt-4 max-w-2xl font-serif text-4xl md:text-5xl">Choose a ritual. Follow the record.</h2></div>
-          <Link to="/shop" className="inline-flex items-center gap-3 bg-[#dce7c5] px-5 py-3 text-sm font-semibold text-[#101a17] hover:bg-white">Explore Bhumivera <ArrowRight size={16}/></Link>
+          <Link to="/products" className="inline-flex items-center gap-3 bg-[#dce7c5] px-5 py-3 text-sm font-semibold text-[#101a17] hover:bg-white">Explore Bhumivera <ArrowRight size={16}/></Link>
         </div>
       </section>
     </main>

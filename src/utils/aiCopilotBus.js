@@ -194,7 +194,7 @@ export const COMPLETE_SITE_NAVIGATION_DIRECTORY = [
     category: 'Staff & Admin Portals',
     title: 'SuperAdmin Support Command Center (/superadminsupport)',
     path: '/superadminsupport',
-    description: 'Omnichannel chats, ticket deletion, staff RBAC permissions, and 512-bit audit logs.',
+    description: 'Omnichannel chats, ticket deletion, staff RBAC permissions, and cryptographic audit logs.',
     badge: 'SuperAdmin',
   },
   {

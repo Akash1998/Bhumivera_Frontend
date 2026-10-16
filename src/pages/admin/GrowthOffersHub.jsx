@@ -26,7 +26,7 @@ const groups = [
   },
   {
     id: 'loyalty',
-    label: 'Loyalty Matrix',
+    label: 'Clientele Privilege & Tiers',
     icon: Award,
     features: [
       { id: 'loyalty-matrix', label: 'Matrix controls', purpose: 'Set point earning, redemption safeguards, lifetime tiers, and real tier benefits.', steps: 'Configure the program and redemption caps, then define each tier’s qualifying points and checkout benefits.', component: LoyaltyTierForge },

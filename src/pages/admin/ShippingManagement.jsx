@@ -183,7 +183,7 @@ export default function ShippingManagement() {
       <div className="flex flex-wrap justify-between items-center gap-3">
         <div>
           <h2 className="text-2xl font-black text-white flex items-center gap-2">
-            <Truck className="text-emerald-500" /> Shipping Zones &amp; 100X Carrier Logistics
+            <Truck className="text-emerald-500" /> Shipping Zones &amp; Carrier & Fulfilment Logistics
           </h2>
           <p className="text-slate-400 text-sm mt-1">
             Manage delivery regions, encrypted carrier APIs, volumetric weight slabs, and base shipping charges.
