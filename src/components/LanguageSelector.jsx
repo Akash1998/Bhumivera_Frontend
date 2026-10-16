@@ -22,6 +22,10 @@ export default function LanguageSelector({ variant = 'navbar', className = '' })
     return () => window.removeEventListener('bhumivera:language-change', handleLangChange);
   }, []);
 
+  useEffect(() => {
+    activateFullSiteTranslation(getCurrentLanguage());
+  }, []);
+
   // Close dropdown on outside click
   useEffect(() => {
     if (!isOpen) return;

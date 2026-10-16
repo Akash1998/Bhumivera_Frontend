@@ -18,6 +18,19 @@ body {
   overflow-x: hidden;
 }
 
+html body {
+  top: 0 !important;
+}
+
+.goog-te-banner-frame,
+iframe.goog-te-banner-frame,
+.goog-te-menu-frame,
+.goog-te-balloon-frame,
+#goog-gt-tt {
+  display: none !important;
+  visibility: hidden !important;
+}
+
 .site-shell {
   color: var(--bhumivera-forest);
   background-color: var(--bhumivera-paper);

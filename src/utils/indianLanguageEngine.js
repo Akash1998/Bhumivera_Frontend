@@ -211,6 +211,11 @@ export const TRANSLATION_DICTIONARY = {
   },
 };
 
+let googleTranslateWidgetInitialized = false;
+let googleTranslateComboObserver;
+let googleTranslateComboTimeout;
+let googleTranslateTargetLang = 'en';
+
 /**
  * Get the currently active language code from localStorage or navigator
  */
@@ -255,48 +260,88 @@ export function t(key, defaultFallback = '') {
   return entry[lang] || entry.en || defaultFallback;
 }
 
+function applyGoogleTranslation(lang) {
+  const combo = document.querySelector('#google_translate_element .goog-te-combo');
+  if (!combo) return false;
+
+  combo.value = lang;
+  combo.dispatchEvent(new Event('change', { bubbles: true }));
+  return true;
+}
+
+function applyGoogleTranslationWhenReady(lang) {
+  if (applyGoogleTranslation(lang)) {
+    googleTranslateComboObserver?.disconnect();
+    googleTranslateComboObserver = undefined;
+    window.clearTimeout(googleTranslateComboTimeout);
+    return;
+  }
+
+  googleTranslateComboObserver?.disconnect();
+  window.clearTimeout(googleTranslateComboTimeout);
+  googleTranslateComboObserver = new MutationObserver(() => {
+    if (applyGoogleTranslation(lang)) {
+      googleTranslateComboObserver.disconnect();
+      window.clearTimeout(googleTranslateComboTimeout);
+      googleTranslateComboObserver = undefined;
+    }
+  });
+  googleTranslateComboObserver.observe(document.body, { childList: true, subtree: true });
+  googleTranslateComboTimeout = window.setTimeout(() => {
+    googleTranslateComboObserver?.disconnect();
+    googleTranslateComboObserver = undefined;
+    console.error('[LanguageEngine] Google Translate language selector did not become available.');
+  }, 15000);
+}
+
+function initializeGoogleTranslate() {
+  const TranslateElement = window.google?.translate?.TranslateElement;
+  if (!TranslateElement || googleTranslateWidgetInitialized) return;
+
+  googleTranslateWidgetInitialized = true;
+  new TranslateElement(
+    {
+      pageLanguage: 'en',
+      includedLanguages: 'en,hi,bn,mr,te,ta,gu,ur,kn,ml,pa',
+      autoDisplay: false,
+      layout: TranslateElement.InlineLayout.SIMPLE,
+    },
+    'google_translate_element'
+  );
+  applyGoogleTranslationWhenReady(googleTranslateTargetLang);
+}
+
 /**
  * Dynamic Client-Side Page Translator (Google Neural Translation Bridge)
- * Activates seamless, non-intrusive in-place DOM translation for the whole website
+ * Translates the page through the site's language selector without showing Google's controls
  */
 export function activateFullSiteTranslation(targetLangCode) {
   if (typeof window === 'undefined') return;
   const lang = targetLangCode || getCurrentLanguage();
+  googleTranslateTargetLang = lang;
   if (lang === 'en') {
-    // Reset back to English
-    const docCookie = document.cookie;
-    if (docCookie.includes('googtrans')) {
-      document.cookie = 'googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
-      document.cookie = `googtrans=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/; domain=.${window.location.hostname}`;
-    }
+    document.cookie = 'googtrans=; Max-Age=0; path=/;';
+    document.cookie = `googtrans=; Max-Age=0; path=/; domain=.${window.location.hostname}`;
+    if (googleTranslateWidgetInitialized) applyGoogleTranslationWhenReady('en');
     return;
   }
 
-  // Set Google Translate cookie so the translation engine renders automatically
-  document.cookie = `/en/${lang}; path=/;`;
   document.cookie = `googtrans=/en/${lang}; path=/;`;
   document.cookie = `googtrans=/en/${lang}; path=/; domain=.${window.location.hostname}`;
+  window.googleTranslateElementInit = initializeGoogleTranslate;
 
-  // Dynamically load Google Translate non-blocking script if not already present
-  if (!document.getElementById('bhumivera-google-translate-script')) {
-    window.googleTranslateElementInit = function () {
-      if (window.google && window.google.translate && window.google.translate.TranslateElement) {
-        new window.google.translate.TranslateElement(
-          {
-            pageLanguage: 'en',
-            includedLanguages: 'en,hi,bn,mr,te,ta,gu,ur,kn,ml,pa',
-            autoDisplay: false,
-            layout: window.google.translate.TranslateElement.InlineLayout.SIMPLE,
-          },
-          'google_translate_element'
-        );
-      }
-    };
-
+  if (googleTranslateWidgetInitialized) {
+    applyGoogleTranslationWhenReady(lang);
+  } else if (window.google?.translate?.TranslateElement) {
+    initializeGoogleTranslate();
+  } else if (!document.getElementById('bhumivera-google-translate-script')) {
     const s = document.createElement('script');
     s.id = 'bhumivera-google-translate-script';
-    s.src = '//translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
+    s.src = 'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit';
     s.async = true;
+    s.onerror = () => {
+      console.error('[LanguageEngine] Failed to load Google Translate.');
+    };
     document.body.appendChild(s);
   }
 }
