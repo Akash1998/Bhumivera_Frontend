@@ -118,7 +118,6 @@ const ForgotPassword = lazyWithRetry(() => import("./pages/ForgotPassword.jsx"))
 const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword.jsx"));
 const SupportPortal = lazyWithRetry(() => import("./pages/SupportPortal.jsx"));
 const SuperAdminSupport = lazyWithRetry(() => import("./pages/SuperAdminSupport.jsx"));
-const SuperAdminControlCentre = lazyWithRetry(() => import("./pages/SuperAdminControlCentre.jsx"));
 const AdminForgotPassword = lazyWithRetry(() => import("./pages/admin/AdminForgotPassword.jsx"));
 const CheckoutPage = lazyWithRetry(() => import("./pages/Checkout.jsx"));
 
@@ -289,7 +288,6 @@ function AppContent() {
       path.startsWith("/warehouse") || 
       path.startsWith("/support") ||
       path.startsWith("/superadminsupport") ||
-      path.startsWith("/superadmin/controlcentre") ||
       path === "/warehouseadmin" || 
       path === "/earn-from-home" || 
       path === "/mpgebusiness"
@@ -360,12 +358,12 @@ function AppContent() {
             <Route path="/reset-password" element={<ResetPassword />} />
             <Route path="/admin/forgot-password" element={<WebOnlyManagement><AdminForgotPassword /></WebOnlyManagement>} />
 
-            {/* Unified Master Control Centre & Support Portals */}
-            <Route path="/superadmin/controlcentre" element={<WebOnlyManagement><SuperAdminControlCentre /></WebOnlyManagement>} />
-            <Route path="/superadmin/controlcentre/*" element={<WebOnlyManagement><SuperAdminControlCentre /></WebOnlyManagement>} />
+            {/* Support Portals */}
             <Route path="/support/*" element={<WebOnlyManagement><SupportPortal /></WebOnlyManagement>} />
             <Route path="/superadminsupport" element={<WebOnlyManagement><SuperAdminSupport /></WebOnlyManagement>} />
             <Route path="/superadminsupport/*" element={<WebOnlyManagement><SuperAdminSupport /></WebOnlyManagement>} />
+            <Route path="/superadmin/controlcentre/*" element={<Navigate to="/" replace />} />
+            <Route path="/superadmin/controlcentre" element={<Navigate to="/" replace />} />
 
             {/* Protected User Routes */}
             <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
@@ -388,8 +386,6 @@ function AppContent() {
             <Route path="/admin" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />
             <Route path="/admin/dashboard/support" element={<Navigate to="/support" replace />} />
             <Route path="/admin/dashboard/contact" element={<Navigate to="/support" replace />} />
-            <Route path="/admin/dashboard/system-health" element={<Navigate to="/superadmin/controlcentre" replace />} />
-            <Route path="/admin/dashboard/logs" element={<Navigate to="/superadmin/controlcentre" replace />} />
             <Route path="/admin/dashboard/:tab" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />
             <Route path="/admin/*" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />
 

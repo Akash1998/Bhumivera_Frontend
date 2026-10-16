@@ -422,13 +422,6 @@ export default function AdminDashboard() {
                 Maison Portals
               </p>
               <Link
-                to="/superadmin/controlcentre"
-                className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-[#f3d77b] bg-[#d4af37]/10 hover:bg-[#d4af37]/20 font-semibold"
-              >
-                <span>SuperAdmin Control Centre</span>
-                <ExternalLink size={12} />
-              </Link>
-              <Link
                 to="/superadminsupport"
                 className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-purple-200 hover:bg-purple-500/15"
               >
@@ -525,14 +518,6 @@ export default function AdminDashboard() {
                   Maison Route Registry
                 </button>
 
-                <Link
-                  to="/superadmin/controlcentre"
-                  className="hidden md:inline-flex items-center gap-1.5 rounded-xl border border-[#d4af37]/40 bg-[#d4af37]/15 px-3 py-1.5 text-xs font-semibold text-[#f3d77b] hover:bg-[#d4af37]/25"
-                >
-                  Control Centre
-                  <ExternalLink size={12} />
-                </Link>
-
                 <div className="relative border-l border-white/10 pl-3 md:pl-5" ref={accountMenuRef}>
                   <button
                     type="button"
@@ -591,17 +576,6 @@ export default function AdminDashboard() {
                       >
                         <FileText size={16} className="text-[#d4af37]" aria-hidden="true" />
                         Financial Ledger &amp; GST Compliance
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setAccountMenuOpen(false);
-                          navigate('/superadmin/controlcentre');
-                        }}
-                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-200 transition hover:bg-white/5 hover:text-white"
-                      >
-                        <Activity size={16} className="text-cyan-300" aria-hidden="true" />
-                        SuperAdmin Control Centre
                       </button>
                       <button
                         type="button"
