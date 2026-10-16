@@ -283,10 +283,10 @@ export default function AdminDashboard() {
     const q = siteLinksFilter.trim().toLowerCase();
     if (!q) return true;
     return (
-      item.label.toLowerCase().includes(q) ||
-      item.path.toLowerCase().includes(q) ||
-      item.category.toLowerCase().includes(q) ||
-      item.description.toLowerCase().includes(q)
+      (item.label || item.title || '').toLowerCase().includes(q) ||
+      (item.path || '').toLowerCase().includes(q) ||
+      (item.category || '').toLowerCase().includes(q) ||
+      (item.description || '').toLowerCase().includes(q)
     );
   });
 
@@ -683,7 +683,7 @@ export default function AdminDashboard() {
                     <span className="text-[10px] uppercase text-[#d4af37] font-bold">{item.category}</span>
                     <ExternalLink size={12} className="text-slate-400" />
                   </div>
-                  <div className="font-bold text-white">{item.label}</div>
+                  <div className="font-bold text-white">{item.label || item.title}</div>
                   <code className="text-[11px] text-emerald-300 block">{item.path}</code>
                   <p className="text-[11px] text-slate-400">{item.description}</p>
                 </Link>

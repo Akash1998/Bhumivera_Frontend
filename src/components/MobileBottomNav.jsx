@@ -11,8 +11,16 @@ export default function MobileBottomNav() {
 
   const cartCount = cartItems.reduce((acc, i) => acc + (Number(i.quantity) || 1), 0);
 
-  // Hide on admin and warehouse routes
-  if (location.pathname.startsWith('/admin') || location.pathname.startsWith('/warehouse')) {
+  // Hide on admin, warehouse, and support management routes
+  if (
+    location.pathname.startsWith('/admin') ||
+    location.pathname.startsWith('/warehouse') ||
+    location.pathname.startsWith('/support') ||
+    location.pathname.startsWith('/superadminsupport') ||
+    location.pathname === '/warehouseadmin' ||
+    location.pathname === '/earn-from-home' ||
+    location.pathname === '/mpgebusiness'
+  ) {
     return null;
   }
 

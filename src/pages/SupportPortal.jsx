@@ -557,10 +557,10 @@ export default function SupportPortal() {
     if (!q) return COMPLETE_SITE_NAVIGATION_DIRECTORY;
     return COMPLETE_SITE_NAVIGATION_DIRECTORY.filter(
       item =>
-        item.label.toLowerCase().includes(q) ||
-        item.path.toLowerCase().includes(q) ||
-        item.category.toLowerCase().includes(q) ||
-        item.description.toLowerCase().includes(q)
+        (item.label || item.title || '').toLowerCase().includes(q) ||
+        (item.path || '').toLowerCase().includes(q) ||
+        (item.category || '').toLowerCase().includes(q) ||
+        (item.description || '').toLowerCase().includes(q)
     );
   }, [linkFilter]);
 
@@ -1684,7 +1684,7 @@ export default function SupportPortal() {
                         <span className="text-[10px] uppercase tracking-wider text-[#D4AF37] font-bold">
                           {item.category}
                         </span>
-                        <div className="font-bold text-white">{item.label}</div>
+                        <div className="font-bold text-white">{item.label || item.title}</div>
                         <code className="text-[11px] text-emerald-300">{item.path}</code>
                         <p className="text-[11px] text-emerald-100/65 mt-0.5">{item.description}</p>
                       </div>

@@ -120,6 +120,7 @@ const SupportPortal = lazyWithRetry(() => import("./pages/SupportPortal.jsx"));
 const SuperAdminSupport = lazyWithRetry(() => import("./pages/SuperAdminSupport.jsx"));
 const AdminForgotPassword = lazyWithRetry(() => import("./pages/admin/AdminForgotPassword.jsx"));
 const CheckoutPage = lazyWithRetry(() => import("./pages/Checkout.jsx"));
+const EWarranty = lazyWithRetry(() => import("./pages/EWarranty.jsx"));
 
 const PageLoader = () => (
   <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
@@ -340,8 +341,12 @@ function AppContent() {
             <Route path="/earn-from-home" element={<MPGEBusinessLanding />} />
             <Route path="/mpgebusiness" element={<MPGEBusinessLanding />} />
 
+            {/* Authenticity & E-Warranty */}
+            <Route path="/ewarranty" element={<EWarranty />} />
+            <Route path="/verify-product" element={<EWarranty />} />
+            <Route path="/warranty" element={<Navigate to="/ewarranty" replace />} />
+
             {/* Tools & Tracking */}
-            <Route path="/warranty" element={<Navigate to="/returns" replace />} />
             <Route path="/order-tracking" element={<OrderTracking />} />
             <Route path="/compare" element={<Compare />} />
 
@@ -349,6 +354,9 @@ function AppContent() {
             <Route path="/flash-sales" element={<FlashSales />} />
             <Route path="/somatic-registry" element={<SomaticRegistry />} />
             <Route path="/provenance-engine" element={<ProvenanceEngine />} />
+            <Route path="/provenance" element={<Navigate to="/provenance-engine" replace />} />
+            <Route path="/addresses" element={<Navigate to="/address-book" replace />} />
+            <Route path="/support-center" element={<Navigate to="/contact" replace />} />
             <Route path="/spin-registration" element={<Navigate to="/returns" replace />} />
             
             {/* Auth Routes */}
@@ -384,6 +392,7 @@ function AppContent() {
             {/* Executive Admin System */}
             <Route path="/admin/login" element={<WebOnlyManagement><AdminLogin /></WebOnlyManagement>} />
             <Route path="/admin" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />
+            <Route path="/admin/dashboard" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />
             <Route path="/admin/dashboard/support" element={<Navigate to="/support" replace />} />
             <Route path="/admin/dashboard/contact" element={<Navigate to="/support" replace />} />
             <Route path="/admin/dashboard/:tab" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />

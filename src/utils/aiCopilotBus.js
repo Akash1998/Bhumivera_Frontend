@@ -205,7 +205,7 @@ export const COMPLETE_SITE_NAVIGATION_DIRECTORY = [
     description: 'Full store administration, GST & Books, Luxury Tax Invoices, Coupons, and Analytics.',
     badge: 'Admin',
   },
-];
+].map(item => ({ label: item.title, ...item }));
 
 const COMMON_WEAK_PASSWORDS = new Set([
   'password', 'password123', 'password123!', '12345678', '123456789', 'qwerty123',
