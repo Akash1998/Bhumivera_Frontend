@@ -51,7 +51,7 @@ describe('activateFullSiteTranslation', () => {
     expect(changeHandler).toHaveBeenCalledOnce();
   });
 
-  it('changes languages through the site control and returns to English', () => {
+  it('reloads with a canonical cookie when switching an initialized translation', () => {
     window.google = {
       translate: {
         TranslateElement: class {
@@ -74,12 +74,15 @@ describe('activateFullSiteTranslation', () => {
 
     activateFullSiteTranslation('hi');
     expect(translateCombo.value).toBe('hi');
-    activateFullSiteTranslation('bn');
-    expect(translateCombo.value).toBe('bn');
-    activateFullSiteTranslation('en');
-    expect(translateCombo.value).toBe('en');
-    expect(changeHandler).toHaveBeenCalledTimes(3);
+    const reloadPage = vi.fn();
+    activateFullSiteTranslation('bn', { reloadPage });
+    expect(reloadPage).toHaveBeenCalledOnce();
+    expect(document.cookie).toContain('googtrans=/en/bn');
+
+    activateFullSiteTranslation('en', { reloadPage });
+    expect(reloadPage).toHaveBeenCalledTimes(2);
     expect(document.cookie).not.toContain('googtrans=/en/');
+    expect(changeHandler).toHaveBeenCalledOnce();
   });
 
   it('waits for Google Translate to populate a selected language option', async () => {

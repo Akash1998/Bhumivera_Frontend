@@ -346,20 +346,41 @@ function initializeGoogleTranslate() {
  * Dynamic Client-Side Page Translator (Google Neural Translation Bridge)
  * Translates the page through the site's language selector without showing Google's controls
  */
-export function activateFullSiteTranslation(targetLangCode) {
+export function activateFullSiteTranslation(targetLangCode, { reloadPage } = {}) {
   if (typeof window === 'undefined') return;
   hideGoogleTranslateBanner();
   const lang = targetLangCode || getCurrentLanguage();
+  const reload = reloadPage || (() => window.location.reload());
+  const currentTranslateValues = document.cookie
+    .split(';')
+    .map((cookie) => cookie.trim())
+    .filter((cookie) => cookie.startsWith('googtrans='))
+    .map((cookie) => decodeURIComponent(cookie.slice('googtrans='.length)));
+  const requestedTranslateValue = lang === 'en' ? null : `/en/${lang}`;
+  const alreadyOnRequestedLanguage = lang === 'en'
+    ? currentTranslateValues.length === 0
+    : currentTranslateValues.length > 0 &&
+      currentTranslateValues.every((value) => value === requestedTranslateValue);
+
   googleTranslateTargetLang = lang;
+
+  // Remove old host-only and domain-scoped cookies to prevent conflicting target languages.
+  document.cookie = 'googtrans=; Max-Age=0; path=/;';
+  document.cookie = `googtrans=; Max-Age=0; path=/; domain=.${window.location.hostname}`;
   if (lang === 'en') {
-    document.cookie = 'googtrans=; Max-Age=0; path=/;';
-    document.cookie = `googtrans=; Max-Age=0; path=/; domain=.${window.location.hostname}`;
-    if (googleTranslateWidgetInitialized) applyGoogleTranslationWhenReady('en');
+    if (!alreadyOnRequestedLanguage && (googleTranslateWidgetInitialized || currentTranslateValues.length > 0)) {
+      reload();
+      return;
+    }
     return;
   }
 
-  document.cookie = `googtrans=/en/${lang}; path=/;`;
-  document.cookie = `googtrans=/en/${lang}; path=/; domain=.${window.location.hostname}`;
+  document.cookie = `googtrans=${requestedTranslateValue}; path=/; SameSite=Lax`;
+  if (!alreadyOnRequestedLanguage && (googleTranslateWidgetInitialized || currentTranslateValues.length > 0)) {
+    reload();
+    return;
+  }
+
   window.googleTranslateElementInit = initializeGoogleTranslate;
 
   if (googleTranslateWidgetInitialized) {

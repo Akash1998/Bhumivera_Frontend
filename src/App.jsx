@@ -427,7 +427,7 @@ function AppContent() {
         initialTab={visualGuideState.tab}
         onClose={() => setVisualGuideState(prev => ({ ...prev, isOpen: false }))}
       />
-      <div id="google_translate_element" style={{ display: 'none' }} />
+      <div id="google_translate_element" className="google-translate-host" aria-hidden="true" />
     </div>
   );
 }
