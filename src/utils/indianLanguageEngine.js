@@ -980,7 +980,6 @@ export function activateFullSiteTranslation(targetLangCode, { reloadPage } = {})
   if (typeof window === 'undefined') return;
   hideGoogleTranslateBanner();
   const lang = targetLangCode || getCurrentLanguage();
-  const reload = reloadPage || (() => window.location.reload());
   const currentTranslateValues = document.cookie
     .split(';')
     .map((cookie) => cookie.trim())
@@ -998,16 +997,19 @@ export function activateFullSiteTranslation(targetLangCode, { reloadPage } = {})
   document.cookie = 'googtrans=; Max-Age=0; path=/;';
   document.cookie = `googtrans=; Max-Age=0; path=/; domain=.${window.location.hostname}`;
   if (lang === 'en') {
-    if (!alreadyOnRequestedLanguage && (googleTranslateWidgetInitialized || currentTranslateValues.length > 0)) {
-      reload();
+    if (typeof reloadPage === 'function' && !alreadyOnRequestedLanguage && (googleTranslateWidgetInitialized || currentTranslateValues.length > 0)) {
+      reloadPage();
       return;
+    }
+    if (googleTranslateWidgetInitialized) {
+      applyGoogleTranslationWhenReady('en');
     }
     return;
   }
 
   document.cookie = `googtrans=${requestedTranslateValue}; path=/; SameSite=Lax`;
-  if (!alreadyOnRequestedLanguage && (googleTranslateWidgetInitialized || currentTranslateValues.length > 0)) {
-    reload();
+  if (typeof reloadPage === 'function' && !alreadyOnRequestedLanguage && (googleTranslateWidgetInitialized || currentTranslateValues.length > 0)) {
+    reloadPage();
     return;
   }
 

@@ -38,14 +38,20 @@ export function LanguageProvider({ children }) {
     return () => window.removeEventListener('bhumivera:language-change', handleLangChange);
   }, [currentLang]);
 
-  // Initial translation on mount and re-translate on route navigation
+  // Initial translation on mount
   useEffect(() => {
     const initial = getCurrentLanguage();
     if (initial !== 'en') {
       translateDomNodes(initial);
       activateFullSiteTranslation(initial);
+    }
+  }, []);
+
+  // Re-translate on route navigation
+  useEffect(() => {
+    if (currentLang !== 'en') {
       const handleNav = () => {
-        window.setTimeout(() => translateDomNodes(initial), 120);
+        window.setTimeout(() => translateDomNodes(currentLang), 100);
       };
       window.addEventListener('popstate', handleNav);
       return () => window.removeEventListener('popstate', handleNav);
