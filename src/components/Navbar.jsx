@@ -158,19 +158,19 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-6">
             <Link to="/impact" className="flex items-center gap-2 transition-colors hover:text-white"><Droplets size={14} className="text-[#c8d6aa]" /> Our impact</Link>
-            <Link to="/order-tracking" className="flex items-center gap-2 transition-colors hover:text-white"><MapPin size={14} className="text-[#8b5a2b]" /> Track Order</Link>
+            <Link to="/order-tracking" className="flex items-center gap-2 transition-colors hover:text-white"><MapPin size={14} className="text-[#c8d6aa]" /> Track Order</Link>
           </div>
           <div className="flex items-center gap-6">
-            <Link to="/contact" className="hover:text-[#8b5a2b] transition-colors">Boutique Support</Link>
+            <Link to="/contact" className="transition-colors hover:text-[#dce7c5]">Boutique Support</Link>
             {user?.role === 'admin' && (
-              <Link to="/admin" className="text-[#8b5a2b] flex items-center gap-1.5"><Activity size={14}/> Admin Terminal</Link>
+              <Link to="/admin" className="flex items-center gap-1.5 text-[#d6c990]"><Activity size={14}/> Admin Terminal</Link>
             )}
           </div>
         </div>
       </div>
 
       <nav className="sticky top-0 z-[100] border-b border-[#dedfd4] bg-[#fbfaf5]/95 backdrop-blur-xl">
-        <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:gap-6 sm:px-6 sm:py-4 lg:gap-8">
+        <div className="relative mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:gap-6 sm:px-6 sm:py-4 lg:gap-8">
           
           <button 
             onClick={() => setMenuOpen(!isMenuOpen)} 
@@ -182,7 +182,7 @@ export default function Navbar() {
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
 
-          <Link to="/" className="flex items-center space-x-3 group shrink-0" aria-label="Bhumivera Home">
+          <Link to="/" className="absolute left-1/2 flex -translate-x-1/2 items-center space-x-2 group sm:space-x-3" aria-label="Bhumivera Home">
             <img
               src="/logo.webp"
               alt=""
@@ -195,7 +195,7 @@ export default function Navbar() {
             <span className="hidden font-serif text-2xl uppercase tracking-[0.16em] text-[#14251c] sm:block">Bhumivera</span>
           </Link>
 
-          <div className="hidden md:flex flex-1 max-w-2xl relative" ref={searchDropdownRef}>
+          <div className="hidden min-w-0 max-w-sm flex-1 relative md:flex" ref={searchDropdownRef}>
             <form onSubmit={executeFullSearch} className="w-full relative group">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#526b4d]/60 transition-colors group-focus-within:text-[#526b4d]">
                 <Search size={18} />
@@ -280,6 +280,14 @@ export default function Navbar() {
                 <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full border-2 border-white bg-[#14251c] text-[10px] font-bold text-white shadow-sm">{cartCount}</span>
               )}
             </button>
+          </div>
+        </div>
+        <div className="hidden border-t border-[#dedfd4]/80 md:block">
+          <div className="mx-auto flex max-w-7xl items-center justify-center gap-10 px-6 py-3 text-[10px] font-semibold uppercase tracking-[0.17em] text-[#536b4d]">
+            <Link to="/shop" className="transition-colors hover:text-[#14251c]">Shop all</Link>
+            <Link to="/about" className="transition-colors hover:text-[#14251c]">Our story</Link>
+            <Link to="/science" className="transition-colors hover:text-[#14251c]">Our approach</Link>
+            <Link to="/impact" className="transition-colors hover:text-[#14251c]">Our impact</Link>
           </div>
         </div>
       </nav>

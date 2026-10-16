@@ -6,6 +6,7 @@ import {
   ArrowUpRight,
   Droplets,
   Leaf,
+  ShoppingBag,
   Sparkles,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -13,6 +14,7 @@ import { motion as Motion } from 'framer-motion';
 import SEO from '../components/SEO';
 import { categories as categoriesApi, products as productsApi, recommendations as recommendationsApi, reviews as reviewsApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
+import { useCart } from '../context/CartContext';
 import { getProductImageUrl } from '../utils/productImageUrl';
 
 const productImage = product => getProductImageUrl(
@@ -113,6 +115,7 @@ const questions = [
 
 export default function PremiumHome() {
   const { user } = useAuth();
+  const { addToCart } = useCart();
   const [products, setProducts] = useState([]);
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [recommendationsPersonalized, setRecommendationsPersonalized] = useState(false);
@@ -403,7 +406,12 @@ export default function PremiumHome() {
                   <div className="min-w-0"><p className="truncate text-[8px] font-semibold uppercase tracking-[0.15em] text-[#71806a] sm:text-[10px]">{product.category_name || 'Bhumivera ritual'}</p><h3 className="mt-1 line-clamp-2 font-serif text-base leading-snug sm:text-xl">{product.name}</h3></div>
                   <span className="text-xs font-semibold sm:shrink-0 sm:pt-4 sm:text-sm">₹{price(product)}</span>
                 </div>
-                <Link to={`/product/${product.slug || product.id}`} className="mt-3 inline-flex min-h-8 items-center gap-2 text-[9px] font-bold uppercase tracking-[0.13em] text-[#3d553b] sm:text-[10px]">Discover details <ArrowRight size={13} /></Link>
+                <div className="mt-3 flex flex-wrap items-center justify-between gap-2">
+                  <Link to={`/product/${product.slug || product.id}`} className="inline-flex min-h-8 items-center gap-2 text-[9px] font-bold uppercase tracking-[0.13em] text-[#3d553b] sm:text-[10px]">Discover details <ArrowRight size={13} /></Link>
+                  <button type="button" onClick={() => addToCart(product)} className="inline-flex min-h-9 items-center justify-center gap-2 border border-[#253b2f]/25 px-3 text-[9px] font-semibold uppercase tracking-[0.1em] text-[#253b2f] transition-colors hover:border-[#253b2f] hover:bg-[#253b2f] hover:text-white sm:text-[10px]">
+                    <ShoppingBag size={13} /> Add to bag
+                  </button>
+                </div>
               </Motion.article>
             ))}
           </div>

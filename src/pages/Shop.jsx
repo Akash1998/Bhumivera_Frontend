@@ -25,15 +25,15 @@ const ProductCard = ({ product }) => {
   const wishlisted = typeof isInWishlist === 'function' ? isInWishlist(product.id) : false;
 
   return (
-    <div className="group relative flex flex-col bg-white border border-[#e8dcc4] rounded-[1.5rem] sm:rounded-[2.5rem] overflow-hidden hover:shadow-[0_20px_50px_rgba(139,90,43,0.1)] hover:border-[#8b5a2b]/30 transition-all duration-700">
-      <Link to={`/product/${product.slug || product.id}`} className="relative aspect-[4/5] overflow-hidden bg-[#faf8f5]">
+    <article className="group relative flex min-w-0 flex-col">
+      <Link to={`/product/${product.slug || product.id}`} className="relative aspect-[4/5] overflow-hidden bg-[#e9e8df]">
         <img
           src={getProductImageUrl(product.image_url || product.images || product.image) || '/logo.webp'}
-          className="w-full h-full object-cover p-8 group-hover:scale-105 transition-transform duration-[2000ms] ease-out mix-blend-multiply"
+          className="h-full w-full object-cover transition-transform duration-700 ease-out group-hover:scale-[1.035]"
           alt={product.name}
           onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}
         />
-        <div className="absolute top-6 right-6 flex flex-col gap-3 translate-x-12 group-hover:translate-x-0 opacity-0 group-hover:opacity-100 transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)]">
+        <div className="absolute right-3 top-3 flex flex-col gap-2 opacity-100 transition-opacity md:right-4 md:top-4 md:opacity-0 md:group-hover:opacity-100">
           <button
             type="button"
             onClick={(e) => {
@@ -44,10 +44,10 @@ const ProductCard = ({ product }) => {
               }
             }}
             aria-label={wishlisted ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
-            className={`p-4 backdrop-blur-md border rounded-full transition-all shadow-sm ${
+            className={`grid h-10 w-10 place-items-center rounded-full border backdrop-blur-md transition-colors shadow-sm ${
               wishlisted
-                ? 'bg-[#8b5a2b] text-white border-[#8b5a2b]'
-                : 'bg-white/90 text-[#1a1a1a] border-[#e8dcc4] hover:bg-[#8b5a2b] hover:text-white'
+                ? 'border-[#253b2f] bg-[#253b2f] text-white'
+                : 'border-white/70 bg-white/90 text-[#253b2f] hover:bg-[#253b2f] hover:text-white'
             }`}
           >
             <Heart size={16} fill={wishlisted ? 'currentColor' : 'none'} />
@@ -60,22 +60,22 @@ const ProductCard = ({ product }) => {
               navigate(`/product/${product.slug || product.id}`);
             }}
             aria-label={`View details for ${product.name}`}
-            className="p-4 bg-white/90 backdrop-blur-md text-[#1a1a1a] border border-[#e8dcc4] rounded-full hover:bg-[#8b5a2b] hover:text-white transition-all shadow-sm"
+            className="grid h-10 w-10 place-items-center rounded-full border border-white/70 bg-white/90 text-[#253b2f] shadow-sm transition-colors hover:bg-[#253b2f] hover:text-white"
           >
             <Eye size={16} />
           </button>
         </div>
         {product.is_featured && (
-          <div className="absolute top-6 left-6 px-4 py-1.5 bg-[#8b5a2b]/90 backdrop-blur-md text-white text-[9px] font-bold uppercase tracking-widest rounded-full border border-[#8b5a2b]">
+          <div className="absolute bottom-3 left-3 border border-white/30 bg-[#17251c]/85 px-3 py-1.5 text-[9px] font-semibold uppercase tracking-[0.16em] text-white backdrop-blur-sm">
             Featured
           </div>
         )}
       </Link>
 
-      <div className="p-4 sm:p-8 flex flex-col flex-1 text-center">
+      <div className="flex flex-1 flex-col pt-3 sm:pt-4">
         {Number(product.rating) > 0 && Number(product.reviews) > 0 && (
           <div
-            className="flex justify-center items-center mb-3 gap-1 text-[#8b5a2b]"
+            className="mb-2 flex items-center gap-1 text-[#78875f]"
             aria-label={`Rated ${product.rating} out of 5 from ${product.reviews} reviews`}
           >
             {[...Array(5)].map((_, index) => (
@@ -85,39 +85,38 @@ const ProductCard = ({ product }) => {
                 fill={index < Math.round(Number(product.rating)) ? 'currentColor' : 'none'}
               />
             ))}
-            <span className="ml-1 text-[10px] text-[#5c4a3d]">({product.reviews})</span>
+            <span className="ml-1 text-[10px] text-stone-500">({product.reviews})</span>
           </div>
         )}
 
-        <Link to={`/product/${product.slug || product.id}`}>
-          <h3 className="text-sm font-bold uppercase tracking-widest text-[#1a1a1a] group-hover:text-[#8b5a2b] transition-colors line-clamp-2 mb-2">
+        <span className="mb-1.5 block text-[9px] font-semibold uppercase tracking-[0.17em] text-[#77816d]">
+          {product.category_name || 'The collection'}
+        </span>
+        <Link to={`/product/${product.slug || product.id}`} className="text-[#1b2921] transition-colors hover:text-[#536b4d]">
+          <h3 className="line-clamp-2 font-serif text-base leading-snug sm:text-lg">
             {product.name}
           </h3>
         </Link>
 
-        <span className="text-[10px] font-medium uppercase tracking-[0.2em] text-[#5c4a3d] mb-6 block">
-          {product.category_name || 'Product'}
-        </span>
-
-        <div className="mt-auto pt-6 border-t border-[#e8dcc4] flex flex-col gap-4">
-          <div className="flex justify-center items-center gap-3">
-            <span className="text-xl font-serif text-[#1a1a1a]">
+        <div className="mt-auto flex items-center justify-between gap-2 pt-3">
+          <div className="flex items-baseline gap-2">
+            <span className="font-serif text-lg text-[#253b2f] sm:text-xl">
               ₹{product.discount_price || product.price}
             </span>
             {product.discount_price && (
-              <span className="text-xs font-serif text-[#8b5a2b]/60 line-through">₹{product.price}</span>
+              <span className="text-xs text-stone-500 line-through">₹{product.price}</span>
             )}
           </div>
-          <button
-            type="button"
-            onClick={() => addToCart(product)}
-            className="w-full py-4 bg-[#f4eedc] text-[#1a1a1a] text-[10px] font-bold uppercase tracking-widest rounded-2xl border border-[#e8dcc4] hover:bg-[#8b5a2b] hover:text-white hover:border-[#8b5a2b] transition-all duration-300 flex justify-center items-center gap-2"
-          >
-            <ShoppingBag size={14} /> Add to Bag
-          </button>
         </div>
+        <button
+          type="button"
+          onClick={() => addToCart(product)}
+          className="mt-3 inline-flex min-h-10 w-full items-center justify-center gap-2 border border-[#253b2f]/25 px-3 text-[9px] font-semibold uppercase tracking-[0.15em] text-[#253b2f] transition-colors hover:border-[#253b2f] hover:bg-[#253b2f] hover:text-white sm:min-h-11 sm:text-[10px]"
+        >
+          <ShoppingBag size={14} /> Add to bag
+        </button>
       </div>
-    </div>
+    </article>
   );
 };
 
@@ -128,12 +127,17 @@ export default function Shop() {
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid');
 
-  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+  const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || searchParams.get('q') || '');
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get('category') || 'all');
   const [sortBy, setSortBy] = useState('featured');
   const [inStockOnly, setInStockOnly] = useState(false);
   const [showRefinePanel, setShowRefinePanel] = useState(false);
   const [isListening, setIsListening] = useState(false);
+
+  useEffect(() => {
+    setSearchTerm(searchParams.get('search') || searchParams.get('q') || '');
+    setSelectedCategory(searchParams.get('category') || 'all');
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -209,142 +213,131 @@ export default function Shop() {
   };
 
   return (
-    <div className="min-h-screen bg-[#faf8f5] text-[#1a1a1a] pt-20 sm:pt-28 lg:pt-40 pb-28 font-sans">
+    <div className="min-h-screen bg-[#f4f1e9] pb-20 pt-10 font-sans text-[#1b2921] sm:pb-24 sm:pt-14">
       <SEO
         title="Botanical Collection | Bhumivera"
         description="Browse Bhumivera's skincare collection and review product-specific details, ingredients and directions."
         keywords="Bhumivera skincare, product details, skincare ingredients, skincare collection"
         route="/shop"
       />
-      <div className="max-w-7xl mx-auto px-6">
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 lg:gap-12 mb-10 lg:mb-20">
-          <div className="max-w-xl">
-            <h2 className="text-[10px] font-bold text-[#8b5a2b] uppercase tracking-[0.5em] mb-4">
-              Curated Offerings
-            </h2>
-            <h1 className="text-4xl sm:text-5xl md:text-7xl font-serif text-[#1a1a1a] leading-none mb-5 md:mb-6">
-              The <span className="text-[#8b5a2b] italic">Collection.</span>
+      <div className="mx-auto max-w-7xl px-5 sm:px-8 lg:px-10">
+        <div className="mb-9 border-b border-[#253b2f]/15 pb-7 sm:mb-12 sm:pb-9">
+          <div className="mx-auto max-w-3xl text-center">
+            <p className="mb-3 text-[9px] font-bold uppercase tracking-[0.24em] text-[#687958] sm:text-[10px]">
+                Bhumivera · Thoughtfully considered
+            </p>
+            <h1 className="font-editorial text-4xl leading-none tracking-[-0.03em] sm:text-5xl lg:text-6xl">
+                The collection
             </h1>
-            <p className="text-[#5c4a3d] font-light text-lg">
-              Showing {filteredProducts.length} plant-powered formulations crafted for authentic radiance.
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-6 text-stone-600 sm:text-base">
+                {loading
+                  ? 'A considered edit of botanical care and everyday rituals.'
+                  : `A considered edit of botanical care and everyday rituals. ${filteredProducts.length} formulations.`}
             </p>
           </div>
-
-          <div className="flex-1 max-w-2xl w-full">
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-6 flex items-center text-[#8b5a2b]/50 group-focus-within:text-[#8b5a2b] transition-colors">
-                <Search size={20} />
-              </div>
-              <input
-                type="text"
-                placeholder="Search botanicals, ingredients, or rituals..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-white border border-[#e8dcc4] rounded-full pl-16 pr-32 py-5 text-sm font-light text-[#1a1a1a] outline-none focus:ring-4 focus:ring-[#8b5a2b]/10 focus:border-[#8b5a2b]/50 transition-all shadow-sm"
-              />
-              <div className="absolute inset-y-2 right-2 flex gap-2">
-                {searchTerm && (
+          <div className="mx-auto mt-6 w-full max-w-xl">
+            <div className="group relative">
+                <div className="absolute inset-y-0 left-5 flex items-center text-[#536b4d] transition-colors group-focus-within:text-[#253b2f]">
+                  <Search size={18} />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search products and ingredients"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full border border-[#253b2f]/20 bg-[#fbfaf5] py-3.5 pl-12 pr-24 text-sm outline-none transition focus:border-[#536b4d] focus:ring-2 focus:ring-[#536b4d]/10"
+                />
+                <div className="absolute inset-y-1.5 right-1.5 flex gap-1">
+                  {searchTerm && (
+                    <button
+                      type="button"
+                      onClick={() => setSearchTerm('')}
+                      aria-label="Clear search query"
+                      className="grid w-10 place-items-center text-[#536b4d] hover:bg-[#e7e9de]"
+                    >
+                      <X size={17} />
+                    </button>
+                  )}
                   <button
                     type="button"
-                    onClick={() => setSearchTerm('')}
-                    aria-label="Clear search query"
-                    className="p-3 bg-[#faf8f5] text-[#8b5a2b] rounded-full border border-[#e8dcc4] hover:bg-[#8b5a2b] hover:text-white transition-all"
+                    onClick={startVoiceSearch}
+                    aria-label="Search by voice"
+                    className={`grid w-10 place-items-center transition-colors ${
+                      isListening ? 'bg-rose-700 text-white' : 'text-[#536b4d] hover:bg-[#e7e9de]'
+                    }`}
                   >
-                    <X size={18} />
+                    <Mic size={17} />
                   </button>
-                )}
-                <button
-                  type="button"
-                  onClick={startVoiceSearch}
-                  aria-label="Search by voice"
-                  className={`p-3 rounded-full transition-all ${
-                    isListening
-                      ? 'bg-rose-500 text-white animate-pulse'
-                      : 'bg-[#faf8f5] text-[#8b5a2b] hover:bg-[#8b5a2b] hover:text-white border border-[#e8dcc4]'
-                  }`}
-                >
-                  <Mic size={18} />
-                </button>
-              </div>
+                </div>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-8 py-8 border-y border-[#e8dcc4] mb-8">
-          <div className="flex items-center gap-4 overflow-x-auto scrollbar-hide pb-2">
+        <div className="mb-8 flex flex-wrap items-center justify-between gap-4 border-b border-[#253b2f]/15 pb-5">
+          <div className="flex max-w-full items-center gap-2 overflow-x-auto pb-1">
             <button
-              type="button"
-              onClick={() => setSelectedCategory('all')}
-              className={`px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all flex-shrink-0 ${
-                selectedCategory === 'all'
-                  ? 'bg-[#8b5a2b] border-[#8b5a2b] text-white shadow-md'
-                  : 'bg-white border-[#e8dcc4] text-[#5c4a3d] hover:border-[#8b5a2b] hover:text-[#8b5a2b]'
-              }`}
+                type="button"
+                onClick={() => setSelectedCategory('all')}
+                className={`min-h-9 shrink-0 border px-4 text-[9px] font-semibold uppercase tracking-[0.14em] transition-colors ${
+                  selectedCategory === 'all'
+                    ? 'border-[#253b2f] bg-[#253b2f] text-white'
+                    : 'border-[#253b2f]/20 bg-transparent text-[#526b4d] hover:border-[#253b2f]'
+                }`}
             >
-              All Formulations
+                All products
             </button>
             {categories.map((cat) => (
-              <button
-                key={cat.id}
-                type="button"
-                onClick={() => setSelectedCategory(cat.id.toString())}
-                className={`px-8 py-3 rounded-full text-[10px] font-bold uppercase tracking-widest border transition-all flex-shrink-0 ${
-                  selectedCategory === cat.id.toString()
-                    ? 'bg-[#8b5a2b] border-[#8b5a2b] text-white shadow-md'
-                    : 'bg-white border-[#e8dcc4] text-[#5c4a3d] hover:border-[#8b5a2b] hover:text-[#8b5a2b]'
-                }`}
-              >
-                {cat.name}
-              </button>
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setSelectedCategory(cat.id.toString())}
+                  className={`min-h-9 shrink-0 border px-4 text-[9px] font-semibold uppercase tracking-[0.14em] transition-colors ${
+                    selectedCategory === cat.id.toString()
+                      ? 'border-[#253b2f] bg-[#253b2f] text-white'
+                      : 'border-[#253b2f]/20 bg-transparent text-[#526b4d] hover:border-[#253b2f]'
+                  }`}
+                >
+                  {cat.name}
+                </button>
             ))}
           </div>
-
-          <div className="flex items-center gap-4">
-            <div className="flex bg-white border border-[#e8dcc4] rounded-full p-1 shadow-sm">
-              <button
-                type="button"
-                onClick={() => setViewMode('grid')}
-                aria-label="Grid view"
-                className={`p-3 rounded-full transition-all ${
-                  viewMode === 'grid'
-                    ? 'bg-[#faf8f5] text-[#8b5a2b] shadow-sm'
-                    : 'text-[#5c4a3d] hover:text-[#8b5a2b]'
-                }`}
-              >
-                <Grid size={18} />
-              </button>
-              <button
-                type="button"
-                onClick={() => setViewMode('list')}
-                aria-label="List view"
-                className={`p-3 rounded-full transition-all ${
-                  viewMode === 'list'
-                    ? 'bg-[#faf8f5] text-[#8b5a2b] shadow-sm'
-                    : 'text-[#5c4a3d] hover:text-[#8b5a2b]'
-                }`}
-              >
-                <List size={18} />
-              </button>
-            </div>
+          <div className="flex items-center gap-2">
             <button
-              type="button"
-              onClick={() => setShowRefinePanel((prev) => !prev)}
-              className={`flex items-center gap-3 px-8 py-3 border rounded-full text-[10px] font-bold uppercase tracking-widest transition-all shadow-sm ${
-                showRefinePanel
-                  ? 'bg-[#8b5a2b] text-white border-[#8b5a2b]'
-                  : 'bg-white border-[#e8dcc4] text-[#1a1a1a] hover:border-[#8b5a2b] hover:text-[#8b5a2b]'
-              }`}
+                type="button"
+                onClick={() => setShowRefinePanel((prev) => !prev)}
+                aria-expanded={showRefinePanel}
+                className={`flex min-h-9 items-center gap-2 border px-3 text-[9px] font-semibold uppercase tracking-[0.13em] transition-colors ${
+                  showRefinePanel ? 'border-[#253b2f] bg-[#253b2f] text-white' : 'border-[#253b2f]/20 text-[#526b4d] hover:border-[#253b2f]'
+                }`}
             >
-              <SlidersHorizontal size={16} /> Refine
+                <SlidersHorizontal size={14} /> Refine
             </button>
+            <div className="hidden items-center border border-[#253b2f]/20 sm:flex">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('grid')}
+                  aria-label="Grid view"
+                  className={`grid h-9 w-9 place-items-center ${viewMode === 'grid' ? 'bg-[#253b2f] text-white' : 'text-[#536b4d] hover:bg-[#e7e9de]'}`}
+                >
+                  <Grid size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('list')}
+                  aria-label="List view"
+                  className={`grid h-9 w-9 place-items-center ${viewMode === 'list' ? 'bg-[#253b2f] text-white' : 'text-[#536b4d] hover:bg-[#e7e9de]'}`}
+                >
+                  <List size={15} />
+                </button>
+            </div>
           </div>
         </div>
 
         {/* Interactive Refine & Sort Drawer */}
         {showRefinePanel && (
-          <div className="mb-12 p-6 bg-white border border-[#e8dcc4] rounded-3xl shadow-sm flex flex-wrap items-center justify-between gap-4">
+          <div className="mb-10 flex flex-wrap items-center justify-between gap-4 border border-[#253b2f]/15 bg-[#fbfaf5] p-4 sm:p-5">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-[#5c4a3d] mr-2">
+              <span className="mr-2 text-[9px] font-semibold uppercase tracking-[0.15em] text-[#687958]">
                 Sort By:
               </span>
               {[
@@ -357,10 +350,10 @@ export default function Shop() {
                   key={opt.id}
                   type="button"
                   onClick={() => setSortBy(opt.id)}
-                  className={`px-4 py-2 rounded-full text-[10px] font-bold uppercase tracking-wider border transition ${
+                  className={`min-h-9 border px-3 text-[9px] font-semibold uppercase tracking-[0.1em] transition-colors ${
                     sortBy === opt.id
-                      ? 'bg-[#8b5a2b] text-white border-[#8b5a2b]'
-                      : 'bg-[#faf8f5] text-[#5c4a3d] border-[#e8dcc4] hover:border-[#8b5a2b]'
+                      ? 'border-[#253b2f] bg-[#253b2f] text-white'
+                      : 'border-[#253b2f]/20 bg-transparent text-[#526b4d] hover:border-[#253b2f]'
                   }`}
                 >
                   {opt.label}
@@ -368,12 +361,12 @@ export default function Shop() {
               ))}
             </div>
 
-            <label className="flex items-center gap-2 text-xs font-medium text-[#1a1a1a] cursor-pointer">
+            <label className="flex cursor-pointer items-center gap-2 text-xs font-medium text-[#253b2f]">
               <input
                 type="checkbox"
                 checked={inStockOnly}
                 onChange={(e) => setInStockOnly(e.target.checked)}
-                className="rounded border-[#e8dcc4] text-[#8b5a2b] focus:ring-[#8b5a2b]"
+                className="border-[#253b2f]/30 text-[#253b2f] focus:ring-[#536b4d]"
               />
               <span>In-Stock Formulations Only</span>
             </label>
@@ -381,11 +374,11 @@ export default function Shop() {
         )}
 
         {loading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+          <div className="grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 lg:grid-cols-4">
             {[...Array(8)].map((_, i) => (
               <div
                 key={i}
-                className="aspect-[3/4] bg-white rounded-[2.5rem] animate-pulse border border-[#e8dcc4]"
+                className="aspect-[4/5] animate-pulse bg-[#e8e5dc]"
               />
             ))}
           </div>
@@ -393,7 +386,7 @@ export default function Shop() {
           <div
             className={
               viewMode === 'grid'
-                ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10'
+                ? 'grid grid-cols-2 gap-x-3 gap-y-8 sm:gap-x-5 lg:grid-cols-4'
                 : 'flex flex-col gap-6'
             }
           >
@@ -402,13 +395,13 @@ export default function Shop() {
             ))}
           </div>
         ) : (
-          <div className="py-32 text-center bg-white rounded-[3rem] border border-[#e8dcc4] shadow-sm">
-            <div className="inline-flex p-8 bg-[#faf8f5] rounded-full text-[#8b5a2b] mb-8 border border-[#e8dcc4]">
-              <Search size={40} />
+          <div className="border-y border-[#253b2f]/15 py-20 text-center sm:py-28">
+            <div className="mb-6 inline-flex h-16 w-16 items-center justify-center border border-[#253b2f]/15 text-[#536b4d]">
+              <Search size={28} />
             </div>
-            <h3 className="text-3xl font-serif text-[#1a1a1a] mb-4">No Botanicals Found</h3>
-            <p className="text-[#5c4a3d] font-light text-lg mb-8 max-w-md mx-auto">
-              We couldn't find any formulations matching "{searchTerm}" in the selected category.
+            <h3 className="mb-3 font-editorial text-3xl text-[#1b2921] sm:text-4xl">Nothing in this edit just yet.</h3>
+            <p className="mx-auto mb-7 max-w-md text-sm leading-6 text-stone-600">
+              We couldn’t find products matching “{searchTerm}” in this selection.
             </p>
             <button
               type="button"
@@ -417,9 +410,9 @@ export default function Shop() {
                 setSelectedCategory('all');
                 setInStockOnly(false);
               }}
-              className="px-10 py-4 bg-[#8b5a2b] text-white text-[10px] font-bold uppercase tracking-widest rounded-full hover:bg-[#1a1a1a] transition-all shadow-lg"
+              className="min-h-11 border border-[#253b2f] bg-[#253b2f] px-6 text-[10px] font-semibold uppercase tracking-[0.14em] text-white transition-colors hover:bg-[#354c3b]"
             >
-              View All Formulations
+              View all products
             </button>
           </div>
         )}
