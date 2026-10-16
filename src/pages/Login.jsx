@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, Navigate, useLocation } from 'react-router-dom';
 import api, { auth } from '../services/api';
 import { toast } from 'react-hot-toast';
-import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft, Fingerprint, Key } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft, Fingerprint, Key, Sparkles } from 'lucide-react';
 import { loginWithPasskey, storeBrowserPassword } from '../utils/webauthnClient';
 import { useAuth } from '../context/AuthContext';
 import { triggerAiCopilotAssist } from '../utils/aiCopilotBus';
@@ -410,7 +410,17 @@ const Login = () => {
             </form>
           )}
 
-          <div className="mt-8 text-center border-t border-[#0B2419]/5 pt-6">
+          <div className="mt-6 flex items-center justify-center">
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('bhumivera:open-visual-guide', { detail: { tab: 'password' } }))}
+              className="inline-flex items-center gap-1.5 text-xs text-[#8B5A2B] hover:text-[#0B2419] font-medium transition-colors"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" /> Login &amp; Password Visual Guide
+            </button>
+          </div>
+
+          <div className="mt-6 text-center border-t border-[#0B2419]/5 pt-5">
             <p className="text-sm text-[#0B2419]/60">
               Don't have an account? <Link to="/register" className="text-[#0B2419] font-bold border-b border-[#D4AF37] pb-0.5 hover:opacity-80 transition-opacity">Join Bhumivera</Link>
             </p>

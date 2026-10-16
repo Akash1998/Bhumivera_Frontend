@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { addresses as addressesApi } from '../services/api';
-import { MapPin, Plus, Edit2, Trash2, Star, Home, Building, Map, X, CheckCircle2, Navigation, ExternalLink, Copy, Check } from 'lucide-react';
+import { MapPin, Plus, Edit2, Trash2, Star, Home, Building, Map, X, CheckCircle2, Navigation, ExternalLink, Copy, Check, Sparkles } from 'lucide-react';
 
 const defaultForm = { 
   label: 'Home', 
@@ -233,10 +233,19 @@ export default function AddressBook() {
               <p className="text-sm text-[#8B9D83]">Manage your saved shipping addresses</p>
             </div>
           </div>
-          <button onClick={() => { setForm(defaultForm); setEditId(null); setShowForm(true); }}
-            className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0B2419] hover:bg-[#2C3E2D] text-[#FDFBF7] rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md self-start sm:self-auto">
-            <Plus size={16} /> Add New Address
-          </button>
+          <div className="flex items-center gap-2 self-start sm:self-auto">
+            <button
+              type="button"
+              onClick={() => window.dispatchEvent(new CustomEvent('bhumivera:open-visual-guide', { detail: { tab: 'location' } }))}
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-white border border-[#0B2419]/20 text-[#0B2419] rounded-xl text-sm font-semibold hover:bg-stone-50 transition-all shadow-sm"
+            >
+              <Sparkles size={16} className="text-[#D4AF37]" /> Map Guide
+            </button>
+            <button onClick={() => { setForm(defaultForm); setEditId(null); setShowForm(true); }}
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0B2419] hover:bg-[#2C3E2D] text-[#FDFBF7] rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md">
+              <Plus size={16} /> Add New Address
+            </button>
+          </div>
         </div>
 
         {msg && (

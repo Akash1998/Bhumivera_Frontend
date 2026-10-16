@@ -39,6 +39,8 @@ import {
   analyzePasswordForAiGuide,
 } from '../utils/aiCopilotBus';
 import { resolveClientSideConciergeFallback } from '../utils/bhumiveraAiConciergeFallback';
+import { matchAiIntentWithFuzzy } from '../utils/aiIntentMatcher';
+import LanguageSelector from './LanguageSelector';
 
 const STORAGE_KEY = 'bhumivera_client_concierge_state_v3';
 const SESSION_TOKEN_KEY = 'bhumivera_client_concierge_token_v3';
@@ -2543,6 +2545,17 @@ export function formatIngredientDeepDiveMarkdown(ing) {
 export function resolveEnhancedBotanicalConcierge(rawQuery = '') {
   const q = String(rawQuery || '').toLowerCase().trim();
 
+  // 0. Resilient Fuzzy Typo Matcher for Critical Customer Workflows
+  // (Instant resolution for "passpot", "paswrd", "damaged item", "where is my ordr", "upi failed", etc.)
+  try {
+    const fuzzyIntent = matchAiIntentWithFuzzy(rawQuery);
+    if (fuzzyIntent) {
+      return fuzzyIntent;
+    }
+  } catch (err) {
+    console.warn('[Concierge] matchAiIntentWithFuzzy error:', err);
+  }
+
   // 1. Kumkumadi Night Elixir discovery & application
   if (q.includes('kumkumadi') || q.includes('night elixir') || q.includes('kesar oil') || (q.includes('saffron') && q.includes('oil'))) {
     return {
@@ -4795,6 +4808,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             </div>
 
             <div className="flex items-center gap-1 shrink-0">
+              <LanguageSelector variant="concierge" />
               <button
                 type="button"
                 onClick={() => openVerificationFlow('')}

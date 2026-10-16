@@ -18,11 +18,11 @@ const ReturnsCentre = () => {
         <div className="container mx-auto px-6 text-center z-10">
           <motion.div {...fadeInUp}>
             <RotateCcw className="mx-auto text-emerald-500 mb-6" size={48} strokeWidth={1.5} />
-            <h1 className="text-5xl md:text-7xl font-light tracking-tighter mb-8 italic">
-              Returns & Resolution
+            <h1 className="text-4xl md:text-6xl font-light tracking-tighter mb-6 italic">
+              Damaged Items &amp; Courtesy Resolution
             </h1>
-            <p className="max-w-3xl mx-auto text-gray-400 text-lg leading-relaxed mb-8">
-              For help with an order, contact our support team with your order details. We will guide you through the options that apply.
+            <p className="max-w-3xl mx-auto text-gray-300 text-base md:text-lg leading-relaxed mb-8">
+              Because personal care cosmetics (face washes &amp; shampoos) cannot be physically restocked for hygiene safety, we offer an instant replacement or courtesy store credit if your bottle arrives damaged or leaking in transit.
             </p>
           </motion.div>
         </div>
@@ -260,7 +260,10 @@ const ReturnsCentre = () => {
           </motion.div>
           
           <div className="flex flex-col md:flex-row justify-center gap-6 pt-12">
-            <Link to="/contact" className="inline-flex items-center justify-center gap-3 px-12 py-5 bg-emerald-600 text-black font-bold uppercase tracking-widest text-xs hover:bg-emerald-500 transition-all">
+            <Link to="/returns" className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-[#D4AF37] text-black font-bold uppercase tracking-widest text-xs hover:bg-[#e0bc46] transition-all rounded-xl shadow-lg">
+              Damaged Item Courtesy Guarantee <ArrowRight size={14} />
+            </Link>
+            <Link to="/contact" className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-emerald-600 text-black font-bold uppercase tracking-widest text-xs hover:bg-emerald-500 transition-all rounded-xl">
               Contact support <ArrowRight size={14} />
             </Link>
           </div>

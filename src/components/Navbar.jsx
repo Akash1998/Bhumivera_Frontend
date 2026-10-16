@@ -12,6 +12,7 @@ import { useCart } from '../context/CartContext';
 import { search } from '../services/api';
 import { useVoiceSearch } from '../hooks/useVoiceSearch';
 import { getProductImageUrl } from '../utils/productImageUrl';
+import LanguageSelector from './LanguageSelector';
 
 export default function Navbar() {
   const { user } = useAuth();
@@ -263,6 +264,8 @@ export default function Navbar() {
               </div>
             </Link>
 
+            <LanguageSelector className="hidden sm:inline-flex" />
+
             {user ? (
               <Link to="/profile" aria-label="Profile" className="flex items-center gap-3 group">
                 <div className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#dedfd4] bg-white shadow-sm group-hover:border-[#526b4d]">
@@ -383,7 +386,7 @@ export default function Navbar() {
                 { to: '/order-tracking', label: 'Track an order', icon: Truck },
                 { to: '/wishlist', label: 'Wishlist', icon: Heart },
                 { to: '/compare', label: 'Compare products', icon: GitCompareArrows },
-                { to: '/returns-centre', label: 'Returns & exchanges', icon: Package },
+                { to: '/returns', label: 'Damaged item & courtesy credit', icon: Package },
               ].map(({ to, label, icon: Icon }) => (
                 <Motion.div
                   key={to}
@@ -398,6 +401,9 @@ export default function Navbar() {
                 </Motion.div>
               ))}
             </Motion.div>
+            <div className="mt-4">
+              <LanguageSelector className="w-full" />
+            </div>
             {!isStandalone && (installPrompt || isIosDevice) && (
               <div className="mt-4">
                 <button

@@ -8,6 +8,7 @@ import { initPushNotifications } from "./utils/pushNotifications.js";
 import Footer from "./components/Footer.jsx";
 import MiniCart from "./components/MiniCart.jsx";
 import SupportAssistant from "./components/SupportAssistant.jsx";
+import VisualGuideModal from "./components/VisualGuideModal.jsx";
 import { CartProvider, useCart } from "./context/CartContext.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { ToastProvider } from "./context/ToastContext.jsx";
@@ -239,6 +240,16 @@ function AppContent() {
   const navigate = useNavigate();
   const { setIsCartOpen } = useCart();
   const [pwaUpdateWorker, setPwaUpdateWorker] = React.useState(null);
+  const [visualGuideState, setVisualGuideState] = React.useState({ isOpen: false, tab: 'password' });
+
+  useEffect(() => {
+    const handleOpenGuide = event => {
+      const tab = event.detail?.tab || 'password';
+      setVisualGuideState({ isOpen: true, tab });
+    };
+    window.addEventListener('bhumivera:open-visual-guide', handleOpenGuide);
+    return () => window.removeEventListener('bhumivera:open-visual-guide', handleOpenGuide);
+  }, []);
 
   useEffect(() => {
     const showUpdateNotice = event => setPwaUpdateWorker(event.detail?.worker || null);
@@ -411,6 +422,12 @@ function AppContent() {
       {!isManagementView && <Footer />}
       {!isManagementView && <MiniCart />}
       {!isManagementView && <SupportAssistant />}
+      <VisualGuideModal
+        isOpen={visualGuideState.isOpen}
+        initialTab={visualGuideState.tab}
+        onClose={() => setVisualGuideState(prev => ({ ...prev, isOpen: false }))}
+      />
+      <div id="google_translate_element" style={{ display: 'none' }} />
     </div>
   );
 }

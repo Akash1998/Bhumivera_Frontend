@@ -168,13 +168,13 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link to="/returns-centre" className="transition-colors hover:text-white">
-                Returns Centre
+              <Link to="/returns" className="transition-colors hover:text-white">
+                Damaged Items &amp; Courtesy Credit
               </Link>
             </li>
             <li>
               <Link to="/contact" className="transition-colors hover:text-white">
-                Help &amp; support
+                Help &amp; Support Guide
               </Link>
             </li>
             <li>
@@ -192,7 +192,7 @@ export default function Footer() {
 
         <div>
           <h3 className="mb-4 text-[10px] font-bold uppercase tracking-[0.18em] text-[#c8d6aa] sm:mb-5 sm:text-xs">
-            Connect &amp; Portals
+            Connect With Us
           </h3>
           <ul className="space-y-3 text-xs leading-5 text-white/60 sm:text-sm">
             <li>
@@ -226,18 +226,18 @@ export default function Footer() {
               </a>
             </li>
             <li>
-              <Link to="/support" className="transition-colors hover:text-[#c8d6aa]">
-                Support Agent Desk (/support)
-              </Link>
+              <a
+                href="https://t.me/bhumivera"
+                target="_blank"
+                rel="noreferrer"
+                className="transition-colors hover:text-white"
+              >
+                Telegram Community
+              </a>
             </li>
             <li>
-              <Link to="/superadminsupport" className="transition-colors hover:text-[#c8d6aa]">
-                SuperAdmin Support (/superadminsupport)
-              </Link>
-            </li>
-            <li>
-              <Link to="/admin/dashboard" className="transition-colors hover:text-[#c8d6aa]">
-                Admin Workspace (/admin)
+              <Link to="/contact" className="transition-colors hover:text-[#c8d6aa]">
+                Customer Care Helpline
               </Link>
             </li>
           </ul>

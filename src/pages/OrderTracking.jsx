@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { orders as ordersApi } from '../services/api';
 import { getProductImageUrl } from '../utils/productImageUrl';
-import { Package, CheckCircle2, Truck, ShoppingBag, PartyPopper, Settings, ArrowRight, Loader2, AlertCircle, LogIn } from 'lucide-react';
+import { Package, CheckCircle2, Truck, ShoppingBag, PartyPopper, Settings, ArrowRight, Loader2, AlertCircle, LogIn, Sparkles } from 'lucide-react';
 
 const STATUS_STEPS = [
   { key: 'placed', label: 'Order Placed', icon: ShoppingBag, description: 'Your order has been placed successfully.' },
@@ -108,9 +108,18 @@ export default function OrderTracking() {
   return (
     <div className="min-h-screen bg-[#FDFBF7] py-10 px-4">
       <div className="max-w-3xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-[#0B2419] mb-2 tracking-tight">Track Orders</h1>
-          <p className="text-[#8B9D83]">Real-time status of your Bhumivera purchases</p>
+        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-3xl font-bold text-[#0B2419] mb-2 tracking-tight">Track Orders</h1>
+            <p className="text-[#8B9D83]">Real-time status of your Bhumivera purchases</p>
+          </div>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent('bhumivera:open-visual-guide', { detail: { tab: 'tracking' } }))}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#0B2419]/20 bg-white text-xs font-bold text-[#0B2419] hover:bg-stone-50 transition-all shadow-sm shrink-0 self-start sm:self-auto"
+          >
+            <Sparkles className="w-4 h-4 text-[#D4AF37]" /> Delivery Visual Guide
+          </button>
         </div>
 
         {displayOrders.length === 0 ? (

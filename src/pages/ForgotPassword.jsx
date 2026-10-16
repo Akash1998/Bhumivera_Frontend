@@ -179,21 +179,32 @@ export default function ForgotPassword() {
             <ArrowLeft className="w-4 h-4" />
             Back to login
           </Link>
-          <button
-            type="button"
-            onClick={() =>
-              triggerAiCopilotAssist({
-                frictionType: 'password_auth',
-                stage: 'forgot_password',
-                email,
-                candidatePassword: newPassword,
-                autoOpen: true,
-              })
-            }
-            className="inline-flex items-center gap-1.5 rounded-full bg-[#0B2419] px-3 py-1.5 text-xs font-bold text-[#D4AF37] hover:bg-[#163828]"
-          >
-            <Sparkles className="w-3.5 h-3.5" /> Ask AI Password Guide
-          </button>
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() =>
+                window.dispatchEvent(new CustomEvent('bhumivera:open-visual-guide', { detail: { tab: 'password' } }))
+              }
+              className="inline-flex items-center gap-1.5 rounded-full border border-[#0B2419]/20 bg-white px-3 py-1.5 text-xs font-semibold text-[#0B2419] hover:bg-stone-50 transition-colors shadow-sm"
+            >
+              <HelpCircle className="w-3.5 h-3.5 text-[#D4AF37]" /> Visual Guide
+            </button>
+            <button
+              type="button"
+              onClick={() =>
+                triggerAiCopilotAssist({
+                  frictionType: 'password_auth',
+                  stage: 'forgot_password',
+                  email,
+                  candidatePassword: newPassword,
+                  autoOpen: true,
+                })
+              }
+              className="inline-flex items-center gap-1.5 rounded-full bg-[#0B2419] px-3 py-1.5 text-xs font-bold text-[#D4AF37] hover:bg-[#163828] transition-colors shadow-sm"
+            >
+              <Sparkles className="w-3.5 h-3.5" /> Ask AI Guide
+            </button>
+          </div>
         </div>
 
         <div className="text-center mb-7">
