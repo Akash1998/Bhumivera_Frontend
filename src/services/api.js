@@ -635,6 +635,9 @@ export const aiSupport = {
   cartRescue: data => api.post('/support/ai-copilot/cart-rescue', data, { notify: false }),
   passwordRescue: data => api.post('/support/ai-copilot/password-rescue', data, { notify: false }),
   getNavigationMap: q => api.get('/support/ai-copilot/navigation-map', { params: q ? { q } : {}, notify: false }),
+  getKnowledgeBase: params => api.get('/support/knowledge-base', { params: params || {}, notify: false }),
+  addKnowledgeBaseEntry: data => api.post('/support/knowledge-base', data, { adminAuth: true }),
+  askGeminiConcierge: data => api.post('/ai/ask', data, { notify: false }),
 };
 export const loyalty = { getSystemConfig: () => api.get("/settings"), updateSystemConfig: d => api.put("/settings", d), getMembers: () => api.get("/admin/users"), adjustPoints: (u, d) => api.patch(`/admin/users/${u}/status`, d) };
 export const loyaltyTiers = {

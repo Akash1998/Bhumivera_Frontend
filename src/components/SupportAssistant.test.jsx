@@ -46,7 +46,6 @@ describe('SupportAssistant floating AI widget', () => {
       data: {
         sessionToken: 'sess_test_12345',
         greeting: 'Hi Aarav, how can I help you today?',
-        hasPlacedOrder: true,
         quickActions: [
           { id: 'track_order', label: 'Where is my order?', prompt: 'Where is my order?' },
           { id: 'initiate_return', label: 'Initiate Return', prompt: 'Initiate return' },
@@ -105,7 +104,7 @@ describe('SupportAssistant floating AI widget', () => {
       </MemoryRouter>
     );
 
-    const launcher = screen.getByRole('button', { name: /Open Bhumivera Client Concierge/i });
+    const launcher = screen.getByRole('button', { name: /Open Bhumivera Support/i });
     fireEvent.click(launcher);
 
     await waitFor(() => {
@@ -114,7 +113,7 @@ describe('SupportAssistant floating AI widget', () => {
 
     expect(await screen.findByText(/Hi Aarav, how can I help you today/i)).toBeTruthy();
 
-    const quickChip = screen.getByRole('button', { name: /Track My Order/i });
+    const quickChip = screen.getByRole('button', { name: /Where is my order\?/i });
     fireEvent.click(quickChip);
 
     await waitFor(() => {
@@ -123,8 +122,8 @@ describe('SupportAssistant floating AI widget', () => {
 
     expect((await screen.findAllByText(/#918273646/i)).length).toBeGreaterThan(0);
     expect(screen.getByText(/DLV99881122/i)).toBeTruthy();
-    expect(screen.queryByText(/How was your concierge experience/i)).toBeNull();
-    expect(screen.getByRole('button', { name: 'Mark Inquiry Resolved' })).toBeTruthy();
+    expect(screen.queryByText(/How was your support experience/i)).toBeNull();
+    expect(screen.getByRole('button', { name: 'End chat' })).toBeTruthy();
   });
 
   it('shows the rating form only after the customer ends the chat', async () => {
@@ -146,15 +145,15 @@ describe('SupportAssistant floating AI widget', () => {
       </MemoryRouter>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /Open Bhumivera Client Concierge/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Open Bhumivera Support/i }));
     await screen.findByText(/Hi Aarav, how can I help you today/i);
-    fireEvent.click(screen.getByRole('button', { name: /Track My Order/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Where is my order\?/i }));
     await waitFor(() => expect(aiSupport.sendMessage).toHaveBeenCalled());
 
     expect(screen.queryByText(/How was your support experience/i)).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Mark Inquiry Resolved' }));
+    fireEvent.click(screen.getByRole('button', { name: 'End chat' }));
 
-    expect(await screen.findByText(/How was your concierge experience/i)).toBeTruthy();
+    expect(await screen.findByText(/How was your support experience/i)).toBeTruthy();
     expect(aiSupport.endSatisfied).toHaveBeenCalledWith('sess_test_12345', {});
 
     fireEvent.click(screen.getByRole('button', { name: 'Send' }));
@@ -176,6 +175,50 @@ describe('SupportAssistant floating AI widget', () => {
       await new Promise(resolve => setTimeout(resolve, 120));
     });
 
-    expect(await screen.findByText(/Need assistance with shipping timelines/i)).toBeTruthy();
+    expect(await screen.findByText(/Need a hand with checkout/i)).toBeTruthy();
+  });
+
+  it('updates quickActions dynamically for Product -> Ingredient -> 2+1 Suggestions (Sea Buckthorn Face Wash -> Niacinamide)', async () => {
+    aiSupport.sendMessage.mockResolvedValueOnce({
+      data: {
+        sessionToken: 'sess_test_12345',
+        reply: '**Bhumivera Sea Buckthorn Face Wash** checks all listed ingredients in memory including Sea Buckthorn and Niacinamide.',
+        orderCards: [],
+        quickActions: [
+          { id: 'ing_niacinamide', label: 'Ingredient: Niacinamide', prompt: 'Tell me about Niacinamide in Sea Buckthorn Face Wash', category: 'ingredient_discovery' },
+          { id: 'ing_hyaluronic', label: 'Ingredient: Hyaluronic Acid', prompt: 'Tell me about Hyaluronic Acid in Sea Buckthorn Face Wash', category: 'ingredient_discovery' },
+          { id: 'usage_time', label: 'How & What Time to Use Sea Buckthorn Face Wash', prompt: 'How do I really use Sea Buckthorn Face Wash?', category: 'usage_and_timing' },
+        ],
+      },
+    }).mockResolvedValueOnce({
+      data: {
+        sessionToken: 'sess_test_12345',
+        reply: '**Niacinamide (Vitamin B3)** supports barrier ceramides and refines pores.',
+        orderCards: [],
+        quickActions: [
+          { id: 'nia_1', label: 'Niacinamide: Pores, Oil Control & Barrier Science', prompt: 'How does Niacinamide control oil?', category: 'ingredient_deep_dive' },
+          { id: 'nia_2', label: 'Niacinamide: Daily Layering & Active Pairing Guide', prompt: 'Can I pair Niacinamide with Vitamin C?', category: 'ingredient_deep_dive' },
+          { id: 'rel_ha', label: 'Related Ingredient: Hyaluronic Acid', prompt: 'Tell me about Hyaluronic Acid', category: 'closely_related_ingredient' },
+          { id: 'use_fw', label: 'How & What Time to Use Sea Buckthorn Face Wash', prompt: 'How do I really use Sea Buckthorn Face Wash?', category: 'usage_and_timing' },
+        ],
+      },
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/science']}>
+        <SupportAssistant />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Open Bhumivera Support/i }));
+    await screen.findByText(/Hi Aarav, how can I help you today/i);
+
+    fireEvent.click(screen.getByRole('button', { name: /Where is my order\?/i }));
+    expect(await screen.findByRole('button', { name: /Ingredient: Niacinamide/i })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: /Ingredient: Niacinamide/i }));
+    expect(await screen.findByRole('button', { name: /Niacinamide: Pores, Oil Control & Barrier Science/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Niacinamide: Daily Layering & Active Pairing Guide/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Related Ingredient: Hyaluronic Acid/i })).toBeTruthy();
   });
 });

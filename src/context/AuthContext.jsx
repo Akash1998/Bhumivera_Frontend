@@ -25,38 +25,14 @@ const storeAdminUser = user => {
   localStorage.setItem('adminUser', JSON.stringify(user));
   localStorage.setItem('user', JSON.stringify(user));
 };
-const getInitialSession = () => {
-  const pathname = window.location.pathname;
-  const customerToken = localStorage.getItem('token');
-  const adminToken = localStorage.getItem('adminToken');
-  const warehouseToken = localStorage.getItem('warehouseToken');
-
-  if (pathname.startsWith('/admin')) {
-    const token = adminToken || (['admin', 'superadmin'].includes(decodeJWT(customerToken)?.role) ? customerToken : null);
-    return { token, user: token ? getStoredAdminUser() : null };
-  }
-  if (pathname.startsWith('/warehouse')) {
-    const token = warehouseToken || customerToken;
-    return { token, user: token ? getStoredUser() : null };
-  }
-
-  const role = decodeJWT(customerToken)?.role;
-  if (!customerToken || ['admin', 'superadmin', 'warehouse_admin'].includes(role)) {
-    return { token: null, user: null };
-  }
-  const storedUser = getStoredUser();
-  return {
-    token: customerToken,
-    user: storedUser && !['admin', 'superadmin', 'warehouse_admin'].includes(storedUser.role)
-      ? storedUser
-      : null,
-  };
-};
 
 export const AuthProvider = ({ children }) => {
-  const [initialSession] = useState(getInitialSession);
-  const [user, setUser] = useState(initialSession.user);
-  const [token, setToken] = useState(initialSession.token);
+  const [user, setUser] = useState(() => (
+    localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('warehouseToken')
+      ? getStoredUser()
+      : null
+  ));
+  const [token, setToken] = useState(localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('warehouseToken') || null);
   const [loading, setLoading] = useState(true);
   const authExpiryHandled = useRef(false);
 
@@ -76,18 +52,12 @@ export const AuthProvider = ({ children }) => {
       const customerRole = decodeJWT(customerToken)?.role;
       const anyT = adminPath
         ? adminToken || (['admin', 'superadmin'].includes(customerRole) ? customerToken : null)
-        : customerToken;
+        : customerToken || warehouseToken;
       if (anyT) {
         let role = 'user';
         let storedUser = {};
         try {
           const d = decodeJWT(anyT); role = d?.role || storedUser?.role || 'user';
-          if (!adminPath && ['admin', 'superadmin', 'warehouse_admin'].includes(role)) {
-            setToken(null);
-            setUser(null);
-            setLoading(false);
-            return;
-          }
           storedUser = (role === 'admin' || role === 'superadmin' ? getStoredAdminUser() : getStoredUser()) || {};
           let fu = storedUser;
           if (role === 'admin' || role === 'superadmin') {

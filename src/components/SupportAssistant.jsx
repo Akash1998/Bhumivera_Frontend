@@ -37,6 +37,7 @@ import {
   AI_COPILOT_EVENT,
   analyzePasswordForAiGuide,
 } from '../utils/aiCopilotBus';
+import { resolveClientSideConciergeFallback } from '../utils/bhumiveraAiConciergeFallback';
 
 const STORAGE_KEY = 'bhumivera_client_concierge_state_v3';
 const SESSION_TOKEN_KEY = 'bhumivera_client_concierge_token_v3';
@@ -44,11 +45,12 @@ const PROACTIVE_TRIGGERED_KEY = 'bhumivera_concierge_proactive_v3';
 const LINGER_THRESHOLD_MS = 45000;
 
 const PUBLIC_GENERAL_CHIPS = [
-  { id: 'ingredients', label: 'Botanical Ingredients', prompt: 'What botanical ingredients and actives are used in Bhumivera formulations?' },
-  { id: 'brand_story', label: 'Maison Story', prompt: 'Tell me about the Bhumivera brand story and philosophy.' },
-  { id: 'shipping_policy', label: 'Shipping & Delivery', prompt: 'What are your shipping charges and delivery timelines?' },
-  { id: 'how_to_join', label: 'Brand Ambassador Program', prompt: 'How do I join the Bhumivera Brand Ambassador Program?' },
-  { id: 'verify_order', label: 'Order Support & Verification', prompt: '__OPEN_VERIFICATION_FLOW__' },
+  { id: 'know_sb_fw', label: 'Know More: Sea Buckthorn Face Wash', prompt: 'Tell me about Sea Buckthorn Face Wash and its key ingredients', category: 'product_discovery' },
+  { id: 'ing_niacinamide', label: 'Ingredient: Niacinamide', prompt: 'Tell me about Niacinamide in Sea Buckthorn Face Wash', category: 'ingredient_discovery' },
+  { id: 'how_to_join', label: 'Brand Ambassador Program', prompt: 'How do I join the Bhumivera Brand Ambassador Program?', category: 'ambassador' },
+  { id: 'usage_time', label: 'How & What Time to Use Face Wash', prompt: 'How do I really use Sea Buckthorn Face Wash step-by-step and what time of day should I use it?', category: 'usage_and_timing' },
+  { id: 'shipping_policy', label: 'Shipping & Delivery', prompt: 'What are your shipping charges and delivery timelines?', category: 'policy' },
+  { id: 'verify_order', label: 'Order Support & Verification', prompt: '__OPEN_VERIFICATION_FLOW__', category: 'verification' },
 ];
 
 const VERIFIED_BUYER_CHIPS = [
@@ -426,6 +428,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   const [copilotRescue, setCopilotRescue] = useState(null);
   const [copilotEmailInput, setCopilotEmailInput] = useState('');
   const [copilotSendingReset, setCopilotSendingReset] = useState(false);
+  const [conciergeFlow, setConciergeFlow] = useState(persisted.conciergeFlow || { activeProductId: null, lastIngredientId: null });
 
   // 3-Step Legitimate Customer Verification & Specialist Escalation Flow State
   const [escalationWizard, setEscalationWizard] = useState({
@@ -505,7 +508,11 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       if (Array.isArray(data.messages) && data.messages.length > 0 && messages.length === 0) {
         setMessages(data.messages);
       }
-      setQuickActions(buyerVerified ? VERIFIED_BUYER_CHIPS : PUBLIC_GENERAL_CHIPS);
+      if (Array.isArray(data.quickActions) && data.quickActions.length > 0) {
+        setQuickActions(data.quickActions);
+      } else {
+        setQuickActions(buyerVerified ? VERIFIED_BUYER_CHIPS : PUBLIC_GENERAL_CHIPS);
+      }
       return data.sessionToken || sessionToken;
     } catch {
       if (messages.length === 0) {
@@ -611,11 +618,25 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     const alreadyTriggeredForPath = sessionStorage.getItem(`${PROACTIVE_TRIGGERED_KEY}:${path}`);
     if (alreadyTriggeredForPath) return undefined;
 
-    const timer = window.setTimeout(() => {
+    const timer = window.setTimeout(async () => {
       sessionStorage.setItem(`${PROACTIVE_TRIGGERED_KEY}:${path}`, '1');
-      const nudge = path.startsWith('/checkout') || isCartOpen
-        ? 'Need assistance with shipping timelines, privilege points, or payment at checkout?'
+      let nudge = path.startsWith('/checkout') || isCartOpen
+        ? 'Need a hand with checkout? Free standard shipping on orders ₹500+.'
         : 'Looking for live tracking or order assistance? Our Client Concierge is here.';
+      try {
+        if (typeof aiSupportApi.updateContext === 'function') {
+          const ctxRes = await aiSupportApi.updateContext({
+            sessionToken,
+            pageContext: { ...currentPageContext, proactiveTrigger: 'checkout_linger' },
+          });
+          if (ctxRes?.data?.proactiveMessage) {
+            nudge = ctxRes.data.proactiveMessage;
+          }
+          if (Array.isArray(ctxRes?.data?.quickActions) && ctxRes.data.quickActions.length > 0) {
+            setQuickActions(ctxRes.data.quickActions);
+          }
+        }
+      } catch {}
       setProactiveBubble({ text: nudge });
       setUnreadCount(prev => Math.max(1, prev));
     }, lingerThresholdMs);
@@ -872,14 +893,18 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         sessionToken,
         message: text,
         attachments: currentAttachments.map(a => ({ name: a.name, url: a.url, type: a.type })),
-        pageContext: currentPageContext,
+        pageContext: { ...currentPageContext, conciergeFlow },
       });
 
       const data = response?.data || {};
       if (data.sessionToken) setSessionToken(data.sessionToken);
       if (data.status) setChatStatus(data.status);
+      if (data.conciergeFlow) setConciergeFlow(data.conciergeFlow);
       if (Array.isArray(data.orderCards) && data.orderCards.length > 0) {
         setHasPlacedOrder(true);
+      }
+      if (Array.isArray(data.quickActions) && data.quickActions.length > 0) {
+        setQuickActions(data.quickActions);
       }
 
       if (data.escalation?.verificationStep === 'STEP_1_VERIFY_ORDER') {
@@ -895,25 +920,30 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           content: data.reply || data.message?.content || 'How else may I assist you today?',
           orderCards: data.orderCards || [],
           quickActions: data.quickActions || [],
+          conciergeFlow: data.conciergeFlow || null,
           escalation: data.escalation || null,
           createdAt: new Date().toISOString(),
         },
       ]);
       playSupportChime(soundEnabled);
     } catch {
+      const localConcierge = resolveClientSideConciergeFallback(text);
+      if (Array.isArray(localConcierge.quickActions) && localConcierge.quickActions.length > 0) {
+        setQuickActions(localConcierge.quickActions);
+      }
       setMessages(prev => [
         ...prev,
         {
           id: assistantStreamId,
           sender: 'assistant',
           senderName: 'Bhumivera Client Concierge',
-          content:
-            'Our concierge connection experienced a brief interruption. Please try again or reach us at support@bhumivera.com.',
+          content: localConcierge.reply,
           orderCards: [],
-          quickActions: hasPlacedOrder ? VERIFIED_BUYER_CHIPS : PUBLIC_GENERAL_CHIPS,
+          quickActions: localConcierge.quickActions || (hasPlacedOrder ? VERIFIED_BUYER_CHIPS : PUBLIC_GENERAL_CHIPS),
           createdAt: new Date().toISOString(),
         },
       ]);
+      playSupportChime(soundEnabled);
     } finally {
       setIsTyping(false);
       setStatusLabel('');
@@ -941,7 +971,11 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       if (detail.verifyOrderId) {
         openVerificationFlow(detail.verifyOrderId);
       } else if (detail.prompt) {
-        setInput(detail.prompt);
+        if (detail.autoSend !== false) {
+          void sendMessage(detail.prompt);
+        } else {
+          setInput(detail.prompt);
+        }
       }
     };
     window.addEventListener('bhumivera:open-support-chat', handleExternalOpen);
@@ -1449,7 +1483,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               >
                 <div className="flex items-center justify-between gap-2">
                   <span className="text-[11px] font-bold">
-                    {csatSubmitted ? 'Thank you for your feedback.' : 'How was your concierge experience?'}
+                    {csatSubmitted ? 'Thank you for your feedback.' : 'How was your support experience?'}
                   </span>
                   <a
                     href={telegramBotUrl}
@@ -1511,9 +1545,10 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   type="button"
                   onClick={() => void handleEndChat()}
                   disabled={csatSubmitting || isTyping}
+                  aria-label="End chat"
                   className="rounded-lg border border-[#0B2419]/15 px-3 py-1.5 text-[11px] font-semibold text-[#0B2419] hover:bg-[#0B2419]/5 disabled:opacity-60 dark:text-stone-100 dark:border-white/15"
                 >
-                  {csatSubmitting ? 'Closing…' : 'Mark Inquiry Resolved'}
+                  {csatSubmitting ? 'Closing…' : 'End chat'}
                 </button>
               </div>
             )}
@@ -1532,28 +1567,43 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Curated Quick-Action Chips */}
+          {/* Dynamic AI Next Auto-Suggestions (Product -> Ingredient -> 2+1 Related + Usage Guide) */}
           {Array.isArray(quickActions) && quickActions.length > 0 && (
             <div
-              className={`px-4 py-2.5 border-t flex flex-wrap items-center gap-1.5 shrink-0 ${
+              className={`px-4 py-2.5 border-t space-y-1.5 shrink-0 ${
                 isDark ? 'bg-[#0a1c15] border-white/10' : 'bg-[#f4f1e9] border-[#0B2419]/10'
               }`}
             >
-              {quickActions.map(chip => (
-                <button
-                  key={chip.id || chip.label}
-                  type="button"
-                  disabled={isTyping}
-                  onClick={() => void sendMessage(chip.prompt || chip.label)}
-                  className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all ${
-                    isDark
-                      ? 'bg-[#10241f] border-[#D4AF37]/30 text-stone-200 hover:border-[#D4AF37] hover:text-[#D4AF37]'
-                      : 'bg-white border-[#0B2419]/15 text-[#0B2419] hover:border-[#0B2419] hover:bg-[#0B2419] hover:text-white'
-                  } disabled:opacity-50`}
-                >
-                  {chip.label}
-                </button>
-              ))}
+              {quickActions.some(c => c.category === 'ingredient_deep_dive' || c.category === 'closely_related_ingredient') && (
+                <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-[0.14em] text-[#D4AF37]">
+                  <span>AI Auto-Suggestions · 2 Ingredient Insights + 1 Related Active + Usage</span>
+                </div>
+              )}
+              <div className="flex flex-wrap items-center gap-1.5">
+                {quickActions.map(chip => {
+                  const isRelated = chip.category === 'closely_related_ingredient';
+                  const isUsage = chip.category === 'usage_and_timing';
+                  return (
+                    <button
+                      key={chip.id || chip.label}
+                      type="button"
+                      disabled={isTyping}
+                      onClick={() => void sendMessage(chip.prompt || chip.label)}
+                      className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all ${
+                        isRelated
+                          ? 'bg-[#D4AF37]/15 border-[#D4AF37] text-[#0B2419] dark:text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0B2419]'
+                          : isUsage
+                          ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-900 dark:text-emerald-200 hover:bg-emerald-600 hover:text-white'
+                          : isDark
+                          ? 'bg-[#10241f] border-[#D4AF37]/30 text-stone-200 hover:border-[#D4AF37] hover:text-[#D4AF37]'
+                          : 'bg-white border-[#0B2419]/15 text-[#0B2419] hover:border-[#0B2419] hover:bg-[#0B2419] hover:text-white'
+                      } disabled:opacity-50`}
+                    >
+                      {chip.label}
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           )}
 
@@ -1649,7 +1699,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             setUnreadCount(0);
             setProactiveBubble(null);
           }}
-          aria-label="Open Bhumivera Client Concierge"
+          aria-label="Open Bhumivera Support"
           className="group relative flex items-center gap-2.5 rounded-full bg-gradient-to-r from-[#0B2419] to-[#1e4031] px-4 py-3.5 text-[#FDFBF7] shadow-[0_14px_34px_rgba(11,36,25,0.45)] border border-[#D4AF37]/45 hover:scale-[1.03] active:scale-[0.98] transition-all"
         >
           <div className="relative flex items-center justify-center">
