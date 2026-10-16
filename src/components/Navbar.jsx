@@ -13,9 +13,11 @@ import { search } from '../services/api';
 import { useVoiceSearch } from '../hooks/useVoiceSearch';
 import { getProductImageUrl } from '../utils/productImageUrl';
 import LanguageSelector from './LanguageSelector';
+import { useLanguage } from '../context/LanguageContext.jsx';
 
 export default function Navbar() {
   const { user } = useAuth();
+  const { t, currentLang } = useLanguage();
   const { cartItems, setIsCartOpen } = useCart();
   const cartCount = cartItems.reduce((count, item) => count + (Number(item.quantity) || 1), 0);
   const [isMenuOpen, setMenuOpen] = useState(false);
@@ -158,11 +160,11 @@ export default function Navbar() {
       <div className="bg-[#14251c] text-[#e8dcc4] py-2 px-6 text-[10px] font-bold uppercase tracking-widest hidden md:block border-b border-[#c4aa67]/20">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-6">
-            <Link to="/impact" className="flex items-center gap-2 transition-colors hover:text-white"><Droplets size={14} className="text-[#c8d6aa]" /> Our impact</Link>
-            <Link to="/order-tracking" className="flex items-center gap-2 transition-colors hover:text-white"><MapPin size={14} className="text-[#8b5a2b]" /> Track Order</Link>
+            <Link to="/impact" className="flex items-center gap-2 transition-colors hover:text-white"><Droplets size={14} className="text-[#c8d6aa]" /> {t('nav_impact', 'Our impact')}</Link>
+            <Link to="/order-tracking" className="flex items-center gap-2 transition-colors hover:text-white"><MapPin size={14} className="text-[#8b5a2b]" /> {t('nav_track_order', 'Track Order')}</Link>
           </div>
           <div className="flex items-center gap-6">
-            <Link to="/contact" className="hover:text-[#8b5a2b] transition-colors">Boutique Support</Link>
+            <Link to="/contact" className="hover:text-[#8b5a2b] transition-colors">{t('nav_support', 'Boutique Support')}</Link>
             {user?.role === 'admin' && (
               <Link to="/admin" className="text-[#8b5a2b] flex items-center gap-1.5"><Activity size={14}/> Admin Terminal</Link>
             )}
@@ -206,7 +208,7 @@ export default function Navbar() {
                 value={searchQuery}
                 onChange={handleSearch}
                 onFocus={() => { if(searchQuery.length > 2) setShowSearchDropdown(true); }}
-                placeholder="Search skincare, hair care, ingredients..."
+                placeholder={t('search_placeholder', 'Search skincare, hair care, ingredients...')}
                 aria-label="Search skincare products"
                 className="w-full rounded-full border border-[#dedfd4] bg-white py-3.5 pl-12 pr-28 text-sm text-[#14251c] shadow-sm outline-none transition-all placeholder:text-[#526b4d]/60 focus:border-[#526b4d]"
               />
@@ -222,7 +224,7 @@ export default function Navbar() {
                 </button>
               </div>
               <button type="submit" aria-label="Search" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-[#14251c] px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-white opacity-0 transition-colors group-focus-within:opacity-100 hover:bg-[#354c3b]">
-                Discover
+                {t('search_action', 'Discover')}
               </button>
             </form>
 
@@ -259,8 +261,8 @@ export default function Navbar() {
             <Link to="/science" aria-label="Skin Assessment" className={`hidden xl:flex items-center space-x-3 rounded-full border px-5 py-2.5 shadow-sm transition-all ${isGarageActive ? 'border-[#14251c] bg-[#14251c] text-white' : 'border-[#dedfd4] bg-white text-[#526b4d]'}`}>
               <Sparkles size={18} className={isGarageActive ? 'animate-pulse' : ''} />
               <div className="text-left">
-                <div className="text-[8px] font-bold uppercase tracking-widest leading-none opacity-80">{isGarageActive ? 'Active Regimen' : 'Botanical Science'}</div>
-                <div className="text-[11px] font-bold uppercase tracking-widest truncate max-w-[100px]">{isGarageActive ? garageData.model : 'Discover the Science'}</div>
+                <div className="text-[8px] font-bold uppercase tracking-widest leading-none opacity-80">{isGarageActive ? t('active_regimen', 'Active Regimen') : t('nav_science', 'Botanical Science')}</div>
+                <div className="text-[11px] font-bold uppercase tracking-widest truncate max-w-[100px]">{isGarageActive ? garageData.model : t('discover_science', 'Discover the Science')}</div>
               </div>
             </Link>
 
@@ -274,7 +276,7 @@ export default function Navbar() {
                 </div>
               </Link>
             ) : (
-              <Link to="/login" className="hidden rounded-full bg-[#14251c] px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-white shadow-sm transition-all hover:bg-[#354c3b] sm:flex">Sign In</Link>
+              <Link to="/login" className="hidden rounded-full bg-[#14251c] px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-white shadow-sm transition-all hover:bg-[#354c3b] sm:flex">{t('nav_signin', 'Sign In')}</Link>
             )}
 
             <button type="button" onClick={() => setIsCartOpen(true)} aria-label={`Open cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`} className="group relative rounded-full border border-[#dedfd4] bg-white p-2.5 text-[#526b4d] shadow-sm transition-all hover:border-[#526b4d]">
@@ -348,12 +350,12 @@ export default function Navbar() {
               className="grid grid-cols-2 gap-2.5"
             >
               {[
-                { to: '/shop', label: 'Shop all', detail: 'All products', icon: Compass, tone: 'forest' },
-                { to: '/flash-sales', label: 'Offers', detail: 'Fresh offers', icon: BadgePercent, tone: 'gold' },
-                { to: '/science', label: 'Our science', detail: 'Plant science', icon: FlaskConical, tone: 'leaf' },
-                { to: '/about', label: 'Our story', detail: 'Our roots', icon: Leaf, tone: 'paper' },
-                { to: '/impact', label: 'Our impact', detail: 'Giving back', icon: HeartHandshake, tone: 'paper' },
-                { to: '/contact', label: 'Help & support', detail: 'We’re here', icon: MapPin, tone: 'paper' },
+                { to: '/shop', label: t('nav_shop', 'Shop all'), detail: t('nav_shop_desc', 'All products'), icon: Compass, tone: 'forest' },
+                { to: '/flash-sales', label: t('nav_offers', 'Offers'), detail: t('nav_offers_desc', 'Fresh offers'), icon: BadgePercent, tone: 'gold' },
+                { to: '/science', label: t('nav_science', 'Our science'), detail: t('nav_science_desc', 'Plant science'), icon: FlaskConical, tone: 'leaf' },
+                { to: '/about', label: t('nav_story', 'Our story'), detail: t('nav_story_desc', 'Our roots'), icon: Leaf, tone: 'paper' },
+                { to: '/impact', label: t('nav_impact', 'Our impact'), detail: t('nav_impact_desc', 'Giving back'), icon: HeartHandshake, tone: 'paper' },
+                { to: '/contact', label: t('nav_help', 'Help & support'), detail: t('nav_help_desc', 'We’re here'), icon: MapPin, tone: 'paper' },
               ].map(({ to, label, detail, icon: Icon, tone }) => (
                 <Motion.div
                   key={to}
@@ -369,7 +371,7 @@ export default function Navbar() {
               ))}
             </Motion.div>
             <div className="mb-3 mt-7 flex items-center justify-between">
-              <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-[#74806e]">Your account</p>
+              <p className="text-[9px] font-bold uppercase tracking-[0.22em] text-[#74806e]">{t('nav_profile', 'Your account')}</p>
               <span className="text-[9px] font-medium text-[#82907c]">Orders, saved care &amp; more</span>
             </div>
             <Motion.div
@@ -379,14 +381,14 @@ export default function Navbar() {
               className="mobile-menu-account overflow-hidden rounded-2xl border border-[#dedfd4] bg-[#fbfaf5]"
             >
               {[
-                ...(user ? [{ to: '/profile', label: 'My account', icon: CircleUserRound }] : [
-                  { to: '/login', label: 'Sign in', icon: User },
-                  { to: '/register', label: 'Create an account', icon: Gift },
+                ...(user ? [{ to: '/profile', label: t('nav_profile', 'My account'), icon: CircleUserRound }] : [
+                  { to: '/login', label: t('nav_signin', 'Sign in'), icon: User },
+                  { to: '/register', label: t('nav_register', 'Create an account'), icon: Gift },
                 ]),
-                { to: '/order-tracking', label: 'Track an order', icon: Truck },
-                { to: '/wishlist', label: 'Wishlist', icon: Heart },
-                { to: '/compare', label: 'Compare products', icon: GitCompareArrows },
-                { to: '/returns', label: 'Damaged item & courtesy credit', icon: Package },
+                { to: '/order-tracking', label: t('nav_track_order', 'Track an order'), icon: Truck },
+                { to: '/wishlist', label: t('nav_wishlist', 'Wishlist'), icon: Heart },
+                { to: '/compare', label: t('nav_compare', 'Compare products'), icon: GitCompareArrows },
+                { to: '/returns', label: t('nav_damaged_credit', 'Damaged item & courtesy credit'), icon: Package },
               ].map(({ to, label, icon: Icon }) => (
                 <Motion.div
                   key={to}

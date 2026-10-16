@@ -1,30 +1,11 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Globe, Check, ChevronDown } from 'lucide-react';
-import {
-  SUPPORTED_INDIAN_LANGUAGES,
-  getCurrentLanguage,
-  setLanguage,
-  activateFullSiteTranslation,
-} from '../utils/indianLanguageEngine.js';
+import { useLanguage } from '../context/LanguageContext.jsx';
 
 export default function LanguageSelector({ variant = 'navbar', className = '' }) {
-  const [currentLang, setCurrentLang] = useState(getCurrentLanguage());
+  const { currentLang, setLanguage, supportedLanguages, activeLangMeta } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const containerRef = useRef(null);
-
-  useEffect(() => {
-    const handleLangChange = (e) => {
-      if (e.detail?.lang) {
-        setCurrentLang(e.detail.lang);
-      }
-    };
-    window.addEventListener('bhumivera:language-change', handleLangChange);
-    return () => window.removeEventListener('bhumivera:language-change', handleLangChange);
-  }, []);
-
-  useEffect(() => {
-    activateFullSiteTranslation(getCurrentLanguage());
-  }, []);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -38,12 +19,8 @@ export default function LanguageSelector({ variant = 'navbar', className = '' })
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [isOpen]);
 
-  const activeLangMeta = SUPPORTED_INDIAN_LANGUAGES.find((l) => l.code === currentLang) || SUPPORTED_INDIAN_LANGUAGES[0];
-
   const handleSelect = (langCode) => {
     setLanguage(langCode);
-    setCurrentLang(langCode);
-    activateFullSiteTranslation(langCode);
     setIsOpen(false);
   };
 
@@ -68,7 +45,7 @@ export default function LanguageSelector({ variant = 'navbar', className = '' })
             <div className="px-3 py-1.5 text-[9px] uppercase tracking-widest text-[#D4AF37] font-bold border-b border-white/10">
               Indian Languages (भारतीय भाषाएं)
             </div>
-            {SUPPORTED_INDIAN_LANGUAGES.map((l) => (
+            {(supportedLanguages || []).map((l) => (
               <button
                 key={l.code}
                 type="button"
@@ -113,7 +90,7 @@ export default function LanguageSelector({ variant = 'navbar', className = '' })
           <div className="px-4 py-2 text-[10px] uppercase tracking-widest text-[#526b4d] font-bold border-b border-[#dedfd4]/60">
             Select Language · भाषा चुनें
           </div>
-          {SUPPORTED_INDIAN_LANGUAGES.map((l) => (
+          {(supportedLanguages || []).map((l) => (
             <button
               key={l.code}
               type="button"

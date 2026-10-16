@@ -184,12 +184,175 @@ export function scoreIntent(query = '') {
 /**
  * Resolves critical help guides based on fuzzy intent matching
  */
-export function matchAiIntentWithFuzzy(rawQuery = '') {
+
+export const LOCALIZED_INTENT_RESPONSES = {
+  hi: {
+    PASSWORD_GUIDE: {
+      intent: 'PASSWORD_GUIDE',
+      reply: [
+        '🔐 **भूमिअवेरा AI पासवर्ड और खाता सुरक्षा मार्गदर्शिका**',
+        'यदि आपको लॉगिन करने, पासवर्ड रीसेट करने या आवश्यकताओं को पूरा करने में कोई समस्या आ रही है, तो यहाँ आपके लिए पूरी जानकारी है:',
+        '**पासवर्ड सुरक्षा नियम (लाइव जांच):**\n- **लंबाई:** 8 से 72 अक्षर।\n- **अक्षर:** कम से कम 1 बड़ा अक्षर (A–Z) और 1 छोटा अक्षर (a–z)।\n- **संख्या और प्रतीक:** कम से कम 1 संख्या (0–9) और 1 विशेष प्रतीक (!@#$%^&*)।\n- **सुरक्षा:** सामान्य शब्द जैसे "Password123" या ईमेल का नाम दोहराने से बचें।',
+        '**3 आसान चरणों में पासवर्ड रीसेट करें:**\n1. [पासवर्ड भूल गए पेज](/forgot-password) पर जाएं।\n2. 6 अंकों का सुरक्षित OTP प्राप्त करने के लिए अपना पंजीकृत ईमेल दर्ज करें।\n3. OTP दर्ज करें और अपना नया मजबूत पासवर्ड बनाएं।',
+        '💡 *तत्काल सहायता चाहिए? यदि आपको परेशानी हो रही है, तो हमारा AI सलाहकार सीधे आपके इनबॉक्स में 30 मिनट का वन-क्लिक रिकवरी लिंक भेज सकता है।*',
+      ].join('\n\n'),
+      quickActions: [
+        { id: 'go_forgot_pwd', label: '🔑 पासवर्ड रीसेट पेज खोलें', prompt: 'I want to reset my password on the Forgot Password page' },
+        { id: 'otp_help', label: '✉️ OTP कोड नहीं मिला?', prompt: 'I did not receive the password OTP verification email' },
+        { id: 'contact_auth_agent', label: '👤 खाता विशेषज्ञ से बात करें', prompt: 'Connect me with an account support specialist for login help' },
+      ],
+    },
+    DAMAGED_ITEM_CREDIT: {
+      intent: 'DAMAGED_ITEM_CREDIT',
+      reply: [
+        '🌿 **भूमिअवेरा स्वच्छता और सौजन्य सुरक्षा गारंटी**',
+        '*“उत्पाद वापस भेजने का कोई झंझट नहीं — तुरंत नया उत्पाद या 100% स्टोर क्रेडिट पाएं।”*',
+        '**भौतिक रूप से सामान वापस क्यों नहीं लिया जाता?**\nक्योंकि हमारे वानस्पतिक फॉर्मूलेशन (सी बकथॉर्न फेस वॉश, चारकोल फेस वॉश, कुमकुमादि नाइट एलिक्सिर, और वानस्पतिक शैम्पू) व्यक्तिगत देखभाल उत्पाद हैं। भारतीय स्वास्थ्य नियमों के अनुसार उपयोग किए गए या डिलीवर किए गए उत्पादों को दोबारा स्टॉक में नहीं रखा जा सकता। यह हर ग्राहक के लिए 100% शुद्धता की गारंटी देता है।',
+        '**यदि सामान क्षतिग्रस्त या लीक मिले तो क्या करें?**\nआपको उत्पाद पैक करके वापस भेजने की कोई ज़रूरत नहीं है! बस 3 आसान कदम उठाएं:\n1. **फोटो खींचें:** क्षतिग्रस्त बोतल, ढक्कन या पैकेजिंग की एक स्पष्ट फोटो लें।\n2. **हमें भेजें:** अपनी ऑर्डर आईडी के साथ यहाँ चैट में या व्हाट्सएप (+91 74309 85647) पर साझा करें।\n3. **तुरंत समाधान:** 24 घंटे में नया उत्पाद मुफ्त भेजा जाएगा या 100% सौजन्य क्रेडिट आपके वॉलेट में जोड़ दिया जाएगा!',
+      ].join('\n\n'),
+      quickActions: [
+        { id: 'damaged_claim', label: '📸 क्षतिग्रस्त उत्पाद क्लेम करें', prompt: 'I want to submit a photo for a damaged bottle replacement or courtesy credit' },
+        { id: 'check_wallet', label: '💰 वॉलेट बैलेंस देखें', prompt: 'What is my current Bhumivera Wallet and Courtesy Credit balance?' },
+        { id: 'policy_page', label: '📋 पूरी गारंटी नीति पढ़ें', prompt: 'Show me the official Courtesy Credit & Hygiene Policy' },
+      ],
+    },
+    ORDER_TRACKING: {
+      intent: 'ORDER_TRACKING',
+      reply: [
+        '📦 **भूमिअवेरा लाइव एक्सप्रेस डिलीवरी ट्रैकिंग गाइड**',
+        'हमारे सभी ऑर्डर **Delhivery, BlueDart, और DTDC Express** द्वारा पूरे भारत में एसएमएस और व्हाट्सएप ट्रैकिंग के साथ भेजे जाते हैं।',
+        '**डिलीवरी समय सीमा:**\n- **मेट्रो शहर (दिल्ली, मुंबई, बेंगलुरु, हैदराबाद, चेन्नई, कोलकाता):** 2 से 3 कार्य दिवस।\n- **टियर 2 / टियर 3 शहर:** 3 से 5 कार्य दिवस।\n- **पूर्वोत्तर और दूरदराज के क्षेत्र:** 4 से 6 कार्य दिवस।',
+        '**ट्रैक कैसे करें:**\n- अपनी **ऑर्डर आईडी** (उदा. #BHU-84920) सीधे इस चैट में दर्ज करें या हमारे [लाइव ऑर्डर ट्रैकिंग पेज](/order-tracking) पर जाएं।\n- प्रेषण के बाद आपको कूरियर को लाइव ट्रैक करने के लिए एक सीधा AWB लिंक एसएमएस पर मिलता है।',
+      ].join('\n\n'),
+      quickActions: [
+        { id: 'open_tracker', label: '🚚 ऑर्डर ट्रैकर खोलें', prompt: 'Open the Live Order Tracking page' },
+        { id: 'deliv_estimate', label: '⏱ पिनकोड डिलीवरी समय जांचें', prompt: 'How long will delivery take to my pin code?' },
+        { id: 'order_history', label: '📋 हाल के ऑर्डर देखें', prompt: 'Show me my recent orders and tracking status' },
+      ],
+    },
+    ADDRESS_PINPOINT: {
+      intent: 'ADDRESS_PINPOINT',
+      reply: [
+        '📍 **पता और गूगल मैप्स सटीक लोकेशन डिलीवरी गाइड**',
+        'कूरियर पार्टनर बिना किसी भ्रम के सीधे आपके दरवाजे तक पहुँच सकें, इसके लिए भूमिअवेरा **गूगल मैप्स लाइव लोकेशन पिनपॉइंट** का समर्थन करता है:',
+        '**पता कैसे अपडेट या पिन करें:**\n1. अपनी [प्रोफ़ाइल पता पुस्तिका](/profile) या चेकआउट स्क्रीन पर जाएं।\n2. **' + '"' + 'लाइव लोकेशन का उपयोग करें / मैप पर पिन करें' + '"' + '** पर टैप करें।\n3. सुनिश्चित करें कि आपका मकान/फ्लैट नंबर, लैंडमार्क और 6 अंकों का पिनकोड सही है।',
+        '⚠️ **यदि आपका ऑर्डर पहले ही दिया जा चुका है:**\n- यदि स्थिति *प्रोसेसिंग* है, तो हम तुरंत डिलीवरी पता बदल सकते हैं।\n- यदि स्थिति *डिस्पैच* है, तो हमारी टीम कूरियर से संपर्क करके पता अपडेट करवाती है।',
+      ].join('\n\n'),
+      quickActions: [
+        { id: 'edit_address', label: '🏠 प्रोफ़ाइल में पता बदलें', prompt: 'I want to update my delivery address in my profile' },
+        { id: 'change_order_addr', label: '🚚 ऑर्डर का पता बदलें', prompt: 'Can I change the delivery address of my pending order?' },
+      ],
+    },
+    PAYMENT_TROUBLESHOOT: {
+      intent: 'PAYMENT_TROUBLESHOOT',
+      reply: [
+        '💳 **पेमेंट, यूपीआई और कैश ऑन डिलीवरी (COD) गाइड**',
+        'भूमिअवेरा के सभी ऑनलाइन भुगतान **100% सुरक्षित रेज़रपे (256-बिट SSL)** द्वारा संसाधित होते हैं, जिसमें UPI (Google Pay, PhonePe, Paytm, BHIM), कार्ड और नेट बैंकिंग शामिल हैं।',
+        '**पैसे कट गए लेकिन ऑर्डर कन्फर्म नहीं हुआ?**\nचिंता न करें! यदि बैंक सर्वर या नेटवर्क की समस्या के कारण ऐसा हुआ है:\n- NPCI बैंकिंग गेटवे **2 से 4 कार्य दिवसों में पूरी राशि स्वतः आपके बैंक खाते में वापस कर देता है**।\n- अपनी 12 अंकों की UPI UTR संख्या या स्क्रीनशॉट हमारे सलाहकार से साझा करें ताकि हम तुरंत पुष्टि कर सकें।',
+        '**कैश ऑन डिलीवरी (COD):**\n- भारत के 19,000+ पिनकोड पर ₹3,000 तक के ऑर्डर पर उपलब्ध है।\n- प्रेषण से पहले आपको त्वरित 1-क्लिक व्हाट्सएप/एसएमएस सत्यापन प्राप्त होगा।',
+      ].join('\n\n'),
+      quickActions: [
+        { id: 'verify_payment', label: '🔍 पेंडिंग ट्रांजेक्शन जांचें', prompt: 'Money was deducted from my UPI but order did not show confirmation' },
+        { id: 'cod_query', label: '💵 COD सत्यापन जानकारी', prompt: 'How does Cash on Delivery verification work?' },
+      ],
+    },
+    SKINCARE_LAYERING: {
+      intent: 'SKINCARE_LAYERING',
+      reply: [
+        '🌸 **भूमिअवेरा सुबह और शाम की विशेष स्किनकेयर दिनचर्या**',
+        '**☀️ सुबह की दिनचर्या (7:00 AM – 9:00 AM):**\n1. **क्लींज:** गुनगुने पानी (28°C–32°C) के साथ **सी बकथॉर्न फेस वॉश** का 1 पंप। 40 सेकंड मालिश करें और 15 सेकंड रुकें।\n2. **धोएं और थपथपाएं:** ठंडे पानी से धोएं और तौलिये से थपथपाकर 15% नमी छोड़ें।\n3. **हाइड्रेट और सुरक्षा:** 60 सेकंड के अंदर टोनर या सीरम लगाएं और SPF 50 सनस्क्रीन से सुरक्षित करें।',
+        '**🌙 शाम की दिनचर्या (8:00 PM – 10:30 PM):**\n1. **डीटॉक्स क्लींज:** प्रदूषण और सनस्क्रीन हटाने के लिए **चारकोल फेस वॉश** का 1.5 पंप।\n2. **कुमकुमादि एलिक्सिर:** **कुमकुमादि नाइट एलिक्सिर** की 2-3 बूंदें हथेलियों में गर्म करें और गालों, माथे और गर्दन पर हल्के हाथों से दबाएं।\n3. **रात भर पोषण:** सोते समय त्वचा की कोशिकाओं को प्राकृतिक रूप से स्वस्थ होने दें।',
+      ].join('\n\n'),
+      quickActions: [
+        { id: 'launch_ritual_timer', label: '⏱ 4-फेज रिचुअल प्लेयर शुरू करें', prompt: '__OPEN_RITUAL_PLAYER__' },
+        { id: 'kumk_details', label: '🌙 कुमकुमादि नाइट एलिक्सिर गाइड', prompt: 'Tell me about Kumkumadi Night Elixir and how to apply it' },
+        { id: 'sb_wash_details', label: '🍊 सी बकथॉर्न फेस वॉश विवरण', prompt: 'Tell me about Sea Buckthorn Face Wash and its key ingredients' },
+      ],
+    },
+  },
+  bn: {
+    PASSWORD_GUIDE: {
+      intent: 'PASSWORD_GUIDE',
+      reply: [
+        '🔐 **ভূমিভেরা AI পাসওয়ার্ড ও অ্যাকাউন্ট অ্যাক্সেস নির্দেশিকা**',
+        'লগইন করতে বা পাসওয়ার্ড রিসেট করতে সমস্যা হলে নিচে প্রয়োজনীয় পদক্ষেপ দেখুন:',
+        '**পাসওয়ার্ড সুরক্ষার নিয়মাবলী:**\n- দৈর্ঘ্য: ৮ থেকে ৭২ অক্ষর\n- কমপক্ষে ১টি বড় হাতের (A-Z) ও ১টি ছোট হাতের অক্ষর (a-z)\n- কমপক্ষে ১টি সংখ্যা ও ১টি বিশেষ চিহ্ন (!@#$%^&*)',
+        '**সহজ ৩ ধাপে রিসেট করুন:**\n১. [পাসওয়ার্ড রিসেট পেজে](/forgot-password) যান।\n২. নিবন্ধিত ইমেইল প্রদান করে ৬ সংখ্যার OTP কোড নিন।\n৩. OTP যাচাই করে নতুন পাসওয়ার্ড নির্ধারণ করুন।',
+      ].join('\n\n'),
+      quickActions: [
+        { id: 'go_forgot_pwd', label: '🔑 পাসওয়ার্ড রিসেট পেজ', prompt: 'I want to reset my password on the Forgot Password page' },
+        { id: 'contact_auth_agent', label: '👤 সাপোর্ট প্রতিনিধির সাথে কথা বলুন', prompt: 'Connect me with an account support specialist for login help' },
+      ],
+    },
+    DAMAGED_ITEM_CREDIT: {
+      intent: 'DAMAGED_ITEM_CREDIT',
+      reply: [
+        '🌿 **ভূমিভেরা স্বাস্থ্যবিধি ও সৌজন্য সুরক্ষা গ্যারান্টি**',
+        '*“পণ্য ফেরত পাঠানোর কোনো ঝামেলা নেই — তাৎক্ষণিক নতুন পণ্য অথবা ১০০% ওয়ালেট ক্রেডিট পান।”*',
+        'ফেসওয়াশ ও শ্যাম্পু ব্যক্তিগত প্রসাধন সামগ্রী হওয়ায় ডেলিভারির পর এগুলো ফেরত নেওয়া হয় না। যদি পণ্য ক্ষতিগ্রস্ত বা লিক হয়ে থাকে, তাহলে ছবি তুলে আমাদের জানান। আমরা ২৪ ঘণ্টার মধ্যে নতুন পণ্য বিনামূল্যে পাঠাব অথবা ওয়ালেটে সম্পূর্ণ ক্রেডিট প্রদান করব।',
+      ].join('\n\n'),
+      quickActions: [
+        { id: 'damaged_claim', label: '📸 ক্ষতিগ্রস্ত পণ্যের আবেদন', prompt: 'I want to submit a photo for a damaged bottle replacement or courtesy credit' },
+        { id: 'check_wallet', label: '💰 ওয়ালেট ব্যালেন্স দেখুন', prompt: 'What is my current Bhumivera Wallet and Courtesy Credit balance?' },
+      ],
+    },
+    ORDER_TRACKING: {
+      intent: 'ORDER_TRACKING',
+      reply: [
+        '📦 **ভূমিভেরা লাইভ এক্সপ্রেস ডেলিভারি ট্র্যাকিং**',
+        'আপনার অর্ডারটি Delhivery, BlueDart অথবা DTDC এক্সপ্রেসের মাধ্যমে পাঠানো হয়।\n- মেট্রো শহর: ২-৩ দিন\n- অন্যান্য শহর: ৩-৫ দিন\nআপনার অর্ডার আইডি লিখে সরাসরি চ্যাটে পাঠান বা ট্র্যাকিং পেজ দেখুন।',
+      ].join('\n\n'),
+      quickActions: [
+        { id: 'open_tracker', label: '🚚 ট্র্যাকিং পেজ খুলুন', prompt: 'Open the Live Order Tracking page' },
+      ],
+    },
+  },
+  mr: {
+    PASSWORD_GUIDE: {
+      intent: 'PASSWORD_GUIDE',
+      reply: [
+        '🔐 **भूमीवेरा AI पासवर्ड आणि खाते सुरक्षा मार्गदर्शक**',
+        'पासवर्ड रीसेट करण्यासाठी खालील पायऱ्या फॉलो करा:\n१. [पासवर्ड विसरलात का?](/forgot-password) पृष्ठावर जा.\n२. नोंदणीकृत ईमेल टाकून ६-अंकी OTP मिळवा.\n३. OTP टाकून सुरक्षित नवीन पासवर्ड सेट करा.',
+      ].join('\n\n'),
+      quickActions: [
+        { id: 'go_forgot_pwd', label: '🔑 पासवर्ड रीसेट करा', prompt: 'I want to reset my password on the Forgot Password page' },
+      ],
+    },
+    DAMAGED_ITEM_CREDIT: {
+      intent: 'DAMAGED_ITEM_CREDIT',
+      reply: [
+        '🌿 **भूमीवेरा स्वच्छता आणि सौजन्य हमी**',
+        '*“उत्पादन परत पाठवण्याची कोणतीही कटकट नाही — त्वरित मोफत उत्पादन किंवा १००% वॉलेट क्रेडिट मिळवा.”*',
+        'फेस वॉश आणि शाम्पू ही वैयक्तिक काळजी उत्पादने असल्याने ती परत घेतली जात नाहीत. नुकसान किंवा लिकेज असल्यास त्वरित फोटो शेअर करा, आम्ही २४ तासांत मोफत नवीन उत्पादन पाठवू.',
+      ].join('\n\n'),
+      quickActions: [
+        { id: 'damaged_claim', label: '📸 नुकसान क्लेम दाखल करा', prompt: 'I want to submit a photo for a damaged bottle replacement or courtesy credit' },
+      ],
+    },
+    ORDER_TRACKING: {
+      intent: 'ORDER_TRACKING',
+      reply: [
+        '📦 **भूमीवेरा थेट एक्सप्रेस डिलिव्हरी ट्रॅकिंग**',
+        'सर्व ऑर्डर्स Delhivery आणि BlueDart द्वारे पाठवल्या जातात.\nमेट्रो शहरे: २ ते ३ दिवस | इतर शहरे: ३ ते ५ दिवस\nआपला ऑर्डर आयडी टाकून थेट ट्रॅक करा.',
+      ].join('\n\n'),
+      quickActions: [
+        { id: 'open_tracker', label: '🚚 ट्रॅकिंग पेज उघडा', prompt: 'Open the Live Order Tracking page' },
+      ],
+    },
+  },
+};
+
+export function matchAiIntentWithFuzzy(rawQuery = '', targetLangOverride) {
   const q = String(rawQuery || '').trim();
   if (!q) return null;
 
   const topIntent = scoreIntent(q);
   if (!topIntent) return null;
+
+  const currentL = targetLangOverride || getCurrentLanguage();
+  if (currentL && currentL !== 'en' && LOCALIZED_INTENT_RESPONSES[currentL]?.[topIntent]) {
+    return LOCALIZED_INTENT_RESPONSES[currentL][topIntent];
+  }
 
   // 1. Password & Account Access Guide
   if (topIntent === 'PASSWORD_GUIDE') {

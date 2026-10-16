@@ -41,6 +41,7 @@ import {
 import { resolveClientSideConciergeFallback } from '../utils/bhumiveraAiConciergeFallback';
 import { matchAiIntentWithFuzzy } from '../utils/aiIntentMatcher';
 import LanguageSelector from './LanguageSelector';
+import { useLanguage } from '../context/LanguageContext';
 
 const STORAGE_KEY = 'bhumivera_client_concierge_state_v3';
 const SESSION_TOKEN_KEY = 'bhumivera_client_concierge_token_v3';
@@ -4047,6 +4048,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   const navigate = useNavigate();
   const { user } = useAuth() || {};
   const { cart = [], isCartOpen = false } = useCart() || {};
+  const { currentLang, t } = useLanguage();
 
   const persisted = useMemo(() => {
     if (typeof window === 'undefined') return {};
@@ -4797,12 +4799,12 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <h2 className="font-serif text-base font-semibold tracking-wide truncate">
-                    Bhumivera Client Concierge
+                    {t('concierge_title', 'Bhumivera Client Concierge')}
                   </h2>
                 </div>
                 <p className="text-[10px] text-[#D4AF37]/90 font-medium tracking-wide truncate flex items-center gap-1.5">
                   <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                  ✦ Ayurvedic Botanical AI · Always Active
+                  {t('concierge_subtitle', '✦ Ayurvedic Botanical AI · Always Active')}
                 </p>
               </div>
             </div>
@@ -4816,7 +4818,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                 aria-label="Verify Order for Follow-up"
                 className="hidden sm:inline-flex px-2.5 py-1 rounded-xl text-[10px] font-bold tracking-wider uppercase border border-[#D4AF37]/50 text-[#D4AF37] hover:bg-[#D4AF37]/15 transition-all shadow-sm"
               >
-                Verify Order
+                {t('concierge_verify_order', 'Verify Order')}
               </button>
               <button
                 type="button"
@@ -5610,8 +5612,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               onChange={e => setInput(e.target.value)}
               placeholder={
                 hasPlacedOrder
-                  ? 'Ask about your order, returns, or botanical rituals…'
-                  : 'Ask about ingredients, skin concerns, or verify an Order ID…'
+                  ? t('concierge_input_placeholder_orders', 'Ask about your order, returns, or botanical rituals…')
+                  : t('concierge_input_placeholder', 'Ask about ingredients, skin concerns, or verify an Order ID…')
               }
               maxLength={2000}
               aria-label="Message Bhumivera Client Concierge"

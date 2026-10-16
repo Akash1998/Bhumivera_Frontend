@@ -113,13 +113,247 @@ export const TRANSLATION_DICTIONARY = {
     hi: 'AI सलाहकार से पूछें',
     bn: 'AI সহযোগীকে জিজ্ঞাসা করুন',
     mr: 'AI सहाय्यकाला विचारा',
-    te: 'AI కన్సియర్జ్ ను అడగండి',
+    te: 'AI కన్సియర్జ్ ను అడगండి',
     ta: 'AI உதவியாளரிடம் கேளுங்கள்',
     gu: 'AI સહાયકને પૂછો',
     ur: 'AI معاون سے پوچھیں',
     kn: 'AI ಸಹಾಯಕರನ್ನು ಕೇಳಿ',
     ml: 'AI സഹായിയോട് ചോദിക്കുക',
     pa: 'AI ਸਹਾਇਕ ਨੂੰ ਪੁੱਛੋ',
+  },
+  nav_impact: {
+    en: 'Our impact',
+    hi: 'हमारा प्रभाव',
+    bn: 'আমাদের প্রভাব',
+    mr: 'आमचा प्रभाव',
+    te: 'మా ప్రభావం',
+    ta: 'எங்கள் தாக்கம்',
+    gu: 'અમારો પ્રભાવ',
+    ur: 'ہمارا اثر',
+    kn: 'ನಮ್ಮ ಪ್ರಭಾವ',
+    ml: 'ഞങ്ങളുടെ സ്വാധീനം',
+    pa: 'ਸਾਡਾ ਪ੍ਰਭਾਵ',
+  },
+  nav_support: {
+    en: 'Boutique Support',
+    hi: 'बुटीक सहायता',
+    bn: 'সহায়তা কেন্দ্র',
+    mr: 'मदत केंद्र',
+    te: 'మద్దతు కేంద్రం',
+    ta: 'ஆதரவு மையம்',
+    gu: 'સહાયતા કેન્દ્ર',
+    ur: 'سپورٹ سینٹر',
+    kn: 'ಬೆಂಬಲ ಕೇಂದ್ರ',
+    ml: 'സഹായ കേന്ദ്രം',
+    pa: 'ਸਹਾਇਤਾ ਕੇਂਦਰ',
+  },
+  nav_signin: {
+    en: 'Sign In',
+    hi: 'साइन इन',
+    bn: 'সাইন ইন',
+    mr: 'साइन इन',
+    te: 'సైన్ ఇన్',
+    ta: 'உள்நுழைக',
+    gu: 'સાઇન ઇન',
+    ur: 'سائن ان',
+    kn: 'ಸೈನ್ ಇನ್',
+    ml: 'സൈൻ ഇൻ',
+    pa: 'ਸਾਈਨ ਇਨ',
+  },
+  search_placeholder: {
+    en: 'Search skincare, hair care, ingredients...',
+    hi: 'स्किनकेयर, हेयर केयर या सामग्री खोजें...',
+    bn: 'স্কিনকেয়ার বা উপাদান খুঁজুন...',
+    mr: 'त्वचा काळजी किंवा घटक शोधा...',
+    te: 'స్కిన్‌కేర్ లేదా ఉత్పత్తులను శోధించండి...',
+    ta: 'சரும பராமரிப்பு பொருட்களைத் தேடுங்கள்...',
+    gu: 'સ્કિનકેર અથવા ઘટકો શોધો...',
+    ur: 'اسکن کیئر یا اشیاء تلاش کریں...',
+    kn: 'ಉತ್ಪನ್ನಗಳನ್ನು ಹುಡುಕಿ...',
+    ml: 'ഉൽപ്പന്നങ്ങൾ തിരയുക...',
+    pa: 'ਉਤਪਾਦ ਖੋਜੋ...',
+  },
+  search_action: {
+    en: 'Discover',
+    hi: 'खोजें',
+    bn: 'অনুসন্ধান',
+    mr: 'शोधा',
+    te: 'కనుగొనండి',
+    ta: 'கண்டறியுங்கள்',
+    gu: 'શોધો',
+    ur: 'دریافت کریں',
+    kn: 'ಹುಡುಕಿ',
+    ml: 'കണ്ടെത്തുക',
+    pa: 'ਲੱਭੋ',
+  },
+  active_regimen: {
+    en: 'Active Regimen',
+    hi: 'सक्रिय दिनचर्या',
+    bn: 'সক্রিয় নিয়ম',
+    mr: 'सक्रिय दिनचर्या',
+    te: 'యాక్టివ్ విధానం',
+    ta: 'செயலில் உள்ள வழக்கம்',
+    gu: 'સક્રિય પદ્ધતિ',
+    ur: 'فعال معمول',
+    kn: 'ಸಕ್ರಿಯ ನಿಯಮ',
+    ml: 'സജീവ ക്രമം',
+    pa: 'ਸਰਗਰਮ ਰੁਟੀਨ',
+  },
+  discover_science: {
+    en: 'Discover the Science',
+    hi: 'विज्ञान जानें',
+    bn: 'বিজ্ঞান জানুন',
+    mr: 'विज्ञान जाणा',
+    te: 'సైన్స్ తెలుసుకోండి',
+    ta: 'அறிவியலை அறிக',
+    gu: 'વિજ્ઞાન જાણો',
+    ur: 'سائنس جانیے',
+    kn: 'ವಿಜ್ಞಾನ ತಿಳಿಯಿರಿ',
+    ml: 'ശാസ്ത്രം അറിയുക',
+    pa: 'ਵਿਗਿਆਨ ਜਾਣੋ',
+  },
+  nav_offers: {
+    en: 'Offers',
+    hi: 'ऑफ़र्स',
+    bn: 'অফার',
+    mr: 'ऑफर',
+    te: 'ఆఫర్లు',
+    ta: 'சலுகைகள்',
+    gu: 'ઑફર્સ',
+    ur: 'پیشکشیں',
+    kn: 'ಆಫರ್ಗಳು',
+    ml: 'ഓഫറുകൾ',
+    pa: 'ਆਫਰ',
+  },
+  nav_story: {
+    en: 'Our story',
+    hi: 'हमारी कहानी',
+    bn: 'আমাদের গল্প',
+    mr: 'आमची कथा',
+    te: 'మా కథ',
+    ta: 'எங்கள் கதை',
+    gu: 'અમારી વાર્તા',
+    ur: 'ہماری کہانی',
+    kn: 'ನಮ್ಮ ಕಥೆ',
+    ml: 'ഞങ്ങളുടെ കഥ',
+    pa: 'ਸਾਡੀ ਕਹਾਣੀ',
+  },
+  nav_help: {
+    en: 'Help & support',
+    hi: 'सहायता और संपर्क',
+    bn: 'সাহায্য ও সহায়তা',
+    mr: 'मदत आणि सहकार्य',
+    te: 'సహాయం & మద్దతు',
+    ta: 'உதவி மற்றும் ஆதரவு',
+    gu: 'મદદ અને સહાય',
+    ur: 'مدد اور سپورٹ',
+    kn: 'ಸಹಾಯ ಮತ್ತು ಬೆಂಬಲ',
+    ml: 'സഹായവും പിന്തുണയും',
+    pa: 'ਸਹਾਇਤਾ ਅਤੇ ਸਹਿਯੋਗ',
+  },
+  nav_register: {
+    en: 'Create an account',
+    hi: 'खाता बनाएं',
+    bn: 'অ্যাকাউন্ট খুলুন',
+    mr: 'खाते तयार करा',
+    te: 'ఖాతా సృష్టించండి',
+    ta: 'கணக்கு தொடங்கவும்',
+    gu: 'એકાઉન્ટ બનાવો',
+    ur: 'نیا اکاؤنٹ بنائیں',
+    kn: 'ಖಾತೆ ತೆರೆಯಿರಿ',
+    ml: 'അക്കൗണ്ട് നിർമ്മിക്കുക',
+    pa: 'ਖਾਤਾ ਬਣਾਓ',
+  },
+  nav_wishlist: {
+    en: 'Wishlist',
+    hi: 'विशलिस्ट',
+    bn: 'পছন্দের তালিকা',
+    mr: 'आवडते',
+    te: 'విష్‌లిస్ట్',
+    ta: 'விருப்பப் பட்டியல்',
+    gu: 'વિશલિસ્ટ',
+    ur: 'پسندیدہ فہرست',
+    kn: 'ವಿಶ್ಲಿಸ್ಟ್',
+    ml: 'വിഷ്‌ലിസ്റ്റ്',
+    pa: 'ਪਸੰਦੀਦਾ ਸੂਚੀ',
+  },
+  nav_compare: {
+    en: 'Compare products',
+    hi: 'तुलना करें',
+    bn: 'পণ্য তুলনা',
+    mr: 'तुलना करा',
+    te: 'పోల్చండి',
+    ta: 'ஒப்பீடு செய்க',
+    gu: 'સરખામણી કરો',
+    ur: 'موازنہ کریں',
+    kn: 'ಹೋಲಿಕೆ ಮಾಡಿ',
+    ml: 'താരതമ്യം ചെയ്യുക',
+    pa: 'ਤੁਲਨਾ ਕਰੋ',
+  },
+  nav_damaged_credit: {
+    en: 'Damaged item & courtesy credit',
+    hi: 'क्षतिग्रस्त उत्पाद और सौजन्य क्रेडिट',
+    bn: 'ক্ষতিগ্রস্ত পণ্য ও সৌজন্য ক্রেডিট',
+    mr: 'नुकसान झालेले उत्पादन आणि सौजन्य क्रेडिट',
+    te: 'దెబ్బతిన్న ఉత్పత్తి & మర్యాద క్రెడిట్',
+    ta: 'சேதமடைந்த பொருள் & கிரெடிட்',
+    gu: 'ક્ષતિગ્રસ્ત વસ્તુ અને ક્રેડિટ',
+    ur: 'خراب اشیاء اور کریڈٹ',
+    kn: 'ಹಾನಿಗೊಳಗಾದ ವಸ್ತು ಮತ್ತು ಕ್ರೆಡಿಟ್',
+    ml: 'കേടുവന്ന ഉൽപ്പന്നവും ക്രെഡിറ്റും',
+    pa: 'ਖਰਾਬ ਉਤਪਾਦ ਅਤੇ ਵਾਲਿਟ ਕ੍ਰੈਡਿਟ',
+  },
+  concierge_title: {
+    en: 'Bhumivera Client Concierge',
+    hi: 'भूमिअवेरा क्लाइंट सलाहकार',
+    bn: 'ভূমিভেরা ক্লায়েন্ট সহায়ক',
+    mr: 'भूमीवेरा क्लायंट सहाय्यक',
+    te: 'భూమివేర క్లయింట్ కన్సియర్జ్',
+    ta: 'பூமிவேரா வாடிக்கையாளர் உதவியாளர்',
+    gu: 'ભૂમિવેરા ક્લાયન્ટ સહાયક',
+    ur: 'بھومی ویرا کلائنٹ معاون',
+    kn: 'ಭೂಮಿವೇರ ಕ್ಲೈಂಟ್ ಸಹಾಯಕ',
+    ml: 'ഭൂമിവേര ക്ലയന്റ് സഹായി',
+    pa: 'ਭੂਮੀਵੇਰਾ ਕਲਾਇੰਟ ਸਹਾਇਕ',
+  },
+  concierge_subtitle: {
+    en: '✦ Ayurvedic Botanical AI · Always Active',
+    hi: '✦ आयुर्वेदिक वानस्पतिक AI · हमेशा सक्रिय',
+    bn: '✦ আয়ুর্বেদিক ভেষজ AI · সর্বদা সক্রিয়',
+    mr: '✦ आयुर्वेदिक वनस्पती AI · सदैव सक्रिय',
+    te: '✦ ఆయుర్వేద బొటానికల్ AI · ఎల్లప్పుడూ సక్రియం',
+    ta: '✦ ஆயுர்வேத தாவர AI · எப்போதும் செயல்படுகிறது',
+    gu: '✦ આયુર્વેદિક વનસ્પતિ AI · હંમેશા સક્રિય',
+    ur: '✦ آیورویدک نباتیاتی AI · ہمیشہ متحرک',
+    kn: '✦ ಆಯುರ್ವೇದ ಬೊಟಾನಿಕಲ್ AI · ಯಾವಾಗಲೂ ಸಕ್ರಿಯ',
+    ml: '✦ ആയുർവേദ ബൊട്ടാണിക്കൽ AI · എപ്പോഴും സജീവം',
+    pa: '✦ ਆਯੁਰਵੈਦਿਕ ਬੋਟੈਨੀਕਲ AI · ਹਮੇਸ਼ਾ ਕਿਰਿਆਸ਼ੀਲ',
+  },
+  concierge_verify_order: {
+    en: 'Verify Order',
+    hi: 'ऑर्डर सत्यापित करें',
+    bn: 'অর্ডার যাচাই করুন',
+    mr: 'ऑर्डर तपासा',
+    te: 'ఆర్డర్ ధృవీకరించండి',
+    ta: 'ஆர்டரை சரிபார்க்கவும்',
+    gu: 'ઓર્ડર ચકાસો',
+    ur: 'آرڈر تصدیق کریں',
+    kn: 'ಆರ್ಡರ್ ಪರಿಶೀಲಿಸಿ',
+    ml: 'ഓർഡർ പരിശോധിക്കുക',
+    pa: 'ਆਰਡਰ ਜਾਂਚੋ',
+  },
+  concierge_input_placeholder: {
+    en: 'Ask about ingredients, orders, rituals, or enter an Order ID...',
+    hi: 'सामग्री, ऑर्डर, दिनचर्या या ऑर्डर आईडी के बारे में पूछें...',
+    bn: 'উপাদান, অর্ডার, নিয়ম বা অর্ডার আইডি সম্পর্কে জিজ্ঞাসা করুন...',
+    mr: 'घटक, ऑर्डर, दिनचर्या किंवा ऑर्डर आयडी बद्दल विचारा...',
+    te: 'పదార్థాలు, ఆర్డర్‌లు లేదా ఆర్డర్ ఐడి గురించి అడగండి...',
+    ta: 'பொருட்கள், ஆர்டர்கள் அல்லது ஆர்டர் ஐடி பற்றி கேளுங்கள்...',
+    gu: 'ઘટકો, ઓર્ડર અથવા ઓર્ડર આઈડી વિશે પૂછો...',
+    ur: 'اجزاء، آرڈرز یا آرڈر آئی ڈی کے بارے میں پوچھیں...',
+    kn: 'ಘಟಕಗಳು, ಆರ್ಡರ್‌ಗಳು ಅಥವಾ ಆರ್ಡರ್ ಐಡಿ ಬಗ್ಗೆ ಕೇಳಿ...',
+    ml: 'ചേരുവകൾ, ഓർഡറുകൾ അല്ലെങ്കിൽ ഓർഡർ ഐഡിയെക്കുറിച്ച് ചോദിക്കുക...',
+    pa: 'ਸਮੱਗਰੀ, ਆਰਡਰ ਜਾਂ ਆਰਡਰ ਆਈਡੀ ਬਾਰੇ ਪੁੱਛੋ...',
   },
 
   // Guarantees & Policy
@@ -151,71 +385,457 @@ export const TRANSLATION_DICTIONARY = {
     ml: 'AI പാസ്‌വേഡ് & അക്കൗണ്ട് ആക്സസ് ഗൈഡ്',
     pa: 'AI ਪਾਸਵਰਡ ਅਤੇ ਖਾਤਾ ਸੁਰੱਖਿਆ ਗਾਈਡ',
   },
-  password_rule_length: {
-    en: '8 to 72 characters long',
-    hi: '8 से 72 अक्षर लंबा',
-    bn: '৮ থেকে ৭২ অক্ষরের হতে হবে',
-    mr: '८ ते ७२ अक्षरे लांब',
-    te: '8 నుండి 72 అక్షరాలు ఉండాలి',
-    ta: '8 முதல் 72 எழுத்துக்கள் நீளம்',
-    gu: '8 થી 72 અક્ષરો લાંબો',
-    ur: '8 سے 72 حروف پر مشتمل',
-    kn: '8 ರಿಂದ 72 ಅಕ್ಷರಗಳು',
-    ml: '8 മുതൽ 72 അക്ഷരങ്ങൾ നീളം',
-    pa: '8 ਤੋਂ 72 ਅੱਖਰ ਲੰਬਾ',
-  },
+};
 
-  // Damaged Item Assistance
-  damaged_item_title: {
-    en: 'Damaged or Leaking Item Resolution',
-    hi: 'क्षतिग्रस्त या लीक उत्पाद का तुरंत समाधान',
-    bn: 'ক্ষতিগ্রস্ত বা লিক হওয়া পণ্যের সমাধান',
-    mr: 'नुकसान किंवा गळती झालेल्या उत्पादनाचे त्वरित निवारण',
-    te: 'దెబ్బతిన్న లేదా లీకైన ఉత్పత్తి పరిష్కారం',
-    ta: 'சேதமடைந்த அல்லது கசிந்த பொருளுக்கான உடனடி தீர்வு',
-    gu: 'ક્ષતિગ્રસ્ત અથવા લીક થયેલ વસ્તુનું ઝડપી સમાધાન',
-    ur: 'خراب یا لیکیج والی اشیاء کا فوری حل',
-    kn: 'ಹಾನಿಗೊಳಗಾದ ಅಥವಾ ಸೋರಿಕೆಯಾದ ಉತ್ಪನ್ನದ ಪರಿಹಾರ',
-    ml: 'കേടുപാടുകൾ സംഭവിച്ച ഉൽപ്പന്നങ്ങളുടെ പരിഹാരം',
-    pa: 'ਖਰਾਬ ਜਾਂ ਲੀਕ ਹੋਏ ਉਤਪਾਦ ਦਾ ਤੁਰੰਤ ਹੱਲ',
+/**
+ * Universal phrase translation map for client DOM node replacement
+ */
+export const DOM_PHRASE_DICTIONARY = {
+  hi: {
+    'Home': 'होम',
+    'Shop': 'शॉप',
+    'Shop all': 'सभी उत्पाद',
+    'Shop All Botanicals': 'सभी वानस्पतिक उत्पाद',
+    'Offers': 'ऑफ़र्स',
+    'Our science': 'हमारा विज्ञान',
+    'Our story': 'हमारी कहानी',
+    'Our roots': 'हमारी जड़ें',
+    'Our impact': 'हमारा प्रभाव',
+    'Giving back': 'समाज सेवा',
+    'Help & support': 'सहायता और संपर्क',
+    'We’re here': 'हम आपके साथ हैं',
+    'Botanical Science': 'वानस्पतिक विज्ञान',
+    'Active Regimen': 'सक्रिय दिनचर्या',
+    'Discover the Science': 'विज्ञान जानें',
+    'Sign In': 'साइन इन',
+    'Join Bhumivera': 'खाता बनाएं',
+    'Create an account': 'खाता बनाएं',
+    'My account': 'मेरा खाता',
+    'Shopping Bag': 'शॉपिंग बैग',
+    'Track an order': 'ऑर्डर ट्रैक करें',
+    'Track Orders': 'ऑर्डर ट्रैक करें',
+    'Wishlist': 'विशलिस्ट',
+    'Compare products': 'तुलना करें',
+    'Damaged item & courtesy credit': 'क्षतिग्रस्त उत्पाद और सौजन्य क्रेडिट',
+    'Damaged Items & Courtesy Credit': 'क्षतिग्रस्त उत्पाद और सौजन्य क्रेडिट',
+    'Help & Support Guide': 'सहायता मार्गदर्शिका',
+    'Customer Care Helpline': 'कस्टमर केयर हेल्पलाइन',
+    'Conditions of Use & Sale': 'उपयोग और बिक्री की शर्तें',
+    'Privacy Policy': 'गोपनीयता नीति',
+    'Connect With Us': 'हमसे जुड़ें',
+    'Telegram Community': 'टेलीग्राम कम्युनिटी',
+    'Verify Product Authenticity': 'प्रामाणिकता सत्यापित करें',
+    'E-Warranty Registration': 'ई-वारंटी पंजीकरण',
+    'Bhumivera Client Concierge': 'भूमिअवेरा क्लाइंट सलाहकार',
+    'Ayurvedic Botanical AI · Always Active': 'आयुर्वेदिक वानस्पतिक AI · हमेशा सक्रिय',
+    'Verify Order': 'ऑर्डर सत्यापित करें',
+    'Ask AI Guide': 'AI गाइड से पूछें',
+    'Visual Guide': 'विजुअल गाइड',
+    'Map Guide': 'मैप गाइड',
+    'Delivery Visual Guide': 'डिलीवरी विजुअल गाइड',
+    'Add to Bag': 'बैग में जोड़ें',
+    'Buy Now': 'अभी खरीदें',
+    'View Details': 'विवरण देखें',
+    'Reset your password': 'अपना पासवर्ड रीसेट करें',
+    'Verify your email': 'अपना ईमेल सत्यापित करें',
+    'Set new password': 'नया पासवर्ड सेट करें',
+    'Back to login': 'लॉगिन पर वापस जाएं',
+    'Address Book': 'पता पुस्तिका',
+    'Add New Address': 'नया पता जोड़ें',
+    'Natural Purity. Premium Care.': 'प्राकृतिक शुद्धता. प्रीमियम देखभाल.',
+    'Replacement & Courtesy Credit Policy': 'प्रतिस्थापन और सौजन्य क्रेडिट नीति',
+    'What to Do If an Item Arrives Damaged': 'यदि आइटम क्षतिग्रस्त मिले तो क्या करें',
+    'Snap a Quick Photo': 'एक फोटो खींचें',
+    'Instant Replacement or Store Credit': 'तुरंत नया उत्पाद या स्टोर क्रेडिट',
+    'Frequently Asked Questions': 'अक्सर पूछे जाने वाले प्रश्न',
+    'Need Help with an Order?': 'ऑर्डर में सहायता चाहिए?',
+    'View My Orders': 'मेरे ऑर्डर देखें',
+    'Message AI Concierge': 'AI सलाहकार से बात करें',
+    'Search skincare, hair care, ingredients...': 'स्किनकेयर, हेयर केयर या सामग्री खोजें...',
+    'Discover': 'खोजें',
+    'A more thoughtful ritual': 'एक विचारशील दिनचर्या',
+    'Find your kind of care.': 'अपनी त्वचा की सही देखभाल पाएं।',
+    'Your account': 'आपका खाता',
+    'Orders, saved care & more': 'ऑर्डर, सहेजी गई सामग्री और अधिक',
+    'Made with care · rooted in nature': 'प्रकृति से प्रेरित · प्रेम से निर्मित',
   },
-
-  // Order Tracking
-  order_tracking_title: {
-    en: 'Live Express Delivery Tracking',
-    hi: 'लाइव एक्सप्रेस डिलीवरी ट्रैकिंग',
-    bn: 'লাইভ এক্সপ্রেস ডেলিভারি ট্র্যাকিং',
-    mr: 'थेट एक्सप्रेस डिलिव्हरी ट्रॅकिंग',
-    te: 'లైవ్ ఎక్స్‌ప్రెస్ డెలివరీ ట్రాకింగ్',
-    ta: 'நேரலை எக்ஸ்பிரஸ் டெலிவரி கண்காணிப்பு',
-    gu: 'લાઇવ એક્સપ્રેસ ડિલિવરી ટ્રેકિંગ',
-    ur: 'لائیو ایکسپریس ڈلیوری ٹریکنگ',
-    kn: 'ಲೈವ್ ಎಕ್ಸ್‌ಪ್ರೆಸ್ ಡೆಲಿವರಿ ಟ್ರ್ಯಾಕಿಂಗ್',
-    ml: 'തത്സമയ എക്സ്പ്രസ് ഡെലിവറി ട്രാക്കിംഗ്',
-    pa: 'ਲਾਈਵ ਐਕਸਪ੍ਰੈਸ ਡਿਲੀਵਰੀ ਟਰੈਕਿੰਗ',
+  bn: {
+    'Home': 'হোম',
+    'Shop': 'শপ',
+    'Shop all': 'সব পণ্য',
+    'Shop All Botanicals': 'সব ভেষজ পণ্য',
+    'Offers': 'অফার',
+    'Our science': 'আমাদের বিজ্ঞান',
+    'Our story': 'আমাদের গল্প',
+    'Our roots': 'আমাদের শিকড়',
+    'Our impact': 'আমাদের প্রভাব',
+    'Help & support': 'সাহায্য ও সহায়তা',
+    'Botanical Science': 'উদ্ভিদ বিজ্ঞান',
+    'Sign In': 'সাইন ইন',
+    'Join Bhumivera': 'যুক্ত হন',
+    'Create an account': 'অ্যাকাউন্ট খুলুন',
+    'My account': 'আমার অ্যাকাউন্ট',
+    'Shopping Bag': 'শপিং ব্যাগ',
+    'Track an order': 'অর্ডার ট্র্যাক করুন',
+    'Track Orders': 'অর্ডার ট্র্যাক করুন',
+    'Wishlist': 'পছন্দের তালিকা',
+    'Compare products': 'পণ্য তুলনা',
+    'Damaged item & courtesy credit': 'ক্ষতিগ্রস্ত পণ্য ও সৌজন্য ক্রেডিট',
+    'Damaged Items & Courtesy Credit': 'ক্ষতিগ্রস্ত পণ্য ও সৌজন্য ক্রেডিট',
+    'Help & Support Guide': 'সহায়তা গাইড',
+    'Connect With Us': 'আমাদের সাথে যুক্ত হন',
+    'Bhumivera Client Concierge': 'ক্লায়েন্ট সহায়ক',
+    'Verify Order': 'অর্ডার যাচাই করুন',
+    'Ask AI Guide': 'AI গাইডকে জিজ্ঞাসা করুন',
+    'Visual Guide': 'ভিজ্যুয়াল গাইড',
+    'Map Guide': 'ম্যাপ গাইড',
+    'Add to Bag': 'ব্যাগে যোগ করুন',
+    'Buy Now': 'এখনই কিনুন',
+    'View Details': 'বিস্তারিত দেখুন',
+    'Reset your password': 'পাসওয়ার্ড রিসেট করুন',
+    'Address Book': 'ঠিকানা খাতা',
+    'Add New Address': 'নতুন ঠিকানা যোগ করুন',
+    'Natural Purity. Premium Care.': 'প্রাকৃতিক বিশুদ্ধতা. প্রিমিয়াম যত্ন.',
+    'Replacement & Courtesy Credit Policy': 'প্রতিস্থাপন ও সৌজন্য ক্রেডিট নীতি',
+    'Search skincare, hair care, ingredients...': 'স্কিনকেয়ার বা উপাদান খুঁজুন...',
+    'Discover': 'অনুসন্ধান',
   },
-
-  // Skincare Layering
-  layering_guide_title: {
-    en: 'Chronobiological AM & PM Layering Ritual',
-    hi: 'सुबह और शाम की स्किनकेयर दिनचर्या',
-    bn: 'সকাল ও রাতের ত্বকের যত্ন ও ব্যবহারের নিয়ম',
-    mr: 'सकाळ आणि संध्याकाळची स्किनकेअर दिनचर्या',
-    te: 'ఉదయం & రాత్రి స్కిన్‌కేర్ లేయరింగ్ విధానం',
-    ta: 'காலை மற்றும் இரவு சரும பராமரிப்பு வரிசைமுறை',
-    gu: 'સવાર અને સાંજની સ્કિનકેર ક્રમ પદ્ધતિ',
-    ur: 'صبح اور شام کے اسکن کیئر کے درست طریقے',
-    kn: 'ಬೆಳಿಗ್ಗೆ ಮತ್ತು ಸಂಜೆಯ ತ್ವಚೆ ಸಂರಕ್ಷಣಾ ವಿಧಾನ',
-    ml: 'രാവിലെയും വൈകുന്നേരവുമുള്ള ചർമ്മ സംരക്ഷണ ക്രമം',
-    pa: 'ਸਵੇਰ ਅਤੇ ਸ਼ਾਮ ਦੀ ਸਕਿਨਕੇਅਰ ਵਰਤੋਂ ਦਾ ਤਰੀਕਾ',
+  mr: {
+    'Home': 'मुख्यपृष्ठ',
+    'Shop': 'खरेदी करा',
+    'Shop all': 'सर्व उत्पादने',
+    'Shop All Botanicals': 'सर्व वनस्पती उत्पादने',
+    'Offers': 'ऑफर',
+    'Our science': 'आमचे विज्ञान',
+    'Our story': 'आमची कथा',
+    'Help & support': 'मदत आणि सहकार्य',
+    'Botanical Science': 'वनस्पती शास्त्र',
+    'Sign In': 'साइन इन',
+    'Join Bhumivera': 'खाते तयार करा',
+    'Create an account': 'खाते तयार करा',
+    'My account': 'माझे खाते',
+    'Shopping Bag': 'खरेदी पिशवी',
+    'Track an order': 'ऑर्डर ट्रॅक करा',
+    'Track Orders': 'ऑर्डर ट्रॅक करा',
+    'Wishlist': 'आवडते',
+    'Damaged item & courtesy credit': 'नुकसान झालेले उत्पादन आणि सौजन्य क्रेडिट',
+    'Damaged Items & Courtesy Credit': 'नुकसान झालेले उत्पादन आणि सौजन्य क्रेडिट',
+    'Help & Support Guide': 'मदत मार्गदर्शक',
+    'Connect With Us': 'आमच्याशी जोडा',
+    'Verify Order': 'ऑर्डर तपासा',
+    'Ask AI Guide': 'AI मदतनीसाला विचारा',
+    'Visual Guide': 'चित्रात्मक मार्गदर्शक',
+    'Map Guide': 'नकाशा मार्गदर्शक',
+    'Add to Bag': 'बॅगमध्ये जोडा',
+    'Buy Now': 'आता खरेदी करा',
+    'View Details': 'तपशील पहा',
+    'Reset your password': 'पासवर्ड रीसेट करा',
+    'Address Book': 'पत्ता पुस्तिका',
+    'Add New Address': 'नवीन पत्ता जोडा',
+    'Search skincare, hair care, ingredients...': 'त्वचा काळजी किंवा घटक शोधा...',
+    'Discover': 'शोधा',
+  },
+  te: {
+    'Home': 'హోమ్',
+    'Shop': 'షాప్',
+    'Shop all': 'అన్ని ఉత్పత్తులు',
+    'Offers': 'ఆఫర్లు',
+    'Our science': 'మా సైన్స్',
+    'Our story': 'మా కథ',
+    'Help & support': 'సహాయం & మద్దతు',
+    'Botanical Science': 'బొటానికల్ సైన్స్',
+    'Sign In': 'సైన్ ఇన్',
+    'My account': 'నా ఖాతా',
+    'Shopping Bag': 'షాపింగ్ బ్యాగ్',
+    'Track an order': 'ఆర్డర్ ట్రాక్ చేయండి',
+    'Track Orders': 'ఆర్డర్ ట్రాక్ చేయండి',
+    'Damaged item & courtesy credit': 'దెబ్బతిన్న ఉత్పత్తి & మర్యాద క్రెడిట్',
+    'Help & Support Guide': 'సహాయక గైడ్',
+    'Connect With Us': 'మమ్మల్ని సంప్రదించండి',
+    'Verify Order': 'ఆర్డర్ ధృవీకరించండి',
+    'Ask AI Guide': 'AI గైడ్ ని అడగండి',
+    'Visual Guide': 'విజువల్ గైడ్',
+    'Map Guide': 'మ్యాప్ గైడ్',
+    'Add to Bag': 'బ్యాగ్‌కు జోడించండి',
+    'Buy Now': 'ఇప్పుడే కొనండి',
+    'Reset your password': 'పాస్‌వర్డ్‌ను రీసెట్ చేయండి',
+    'Address Book': 'చిరునామా పుస్తకం',
+    'Add New Address': 'కొత్త చిరునామా జోడించండి',
+    'Search skincare, hair care, ingredients...': 'స్కిన్‌కేర్ లేదా ఉత్పత్తులను శోధించండి...',
+    'Discover': 'కనుగొనండి',
+  },
+  ta: {
+    'Home': 'முகப்பு',
+    'Shop': 'ஷாப்பிங்',
+    'Shop all': 'அனைத்து பொருட்கள்',
+    'Offers': 'சலுகைகள்',
+    'Our science': 'எங்கள் அறிவியல்',
+    'Our story': 'எங்கள் கதை',
+    'Help & support': 'உதவி மற்றும் ஆதரவு',
+    'Botanical Science': 'தாவர அறிவியல்',
+    'Sign In': 'உள்நுழைக',
+    'My account': 'என் கணக்கு',
+    'Shopping Bag': 'ஷாப்பிங் பை',
+    'Track an order': 'ஆர்டரை கண்காணிக்கவும்',
+    'Track Orders': 'ஆர்டரை கண்காணிக்கவும்',
+    'Damaged item & courtesy credit': 'சேதமடைந்த பொருள் & கிரெடிட்',
+    'Help & Support Guide': 'உதவி வழிகாட்டி',
+    'Connect With Us': 'எங்களுடன் இணையுங்கள்',
+    'Verify Order': 'ஆர்டரை சரிபார்க்கவும்',
+    'Ask AI Guide': 'AI வழிகாட்டியிடம் கேளுங்கள்',
+    'Visual Guide': 'படக் குறிப்பு',
+    'Map Guide': 'வரைபட வழிகாட்டி',
+    'Add to Bag': 'பையில் சேர்க்கவும்',
+    'Buy Now': 'இப்போதே வாங்கவும்',
+    'Reset your password': 'கடவுச்சொல்லை மீட்டமைക്കുക',
+    'Address Book': 'முகவரி புத்தகம்',
+    'Add New Address': 'புதிய முகவரி சேர்க்கவும்',
+    'Search skincare, hair care, ingredients...': 'சரும பராமரிப்பு பொருட்களைத் தேடுங்கள்...',
+    'Discover': 'கண்டறியுங்கள்',
+  },
+  gu: {
+    'Home': 'હોમ',
+    'Shop': 'શોપ',
+    'Shop all': 'બધી વસ્તુઓ',
+    'Offers': 'ઑફર્સ',
+    'Our science': 'અમારું વિજ્ઞાન',
+    'Our story': 'અમારી વાર્તા',
+    'Help & support': 'મદદ અને સહાય',
+    'Botanical Science': 'વનસ્પતિ વિજ્ઞાન',
+    'Sign In': 'સાઇન ઇન',
+    'My account': 'મારું એકાઉન્ટ',
+    'Shopping Bag': 'શોપિંગ બેગ',
+    'Track an order': 'ઓર્ડર ટ્રેક કરો',
+    'Track Orders': 'ઓર્ડર ટ્રેક કરો',
+    'Damaged item & courtesy credit': 'ક્ષતિગ્રસ્ત વસ્તુ અને ક્રેડિટ',
+    'Help & Support Guide': 'સહાયક માર્ગદર્શિકા',
+    'Connect With Us': 'અમારી સાથે જોડાઓ',
+    'Verify Order': 'ઓર્ડર ચકાસો',
+    'Ask AI Guide': 'AI ગાઇડને પૂછો',
+    'Visual Guide': 'વિઝ્યુઅલ ગાઇડ',
+    'Map Guide': 'નકશા માર્ગદર્શિકા',
+    'Add to Bag': 'બેગમાં ઉમેરો',
+    'Buy Now': 'હમણાં ખરીદો',
+    'Reset your password': 'પાસવર્ડ રીસેટ કરો',
+    'Address Book': 'સરનામાં પુસ્તિકા',
+    'Add New Address': 'નવું સરનામું ઉમેરો',
+    'Search skincare, hair care, ingredients...': 'સ્કિનકેર અથવા ઘટકો શોધો...',
+    'Discover': 'શોધો',
+  },
+  ur: {
+    'Home': 'ہوم',
+    'Shop': 'شاپ',
+    'Shop all': 'تمام مصنوعات',
+    'Offers': 'پیشکشیں',
+    'Our science': 'ہماری سائنس',
+    'Our story': 'ہماری کہانی',
+    'Help & support': 'مدد اور سپورٹ',
+    'Botanical Science': 'نباتیاتی سائنس',
+    'Sign In': 'سائن ان',
+    'My account': 'میرا اکاؤنٹ',
+    'Shopping Bag': 'شاپنگ بیگ',
+    'Track an order': 'آرڈر ٹریک کریں',
+    'Track Orders': 'آرڈر ٹریک کریں',
+    'Damaged item & courtesy credit': 'خراب اشیاء اور کریڈٹ',
+    'Help & Support Guide': 'رہنمائی گائیڈ',
+    'Connect With Us': 'ہم سے رابطہ کریں',
+    'Verify Order': 'آرڈر کی تصدیق کریں',
+    'Ask AI Guide': 'AI سے پوچھیں',
+    'Visual Guide': 'بصری گائیڈ',
+    'Map Guide': 'نقشہ گائیڈ',
+    'Add to Bag': 'بیگ میں شامل کریں',
+    'Buy Now': 'ابھی خریدیں',
+    'Reset your password': 'پاس ورڈ دوبارہ ترتیب دیں',
+    'Address Book': 'ایڈریس بک',
+    'Add New Address': 'نیا پتہ شامل کریں',
+    'Search skincare, hair care, ingredients...': 'اسکن کیئر یا اشیاء تلاش کریں...',
+    'Discover': 'دریافت کریں',
+  },
+  kn: {
+    'Home': 'ಮುಖಪುಟ',
+    'Shop': 'ಶಾಪ್',
+    'Shop all': 'ಎಲ್ಲಾ ಉತ್ಪನ್ನಗಳು',
+    'Offers': 'ಆಫರ್ಗಳು',
+    'Our science': 'ನಮ್ಮ ವಿಜ್ಞಾನ',
+    'Help & support': 'ಸಹಾಯ ಮತ್ತು ಬೆಂಬಲ',
+    'Botanical Science': 'ಬೊಟಾನಿಕಲ್ ಸೈನ್ಸ್',
+    'Sign In': 'ಸೈನ್ ಇನ್',
+    'My account': 'ನನ್ನ ಖಾತೆ',
+    'Shopping Bag': 'ಶಾಪಿಂಗ್ ಬ್ಯಾಗ್',
+    'Track an order': 'ಆರ್ಡರ್ ಟ್ರ್ಯಾಕ್ ಮಾಡಿ',
+    'Track Orders': 'ಆರ್ಡರ್ ಟ್ರ್ಯಾಕ್ ಮಾಡಿ',
+    'Damaged item & courtesy credit': 'ಹಾನಿಗೊಳಗಾದ ವಸ್ತು ಮತ್ತು ಕ್ರೆಡಿಟ್',
+    'Help & Support Guide': 'ಸಹಾಯ ಮಾರ್ಗದರ್ಶಿ',
+    'Connect With Us': 'ನಮ್ಮೊಂದಿಗೆ ಸಂಪರ್ಕದಲ್ಲಿರಿ',
+    'Verify Order': 'ಆರ್ಡರ್ ಪರಿಶೀಲಿಸಿ',
+    'Ask AI Guide': 'AI ಗೈಡ್ ಕೇಳಿ',
+    'Visual Guide': 'ಚಿತ್ರ ಮಾರ್ಗದರ್ಶಿ',
+    'Map Guide': 'ಮ್ಯಾಪ್ ಗೈಡ್',
+    'Add to Bag': 'ಬ್ಯಾಗ್ಗೆ ಸೇರಿಸಿ',
+    'Buy Now': 'ಈಗಲೇ ಖರೀದಿಸಿ',
+    'Reset your password': 'ಪಾಸ್‌ವರ್ಡ್ ಮರುಹೊಂದಿಸಿ',
+    'Address Book': 'ವಿಳಾಸ ಪುಸ್ತಕ',
+    'Add New Address': 'ಹೊಸ ವಿಳಾಸ ಸೇರಿಸಿ',
+    'Search skincare, hair care, ingredients...': 'ಉತ್ಪನ್ನಗಳನ್ನು ಹುಡುಕಿ...',
+    'Discover': 'ಹುಡುಕಿ',
+  },
+  ml: {
+    'Home': 'ഹോം',
+    'Shop': 'ഷോപ്പ്',
+    'Shop all': 'എല്ലാ ഉൽപ്പന്നങ്ങളും',
+    'Offers': 'ഓഫറുകൾ',
+    'Our science': 'ഞങ്ങളുടെ ശാസ്ത്രം',
+    'Help & support': 'സഹായവും പിന്തുണയും',
+    'Botanical Science': 'ബൊട്ടാണിക്കൽ സയൻസ്',
+    'Sign In': 'സൈൻ ഇൻ',
+    'My account': 'എന്റെ അക്കൗണ്ട്',
+    'Shopping Bag': 'ഷോപ്പിംഗ് ബാഗ്',
+    'Track an order': 'ഓർഡർ ട്രാക്ക് ചെയ്യുക',
+    'Track Orders': 'ഓർഡർ ട്രാക്ക് ചെയ്യുക',
+    'Damaged item & courtesy credit': 'കേടുവന്ന ഉൽപ്പന്നവും ക്രെഡിറ്റും',
+    'Help & Support Guide': 'സഹായ മാർഗ്ഗനിർദ്ദേശം',
+    'Connect With Us': 'ഞങ്ങളുമായി ബന്ധപ്പെടുക',
+    'Verify Order': 'ഓർഡർ പരിശോധിക്കുക',
+    'Ask AI Guide': 'AI ഗൈഡിനോട് ചോദിക്കുക',
+    'Visual Guide': 'വിഷ്വൽ ഗൈഡ്',
+    'Map Guide': 'മാപ്പ് ഗൈഡ്',
+    'Add to Bag': 'ബാഗിലേക്ക് ചേർക്കുക',
+    'Buy Now': 'ഇപ്പോൾ വാങ്ങുക',
+    'Reset your password': 'പാസ്‌വേഡ് റീസെറ്റ് ചെയ്യുക',
+    'Address Book': 'വിലാസ പുസ്തകം',
+    'Add New Address': 'പുതിയ വിലാസം ചേർക്കുക',
+    'Search skincare, hair care, ingredients...': 'ഉൽപ്പന്നങ്ങൾ തിരയുക...',
+    'Discover': 'കണ്ടെത്തുക',
+  },
+  pa: {
+    'Home': 'ਮੁੱਖ ਪੰਨਾ',
+    'Shop': 'ਦੁਕਾਨ',
+    'Shop all': 'ਸਾਰੇ ਉਤਪਾਦ',
+    'Offers': 'ਆਫਰ',
+    'Our science': 'ਸਾਡਾ ਵਿਗਿਆਨ',
+    'Help & support': 'ਸਹਾਇਤਾ ਅਤੇ ਸਹਿਯੋਗ',
+    'Botanical Science': 'ਬੋਟੈਨੀਕਲ ਵਿਗਿਆਨ',
+    'Sign In': 'ਸਾਈਨ ਇਨ',
+    'My account': 'ਮੇਰਾ ਖਾਤਾ',
+    'Shopping Bag': 'ਖਰੀਦਦਾਰੀ ਝੋਲਾ',
+    'Track an order': 'ਆਰਡਰ ਟਰੈਕ ਕਰੋ',
+    'Track Orders': 'ਆਰਡਰ ਟਰੈਕ ਕਰੋ',
+    'Damaged item & courtesy credit': 'ਖਰਾਬ ਉਤਪਾਦ ਅਤੇ ਵਾਲਿਟ ਕ੍ਰੈਡਿਟ',
+    'Help & Support Guide': 'ਸਹਾਇਤਾ ਗਾਈਡ',
+    'Connect With Us': 'ਸਾਡੇ ਨਾਲ ਜੁੜੋ',
+    'Verify Order': 'ਆਰਡਰ ਦੀ ਜਾਂਚ ਕਰੋ',
+    'Ask AI Guide': 'AI ਗਾਈਡ ਨੂੰ ਪੁੱਛੋ',
+    'Visual Guide': 'ਵਿਜ਼ੂਅਲ ਗਾਈਡ',
+    'Map Guide': 'ਨਕਸ਼ਾ ਗਾਈਡ',
+    'Add to Bag': 'ਬੈਗ ਵਿੱਚ ਸ਼ਾਮਲ ਕਰੋ',
+    'Buy Now': 'ਹੁਣੇ ਖਰੀਦੋ',
+    'Reset your password': 'ਪਾਸਵਰਡ ਰੀਸੈੱਟ ਕਰੋ',
+    'Address Book': 'ਪਤਾ ਪੁਸਤਕ',
+    'Add New Address': 'ਨਵਾਂ ਪਤਾ ਸ਼ਾਮਲ ਕਰੋ',
+    'Search skincare, hair care, ingredients...': 'ਉਤਪਾਦ ਖੋਜੋ...',
+    'Discover': 'ਲੱਭੋ',
   },
 };
 
-let googleTranslateWidgetInitialized = false;
-let googleTranslateComboObserver;
-let googleTranslateComboTimeout;
-let googleTranslateBannerObserver;
-let googleTranslateTargetLang = 'en';
+const ORIGINAL_TEXT_MAP = new WeakMap();
+let domObserver = null;
+
+/**
+ * High-speed in-place DOM translation walker
+ * Replaces visible English text nodes with native Indian translations with 0ms latency
+ */
+export function translateDomNodes(targetLang) {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+  const lang = targetLang || getCurrentLanguage();
+  const phraseMap = DOM_PHRASE_DICTIONARY[lang];
+
+  function processTextNode(node) {
+    if (!node || node.nodeType !== Node.TEXT_NODE) return;
+    const parent = node.parentElement;
+    if (!parent) return;
+    const tag = parent.tagName ? parent.tagName.toLowerCase() : '';
+    if (['script', 'style', 'code', 'pre', 'noscript'].includes(tag)) return;
+    if (parent.isContentEditable) return;
+
+    let original = ORIGINAL_TEXT_MAP.get(node);
+    if (original === undefined) {
+      original = node.nodeValue;
+      ORIGINAL_TEXT_MAP.set(node, original);
+    }
+
+    if (lang === 'en' || !phraseMap) {
+      if (node.nodeValue !== original) {
+        node.nodeValue = original;
+      }
+      return;
+    }
+
+    const trimmed = original.trim();
+    if (!trimmed) return;
+
+    if (phraseMap[trimmed]) {
+      const leading = original.match(/^\s*/)?.[0] || '';
+      const trailing = original.match(/\s*$/)?.[0] || '';
+      node.nodeValue = leading + phraseMap[trimmed] + trailing;
+    }
+  }
+
+  // Walk text nodes in the DOM
+  if (document.body) {
+    const walker = document.createTreeWalker(
+      document.body,
+      NodeFilter.SHOW_TEXT,
+      null,
+      false
+    );
+
+    let currentNode;
+    while ((currentNode = walker.nextNode())) {
+      processTextNode(currentNode);
+    }
+
+    // Translate input placeholders
+    document.querySelectorAll('input[placeholder], textarea[placeholder]').forEach((el) => {
+      let origPlaceholder = el.getAttribute('data-orig-placeholder');
+      if (origPlaceholder === null) {
+        origPlaceholder = el.placeholder;
+        el.setAttribute('data-orig-placeholder', origPlaceholder);
+      }
+      if (lang === 'en' || !phraseMap) {
+        el.placeholder = origPlaceholder;
+      } else if (phraseMap[origPlaceholder.trim()]) {
+        el.placeholder = phraseMap[origPlaceholder.trim()];
+      }
+    });
+  }
+
+  // Set up MutationObserver for any dynamic additions
+  if (!domObserver && typeof MutationObserver !== 'undefined' && document.body) {
+    domObserver = new MutationObserver((mutations) => {
+      const activeL = getCurrentLanguage();
+      if (activeL === 'en') return;
+      for (const m of mutations) {
+        for (const added of m.addedNodes) {
+          if (added.nodeType === Node.TEXT_NODE) {
+            processTextNode(added);
+          } else if (added.nodeType === Node.ELEMENT_NODE) {
+            const subWalker = document.createTreeWalker(
+              added,
+              NodeFilter.SHOW_TEXT,
+              null,
+              false
+            );
+            let subNode;
+            while ((subNode = subWalker.nextNode())) {
+              processTextNode(subNode);
+            }
+          }
+        }
+      }
+    });
+    domObserver.observe(document.body, { childList: true, subtree: true });
+  }
+}
 
 /**
  * Get the currently active language code from localStorage or navigator
@@ -224,42 +844,23 @@ export function getCurrentLanguage() {
   if (typeof window === 'undefined') return 'en';
   try {
     const saved = localStorage.getItem('bhumivera_language');
-    if (saved && SUPPORTED_INDIAN_LANGUAGES.some(l => l.code === saved)) {
+    if (saved && SUPPORTED_INDIAN_LANGUAGES.some((l) => l.code === saved)) {
       return saved;
     }
     // Auto-detect Indian locales from navigator
     const browserLang = (navigator.language || '').split('-')[0].toLowerCase();
-    const matched = SUPPORTED_INDIAN_LANGUAGES.find(l => l.code === browserLang);
+    const matched = SUPPORTED_INDIAN_LANGUAGES.find((l) => l.code === browserLang);
     return matched ? matched.code : 'en';
   } catch {
     return 'en';
   }
 }
 
-/**
- * Switch active language across the application and trigger global event
- */
-export function setLanguage(langCode) {
-  if (typeof window === 'undefined') return;
-  const target = SUPPORTED_INDIAN_LANGUAGES.some(l => l.code === langCode) ? langCode : 'en';
-  try {
-    localStorage.setItem('bhumivera_language', target);
-    document.documentElement.lang = target;
-    window.dispatchEvent(new CustomEvent('bhumivera:language-change', { detail: { lang: target } }));
-  } catch (err) {
-    console.error('[LanguageEngine] setLanguage error:', err);
-  }
-}
-
-/**
- * Look up a translated string with fallback to English
- */
-export function t(key, defaultFallback = '') {
-  const lang = getCurrentLanguage();
-  const entry = TRANSLATION_DICTIONARY[key];
-  if (!entry) return defaultFallback;
-  return entry[lang] || entry.en || defaultFallback;
-}
+let googleTranslateWidgetInitialized = false;
+let googleTranslateComboObserver;
+let googleTranslateComboTimeout;
+let googleTranslateBannerObserver;
+let googleTranslateTargetLang = 'en';
 
 function applyGoogleTranslation(lang) {
   const combo = document.querySelector('#google_translate_element .goog-te-combo');
@@ -277,16 +878,16 @@ function removeGoogleTranslateBanner(root) {
     root.remove();
   }
   root.querySelectorAll?.('.goog-te-banner-frame').forEach((banner) => banner.remove());
-  if (document.body.style.top) {
+  if (document.body?.style?.top) {
     document.body.style.setProperty('top', '0px', 'important');
   }
-  if (document.body.style.marginTop) {
+  if (document.body?.style?.marginTop) {
     document.body.style.setProperty('margin-top', '0px', 'important');
   }
 }
 
 function hideGoogleTranslateBanner() {
-  if (!document.body) return;
+  if (typeof document === 'undefined' || !document.body) return;
   removeGoogleTranslateBanner(document.body);
   if (googleTranslateBannerObserver) return;
 
@@ -304,25 +905,27 @@ function applyGoogleTranslationWhenReady(lang) {
   if (applyGoogleTranslation(lang)) {
     googleTranslateComboObserver?.disconnect();
     googleTranslateComboObserver = undefined;
-    window.clearTimeout(googleTranslateComboTimeout);
+    if (typeof window !== 'undefined') window.clearTimeout(googleTranslateComboTimeout);
     return;
   }
 
   googleTranslateComboObserver?.disconnect();
-  window.clearTimeout(googleTranslateComboTimeout);
-  googleTranslateComboObserver = new MutationObserver(() => {
-    if (applyGoogleTranslation(lang)) {
-      googleTranslateComboObserver.disconnect();
-      window.clearTimeout(googleTranslateComboTimeout);
+  if (typeof window !== 'undefined') window.clearTimeout(googleTranslateComboTimeout);
+  if (typeof MutationObserver !== 'undefined' && typeof document !== 'undefined' && document.body) {
+    googleTranslateComboObserver = new MutationObserver(() => {
+      if (applyGoogleTranslation(lang)) {
+        googleTranslateComboObserver.disconnect();
+        if (typeof window !== 'undefined') window.clearTimeout(googleTranslateComboTimeout);
+        googleTranslateComboObserver = undefined;
+      }
+    });
+    googleTranslateComboObserver.observe(document.body, { childList: true, subtree: true });
+    googleTranslateComboTimeout = window.setTimeout(() => {
+      googleTranslateComboObserver?.disconnect();
       googleTranslateComboObserver = undefined;
-    }
-  });
-  googleTranslateComboObserver.observe(document.body, { childList: true, subtree: true });
-  googleTranslateComboTimeout = window.setTimeout(() => {
-    googleTranslateComboObserver?.disconnect();
-    googleTranslateComboObserver = undefined;
-    console.error('[LanguageEngine] Google Translate language selector did not become available.');
-  }, 15000);
+      console.warn('[LanguageEngine] Google Translate language option did not become available.');
+    }, 15000);
+  }
 }
 
 function initializeGoogleTranslate() {
@@ -340,6 +943,33 @@ function initializeGoogleTranslate() {
     'google_translate_element'
   );
   applyGoogleTranslationWhenReady(googleTranslateTargetLang);
+}
+
+/**
+ * Switch active language across the application and trigger global event
+ */
+export function setLanguage(langCode, options = {}) {
+  if (typeof window === 'undefined') return;
+  const target = SUPPORTED_INDIAN_LANGUAGES.some((l) => l.code === langCode) ? langCode : 'en';
+  try {
+    localStorage.setItem('bhumivera_language', target);
+    document.documentElement.lang = target;
+    translateDomNodes(target);
+    window.dispatchEvent(new CustomEvent('bhumivera:language-change', { detail: { lang: target } }));
+    activateFullSiteTranslation(target, options);
+  } catch (err) {
+    console.error('[LanguageEngine] setLanguage error:', err);
+  }
+}
+
+/**
+ * Look up a translated string with fallback to English
+ */
+export function t(key, defaultFallback = '', langOverride) {
+  const lang = langOverride || getCurrentLanguage();
+  const entry = TRANSLATION_DICTIONARY[key];
+  if (!entry) return defaultFallback;
+  return entry[lang] || entry.en || defaultFallback;
 }
 
 /**
