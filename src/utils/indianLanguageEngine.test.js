@@ -82,6 +82,41 @@ describe('activateFullSiteTranslation', () => {
     expect(document.cookie).not.toContain('googtrans=/en/');
   });
 
+  it('waits for Google Translate to populate a selected language option', async () => {
+    window.google = {
+      translate: {
+        TranslateElement: class {
+          static InlineLayout = { SIMPLE: 0 };
+
+          constructor(_options, targetId) {
+            translateCombo = document.createElement('select');
+            translateCombo.className = 'goog-te-combo';
+            ['en', 'hi'].forEach((lang) => {
+              const option = document.createElement('option');
+              option.value = lang;
+              translateCombo.appendChild(option);
+            });
+            translateCombo.addEventListener('change', changeHandler);
+            document.getElementById(targetId).appendChild(translateCombo);
+          }
+        },
+      },
+    };
+
+    activateFullSiteTranslation('bn');
+    expect(translateCombo.value).toBe('en');
+    expect(changeHandler).not.toHaveBeenCalled();
+
+    const bengaliOption = document.createElement('option');
+    bengaliOption.value = 'bn';
+    translateCombo.appendChild(bengaliOption);
+
+    await vi.waitFor(() => {
+      expect(translateCombo.value).toBe('bn');
+      expect(changeHandler).toHaveBeenCalledOnce();
+    });
+  });
+
   it('removes the Google toolbar if it is injected after translation starts', async () => {
     activateFullSiteTranslation('hi');
     const banner = document.createElement('iframe');

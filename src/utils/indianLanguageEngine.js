@@ -263,7 +263,9 @@ export function t(key, defaultFallback = '') {
 
 function applyGoogleTranslation(lang) {
   const combo = document.querySelector('#google_translate_element .goog-te-combo');
-  if (!combo) return false;
+  if (!combo || !Array.from(combo.options).some((option) => option.value === lang)) {
+    return false;
+  }
 
   combo.value = lang;
   combo.dispatchEvent(new Event('change', { bubbles: true }));
