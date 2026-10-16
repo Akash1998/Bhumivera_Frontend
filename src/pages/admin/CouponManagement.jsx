@@ -1,609 +1,1046 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import * as XLSX from 'xlsx';
-import { 
-  Ticket, Percent, IndianRupee, Zap, Calendar, Users, 
-  Target, Search, RefreshCw, Plus, Edit2, Trash2, 
-  CheckCircle, XCircle, AlertTriangle, Download, 
-  Clock, TrendingUp, Filter, ShieldAlert, Sparkles
+import {
+  Ticket,
+  Plus,
+  Search,
+  Edit2,
+  Trash2,
+  Calendar,
+  Percent,
+  CheckCircle,
+  XCircle,
+  AlertCircle,
+  ChevronLeft,
+  ChevronRight,
+  RefreshCw,
+  Copy,
+  ShieldCheck,
+  History,
+  Sparkles,
+  Users,
+  Layers,
+  Power,
+  X,
 } from 'lucide-react';
-import api from '../../services/api';
-import { useToast } from '../../context/ToastContext';
-import DatetimeTzInput from '../../components/DatetimeTzInput';
-import { defaultRange } from '../../utils/dateTz';
+import { coupons as couponApi } from '../../services/api';
 
-const toIsoString = value => {
-  if (!value) return '';
-  const date = new Date(value);
-  return Number.isFinite(date.getTime()) ? date.toISOString() : '';
+const EMPTY_FORM = {
+  code: '',
+  discount_type: 'percentage',
+  discount_value: '',
+  reward_type: 'standard',
+  min_order_value: '',
+  max_discount: '',
+  usage_limit: '',
+  per_user_limit: '1',
+  first_order_only: false,
+  allowed_payment_modes: '',
+  restricted_user_id: '',
+  campaign_tag: '',
+  description: '',
+  expiry_date: '',
+  status: 'active',
+};
+
+const EMPTY_BULK_FORM = {
+  prefix: 'BHVM',
+  count: 10,
+  discount_type: 'percentage',
+  discount_value: 15,
+  min_order_value: 499,
+  max_discount: 300,
+  usage_limit: 1,
+  per_user_limit: 1,
+  first_order_only: false,
+  reward_type: 'standard',
+  campaign_tag: 'VIP_DROP',
+  expiry_date: '',
 };
 
 export default function CouponManagement() {
   const [coupons, setCoupons] = useState([]);
-  const [loading, setLoading] = useState(true);
-  
-  // Filtering & Pagination
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('all');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage] = useState(10);
-
-  // Modal & Form State
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('core');
-  const [editingItem, setEditingItem] = useState(null);
-  const [isProcessing, setIsProcessing] = useState(false);
-
-  const [form, setForm] = useState({
-    code: '',
-    description: '',
-    discount_type: 'percentage', // percentage, fixed
-    discount_value: '',
-    min_purchase: '',
-    max_discount: '',
-    usage_limit: '',
-    valid_from: '',
-    valid_until: '',
-    status: 'active'
+  const [summary, setSummary] = useState({
+    totalCoupons: 0,
+    activeCoupons: 0,
+    expiredCoupons: 0,
+    disabledCoupons: 0,
+    totalRedemptions: 0,
+    reversedRedemptions: 0,
+    uniqueCustomers: 0,
+    totalDiscountAmount: 0,
   });
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState('');
+  const [notice, setNotice] = useState('');
 
-  const { showToast } = useToast() || {};
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
 
-  useEffect(() => { fetchCoupons(); }, []);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingCoupon, setEditingCoupon] = useState(null);
+  const [formData, setFormData] = useState(EMPTY_FORM);
 
-  const fetchCoupons = async () => {
-    setLoading(true);
+  const [isBulkModalOpen, setIsBulkModalOpen] = useState(false);
+  const [bulkForm, setBulkForm] = useState(EMPTY_BULK_FORM);
+
+  const [redemptionModalCoupon, setRedemptionModalCoupon] = useState(null);
+  const [redemptionLogs, setRedemptionLogs] = useState([]);
+  const [loadingRedemptions, setLoadingRedemptions] = useState(false);
+
+  const fetchCoupons = async (showSpinner = false) => {
     try {
-      const res = await api.get('/coupons', { adminAuth: true });
-      setCoupons(res.data?.coupons || res.data?.data || res.data || []);
+      if (showSpinner) setRefreshing(true);
+      else setLoading(true);
+      setError('');
+      const response = await couponApi.getAllAdmin();
+      const rows = Array.isArray(response.data?.data) ? response.data.data : [];
+      setCoupons(rows);
+      if (response.data?.summary) {
+        setSummary(response.data.summary);
+      } else {
+        const now = new Date();
+        setSummary({
+          totalCoupons: rows.length,
+          activeCoupons: rows.filter(
+            (c) => c.status === 'active' && (!c.expiry_date || new Date(c.expiry_date) > now)
+          ).length,
+          expiredCoupons: rows.filter(
+            (c) => c.status === 'expired' || (c.expiry_date && new Date(c.expiry_date) <= now)
+          ).length,
+          disabledCoupons: rows.filter((c) => c.status === 'disabled').length,
+          totalRedemptions: rows.reduce((s, c) => s + Number(c.verified_redemptions ?? c.used_count ?? 0), 0),
+          reversedRedemptions: 0,
+          uniqueCustomers: rows.reduce((s, c) => s + Number(c.unique_redeemers || 0), 0),
+          totalDiscountAmount: rows.reduce((s, c) => s + Number(c.total_discount_given || 0), 0),
+        });
+      }
     } catch (err) {
-      showToast?.('Failed to synchronize campaign matrix.', 'error');
+      setError(err.response?.data?.message || err.message || 'Failed to load coupons.');
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   };
 
-  // --- ALGORITHMIC CODE GENERATOR ---
-  const generateHash = (length = 8, prefix = '') => {
-    const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-    let result = prefix ? `${prefix}-` : '';
-    for (let i = 0; i < length; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    setForm({ ...form, code: result });
-    showToast?.('Cryptographic hash generated', 'success');
+  useEffect(() => {
+    fetchCoupons();
+  }, []);
+
+  const flashNotice = (msg) => {
+    setNotice(msg);
+    setTimeout(() => {
+      setNotice((prev) => (prev === msg ? '' : prev));
+    }, 4500);
   };
 
-  // --- CRUD OPERATIONS ---
-  const openModal = (item = null) => {
-    if (item) {
-      setEditingItem(item);
-      setForm({
-        code: item.code || '',
-        description: item.description || '',
-        discount_type: item.discount_type || 'percentage',
-        discount_value: item.discount_value || '',
-        min_purchase: item.min_purchase || item.min_cart_value || '',
-        max_discount: item.max_discount || item.max_discount_amount || '',
-        usage_limit: item.usage_limit || '',
-        valid_from: toIsoString(item.valid_from),
-        valid_until: toIsoString(item.valid_until || item.expires_at),
-        status: item.status || 'active'
+  const handleCopyCode = async (code) => {
+    try {
+      await navigator.clipboard.writeText(code);
+      flashNotice(`Copied coupon code "${code}" to clipboard.`);
+    } catch {
+      flashNotice(`Coupon code: ${code}`);
+    }
+  };
+
+  const generateRandomCode = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+    let suffix = '';
+    for (let i = 0; i < 6; i += 1) {
+      suffix += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setFormData((prev) => ({ ...prev, code: `BHVM-${suffix}` }));
+  };
+
+  const handleOpenModal = (coupon = null) => {
+    setError('');
+    if (coupon) {
+      setEditingCoupon(coupon);
+      const rawDate = coupon.expiry_date || coupon.expires_at;
+      const formattedDate = rawDate ? new Date(rawDate).toISOString().slice(0, 16) : '';
+      setFormData({
+        code: coupon.code || '',
+        discount_type: coupon.discount_type || 'percentage',
+        discount_value: coupon.discount_value ?? '',
+        reward_type: coupon.reward_type || 'standard',
+        min_order_value: coupon.min_order_value ?? coupon.minimum_order_amount ?? '',
+        max_discount: coupon.max_discount || '',
+        usage_limit: coupon.usage_limit || '',
+        per_user_limit:
+          coupon.per_user_limit !== undefined && coupon.per_user_limit !== null
+            ? String(coupon.per_user_limit)
+            : '1',
+        first_order_only: Boolean(Number(coupon.first_order_only)),
+        allowed_payment_modes: coupon.allowed_payment_modes || '',
+        restricted_user_id: coupon.restricted_user_id || '',
+        campaign_tag: coupon.campaign_tag || '',
+        description: coupon.description || '',
+        expiry_date: formattedDate,
+        status: coupon.status || 'active',
       });
     } else {
-      setEditingItem(null);
-      const dates = defaultRange(0, 30);
-      setForm({
-        code: '', description: '', discount_type: 'percentage', discount_value: '',
-        min_purchase: '', max_discount: '', usage_limit: '', valid_from: dates.startIso, valid_until: dates.endIso, status: 'active'
-      });
+      setEditingCoupon(null);
+      const defaultExpiry = new Date(Date.now() + 30 * 86400 * 1000).toISOString().slice(0, 16);
+      setFormData({ ...EMPTY_FORM, expiry_date: defaultExpiry });
     }
-    setActiveTab('core');
     setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setEditingCoupon(null);
+  };
+
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setFormData((prev) => {
+      const next = {
+        ...prev,
+        [name]: type === 'checkbox' ? checked : name === 'code' ? value.toUpperCase() : value,
+      };
+      if (name === 'discount_type' && value === 'free_shipping') {
+        next.reward_type = 'free_shipping';
+        next.discount_value = '0';
+      } else if (name === 'reward_type' && value === 'free_shipping') {
+        next.discount_type = 'free_shipping';
+        next.discount_value = '0';
+      }
+      return next;
+    });
   };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (form.valid_from || form.valid_until) {
-      const start = new Date(form.valid_from).getTime();
-      const end = new Date(form.valid_until).getTime();
-      if (!Number.isFinite(start) || !Number.isFinite(end)) {
-        showToast?.('Enter both valid coupon dates or leave both dates empty.', 'error');
-        return;
-      }
-      if (end - start < 60 * 60 * 1000) {
-        showToast?.('Coupon expiry must be at least one hour after its start time.', 'error');
-        return;
-      }
-    }
-    setIsProcessing(true);
+    setError('');
     try {
-      const payload = { ...form };
-      // Sanitize empty strings to null for backend numbers
-      Object.keys(payload).forEach(key => { if (payload[key] === '') payload[key] = null; });
+      const payload = {
+        ...formData,
+        discount_value:
+          formData.discount_type === 'free_shipping' || formData.reward_type === 'free_shipping'
+            ? 0
+            : parseFloat(formData.discount_value || 0),
+        min_order_value: formData.min_order_value ? parseFloat(formData.min_order_value) : 0,
+        max_discount: formData.max_discount ? parseFloat(formData.max_discount) : null,
+        usage_limit: formData.usage_limit ? parseInt(formData.usage_limit, 10) : null,
+        per_user_limit:
+          formData.per_user_limit !== '' && formData.per_user_limit !== null
+            ? Math.max(0, parseInt(formData.per_user_limit, 10))
+            : 1,
+        first_order_only: Boolean(formData.first_order_only),
+        allowed_payment_modes: formData.allowed_payment_modes || null,
+        restricted_user_id: formData.restricted_user_id ? parseInt(formData.restricted_user_id, 10) : null,
+        campaign_tag: formData.campaign_tag || null,
+        description: formData.description || null,
+      };
 
-      if (editingItem) {
-        await api.put(`/coupons/${editingItem.id || editingItem._id}`, payload);
-        showToast?.('Campaign parameters updated', 'success');
+      if (editingCoupon) {
+        await couponApi.update(editingCoupon.id, payload);
+        flashNotice(`Updated coupon ${payload.code} with 512-bit tamper-proof rules.`);
       } else {
-        await api.post('/coupons', payload);
-        showToast?.('New campaign deployed', 'success');
+        await couponApi.create(payload);
+        flashNotice(`Created coupon ${payload.code} (Max ${payload.per_user_limit || 'Unlimited'} use(s) per customer).`);
       }
-      setIsModalOpen(false);
-      fetchCoupons();
+
+      handleCloseModal();
+      fetchCoupons(true);
     } catch (err) {
-      showToast?.('Campaign deployment failed', 'error');
+      setError(err.response?.data?.message || err.message || 'Could not save coupon.');
+    }
+  };
+
+  const handleBulkSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    try {
+      const res = await couponApi.bulkGenerate(bulkForm);
+      setIsBulkModalOpen(false);
+      flashNotice(res.data?.message || `Generated ${res.data?.coupons?.length || 0} campaign coupons.`);
+      fetchCoupons(true);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Bulk generation failed.');
+    }
+  };
+
+  const handleToggleStatus = async (coupon) => {
+    try {
+      const nextStatus = coupon.status === 'active' ? 'disabled' : 'active';
+      const res = await couponApi.toggleStatus(coupon.id, nextStatus);
+      flashNotice(res.data?.message || `Coupon ${coupon.code} marked ${nextStatus}.`);
+      fetchCoupons(true);
+    } catch (err) {
+      setError(err.response?.data?.message || err.message || 'Could not toggle status.');
+    }
+  };
+
+  const handleOpenRedemptions = async (coupon) => {
+    setRedemptionModalCoupon(coupon);
+    setRedemptionLogs([]);
+    setLoadingRedemptions(true);
+    try {
+      const res = await couponApi.redemptions(coupon.id);
+      setRedemptionLogs(res.data?.redemptions || []);
+    } catch (err) {
+      setError(err.response?.data?.message || 'Failed to load redemption ledger.');
     } finally {
-      setIsProcessing(false);
+      setLoadingRedemptions(false);
     }
   };
 
   const handleDelete = async (id) => {
-    if (!window.confirm('WARNING: Purging this campaign will invalidate it for all users immediately. Proceed?')) return;
+    if (!window.confirm('Are you sure you want to permanently delete this coupon?')) return;
     try {
-      await api.delete(`/coupons/${id}`);
-      showToast?.('Campaign purged', 'success');
-      fetchCoupons();
+      await couponApi.delete(id);
+      flashNotice('Coupon deleted.');
+      fetchCoupons(true);
     } catch (err) {
-      showToast?.('Purge protocol failed', 'error');
+      setError(err.response?.data?.message || err.message || 'Failed to delete coupon.');
     }
-  };
-
-  const toggleStatus = async (id, currentStatus) => {
-    try {
-      const newStatus = currentStatus === 'active' ? 'inactive' : 'active';
-      await api.put(`/coupons/${id}`, { status: newStatus });
-      fetchCoupons();
-      showToast?.(`Campaign ${newStatus === 'active' ? 'activated' : 'suspended'}`, 'success');
-    } catch (err) {
-      showToast?.('Unable to update campaign status', 'error');
-    }
-  };
-
-  // --- TELEMETRY & ANALYTICS ---
-  const exportToExcel = () => {
-    const worksheetData = coupons.map(c => ({
-      'Campaign Hash (Code)': c.code,
-      'Internal Designation': c.description || 'N/A',
-      'Discount Type': c.discount_type,
-      'Discount Value': c.discount_type === 'percentage' ? `${c.discount_value}%` : `₹${c.discount_value}`,
-      'Min Purchase (₹)': c.min_purchase || c.min_cart_value || 0,
-      'Times Claimed': c.used_count || 0,
-      'Max Usage Cap': c.usage_limit || 'Unlimited',
-      'Valid From': c.valid_from ? new Date(c.valid_from).toLocaleString() : 'Immediate',
-      'Expiry Horizon': c.valid_until ? new Date(c.valid_until).toLocaleString() : 'Never',
-      'Status': getCampaignStatus(c).label
-    }));
-
-    const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Campaign Matrix");
-    XLSX.writeFile(workbook, `Bhumivera_Growth_Matrix_${new Date().toISOString().split('T')[0]}.xlsx`);
-    showToast?.('Telemetry Exported', 'success');
-  };
-
-  const getCampaignStatus = (coupon) => {
-    const now = new Date();
-    if (coupon.status === 'inactive') return { label: 'Suspended', color: 'slate', icon: ShieldAlert };
-    if (coupon.valid_from && new Date(coupon.valid_from) > now) return { label: 'Scheduled', color: 'blue', icon: Clock };
-    if (coupon.valid_until && new Date(coupon.valid_until) < now) return { label: 'Expired', color: 'rose', icon: XCircle };
-    if (coupon.usage_limit && (coupon.used_count || 0) >= coupon.usage_limit) return { label: 'Depleted', color: 'amber', icon: AlertTriangle };
-    return { label: 'Live', color: 'emerald', icon: Zap };
   };
 
   const filteredCoupons = useMemo(() => {
-    return coupons.filter(c => {
-      const matchesSearch = c.code?.toLowerCase().includes(searchTerm.toLowerCase()) || c.description?.toLowerCase().includes(searchTerm.toLowerCase());
-      if (!matchesSearch) return false;
-      if (statusFilter !== 'all') {
-        const status = getCampaignStatus(c).label.toLowerCase();
-        return status === statusFilter.toLowerCase();
-      }
-      return true;
-    }).sort((a, b) => new Date(b.created_at || Date.now()) - new Date(a.created_at || Date.now()));
-  }, [coupons, searchTerm, statusFilter]);
+    const now = new Date();
+    return coupons.filter((coupon) => {
+      const q = searchQuery.trim().toLowerCase();
+      const matchesSearch =
+        !q ||
+        String(coupon.code || '').toLowerCase().includes(q) ||
+        String(coupon.campaign_tag || '').toLowerCase().includes(q) ||
+        String(coupon.description || '').toLowerCase().includes(q) ||
+        String(coupon.restricted_user_email || '').toLowerCase().includes(q);
 
-  const totalPages = Math.ceil(filteredCoupons.length / itemsPerPage);
-  const paginatedCoupons = filteredCoupons.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
+      const isExpired =
+        coupon.status === 'expired' || (coupon.expiry_date && new Date(coupon.expiry_date) <= now);
+      const effectiveStatus = isExpired && coupon.status === 'active' ? 'expired' : coupon.status;
 
-  // Dash Metrics
-  const activeCampaigns = coupons.filter(c => getCampaignStatus(c).label === 'Live').length;
-  const totalClaims = coupons.reduce((acc, c) => acc + (parseInt(c.used_count) || 0), 0);
-  const expiringSoon = coupons.filter(c => {
-    if (!c.valid_until) return false;
-    const daysLeft = (new Date(c.valid_until) - new Date()) / (1000 * 60 * 60 * 24);
-    return daysLeft > 0 && daysLeft <= 7;
-  }).length;
+      const matchesStatus =
+        statusFilter === 'all' ||
+        (statusFilter === 'active' && effectiveStatus === 'active') ||
+        (statusFilter === 'expired' && effectiveStatus === 'expired') ||
+        (statusFilter === 'disabled' && effectiveStatus === 'disabled') ||
+        (statusFilter === 'personal' && Boolean(coupon.restricted_user_id));
 
-  if (loading && coupons.length === 0) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[60vh] space-y-6">
-        <div className="relative">
-          <div className="w-20 h-20 border-4 border-amber-500/20 border-t-amber-500 rounded-full animate-spin"></div>
-          <Ticket className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-amber-500 animate-pulse" size={24} />
-        </div>
-        <p className="text-slate-500 font-black uppercase text-[10px] tracking-[0.3em] animate-pulse">Syncing Growth Engine...</p>
-      </div>
-    );
-  }
+      const matchesType =
+        typeFilter === 'all' ||
+        coupon.discount_type === typeFilter ||
+        coupon.reward_type === typeFilter;
+
+      return matchesSearch && matchesStatus && matchesType;
+    });
+  }, [coupons, searchQuery, statusFilter, typeFilter]);
+
+  const totalPages = Math.max(1, Math.ceil(filteredCoupons.length / itemsPerPage));
+  const paginatedCoupons = filteredCoupons.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   return (
-    <div className="space-y-5 text-slate-300 font-sans animate-in fade-in duration-500">
-      
-      {/* COMMAND HEADER */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-slate-800/80">
+    <div className="p-6 max-w-7xl mx-auto text-slate-200 space-y-6">
+      {/* Header */}
+      <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
         <div>
-          <h1 className="text-3xl font-black text-white uppercase tracking-tight flex items-center gap-3">
-            Growth <span className="text-amber-500">Matrix</span>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+              <ShieldCheck size={12} /> 512-Bit Tamper-Proof Coupon Engine
+            </span>
+          </div>
+          <h1 className="text-2xl font-bold text-white flex items-center gap-2 mt-1">
+            <Ticket className="text-emerald-400" /> Coupon Issuance, Anti-Reuse & Redemption Ledger
           </h1>
-          <p className="text-slate-500 font-bold uppercase text-[10px] tracking-widest mt-1 flex items-center gap-2">
-            <TrendingUp size={12} className="text-amber-500" /> Promotional Campaign & Yield Control
+          <p className="text-slate-400 text-sm mt-1">
+            Enforces strict per-customer redemption limits (default 1 use per customer), first-order rules, payment-mode guards, and automatic cancellation reversal.
           </p>
         </div>
-        <div className="flex gap-3">
-          <button onClick={fetchCoupons} className="p-3 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 text-slate-400 rounded-xl hover:bg-slate-800 hover:text-amber-400 transition-all shadow-lg">
-            <RefreshCw size={18} />
+
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            type="button"
+            onClick={() => fetchCoupons(true)}
+            className="flex items-center gap-2 bg-slate-800 hover:bg-slate-700 border border-slate-700 text-slate-200 px-3.5 py-2.5 rounded-xl text-xs font-semibold transition"
+            title="Refresh live coupon ledger"
+          >
+            <RefreshCw size={15} className={refreshing ? 'animate-spin text-emerald-400' : ''} />
+            Refresh
           </button>
-          <button onClick={exportToExcel} className="hidden sm:flex items-center gap-2 px-4 py-3 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 text-slate-400 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-slate-800 hover:text-white transition-all">
-            <Download size={14} /> Export
+
+          <button
+            type="button"
+            onClick={() => {
+              const defaultExpiry = new Date(Date.now() + 30 * 86400 * 1000).toISOString().slice(0, 16);
+              setBulkForm({ ...EMPTY_BULK_FORM, expiry_date: defaultExpiry });
+              setIsBulkModalOpen(true);
+            }}
+            className="flex items-center gap-2 bg-amber-500/15 hover:bg-amber-500/25 border border-amber-500/30 text-amber-300 px-4 py-2.5 rounded-xl text-xs font-bold transition"
+          >
+            <Sparkles size={15} /> Bulk Generate Codes
           </button>
-          <button onClick={() => openModal()} className="flex items-center gap-2 px-5 py-3 bg-amber-500 text-slate-950 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-amber-400 transition-all shadow-[0_0_15px_rgba(245,158,11,0.3)]">
-            <Plus size={16} /> Deploy Campaign
+
+          <button
+            type="button"
+            onClick={() => handleOpenModal()}
+            className="flex items-center gap-2 bg-emerald-600 hover:bg-emerald-500 text-white px-5 py-2.5 rounded-xl text-xs font-bold transition shadow-lg shadow-emerald-900/20"
+          >
+            <Plus size={16} /> Create New Coupon
           </button>
         </div>
       </div>
 
-      {/* KPI DASHBOARD */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-emerald-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-emerald-500 z-10"><Zap size={22} /></div>
-          <div className="z-10">
-            <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Live Vectors</p>
-            <h4 className="text-2xl font-black text-white tracking-tight mt-1">{activeCampaigns}</h4>
-          </div>
-        </div>
-        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-blue-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-blue-500 z-10"><Users size={22} /></div>
-          <div className="z-10">
-            <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Total Redemptions</p>
-            <h4 className="text-2xl font-black text-white tracking-tight mt-1">{totalClaims.toLocaleString()}</h4>
-          </div>
-        </div>
-        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
-          <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-rose-500/20 transition-all"></div>
-          <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-rose-500 z-10"><Clock size={22} /></div>
-          <div className="z-10">
-            <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Expiring Horizon (&lt;7D)</p>
-            <h4 className="text-2xl font-black text-white tracking-tight mt-1">{expiringSoon}</h4>
-          </div>
-        </div>
+      {/* Interactive KPI Cards — Every Card Filters or Inspects */}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+        {[
+          {
+            key: 'all',
+            label: 'Total Coupons',
+            value: summary.totalCoupons,
+            sub: 'Click to view all',
+            color: 'text-white',
+          },
+          {
+            key: 'active',
+            label: 'Active Coupons',
+            value: summary.activeCoupons,
+            sub: 'Live & redeemable',
+            color: 'text-emerald-400',
+          },
+          {
+            key: 'expired',
+            label: 'Expired',
+            value: summary.expiredCoupons,
+            sub: 'Past expiry date',
+            color: 'text-amber-400',
+          },
+          {
+            key: 'disabled',
+            label: 'Disabled',
+            value: summary.disabledCoupons,
+            sub: 'Paused by admin',
+            color: 'text-rose-400',
+          },
+          {
+            key: 'personal',
+            label: 'Verified Redemptions',
+            value: summary.totalRedemptions,
+            sub: `${summary.uniqueCustomers} unique customer(s)`,
+            color: 'text-sky-400',
+          },
+          {
+            key: 'all',
+            label: 'Total Discount Given',
+            value: `₹${Number(summary.totalDiscountAmount || 0).toLocaleString('en-IN')}`,
+            sub: `${summary.reversedRedemptions || 0} reversed on cancel`,
+            color: 'text-purple-400',
+          },
+        ].map((card, idx) => (
+          <button
+            key={`${card.label}-${idx}`}
+            type="button"
+            onClick={() => {
+              setStatusFilter(card.key);
+              setCurrentPage(1);
+            }}
+            className={`text-left p-4 rounded-2xl border transition ${
+              statusFilter === card.key && idx < 5
+                ? 'bg-slate-800/90 border-emerald-500/60 ring-1 ring-emerald-500/30'
+                : 'bg-slate-900/70 border-slate-800 hover:border-slate-700'
+            }`}
+          >
+            <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+              {card.label}
+            </div>
+            <div className={`text-2xl font-bold mt-1.5 ${card.color}`}>{card.value}</div>
+            <div className="text-[11px] text-slate-500 mt-1">{card.sub}</div>
+          </button>
+        ))}
       </div>
 
-      {/* FILTER MATRIX */}
-      <div className="flex flex-col md:flex-row gap-4 bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-4 rounded-[2rem] shadow-lg">
-        <div className="relative flex-1 group">
-          <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-amber-500 transition-colors" size={18} />
-          <input 
-            type="text" placeholder="Scan by Hash Code or Designation..." 
-            value={searchTerm} onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
-            className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 focus:border-amber-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all"
+      {/* Alerts */}
+      {error && (
+        <div className="bg-rose-500/10 border border-rose-500/30 text-rose-300 p-4 rounded-xl flex items-center justify-between gap-3 text-sm">
+          <span className="flex items-center gap-2">
+            <AlertCircle size={18} /> {error}
+          </span>
+          <button type="button" onClick={() => setError('')} className="text-rose-300 hover:text-white">
+            <X size={16} />
+          </button>
+        </div>
+      )}
+      {notice && (
+        <div className="bg-emerald-500/10 border border-emerald-500/30 text-emerald-300 p-3.5 rounded-xl flex items-center justify-between gap-3 text-xs font-medium">
+          <span className="flex items-center gap-2">
+            <CheckCircle size={16} /> {notice}
+          </span>
+          <button type="button" onClick={() => setNotice('')} className="text-emerald-300 hover:text-white">
+            <X size={15} />
+          </button>
+        </div>
+      )}
+
+      {/* Filters & Search */}
+      <div className="bg-slate-900/60 border border-slate-800 p-4 rounded-2xl flex flex-col lg:flex-row gap-3 items-stretch lg:items-center justify-between">
+        <div className="relative flex-1">
+          <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+          <input
+            type="text"
+            placeholder="Search by coupon code, campaign tag, description, or customer email..."
+            value={searchQuery}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-10 pr-4 py-2 text-sm text-white focus:outline-none focus:border-emerald-500"
           />
         </div>
-        <div className="relative w-full md:w-64">
-          <Filter className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 pointer-events-none" size={16} />
-          <select 
-            value={statusFilter} onChange={(e) => { setStatusFilter(e.target.value); setCurrentPage(1); }}
-            className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 focus:border-amber-500/50 rounded-xl py-3.5 pl-12 pr-4 text-white font-bold text-sm outline-none transition-all appearance-none cursor-pointer capitalize"
+
+        <div className="flex flex-wrap items-center gap-2">
+          <select
+            value={statusFilter}
+            onChange={(e) => {
+              setStatusFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
           >
-            <option value="all">All Lifecycles</option>
-            <option value="live">Live</option>
-            <option value="scheduled">Scheduled</option>
-            <option value="depleted">Depleted</option>
-            <option value="expired">Expired</option>
-            <option value="suspended">Suspended</option>
+            <option value="all">All Statuses</option>
+            <option value="active">Active Only</option>
+            <option value="expired">Expired Only</option>
+            <option value="disabled">Disabled Only</option>
+            <option value="personal">Customer-Restricted Only</option>
+          </select>
+
+          <select
+            value={typeFilter}
+            onChange={(e) => {
+              setTypeFilter(e.target.value);
+              setCurrentPage(1);
+            }}
+            className="bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+          >
+            <option value="all">All Reward Types</option>
+            <option value="percentage">Percentage Discount (%)</option>
+            <option value="flat">Flat Discount (₹)</option>
+            <option value="free_shipping">Free Shipping</option>
+            <option value="referral_wallet">Referral Wallet</option>
+            <option value="coupon_credit">Coupon Credit</option>
           </select>
         </div>
       </div>
 
-      {/* CAMPAIGN LEDGER TABLE */}
-      <div className="bg-[#10241f]/35 backdrop-blur-xl border border-slate-800/80 rounded-[2.5rem] overflow-hidden shadow-2xl">
+      {/* Coupons Table */}
+      <div className="bg-slate-900/60 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>
-              <tr className="bg-[#081b15]/80 backdrop-blur-xl border-b border-slate-800 backdrop-blur-md">
-                <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Campaign Hash</th>
-                <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Yield Logic</th>
-                <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Redemptions</th>
-                <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">Time Fencing</th>
-                <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest">State</th>
-                <th className="p-6 text-[10px] font-black uppercase text-slate-500 tracking-widest text-right">Ops</th>
+              <tr className="bg-slate-950/60 border-b border-slate-800 text-slate-400 text-[11px] uppercase tracking-wider">
+                <th className="py-3.5 px-5 font-semibold">Code & Campaign</th>
+                <th className="py-3.5 px-5 font-semibold">Reward & Discount</th>
+                <th className="py-3.5 px-5 font-semibold">Anti-Abuse Rules</th>
+                <th className="py-3.5 px-5 font-semibold">Redemption Ledger</th>
+                <th className="py-3.5 px-5 font-semibold">Expiry</th>
+                <th className="py-3.5 px-5 font-semibold">Status</th>
+                <th className="py-3.5 px-5 font-semibold text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-800/50">
-              {paginatedCoupons.length === 0 ? (
+            <tbody className="divide-y divide-slate-800/60 text-sm">
+              {loading ? (
                 <tr>
-                  <td colSpan={6} className="p-16 text-center">
-                    <Ticket size={48} className="mx-auto text-slate-700 mb-4" />
-                    <p className="text-slate-500 font-black uppercase tracking-widest text-sm">No campaigns match active parameters</p>
+                  <td colSpan="7" className="text-center py-10 text-slate-500">
+                    Loading tamper-proof coupon registry...
                   </td>
                 </tr>
-              ) : paginatedCoupons.map(coupon => {
-                const status = getCampaignStatus(coupon);
-                const StatusIcon = status.icon;
-                const isPerc = coupon.discount_type === 'percentage';
+              ) : paginatedCoupons.length === 0 ? (
+                <tr>
+                  <td colSpan="7" className="text-center py-10 text-slate-500">
+                    No coupons match the selected filters.
+                  </td>
+                </tr>
+              ) : (
+                paginatedCoupons.map((coupon) => {
+                  const isExpired =
+                    coupon.expiry_date && new Date(coupon.expiry_date) < new Date();
+                  const currentStatus =
+                    isExpired && coupon.status === 'active' ? 'expired' : coupon.status || 'active';
+                  const perUserLimit =
+                    coupon.per_user_limit !== undefined && coupon.per_user_limit !== null
+                      ? Number(coupon.per_user_limit)
+                      : 1;
+                  const usedCount = Number(coupon.verified_redemptions ?? coupon.used_count ?? 0);
 
-                return (
-                  <tr key={coupon.id || coupon._id} className="hover:bg-amber-500/[0.02] transition-colors group">
-                    <td className="p-6">
-                      <div className="flex items-center gap-3">
-                        <div className={`w-10 h-10 rounded-xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 flex items-center justify-center ${isPerc ? 'text-blue-500' : 'text-emerald-500'}`}>
-                          {isPerc ? <Percent size={16}/> : <IndianRupee size={16}/>}
-                        </div>
-                        <div>
-                          <p className="text-sm font-black text-amber-400 font-mono tracking-wider">{coupon.code}</p>
-                          <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-0.5 truncate max-w-[150px]">
-                            {coupon.description || 'Standard Promo'}
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="p-6">
-                      <p className={`text-sm font-black ${isPerc ? 'text-blue-400' : 'text-emerald-400'}`}>
-                        {coupon.reward_type === 'referral_wallet'
-                          ? `Up to ₹${coupon.wallet_per_order_limit || coupon.discount_value} referral balance / order`
-                          : isPerc ? `${coupon.discount_value}% OFF` : `₹${coupon.discount_value} FLAT`}
-                      </p>
-                      {coupon.restricted_user_id && <p className="mt-1 text-[9px] font-bold uppercase tracking-widest text-amber-300">Assigned to customer #{coupon.restricted_user_id}</p>}
-                      {coupon.min_purchase && (
-                        <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-0.5">
-                          Min Cart: ₹{coupon.min_purchase}
-                        </p>
-                      )}
-                    </td>
-                    <td className="p-6">
-                      <div className="flex flex-col gap-1">
+                  return (
+                    <tr key={coupon.id} className="hover:bg-slate-800/30 transition">
+                      <td className="py-3.5 px-5">
                         <div className="flex items-center gap-2">
-                          <span className="text-xs font-bold text-white">{coupon.used_count || 0}</span>
-                          <span className="text-[10px] text-slate-500 font-bold">/ {coupon.usage_limit || '∞'}</span>
-                        </div>
-                        {coupon.usage_limit && (
-                          <div className="w-24 h-1.5 bg-slate-800 rounded-full overflow-hidden">
-                            <div className="h-full bg-amber-500" style={{ width: `${Math.min(100, ((coupon.used_count || 0) / coupon.usage_limit) * 100)}%` }}></div>
-                          </div>
-                        )}
-                      </div>
-                    </td>
-                    <td className="p-6">
-                      <div className="flex items-center gap-2 text-[10px] font-mono text-slate-400">
-                        <Calendar size={12} className="text-slate-600"/>
-                        {coupon.valid_until ? new Date(coupon.valid_until).toLocaleDateString() : 'Indefinite Horizon'}
-                      </div>
-                    </td>
-                    <td className="p-6">
-                      <div className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-widest bg-${status.color}-500/10 text-${status.color}-500 border border-${status.color}-500/20 shadow-[0_0_10px_rgba(var(--tw-colors-${status.color}-500),0.1)]`}>
-                        <StatusIcon size={12} /> {status.label}
-                      </div>
-                    </td>
-                    <td className="p-6 text-right">
-                      <div className="flex items-center justify-end gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                        <button
-                          onClick={() => toggleStatus(coupon.id || coupon._id, coupon.status)}
-                          className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-all"
-                          title="Toggle Suspend/Active"
-                        >
-                          {coupon.status === 'active' ? <Clock size={14} /> : <Zap size={14} />}
-                        </button>
-                        {coupon.reward_type !== 'referral_wallet' && <>
+                          <span className="font-mono font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-1 rounded-lg border border-emerald-500/20">
+                            {coupon.code}
+                          </span>
                           <button
-                            onClick={() => openModal(coupon)}
-                            className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl text-blue-500 hover:bg-blue-500 hover:text-white transition-all"
+                            type="button"
+                            onClick={() => handleCopyCode(coupon.code)}
+                            className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition"
+                            title="Copy coupon code"
                           >
-                            <Edit2 size={14} />
+                            <Copy size={13} />
                           </button>
-                          <button 
-                            onClick={() => handleDelete(coupon.id || coupon._id)}
-                            className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl text-rose-500 hover:bg-rose-500 hover:text-white transition-all"
+                        </div>
+                        <div className="flex flex-wrap items-center gap-1.5 mt-1 text-[11px] text-slate-400">
+                          {coupon.campaign_tag && (
+                            <span className="px-1.5 py-0.5 rounded bg-slate-800 text-slate-300 font-medium">
+                              #{coupon.campaign_tag}
+                            </span>
+                          )}
+                          {coupon.restricted_user_id && (
+                            <span className="px-1.5 py-0.5 rounded bg-purple-500/15 text-purple-300 border border-purple-500/30">
+                              User #{coupon.restricted_user_id}
+                              {coupon.restricted_user_name ? ` (${coupon.restricted_user_name})` : ''}
+                            </span>
+                          )}
+                          {coupon.description && (
+                            <span className="truncate max-w-[200px]">{coupon.description}</span>
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-5">
+                        <div className="font-semibold text-white">
+                          {coupon.reward_type === 'free_shipping' || coupon.discount_type === 'free_shipping' ? (
+                            <span className="text-sky-400">FREE SHIPPING</span>
+                          ) : coupon.discount_type === 'percentage' ? (
+                            <span>{coupon.discount_value}% OFF</span>
+                          ) : (
+                            <span>₹{coupon.discount_value} OFF</span>
+                          )}
+                        </div>
+                        <div className="text-xs text-slate-400 mt-0.5">
+                          Min Order: ₹{coupon.min_order_value || 0}
+                          {coupon.max_discount ? ` · Cap: ₹${coupon.max_discount}` : ''}
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-5 text-xs space-y-1">
+                        <div className="flex items-center gap-1.5 text-emerald-300 font-medium">
+                          <Users size={13} />
+                          {perUserLimit === 0
+                            ? 'Unlimited per customer'
+                            : `Max ${perUserLimit} use${perUserLimit > 1 ? 's' : ''} / customer`}
+                        </div>
+                        <div className="flex flex-wrap gap-1">
+                          {Number(coupon.first_order_only) === 1 && (
+                            <span className="px-1.5 py-0.5 rounded bg-amber-500/15 text-amber-300 border border-amber-500/30 text-[10px] font-bold">
+                              1st Order Only
+                            </span>
+                          )}
+                          {coupon.allowed_payment_modes && (
+                            <span className="px-1.5 py-0.5 rounded bg-sky-500/15 text-sky-300 border border-sky-500/30 text-[10px] font-bold">
+                              {coupon.allowed_payment_modes} Only
+                            </span>
+                          )}
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-5">
+                        <div className="flex items-center gap-2">
+                          <span className="text-slate-200 font-semibold">
+                            {usedCount} / {coupon.usage_limit ? coupon.usage_limit : '∞'}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenRedemptions(coupon)}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-[11px] text-emerald-400 border border-slate-700 transition"
+                            title="Inspect customer redemption audit log"
                           >
-                            <Trash2 size={14} />
+                            <History size={12} /> Audit Log
                           </button>
-                        </>}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                        </div>
+                        <div className="w-28 bg-slate-800 h-1.5 rounded-full mt-1.5 overflow-hidden">
+                          <div
+                            className="bg-emerald-500 h-full rounded-full"
+                            style={{
+                              width: coupon.usage_limit
+                                ? `${Math.min((usedCount / coupon.usage_limit) * 100, 100)}%`
+                                : '20%',
+                            }}
+                          />
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-5 text-slate-300 text-xs">
+                        <div className="flex items-center gap-1.5">
+                          <Calendar size={13} className="text-slate-500" />
+                          {coupon.expiry_date
+                            ? new Date(coupon.expiry_date).toLocaleDateString('en-IN', {
+                                day: 'numeric',
+                                month: 'short',
+                                year: 'numeric',
+                              })
+                            : 'No Expiry'}
+                        </div>
+                      </td>
+
+                      <td className="py-3.5 px-5">
+                        {currentStatus === 'active' && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                            <CheckCircle size={12} /> Active
+                          </span>
+                        )}
+                        {currentStatus === 'expired' && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            <AlertCircle size={12} /> Expired
+                          </span>
+                        )}
+                        {currentStatus === 'disabled' && (
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium bg-rose-500/10 text-rose-400 border border-rose-500/20">
+                            <XCircle size={12} /> Disabled
+                          </span>
+                        )}
+                      </td>
+
+                      <td className="py-3.5 px-5 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handleToggleStatus(coupon)}
+                            className={`p-2 rounded-lg transition ${
+                              coupon.status === 'active'
+                                ? 'text-emerald-400 hover:bg-emerald-500/10'
+                                : 'text-slate-400 hover:bg-slate-800'
+                            }`}
+                            title={coupon.status === 'active' ? 'Disable coupon' : 'Activate coupon'}
+                          >
+                            <Power size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleOpenModal(coupon)}
+                            className="p-2 text-slate-400 hover:text-blue-400 hover:bg-blue-500/10 rounded-lg transition"
+                            title="Edit coupon rules"
+                          >
+                            <Edit2 size={15} />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDelete(coupon.id)}
+                            className="p-2 text-slate-400 hover:text-rose-400 hover:bg-rose-500/10 rounded-lg transition"
+                            title="Delete coupon"
+                          >
+                            <Trash2 size={15} />
+                          </button>
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>
 
+        {/* Pagination Controls */}
         {totalPages > 1 && (
-          <div className="p-4 bg-[#081b15]/80 backdrop-blur-xl border-t border-slate-800 flex items-center justify-between">
-            <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-4">
-              Showing {(currentPage - 1) * itemsPerPage + 1} - {Math.min(currentPage * itemsPerPage, filteredCoupons.length)} of {filteredCoupons.length}
+          <div className="px-6 py-4 border-t border-slate-800 flex justify-between items-center bg-slate-950/30">
+            <span className="text-xs text-slate-400">
+              Showing {(currentPage - 1) * itemsPerPage + 1} to{' '}
+              {Math.min(currentPage * itemsPerPage, filteredCoupons.length)} of {filteredCoupons.length} coupons
             </span>
-            <div className="flex items-center gap-2 mr-4">
-              <button disabled={currentPage === 1} onClick={() => setCurrentPage(p => p - 1)} className="p-2 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 text-slate-400 rounded-lg hover:bg-slate-800 disabled:opacity-50 transition-colors"><ChevronLeft size={16}/></button>
-              <button disabled={currentPage === totalPages} onClick={() => setCurrentPage(p => p + 1)} className="p-2 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 text-slate-400 rounded-lg hover:bg-slate-800 disabled:opacity-50 transition-colors"><ChevronRight size={16}/></button>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => p - 1)}
+                className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-white disabled:opacity-40"
+              >
+                <ChevronLeft size={16} />
+              </button>
+              <button
+                type="button"
+                disabled={currentPage === totalPages}
+                onClick={() => setCurrentPage((p) => p + 1)}
+                className="p-2 bg-slate-900 border border-slate-800 rounded-lg text-slate-400 hover:text-white disabled:opacity-40"
+              >
+                <ChevronRight size={16} />
+              </button>
             </div>
           </div>
         )}
       </div>
 
-      {/* CAMPAIGN DEPLOYMENT ENGINE MODAL */}
+      {/* Create / Edit Coupon Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#081b15]/90 backdrop-blur-xl/90 backdrop-blur-xl overflow-y-auto custom-scrollbar">
-          <div className="bg-[#10241f]/90 backdrop-blur-xl border border-slate-800 w-full max-w-4xl rounded-[3rem] shadow-2xl overflow-hidden my-auto animate-in zoom-in-95 duration-300 relative flex flex-col">
-            
-            <div className="p-6 md:p-8 border-b border-slate-800 flex justify-between items-start bg-[#10241f]/55 backdrop-blur-xl flex-shrink-0">
-              <div className="flex items-center gap-4">
-                <div className="w-12 h-12 bg-amber-500/10 rounded-2xl flex items-center justify-center text-amber-500">
-                  <Sparkles size={24} />
-                </div>
-                <div>
-                  <h2 className="text-2xl font-black text-white uppercase tracking-tighter flex items-center gap-3">
-                    {editingItem ? 'Reconfigure' : 'Deploy'} Campaign Vector
-                  </h2>
-                  <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest mt-1">Advanced Yield & Promotional Routing</p>
-                </div>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-2xl overflow-hidden shadow-2xl my-8">
+            <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-bold text-white">
+                  {editingCoupon ? `Edit Coupon: ${editingCoupon.code}` : 'Create Tamper-Proof Coupon'}
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Protected by atomic per-user locking and 512-bit SHA-512 redemption signatures.
+                </p>
               </div>
-              <button onClick={() => setIsModalOpen(false)} className="p-3 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 hover:bg-rose-500/10 text-slate-500 hover:text-rose-500 rounded-2xl transition-all shadow-md">
-                <XCircle size={20} />
+              <button type="button" onClick={handleCloseModal} className="text-slate-400 hover:text-white">
+                <X size={20} />
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col flex-1">
-              <div className="flex border-b border-slate-800 px-8 bg-[#081b15]/35 backdrop-blur-xl">
-                {[
-                  { id: 'core', label: 'Hash & Yield', icon: Zap },
-                  { id: 'targeting', label: 'Targeting Matrix', icon: Target },
-                  { id: 'time', label: 'Time Fencing', icon: Clock }
-                ].map(tab => (
-                  <button
-                    key={tab.id} type="button" onClick={() => setActiveTab(tab.id)}
-                    className={`flex items-center gap-2 px-6 py-4 text-[10px] font-black uppercase tracking-widest transition-all border-b-2 ${
-                      activeTab === tab.id ? 'border-amber-500 text-amber-400 bg-amber-500/5' : 'border-transparent text-slate-500 hover:text-slate-300'
-                    }`}
+            <form onSubmit={handleSubmit} className="p-6 space-y-4 max-h-[80vh] overflow-y-auto">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div className="sm:col-span-2">
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Coupon Code *</label>
+                  <div className="flex gap-2">
+                    <input
+                      type="text"
+                      name="code"
+                      required
+                      placeholder="e.g. WELCOME20"
+                      value={formData.code}
+                      onChange={handleChange}
+                      className="flex-1 bg-slate-950 border border-slate-800 rounded-xl px-4 py-2 text-white font-mono uppercase focus:outline-none focus:border-emerald-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={generateRandomCode}
+                      className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-emerald-400 border border-slate-700"
+                    >
+                      Auto-Generate
+                    </button>
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Campaign Tag</label>
+                  <input
+                    type="text"
+                    name="campaign_tag"
+                    placeholder="e.g. FESTIVE2026"
+                    value={formData.campaign_tag}
+                    onChange={handleChange}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Discount Type</label>
+                  <select
+                    name="discount_type"
+                    value={formData.discount_type}
+                    onChange={handleChange}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
                   >
-                    <tab.icon size={14} /> {tab.label}
-                  </button>
-                ))}
+                    <option value="percentage">Percentage (%)</option>
+                    <option value="flat">Flat Amount (₹)</option>
+                    <option value="free_shipping">Free Shipping</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">
+                    Discount Value {formData.discount_type === 'percentage' ? '(%)' : '(₹)'}
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="discount_value"
+                    disabled={formData.discount_type === 'free_shipping'}
+                    required={formData.discount_type !== 'free_shipping'}
+                    placeholder={formData.discount_type === 'percentage' ? '15' : '200'}
+                    value={formData.discount_value}
+                    onChange={handleChange}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500 disabled:opacity-50"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Reward Category</label>
+                  <select
+                    name="reward_type"
+                    value={formData.reward_type}
+                    onChange={handleChange}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+                  >
+                    <option value="standard">Standard Promo</option>
+                    <option value="free_shipping">Free Shipping</option>
+                    <option value="coupon_credit">Coupon Credit</option>
+                    <option value="referral_wallet">Referral Wallet</option>
+                  </select>
+                </div>
               </div>
 
-              <div className="p-8 overflow-y-auto custom-scrollbar" style={{ minHeight: '350px' }}>
-                
-                {/* CORE SETTINGS */}
-                {activeTab === 'core' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-right-4 duration-300">
-                    <div className="col-span-2 md:col-span-1 space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Cryptographic Hash (Code)</label>
-                      <div className="flex gap-2">
-                        <input 
-                          required type="text" placeholder="e.g. SUMMER25"
-                          value={form.code} onChange={e => setForm({...form, code: e.target.value.toUpperCase().replace(/\s+/g, '')})}
-                          className="flex-1 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 text-amber-400 font-mono font-bold text-lg outline-none focus:border-amber-500/50 uppercase"
-                        />
-                        <button type="button" onClick={() => generateHash(8, 'ANR')} className="px-4 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 rounded-2xl text-slate-400 hover:bg-slate-800 hover:text-white transition-colors" title="Auto-Generate Hash">
-                          <RefreshCw size={20} />
-                        </button>
-                      </div>
-                    </div>
-                    
-                    <div className="col-span-2 md:col-span-1 space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Internal Designation</label>
-                      <input 
-                        type="text" placeholder="e.g. End of Summer Flash Sale"
-                        value={form.description} onChange={e => setForm({...form, description: e.target.value})}
-                        className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 text-white font-bold outline-none focus:border-amber-500/50"
-                      />
-                    </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Min Order Value (₹)</label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="min_order_value"
+                    placeholder="0.00"
+                    value={formData.min_order_value}
+                    onChange={handleChange}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
 
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Yield Logic (Type)</label>
-                      <select 
-                        value={form.discount_type} onChange={e => setForm({...form, discount_type: e.target.value})}
-                        className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 text-white font-bold outline-none focus:border-amber-500/50 appearance-none cursor-pointer"
-                      >
-                        <option value="percentage">Percentage Algorithm (%)</option>
-                        <option value="fixed">Fixed Currency (₹)</option>
-                      </select>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Yield Value</label>
-                      <div className="relative">
-                        <div className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 font-bold">
-                          {form.discount_type === 'percentage' ? '%' : '₹'}
-                        </div>
-                        <input 
-                          required type="number" min="0" step="0.01" placeholder={form.discount_type === 'percentage' ? '20' : '500'}
-                          value={form.discount_value} onChange={e => setForm({...form, discount_value: e.target.value})}
-                          className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 pl-10 text-white font-bold outline-none focus:border-amber-500/50"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* TARGETING MATRIX */}
-                {activeTab === 'targeting' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-right-4 duration-300">
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Minimum Cart Threshold (₹)</label>
-                      <input 
-                        type="number" min="0" placeholder="0 = No Minimum"
-                        value={form.min_purchase} onChange={e => setForm({...form, min_purchase: e.target.value})}
-                        className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 text-white font-bold outline-none focus:border-amber-500/50"
-                      />
-                      <p className="text-[9px] font-bold text-slate-600 ml-1 mt-1">Require users to spend this amount to activate the hash.</p>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Max Yield Cap (₹)</label>
-                      <input 
-                        type="number" min="0" placeholder="Optional cap for % discounts" disabled={form.discount_type !== 'percentage'}
-                        value={form.max_discount} onChange={e => setForm({...form, max_discount: e.target.value})}
-                        className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 text-white font-bold outline-none focus:border-amber-500/50 disabled:opacity-30 disabled:cursor-not-allowed"
-                      />
-                    </div>
-
-                    <div className="space-y-2 col-span-2">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-500 ml-1">Maximum Redemption Cap</label>
-                      <input 
-                        type="number" min="0" placeholder="Leave empty for unlimited redemptions"
-                        value={form.usage_limit} onChange={e => setForm({...form, usage_limit: e.target.value})}
-                        className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-2xl p-4 text-white font-bold outline-none focus:border-amber-500/50"
-                      />
-                      <p className="text-[9px] font-bold text-slate-600 ml-1 mt-1">Useful for "First 100 Customers Only" campaigns.</p>
-                    </div>
-                  </div>
-                )}
-
-                {/* TIME FENCING */}
-                {activeTab === 'time' && (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8 animate-in fade-in slide-in-from-right-4 duration-300">
-                    <div className="col-span-2 p-6 bg-blue-500/5 border border-blue-500/20 rounded-[2rem]">
-                      <div className="flex items-start gap-4">
-                        <Clock size={24} className="text-blue-500 mt-1" />
-                        <div>
-                          <h4 className="text-sm font-black text-white uppercase tracking-widest">Temporal Routing</h4>
-                          <p className="text-xs font-bold text-slate-400 mt-1 leading-relaxed">
-                            Define the exact window when this payload becomes active. If no dates are set, the campaign is perpetually active until manually suspended.
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="space-y-2">
-                      <DatetimeTzInput
-                        label="Activation Horizon (Start Date)"
-                        value={form.valid_from}
-                        initializeEmpty={!editingItem}
-                        onChange={valid_from => setForm(current => ({ ...current, valid_from }))}
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <DatetimeTzInput
-                        label="Termination Horizon (End Date)"
-                        value={form.valid_until}
-                        initializeEmpty={!editingItem}
-                        onChange={valid_until => setForm(current => ({ ...current, valid_until }))}
-                      />
-                    </div>
-                  </div>
-                )}
-
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">
+                    Max Discount Cap (₹) <span className="text-slate-600">(Optional)</span>
+                  </label>
+                  <input
+                    type="number"
+                    step="0.01"
+                    name="max_discount"
+                    placeholder="No Cap"
+                    value={formData.max_discount}
+                    onChange={handleChange}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
               </div>
 
-              {/* Modal Footer */}
-              <div className="p-6 border-t border-slate-800 bg-[#081b15]/80 backdrop-blur-xl flex justify-end gap-4 mt-auto">
-                <button type="button" onClick={() => setIsModalOpen(false)} className="px-8 py-3.5 text-slate-400 font-black uppercase tracking-widest text-xs rounded-xl hover:bg-[#10241f]/85 backdrop-blur-xl transition-all">
-                  Abort
+              {/* Anti-Abuse & Per-Customer Limits */}
+              <div className="p-4 rounded-xl bg-slate-950/80 border border-emerald-500/25 space-y-3">
+                <div className="text-xs font-bold uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
+                  <ShieldCheck size={14} /> Anti-Abuse & Tamper-Proof Controls
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Max Uses Per Customer *
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      name="per_user_limit"
+                      value={formData.per_user_limit}
+                      onChange={handleChange}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+                    />
+                    <span className="text-[10px] text-slate-500">Default 1 (prevents 10x reuse). Set 0 for unlimited.</span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Global Total Limit
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      name="usage_limit"
+                      placeholder="Unlimited"
+                      value={formData.usage_limit}
+                      onChange={handleChange}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+                    />
+                    <span className="text-[10px] text-slate-500">Total redemptions across all users.</span>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Restrict to User ID
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      name="restricted_user_id"
+                      placeholder="Public (Anyone)"
+                      value={formData.restricted_user_id}
+                      onChange={handleChange}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+                    />
+                    <span className="text-[10px] text-slate-500">Locks code to 1 specific customer ID.</span>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                  <div>
+                    <label className="block text-xs font-medium text-slate-300 mb-1">
+                      Allowed Payment Modes
+                    </label>
+                    <select
+                      name="allowed_payment_modes"
+                      value={formData.allowed_payment_modes}
+                      onChange={handleChange}
+                      className="w-full bg-slate-900 border border-slate-700 rounded-xl px-3.5 py-2 text-white text-xs focus:outline-none focus:border-emerald-500"
+                    >
+                      <option value="">All Payment Modes (Online, Wallet, COD)</option>
+                      <option value="ONLINE">Prepaid / Online (Razorpay) Only</option>
+                      <option value="ONLINE,WALLET">Online & Bhumivera Wallet Only (No COD)</option>
+                      <option value="WALLET">Bhumivera Wallet Only</option>
+                      <option value="COD">Cash on Delivery (COD) Only</option>
+                    </select>
+                  </div>
+
+                  <div className="flex items-center pt-5">
+                    <label className="flex items-center gap-2.5 text-xs text-slate-200 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        name="first_order_only"
+                        checked={Boolean(formData.first_order_only)}
+                        onChange={handleChange}
+                        className="rounded border-slate-700 text-emerald-500 focus:ring-emerald-500"
+                      />
+                      <span>
+                        <strong>First-Order Only</strong> (Block if customer has prior orders)
+                      </span>
+                    </label>
+                  </div>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Expiry Date & Time *</label>
+                  <input
+                    type="datetime-local"
+                    name="expiry_date"
+                    required
+                    value={formData.expiry_date}
+                    onChange={handleChange}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">Status</label>
+                  <select
+                    name="status"
+                    value={formData.status}
+                    onChange={handleChange}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+                  >
+                    <option value="active">Active</option>
+                    <option value="disabled">Disabled</option>
+                    <option value="expired">Expired</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-medium text-slate-400 mb-1">Customer-Facing Description</label>
+                <input
+                  type="text"
+                  name="description"
+                  placeholder="e.g. Flat 15% off on your botanical skincare ritual (Single use per customer)"
+                  value={formData.description}
+                  onChange={handleChange}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white text-sm focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="pt-3 flex justify-end gap-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm transition"
+                >
+                  Cancel
                 </button>
-                <button type="submit" disabled={isProcessing} className="px-10 py-3.5 bg-amber-500 text-slate-950 font-black uppercase tracking-widest text-xs rounded-xl shadow-[0_0_20px_rgba(245,158,11,0.2)] hover:bg-amber-400 transition-all hover:-translate-y-0.5 flex items-center gap-2 disabled:opacity-50">
-                  {isProcessing ? <RefreshCw size={16} className="animate-spin" /> : <Sparkles size={16} />}
-                  Execute Integration
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold transition shadow-lg shadow-emerald-900/20"
+                >
+                  {editingCoupon ? 'Save Changes' : 'Create Coupon'}
                 </button>
               </div>
             </form>
@@ -611,6 +1048,189 @@ export default function CouponManagement() {
         </div>
       )}
 
+      {/* Bulk Campaign Generator Modal */}
+      {isBulkModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-lg overflow-hidden shadow-2xl">
+            <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                  <Sparkles size={18} className="text-amber-400" /> Bulk Single-Use Coupon Generator
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Generate unique single-use codes for VIP drops, influencers, or customer care.
+                </p>
+              </div>
+              <button type="button" onClick={() => setIsBulkModalOpen(false)} className="text-slate-400 hover:text-white">
+                <X size={20} />
+              </button>
+            </div>
+
+            <form onSubmit={handleBulkSubmit} className="p-6 space-y-4 text-sm">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Code Prefix</label>
+                  <input
+                    type="text"
+                    required
+                    value={bulkForm.prefix}
+                    onChange={(e) => setBulkForm((p) => ({ ...p, prefix: e.target.value.toUpperCase() }))}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Number of Codes (1–100)</label>
+                  <input
+                    type="number"
+                    min="1"
+                    max="100"
+                    required
+                    value={bulkForm.count}
+                    onChange={(e) => setBulkForm((p) => ({ ...p, count: e.target.value }))}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Type</label>
+                  <select
+                    value={bulkForm.discount_type}
+                    onChange={(e) => setBulkForm((p) => ({ ...p, discount_type: e.target.value }))}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white text-xs"
+                  >
+                    <option value="percentage">Percentage (%)</option>
+                    <option value="flat">Flat (₹)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Value</label>
+                  <input
+                    type="number"
+                    required
+                    value={bulkForm.discount_value}
+                    onChange={(e) => setBulkForm((p) => ({ ...p, discount_value: e.target.value }))}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-slate-400 mb-1">Min Order (₹)</label>
+                  <input
+                    type="number"
+                    value={bulkForm.min_order_value}
+                    onChange={(e) => setBulkForm((p) => ({ ...p, min_order_value: e.target.value }))}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-white"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs text-slate-400 mb-1">Expiry Date & Time *</label>
+                <input
+                  type="datetime-local"
+                  required
+                  value={bulkForm.expiry_date}
+                  onChange={(e) => setBulkForm((p) => ({ ...p, expiry_date: e.target.value }))}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3.5 py-2 text-white"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3 pt-3 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setIsBulkModalOpen(false)}
+                  className="px-4 py-2 rounded-xl bg-slate-800 text-slate-300 text-xs"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-5 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs"
+                >
+                  Generate {bulkForm.count} Unique Coupons
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Redemption Audit Ledger Modal */}
+      {redemptionModalCoupon && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4">
+          <div className="bg-slate-900 border border-slate-800 rounded-2xl w-full max-w-3xl overflow-hidden shadow-2xl">
+            <div className="px-6 py-4 border-b border-slate-800 flex justify-between items-center">
+              <div>
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <History size={18} className="text-emerald-400" /> Redemption Audit Ledger:{' '}
+                  <span className="font-mono text-emerald-400">{redemptionModalCoupon.code}</span>
+                </h3>
+                <p className="text-xs text-slate-400">
+                  Every checkout redemption is cryptographically signed (SHA-512) and linked to the customer & order.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setRedemptionModalCoupon(null)}
+                className="text-slate-400 hover:text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-6 max-h-[65vh] overflow-y-auto">
+              {loadingRedemptions ? (
+                <p className="text-center text-slate-400 py-8 text-sm">Loading redemption history...</p>
+              ) : redemptionLogs.length === 0 ? (
+                <p className="text-center text-slate-500 py-8 text-sm">
+                  No redemptions recorded for {redemptionModalCoupon.code} yet.
+                </p>
+              ) : (
+                <div className="space-y-2.5">
+                  {redemptionLogs.map((log) => (
+                    <div
+                      key={log.id}
+                      className="p-3.5 rounded-xl bg-slate-950 border border-slate-800 flex flex-wrap items-center justify-between gap-3 text-xs"
+                    >
+                      <div>
+                        <div className="font-semibold text-white">
+                          {log.user_name || `User #${log.user_id || 'Guest'}`}{' '}
+                          <span className="text-slate-400 font-normal">({log.user_email || 'Verified'})</span>
+                        </div>
+                        <div className="text-slate-400 mt-0.5">
+                          Order: <strong className="text-emerald-400">#{log.order_number || log.order_id}</strong> ·
+                          Discount Saved: <strong className="text-white">₹{log.discount_amount}</strong> · Subtotal: ₹
+                          {log.order_subtotal}
+                        </div>
+                        {log.signature_sha512 && (
+                          <div className="font-mono text-[10px] text-slate-500 mt-1">
+                            SHA-512: {log.signature_sha512.slice(0, 32)}...
+                          </div>
+                        )}
+                      </div>
+                      <div className="text-right">
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                            log.status === 'active'
+                              ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
+                              : 'bg-amber-500/15 text-amber-300 border border-amber-500/30'
+                          }`}
+                        >
+                          {log.status}
+                        </span>
+                        <div className="text-[11px] text-slate-500 mt-1">
+                          {log.redeemed_at ? new Date(log.redeemed_at).toLocaleString() : ''}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

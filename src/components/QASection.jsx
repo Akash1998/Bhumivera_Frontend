@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { MessageSquare, HelpCircle, Send, Search, ThumbsUp, ChevronDown, ChevronUp, Loader2 } from 'lucide-react';
+import { MessageSquare, HelpCircle, Send, Search, ThumbsUp, Loader2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchProductQA, submitProductQuestion } from '../services/api';
+import { fetchProductQA, submitProductQuestion, qa as qaApi } from '../services/api';
 
 const QASection = ({ productId }) => {
   const { user } = useAuth();
@@ -44,6 +44,19 @@ const QASection = ({ productId }) => {
       console.error('Failed to submit question:', err);
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleVoteHelpful = async (qId) => {
+    try {
+      await qaApi.voteHelpful(qId);
+      setQuestions((prev) =>
+        prev.map((q) =>
+          q.id === qId ? { ...q, helpful_count: Number(q.helpful_count || 0) + 1 } : q
+        )
+      );
+    } catch (err) {
+      console.error('Failed to vote helpful:', err);
     }
   };
 
@@ -152,7 +165,11 @@ const QASection = ({ productId }) => {
                   </div>
                 </div>
                 <div className="mt-3 flex items-center gap-4">
-                  <button className="flex items-center gap-1.5 text-[11px] font-black text-gray-400 hover:text-gray-900 transition-colors uppercase">
+                  <button
+                    type="button"
+                    onClick={() => handleVoteHelpful(q.id)}
+                    className="flex items-center gap-1.5 text-[11px] font-black text-gray-400 hover:text-gray-900 transition-colors uppercase"
+                  >
                     <ThumbsUp size={12} />
                     Helpful ({q.helpful_count || 0})
                   </button>

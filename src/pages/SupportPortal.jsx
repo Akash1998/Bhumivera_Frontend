@@ -12,9 +12,6 @@ import {
   UserRound,
   MessageSquare,
   HelpCircle,
-  AlertTriangle,
-  CheckCircle2,
-  Lock,
   RotateCcw,
   Ban,
   Gift,
@@ -329,6 +326,28 @@ export default function SupportPortal() {
       setCustomerDetails(response.data);
     } catch (requestError) {
       setError(errorText(requestError));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const handleSendDirectCustomerEmail = async e => {
+    e.preventDefault();
+    const custId = customerDetails?.customer?.id;
+    if (!custId || !emailSubject.trim() || !emailMessage.trim()) return;
+    setBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      const res = await supportPortal.emailCustomer(custId, {
+        subject: emailSubject.trim(),
+        message: emailMessage.trim(),
+      });
+      setEmailSubject('');
+      setEmailMessage('');
+      setNotice(res.data?.message || 'Direct email sent to customer.');
+    } catch (err) {
+      setError(errorText(err));
     } finally {
       setBusy(false);
     }
@@ -672,24 +691,36 @@ export default function SupportPortal() {
                             Confirm at least 2 details below with the customer before sharing sensitive info
                           </h4>
                         </div>
-                        <button
-                          type="button"
-                          onClick={() =>
-                            setVerifiedOrderIds(prev => ({
-                              ...prev,
-                              [selectedOrderDetail.id]: !prev[selectedOrderDetail.id],
-                            }))
-                          }
-                          className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
-                            verifiedOrderIds[selectedOrderDetail.id]
-                              ? 'bg-emerald-500 text-[#071510]'
-                              : 'bg-[#D4AF37] text-[#071510]'
-                          }`}
-                        >
-                          {verifiedOrderIds[selectedOrderDetail.id]
-                            ? '✓ Customer Identity Verified'
-                            : 'Mark Customer Verified'}
-                        </button>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setActionOrderId(String(selectedOrderDetail.orderNumber || selectedOrderDetail.id));
+                              setSection('chats');
+                            }}
+                            className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold"
+                          >
+                            Load in Live Chat Desk →
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setVerifiedOrderIds(prev => ({
+                                ...prev,
+                                [selectedOrderDetail.id]: !prev[selectedOrderDetail.id],
+                              }))
+                            }
+                            className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition ${
+                              verifiedOrderIds[selectedOrderDetail.id]
+                                ? 'bg-emerald-500 text-[#071510]'
+                                : 'bg-[#D4AF37] text-[#071510]'
+                            }`}
+                          >
+                            {verifiedOrderIds[selectedOrderDetail.id]
+                              ? '✓ Customer Identity Verified'
+                              : 'Mark Customer Verified'}
+                          </button>
+                        </div>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 text-xs">
@@ -1106,7 +1137,11 @@ export default function SupportPortal() {
                     key={c.id}
                     type="button"
                     onClick={() => selectCustomer(c)}
-                    className="w-full text-left p-3 rounded-xl bg-black/30 border border-white/10 text-xs"
+                    className={`w-full text-left p-3 rounded-xl border text-xs transition ${
+                      selectedCustomer?.id === c.id
+                        ? 'bg-[#D4AF37]/15 border-[#D4AF37]'
+                        : 'bg-black/30 border-white/10 hover:border-white/25'
+                    }`}
                   >
                     <div className="font-bold text-white">{c.name}</div>
                     <div className="text-[11px] text-emerald-100/70">{c.email} · {c.phone}</div>
@@ -1115,14 +1150,14 @@ export default function SupportPortal() {
               </div>
             </div>
 
-            <div className="lg:col-span-8 bg-[#0B2419] border border-white/10 rounded-2xl p-5 space-y-4">
+            <div className="lg:col-span-8 bg-[#0B2419] border border-white/10 rounded-2xl p-5 space-y-5">
               {customerDetails?.customer ? (
                 <>
-                  <div className="flex flex-wrap items-center justify-between gap-2">
+                  <div className="flex flex-wrap items-center justify-between gap-2 pb-4 border-b border-white/10">
                     <div>
                       <h3 className="text-base font-bold text-white">{customerDetails.customer.name}</h3>
                       <p className="text-xs text-emerald-100/70">
-                        {customerDetails.customer.email} · Wallet: ₹{customerDetails.customer.wallet_balance || 0}
+                        {customerDetails.customer.email} · Phone: {customerDetails.customer.phone || 'N/A'} · Wallet: ₹{customerDetails.customer.wallet_balance || 0} · Loyalty: {customerDetails.customer.loyalty_points || 0} pts
                       </p>
                     </div>
                     <button
@@ -1137,9 +1172,70 @@ export default function SupportPortal() {
                       <KeyRound className="w-3.5 h-3.5" /> Send Password Reset Link
                     </button>
                   </div>
+
+                  {/* Customer Order History */}
+                  <div className="space-y-2">
+                    <h4 className="text-xs font-bold text-[#D4AF37] uppercase">
+                      Customer Order History ({(customerDetails.orders || []).length})
+                    </h4>
+                    {(customerDetails.orders || []).length === 0 ? (
+                      <p className="text-xs text-emerald-100/60">No orders placed yet.</p>
+                    ) : (
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-48 overflow-y-auto pr-1">
+                        {(customerDetails.orders || []).map(ord => (
+                          <div key={ord.id} className="p-3 rounded-xl bg-black/30 border border-white/10 text-xs flex justify-between items-center">
+                            <div>
+                              <div className="font-bold text-white">Order #{ord.order_number || ord.id}</div>
+                              <div className="text-[11px] text-emerald-100/70 uppercase">{ord.status} · ₹{ord.total_amount || ord.total}</div>
+                            </div>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setUniversalQuery(String(ord.order_number || ord.id));
+                                setSection('search');
+                              }}
+                              className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-[10px] text-[#D4AF37] font-bold"
+                            >
+                              Inspect
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Direct Customer Email Composer */}
+                  <form onSubmit={handleSendDirectCustomerEmail} className="p-4 rounded-xl bg-black/30 border border-white/10 space-y-3">
+                    <h4 className="text-xs font-bold text-[#D4AF37] uppercase flex items-center gap-1.5">
+                      <Mail className="w-3.5 h-3.5" /> Send Direct Support Email to {customerDetails.customer.email}
+                    </h4>
+                    <input
+                      type="text"
+                      required
+                      value={emailSubject}
+                      onChange={e => setEmailSubject(e.target.value)}
+                      placeholder="Email Subject (e.g. Update on your Bhumivera Order)"
+                      className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-xs text-white"
+                    />
+                    <textarea
+                      rows={3}
+                      required
+                      value={emailMessage}
+                      onChange={e => setEmailMessage(e.target.value)}
+                      placeholder="Write message to customer…"
+                      className="w-full px-3 py-2 rounded-lg bg-black/40 border border-white/15 text-xs text-white"
+                    />
+                    <button
+                      type="submit"
+                      disabled={busy}
+                      className="px-4 py-2 rounded-xl bg-[#D4AF37] text-[#071510] font-bold text-xs flex items-center gap-1.5"
+                    >
+                      <Send className="w-3.5 h-3.5" /> Send Email
+                    </button>
+                  </form>
                 </>
               ) : (
-                <p className="text-xs text-emerald-100/60">Search and select a customer to view details.</p>
+                <p className="text-xs text-emerald-100/60">Search and select a customer to view details, order history, or send a password reset link.</p>
               )}
             </div>
           </div>

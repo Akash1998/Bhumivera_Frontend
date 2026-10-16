@@ -971,12 +971,17 @@ export default function SuperAdminSupport() {
             {/* Role Benchmark & Anti-Abuse Protection Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
               {Object.entries(ROLE_CONFIG).map(([roleKey, cfg]) => (
-                <div key={roleKey} className="p-4 rounded-2xl bg-[#0B2419] border border-white/10 space-y-1.5">
+                <button
+                  key={roleKey}
+                  type="button"
+                  onClick={() => setActiveTab(roleKey === "superadmin" ? "guide" : "rbac")}
+                  className="text-left p-4 rounded-2xl bg-[#0B2419] border border-white/10 hover:border-[#D4AF37]/50 transition space-y-1.5"
+                >
                   <span className={`text-[10px] uppercase tracking-wider px-2.5 py-0.5 rounded-full border font-bold ${cfg.badge}`}>
                     {cfg.label}
                   </span>
                   <p className="text-xs text-emerald-100/75 leading-relaxed pt-1">{cfg.description}</p>
-                </div>
+                </button>
               ))}
             </div>
 
@@ -1052,16 +1057,24 @@ export default function SuperAdminSupport() {
                   Customer Satisfaction & Telegram Bot
                 </h3>
                 <div className="grid grid-cols-2 gap-3 text-xs">
-                  <div className="p-3 rounded-xl bg-black/30 border border-white/5">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("tickets")}
+                    className="text-left p-3 rounded-xl bg-black/30 border border-white/5 hover:border-[#D4AF37]/40 transition"
+                  >
                     <span className="text-emerald-100/60">Customer Rating Avg</span>
                     <div className="text-xl font-bold text-[#D4AF37] mt-1">
                       {overview?.metrics?.averageCsat ? `${overview.metrics.averageCsat} / 5.0 ★` : '4.9 ★'}
                     </div>
-                  </div>
-                  <div className="p-3 rounded-xl bg-black/30 border border-white/5">
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab("features")}
+                    className="text-left p-3 rounded-xl bg-black/30 border border-white/5 hover:border-sky-400/40 transition"
+                  >
                     <span className="text-emerald-100/60">Telegram Bot Bridge</span>
-                    <div className="text-sm font-bold text-sky-300 mt-1.5">@BhumiveraBot Active</div>
-                  </div>
+                    <div className="text-sm font-bold text-sky-300 mt-1.5">@BhumiveraBot Active →</div>
+                  </button>
                 </div>
               </div>
 
@@ -1531,6 +1544,38 @@ export default function SuperAdminSupport() {
 
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               <div className="lg:col-span-4 bg-[#0B2419] border border-white/10 rounded-2xl p-4 space-y-3">
+                {searchResults.customers?.length > 0 && (
+                  <div className="space-y-2 pb-3 border-b border-white/10">
+                    <h3 className="text-xs font-bold text-[#D4AF37] uppercase">
+                      Matching Customer Accounts ({searchResults.customers.length})
+                    </h3>
+                    {searchResults.customers.map(cust => (
+                      <div key={cust.id} className="p-2.5 rounded-xl bg-black/40 border border-white/10 text-xs flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="font-bold text-white truncate">{cust.name}</div>
+                          <div className="text-[10px] text-emerald-100/70 truncate">{cust.email} · {cust.phone || "No phone"}</div>
+                        </div>
+                        <div className="flex items-center gap-1 shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => handleSelectCustomer(cust.id)}
+                            className="px-2 py-1 rounded bg-white/10 hover:bg-white/20 text-[10px] text-white font-semibold"
+                          >
+                            Dossier
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleSendPasswordResetLink(cust.id)}
+                            className="px-2 py-1 rounded bg-[#D4AF37]/20 hover:bg-[#D4AF37] hover:text-[#071510] text-[10px] text-[#D4AF37] font-bold"
+                            title="Send Password Reset Link"
+                          >
+                            Reset Link
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
                 <h3 className="text-sm font-bold text-white">
                   Matching Orders ({searchResults.orders.length})
                 </h3>
@@ -1990,13 +2035,44 @@ export default function SuperAdminSupport() {
                   placeholder="Template message…"
                   className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white"
                 />
-                <button
-                  type="submit"
-                  className="px-4 py-2 rounded-xl bg-[#D4AF37] text-[#071510] font-bold text-xs"
-                >
-                  + Save Quick Reply
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="submit"
+                    className="px-4 py-2 rounded-xl bg-[#D4AF37] text-[#071510] font-bold text-xs"
+                  >
+                    + Save Quick Reply
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTestWebhook("telegram")}
+                    className="px-3.5 py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/30 text-sky-200 font-bold text-xs"
+                  >
+                    Test @BhumiveraBot Alert
+                  </button>
+                </div>
               </form>
+
+              <div className="space-y-2 pt-3 border-t border-white/10 max-h-64 overflow-y-auto pr-1">
+                {availableMacros.map(m => (
+                  <div key={m.id} className="p-3 rounded-xl bg-black/30 border border-white/10 flex items-start justify-between gap-2 text-xs">
+                    <div>
+                      <div className="font-bold text-[#D4AF37]">{m.title || m.label}</div>
+                      <p className="text-emerald-100/80 text-[11px] mt-0.5">{m.content || m.text}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const filtered = availableMacros.filter(item => item.id !== m.id);
+                        handleSaveFeatures({ ...features, macros: filtered });
+                      }}
+                      className="p-1.5 rounded bg-rose-500/15 hover:bg-rose-500/30 text-rose-300 shrink-0"
+                      title="Delete Macro"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
             </div>
           </div>
         )}

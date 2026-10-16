@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Zap, ShieldCheck, Globe, ArrowRight, Play, ShoppingBag } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 
 const slides = [
   {
@@ -35,6 +35,7 @@ const slides = [
 export default function HeroSection() {
   const [current, setCurrent] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     if (isPaused) return;
@@ -91,9 +92,13 @@ export default function HeroSection() {
               <ShoppingBag size={20} />
               {slides[current].cta}
             </Link>
-            <button className="px-8 py-4 bg-slate-900/50 hover:bg-slate-800 backdrop-blur-md border border-slate-800 text-white font-black uppercase tracking-wider rounded-2xl transition-all duration-300 flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => navigate('/about')}
+              className="px-8 py-4 bg-slate-900/50 hover:bg-slate-800 backdrop-blur-md border border-slate-800 text-white font-black uppercase tracking-wider rounded-2xl transition-all duration-300 flex items-center gap-3"
+            >
               <Play size={20} className="fill-current" />
-              Watch Demo
+              Explore Our Craft
             </button>
           </div>
         </div>
@@ -139,7 +144,7 @@ export default function HeroSection() {
           <div className="w-px h-4 bg-slate-800" />
           <div className="flex items-center gap-3">
             <Globe size={18} className="text-emerald-500" />
-            PAN India Installation Support
+            PAN India Delivery Support
           </div>
           <div className="w-px h-4 bg-slate-800" />
           <div className="flex items-center gap-3">
@@ -147,10 +152,10 @@ export default function HeroSection() {
             Next-Day Dispatch Guaranteed
           </div>
           <div className="w-px h-4 bg-slate-800" />
-          <div className="flex items-center gap-3 group/link">
+          <Link to="/about" className="flex items-center gap-3 group/link hover:text-emerald-400 transition-colors">
             Learn More About Our Quality
             <ArrowRight size={14} className="transition-transform group-hover/link:translate-x-1" />
-          </div>
+          </Link>
         </div>
       </div>
     </div>

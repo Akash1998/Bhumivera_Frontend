@@ -1,10 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { ShoppingCart, Eye, Heart, CheckCircle, AlertCircle, Star, Layers } from 'lucide-react';
 import { useCart } from '../context/CartContext';
+import { useWishlist } from '../context/WishlistContext';
 
 export default function Card({ product }) {
   const { addToCart } = useCart();
+  const { toggleWishlist, isInWishlist } = useWishlist() || {};
+  const navigate = useNavigate();
   const [garage, setGarage] = useState(null);
 
   useEffect(() => {
@@ -22,6 +25,8 @@ export default function Card({ product }) {
   if (!product) return null;
 
   const isCompatible = garage && (product.category === 'Lights' || product.category === 'Audio');
+  const productId = product._id || product.id;
+  const wished = isInWishlist ? isInWishlist(productId) : false;
 
   // Intelligent ID routing fallback
   const productLink = `/product/${product.slug || product._id || product.id}`;
@@ -48,13 +53,31 @@ export default function Card({ product }) {
         />
         
         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center space-x-4">
-           <button className="p-4 bg-white text-black rounded-full hover:bg-emerald-500 transition-all hover:-translate-y-1">
-             <Heart size={20} />
+           <button
+             type="button"
+             onClick={(e) => {
+               e.preventDefault();
+               e.stopPropagation();
+               toggleWishlist?.(product);
+             }}
+             className={`p-4 rounded-full transition-all hover:-translate-y-1 ${wished ? 'bg-rose-500 text-white' : 'bg-white text-black hover:bg-emerald-500'}`}
+             title={wished ? "Remove from Wishlist" : "Add to Wishlist"}
+           >
+             <Heart size={20} className={wished ? "fill-current" : ""} />
            </button>
-           <Link to={productLink} className="p-4 bg-white text-black rounded-full hover:bg-emerald-500 transition-all hover:-translate-y-1">
+           <Link to={productLink} className="p-4 bg-white text-black rounded-full hover:bg-emerald-500 transition-all hover:-translate-y-1" title="View Product Details">
              <Eye size={20} />
            </Link>
-           <button className="p-4 bg-white text-black rounded-full hover:bg-emerald-500 transition-all hover:-translate-y-1">
+           <button
+             type="button"
+             onClick={(e) => {
+               e.preventDefault();
+               e.stopPropagation();
+               navigate(`/shop?category=${encodeURIComponent(product.category || '')}`);
+             }}
+             className="p-4 bg-white text-black rounded-full hover:bg-emerald-500 transition-all hover:-translate-y-1"
+             title="Browse Similar in Category"
+           >
              <Layers size={20} />
            </button>
         </div>
@@ -65,7 +88,7 @@ export default function Card({ product }) {
           <div>
             <div className="text-[10px] font-black uppercase text-slate-500 tracking-[0.3em] mb-1">{product.category}</div>
             <h3 className="text-xl font-black uppercase tracking-tighter leading-tight text-white group-hover:text-emerald-400 transition-colors">
-              {product.name}
+              <Link to={productLink}>{product.name}</Link>
             </h3>
           </div>
           <div className="text-right">

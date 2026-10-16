@@ -3,7 +3,7 @@ import {
   ShieldCheck, Search, Trash2, ShieldAlert, 
   Calendar, RefreshCw, XCircle, CheckCircle, 
   Plus, Hash, Database, Cpu, Zap, Filter, 
-  FileText, Download, History, UserCheck, AlertTriangle
+  FileText, Download, History, UserCheck, AlertTriangle, X, ExternalLink
 } from 'lucide-react';
 import api, { warranty as warrantyApi, products as productsApi } from "../../services/api";
 import { useToast } from "../../context/ToastContext";
@@ -17,8 +17,10 @@ export default function Genuine_testManagement() {
   
   // Filtering & Search
   const [searchTerm, setSearchTerm] = useState('');
+  const [registrationStatusFilter, setRegistrationStatusFilter] = useState('all'); // all, active, revoked
   const [vaultSearch, setVaultSearch] = useState('');
   const [vaultFilter, setVaultFilter] = useState('all'); // all, available, registered, legacy
+  const [selectedWarrantyDoc, setSelectedWarrantyDoc] = useState(null);
   
   // Generator State
   const [genModal, setGenModal] = useState(false);
@@ -53,8 +55,6 @@ export default function Genuine_testManagement() {
     try {
       await api.patch(`/warranty/${id}/status`, { status: newStatus });
       showToast?.(`Assurance access status updated to ${newStatus.toUpperCase()}`, "success");
-      
-      // Optimistic Update
       setWarranties(warranties.map(w => w.id === id ? { ...w, status: newStatus } : w));
     } catch (err) {
       showToast?.("Status mutation failed", "error");
@@ -116,11 +116,16 @@ export default function Genuine_testManagement() {
 
   // --- ANALYTICS & FILTERING ---
   const filteredRegistrations = useMemo(() => {
-    return warranties.filter(w => 
-      w.user_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      w.registered_serial?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [warranties, searchTerm]);
+    return warranties.filter(w => {
+      const matchesSearch = w.user_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        w.registered_serial?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        w.product_name?.toLowerCase().includes(searchTerm.toLowerCase());
+      if (!matchesSearch) return false;
+      if (registrationStatusFilter === 'active') return w.status === 'approved' || w.status === 'active' || !w.status;
+      if (registrationStatusFilter === 'revoked') return w.status === 'rejected' || w.status === 'revoked';
+      return true;
+    });
+  }, [warranties, searchTerm, registrationStatusFilter]);
 
   const filteredVault = useMemo(() => {
     return serialsVault.filter(s => {
@@ -164,6 +169,9 @@ export default function Genuine_testManagement() {
           </p>
         </div>
         <div className="flex gap-3">
+          <button onClick={fetchData} className="p-3 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 text-slate-400 rounded-xl hover:bg-slate-800 hover:text-white transition-all" title="Refresh Vault">
+            <RefreshCw size={16} />
+          </button>
           <button onClick={exportVault} className="flex items-center gap-2 px-5 py-3 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 text-slate-400 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-slate-800 hover:text-white transition-all shadow-lg">
             <Download size={16} /> Export Registry
           </button>
@@ -173,40 +181,52 @@ export default function Genuine_testManagement() {
         </div>
       </div>
 
-      {/* KPI DASHBOARD */}
+      {/* INTERACTIVE KPI DASHBOARD */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+        <button
+          onClick={() => { setActiveTab('registrations'); setRegistrationStatusFilter(registrationStatusFilter === 'active' ? 'all' : 'active'); }}
+          className={`bg-[#10241f]/45 backdrop-blur-xl border p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group text-left transition-all ${activeTab === 'registrations' && registrationStatusFilter === 'active' ? 'border-emerald-500/60 ring-1 ring-emerald-500/20' : 'border-slate-800/80 hover:border-emerald-500/40'}`}
+        >
           <div className="absolute top-0 right-0 w-24 h-24 bg-emerald-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-emerald-500/20 transition-all"></div>
           <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-emerald-500 z-10"><UserCheck size={22} /></div>
           <div className="z-10">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Active Policies</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{activeWarranties}</h4>
           </div>
-        </div>
-        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+        </button>
+        <button
+          onClick={() => { setActiveTab('vault'); setVaultFilter('all'); }}
+          className={`bg-[#10241f]/45 backdrop-blur-xl border p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group text-left transition-all ${activeTab === 'vault' && vaultFilter === 'all' ? 'border-purple-500/60 ring-1 ring-purple-500/20' : 'border-slate-800/80 hover:border-purple-500/40'}`}
+        >
           <div className="absolute top-0 right-0 w-24 h-24 bg-purple-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-purple-500/20 transition-all"></div>
           <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-purple-500 z-10"><Database size={22} /></div>
           <div className="z-10">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Total Vault Hashes</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{totalSerials.toLocaleString()}</h4>
           </div>
-        </div>
-        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+        </button>
+        <button
+          onClick={() => { setActiveTab('vault'); setVaultFilter('available'); }}
+          className={`bg-[#10241f]/45 backdrop-blur-xl border p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group text-left transition-all ${activeTab === 'vault' && vaultFilter === 'available' ? 'border-blue-500/60 ring-1 ring-blue-500/20' : 'border-slate-800/80 hover:border-blue-500/40'}`}
+        >
           <div className="absolute top-0 right-0 w-24 h-24 bg-blue-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-blue-500/20 transition-all"></div>
           <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-blue-500 z-10"><Hash size={22} /></div>
           <div className="z-10">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Available Keys</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{availableSerials.toLocaleString()}</h4>
           </div>
-        </div>
-        <div className="bg-[#10241f]/45 backdrop-blur-xl border border-slate-800/80 p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group">
+        </button>
+        <button
+          onClick={() => { setActiveTab('registrations'); setRegistrationStatusFilter(registrationStatusFilter === 'revoked' ? 'all' : 'revoked'); }}
+          className={`bg-[#10241f]/45 backdrop-blur-xl border p-6 rounded-[2rem] flex items-center gap-5 relative overflow-hidden group text-left transition-all ${activeTab === 'registrations' && registrationStatusFilter === 'revoked' ? 'border-rose-500/60 ring-1 ring-rose-500/20' : 'border-slate-800/80 hover:border-rose-500/40'}`}
+        >
           <div className="absolute top-0 right-0 w-24 h-24 bg-rose-500/10 blur-2xl -mr-6 -mt-6 group-hover:bg-rose-500/20 transition-all"></div>
           <div className="p-3.5 rounded-2xl bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 text-rose-500 z-10"><ShieldAlert size={22} /></div>
           <div className="z-10">
             <p className="text-[10px] font-black uppercase text-slate-500 tracking-widest">Flagged/Revoked</p>
             <h4 className="text-2xl font-black text-white tracking-tight mt-1">{flaggedWarranties}</h4>
           </div>
-        </div>
+        </button>
       </div>
 
       {/* MATRIX TABS */}
@@ -234,8 +254,8 @@ export default function Genuine_testManagement() {
         
         {activeTab === 'registrations' ? (
           <div className="space-y-0">
-            <div className="p-6 border-b border-slate-800/80">
-              <div className="relative group">
+            <div className="p-6 border-b border-slate-800/80 flex flex-col md:flex-row gap-4">
+              <div className="relative flex-1 group">
                 <Search className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-purple-500 transition-colors" size={18} />
                 <input 
                   placeholder="Scan by Client Name or Serial Hash..." 
@@ -243,6 +263,14 @@ export default function Genuine_testManagement() {
                   value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
+              {registrationStatusFilter !== 'all' && (
+                <button
+                  onClick={() => setRegistrationStatusFilter('all')}
+                  className="px-4 py-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-300 text-xs font-black uppercase tracking-widest"
+                >
+                  Clear Filter ({registrationStatusFilter})
+                </button>
+              )}
             </div>
             
             <div className="overflow-x-auto">
@@ -284,8 +312,14 @@ export default function Genuine_testManagement() {
                           </div>
                         </td>
                         <td className="p-6 text-right">
-                          <div className="flex items-center justify-end gap-2 opacity-50 group-hover:opacity-100 transition-opacity">
-                            <button className="p-2.5 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 hover:bg-blue-500/10 hover:text-blue-500 hover:border-blue-500/30 rounded-xl text-slate-400 transition-all" title="View Documents"><FileText size={16} /></button>
+                          <div className="flex items-center justify-end gap-2 opacity-80 group-hover:opacity-100 transition-opacity">
+                            <button
+                              onClick={() => setSelectedWarrantyDoc(w)}
+                              className="p-2.5 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 hover:bg-blue-500/10 hover:text-blue-500 hover:border-blue-500/30 rounded-xl text-slate-400 transition-all"
+                              title="View Documents & Policy Details"
+                            >
+                              <FileText size={16} />
+                            </button>
                             <button 
                               onClick={() => handleUpdateStatus(w.id, isRevoked ? 'approved' : 'revoked')}
                               className={`p-2.5 bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl transition-all ${isRevoked ? 'hover:bg-emerald-500/10 hover:text-emerald-500 hover:border-emerald-500/30 text-slate-400' : 'hover:bg-rose-500/10 hover:text-rose-500 hover:border-rose-500/30 text-slate-400'}`}
@@ -382,6 +416,80 @@ export default function Genuine_testManagement() {
           </div>
         )}
       </div>
+
+      {/* WARRANTY DOCUMENT & POLICY DETAIL MODAL */}
+      {selectedWarrantyDoc && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#081b15]/90 backdrop-blur-xl">
+          <div className="bg-[#10241f]/95 border border-slate-800 w-full max-w-xl rounded-[2.5rem] shadow-2xl overflow-hidden animate-in zoom-in-95 duration-200">
+            <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-purple-500/5">
+              <div>
+                <h3 className="text-xl font-black text-white uppercase tracking-tight">Warranty Policy Dossier #{selectedWarrantyDoc.id}</h3>
+                <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mt-1">Serial: {selectedWarrantyDoc.registered_serial}</p>
+              </div>
+              <button onClick={() => setSelectedWarrantyDoc(null)} className="p-2 text-slate-400 hover:text-white rounded-xl bg-slate-900 border border-slate-800">
+                <X size={18} />
+              </button>
+            </div>
+            <div className="p-6 space-y-4 text-xs">
+              <div className="grid grid-cols-2 gap-4 bg-[#081b15]/90 p-4 rounded-2xl border border-slate-800">
+                <div>
+                  <span className="text-[10px] font-black uppercase text-slate-500 block">Client Name</span>
+                  <span className="font-bold text-white text-sm">{selectedWarrantyDoc.user_name || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase text-slate-500 block">Client Email</span>
+                  <span className="font-bold text-white text-sm">{selectedWarrantyDoc.user_email || 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase text-slate-500 block">Product</span>
+                  <span className="font-bold text-purple-400">{selectedWarrantyDoc.product_name || 'Registered Hardware'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase text-slate-500 block">Registered On</span>
+                  <span className="font-bold text-white">{selectedWarrantyDoc.registered_at ? new Date(selectedWarrantyDoc.registered_at).toLocaleString() : 'N/A'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase text-slate-500 block">Expiry Date</span>
+                  <span className="font-bold text-emerald-400">{selectedWarrantyDoc.expiry_date ? new Date(selectedWarrantyDoc.expiry_date).toLocaleDateString() : '12 Months Active'}</span>
+                </div>
+                <div>
+                  <span className="text-[10px] font-black uppercase text-slate-500 block">Invoice / Proof</span>
+                  {selectedWarrantyDoc.invoice_url || selectedWarrantyDoc.proof_of_purchase ? (
+                    <a
+                      href={selectedWarrantyDoc.invoice_url || selectedWarrantyDoc.proof_of_purchase}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-cyan-400 hover:underline font-bold"
+                    >
+                      Open Proof <ExternalLink size={12} />
+                    </a>
+                  ) : (
+                    <span className="text-slate-400 font-bold">Verified Digital Serial</span>
+                  )}
+                </div>
+              </div>
+              <div className="flex justify-end gap-3 pt-2">
+                <button
+                  onClick={() => {
+                    const nextStatus = (selectedWarrantyDoc.status === 'revoked' || selectedWarrantyDoc.status === 'rejected') ? 'approved' : 'revoked';
+                    handleUpdateStatus(selectedWarrantyDoc.id, nextStatus);
+                    setSelectedWarrantyDoc({ ...selectedWarrantyDoc, status: nextStatus });
+                  }}
+                  className="px-5 py-2.5 rounded-xl bg-purple-600 hover:bg-purple-500 text-white font-black uppercase tracking-widest text-[10px]"
+                >
+                  {(selectedWarrantyDoc.status === 'revoked' || selectedWarrantyDoc.status === 'rejected') ? 'Reinstate Policy' : 'Revoke Policy'}
+                </button>
+                <button
+                  onClick={() => setSelectedWarrantyDoc(null)}
+                  className="px-5 py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 font-black uppercase tracking-widest text-[10px]"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* GENERATOR MODAL */}
       {genModal && (

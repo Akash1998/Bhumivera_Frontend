@@ -1,7 +1,7 @@
 // QuickViewModal - Revamped with modern UI and lucide-react icons
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { X, ShoppingCart, Heart, Star, Check, Minus, Plus, ExternalLink, Tag, Package } from 'lucide-react';
+import { X, ShoppingCart, Star, Check, Minus, Plus, ExternalLink, Tag, Package } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 
 const FALLBACK = 'https://images.unsplash.com/photo-1601362840469-51e4d8d58785?auto=format&fit=crop&w=400&q=60';
@@ -11,6 +11,7 @@ export default function QuickViewModal({ product, onClose }) {
   const [qty, setQty] = useState(1);
   const [added, setAdded] = useState(false);
   const [selectedImg, setSelectedImg] = useState(0);
+  const [selectedVariant, setSelectedVariant] = useState(0);
 
   if (!product) return null;
 
@@ -26,7 +27,11 @@ export default function QuickViewModal({ product, onClose }) {
 
   const handleAdd = async () => {
     try {
-      await addToCart(product, qty);
+      const chosenVariant = product.variants?.[selectedVariant];
+      const itemToAdd = chosenVariant
+        ? { ...product, selectedVariant: chosenVariant.name || chosenVariant }
+        : product;
+      await addToCart(itemToAdd, qty);
       setAdded(true);
       setTimeout(() => setAdded(false), 2000);
     } catch (err) {
@@ -189,7 +194,13 @@ export default function QuickViewModal({ product, onClose }) {
                   {product.variants.map((v, i) => (
                     <button
                       key={i}
-                      className="px-3 py-1.5 text-sm border border-gray-700 rounded-lg text-gray-300 hover:border-cyan-500 hover:text-cyan-400 transition-colors"
+                      type="button"
+                      onClick={() => setSelectedVariant(i)}
+                      className={`px-3 py-1.5 text-sm border rounded-lg transition-colors ${
+                        selectedVariant === i
+                          ? 'border-cyan-500 bg-cyan-500/15 text-cyan-300 font-semibold'
+                          : 'border-gray-700 text-gray-300 hover:border-cyan-500 hover:text-cyan-400'
+                      }`}
                     >
                       {v.name || v}
                     </button>
