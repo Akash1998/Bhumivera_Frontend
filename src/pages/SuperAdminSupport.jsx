@@ -521,7 +521,28 @@ export default function SuperAdminSupport() {
       );
       await fetchSessionDetail(selectedSessionToken);
       await fetchCommandCenterData();
-      showNotice('success', res.data?.message || `Completed ${action}.`);
+      const refund = action === 'cancel_order' ? res.data?.refundSummary : null;
+      if (refund) {
+        const amount = Number(refund.gatewayRefundAmount || refund.walletCreditedAmount || 0);
+        const formattedAmount = `₹${amount.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+        if (refund.refundDestination === 'ORIGINAL_GATEWAY') {
+          const status = String(refund.gatewayStatus || 'INITIATED').replace(/_/g, ' ').toLowerCase();
+          const reference = refund.gatewayRefundId ? ` (Refund ID: ${refund.gatewayRefundId})` : '';
+          showNotice(
+            'success',
+            `${res.data?.message || `Order #${res.data?.orderNumber || actionOrderId} cancelled.`} Refund of ${formattedAmount} to the original payment method is ${status}${reference}.`
+          );
+        } else if (refund.refundDestination === 'WALLET_INSTANT') {
+          showNotice(
+            'success',
+            `${res.data?.message || `Order #${res.data?.orderNumber || actionOrderId} cancelled.`} ${formattedAmount} was credited to the customer's wallet.`
+          );
+        } else {
+          showNotice('success', res.data?.message || `Completed ${action}. No payment refund was due for this order.`);
+        }
+      } else {
+        showNotice('success', res.data?.message || `Completed ${action}.`);
+      }
     } catch (err) {
       showNotice('error', err.response?.data?.message || 'Action blocked by role security guardrail.');
     }
