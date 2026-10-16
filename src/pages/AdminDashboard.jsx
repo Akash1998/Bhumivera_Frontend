@@ -32,7 +32,7 @@ const WalletManagement = lazy(() => import('./admin/WalletManagement.jsx'));
 const ReferralEngine = lazy(() => import('./admin/AffiliateManagement.jsx'));
 const SupportManagement = lazy(() => import('./admin/SupportManagement.jsx'));
 const ContactManagement = lazy(() => import('./admin/ContactManagement.jsx'));
-const EwarrantyManagement = lazy(() => import('./admin/EwarrantyManagement.jsx'));
+const EWarrantyManagement = lazy(() => import('./admin/EWarrantyManagement.jsx'));
 const SupportAgentManagement = lazy(() => import('./admin/SupportAgentManagement.jsx'));
 const LoyaltyTierForge = lazy(() => import('./admin/LoyaltyTierForge.jsx'));
 const LoyaltyMembers = lazy(() => import('./admin/LoyaltyMembers.jsx'));
@@ -112,7 +112,7 @@ const TAB_COMPONENTS = {
   impact: ImpactManagement,
   support: SupportManagement,
   contacts: ContactManagement,
-  ewarranty: EwarrantyManagement,
+  ewarranty: EWarrantyManagement,
   'support-agents': SupportAgentManagement,
 };
 
