@@ -32,6 +32,7 @@ import {
   Filter, Calendar, Hash, Truck, PackageCheck, RotateCcw,
   ChevronDown, ChevronUp, Gift, PiggyBank, ShoppingBag,
   Leaf, Zap, Users, Coins, ExternalLink, Key, Camera, Image as ImageIcon, Fingerprint,
+  Navigation, Check,
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { registerPasskey, isPasskeySupported } from '../utils/webauthnClient';
@@ -262,7 +263,9 @@ export default function Profile() {
   const [returnUploadProgress, setReturnUploadProgress] = useState(0);
   const returnPhotoInputRef = useRef(null);
   const [returnEligibilityClock, setReturnEligibilityClock] = useState(Date.now());
-  const [addressModal, setAddressModal] = useState({ open:false, editId:null, form:{ label:'Home', full_name:'', phone:'', line1:'', line2:'', city:'', state:'', postal_code:'', country:'India', is_default:false }});
+  const [addressModal, setAddressModal] = useState({ open:false, editId:null, form:{ label:'Home', full_name:'', phone:'', line1:'', line2:'', city:'', state:'', postal_code:'', country:'India', is_default:false, latitude:null, longitude:null, google_maps_url:'' }});
+  const [locatingAddress, setLocatingAddress] = useState(false);
+  const [copiedAddressId, setCopiedAddressId] = useState(null);
   const [faqOpen, setFaqOpen] = useState(new Set());
   const [reviewEditing, setReviewEditing] = useState(null);
   const [reviewSubmission, setReviewSubmission] = useState(null);
@@ -829,6 +832,71 @@ export default function Profile() {
       return true;
     } catch (err) { toast.error(err.response?.data?.message || 'Failed'); return false; }
   };
+  const handleDetectProfileLocation = () => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser. Please enter your address details manually.');
+      return;
+    }
+
+    setLocatingAddress(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = Number(position.coords.latitude.toFixed(7));
+        const lng = Number(position.coords.longitude.toFixed(7));
+        const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+
+        const updatedFields = {
+          latitude: lat,
+          longitude: lng,
+          google_maps_url: mapsUrl
+        };
+
+        try {
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+            headers: { 'Accept': 'application/json' }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const addr = data.address || {};
+            const street = addr.road || addr.suburb || addr.neighbourhood || addr.residential || '';
+            const city = addr.city || addr.town || addr.village || addr.county || addr.state_district || '';
+            const state = addr.state || '';
+            const pincode = addr.postcode || '';
+
+            if (street && !addressModal.form.line1) updatedFields.line1 = street;
+            if (city) updatedFields.city = city;
+            if (state) updatedFields.state = state;
+            if (pincode) updatedFields.postal_code = pincode;
+          }
+        } catch (geoErr) {
+          console.warn('Reverse geocoding network notice (non-blocking):', geoErr);
+        }
+
+        setAddressModal(m => ({
+          ...m,
+          form: {
+            ...m.form,
+            ...updatedFields
+          }
+        }));
+        setLocatingAddress(false);
+        toast.success('Exact GPS delivery spot pinned successfully!');
+      },
+      (error) => {
+        setLocatingAddress(false);
+        console.warn('Geolocation error:', error);
+        if (error.code === 1) {
+          toast.error('Location permission was denied. You can still type your address details manually.');
+        } else if (error.code === 3) {
+          toast.error('Location request timed out. Please enter your address manually.');
+        } else {
+          toast.error('Unable to fetch precise location. Please enter your address manually.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
   const handleAddressSave = async (e) => {
     e.preventDefault();
     const f = addressModal.form;
@@ -840,6 +908,9 @@ export default function Profile() {
       line2: f.line2, address_line2: f.line2, street_address2: f.line2,
       city: f.city, state: f.state, postal_code: f.postal_code, zip: f.postal_code,
       country: f.country, is_default: f.is_default,
+      latitude: f.latitude || undefined,
+      longitude: f.longitude || undefined,
+      google_maps_url: f.google_maps_url || (f.latitude && f.longitude ? `https://www.google.com/maps?q=${f.latitude},${f.longitude}` : undefined)
     };
     try {
       if (addressModal.editId) {
@@ -849,7 +920,7 @@ export default function Profile() {
         await addressesApi.create(payload);
         toast.success('Address added');
       }
-      setAddressModal({ open:false, editId:null, form:{ label:'Home', full_name:'', phone:'', line1:'', line2:'', city:'', state:'', postal_code:'', country:'India', is_default:false }});
+      setAddressModal({ open:false, editId:null, form:{ label:'Home', full_name:'', phone:'', line1:'', line2:'', city:'', state:'', postal_code:'', country:'India', is_default:false, latitude:null, longitude:null, google_maps_url:'' }});
       await loadAddresses();
     } catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
   };
@@ -1405,53 +1476,103 @@ export default function Profile() {
               <section>
                 <div className="flex items-center justify-between mb-5">
                   <h2 className="text-lg font-semibold text-[#0B2419]">Saved Addresses ({addresses.length})</h2>
-                  <button onClick={() => setAddressModal({ open:true, editId:null, form:{ label:'Home', full_name: displayName, phone: profileData.phone||'', line1:'', line2:'', city:'', state:'', postal_code:'', country:'India', is_default: addresses.length===0 }})}
+                  <button onClick={() => setAddressModal({ open:true, editId:null, form:{ label:'Home', full_name: displayName, phone: profileData.phone||'', line1:'', line2:'', city:'', state:'', postal_code:'', country:'India', is_default: addresses.length===0, latitude:null, longitude:null, google_maps_url:'' }})}
                     className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B2419] text-[#FDFBF7] text-sm font-medium hover:bg-[#1e4031] transition-colors shadow-sm">
-                    <Plus className="w-4 h-4"/> Add Address
+                  <Plus className="w-4 h-4"/> Add Address
                   </button>
                 </div>
                 {addresses.length === 0 ? (
                   <div className="rounded-2xl bg-white border border-stone-200 p-5 shadow-sm">
-                    <EmptyState icon={MapPin} title="No saved addresses" subtitle="Save a delivery address to breeze through checkout. You can manage multiple addresses (Home, Work, etc.)" actionLabel="Add First Address" onAction={() => setAddressModal({ open:true, editId:null, form:{ label:'Home', full_name: displayName, phone: profileData.phone||'', line1:'', line2:'', city:'', state:'', postal_code:'', country:'India', is_default:true }})}/>
+                    <EmptyState icon={MapPin} title="No saved addresses" subtitle="Save a delivery address to breeze through checkout. You can manage multiple addresses (Home, Work, etc.)" actionLabel="Add First Address" onAction={() => setAddressModal({ open:true, editId:null, form:{ label:'Home', full_name: displayName, phone: profileData.phone||'', line1:'', line2:'', city:'', state:'', postal_code:'', country:'India', is_default:true, latitude:null, longitude:null, google_maps_url:'' }})}/>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {addresses.map(a => (
-                      <div key={a.id} className={`rounded-2xl bg-white border p-5 shadow-sm hover:shadow-md transition-all ${a.is_default || a.default ? 'border-[#D4AF37]/60' : 'border-stone-200'}`}>
-                        <div className="flex items-start justify-between mb-3">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${a.is_default || a.default ? 'bg-[#D4AF37]/15 text-[#8a6a12]' : 'bg-stone-100 text-stone-500'}`}>
-                              <LabelIcon label={a.label}/>
+                    {addresses.map(a => {
+                      const addrId = a.id || a._id;
+                      const addrLine1 = a.line1 || a.street_address || a.address_line1 || a.address || '';
+                      const addrLine2 = a.line2 || a.address_line2 || '';
+                      const mapsUrl = a.google_maps_url || (a.latitude && a.longitude ? `https://www.google.com/maps?q=${a.latitude},${a.longitude}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([addrLine1, addrLine2, a.city, a.state, a.postal_code || a.zip, a.country || 'India'].filter(Boolean).join(', '))}`);
+                      const hasExactGps = !!(a.latitude && a.longitude);
+
+                      return (
+                        <div key={addrId} className={`rounded-2xl bg-white border p-5 shadow-sm hover:shadow-md transition-all ${a.is_default || a.default ? 'border-[#D4AF37]/60' : 'border-stone-200'}`}>
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-2">
+                              <div className={`w-9 h-9 rounded-xl flex items-center justify-center ${a.is_default || a.default ? 'bg-[#D4AF37]/15 text-[#8a6a12]' : 'bg-stone-100 text-stone-500'}`}>
+                                <LabelIcon label={a.label}/>
+                              </div>
+                              <div>
+                                <div className="font-semibold text-sm text-[#0B2419]">{a.label || 'Home'}</div>
+                                <div className="text-xs text-stone-500">{a.full_name || a.name || displayName}</div>
+                              </div>
                             </div>
-                            <div>
-                              <div className="font-semibold text-sm text-[#0B2419]">{a.label || 'Home'}</div>
-                              <div className="text-xs text-stone-500">{a.full_name || a.name || displayName}</div>
+                            {(a.is_default || a.default) && (
+                              <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#D4AF37]/15 text-[#8a6a12] border border-[#D4AF37]/40 text-[10px] font-bold uppercase tracking-wide">Default</span>
+                            )}
+                          </div>
+                          <div className="text-sm text-stone-700 leading-relaxed space-y-0.5">
+                            <div>{addrLine1}</div>
+                            {addrLine2 && <div className="text-stone-500">{addrLine2}</div>}
+                            <div>{a.city}, {a.state} {a.postal_code || a.zip}</div>
+                            <div className="text-stone-500">{a.country || 'India'}</div>
+                            <div className="pt-1.5 flex items-center gap-1.5 text-stone-600"><Phone className="w-3.5 h-3.5"/> {a.phone || a.phone_number}</div>
+                          </div>
+
+                          {/* Google Maps Pin & Courier Share */}
+                          <div className="mt-3 pt-2.5 border-t border-stone-100 flex flex-wrap items-center justify-between gap-2 text-xs">
+                            <div className="flex items-center gap-1.5">
+                              <MapPin className={`w-3.5 h-3.5 ${hasExactGps ? 'text-emerald-700' : 'text-stone-400'}`} />
+                              <span className={hasExactGps ? 'font-semibold text-emerald-800' : 'text-stone-500'}>
+                                {hasExactGps ? 'Exact GPS Pinned' : 'Maps Link Ready'}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <a
+                                href={mapsUrl}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="inline-flex items-center gap-1 text-[#0B2419] hover:text-[#D4AF37] font-medium"
+                              >
+                                View Map <ExternalLink className="w-3 h-3" />
+                              </a>
+                              <span className="text-stone-300">|</span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  navigator.clipboard.writeText(mapsUrl);
+                                  setCopiedAddressId(addrId);
+                                  toast.success('Google Maps delivery link copied!');
+                                  setTimeout(() => setCopiedAddressId(null), 2000);
+                                }}
+                                className="inline-flex items-center gap-1 text-[#0B2419] hover:text-[#D4AF37] font-medium"
+                              >
+                                {copiedAddressId === addrId ? (
+                                  <>
+                                    <Check className="w-3 h-3 text-emerald-600" /> Copied!
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3 h-3" /> Copy Map Link
+                                  </>
+                                )}
+                              </button>
                             </div>
                           </div>
-                          {(a.is_default || a.default) && (
-                            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#D4AF37]/15 text-[#8a6a12] border border-[#D4AF37]/40 text-[10px] font-bold uppercase tracking-wide">Default</span>
-                          )}
+
+                          <div className="mt-3 pt-2.5 border-t border-stone-100 flex items-center gap-2 flex-wrap">
+                            {!(a.is_default || a.default) && (
+                              <button onClick={() => handleSetDefaultAddr(addrId)} className="text-xs px-3 py-1.5 rounded-lg border border-stone-200 text-stone-700 hover:border-[#D4AF37] hover:text-[#8a6a12] font-medium">Set Default</button>
+                            )}
+                            <button onClick={() => setAddressModal({ open:true, editId:addrId, form:{ label:a.label||'Home', full_name:a.full_name||a.name||'', phone:a.phone||a.phone_number||'', line1:addrLine1, line2:addrLine2, city:a.city||'', state:a.state||'', postal_code:a.postal_code||a.zip||'', country:a.country||'India', is_default: !!(a.is_default||a.default), latitude: a.latitude || null, longitude: a.longitude || null, google_maps_url: a.google_maps_url || (a.latitude && a.longitude ? `https://www.google.com/maps?q=${a.latitude},${a.longitude}` : '') }})} className="text-xs px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 inline-flex items-center gap-1 font-medium">
+                              <Edit2 className="w-3 h-3"/> Edit
+                            </button>
+                            <button onClick={() => handleAddressDelete(addrId)} className="text-xs px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 inline-flex items-center gap-1 font-medium">
+                              <Trash2 className="w-3 h-3"/> Delete
+                            </button>
+                          </div>
                         </div>
-                        <div className="text-sm text-stone-700 leading-relaxed space-y-0.5">
-                          <div>{a.line1 || a.street_address || a.address_line1 || a.address}</div>
-                          {(a.line2 || a.address_line2) && <div className="text-stone-500">{a.line2 || a.address_line2}</div>}
-                          <div>{a.city}, {a.state} {a.postal_code || a.zip}</div>
-                          <div className="text-stone-500">{a.country || 'India'}</div>
-                          <div className="pt-1.5 flex items-center gap-1.5 text-stone-600"><Phone className="w-3.5 h-3.5"/> {a.phone || a.phone_number}</div>
-                        </div>
-                        <div className="mt-4 flex items-center gap-2 flex-wrap">
-                          {!(a.is_default || a.default) && (
-                            <button onClick={() => handleSetDefaultAddr(a.id)} className="text-xs px-3 py-1.5 rounded-lg border border-stone-200 text-stone-700 hover:border-[#D4AF37] hover:text-[#8a6a12] font-medium">Set Default</button>
-                          )}
-                          <button onClick={() => setAddressModal({ open:true, editId:a.id, form:{ label:a.label||'Home', full_name:a.full_name||a.name||'', phone:a.phone||a.phone_number||'', line1:a.line1||a.street_address||a.address_line1||a.address||'', line2:a.line2||a.address_line2||'', city:a.city||'', state:a.state||'', postal_code:a.postal_code||a.zip||'', country:a.country||'India', is_default: !!(a.is_default||a.default) }})} className="text-xs px-3 py-1.5 rounded-lg bg-stone-100 hover:bg-stone-200 text-stone-700 inline-flex items-center gap-1 font-medium">
-                            <Edit2 className="w-3 h-3"/> Edit
-                          </button>
-                          <button onClick={() => handleAddressDelete(a.id)} className="text-xs px-3 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 inline-flex items-center gap-1 font-medium">
-                            <Trash2 className="w-3 h-3"/> Delete
-                          </button>
-                        </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </section>
@@ -2595,6 +2716,46 @@ export default function Profile() {
                 ))}
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div className="sm:col-span-2 bg-[#F4F7F4] border border-[#8B9D83]/30 rounded-2xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <Navigation className="text-[#0B2419] w-4 h-4" />
+                      <span className="text-sm font-semibold text-[#0B2419]">Exact Delivery Spot Pinpointer</span>
+                      {addressModal.form.latitude && addressModal.form.longitude && (
+                        <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                          GPS Attached
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-xs text-stone-600 mt-1">
+                      {addressModal.form.latitude && addressModal.form.longitude ? (
+                        <>
+                          Coordinates: <span className="font-mono text-emerald-900 font-semibold">{addressModal.form.latitude}, {addressModal.form.longitude}</span> &bull;{' '}
+                          <a
+                            href={addressModal.form.google_maps_url || `https://www.google.com/maps?q=${addressModal.form.latitude},${addressModal.form.longitude}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-[#0B2419] underline font-medium hover:text-[#D4AF37] inline-flex items-center gap-1"
+                          >
+                            Preview on Google Maps <ExternalLink className="w-3 h-3" />
+                          </a>
+                        </>
+                      ) : (
+                        'Pin your exact location so delivery couriers navigate directly to your doorstep.'
+                      )}
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={handleDetectProfileLocation}
+                    disabled={locatingAddress}
+                    className="inline-flex items-center gap-2 px-3.5 py-2 bg-[#0B2419] hover:bg-[#2C3E2D] text-[#FDFBF7] rounded-xl text-xs font-semibold transition-all disabled:opacity-50 whitespace-nowrap shadow-sm"
+                  >
+                    <Navigation className={`w-3.5 h-3.5 ${locatingAddress ? 'animate-spin' : ''}`} />
+                    {locatingAddress ? 'Detecting GPS...' : addressModal.form.latitude ? 'Re-pin Location' : 'Use Current Location'}
+                  </button>
+                </div>
+
                 <div className="sm:col-span-2">
                   <label className="text-xs font-semibold text-stone-600 mb-1.5 block">Full Name</label>
                   <input required value={addressModal.form.full_name} onChange={e => setAddressModal(m => ({ ...m, form:{ ...m.form, full_name: e.target.value }}))}

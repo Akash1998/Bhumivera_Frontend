@@ -5,7 +5,7 @@ import {
 import api from "../services/api";
 import { getProductImageUrl } from "../utils/productImageUrl";
 
-export default function Genuine_test() {
+export default function EWarranty() {
   const [serial, setSerial] = useState('');
   const [step, setStep] = useState(1);
   const [loading, setLoading] = useState(false);
@@ -33,11 +33,11 @@ export default function Genuine_test() {
       const response = await api.get(`/warranty/validate/${encodeURIComponent(serial)}`);
       const data = response.data;
       
-      const safGenuine_testMonths = Number(data.base_warranty_months || data.warranty_period || 12);
+      const safeWarrantyMonths = Number(data.base_warranty_months || data.warranty_period || 12);
       
       const mappedProductData = {
         ...data,
-        base_warranty_months: safGenuine_testMonths,
+        base_warranty_months: safeWarrantyMonths,
         images: Array.isArray(data.images) ? data.images : [] 
       };
       
@@ -50,7 +50,7 @@ export default function Genuine_test() {
             setCalculatedExpiry(new Date(data.warranty_end_date).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
         } else if (data.purchase_date) {
             const pDate = new Date(data.purchase_date);
-            pDate.setMonth(pDate.getMonth() + safGenuine_testMonths + 1);
+            pDate.setMonth(pDate.getMonth() + safeWarrantyMonths + 1);
             setCalculatedExpiry(pDate.toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' }));
         } else {
             setCalculatedExpiry("Lifetime / Standard");

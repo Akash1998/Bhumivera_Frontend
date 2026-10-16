@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { addresses as addressesApi } from '../services/api';
-import { MapPin, Plus, Edit2, Trash2, Star, Home, Building, Map, X, CheckCircle2 } from 'lucide-react';
+import { MapPin, Plus, Edit2, Trash2, Star, Home, Building, Map, X, CheckCircle2, Navigation, ExternalLink, Copy, Check } from 'lucide-react';
 
 const defaultForm = { 
   label: 'Home', 
@@ -14,7 +14,10 @@ const defaultForm = {
   state: '', 
   pincode: '', 
   country: 'India', 
-  isDefault: false 
+  isDefault: false,
+  latitude: null,
+  longitude: null,
+  google_maps_url: ''
 };
 
 export default function AddressBook() {
@@ -26,6 +29,8 @@ export default function AddressBook() {
   const [editId, setEditId] = useState(null);
   const [form, setForm] = useState(defaultForm);
   const [saving, setSaving] = useState(false);
+  const [locating, setLocating] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
   const [msg, setMsg] = useState('');
   const [msgType, setMsgType] = useState('success');
 
@@ -43,6 +48,69 @@ export default function AddressBook() {
     setLoading(false);
   };
 
+  const handleDetectLocation = () => {
+    if (typeof window === 'undefined' || !navigator.geolocation) {
+      toast.error('Geolocation is not supported by your browser. Please enter your address details manually.');
+      return;
+    }
+
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        const lat = Number(position.coords.latitude.toFixed(7));
+        const lng = Number(position.coords.longitude.toFixed(7));
+        const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+
+        const updatedFields = {
+          latitude: lat,
+          longitude: lng,
+          google_maps_url: mapsUrl
+        };
+
+        try {
+          // Attempt reverse geocoding to pre-fill address fields without blocking
+          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
+            headers: { 'Accept': 'application/json' }
+          });
+          if (res.ok) {
+            const data = await res.json();
+            const addr = data.address || {};
+            const street = addr.road || addr.suburb || addr.neighbourhood || addr.residential || '';
+            const city = addr.city || addr.town || addr.village || addr.county || addr.state_district || '';
+            const state = addr.state || '';
+            const pincode = addr.postcode || '';
+
+            if (street && !form.addressLine1) updatedFields.addressLine1 = street;
+            if (city) updatedFields.city = city;
+            if (state) updatedFields.state = state;
+            if (pincode) updatedFields.pincode = pincode;
+          }
+        } catch (geoErr) {
+          console.warn('Reverse geocoding network notice (non-blocking):', geoErr);
+        }
+
+        setForm(prev => ({
+          ...prev,
+          ...updatedFields
+        }));
+        setLocating(false);
+        toast.success('Exact GPS delivery spot pinned successfully!');
+      },
+      (error) => {
+        setLocating(false);
+        console.warn('Geolocation prompt error:', error);
+        if (error.code === 1) {
+          toast.error('Location permission was denied. You can still type your address details manually.');
+        } else if (error.code === 3) {
+          toast.error('Location request timed out. Please enter your address manually.');
+        } else {
+          toast.error('Unable to fetch precise location. Please enter your address manually.');
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+    );
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setSaving(true);
@@ -56,7 +124,10 @@ export default function AddressBook() {
       address_line2: form.addressLine2,
       phone_number: form.phone,
       postal_code: form.pincode,
-      is_default: form.isDefault
+      is_default: form.isDefault,
+      latitude: form.latitude || undefined,
+      longitude: form.longitude || undefined,
+      google_maps_url: form.google_maps_url || (form.latitude && form.longitude ? `https://www.google.com/maps?q=${form.latitude},${form.longitude}` : undefined)
     };
 
     try {
@@ -134,7 +205,10 @@ export default function AddressBook() {
       state: addr.state || '', 
       pincode: addr.pincode || addr.postal_code || '', 
       country: addr.country || 'India', 
-      isDefault: addr.isDefault || addr.is_default || false 
+      isDefault: addr.isDefault || addr.is_default || false,
+      latitude: addr.latitude || null,
+      longitude: addr.longitude || null,
+      google_maps_url: addr.google_maps_url || (addr.latitude && addr.longitude ? `https://www.google.com/maps?q=${addr.latitude},${addr.longitude}` : '')
     });
     setShowForm(true);
   };
@@ -189,6 +263,46 @@ export default function AddressBook() {
               </button>
             </div>
             <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="sm:col-span-2 bg-[#F4F7F4] border border-[#8B9D83]/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+                <div>
+                  <div className="flex items-center gap-2">
+                    <Navigation className="text-[#0B2419] w-4 h-4" />
+                    <span className="text-sm font-semibold text-[#0B2419]">Exact Delivery Spot Pinpointer</span>
+                    {form.latitude && form.longitude && (
+                      <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                        GPS Attached
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-[#2C3E2D]/80 mt-1">
+                    {form.latitude && form.longitude ? (
+                      <>
+                        Coordinates: <span className="font-mono text-emerald-900 font-semibold">{form.latitude}, {form.longitude}</span> &bull;{' '}
+                        <a
+                          href={form.google_maps_url || `https://www.google.com/maps?q=${form.latitude},${form.longitude}`}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-[#0B2419] underline font-medium hover:text-[#D4AF37] inline-flex items-center gap-1"
+                        >
+                          Preview on Google Maps <ExternalLink size={11} />
+                        </a>
+                      </>
+                    ) : (
+                      'Pin your exact location so couriers navigate straight to your doorstep without landmark confusion.'
+                    )}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDetectLocation}
+                  disabled={locating}
+                  className="inline-flex items-center gap-2 px-3.5 py-2 bg-[#0B2419] hover:bg-[#2C3E2D] text-[#FDFBF7] rounded-lg text-xs font-semibold transition-all disabled:opacity-50 whitespace-nowrap shadow-sm"
+                >
+                  <Navigation size={13} className={locating ? 'animate-spin' : ''} />
+                  {locating ? 'Detecting GPS...' : form.latitude ? 'Re-pin Current Location' : 'Use Current Location'}
+                </button>
+              </div>
+
               <div>
                 <label className="text-xs font-medium text-[#2C3E2D] mb-1.5 block">Label</label>
                 <select value={form.label} onChange={e => setForm({...form, label: e.target.value})}
@@ -301,6 +415,55 @@ export default function AddressBook() {
                   </p>
                   <p className="text-[#2C3E2D] text-sm">{addr.city}, {addr.state} &mdash; {addr.pincode || addr.postal_code}</p>
                   <p className="text-[#8B9D83] text-sm mb-3">{addr.country || 'India'}</p>
+
+                  {/* Google Maps Pin & Courier Share */}
+                  {(() => {
+                    const mapsUrl = addr.google_maps_url || (addr.latitude && addr.longitude ? `https://www.google.com/maps?q=${addr.latitude},${addr.longitude}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([addressLine1, addressLine2, addr.city, addr.state, addr.pincode || addr.postal_code, addr.country || 'India'].filter(Boolean).join(', '))}`);
+                    const hasExactGps = !!(addr.latitude && addr.longitude);
+
+                    return (
+                      <div className="mb-3 pt-2.5 border-t border-[#8B9D83]/15 flex flex-wrap items-center justify-between gap-2 text-xs">
+                        <div className="flex items-center gap-1.5">
+                          <MapPin size={13} className={hasExactGps ? "text-emerald-700" : "text-[#8B9D83]"} />
+                          <span className={hasExactGps ? "font-semibold text-emerald-800" : "text-stone-600"}>
+                            {hasExactGps ? "GPS Pinpoint Verified" : "Google Maps Link Ready"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <a
+                            href={mapsUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 text-[#0B2419] hover:text-[#D4AF37] font-medium transition-colors"
+                          >
+                            View Map <ExternalLink size={12} />
+                          </a>
+                          <span className="text-stone-300">|</span>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              navigator.clipboard.writeText(mapsUrl);
+                              setCopiedId(addrId);
+                              toast.success('Google Maps delivery link copied!');
+                              setTimeout(() => setCopiedId(null), 2000);
+                            }}
+                            className="inline-flex items-center gap-1 text-[#0B2419] hover:text-[#D4AF37] font-medium transition-colors"
+                          >
+                            {copiedId === addrId ? (
+                              <>
+                                <Check size={12} className="text-emerald-600" /> Copied!
+                              </>
+                            ) : (
+                              <>
+                                <Copy size={12} /> Copy Map Link
+                              </>
+                            )}
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })()}
+
                   <div className="flex items-center gap-3 pt-3 border-t border-[#8B9D83]/10">
                     {!isDefault && (
                       <button onClick={() => setDefault(addrId)} className="text-xs font-medium text-[#D4AF37] hover:text-[#0B2419] transition-colors flex items-center gap-1">

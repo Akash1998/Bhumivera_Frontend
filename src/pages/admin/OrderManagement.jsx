@@ -21,6 +21,10 @@ import {
   ChevronLeft,
   ChevronRight,
   Sparkles,
+  ExternalLink,
+  Copy,
+  Check,
+  Navigation,
 } from 'lucide-react';
 import api from '../../services/api';
 import { formatOrderNumber } from '../../utils/formatOrderNumber';
@@ -219,6 +223,7 @@ export default function OrderManagement() {
   });
 
   const { showToast } = useToast() || {};
+  const [copiedMapLink, setCopiedMapLink] = useState(false);
 
   useEffect(() => {
     let active = true;
@@ -954,14 +959,67 @@ export default function OrderManagement() {
                     </span>
                     {selectedOrder.address_snapshot ? (
                       <>
-                        {selectedOrder.address_snapshot.line1}, {selectedOrder.address_snapshot.line2}
+                        {selectedOrder.address_snapshot.line1 || selectedOrder.address_snapshot.street_address}
+                        {selectedOrder.address_snapshot.line2 ? `, ${selectedOrder.address_snapshot.line2}` : ''}
                         <br />
                         {selectedOrder.address_snapshot.city}, {selectedOrder.address_snapshot.state} -{' '}
-                        {selectedOrder.address_snapshot.pincode}
+                        {selectedOrder.address_snapshot.pincode || selectedOrder.address_snapshot.postal_code}
                       </>
                     ) : (
                       'Address not found.'
                     )}
+
+                    {/* Courier Navigation & Exact GPS Tool */}
+                    {(() => {
+                      const snap = selectedOrder.address_snapshot || {};
+                      const hasGps = snap.latitude && snap.longitude;
+                      const mapsUrl = snap.google_maps_url || (hasGps ? `https://www.google.com/maps?q=${snap.latitude},${snap.longitude}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([snap.line1 || snap.street_address, snap.line2, snap.city, snap.state, snap.pincode || snap.postal_code, 'India'].filter(Boolean).join(', '))}`);
+
+                      return (
+                        <div className="mt-3 pt-3 border-t border-white/10">
+                          <div className="flex items-center justify-between mb-2">
+                            <span className="text-xs font-medium flex items-center gap-1.5">
+                              <Navigation size={12} className={hasGps ? "text-emerald-400" : "text-amber-400"} />
+                              {hasGps ? (
+                                <span className="text-emerald-400 font-semibold">Verified GPS Pinpoint ({Number(snap.latitude).toFixed(4)}, {Number(snap.longitude).toFixed(4)})</span>
+                              ) : (
+                                <span className="text-slate-400">Google Maps Navigation Link</span>
+                              )}
+                            </span>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <a
+                              href={mapsUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-emerald-500/20 text-emerald-300 hover:bg-emerald-500/30 text-xs font-medium transition-colors border border-emerald-500/30"
+                            >
+                              <ExternalLink size={12} /> Open in Google Maps
+                            </a>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                navigator.clipboard.writeText(mapsUrl);
+                                setCopiedMapLink(true);
+                                showToast?.('Delivery Google Maps link copied to clipboard!', 'success');
+                                setTimeout(() => setCopiedMapLink(false), 2000);
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/10 hover:bg-white/15 text-slate-200 text-xs font-medium transition-colors border border-white/10"
+                            >
+                              {copiedMapLink ? (
+                                <>
+                                  <Check size={12} className="text-emerald-400" /> Copied for Courier!
+                                </>
+                              ) : (
+                                <>
+                                  <Copy size={12} /> Copy Link for Courier
+                                </>
+                              )}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })()}
                   </div>
                 </div>
 

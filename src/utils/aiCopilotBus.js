@@ -170,7 +170,7 @@ export const COMPLETE_SITE_NAVIGATION_DIRECTORY = [
     category: 'Support & Policies',
     title: 'Purchase Protection Guarantee (/purchase-protection)',
     path: '/purchase-protection',
-    description: '100% authenticity, transit damage protection, and replacement guarantee.',
+    description: 'Guaranteed authenticity, transit damage protection, and dedicated replacement policy.',
     badge: 'Guarantee',
   },
   {

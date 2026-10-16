@@ -332,6 +332,11 @@ export default function Checkout() {
                             {addr.street_address || addr.line1}, {addr.city}, {addr.state} - {addr.postal_code || addr.pincode}
                           </p>
                           <p className="mt-1 text-xs text-stone-500">Phone: {addr.phone_number || addr.phone}</p>
+                          {(addr.latitude && addr.longitude) || addr.google_maps_url ? (
+                            <div className="mt-2 inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-0.5 text-[10px] font-medium text-emerald-800 border border-emerald-200">
+                              <MapPin className="h-2.5 w-2.5 text-emerald-600" /> GPS Pinpoint Attached
+                            </div>
+                          ) : null}
                         </div>
                       ))}
                     </div>
@@ -652,7 +657,7 @@ export default function Checkout() {
               </div>
 
               <div className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-stone-50 p-3 text-center text-[11px] text-stone-500">
-                <ShieldCheck className="h-4 w-4 text-[#607552]" /> 100% Encrypted &amp; Direct-from-Lab Delivery
+                <ShieldCheck className="h-4 w-4 text-[#607552]" /> 256-Bit Encrypted &amp; Direct-from-Lab Delivery
               </div>
             </div>
           </div>
