@@ -20,6 +20,7 @@ body {
 
 html body {
   top: 0 !important;
+  margin-top: 0 !important;
 }
 
 .goog-te-banner-frame,
@@ -29,6 +30,10 @@ iframe.goog-te-banner-frame,
 #goog-gt-tt {
   display: none !important;
   visibility: hidden !important;
+}
+
+body > .skiptranslate {
+  display: none !important;
 }
 
 .site-shell {
@@ -100,6 +105,20 @@ iframe.goog-te-banner-frame,
     background-color: #fbfaf5;
     -webkit-backdrop-filter: none;
     backdrop-filter: none;
+  }
+
+  html.translated-ltr .site-shell h1,
+  html.translated-rtl .site-shell h1 {
+    font-size: clamp(2rem, 10vw, 3.25rem) !important;
+    line-height: 1.15 !important;
+    letter-spacing: normal !important;
+    overflow-wrap: break-word;
+  }
+
+  html.translated-ltr .site-shell h2,
+  html.translated-rtl .site-shell h2 {
+    letter-spacing: normal !important;
+    overflow-wrap: break-word;
   }
 }
 

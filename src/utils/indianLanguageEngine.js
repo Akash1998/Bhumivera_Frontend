@@ -214,6 +214,7 @@ export const TRANSLATION_DICTIONARY = {
 let googleTranslateWidgetInitialized = false;
 let googleTranslateComboObserver;
 let googleTranslateComboTimeout;
+let googleTranslateBannerObserver;
 let googleTranslateTargetLang = 'en';
 
 /**
@@ -269,6 +270,34 @@ function applyGoogleTranslation(lang) {
   return true;
 }
 
+function removeGoogleTranslateBanner(root) {
+  if (root instanceof Element && root.matches('.goog-te-banner-frame')) {
+    root.remove();
+  }
+  root.querySelectorAll?.('.goog-te-banner-frame').forEach((banner) => banner.remove());
+  if (document.body.style.top) {
+    document.body.style.setProperty('top', '0px', 'important');
+  }
+  if (document.body.style.marginTop) {
+    document.body.style.setProperty('margin-top', '0px', 'important');
+  }
+}
+
+function hideGoogleTranslateBanner() {
+  if (!document.body) return;
+  removeGoogleTranslateBanner(document.body);
+  if (googleTranslateBannerObserver) return;
+
+  googleTranslateBannerObserver = new MutationObserver((mutations) => {
+    mutations.forEach(({ addedNodes }) => {
+      addedNodes.forEach((node) => {
+        if (node instanceof Element) removeGoogleTranslateBanner(node);
+      });
+    });
+  });
+  googleTranslateBannerObserver.observe(document.body, { childList: true, subtree: true });
+}
+
 function applyGoogleTranslationWhenReady(lang) {
   if (applyGoogleTranslation(lang)) {
     googleTranslateComboObserver?.disconnect();
@@ -317,6 +346,7 @@ function initializeGoogleTranslate() {
  */
 export function activateFullSiteTranslation(targetLangCode) {
   if (typeof window === 'undefined') return;
+  hideGoogleTranslateBanner();
   const lang = targetLangCode || getCurrentLanguage();
   googleTranslateTargetLang = lang;
   if (lang === 'en') {

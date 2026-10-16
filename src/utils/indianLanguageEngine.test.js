@@ -81,4 +81,15 @@ describe('activateFullSiteTranslation', () => {
     expect(changeHandler).toHaveBeenCalledTimes(3);
     expect(document.cookie).not.toContain('googtrans=/en/');
   });
+
+  it('removes the Google toolbar if it is injected after translation starts', async () => {
+    activateFullSiteTranslation('hi');
+    const banner = document.createElement('iframe');
+    banner.className = 'goog-te-banner-frame';
+    document.body.appendChild(banner);
+
+    await vi.waitFor(() => {
+      expect(document.querySelector('.goog-te-banner-frame')).toBeNull();
+    });
+  });
 });
