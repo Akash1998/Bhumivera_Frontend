@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   MessageSquare,
+  ArrowLeftRight,
   X,
   Minimize2,
   Maximize2,
@@ -46,6 +47,20 @@ const RITUAL_PROGRESS_STORAGE_KEY = 'bhumivera_concierge_ritual_progress_v3';
 const DIAGNOSTIC_STATE_STORAGE_KEY = 'bhumivera_concierge_skin_diagnostic_v3';
 const SAVED_INGREDIENTS_STORAGE_KEY = 'bhumivera_concierge_saved_ingredients_v3';
 const LINGER_THRESHOLD_MS = 45000;
+const SUPPORT_ENTRY_CHOICES = [
+  {
+    id: 'order',
+    label: 'Order-related issue',
+    description: 'Delivery, payment, return, or an existing order',
+    prompt: 'I need help with an order.',
+  },
+  {
+    id: 'general',
+    label: 'General question',
+    description: 'Products, ingredients, or store policies',
+    prompt: 'I have a general question about Bhumivera products, ingredients, or policies.',
+  },
+];
 
 /**
  * Hero Ingredient Stories directly inspired by the Bhumivera Botanical Showcase:
@@ -314,7 +329,7 @@ export const HERO_INGREDIENT_STORIES = [
 export const PUBLIC_GENERAL_CHIPS = [
   {
     id: 'know_sb_fw',
-    label: 'Know More: Sea Buckthorn Face Wash',
+    label: 'Sea Buckthorn Face Wash',
     prompt: 'Tell me about Sea Buckthorn Face Wash and its key ingredients',
     category: 'product_discovery',
   },
@@ -344,31 +359,31 @@ export const PUBLIC_GENERAL_CHIPS = [
   },
   {
     id: 'ing_niacinamide',
-    label: 'Ingredient: Niacinamide',
+    label: 'Active: Niacinamide',
     prompt: 'Tell me about Niacinamide in Sea Buckthorn Face Wash',
     category: 'ingredient_discovery',
   },
   {
     id: 'all_32_ingredients',
-    label: 'Explore All 32 Ingredients',
+    label: 'Botanical Library & Actives',
     prompt: '__OPEN_INGREDIENT_ENCYCLOPEDIA__',
     category: 'ingredient_deep_dive',
   },
   {
     id: 'usage_time',
-    label: '12-Step Face Wash Ritual & Timing',
+    label: 'Daily Facial Ritual Guide',
     prompt: 'How do I really use Sea Buckthorn Face Wash step-by-step and what time of day should I use it?',
     category: 'usage_and_timing',
   },
   {
     id: 'interactive_ritual_player',
-    label: 'Interactive 12-Step Ritual Timer',
+    label: 'Facial Ritual Player (4 Phases)',
     prompt: '__OPEN_RITUAL_PLAYER__',
     category: 'post_wash_routine',
   },
   {
     id: 'skin_quiz_8step',
-    label: '8-Step Skin Diagnostic Quiz',
+    label: 'Personalized Skin Quiz',
     prompt: '__OPEN_SKIN_DIAGNOSTIC__',
     category: 'skin_compatibility',
   },
@@ -396,17 +411,17 @@ export const VERIFIED_BUYER_CHIPS = [
   { id: 'track_order', label: 'Track My Order', prompt: 'Where is my latest order?' },
   {
     id: 'initiate_return',
-    label: 'Return or Replacement (6-Step Guide)',
+    label: 'Return or Replacement',
     prompt: 'I want to initiate a return or replacement for my delivered order.',
   },
   {
     id: 'order_assistance',
-    label: 'Order Modification / Escalation (7-Step)',
+    label: 'Specialist Escalation',
     prompt: '__OPEN_VERIFICATION_FLOW__',
   },
   {
     id: 'wallet_loyalty',
-    label: 'Wallet & Privilege Tier',
+    label: 'Privilege Tier & Rewards',
     prompt: 'What is my current wallet balance and loyalty points?',
   },
   {
@@ -416,13 +431,13 @@ export const VERIFIED_BUYER_CHIPS = [
   },
   {
     id: 'all_32_ingredients_verified',
-    label: 'Botanical Encyclopedia (32 Actives)',
+    label: 'Botanical Library & Actives',
     prompt: '__OPEN_INGREDIENT_ENCYCLOPEDIA__',
     category: 'ingredient_deep_dive',
   },
   {
     id: 'ritual_timer_verified',
-    label: '12-Step Cleansing Ritual Guide',
+    label: 'Facial Ritual Guide (4 Phases)',
     prompt: '__OPEN_RITUAL_PLAYER__',
     category: 'usage_and_timing',
   },
@@ -510,24 +525,24 @@ export const DETAILED_ORDER_LIFECYCLE_STEPS = [
 
 export const STATUS_META = {
   active: {
-    label: 'Concierge Online',
+    label: 'Automated help',
     badgeClass: 'bg-emerald-500/20 text-emerald-200 border-emerald-400/40',
-    description: 'AI Botanical & Order Concierge responding in real time',
+    description: 'Automated guidance is available; this is not a live-agent chat',
   },
   pending: {
-    label: 'Awaiting Details',
+    label: 'Request noted',
     badgeClass: 'bg-amber-500/20 text-amber-200 border-amber-400/40',
-    description: 'Waiting for order verification or photo inspection details',
+    description: 'Your follow-up request is saved for later review',
   },
   waiting_for_review: {
-    label: 'Specialist Review',
+    label: 'Awaiting review',
     badgeClass: 'bg-sky-500/20 text-sky-200 border-sky-400/40',
-    description: 'Queued for Senior Client Concierge review under 12-hour SLA',
+    description: 'Your request is queued for review; replies may take time',
   },
   escalated: {
-    label: 'Specialist Assigned',
+    label: 'Follow-up requested',
     badgeClass: 'bg-rose-500/20 text-rose-200 border-rose-400/40',
-    description: 'Verified priority ticket active with dedicated specialist outreach',
+    description: 'Your verified request is recorded for later follow-up',
   },
   resolved: {
     label: 'Resolved',
@@ -14557,23 +14572,23 @@ export const VERIFICATION_WIZARD_STEP_DEFINITIONS = [
   {
     step: 5,
     code: 'STEP_5_OUTREACH_CHANNEL',
-    title: 'Step 5 of 7 · Specialist Outreach Channel & Callback Time Slot',
+    title: 'Step 5 of 7 · Follow-up Contact Preference',
     shortTitle: '5. Contact Slot',
-    description: 'Select Email Update or Direct Specialist Phone Call with your preferred IST time window (Morning, Afternoon, or Evening).',
+    description: 'Choose whether you prefer an email or phone follow-up. Replies are not live and may take some time.',
   },
   {
     step: 6,
     code: 'STEP_6_REVIEW_DOSSIER',
-    title: 'Step 6 of 7 · Review Verified Escalation Dossier & 12-Hour SLA',
+    title: 'Step 6 of 7 · Review Your Verified Follow-up Request',
     shortTitle: '6. Review & Confirm',
     description: 'Verify your complete ticket summary before dispatching to our Senior Client Concierge Desk.',
   },
   {
     step: 7,
     code: 'STEP_7_CONFIRMED_SLA',
-    title: 'Step 7 of 7 · Confirmed Specialist Ticket & 12-Hour SLA Guarantee',
+    title: 'Step 7 of 7 · Follow-up Request Recorded',
     shortTitle: '7. Confirmed',
-    description: 'Your single verified ticket is locked in with a guaranteed specialist response within 12 hours.',
+    description: 'Your verified request is saved for later review. Replies are not live and may take some time.',
   },
 ];
 
@@ -15149,6 +15164,74 @@ function ChatOrderCard({ order, isDark, onQuickPrompt, onRequestOrderInterventio
   );
 }
 
+const INGREDIENT_PATHWAY_GROUPS = [
+  { id: 'ALL', label: 'All Botanicals & Actives (32)', icon: '✦' },
+  { id: 'HERO', label: '👑 4 Hero Foundations', icon: '👑' },
+  { id: 'BARRIER', label: '✨ Barrier & Glow', icon: '✨' },
+  { id: 'CLARIFY', label: '🌿 Pores & Clarifying', icon: '🌿' },
+  { id: 'HYDRATE', label: '💧 Deep Hydration', icon: '💧' },
+  { id: 'DEFENSE', label: '🛡️ Antioxidant Defense', icon: '🛡️' },
+];
+
+const FOUR_CORE_RITUAL_PHASES = [
+  {
+    phaseId: 1,
+    phaseNumber: 'PHASE 01',
+    title: 'Thermal Water Prep & Apothecary Dosing',
+    durationTotal: 30,
+    stepsCovered: [1, 2, 3],
+    temperature: '28°C–32°C Lukewarm',
+    dosage: '1 to 1.5 Pumps',
+    headline: 'Prime corneal hydration & calibrate bio-actives without melting epidermal ceramides',
+    instruction: 'Wash hands for 15s to clear phone/keyboard oils. Splash face 5 times with lukewarm (28°C–32°C) water. Dispense 1 pump for AM refresh, or 1.5 pumps for PM sunscreen & pollution detox.',
+    proTip: 'Water above 38°C dissolves skin lipids and worsens redness; keep it skin-neutral lukewarm.',
+    avoid: 'Pumping face wash onto dry hands or washing under a steaming hot shower head.',
+    actives: ['Sea Buckthorn', 'Aloe Vera', 'Neem Distillate', 'Vegetable Glycerin'],
+  },
+  {
+    phaseId: 2,
+    phaseNumber: 'PHASE 02',
+    title: 'Palm Micro-Foam Activation',
+    durationTotal: 10,
+    stepsCovered: [4],
+    temperature: 'Lukewarm Damp Palms',
+    dosage: 'Micro-Foam Cushion',
+    headline: 'Aerate amphiphilic micelles into a dense, velvety cushion to eliminate skin friction',
+    instruction: 'Rub wet palms together vigorously in brisk circles for 10 seconds. Aerate the concentrated gel into a cushiony micro-foam BEFORE touching your face.',
+    proTip: 'Pre-forming foam in your palms liberates Sea Buckthorn Omega-7 and micro-charcoal while reducing friction on facial capillaries.',
+    avoid: 'Slapping raw, un-lathered gel onto dry cheeks and scrubbing mechanically.',
+    actives: ['Sea Buckthorn (Omega-7)', 'Activated Charcoal', 'Aloe Vera Polysaccharides'],
+  },
+  {
+    phaseId: 3,
+    phaseNumber: 'PHASE 03',
+    title: '40s Zonal Ayurvedic Sculpt Massage & Phyto-Dwell',
+    durationTotal: 55,
+    stepsCovered: [5, 6, 7, 8, 9],
+    temperature: 'Skin-Warm',
+    dosage: 'Zone-by-Zone Application',
+    headline: 'Target sebaceous zones, sculpt facial contours, and allow 15s bio-active partition',
+    instruction: '1) T-Zone & Nose: small circles around nostrils and chin crease (15s). 2) Cheeks: upward lifting sweeps toward cheekbones (10s). 3) Jaw & Neck: drainage sweeps along jawline to lymph nodes (10s). 4) Pause 15s for the Phyto-Active Dwell so Niacinamide and Botanical Actives penetrate.',
+    proTip: 'The 15-second dwell window is where therapeutic botanicals bind to receptors; do not rush to wash off immediately.',
+    avoid: 'Aggressive scrubbing around the delicate orbital eye contour.',
+    actives: ['4% Niacinamide', 'Botanical Salicylic BHA', 'Sacred Tulsi Ursolic Acid'],
+  },
+  {
+    phaseId: 4,
+    phaseNumber: 'PHASE 04',
+    title: 'Cool-Water Rinse & 60-Second Barrier Lock',
+    durationTotal: 25,
+    stepsCovered: [10, 11, 12],
+    temperature: '22°C–25°C Cool Water',
+    dosage: 'Damp Skin Seal',
+    headline: 'Flush dissolved debris, pat to 15% surface moisture, and lock hydration within 60 seconds',
+    instruction: 'Rinse with 10 gentle splashes of cool water (22°C–25°C) to close pore openings. Gently press (never rub) with a clean microfiber towel, leaving skin 15% damp. Within 60 seconds, apply your leave-on moisturizer or serum to lock in hydration.',
+    proTip: 'Sealing moisturizer while skin is still slightly damp locks in 40% more hydration.',
+    avoid: 'Vigorously rubbing face with a rough bathroom towel until bone-dry.',
+    actives: ['Multi-Molecular Hyaluronic Acid', 'D-Panthenol B5', 'Ceramides'],
+  },
+];
+
 function IngredientEncyclopediaDrawer({
   isOpen,
   onClose,
@@ -15158,8 +15241,8 @@ function IngredientEncyclopediaDrawer({
   onAskConciergeAbout,
 }) {
   const [searchQuery, setSearchQuery] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('ALL');
-  const [activeTab, setActiveTab] = useState('story'); // 'story' | 'molecules' | 'pathway' | 'protocol' | 'timeline' | 'compare'
+  const [pathwayFilter, setPathwayFilter] = useState('ALL');
+  const [activeTab, setActiveTab] = useState('story'); // 'story' | 'molecules' | 'protocol' | 'compare'
   const [comparePartnerId, setComparePartnerId] = useState('niacinamide');
 
   const selectedIngredient = useMemo(() => {
@@ -15179,8 +15262,34 @@ function IngredientEncyclopediaDrawer({
   const filteredList = useMemo(() => {
     const q = searchQuery.toLowerCase().trim();
     return BOTANICAL_INGREDIENT_ENCYCLOPEDIA.filter(item => {
-      if (categoryFilter === 'HERO' && !item.isHeroStory) return false;
-      if (categoryFilter === 'ACTIVE' && item.isHeroStory) return false;
+      if (pathwayFilter === 'HERO' && !item.isHeroStory) return false;
+      if (pathwayFilter === 'BARRIER') {
+        const isB =
+          item.category?.toLowerCase().includes('barrier') ||
+          item.category?.toLowerCase().includes('lipid') ||
+          ['niacinamide', 'ceramides', 'squalane', 'peptides', 'rosehip_oil'].includes(item.id);
+        if (!isB) return false;
+      }
+      if (pathwayFilter === 'CLARIFY') {
+        const isC =
+          item.category?.toLowerCase().includes('pore') ||
+          item.category?.toLowerCase().includes('clar') ||
+          ['salicylic_acid', 'willow_bark', 'activated_charcoal', 'tea_tree', 'neem_distillate', 'green_tea'].includes(item.id);
+        if (!isC) return false;
+      }
+      if (pathwayFilter === 'HYDRATE') {
+        const isH =
+          item.category?.toLowerCase().includes('hydrat') ||
+          ['hyaluronic_acid', 'panthenol', 'vegetable_glycerin', 'centella_asiatica', 'aloe_vera'].includes(item.id);
+        if (!isH) return false;
+      }
+      if (pathwayFilter === 'DEFENSE') {
+        const isD =
+          item.category?.toLowerCase().includes('antioxidant') ||
+          ['vitamin_c_ethyl', 'tocopherol_vit_e', 'bakuchiol', 'astaxanthin', 'sea_buckthorn', 'sacred_tulsi'].includes(item.id);
+        if (!isD) return false;
+      }
+
       if (!q) return true;
       return (
         item.name.toLowerCase().includes(q) ||
@@ -15190,87 +15299,121 @@ function IngredientEncyclopediaDrawer({
         item.primaryClinicalBenefit.toLowerCase().includes(q)
       );
     });
-  }, [searchQuery, categoryFilter]);
+  }, [searchQuery, pathwayFilter]);
 
   if (!isOpen) return null;
 
   return (
     <div
-      className={`px-4 py-3.5 border-b space-y-3 text-xs shrink-0 max-h-[400px] overflow-y-auto ${
-        isDark ? 'bg-[#0b1f17] border-[#D4AF37]/40 text-stone-100' : 'bg-[#fbf9f2] border-[#D4AF37]/50 text-[#0B2419]'
+      className={`px-4 py-3.5 border-b space-y-3.5 text-xs shrink-0 max-h-[460px] overflow-y-auto ${
+        isDark
+          ? 'bg-[#081a13] border-[#D4AF37]/35 text-stone-100'
+          : 'bg-[#faf8f2] border-[#D4AF37]/45 text-[#0B2419]'
       }`}
     >
-      {/* Showcase Header Matching Uploaded Image */}
-      <div className="flex items-start justify-between gap-2 pb-2 border-b border-current/10">
+      {/* Luxury Showcase Header */}
+      <div className="flex items-start justify-between gap-3 pb-2.5 border-b border-current/10">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#D4AF37] block">
-            Nature has more than one note · 32 Botanical & Active Profiles
-          </span>
-          <p className="text-[11px] opacity-80 mt-0.5">
-            Meet the botanicals that inspire us—and the contemporary actives shaping the next chapter of skin care.
+          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#D4AF37]">
+            <Sparkles className="w-3.5 h-3.5" /> Botanical Apothecary & Bio-Actives
+          </div>
+          <h3 className="font-serif text-sm font-semibold mt-0.5 tracking-wide">
+            Curated Portfolio · 4 Hero Foundations & 28 Clinical Actives
+          </h3>
+          <p className="text-[11px] opacity-75 mt-0.5">
+            Select an active or search by skin concern to inspect cellular pathways and synergistic pairings.
           </p>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="px-2 py-0.5 rounded-lg border border-current/20 text-[11px] opacity-75 hover:opacity-100"
+          className="shrink-0 px-2.5 py-1 rounded-xl border border-current/20 text-[11px] font-medium opacity-80 hover:opacity-100 hover:border-[#D4AF37] transition-colors"
         >
           Close ✕
         </button>
       </div>
 
-      {/* 4 Hero Ingredient Story Cards (Sea buckthorn, Charcoal, Tulsi, Aloe vera) */}
-      <div className="grid grid-cols-2 gap-2">
-        {HERO_INGREDIENT_STORIES.map(story => {
-          const isSelected = selectedIngredient?.id === story.ingredientId;
-          return (
+      {/* 4 Hero Foundations Showcase (Prominent Aesthetic Grid) */}
+      {(pathwayFilter === 'ALL' || pathwayFilter === 'HERO') && (
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-[#D4AF37]">
+            <span>👑 4 Ayurvedic Hero Foundations</span>
+            <span className="text-[9px] font-normal opacity-70">Primary Formulation Pillars</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2">
+            {HERO_INGREDIENT_STORIES.map(story => {
+              const isSelected = selectedIngredient?.id === story.ingredientId;
+              return (
+                <button
+                  key={story.storyCode}
+                  type="button"
+                  onClick={() => onSelectIngredient(story.ingredientId)}
+                  className={`text-left p-3 rounded-2xl border transition-all duration-150 ${
+                    isSelected
+                      ? 'bg-[#0B2419] text-[#FDFBF7] border-[#D4AF37] shadow-lg ring-1 ring-[#D4AF37]/50'
+                      : isDark
+                      ? 'bg-black/30 border-white/10 hover:border-[#D4AF37]/60'
+                      : 'bg-white border-[#0B2419]/15 hover:border-[#D4AF37] shadow-sm'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-1">
+                    <span className="text-[9px] font-bold uppercase tracking-widest text-[#D4AF37]">
+                      {story.storyCode}
+                    </span>
+                    {isSelected && <span className="text-[10px] text-[#D4AF37]">● Active</span>}
+                  </div>
+                  <div className="font-serif font-semibold text-xs mt-0.5 tracking-wide">{story.title}</div>
+                  <p className="text-[10px] opacity-80 line-clamp-2 mt-0.5 leading-snug">{story.tagline}</p>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* Skin Goal & Pathway Filter Pills */}
+      <div className="space-y-1.5">
+        <div className="text-[10px] font-semibold opacity-80">Filter by Skin Focus:</div>
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          {INGREDIENT_PATHWAY_GROUPS.map(mode => (
             <button
-              key={story.storyCode}
+              key={mode.id}
               type="button"
-              onClick={() => onSelectIngredient(story.ingredientId)}
-              className={`text-left p-2.5 rounded-xl border transition-all ${
-                isSelected
-                  ? 'bg-[#0B2419] text-[#FDFBF7] border-[#D4AF37] shadow-md'
-                  : isDark
-                  ? 'bg-black/25 border-white/10 hover:border-[#D4AF37]/50'
-                  : 'bg-white border-[#0B2419]/15 hover:border-[#D4AF37]'
+              onClick={() => setPathwayFilter(mode.id)}
+              className={`shrink-0 px-2.5 py-1 rounded-xl text-[10px] font-semibold border transition-all ${
+                pathwayFilter === mode.id
+                  ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37] shadow-sm'
+                  : 'border-current/15 opacity-75 hover:opacity-100 hover:border-current/30'
               }`}
             >
-              <span className="text-[9px] font-bold uppercase tracking-widest text-[#D4AF37] block">
-                {story.storyCode}
-              </span>
-              <div className="font-serif font-semibold text-xs mt-0.5">{story.title}</div>
-              <p className="text-[10px] opacity-80 line-clamp-2 mt-0.5">{story.tagline}</p>
+              {mode.label}
             </button>
-          );
-        })}
+          ))}
+        </div>
       </div>
 
-      {/* Search & Filter Bar for All 32 Ingredients */}
-      <div className="flex flex-wrap items-center gap-1.5">
+      {/* Quick Search */}
+      <div className="relative">
         <input
           type="text"
           value={searchQuery}
           onChange={e => setSearchQuery(e.target.value)}
-          placeholder="Search 32 ingredients (e.g., Sea Buckthorn, Charcoal, Tulsi, Aloe, Niacinamide)…"
-          className={`flex-1 min-w-[160px] px-2.5 py-1.5 rounded-xl border text-[11px] outline-none ${
-            isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-white border-stone-300 text-[#0B2419]'
+          placeholder="Search actives (e.g., Niacinamide, Hyaluronic, Tulsi, BHA, Vitamin C)…"
+          className={`w-full px-3 py-2 rounded-xl border text-[11px] outline-none transition-colors ${
+            isDark
+              ? 'bg-black/35 border-white/15 text-white placeholder:text-stone-400 focus:border-[#D4AF37]'
+              : 'bg-white border-stone-300 text-[#0B2419] placeholder:text-stone-400 focus:border-[#0B2419]'
           }`}
         />
-        {['ALL', 'HERO', 'ACTIVE'].map(mode => (
+        {searchQuery && (
           <button
-            key={mode}
             type="button"
-            onClick={() => setCategoryFilter(mode)}
-            className={`px-2 py-1 rounded-lg text-[10px] font-semibold border ${
-              categoryFilter === mode
-                ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37]'
-                : 'border-current/20 opacity-75'
-            }`}
+            onClick={() => setSearchQuery('')}
+            className="absolute right-2.5 top-2 text-[11px] opacity-60 hover:opacity-100"
           >
-            {mode === 'ALL' ? 'All (32)' : mode === 'HERO' ? 'Hero Stories (4)' : 'Actives (28)'}
+            ✕
           </button>
-        ))}
+        )}
       </div>
 
       {/* Horizontal Selector Pills for Filtered Ingredients */}
@@ -15280,30 +15423,35 @@ function IngredientEncyclopediaDrawer({
             key={item.id}
             type="button"
             onClick={() => onSelectIngredient(item.id)}
-            className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-semibold border transition ${
+            className={`shrink-0 px-3 py-1.5 rounded-full text-[10px] font-semibold border transition-all ${
               selectedIngredient?.id === item.id
-                ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37]'
-                : 'border-current/20 opacity-80 hover:opacity-100'
+                ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37] shadow-sm font-bold'
+                : isDark
+                ? 'bg-black/25 border-white/10 opacity-80 hover:opacity-100 hover:border-[#D4AF37]/50'
+                : 'bg-white border-stone-200 opacity-85 hover:opacity-100 hover:border-[#0B2419]'
             }`}
           >
             {item.indexNumber}. {item.name}
           </button>
         ))}
+        {filteredList.length === 0 && (
+          <p className="text-[11px] opacity-70 italic py-1">No ingredients match “{searchQuery}”.</p>
+        )}
       </div>
 
-      {/* Selected Ingredient Deep-Dive Card with 6 Interactive Tabs */}
+      {/* Selected Ingredient Deep-Dive Card */}
       {selectedIngredient && (
         <div
-          className={`rounded-2xl border p-3 space-y-2.5 ${
-            isDark ? 'bg-[#071510] border-white/15' : 'bg-white border-[#0B2419]/15 shadow-sm'
+          className={`rounded-2xl border p-3.5 space-y-3 ${
+            isDark ? 'bg-[#071510] border-white/15 shadow-inner' : 'bg-white border-[#0B2419]/15 shadow-sm'
           }`}
         >
-          <div className="flex items-start justify-between gap-2">
+          <div className="flex items-start justify-between gap-2 pb-2 border-b border-current/10">
             <div>
               <span className="text-[9px] font-bold uppercase tracking-widest text-[#D4AF37]">
                 {selectedIngredient.storyNumber} · {selectedIngredient.category}
               </span>
-              <h4 className="font-serif text-sm font-bold mt-0.5">
+              <h4 className="font-serif text-sm font-bold mt-0.5 tracking-wide">
                 {selectedIngredient.fullTitle}
               </h4>
               <p className="text-[10px] italic opacity-75">
@@ -15312,30 +15460,28 @@ function IngredientEncyclopediaDrawer({
             </div>
             <button
               type="button"
-              onClick={() => onAskConciergeAbout(`Tell me about ${selectedIngredient.name} and its step-by-step ritual`)}
-              className="shrink-0 px-2.5 py-1 rounded-lg bg-[#0B2419] text-[#D4AF37] border border-[#D4AF37]/40 text-[10px] font-semibold"
+              onClick={() => onAskConciergeAbout(`Tell me about ${selectedIngredient.name} and how it fits into my daily facial ritual`)}
+              className="shrink-0 px-3 py-1.5 rounded-xl bg-[#0B2419] text-[#D4AF37] border border-[#D4AF37]/40 text-[10px] font-bold hover:bg-[#143928] transition-colors"
             >
-              Ask in Chat
+              Ask Concierge 💬
             </button>
           </div>
 
-          {/* 6 Deep-Dive Tabs */}
-          <div className="flex flex-wrap gap-1 border-b border-current/10 pb-2">
+          {/* 4 Simplified, Intuitive Tabs */}
+          <div className="grid grid-cols-4 gap-1 border-b border-current/10 pb-2">
             {[
               { id: 'story', label: '1. Overview' },
-              { id: 'molecules', label: '2. Bio-Molecules (4)' },
-              { id: 'pathway', label: '3. Cellular Steps (6)' },
-              { id: 'protocol', label: '4. Usage Ritual (6)' },
-              { id: 'timeline', label: '5. Skin Matrix' },
-              { id: 'compare', label: '6. Compare Synergy' },
+              { id: 'molecules', label: '2. Molecules' },
+              { id: 'protocol', label: '3. Layering' },
+              { id: 'compare', label: '4. Pairings' },
             ].map(t => (
               <button
                 key={t.id}
                 type="button"
                 onClick={() => setActiveTab(t.id)}
-                className={`px-2 py-1 rounded-lg text-[10px] font-semibold transition ${
+                className={`py-1 rounded-lg text-[10px] font-semibold text-center transition ${
                   activeTab === t.id
-                    ? 'bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/50'
+                    ? 'bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/50 font-bold'
                     : 'opacity-70 hover:opacity-100'
                 }`}
               >
@@ -15345,21 +15491,25 @@ function IngredientEncyclopediaDrawer({
           </div>
 
           {activeTab === 'story' && (
-            <div className="space-y-1.5 text-[11px]">
-              <p className="font-medium text-[#D4AF37]">“{selectedIngredient.tagline}”</p>
+            <div className="space-y-2 text-[11px]">
+              <p className="font-serif italic text-[#D4AF37]">“{selectedIngredient.tagline}”</p>
               <p className="leading-relaxed opacity-90">{selectedIngredient.shortSummary}</p>
-              <div className="grid grid-cols-2 gap-1.5 pt-1 text-[10px]">
-                <div className="p-2 rounded-lg bg-current/5">
-                  <strong>Concentration:</strong> {selectedIngredient.concentrationInFormula}
+              <div className="grid grid-cols-2 gap-2 pt-1 text-[10px]">
+                <div className="p-2.5 rounded-xl bg-current/5">
+                  <div className="font-bold opacity-70 uppercase tracking-wider text-[9px]">Dosing</div>
+                  <div className="font-semibold mt-0.5">{selectedIngredient.concentrationInFormula}</div>
                 </div>
-                <div className="p-2 rounded-lg bg-current/5">
-                  <strong>Optimal pH:</strong> {selectedIngredient.optimalPhRange}
+                <div className="p-2.5 rounded-xl bg-current/5">
+                  <div className="font-bold opacity-70 uppercase tracking-wider text-[9px]">Optimal pH</div>
+                  <div className="font-semibold mt-0.5">{selectedIngredient.optimalPhRange}</div>
                 </div>
-                <div className="p-2 rounded-lg bg-current/5">
-                  <strong>Origin:</strong> {selectedIngredient.originRegion}
+                <div className="p-2.5 rounded-xl bg-current/5">
+                  <div className="font-bold opacity-70 uppercase tracking-wider text-[9px]">Origin</div>
+                  <div className="font-semibold mt-0.5">{selectedIngredient.originRegion}</div>
                 </div>
-                <div className="p-2 rounded-lg bg-current/5">
-                  <strong>Extraction:</strong> {selectedIngredient.extractionMethod}
+                <div className="p-2.5 rounded-xl bg-current/5">
+                  <div className="font-bold opacity-70 uppercase tracking-wider text-[9px]">Extraction</div>
+                  <div className="font-semibold mt-0.5">{selectedIngredient.extractionMethod}</div>
                 </div>
               </div>
             </div>
@@ -15367,27 +15517,14 @@ function IngredientEncyclopediaDrawer({
 
           {activeTab === 'molecules' && (
             <div className="space-y-2 text-[11px]">
+              <div className="text-[10px] opacity-75 font-semibold">Active Molecular Profile & Targets:</div>
               {(selectedIngredient.bioactiveCompounds || []).map((c, idx) => (
-                <div key={idx} className="p-2 rounded-xl bg-current/5 space-y-0.5">
+                <div key={idx} className="p-2.5 rounded-xl bg-current/5 space-y-0.5">
                   <div className="font-bold text-[#D4AF37]">
                     {idx + 1}. {c.compound} ({c.concentration})
                   </div>
-                  <div className="text-[10px] font-semibold opacity-85">{c.role}</div>
-                  <div className="text-[10px] opacity-80">{c.biochemicalTarget}</div>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {activeTab === 'pathway' && (
-            <div className="space-y-2 text-[11px]">
-              {(selectedIngredient.multiStepCellularPathway || []).map(p => (
-                <div key={p.step} className="p-2 rounded-xl bg-current/5 space-y-0.5">
-                  <div className="font-bold text-[#D4AF37]">
-                    {p.phaseName} · <span className="font-normal opacity-80">{p.timeframe}</span>
-                  </div>
-                  <div className="text-[10px] opacity-85">{p.cellularMechanism}</div>
-                  <div className="text-[10px] text-emerald-500 font-medium">Outcome: {p.visibleOutcome}</div>
+                  <div className="text-[10px] font-semibold opacity-90">{c.role}</div>
+                  <div className="text-[10px] opacity-75">Target: {c.biochemicalTarget}</div>
                 </div>
               ))}
             </div>
@@ -15395,40 +15532,28 @@ function IngredientEncyclopediaDrawer({
 
           {activeTab === 'protocol' && (
             <div className="space-y-2 text-[11px]">
+              <div className="text-[10px] opacity-75 font-semibold">Ayurvedic & Clinical Application Steps:</div>
               {(selectedIngredient.stepByStepUsageProtocol || []).map(u => (
-                <div key={u.stepNumber} className="p-2 rounded-xl bg-current/5 space-y-0.5">
+                <div key={u.stepNumber} className="p-2.5 rounded-xl bg-current/5 space-y-0.5">
                   <div className="font-bold text-[#D4AF37]">
                     {u.title} ({u.durationSeconds}s)
                   </div>
                   <div className="text-[10px] opacity-90">{u.instruction}</div>
-                  <div className="text-[10px] text-emerald-500">Tip: {u.proTip}</div>
-                  <div className="text-[10px] text-rose-400">Avoid: {u.commonMistakeToAvoid}</div>
+                  <div className="text-[10px] text-emerald-500 font-medium">✓ Pro-Tip: {u.proTip}</div>
+                  <div className="text-[10px] text-rose-400 font-medium">✕ Avoid: {u.commonMistakeToAvoid}</div>
                 </div>
               ))}
             </div>
           )}
 
-          {activeTab === 'timeline' && (
-            <div className="space-y-2 text-[11px]">
-              <div className="space-y-1">
-                {(selectedIngredient.clinicalTimeline || []).map((m, idx) => (
-                  <div key={idx} className="p-2 rounded-lg bg-current/5">
-                    <div className="font-bold text-[#D4AF37]">{m.milestone}</div>
-                    <div className="text-[10px] opacity-85">{m.metrics}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
           {activeTab === 'compare' && (
-            <div className="space-y-2 text-[11px]">
+            <div className="space-y-2.5 text-[11px]">
               <div className="flex items-center gap-2">
-                <span className="text-[10px] font-semibold">Compare {selectedIngredient.name} with:</span>
+                <span className="text-[10px] font-semibold">Pair {selectedIngredient.name} with:</span>
                 <select
                   value={comparePartnerId}
                   onChange={e => setComparePartnerId(e.target.value)}
-                  className={`px-2 py-1 rounded-lg border text-[10px] outline-none ${
+                  className={`flex-1 px-2.5 py-1.5 rounded-xl border text-[10px] outline-none ${
                     isDark ? 'bg-black/40 border-white/15 text-white' : 'bg-stone-100 border-stone-300 text-[#0B2419]'
                   }`}
                 >
@@ -15440,13 +15565,13 @@ function IngredientEncyclopediaDrawer({
                 </select>
               </div>
               <div className="grid grid-cols-2 gap-2 text-[10px]">
-                <div className="p-2 rounded-xl bg-current/5 space-y-1">
+                <div className="p-2.5 rounded-xl bg-current/5 space-y-1">
                   <div className="font-bold text-[#D4AF37]">{selectedIngredient.name}</div>
                   <div><strong>Dose:</strong> {selectedIngredient.concentrationInFormula}</div>
                   <div><strong>pH:</strong> {selectedIngredient.optimalPhRange}</div>
                   <div><strong>Focus:</strong> {selectedIngredient.primaryClinicalBenefit}</div>
                 </div>
-                <div className="p-2 rounded-xl bg-current/5 space-y-1">
+                <div className="p-2.5 rounded-xl bg-current/5 space-y-1">
                   <div className="font-bold text-emerald-400">{comparePartner.name}</div>
                   <div><strong>Dose:</strong> {comparePartner.concentrationInFormula}</div>
                   <div><strong>pH:</strong> {comparePartner.optimalPhRange}</div>
@@ -15456,11 +15581,11 @@ function IngredientEncyclopediaDrawer({
               <button
                 type="button"
                 onClick={() =>
-                  onAskConciergeAbout(`Compare ${selectedIngredient.name} with ${comparePartner.name} and how to use them together`)
+                  onAskConciergeAbout(`Compare ${selectedIngredient.name} with ${comparePartner.name} and how to layer them together in my daily routine`)
                 }
-                className="w-full py-1.5 rounded-xl bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40 font-semibold text-[10px]"
+                className="w-full py-2 rounded-xl bg-[#D4AF37]/20 text-[#D4AF37] border border-[#D4AF37]/40 font-bold text-[10px] hover:bg-[#D4AF37]/30 transition-colors"
               >
-                Generate Full Synergy Protocol in Chat
+                Generate Synergistic Layering Sequence in Chat ✦
               </button>
             </div>
           )}
@@ -15471,123 +15596,305 @@ function IngredientEncyclopediaDrawer({
 }
 
 function MasterRitualPlayerDrawer({ isOpen, onClose, isDark, onSendSummaryToChat }) {
+  const [viewMode, setViewMode] = useState('four_phase'); // 'four_phase' | 'twelve_step'
+  const [activePhaseIdx, setActivePhaseIdx] = useState(0);
   const [activeStepIdx, setActiveStepIdx] = useState(0);
-  const [secondsLeft, setSecondsLeft] = useState(MASTER_SKINCARE_RITUAL_STEPS[0].durationSeconds);
   const [timerRunning, setTimerRunning] = useState(false);
 
+  const currentPhase = FOUR_CORE_RITUAL_PHASES[activePhaseIdx] || FOUR_CORE_RITUAL_PHASES[0];
   const currentStep = MASTER_SKINCARE_RITUAL_STEPS[activeStepIdx] || MASTER_SKINCARE_RITUAL_STEPS[0];
 
+  const [phaseSecondsLeft, setPhaseSecondsLeft] = useState(currentPhase.durationTotal);
+  const [stepSecondsLeft, setStepSecondsLeft] = useState(currentStep.durationSeconds);
+
   useEffect(() => {
-    setSecondsLeft(currentStep.durationSeconds);
+    setPhaseSecondsLeft(currentPhase.durationTotal);
+    setTimerRunning(false);
+  }, [activePhaseIdx, currentPhase.durationTotal]);
+
+  useEffect(() => {
+    setStepSecondsLeft(currentStep.durationSeconds);
     setTimerRunning(false);
   }, [activeStepIdx, currentStep.durationSeconds]);
 
   useEffect(() => {
     if (!timerRunning || !isOpen) return undefined;
     const interval = window.setInterval(() => {
-      setSecondsLeft(prev => {
-        if (prev <= 1) {
-          setTimerRunning(false);
-          return 0;
-        }
-        return prev - 1;
-      });
+      if (viewMode === 'four_phase') {
+        setPhaseSecondsLeft(prev => {
+          if (prev <= 1) {
+            setTimerRunning(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      } else {
+        setStepSecondsLeft(prev => {
+          if (prev <= 1) {
+            setTimerRunning(false);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }
     }, 1000);
     return () => window.clearInterval(interval);
-  }, [timerRunning, isOpen]);
+  }, [timerRunning, isOpen, viewMode]);
 
   if (!isOpen) return null;
 
   return (
     <div
-      className={`px-4 py-3.5 border-b space-y-2.5 text-xs shrink-0 max-h-80 overflow-y-auto ${
-        isDark ? 'bg-[#0c2119] border-[#D4AF37]/40 text-stone-100' : 'bg-[#fbf9f2] border-[#D4AF37]/50 text-[#0B2419]'
+      className={`px-4 py-3.5 border-b space-y-3.5 text-xs shrink-0 max-h-[460px] overflow-y-auto ${
+        isDark
+          ? 'bg-[#091d15] border-[#D4AF37]/35 text-stone-100'
+          : 'bg-[#faf8f2] border-[#D4AF37]/45 text-[#0B2419]'
       }`}
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#D4AF37]">
-          Interactive 12-Step Cleansing & Layering Ritual Timer
-        </span>
-        <button type="button" onClick={onClose} className="text-xs opacity-70 hover:opacity-100">
-          ✕
+      {/* Luxury Header */}
+      <div className="flex items-start justify-between gap-3 pb-2.5 border-b border-current/10">
+        <div>
+          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#D4AF37]">
+            <Clock className="w-3.5 h-3.5" /> Ayurvedic Facial Cleansing Ritual
+          </div>
+          <h3 className="font-serif text-sm font-semibold mt-0.5 tracking-wide">
+            {viewMode === 'four_phase' ? '4-Phase Daily Cleansing Protocol (2 Mins)' : 'Granular 12-Step Apothecary Sequence'}
+          </h3>
+          <p className="text-[11px] opacity-75 mt-0.5">
+            Chronobiological timing designed to preserve barrier lipids while decongesting pores.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="shrink-0 px-2.5 py-1 rounded-xl border border-current/20 text-[11px] font-medium opacity-80 hover:opacity-100 hover:border-[#D4AF37] transition-colors"
+        >
+          Close ✕
         </button>
       </div>
 
-      {/* 12-Step Progress Pills */}
-      <div className="grid grid-cols-12 gap-1">
-        {MASTER_SKINCARE_RITUAL_STEPS.map((s, idx) => (
-          <button
-            key={s.phaseCode}
-            type="button"
-            onClick={() => setActiveStepIdx(idx)}
-            className={`h-2 rounded-full transition-all ${
-              idx === activeStepIdx
-                ? 'bg-[#D4AF37] scale-y-125'
-                : idx < activeStepIdx
-                ? 'bg-emerald-500/70'
-                : 'bg-current/15'
-            }`}
-            title={s.title}
-          />
-        ))}
-      </div>
-
-      <div className="p-3 rounded-2xl bg-current/5 space-y-1.5">
-        <div className="flex items-center justify-between gap-2">
-          <span className="font-bold text-xs text-[#D4AF37]">{currentStep.title}</span>
-          <span className="font-mono font-bold text-xs px-2 py-0.5 rounded-lg bg-[#0B2419] text-[#D4AF37]">
-            {secondsLeft}s
-          </span>
-        </div>
-        <div className="text-[10px] font-semibold opacity-75">
-          Target: {currentStep.anatomicalTarget} · Water: {currentStep.waterTempCelsius}
-        </div>
-        <p className="text-[11px] leading-relaxed">{currentStep.detailedInstruction}</p>
-        <div className="text-[10px] text-emerald-500">
-          <strong>Concierge Tip:</strong> {currentStep.proConciergeTip}
-        </div>
-        <div className="text-[10px] text-rose-400">
-          <strong>Avoid:</strong> {currentStep.mistakeToAvoid}
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between gap-2">
+      {/* Mode Switcher: 4-Phase (Simplified) vs 12-Step (Granular) */}
+      <div className="flex items-center justify-between gap-2 p-1 rounded-xl bg-current/5">
         <button
           type="button"
-          disabled={activeStepIdx === 0}
-          onClick={() => setActiveStepIdx(prev => Math.max(0, prev - 1))}
-          className="px-2.5 py-1.5 rounded-xl border border-current/20 text-[11px] font-semibold disabled:opacity-40"
+          onClick={() => {
+            setViewMode('four_phase');
+            setTimerRunning(false);
+          }}
+          className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+            viewMode === 'four_phase'
+              ? 'bg-[#D4AF37] text-[#0B2419] shadow-sm'
+              : 'opacity-70 hover:opacity-100'
+          }`}
         >
-          ← Prev Step
+          ✨ 4-Phase Express Guide (Recommended)
         </button>
         <button
           type="button"
-          onClick={() => setTimerRunning(prev => !prev)}
-          className="px-3 py-1.5 rounded-xl bg-[#D4AF37] text-[#0B2419] font-bold text-[11px]"
+          onClick={() => {
+            setViewMode('twelve_step');
+            setTimerRunning(false);
+          }}
+          className={`flex-1 py-1.5 rounded-lg text-[10px] font-bold transition-all ${
+            viewMode === 'twelve_step'
+              ? 'bg-[#D4AF37] text-[#0B2419] shadow-sm'
+              : 'opacity-70 hover:opacity-100'
+          }`}
         >
-          {timerRunning ? 'Pause Timer' : secondsLeft === 0 ? 'Step Complete ✓' : `Start ${secondsLeft}s Timer`}
+          🔬 12-Step Granular View
         </button>
-        {activeStepIdx < MASTER_SKINCARE_RITUAL_STEPS.length - 1 ? (
-          <button
-            type="button"
-            onClick={() => setActiveStepIdx(prev => Math.min(MASTER_SKINCARE_RITUAL_STEPS.length - 1, prev + 1))}
-            className="px-2.5 py-1.5 rounded-xl bg-[#0B2419] text-[#D4AF37] border border-[#D4AF37]/40 text-[11px] font-semibold"
-          >
-            Next Step →
-          </button>
-        ) : (
-          <button
-            type="button"
-            onClick={() => {
-              onSendSummaryToChat('How do I really use Sea Buckthorn Face Wash step-by-step and what time of day should I use it?');
-              onClose();
-            }}
-            className="px-2.5 py-1.5 rounded-xl bg-emerald-600 text-white text-[11px] font-semibold"
-          >
-            Post Full 12-Step Guide in Chat
-          </button>
-        )}
       </div>
+
+      {/* View Mode 1: 4-Phase Simplified Experience */}
+      {viewMode === 'four_phase' ? (
+        <div className="space-y-3">
+          {/* 4 Phase Progress Pills */}
+          <div className="grid grid-cols-4 gap-1.5">
+            {FOUR_CORE_RITUAL_PHASES.map((p, idx) => (
+              <button
+                key={p.phaseId}
+                type="button"
+                onClick={() => setActivePhaseIdx(idx)}
+                className={`py-2 px-1.5 rounded-xl border text-center transition-all ${
+                  idx === activePhaseIdx
+                    ? 'bg-[#0B2419] text-[#FDFBF7] border-[#D4AF37] shadow-md ring-1 ring-[#D4AF37]/50'
+                    : idx < activePhaseIdx
+                    ? 'bg-emerald-500/15 border-emerald-500/30 text-emerald-800 dark:text-emerald-200'
+                    : 'bg-current/5 border-transparent opacity-65 hover:opacity-100'
+                }`}
+              >
+                <div className="text-[9px] font-bold text-[#D4AF37]">{p.phaseNumber}</div>
+                <div className="text-[10px] font-semibold truncate mt-0.5">{p.title.split(' ')[0]}</div>
+                <div className="text-[9px] opacity-75">{p.durationTotal}s</div>
+              </button>
+            ))}
+          </div>
+
+          {/* Active Phase Card */}
+          <div className="p-3.5 rounded-2xl bg-current/5 border border-current/10 space-y-2">
+            <div className="flex items-center justify-between gap-2">
+              <div>
+                <span className="text-[9px] font-bold uppercase tracking-widest text-[#D4AF37]">
+                  {currentPhase.phaseNumber} · {currentPhase.durationTotal} Seconds
+                </span>
+                <h4 className="font-serif text-xs font-bold mt-0.5 tracking-wide">{currentPhase.title}</h4>
+              </div>
+              <span className="font-mono font-bold text-sm px-3 py-1 rounded-xl bg-[#0B2419] text-[#D4AF37] border border-[#D4AF37]/40 shrink-0">
+                {phaseSecondsLeft}s
+              </span>
+            </div>
+
+            <div className="grid grid-cols-2 gap-2 text-[10px]">
+              <div className="p-2 rounded-xl bg-current/5">
+                <strong className="text-[9px] uppercase tracking-wider opacity-70 block">Water Temp</strong>
+                <span>{currentPhase.temperature}</span>
+              </div>
+              <div className="p-2 rounded-xl bg-current/5">
+                <strong className="text-[9px] uppercase tracking-wider opacity-70 block">Target Dosage</strong>
+                <span>{currentPhase.dosage}</span>
+              </div>
+            </div>
+
+            <p className="text-[11px] leading-relaxed pt-1">{currentPhase.instruction}</p>
+
+            <div className="space-y-1 pt-1 text-[10px]">
+              <div className="text-emerald-500 font-medium">
+                <strong>✓ Concierge Pro-Tip:</strong> {currentPhase.proTip}
+              </div>
+              <div className="text-rose-400 font-medium">
+                <strong>✕ Common Mistake to Avoid:</strong> {currentPhase.avoid}
+              </div>
+            </div>
+
+            <div className="pt-1.5 flex flex-wrap gap-1 items-center">
+              <span className="text-[9px] font-bold uppercase tracking-wider opacity-70 mr-1">Bio-Actives at Work:</span>
+              {currentPhase.actives.map((act, i) => (
+                <span key={i} className="px-2 py-0.5 rounded-full bg-[#D4AF37]/15 text-[#D4AF37] text-[9px] font-semibold border border-[#D4AF37]/30">
+                  {act}
+                </span>
+              ))}
+            </div>
+          </div>
+
+          {/* Phase Controls */}
+          <div className="flex items-center justify-between gap-2 pt-1">
+            <button
+              type="button"
+              disabled={activePhaseIdx === 0}
+              onClick={() => setActivePhaseIdx(prev => Math.max(0, prev - 1))}
+              className="px-3 py-1.5 rounded-xl border border-current/20 text-[11px] font-semibold disabled:opacity-40"
+            >
+              ← Prev Phase
+            </button>
+            <button
+              type="button"
+              onClick={() => setTimerRunning(prev => !prev)}
+              className="flex-1 py-2 rounded-xl bg-[#D4AF37] text-[#0B2419] font-bold text-xs shadow-md hover:bg-[#e0bc46] transition-all"
+            >
+              {timerRunning ? 'Pause Timer ⏸' : phaseSecondsLeft === 0 ? 'Phase Complete ✓' : `Start ${phaseSecondsLeft}s Timer ▶`}
+            </button>
+            {activePhaseIdx < FOUR_CORE_RITUAL_PHASES.length - 1 ? (
+              <button
+                type="button"
+                onClick={() => setActivePhaseIdx(prev => Math.min(FOUR_CORE_RITUAL_PHASES.length - 1, prev + 1))}
+                className="px-3 py-1.5 rounded-xl bg-[#0B2419] text-[#D4AF37] border border-[#D4AF37]/40 text-[11px] font-semibold hover:bg-[#143928] transition-colors"
+              >
+                Next Phase →
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  onSendSummaryToChat('How do I really use Sea Buckthorn Face Wash step-by-step and what time of day should I use it?');
+                  onClose();
+                }}
+                className="px-3 py-1.5 rounded-xl bg-emerald-600 text-white text-[11px] font-bold shadow-md hover:bg-emerald-700 transition-colors"
+              >
+                Send to Chat ✓
+              </button>
+            )}
+          </div>
+        </div>
+      ) : (
+        /* View Mode 2: 12-Step Granular Apothecary View */
+        <div className="space-y-3">
+          {/* 12-Step Progress Bar */}
+          <div className="grid grid-cols-12 gap-1">
+            {MASTER_SKINCARE_RITUAL_STEPS.map((s, idx) => (
+              <button
+                key={s.phaseCode}
+                type="button"
+                onClick={() => setActiveStepIdx(idx)}
+                className={`h-2 rounded-full transition-all ${
+                  idx === activeStepIdx
+                    ? 'bg-[#D4AF37] scale-y-125'
+                    : idx < activeStepIdx
+                    ? 'bg-emerald-500/70'
+                    : 'bg-current/15'
+                }`}
+                title={s.title}
+              />
+            ))}
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-current/5 border border-current/10 space-y-1.5">
+            <div className="flex items-center justify-between gap-2">
+              <span className="font-bold text-xs text-[#D4AF37]">{currentStep.title}</span>
+              <span className="font-mono font-bold text-xs px-2.5 py-0.5 rounded-lg bg-[#0B2419] text-[#D4AF37]">
+                {stepSecondsLeft}s
+              </span>
+            </div>
+            <div className="text-[10px] font-semibold opacity-75">
+              Target: {currentStep.anatomicalTarget} · Water: {currentStep.waterTempCelsius}
+            </div>
+            <p className="text-[11px] leading-relaxed pt-1">{currentStep.detailedInstruction}</p>
+            <div className="text-[10px] text-emerald-500 font-medium">
+              <strong>✓ Concierge Tip:</strong> {currentStep.proConciergeTip}
+            </div>
+            <div className="text-[10px] text-rose-400 font-medium">
+              <strong>✕ Avoid:</strong> {currentStep.mistakeToAvoid}
+            </div>
+          </div>
+
+          <div className="flex items-center justify-between gap-2 pt-1">
+            <button
+              type="button"
+              disabled={activeStepIdx === 0}
+              onClick={() => setActiveStepIdx(prev => Math.max(0, prev - 1))}
+              className="px-2.5 py-1.5 rounded-xl border border-current/20 text-[11px] font-semibold disabled:opacity-40"
+            >
+              ← Prev Step
+            </button>
+            <button
+              type="button"
+              onClick={() => setTimerRunning(prev => !prev)}
+              className="flex-1 py-1.5 rounded-xl bg-[#D4AF37] text-[#0B2419] font-bold text-[11px]"
+            >
+              {timerRunning ? 'Pause Timer' : stepSecondsLeft === 0 ? 'Step Complete ✓' : `Start ${stepSecondsLeft}s Timer`}
+            </button>
+            {activeStepIdx < MASTER_SKINCARE_RITUAL_STEPS.length - 1 ? (
+              <button
+                type="button"
+                onClick={() => setActiveStepIdx(prev => Math.min(MASTER_SKINCARE_RITUAL_STEPS.length - 1, prev + 1))}
+                className="px-2.5 py-1.5 rounded-xl bg-[#0B2419] text-[#D4AF37] border border-[#D4AF37]/40 text-[11px] font-semibold"
+              >
+                Next Step →
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => {
+                  onSendSummaryToChat('How do I really use Sea Buckthorn Face Wash step-by-step and what time of day should I use it?');
+                  onClose();
+                }}
+                className="px-2.5 py-1.5 rounded-xl bg-emerald-600 text-white text-[11px] font-semibold"
+              >
+                Post 12-Step Guide in Chat
+              </button>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -15604,24 +15911,49 @@ function SkinDiagnosticQuizDrawer({ isOpen, onClose, isDark, onCompleteBlueprint
 
   return (
     <div
-      className={`px-4 py-3.5 border-b space-y-2.5 text-xs shrink-0 max-h-80 overflow-y-auto ${
-        isDark ? 'bg-[#0c2119] border-[#D4AF37]/40 text-stone-100' : 'bg-[#fbf9f2] border-[#D4AF37]/50 text-[#0B2419]'
+      className={`px-4 py-3.5 border-b space-y-3.5 text-xs shrink-0 max-h-[460px] overflow-y-auto ${
+        isDark
+          ? 'bg-[#091d15] border-[#D4AF37]/35 text-stone-100'
+          : 'bg-[#faf8f2] border-[#D4AF37]/45 text-[#0B2419]'
       }`}
     >
-      <div className="flex items-center justify-between gap-2">
-        <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-[#D4AF37]">
-          8-Step Botanical Skin Diagnostic & Regimen Architect
-        </span>
-        <button type="button" onClick={onClose} className="text-xs opacity-70 hover:opacity-100">
-          ✕
+      <div className="flex items-start justify-between gap-3 pb-2.5 border-b border-current/10">
+        <div>
+          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.18em] text-[#D4AF37]">
+            <Sparkles className="w-3.5 h-3.5" /> Personalized Skin Blueprint
+          </div>
+          <h3 className="font-serif text-sm font-semibold mt-0.5 tracking-wide">
+            {isFinished ? 'Your Tailored Botanical Blueprint' : `Diagnostic Diagnostic · Question ${stepIdx + 1} of ${SKIN_DIAGNOSTIC_STEPS.length}`}
+          </h3>
+          <p className="text-[11px] opacity-75 mt-0.5">
+            Analyzes skin lipid barriers, urban exposure, and botanical active tolerance.
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={onClose}
+          className="shrink-0 px-2.5 py-1 rounded-xl border border-current/20 text-[11px] font-medium opacity-80 hover:opacity-100 hover:border-[#D4AF37] transition-colors"
+        >
+          Close ✕
         </button>
       </div>
 
       {!isFinished && currentQuestion ? (
-        <div className="space-y-2">
-          <div className="font-bold text-xs">{currentQuestion.question}</div>
-          <div className="text-[10px] opacity-75">{currentQuestion.subtitle}</div>
-          <div className="space-y-1.5 pt-1">
+        <div className="space-y-3">
+          {/* Progress Bar */}
+          <div className="h-1.5 w-full rounded-full bg-current/10 overflow-hidden">
+            <div
+              className="h-full bg-[#D4AF37] transition-all duration-300"
+              style={{ width: `${((stepIdx + 1) / SKIN_DIAGNOSTIC_STEPS.length) * 100}%` }}
+            />
+          </div>
+
+          <div className="space-y-1">
+            <div className="font-serif text-xs font-bold tracking-wide">{currentQuestion.question}</div>
+            <div className="text-[10px] opacity-75">{currentQuestion.subtitle}</div>
+          </div>
+
+          <div className="space-y-2 pt-1">
             {currentQuestion.options.map(opt => (
               <button
                 key={opt.value}
@@ -15631,41 +15963,66 @@ function SkinDiagnosticQuizDrawer({ isOpen, onClose, isDark, onCompleteBlueprint
                   setAnswers(next);
                   setStepIdx(prev => prev + 1);
                 }}
-                className={`w-full text-left px-3 py-2 rounded-xl border text-[11px] transition ${
+                className={`w-full text-left p-3 rounded-2xl border text-[11px] transition-all duration-150 flex items-center justify-between gap-2 ${
                   isDark
-                    ? 'bg-black/25 border-white/15 hover:border-[#D4AF37]'
-                    : 'bg-white border-stone-300 hover:border-[#0B2419]'
+                    ? 'bg-black/30 border-white/10 hover:border-[#D4AF37] hover:bg-black/50'
+                    : 'bg-white border-stone-200 hover:border-[#0B2419] hover:bg-stone-50 shadow-sm'
                 }`}
               >
-                {opt.label}
+                <span className="font-medium">{opt.label}</span>
+                <span className="text-[#D4AF37] text-xs">→</span>
               </button>
             ))}
           </div>
         </div>
       ) : (
         blueprint && (
-          <div className="space-y-2 text-[11px]">
-            <div className="font-bold text-emerald-500">
-              Diagnostic Complete · Recommended Anchor: {blueprint.recommendedProduct.name}
+          <div className="space-y-3 text-[11px]">
+            <div className="p-3.5 rounded-2xl bg-[#0B2419] text-[#FDFBF7] border border-[#D4AF37]/50 space-y-2 shadow-lg">
+              <div className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37]">
+                Recommended Anchor Formulation
+              </div>
+              <div className="font-serif text-sm font-bold tracking-wide">
+                {blueprint.recommendedProduct.name}
+              </div>
+              <p className="text-[10px] opacity-80">{blueprint.recommendedProduct.subtitle}</p>
             </div>
-            <div>
-              <strong>Top 5 Synergistic Bio-Actives for Your Skin:</strong>{' '}
-              {blueprint.topIngredients.map(i => i.name).join(', ')}
+
+            <div className="p-3 rounded-2xl bg-current/5 border border-current/10 space-y-1.5">
+              <div className="font-bold text-[10px] uppercase tracking-wider text-[#D4AF37]">
+                Top 5 Synergistic Bio-Actives for Your Profile:
+              </div>
+              <div className="space-y-1 text-[10px]">
+                {blueprint.topIngredients.map((ing, i) => (
+                  <div key={i} className="flex items-start gap-1.5">
+                    <span className="text-[#D4AF37] font-bold">{i + 1}.</span>
+                    <span><strong>{ing.name}</strong> ({ing.storyNumber}) — {ing.primaryClinicalBenefit}</span>
+                  </div>
+                ))}
+              </div>
             </div>
-            <div className="p-2 rounded-xl bg-current/5 text-[10px] space-y-1">
-              <div>{blueprint.amSummary}</div>
-              <div>{blueprint.pmSummary}</div>
+
+            <div className="grid grid-cols-2 gap-2 text-[10px]">
+              <div className="p-2.5 rounded-xl bg-current/5">
+                <strong className="text-[9px] uppercase tracking-wider text-[#D4AF37] block">AM Ritual</strong>
+                <span className="mt-0.5 block">{blueprint.amSummary}</span>
+              </div>
+              <div className="p-2.5 rounded-xl bg-current/5">
+                <strong className="text-[9px] uppercase tracking-wider text-[#D4AF37] block">PM Ritual</strong>
+                <span className="mt-0.5 block">{blueprint.pmSummary}</span>
+              </div>
             </div>
-            <div className="flex gap-2">
+
+            <div className="flex gap-2 pt-1">
               <button
                 type="button"
                 onClick={() => {
                   setStepIdx(0);
                   setAnswers({});
                 }}
-                className="px-3 py-1.5 rounded-xl border border-current/20 text-[10px] font-semibold"
+                className="px-3 py-2 rounded-xl border border-current/20 text-[10px] font-semibold hover:border-current/40"
               >
-                Retake 8-Step Quiz
+                Retake Quiz
               </button>
               <button
                 type="button"
@@ -15673,9 +16030,9 @@ function SkinDiagnosticQuizDrawer({ isOpen, onClose, isDark, onCompleteBlueprint
                   onCompleteBlueprint(blueprint);
                   onClose();
                 }}
-                className="flex-1 py-1.5 rounded-xl bg-[#0B2419] text-[#D4AF37] border border-[#D4AF37]/40 font-semibold text-[10px]"
+                className="flex-1 py-2 rounded-xl bg-[#0B2419] text-[#D4AF37] border border-[#D4AF37]/40 font-bold text-[11px] shadow-md hover:bg-[#143928] transition-colors"
               >
-                Send My Personalized Blueprint to Chat
+                Send Personalized Blueprint to Chat ✦
               </button>
             </div>
           </div>
@@ -15731,6 +16088,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
 
   const [isOpen, setIsOpen] = useState(Boolean(persisted.isOpen));
   const [isMaximized, setIsMaximized] = useState(false);
+  const [launcherSide, setLauncherSide] = useState(persisted.launcherSide === 'left' ? 'left' : 'right');
+  const [supportCategory, setSupportCategory] = useState(persisted.supportCategory || null);
   const [isDark, setIsDark] = useState(() => {
     if (typeof persisted.isDark === 'boolean') return persisted.isDark;
     return typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
@@ -15803,6 +16162,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     try {
       const snapshot = JSON.stringify({
         isOpen,
+        launcherSide,
         isDark,
         soundEnabled,
         chatStatus,
@@ -15811,6 +16171,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         messages: messages.slice(-50),
         quickActions,
         conciergeFlow,
+        supportCategory,
       });
       localStorage.setItem(STORAGE_KEY, snapshot);
       sessionStorage.setItem(STORAGE_KEY, snapshot);
@@ -15819,7 +16180,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         sessionStorage.setItem(SESSION_TOKEN_KEY, sessionToken);
       }
     } catch {}
-  }, [isOpen, isDark, soundEnabled, chatStatus, assignedAgentName, hasPlacedOrder, messages, quickActions, conciergeFlow, sessionToken]);
+  }, [isOpen, launcherSide, isDark, soundEnabled, chatStatus, assignedAgentName, hasPlacedOrder, messages, quickActions, conciergeFlow, supportCategory, sessionToken]);
 
   useEffect(() => {
     if (isOpen && messagesEndRef.current) {
@@ -16084,7 +16445,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           senderName: 'Bhumivera Client Concierge',
           content:
             res.data?.conciergePrompt ||
-            'Our specialist team will reach out to you within 12 hours. Would you prefer to receive our update via Email or a Direct Phone Call?',
+            'Your verified follow-up request can be recorded for later review; replies are not live and may take some time. Would you prefer an update via Email or a Phone Call?',
           createdAt: new Date().toISOString(),
         },
       ]);
@@ -16160,7 +16521,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           senderName: 'Bhumivera Client Concierge',
           content:
             data.reply ||
-            'Your verified specialist request has been logged. Our team will reach out within 12 hours via your chosen preference.',
+            'Your verified follow-up request has been recorded. A team member will review it and reply when available; replies are not live.',
           escalation: {
             escalated: true,
             ticketId: data.ticketReference || data.ticketId,
@@ -16173,7 +16534,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       setEscalationWizard(prev => ({
         ...prev,
         busy: false,
-        error: err.response?.data?.message || 'Could not submit specialist escalation request.',
+        error: err.response?.data?.message || 'Could not save your follow-up request.',
       }));
     }
   };
@@ -16212,7 +16573,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     }
   };
 
-  const sendMessage = useCallback(async (overridePrompt = null) => {
+  const sendMessage = useCallback(async (overridePrompt = null, selectedCategory = null) => {
     if (overridePrompt === '__OPEN_VERIFICATION_FLOW__') {
       openVerificationFlow('');
       return;
@@ -16242,9 +16603,9 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     const text = String(overridePrompt !== null ? overridePrompt : input).trim();
     if ((!text && attachments.length === 0) || isTyping) return;
 
-    // Intercept direct cancellation or human escalation phrases to open the Verification Wizard if not yet verified
+    // Cancellation requests always require order verification; general requests for a person do not.
     if (
-      /\b(cancel\s*(?:my\s*|this\s*|the\s*)?order|connect\s*me\s*to\s*an?\s*associate|speak\s*to\s*(?:a\s*)?(?:human|agent|specialist)|human\s*agent)\b/i.test(text) &&
+      /\bcancel\s*(?:my\s*|this\s*|the\s*)?order\b/i.test(text) &&
       !escalationWizard.verifiedOrder
     ) {
       const matchOrd = text.match(/(?:BHVM[-_\s]*)?(\d{6,12})\b/i);
@@ -16279,7 +16640,13 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         sessionToken,
         message: text,
         attachments: currentAttachments.map(a => ({ name: a.name, url: a.url, type: a.type })),
-        pageContext: { ...currentPageContext, conciergeFlow },
+        pageContext: {
+          ...currentPageContext,
+          conciergeFlow,
+          ...(selectedCategory || supportCategory
+            ? { supportCategory: selectedCategory || supportCategory }
+            : {}),
+        },
       });
 
       const data = response?.data || {};
@@ -16312,7 +16679,21 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         },
       ]);
       playSupportChime(soundEnabled);
-    } catch {
+    } catch (error) {
+      if (error?.response?.status === 429) {
+        if (overridePrompt === null) setInput(text);
+        setMessages(prev => [
+          ...prev.filter(msg => msg.id !== userMsgId),
+          {
+            id: assistantStreamId,
+            sender: 'assistant',
+            senderName: 'Bhumivera Client Concierge',
+            content: error.response.data?.message || 'Please wait before sending this message again.',
+            createdAt: new Date().toISOString(),
+          },
+        ]);
+        return;
+      }
       const localConcierge = resolveEnhancedBotanicalConcierge(text);
       if (Array.isArray(localConcierge.quickActions) && localConcierge.quickActions.length > 0) {
         setQuickActions(localConcierge.quickActions);
@@ -16342,6 +16723,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     sessionToken,
     currentPageContext,
     conciergeFlow,
+    supportCategory,
     user?.name,
     soundEnabled,
     hasPlacedOrder,
@@ -16377,7 +16759,9 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   return (
     <div
       data-testid="bhumivera-support-assistant"
-      className="fixed bottom-20 right-4 md:bottom-6 md:right-6 z-[250] flex flex-col items-end font-sans"
+      className={`fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-6 z-[250] flex flex-col font-sans ${
+        launcherSide === 'left' ? 'left-4 items-start' : 'right-4 items-end'
+      }`}
     >
       {/* Subtle Luxury Assistance Nudge */}
       {!isOpen && proactiveBubble && (
@@ -16422,20 +16806,20 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       {isOpen && (
         <section
           aria-label="Bhumivera Client Concierge"
-          className={`flex flex-col overflow-hidden rounded-3xl border shadow-[0_24px_60px_rgba(0,0,0,0.28)] transition-all duration-200 ${
+          className={`flex flex-col overflow-hidden rounded-3xl border transition-all duration-200 backdrop-blur-xl ${
             isMaximized
-              ? 'w-[calc(100vw-1.5rem)] h-[calc(100vh-6rem)] md:w-[560px] md:h-[700px]'
-              : 'w-[calc(100vw-1.5rem)] sm:w-[410px] h-[580px] max-h-[calc(100vh-7rem)]'
+              ? 'w-[calc(100vw-1.5rem)] sm:w-[580px] md:w-[680px] lg:w-[720px] h-[calc(100dvh-4rem)] md:h-[760px]'
+              : 'w-[calc(100vw-1.5rem)] sm:w-[460px] md:w-[480px] h-[650px] max-h-[calc(100dvh-5.5rem)]'
           } ${
             isDark
-              ? 'bg-[#071510] border-white/15 text-stone-100'
-              : 'bg-[#FDFBF7] border-[#0B2419]/15 text-[#0B2419]'
+              ? 'bg-[#071610]/98 border-[#D4AF37]/35 text-stone-100 shadow-[0_24px_70px_rgba(0,0,0,0.55)]'
+              : 'bg-[#FDFBF7]/98 border-[#D4AF37]/40 text-[#0B2419] shadow-[0_24px_70px_rgba(11,36,25,0.22)]'
           }`}
         >
-          {/* Minimal Luxury Header (No '+' New Chat Spam Button) */}
-          <header className="bg-gradient-to-r from-[#0B2419] via-[#14251c] to-[#1f3528] px-5 py-3.5 text-[#FDFBF7] flex items-center justify-between gap-3 border-b border-[#D4AF37]/30 shrink-0">
+          {/* Haute Luxury Header */}
+          <header className="bg-gradient-to-r from-[#071911] via-[#0B2419] to-[#143725] px-5 py-3.5 text-[#FDFBF7] flex items-center justify-between gap-3 border-b border-[#D4AF37]/30 shrink-0 shadow-sm">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-9 h-9 rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/45 flex items-center justify-center shrink-0">
+              <div className="w-10 h-10 rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/50 flex items-center justify-center shrink-0 shadow-inner">
                 <Sparkles className="w-4 h-4 text-[#D4AF37]" />
               </div>
               <div className="min-w-0">
@@ -16444,12 +16828,9 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                     Bhumivera Client Concierge
                   </h2>
                 </div>
-                <p className="text-[10px] text-[#d6dfd9] truncate">
-                  {assignedAgentName
-                    ? `Specialist: ${assignedAgentName}`
-                    : hasPlacedOrder
-                    ? 'Verified Order Concierge · Single Active Thread'
-                    : '32 Botanicals, 12-Step Rituals & Order Verification'}
+                <p className="text-[10px] text-[#D4AF37]/90 font-medium tracking-wide truncate flex items-center gap-1.5">
+                  <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                  ✦ Ayurvedic Botanical AI · Always Active
                 </p>
               </div>
             </div>
@@ -16458,11 +16839,20 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               <button
                 type="button"
                 onClick={() => openVerificationFlow('')}
-                title="Verify Order ID for Specialist Callback or Email Assistance"
-                aria-label="Verify Order for Specialist Escalation"
-                className="px-2.5 py-1 rounded-xl text-[10px] font-semibold tracking-wider uppercase border border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37]/15 transition-colors"
+                title="Verify an order to submit a follow-up request"
+                aria-label="Verify Order for Follow-up"
+                className="hidden sm:inline-flex px-2.5 py-1 rounded-xl text-[10px] font-bold tracking-wider uppercase border border-[#D4AF37]/50 text-[#D4AF37] hover:bg-[#D4AF37]/15 transition-all shadow-sm"
               >
                 Verify Order
+              </button>
+              <button
+                type="button"
+                onClick={() => setLauncherSide(prev => prev === 'left' ? 'right' : 'left')}
+                title={`Move Concierge to ${launcherSide === 'left' ? 'right' : 'left'}`}
+                aria-label={`Move Concierge to ${launcherSide === 'left' ? 'right' : 'left'}`}
+                className="p-1.5 rounded-lg text-stone-200 hover:bg-white/10 transition-colors"
+              >
+                <ArrowLeftRight className="w-4 h-4" />
               </button>
               <button
                 type="button"
@@ -16471,7 +16861,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                 aria-label={soundEnabled ? 'Mute chimes' : 'Enable chimes'}
                 className="p-1.5 rounded-lg text-stone-200 hover:bg-white/10 transition-colors"
               >
-                {soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4 opacity-60" />}
+                {soundEnabled ? <Volume2 className="w-4 h-4 text-[#D4AF37]" /> : <VolumeX className="w-4 h-4 opacity-60" />}
               </button>
               <button
                 type="button"
@@ -16494,8 +16884,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
-                title="Minimize Concierge"
-                aria-label="Minimize Concierge"
+                title="Close Concierge"
+                aria-label="Close Concierge"
                 className="p-1.5 rounded-lg text-stone-200 hover:bg-white/10 transition-colors"
               >
                 <X className="w-4 h-4" />
@@ -16503,19 +16893,19 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             </div>
           </header>
 
-          {/* Two-Tier Status Bar + Interactive Module Switcher */}
+          {/* Luxury Two-Tier Switcher Bar */}
           <div
-            className={`px-4 py-2 border-b flex flex-col gap-1.5 text-[11px] shrink-0 ${
-              isDark ? 'bg-[#0a1c15] border-white/10 text-stone-300' : 'bg-[#f4f1e9] border-[#0B2419]/10 text-[#1b2921]'
+            className={`px-4 py-2 border-b flex flex-col gap-1.5 text-[11px] shrink-0 transition-colors ${
+              isDark ? 'bg-[#0a1c15] border-white/10 text-stone-300' : 'bg-[#f5f2e8] border-[#0B2419]/10 text-[#1b2921]'
             }`}
           >
             <div className="flex items-center justify-between gap-2">
               <span className="inline-flex items-center gap-1.5 truncate">
                 <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
                 {hasPlacedOrder ? (
-                  <span><strong>Verified Buyer Concierge:</strong> Dedicated Order Thread Active</span>
+                  <span><strong>Verified Client:</strong> Private order & refund details accessible</span>
                 ) : (
-                  <span><strong>General Inquiry Mode:</strong> Verify an Order ID to unlock live specialist support</span>
+                  <span><strong>AI Skincare Concierge:</strong> Personalized guidance & ingredient science</span>
                 )}
               </span>
               <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider border shrink-0 ${activeStatusMeta.badgeClass}`}>
@@ -16523,8 +16913,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               </span>
             </div>
 
-            {/* Interactive Botanical & Ritual Module Bar */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pt-0.5">
+            {/* Interactive Luxury Module Navigation Pills */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pt-0.5 scrollbar-none">
               <button
                 type="button"
                 onClick={() => {
@@ -16533,13 +16923,13 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   setDiagnosticDrawerOpen(false);
                   setEscalationWizard(prev => ({ ...prev, open: false }));
                 }}
-                className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition ${
+                className={`shrink-0 px-3 py-1 rounded-xl text-[10px] font-bold border transition-all ${
                   ingredientDrawerOpen
-                    ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37]'
-                    : 'border-current/20 hover:border-[#D4AF37]'
+                    ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37] shadow-sm'
+                    : 'border-current/20 hover:border-[#D4AF37] hover:text-[#D4AF37]'
                 }`}
               >
-                32 Ingredients & 4 Stories
+                🌿 Botanical Library
               </button>
               <button
                 type="button"
@@ -16549,13 +16939,13 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   setDiagnosticDrawerOpen(false);
                   setEscalationWizard(prev => ({ ...prev, open: false }));
                 }}
-                className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition ${
+                className={`shrink-0 px-3 py-1 rounded-xl text-[10px] font-bold border transition-all ${
                   ritualDrawerOpen
-                    ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37]'
-                    : 'border-current/20 hover:border-[#D4AF37]'
+                    ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37] shadow-sm'
+                    : 'border-current/20 hover:border-[#D4AF37] hover:text-[#D4AF37]'
                 }`}
               >
-                12-Step Ritual Timer
+                ⏳ Facial Ritual (4 Phases)
               </button>
               <button
                 type="button"
@@ -16565,13 +16955,24 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   setRitualDrawerOpen(false);
                   setEscalationWizard(prev => ({ ...prev, open: false }));
                 }}
-                className={`shrink-0 px-2.5 py-1 rounded-lg text-[10px] font-semibold border transition ${
+                className={`shrink-0 px-3 py-1 rounded-xl text-[10px] font-bold border transition-all ${
                   diagnosticDrawerOpen
-                    ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37]'
-                    : 'border-current/20 hover:border-[#D4AF37]'
+                    ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37] shadow-sm'
+                    : 'border-current/20 hover:border-[#D4AF37] hover:text-[#D4AF37]'
                 }`}
               >
-                8-Step Skin Quiz
+                ✨ Skin Quiz
+              </button>
+              <button
+                type="button"
+                onClick={() => openVerificationFlow('')}
+                className={`shrink-0 px-3 py-1 rounded-xl text-[10px] font-bold border transition-all ${
+                  escalationWizard.open
+                    ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37] shadow-sm'
+                    : 'border-current/20 hover:border-[#D4AF37] hover:text-[#D4AF37]'
+                }`}
+              >
+                🛡️ Specialist Support
               </button>
             </div>
           </div>
@@ -16589,7 +16990,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             }}
           />
 
-          {/* Interactive 12-Step Skincare Ritual Timer Drawer */}
+          {/* Interactive 4-Phase Skincare Ritual Timer Drawer */}
           <MasterRitualPlayerDrawer
             isOpen={ritualDrawerOpen}
             onClose={() => setRitualDrawerOpen(false)}
@@ -16610,7 +17011,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   sender: 'assistant',
                   senderName: 'Bhumivera Client Concierge',
                   content: [
-                    `**Your Personalized 8-Step Botanical Skin Blueprint**`,
+                    `**Your Personalized Botanical Skin Blueprint**`,
                     `**Anchor Formulation:** ${bp.recommendedProduct.name} (${bp.recommendedProduct.subtitle})`,
                     `**Top 5 Synergistic Bio-Actives for Your Profile:**\n${bp.topIngredients
                       .map((ing, i) => `${i + 1}. **${ing.name}** (*${ing.storyNumber}*) — ${ing.primaryClinicalBenefit}`)
@@ -16635,8 +17036,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   {escalationWizard.step === 1
                     ? 'Step 1 of 2 · Customer Order Verification (7-Point Protocol)'
                     : escalationWizard.step === 2
-                    ? 'Step 2 of 2 · Specialist Contact Preference (12-Hr SLA)'
-                    : 'Verified Specialist Request Logged'}
+                    ? 'Step 2 of 2 · Follow-up Contact Preference'
+                    : 'Verified Follow-up Request Recorded'}
                 </span>
                 <button
                   type="button"
@@ -16693,7 +17094,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               {escalationWizard.step === 2 && (
                 <form onSubmit={handleSubmitEscalationStep2} className="space-y-2.5">
                   <p className="text-[11px] leading-relaxed">
-                    Verified <strong>Order #{escalationWizard.verifiedOrder?.orderNumber}</strong>. Our specialist team will reach out to you within 12 hours. Would you prefer to receive our update via <strong>Email</strong> or a <strong>Direct Phone Call</strong>?
+                    Verified <strong>Order #{escalationWizard.verifiedOrder?.orderNumber}</strong>. Your request can be saved for later review; replies are not live and may take some time. Would you prefer an update via <strong>Email</strong> or a <strong>Phone Call</strong>?
                   </p>
 
                   {/* Granular Inspection & Remedy Selectors */}
@@ -16719,7 +17120,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                         isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-white border-stone-300 text-[#0B2419]'
                       }`}
                     >
-                      <option value="specialist_callback_or_resolution">Specialist Outreach & Resolution</option>
+                      <option value="specialist_callback_or_resolution">Follow-up & Resolution</option>
                       <option value="priority_free_replacement">Priority Free Replacement</option>
                       <option value="wallet_credit_with_bonus">Instant Wallet Credit</option>
                       <option value="original_payment_refund">Original Source Refund</option>
@@ -16801,7 +17202,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                     disabled={escalationWizard.busy}
                     className="w-full py-2 rounded-xl bg-[#0B2419] text-[#D4AF37] border border-[#D4AF37]/40 font-semibold text-xs hover:bg-[#163829] disabled:opacity-50"
                   >
-                    {escalationWizard.busy ? 'Logging Verified Request…' : 'Confirm & Schedule Specialist Outreach'}
+                    {escalationWizard.busy ? 'Saving Verified Request…' : 'Submit Follow-up Request'}
                   </button>
                 </form>
               )}
@@ -16813,7 +17214,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                     <span>Escalation Ticket #{escalationWizard.ticketReference} Confirmed</span>
                   </div>
                   <p className="text-[11px] opacity-85">
-                    Our specialist team will reach out within 12 hours via your selected preference.
+                    Your verified request has been recorded for later review. Replies are not live and may take some time.
                   </p>
                 </div>
               )}
@@ -16925,7 +17326,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               if (isSystem) {
                 return (
                   <div key={msg.id || idx} className="flex justify-center">
-                    <div className="max-w-[92%] rounded-xl px-3.5 py-2 text-[11px] text-center bg-[#D4AF37]/15 border border-[#D4AF37]/30">
+                    <div className="max-w-[92%] rounded-2xl px-4 py-2.5 text-[11px] text-center bg-[#D4AF37]/15 border border-[#D4AF37]/35 shadow-sm">
                       <FormattedMarkdown content={msg.content} isDark={isDark} onNavigate={href => navigate(href)} />
                     </div>
                   </div>
@@ -16938,19 +17339,20 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}
                 >
                   {!isUser && (
-                    <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-[#D4AF37] mb-1 pl-1">
-                      {isHumanStaff ? msg.senderName || 'Bhumivera Specialist' : 'Bhumivera Client Concierge'}
-                    </span>
+                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#D4AF37] mb-1.5 pl-1">
+                      <Sparkles className="w-3 h-3 text-[#D4AF37]" />
+                      <span>{isHumanStaff ? msg.senderName || 'Bhumivera Specialist' : 'Bhumivera Client Concierge'}</span>
+                    </div>
                   )}
                   <div
-                    className={`max-w-[88%] rounded-2xl px-4 py-3 ${
+                    className={`max-w-[90%] rounded-2xl px-4.5 py-3.5 transition-all shadow-sm ${
                       isUser
-                        ? 'bg-[#0B2419] text-[#FDFBF7] rounded-br-sm shadow-sm'
+                        ? 'bg-[#0B2419] text-[#FDFBF7] rounded-tr-sm border border-[#D4AF37]/25 shadow-md'
                         : isHumanStaff
-                        ? 'bg-emerald-950 text-emerald-50 border border-emerald-400/40 rounded-bl-sm shadow-md'
+                        ? 'bg-emerald-950 text-emerald-50 border border-emerald-400/40 rounded-tl-sm shadow-md'
                         : isDark
-                        ? 'bg-[#10241f] text-stone-100 border border-white/10 rounded-bl-sm'
-                        : 'bg-white text-[#0B2419] border border-[#0B2419]/10 rounded-bl-sm shadow-sm'
+                        ? 'bg-[#0f241d] text-stone-100 border border-white/10 rounded-tl-sm shadow-md'
+                        : 'bg-white text-[#0B2419] border border-[#0B2419]/10 rounded-tl-sm shadow-md'
                     }`}
                   >
                     <FormattedMarkdown
@@ -16960,11 +17362,11 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                     />
 
                     {Array.isArray(msg.attachments) && msg.attachments.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1.5">
+                      <div className="mt-2.5 flex flex-wrap gap-1.5">
                         {msg.attachments.map((att, aIdx) => (
                           <div
                             key={aIdx}
-                            className="flex items-center gap-1.5 px-2 py-1 rounded-lg bg-black/20 text-[11px]"
+                            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-black/20 text-[11px]"
                           >
                             <ImageIcon className="w-3.5 h-3.5 text-[#D4AF37]" />
                             <span className="truncate max-w-[140px]">{att.name || 'Photo'}</span>
@@ -16988,7 +17390,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                       <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-amber-500/15 border border-amber-500/30 px-3 py-2 text-[11px] font-medium text-amber-700 dark:text-amber-300">
                         <ShieldAlert className="w-4 h-4 shrink-0" />
                         <span>
-                          Verified Specialist Ticket{msg.escalation.ticketId ? ` #${msg.escalation.ticketId}` : ''} logged (12-hour response guarantee).
+                          Verified follow-up request{msg.escalation.ticketId ? ` #${msg.escalation.ticketId}` : ''} recorded. A specialist will review your details.
                         </span>
                       </div>
                     )}
@@ -16997,14 +17399,52 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               );
             })}
 
+            {!isTyping && !messages.some(msg => msg.sender === 'user') && (
+              <div
+                className={`rounded-2xl border p-4 space-y-3 ${
+                  isDark ? 'border-white/10 bg-[#0d221a]' : 'border-[#0B2419]/10 bg-white shadow-sm'
+                }`}
+              >
+                <div>
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] block">
+                    Ayurvedic Bio-Active Consultation
+                  </span>
+                  <p className="font-serif text-sm font-semibold mt-0.5">How may we guide your skincare journey today?</p>
+                </div>
+                <div className="grid gap-2 sm:grid-cols-2">
+                  {SUPPORT_ENTRY_CHOICES.map(choice => (
+                    <button
+                      key={choice.id}
+                      type="button"
+                      onClick={() => {
+                        setSupportCategory(choice.id);
+                        void sendMessage(choice.prompt, choice.id);
+                      }}
+                      className={`rounded-xl border p-3 text-left transition-all flex flex-col justify-between ${
+                        isDark
+                          ? 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-[#D4AF37]/50'
+                          : 'border-[#0B2419]/10 bg-[#FDFBF7] hover:bg-[#f4f1e9] hover:border-[#0B2419]/30'
+                      }`}
+                    >
+                      <span className="block text-xs font-bold text-[#D4AF37]">{choice.label}</span>
+                      <span className="mt-1 block text-[10px] opacity-75 leading-relaxed">{choice.description}</span>
+                    </button>
+                  ))}
+                </div>
+                <p className="text-[10px] opacity-65 italic">
+                  ✦ Automated botanical concierge. Verified follow-up requests are scheduled with human specialists.
+                </p>
+              </div>
+            )}
+
             {['resolved', 'closed'].includes(chatStatus) && (
               <div
-                className={`rounded-2xl border p-3.5 space-y-2 ${
-                  isDark ? 'bg-[#10241f] border-[#D4AF37]/30' : 'bg-white border-[#0B2419]/15 shadow-sm'
+                className={`rounded-2xl border p-4 space-y-2.5 ${
+                  isDark ? 'bg-[#10241f] border-[#D4AF37]/35' : 'bg-white border-[#0B2419]/15 shadow-sm'
                 }`}
               >
                 <div className="flex items-center justify-between gap-2">
-                  <span className="text-[11px] font-bold">
+                  <span className="text-xs font-bold">
                     {csatSubmitted ? 'Thank you for your feedback.' : 'How was your support experience?'}
                   </span>
                   <a
@@ -17013,12 +17453,12 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                     rel="noopener noreferrer"
                     className="text-[10px] font-semibold text-[#D4AF37] underline"
                   >
-                    Telegram Concierge
+                    Telegram Concierge ↗
                   </a>
                 </div>
                 {!csatSubmitted && (
                   <>
-                    <div className="flex items-center gap-1">
+                    <div className="flex items-center gap-1.5 py-1">
                       {[1, 2, 3, 4, 5].map(star => (
                         <button
                           key={star}
@@ -17026,7 +17466,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                           onClick={() => setCsatRating(star)}
                           disabled={csatSubmitting}
                           aria-label={`Rate ${star} stars`}
-                          className="p-0.5 hover:scale-110 transition-transform disabled:opacity-60"
+                          className="p-1 hover:scale-125 transition-transform disabled:opacity-60"
                         >
                           <Star
                             className={`w-4 h-4 ${
@@ -17042,7 +17482,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                         value={csatFeedback}
                         onChange={e => setCsatFeedback(e.target.value)}
                         placeholder="Share a note on your experience…"
-                        className={`flex-1 px-2.5 py-1.5 rounded-lg border text-[11px] ${
+                        className={`flex-1 px-3 py-2 rounded-xl border text-[11px] ${
                           isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-stone-50 border-stone-200 text-[#0B2419]'
                         }`}
                       />
@@ -17050,7 +17490,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                         type="button"
                         onClick={() => void handleSubmitCsat()}
                         disabled={csatSubmitting}
-                        className="px-2.5 py-1.5 rounded-lg bg-[#0B2419] text-[#D4AF37] text-[10px] font-bold shrink-0 disabled:opacity-60"
+                        className="px-3.5 py-2 rounded-xl bg-[#0B2419] text-[#D4AF37] text-xs font-bold shrink-0 disabled:opacity-60 hover:bg-[#143928] transition-colors"
                       >
                         {csatSubmitting ? 'Saving…' : 'Send'}
                       </button>
@@ -17068,7 +17508,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   onClick={() => void handleEndChat()}
                   disabled={csatSubmitting || isTyping}
                   aria-label="End chat"
-                  className="rounded-lg border border-[#0B2419]/15 px-3 py-1.5 text-[11px] font-semibold text-[#0B2419] hover:bg-[#0B2419]/5 disabled:opacity-60 dark:text-stone-100 dark:border-white/15"
+                  className="rounded-xl border border-[#0B2419]/20 px-3.5 py-1.5 text-[11px] font-semibold text-[#0B2419] hover:bg-[#0B2419]/10 disabled:opacity-60 dark:text-stone-200 dark:border-white/20 transition-colors"
                 >
                   {csatSubmitting ? 'Closing…' : 'End chat'}
                 </button>
@@ -17076,36 +17516,37 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             )}
 
             {isTyping && (
-              <div className="flex items-center gap-2 text-xs opacity-75 pl-1">
-                <div className="flex items-center gap-1 px-3 py-2 rounded-2xl bg-[#0B2419]/10 dark:bg-white/10">
+              <div className="flex items-center gap-2 text-xs opacity-85 pl-1 animate-pulse">
+                <div className="flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-[#0B2419]/10 dark:bg-white/10">
                   <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-bounce" />
                   <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-bounce [animation-delay:150ms]" />
                   <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-bounce [animation-delay:300ms]" />
                 </div>
-                {statusLabel && <span className="text-[11px] italic">{statusLabel}</span>}
+                {statusLabel && <span className="text-[11px] italic font-serif">{statusLabel}</span>}
               </div>
             )}
 
             <div ref={messagesEndRef} />
           </div>
 
-          {/* Dynamic AI Next Auto-Suggestions (Product -> Ingredient -> 2+1 Related + Usage Guide) */}
+          {/* Dynamic AI Suggested Actions Carousel */}
           {Array.isArray(quickActions) && quickActions.length > 0 && (
             <div
-              className={`px-4 py-2.5 border-t space-y-1.5 shrink-0 ${
-                isDark ? 'bg-[#0a1c15] border-white/10' : 'bg-[#f4f1e9] border-[#0B2419]/10'
+              className={`px-4 py-2 border-t space-y-1.5 shrink-0 transition-colors ${
+                isDark ? 'bg-[#081a13] border-white/10' : 'bg-[#f6f3ea] border-[#0B2419]/10'
               }`}
             >
-              <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-[0.14em] text-[#D4AF37]">
+              <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-[0.16em] text-[#D4AF37]">
                 <span>
                   {quickActions.some(c => c.category === 'post_wash_routine' || c.category === 'product_pairing' || c.category === 'ingredient_synergy')
-                    ? 'AI Concierge · Skincare Ritual & Next Steps'
+                    ? '✦ Skincare Ritual & Layering Suggestions'
                     : quickActions.some(c => c.category === 'ingredient_deep_dive' || c.category === 'closely_related_ingredient')
-                    ? 'AI Concierge · Botanical Ingredient Deep Dives'
-                    : 'AI Concierge · Recommended Actions'}
+                    ? '✦ Botanical Active Inquiries'
+                    : '✦ Recommended Inquiries'}
                 </span>
+                <span className="text-[8px] opacity-60 font-normal">Swipe for more</span>
               </div>
-              <div className="flex flex-wrap items-center gap-1.5 max-h-24 overflow-y-auto">
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
                 {quickActions.map(chip => {
                   const isRelated = chip.category === 'closely_related_ingredient' || chip.category === 'product_pairing';
                   const isUsage = chip.category === 'usage_and_timing' || chip.category === 'post_wash_routine';
@@ -17116,7 +17557,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                       type="button"
                       disabled={isTyping}
                       onClick={() => void sendMessage(chip.prompt || chip.label)}
-                      className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all ${
+                      className={`shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-medium border transition-all duration-150 ${
                         isRelated
                           ? 'bg-[#D4AF37]/15 border-[#D4AF37]/60 text-[#0B2419] dark:text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0B2419]'
                           : isUsage
@@ -17124,8 +17565,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                           : isSynergy
                           ? 'bg-amber-500/15 border-amber-500/40 text-amber-900 dark:text-amber-200 hover:bg-amber-600 hover:text-white'
                           : isDark
-                          ? 'bg-[#10241f] border-[#D4AF37]/30 text-stone-200 hover:border-[#D4AF37] hover:text-[#D4AF37]'
-                          : 'bg-white border-[#0B2419]/15 text-[#0B2419] hover:border-[#0B2419] hover:bg-[#0B2419] hover:text-white'
+                          ? 'bg-[#10241f] border-[#D4AF37]/35 text-stone-200 hover:border-[#D4AF37] hover:text-[#D4AF37]'
+                          : 'bg-white border-[#0B2419]/15 text-[#0B2419] hover:border-[#0B2419] hover:bg-[#0B2419] hover:text-white shadow-sm'
                       } disabled:opacity-50`}
                     >
                       {chip.label}
@@ -17142,7 +17583,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               {attachments.map((att, idx) => (
                 <div
                   key={idx}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[#D4AF37]/15 text-[11px] font-medium"
+                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#D4AF37]/15 text-[11px] font-medium border border-[#D4AF37]/30"
                 >
                   <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                   <span className="truncate max-w-[110px]">{att.name}</span>
@@ -17165,7 +17606,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               void sendMessage();
             }}
             className={`p-3.5 border-t flex items-center gap-2 shrink-0 ${
-              isDark ? 'bg-[#071510] border-white/10' : 'bg-white border-[#0B2419]/10'
+              isDark ? 'bg-[#071610] border-white/10' : 'bg-white border-[#0B2419]/10'
             }`}
           >
             <input
@@ -17182,10 +17623,10 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               onClick={() => fileInputRef.current?.click()}
               title="Attach photo for return inspection"
               aria-label="Attach photo"
-              className={`p-2 rounded-xl border transition-colors ${
+              className={`p-2.5 rounded-xl border transition-colors ${
                 isDark
-                  ? 'border-white/15 text-stone-300 hover:bg-white/10'
-                  : 'border-stone-200 text-stone-600 hover:bg-stone-100'
+                  ? 'border-white/15 text-stone-300 hover:bg-white/10 hover:border-[#D4AF37]'
+                  : 'border-stone-200 text-stone-600 hover:bg-stone-100 hover:border-[#0B2419]'
               }`}
             >
               <Paperclip className="w-4 h-4" />
@@ -17197,21 +17638,21 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               placeholder={
                 hasPlacedOrder
                   ? 'Ask about your order, returns, or botanical rituals…'
-                  : 'Ask about ingredients, shipping, or verify an Order ID…'
+                  : 'Ask about ingredients, skin concerns, or verify an Order ID…'
               }
               maxLength={2000}
               aria-label="Message Bhumivera Client Concierge"
-              className={`flex-1 min-w-0 px-3.5 py-2 rounded-xl border text-xs outline-none transition-colors ${
+              className={`flex-1 min-w-0 px-4 py-2.5 rounded-2xl border text-xs outline-none transition-all ${
                 isDark
-                  ? 'bg-[#10241f] border-white/15 text-stone-100 placeholder:text-stone-400 focus:border-[#D4AF37]'
-                  : 'bg-[#FDFBF7] border-stone-200 text-[#0B2419] placeholder:text-stone-400 focus:border-[#0B2419]'
+                  ? 'bg-[#10241f] border-white/15 text-stone-100 placeholder:text-stone-400 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40'
+                  : 'bg-[#FDFBF7] border-stone-200 text-[#0B2419] placeholder:text-stone-400 focus:border-[#0B2419] focus:ring-1 focus:ring-[#0B2419]/20'
               }`}
             />
             <button
               type="submit"
               disabled={isTyping || (!input.trim() && attachments.length === 0)}
               aria-label="Send message"
-              className="p-2.5 rounded-xl bg-[#0B2419] text-[#D4AF37] hover:bg-[#1e4031] disabled:opacity-40 transition-colors shrink-0"
+              className="p-2.5 rounded-2xl bg-[#0B2419] text-[#D4AF37] border border-[#D4AF37]/40 hover:bg-[#163829] active:scale-95 disabled:opacity-40 transition-all shrink-0 shadow-md"
             >
               <Send className="w-4 h-4" />
             </button>
@@ -17221,26 +17662,44 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
 
       {/* Floating Concierge Launcher */}
       {!isOpen && (
-        <button
-          type="button"
-          onClick={() => {
-            setIsOpen(true);
-            setUnreadCount(0);
-            setProactiveBubble(null);
-          }}
-          aria-label="Open Bhumivera Support"
-          className="group relative flex items-center gap-2.5 rounded-full bg-gradient-to-r from-[#0B2419] to-[#1e4031] px-4 py-3.5 text-[#FDFBF7] shadow-[0_14px_34px_rgba(11,36,25,0.45)] border border-[#D4AF37]/45 hover:scale-[1.03] active:scale-[0.98] transition-all"
-        >
-          <div className="relative flex items-center justify-center">
-            <MessageSquare className="w-5 h-5 text-[#D4AF37]" />
-            {unreadCount > 0 && (
-              <span className="absolute -top-2 -right-2 min-w-[18px] h-[18px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center">
-                {unreadCount}
-              </span>
-            )}
-          </div>
-          <span className="text-xs font-semibold tracking-wide pr-0.5">Client Concierge</span>
-        </button>
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setLauncherSide(prev => (prev === 'left' ? 'right' : 'left'))}
+            aria-label={`Move Concierge to ${launcherSide === 'left' ? 'right' : 'left'}`}
+            title={`Move Concierge to ${launcherSide === 'left' ? 'right' : 'left'}`}
+            className={`flex h-10 w-10 items-center justify-center rounded-full border shadow-md transition-all duration-150 ${
+              isDark
+                ? 'border-white/15 bg-[#071510] text-stone-200 hover:bg-[#10241f] hover:border-[#D4AF37]/50'
+                : 'border-[#0B2419]/15 bg-white text-[#0B2419] hover:bg-stone-50 hover:border-[#0B2419]'
+            }`}
+          >
+            <ArrowLeftRight className="h-4 w-4" />
+          </button>
+          <button
+            type="button"
+            onClick={() => {
+              setIsOpen(true);
+              setUnreadCount(0);
+              setProactiveBubble(null);
+            }}
+            aria-label="Open Bhumivera Support"
+            className="group relative flex items-center gap-2.5 rounded-full bg-gradient-to-r from-[#071911] via-[#0B2419] to-[#163828] px-4 py-3 text-[#FDFBF7] shadow-[0_12px_30px_rgba(11,36,25,0.35)] border border-[#D4AF37]/45 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200"
+          >
+            <div className="relative flex items-center justify-center">
+              <MessageSquare className="w-5 h-5 text-[#D4AF37]" />
+              {unreadCount > 0 && (
+                <span className="absolute -top-2.5 -right-2.5 min-w-[20px] h-[20px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center animate-bounce shadow-md">
+                  {unreadCount}
+                </span>
+              )}
+            </div>
+            <span className="text-xs font-semibold tracking-wider pr-0.5">
+              <span className="sm:hidden">Concierge</span>
+              <span className="hidden sm:inline">✦ Client Concierge</span>
+            </span>
+          </button>
+        </div>
       )}
     </div>
   );

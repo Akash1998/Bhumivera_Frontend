@@ -178,6 +178,56 @@ describe('SupportAssistant floating AI widget', () => {
     expect(await screen.findByText(/Need a hand with checkout/i)).toBeTruthy();
   });
 
+  it('offers order and general-query paths and lets customers move or close the mobile widget', async () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <SupportAssistant />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Open Bhumivera Support/i }));
+    await screen.findByText(/Hi Aarav, how can I help you today/i);
+    expect(screen.getByRole('button', { name: /Order-related issue/i })).toBeTruthy();
+    expect(screen.getByRole('button', { name: /General question/i })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: /Move Concierge to left/i }));
+    expect(screen.getByTestId('bhumivera-support-assistant').className).toContain('left-4');
+    expect(screen.getByRole('button', { name: /Move Concierge to right/i })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Close Concierge' }));
+    fireEvent.click(screen.getByRole('button', { name: /Open Bhumivera Support/i }));
+    expect(await screen.findByRole('button', { name: /Move Concierge to right/i })).toBeTruthy();
+  });
+
+  it('sends the selected issue category and shows server cooldown errors instead of a fallback answer', async () => {
+    aiSupport.sendMessage.mockRejectedValueOnce({
+      response: {
+        status: 429,
+        data: { message: 'You already sent this message recently. Please wait 10 minutes.' },
+      },
+    });
+
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <SupportAssistant />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByRole('button', { name: /Open Bhumivera Support/i }));
+    await screen.findByText(/Hi Aarav, how can I help you today/i);
+    fireEvent.click(screen.getByRole('button', { name: /Order-related issue/i }));
+
+    await waitFor(() => {
+      expect(aiSupport.sendMessage).toHaveBeenCalledWith(expect.objectContaining({
+        pageContext: expect.objectContaining({ supportCategory: 'order' }),
+      }));
+    });
+
+    fireEvent.click(screen.getByRole('button', { name: /Where is my order\?/i }));
+    expect(await screen.findByText(/wait 10 minutes/i)).toBeTruthy();
+    expect(screen.queryByText(/I can help you fix/i)).toBeNull();
+  });
+
   it('updates quickActions dynamically for Product -> Ingredient -> 2+1 Suggestions (Sea Buckthorn Face Wash -> Niacinamide)', async () => {
     aiSupport.sendMessage.mockResolvedValueOnce({
       data: {
