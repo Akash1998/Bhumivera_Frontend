@@ -1,133 +1,104 @@
 // @vitest-environment jsdom
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 
+let getCurrentLanguage;
+let setLanguage;
+let t;
+let translateDomNodes;
 let activateFullSiteTranslation;
-let translateCombo;
-let changeHandler;
+let SUPPORTED_INDIAN_LANGUAGES;
 
 beforeEach(async () => {
   vi.resetModules();
   localStorage.clear();
   document.cookie = 'googtrans=; Max-Age=0; path=/;';
-  document.body.innerHTML = '<div id="google_translate_element"></div>';
-  delete window.google;
-  translateCombo = undefined;
-  changeHandler = vi.fn();
-  ({ activateFullSiteTranslation } = await import('./indianLanguageEngine.js'));
+  document.body.innerHTML = `
+    <div id="test-root">
+      <h1>Rooted in nature. Made for your everyday.</h1>
+      <p>A story that begins with the earth</p>
+      <button aria-label="Explore the Collection" title="Discover">
+        Explore the Collection
+      </button>
+      <input type="text" placeholder="Search skincare, hair care, ingredients..." />
+    </div>
+  `;
+  ({
+    getCurrentLanguage,
+    setLanguage,
+    t,
+    translateDomNodes,
+    activateFullSiteTranslation,
+    SUPPORTED_INDIAN_LANGUAGES,
+  } = await import('./indianLanguageEngine.js'));
 });
 
-describe('activateFullSiteTranslation', () => {
-  it('loads Google Translate and automatically selects the requested language', async () => {
-    activateFullSiteTranslation('hi');
-
-    const script = document.getElementById('bhumivera-google-translate-script');
-    expect(script.src).toBe(
-      'https://translate.google.com/translate_a/element.js?cb=googleTranslateElementInit'
-    );
-    expect(document.cookie).toContain('googtrans=/en/hi');
-
-    window.google = {
-      translate: {
-        TranslateElement: class {
-          static InlineLayout = { SIMPLE: 0 };
-
-          constructor(_options, targetId) {
-            translateCombo = document.createElement('select');
-            translateCombo.className = 'goog-te-combo';
-            ['en', 'hi', 'bn'].forEach((lang) => {
-              const option = document.createElement('option');
-              option.value = lang;
-              translateCombo.appendChild(option);
-            });
-            translateCombo.addEventListener('change', changeHandler);
-            document.getElementById(targetId).appendChild(translateCombo);
-          }
-        },
-      },
-    };
-    window.googleTranslateElementInit();
-
-    expect(translateCombo.value).toBe('hi');
-    expect(changeHandler).toHaveBeenCalledOnce();
+describe('Bhumivera Tri-Lingual Language Engine (English, Hindi, Bengali)', () => {
+  it('supports English, Hindi, and Bengali as primary languages', () => {
+    const codes = SUPPORTED_INDIAN_LANGUAGES.map((l) => l.code);
+    expect(codes).toContain('en');
+    expect(codes).toContain('hi');
+    expect(codes).toContain('bn');
+    expect(SUPPORTED_INDIAN_LANGUAGES.find((l) => l.code === 'bn')?.nativeName).toBe('বাংলা');
+    expect(SUPPORTED_INDIAN_LANGUAGES.find((l) => l.code === 'hi')?.nativeName).toBe('हिन्दी');
   });
 
-  it('reloads with a canonical cookie when switching an initialized translation', () => {
-    window.google = {
-      translate: {
-        TranslateElement: class {
-          static InlineLayout = { SIMPLE: 0 };
+  it('translates DOM nodes and placeholders into Hindi', () => {
+    setLanguage('hi');
 
-          constructor(_options, targetId) {
-            translateCombo = document.createElement('select');
-            translateCombo.className = 'goog-te-combo';
-            ['en', 'hi', 'bn'].forEach((lang) => {
-              const option = document.createElement('option');
-              option.value = lang;
-              translateCombo.appendChild(option);
-            });
-            translateCombo.addEventListener('change', changeHandler);
-            document.getElementById(targetId).appendChild(translateCombo);
-          }
-        },
-      },
-    };
+    const h1 = document.querySelector('h1');
+    const p = document.querySelector('p');
+    const btn = document.querySelector('button');
+    const input = document.querySelector('input');
 
-    activateFullSiteTranslation('hi');
-    expect(translateCombo.value).toBe('hi');
-    const reloadPage = vi.fn();
-    activateFullSiteTranslation('bn', { reloadPage });
-    expect(reloadPage).toHaveBeenCalledOnce();
-    expect(document.cookie).toContain('googtrans=/en/bn');
-
-    activateFullSiteTranslation('en', { reloadPage });
-    expect(reloadPage).toHaveBeenCalledTimes(2);
-    expect(document.cookie).not.toContain('googtrans=/en/');
-    expect(changeHandler).toHaveBeenCalledOnce();
+    expect(h1.textContent).toBe('प्रकृति से प्रेरित। आपके दैनिक जीवन के लिए निर्मित।');
+    expect(p.textContent).toBe('एक कहानी जो धरती से शुरू होती है');
+    expect(btn.textContent.trim()).toBe('संग्रह देखें');
+    expect(input.placeholder).toBe('स्किनकेयर, हेयर केयर या सामग्री खोजें...');
+    expect(document.documentElement.lang).toBe('hi');
   });
 
-  it('waits for Google Translate to populate a selected language option', async () => {
-    window.google = {
-      translate: {
-        TranslateElement: class {
-          static InlineLayout = { SIMPLE: 0 };
+  it('translates DOM nodes and placeholders into Bengali with zero latency and restores English', () => {
+    setLanguage('bn');
 
-          constructor(_options, targetId) {
-            translateCombo = document.createElement('select');
-            translateCombo.className = 'goog-te-combo';
-            ['en', 'hi'].forEach((lang) => {
-              const option = document.createElement('option');
-              option.value = lang;
-              translateCombo.appendChild(option);
-            });
-            translateCombo.addEventListener('change', changeHandler);
-            document.getElementById(targetId).appendChild(translateCombo);
-          }
-        },
-      },
-    };
+    const h1 = document.querySelector('h1');
+    const p = document.querySelector('p');
+    const btn = document.querySelector('button');
+    const input = document.querySelector('input');
 
-    activateFullSiteTranslation('bn');
-    expect(translateCombo.value).toBe('en');
-    expect(changeHandler).not.toHaveBeenCalled();
+    expect(h1.textContent).toBe('প্রকৃতি থেকে অনুপ্রাণিত। আপনার দৈনন্দিন জীবনের জন্য তৈরি।');
+    expect(p.textContent).toBe('একটি গল্প যা মাটি থেকে শুরু হয়');
+    expect(btn.textContent.trim()).toBe('সংগ্রহ দেখুন');
+    expect(input.placeholder).toBe('স্কিনকেয়ার বা উপাদান খুঁজুন...');
+    expect(document.documentElement.lang).toBe('bn');
 
-    const bengaliOption = document.createElement('option');
-    bengaliOption.value = 'bn';
-    translateCombo.appendChild(bengaliOption);
-
-    await vi.waitFor(() => {
-      expect(translateCombo.value).toBe('bn');
-      expect(changeHandler).toHaveBeenCalledOnce();
-    });
+    // Switch back to English
+    setLanguage('en');
+    expect(h1.textContent).toBe('Rooted in nature. Made for your everyday.');
+    expect(p.textContent).toBe('A story that begins with the earth');
+    expect(btn.textContent.trim()).toBe('Explore the Collection');
+    expect(input.placeholder).toBe('Search skincare, hair care, ingredients...');
+    expect(document.documentElement.lang).toBe('en');
   });
 
-  it('removes the Google toolbar if it is injected after translation starts', async () => {
-    activateFullSiteTranslation('hi');
+  it('t() function retrieves correct localized strings for en, hi, and bn', () => {
+    expect(t('nav_home', '', 'en')).toBe('Home');
+    expect(t('nav_home', '', 'hi')).toBe('होम');
+    expect(t('nav_home', '', 'bn')).toBe('হোম');
+
+    expect(t('nav_shop', '', 'bn')).toBe('সব পণ্য দেখুন');
+    expect(t('nav_science', '', 'bn')).toBe('উদ্ভিদ বিজ্ঞান');
+  });
+
+  it('cleans up legacy Google Translate banner frames and cookies without reloading', () => {
     const banner = document.createElement('iframe');
     banner.className = 'goog-te-banner-frame';
     document.body.appendChild(banner);
 
-    await vi.waitFor(() => {
-      expect(document.querySelector('.goog-te-banner-frame')).toBeNull();
-    });
+    document.cookie = 'googtrans=/en/hi; path=/';
+    activateFullSiteTranslation('bn');
+
+    expect(document.querySelector('.goog-te-banner-frame')).toBeNull();
+    expect(document.cookie).not.toContain('googtrans=/en/hi');
   });
 });
+

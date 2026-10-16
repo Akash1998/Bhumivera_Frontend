@@ -268,8 +268,8 @@ export default function Footer() {
             <Link to="/legal?section=referrals" className="transition-colors hover:text-[#c8d6aa]">
               Referral rewards
             </Link>
-            <Link to="/returns-centre" className="transition-colors hover:text-[#c8d6aa]">
-              Return &amp; Refund Policy
+            <Link to="/returns" className="transition-colors hover:text-[#c8d6aa]">
+              Replacement &amp; Courtesy Credit Policy
             </Link>
           </div>
           <p className="text-center text-[9px] font-semibold uppercase tracking-[0.14em] text-white/35 sm:text-right">

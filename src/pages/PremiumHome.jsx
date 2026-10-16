@@ -95,11 +95,11 @@ const questions = [
   },
   {
     key: 'returns',
-    label: 'Returns',
-    question: 'How do returns work?',
-    answer: 'Return eligibility depends on the published policy, order details and product condition. Review the Returns Centre for the current steps before sending an item back.',
-    link: '/returns-centre',
-    linkLabel: 'Visit the Returns Centre',
+    label: 'Replacement & Credit',
+    question: 'How do replacements and courtesy credits work?',
+    answer: 'As personal care cosmetics, delivered bottles cannot be physically returned for hygiene safety. If your item arrives damaged or leaking, submit a photo to receive an instant free replacement or 100% courtesy wallet credit.',
+    link: '/returns',
+    linkLabel: 'Replacement & Courtesy Credit',
   },
   {
     key: 'impact',

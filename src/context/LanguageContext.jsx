@@ -23,6 +23,7 @@ export function LanguageProvider({ children }) {
     if (typeof window !== 'undefined') {
       window.requestAnimationFrame(() => translateDomNodes(target));
       window.setTimeout(() => translateDomNodes(target), 80);
+      window.setTimeout(() => translateDomNodes(target), 300);
     }
   }, []);
 
