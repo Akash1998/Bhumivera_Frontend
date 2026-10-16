@@ -1574,15 +1574,20 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                 isDark ? 'bg-[#0a1c15] border-white/10' : 'bg-[#f4f1e9] border-[#0B2419]/10'
               }`}
             >
-              {quickActions.some(c => c.category === 'ingredient_deep_dive' || c.category === 'closely_related_ingredient') && (
-                <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-[0.14em] text-[#D4AF37]">
-                  <span>AI Auto-Suggestions · 2 Ingredient Insights + 1 Related Active + Usage</span>
-                </div>
-              )}
+              <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-[0.14em] text-[#D4AF37]">
+                <span>
+                  {quickActions.some(c => c.category === 'post_wash_routine' || c.category === 'product_pairing' || c.category === 'ingredient_synergy')
+                    ? 'AI Concierge · Skincare Ritual & Next Steps'
+                    : quickActions.some(c => c.category === 'ingredient_deep_dive' || c.category === 'closely_related_ingredient')
+                    ? 'AI Concierge · Botanical Ingredient Deep Dives'
+                    : 'AI Concierge · Recommended Actions'}
+                </span>
+              </div>
               <div className="flex flex-wrap items-center gap-1.5">
                 {quickActions.map(chip => {
-                  const isRelated = chip.category === 'closely_related_ingredient';
-                  const isUsage = chip.category === 'usage_and_timing';
+                  const isRelated = chip.category === 'closely_related_ingredient' || chip.category === 'product_pairing';
+                  const isUsage = chip.category === 'usage_and_timing' || chip.category === 'post_wash_routine';
+                  const isSynergy = chip.category === 'ingredient_synergy' || chip.category === 'skin_compatibility';
                   return (
                     <button
                       key={chip.id || chip.label}
@@ -1591,9 +1596,11 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                       onClick={() => void sendMessage(chip.prompt || chip.label)}
                       className={`shrink-0 px-3 py-1.5 rounded-full text-[11px] font-medium border transition-all ${
                         isRelated
-                          ? 'bg-[#D4AF37]/15 border-[#D4AF37] text-[#0B2419] dark:text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0B2419]'
+                          ? 'bg-[#D4AF37]/15 border-[#D4AF37]/60 text-[#0B2419] dark:text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0B2419]'
                           : isUsage
                           ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-900 dark:text-emerald-200 hover:bg-emerald-600 hover:text-white'
+                          : isSynergy
+                          ? 'bg-amber-500/15 border-amber-500/40 text-amber-900 dark:text-amber-200 hover:bg-amber-600 hover:text-white'
                           : isDark
                           ? 'bg-[#10241f] border-[#D4AF37]/30 text-stone-200 hover:border-[#D4AF37] hover:text-[#D4AF37]'
                           : 'bg-white border-[#0B2419]/15 text-[#0B2419] hover:border-[#0B2419] hover:bg-[#0B2419] hover:text-white'
