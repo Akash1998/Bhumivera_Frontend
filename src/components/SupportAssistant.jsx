@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom';
 import {
   MessageSquare,
-  ArrowLeftRight,
   X,
   Minimize2,
   Maximize2,
@@ -4247,7 +4246,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   const navigate = useNavigate();
   const { user } = useAuth() || {};
   const { cart = [], isCartOpen = false } = useCart() || {};
-  const { currentLang, t } = useLanguage();
+  const { t } = useLanguage();
 
   const persisted = useMemo(() => {
     if (typeof window === 'undefined') return {};
@@ -4259,9 +4258,12 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     }
   }, []);
 
-  const [isOpen, setIsOpen] = useState(Boolean(persisted.isOpen));
+  const [isOpen, setIsOpen] = useState(() =>
+    Boolean(persisted.isOpen) &&
+    typeof window !== 'undefined' &&
+    Boolean(window.matchMedia?.('(min-width: 768px)').matches)
+  );
   const [isMaximized, setIsMaximized] = useState(false);
-  const [launcherSide, setLauncherSide] = useState(persisted.launcherSide === 'left' ? 'left' : 'right');
   const [supportCategory, setSupportCategory] = useState(persisted.supportCategory || null);
   const [isDark, setIsDark] = useState(() => {
     if (typeof persisted.isDark === 'boolean') return persisted.isDark;
@@ -4284,7 +4286,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   const [attachments, setAttachments] = useState([]);
   const [isTyping, setIsTyping] = useState(false);
   const [statusLabel, setStatusLabel] = useState('');
-  const [unreadCount, setUnreadCount] = useState(0);
   const [proactiveBubble, setProactiveBubble] = useState(null);
   const [csatRating, setCsatRating] = useState(5);
   const [csatFeedback, setCsatFeedback] = useState('');
@@ -4335,7 +4336,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     try {
       const snapshot = JSON.stringify({
         isOpen,
-        launcherSide,
         isDark,
         soundEnabled,
         chatStatus,
@@ -4353,13 +4353,25 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         sessionStorage.setItem(SESSION_TOKEN_KEY, sessionToken);
       }
     } catch {}
-  }, [isOpen, launcherSide, isDark, soundEnabled, chatStatus, assignedAgentName, hasPlacedOrder, messages, quickActions, conciergeFlow, supportCategory, sessionToken]);
+  }, [isOpen, isDark, soundEnabled, chatStatus, assignedAgentName, hasPlacedOrder, messages, quickActions, conciergeFlow, supportCategory, sessionToken]);
 
   useEffect(() => {
     if (isOpen && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
   }, [messages, isTyping, isOpen, escalationWizard.open, ingredientDrawerOpen, ritualDrawerOpen, diagnosticDrawerOpen]);
+
+  useEffect(() => {
+    if (!isOpen) return undefined;
+    const previousBodyOverflow = document.body.style.overflow;
+    const previousDocumentOverflow = document.documentElement.style.overflow;
+    document.body.style.overflow = 'hidden';
+    document.documentElement.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previousBodyOverflow;
+      document.documentElement.style.overflow = previousDocumentOverflow;
+    };
+  }, [isOpen]);
 
   const currentPageContext = useMemo(() => ({
     pathname: location.pathname,
@@ -4421,7 +4433,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   useEffect(() => {
     if (isOpen && !sessionInitializedRef.current) {
       sessionInitializedRef.current = true;
-      setUnreadCount(0);
       setProactiveBubble(null);
       void ensureSession();
     }
@@ -4479,7 +4490,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       setCopilotRescue(initialRescue);
       if (detail.autoOpen !== false) {
         setIsOpen(true);
-        setUnreadCount(0);
         setProactiveBubble(null);
       }
     };
@@ -4521,7 +4531,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         }
       } catch {}
       setProactiveBubble({ text: nudge });
-      setUnreadCount(prev => Math.max(1, prev));
     }, lingerThresholdMs);
 
     return () => window.clearTimeout(timer);
@@ -4909,7 +4918,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       const detail = event?.detail || {};
       setIsOpen(true);
       setProactiveBubble(null);
-      setUnreadCount(0);
       if (detail.verifyOrderId) {
         openVerificationFlow(detail.verifyOrderId);
       } else if (detail.ingredientId) {
@@ -4932,8 +4940,14 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   return (
     <div
       data-testid="bhumivera-support-assistant"
-      className={`fixed bottom-[calc(5.5rem+env(safe-area-inset-bottom))] md:bottom-6 z-[250] flex flex-col font-sans ${
-        launcherSide === 'left' ? 'left-4 items-start' : 'right-4 items-end'
+      className={`fixed z-[250] flex flex-col font-sans ${
+        isOpen
+          ? `inset-0 items-stretch pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] md:pt-0 md:pb-0 ${
+              isMaximized
+                ? 'md:inset-0 md:w-auto'
+                : 'md:inset-y-6 md:right-6 md:left-auto md:w-1/2 md:max-w-[760px]'
+            }`
+          : 'bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 items-end'
       }`}
     >
       {/* Subtle Luxury Assistance Nudge */}
@@ -4966,7 +4980,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             onClick={() => {
               setIsOpen(true);
               setProactiveBubble(null);
-              setUnreadCount(0);
             }}
             className="mt-2.5 inline-flex items-center gap-1 text-xs font-semibold text-[#D4AF37] hover:underline"
           >
@@ -4978,12 +4991,10 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       {/* Expanded Luxury Concierge Window */}
       {isOpen && (
         <section
+          role="dialog"
+          aria-modal="true"
           aria-label="Bhumivera Client Concierge"
-          className={`flex flex-col overflow-hidden rounded-3xl border transition-all duration-200 backdrop-blur-xl ${
-            isMaximized
-              ? 'w-[calc(100vw-1.5rem)] sm:w-[580px] md:w-[680px] lg:w-[720px] h-[calc(100dvh-4rem)] md:h-[760px]'
-              : 'w-[calc(100vw-1.5rem)] sm:w-[460px] md:w-[480px] h-[650px] max-h-[calc(100dvh-5.5rem)]'
-          } ${
+          className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-none border-0 transition-all duration-200 backdrop-blur-xl md:rounded-3xl md:border ${
             isDark
               ? 'bg-[#071610]/98 border-[#D4AF37]/35 text-stone-100 shadow-[0_24px_70px_rgba(0,0,0,0.55)]'
               : 'bg-[#FDFBF7]/98 border-[#D4AF37]/40 text-[#0B2419] shadow-[0_24px_70px_rgba(11,36,25,0.22)]'
@@ -5018,15 +5029,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                 className="hidden sm:inline-flex px-2.5 py-1 rounded-xl text-[10px] font-bold tracking-wider uppercase border border-[#D4AF37]/50 text-[#D4AF37] hover:bg-[#D4AF37]/15 transition-all shadow-sm"
               >
                 {t('concierge_verify_order', 'Verify Order')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setLauncherSide(prev => prev === 'left' ? 'right' : 'left')}
-                title={`Move Concierge to ${launcherSide === 'left' ? 'right' : 'left'}`}
-                aria-label={`Move Concierge to ${launcherSide === 'left' ? 'right' : 'left'}`}
-                className="p-1.5 rounded-lg text-stone-200 hover:bg-white/10 transition-colors"
-              >
-                <ArrowLeftRight className="w-4 h-4" />
               </button>
               <button
                 type="button"
@@ -5834,47 +5836,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         </section>
       )}
 
-      {/* Floating Concierge Launcher */}
-      {!isOpen && (
-        <div className="flex items-center gap-2">
-          <button
-            type="button"
-            onClick={() => setLauncherSide(prev => (prev === 'left' ? 'right' : 'left'))}
-            aria-label={`Move Concierge to ${launcherSide === 'left' ? 'right' : 'left'}`}
-            title={`Move Concierge to ${launcherSide === 'left' ? 'right' : 'left'}`}
-            className={`flex h-10 w-10 items-center justify-center rounded-full border shadow-md transition-all duration-150 ${
-              isDark
-                ? 'border-white/15 bg-[#071510] text-stone-200 hover:bg-[#10241f] hover:border-[#D4AF37]/50'
-                : 'border-[#0B2419]/15 bg-white text-[#0B2419] hover:bg-stone-50 hover:border-[#0B2419]'
-            }`}
-          >
-            <ArrowLeftRight className="h-4 w-4" />
-          </button>
-          <button
-            type="button"
-            onClick={() => {
-              setIsOpen(true);
-              setUnreadCount(0);
-              setProactiveBubble(null);
-            }}
-            aria-label="Open Bhumivera Support"
-            className="group relative flex items-center gap-2.5 rounded-full bg-gradient-to-r from-[#071911] via-[#0B2419] to-[#163828] px-4 py-3 text-[#FDFBF7] shadow-[0_12px_30px_rgba(11,36,25,0.35)] border border-[#D4AF37]/45 hover:scale-[1.03] active:scale-[0.98] transition-all duration-200"
-          >
-            <div className="relative flex items-center justify-center">
-              <MessageSquare className="w-5 h-5 text-[#D4AF37]" />
-              {unreadCount > 0 && (
-                <span className="absolute -top-2.5 -right-2.5 min-w-[20px] h-[20px] px-1 rounded-full bg-rose-500 text-white text-[10px] font-bold flex items-center justify-center animate-bounce shadow-md">
-                  {unreadCount}
-                </span>
-              )}
-            </div>
-            <span className="text-xs font-semibold tracking-wider pr-0.5">
-              <span className="sm:hidden">Concierge</span>
-              <span className="hidden sm:inline">✦ Client Concierge</span>
-            </span>
-          </button>
-        </div>
-      )}
     </div>
   );
 }

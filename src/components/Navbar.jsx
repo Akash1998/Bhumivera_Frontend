@@ -5,7 +5,7 @@ import {
   ShoppingCart, User, Search, Menu, X, Sparkles, Heart,
   ChevronDown, Package, Gift, GitCompareArrows, ArrowRight,
   MapPin, Activity, Droplets, Leaf, Mic, FlaskConical, Compass, Download,
-  HeartHandshake, Truck, CircleUserRound, BadgePercent
+  HeartHandshake, Truck, CircleUserRound, BadgePercent, ShieldCheck
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -17,7 +17,7 @@ import { useLanguage } from '../context/LanguageContext.jsx';
 
 export default function Navbar() {
   const { user } = useAuth();
-  const { t, currentLang } = useLanguage();
+  const { t } = useLanguage();
   const { cartItems, setIsCartOpen } = useCart();
   const cartCount = cartItems.reduce((count, item) => count + (Number(item.quantity) || 1), 0);
   const [isMenuOpen, setMenuOpen] = useState(false);
@@ -33,9 +33,11 @@ export default function Navbar() {
   const [installPrompt, setInstallPrompt] = useState(null);
   const [showIosInstallHelp, setShowIosInstallHelp] = useState(false);
   const searchTimeout = useRef(null);
+  const searchRequestId = useRef(0);
   const navigate = useNavigate(); 
   const location = useLocation();
   const searchDropdownRef = useRef(null);
+  const mobileSearchRef = useRef(null);
   const isIosDevice = /iPhone|iPad|iPod/.test(navigator.userAgent) ||
     (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches ||
@@ -98,12 +100,20 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (searchDropdownRef.current && !searchDropdownRef.current.contains(event.target)) {
+      if (
+        searchDropdownRef.current &&
+        !searchDropdownRef.current.contains(event.target) &&
+        !mobileSearchRef.current?.contains(event.target)
+      ) {
         setShowSearchDropdown(false);
       }
     };
     document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      if (searchTimeout.current) clearTimeout(searchTimeout.current);
+      searchRequestId.current += 1;
+    };
   }, []);
 
   const handleSearch = (e) => {
@@ -111,26 +121,35 @@ export default function Navbar() {
     setSearchQuery(query);
     setShowSearchDropdown(true);
     if (searchTimeout.current) clearTimeout(searchTimeout.current);
+    const requestId = ++searchRequestId.current;
     if (query.length > 2) {
       setIsSearching(true);
       searchTimeout.current = setTimeout(async () => {
         try {
           const res = await search.query(query, 5); 
-          if (res.data?.success || res.data) {
-            setSuggestions(res.data?.data || res.data);
-            setIsAiPowered(res.data?.isAiPowered || true); 
+          if (requestId === searchRequestId.current) {
+            const data = res.data?.data ?? res.data;
+            setSuggestions(Array.isArray(data) ? data : Array.isArray(data?.products) ? data.products : []);
+            setIsAiPowered(Boolean(res.data?.isAiPowered));
           }
         } catch (error) {
-          console.error("AI Search Failure:", error);
-          setSuggestions([]);
+          if (requestId === searchRequestId.current) {
+            console.error("AI Search Failure:", error);
+            setSuggestions([]);
+          }
         } finally {
-          setIsSearching(false);
+          if (requestId === searchRequestId.current) setIsSearching(false);
         }
       }, 400); 
     } else {
       setSuggestions([]);
       setIsAiPowered(false);
+      setIsSearching(false);
     }
+  };
+
+  const openAiConcierge = () => {
+    window.dispatchEvent(new CustomEvent('bhumivera:open-support-chat'));
   };
 
   const executeFullSearch = (e) => {
@@ -163,6 +182,7 @@ export default function Navbar() {
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:gap-6 sm:px-6 sm:py-4 lg:gap-8">
           
           <button 
+            type="button"
             onClick={() => setMenuOpen(!isMenuOpen)} 
             className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#14251c] transition-colors hover:bg-[#14251c]/5 hover:text-[#526b4d] md:hidden"
             aria-label={isMenuOpen ? "Close menu" : "Open menu"}
@@ -178,15 +198,15 @@ export default function Navbar() {
               alt=""
               width="44"
               height="44"
-              fetchPriority="high"
+              fetchpriority="high"
               decoding="async"
               className="h-11 w-11 object-contain transition-transform group-hover:scale-105"
             />
             <span className="hidden font-serif text-2xl uppercase tracking-[0.16em] text-[#14251c] sm:block">Bhumivera</span>
           </Link>
 
-          <div className="hidden md:flex flex-1 max-w-2xl relative" ref={searchDropdownRef}>
-            <form onSubmit={executeFullSearch} className="w-full relative group">
+          <div className="hidden md:flex min-w-0 flex-1 max-w-2xl items-center gap-2 relative" ref={searchDropdownRef}>
+            <form onSubmit={executeFullSearch} className="w-full min-w-0 relative group">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#526b4d]/60 transition-colors group-focus-within:text-[#526b4d]">
                 <Search size={18} />
               </div>
@@ -214,6 +234,16 @@ export default function Navbar() {
                 {t('search_action', 'Discover')}
               </button>
             </form>
+            <button
+              type="button"
+              onClick={openAiConcierge}
+              aria-label="Open AI concierge"
+              title="Ask the AI concierge"
+              className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-[#d4af37]/50 bg-[#14251c] px-4 text-xs font-bold text-[#f4d979] shadow-sm transition hover:bg-[#20392b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#526b4d]"
+            >
+              <Sparkles size={16} />
+              <span>Ask AI</span>
+            </button>
 
             {showSearchDropdown && (searchQuery.length > 2) && (
               <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-white rounded-2xl border border-[#e8dcc4] shadow-2xl overflow-hidden z-50">
@@ -274,11 +304,66 @@ export default function Navbar() {
             </button>
           </div>
         </div>
+        <div ref={mobileSearchRef} className="mx-auto flex max-w-7xl items-center gap-2 px-4 pb-3 md:hidden">
+          <div className="relative min-w-0 flex-1">
+            <form onSubmit={executeFullSearch} className="relative">
+              <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#526b4d]" />
+              <input
+                type="search"
+                value={searchQuery}
+                onChange={handleSearch}
+                onFocus={() => { if (searchQuery.length > 2) setShowSearchDropdown(true); }}
+                placeholder={t('search_placeholder', 'Search skincare, hair care, ingredients...')}
+                aria-label="Search skincare products"
+                className="h-11 w-full rounded-full border border-[#dedfd4] bg-white pl-10 pr-4 text-sm text-[#14251c] shadow-sm outline-none placeholder:text-[#526b4d]/60 focus:border-[#526b4d]"
+              />
+            </form>
+            {showSearchDropdown && searchQuery.length > 2 && (
+              <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-[120] overflow-hidden rounded-2xl border border-[#e8dcc4] bg-white shadow-2xl">
+                <div className="flex items-center justify-between border-b border-[#dedfd4] bg-[#f4f1e9] px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest text-[#526b4d]">
+                  <span>{isAiPowered ? 'AI suggestions' : 'Search suggestions'}</span>
+                  {isSearching && <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#e8dcc4] border-t-[#d4af37]" />}
+                </div>
+                <div className="max-h-[50dvh] overflow-y-auto">
+                  {suggestions.map(item => (
+                    <Link
+                      key={item.id || item._id}
+                      to={`/product/${item.slug || item.id || item._id}`}
+                      onClick={() => setShowSearchDropdown(false)}
+                      className="flex items-center gap-3 border-b border-[#dedfd4]/70 p-3 text-sm last:border-0 hover:bg-[#f4f1e9]"
+                    >
+                      <img
+                        src={getProductImageUrl(item.image_url || item.images || item.image) || '/logo.webp'}
+                        onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}
+                        className="h-10 w-10 rounded-full border border-[#dedfd4] object-cover p-1"
+                        alt=""
+                      />
+                      <span className="min-w-0 flex-1 truncate font-semibold text-[#14251c]">{item.name}</span>
+                      <span className="shrink-0 text-xs text-[#526b4d]">₹{item.discount_price || item.price}</span>
+                    </Link>
+                  ))}
+                  {!isSearching && suggestions.length === 0 && (
+                    <p className="px-4 py-5 text-center text-xs text-[#526b4d]">No botanical matches found.</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </div>
+          <button
+            type="button"
+            onClick={openAiConcierge}
+            aria-label="Open AI concierge"
+            className="inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#d4af37]/50 bg-[#14251c] px-3.5 text-xs font-bold text-[#f4d979] shadow-sm transition hover:bg-[#20392b]"
+          >
+            <Sparkles size={16} />
+            <span>AI</span>
+          </button>
+        </div>
       </nav>
       {/* REAL LUXURY MOBILE SIDEBAR DRAWER (SLIDES IN FROM LEFT) */}
       <AnimatePresence>
         {isMenuOpen && (
-          <div className="fixed inset-0 z-[250] md:hidden">
+          <div className="fixed inset-0 z-[250] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] md:hidden">
             {/* Backdrop Overlay */}
             <Motion.div
               initial={{ opacity: 0 }}
@@ -292,6 +377,10 @@ export default function Navbar() {
 
             {/* Slide-out Sidebar Panel */}
             <Motion.div
+              id="mobile-navigation"
+              role="dialog"
+              aria-modal="true"
+              aria-label="Main navigation"
               initial={{ x: '-100%' }}
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}

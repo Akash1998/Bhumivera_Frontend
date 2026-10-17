@@ -33,8 +33,12 @@ vi.mock('../services/api', () => ({
   },
 }));
 
-describe('SupportAssistant floating AI widget', () => {
+describe('SupportAssistant chat panel', () => {
   afterEach(cleanup);
+
+  const openSupportChat = () => {
+    act(() => window.dispatchEvent(new CustomEvent('bhumivera:open-support-chat')));
+  };
 
   beforeEach(() => {
     localStorage.clear();
@@ -104,8 +108,7 @@ describe('SupportAssistant floating AI widget', () => {
       </MemoryRouter>
     );
 
-    const launcher = screen.getByRole('button', { name: /Open Bhumivera Support/i });
-    fireEvent.click(launcher);
+    openSupportChat();
 
     await waitFor(() => {
       expect(aiSupport.initSession).toHaveBeenCalledTimes(1);
@@ -145,7 +148,7 @@ describe('SupportAssistant floating AI widget', () => {
       </MemoryRouter>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /Open Bhumivera Support/i }));
+    openSupportChat();
     await screen.findByText(/Hi Aarav, how can I help you today/i);
     fireEvent.click(screen.getByRole('button', { name: /Where is my order\?/i }));
     await waitFor(() => expect(aiSupport.sendMessage).toHaveBeenCalled());
@@ -178,25 +181,28 @@ describe('SupportAssistant floating AI widget', () => {
     expect(await screen.findByText(/Need a hand with checkout/i)).toBeTruthy();
   });
 
-  it('offers order and general-query paths and lets customers move or close the mobile widget', async () => {
+  it('opens from the navbar event as a responsive panel and supports closing', async () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <SupportAssistant />
       </MemoryRouter>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /Open Bhumivera Support/i }));
+    openSupportChat();
     await screen.findByText(/Hi Aarav, how can I help you today/i);
     expect(screen.getByRole('button', { name: /Order-related issue/i })).toBeTruthy();
     expect(screen.getByRole('button', { name: /General question/i })).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: /Move Concierge to left/i }));
-    expect(screen.getByTestId('bhumivera-support-assistant').className).toContain('left-4');
-    expect(screen.getByRole('button', { name: /Move Concierge to right/i })).toBeTruthy();
+    const assistant = screen.getByTestId('bhumivera-support-assistant');
+    expect(assistant.className).toContain('inset-0');
+    expect(assistant.className).toContain('md:w-1/2');
+    expect(screen.queryByRole('button', { name: /Open Bhumivera Support/i })).toBeNull();
+    expect(document.body.style.overflow).toBe('hidden');
 
     fireEvent.click(screen.getByRole('button', { name: 'Close Concierge' }));
-    fireEvent.click(screen.getByRole('button', { name: /Open Bhumivera Support/i }));
-    expect(await screen.findByRole('button', { name: /Move Concierge to right/i })).toBeTruthy();
+    expect(document.body.style.overflow).not.toBe('hidden');
+    openSupportChat();
+    expect(await screen.findByRole('button', { name: 'Close Concierge' })).toBeTruthy();
   });
 
   it('sends the selected issue category and shows server cooldown errors instead of a fallback answer', async () => {
@@ -213,7 +219,7 @@ describe('SupportAssistant floating AI widget', () => {
       </MemoryRouter>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /Open Bhumivera Support/i }));
+    openSupportChat();
     await screen.findByText(/Hi Aarav, how can I help you today/i);
     fireEvent.click(screen.getByRole('button', { name: /Order-related issue/i }));
 
@@ -260,7 +266,7 @@ describe('SupportAssistant floating AI widget', () => {
       </MemoryRouter>
     );
 
-    fireEvent.click(screen.getByRole('button', { name: /Open Bhumivera Support/i }));
+    openSupportChat();
     await screen.findByText(/Hi Aarav, how can I help you today/i);
 
     fireEvent.click(screen.getByRole('button', { name: /Where is my order\?/i }));
