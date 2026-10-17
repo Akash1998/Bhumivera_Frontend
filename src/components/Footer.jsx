@@ -64,7 +64,7 @@ export default function Footer() {
 
   return (
     <footer className="mt-auto border-t border-white/10 bg-[#0d1712] font-sans text-[#f1efe7] antialiased">
-      {/* 1. CINEMATIC AMBIENT VIDEO CONCIERGE BANNER */}
+      {/* 1. BRAND INTRODUCTION */}
       <div className="relative isolate overflow-hidden border-b border-white/10 bg-[#13211a]">
         <div className="absolute inset-0 -z-20 opacity-30" aria-hidden="true">
           <img
@@ -161,7 +161,7 @@ export default function Footer() {
       </div>
 
       {/* 3. FOOTER DIRECTORY */}
-      <div className="grid w-full grid-cols-2 gap-4 border-b border-white/10 bg-[#0c1712] px-[clamp(1.25rem,4vw,4.5rem)] py-10 sm:grid-cols-3 sm:gap-5 sm:py-14 xl:grid-cols-6">
+      <div className="grid w-full grid-cols-2 items-start gap-4 border-b border-white/10 bg-[#0c1712] px-[clamp(1.25rem,4vw,4.5rem)] py-10 sm:grid-cols-3 sm:gap-5 sm:py-14 xl:grid-cols-6">
         {/* Column 1: Bhumivera Store */}
         <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 sm:p-5">
           <h3 className="mb-4 border-b border-white/10 pb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#c8d6aa] sm:mb-5 sm:text-xs">
@@ -487,13 +487,6 @@ export default function Footer() {
         <div className="flex w-full flex-col items-center gap-5 px-[clamp(1.25rem,4vw,4.5rem)] py-7 lg:flex-row lg:justify-between">
           <Link to="/" aria-label="Bhumivera home" className="flex items-center gap-3.5">
             <div className="relative h-12 w-12 overflow-hidden rounded-full border border-[#d4af37]/40 bg-[#111c17]">
-              <BhumiveraVideo
-                src="/assets/videos/seabuckthorn-botanical.mp4"
-                poster="/logo.webp"
-                alt="Bhumivera Crest Video Emblem"
-                className="h-full w-full object-cover opacity-50"
-                containerClassName="relative h-full w-full overflow-hidden"
-              />
               <img
                 src="/logo.webp"
                 alt="Bhumivera Crest"
@@ -511,12 +504,6 @@ export default function Footer() {
               </span>
             </div>
           </Link>
-
-          <div className="flex flex-wrap justify-center gap-x-5 gap-y-2 text-[10px] text-white/55 sm:text-xs">
-            <Link to="/legal" className="transition-colors hover:text-[#c8d6aa]">
-              Legal information
-            </Link>
-          </div>
 
           <p className="text-center text-[9px] font-semibold uppercase tracking-[0.14em] text-white/40 lg:text-right">
             © {currentYear} Bhumivera · Care, returned to its source
