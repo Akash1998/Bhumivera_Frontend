@@ -28,6 +28,7 @@ import {
   Star,
   Mail,
   ShieldCheck,
+  Award,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -54,7 +55,7 @@ const SUPPORT_ENTRY_CHOICES = [
   {
     id: 'order',
     label: 'Order-related issue',
-    description: 'Delivery, payment, return, or an existing order',
+    description: 'Delivery, payment, bottle verification, or an existing order',
     prompt: 'I need help with an order.',
   },
   {
@@ -414,9 +415,9 @@ export const PUBLIC_GENERAL_CHIPS = [
 export const VERIFIED_BUYER_CHIPS = [
   { id: 'track_order', label: 'Track My Order', prompt: 'Where is my latest order?' },
   {
-    id: 'initiate_return',
-    label: 'Return or Replacement',
-    prompt: 'I want to initiate a return or replacement for my delivered order.',
+    id: 'verify_genuinity',
+    label: 'Verify Bottle Serial & Genuinity',
+    prompt: 'How do I test my bottle serial for genuinity and laboratory pH calibration?',
   },
   {
     id: 'layering_guide_v',
@@ -520,9 +521,9 @@ export const DETAILED_ORDER_LIFECYCLE_STEPS = [
     stepIndex: 4,
     code: 'DELIVERED',
     label: 'Delivered',
-    title: 'Delivered & 7-Day Inspection Window Active',
+    title: 'Delivered · Sealed Virgin Personal Care',
     description:
-      'Package delivered to your doorstep. Your 12-Step Skincare Ritual unlocks along with our 7-day verified replacement guarantee.',
+      'Package safely delivered. Sealed under our strict personal care hygiene standard for virgin botanical purity.',
     typicalDuration: 'Completed',
   },
 ];
@@ -2346,7 +2347,7 @@ export const VERIFICATION_WIZARD_STEP_DEFINITIONS = [
     code: 'STEP_4_REMEDY_PREFERENCE',
     title: 'Step 4 of 7 · Preferred Resolution Remedy',
     shortTitle: '4. Resolution',
-    description: 'Choose your preferred resolution outcome: Priority Replacement Dispatch, Instant Wallet Credit (+10% Bonus), Source Refund, or Live Modification.',
+    description: 'Choose your preferred concierge resolution: Direct Concierge Review, Instant Wallet Credit (+10% Bonus), Source Refund, or Live Modification.',
   },
   {
     step: 5,
@@ -2374,33 +2375,33 @@ export const VERIFICATION_WIZARD_STEP_DEFINITIONS = [
 export const RETURN_INSPECTION_STEP_DEFINITIONS = [
   {
     step: 1,
-    title: 'Step 1 of 6 · Eligibility & 7-Day Delivery Window Check',
-    detail: 'Delivered orders are eligible for return or free replacement within 7 days of delivery for damaged, leaked, wrong, or defective items.',
+    title: 'Step 1 of 6 · 100% Sealed Virgin Custody Standard',
+    detail: 'Personal care cosmetics (face washes, soaps, shampoos) are bottled with virgin tamper-evident security in micro-batches of 250 units to guarantee absolute purity.',
   },
   {
     step: 2,
-    title: 'Step 2 of 6 · Outer Carton & Tamper Seal Verification',
-    detail: 'Locate the gold hologram tamper seal and the laser-etched batch number on the base of your Bhumivera bottle or outer box.',
+    title: 'Step 2 of 6 · Outer Carton & Serial Verification',
+    detail: 'Locate the laser-etched serial number or QR code on your Bhumivera bottle or outer carton to verify against our laboratory master registry.',
   },
   {
     step: 3,
-    title: 'Step 3 of 6 · Photo Documentation (Up to 3 Clear Images)',
-    detail: 'Use the Paperclip button in the Concierge composer to attach 1–3 photos showing the shipping label, batch code, and item condition.',
+    title: 'Step 3 of 6 · Unboxing Documentation (Continuous 360°)',
+    detail: 'Use the Paperclip button in the Concierge composer to attach continuous unboxing footage showing the intact courier AWB label and parcel condition.',
   },
   {
     step: 4,
-    title: 'Step 4 of 6 · Choose Replacement vs. Refund Mode',
-    detail: 'Select Priority Free Replacement (dispatched within 24 hours) or Full Refund (to original payment method or Bhumivera Wallet).',
+    title: 'Step 4 of 6 · Multi-Order Loyal Patron Review',
+    detail: 'For patrons who have placed multiple orders, complaints are reviewed directly with priority by our Executive Concierge Desk.',
   },
   {
     step: 5,
-    title: 'Step 5 of 6 · Reverse Courier Pickup Scheduling',
-    detail: 'Our courier partner schedules doorstep pickup within 24–48 hours; keep the product in its original box with invoice/tags.',
+    title: 'Step 5 of 6 · Untouched Sterile Freshness',
+    detail: 'Every bottle is sealed at cleanroom standards. Verified patrons receive direct resolution with uncompromised virgin freshness and zero shipping hassle.',
   },
   {
     step: 6,
-    title: 'Step 6 of 6 · Instant RMA Tracking & Refund Settlement',
-    detail: 'Track your RMA number directly on your Order Card in chat; refunds process within 3–5 business days after pickup verification.',
+    title: 'Step 6 of 6 · Direct Verification & Refund Review',
+    detail: 'Upon concierge verification of verified patron complaint, direct resolution is processed directly to your original payment source or wallet.',
   },
 ];
 
@@ -2973,24 +2974,13 @@ function ChatOrderCard({ order, isDark, onQuickPrompt, onRequestOrderInterventio
             <PhoneCall className="w-3 h-3" /> Request Specialist Assistance
           </button>
         )}
-        {order.canReturn && (
-          <>
-            <button
-              type="button"
-              onClick={() => onQuickPrompt(`Initiate return for order #${order.orderNumber}`)}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-[#D4AF37]/15 text-[#8a6a12] dark:text-[#D4AF37] hover:bg-[#D4AF37]/25 transition-colors"
-            >
-              <RotateCcw className="w-3 h-3" /> Initiate Return
-            </button>
-            <button
-              type="button"
-              onClick={() => onQuickPrompt(`Request replacement for order #${order.orderNumber}`)}
-              className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-emerald-500/15 text-emerald-700 dark:text-emerald-300 hover:bg-emerald-500/25 transition-colors"
-            >
-              <Package className="w-3 h-3" /> Request Replacement
-            </button>
-          </>
-        )}
+        <button
+          type="button"
+          onClick={() => onQuickPrompt(`I want to verify the bottle serial and lab assay for order #${order.orderNumber}`)}
+          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-[#D4AF37]/15 text-[#8a6a12] dark:text-[#D4AF37] hover:bg-[#D4AF37]/25 transition-colors"
+        >
+          <Award className="w-3 h-3" /> Verify Bottle Serial
+        </button>
         {order.activeReturn && (
           <button
             type="button"
@@ -5293,7 +5283,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                     >
                       <option value="order_modification_or_delivery">Order / Address / Delivery Assist</option>
                       <option value="damaged_or_leaked_unit">Damaged / Leaked Bottle Inspection</option>
-                      <option value="return_or_replacement_rma">Return or Replacement RMA</option>
+                      <option value="quality_verification_inquiry">Quality or Transit Verification</option>
                       <option value="botanical_formulation_consult">Botanical Regimen Consultation</option>
                     </select>
                     <select
@@ -5305,7 +5295,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                       }`}
                     >
                       <option value="specialist_callback_or_resolution">Follow-up & Resolution</option>
-                      <option value="priority_free_replacement">Priority Free Replacement</option>
+                      <option value="direct_concierge_review">Direct Concierge Quality Review</option>
                       <option value="wallet_credit_with_bonus">Instant Wallet Credit</option>
                       <option value="original_payment_refund">Original Source Refund</option>
                     </select>
@@ -5805,7 +5795,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             <button
               type="button"
               onClick={() => fileInputRef.current?.click()}
-              title="Attach photo for return inspection"
+              title="Attach unboxing photo or verification file"
               aria-label="Attach photo"
               className={`p-2.5 rounded-xl border transition-colors ${
                 isDark
@@ -5821,7 +5811,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               onChange={e => setInput(e.target.value)}
               placeholder={
                 hasPlacedOrder
-                  ? t('concierge_input_placeholder_orders', 'Ask about your order, returns, or botanical rituals…')
+                  ? t('concierge_input_placeholder_orders', 'Ask about your order, serial verification, or botanical rituals…')
                   : t('concierge_input_placeholder', 'Ask about ingredients, skin concerns, or verify an Order ID…')
               }
               maxLength={2000}

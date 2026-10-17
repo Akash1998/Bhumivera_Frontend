@@ -7,7 +7,7 @@ import React from 'react';
  */
 export default function BhumiveraVideo({
   src,
-  poster = '/assets/images/real_001.webp',
+  poster = '/assets/images/Promo1.webp',
   alt = 'Bhumivera botanical photograph',
   className = 'w-full h-full object-cover',
   containerClassName = 'relative w-full h-full overflow-hidden',
@@ -19,7 +19,7 @@ export default function BhumiveraVideo({
       ? poster
       : src && !String(src).endsWith('.mp4')
       ? src
-      : '/assets/images/real_001.webp';
+      : '/assets/images/Promo1.webp';
 
   const cleanBadge = badge
     ? String(badge)
@@ -37,7 +37,7 @@ export default function BhumiveraVideo({
         decoding="async"
         onError={(e) => {
           e.currentTarget.onerror = null;
-          e.currentTarget.src = '/assets/images/real_001.webp';
+          e.currentTarget.src = '/assets/images/Promo1.webp';
         }}
         className={className}
       />

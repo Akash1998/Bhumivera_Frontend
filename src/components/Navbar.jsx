@@ -388,7 +388,7 @@ export default function Navbar() {
                 { to: '/order-tracking', label: t('nav_track_order', 'Track an order'), icon: Truck },
                 { to: '/wishlist', label: t('nav_wishlist', 'Wishlist'), icon: Heart },
                 { to: '/compare', label: t('nav_compare', 'Compare products'), icon: GitCompareArrows },
-                { to: '/returns', label: t('nav_damaged_credit', 'Damaged item & courtesy credit'), icon: Package },
+                { to: '/verify', label: 'Verify Bottle Serial & Genuinity', icon: ShieldCheck },
               ].map(({ to, label, icon: Icon }) => (
                 <Motion.div
                   key={to}

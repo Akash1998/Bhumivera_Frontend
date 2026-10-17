@@ -41,7 +41,7 @@ export default function VisualGuideModal({ isOpen, onClose, initialTab = 'passwo
         <div className="flex border-b border-stone-200 bg-[#f4f1e9] overflow-x-auto p-2 gap-1.5 shrink-0 scrollbar-none">
           {[
             { id: 'password', label: 'Password & Login', icon: KeyRound },
-            { id: 'damaged', label: 'Damaged & Courtesy Credit', icon: ShieldCheck },
+            { id: 'verify', label: 'Serial & Genuinity', icon: ShieldCheck },
             { id: 'tracking', label: 'Order Tracking', icon: Truck },
             { id: 'location', label: 'Pinpoint Location', icon: MapPin },
             { id: 'ritual', label: 'Skincare Layering', icon: Droplets },
@@ -152,22 +152,22 @@ export default function VisualGuideModal({ isOpen, onClose, initialTab = 'passwo
             </div>
           )}
 
-          {/* TAB 2: DAMAGED ITEMS & COURTESY CREDIT */}
-          {activeTab === 'damaged' && (
+          {/* TAB 2: ARTISANAL SERIAL & GENUINITY VERIFICATION */}
+          {activeTab === 'verify' && (
             <div className="space-y-5 animate-fadeIn">
-              <div className="rounded-2xl bg-gradient-to-br from-[#0B2419]/5 to-amber-500/10 p-5 border border-amber-500/30 flex flex-col sm:flex-row items-center gap-5">
-                {/* Animated Courtesy Wallet & Shield SVG */}
+              <div className="rounded-2xl bg-gradient-to-br from-[#0B2419]/5 to-[#D4AF37]/15 p-5 border border-[#D4AF37]/40 flex flex-col sm:flex-row items-center gap-5">
+                {/* Artisanal Seal & Verification SVG */}
                 <div className="w-24 h-24 shrink-0 flex items-center justify-center">
                   <svg viewBox="0 0 100 100" className="w-full h-full drop-shadow-md">
                     <circle cx="50" cy="50" r="44" fill="#0B2419" opacity="0.08" />
-                    {/* Protective Hexagon */}
+                    {/* Golden Hexagon Plate */}
                     <polygon
                       points="50,14 84,32 84,68 50,86 16,68 16,32"
                       fill="#0B2419"
                       stroke="#D4AF37"
                       strokeWidth="2.5"
                     />
-                    {/* Golden Coin with shimmer */}
+                    {/* Certified Monogram */}
                     <circle cx="50" cy="50" r="16" fill="#D4AF37" stroke="#FFFFFF" strokeWidth="1.5">
                       <animate
                         attributeName="r"
@@ -176,59 +176,59 @@ export default function VisualGuideModal({ isOpen, onClose, initialTab = 'passwo
                         repeatCount="indefinite"
                       />
                     </circle>
-                    <text x="50" y="55" fontSize="14" fontWeight="bold" textAnchor="middle" fill="#0B2419">
-                      ₹
+                    <text x="50" y="55" fontSize="13" fontWeight="bold" textAnchor="middle" fill="#0B2419">
+                      ✓
                     </text>
                   </svg>
                 </div>
 
                 <div className="space-y-1 text-center sm:text-left flex-1">
-                  <h4 className="font-serif text-lg font-bold text-[#0B2419]">Cosmetics Hygiene &amp; Courtesy Credit Policy</h4>
+                  <h4 className="font-serif text-lg font-bold text-[#0B2419]">Artisanal Serial &amp; Genuinity Test</h4>
                   <p className="text-xs text-stone-600 leading-relaxed">
-                    Personal care botanicals (Face Wash &amp; Shampoo) cannot be physically restocked once delivered. In case of damage, our 100% Courtesy Guarantee replaces or credits without return shipping.
+                    Every Bhumivera bottle is produced in small artisanal runs (250 units) and hand-serialized. Scan your bottle QR to unlock the independent lab certificate and chemical purity monograph.
                   </p>
                 </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="p-3.5 rounded-2xl bg-white border border-stone-200 space-y-1">
-                  <div className="w-7 h-7 rounded-lg bg-amber-500 text-white font-bold text-xs flex items-center justify-center">
+                <div className="p-3.5 rounded-2xl bg-white border border-[#D4AF37]/30 space-y-1">
+                  <div className="w-7 h-7 rounded-lg bg-[#0B2419] text-[#D4AF37] font-bold text-xs flex items-center justify-center">
                     1
                   </div>
-                  <h5 className="font-bold text-xs text-[#0B2419]">Snap a Photo</h5>
+                  <h5 className="font-bold text-xs text-[#0B2419]">Locate Bottle Serial</h5>
                   <p className="text-[11px] text-stone-600 leading-relaxed">
-                    Take a clear picture of the leaking bottle, cracked cap, or damaged box showing the shipping label.
+                    Check the tamper-evident neck strip or back label for your individualized bottle code (e.g. #087 of 250).
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-white border border-stone-200 space-y-1">
-                  <div className="w-7 h-7 rounded-lg bg-amber-500 text-white font-bold text-xs flex items-center justify-center">
+                <div className="p-3.5 rounded-2xl bg-white border border-[#D4AF37]/30 space-y-1">
+                  <div className="w-7 h-7 rounded-lg bg-[#0B2419] text-[#D4AF37] font-bold text-xs flex items-center justify-center">
                     2
                   </div>
-                  <h5 className="font-bold text-xs text-[#0B2419]">Send via AI or WhatsApp</h5>
+                  <h5 className="font-bold text-xs text-[#0B2419]">Scan QR or Enter Code</h5>
                   <p className="text-[11px] text-stone-600 leading-relaxed">
-                    Share your photo and Order ID with our concierge or WhatsApp (+91 74309 85647) within 48 hours.
+                    Point your camera at the QR code or enter your serial on /verify to query the analytical batch ledger.
                   </p>
                 </div>
 
-                <div className="p-3.5 rounded-2xl bg-white border border-stone-200 space-y-1">
-                  <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white font-bold text-xs flex items-center justify-center">
+                <div className="p-3.5 rounded-2xl bg-white border border-[#D4AF37]/30 space-y-1">
+                  <div className="w-7 h-7 rounded-lg bg-[#0B2419] text-[#D4AF37] font-bold text-xs flex items-center justify-center">
                     3
                   </div>
-                  <h5 className="font-bold text-xs text-[#0B2419]">Instant Replacement</h5>
+                  <h5 className="font-bold text-xs text-[#0B2419]">Inspect Lab Assay</h5>
                   <p className="text-[11px] text-stone-600 leading-relaxed">
-                    Zero return shipment required. We dispatch a fresh bottle or deposit 100% courtesy credit into your wallet!
+                    View calibrated pH (5.51), spectrophotometric purity, heavy-metal screening (ND), and virgin custody stamp.
                   </p>
                 </div>
               </div>
 
               <div className="flex justify-end pt-2">
                 <Link
-                  to="/returns"
+                  to="/verify"
                   onClick={onClose}
-                  className="px-4 py-2 rounded-xl bg-[#0B2419] text-[#D4AF37] font-bold text-xs hover:bg-[#163c2a] transition-all"
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-[#D4AF37] to-[#F3E5AB] text-[#0B2419] font-bold text-xs shadow-md hover:brightness-105 transition-all"
                 >
-                  View Full Guarantee Policy →
+                  Verify Bottle Serial Now →
                 </Link>
               </div>
             </div>

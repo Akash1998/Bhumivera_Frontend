@@ -42,7 +42,7 @@ const SECTION_TO_PATH = {
 
 const SECTIONS = [
   { id: 'terms', code: 'PART I', label: 'Conditions of Use & Sale', count: 16 },
-  { id: 'orders', code: 'PART II', label: 'Orders, Hygiene Non-Return & Courtesy Credit', count: 12 },
+  { id: 'orders', code: 'PART II', label: 'Orders, Sanitary Virgin Custody & Concierge Care', count: 12 },
   { id: 'antifraud', code: 'PART III', label: 'Anti-Scam, 360° Unboxing & Chargeback Shield', count: 10 },
   { id: 'referrals', code: 'PART IV', label: 'Wallet, Loyalty, Spin & Referral Governance', count: 10 },
   { id: 'warranty_affiliate', code: 'PART V', label: 'E-Warranty, Authenticity, Affiliate & B2B Terms', count: 10 },
@@ -54,14 +54,14 @@ const SECTIONS = [
 
 const PROTECTION_MATRIX = [
   {
-    scenario: 'Physical Return of Delivered Face Wash / Shampoo / Elixir',
-    policy: 'Strictly Non-Returnable once delivered (Intimate Personal Care Hygiene & Safety Seal Rule).',
+    scenario: 'Delivered Personal Care Custody & Hygiene Standard',
+    policy: '100% Sealed Virgin Unit Custody. Sealed at compounding facility; serialized in small artisanal batches to guarantee absolute purity.',
     evidence: 'Sealed dispatch weight & warehouse CCTV record.',
     statute: 'Drugs & Cosmetics Act, 1940; Consumer Protection (E-Commerce) Rules, 2020.',
   },
   {
     scenario: 'Damaged, Leaking, Defective or Wrong Item on Arrival',
-    policy: '100% Free Replacement OR 100% Spendable Bhumivera Wallet Courtesy Credit (Zero Return Shipping).',
+    policy: 'Direct Concierge Review for Verified Patrons with direct refund or spendable store credit.',
     evidence: 'Mandatory uncut 360° unboxing video showing intact outer AWB & seal + photos within 48 hours of delivery.',
     statute: 'Consumer Protection Act, 2019; Indian Sale of Goods Act, 1930.',
   },
@@ -233,25 +233,25 @@ const LEGAL_CLAUSES = {
     },
     {
       num: '2.2',
-      title: '2. Strict non-returnability of personal care, skincare & haircare cosmetics',
+      title: '2. Artisanal Sealed Virgin Custody Standard for Personal Care Cosmetics',
       body: [
-        'Bhumivera formulations—including Face Washes, Shampoos, Hair Cleansers, Night Elixirs, Serums, and Botanical Gels—are intimate, microbial-sensitive personal hygiene and cosmetic products. In strict compliance with health, hygiene, and cosmetic safety standards under the Drugs and Cosmetics Act, 1940 and the sealed-hygiene-goods exception recognized under e-commerce consumer practice, DELIVERED PRODUCTS CANNOT BE PHYSICALLY RETURNED, EXCHANGED FOR CHANGE OF MIND, OR RESTOCKED ONCE DELIVERED.',
-        'Requests for return or refund based on change of mind, personal dislike of natural botanical fragrance, colour, texture, or ordering the wrong item by mistake are not eligible for return or refund after dispatch.',
+        'Bhumivera formulations—including Face Washes, Shampoos, Hair Cleansers, Night Elixirs, Serums, and Botanical Gels—are intimate, microbial-sensitive personal hygiene and cosmetic products compounded in small artisanal batches of 250 units. In compliance with health and cosmetic safety standards under the Drugs and Cosmetics Act, 1940 and sealed-hygiene custody practices, all delivered vessels are sealed with tamper-evident virgin security to guarantee 100% untouched botanical purity for every patron.',
+        'Each bottle carries a unique serial number verifiable on our /verify portal to inspect individual batch laboratory assays, calibrated pH, and chemical purity.',
       ],
     },
     {
       num: '2.3',
-      title: '3. The Bhumivera Courtesy Protection Guarantee (damaged, leaking or wrong item)',
+      title: '3. Dedicated Concierge Resolution for Verified Patrons',
       body: [
-        'Notwithstanding our strict hygiene non-return rule, every customer is protected by our Courtesy Protection Guarantee if a product arrives physically damaged in transit, leaking through a broken primary seal, manufacturing-defective, expired upon arrival, or materially different from the item ordered on the tax invoice.',
-        'Under Courtesy Protection, you NEVER have to ship a broken or leaking cosmetic bottle back to our warehouse. Upon verification of your claim under Clause 2.4, we provide either (a) an immediate, zero-cost express replacement of the affected item, or (b) 100% of the item’s paid net value credited directly to your spendable Bhumivera Wallet (or source refund where required by law).',
+        'Every loyal patron is protected by our Dedicated Concierge Service. If a parcel arrives with evidence of external transit compromise, leaking through a damaged primary seal, or materially discordant from the tax invoice, our executive concierge reviews the incident directly.',
+        'Upon verification of your claim under Clause 2.4, our concierge team processes direct resolution (including immediate wallet credit or direct payment refund) without requiring return shipping.',
       ],
     },
     {
       num: '2.4',
       title: '4. Mandatory 48-hour reporting window & 360° uncut unboxing video requirement',
       body: [
-        'To qualify for Courtesy Replacement, Wallet Credit, or any transit-damage/short-shipment/missing-item resolution, the customer MUST submit a claim within 48 hours of the courier’s recorded delivery timestamp.',
+        'To qualify for Concierge Resolution, Wallet Credit, or transit dispute resolution, the customer MUST submit a claim within 48 hours of the courier’s recorded delivery timestamp.',
         'Every claim for transit damage, leakage, missing item, wrong item, or empty/tampered parcel MUST be accompanied by a continuous, uncut, unedited 360-degree Unboxing Video recorded from start to finish. The video must clearly show: (i) all 6 sides (360°) of the unopened outer shipping box, (ii) the legible courier AWB shipping label and intact tamper-evident seal BEFORE any tape or seal is cut, (iii) the continuous opening of the box in frame without any pause, cut, splice, fast-forward, or camera obstruction, and (iv) the close-up condition of the inner product bottle, cap seal, and batch/serial label.',
         'Claims submitted after 48 hours of delivery, or claims accompanied only by post-opening photographs without a valid uncut 360° unboxing video (or with a video started after the outer seal was already cut and re-taped), will be respectfully declined as unverifiable post-delivery handling.',
       ],
@@ -319,9 +319,9 @@ const LEGAL_CLAUSES = {
   antifraud: [
     {
       num: '3.1',
-      title: '1. Zero-tolerance policy against e-commerce scams & return abuse',
+      title: '1. Zero-tolerance policy against e-commerce scams & claim abuse',
       body: [
-        'Bhumivera enforces a strict zero-tolerance policy against all forms of e-commerce fraud, including but not limited to: “empty-box” claims, “brick/stone-in-box” claims, item swapping (replacing genuine product with diluted or counterfeit liquid), intentional post-delivery bottle breakage to claim free replacements, courier-collusion false non-delivery claims, and abusive serial refund requests.',
+        'Bhumivera enforces a strict zero-tolerance policy against all forms of e-commerce fraud, including but not limited to: “empty-box” claims, “brick/stone-in-box” claims, item tampering (altering genuine botanical liquid), intentional post-delivery damage claims, courier-collusion false non-delivery claims, and abusive serial dispute attempts.',
       ],
     },
     {
@@ -336,7 +336,7 @@ const LEGAL_CLAUSES = {
       num: '3.3',
       title: '3. Chargeback fraud, false UPI disputes & bank reversal defense',
       body: [
-        'Filing a false chargeback, unauthorized-transaction dispute, or UPI cyber-cell complaint with a bank or payment gateway after receiving a valid order (or after receiving a Wallet credit/replacement) constitutes actionable financial fraud and breach of contract.',
+        'Filing a false chargeback, unauthorized-transaction dispute, or UPI cyber-cell complaint with a bank or payment gateway after receiving a valid order (or after receiving a concierge resolution) constitutes actionable financial fraud and breach of contract.',
         'Upon receipt of any disputed chargeback notice, Bhumivera automatically compiles and submits to the payment processor and acquiring bank: (a) the authenticated login/OTP/Passkey session log, (b) IP and device security telemetry, (c) the GST Tax Invoice, (d) warehouse CCTV packing footage and digital weight-scan certificate, and (e) carrier Proof of Delivery (POD) with OTP/signature confirmation. The disputing account is immediately frozen, all wallet/loyalty balances are forfeited, and the customer is liable for the full order amount plus gateway chargeback dispute fees and legal recovery costs.',
       ],
     },

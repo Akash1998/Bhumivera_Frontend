@@ -103,14 +103,12 @@ const Wishlist = lazyWithRetry(() => import("./pages/Wishlist.jsx"));
 const OrderTracking = lazyWithRetry(() => import("./pages/OrderTracking.jsx"));
 const Compare = lazyWithRetry(() => import("./pages/Compare.jsx"));
 const AddressBook = lazyWithRetry(() => import("./pages/AddressBook.jsx"));
-const Returns = lazyWithRetry(() => import("./pages/Returns.jsx"));
 const PurchaseProtection = lazyWithRetry(() => import("./pages/PurchaseProtection.jsx"));
 const Affiliate = lazyWithRetry(() => import("./pages/Affiliate.jsx"));
 const About = lazyWithRetry(() => import("./pages/About.jsx"));
 const Impact = lazyWithRetry(() => import("./pages/Impact.jsx"));
 const Legal = lazyWithRetry(() => import("./pages/Legal.jsx"));
 const BhumiveraScience = lazyWithRetry(() => import("./pages/BhumiveraScience.jsx"));
-const ReturnsCentre = lazyWithRetry(() => import("./pages/ReturnsCentre.jsx"));
 const MPGEBusinessLanding = lazyWithRetry(() => import("./pages/MPGEBusinessLanding.jsx"));
 const FlashSales = lazyWithRetry(() => import("./pages/FlashSales.jsx"));
 const SomaticRegistry = lazyWithRetry(() => import("./pages/SomaticRegistry.jsx"));
@@ -349,7 +347,8 @@ function AppContent() {
             {/* Bhumivera Brand & Partner Routes */}
             <Route path="/science" element={<BhumiveraScience />} />
             <Route path="/purchase-protection" element={<PurchaseProtection />} />
-            <Route path="/returns-centre" element={<ReturnsCentre />} />
+            <Route path="/returns-centre" element={<Navigate to="/verify" replace />} />
+            <Route path="/returns" element={<Navigate to="/verify" replace />} />
             <Route path="/sell-on-bhumivera" element={<SellOnBhumivera />} />
 
             {/* Campaign Inbound Routes */}
@@ -357,6 +356,8 @@ function AppContent() {
             <Route path="/mpgebusiness" element={<MPGEBusinessLanding />} />
 
             {/* Authenticity & E-Warranty */}
+            <Route path="/verify" element={<EWarranty />} />
+            <Route path="/genuinity" element={<EWarranty />} />
             <Route path="/ewarranty" element={<EWarranty />} />
             <Route path="/verify-product" element={<EWarranty />} />
             <Route path="/warranty" element={<EWarranty />} />
@@ -396,7 +397,6 @@ function AppContent() {
             <Route path="/order-success/:orderId?" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/address-book" element={<AddressBook />} />
-            <Route path="/returns" element={<Returns />} />
             <Route path="/affiliate" element={<Affiliate />} />
 
             {/* Warehouse System */}

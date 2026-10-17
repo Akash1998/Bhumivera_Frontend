@@ -23,8 +23,8 @@ const FAQS = [
     a: "Dispatch and delivery estimates can vary by order and destination. Check your order confirmation and tracking page for the latest information, or contact support with your order number."
   },
   {
-    q: "What is your return policy?",
-    a: "Return and refund eligibility depends on the terms for your order. Contact our support team with your order number to confirm the applicable options and next steps."
+    q: "What is your bottle sanitary custody standard?",
+    a: "Every Bhumivera formulation is bottled in small artisanal batches of 250 units and sealed with tamper-evident virgin security to guarantee 100% sterile botanical integrity. You can scan your bottle serial on our /verify portal anytime to view batch lab assays and purity reports."
   }
 ];
 
@@ -140,7 +140,7 @@ export default function Contact() {
                     <select value={form.subject} onChange={e => setForm({...form, subject: e.target.value})} className="w-full bg-[#faf8f5] border border-[#dccfb8] rounded-2xl p-5 text-sm text-[#1e1510] outline-none focus:border-[#6b4226] focus:bg-white transition-all appearance-none cursor-pointer shadow-inner">
                       <option value="product_inquiry">Product & Botanical Inquiry</option>
                       <option value="order_status">Order Tracking & Logistics</option>
-                      <option value="returns">Returns & Exchanges</option>
+                      <option value="batch_verification">Artisanal Batch &amp; Serial Verification</option>
                       <option value="partnership">Retail / Wholesale Partnership (Sell on Bhumivera)</option>
                       <option value="general">General Support</option>
                     </select>

@@ -49,12 +49,12 @@ const questions = [
     linkLabel: 'Track an order',
   },
   {
-    key: 'courtesy',
-    label: 'Courtesy Guarantee',
-    question: 'What if an item arrives damaged in transit?',
-    answer: 'As personal-care cosmetics, delivered bottles are non-returnable for hygiene safety. Submit your unboxing proof within 48 hours of delivery for a free replacement or 100% Wallet credit.',
-    link: '/returns',
-    linkLabel: 'Read Courtesy Policy',
+    key: 'genuinity',
+    label: 'Bottle Serial & Purity',
+    question: 'How do I test my bottle’s genuineness?',
+    answer: 'Every Bhumivera vessel is individually serialized in artisanal micro-runs of 250 bottles. Scan the bottle QR code or enter your serial on the Genuinity Test page to inspect real lab pH calibration and botanical origin.',
+    link: '/verify',
+    linkLabel: 'Verify bottle serial & genuinity',
   },
 ];
 
@@ -129,7 +129,7 @@ export default function PremiumHome() {
             <p className="mt-6 max-w-2xl text-sm leading-7 text-white/80 sm:text-base">
               Cold-pressed Himalayan Sea Buckthorn (Omega-7), Pampore Kashmiri Saffron, and fresh Aloe Vera inner fillet paired with pH 5.5 Niacinamide and Hyaluronic Acid. Every concentration printed openly on the label.
             </p>
-            <div className="mt-8 flex flex-wrap gap-4">
+            <div className="mt-8 flex flex-wrap gap-4 items-center">
               <Link
                 to="/shop"
                 className="inline-flex min-h-12 items-center gap-2.5 rounded-full bg-[#d4af37] px-7 py-3.5 text-xs font-bold uppercase tracking-widest text-[#09120e] transition hover:bg-[#e5c247]"
@@ -137,16 +137,16 @@ export default function PremiumHome() {
                 Shop the Collection <ArrowRight size={15} />
               </Link>
               <Link
-                to="/compare"
-                className="inline-flex min-h-12 items-center gap-2.5 rounded-full border border-white/25 bg-white/5 px-7 py-3.5 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-white/15"
+                to="/verify"
+                className="inline-flex min-h-12 items-center gap-2.5 rounded-full border border-[#d4af37] bg-[#d4af37]/15 px-6 py-3.5 text-xs font-bold uppercase tracking-widest text-[#d4af37] transition hover:bg-[#d4af37] hover:text-[#09120e] shadow-[0_0_15px_rgba(212,175,55,0.25)]"
               >
-                Compare Formulations
+                <ShieldCheck size={16} /> Verify Bottle Serial
               </Link>
               <Link
-                to="/somatic-registry"
-                className="inline-flex min-h-12 items-center gap-2.5 rounded-full border border-[#c8d6aa]/30 px-6 py-3.5 text-xs font-semibold text-[#c8d6aa] transition hover:bg-white/10"
+                to="/compare"
+                className="inline-flex min-h-12 items-center gap-2.5 rounded-full border border-white/25 bg-white/5 px-6 py-3.5 text-xs font-bold uppercase tracking-widest text-white transition hover:bg-white/15"
               >
-                Inspect Somatic Label Registry
+                Compare Formulations
               </Link>
             </div>
           </div>
@@ -165,8 +165,8 @@ export default function PremiumHome() {
               <p className="mt-1 font-semibold text-white">±0.5g Digital Scale Logged</p>
             </div>
             <div>
-              <p className="font-mono text-[10px] uppercase tracking-widest text-[#d4af37]">Buyer Protection</p>
-              <p className="mt-1 font-semibold text-white">48h Courtesy Replacement</p>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-[#d4af37]">Sanitary Custody</p>
+              <p className="mt-1 font-semibold text-emerald-300">100% Sealed &amp; Serial Tested</p>
             </div>
           </div>
         </div>
@@ -258,51 +258,93 @@ export default function PremiumHome() {
         </div>
       </section>
 
-      {/* 3. 4 CORE BOTANICAL SPECIMEN CARDS (UNIQUE PHOTOGRAPHS, NO VIDEO) */}
-      <section className="bg-[#101c16] py-16 text-white sm:py-24">
+      {/* 3. 4 CORE BOTANICAL SPECIMEN CARDS (GOLD & SILVER METALLIC PLATE REVAMP) */}
+      <section className="bg-gradient-to-b from-[#0a140f] via-[#0e1c15] to-[#0a120e] py-16 text-white sm:py-24 border-y border-[#d4af37]/20">
         <div className="mx-auto max-w-7xl px-6 sm:px-10">
-          <div className="flex flex-col justify-between gap-4 border-b border-white/10 pb-8 md:flex-row md:items-end">
+          <div className="flex flex-col justify-between gap-4 border-b border-[#d4af37]/30 pb-8 md:flex-row md:items-end">
             <div>
-              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-[#d4af37]">
-                Raw Botanical Provenance
+              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-[#d4af37] flex items-center gap-2">
+                <Sparkles size={13} className="text-[#d4af37]" /> Small-Batch Botanical Potency &amp; Origin
               </p>
-              <h2 className="mt-2 font-serif text-3xl sm:text-5xl">
-                Four Cornerstone Botanicals
+              <h2 className="mt-2 font-serif text-3xl sm:text-5xl text-white">
+                Cornerstone Botanical Actives
               </h2>
+              <p className="mt-2 max-w-xl text-xs sm:text-sm text-white/70">
+                Transcribed from our physical bottle labels: pure steam-activated charcoal, high-altitude Sea Buckthorn, sacred neem, haridra, and triphala saponins.
+              </p>
             </div>
-            <Link
-              to="/provenance-engine"
-              className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#dce7c5] hover:text-white"
-            >
-              Inspect 6 Harvest Corridors <ArrowRight size={14} />
-            </Link>
+            <div className="flex flex-wrap items-center gap-3">
+              <Link
+                to="/verify"
+                className="inline-flex items-center gap-2 rounded-full border border-[#d4af37] bg-[#d4af37]/10 px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-[#d4af37] transition hover:bg-[#d4af37] hover:text-[#0a120e] shadow-[0_0_15px_rgba(212,175,55,0.2)]"
+              >
+                <ShieldCheck size={14} /> Test Bottle Genuinity
+              </Link>
+              <Link
+                to="/provenance-engine"
+                className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-[#dce7c5] hover:text-white"
+              >
+                Inspect 6 Harvest Corridors <ArrowRight size={14} />
+              </Link>
+            </div>
           </div>
 
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {HOME_VISUAL_ASSETS.ingredients.map((ing) => (
+            {HOME_VISUAL_ASSETS.ingredients.map((ing, idx) => (
               <article
                 key={ing.name}
-                className="group relative overflow-hidden rounded-2xl border border-white/15 bg-[#0a130f]"
+                className={`group relative overflow-hidden rounded-3xl ${idx % 2 === 0 ? 'gold-plate-card' : 'silver-plate-card'} transition-all duration-500 hover:-translate-y-1`}
               >
-                <div className="aspect-[4/5] w-full overflow-hidden">
+                <div className="aspect-[4/5] w-full overflow-hidden relative">
                   <img
                     src={ing.image}
                     alt={ing.name}
                     loading="lazy"
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
+                  <div className={`absolute inset-0 bg-gradient-to-t ${ing.tone} via-black/40 to-transparent`} />
                 </div>
-                <div className={`absolute inset-0 bg-gradient-to-t ${ing.tone} via-black/35 to-transparent`} />
-                <div className="absolute inset-x-0 bottom-0 p-5">
-                  <span className="inline-block rounded bg-black/60 px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-widest text-[#d4af37]">
+                
+                {/* Gold/Silver Accent Top Ribbon */}
+                <div className="absolute top-3.5 left-3.5 right-3.5 flex justify-between items-center pointer-events-none">
+                  <span className="rounded-full bg-black/75 px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-widest text-[#d4af37] border border-[#d4af37]/40 backdrop-blur-md">
                     {ing.badge}
                   </span>
-                  <h3 className="mt-2 font-serif text-2xl text-white">{ing.name}</h3>
-                  <p className="text-[11px] font-medium text-[#c8d6aa]">{ing.botanical}</p>
+                </div>
+
+                <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-black/95 via-black/80 to-transparent">
+                  <h3 className="font-serif text-2xl text-white group-hover:text-[#d4af37] transition-colors">{ing.name}</h3>
+                  <p className="text-[11px] font-mono text-[#c8d6aa] mt-0.5">{ing.botanical}</p>
                   <p className="mt-2 text-xs leading-5 text-white/80">{ing.note}</p>
                 </div>
               </article>
             ))}
+          </div>
+
+          {/* LUXURY BRUSHED GOLD PLATE: SERIAL QR GENUINITY BANNER */}
+          <div className="mt-12 gold-plate rounded-3xl p-6 sm:p-8 border border-[#d4af37]/60 shadow-[0_0_30px_rgba(212,175,55,0.15)] flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-4">
+              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#d4af37]/20 border border-[#d4af37]/40 text-[#d4af37] shrink-0">
+                <QrCode size={28} />
+              </span>
+              <div>
+                <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#d4af37]">
+                  Artisanal Provenance &amp; Verification
+                </p>
+                <h3 className="font-serif text-xl sm:text-2xl font-bold text-white mt-0.5">
+                  Scan Your Bottle Serial Number
+                </h3>
+                <p className="text-xs sm:text-sm text-white/75 mt-1 max-w-xl">
+                  Inspect the live spectrophotometric purity assay, calibrated pH record, small-batch run allocation (250 bottles), and master herbalist seal for your specific bottle.
+                </p>
+              </div>
+            </div>
+            <Link
+              to="/verify"
+              className="inline-flex items-center gap-2 rounded-2xl bg-gradient-to-r from-[#d4af37] via-[#ecd57c] to-[#aa8529] px-7 py-4 text-xs font-bold uppercase tracking-widest text-[#0a120e] shadow-xl transition hover:brightness-110 shrink-0 active:scale-95"
+            >
+              <ShieldCheck size={16} /> Open Genuinity Test Report <ArrowRight size={14} />
+            </Link>
           </div>
         </div>
       </section>

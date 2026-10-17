@@ -69,59 +69,86 @@ export default function ProvenanceEngine() {
                 </button>
               ))}
             </div>
-            <div className="mt-4 rounded-xl border border-emerald-400/30 bg-emerald-950/50 p-4 text-xs">
+            <div className="mt-4 rounded-xl border border-[#d4af37]/40 bg-black/60 p-4 text-xs">
               <p className="font-bold text-[#dce7c5]">{matchedRegion.region}</p>
               <p className="mt-1 text-white/80">{matchedRegion.botanical}</p>
-              <p className="mt-1 text-emerald-300 font-mono text-[11px]">QC: {matchedRegion.verificationMethod}</p>
+              <p className="mt-1 text-[#d4af37] font-mono text-[11px]">QC: {matchedRegion.verificationMethod}</p>
+              <div className="mt-3 pt-3 border-t border-white/10 flex justify-end">
+                <Link
+                  to={`/verify?serial=${matchedRegion.batchPrefix === 'BV-CH26' ? 'BV-CH26-8841' : matchedRegion.batchPrefix === 'BV-SH26' ? 'BV-SH26-4409' : matchedRegion.batchPrefix === 'BV-KM26' ? 'BV-KK26-3019' : 'BV-SB26-1042'}`}
+                  className="inline-flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-[#d4af37] hover:underline"
+                >
+                  <ShieldCheck size={12} /> Inspect Lab Genuinity Report <ArrowRight size={11} />
+                </Link>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 6 Regional Provenance Cards with Unique Real-Life Photos */}
+      {/* 6 Regional Provenance Cards with Distinct Authentic Photos & Gold/Silver Plate Styling */}
       <section className="mx-auto max-w-7xl px-5 py-16 sm:px-8">
         <div className="mb-10 flex flex-col justify-between gap-4 border-b border-[#1b2921]/15 pb-6 md:flex-row md:items-end">
           <div>
-            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#536b4d]">
-              6 Verified Origin Corridors
+            <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-[#536b4d] flex items-center gap-1.5">
+              <ShieldCheck size={13} className="text-[#8b5a2b]" /> 6 Verified Origin Corridors
             </p>
-            <h2 className="mt-2 font-serif text-3xl sm:text-4xl">
+            <h2 className="mt-2 font-serif text-3xl sm:text-5xl text-[#142019]">
               Real-Life Harvesting &amp; Analytical Provenance Map
             </h2>
+            <p className="mt-2 text-xs sm:text-sm text-stone-600 max-w-2xl">
+              Authentic Indian botanical origins: high-altitude wild Ladakh sea buckthorn, Pampore Kashmir saffron, and Assam bamboo steam-activated carbon.
+            </p>
           </div>
           <Link
-            to="/ewarranty"
-            className="inline-flex items-center gap-2 rounded-xl bg-[#142019] px-5 py-3 text-xs font-bold uppercase tracking-wider text-white hover:bg-[#26392c]"
+            to="/verify"
+            className="inline-flex items-center gap-2 rounded-2xl bg-[#0e1914] px-6 py-3.5 text-xs font-bold uppercase tracking-widest text-[#d4af37] border border-[#d4af37]/40 hover:bg-[#1a2d21] shadow-lg transition"
           >
-            Verify Bottle Serial on E-Warranty <ArrowRight size={14} />
+            <ShieldCheck size={16} /> Verify Bottle Serial on Genuinity Test <ArrowRight size={14} />
           </Link>
         </div>
 
         <div className="grid gap-8 md:grid-cols-2 lg:grid-cols-3">
-          {PROVENANCE_PAGE_DATA.regions.map((region) => (
+          {PROVENANCE_PAGE_DATA.regions.map((region, idx) => (
             <article
               key={region.code}
-              className="flex flex-col overflow-hidden rounded-2xl border border-[#1b2921]/15 bg-white shadow-sm"
+              className={`flex flex-col overflow-hidden rounded-3xl border ${
+                idx % 2 === 0
+                  ? 'border-[#d4af37]/35 shadow-[0_10px_30px_rgba(212,175,55,0.08)] bg-white'
+                  : 'border-stone-300 shadow-md bg-[#faf9f5]'
+              } transition-all duration-300 hover:-translate-y-1`}
             >
-              <div className="aspect-[16/10] w-full overflow-hidden bg-[#142019]">
+              <div className="aspect-[16/10] w-full overflow-hidden bg-[#142019] relative">
                 <img
                   src={region.image}
                   alt={region.region}
                   loading="lazy"
                   className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
                 />
+                <span className="absolute top-3 left-3 rounded-full bg-black/75 px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-widest text-[#d4af37] border border-[#d4af37]/30 backdrop-blur-md">
+                  {region.code} · {region.batchPrefix}
+                </span>
               </div>
-              <div className="flex flex-1 flex-col justify-between p-6">
+              <div className="flex flex-1 flex-col justify-between p-6 sm:p-7">
                 <div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="rounded bg-[#eef0e6] px-2.5 py-1 font-mono text-[10px] font-bold text-[#26392c]">
-                      {region.code} · {region.batchPrefix}
+                  <div className="flex items-center justify-between gap-2 border-b border-stone-200 pb-3">
+                    <span className="font-mono text-[10px] font-bold text-[#26392c]">
+                      Corridor Active
                     </span>
-                    <span className="text-[11px] font-semibold text-[#6b4226]">{region.harvestWindow}</span>
+                    <span className="text-[11px] font-semibold text-[#8b5a2b]">{region.harvestWindow}</span>
                   </div>
-                  <h3 className="mt-3 font-serif text-xl font-bold text-[#142019]">{region.region}</h3>
+                  <h3 className="mt-3 font-serif text-2xl font-bold text-[#142019]">{region.region}</h3>
                   <p className="mt-1 text-xs font-semibold text-[#536b4d]">{region.botanical}</p>
                   <p className="mt-3 text-xs leading-6 text-stone-600">{region.verificationMethod}</p>
+                </div>
+                <div className="mt-6 pt-4 border-t border-stone-100 flex items-center justify-between">
+                  <span className="font-mono text-[10px] text-stone-500 uppercase tracking-widest">Small-Batch Run</span>
+                  <Link
+                    to={`/verify?serial=${region.batchPrefix === 'BV-CH26' ? 'BV-CH26-8841' : region.batchPrefix === 'BV-SH26' ? 'BV-SH26-4409' : region.batchPrefix === 'BV-KM26' ? 'BV-KK26-3019' : 'BV-SB26-1042'}`}
+                    className="inline-flex items-center gap-1 text-xs font-bold text-[#8b5a2b] hover:text-[#142019] transition"
+                  >
+                    View Batch Certificate <ArrowRight size={12} />
+                  </Link>
                 </div>
               </div>
             </article>

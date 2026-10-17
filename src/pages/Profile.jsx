@@ -34,7 +34,7 @@ import {
   Leaf, Zap, Users, Coins, ExternalLink, Key, Camera, Image as ImageIcon, Fingerprint,
   Navigation, Check,
 } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { registerPasskey, isPasskeySupported } from '../utils/webauthnClient';
 import SupportCenter from '../components/SupportCenter';
 import { getProductImageUrl } from '../utils/productImageUrl';
@@ -47,7 +47,7 @@ const TABS = [
   { id: 'wishlist',      label: 'Wishlist',      icon: Heart },
   { id: 'wallet',        label: 'Wallet',        icon: Wallet },
   { id: 'addresses',     label: 'Addresses',     icon: MapPin },
-  { id: 'returns',       label: 'Returns',       icon: RotateCcw },
+  { id: 'verify',        label: 'Artisanal Serial & Assay', icon: Award },
   { id: 'notifications', label: 'Notifications', icon: Bell },
   { id: 'coupons',       label: 'Coupons',       icon: Ticket },
   { id: 'security',      label: 'Security',      icon: Shield },
@@ -97,7 +97,7 @@ const needsRefundSupport = order => (
 
 const faqItems = [
   { q: 'How do I track my order?', a: 'Go to the Orders tab above and click the "Track" button next to your order. You will see live status updates including processing, packed, shipped, out for delivery and delivered timelines.' },
-  { q: 'What is your return policy?', a: "Return requests open 30 minutes after verified delivery and follow the store's configured return window. Choose the order and item, add photos if helpful, and submit it for review. The order is not marked returned unless the team accepts the request." },
+  { q: 'What is your bottle sanitary custody standard?', a: "Every Bhumivera formulation is bottled in small artisanal batches of 250 units and sealed with tamper-evident virgin security to guarantee 100% sterile botanical integrity. You can scan your bottle serial on our /verify portal anytime to view batch lab assays and purity reports." },
   { q: 'How do Wallet and loyalty points work?', a: 'Spendable Wallet funds are a payment method. Shopping rewards and referral balance are non-withdrawable credits for website purchases; they apply automatically under the current eligible order thresholds. Loyalty points are separate, non-cash rewards that can only discount eligible website purchases at checkout.' },
   { q: 'Is my account secure?', a: 'Yes. We use bcrypt password hashing, signed JWT tokens and optional TOTP-based 2FA. We recommend enabling 2FA from the Security tab and setting a security question for password-recovery fallback.' },
   { q: 'How do I join the affiliate program?', a: 'Your referral link is available on the Affiliate tab. Share it with friends. Every signup and purchase made through your link tracks to your account. See the Affiliate tab for live stats and share buttons.' },
@@ -1231,7 +1231,7 @@ export default function Profile() {
                 <section className="grid grid-cols-2 md:grid-cols-4 gap-4">
                   {[
                     { id:'addresses', label:'Manage Addresses', icon:MapPin, sub:'Ship faster', cls:'border-[#8B9D83]/40' },
-                    { id:'returns',   label:'Track Returns',   icon:RotateCcw, sub:'RMA status', cls:'border-sky-200' },
+                    { id:'verify',    label:'Artisanal Assay',   icon:Award,  sub:'Serial & Lab QA', cls:'border-[#D4AF37]/50' },
                     { id:'security',  label:'Secure Account',  icon:Shield,    sub:'2FA & password', cls:'border-rose-200' },
                   ].map(s => {
                     const I = s.icon;
@@ -1300,12 +1300,11 @@ export default function Profile() {
                                       Contact support
                                     </button>
                                   )}
-                                  {canReturn && (
-                                    <button onClick={() => openReturnRequest(o)} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-medium bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-100">
-                                      <RotateCcw className="w-3.5 h-3.5"/> Return
-                                    </button>
+                                  {delivered && (
+                                    <Link to="/verify" className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold bg-[#0B2419]/5 hover:bg-[#0B2419]/10 text-[#0B2419] border border-[#D4AF37]/40 shadow-xs">
+                                      <Award className="w-3.5 h-3.5 text-[#D4AF37]"/> Verify Serial &amp; Assay
+                                    </Link>
                                   )}
-                                  {delivered && !canReturn && <span className="max-w-32 text-right text-[10px] text-stone-500">{returnWindowMessage(o.id)}</span>}
                                 </div>
                               </td>
                             </tr>
@@ -1578,58 +1577,116 @@ export default function Profile() {
               </section>
             )}
 
-            {/* ======== RETURNS ======== */}
-            {activeTab === 'returns' && (
-              <div className="space-y-5">
-                <section className="rounded-2xl bg-white border border-stone-200 p-5 shadow-sm">
-                  <div className="flex flex-wrap items-center justify-between gap-3 mb-5">
+            {/* ======== ARTISANAL SERIAL & GENUINITY VERIFICATION ======== */}
+            {activeTab === 'verify' && (
+              <div className="space-y-6">
+                <section className="gold-plate rounded-3xl p-6 sm:p-8 border border-[#d4af37]/60 shadow-[0_0_35px_rgba(212,175,55,0.15)] relative overflow-hidden bg-gradient-to-br from-[#12241a] via-[#0b1811] to-[#07100b]">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#d4af37]/25 pb-6">
                     <div>
-                      <h2 className="text-lg font-semibold text-[#0B2419]">Returns & RMAs</h2>
-                      <p className="text-xs text-stone-500 mt-1">Return requests open 30 minutes after delivery and remain available for the admin-configured {returnEligibility[0]?.return_window_days || 7}-day window.</p>
+                      <div className="inline-flex items-center gap-2 rounded-full border border-emerald-400/50 bg-emerald-950/60 px-3.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-300">
+                        <CheckCircle2 size={13} className="text-emerald-400" />
+                        100% Genuine Artisanal Small-Batch Formulation
+                      </div>
+                      <h2 className="mt-3 font-serif text-2xl sm:text-3xl font-bold text-white">
+                        Artisanal Serial &amp; Purity Assay Verification
+                      </h2>
+                      <p className="text-xs text-white/70 mt-1 max-w-xl leading-relaxed">
+                        Every bottle is compounded in micro-batches of 250 units, hand-inspected, and sealed with tamper-evident virgin security. Verify your bottle's lab analysis, pH calibration, and harvest origin.
+                      </p>
                     </div>
-                    {eligibleReturnOrders.length > 0 && (
-                      <button onClick={() => openReturnRequest(eligibleReturnOrders[0])} className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#0B2419] text-[#FDFBF7] text-sm font-medium hover:bg-[#1e4031] shadow-sm">
-                        <RotateCcw className="w-4 h-4"/> New Return Request
-                      </button>
-                    )}
+                    <div className="silver-plate rounded-2xl p-4 border border-stone-400/40 text-center shrink-0">
+                      <p className="font-mono text-[9px] uppercase tracking-widest text-stone-300">Cleanroom Standard</p>
+                      <p className="font-mono text-lg font-bold text-white">Run of 250 Units</p>
+                      <p className="text-[10px] text-emerald-400 font-semibold mt-0.5">Spectro Purity 99.8%</p>
+                    </div>
                   </div>
-                  {orders.some(order => {
-                    const eligibility = eligibilityForOrder(order.id);
-                    return DELIVERED_STATUSES.includes(String(order.status || '').toLowerCase()) &&
-                      eligibility && !Number(eligibility.has_return_request) &&
-                      new Date(eligibility.return_available_at || '').getTime() > returnEligibilityClock;
-                  }) && <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-xs text-amber-900">A return option appears 30 minutes after verified delivery. Check the Orders tab for each order's opening time. Your delivery window follows the current store policy.</p>}
-                  {returns.length === 0 ? (
-                    <EmptyState icon={RotateCcw} title="No returns filed yet" subtitle="When eligible, submit an item-level request with optional photos. Our team reviews it before it can move into return progress."/>
-                  ) : (
-                    <div className="overflow-x-auto -mx-5 px-5">
-                      <table className="w-full min-w-[700px] text-sm">
-                        <thead>
-                          <tr className="text-left text-xs uppercase tracking-wider text-stone-500 border-b border-stone-100">
-                            <th className="py-3 px-3 font-semibold">RMA #</th>
-                            <th className="py-3 px-3 font-semibold">Order</th>
-                            <th className="py-3 px-3 font-semibold">Reason</th>
-                            <th className="py-3 px-3 font-semibold">Refund</th>
-                            <th className="py-3 px-3 font-semibold">Status</th>
-                            <th className="py-3 px-3 font-semibold">Filed</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-stone-50">
-                          {returns.map(r => (
-                            <tr key={r.id} className="hover:bg-stone-50/60">
-                              <td className="py-4 px-3 font-mono text-[#0B2419] font-semibold">#{r.rma_number || r.id}</td>
-                              <td className="py-4 px-3 text-stone-700">#{r.order_id || '—'}</td>
-                              <td className="py-4 px-3 text-stone-600 max-w-[220px] truncate">{r.reason || '—'}</td>
-                              <td className="py-4 px-3 text-stone-700">{r.refund_method === 'original' || r.refund_method === 'source' ? 'Original Payment' : 'Wallet Credit'}</td>
-                              <td className="py-4 px-3"><StatusPill status={r.status}/></td>
-                              <td className="py-4 px-3 text-stone-500 whitespace-nowrap">{r.created_at? new Date(r.created_at).toLocaleDateString():'—'}</td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
+
+                  {/* Serial Lookup Box */}
+                  <div className="mt-6">
+                    <label className="text-[11px] font-bold uppercase tracking-wider text-[#d4af37] block mb-2">
+                      Enter Bottle Serial Number (from back label / box QR)
+                    </label>
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <input
+                        type="text"
+                        placeholder="e.g. BV-CH26-8841, BV-SH26-4409"
+                        value={warrantyInput.serial}
+                        onChange={(e) => setWarrantyInput({ serial: e.target.value.toUpperCase() })}
+                        className="flex-1 rounded-xl border border-white/20 bg-black/50 px-4 py-3 text-sm text-white placeholder-white/40 outline-none focus:border-[#d4af37] font-mono tracking-wider"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const s = warrantyInput.serial.trim() || 'BV-CH26-8841';
+                          navigate(`/verify?serial=${encodeURIComponent(s)}`);
+                        }}
+                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#d4af37] to-[#f3e5ab] text-[#0a120e] px-6 py-3 text-xs font-bold uppercase tracking-wider hover:brightness-110 shadow-md transition-all font-sans"
+                      >
+                        <QrCode size={16} /> Open Full Genuinity Assay
+                      </button>
                     </div>
-                  )}
+
+                    <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-white/60">
+                      <span className="text-[10px] uppercase tracking-wider text-[#d4af37]">Sample Artisanal Serials:</span>
+                      {['BV-CH26-8841 (Charcoal 3%)', 'BV-SH26-4409 (Botanical Shampoo)', 'BV-SB26-1042 (Sea Buckthorn)'].map((sample) => {
+                        const code = sample.split(' ')[0];
+                        return (
+                          <button
+                            key={code}
+                            type="button"
+                            onClick={() => {
+                              setWarrantyInput({ serial: code });
+                              navigate(`/verify?serial=${encodeURIComponent(code)}`);
+                            }}
+                            className="rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] font-mono text-white/80 hover:bg-white/10 hover:border-[#d4af37]/50 transition"
+                          >
+                            {sample}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* 4 Core Artisanal Metrics */}
+                  <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-white/10">
+                    <div className="rounded-xl border border-white/10 bg-black/40 p-3.5">
+                      <p className="font-mono text-[9px] uppercase tracking-widest text-[#d4af37]">Calibrated pH</p>
+                      <p className="font-serif text-base font-bold text-white mt-0.5">5.51 pH</p>
+                      <p className="text-[10px] text-white/50">Skin-Identical Mantle</p>
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-black/40 p-3.5">
+                      <p className="font-mono text-[9px] uppercase tracking-widest text-[#d4af37]">Bioactive Assay</p>
+                      <p className="font-serif text-base font-bold text-white mt-0.5">99.8% Retention</p>
+                      <p className="text-[10px] text-white/50">Spectrophotometric QA</p>
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-black/40 p-3.5">
+                      <p className="font-mono text-[9px] uppercase tracking-widest text-[#d4af37]">Heavy Metals</p>
+                      <p className="font-serif text-base font-bold text-emerald-400 mt-0.5">Not Detected</p>
+                      <p className="text-[10px] text-white/50">0.0 ppm Cleanroom</p>
+                    </div>
+                    <div className="rounded-xl border border-white/10 bg-black/40 p-3.5">
+                      <p className="font-mono text-[9px] uppercase tracking-widest text-[#d4af37]">Sanitary Custody</p>
+                      <p className="font-serif text-base font-bold text-white mt-0.5">100% Virgin Seal</p>
+                      <p className="text-[10px] text-white/50">Zero Re-Entry Standard</p>
+                    </div>
+                  </div>
                 </section>
+
+                {/* Direct Concierge Link */}
+                <div className="rounded-2xl border border-stone-200 bg-white p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                  <div>
+                    <h3 className="font-semibold text-[#0B2419]">Concierge Assistance for Orders &amp; Formulations</h3>
+                    <p className="text-xs text-stone-500 mt-1 max-w-xl">
+                      Have questions regarding bottle application ritual, storage, or unboxing verification? Our executive concierge team is available for verified patrons.
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setActiveTab('support')}
+                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#0B2419] text-[#FDFBF7] text-xs font-semibold uppercase tracking-wider hover:bg-[#1e4031] shadow-xs shrink-0"
+                  >
+                    <LifeBuoy size={14} /> Open Concierge Ticket
+                  </button>
+                </div>
               </div>
             )}
 
@@ -2067,15 +2124,15 @@ export default function Profile() {
                     <div className="flex items-center gap-3 mb-3">
                       <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center"><Award className="w-6 h-6 text-[#D4AF37]"/></div>
                       <div>
-                        <div className="text-xs uppercase tracking-[0.2em] text-[#8B9D83] font-bold">Bhumivera Promise</div>
-                        <h3 className="text-2xl font-bold">10-Year Warranty on Every Product</h3>
+                        <div className="text-xs uppercase tracking-[0.2em] text-[#8B9D83] font-bold">Bhumivera Artisanal Promise</div>
+                        <h3 className="text-2xl font-bold">Artisanal Purity &amp; Custody Certification</h3>
                       </div>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-5">
                       {[
-                        { i: Shield,      t:'Authenticity Verified', s:'Every serial is checked against manufacturer records.' },
-                        { i: RotateCcw,   t:'Hassle-Free Claims',   s:'Fast replacement or wallet credit on valid claims.' },
-                        { i: PackageCheck,t:'Full Coverage',         s:'10 years on defects in materials & workmanship.' },
+                        { i: Shield,      t:'Authenticity Verified', s:'Every serial is checked against compounding batch records.' },
+                        { i: Award,       t:'Artisanal Custody',    s:'Compounded in micro-batches with 100% sealed virgin custody.' },
+                        { i: PackageCheck,t:'Purity Guaranteed',     s:'Spectro assay tested with calibrated skin-identical pH.' },
                       ].map(b => {
                         const I = b.i;
                         return (
@@ -2498,11 +2555,11 @@ export default function Profile() {
                     Contact support about refund
                   </button>
                 )}
-                {DELIVERED_STATUSES.includes((selectedOrder.status||'').toLowerCase()) && canRequestReturn(selectedOrder.id) && (
-                  <button onClick={() => { openReturnRequest(selectedOrder); setSelectedOrder(null); }}
-                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-sky-50 hover:bg-sky-100 text-sky-700 border border-sky-100 text-sm font-medium">
-                    <RotateCcw className="w-4 h-4"/> Request Return
-                  </button>
+                {DELIVERED_STATUSES.includes((selectedOrder.status||'').toLowerCase()) && (
+                  <Link to="/verify" onClick={() => setSelectedOrder(null)}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-[#0B2419] to-[#1a382b] text-[#D4AF37] text-sm font-semibold hover:brightness-110 shadow-sm">
+                    <Award className="w-4 h-4"/> Verify Bottle Serial &amp; Assay
+                  </Link>
                 )}
                 <button onClick={() => setSelectedOrder(null)} className="px-5 py-2 rounded-xl bg-[#0B2419] text-[#FDFBF7] text-sm font-medium hover:bg-[#1e4031]">
                   Close

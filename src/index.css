@@ -555,3 +555,75 @@ html.native-app .site-shell > footer {
 .management-shell ::-webkit-scrollbar-thumb:hover {
   background: rgba(212, 175, 55, 0.6);
 }
+
+/* LUXURY GOLD & SILVER METALLIC PLATES & LININGS */
+.gold-plate {
+  background: linear-gradient(135deg, #18231c 0%, #0d1611 100%);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.35), inset 0 1px 0 rgba(255, 235, 170, 0.25);
+  position: relative;
+}
+
+.gold-plate::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #d4af37, transparent);
+}
+
+.silver-plate {
+  background: linear-gradient(135deg, #1b2621 0%, #101814 100%);
+  border: 1px solid rgba(220, 230, 235, 0.35);
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+  position: relative;
+}
+
+.silver-plate::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 10%;
+  right: 10%;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.6), transparent);
+}
+
+.gold-border-glow {
+  border: 1px solid #d4af37;
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+}
+
+.silver-border-glow {
+  border: 1px solid rgba(200, 215, 225, 0.5);
+  box-shadow: 0 0 12px rgba(200, 215, 225, 0.15);
+}
+
+.metallic-gold-text {
+  background: linear-gradient(135deg, #faeec7 0%, #d4af37 50%, #a48227 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.metallic-silver-text {
+  background: linear-gradient(135deg, #ffffff 0%, #e2e8f0 50%, #94a3b8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.gold-plate-card {
+  border-radius: 1.25rem;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  background: radial-gradient(circle at top left, rgba(212, 175, 55, 0.08), transparent 70%), #0d1612;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(212, 175, 55, 0.15);
+}
+
+.silver-plate-card {
+  border-radius: 1.25rem;
+  border: 1px solid rgba(226, 232, 240, 0.25);
+  background: radial-gradient(circle at top right, rgba(255, 255, 255, 0.06), transparent 70%), #111a15;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+

@@ -43,7 +43,7 @@ export default function Footer() {
                 <Camera size={13} className="text-[#d4af37]" /> Bhumivera · Botanical care, thoughtfully made
               </p>
               <h2 className="mt-3 max-w-2xl font-serif text-3xl leading-tight sm:text-4xl lg:text-5xl">
-                Care, returned to its source.
+                Pure care, rooted in its source.
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-white/65 sm:text-base">
                 Explore the real-life botanicals, laboratory standards, and verified fulfilment practices behind every Bhumivera ritual.
@@ -57,7 +57,7 @@ export default function Footer() {
                     mode: 'navigation_rescue',
                     title: 'Bhumivera Client Concierge & Site Guide',
                     message:
-                      'How can I assist you today? I can help you compare formulations, check ingredient concentrations, track an order, verify courtesy replacement rules, or jump to any page on Bhumivera.',
+                      'How can I assist you today? I can help you compare formulations, check ingredient concentrations, track an order, test bottle serial genuinity, or jump to any page on Bhumivera.',
                   })
                 }
                 className="inline-flex min-h-11 items-center gap-2 bg-[#d4af37] px-4 py-2.5 text-xs font-bold text-[#071a12] transition-colors hover:bg-[#e5c247]"
@@ -245,13 +245,13 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link to="/returns" className="transition-colors hover:text-white">
-                Damaged Items &amp; Courtesy Credit
+              <Link to="/verify" className="transition-colors hover:text-[#d4af37]">
+                Verify Bottle Serial &amp; Genuinity
               </Link>
             </li>
             <li>
-              <Link to="/returns-centre" className="transition-colors hover:text-white">
-                Returns &amp; Resolution Centre
+              <Link to="/provenance-engine" className="transition-colors hover:text-white">
+                Botanical Sourcing &amp; Provenance
               </Link>
             </li>
             <li>
@@ -290,7 +290,7 @@ export default function Footer() {
             </li>
             <li>
               <Link to="/legal/shipping-hygiene" className="transition-colors hover:text-[#e5c247]">
-                Shipping &amp; Hygiene Non-Return
+                Shipping &amp; Sealed Sanitary Custody
               </Link>
             </li>
             <li>
@@ -394,10 +394,10 @@ export default function Footer() {
               <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#d4af37]" />
               <div>
                 <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#dce7c5]">
-                  Hygiene Seal &amp; Non-Return Standard
+                  100% Sealed Virgin Sanitary Custody
                 </h4>
                 <p className="mt-1 text-[11px] leading-5 text-white/55">
-                  Personal-care cosmetics are non-returnable once delivered under hygiene safety laws. Damaged arrivals qualify for Courtesy Replacement or Wallet Credit.
+                  Artisanal small-batch personal care cosmetics bottled with tamper-evident seals to preserve uncompromised hygiene and potency. Verified patrons receive direct concierge care.
                 </p>
               </div>
             </div>
@@ -465,7 +465,7 @@ export default function Footer() {
           </Link>
 
           <p className="text-center text-[9px] font-semibold uppercase tracking-[0.14em] text-white/40 lg:text-right">
-            © {currentYear} Bhumivera · Care, returned to its source
+            © {currentYear} Bhumivera · Pure care, rooted in its source
           </p>
         </div>
       </div>

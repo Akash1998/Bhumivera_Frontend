@@ -205,15 +205,15 @@ export const LOCALIZED_INTENT_RESPONSES = {
     DAMAGED_ITEM_CREDIT: {
       intent: 'DAMAGED_ITEM_CREDIT',
       reply: [
-        '🌿 **भूमिअवेरा स्वच्छता और सौजन्य सुरक्षा गारंटी**',
-        '*“उत्पाद वापस भेजने का कोई झंझट नहीं — तुरंत नया उत्पाद या 100% स्टोर क्रेडिट पाएं।”*',
-        '**भौतिक रूप से सामान वापस क्यों नहीं लिया जाता?**\nक्योंकि हमारे वानस्पतिक फॉर्मूलेशन (सी बकथॉर्न फेस वॉश, चारकोल फेस वॉश, कुमकुमादि नाइट एलिक्सिर, और वानस्पतिक शैम्पू) व्यक्तिगत देखभाल उत्पाद हैं। भारतीय स्वास्थ्य नियमों के अनुसार उपयोग किए गए या डिलीवर किए गए उत्पादों को दोबारा स्टॉक में नहीं रखा जा सकता। यह हर ग्राहक के लिए 100% शुद्धता की गारंटी देता है।',
-        '**यदि सामान क्षतिग्रस्त या लीक मिले तो क्या करें?**\nआपको उत्पाद पैक करके वापस भेजने की कोई ज़रूरत नहीं है! बस 3 आसान कदम उठाएं:\n1. **फोटो खींचें:** क्षतिग्रस्त बोतल, ढक्कन या पैकेजिंग की एक स्पष्ट फोटो लें।\n2. **हमें भेजें:** अपनी ऑर्डर आईडी के साथ यहाँ चैट में या व्हाट्सएप (+91 74309 85647) पर साझा करें।\n3. **तुरंत समाधान:** 24 घंटे में नया उत्पाद मुफ्त भेजा जाएगा या 100% सौजन्य क्रेडिट आपके वॉलेट में जोड़ दिया जाएगा!',
+        '🌿 **भूमिअवेरा स्वच्छता और अनूठी हस्तनिर्मित सुरक्षा नीति**',
+        '*“100% सीलबंद वर्जिन यूनिट्स — 250 बोतलों के छोटे बैच में तैयार।”*',
+        '**वर्जिन स्वच्छता कस्टडी:**\nहमारे सभी उत्पाद (सी बकथॉर्न फेस वॉश, चारकोल फेस वॉश, और बोटैनिकल शैम्पू) स्वच्छता सुरक्षा मानकों के अनुसार 100% गैर-वापसी योग्य और सीलबंद रखे जाते हैं ताकि हर ग्राहक को पूर्णतः शुद्ध और अप्रयुक्त उत्पाद मिले। प्रत्येक बोतल का एक अनूठा सीरियल नंबर होता है जिसे /verify पर देखा जा सकता है।',
+        '**पार्सल समस्या के लिए सहायता:**\nयदि पार्सल को डिलीवरी के समय कोई क्षति हुई है, तो डिलीवरी के 48 घंटों के भीतर 360° अनबॉक्सिंग वीडियो साझा करें। हमारे कंसीयर्ज द्वारा जांच के बाद हमारे नियमित ग्राहकों के लिए सीधे समाधान (रिफंड या क्रेडिट) प्रदान किया जाता है।',
       ].join('\n\n'),
       quickActions: [
-        { id: 'damaged_claim', label: '📸 क्षतिग्रस्त उत्पाद क्लेम करें', prompt: 'I want to submit a photo for a damaged bottle replacement or courtesy credit' },
+        { id: 'damaged_claim', label: '📹 अनबॉक्सिंग वीडियो सत्यापन भेजें', prompt: 'I want to submit an unboxing verification video to concierge' },
+        { id: 'verify_serial', label: '🔬 बोतल सीरियल और लैब टेस्ट जांचें', prompt: 'I want to verify the artisanal serial number and lab assay of my bottle' },
         { id: 'check_wallet', label: '💰 वॉलेट बैलेंस देखें', prompt: 'What is my current Bhumivera Wallet and Courtesy Credit balance?' },
-        { id: 'policy_page', label: '📋 पूरी गारंटी नीति पढ़ें', prompt: 'Show me the official Courtesy Credit & Hygiene Policy' },
       ],
     },
     ORDER_TRACKING: {
@@ -287,12 +287,13 @@ export const LOCALIZED_INTENT_RESPONSES = {
     DAMAGED_ITEM_CREDIT: {
       intent: 'DAMAGED_ITEM_CREDIT',
       reply: [
-        '🌿 **ভূমিভেরা স্বাস্থ্যবিধি ও সৌজন্য সুরক্ষা গ্যারান্টি**',
-        '*“পণ্য ফেরত পাঠানোর কোনো ঝামেলা নেই — তাৎক্ষণিক নতুন পণ্য অথবা ১০০% ওয়ালেট ক্রেডিট পান।”*',
-        'ফেসওয়াশ ও শ্যাম্পু ব্যক্তিগত প্রসাধন সামগ্রী হওয়ায় ডেলিভারির পর এগুলো ফেরত নেওয়া হয় না। যদি পণ্য ক্ষতিগ্রস্ত বা লিক হয়ে থাকে, তাহলে ছবি তুলে আমাদের জানান। আমরা ২৪ ঘণ্টার মধ্যে নতুন পণ্য বিনামূল্যে পাঠাব অথবা ওয়ালেটে সম্পূর্ণ ক্রেডিট প্রদান করব।',
+        '🌿 **ভূমিভেরা স্বাস্থ্যবিধি ও স্বাতন্ত্র্যসূচক আর্টয়সান সুরক্ষা নীতি**',
+        '*“১০০% সিলযুক্ত ভার্জিন ইউনিট — ২৫০ বোতলের ক্ষুদ্র ব্যাচে তৈরি।”*',
+        'ফেসওয়াশ ও শ্যাম্পু ব্যক্তিগত প্রসাধন সামগ্রী হওয়ায় স্বাস্থ্যবিধি মান বজায় রাখতে এগুলো ১০০% সিলযুক্ত ও ফেরত-অযোগ্য রাখা হয়। প্রতিটি বোতলের রয়েছে স্বতন্ত্র সিরিয়াল নম্বর যা /verify পেজে যাচাই করা যায়। কোনো সমস্যা থাকলে ডেলিভারির ৪৮ ঘণ্টার মধ্যে আনবক্সিং ভিডিও শেয়ার করুন; কনসিয়ার্জ টিম সরাসরি সমাধান করবে।',
       ].join('\n\n'),
       quickActions: [
-        { id: 'damaged_claim', label: '📸 ক্ষতিগ্রস্ত পণ্যের আবেদন', prompt: 'I want to submit a photo for a damaged bottle replacement or courtesy credit' },
+        { id: 'damaged_claim', label: '📹 আনবক্সিং ভিডিও যাচাই করুন', prompt: 'I want to submit an unboxing verification video to concierge' },
+        { id: 'verify_serial', label: '🔬 বোতল সিরিয়াল ও ল্যাব টেস্ট', prompt: 'I want to verify the artisanal serial number and lab assay of my bottle' },
         { id: 'check_wallet', label: '💰 ওয়ালেট ব্যালেন্স দেখুন', prompt: 'What is my current Bhumivera Wallet and Courtesy Credit balance?' },
       ],
     },
@@ -360,12 +361,13 @@ export const LOCALIZED_INTENT_RESPONSES = {
     DAMAGED_ITEM_CREDIT: {
       intent: 'DAMAGED_ITEM_CREDIT',
       reply: [
-        '🌿 **भूमीवेरा स्वच्छता आणि सौजन्य हमी**',
-        '*“उत्पादन परत पाठवण्याची कोणतीही कटकट नाही — त्वरित मोफत उत्पादन किंवा १००% वॉलेट क्रेडिट मिळवा.”*',
-        'फेस वॉश आणि शाम्पू ही वैयक्तिक काळजी उत्पादने असल्याने ती परत घेतली जात नाहीत. नुकसान किंवा लिकेज असल्यास त्वरित फोटो शेअर करा, आम्ही २४ तासांत मोफत नवीन उत्पादन पाठवू.',
+        '🌿 **भूमीवेरा स्वच्छता आणि आर्टिसनल सुरक्षा मानक**',
+        '*“१००% सीलबंद व्हर्जिन युनिट्स — २५० बाटल्यांच्या लहान बॅचमध्ये तयार.”*',
+        'फेस वॉश आणि शाम्पू ही वैयक्तिक काळजी उत्पादने असल्याने स्वच्छता मानकांनुसार ती १००% सीलबंद व गैर-परतावा ठेवली जातात. प्रत्येक बाटलीचा एक युनिक अनुक्रमांक असतो जो /verify वर तपासता येतो. कोणतीही अडचण असल्यास ४८ तासांत अनबॉक्सिंग व्हिडिओ शेअर करा; कॉन्सिअर्ज टीम थेट मदत करेल.',
       ].join('\n\n'),
       quickActions: [
-        { id: 'damaged_claim', label: '📸 नुकसान क्लेम दाखल करा', prompt: 'I want to submit a photo for a damaged bottle replacement or courtesy credit' },
+        { id: 'damaged_claim', label: '📹 अनबॉक्सिंग व्हिडिओ पडताळणी पाठवा', prompt: 'I want to submit an unboxing verification video to concierge' },
+        { id: 'verify_serial', label: '🔬 बाटली अनुक्रमांक आणि लॅब टेस्ट', prompt: 'I want to verify the artisanal serial number and lab assay of my bottle' },
       ],
     },
     ORDER_TRACKING: {
@@ -412,20 +414,20 @@ export function matchAiIntentWithFuzzy(rawQuery = '', targetLangOverride) {
     };
   }
 
-  // 2. Damaged / Leaking Item & Courtesy Credit Guarantee
+  // 2. Artisanal Sealed Virgin Custody & Concierge Resolution
   if (topIntent === 'DAMAGED_ITEM_CREDIT') {
     return {
       intent: 'DAMAGED_ITEM_CREDIT',
       reply: [
-        '🌿 **Bhumivera Cosmetics Hygiene & Courtesy Protection Guarantee**',
-        '*“Zero return shipping hassle — instant replacement or 100% store credit.”*',
-        '**Why No Physical Returns?**\nBecause our botanical formulations (Sea Buckthorn Face Wash, Charcoal Face Wash, Kumkumadi Night Elixir, and Botanical Shampoo) are intimate personal care cosmetics, Indian health regulations prohibit restocking or reselling delivered bottles. This guarantees 100% sterile purity for every customer.',
-        '**What If Your Item Arrived Damaged, Leaking, or Defective?**\nYou **NEVER** have to pack or return the product! Follow our 3-step courtesy resolution:\n1. **Snap a Photo:** Take a quick picture of the damaged bottle, leaky cap, or package with the shipping label.\n2. **Share with Us:** Message our concierge here, on WhatsApp (+91 74309 85647), or email support@bhumivera.com with your Order ID.\n3. **Instant Resolution:** We approve within 24 hours! Choose between a **Free Express Replacement** dispatched to your door OR **100% Courtesy Store Credit** deposited directly into your Bhumivera Wallet.',
+        '🌿 **Bhumivera Artisanal Custody & Executive Concierge Care**',
+        '*“100% Sealed Virgin Unit Custody — Artisanal Small-Batch Formulations.”*',
+        '**Sealed Virgin Custody:**\nBecause our botanical formulations (Activated Bamboo Charcoal Face Wash, Botanical Hair Cleanser, and Sea Buckthorn Face Wash) are intimate personal care cosmetics, each bottle is compounded in small artisanal runs of 250 units and sealed with tamper-evident security to guarantee 100% sterile virgin purity.',
+        '**Verification & Concierge Resolution:**\nEvery bottle carries a serialized QR code verifiable on our /verify portal for calibrated pH (5.51) and spectrophotometric assays. If any parcel exhibits transit compromise upon arrival, submit your continuous 360° unboxing video showing the intact outer AWB label within 48 hours. Our executive concierge team directly reviews claims for verified patrons and coordinates immediate resolution.',
       ].join('\n\n'),
       quickActions: [
-        { id: 'damaged_claim', label: '📸 Submit Damaged Item Claim', prompt: 'I want to submit a photo for a damaged bottle replacement or courtesy credit' },
-        { id: 'check_wallet', label: '💰 View My Wallet Balance', prompt: 'What is my current Bhumivera Wallet and Courtesy Credit balance?' },
-        { id: 'policy_page', label: '📋 View Full Guarantee Policy', prompt: 'Show me the official Courtesy Credit & Hygiene Policy' },
+        { id: 'damaged_claim', label: '📹 Submit Unboxing Video Verification', prompt: 'I want to submit an unboxing verification video to concierge' },
+        { id: 'verify_serial', label: '🔬 Verify Bottle Serial & Lab Assay', prompt: 'I want to verify the artisanal serial number and lab assay of my bottle' },
+        { id: 'check_wallet', label: '💰 View My Wallet Balance', prompt: 'What is my current Bhumivera Wallet balance?' },
       ],
     };
   }
