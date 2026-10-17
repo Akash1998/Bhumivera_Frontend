@@ -91,7 +91,7 @@ export default function ProvenanceEngine() {
         <div className="mb-10 flex flex-col justify-between gap-4 border-b border-[#1b2921]/15 pb-6 md:flex-row md:items-end">
           <div>
             <p className="font-mono text-[10px] font-bold uppercase tracking-[0.25em] text-[#536b4d] flex items-center gap-1.5">
-              <ShieldCheck size={13} className="text-[#8b5a2b]" /> 6 Verified Origin Corridors
+              <ShieldCheck size={13} className="text-[#d4af37]" /> 6 Verified Origin Corridors
             </p>
             <h2 className="mt-2 font-serif text-3xl sm:text-5xl text-[#142019]">
               Real-Life Harvesting &amp; Analytical Provenance Map
@@ -135,7 +135,7 @@ export default function ProvenanceEngine() {
                     <span className="font-mono text-[10px] font-bold text-[#26392c]">
                       Corridor Active
                     </span>
-                    <span className="text-[11px] font-semibold text-[#8b5a2b]">{region.harvestWindow}</span>
+                    <span className="text-[11px] font-semibold text-[#d4af37]">{region.harvestWindow}</span>
                   </div>
                   <h3 className="mt-3 font-serif text-2xl font-bold text-[#142019]">{region.region}</h3>
                   <p className="mt-1 text-xs font-semibold text-[#536b4d]">{region.botanical}</p>
@@ -145,7 +145,7 @@ export default function ProvenanceEngine() {
                   <span className="font-mono text-[10px] text-stone-500 uppercase tracking-widest">Small-Batch Run</span>
                   <Link
                     to={`/verify?serial=${region.batchPrefix === 'BV-CH26' ? 'BV-CH26-8841' : region.batchPrefix === 'BV-SH26' ? 'BV-SH26-4409' : region.batchPrefix === 'BV-KM26' ? 'BV-KK26-3019' : 'BV-SB26-1042'}`}
-                    className="inline-flex items-center gap-1 text-xs font-bold text-[#8b5a2b] hover:text-[#142019] transition"
+                    className="inline-flex items-center gap-1 text-xs font-bold text-[#d4af37] hover:text-[#142019] transition"
                   >
                     View Batch Certificate <ArrowRight size={12} />
                   </Link>

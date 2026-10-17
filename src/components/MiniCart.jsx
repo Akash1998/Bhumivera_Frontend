@@ -683,11 +683,11 @@ export default function MiniCart() {
               </div>
               <div className="mt-2 flex items-start gap-2 text-xs leading-5 text-[#526b4d]">
                 {rulePreview?.gifts?.length > 0
-                  ? <><Gift size={14} className="mt-0.5 shrink-0 text-[#8b5a2b]"/><span>{rulePreview.gifts[0].productName ? `${rulePreview.gifts[0].productName} unlocked` : 'A free gift is unlocked'}{rulePreview.gifts.length > 1 ? ` and ${rulePreview.gifts.length - 1} more` : ''}</span></>
+                  ? <><Gift size={14} className="mt-0.5 shrink-0 text-[#d4af37]"/><span>{rulePreview.gifts[0].productName ? `${rulePreview.gifts[0].productName} unlocked` : 'A free gift is unlocked'}{rulePreview.gifts.length > 1 ? ` and ${rulePreview.gifts.length - 1} more` : ''}</span></>
                   : upcomingCartReward
-                    ? <><Gift size={14} className="mt-0.5 shrink-0 text-[#8b5a2b]"/><span>Add {formatPrice(upcomingCartReward.missingAmount)} to unlock {upcomingCartReward.badge || upcomingCartReward.name}</span></>
+                    ? <><Gift size={14} className="mt-0.5 shrink-0 text-[#d4af37]"/><span>Add {formatPrice(upcomingCartReward.missingAmount)} to unlock {upcomingCartReward.badge || upcomingCartReward.name}</span></>
                     : unlockedCartReward
-                      ? <><Gift size={14} className="mt-0.5 shrink-0 text-[#8b5a2b]"/><span>{unlockedCartReward.badge || unlockedCartReward.name} reward unlocked</span></>
+                      ? <><Gift size={14} className="mt-0.5 shrink-0 text-[#d4af37]"/><span>{unlockedCartReward.badge || unlockedCartReward.name} reward unlocked</span></>
                       : <><ShieldCheck size={14} className="mt-0.5 shrink-0"/><span>Rewards are applied automatically when your cart qualifies.</span></>}
               </div>
               <div className="mt-2 flex items-center gap-2 border-t border-[#edf0e9] pt-2 text-xs text-[#526b4d]">
@@ -719,8 +719,8 @@ export default function MiniCart() {
                     </div>
                     <span className="text-sm font-bold text-[#14251c]">{formatPrice(price * (Number(item.quantity) || 1))}</span>
                   </div>
-                  <button type="button" disabled={itemBusy} onClick={() => saveForLater(item)} className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-semibold text-stone-500 transition hover:text-[#8b5a2b] disabled:cursor-wait">
-                    <Heart size={13} fill={saved ? 'currentColor' : 'none'} className={saved ? 'text-[#8b5a2b]' : ''}/>
+                  <button type="button" disabled={itemBusy} onClick={() => saveForLater(item)} className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-semibold text-stone-500 transition hover:text-[#d4af37] disabled:cursor-wait">
+                    <Heart size={13} fill={saved ? 'currentColor' : 'none'} className={saved ? 'text-[#d4af37]' : ''}/>
                     {saved ? 'Saved · remove from cart' : 'Save for later'}
                   </button>
                 </div>
@@ -728,8 +728,8 @@ export default function MiniCart() {
             })}
 
             {!checkoutOpen && <div className="grid grid-cols-2 gap-2 rounded-xl border border-[#e8dcc4] bg-[#fffdf8] p-3 text-[10px] font-semibold text-[#35533c]">
-              <span className="flex items-center gap-1.5"><ShieldCheck size={14} className="text-[#8b5a2b]"/>Secure checkout</span>
-              <span className="flex items-center gap-1.5"><BadgeCheck size={14} className="text-[#8b5a2b]"/>Customer-approved reviews</span>
+              <span className="flex items-center gap-1.5"><ShieldCheck size={14} className="text-[#d4af37]"/>Secure checkout</span>
+              <span className="flex items-center gap-1.5"><BadgeCheck size={14} className="text-[#d4af37]"/>Customer-approved reviews</span>
             </div>}
 
             {checkoutOpen && <section className="mini-cart-checkout" aria-label="Checkout details">
@@ -752,7 +752,7 @@ export default function MiniCart() {
               {!user ? <button type="button" onClick={() => { setIsCartOpen(false); navigate('/login', { state: { from: '/checkout', reopenCart: true } }); }} className="w-full rounded-xl bg-[#2C3E2D] px-4 py-3 text-sm font-semibold text-white">Sign in to continue</button> : <>
                 {checkoutStep === 1 && <>
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-3"><p className="text-xs font-bold text-[#35533c]">Delivery address</p><button type="button" onClick={() => setAddressFormOpen(open => !open)} className="text-xs font-semibold text-[#8b5a2b] underline underline-offset-2">{addressFormOpen ? 'Cancel' : '+ Add address'}</button></div>
+                  <div className="flex items-center justify-between gap-3"><p className="text-xs font-bold text-[#35533c]">Delivery address</p><button type="button" onClick={() => setAddressFormOpen(open => !open)} className="text-xs font-semibold text-[#d4af37] underline underline-offset-2">{addressFormOpen ? 'Cancel' : '+ Add address'}</button></div>
                   {addresses.length > 0 ? addresses.map(address => <label key={address.id} className={`flex cursor-pointer gap-2 rounded-xl border bg-white p-3 text-xs ${String(selectedAddress) === String(address.id) ? 'border-[#536b4d] ring-1 ring-[#536b4d]/30' : 'border-[#e8dcc4]'}`}>
                     <input type="radio" name="mini-cart-address" value={address.id} checked={String(selectedAddress) === String(address.id)} onChange={() => setSelectedAddress(String(address.id))} className="mt-0.5 accent-[#35533c]"/>
                     <span className="min-w-0"><strong className="block text-[#263d31]">{address.full_name || address.fullName} · {address.label || 'Address'}</strong><span className="mt-1 block leading-5 text-stone-500">{address.address_line1 || address.street_address || address.line1}{address.address_line2 ? `, ${address.address_line2}` : ''}, {address.city}, {address.state} {address.pincode || address.postal_code}</span><span className="mt-1 block text-stone-500">{address.phone || address.phone_number}</span></span>
@@ -779,14 +779,14 @@ export default function MiniCart() {
                     <span className="mt-1 block text-[10px] text-stone-500">3–5 days · {premiumDeliveryCost ? formatPrice(premiumDeliveryCost) : 'Free'}</span>
                   </button>}
                 </div>
-                {subtotal < PREMIUM_DELIVERY_THRESHOLD && shippingMethod === 'STANDARD' && <button type="button" onClick={() => setShippingMethod('PREMIUM')} className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#8b5a2b] underline underline-offset-2">
+                {subtotal < PREMIUM_DELIVERY_THRESHOLD && shippingMethod === 'STANDARD' && <button type="button" onClick={() => setShippingMethod('PREMIUM')} className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#d4af37] underline underline-offset-2">
                   Want it sooner? Upgrade to Premium for {formatPrice(PREMIUM_DELIVERY_SURCHARGE)} extra <ArrowRight size={12}/>
                 </button>}
                 </>}
                 {checkoutStep === 2 && <>
                 <div className="flex items-start justify-between gap-3 rounded-xl border border-[#e1e3d9] bg-white p-3 text-xs">
                   <div className="min-w-0"><p className="font-semibold text-[#35533c]">{selectedAddressDetails?.full_name || selectedAddressDetails?.fullName || 'Delivery address'} · {selectedAddressDetails?.label || 'Address'}</p><p className="mt-1 truncate text-stone-500">{selectedAddressDetails ? `${selectedAddressDetails.address_line1 || selectedAddressDetails.street_address || selectedAddressDetails.line1}, ${selectedAddressDetails.city}, ${selectedAddressDetails.state} ${selectedAddressDetails.pincode || selectedAddressDetails.postal_code}` : 'Address selected'}</p><p className="mt-1 text-stone-500">{shippingMethod === 'PREMIUM' ? 'Premium delivery · 3–5 days' : 'Standard delivery · 5–7 days'} · {shippingCost ? formatPrice(shippingCost) : 'Free'}</p></div>
-                  <button type="button" onClick={() => setCheckoutStep(1)} className="shrink-0 font-semibold text-[#8b5a2b] underline underline-offset-2">Edit</button>
+                  <button type="button" onClick={() => setCheckoutStep(1)} className="shrink-0 font-semibold text-[#d4af37] underline underline-offset-2">Edit</button>
                 </div>
                 <div className="space-y-2">
                   <p className="text-xs font-bold text-[#35533c]">Payment method</p>
@@ -811,7 +811,7 @@ export default function MiniCart() {
 
             {!checkoutOpen && <section className="overflow-hidden rounded-2xl border border-[#e8dcc4] bg-white">
               <button type="button" onClick={() => setOffersOpen(open => !open)} aria-expanded={offersOpen} className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
-                <span className="flex items-center gap-2"><span className="rounded-lg bg-[#f5f1e8] p-2 text-[#8b5a2b]"><Tag size={15}/></span><span><span className="block text-sm font-semibold text-[#2C3E2D]">Coupons &amp; offers</span><span className="block text-[10px] text-stone-500">{offersToShow.length ? `${offersToShow.length} available offers — best savings first` : 'Enter a coupon code'}</span></span></span>
+                <span className="flex items-center gap-2"><span className="rounded-lg bg-[#f5f1e8] p-2 text-[#d4af37]"><Tag size={15}/></span><span><span className="block text-sm font-semibold text-[#2C3E2D]">Coupons &amp; offers</span><span className="block text-[10px] text-stone-500">{offersToShow.length ? `${offersToShow.length} available offers — best savings first` : 'Enter a coupon code'}</span></span></span>
                 {offersOpen ? <ChevronUp size={16} className="text-stone-500"/> : <ChevronDown size={16} className="text-stone-500"/>}
               </button>
               {offersOpen && <div className="border-t border-[#f0e8da] p-3">
@@ -824,7 +824,7 @@ export default function MiniCart() {
                   <p className="border-t border-emerald-200 pt-1.5 text-[10px] leading-4 text-emerald-800">Maximum {formatPrice(SHOPPING_WALLET_REWARD_CAP)}. Shopping-wallet credit only—not cash, not withdrawable, and not deducted from today’s total.</p>
                 </section>}
                 <form onSubmit={validateCoupon} className="flex gap-2">
-                  <input value={couponCode} onChange={event => setCouponCode(event.target.value)} aria-label="Coupon code" placeholder="Enter coupon code" className="min-w-0 flex-1 rounded-xl border border-dashed border-stone-300 px-3 py-2.5 text-sm outline-none focus:border-[#8b5a2b]"/>
+                  <input value={couponCode} onChange={event => setCouponCode(event.target.value)} aria-label="Coupon code" placeholder="Enter coupon code" className="min-w-0 flex-1 rounded-xl border border-dashed border-stone-300 px-3 py-2.5 text-sm outline-none focus:border-[#d4af37]"/>
                   <button disabled={couponBusy || !couponCode.trim()} className="rounded-xl bg-[#2C3E2D] px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{couponBusy ? 'Checking…' : 'Apply'}</button>
                 </form>
                 {couponMessage && <p role="status" className={`mt-2 text-xs ${appliedCoupon && couponDiscount > 0 ? 'text-emerald-700' : appliedCoupon ? 'text-amber-700' : 'text-rose-700'}`}>{couponMessage}</p>}
@@ -867,7 +867,7 @@ export default function MiniCart() {
                                 : 'Not eligible with the current cart discounts.'}
                         </span>
                       </span>
-                      <span className="shrink-0 text-right text-[9px] font-bold uppercase tracking-wider text-[#8b5a2b]">
+                      <span className="shrink-0 text-right text-[9px] font-bold uppercase tracking-wider text-[#d4af37]">
                         {isSpinReward ? 'Spin reward' : index === 0 && offer.estimatedSaving > 0 ? 'Best saving' : offer.is_personal ? 'Your reward' : 'Apply'}
                       </span>
                     </button>
@@ -889,8 +889,8 @@ export default function MiniCart() {
                 <div className="grid grid-cols-2 gap-2">
                   {recommendationsToShow.slice(0, 2).map(product => <article key={product.id || product._id} className="flex min-w-0 items-center gap-2 rounded-xl border border-[#e8dcc4] bg-white p-2">
                     <img src={getImageUrl(product.image_url || product.images || product.image)} alt={product.name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-12 w-12 shrink-0 rounded-lg bg-[#faf8f5] object-contain p-1"/>
-                    <div className="min-w-0 flex-1"><p className="line-clamp-2 text-[10px] font-semibold leading-tight text-[#2C3E2D]">{product.name}</p><p className="mt-1 text-[10px] font-bold text-[#8b5a2b]">{formatPrice(product.discount_price || product.price)}</p></div>
-                    <button type="button" aria-label={`Add ${product.name} to cart`} onClick={() => addToCart(product)} className="shrink-0 rounded-lg border border-[#e8dcc4] p-1.5 text-[#8b5a2b] hover:bg-[#8b5a2b] hover:text-white"><Plus size={14}/></button>
+                    <div className="min-w-0 flex-1"><p className="line-clamp-2 text-[10px] font-semibold leading-tight text-[#2C3E2D]">{product.name}</p><p className="mt-1 text-[10px] font-bold text-[#d4af37]">{formatPrice(product.discount_price || product.price)}</p></div>
+                    <button type="button" aria-label={`Add ${product.name} to cart`} onClick={() => addToCart(product)} className="shrink-0 rounded-lg border border-[#e8dcc4] p-1.5 text-[#d4af37] hover:bg-[#d4af37] hover:text-white"><Plus size={14}/></button>
                   </article>)}
                 </div>
               </div>}
@@ -900,7 +900,7 @@ export default function MiniCart() {
           {!checkoutOpen && wishlist.length > 0 && <section className="overflow-hidden rounded-2xl border border-[#e8dcc4] bg-white" aria-label="Saved for later items">
             <h3 id="saved-items-title" className="sr-only">Saved for later</h3>
             <button type="button" aria-expanded={savedListOpen} aria-controls="mini-cart-saved-items" onClick={() => setSavedListOpen(open => !open)} className="flex w-full items-center justify-between gap-3 p-4 text-left">
-              <span className="flex items-center gap-2 text-sm font-semibold text-[#2C3E2D]"><Heart size={16} className="text-[#8b5a2b]"/>Saved for later <span className="rounded-full bg-[#f5f0e8] px-2 py-0.5 text-[10px] text-stone-600">{wishlist.length}</span></span>
+              <span className="flex items-center gap-2 text-sm font-semibold text-[#2C3E2D]"><Heart size={16} className="text-[#d4af37]"/>Saved for later <span className="rounded-full bg-[#f5f0e8] px-2 py-0.5 text-[10px] text-stone-600">{wishlist.length}</span></span>
               {savedListOpen ? <ChevronUp size={16} className="text-stone-500"/> : <ChevronDown size={16} className="text-stone-500"/>}
             </button>
             {savedListOpen && <div id="mini-cart-saved-items" className="max-h-64 space-y-2 overflow-y-auto border-t border-[#f0e8da] p-3">
@@ -910,7 +910,7 @@ export default function MiniCart() {
                 const savedBusy = busySavedItem === String(id);
                 return <article key={id} className="flex items-center gap-2 rounded-xl bg-[#faf8f5] p-2">
                   <img src={getImageUrl(product.image_url || product.images || product.image)} alt={product.name || 'Saved product'} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-11 w-11 shrink-0 rounded-lg bg-white object-contain p-1"/>
-                  <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-[#2C3E2D]">{product.name || 'Saved product'}</p><p className="mt-1 text-[10px] font-bold text-[#8b5a2b]">{formatPrice(product.discount_price || product.price)}</p></div>
+                  <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-[#2C3E2D]">{product.name || 'Saved product'}</p><p className="mt-1 text-[10px] font-bold text-[#d4af37]">{formatPrice(product.discount_price || product.price)}</p></div>
                   <button type="button" disabled={busySavedItem !== null} onClick={() => moveSavedItemToCart(savedItem)} className="rounded-lg bg-[#2C3E2D] px-2.5 py-2 text-[10px] font-semibold text-white transition hover:bg-[#1b2c20] disabled:cursor-wait disabled:opacity-50">{savedBusy ? 'Moving…' : 'Add'}</button>
                   <button type="button" disabled={busySavedItem !== null} aria-label={`Remove ${product.name || 'saved product'} from wishlist`} onClick={() => removeSavedItem(id)} className="rounded-lg p-2 text-stone-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:cursor-wait"><Trash2 size={14}/></button>
                 </article>;
@@ -942,7 +942,7 @@ export default function MiniCart() {
               className={`${checkoutOpen && summaryExpanded ? 'min-h-0 flex-1 overflow-y-auto pr-1' : ''} ${checkoutOpen && !summaryExpanded ? 'hidden' : 'space-y-2'}`}
             >
             {discount > 0 && <div className="flex justify-between text-[#526b4d]"><span>Cart offers</span><span>−{formatPrice(discount)}</span></div>}
-            {couponDiscount > 0 && <div className="flex justify-between gap-3 font-extrabold text-[#8b5a2b]"><span className="min-w-0 truncate">Coupon{appliedCoupon?.code ? ` · ${appliedCoupon.code}` : ''}</span><span className="shrink-0">−{formatPrice(couponDiscount)}</span></div>}
+            {couponDiscount > 0 && <div className="flex justify-between gap-3 font-extrabold text-[#d4af37]"><span className="min-w-0 truncate">Coupon{appliedCoupon?.code ? ` · ${appliedCoupon.code}` : ''}</span><span className="shrink-0">−{formatPrice(couponDiscount)}</span></div>}
             {tierDiscount > 0 && <div className="flex justify-between text-[#526b4d]"><span>Membership saving</span><span>−{formatPrice(tierDiscount)}</span></div>}
             {referralWalletAmount > 0 && <div className="flex justify-between font-semibold text-[#526b4d]"><span>Shopping wallet applied</span><span>−{formatPrice(referralWalletAmount)}</span></div>}
             {loyalty?.enabled && Number(loyalty?.pointsBalance) >= Number(loyalty?.minimumRedemptionPoints) && pointsRedemption.points > 0 && <label className="flex items-center justify-between gap-3 font-semibold text-emerald-700"><span className="flex items-center gap-2"><input type="checkbox" checked={redeemLoyaltyPoints} onChange={event => setRedeemLoyaltyPoints(event.target.checked)} className="accent-[#35533c]"/>Use {(redeemLoyaltyPoints ? loyaltyPointsToRedeem : pointsRedemption.points).toLocaleString()} loyalty points</span><span>{loyaltyDiscount > 0 ? `−${formatPrice(loyaltyDiscount)}` : 'Not applied'}</span></label>}

@@ -414,7 +414,7 @@ const Login = () => {
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent('bhumivera:open-visual-guide', { detail: { tab: 'password' } }))}
-              className="inline-flex items-center gap-1.5 text-xs text-[#8B5A2B] hover:text-[#0B2419] font-medium transition-colors"
+              className="inline-flex items-center gap-1.5 text-xs text-[#d4af37] hover:text-[#0B2419] font-medium transition-colors"
             >
               <Sparkles className="w-3.5 h-3.5 text-[#D4AF37]" /> Login &amp; Password Visual Guide
             </button>

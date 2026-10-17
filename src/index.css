@@ -3,13 +3,15 @@
 @tailwind utilities;
 
 :root {
-  --olive-stripe: rgba(128, 128, 0, 0.06);
-  --alabaster: #FDFDFB;
-  --bhumivera-forest: #14251c;
-  --bhumivera-leaf: #526b4d;
-  --bhumivera-gold: #c4aa67;
-  --bhumivera-paper: #f4f1e9;
-  --bhumivera-line: #dedfd4;
+  --olive-stripe: rgba(212, 175, 55, 0.08);
+  --alabaster: #0c1712;
+  --bhumivera-forest: #0c1712;
+  --bhumivera-leaf: #14251c;
+  --bhumivera-gold: #d4af37;
+  --bhumivera-silver: #e2e8f0;
+  --bhumivera-black: #050807;
+  --bhumivera-paper: #0c1712;
+  --bhumivera-line: rgba(212, 175, 55, 0.2);
 }
 
 body {
@@ -214,14 +216,17 @@ body {
   bottom: 0;
   left: 0;
   right: 0;
-  height: calc(60px + var(--sab));
+  height: calc(62px + var(--sab));
   padding-bottom: var(--sab);
-  background: #ffffff;
-  border-top: 1px solid #e7e5e4;
+  background: rgba(12, 23, 18, 0.95);
+  -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
+  border-top: 1px solid rgba(212, 175, 55, 0.28);
   display: flex;
   justify-content: space-around;
   align-items: center;
-  z-index: 40;
+  z-index: 50;
+  box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.65);
 }
 
 .mobile-tap-active:active {

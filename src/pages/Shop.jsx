@@ -33,7 +33,7 @@ const ProductCard = ({ product, index }) => {
     FALLBACK_CATALOG_PRODUCTS[index % FALLBACK_CATALOG_PRODUCTS.length].image_url;
 
   return (
-    <div className="group relative flex flex-col bg-white border border-[#e8dcc4] rounded-[1.5rem] sm:rounded-[2.2rem] overflow-hidden hover:shadow-[0_20px_50px_rgba(139,90,43,0.1)] hover:border-[#8b5a2b]/30 transition-all duration-500">
+    <div className="group relative flex flex-col bg-white border border-[#e8dcc4] rounded-[1.5rem] sm:rounded-[2.2rem] overflow-hidden hover:shadow-[0_20px_50px_rgba(139,90,43,0.1)] hover:border-[#d4af37]/30 transition-all duration-500">
       <Link to={`/product/${product.slug || prodId}`} className="relative aspect-[4/3] overflow-hidden bg-[#101d16]">
         <img
           src={imgSrc}
@@ -55,8 +55,8 @@ const ProductCard = ({ product, index }) => {
             aria-label={wishlisted ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
             className={`p-3 backdrop-blur-md border rounded-full transition-all shadow-sm ${
               wishlisted
-                ? 'bg-[#8b5a2b] text-white border-[#8b5a2b]'
-                : 'bg-white/90 text-[#1a1a1a] border-[#e8dcc4] hover:bg-[#8b5a2b] hover:text-white'
+                ? 'bg-[#d4af37] text-[#0c1712] border-[#d4af37]'
+                : 'bg-white/90 text-[#1a1a1a] border-[#e8dcc4] hover:bg-[#d4af37] hover:text-[#0c1712]'
             }`}
           >
             <Heart size={15} fill={wishlisted ? 'currentColor' : 'none'} />
@@ -85,16 +85,16 @@ const ProductCard = ({ product, index }) => {
       </Link>
 
       <div className="p-5 sm:p-7 flex flex-col flex-1 text-left">
-        <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-[#8b5a2b] mb-2">
+        <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-[#d4af37] mb-2">
           <span>{product.category_name || 'Botanical Care'}</span>
           <span className="flex items-center gap-1">
-            <Star size={12} className="fill-current text-amber-500" />
+            <Star size={12} className="fill-current text-[#d4af37]" />
             {product.rating || 4.9} ({product.reviews || 95})
           </span>
         </div>
 
         <Link to={`/product/${product.slug || prodId}`}>
-          <h3 className="text-lg font-serif font-bold text-[#1a1a1a] group-hover:text-[#8b5a2b] transition-colors mb-2">
+          <h3 className="text-lg font-serif font-bold text-[#1a1a1a] group-hover:text-[#d4af37] transition-colors mb-2">
             {product.name}
           </h3>
         </Link>
@@ -109,13 +109,13 @@ const ProductCard = ({ product, index }) => {
               ₹{product.discount_price || product.price}
             </span>
             {product.discount_price && (
-              <span className="ml-2 text-xs font-serif text-[#8b5a2b]/60 line-through">₹{product.price}</span>
+              <span className="ml-2 text-xs font-serif text-[#d4af37]/60 line-through">₹{product.price}</span>
             )}
           </div>
           <button
             type="button"
             onClick={() => addToCart?.(product, 1)}
-            className="px-5 py-3 bg-[#14251c] text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-[#8b5a2b] transition-all flex items-center gap-2"
+            className="px-5 py-3 bg-[#0c1712] text-white text-[10px] font-bold uppercase tracking-widest rounded-xl hover:bg-[#d4af37] hover:text-[#0c1712] transition-all flex items-center gap-2"
           >
             <ShoppingBag size={14} /> Add to Bag
           </button>
@@ -206,26 +206,26 @@ export default function Shop() {
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-10">
           <div className="max-w-xl">
-            <span className="text-[10px] font-bold text-[#8b5a2b] uppercase tracking-[0.4em] block mb-3">
+            <span className="text-[10px] font-bold text-[#d4af37] uppercase tracking-[0.4em] block mb-3">
               pH 5.5 Calibrated Apothecary
             </span>
             <h1 className="text-4xl sm:text-6xl font-serif text-[#1a1a1a] leading-none mb-4">
-              The <span className="text-[#8b5a2b] italic">Collection.</span>
+              The <span className="text-[#d4af37] italic">Collection.</span>
             </h1>
-            <p className="text-[#5c4a3d] text-sm sm:text-base">
+            <p className="text-stone-600 text-sm sm:text-base">
               Showing {filteredProducts.length} plant-powered formulations with complete INCI percentage transparency.
             </p>
           </div>
 
           <div className="flex-1 max-w-xl w-full">
             <div className="relative">
-              <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8b5a2b]" />
+              <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#d4af37]" />
               <input
                 type="text"
                 placeholder="Search Sea Buckthorn, Charcoal, Kumkumadi, Niacinamide..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-white border border-[#e8dcc4] rounded-full pl-12 pr-12 py-4 text-sm text-[#1a1a1a] outline-none focus:border-[#8b5a2b] shadow-sm"
+                className="w-full bg-white border border-[#e8dcc4] rounded-full pl-12 pr-12 py-4 text-sm text-[#1a1a1a] outline-none focus:border-[#d4af37] shadow-sm"
               />
               {searchTerm && (
                 <button

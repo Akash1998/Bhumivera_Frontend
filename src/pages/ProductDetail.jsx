@@ -253,7 +253,7 @@ export default function ProductDetail() {
 
   if (!product) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-[#8b5a2b] bg-[#FDFBF7] font-black uppercase tracking-widest text-2xl">
+      <div className="min-h-screen flex items-center justify-center text-[#d4af37] bg-[#FDFBF7] font-black uppercase tracking-widest text-2xl">
         Botanical Profile Not Found.
       </div>
     );
@@ -293,9 +293,9 @@ export default function ProductDetail() {
       />
 
       <div className="relative z-10 mx-auto mb-4 flex max-w-7xl items-center gap-1.5 overflow-hidden px-4 text-[9px] font-bold uppercase tracking-[0.12em] text-stone-500 md:mb-8 md:gap-2 md:px-6 md:text-xs md:tracking-widest">
-        <Link to="/" className="hover:text-[#8b5a2b] transition-colors">Home</Link>
+        <Link to="/" className="hover:text-[#d4af37] transition-colors">Home</Link>
         <ChevronRight size={12} className="shrink-0 md:h-[14px] md:w-[14px]" />
-        <Link to={`/shop?category=${product.category_id}`} className="shrink-0 hover:text-[#8b5a2b] transition-colors">{product.category_name || 'Botanicals'}</Link>
+        <Link to={`/shop?category=${product.category_id}`} className="shrink-0 hover:text-[#d4af37] transition-colors">{product.category_name || 'Botanicals'}</Link>
         <ChevronRight size={12} className="shrink-0 md:h-[14px] md:w-[14px]" />
         <span className="truncate text-[#35533c]">{product.name}</span>
       </div>
@@ -313,7 +313,7 @@ export default function ProductDetail() {
                   aria-label={`View ${product.name} image ${idx + 1}`}
                   aria-pressed={getImageUrl(activeMedia) === url}
                   className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-300 sm:h-16 sm:w-16 md:h-20 md:w-20 md:rounded-2xl lg:h-24 lg:w-24 ${
-                    getImageUrl(activeMedia) === url ? 'border-[#8b5a2b] shadow-[2px_2px_0px_#6b4421]' : 'border-stone-200 hover:border-stone-300'
+                    getImageUrl(activeMedia) === url ? 'border-[#d4af37] shadow-[2px_2px_0px_#6b4421]' : 'border-stone-200 hover:border-stone-300'
                   }`}
                 >
                   <img src={url} alt={`${product.name} image ${idx + 1}`} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" loading="lazy" />
@@ -346,14 +346,14 @@ export default function ProductDetail() {
                 </button>
                 <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2 rounded-full bg-white/85 px-3 py-2 shadow-sm backdrop-blur">
                   {product.images.map((image, index) => (
-                    <button key={image.id || `${getImageUrl(image)}-${index}`} type="button" onClick={() => setActiveMedia(image)} aria-label={`Show product image ${index + 1}`} aria-current={index === activeImageIndex} className={`h-2 rounded-full transition-all ${index === activeImageIndex ? 'w-6 bg-[#8b5a2b]' : 'w-2 bg-stone-400 hover:bg-stone-600'}`}/>
+                    <button key={image.id || `${getImageUrl(image)}-${index}`} type="button" onClick={() => setActiveMedia(image)} aria-label={`Show product image ${index + 1}`} aria-current={index === activeImageIndex} className={`h-2 rounded-full transition-all ${index === activeImageIndex ? 'w-6 bg-[#d4af37]' : 'w-2 bg-stone-400 hover:bg-stone-600'}`}/>
                   ))}
                 </div>
               </>
             )}
 
             <div className="absolute left-3 top-3 z-10 flex flex-col gap-3 sm:left-6 sm:top-6">
-              {product.is_featured === 1 && <span className="rounded-full bg-[#8b5a2b] px-3 py-1.5 font-mono text-[9px] uppercase tracking-widest text-white shadow-sm sm:px-4 sm:text-[10px]">Premium Selection</span>}
+              {product.is_featured === 1 && <span className="rounded-full bg-[#d4af37] px-3 py-1.5 font-mono text-[9px] uppercase tracking-widest text-white shadow-sm sm:px-4 sm:text-[10px]">Premium Selection</span>}
             </div>
             
             <button onClick={() => toggleWishlist(product)} aria-label={isWishlisted(product.id) ? 'Remove from saved products' : 'Save product'} aria-pressed={isWishlisted(product.id)} className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 bg-white/95 text-stone-500 shadow-sm transition-all duration-300 hover:border-[#536b4d] hover:text-[#35533c] sm:right-6 sm:top-6 sm:h-12 sm:w-12">
@@ -379,7 +379,7 @@ export default function ProductDetail() {
               {product.name}
             </h1>
 
-            {productRating > 0 && <a href="#product-reviews" onClick={() => setActiveTab('reviews')} className="mb-4 inline-flex min-h-10 items-center gap-2 text-xs text-[#526b4c] hover:text-[#8b5a2b] sm:text-sm">
+            {productRating > 0 && <a href="#product-reviews" onClick={() => setActiveTab('reviews')} className="mb-4 inline-flex min-h-10 items-center gap-2 text-xs text-[#526b4c] hover:text-[#d4af37] sm:text-sm">
               <span className="flex" aria-label={`${productRating.toFixed(1)} out of 5 stars`}>{[1, 2, 3, 4, 5].map(star => <Star key={star} size={13} fill={star <= Math.round(productRating) ? 'currentColor' : 'none'} />)}</span>
               <span>{productRating.toFixed(1)}{reviewCount > 0 ? ` · ${reviewCount} reviews` : ''}</span>
             </a>}
@@ -411,11 +411,11 @@ export default function ProductDetail() {
 
             <div className="flex flex-col gap-3 sm:flex-row">
               <div className="flex h-12 w-full items-center justify-between rounded-xl border border-stone-200 bg-[#faf9f6] px-2 sm:h-auto sm:w-32">
-                <button type="button" aria-label="Decrease quantity" disabled={quantity <= 1} onClick={() => setQuantity(q => Math.max(1, q - 1))} className="flex h-10 w-10 items-center justify-center rounded-lg text-stone-500 transition-colors hover:bg-white hover:text-[#8b5a2b] disabled:opacity-40">
+                <button type="button" aria-label="Decrease quantity" disabled={quantity <= 1} onClick={() => setQuantity(q => Math.max(1, q - 1))} className="flex h-10 w-10 items-center justify-center rounded-lg text-stone-500 transition-colors hover:bg-white hover:text-[#d4af37] disabled:opacity-40">
                   <Minus size={16} />
                 </button>
                 <span aria-live="polite" className="w-8 text-center font-mono text-base">{quantity}</span>
-                <button type="button" aria-label="Increase quantity" onClick={() => setQuantity(q => q + 1)} disabled={quantity >= product.quantity} className="flex h-10 w-10 items-center justify-center rounded-lg text-stone-500 transition-colors hover:bg-white hover:text-[#8b5a2b] disabled:opacity-40">
+                <button type="button" aria-label="Increase quantity" onClick={() => setQuantity(q => q + 1)} disabled={quantity >= product.quantity} className="flex h-10 w-10 items-center justify-center rounded-lg text-stone-500 transition-colors hover:bg-white hover:text-[#d4af37] disabled:opacity-40">
                   <Plus size={16} />
                 </button>
               </div>
@@ -445,7 +445,7 @@ export default function ProductDetail() {
                     <Sparkles size={16} />
                   </div>
                   <div>
-                    <p className="font-mono text-[9px] font-bold uppercase tracking-widest text-[#8B5A2B]">Artisanal Compounding</p>
+                    <p className="font-mono text-[9px] font-bold uppercase tracking-widest text-[#d4af37]">Artisanal Compounding</p>
                     <p className="font-serif text-sm font-bold text-[#0B2419]">Batch #{product.batchCode || 'BV-CH26-8841'} · 250 Units Run</p>
                   </div>
                 </div>
@@ -481,7 +481,7 @@ export default function ProductDetail() {
               { icon: <Leaf />, title: 'Care beyond the product', sub: 'See the public, verified field ledger', to: '/impact' },
             ].map((item, i) => (
               <Link to={item.to} key={i} className="group flex min-h-24 flex-row items-center gap-4 rounded-2xl border border-[#253b2f]/10 bg-white p-4 transition-colors hover:border-[#536b4d]/60 sm:min-h-36 sm:flex-col sm:items-start sm:p-5 md:p-6">
-                <div className="text-[#8b5a2b] group-hover:scale-110 transition-transform origin-left">{item.icon}</div>
+                <div className="text-[#d4af37] group-hover:scale-110 transition-transform origin-left">{item.icon}</div>
                 <div>
                   <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-800">{item.title}</h4>
                   <p className="mt-1 text-[10px] leading-4 text-stone-500 sm:text-xs">{item.sub}</p>
@@ -499,12 +499,12 @@ export default function ProductDetail() {
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`relative min-h-12 whitespace-nowrap px-5 pb-3 text-[10px] font-mono uppercase tracking-widest transition-colors sm:px-8 sm:pb-6 sm:text-xs ${
-                activeTab === tab ? 'text-[#8b5a2b]' : 'text-stone-400 hover:text-stone-800'
+                activeTab === tab ? 'text-[#d4af37]' : 'text-stone-400 hover:text-stone-800'
               }`}
             >
               {tab === 'reviews' ? `Reviews (${reviewCount})` : tab === 'formulation' ? 'Formulation & Actives' : tab}
               {activeTab === tab && (
-                <motion.div layoutId="activeTabIndicator" className="absolute bottom-0 left-0 w-full h-0.5 bg-[#8b5a2b]" />
+                <motion.div layoutId="activeTabIndicator" className="absolute bottom-0 left-0 w-full h-0.5 bg-[#d4af37]" />
               )}
             </button>
           ))}
@@ -532,7 +532,7 @@ export default function ProductDetail() {
                       </h3>
                     </div>
                     <div className="text-right">
-                      <span className="font-mono text-xs font-bold text-[#8B5A2B]">Batch #{product.batchCode || 'BV-CH26-8841'}</span>
+                      <span className="font-mono text-xs font-bold text-[#d4af37]">Batch #{product.batchCode || 'BV-CH26-8841'}</span>
                       <p className="text-[10px] text-stone-600">Standard: 250 Units / Run</p>
                     </div>
                   </div>
@@ -558,7 +558,7 @@ export default function ProductDetail() {
                               <p className="font-semibold text-xs text-[#0B2419]">{ing.name}</p>
                               <p className="text-[11px] text-stone-600">{ing.note}</p>
                             </div>
-                            <span className="font-mono text-xs font-bold text-[#8B5A2B] shrink-0 bg-[#D4AF37]/15 px-2 py-0.5 rounded-md">
+                            <span className="font-mono text-xs font-bold text-[#d4af37] shrink-0 bg-[#D4AF37]/15 px-2 py-0.5 rounded-md">
                               {ing.potency}
                             </span>
                           </div>
@@ -582,7 +582,7 @@ export default function ProductDetail() {
                               <p className="font-semibold text-xs text-[#0B2419]">{ing.name}</p>
                               <p className="text-[11px] text-stone-600">{ing.note}</p>
                             </div>
-                            <span className="font-mono text-xs font-bold text-[#8B5A2B] shrink-0 bg-[#D4AF37]/15 px-2 py-0.5 rounded-md">
+                            <span className="font-mono text-xs font-bold text-[#d4af37] shrink-0 bg-[#D4AF37]/15 px-2 py-0.5 rounded-md">
                               {ing.potency}
                             </span>
                           </div>
@@ -591,19 +591,19 @@ export default function ProductDetail() {
                     ) : (
                       <>
                         <div className="p-3.5 rounded-xl bg-white/80 border border-[#D4AF37]/30">
-                          <p className="font-mono text-[10px] uppercase font-bold text-[#8B5A2B]">Key Botanicals</p>
+                          <p className="font-mono text-[10px] uppercase font-bold text-[#d4af37]">Key Botanicals</p>
                           <p className="text-xs text-[#0B2419] mt-1">{product.primaryBotanicals || 'Cold-Pressed Himalayan Flora'}</p>
                         </div>
                         <div className="p-3.5 rounded-xl bg-white/80 border border-[#D4AF37]/30">
-                          <p className="font-mono text-[10px] uppercase font-bold text-[#8B5A2B]">Clinical Actives</p>
+                          <p className="font-mono text-[10px] uppercase font-bold text-[#d4af37]">Clinical Actives</p>
                           <p className="text-xs text-[#0B2419] mt-1">{product.clinicalActives || 'Biomimetic Humectants & Actives'}</p>
                         </div>
                         <div className="p-3.5 rounded-xl bg-white/80 border border-[#D4AF37]/30">
-                          <p className="font-mono text-[10px] uppercase font-bold text-[#8B5A2B]">Acid Mantle Calibration</p>
+                          <p className="font-mono text-[10px] uppercase font-bold text-[#d4af37]">Acid Mantle Calibration</p>
                           <p className="text-xs text-[#0B2419] mt-1">{product.phLevel || 'pH 5.50 (Skin-Identical)'}</p>
                         </div>
                         <div className="p-3.5 rounded-xl bg-white/80 border border-[#D4AF37]/30">
-                          <p className="font-mono text-[10px] uppercase font-bold text-[#8B5A2B]">Artisanal Volume</p>
+                          <p className="font-mono text-[10px] uppercase font-bold text-[#d4af37]">Artisanal Volume</p>
                           <p className="text-xs text-[#0B2419] mt-1">{product.volume || '100 ml Amber Glass'}</p>
                         </div>
                       </>
@@ -622,8 +622,8 @@ export default function ProductDetail() {
                     </div>
 
                     <div className="p-4 rounded-2xl bg-[#0B2419]/5 border border-[#0B2419]/10">
-                      <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#8B5A2B] flex items-center gap-1.5">
-                        <AlertCircle size={13} className="text-[#8B5A2B]" /> Storage &amp; Natural Caution
+                      <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#d4af37] flex items-center gap-1.5">
+                        <AlertCircle size={13} className="text-[#d4af37]" /> Storage &amp; Natural Caution
                       </p>
                       <p className="text-xs text-stone-700 leading-relaxed mt-2">
                         {product.caution || 'Product contains natural ingredients & may change colour and fragrance, without losing effectiveness. Patch test recommended. Store in a cool and dry place, away from direct sunlight. For external use only.'}
@@ -633,7 +633,7 @@ export default function ProductDetail() {
 
                   <div className="mt-6 flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-[#D4AF37]/30">
                     <div className="flex items-center gap-2 text-xs text-stone-600">
-                      <Lock size={14} className="text-[#8B5A2B]" />
+                      <Lock size={14} className="text-[#d4af37]" />
                       <span>100% Sealed Sanitary Custody: Artisanal Personal Care Purity Standard</span>
                     </div>
                     <Link
@@ -666,7 +666,7 @@ export default function ProductDetail() {
                 <div className="mb-8 grid gap-6 border border-[#253b2f]/15 bg-white p-6 md:grid-cols-[auto_1fr] md:items-center md:p-8">
                   <div className="text-center md:min-w-32">
                     <div className="font-serif text-5xl text-[#35533c]">{reviewCount ? productRating.toFixed(1) : '—'}</div>
-                    <div className="mt-2 flex justify-center text-[#8b5a2b]" aria-label={`${productRating.toFixed(1)} out of 5 stars`}>
+                    <div className="mt-2 flex justify-center text-[#d4af37]" aria-label={`${productRating.toFixed(1)} out of 5 stars`}>
                       {[1, 2, 3, 4, 5].map(star => <Star key={star} size={14} fill={star <= Math.round(productRating) ? 'currentColor' : 'none'} />)}
                     </div>
                     <p className="mt-2 text-[10px] font-mono uppercase tracking-widest text-stone-500">{reviewCount} approved reviews</p>
@@ -675,14 +675,14 @@ export default function ProductDetail() {
                     <h3 className="mb-1 font-serif text-xl text-[#17251c]">Real experiences, thoughtfully shared</h3>
                     <p>Only currently approved reviews are shown. A verified-purchase label appears only when a review is linked to an order.</p>
                     <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-semibold text-[#35533c] sm:grid-cols-3">
-                      <span className="flex items-center gap-2"><Shield size={15} className="text-[#8b5a2b]"/>Secure checkout</span>
-                      <span className="flex items-center gap-2"><BadgeCheck size={15} className="text-[#8b5a2b]"/>Verified reviews</span>
-                      <span className="flex items-center gap-2"><Package size={15} className="text-[#8b5a2b]"/>Order support</span>
+                      <span className="flex items-center gap-2"><Shield size={15} className="text-[#d4af37]"/>Secure checkout</span>
+                      <span className="flex items-center gap-2"><BadgeCheck size={15} className="text-[#d4af37]"/>Verified reviews</span>
+                      <span className="flex items-center gap-2"><Package size={15} className="text-[#d4af37]"/>Order support</span>
                     </div>
                   </div>
                 </div>
                 {reviewPhotos.length > 0 && <section className="mb-8 rounded-2xl border border-[#253b2f]/15 bg-white p-5 md:p-6">
-                  <div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#8b5a2b]">From our customers</p><h3 className="mt-1 font-serif text-2xl text-[#17251c]">Real photos, real reviews</h3></div><span className="text-xs text-stone-500">{reviewPhotos.length} customer {reviewPhotos.length === 1 ? 'photo' : 'photos'}</span></div>
+                  <div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#d4af37]">From our customers</p><h3 className="mt-1 font-serif text-2xl text-[#17251c]">Real photos, real reviews</h3></div><span className="text-xs text-stone-500">{reviewPhotos.length} customer {reviewPhotos.length === 1 ? 'photo' : 'photos'}</span></div>
                   <div className="flex gap-3 overflow-x-auto pb-2">
                     {reviewPhotos.map(({ image, review }, index) => <a key={`${review.id || index}-${index}`} href={getImageUrl(image)} target="_blank" rel="noreferrer" aria-label={`View customer photo from ${review.user_name || 'a customer'}'s review`} className="group relative h-36 w-32 shrink-0 overflow-hidden rounded-xl border border-stone-200 bg-stone-50 sm:h-44 sm:w-40">
                       <img src={getImageUrl(image)} alt={`Customer photo for ${product.name}`} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}/>
@@ -707,7 +707,7 @@ export default function ProductDetail() {
                   visibleReviews.map((review, i) => (
                     <article key={review.id || i} className="mb-4 rounded-2xl border border-stone-200 bg-white p-5 sm:p-7">
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
-                        <div className="flex items-center gap-1 text-[#8b5a2b]" aria-label={`${review.rating} out of 5 stars`}>
+                        <div className="flex items-center gap-1 text-[#d4af37]" aria-label={`${review.rating} out of 5 stars`}>
                           {[...Array(5)].map((_, idx) => <Star key={idx} size={14} fill={idx < Number(review.rating) ? "currentColor" : "none"} />)}
                         </div>
                         {review.order_id && <span className="inline-flex items-center gap-1 rounded-full bg-[#e9f7ef] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-800"><BadgeCheck size={13}/>Verified purchase</span>}
@@ -715,7 +715,7 @@ export default function ProductDetail() {
                       {review.title && <h4 className="mb-2 text-lg font-semibold text-stone-800">{review.title}</h4>}
                       <p className="whitespace-pre-line text-sm leading-6 text-stone-600">{review.comment}</p>
                       {Array.isArray(review.images) && review.images.length > 0 && <div className="mt-4 flex flex-wrap gap-3">
-                        {review.images.map((image, imageIndex) => <a key={`${review.id}-${imageIndex}`} href={getImageUrl(image)} target="_blank" rel="noreferrer" className="block h-24 w-24 overflow-hidden rounded-xl border border-stone-200 bg-stone-50 focus:outline-none focus:ring-2 focus:ring-[#8b5a2b]">
+                        {review.images.map((image, imageIndex) => <a key={`${review.id}-${imageIndex}`} href={getImageUrl(image)} target="_blank" rel="noreferrer" className="block h-24 w-24 overflow-hidden rounded-xl border border-stone-200 bg-stone-50 focus:outline-none focus:ring-2 focus:ring-[#d4af37]">
                           <img src={getImageUrl(image)} alt={`Customer photo ${imageIndex + 1} for ${product.name}`} className="h-full w-full object-cover" loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}/>
                         </a>)}
                       </div>}
@@ -742,13 +742,13 @@ export default function ProductDetail() {
           {videoEmbeds.length > 0 && (
             <div className="mb-12">
               <div className="mb-6 border-b border-[#253b2f]/15 pb-4">
-                <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#8b5a2b]">See it for yourself</p>
+                <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#d4af37]">See it for yourself</p>
                 <h2 className="mt-2 font-serif text-3xl text-[#17251c]">Product videos</h2>
               </div>
               <div className="flex snap-x gap-4 overflow-x-auto pb-3">
                 {videoEmbeds.map((video, index) => (
                   <button key={video.embed} type="button" onClick={() => setActiveVideo(video)} aria-label={`Play product video ${index + 1}`} className="group relative aspect-[9/12] w-56 shrink-0 snap-start overflow-hidden rounded-2xl border border-[#253b2f]/15 bg-[#e9e8df] text-left shadow-sm sm:w-64">
-                    {video.embed.includes('youtube-nocookie.com/embed/') ? <img src={`https://img.youtube.com/vi/${video.embed.split('/').pop()}/hqdefault.jpg`} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.classList.add('hidden'); }}/> : <div className="absolute inset-0 bg-gradient-to-br from-[#253b2f] to-[#8b5a2b]"/>}
+                    {video.embed.includes('youtube-nocookie.com/embed/') ? <img src={`https://img.youtube.com/vi/${video.embed.split('/').pop()}/hqdefault.jpg`} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.classList.add('hidden'); }}/> : <div className="absolute inset-0 bg-gradient-to-br from-[#253b2f] to-[#d4af37]"/>}
                     <span className="absolute inset-0 flex items-center justify-center bg-black/10 transition group-hover:bg-black/25"><span className="rounded-full bg-white/95 p-4 text-[#35533c] shadow-xl"><Play size={22} fill="currentColor"/></span></span>
                     <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-4 pt-16 text-left text-sm font-semibold text-white">{product.name}<span className="mt-1 block text-[10px] font-bold uppercase tracking-widest text-white/80">Watch product video</span></span>
                   </button>
@@ -761,7 +761,7 @@ export default function ProductDetail() {
               <h2 className="mb-4 font-serif text-2xl text-[#17251c]">Product resources</h2>
               <div className="flex flex-wrap gap-3">
                 {productLinks.map(url => (
-                  <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 border border-[#253b2f]/20 px-4 py-3 text-xs font-semibold text-[#35533c] transition hover:border-[#8b5a2b] hover:text-[#8b5a2b]">
+                  <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 border border-[#253b2f]/20 px-4 py-3 text-xs font-semibold text-[#35533c] transition hover:border-[#d4af37] hover:text-[#d4af37]">
                     {new URL(url).hostname.replace(/^www\./, '')}<ChevronRight size={14}/>
                   </a>
                 ))}
@@ -774,7 +774,7 @@ export default function ProductDetail() {
       {canPersonalize && recommendedProducts.length > 0 && (
         <section className="max-w-7xl mx-auto px-6 mt-16 relative z-10">
           <div className="mb-6 border-b border-[#253b2f]/15 pb-4">
-            <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#8b5a2b]">Picked for you</p>
+            <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#d4af37]">Picked for you</p>
             <h2 className="mt-2 font-serif text-3xl text-[#17251c]">You may also love</h2>
             <p className="mt-2 text-sm text-stone-500">{recommendationReason}</p>
           </div>
@@ -803,10 +803,10 @@ export default function ProductDetail() {
               <iframe src={activeVideo.embed} title={`${product.name} product video`} className="h-full w-full" referrerPolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen/>
             </div>
             <div className="flex flex-col p-6 sm:p-8">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8b5a2b]">See it for yourself</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#d4af37]">See it for yourself</p>
               <h2 id="product-video-title" className="mt-2 font-serif text-2xl leading-tight text-[#17251c]">{product.name}</h2>
               <p className="mt-3 text-xl font-semibold text-[#35533c]">₹{product.discount_price || product.price}</p>
-              <div className="mt-4 flex items-center gap-2 text-xs text-stone-600"><Shield size={15} className="text-[#8b5a2b]"/>Secure checkout · Bhumivera support</div>
+              <div className="mt-4 flex items-center gap-2 text-xs text-stone-600"><Shield size={15} className="text-[#d4af37]"/>Secure checkout · Bhumivera support</div>
               <div className="mt-auto pt-8">
                 <button type="button" onClick={async () => { await handleAddToCart(); setActiveVideo(null); }} disabled={isOutOfStock || isAdding} className="w-full rounded-xl bg-[#35533c] px-5 py-4 text-sm font-bold uppercase tracking-widest text-white transition hover:bg-[#253b2f] disabled:cursor-not-allowed disabled:opacity-50">{isAdding ? 'Adding…' : isOutOfStock ? 'Currently unavailable' : 'Add to cart'}</button>
               </div>

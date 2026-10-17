@@ -33,8 +33,6 @@ export default function Navbar() {
   const [installPrompt, setInstallPrompt] = useState(null);
   const [showIosInstallHelp, setShowIosInstallHelp] = useState(false);
   const searchTimeout = useRef(null);
-  const [isGarageActive, setGarageActive] = useState(false);
-  const [garageData, setGarageData] = useState(null);
   const navigate = useNavigate(); 
   const location = useLocation();
   const searchDropdownRef = useRef(null);
@@ -96,18 +94,7 @@ export default function Navbar() {
     };
   }, [isMenuOpen]);
 
-  useEffect(() => {
-    const checkGarage = () => {
-      const stored = localStorage.getItem('Bhumivera_garage');
-      if (stored) {
-        setGarageData(JSON.parse(stored));
-        setGarageActive(true);
-      }
-    };
-    checkGarage();
-    window.addEventListener('storage', checkGarage);
-    return () => window.removeEventListener('storage', checkGarage);
-  }, []);
+
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -161,12 +148,12 @@ export default function Navbar() {
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-6">
             <Link to="/impact" className="flex items-center gap-2 transition-colors hover:text-white"><Droplets size={14} className="text-[#c8d6aa]" /> {t('nav_impact', 'Our impact')}</Link>
-            <Link to="/order-tracking" className="flex items-center gap-2 transition-colors hover:text-white"><MapPin size={14} className="text-[#8b5a2b]" /> {t('nav_track_order', 'Track Order')}</Link>
+            <Link to="/order-tracking" className="flex items-center gap-2 transition-colors hover:text-white"><MapPin size={14} className="text-[#d4af37]" /> {t('nav_track_order', 'Track Order')}</Link>
           </div>
           <div className="flex items-center gap-6">
-            <Link to="/contact" className="hover:text-[#8b5a2b] transition-colors">{t('nav_support', 'Boutique Support')}</Link>
+            <Link to="/contact" className="hover:text-[#d4af37] transition-colors">{t('nav_support', 'Boutique Support')}</Link>
             {user?.role === 'admin' && (
-              <Link to="/admin" className="text-[#8b5a2b] flex items-center gap-1.5"><Activity size={14}/> Admin Terminal</Link>
+              <Link to="/admin" className="text-[#d4af37] flex items-center gap-1.5"><Activity size={14}/> Admin Terminal</Link>
             )}
           </div>
         </div>
@@ -235,7 +222,7 @@ export default function Navbar() {
                      <Sparkles size={14} className="mr-2 animate-pulse" />
                      {isAiPowered ? 'Semantic Formulation Results' : 'Standard Search'}
                    </div>
-                   {isSearching && <div className="w-4 h-4 border-2 border-[#e8dcc4] border-t-[#8b5a2b] rounded-full animate-spin"></div>}
+                   {isSearching && <div className="w-4 h-4 border-2 border-[#e8dcc4] border-t-[#d4af37] rounded-full animate-spin"></div>}
                  </div>
                  <div className="max-h-[60vh] overflow-y-auto">
                    {suggestions.length === 0 && !isSearching ? (
@@ -258,11 +245,11 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center space-x-4 sm:space-x-6 shrink-0">
-            <Link to="/science" aria-label="Skin Assessment" className={`hidden xl:flex items-center space-x-3 rounded-full border px-5 py-2.5 shadow-sm transition-all ${isGarageActive ? 'border-[#14251c] bg-[#14251c] text-white' : 'border-[#dedfd4] bg-white text-[#526b4d]'}`}>
-              <Sparkles size={18} className={isGarageActive ? 'animate-pulse' : ''} />
+            <Link to="/science" aria-label="Botanical Science" className="hidden xl:flex items-center space-x-3 rounded-full border border-[#dedfd4] bg-white px-5 py-2.5 shadow-sm transition-all hover:border-[#d4af37] hover:bg-[#0c1712] hover:text-[#d4af37] group">
+              <Sparkles size={16} className="text-[#d4af37]" />
               <div className="text-left">
-                <div className="text-[8px] font-bold uppercase tracking-widest leading-none opacity-80">{isGarageActive ? t('active_regimen', 'Active Regimen') : t('nav_science', 'Botanical Science')}</div>
-                <div className="text-[11px] font-bold uppercase tracking-widest truncate max-w-[100px]">{isGarageActive ? garageData.model : t('discover_science', 'Discover the Science')}</div>
+                <div className="text-[8px] font-bold uppercase tracking-widest leading-none text-[#526b4d] group-hover:text-[#d4af37]">{t('nav_science', 'Botanical Science')}</div>
+                <div className="text-[11px] font-serif font-bold uppercase tracking-widest text-[#14251c] group-hover:text-white truncate max-w-[120px]">{t('discover_science', 'pH 5.5 Assays')}</div>
               </div>
             </Link>
 
@@ -423,7 +410,12 @@ export default function Navbar() {
                 )}
               </div>
             )}
-            <p className="mt-4 text-center text-[9px] font-medium tracking-wide text-[#82907c]">Made with care · rooted in nature</p>
+            <div className="mt-5 border-t border-[#dedfd4]/60 pt-4 text-center">
+              <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-[#526b4d]">Bhumivera Botanical Maison</p>
+              <p className="mt-1 font-serif text-[11px] font-bold tracking-widest text-[#d4af37]">
+                Architectural Design · Developed By Akash Prasad
+              </p>
+            </div>
           </Motion.div>
         </Motion.div>}
       </AnimatePresence>

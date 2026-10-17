@@ -101,7 +101,7 @@ export default function OrderSuccess() {
                 transition={{ duration: 4, ease: 'easeOut' }}
               />
               <span className="absolute inset-0 m-auto flex h-12 w-12 items-center justify-center rounded-full border-4 border-[#14251c] bg-[#fbfaf5] text-[#526b4d]"><Gift size={18}/></span>
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 border-x-[9px] border-b-[14px] border-x-transparent border-b-[#8b5a2b]" aria-hidden="true"/>
+              <span className="absolute -top-3 left-1/2 -translate-x-1/2 border-x-[9px] border-b-[14px] border-x-transparent border-b-[#d4af37]" aria-hidden="true"/>
             </div>
             <div className="max-w-sm text-center sm:text-left">
               <button type="button" onClick={spinForReward} disabled={spinning} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#14251c] px-6 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-md transition hover:bg-[#294434] disabled:cursor-wait disabled:opacity-70">

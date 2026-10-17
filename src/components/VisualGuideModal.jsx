@@ -114,7 +114,7 @@ export default function VisualGuideModal({ isOpen, onClose, initialTab = 'passwo
                   </div>
                   <h5 className="font-bold text-xs text-[#0B2419]">Enter Your Email</h5>
                   <p className="text-[11px] text-stone-600 leading-relaxed">
-                    Go to <Link to="/forgot-password" onClick={onClose} className="text-[#8B5A2B] underline font-semibold">Forgot Password</Link> and enter your registered email.
+                    Go to <Link to="/forgot-password" onClick={onClose} className="text-[#d4af37] underline font-semibold">Forgot Password</Link> and enter your registered email.
                   </p>
                 </div>
 
@@ -369,7 +369,7 @@ export default function VisualGuideModal({ isOpen, onClose, initialTab = 'passwo
               </div>
 
               <div className="p-4 rounded-2xl bg-white border border-stone-200 space-y-2 text-xs leading-relaxed">
-                <p><strong>1. How to Pin Your Location:</strong> Open your <Link to="/profile" onClick={onClose} className="text-[#8B5A2B] underline font-semibold">Address Book</Link> or the Checkout page and tap <em>"Use My Current Location / Pin on Map"</em>.</p>
+                <p><strong>1. How to Pin Your Location:</strong> Open your <Link to="/profile" onClick={onClose} className="text-[#d4af37] underline font-semibold">Address Book</Link> or the Checkout page and tap <em>"Use My Current Location / Pin on Map"</em>.</p>
                 <p><strong>2. Accuracy Verification:</strong> Move the golden pin directly over your building or apartment gate.</p>
                 <p><strong>3. Driver Direct Access:</strong> The generated Google Maps link is shared with the courier driver's navigation app for direct doorstep arrival.</p>
               </div>

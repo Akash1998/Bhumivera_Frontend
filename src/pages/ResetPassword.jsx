@@ -164,7 +164,7 @@ export default function ResetPassword() {
         <div className="mb-6 flex items-center justify-between">
           <Link
             to="/login"
-            className="inline-flex items-center gap-2 text-sm text-[#8B5A2B] hover:text-[#0B2419] font-medium transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-[#d4af37] hover:text-[#0B2419] font-medium transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to login
@@ -283,7 +283,7 @@ export default function ResetPassword() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="text-sm text-stone-500 hover:text-[#8B5A2B] font-medium"
+                  className="text-sm text-stone-500 hover:text-[#d4af37] font-medium"
                 >
                   Wrong email? Go back
                 </button>

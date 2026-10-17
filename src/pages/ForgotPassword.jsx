@@ -174,7 +174,7 @@ export default function ForgotPassword() {
         <div className="mb-6 flex items-center justify-between">
           <Link
             to="/login"
-            className="inline-flex items-center gap-2 text-sm text-[#8B5A2B] hover:text-[#0B2419] font-medium transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-[#d4af37] hover:text-[#0B2419] font-medium transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
             Back to login
@@ -278,7 +278,7 @@ export default function ForgotPassword() {
                   type="button"
                   disabled={sendingAiLink}
                   onClick={handleRequestAiRecoveryLink}
-                  className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-[#8B5A2B] hover:text-[#0B2419]"
+                  className="inline-flex items-center justify-center gap-1.5 text-xs font-bold text-[#d4af37] hover:text-[#0B2419]"
                 >
                   <Wand2 className="w-3.5 h-3.5" />
                   {sendingAiLink
@@ -318,7 +318,7 @@ export default function ForgotPassword() {
                 <button
                   type="button"
                   onClick={() => setStep(1)}
-                  className="text-stone-500 hover:text-[#8B5A2B] font-medium"
+                  className="text-stone-500 hover:text-[#d4af37] font-medium"
                 >
                   Wrong email? Go back
                 </button>
@@ -326,7 +326,7 @@ export default function ForgotPassword() {
                   type="button"
                   disabled={sendingAiLink}
                   onClick={handleRequestAiRecoveryLink}
-                  className="font-bold text-[#8B5A2B] hover:text-[#0B2419]"
+                  className="font-bold text-[#d4af37] hover:text-[#0B2419]"
                 >
                   Send 1-Click Reset Link Instead
                 </button>

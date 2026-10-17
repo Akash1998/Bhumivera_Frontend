@@ -160,6 +160,34 @@ export default function About() {
           </div>
         </div>
       </section>
+
+      {/* 5. ARCHITECTURAL CRAFTSMANSHIP & ENGINEERING SEAL */}
+      <section className="max-w-7xl mx-auto px-6 pt-12">
+        <div className="rounded-3xl border border-[#d4af37]/35 bg-gradient-to-r from-[#0c1712] via-[#09130e] to-[#070f0b] p-6 sm:p-8 flex flex-col md:flex-row items-center justify-between gap-6 shadow-xl">
+          <div className="flex items-center gap-4">
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#d4af37]/15 border border-[#d4af37]/40 text-[#d4af37] shrink-0">
+              <Sparkles size={24} />
+            </div>
+            <div>
+              <p className="text-[10px] font-bold uppercase tracking-[0.25em] text-[#d4af37]">
+                Digital Maison Architecture &amp; Systems Engineering
+              </p>
+              <h3 className="font-serif text-xl sm:text-2xl font-bold text-white mt-1">
+                Developed By Akash Prasad
+              </h3>
+              <p className="text-xs text-white/70 mt-1 max-w-xl">
+                Engineered with clinical precision, zero-latency micro-chunk streaming, high-fidelity security shields, and bespoke luxury botanical aesthetics.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/shop"
+            className="inline-flex items-center gap-2 rounded-full bg-[#d4af37] px-6 py-3 text-xs font-bold uppercase tracking-widest text-[#0c1712] transition hover:bg-[#e5c247] shadow-[0_0_15px_rgba(212,175,55,0.3)] shrink-0"
+          >
+            Explore Maison Rituals <ArrowRight size={14} />
+          </Link>
+        </div>
+      </section>
     </main>
   );
 }

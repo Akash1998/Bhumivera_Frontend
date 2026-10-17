@@ -132,7 +132,7 @@ export default function PurchaseProtection() {
               Track an Order <ArrowRight size={14} />
             </Link>
             <Link to="/verify" className="inline-flex items-center gap-2 rounded-xl border border-[#D4AF37] bg-[#D4AF37]/15 px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#0B2419] hover:bg-[#D4AF37]/25 transition-all">
-              <Sparkles size={14} className="text-[#8B5A2B]" /> Verify Bottle Serial
+              <Sparkles size={14} className="text-[#d4af37]" /> Verify Bottle Serial
             </Link>
             <Link to="/provenance" className="inline-flex items-center gap-2 rounded-xl border border-[#142019]/25 px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#142019] hover:bg-black/5 transition-all">
               Provenance Map

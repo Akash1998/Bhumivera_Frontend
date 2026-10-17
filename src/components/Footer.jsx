@@ -1,55 +1,65 @@
-import React, { useState } from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Camera,
   ShieldCheck,
   Scale,
   Lock,
   Sparkles,
-  Eye,
-  X,
-  CheckCircle2,
-  AlertTriangle,
   FileCheck2,
   ArrowRight,
-  MapPin,
+  Phone,
+  Mail,
+  Send,
+  ExternalLink,
+  CheckCircle2,
 } from 'lucide-react';
 import { triggerAiCopilotAssist } from '../utils/aiCopilotBus';
-import { FOOTER_BRAND_BANNER_IMAGE, FOOTER_PHOTO_STORIES } from '../data/bhumiveraUniqueData';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
-  const [activeStory, setActiveStory] = useState(null);
 
   return (
-    <footer className="mt-auto border-t border-white/10 bg-[#0d1712] font-sans text-[#f1efe7] antialiased">
-      {/* 1. BRAND INTRODUCTION */}
-      <div className="relative isolate overflow-hidden border-b border-white/10 bg-[#13211a]">
-        <div className="absolute inset-0 -z-20 opacity-30" aria-hidden="true">
-          <img
-            src={FOOTER_BRAND_BANNER_IMAGE}
-            alt=""
-            loading="lazy"
-            decoding="async"
-            className="h-full w-full object-cover"
-          />
-        </div>
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0d1712]/95 via-[#0d1712]/85 to-[#0d1712]/65" />
+    <footer className="mt-auto border-t border-[#d4af37]/25 bg-[#0c1712] font-sans text-[#e2e8f0] antialiased">
+      {/* 1. ULTRA-PREMIUM BRAND SHOWCASE & CONCIERGE HERO */}
+      <div className="relative isolate overflow-hidden border-b border-[#d4af37]/20 bg-gradient-to-b from-[#0c1712] via-[#09130e] to-[#070f0b]">
+        {/* Subtle Ambient Gold & Emerald Glows */}
+        <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-[#d4af37]/5 blur-[120px]" />
+        <div className="pointer-events-none absolute -right-32 -bottom-32 h-96 w-96 rounded-full bg-[#1b3a2b]/20 blur-[130px]" />
 
-        <div className="w-full px-[clamp(1.25rem,4vw,4.5rem)] py-12 sm:py-16">
-          <div className="flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
-            <div className="max-w-3xl">
-              <p className="inline-flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.22em] text-[#c8d6aa]">
-                <Camera size={13} className="text-[#d4af37]" /> Bhumivera · Botanical care, thoughtfully made
-              </p>
-              <h2 className="mt-3 max-w-2xl font-serif text-3xl leading-tight sm:text-4xl lg:text-5xl">
+        <div className="mx-auto w-full max-w-7xl px-5 py-12 sm:px-8 sm:py-16 lg:px-12">
+          <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
+            <div className="max-w-2xl">
+              <div className="flex items-center gap-3">
+                <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#d4af37]/50 bg-gradient-to-br from-[#13221b] to-[#050807] shadow-[0_0_20px_rgba(212,175,55,0.2)]">
+                  <img
+                    src="/logo.webp"
+                    alt="Bhumivera Crest"
+                    width="40"
+                    height="40"
+                    loading="lazy"
+                    decoding="async"
+                    className="h-9 w-9 object-contain"
+                  />
+                </div>
+                <div>
+                  <span className="font-serif text-2xl font-bold tracking-[0.22em] text-[#d4af37] sm:text-3xl">
+                    BHUMIVERA
+                  </span>
+                  <span className="block text-[9px] font-semibold uppercase tracking-[0.28em] text-[#94a3b8]">
+                    Botanical Maison · Est. India
+                  </span>
+                </div>
+              </div>
+
+              <h2 className="mt-5 font-serif text-2xl leading-snug text-[#f8fafc] sm:text-3xl lg:text-4xl">
                 Pure care, rooted in its source.
               </h2>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-white/65 sm:text-base">
-                Explore the real-life botanicals, laboratory standards, and verified fulfilment practices behind every Bhumivera ritual.
+              <p className="mt-3 text-xs leading-relaxed text-[#cbd5e1] sm:text-sm max-w-xl">
+                Formulated with cold-pressed Himalayan Sea Buckthorn, Pampore Kashmiri Saffron, and certified pH 5.5 clinical actives. Produced in micro-runs of 250 bottles with open label transparency and verifiable lab purity.
               </p>
             </div>
-            <div className="flex flex-wrap gap-3 lg:justify-end">
+
+            <div className="flex flex-wrap items-center gap-3 sm:gap-4 lg:justify-end">
               <button
                 type="button"
                 onClick={() =>
@@ -57,497 +67,353 @@ export default function Footer() {
                     mode: 'navigation_rescue',
                     title: 'Bhumivera Client Concierge & Site Guide',
                     message:
-                      'How can I assist you today? I can help you compare formulations, check ingredient concentrations, track an order, test bottle serial genuinity, or jump to any page on Bhumivera.',
+                      'How may we assist your ritual today? I can help verify bottle genuinity, track transit weight logs, or inspect formulation ingredients.',
                   })
                 }
-                className="inline-flex min-h-11 items-center gap-2 bg-[#d4af37] px-4 py-2.5 text-xs font-bold text-[#071a12] transition-colors hover:bg-[#e5c247]"
+                className="inline-flex min-h-12 items-center gap-2.5 rounded-full bg-gradient-to-r from-[#d4af37] to-[#e5c247] px-6 py-3 text-xs font-bold uppercase tracking-widest text-[#0c1712] shadow-[0_0_25px_rgba(212,175,55,0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_0_35px_rgba(212,175,55,0.45)]"
               >
-                <Sparkles size={14} /> Ask our concierge
+                <Sparkles size={15} /> Client Concierge
               </button>
+
               <Link
-                to="/science#ingredients"
-                className="inline-flex min-h-11 items-center gap-2 bg-[#dce7c5] px-4 py-2.5 text-xs font-semibold text-[#19271e] transition-colors hover:bg-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#dce7c5]"
+                to="/verify"
+                className="inline-flex min-h-12 items-center gap-2.5 rounded-full border border-[#d4af37]/60 bg-[#0c1712]/80 px-6 py-3 text-xs font-bold uppercase tracking-widest text-[#d4af37] shadow-[0_0_15px_rgba(212,175,55,0.15)] backdrop-blur transition-all hover:border-[#d4af37] hover:bg-[#d4af37]/15 hover:text-[#f8fafc]"
               >
-                Explore the ingredients <span aria-hidden="true">↗</span>
+                <ShieldCheck size={16} /> Verify Bottle Serial
+              </Link>
+
+              <Link
+                to="/science"
+                className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 py-3 text-xs font-medium uppercase tracking-widest text-[#e2e8f0] transition-colors hover:border-white/40 hover:bg-white/10"
+              >
+                Lab Science <ArrowRight size={14} />
               </Link>
             </div>
           </div>
+        </div>
+      </div>
 
-          {/* 2. STATIC 4-PILLAR PHOTOGRAPHIC FIELD & LAB DOSSIER GALLERY */}
-          <div className="mt-9 border-t border-white/10 pt-8">
-            <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#c8d6aa]">
-                <span className="h-2 w-2 rounded-full bg-emerald-400" />
-                Real-Life Field &amp; Laboratory Documentation
-              </span>
-              <span className="text-[10px] text-white/50">Select any photographic dossier to inspect</span>
+      {/* 2. UNIFIED LUXURY DIRECTORY (4 BALANCED EDITORIAL COLUMNS - NO BOXES!) */}
+      <div className="mx-auto w-full max-w-7xl px-5 py-12 sm:px-8 sm:py-16 lg:px-12">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
+          
+          {/* Column 1: The Maison & Collections */}
+          <div>
+            <div className="mb-5 flex items-center gap-2 border-b border-[#d4af37]/25 pb-3">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#d4af37]" />
+              <h3 className="font-serif text-sm font-bold uppercase tracking-[0.2em] text-[#d4af37]">
+                Maison &amp; Rituals
+              </h3>
             </div>
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {FOOTER_PHOTO_STORIES.map(story => (
-                <button
-                  key={story.id}
-                  onClick={() => setActiveStory(story)}
-                  type="button"
-                  aria-label={`Inspect photographic dossier: ${story.title}`}
-                  className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0e1914] text-left transition hover:-translate-y-0.5 hover:border-[#d4af37]/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4af37]"
+            <ul className="space-y-3 text-xs sm:text-[13px] text-[#cbd5e1]">
+              <li>
+                <Link to="/shop" className="transition-colors hover:text-[#d4af37] flex items-center justify-between group">
+                  <span>Shop the Collection</span>
+                  <span className="text-[10px] text-[#94a3b8] opacity-0 transition-opacity group-hover:opacity-100">Browse</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/compare" className="transition-colors hover:text-[#d4af37] flex items-center justify-between group">
+                  <span>Compare Formulations</span>
+                  <span className="text-[10px] text-[#94a3b8] opacity-0 transition-opacity group-hover:opacity-100">Matrix</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/somatic-registry" className="transition-colors hover:text-[#d4af37] flex items-center justify-between group">
+                  <span>Somatic Label Registry</span>
+                  <span className="text-[10px] text-[#94a3b8] opacity-0 transition-opacity group-hover:opacity-100">INCI</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/science" className="transition-colors hover:text-[#d4af37] flex items-center justify-between group">
+                  <span>Botanical Science &amp; pH 5.5</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/about" className="transition-colors hover:text-[#d4af37] flex items-center justify-between group">
+                  <span>Our Story &amp; Heritage</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/impact" className="transition-colors hover:text-[#d4af37] flex items-center justify-between group">
+                  <span>Ethical Harvesting &amp; Impact</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/wishlist" className="transition-colors hover:text-[#d4af37] flex items-center justify-between group">
+                  <span>Saved Rituals &amp; Wishlist</span>
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 2: Authenticity & Purity */}
+          <div>
+            <div className="mb-5 flex items-center gap-2 border-b border-[#d4af37]/25 pb-3">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#d4af37]" />
+              <h3 className="font-serif text-sm font-bold uppercase tracking-[0.2em] text-[#d4af37]">
+                Authenticity &amp; Purity
+              </h3>
+            </div>
+            <ul className="space-y-3 text-xs sm:text-[13px] text-[#cbd5e1]">
+              <li>
+                <Link to="/verify" className="inline-flex items-center gap-1.5 font-semibold text-[#d4af37] transition-colors hover:text-[#f8fafc]">
+                  <ShieldCheck size={14} className="shrink-0" />
+                  <span>Verify Bottle Serial &amp; Purity</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/ewarranty" className="transition-colors hover:text-[#d4af37]">
+                  E-Warranty Digital Custody
+                </Link>
+              </li>
+              <li>
+                <Link to="/provenance-engine" className="transition-colors hover:text-[#d4af37]">
+                  Spectrophotometric Lab Assays
+                </Link>
+              </li>
+              <li>
+                <Link to="/purchase-protection" className="transition-colors hover:text-[#d4af37]">
+                  Tamper-Evident Delivery Shield
+                </Link>
+              </li>
+              <li>
+                <Link to="/affiliate" className="transition-colors hover:text-[#d4af37]">
+                  Affiliate Ambassador Program
+                </Link>
+              </li>
+              <li>
+                <Link to="/sell-on-bhumivera" className="transition-colors hover:text-[#d4af37]">
+                  Artisanal Sourcing Partnership
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 3: Client Concierge */}
+          <div>
+            <div className="mb-5 flex items-center gap-2 border-b border-[#d4af37]/25 pb-3">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#d4af37]" />
+              <h3 className="font-serif text-sm font-bold uppercase tracking-[0.2em] text-[#d4af37]">
+                Client Concierge
+              </h3>
+            </div>
+            <ul className="space-y-3 text-xs sm:text-[13px] text-[#cbd5e1]">
+              <li>
+                <Link to="/order-tracking" className="transition-colors hover:text-[#d4af37] flex items-center justify-between group">
+                  <span>Track Consignment AWB</span>
+                  <span className="text-[10px] text-[#94a3b8] opacity-0 transition-opacity group-hover:opacity-100">Live</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/profile" className="transition-colors hover:text-[#d4af37]">
+                  My Profile, Orders &amp; Wallet
+                </Link>
+              </li>
+              <li>
+                <Link to="/address-book" className="transition-colors hover:text-[#d4af37]">
+                  Address Book &amp; Pinpoint
+                </Link>
+              </li>
+              <li>
+                <Link to="/contact" className="transition-colors hover:text-[#d4af37]">
+                  Boutique Concierge &amp; FAQ
+                </Link>
+              </li>
+              <li className="pt-2">
+                <a
+                  href="mailto:support@bhumivera.com"
+                  className="flex items-center gap-2 text-xs font-mono text-[#cbd5e1] transition-colors hover:text-[#d4af37]"
                 >
-                  <div className="aspect-[16/9] w-full overflow-hidden">
-                    <img
-                      src={story.image}
-                      alt={story.title}
-                      loading="lazy"
-                      decoding="async"
-                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
-                    />
-                  </div>
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#09120e]/95 via-[#09120e]/35 to-transparent pointer-events-none" />
-                  <div className="absolute right-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/65 text-[#d4af37] backdrop-blur-sm transition group-hover:bg-[#d4af37] group-hover:text-[#09120e]">
-                    <Eye size={13} />
-                  </div>
-                  <div className="absolute inset-x-0 bottom-0 p-3.5 pointer-events-none">
-                    <p className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-[#d4af37]">
-                      DOSSIER {story.code} · {story.subtitle}
-                    </p>
-                    <h3 className="mt-0.5 font-serif text-base text-white group-hover:text-[#dce7c5]">
-                      {story.title}
-                    </h3>
-                  </div>
-                </button>
+                  <Mail size={13} className="text-[#d4af37] shrink-0" />
+                  support@bhumivera.com
+                </a>
+              </li>
+              <li>
+                <a
+                  href="tel:+917430985647"
+                  className="flex items-center gap-2 text-xs font-mono text-[#cbd5e1] transition-colors hover:text-[#d4af37]"
+                >
+                  <Phone size={13} className="text-[#d4af37] shrink-0" />
+                  +91 74309 85647
+                </a>
+              </li>
+            </ul>
+          </div>
+
+          {/* Column 4: Legal & Anti-Fraud Shield */}
+          <div>
+            <div className="mb-5 flex items-center gap-2 border-b border-[#d4af37]/25 pb-3">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#d4af37]" />
+              <h3 className="font-serif text-sm font-bold uppercase tracking-[0.2em] text-[#d4af37]">
+                Legal &amp; Anti-Fraud Shield
+              </h3>
+            </div>
+            <ul className="space-y-3 text-xs sm:text-[13px] text-[#cbd5e1]">
+              <li>
+                <Link to="/legal/conditions-of-use" className="transition-colors hover:text-[#d4af37]">
+                  Conditions of Use &amp; Sale
+                </Link>
+              </li>
+              <li>
+                <Link to="/legal/shipping-hygiene" className="transition-colors hover:text-[#d4af37]">
+                  Sanitary Sealed Custody Standard
+                </Link>
+              </li>
+              <li>
+                <Link to="/legal/unboxing-antiscam" className="transition-colors hover:text-[#d4af37]">
+                  Mandatory 360° Unboxing Video Rule
+                </Link>
+              </li>
+              <li>
+                <Link to="/legal/wallet-loyalty-referrals" className="transition-colors hover:text-[#d4af37]">
+                  Wallet, Loyalty &amp; Referral Terms
+                </Link>
+              </li>
+              <li>
+                <Link to="/legal/privacy-dpdp" className="transition-colors hover:text-[#d4af37]">
+                  DPDP Act 2023 &amp; Privacy Shield
+                </Link>
+              </li>
+              <li>
+                <Link to="/legal/medical-ip-shield" className="transition-colors hover:text-[#d4af37]">
+                  Medical Disclaimer &amp; IP Protection
+                </Link>
+              </li>
+              <li>
+                <Link to="/legal/arbitration-grievance" className="transition-colors hover:text-[#d4af37]">
+                  Arbitration &amp; Statutory Grievance
+                </Link>
+              </li>
+            </ul>
+          </div>
+
+        </div>
+
+        {/* CONNECT WITH US & VERIFIED CHANNELS STRIP */}
+        <div className="mt-12 border-t border-[#d4af37]/20 pt-8">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            <div className="flex items-center gap-2 text-xs uppercase tracking-widest text-[#94a3b8]">
+              <Send size={14} className="text-[#d4af37]" />
+              <span>Connect With Our Botanical Maison:</span>
+            </div>
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              {[
+                { name: 'Instagram', href: 'https://www.instagram.com/the_rsenterprises' },
+                { name: 'Facebook', href: 'https://facebook.com/Bhumivera' },
+                { name: 'X (Twitter)', href: 'https://twitter.com/Bhumivera' },
+                { name: 'Telegram', href: 'https://t.me/bhumivera' },
+                { name: 'WhatsApp VIP Desk', href: 'https://wa.me/917430985647' },
+              ].map(social => (
+                <a
+                  key={social.name}
+                  href={social.href}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/30 bg-[#070f0b] px-4 py-2 text-xs font-semibold text-[#cbd5e1] transition-all hover:border-[#d4af37] hover:bg-[#d4af37]/15 hover:text-[#d4af37]"
+                >
+                  <span>{social.name}</span>
+                  <ExternalLink size={11} className="opacity-60" />
+                </a>
               ))}
             </div>
           </div>
         </div>
       </div>
 
-      {/* 3. FOOTER DIRECTORY (ALL LINKS HAVE UNIQUE ROUTES & UNIQUE DATA) */}
-      <div className="grid w-full grid-cols-2 items-start gap-4 border-b border-white/10 bg-[#0c1712] px-[clamp(1.25rem,4vw,4.5rem)] py-10 sm:grid-cols-3 sm:gap-5 sm:py-14 xl:grid-cols-6">
-        {/* Column 1: Bhumivera Store */}
-        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 sm:p-5">
-          <h3 className="mb-4 border-b border-white/10 pb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#c8d6aa] sm:mb-5 sm:text-xs">
-            Bhumivera Store
-          </h3>
-          <ul className="space-y-2.5 text-xs leading-5 text-white/65 sm:text-sm">
-            <li>
-              <Link to="/shop" className="transition-colors hover:text-white">
-                Shop the collection
-              </Link>
-            </li>
-            <li>
-              <Link to="/about" className="transition-colors hover:text-white">
-                Our story
-              </Link>
-            </li>
-            <li>
-              <Link to="/impact" className="transition-colors hover:text-white">
-                Our impact
-              </Link>
-            </li>
-            <li>
-              <Link to="/science" className="transition-colors hover:text-white">
-                Product science
-              </Link>
-            </li>
-            <li>
-              <Link to="/wishlist" className="transition-colors hover:text-white">
-                Saved Wishlist
-              </Link>
-            </li>
-            <li>
-              <Link to="/compare" className="transition-colors hover:text-white">
-                Compare Formulations
-              </Link>
-            </li>
-            <li>
-              <Link to="/somatic-registry" className="transition-colors hover:text-white">
-                Somatic Label Registry
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        {/* Column 2: Account & Security */}
-        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 sm:p-5">
-          <h3 className="mb-4 border-b border-white/10 pb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#c8d6aa] sm:mb-5 sm:text-xs">
-            Account &amp; Security
-          </h3>
-          <ul className="space-y-2.5 text-xs leading-5 text-white/65 sm:text-sm">
-            <li>
-              <Link to="/login" className="transition-colors hover:text-white">
-                Customer Sign In
-              </Link>
-            </li>
-            <li>
-              <Link to="/register" className="transition-colors hover:text-white">
-                Create Account
-              </Link>
-            </li>
-            <li>
-              <Link to="/forgot-password" className="transition-colors hover:text-white">
-                Forgot / Reset Password (AI Assist)
-              </Link>
-            </li>
-            <li>
-              <Link to="/profile" className="transition-colors hover:text-white">
-                My Profile, Wallet &amp; Orders
-              </Link>
-            </li>
-            <li>
-              <Link to="/address-book" className="transition-colors hover:text-white">
-                Address Book &amp; Pinpoint
-              </Link>
-            </li>
-            <li>
-              <Link to="/checkout" className="transition-colors hover:text-white">
-                Secure Checkout
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        {/* Column 3: Authenticity & Partners */}
-        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 sm:p-5">
-          <h3 className="mb-4 border-b border-white/10 pb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#c8d6aa] sm:mb-5 sm:text-xs">
-            Authenticity &amp; Partners
-          </h3>
-          <ul className="space-y-2.5 text-xs leading-5 text-white/65 sm:text-sm">
-            <li>
-              <Link to="/ewarranty" className="transition-colors hover:text-white">
-                Verify product &amp; E-Warranty
-              </Link>
-            </li>
-            <li>
-              <Link to="/provenance-engine" className="transition-colors hover:text-white">
-                Provenance &amp; Batch Guide
-              </Link>
-            </li>
-            <li>
-              <Link to="/affiliate" className="transition-colors hover:text-white">
-                Become an affiliate
-              </Link>
-            </li>
-            <li>
-              <Link to="/sell-on-bhumivera" className="transition-colors hover:text-white">
-                Sell on Bhumivera
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        {/* Column 4: Customer Care */}
-        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 sm:p-5">
-          <h3 className="mb-4 border-b border-white/10 pb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#c8d6aa] sm:mb-5 sm:text-xs">
-            Customer care
-          </h3>
-          <ul className="space-y-2.5 text-xs leading-5 text-white/65 sm:text-sm">
-            <li>
-              <Link to="/order-tracking" className="transition-colors hover:text-white">
-                Track an order
-              </Link>
-            </li>
-            <li>
-              <Link to="/verify" className="transition-colors hover:text-[#d4af37]">
-                Verify Bottle Serial &amp; Genuinity
-              </Link>
-            </li>
-            <li>
-              <Link to="/provenance-engine" className="transition-colors hover:text-white">
-                Botanical Sourcing &amp; Provenance
-              </Link>
-            </li>
-            <li>
-              <Link to="/purchase-protection" className="transition-colors hover:text-white">
-                Purchase &amp; Order Protection
-              </Link>
-            </li>
-            <li>
-              <Link to="/contact" className="transition-colors hover:text-white">
-                Help &amp; Support Guide
-              </Link>
-            </li>
-            <li>
-              <a href="mailto:support@bhumivera.com" className="break-words transition-colors hover:text-white">
-                support@bhumivera.com
-              </a>
-            </li>
-            <li>
-              <a href="tel:+917430985647" className="transition-colors hover:text-white">
-                +91 74309 85647
-              </a>
-            </li>
-          </ul>
-        </div>
-
-        {/* Column 5: Legal & Anti-Fraud Shield (8 Unique Dedicated Routes) */}
-        <div className="rounded-2xl border border-[#d4af37]/15 bg-[#d4af37]/[0.035] p-4 sm:p-5">
-          <h3 className="mb-4 border-b border-[#d4af37]/15 pb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#d4af37] sm:mb-5 sm:text-xs">
-            Legal &amp; Anti-Fraud Shield
-          </h3>
-          <ul className="space-y-2.5 text-xs leading-5 text-white/65 sm:text-sm">
-            <li>
-              <Link to="/legal/conditions-of-use" className="transition-colors hover:text-[#e5c247]">
-                Conditions of Use &amp; Sale
-              </Link>
-            </li>
-            <li>
-              <Link to="/legal/shipping-hygiene" className="transition-colors hover:text-[#e5c247]">
-                Shipping &amp; Sealed Sanitary Custody
-              </Link>
-            </li>
-            <li>
-              <Link to="/legal/unboxing-antiscam" className="transition-colors hover:text-[#e5c247]">
-                360° Unboxing &amp; Anti-Scam Rules
-              </Link>
-            </li>
-            <li>
-              <Link to="/legal/wallet-loyalty-referrals" className="transition-colors hover:text-[#e5c247]">
-                Wallet, Loyalty &amp; Referral Terms
-              </Link>
-            </li>
-            <li>
-              <Link to="/legal/warranty-affiliate-b2b" className="transition-colors hover:text-[#e5c247]">
-                Warranty, Affiliate &amp; B2B Terms
-              </Link>
-            </li>
-            <li>
-              <Link to="/legal/privacy-dpdp" className="transition-colors hover:text-[#e5c247]">
-                Privacy &amp; DPDP Act Notice
-              </Link>
-            </li>
-            <li>
-              <Link to="/legal/medical-ip-shield" className="transition-colors hover:text-[#e5c247]">
-                Medical Disclaimer &amp; IP Shield
-              </Link>
-            </li>
-            <li>
-              <Link to="/legal/arbitration-grievance" className="transition-colors hover:text-[#e5c247]">
-                Arbitration &amp; Grievance Officer
-              </Link>
-            </li>
-          </ul>
-        </div>
-
-        {/* Column 6: Connect With Us */}
-        <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 sm:p-5">
-          <h3 className="mb-4 border-b border-white/10 pb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#c8d6aa] sm:mb-5 sm:text-xs">
-            Connect With Us
-          </h3>
-          <ul className="space-y-2.5 text-xs leading-5 text-white/65 sm:text-sm">
-            <li>
-              <a
-                href="https://www.instagram.com/the_rsenterprises"
-                target="_blank"
-                rel="noreferrer"
-                className="transition-colors hover:text-white"
-              >
-                Instagram
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://facebook.com/Bhumivera"
-                target="_blank"
-                rel="noreferrer"
-                className="transition-colors hover:text-white"
-              >
-                Facebook
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://twitter.com/Bhumivera"
-                target="_blank"
-                rel="noreferrer"
-                className="transition-colors hover:text-white"
-              >
-                X (Twitter)
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://t.me/bhumivera"
-                target="_blank"
-                rel="noreferrer"
-                className="transition-colors hover:text-white"
-              >
-                Telegram Community
-              </a>
-            </li>
-            <li>
-              <a
-                href="https://wa.me/917430985647"
-                target="_blank"
-                rel="noreferrer"
-                className="transition-colors hover:text-white"
-              >
-                WhatsApp Support Desk
-              </a>
-            </li>
-          </ul>
-        </div>
-      </div>
-
-      {/* 4. STATUTORY COMPLIANCE, ANTI-SCAM & CONSUMER PROTECTION SHIELD BAR */}
-      <div className="border-t border-white/10 bg-[#0a120e]">
-        <div className="w-full px-[clamp(1.25rem,4vw,4.5rem)] py-8 sm:py-10">
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
-            <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-4">
-              <ShieldCheck size={18} className="mt-0.5 shrink-0 text-[#d4af37]" />
+      {/* 3. STATUTORY COMPLIANCE & CONSUMER PROTECTION PILLARS */}
+      <div className="border-t border-[#d4af37]/20 bg-[#070f0b]">
+        <div className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 sm:py-10 lg:px-12">
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            
+            <div className="flex items-start gap-3 rounded-2xl border border-[#d4af37]/20 bg-[#0c1712]/60 p-4 backdrop-blur-sm">
+              <ShieldCheck size={20} className="mt-0.5 shrink-0 text-[#d4af37]" />
               <div>
-                <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#dce7c5]">
-                  100% Sealed Virgin Sanitary Custody
+                <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#d4af37]">
+                  100% Sealed Sanitary Custody
                 </h4>
-                <p className="mt-1 text-[11px] leading-5 text-white/55">
-                  Artisanal small-batch personal care cosmetics bottled with tamper-evident seals to preserve uncompromised hygiene and potency. Verified patrons receive direct concierge care.
+                <p className="mt-1 text-[11px] leading-relaxed text-[#94a3b8]">
+                  Artisanal micro-batch personal care bottled with tamper-evident seals to safeguard uncompromised potency and pure hygiene.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-4">
-              <FileCheck2 size={18} className="mt-0.5 shrink-0 text-emerald-400" />
+            <div className="flex items-start gap-3 rounded-2xl border border-[#d4af37]/20 bg-[#0c1712]/60 p-4 backdrop-blur-sm">
+              <FileCheck2 size={20} className="mt-0.5 shrink-0 text-[#d4af37]" />
               <div>
-                <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#dce7c5]">
-                  Mandatory 360° Unboxing Proof Rule
+                <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#d4af37]">
+                  360° Unboxing Video Mandate
                 </h4>
-                <p className="mt-1 text-[11px] leading-5 text-white/55">
-                  Any transit-damage, leakage, or missing-item claim must include complete 360° unboxing proof showing the sealed outer box &amp; AWB within 48 hours.
+                <p className="mt-1 text-[11px] leading-relaxed text-[#94a3b8]">
+                  Transit damage or shortage claims require an uncut 360° unboxing recording displaying outer AWB label within 48h.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-4">
-              <Lock size={18} className="mt-0.5 shrink-0 text-[#d4af37]" />
+            <div className="flex items-start gap-3 rounded-2xl border border-[#d4af37]/20 bg-[#0c1712]/60 p-4 backdrop-blur-sm">
+              <Lock size={20} className="mt-0.5 shrink-0 text-[#d4af37]" />
               <div>
-                <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#dce7c5]">
-                  Cryptographic &amp; Weight-Scan Shield
+                <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#d4af37]">
+                  Digital Weight-Scan Shield
                 </h4>
-                <p className="mt-1 text-[11px] leading-5 text-white/55">
-                  Dispatches are weight-logged and security-sealed. Promotional/Referral credits are non-withdrawable, and false chargebacks or Sybil abuse trigger permanent blacklisting.
+                <p className="mt-1 text-[11px] leading-relaxed text-[#94a3b8]">
+                  Warehouse shipments are precision-calibrated by digital weight scanners to eliminate discrepancy and fraudulent substitutions.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 rounded-xl border border-white/10 bg-white/[0.02] p-4">
-              <Scale size={18} className="mt-0.5 shrink-0 text-emerald-400" />
+            <div className="flex items-start gap-3 rounded-2xl border border-[#d4af37]/20 bg-[#0c1712]/60 p-4 backdrop-blur-sm">
+              <Scale size={20} className="mt-0.5 shrink-0 text-[#d4af37]" />
               <div>
-                <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#dce7c5]">
-                  Statutory &amp; Arbitration Governance
+                <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#d4af37]">
+                  Sovereign Legal Governance
                 </h4>
-                <p className="mt-1 text-[11px] leading-5 text-white/55">
-                  Protected under CPA 2019, E-Commerce Rules 2020, IT Act 2000, DPDP Act 2023 &amp; Indian Contract Act 1872, with binding arbitration &amp; West Bengal jurisdiction.
+                <p className="mt-1 text-[11px] leading-relaxed text-[#94a3b8]">
+                  Protected under CPA 2019, IT Act 2000, and DPDP Act 2023 with binding arbitration seated under West Bengal jurisdiction.
                 </p>
               </div>
             </div>
+
           </div>
         </div>
       </div>
 
-      {/* 5. BOTTOM LEGAL & BRAND CREST BAR */}
-      <div className="border-t border-white/10 bg-[#070d0a]">
-        <div className="flex w-full flex-col items-center gap-5 px-[clamp(1.25rem,4vw,4.5rem)] py-7 lg:flex-row lg:justify-between">
-          <Link to="/" aria-label="Bhumivera home" className="flex items-center gap-3.5">
-            <div className="relative h-12 w-12 overflow-hidden rounded-full border border-[#d4af37]/40 bg-[#111c17]">
-              <img
-                src="/logo.webp"
-                alt="Bhumivera Crest"
-                width="48"
-                height="48"
-                loading="lazy"
-                decoding="async"
-                className="absolute inset-0 h-full w-full object-contain p-1"
-              />
-            </div>
-            <div>
-              <span className="block font-serif text-sm tracking-[0.18em] text-white/90">BHUMIVERA</span>
-              <span className="block text-[9px] uppercase tracking-[0.16em] text-[#c8d6aa]/70">
-                Botanical Maison · Est. India
+      {/* 4. BOTTOM TRADEMARK & PROMINENT DEVELOPER BRANDING BAR */}
+      <div className="border-t border-[#d4af37]/25 bg-[#050907] pb-28 sm:pb-8 pt-8">
+        <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-6 px-5 sm:px-8 lg:flex-row lg:px-12">
+          
+          {/* Copyright & Trademark */}
+          <div className="flex items-center gap-3 text-center sm:text-left">
+            <p className="text-xs tracking-wider text-[#94a3b8]">
+              © {currentYear} <span className="font-serif font-bold text-[#d4af37]">BHUMIVERA</span> · Botanical Maison · All Rights Reserved
+            </p>
+          </div>
+
+          {/* PROMINENT DEVELOPER BRANDING: AKASH PRASAD */}
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+            <span className="text-[10px] uppercase tracking-[0.25em] text-[#94a3b8]">
+              Architectural Engineering &amp; Design
+            </span>
+            <span className="hidden sm:inline text-[#d4af37]/50">•</span>
+            <div className="group inline-flex items-center gap-2 rounded-full border border-[#d4af37]/60 bg-[#d4af37]/15 px-4 py-1.5 shadow-[0_0_20px_rgba(212,175,55,0.25)] transition-all hover:bg-[#d4af37] hover:scale-105">
+              <Sparkles size={13} className="text-[#d4af37] group-hover:text-[#0c1712] transition-colors" />
+              <span className="font-serif text-xs font-bold uppercase tracking-[0.2em] text-[#d4af37] group-hover:text-[#0c1712] transition-colors">
+                Developed By Akash Prasad
               </span>
             </div>
-          </Link>
+          </div>
 
-          <p className="text-center text-[9px] font-semibold uppercase tracking-[0.14em] text-white/40 lg:text-right">
-            © {currentYear} Bhumivera · Pure care, rooted in its source
-          </p>
+          {/* Quick Legal Pill Links */}
+          <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-[#94a3b8]">
+            <Link to="/legal/privacy-dpdp" className="transition-colors hover:text-[#d4af37]">Privacy Policy</Link>
+            <span>·</span>
+            <Link to="/legal/conditions-of-use" className="transition-colors hover:text-[#d4af37]">Terms of Sale</Link>
+            <span>·</span>
+            <Link to="/legal/arbitration-grievance" className="transition-colors hover:text-[#d4af37]">Grievance Officer</Link>
+          </div>
+
         </div>
       </div>
-
-      {/* 6. STATIC PHOTOGRAPHIC FIELD DOSSIER MODAL (NO VIDEO ANIMATION) */}
-      {activeStory && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-labelledby="footer-story-modal-title"
-          className="fixed inset-0 z-[250] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md"
-          onClick={e => {
-            if (e.target === e.currentTarget) setActiveStory(null);
-          }}
-        >
-          <div className="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-white/15 bg-[#101c16] text-white shadow-2xl">
-            <button
-              type="button"
-              onClick={() => setActiveStory(null)}
-              aria-label="Close photographic dossier modal"
-              className="absolute right-4 top-4 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/70 text-white hover:bg-white hover:text-black"
-            >
-              <X size={16} />
-            </button>
-            <div className="grid md:grid-cols-[1.2fr_0.8fr]">
-              <div className="relative bg-black md:min-h-[380px]">
-                <img
-                  src={activeStory.modalDetailImage}
-                  alt={activeStory.title}
-                  className="h-full w-full object-cover"
-                />
-                <div className="absolute bottom-3 left-3 right-3 rounded-xl border border-white/15 bg-black/75 p-3 backdrop-blur-md">
-                  <p className="flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-[#d4af37]">
-                    <MapPin size={12} /> {activeStory.location}
-                  </p>
-                  <p className="mt-1 text-xs text-white/85">{activeStory.realLifeExample}</p>
-                </div>
-              </div>
-              <div className="flex flex-col justify-between p-6 sm:p-7">
-                <div>
-                  <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#d4af37]">
-                    Bhumivera Field Dossier · {activeStory.code}
-                  </span>
-                  <h3 id="footer-story-modal-title" className="mt-2 font-serif text-2xl text-white">
-                    {activeStory.title}
-                  </h3>
-                  <p className="mt-1 text-xs font-semibold text-[#c8d6aa]">{activeStory.subtitle}</p>
-                  <p className="mt-4 text-xs leading-6 text-white/75 sm:text-sm">{activeStory.description}</p>
-
-                  <div className="mt-5 space-y-2 border-t border-white/10 pt-4 text-[11px] text-white/70">
-                    <p className="flex items-center gap-2">
-                      <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
-                      Verified Metric: {activeStory.metric}
-                    </p>
-                    <p className="flex items-center gap-2">
-                      <AlertTriangle size={13} className="text-[#d4af37] shrink-0" />
-                      Documented with Real-Life Batch &amp; Field Photography
-                    </p>
-                  </div>
-                </div>
-
-                <div className="mt-6 flex flex-col gap-2.5 pt-4">
-                  <Link
-                    to={activeStory.link}
-                    onClick={() => setActiveStory(null)}
-                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-4 py-2 text-xs font-bold text-[#09120e] hover:bg-[#e5c247]"
-                  >
-                    {activeStory.linkLabel} <ArrowRight size={14} />
-                  </Link>
-                  <Link
-                    to="/legal?section=all"
-                    onClick={() => setActiveStory(null)}
-                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-white/20 px-4 py-2 text-xs font-semibold text-white/80 hover:bg-white/10"
-                  >
-                    View Full 8-Part Master Legal Agreement
-                  </Link>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </footer>
   );
 }

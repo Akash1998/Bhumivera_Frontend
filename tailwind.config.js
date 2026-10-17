@@ -4,10 +4,16 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        sans: ['Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        sans: ['Plus Jakarta Sans', 'Inter', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        serif: ['Cinzel', 'Cormorant Garamond', 'Georgia', 'serif'],
         editorial: ['Cormorant Garamond', 'Georgia', 'serif'],
+        royal: ['Cinzel', 'serif'],
       },
       colors: {
+        'bhumivera-green': '#0c1712',
+        'bhumivera-gold': '#d4af37',
+        'bhumivera-silver': '#e2e8f0',
+        'bhumivera-black': '#050807',
         olive: {
           50: '#f4f5f0',
           100: '#e1e4d1',
@@ -16,7 +22,7 @@ export default {
           700: '#555500',
           800: '#3d3d00',
         },
-        alabaster: '#fdfdfb',
+        alabaster: '#0c1712',
       },
       animation: {
         'fluid-drift': 'fluid-drift 20s ease-in-out infinite',

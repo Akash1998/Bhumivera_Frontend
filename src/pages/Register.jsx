@@ -132,7 +132,7 @@ export default function Register() {
         setError(
           <span className="flex flex-col gap-1.5">
             <span>This email is already registered in the registry.</span>
-            <Link to="/login" className="font-bold underline text-[#8B5A2B] hover:text-[#0B2419] transition-colors w-max">
+            <Link to="/login" className="font-bold underline text-[#d4af37] hover:text-[#0B2419] transition-colors w-max">
               Click here to Log In Instead
             </Link>
           </span>
@@ -180,7 +180,7 @@ export default function Register() {
       {/* Botanical Background Accents */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[5%] right-[15%] w-[600px] h-[600px] bg-[#0B2419]/5 rounded-full blur-[120px]"></div>
-        <div className="absolute bottom-[5%] left-[15%] w-[500px] h-[500px] bg-[#8B5A2B]/5 rounded-full blur-[100px]"></div>
+        <div className="absolute bottom-[5%] left-[15%] w-[500px] h-[500px] bg-[#d4af37]/5 rounded-full blur-[100px]"></div>
       </div>
 
       <div className="w-full max-w-md relative z-10">
@@ -220,7 +220,7 @@ export default function Register() {
                     ) : (
                       <>
                         <input id="referralCode" name="referralCode" type="text" autoComplete="off" maxLength={32} value={formData.referralCode} onChange={handleInputChange} placeholder="Enter a friend’s code" disabled={loading} className="w-full rounded-2xl border border-[#0B2419]/10 bg-[#F3F9F1] px-4 py-4 text-sm text-[#0B2419] outline-none focus:border-[#D4AF37] focus:bg-white disabled:opacity-50"/>
-                        {formData.referralCode.trim() && <p aria-live="polite" className={`mt-1 pl-1 text-xs ${referralPreview.valid ? 'text-emerald-800' : 'text-[#8B5A2B]'}`}>{referralPreview.loading ? 'Checking referral code…' : referralPreview.valid ? `Referred by ${referralPreview.referrerName}. Both accounts may earn the configured referral balance after approval.` : 'Referral code not found. Check the code before continuing.'}</p>}
+                        {formData.referralCode.trim() && <p aria-live="polite" className={`mt-1 pl-1 text-xs ${referralPreview.valid ? 'text-emerald-800' : 'text-[#d4af37]'}`}>{referralPreview.loading ? 'Checking referral code…' : referralPreview.valid ? `Referred by ${referralPreview.referrerName}. Both accounts may earn the configured referral balance after approval.` : 'Referral code not found. Check the code before continuing.'}</p>}
                       </>
                     )}
                   </div>
@@ -230,7 +230,7 @@ export default function Register() {
                     <div className="px-1" aria-live="polite">
                       <div className="mb-2 flex items-center justify-between gap-2">
                         <p className="text-xs font-semibold text-[#0B2419]">Password requirements</p>
-                        <p className={`text-xs font-semibold ${passwordIsValid ? 'text-emerald-700' : 'text-[#8B5A2B]'}`}>
+                        <p className={`text-xs font-semibold ${passwordIsValid ? 'text-emerald-700' : 'text-[#d4af37]'}`}>
                           {passwordStrength}/{passwordChecks.length} complete
                         </p>
                       </div>
@@ -250,7 +250,7 @@ export default function Register() {
 
                   <div className="pt-2">
                     <label className="block text-[10px] font-bold text-[#0B2419] uppercase tracking-[0.2em] mb-1 pl-1">Security Question</label>
-                    <p className="text-[10px] text-[#8B5A2B] italic mb-3 pl-1">"What is your mother's maiden name?"</p>
+                    <p className="text-[10px] text-[#d4af37] italic mb-3 pl-1">"What is your mother's maiden name?"</p>
                     <InputField icon={<Key size={18}/>} type="text" name="securityAnswer" value={formData.securityAnswer} onChange={handleInputChange} placeholder="Your Answer" disabled={loading} />
                   </div>
 
@@ -362,7 +362,7 @@ export default function Register() {
 
 const InputField = ({ icon, ...props }) => (
   <div className="relative group">
-    <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-[#0B2419]/30 group-focus-within:text-[#8B5A2B] transition-colors">
+    <div className="absolute inset-y-0 left-0 pl-5 flex items-center pointer-events-none text-[#0B2419]/30 group-focus-within:text-[#d4af37] transition-colors">
       {icon}
     </div>
     <input 

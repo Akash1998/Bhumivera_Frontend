@@ -6,9 +6,6 @@ import MobileBottomNav from "./components/MobileBottomNav.jsx";
 import { useNativeBackButton } from "./hooks/useNativeBackButton.js";
 import { initPushNotifications } from "./utils/pushNotifications.js";
 import Footer from "./components/Footer.jsx";
-import MiniCart from "./components/MiniCart.jsx";
-import SupportAssistant from "./components/SupportAssistant.jsx";
-import VisualGuideModal from "./components/VisualGuideModal.jsx";
 import { CartProvider, useCart } from "./context/CartContext.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { ToastProvider } from "./context/ToastContext.jsx";
@@ -83,6 +80,10 @@ const lazyWithRetry = (componentImport) =>
       return { default: () => <ModuleLoadError error={error} /> };
     }
   });
+
+const MiniCart = lazyWithRetry(() => import("./components/MiniCart.jsx"));
+const SupportAssistant = lazyWithRetry(() => import("./components/SupportAssistant.jsx"));
+const VisualGuideModal = lazyWithRetry(() => import("./components/VisualGuideModal.jsx"));
 
 // Storefront & Portal Pages
 const Home = lazyWithRetry(() => import("./pages/PremiumHome.jsx"));
@@ -326,7 +327,7 @@ function AppContent() {
       {!isManagementView && <Navbar />}
       {!isManagementView && <NetworkStatus />}
       
-      <main id="main-content" className="flex-1 w-full flex flex-col">
+      <main id="main-content" className="flex-1 w-full flex flex-col overflow-x-hidden">
         <ScrollToTop /> 
         
         <Suspense fallback={<PageLoader />}>
@@ -425,13 +426,25 @@ function AppContent() {
       </main>
 
       {!isManagementView && <Footer />}
-      {!isManagementView && <MiniCart />}
-      {!isManagementView && <SupportAssistant />}
-      <VisualGuideModal
-        isOpen={visualGuideState.isOpen}
-        initialTab={visualGuideState.tab}
-        onClose={() => setVisualGuideState(prev => ({ ...prev, isOpen: false }))}
-      />
+      {!isManagementView && (
+        <Suspense fallback={null}>
+          <MiniCart />
+        </Suspense>
+      )}
+      {!isManagementView && (
+        <Suspense fallback={null}>
+          <SupportAssistant />
+        </Suspense>
+      )}
+      <Suspense fallback={null}>
+        {visualGuideState.isOpen && (
+          <VisualGuideModal
+            isOpen={visualGuideState.isOpen}
+            initialTab={visualGuideState.tab}
+            onClose={() => setVisualGuideState(prev => ({ ...prev, isOpen: false }))}
+          />
+        )}
+      </Suspense>
       <div id="google_translate_element" className="google-translate-host" aria-hidden="true" />
     </div>
   );
