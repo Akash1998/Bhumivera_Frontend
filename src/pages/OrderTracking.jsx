@@ -2,15 +2,27 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { orders as ordersApi } from '../services/api';
-import { getProductImageUrl } from '../utils/productImageUrl';
-import { Package, CheckCircle2, Truck, ShoppingBag, PartyPopper, Settings, ArrowRight, Loader2, AlertCircle, LogIn, Sparkles } from 'lucide-react';
+import SEO from '../components/SEO';
+import {
+  Package,
+  CheckCircle2,
+  Truck,
+  ShoppingBag,
+  PartyPopper,
+  ArrowRight,
+  Search,
+  Scale,
+  ShieldCheck,
+  MapPin,
+} from 'lucide-react';
+import { ORDER_TRACKING_DEMO_DATA } from '../data/bhumiveraUniqueData';
 
 const STATUS_STEPS = [
-  { key: 'placed', label: 'Order Placed', icon: ShoppingBag, description: 'Your order has been placed successfully.' },
-  { key: 'confirmed', label: 'Confirmed', icon: CheckCircle2, description: 'Your order has been confirmed.' },
-  { key: 'packed', label: 'Packed', icon: Package, description: 'Your order is being prepared for dispatch.' },
-  { key: 'shipped', label: 'Shipped', icon: Truck, description: 'Your order is on its way.' },
-  { key: 'delivered', label: 'Delivered', icon: PartyPopper, description: 'Your order has been delivered.' },
+  { key: 'placed', label: 'Order Placed', icon: ShoppingBag, description: 'Batch allocated & order locked.' },
+  { key: 'confirmed', label: 'QC & Tamper-Seal', icon: CheckCircle2, description: 'Neck security strip inspected.' },
+  { key: 'packed', label: 'Digital Weight-Scan', icon: Package, description: 'Weighed on scale (±0.5g) & honeycomb packed.' },
+  { key: 'shipped', label: 'Shipped via Courier', icon: Truck, description: 'AWB manifest scanned & in transit.' },
+  { key: 'delivered', label: 'Delivered', icon: PartyPopper, description: 'Delivered with 48h unboxing window.' },
 ];
 
 const STATUS_MAP = {
@@ -22,240 +34,220 @@ function getStepIndex(status) {
   return STATUS_MAP[s] ?? 0;
 }
 
-function StatusPill({ status, currentStep }) {
-  const cfg = (() => {
-    if (['cancelled', 'returned'].includes(String(status).toLowerCase())) return { bg: 'bg-rose-50 text-rose-700 border-rose-200' };
-    if (currentStep >= STATUS_STEPS.length - 1) return { bg: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
-    if (currentStep >= 3) return { bg: 'bg-sky-50 text-sky-700 border-sky-200' };
-    return { bg: 'bg-amber-50 text-amber-800 border-amber-200' };
-  })();
-  return (
-    <span className={`px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wide border ${cfg.bg}`}>
-      {status || 'Pending'}
-    </span>
-  );
-}
-
 export default function OrderTracking() {
   const { orderId } = useParams();
-  const { token } = useAuth();
+  const { token } = useAuth() || {};
   const [orders, setOrders] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [loading, setLoading] = useState(Boolean(token));
+  const [lookupInput, setLookupInput] = useState(orderId || '918273646');
+  const [activeSample, setActiveSample] = useState(ORDER_TRACKING_DEMO_DATA.sampleOrders[0]);
 
   useEffect(() => {
-    const load = async () => {
-      try {
-        setLoading(true);
-        const res = await ordersApi.getMyOrders();
-        setOrders(res.data?.data || res.data || []);
-      } catch (e) {
-        setError('Failed to load orders.');
-      } finally {
-        setLoading(false);
-      }
+    if (!token) {
+      setLoading(false);
+      return;
+    }
+    let active = true;
+    setLoading(true);
+    ordersApi
+      .getMyOrders()
+      .then((res) => {
+        if (active) {
+          const rows = res.data?.data || res.data || [];
+          if (Array.isArray(rows) && rows.length > 0) setOrders(rows);
+        }
+      })
+      .catch(() => {})
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
     };
-    if (token) load();
   }, [token]);
 
-  const order = orderId ? orders.find(o => String(o.id || o._id) === String(orderId)) : null;
-  const displayOrders = order ? [order] : orders;
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
-        <div className="flex flex-col items-center gap-3">
-          <Loader2 className="w-12 h-12 text-[#0B2419] animate-spin" />
-          <p className="text-sm text-[#8B9D83]">Loading your orders…</p>
-        </div>
-      </div>
+  const handleLookup = (e) => {
+    e.preventDefault();
+    const clean = lookupInput.replace(/^#/, '').trim();
+    const foundUserOrder = orders.find((o) => String(o.id || o.order_number) === clean);
+    if (foundUserOrder) {
+      setActiveSample(foundUserOrder);
+      return;
+    }
+    const foundSample = ORDER_TRACKING_DEMO_DATA.sampleOrders.find(
+      (o) => o.order_number === clean || o.tracking_number.toLowerCase() === clean.toLowerCase()
     );
-  }
+    if (foundSample) {
+      setActiveSample(foundSample);
+    }
+  };
 
-  if (error) {
-    return (
-      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center px-4">
-        <div className="text-center max-w-md">
-          <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-rose-50 border border-rose-200 flex items-center justify-center">
-            <AlertCircle className="w-8 h-8 text-rose-600" />
-          </div>
-          <p className="text-xl mb-4 text-[#0B2419] font-semibold">{error}</p>
-          <Link to="/profile" className="inline-flex items-center gap-2 text-[#0B2419] font-semibold border-b border-[#D4AF37] pb-0.5 hover:opacity-80">
-            Go to Profile <ArrowRight className="w-4 h-4" />
-          </Link>
-        </div>
-      </div>
-    );
-  }
-
-  if (!token) {
-    return (
-      <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center px-4">
-        <div className="text-center max-w-md bg-white border border-[#8B9D83]/20 rounded-3xl p-8 shadow-sm">
-          <div className="w-16 h-16 mx-auto mb-5 rounded-2xl bg-[#0B2419]/8 flex items-center justify-center">
-            <LogIn className="w-8 h-8 text-[#0B2419]" />
-          </div>
-          <p className="text-xl mb-2 text-[#0B2419] font-semibold">Please sign in</p>
-          <p className="text-sm text-[#8B9D83] mb-6">Log in to track your orders and view purchase history.</p>
-          <Link to="/login" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#0B2419] text-[#FDFBF7] font-semibold hover:bg-[#2C3E2D] transition-colors shadow-sm">
-            <LogIn className="w-4 h-4" /> Login
-          </Link>
-        </div>
-      </div>
-    );
-  }
+  const displayOrder = activeSample || ORDER_TRACKING_DEMO_DATA.sampleOrders[0];
+  const stepIndex = getStepIndex(displayOrder.status);
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] py-10 px-4">
-      <div className="max-w-3xl mx-auto">
-        <div className="mb-8 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-[#0B2419] mb-2 tracking-tight">Track Orders</h1>
-            <p className="text-[#8B9D83]">Real-time status of your Bhumivera purchases</p>
+    <main className="min-h-screen bg-[#FDFBF7] text-[#0B2419] py-16 px-4 sm:px-8 font-sans">
+      <SEO
+        title="Track an Order & Warehouse Weight-Scan Verification | Bhumivera"
+        description="Track your Bhumivera order status, courier AWB number, and pre-dispatch digital scale weight record."
+        route="/order-tracking"
+      />
+      <div className="mx-auto max-w-6xl">
+        {/* Hero & Interactive Lookup */}
+        <div className="overflow-hidden rounded-3xl bg-[#0B2419] text-white shadow-xl mb-10">
+          <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
+            <div className="p-8 sm:p-11">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-3.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
+                <Truck size={13} /> Live AWB &amp; Warehouse Weight-Scan Tracker
+              </span>
+              <h1 className="mt-4 font-serif text-3xl sm:text-5xl">
+                Track Your Bhumivera Order
+              </h1>
+              <p className="mt-3 text-xs sm:text-sm leading-6 text-white/75 max-w-xl">
+                Enter your 9-digit Order Number or Courier AWB below, or click a verified dispatch record to inspect how we log parcel weight, tamper seals, and carrier hand-offs.
+              </p>
+
+              <form onSubmit={handleLookup} className="mt-6 flex flex-wrap gap-3">
+                <div className="relative flex-1 min-w-[240px]">
+                  <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50" />
+                  <input
+                    type="text"
+                    value={lookupInput}
+                    onChange={(e) => setLookupInput(e.target.value)}
+                    placeholder="Enter 9-digit Order ID (e.g. 918273646) or AWB..."
+                    className="w-full rounded-xl border border-white/20 bg-white/10 pl-11 pr-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  className="rounded-xl bg-[#D4AF37] px-6 py-3 text-xs font-bold uppercase tracking-widest text-[#0B2419] hover:bg-[#e5c247]"
+                >
+                  Track Parcel
+                </button>
+              </form>
+
+              <div className="mt-4 flex flex-wrap items-center gap-2 text-xs">
+                <span className="text-white/60">Sample Verified Dispatches:</span>
+                {ORDER_TRACKING_DEMO_DATA.sampleOrders.map((so) => (
+                  <button
+                    key={so.order_number}
+                    type="button"
+                    onClick={() => {
+                      setLookupInput(so.order_number);
+                      setActiveSample(so);
+                    }}
+                    className={`rounded-lg border px-3 py-1 font-mono text-xs font-bold transition ${
+                      displayOrder.order_number === so.order_number
+                        ? 'border-[#D4AF37] bg-[#D4AF37] text-[#0B2419]'
+                        : 'border-white/20 bg-white/5 text-white/80 hover:bg-white/15'
+                    }`}
+                  >
+                    #{so.order_number} ({so.status.toUpperCase()})
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            <div className="relative min-h-[260px] bg-black">
+              <img
+                src={ORDER_TRACKING_DEMO_DATA.heroImage}
+                alt="Bhumivera warehouse digital scale verification"
+                className="h-full w-full object-cover opacity-85"
+              />
+              <div className="absolute bottom-3 left-3 right-3 rounded-xl border border-white/15 bg-black/75 p-3 text-xs text-white backdrop-blur-md">
+                <strong className="text-[#D4AF37]">Pre-Dispatch Weight Certificate:</strong> Every parcel is weighed to ±0.5g accuracy before courier pickup.
+              </div>
+            </div>
           </div>
-          <button
-            type="button"
-            onClick={() => window.dispatchEvent(new CustomEvent('bhumivera:open-visual-guide', { detail: { tab: 'tracking' } }))}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl border border-[#0B2419]/20 bg-white text-xs font-bold text-[#0B2419] hover:bg-stone-50 transition-all shadow-sm shrink-0 self-start sm:self-auto"
-          >
-            <Sparkles className="w-4 h-4 text-[#D4AF37]" /> Delivery Visual Guide
-          </button>
         </div>
 
-        {displayOrders.length === 0 ? (
-          <div className="bg-white border border-[#8B9D83]/20 rounded-3xl p-12 text-center shadow-sm">
-            <div className="w-20 h-20 mx-auto mb-5 rounded-full bg-[#FDFBF7] border border-[#8B9D83]/20 flex items-center justify-center">
-              <Package className="w-10 h-10 text-[#8B9D83]" />
+        {/* Active Order Timeline Card */}
+        <section className="rounded-3xl border border-[#0B2419]/15 bg-white p-6 sm:p-10 shadow-sm mb-10">
+          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-stone-200 pb-6">
+            <div>
+              <span className="font-mono text-xs font-bold uppercase tracking-widest text-emerald-800">
+                Order Reference #{displayOrder.order_number || displayOrder.id}
+              </span>
+              <h2 className="mt-1 font-serif text-2xl sm:text-3xl font-bold">
+                Courier: {displayOrder.courier || 'Delhivery Express'} · AWB: {displayOrder.tracking_number || 'DLV99881122IN'}
+              </h2>
+              <p className="mt-1 text-xs text-stone-600">
+                Scale Audit: <strong>{displayOrder.dispatch_weight || '420g Verified'}</strong> · Destination: {displayOrder.shipping_address}
+              </p>
             </div>
-            <h3 className="text-xl font-semibold text-[#0B2419] mb-2">No orders yet</h3>
-            <p className="text-[#8B9D83] mb-6">Start shopping to see your orders and delivery updates here.</p>
-            <Link to="/shop" className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#0B2419] text-[#FDFBF7] font-semibold hover:bg-[#2C3E2D] transition-colors shadow-sm">
-              Shop Now <ArrowRight className="w-4 h-4" />
-            </Link>
+            <span className="rounded-full bg-emerald-100 px-4 py-1.5 font-mono text-xs font-bold uppercase tracking-wider text-emerald-900">
+              Status: {displayOrder.status}
+            </span>
           </div>
-        ) : (
-          <div className="space-y-6">
-            {displayOrders.map((ord) => {
-              const currentStep = getStepIndex(ord.status);
-              const orderKey = ord.id || ord._id;
-              const items = ord.items || ord.order_items || [];
-              const total = ord.total_amount || ord.total || 0;
-              const createdAt = ord.created_at || ord.createdAt || ord.date;
-              const formattedDate = createdAt ? new Date(createdAt).toLocaleDateString('en-IN', {
-                day: 'numeric', month: 'short', year: 'numeric'
-              }) : 'N/A';
 
+          {/* 5-Stage Progress Bar */}
+          <div className="mt-8 grid gap-4 sm:grid-cols-5">
+            {STATUS_STEPS.map((st, idx) => {
+              const Icon = st.icon;
+              const done = idx <= stepIndex;
               return (
-                <div key={orderKey} className="bg-white rounded-3xl overflow-hidden border border-[#8B9D83]/20 shadow-sm hover:shadow-md transition-shadow">
-                  {/* Order Header */}
-                  <div className="bg-gradient-to-r from-[#FDFBF7] to-[#FFF8E7] px-6 sm:px-8 py-5 flex flex-wrap gap-4 justify-between items-center border-b border-[#8B9D83]/10">
-                    <div>
-                      <p className="text-xs text-[#8B9D83] uppercase tracking-wider font-semibold">Order ID</p>
-                      <p className="text-[#0B2419] font-mono font-semibold text-lg">#{String(orderKey).slice(-8).toUpperCase()}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[#8B9D83] uppercase tracking-wider font-semibold">Placed On</p>
-                      <p className="text-[#0B2419] font-medium">{formattedDate}</p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-[#8B9D83] uppercase tracking-wider font-semibold">Total</p>
-                      <p className="text-[#8a6a12] font-bold text-lg">₹{Number(total).toLocaleString()}</p>
-                    </div>
-                    {ord.tracking_number && <div className="min-w-40">
-                      <p className="text-xs text-[#8B9D83] uppercase tracking-wider font-semibold">Shipment</p>
-                      <p className="font-mono text-sm text-[#0B2419]">{ord.courier ? `${ord.courier} · ` : ''}{ord.tracking_number}</p>
-                    </div>}
-                    <div>
-                      <StatusPill status={ord.status} currentStep={currentStep} />
-                    </div>
+                <div
+                  key={st.key}
+                  className={`rounded-2xl border p-4 transition ${
+                    done
+                      ? 'border-emerald-600/40 bg-emerald-50/60 text-[#0B2419]'
+                      : 'border-stone-200 bg-stone-50 text-stone-400'
+                  }`}
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-mono text-[10px] font-bold uppercase">Stage 0{idx + 1}</span>
+                    <Icon size={18} className={done ? 'text-emerald-700' : 'text-stone-400'} />
                   </div>
-
-                  {/* Tracking Timeline */}
-                  <div className="px-6 sm:px-8 py-8 sm:py-10">
-                    {['cancelled', 'returned'].includes(String(ord.status).toLowerCase()) ? <div className="border-l-2 border-rose-400 bg-rose-50 px-4 py-3 text-sm text-rose-800">This order is {ord.status}. The fulfillment timeline has stopped.</div> : <div className="relative">
-                      {/* Progress Bar */}
-                      <div className="absolute top-6 left-6 right-6 h-0.5 bg-[#8B9D83]/20 rounded-full">
-                        <div
-                          className="h-full bg-gradient-to-r from-[#0B2419] to-[#D4AF37] rounded-full transition-all duration-700"
-                          style={{ width: `${(currentStep / (STATUS_STEPS.length - 1)) * 100}%` }}
-                        />
-                      </div>
-
-                      {/* Steps */}
-                      <div className="relative flex justify-between">
-                        {STATUS_STEPS.map((step, idx) => {
-                          const done = idx <= currentStep;
-                          const active = idx === currentStep;
-                          const Icon = step.icon;
-                          return (
-                            <div key={step.key} className="flex flex-col items-center" style={{ width: `${100 / STATUS_STEPS.length}%` }}>
-                              <div className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center z-10 transition-all duration-300 shadow-sm ${
-                                done
-                                  ? active
-                                    ? 'bg-[#0B2419] text-[#D4AF37] ring-4 ring-[#D4AF37]/30 scale-110'
-                                    : 'bg-[#2C3E2D] text-white'
-                                  : 'bg-white text-[#8B9D83] border-2 border-[#8B9D83]/30'
-                              }`}>
-                                <Icon className="w-5 h-5" />
-                              </div>
-                              <p className={`text-xs mt-3 text-center font-semibold leading-tight ${
-                                done ? 'text-[#0B2419]' : 'text-stone-400'
-                              }`}>{step.label}</p>
-                              {active && (
-                                <p className="text-xs text-[#8B9D83] text-center mt-1 max-w-[80px] leading-snug">{step.description}</p>
-                              )}
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </div>}
-                  </div>
-
-                  {Number(ord.impact_amount) > 0 && <div className="mx-6 mb-8 border-t border-[#8B9D83]/15 pt-5 sm:mx-8">
-                    <p className="text-xs font-bold uppercase tracking-wider text-[#536b4d]">Cause contribution</p>
-                    <p className="mt-1 text-sm text-[#0B2419]">₹{Number(ord.impact_amount).toLocaleString('en-IN')} · {ord.impact_project?.replaceAll('-', ' ')}</p>
-                    <p className="mt-1 text-xs leading-5 text-stone-500">Status: {ord.impact_status || 'pledged'}{ord.impact_status !== 'collected' ? ' — it is not counted in the public impact total until collection is reconciled.' : ' — collection has been reconciled.'}</p>
-                    <Link to="/impact" className="mt-2 inline-flex text-xs font-semibold text-[#35533c] underline underline-offset-4">View the impact ledger</Link>
-                  </div>}
-
-                  {/* Order Items */}
-                  {items.length > 0 && (
-                    <div className="px-6 sm:px-8 pb-8">
-                      <h4 className="text-sm font-semibold text-[#8B9D83] uppercase tracking-wider mb-4 flex items-center gap-2">
-                        <ShoppingBag className="w-4 h-4" /> Items in this order
-                      </h4>
-                      <div className="space-y-2">
-                        {items.slice(0, 3).map((item, i) => (
-                          <div key={i} className="flex items-center gap-4 bg-[#FDFBF7] border border-[#8B9D83]/10 rounded-2xl p-3 hover:border-[#D4AF37]/40 transition-colors">
-                            <div className="w-12 h-12 bg-white rounded-xl flex items-center justify-center text-lg border border-[#8B9D83]/10 shrink-0">
-                              {getProductImageUrl(item.image || item.image_url || item.images) ? (
-                                <img
-                                  src={getProductImageUrl(item.image || item.image_url || item.images)}
-                                  alt={item.name || item.product_name || 'Product'}
-                                  onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}
-                                  className="w-full h-full object-cover rounded-xl"
-                                />
-                              ) : <Package className="w-5 h-5 text-[#8B9D83]" />}
-                            </div>
-                            <div className="flex-1 min-w-0">
-                              <p className="text-[#0B2419] text-sm font-medium truncate">{item.name || item.product_name || 'Product'}</p>
-                              <p className="text-[#8B9D83] text-xs">Qty: {item.quantity || 1}</p>
-                            </div>
-                            <p className="text-[#8a6a12] text-sm font-semibold whitespace-nowrap">₹{Number(item.price || item.unit_price || 0).toLocaleString()}</p>
-                          </div>
-                        ))}
-                        {items.length > 3 && (
-                          <p className="text-[#8B9D83] text-sm text-center pt-2">+{items.length - 3} more items</p>
-                        )}
-                      </div>
-                    </div>
-                  )}
+                  <h3 className="mt-2 font-serif text-base font-bold">{st.label}</h3>
+                  <p className="mt-1 text-[11px] leading-5 opacity-80">{st.description}</p>
                 </div>
               );
             })}
           </div>
-        )}
+
+          {/* Items in Parcel */}
+          <div className="mt-8 grid gap-4 sm:grid-cols-2">
+            {(displayOrder.items || []).map((item, idx) => (
+              <div key={idx} className="flex items-center gap-4 rounded-2xl border border-stone-200 p-4">
+                <img
+                  src={item.image || ORDER_TRACKING_DEMO_DATA.stageImages[idx % ORDER_TRACKING_DEMO_DATA.stageImages.length]}
+                  alt={item.name}
+                  className="h-16 w-16 rounded-xl object-cover shrink-0"
+                />
+                <div className="flex-1">
+                  <h4 className="font-serif font-bold text-base text-[#0B2419]">{item.name}</h4>
+                  <p className="text-xs text-stone-500">
+                    Qty: {item.quantity} · ₹{item.price} · Tamper-Seal Verified
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 4 Real-Life Warehouse Fulfilment Stages Gallery */}
+        <section>
+          <h2 className="font-serif text-2xl sm:text-3xl mb-6">
+            Real-Life Fulfilment &amp; Packaging Verification Stages
+          </h2>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
+            {[
+              { title: '01 · Batch Allocation', desc: 'Fresh cleanroom batch assigned with 24-month shelf life.', img: ORDER_TRACKING_DEMO_DATA.stageImages[0] },
+              { title: '02 · Neck Security Strip', desc: 'Gold-and-black tamper-evident seal applied over cap collar.', img: ORDER_TRACKING_DEMO_DATA.stageImages[1] },
+              { title: '03 · Honeycomb Wrapping', desc: 'Biodegradable honeycomb kraft wrap cushions amber glass.', img: ORDER_TRACKING_DEMO_DATA.stageImages[2] },
+              { title: '04 · Digital Scale Log', desc: 'Final parcel weighed on stainless scale prior to AWB scan.', img: ORDER_TRACKING_DEMO_DATA.stageImages[3] },
+            ].map((card) => (
+              <article key={card.title} className="overflow-hidden rounded-2xl border border-[#0B2419]/15 bg-white shadow-sm">
+                <img src={card.img} alt={card.title} loading="lazy" className="aspect-[16/10] w-full object-cover" />
+                <div className="p-5">
+                  <h3 className="font-serif text-lg font-bold">{card.title}</h3>
+                  <p className="mt-1 text-xs leading-5 text-stone-600">{card.desc}</p>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

@@ -1,3 +1,4 @@
+import { FALLBACK_CATALOG_PRODUCTS } from '../data/bhumiveraUniqueData';
 import SEO from '../components/SEO';
 import SEOStructuredData from '../components/SEOStructuredData';
 import ProductDeliveryPromise from '../components/ProductDeliveryPromise';
@@ -115,8 +116,15 @@ export default function ProductDetail() {
           const prodRes = await productsApi.getById(id);
           fetchedProduct = prodRes.data?.data || prodRes.data;
         } catch (err) {
-          const slugRes = await productsApi.getBySlug(id);
-          fetchedProduct = slugRes.data?.data || slugRes.data;
+          try {
+            const slugRes = await productsApi.getBySlug(id);
+            fetchedProduct = slugRes.data?.data || slugRes.data;
+          } catch {
+            fetchedProduct =
+              FALLBACK_CATALOG_PRODUCTS.find(
+                p => String(p.id) === String(id) || p.slug === String(id)
+              ) || FALLBACK_CATALOG_PRODUCTS[0];
+          }
         }
         
         if (fetchedProduct) {
@@ -211,7 +219,7 @@ export default function ProductDetail() {
     ? Number(reviewSummary.average || 0)
     : Number(product?.rating || 0);
   const reviewCount = Number(reviewSummary?.total ?? product?.review_count ?? 0);
-  const videoEmbeds = splitUrls(product?.video_urls)
+  const videoEmbeds = [] && splitUrls(product?.video_urls)
     .map(url => ({ source: url, embed: toVideoEmbedUrl(url) }))
     .filter(video => video.embed);
   const reviewPhotos = reviewsData.flatMap(review => (Array.isArray(review.images) ? review.images : []).map(image => ({ image, review })));

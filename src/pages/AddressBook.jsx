@@ -41,9 +41,16 @@ export default function AddressBook() {
   const fetchAddresses = async () => {
     try {
       const res = await addressesApi.getAll();
-      setAddresses(res.data.addresses || res.data.data || res.data || []);
-    } catch (e) { 
-      console.error("Failed to fetch addresses:", e); 
+      const list = res.data.addresses || res.data.data || res.data || [];
+      if (Array.isArray(list) && list.length > 0) {
+        setAddresses(list);
+      } else {
+        const localSaved = JSON.parse(localStorage.getItem('bhumivera_guest_addresses') || '[]');
+        setAddresses(localSaved);
+      }
+    } catch (e) {
+      const localSaved = JSON.parse(localStorage.getItem('bhumivera_guest_addresses') || '[]');
+      setAddresses(localSaved);
     }
     setLoading(false);
   };

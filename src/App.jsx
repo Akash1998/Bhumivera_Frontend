@@ -123,6 +123,7 @@ const SuperAdminSupport = lazyWithRetry(() => import("./pages/SuperAdminSupport.
 const AdminForgotPassword = lazyWithRetry(() => import("./pages/admin/AdminForgotPassword.jsx"));
 const CheckoutPage = lazyWithRetry(() => import("./pages/Checkout.jsx"));
 const EWarranty = lazyWithRetry(() => import("./pages/EWarranty.jsx"));
+const SellOnBhumivera = lazyWithRetry(() => import("./pages/SellOnBhumivera.jsx"));
 
 const PageLoader = () => (
   <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
@@ -343,11 +344,13 @@ function AppContent() {
             <Route path="/about" element={<About />} />
             <Route path="/impact" element={<Impact />} />
             <Route path="/legal" element={<Legal />} />
+            <Route path="/legal/:sectionSlug" element={<Legal />} />
             
-            {/* Bhumivera Brand Routes */}
+            {/* Bhumivera Brand & Partner Routes */}
             <Route path="/science" element={<BhumiveraScience />} />
             <Route path="/purchase-protection" element={<PurchaseProtection />} />
             <Route path="/returns-centre" element={<ReturnsCentre />} />
+            <Route path="/sell-on-bhumivera" element={<SellOnBhumivera />} />
 
             {/* Campaign Inbound Routes */}
             <Route path="/earn-from-home" element={<MPGEBusinessLanding />} />
@@ -356,20 +359,21 @@ function AppContent() {
             {/* Authenticity & E-Warranty */}
             <Route path="/ewarranty" element={<EWarranty />} />
             <Route path="/verify-product" element={<EWarranty />} />
-            <Route path="/warranty" element={<Navigate to="/ewarranty" replace />} />
+            <Route path="/warranty" element={<EWarranty />} />
 
             {/* Tools & Tracking */}
             <Route path="/order-tracking" element={<OrderTracking />} />
+            <Route path="/order-tracking/:orderId" element={<OrderTracking />} />
             <Route path="/compare" element={<Compare />} />
 
             {/* Special Pages */}
             <Route path="/flash-sales" element={<FlashSales />} />
             <Route path="/somatic-registry" element={<SomaticRegistry />} />
             <Route path="/provenance-engine" element={<ProvenanceEngine />} />
-            <Route path="/provenance" element={<Navigate to="/provenance-engine" replace />} />
-            <Route path="/addresses" element={<Navigate to="/address-book" replace />} />
-            <Route path="/support-center" element={<Navigate to="/contact" replace />} />
-            <Route path="/spin-registration" element={<Navigate to="/returns" replace />} />
+            <Route path="/provenance" element={<ProvenanceEngine />} />
+            <Route path="/addresses" element={<AddressBook />} />
+            <Route path="/support-center" element={<Contact />} />
+            <Route path="/spin-registration" element={<SpinRegistration />} />
             
             {/* Auth Routes */}
             <Route path="/login" element={<Login />} />
@@ -385,15 +389,15 @@ function AppContent() {
             <Route path="/superadmin/controlcentre/*" element={<Navigate to="/" replace />} />
             <Route path="/superadmin/controlcentre" element={<Navigate to="/" replace />} />
 
-            {/* Protected User Routes */}
-            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
+            {/* User & Storefront Interactive Routes (No forced /login redirect on browse!) */}
+            <Route path="/profile" element={<Profile />} />
             <Route path="/cart" element={<Navigate to="/?openCart=1" replace />} />
-            <Route path="/checkout" element={<ProtectedRoute><OnlineCheckout><CheckoutPage /></OnlineCheckout></ProtectedRoute>} />
+            <Route path="/checkout" element={<OnlineCheckout><CheckoutPage /></OnlineCheckout>} />
             <Route path="/order-success/:orderId?" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />
-            <Route path="/wishlist" element={<ProtectedRoute><Wishlist /></ProtectedRoute>} />
-            <Route path="/address-book" element={<ProtectedRoute><AddressBook /></ProtectedRoute>} />
-            <Route path="/returns" element={<ProtectedRoute><Returns /></ProtectedRoute>} />
-            <Route path="/affiliate" element={<ProtectedRoute><Affiliate /></ProtectedRoute>} />
+            <Route path="/wishlist" element={<Wishlist />} />
+            <Route path="/address-book" element={<AddressBook />} />
+            <Route path="/returns" element={<Returns />} />
+            <Route path="/affiliate" element={<Affiliate />} />
 
             {/* Warehouse System */}
             <Route path="/warehouse" element={<WebOnlyManagement><WarehouseRoute><Warehouse /></WarehouseRoute></WebOnlyManagement>} />

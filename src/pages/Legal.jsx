@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useMemo } from 'react';
-import { Link, useLocation, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import {
   Scale,
   ShieldCheck,
@@ -8,12 +8,37 @@ import {
   AlertTriangle,
   Search,
   Printer,
-  Film,
   CheckCircle2,
   BookOpen,
   Gavel,
+  ArrowRight,
 } from 'lucide-react';
-import BhumiveraVideo from '../components/BhumiveraVideo';
+import SEO from '../components/SEO';
+import { LEGAL_SECTION_PROFILES } from '../data/bhumiveraUniqueData';
+
+const SLUG_TO_SECTION = {
+  'conditions-of-use': 'terms',
+  'shipping-hygiene': 'orders',
+  'unboxing-antiscam': 'antifraud',
+  'wallet-loyalty-referrals': 'referrals',
+  'warranty-affiliate-b2b': 'warranty_affiliate',
+  'privacy-dpdp': 'privacy',
+  'medical-ip-shield': 'ip_disclaimer',
+  'arbitration-grievance': 'grievance',
+  'all': 'all',
+};
+
+const SECTION_TO_PATH = {
+  terms: '/legal/conditions-of-use',
+  orders: '/legal/shipping-hygiene',
+  antifraud: '/legal/unboxing-antiscam',
+  referrals: '/legal/wallet-loyalty-referrals',
+  warranty_affiliate: '/legal/warranty-affiliate-b2b',
+  privacy: '/legal/privacy-dpdp',
+  ip_disclaimer: '/legal/medical-ip-shield',
+  grievance: '/legal/arbitration-grievance',
+  all: '/legal?section=all',
+};
 
 const SECTIONS = [
   { id: 'terms', code: 'PART I', label: 'Conditions of Use & Sale', count: 16 },
@@ -734,19 +759,33 @@ const LEGAL_CLAUSES = {
   ],
 };
 
+
 export default function Legal() {
-  const location = useLocation();
+  const { sectionSlug } = useParams();
   const [searchParams] = useSearchParams();
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState('');
 
-  const rawSection = searchParams.get('section');
-  const selectedSection = SECTIONS.some(section => section.id === rawSection)
-    ? rawSection
-    : 'terms';
+  const selectedSection = useMemo(() => {
+    if (sectionSlug && SLUG_TO_SECTION[sectionSlug]) {
+      return SLUG_TO_SECTION[sectionSlug];
+    }
+    const raw = (searchParams.get('section') || '').toLowerCase();
+    if (raw && (LEGAL_CLAUSES[raw] || raw === 'all')) {
+      return raw;
+    }
+    if (location.hash) {
+      const hashClean = location.hash.replace('#', '').replace('legal-part-', '');
+      if (LEGAL_CLAUSES[hashClean]) return hashClean;
+    }
+    return 'terms';
+  }, [sectionSlug, searchParams, location.hash]);
 
   useEffect(() => {
-    window.scrollTo(0, 0);
-  }, [location.pathname, location.search]);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [selectedSection, sectionSlug]);
+
+  const activeProfile = LEGAL_SECTION_PROFILES[selectedSection] || LEGAL_SECTION_PROFILES.terms;
 
   const activeSectionsToRender = useMemo(() => {
     const baseList =
@@ -777,85 +816,79 @@ export default function Legal() {
 
   return (
     <main className="min-h-screen bg-[#f7f5ef] px-4 py-10 font-sans text-[#1b2921] sm:px-8 sm:py-14 print:bg-white print:p-0">
+      <SEO
+        title={`${activeProfile.title} | Bhumivera Legal & Anti-Fraud Charter`}
+        description={activeProfile.subtitle}
+        route={SECTION_TO_PATH[selectedSection] || '/legal'}
+      />
       <div className="mx-auto max-w-6xl">
-        {/* 1. MASTER LEGAL HEADER WITH EMBEDDED VIDEO BRIEFING */}
+        {/* 1. DYNAMIC DOMAIN-SPECIFIC LEGAL HEADER WITH UNIQUE REAL-LIFE PHOTOGRAPHY */}
         <header className="overflow-hidden rounded-2xl border border-[#26392c]/20 bg-[#111e18] text-[#f4f1e9] shadow-xl">
           <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
             <div className="p-6 sm:p-9 lg:p-11">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/40 bg-[#d4af37]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#d4af37]">
-                  <Scale size={12} /> Bhumivera · Legal &amp; Anti-Fraud Charter
+                  <Scale size={12} /> {activeProfile.code} · Bhumivera Legal Shield
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300">
-                  <ShieldCheck size={12} /> 88 Clauses · 8 Statutory Parts
+                  <ShieldCheck size={12} /> {activeProfile.statuteBadge}
                 </span>
               </div>
 
               <h1 className="mt-4 font-serif text-3xl leading-tight sm:text-5xl">
-                Conditions, policies and customer rights
+                {activeProfile.title}
               </h1>
-              <p className="mt-4 max-w-2xl text-xs leading-6 text-white/75 sm:text-sm sm:leading-7">
-                This Master E-Commerce Legal Suite governs the Bhumivera storefront, personal-care cosmetics hygiene non-return standards, mandatory 360° uncut unboxing video verification, dual-ledger wallets, loyalty/referral/spin rewards, E-Warranty serial checks, privacy under the DPDP Act 2023, anti-scam/chargeback enforcement, and dispute resolution under Indian law.
+              <p className="mt-4 max-w-2xl text-xs leading-6 text-white/80 sm:text-sm sm:leading-7">
+                {activeProfile.subtitle}
               </p>
 
               <div className="mt-6 flex flex-wrap items-center gap-3 text-[11px] font-semibold text-[#c8d6aa]">
-                <span>Effective &amp; Last Reviewed: 17 October 2026</span>
+                <span>Effective &amp; Verified: 17 October 2026</span>
                 <span>·</span>
-                <span>Master Version: 2026-10-17-v4X</span>
+                <span>Charter Version: 2026-10-17-v4X</span>
                 <span>·</span>
                 <button
                   type="button"
                   onClick={() => window.print()}
                   className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-white hover:text-[#111e18]"
                 >
-                  <Printer size={13} /> Print / Save Official Legal PDF
+                  <Printer size={13} /> Print / Save Official PDF
                 </button>
               </div>
             </div>
 
-            {/* Embedded Video Policy & Unboxing Verification Player */}
+            {/* Unique Domain-Specific High-Resolution Static Photograph */}
             <div className="relative min-h-[260px] border-t border-white/10 bg-[#0a130f] lg:border-l lg:border-t-0">
-              <BhumiveraVideo
-                src="/assets/videos/unboxing-protection.mp4"
-                poster="/assets/images/Promo1.webp"
-                alt="Bhumivera 360 degree unboxing and legal protection briefing video"
+              <img
+                src={activeProfile.heroImage}
+                alt={activeProfile.title}
                 className="h-full w-full object-cover"
-                containerClassName="relative h-full w-full overflow-hidden"
-                badge="360° Unboxing & Legal Shield · Live Video"
-                showControls
               />
+              <div className="pointer-events-none absolute bottom-3 left-3 rounded-full border border-white/20 bg-black/70 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-[#d4af37]">
+                {activeProfile.code} · Verified Statutory Dossier
+              </div>
             </div>
           </div>
 
-          {/* Statutory Compliance Bar inside Header */}
+          {/* Domain-Specific Key Metrics Bar */}
           <div className="grid grid-cols-2 gap-px border-t border-white/10 bg-white/10 text-[11px] sm:grid-cols-4">
-            <div className="bg-[#15241c] p-3.5">
-              <p className="font-mono text-[9px] uppercase tracking-widest text-[#d4af37]">Consumer Law</p>
-              <p className="mt-1 font-semibold text-white">CPA 2019 &amp; E-Commerce Rules 2020</p>
-            </div>
-            <div className="bg-[#15241c] p-3.5">
-              <p className="font-mono text-[9px] uppercase tracking-widest text-[#d4af37]">Cosmetics Hygiene</p>
-              <p className="mt-1 font-semibold text-white">Drugs &amp; Cosmetics Act 1940 Seal Rule</p>
-            </div>
-            <div className="bg-[#15241c] p-3.5">
-              <p className="font-mono text-[9px] uppercase tracking-widest text-[#d4af37]">Data &amp; Cyber Law</p>
-              <p className="mt-1 font-semibold text-white">DPDP Act 2023 &amp; IT Act 2000</p>
-            </div>
-            <div className="bg-[#15241c] p-3.5">
-              <p className="font-mono text-[9px] uppercase tracking-widest text-[#d4af37]">Electronic Evidence</p>
-              <p className="mt-1 font-semibold text-white">Bharatiya Sakshya Adhiniyam Sec. 63</p>
-            </div>
+            {activeProfile.keyMetrics.map(([val, label]) => (
+              <div key={label} className="bg-[#15241c] p-3.5">
+                <p className="font-mono text-xs font-bold uppercase tracking-wider text-[#d4af37]">{val}</p>
+                <p className="mt-1 font-medium text-white/85">{label}</p>
+              </div>
+            ))}
           </div>
         </header>
 
-        {/* 2. STICKY SECTION NAVIGATION + CLAUSE SEARCH */}
+        {/* 2. STICKY SECTION NAVIGATION (LINKS TO ALL 8 UNIQUE LEGAL ROUTES) */}
         <div className="sticky top-0 z-20 -mx-4 mt-6 border-b border-[#26392c]/15 bg-[#f7f5ef]/95 px-4 py-3.5 backdrop-blur sm:-mx-8 sm:px-8">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <nav aria-label="Legal policy sections" className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
               {SECTIONS.map(section => (
                 <Link
                   key={section.id}
-                  to={`/legal?section=${section.id}`}
+                  to={SECTION_TO_PATH[section.id] || `/legal?section=${section.id}`}
                   aria-current={selectedSection === section.id ? 'page' : undefined}
                   onClick={() => setSearchQuery('')}
                   className={`shrink-0 rounded-lg border px-3 py-2 text-xs font-semibold transition ${
@@ -884,42 +917,44 @@ export default function Legal() {
           </div>
         </div>
 
-        {/* 3. EXECUTIVE SUMMARY MATRIX: ANTI-SCAM & STATUTORY PROTECTION */}
-        <section className="mt-8 overflow-hidden rounded-xl border border-[#26392c]/15 bg-white shadow-sm">
-          <div className="border-b border-[#26392c]/10 bg-[#eef0e6] px-5 py-4 sm:px-6 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Gavel size={16} className="text-[#26392c]" />
-              <h2 className="font-serif text-lg font-bold text-[#142019]">
-                Quick Statutory &amp; Anti-Fraud Governance Matrix
-              </h2>
+        {/* 3. REAL-LIFE ILLUSTRATED CASE EXAMPLES FOR THIS SPECIFIC LEGAL LINK */}
+        {activeProfile.realLifeExamples && activeProfile.realLifeExamples.length > 0 && (
+          <section className="mt-8">
+            <div className="mb-4 flex items-center justify-between">
+              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#6b4226]">
+                Real-Life Case Precedents · {activeProfile.code}
+              </span>
+              <span className="text-xs text-stone-500">Photographic &amp; Operational Examples</span>
             </div>
-            <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#536b4d]">
-              Binding Operational Rules Across All Orders
-            </span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-[#26392c]/15 bg-[#f7f5ef] text-[10px] font-bold uppercase tracking-wider text-[#354933]">
-                  <th className="py-3 px-4">Scenario / Module</th>
-                  <th className="py-3 px-4">Binding Bhumivera Rule</th>
-                  <th className="py-3 px-4">Required Verification Proof</th>
-                  <th className="py-3 px-4">Governing Legal Basis</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-[#26392c]/10 text-stone-700">
-                {PROTECTION_MATRIX.map(row => (
-                  <tr key={row.scenario} className="hover:bg-[#faf9f5]">
-                    <td className="py-3.5 px-4 font-semibold text-[#142019]">{row.scenario}</td>
-                    <td className="py-3.5 px-4 leading-relaxed">{row.policy}</td>
-                    <td className="py-3.5 px-4 leading-relaxed text-[#26392c] font-medium">{row.evidence}</td>
-                    <td className="py-3.5 px-4 font-mono text-[11px] text-stone-600">{row.statute}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+            <div className="grid gap-6 md:grid-cols-2">
+              {activeProfile.realLifeExamples.map((ex) => (
+                <article
+                  key={ex.caseCode}
+                  className="overflow-hidden rounded-2xl border border-[#26392c]/15 bg-white shadow-sm"
+                >
+                  <div className="aspect-[16/9] w-full overflow-hidden bg-[#111e18]">
+                    <img
+                      src={ex.image}
+                      alt={ex.title}
+                      loading="lazy"
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="p-6">
+                    <span className="rounded bg-[#eef0e6] px-2.5 py-1 font-mono text-[10px] font-bold text-[#26392c]">
+                      {ex.caseCode}
+                    </span>
+                    <h2 className="mt-3 font-serif text-xl font-bold text-[#142019]">{ex.title}</h2>
+                    <p className="mt-2 text-xs leading-6 text-stone-600 sm:text-sm">{ex.summary}</p>
+                    <div className="mt-4 rounded-xl border border-emerald-800/15 bg-[#f4f6ef] p-3 text-xs font-medium text-[#1b2921]">
+                      <strong>Verified Resolution:</strong> {ex.outcome}
+                    </div>
+                  </div>
+                </article>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* 4. DETAILED CLAUSE ARTICLES */}
         <div className="mt-8 space-y-10">
@@ -982,49 +1017,40 @@ export default function Legal() {
           )}
         </div>
 
-        {/* 5. VIDEO VERIFICATION & STATUTORY GRIEVANCE FOOTER CARD */}
-        <section className="mt-10 grid gap-6 rounded-2xl border border-[#26392c]/20 bg-[#142019] p-6 text-white sm:p-8 lg:grid-cols-[0.9fr_1.1fr] items-center">
-          <div className="aspect-[16/9] overflow-hidden rounded-xl border border-white/15 bg-black">
-            <BhumiveraVideo
-              src="/assets/videos/founder-manifesto.mp4"
-              poster="/assets/images/foundermanifesto.webp"
-              alt="Bhumivera founder manifesto and stewardship film"
-              className="h-full w-full object-cover"
-              containerClassName="relative h-full w-full overflow-hidden"
-              badge="Bhumivera Integrity & Stewardship Film"
-              showControls
-            />
+        {/* 5. MASTER PROTECTION MATRIX */}
+        <section className="mt-10 overflow-hidden rounded-xl border border-[#26392c]/15 bg-white shadow-sm">
+          <div className="border-b border-[#26392c]/10 bg-[#eef0e6] px-5 py-4 sm:px-6 flex flex-wrap items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Gavel size={16} className="text-[#26392c]" />
+              <h2 className="font-serif text-lg font-bold text-[#142019]">
+                Quick Statutory &amp; Anti-Fraud Governance Matrix
+              </h2>
+            </div>
+            <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#536b4d]">
+              Binding Operational Rules Across All Orders
+            </span>
           </div>
-          <div className="space-y-4">
-            <div className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#d4af37]">
-              <FileCheck2 size={14} /> Complete E-Commerce Legal Protection
-            </div>
-            <h2 className="font-serif text-2xl sm:text-3xl">
-              Transparent for genuine customers. Ironclad against misuse.
-            </h2>
-            <p className="text-xs leading-6 text-white/75 sm:text-sm">
-              Every order on Bhumivera is protected by our dual-ledger wallet architecture, warehouse CCTV &amp; digital weight verification, and our 48-hour 360° unboxing Courtesy Protection Guarantee. Need help applying a policy to your order?
-            </p>
-            <div className="flex flex-wrap gap-3 pt-2">
-              <Link
-                to="/contact"
-                className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[#d4af37] px-4 py-2 text-xs font-bold text-[#142019] hover:bg-[#e5c247]"
-              >
-                Contact &amp; Grievance Desk
-              </Link>
-              <Link
-                to="/returns"
-                className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-[#dce7c5] px-4 py-2 text-xs font-bold text-[#142019] hover:bg-white"
-              >
-                Replacement &amp; Courtesy Credit Policy
-              </Link>
-              <Link
-                to="/order-tracking"
-                className="inline-flex min-h-10 items-center gap-2 rounded-lg border border-white/25 px-4 py-2 text-xs font-semibold text-white hover:bg-white/10"
-              >
-                Track an Order
-              </Link>
-            </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-xs border-collapse">
+              <thead>
+                <tr className="border-b border-[#26392c]/15 bg-[#f7f5ef] text-[10px] font-bold uppercase tracking-wider text-[#354933]">
+                  <th className="py-3 px-4">Scenario / Module</th>
+                  <th className="py-3 px-4">Binding Bhumivera Rule</th>
+                  <th className="py-3 px-4">Required Verification Proof</th>
+                  <th className="py-3 px-4">Governing Legal Basis</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#26392c]/10 text-stone-700">
+                {PROTECTION_MATRIX.map(row => (
+                  <tr key={row.scenario} className="hover:bg-[#faf9f5]">
+                    <td className="py-3.5 px-4 font-semibold text-[#142019]">{row.scenario}</td>
+                    <td className="py-3.5 px-4 leading-relaxed">{row.policy}</td>
+                    <td className="py-3.5 px-4 leading-relaxed text-[#26392c] font-medium">{row.evidence}</td>
+                    <td className="py-3.5 px-4 font-mono text-[11px] text-stone-600">{row.statute}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         </section>
       </div>

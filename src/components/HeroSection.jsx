@@ -1,82 +1,64 @@
-import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Zap, ShieldCheck, Globe, ArrowRight, Play, ShoppingBag } from 'lucide-react';
+import React, { useState } from 'react';
+import { ChevronLeft, ChevronRight, Zap, ShieldCheck, Globe, ArrowRight, ShoppingBag, Compass } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import BhumiveraVideo from './BhumiveraVideo';
 
 const slides = [
   {
     title: "Rooted in Nature, Made With Care",
     subtitle: "Himalayan Botanical Formulations",
     description: "Cold-pressed Sea Buckthorn, Niacinamide, Hyaluronic Acid, and heritage Ayurvedic extracts crafted for daily skin and hair rituals.",
-    video: "/assets/videos/hero-seabuckthorn.mp4",
-    poster: "/assets/images/seabuckthorn.webp",
+    image: "/assets/images/real_135.webp",
     cta: "Explore the Collection",
-    link: "/products",
-    accent: "emerald"
+    link: "/shop",
   },
   {
     title: "Where Botanical Science, Meets Pure Soil",
     subtitle: "Dermatological Active Synergy",
     description: "Every formulation pairs heritage plant intelligence with precision modern actives and full label transparency.",
-    video: "/assets/videos/aloe-science-lab.mp4",
-    poster: "/assets/images/aloeverascience.webp",
-    cta: "Explore the Collection",
-    link: "/products",
-    accent: "blue"
+    image: "/assets/images/real_136.webp",
+    cta: "Explore Our Science",
+    link: "/science",
   },
   {
     title: "Care Returned, To Its Source",
     subtitle: "Living Earth Stewardship",
-    description: "Follow our verified stewardship ledger, 360° quality seal guarantee, and zero-friction courtesy protection.",
-    video: "/assets/videos/planting-vision.mp4",
-    poster: "/assets/images/plant tree.webp",
-    cta: "Explore the Collection",
-    link: "/products",
-    accent: "purple"
+    description: "Follow our verified stewardship ledger, tamper-evident quality seal guarantee, and zero-friction courtesy protection.",
+    image: "/assets/images/real_137.webp",
+    cta: "Inspect Our Impact",
+    link: "/impact",
   }
 ];
 
 export default function HeroSection() {
   const [current, setCurrent] = useState(0);
-  const [isPaused] = useState(false);
   const navigate = useNavigate();
-
-  useEffect(() => {
-    if (isPaused) return;
-    const timer = setInterval(() => {
-      setCurrent((prev) => (prev + 1) % slides.length);
-    }, 6000);
-    return () => clearInterval(timer);
-  }, [isPaused]);
 
   return (
     <div className="relative h-[85vh] min-h-[600px] w-full overflow-hidden bg-slate-950 group">
       {slides.map((slide, idx) => (
         <div
           key={idx}
-          className={`absolute inset-0 transition-all duration-1000 ease-out transform ${
-            idx === current ? 'opacity-100 scale-100' : 'opacity-0 scale-110 pointer-events-none'
+          className={`absolute inset-0 transition-opacity duration-500 ${
+            idx === current ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
         >
           <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent z-10 pointer-events-none" />
-          <BhumiveraVideo
-            src={slide.video}
-            poster={slide.poster}
+          <img
+            src={slide.image}
             alt={slide.title}
             className="w-full h-full object-cover object-center"
-            containerClassName="relative w-full h-full overflow-hidden"
           />
         </div>
       ))}
 
       <div className="relative z-20 container mx-auto px-6 h-full flex flex-col justify-center">
         <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-[0.2em] mb-6 animate-fade-in">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-[0.2em] mb-6">
             <Zap size={14} />
             {slides[current].subtitle}
           </div>
           
-          <h1 className="text-6xl md:text-8xl font-black text-white leading-tight mb-6 tracking-tighter">
+          <h1 className="text-5xl md:text-7xl font-black text-white leading-tight mb-6 tracking-tighter">
             {slides[current].title.split(',').map((part, i) => (
               <span key={i} className="block last:text-transparent last:bg-clip-text last:bg-gradient-to-r last:from-emerald-400 last:to-cyan-400">
                 {part}
@@ -91,7 +73,7 @@ export default function HeroSection() {
           <div className="flex flex-wrap gap-4">
             <Link
               to={slides[current].link}
-              className="px-8 py-4 bg-emerald-500 hover:bg-white text-black font-black uppercase tracking-wider rounded-2xl transition-all duration-300 flex items-center gap-3 shadow-[0_0_30px_rgba(16,185,129,0.3)] hover:shadow-[0_0_40px_rgba(255,255,255,0.2)]"
+              className="px-8 py-4 bg-emerald-500 hover:bg-white text-black font-black uppercase tracking-wider rounded-2xl transition-all duration-300 flex items-center gap-3 shadow-lg"
             >
               <ShoppingBag size={20} />
               {slides[current].cta}
@@ -101,7 +83,7 @@ export default function HeroSection() {
               onClick={() => navigate('/about')}
               className="px-8 py-4 bg-slate-900/50 hover:bg-slate-800 backdrop-blur-md border border-slate-800 text-white font-black uppercase tracking-wider rounded-2xl transition-all duration-300 flex items-center gap-3"
             >
-              <Play size={20} className="fill-current" />
+              <Compass size={20} />
               Explore Our Craft
             </button>
           </div>
@@ -114,7 +96,7 @@ export default function HeroSection() {
             <button
               key={i}
               onClick={() => setCurrent(i)}
-              className={`h-1.5 transition-all duration-500 rounded-full ${
+              className={`h-1.5 transition-all duration-300 rounded-full ${
                 i === current ? 'w-12 bg-emerald-500' : 'w-3 bg-slate-700 hover:bg-slate-500'
               }`}
             />

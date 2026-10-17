@@ -1,66 +1,25 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
-  Film,
+  Camera,
   ShieldCheck,
   Scale,
   Lock,
   Sparkles,
-  Play,
+  Eye,
   X,
   CheckCircle2,
   AlertTriangle,
   FileCheck2,
+  ArrowRight,
+  MapPin,
 } from 'lucide-react';
-import BhumiveraVideo from './BhumiveraVideo';
 import { triggerAiCopilotAssist } from '../utils/aiCopilotBus';
-
-const FOOTER_VIDEO_REELS = [
-  {
-    id: 'planting',
-    code: '01',
-    title: 'Planting & Earth Vision',
-    subtitle: 'Native Afforestation & Stewardship',
-    src: '/assets/videos/planting-vision.mp4',
-    poster: '/assets/images/plant tree.webp',
-    description:
-      'Our live botanical vision replaces static illustrative artwork with continuous on-ground stewardship cinema. Optional COD pledges are reconciled into our verified public ledger after delivery.',
-  },
-  {
-    id: 'science',
-    code: '02',
-    title: 'Botanical & Active Science',
-    subtitle: 'Sea Buckthorn, Niacinamide & Hyaluronic Acid',
-    src: '/assets/videos/aloe-science-lab.mp4',
-    poster: '/assets/images/aloeverascience.webp',
-    description:
-      'Inspect the cellular synergy between cold-pressed Himalayan botanicals and precision dermatological actives calibrated for pH-balanced daily cleansing and barrier care.',
-  },
-  {
-    id: 'unboxing',
-    code: '03',
-    title: '360° Unboxing & Seal Protocol',
-    subtitle: 'Anti-Fraud & Courtesy Credit Verification',
-    src: '/assets/videos/unboxing-protection.mp4',
-    poster: '/assets/images/Promo1.webp',
-    description:
-      'Every Bhumivera dispatch is weighed, CCTV-recorded, and tamper-sealed. Record a continuous 360° uncut unboxing video showing the outer AWB label and seal within 48 hours of delivery to unlock instant Courtesy Replacement or Wallet Credit.',
-  },
-  {
-    id: 'rivers',
-    code: '04',
-    title: 'River & Community Care',
-    subtitle: 'Waterway & Botanical Ecosystem Focus',
-    src: '/assets/videos/river-stewardship.mp4',
-    poster: '/assets/images/river free.webp',
-    description:
-      'Discover how community-led river care and botanical education guide our long-term environmental focus areas across India.',
-  },
-];
+import { FOOTER_BRAND_BANNER_IMAGE, FOOTER_PHOTO_STORIES } from '../data/bhumiveraUniqueData';
 
 export default function Footer() {
   const currentYear = new Date().getFullYear();
-  const [activeReel, setActiveReel] = useState(null);
+  const [activeStory, setActiveStory] = useState(null);
 
   return (
     <footer className="mt-auto border-t border-white/10 bg-[#0d1712] font-sans text-[#f1efe7] antialiased">
@@ -68,7 +27,7 @@ export default function Footer() {
       <div className="relative isolate overflow-hidden border-b border-white/10 bg-[#13211a]">
         <div className="absolute inset-0 -z-20 opacity-30" aria-hidden="true">
           <img
-            src="/assets/images/foundermanifesto.webp"
+            src={FOOTER_BRAND_BANNER_IMAGE}
             alt=""
             loading="lazy"
             decoding="async"
@@ -81,13 +40,13 @@ export default function Footer() {
           <div className="flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
             <div className="max-w-3xl">
               <p className="inline-flex items-center gap-2 text-[9px] font-bold uppercase tracking-[0.22em] text-[#c8d6aa]">
-                <Film size={13} className="text-[#d4af37]" /> Bhumivera · Botanical care, thoughtfully made
+                <Camera size={13} className="text-[#d4af37]" /> Bhumivera · Botanical care, thoughtfully made
               </p>
               <h2 className="mt-3 max-w-2xl font-serif text-3xl leading-tight sm:text-4xl lg:text-5xl">
                 Care, returned to its source.
               </h2>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-white/65 sm:text-base">
-                Explore the botanicals, people, and considered practices behind every Bhumivera ritual.
+                Explore the real-life botanicals, laboratory standards, and verified fulfilment practices behind every Bhumivera ritual.
               </p>
             </div>
             <div className="flex flex-wrap gap-3 lg:justify-end">
@@ -98,7 +57,7 @@ export default function Footer() {
                     mode: 'navigation_rescue',
                     title: 'Bhumivera Client Concierge & Site Guide',
                     message:
-                      'How can I assist you today? I can help you add items to your cart, set or reset your password, track an order, verify unboxing & courtesy credit rules, or jump to any page on Bhumivera.',
+                      'How can I assist you today? I can help you compare formulations, check ingredient concentrations, track an order, verify courtesy replacement rules, or jump to any page on Bhumivera.',
                   })
                 }
                 className="inline-flex min-h-11 items-center gap-2 bg-[#d4af37] px-4 py-2.5 text-xs font-bold text-[#071a12] transition-colors hover:bg-[#e5c247]"
@@ -114,43 +73,43 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* 2. INTERACTIVE 4-REEL VIDEO GALLERY STRIP IN FOOTER */}
+          {/* 2. STATIC 4-PILLAR PHOTOGRAPHIC FIELD & LAB DOSSIER GALLERY */}
           <div className="mt-9 border-t border-white/10 pt-8">
             <div className="mb-4 flex flex-wrap items-center justify-between gap-2">
               <span className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#c8d6aa]">
-                <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-                From our world
+                <span className="h-2 w-2 rounded-full bg-emerald-400" />
+                Real-Life Field &amp; Laboratory Documentation
               </span>
-              <span className="text-[10px] text-white/50">Select a story to watch</span>
+              <span className="text-[10px] text-white/50">Select any photographic dossier to inspect</span>
             </div>
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-              {FOOTER_VIDEO_REELS.map(reel => (
+              {FOOTER_PHOTO_STORIES.map(story => (
                 <button
-                  key={reel.id}
-                  onClick={() => setActiveReel(reel)}
+                  key={story.id}
+                  onClick={() => setActiveStory(story)}
                   type="button"
-                  aria-label={`Play video reel: ${reel.title}`}
+                  aria-label={`Inspect photographic dossier: ${story.title}`}
                   className="group relative overflow-hidden rounded-2xl border border-white/10 bg-[#0e1914] text-left transition hover:-translate-y-0.5 hover:border-[#d4af37]/60 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4af37]"
                 >
                   <div className="aspect-[16/9] w-full overflow-hidden">
                     <img
-                      src={reel.poster}
-                      alt=""
+                      src={story.image}
+                      alt={story.title}
                       loading="lazy"
                       decoding="async"
                       className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                     />
                   </div>
                   <div className="absolute inset-0 bg-gradient-to-t from-[#09120e]/95 via-[#09120e]/35 to-transparent pointer-events-none" />
-                  <div className="absolute right-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/65 text-[#d4af37] backdrop-blur-sm transition group-hover:scale-110 group-hover:bg-[#d4af37] group-hover:text-[#09120e]">
-                    <Play size={12} className="fill-current" />
+                  <div className="absolute right-2.5 top-2.5 flex h-7 w-7 items-center justify-center rounded-full bg-black/65 text-[#d4af37] backdrop-blur-sm transition group-hover:bg-[#d4af37] group-hover:text-[#09120e]">
+                    <Eye size={13} />
                   </div>
                   <div className="absolute inset-x-0 bottom-0 p-3.5 pointer-events-none">
                     <p className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-[#d4af37]">
-                      REEL {reel.code} · {reel.subtitle}
+                      DOSSIER {story.code} · {story.subtitle}
                     </p>
                     <h3 className="mt-0.5 font-serif text-base text-white group-hover:text-[#dce7c5]">
-                      {reel.title}
+                      {story.title}
                     </h3>
                   </div>
                 </button>
@@ -160,7 +119,7 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* 3. FOOTER DIRECTORY */}
+      {/* 3. FOOTER DIRECTORY (ALL LINKS HAVE UNIQUE ROUTES & UNIQUE DATA) */}
       <div className="grid w-full grid-cols-2 items-start gap-4 border-b border-white/10 bg-[#0c1712] px-[clamp(1.25rem,4vw,4.5rem)] py-10 sm:grid-cols-3 sm:gap-5 sm:py-14 xl:grid-cols-6">
         {/* Column 1: Bhumivera Store */}
         <div className="rounded-2xl border border-white/[0.07] bg-white/[0.025] p-4 sm:p-5">
@@ -267,7 +226,7 @@ export default function Footer() {
               </Link>
             </li>
             <li>
-              <Link to="/contact?topic=sell" className="transition-colors hover:text-white">
+              <Link to="/sell-on-bhumivera" className="transition-colors hover:text-white">
                 Sell on Bhumivera
               </Link>
             </li>
@@ -318,49 +277,49 @@ export default function Footer() {
           </ul>
         </div>
 
-        {/* Column 5: Legal & Anti-Fraud Shield (NEW 4X LEGAL SUITE) */}
+        {/* Column 5: Legal & Anti-Fraud Shield (8 Unique Dedicated Routes) */}
         <div className="rounded-2xl border border-[#d4af37]/15 bg-[#d4af37]/[0.035] p-4 sm:p-5">
           <h3 className="mb-4 border-b border-[#d4af37]/15 pb-3 text-[10px] font-bold uppercase tracking-[0.18em] text-[#d4af37] sm:mb-5 sm:text-xs">
             Legal &amp; Anti-Fraud Shield
           </h3>
           <ul className="space-y-2.5 text-xs leading-5 text-white/65 sm:text-sm">
             <li>
-              <Link to="/legal?section=terms" className="transition-colors hover:text-[#e5c247]">
+              <Link to="/legal/conditions-of-use" className="transition-colors hover:text-[#e5c247]">
                 Conditions of Use &amp; Sale
               </Link>
             </li>
             <li>
-              <Link to="/legal?section=orders" className="transition-colors hover:text-[#e5c247]">
+              <Link to="/legal/shipping-hygiene" className="transition-colors hover:text-[#e5c247]">
                 Shipping &amp; Hygiene Non-Return
               </Link>
             </li>
             <li>
-              <Link to="/legal?section=antifraud" className="transition-colors hover:text-[#e5c247]">
+              <Link to="/legal/unboxing-antiscam" className="transition-colors hover:text-[#e5c247]">
                 360° Unboxing &amp; Anti-Scam Rules
               </Link>
             </li>
             <li>
-              <Link to="/legal?section=referrals" className="transition-colors hover:text-[#e5c247]">
+              <Link to="/legal/wallet-loyalty-referrals" className="transition-colors hover:text-[#e5c247]">
                 Wallet, Loyalty &amp; Referral Terms
               </Link>
             </li>
             <li>
-              <Link to="/legal?section=warranty_affiliate" className="transition-colors hover:text-[#e5c247]">
+              <Link to="/legal/warranty-affiliate-b2b" className="transition-colors hover:text-[#e5c247]">
                 Warranty, Affiliate &amp; B2B Terms
               </Link>
             </li>
             <li>
-              <Link to="/legal?section=privacy" className="transition-colors hover:text-[#e5c247]">
+              <Link to="/legal/privacy-dpdp" className="transition-colors hover:text-[#e5c247]">
                 Privacy &amp; DPDP Act Notice
               </Link>
             </li>
             <li>
-              <Link to="/legal?section=ip_disclaimer" className="transition-colors hover:text-[#e5c247]">
+              <Link to="/legal/medical-ip-shield" className="transition-colors hover:text-[#e5c247]">
                 Medical Disclaimer &amp; IP Shield
               </Link>
             </li>
             <li>
-              <Link to="/legal?section=grievance" className="transition-colors hover:text-[#e5c247]">
+              <Link to="/legal/arbitration-grievance" className="transition-colors hover:text-[#e5c247]">
                 Arbitration &amp; Grievance Officer
               </Link>
             </li>
@@ -447,10 +406,10 @@ export default function Footer() {
               <FileCheck2 size={18} className="mt-0.5 shrink-0 text-emerald-400" />
               <div>
                 <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#dce7c5]">
-                  Mandatory 360° Unboxing Video Rule
+                  Mandatory 360° Unboxing Proof Rule
                 </h4>
                 <p className="mt-1 text-[11px] leading-5 text-white/55">
-                  Any transit-damage, leakage, or missing-item claim must include an uncut, unedited 360° unboxing video showing the sealed outer box &amp; AWB within 48 hours.
+                  Any transit-damage, leakage, or missing-item claim must include complete 360° unboxing proof showing the sealed outer box &amp; AWB within 48 hours.
                 </p>
               </div>
             </div>
@@ -459,10 +418,10 @@ export default function Footer() {
               <Lock size={18} className="mt-0.5 shrink-0 text-[#d4af37]" />
               <div>
                 <h4 className="text-[11px] font-bold uppercase tracking-wider text-[#dce7c5]">
-                  Cryptographic &amp; CCTV Fraud Shield
+                  Cryptographic &amp; Weight-Scan Shield
                 </h4>
                 <p className="mt-1 text-[11px] leading-5 text-white/55">
-                  Dispatches are weight-logged and CCTV-recorded. Promotional/Referral credits are non-withdrawable, and false chargebacks or Sybil abuse trigger permanent blacklisting.
+                  Dispatches are weight-logged and security-sealed. Promotional/Referral credits are non-withdrawable, and false chargebacks or Sybil abuse trigger permanent blacklisting.
                 </p>
               </div>
             </div>
@@ -511,66 +470,74 @@ export default function Footer() {
         </div>
       </div>
 
-      {/* 6. INTERACTIVE FOOTER VIDEO REEL MODAL */}
-      {activeReel && (
+      {/* 6. STATIC PHOTOGRAPHIC FIELD DOSSIER MODAL (NO VIDEO ANIMATION) */}
+      {activeStory && (
         <div
           role="dialog"
           aria-modal="true"
-          aria-labelledby="footer-reel-modal-title"
+          aria-labelledby="footer-story-modal-title"
           className="fixed inset-0 z-[250] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md"
           onClick={e => {
-            if (e.target === e.currentTarget) setActiveReel(null);
+            if (e.target === e.currentTarget) setActiveStory(null);
           }}
         >
           <div className="relative w-full max-w-4xl overflow-hidden rounded-2xl border border-white/15 bg-[#101c16] text-white shadow-2xl">
             <button
               type="button"
-              onClick={() => setActiveReel(null)}
-              aria-label="Close video reel modal"
+              onClick={() => setActiveStory(null)}
+              aria-label="Close photographic dossier modal"
               className="absolute right-4 top-4 z-20 inline-flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-black/70 text-white hover:bg-white hover:text-black"
             >
               <X size={16} />
             </button>
-            <div className="grid md:grid-cols-[1.25fr_0.75fr]">
-              <div className="aspect-[16/9] bg-black md:aspect-auto md:min-h-[360px]">
-                <BhumiveraVideo
-                  src={activeReel.src}
-                  poster={activeReel.poster}
-                  alt={activeReel.title}
+            <div className="grid md:grid-cols-[1.2fr_0.8fr]">
+              <div className="relative bg-black md:min-h-[380px]">
+                <img
+                  src={activeStory.modalDetailImage}
+                  alt={activeStory.title}
                   className="h-full w-full object-cover"
-                  containerClassName="relative h-full w-full overflow-hidden"
-                  badge={`REEL ${activeReel.code} · LIVE HD`}
-                  showControls
-                  muted={false}
                 />
+                <div className="absolute bottom-3 left-3 right-3 rounded-xl border border-white/15 bg-black/75 p-3 backdrop-blur-md">
+                  <p className="flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-[#d4af37]">
+                    <MapPin size={12} /> {activeStory.location}
+                  </p>
+                  <p className="mt-1 text-xs text-white/85">{activeStory.realLifeExample}</p>
+                </div>
               </div>
               <div className="flex flex-col justify-between p-6 sm:p-7">
                 <div>
                   <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#d4af37]">
-                    Bhumivera Cinema · Reel {activeReel.code}
+                    Bhumivera Field Dossier · {activeStory.code}
                   </span>
-                  <h3 id="footer-reel-modal-title" className="mt-2 font-serif text-2xl text-white">
-                    {activeReel.title}
+                  <h3 id="footer-story-modal-title" className="mt-2 font-serif text-2xl text-white">
+                    {activeStory.title}
                   </h3>
-                  <p className="mt-1 text-xs font-semibold text-[#c8d6aa]">{activeReel.subtitle}</p>
-                  <p className="mt-4 text-xs leading-6 text-white/75 sm:text-sm">{activeReel.description}</p>
+                  <p className="mt-1 text-xs font-semibold text-[#c8d6aa]">{activeStory.subtitle}</p>
+                  <p className="mt-4 text-xs leading-6 text-white/75 sm:text-sm">{activeStory.description}</p>
 
-                  <div className="mt-5 space-y-2 border-t border-white/10 pt-4 text-[11px] text-white/65">
+                  <div className="mt-5 space-y-2 border-t border-white/10 pt-4 text-[11px] text-white/70">
                     <p className="flex items-center gap-2">
                       <CheckCircle2 size={13} className="text-emerald-400 shrink-0" />
-                      100% Video-First Botanical &amp; Fulfilment Transparency
+                      Verified Metric: {activeStory.metric}
                     </p>
                     <p className="flex items-center gap-2">
                       <AlertTriangle size={13} className="text-[#d4af37] shrink-0" />
-                      Protected by Bhumivera Master Legal &amp; Anti-Scam Terms
+                      Documented with Real-Life Batch &amp; Field Photography
                     </p>
                   </div>
                 </div>
 
                 <div className="mt-6 flex flex-col gap-2.5 pt-4">
                   <Link
+                    to={activeStory.link}
+                    onClick={() => setActiveStory(null)}
+                    className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg bg-[#d4af37] px-4 py-2 text-xs font-bold text-[#09120e] hover:bg-[#e5c247]"
+                  >
+                    {activeStory.linkLabel} <ArrowRight size={14} />
+                  </Link>
+                  <Link
                     to="/legal?section=all"
-                    onClick={() => setActiveReel(null)}
+                    onClick={() => setActiveStory(null)}
                     className="inline-flex min-h-10 items-center justify-center gap-2 rounded-lg border border-white/20 px-4 py-2 text-xs font-semibold text-white/80 hover:bg-white/10"
                   >
                     View Full 8-Part Master Legal Agreement

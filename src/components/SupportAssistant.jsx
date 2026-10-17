@@ -3122,8 +3122,8 @@ function ConciergeVideoVisualizer({
     }
   };
 
-  // If the video asset is not yet rendered or fails, gracefully show the SVG fallback!
-  if (videoFailed || !videoSrc) {
+  // Static visual mode (all video animations removed across platform)
+  if (true || videoFailed || !videoSrc) {
     return (
       <div className="space-y-1">
         {Fallback && <Fallback />}

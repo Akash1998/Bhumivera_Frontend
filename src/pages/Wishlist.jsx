@@ -1,170 +1,186 @@
 import React from 'react';
-import { Heart, ShoppingCart, Trash2, ArrowLeft, ArrowRight, Zap, ShieldCheck } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { Heart, ShoppingCart, Trash2, ArrowLeft, ArrowRight, ShieldCheck, Sparkles, Plus } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { Link } from 'react-router-dom';
+import SEO from '../components/SEO';
 import { useToast } from '../context/ToastContext';
 import { getProductImageUrl } from '../utils/productImageUrl';
+import { FALLBACK_CATALOG_PRODUCTS } from '../data/bhumiveraUniqueData';
 
-const FALLBACK = `data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300' viewBox='0 0 300 300'%3E%3Crect width='300' height='300' fill='%230f172a'/%3E%3Ctext x='50%25' y='50%25' font-family='Arial' font-size='16' fill='%23334155' text-anchor='middle' dominant-baseline='middle'%3ENo Image%3C/text%3E%3C/svg%3E`;
-
-function getImageUrl(product) {
-  return getProductImageUrl(product.image_url || product.images || product.image) || '/logo.webp';
+function getImageUrl(product, idx = 0) {
+  return (
+    getProductImageUrl(product.image_url || product.images || product.image) ||
+    FALLBACK_CATALOG_PRODUCTS[idx % FALLBACK_CATALOG_PRODUCTS.length].image_url
+  );
 }
 
 export default function Wishlist() {
   const toast = useToast();
-  const { wishlist, loading, error, removeFromWishlist, clearWishlist, refreshWishlist } = useWishlist();
-  const { addToCart } = useCart();
+  const { wishlist = [], loading, error, toggleWishlist, removeFromWishlist, clearWishlist, refreshWishlist } = useWishlist() || {};
+  const { addToCart } = useCart() || {};
 
-  // Advanced Feature: Move directly to cart and remove from wishlist simultaneously
   const handleMoveToCart = async (product) => {
     const productId = product.product_id || product.id || product._id;
     const added = await addToCart(product);
     if (!added) {
-      toast.error('Could not add this product to your cart.');
+      toast?.error?.('Could not add this product to your cart.');
       return;
     }
     await removeFromWishlist(productId);
   };
 
-  // Advanced Feature: Batch Operations (Safe loops to avoid context missing function errors)
   const handleDeployAll = () => {
-    wishlist.forEach(product => addToCart(product));
+    wishlist.forEach((product) => addToCart(product));
   };
 
-  const handleClearArsenal = () => {
-    clearWishlist();
-  };
-
-  if (loading) {
-    return <div className="min-h-screen bg-slate-950 px-6 py-32 text-center text-white" role="status">Loading your saved products…</div>;
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-slate-950 px-6 py-32 text-center text-white">
-        <p role="alert" className="text-rose-300">{error}</p>
-        <button type="button" onClick={refreshWishlist} className="mt-5 rounded-xl bg-emerald-500 px-5 py-3 font-semibold text-black">Try again</button>
-      </div>
-    );
-  }
-
-  // --- EMPTY STATE ---
-  if (wishlist.length === 0) {
-    return (
-      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6 selection:bg-emerald-500 selection:text-black pt-24">
-        <motion.div 
-          initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }}
-          className="bg-slate-900/50 backdrop-blur-xl p-12 rounded-[3rem] shadow-2xl flex flex-col items-center text-center max-w-lg border border-slate-800/50 relative overflow-hidden"
-        >
-          <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-emerald-500 to-transparent opacity-50"></div>
-          <div className="w-32 h-32 bg-slate-950 rounded-full flex items-center justify-center mb-8 text-emerald-500 shadow-[0_0_50px_rgba(16,185,129,0.2)] relative">
-            <div className="absolute inset-0 border-2 border-emerald-500/20 rounded-full animate-ping"></div>
-            <Heart size={48} strokeWidth={1.5} />
-          </div>
-          <h2 className="text-3xl font-serif text-white mb-4">Nothing saved just yet</h2>
-          <p className="text-slate-400 mb-10 leading-relaxed font-medium">Keep the products you love close. Your saved list will be here whenever you return.</p>
-          <Link to="/shop" className="bg-emerald-500 hover:bg-emerald-400 text-black px-10 py-5 rounded-full font-black tracking-widest uppercase text-sm transition-all flex items-center gap-3">
-            <ArrowLeft size={18} /> Explore products
-          </Link>
-        </motion.div>
-      </div>
-    );
-  }
-
-  // --- POPULATED STATE (SYNCED WITH CART THEME) ---
   return (
-    <div className="min-h-screen bg-slate-950 text-white selection:bg-emerald-500 selection:text-black py-32 px-6">
+    <main className="min-h-screen bg-[#101914] text-white py-24 px-6 font-sans">
+      <SEO
+        title="Saved Wishlist & Curated Botanical Rituals | Bhumivera"
+        description="Review your saved Bhumivera formulations or one-click save our curated AM and PM skincare regimens."
+        route="/wishlist"
+      />
       <div className="max-w-7xl mx-auto">
-        
-        {/* HEADER & BATCH CONTROLS */}
-        <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-12 border-b border-slate-800 pb-6 gap-6">
+        <div className="flex flex-col md:flex-row items-start md:items-end justify-between mb-10 border-b border-white/10 pb-6 gap-6">
           <div>
-            <h1 className="text-4xl font-serif sm:text-5xl mb-2">Your wishlist</h1>
-            <p className="text-emerald-500 font-bold tracking-widest text-sm flex items-center gap-2">
-              <ShieldCheck size={16} /> {wishlist.length} saved {wishlist.length === 1 ? 'product' : 'products'}
+            <span className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-[#d4af37]">
+              Personal Apothecary Curation
+            </span>
+            <h1 className="text-4xl font-serif sm:text-5xl mt-2">Saved Wishlist &amp; Rituals</h1>
+            <p className="text-emerald-400 font-semibold text-xs mt-2 flex items-center gap-2">
+              <ShieldCheck size={15} /> {wishlist.length} saved {wishlist.length === 1 ? 'formulation' : 'formulations'} (Synced for Guest &amp; Account)
             </p>
           </div>
-          <div className="flex items-center gap-4 w-full md:w-auto">
-            <button 
-              onClick={handleClearArsenal}
-              className="px-6 py-3 rounded-xl font-bold uppercase tracking-widest text-xs bg-slate-900 text-slate-400 hover:text-red-500 hover:bg-red-500/10 transition-colors border border-slate-800"
-            >
-              Clear wishlist
-            </button>
-            <button 
-              onClick={handleDeployAll}
-              className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-slate-800 hover:bg-emerald-500 hover:text-black text-white px-6 py-3 rounded-xl font-black uppercase tracking-widest text-xs transition-all border border-slate-700 hover:border-emerald-500 group"
-            >
-              <Zap size={14} className="group-hover:animate-pulse" /> Add all to cart
-            </button>
-          </div>
-        </div>
-
-        {/* GRID LAYOUT */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          <AnimatePresence>
-            {wishlist.map((product) => (
-              <motion.div 
-                layout
-                initial={{ opacity: 0, scale: 0.9 }} 
-                animate={{ opacity: 1, scale: 1 }} 
-                exit={{ opacity: 0, scale: 0.9 }}
-                key={product.product_id || product.id || product._id}
-                className="bg-slate-900/40 backdrop-blur-sm border border-slate-800/60 rounded-3xl overflow-hidden shadow-xl hover:border-emerald-500/50 transition-colors group flex flex-col"
+          {wishlist.length > 0 && (
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={clearWishlist}
+                className="px-5 py-2.5 rounded-xl font-bold uppercase tracking-widest text-xs bg-white/5 text-white/70 hover:text-rose-300 border border-white/10"
               >
-                {/* Image Container */}
-                <div className="relative aspect-square bg-slate-950 overflow-hidden">
-                  <div className="absolute inset-0 bg-gradient-to-t from-slate-950 to-transparent opacity-60 z-10"></div>
-                  <img
-                    src={getImageUrl(product)}
-                    alt={product.name}
-                    onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = FALLBACK; }}
-                    className="w-full h-full object-cover opacity-80 group-hover:opacity-100 group-hover:scale-110 transition-all duration-700"
-                  />
-                  <button
-                    onClick={() => removeFromWishlist(product.product_id || product.id || product._id)}
-                    className="absolute top-4 right-4 z-20 p-2.5 bg-slate-950/80 backdrop-blur-md text-slate-400 hover:text-red-500 hover:bg-red-500/20 rounded-xl transition-all border border-slate-800"
-                    title="Remove asset"
-                  >
-                    <Trash2 size={16} />
-                  </button>
-                  <div className="absolute bottom-4 left-4 z-20">
-                    <span className="text-[10px] font-black text-emerald-400 uppercase tracking-widest bg-emerald-950/80 px-3 py-1 rounded-full border border-emerald-500/30 backdrop-blur-md">
-                      {product.category || product.category_name || 'Bhumivera'}
-                    </span>
-                  </div>
-                </div>
-
-                {/* Content Container */}
-                <div className="p-6 flex flex-col flex-1">
-                  <Link to={`/product/${product.slug || product.product_id || product.id || product._id}`} className="block mb-2 flex-1">
-                    <h3 className="font-black text-lg text-white uppercase tracking-tight line-clamp-2 group-hover:text-emerald-400 transition-colors">
-                      {product.name || product.title || product.product_name || 'Bhumivera product'}
-                    </h3>
-                  </Link>
-                  
-                  <div className="flex items-center justify-between mt-auto pt-4 border-t border-slate-800">
-                    <p className="text-2xl font-semibold text-white tracking-tight">
-                      ₹{Number(product.discount_price || product.price || 0).toLocaleString('en-IN')}
-                    </p>
-                  </div>
-                  
-                  <button
-                    onClick={() => handleMoveToCart(product)}
-                    className="w-full mt-6 bg-slate-800 hover:bg-emerald-500 text-white hover:text-black py-4 rounded-xl font-black uppercase tracking-widest text-xs flex items-center justify-center gap-2 transition-all border border-slate-700 hover:border-emerald-500 shadow-[0_0_15px_rgba(0,0,0,0.5)] group/btn"
-                  >
-                    <ShoppingCart size={16} /> Move to Cart
-                    <ArrowRight size={14} className="opacity-0 group-hover/btn:opacity-100 -translate-x-2 group-hover/btn:translate-x-0 transition-all" />
-                  </button>
-                </div>
-              </motion.div>
-            ))}
-          </AnimatePresence>
+                Clear Wishlist
+              </button>
+              <button
+                type="button"
+                onClick={handleDeployAll}
+                className="px-5 py-2.5 rounded-xl font-bold uppercase tracking-widest text-xs bg-[#d4af37] text-[#101914] hover:bg-[#e5c247]"
+              >
+                Move All to Bag
+              </button>
+            </div>
+          )}
         </div>
+
+        {/* Saved Items Grid */}
+        {wishlist.length > 0 ? (
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-16">
+            {wishlist.map((product, idx) => {
+              const pid = product.product_id || product.id || product._id;
+              return (
+                <article
+                  key={pid || idx}
+                  className="overflow-hidden rounded-2xl border border-white/15 bg-[#16241d] flex flex-col"
+                >
+                  <div className="aspect-[4/3] w-full overflow-hidden bg-black">
+                    <img
+                      src={getImageUrl(product, idx)}
+                      alt={product.name}
+                      className="h-full w-full object-cover"
+                    />
+                  </div>
+                  <div className="p-6 flex-1 flex flex-col justify-between">
+                    <div>
+                      <h2 className="font-serif text-xl font-bold text-white">{product.name}</h2>
+                      <p className="mt-1 text-sm font-bold text-[#d4af37]">
+                        ₹{product.discount_price || product.price}
+                      </p>
+                    </div>
+                    <div className="mt-5 flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleMoveToCart(product)}
+                        className="flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 py-2.5 text-xs font-bold uppercase text-black"
+                      >
+                        <ShoppingCart size={14} /> Move to Bag
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => removeFromWishlist(pid)}
+                        className="rounded-xl border border-white/15 p-2.5 text-white/70 hover:text-rose-400"
+                        aria-label="Remove from wishlist"
+                      >
+                        <Trash2 size={15} />
+                      </button>
+                    </div>
+                  </div>
+                </article>
+              );
+            })}
+          </div>
+        ) : (
+          <div className="rounded-3xl border border-white/15 bg-[#16241d] p-8 sm:p-10 text-center mb-14">
+            <Heart size={40} className="mx-auto text-[#d4af37] mb-4" />
+            <h2 className="font-serif text-2xl sm:text-3xl">Your personal wishlist is ready to curate</h2>
+            <p className="mt-2 max-w-xl mx-auto text-xs sm:text-sm text-white/70">
+              Click “Save to Wishlist” on any formulation below to build your AM/PM botanical routine—no sign-in required to start saving.
+            </p>
+          </div>
+        )}
+
+        {/* Curated Real-Life Botanical Regimens to Save with 1 Click */}
+        <section>
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#d4af37]">
+                Real-Life Daily Regimens
+              </span>
+              <h2 className="mt-1 font-serif text-2xl sm:text-3xl">
+                Recommended Formulations to Save &amp; Pair
+              </h2>
+            </div>
+            <Link to="/compare" className="text-xs font-bold text-[#c8d6aa] underline underline-offset-4">
+              Compare All 6 Formulations ↗
+            </Link>
+          </div>
+          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            {FALLBACK_CATALOG_PRODUCTS.map((prod) => (
+              <article
+                key={prod.id}
+                className="overflow-hidden rounded-2xl border border-white/10 bg-[#15221b] flex flex-col"
+              >
+                <img src={prod.image_url} alt={prod.name} loading="lazy" className="aspect-[16/10] w-full object-cover" />
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    <span className="font-mono text-[10px] text-[#d4af37] uppercase">{prod.phLevel}</span>
+                    <h3 className="mt-1 font-serif text-lg font-bold text-white">{prod.name}</h3>
+                    <p className="mt-1 text-xs text-white/65 line-clamp-2">{prod.description}</p>
+                  </div>
+                  <div className="mt-4 flex items-center justify-between pt-3 border-t border-white/10">
+                    <span className="font-serif text-lg font-bold text-white">₹{prod.discount_price}</span>
+                    <div className="flex gap-2">
+                      <button
+                        type="button"
+                        onClick={() => toggleWishlist?.(prod)}
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#d4af37]/40 bg-[#d4af37]/10 px-3 py-1.5 text-xs font-bold text-[#d4af37] hover:bg-[#d4af37] hover:text-black"
+                      >
+                        <Heart size={13} /> Save
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => addToCart?.(prod, 1)}
+                        className="inline-flex items-center gap-1.5 rounded-lg bg-white px-3 py-1.5 text-xs font-bold text-[#101914]"
+                      >
+                        + Bag
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

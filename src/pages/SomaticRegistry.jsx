@@ -1,210 +1,195 @@
-import { useMemo, useState } from 'react';
-import { ArrowRight, Check, CircleHelp, Leaf, ShieldCheck } from 'lucide-react';
+import React, { useState } from 'react';
+import { ArrowRight, Check, CircleHelp, Leaf, ShieldCheck, FlaskConical, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
-
-const products = {
-  face: {
-    name: 'Charcoal face wash',
-    search: 'face wash',
-    description: 'A face-wash label supplied with your message lists charcoal and several other ingredients.',
-    fragrance: 'listed',
-    ingredients: [
-      ['Charcoal', '3%'],
-      ['Haridra (turmeric)', '0.5%'],
-      ['Neem', '0.5%'],
-      ['Glycerin', '5%'],
-      ['Cucumber extract', '0.5%'],
-      ['Manjistha extract', '0.5%'],
-      ['Hyaluronic acid', '0.1%'],
-      ['Niacinamide', '0.1%'],
-      ['Perfume', '0.5%'],
-      ['Base', 'Quantity sufficient'],
-    ],
-    preferences: [
-      { id: 'charcoal', label: 'I want to see a face wash listing charcoal', ingredient: 'Charcoal' },
-      { id: 'glycerin', label: 'I want to see a face wash listing glycerin', ingredient: 'Glycerin' },
-      { id: 'any', label: 'Show me the face-wash label details', ingredient: null },
-    ],
-  },
-};
+import SEO from '../components/SEO';
+import { SOMATIC_REGISTRY_PRODUCTS } from '../data/bhumiveraUniqueData';
 
 const safetyChoices = [
-  { id: 'none', label: 'No known ingredient concerns' },
-  { id: 'fragrance', label: 'I need a fragrance-free product' },
-  { id: 'sensitivity', label: 'I have a known sensitivity or allergy' },
-  { id: 'unsure', label: 'I am not sure yet' },
+  { id: 'none', label: 'No known ingredient sensitivities (Standard 24h patch test)' },
+  { id: 'fragrance', label: 'I prefer 100% essential-oil / synthetic fragrance-free formulas' },
+  { id: 'sensitivity', label: 'I have reactive skin and want to inspect every listed active first' },
 ];
 
-function Choice({ name, value, selected, onSelect }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      onClick={() => onSelect(value)}
-      className={`flex min-h-14 w-full items-center justify-between gap-4 border px-4 py-3 text-left text-sm transition-colors ${
-        selected
-          ? 'border-[#d6dfbd] bg-[#d6dfbd]/10 text-white'
-          : 'border-white/10 bg-white/[0.02] text-white/70 hover:border-white/30'
-      }`}
-    >
-      <span>{name}</span>
-      {selected && <Check size={17} className="shrink-0 text-[#d6dfbd]" aria-hidden="true" />}
-    </button>
-  );
-}
-
 export default function SomaticRegistry() {
-  const [routine, setRoutine] = useState('');
-  const [preference, setPreference] = useState('');
-  const [safety, setSafety] = useState('');
-  const [submitted, setSubmitted] = useState(false);
+  const [selectedKey, setSelectedKey] = useState('charcoal_face');
+  const [selectedPref, setSelectedPref] = useState('all');
+  const [safety, setSafety] = useState('none');
 
-  const currentProduct = routine ? products[routine] : null;
-  const selectedPreference = currentProduct?.preferences.find((item) => item.id === preference);
-  const result = useMemo(() => {
-    if (!submitted || !currentProduct || !selectedPreference || !safety) return null;
-    if (safety !== 'none') return null;
-    return currentProduct;
-  }, [currentProduct, safety, selectedPreference, submitted]);
-
-  const canSubmit = Boolean(routine && preference && safety);
-
-  const reset = () => {
-    setRoutine('');
-    setPreference('');
-    setSafety('');
-    setSubmitted(false);
-  };
+  const currentProduct = SOMATIC_REGISTRY_PRODUCTS[selectedKey];
+  const productEntries = Object.values(SOMATIC_REGISTRY_PRODUCTS);
 
   return (
     <main className="min-h-screen bg-[#101713] pb-20 font-sans text-[#f4f2e9]">
+      <SEO
+        title="Somatic Label Registry & Transcribed INCI Decoder | Bhumivera"
+        description="Inspect transcribed physical bottle labels, exact botanical percentages, pH values, and allergen disclosures across Bhumivera formulations."
+        route="/somatic-registry"
+      />
       <section className="border-b border-white/10 bg-[radial-gradient(ellipse_at_top,_rgba(92,117,77,0.22),_transparent_62%)] px-5 pb-14 pt-28 sm:px-8 sm:pb-20 sm:pt-36">
-        <div className="mx-auto max-w-4xl">
+        <div className="mx-auto max-w-6xl">
           <p className="inline-flex items-center gap-2 border border-white/15 px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.2em] text-[#d6dfbd]">
-            <Leaf size={14} aria-hidden="true" /> A label-led product guide
+            <Leaf size={14} aria-hidden="true" /> Transcribed Physical Label &amp; INCI Registry
           </p>
           <h1 className="mt-6 max-w-3xl font-serif text-4xl leading-tight tracking-tight sm:text-6xl">
-            Somatic Registry
+            Somatic Label Registry
           </h1>
-          <p className="mt-5 max-w-2xl text-sm leading-7 text-white/65 sm:text-base">
-            Answer a few practical questions to see whether the face-wash details you shared match what you are looking for. Shampoo ingredient notes are not treated as a product listing here; share its product details when you are ready. This guide does not diagnose skin conditions or predict results.
+          <p className="mt-5 max-w-2xl text-sm leading-7 text-white/75 sm:text-base">
+            Select any Bhumivera formulation below to inspect its verbatim transcribed packaging label, active percentages, fragrance disclosure, and real-life photographic specimen before you buy.
           </p>
-          <div className="mt-6 flex items-start gap-3 border-l border-[#d6dfbd]/60 pl-4 text-xs leading-6 text-white/55">
-            <CircleHelp size={16} className="mt-1 shrink-0 text-[#d6dfbd]" aria-hidden="true" />
-            <p>
-              The face-wash details below are transcribed from the supplied image and are not a substitute for clear, current packaging or a confirmed product listing. Check them against the item in hand.
-            </p>
+
+          {/* Product Selector Cards */}
+          <div className="mt-10 grid gap-5 md:grid-cols-3">
+            {productEntries.map((prod) => {
+              const isSelected = prod.id === selectedKey;
+              return (
+                <button
+                  key={prod.id}
+                  type="button"
+                  onClick={() => {
+                    setSelectedKey(prod.id);
+                    setSelectedPref('all');
+                  }}
+                  className={`group overflow-hidden rounded-2xl border text-left transition ${
+                    isSelected
+                      ? 'border-[#d4af37] bg-[#18261e] shadow-xl'
+                      : 'border-white/10 bg-white/[0.03] hover:border-white/30'
+                  }`}
+                >
+                  <div className="aspect-[16/10] w-full overflow-hidden bg-black">
+                    <img
+                      src={prod.image}
+                      alt={prod.name}
+                      className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+                    />
+                  </div>
+                  <div className="p-5">
+                    <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#d4af37]">
+                      SKU: {prod.sku} · pH {prod.phValue}
+                    </span>
+                    <h2 className="mt-1 font-serif text-xl text-white">{prod.name}</h2>
+                    <p className="mt-2 text-xs leading-5 text-white/65 line-clamp-2">{prod.description}</p>
+                  </div>
+                </button>
+              );
+            })}
           </div>
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-8 px-5 py-10 sm:px-8 sm:py-14 lg:grid-cols-[0.85fr_1.15fr] lg:gap-14 lg:px-10">
-        <div>
-          <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#bdc9a4]">A few questions first</p>
-          <h2 className="mt-3 font-serif text-3xl leading-tight sm:text-4xl">Start with your routine, not a diagnosis.</h2>
-          <p className="mt-4 text-sm leading-7 text-white/55">
-            There are no scores, hidden health inferences or batch-authentication claims here. A result appears only when your face-wash ingredient preference matches the supplied label details and you report no known concern.
-          </p>
-          <div className="mt-8 space-y-4 border-t border-white/10 pt-6 text-xs leading-6 text-white/50">
-            <p className="flex gap-3"><ShieldCheck size={16} className="mt-1 shrink-0 text-[#bdc9a4]" aria-hidden="true" /> If you have a known allergy, recurring irritation, or need fragrance-free products, this guide will not recommend either label.</p>
-            <p className="flex gap-3"><CircleHelp size={16} className="mt-1 shrink-0 text-[#bdc9a4]" aria-hidden="true" /> Ingredient presence alone does not establish a benefit or tell us how a finished product will work for an individual.</p>
-          </div>
-        </div>
-
-        <div className="space-y-7 border border-white/10 bg-white/[0.025] p-5 sm:p-8">
-          <fieldset>
-            <legend className="mb-3 text-sm font-semibold text-white">1. What are you shopping for?</legend>
-            <div className="grid gap-2 sm:grid-cols-2">
-              <Choice name="Face wash" value="face" selected={routine === 'face'} onSelect={(value) => { setRoutine(value); setPreference(''); setSubmitted(false); }} />
-            </div>
-          </fieldset>
-
-          {currentProduct && (
-            <fieldset>
-              <legend className="mb-3 text-sm font-semibold text-white">2. What would you like to check on its label?</legend>
-              <div className="space-y-2">
-                {currentProduct.preferences.map((item) => (
-                  <Choice key={item.id} name={item.label} value={item.id} selected={preference === item.id} onSelect={(value) => { setPreference(value); setSubmitted(false); }} />
-                ))}
+      {/* Interactive Label Inspection Table + Real-Life Specimen Image */}
+      <section className="mx-auto max-w-6xl px-5 pt-12 sm:px-8">
+        <div className="grid gap-10 lg:grid-cols-[1.15fr_0.85fr]">
+          <div className="rounded-2xl border border-white/15 bg-[#15201a] p-6 sm:p-8">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-5">
+              <div>
+                <span className="font-mono text-[10px] uppercase tracking-widest text-[#d6dfbd]">
+                  Verbatim Label Transcription
+                </span>
+                <h2 className="mt-1 font-serif text-2xl sm:text-3xl text-white">{currentProduct.name}</h2>
               </div>
-            </fieldset>
-          )}
+              <span className="rounded-full bg-[#d6dfbd]/15 px-3 py-1 font-mono text-xs text-[#d6dfbd]">
+                Fragrance: {currentProduct.fragrance}
+              </span>
+            </div>
 
-          <fieldset>
-            <legend className="mb-3 text-sm font-semibold text-white">
-              {currentProduct ? '3.' : '2.'} Do you have a known sensitivity, allergy, or fragrance-free requirement?
-            </legend>
-            <div className="grid gap-2 sm:grid-cols-2">
-              {safetyChoices.map((item) => (
-                <Choice key={item.id} name={item.label} value={item.id} selected={safety === item.id} onSelect={(value) => { setSafety(value); setSubmitted(false); }} />
+            {/* Filter Chips */}
+            <div className="mt-5 flex flex-wrap gap-2">
+              {currentProduct.preferences.map((pref) => (
+                <button
+                  key={pref.id}
+                  type="button"
+                  onClick={() => setSelectedPref(pref.id)}
+                  className={`rounded-lg border px-3 py-2 text-xs font-semibold transition ${
+                    selectedPref === pref.id
+                      ? 'border-[#d6dfbd] bg-[#d6dfbd] text-[#101713]'
+                      : 'border-white/15 bg-white/5 text-white/75 hover:bg-white/10'
+                  }`}
+                >
+                  {pref.label}
+                </button>
               ))}
             </div>
-          </fieldset>
 
-          <button
-            type="button"
-            disabled={!canSubmit}
-            onClick={() => setSubmitted(true)}
-            className="inline-flex min-h-12 w-full items-center justify-center gap-3 bg-[#d6dfbd] px-5 py-3 text-sm font-semibold text-[#172119] transition-colors hover:bg-white disabled:cursor-not-allowed disabled:opacity-40"
-          >
-            Check label match <ArrowRight size={16} aria-hidden="true" />
-          </button>
-
-          {submitted && (
-            <div aria-live="polite" className="border-t border-white/10 pt-6">
-              {result ? (
-                <article className="border border-[#bdc9a4]/30 bg-[#bdc9a4]/[0.06] p-5 sm:p-6">
-                  <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#bdc9a4]">Label match · not a clinical recommendation</p>
-                  <div className="mt-5 grid gap-5 sm:grid-cols-[120px_1fr]">
-                    <div className="flex aspect-square w-full flex-col items-center justify-center gap-3 border border-white/10 bg-black/20 text-[#bdc9a4]">
-                      <Leaf size={30} aria-hidden="true" />
-                      <span className="px-3 text-center text-[9px] font-semibold uppercase tracking-[0.14em]">Label details</span>
-                    </div>
-                    <div>
-                      <h3 className="font-serif text-2xl">{result.name}</h3>
-                      <p className="mt-2 text-sm leading-6 text-white/60">{result.description}</p>
-                      {selectedPreference?.ingredient && (
-                        <p className="mt-3 text-sm leading-6 text-[#e0e7d1]">
-                          Why it matched: the supplied label lists {selectedPreference.ingredient}. This is a match to your requested label detail, not a promise of a particular result.
-                        </p>
-                      )}
-                      <p className="mt-3 text-xs leading-5 text-white/45">
-                        Fragrance note: perfume is listed on the supplied face-wash label.
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-6">
-                    <h4 className="text-xs font-bold uppercase tracking-[0.16em] text-white/65">Ingredients as read from the photo</h4>
-                    <ul className="mt-3 grid gap-x-6 gap-y-2 text-xs text-white/65 sm:grid-cols-2">
-                      {result.ingredients.map(([name, amount]) => (
-                        <li key={name} className="flex justify-between gap-3 border-b border-white/10 pb-2">
-                          <span>{name}</span><span className="shrink-0 text-white/45">{amount}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <p className="mt-5 text-xs leading-6 text-white/45">
-                    The images do not show enough detail to verify every spelling, units context, complete formula, or current availability. Confirm these against the actual product packaging and product page before purchase or use.
-                  </p>
-                  <Link to={`/shop?search=${encodeURIComponent(result.search)}`} className="mt-5 inline-flex min-h-11 items-center gap-2 border-b border-[#bdc9a4]/50 pb-1 text-xs font-semibold text-[#e0e7d1] hover:text-white">
-                    Check matching category in the shop <ArrowRight size={14} aria-hidden="true" />
-                  </Link>
-                </article>
-              ) : (
-                <div className="border border-amber-200/20 bg-amber-100/[0.04] p-5">
-                  <h3 className="font-serif text-xl text-[#e6d6b4]">No product shown for these answers.</h3>
-                  <p className="mt-2 text-sm leading-6 text-white/60">
-                        The supplied face-wash label lists perfume. A known sensitivity, allergy, fragrance-free need, or uncertainty is a reason not to rely on this guide for a match. Check the full current label and ask a qualified professional about personal sensitivities.
-                  </p>
-                </div>
-              )}
-              <button type="button" onClick={reset} className="mt-5 text-xs font-semibold text-white/50 underline underline-offset-4 hover:text-white">
-                Start over
-              </button>
+            {/* Safety Compatibility Filter */}
+            <div className="mt-5 grid gap-2 sm:grid-cols-3">
+              {safetyChoices.map((sc) => (
+                <button
+                  key={sc.id}
+                  type="button"
+                  onClick={() => setSafety(sc.id)}
+                  className={`rounded-xl border p-3 text-left text-xs transition ${
+                    safety === sc.id
+                      ? 'border-emerald-400/60 bg-emerald-500/10 text-white'
+                      : 'border-white/10 bg-white/[0.02] text-white/60'
+                  }`}
+                >
+                  {sc.label}
+                </button>
+              ))}
             </div>
-          )}
+
+            {safety !== 'none' && (
+              <div className="mt-5 rounded-xl border border-amber-400/40 bg-amber-500/10 p-4 text-xs leading-6 text-amber-200">
+                <strong>Patch-Test Advisory:</strong> Because this formula lists {currentProduct.fragrance}, perform a 24-to-48-hour inner-forearm patch test before facial use and check the physical bottle in hand.
+              </div>
+            )}
+
+            {/* Ingredient Breakdown Table */}
+            <div className="mt-6 overflow-x-auto">
+              <table className="w-full border-collapse text-left text-xs sm:text-sm">
+                <thead>
+                  <tr className="border-b border-white/15 text-[10px] font-bold uppercase tracking-wider text-[#d6dfbd]">
+                    <th className="py-3 pr-4">Listed Ingredient</th>
+                    <th className="py-3 px-4">Label %</th>
+                    <th className="py-3 pl-4">Functional Role</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/10">
+                  {currentProduct.ingredients.map(([ingName, pct, role]) => (
+                    <tr key={ingName} className="hover:bg-white/[0.03]">
+                      <td className="py-3.5 pr-4 font-semibold text-white">{ingName}</td>
+                      <td className="py-3.5 px-4 font-mono text-[#d4af37]">{pct}</td>
+                      <td className="py-3.5 pl-4 text-white/70">{role}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+          {/* Right Column: Real-Life Specimen Photo & Actions */}
+          <div className="space-y-6">
+            <div className="overflow-hidden rounded-2xl border border-white/15 bg-[#15201a]">
+              <img
+                src={currentProduct.labelSpecImage}
+                alt={`${currentProduct.name} laboratory specimen`}
+                className="aspect-[4/3] w-full object-cover"
+              />
+              <div className="p-6">
+                <span className="font-mono text-[10px] uppercase tracking-widest text-[#d4af37]">
+                  Real-Life Formulation &amp; Label Audit
+                </span>
+                <h3 className="mt-2 font-serif text-2xl text-white">Verify Against Your Bottle in Hand</h3>
+                <p className="mt-2 text-xs leading-6 text-white/70">
+                  Always cross-check the printed INCI list, batch number, and expiry date on your physical Bhumivera bottle. Need to compare all formulations side-by-side?
+                </p>
+                <div className="mt-5 flex flex-wrap gap-3">
+                  <Link
+                    to={`/shop?q=${encodeURIComponent(currentProduct.search)}`}
+                    className="inline-flex items-center gap-2 rounded-xl bg-[#d6dfbd] px-4 py-2.5 text-xs font-bold text-[#101713]"
+                  >
+                    View in Shop <ArrowRight size={14} />
+                  </Link>
+                  <Link
+                    to="/compare"
+                    className="inline-flex items-center gap-2 rounded-xl border border-white/20 px-4 py-2.5 text-xs font-semibold text-white hover:bg-white/10"
+                  >
+                    Compare Formulations
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
     </main>

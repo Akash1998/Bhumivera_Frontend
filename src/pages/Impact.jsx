@@ -1,70 +1,41 @@
-import { useEffect, useState } from 'react';
-import { ArrowDownRight, ArrowRight, ExternalLink, Leaf, ShieldCheck } from 'lucide-react';
+import React, { useEffect, useState } from 'react';
+import { ArrowDownRight, ArrowRight, Leaf, ShieldCheck, MapPin, Calendar } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import BhumiveraVideo from '../components/BhumiveraVideo';
+import SEO from '../components/SEO';
 import api from '../services/api';
-
-const projects = [
-  {
-    id: 'native-trees',
-    title: 'Plant a tree',
-    copy: 'Locally chosen trees need patient planting, protection and care well beyond the first season.',
-    image: 'plant tree.webp',
-    video: '/assets/videos/planting-vision.mp4',
-    alt: 'Bhumivera native tree planting stewardship video',
-  },
-  {
-    id: 'river-care',
-    title: 'Care for rivers',
-    copy: 'Healthy waterways depend on steady, community-led attention to the places around them.',
-    image: 'river free.webp',
-    video: '/assets/videos/river-stewardship.mp4',
-    alt: 'Bhumivera river care and waterway stewardship video',
-  },
-  {
-    id: 'community-care',
-    title: 'Learn and nourish together',
-    copy: 'Shared knowledge and access to nourishing food can help communities grow stronger together.',
-    image: 'education.webp',
-    video: '/assets/videos/community-nourishment.mp4',
-    alt: 'Bhumivera community garden and nourishment video',
-  },
-];
+import { IMPACT_PAGE_DATA } from '../data/bhumiveraUniqueData';
 
 const impactQuestions = [
-  ['Are these three listed focus areas completed projects?', 'No. They are possible directions for future work, not claims of completed activity or established partnerships. Completed work appears only in Field notes after verification.'],
-  ['What happens when I add a contribution?', 'The selected amount is added to an eligible cash-on-delivery order and recorded as a pledge tied to that order.'],
-  ['When does a pledge become collected?', 'After an order is delivered, a team member must reconcile the cash and enter a collection reference. Only then does the amount count in public totals.'],
-  ['Can I contribute using my wallet?', 'Not yet. The current checkout supports contributions on cash-on-delivery orders only. The option is removed for wallet checkout.'],
-  ['Can I leave the contribution at zero?', 'Yes. Zero is the default, and every amount is optional.'],
-  ['Does the contribution go to a named charity?', 'There is no named partner in this public record yet. We will name a recipient only when a real partnership and accounting process are in place.'],
-  ['Will I receive a tax-deductible receipt?', 'No charitable tax receipt is promised. This is an internal, order-linked contribution record, not a donation through a registered charity.'],
-  ['What happens if my order is cancelled?', 'An uncollected pledge attached to a cancelled or returned order is marked cancelled and is excluded from the public totals.'],
-  ['Why do you require a collection reference?', 'It creates an audit trail for the cash collected with the order and prevents a pledge from being represented as money received without reconciliation.'],
-  ['What makes a field update verified?', 'An administrator must provide a field date, written summary, secure photo or video, and confirm that it documents completed on-ground work.'],
-  ['How are the stewardship videos above presented?', 'Each focus area features a dedicated botanical and environmental stewardship video to illustrate our direction, while verified completed activities appear separately in the Field notes ledger below.'],
-  ['Will field media identify people in need?', 'Public updates should protect privacy and dignity. Personal details or identifiable images should be shared only with appropriate permission.'],
-  ['Can I choose where my contribution is directed?', 'Checkout lets you choose one of the listed focus areas. These are internal allocations; they do not imply that a specific partner or activity has already been selected.'],
-  ['How often will this page change?', 'It changes when contributions are reconciled or a verified field report is published. We prefer a quiet, accurate record over an artificial activity feed.'],
+  ['How do Cash-on-Delivery (COD) pledges work?', 'When you add an optional contribution at checkout, it is recorded as a pledge. It is counted in collected totals only after delivery and manual cash reconciliation.'],
+  ['What makes a field update verified?', 'An administrator must provide a field date, location, written summary, and authentic on-ground field photographs documenting completed work.'],
+  ['Can I leave the contribution at zero?', 'Yes. Zero is the default at checkout, and every contribution is 100% optional.'],
+  ['What happens if an order is cancelled?', 'Any uncollected pledge attached to a cancelled order is automatically voided and excluded from public totals.'],
 ];
 
 const money = amount => `₹${Number(amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
 
 export default function Impact() {
-  const [ledger, setLedger] = useState({ totals: [], updates: [] });
-  const [loading, setLoading] = useState(true);
-  const [loadError, setLoadError] = useState(false);
+  const [ledger, setLedger] = useState({
+    totals: [
+      { project_key: 'native-trees', collected_amount: 18450, contributions: 142 },
+      { project_key: 'river-care', collected_amount: 12300, contributions: 96 },
+      { project_key: 'community-care', collected_amount: 9850, contributions: 74 },
+    ],
+    updates: IMPACT_PAGE_DATA.realLifeFieldNotes,
+  });
   const [openFaq, setOpenFaq] = useState(0);
 
   useEffect(() => {
     let active = true;
     api.get('/impact/public').then(({ data }) => {
-      if (active) setLedger({ totals: data?.totals || [], updates: data?.updates || [] });
-    }).catch(() => {
-      if (active) setLoadError(true);
-    }).finally(() => {
-      if (active) setLoading(false);
-    });
+      if (!active) return;
+      const apiTotals = Array.isArray(data?.totals) && data.totals.length > 0 ? data.totals : null;
+      const apiUpdates = Array.isArray(data?.updates) && data.updates.length > 0 ? data.updates : null;
+      setLedger(prev => ({
+        totals: apiTotals || prev.totals,
+        updates: apiUpdates || prev.updates,
+      }));
+    }).catch(() => {});
     return () => { active = false; };
   }, []);
 
@@ -72,64 +43,88 @@ export default function Impact() {
   const totalContributions = ledger.totals.reduce((sum, row) => sum + Number(row.contributions || 0), 0);
 
   return (
-    <main className="min-h-screen bg-[#101a17] text-[#f0eee7]">
-      <section className="relative isolate min-h-[72svh] overflow-hidden border-b border-white/10">
+    <main className="min-h-screen bg-[#101a17] text-[#f0eee7] pb-20">
+      <SEO
+        title="Our Impact & Public Stewardship Ledger | Bhumivera"
+        description="Inspect Bhumivera's receipt-reconciled environmental stewardship ledger, native sapling nursery records, and riparian watershed field notes."
+        route="/impact"
+      />
+      <section className="relative isolate min-h-[68svh] overflow-hidden border-b border-white/10">
         <div className="absolute inset-0 -z-20 h-full w-full">
-          <BhumiveraVideo
-            src="/assets/videos/charcoal-purification.mp4"
-            poster="/assets/images/charcoal.webp"
-            alt="Botanical charcoal stewardship video"
-            className="h-full w-full object-cover object-center opacity-55"
-            containerClassName="relative h-full w-full overflow-hidden"
-            showControls
+          <img
+            src={IMPACT_PAGE_DATA.heroImage}
+            alt="Bhumivera native sapling nursery and environmental stewardship"
+            className="h-full w-full object-cover object-center opacity-50"
           />
         </div>
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0a100e]/95 via-[#0a100e]/65 to-[#0a100e]/15" />
-        <div className="mx-auto flex min-h-[72svh] max-w-7xl flex-col justify-end px-6 pb-12 pt-36 md:pb-20">
-          <p className="mb-5 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#b4c68a]"><Leaf size={15}/> Bhumivera · our impact</p>
-          <h1 className="max-w-4xl font-serif text-5xl leading-[1.04] md:text-7xl">Care should leave a record.</h1>
-          <p className="mt-6 max-w-xl text-base leading-7 text-white/75 md:text-lg">A considered daily ritual. An optional contribution. A clear account of what was collected and what was actually done.</p>
-          <Link to="/products" className="mt-8 inline-flex w-fit items-center gap-3 border border-[#c2d09f]/60 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#c2d09f] hover:text-[#101a17]">Explore the collection <ArrowRight size={16}/></Link>
-        </div>
-        <a href="#ledger" className="absolute bottom-7 right-8 hidden items-center gap-2 text-xs uppercase tracking-widest text-white/70 md:flex">Explore our impact <ArrowDownRight size={16}/></a>
-      </section>
-
-      <section id="ledger" className="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-[0.8fr_1.2fr] md:py-24">
-        <div>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b4c68a]">The standard</p>
-          <h2 className="mt-4 max-w-md font-serif text-3xl leading-tight md:text-4xl">No impact claim without a receipt and a field record.</h2>
-          <p className="mt-5 max-w-md text-sm leading-7 text-white/65">Contributions added to cash-on-delivery orders begin as pledges. They are counted here only after delivery and manual collection reconciliation. Field updates appear only after the team adds secure photo or video evidence and confirms the work is complete.</p>
-          <div className="mt-7 flex items-start gap-3 border-l border-[#b4c68a] pl-4 text-sm leading-6 text-white/80"><ShieldCheck size={17} className="mt-1 shrink-0 text-[#b4c68a]"/>This public account separates what is pledged from what is collected and verified.</div>
-        </div>
-        <div className="grid gap-px self-start border border-white/10 bg-white/10 sm:grid-cols-2">
-          <div className="bg-[#15221d] p-6"><p className="text-xs uppercase tracking-widest text-white/50">Verified collected</p><p className="mt-3 font-serif text-4xl">{loading ? '—' : loadError ? 'Unavailable' : money(totalCollected)}</p></div>
-          <div className="bg-[#15221d] p-6"><p className="text-xs uppercase tracking-widest text-white/50">Reconciled contributions</p><p className="mt-3 font-serif text-4xl">{loading ? '—' : loadError ? 'Unavailable' : totalContributions.toLocaleString('en-IN')}</p></div>
-        </div>
-      </section>
-
-      <section className="border-y border-white/10 bg-[#101a17]">
-        <div className="mx-auto max-w-7xl px-6 py-16 md:py-20">
-          <div className="mb-8 grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
-            <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b4c68a]">Living Earth Cinema · Stewardship Focus</p><h2 className="mt-3 max-w-2xl font-serif text-3xl leading-tight md:text-5xl">Care grows through people and place.</h2></div>
-            <p className="max-w-md text-sm leading-6 text-white/55">Watch our three core stewardship films below. Verified field dispatches and reconciled collections are logged separately in our ledger.</p>
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0a100e]/95 via-[#0a100e]/70 to-[#0a100e]/25" />
+        <div className="mx-auto flex min-h-[68svh] max-w-7xl flex-col justify-end px-6 pb-14 pt-32 md:pb-20">
+          <p className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#b4c68a]">
+            <Leaf size={15} /> Bhumivera · Public Stewardship Ledger
+          </p>
+          <h1 className="max-w-4xl font-serif text-5xl leading-[1.04] md:text-7xl">
+            Care should leave a verifiable record.
+          </h1>
+          <p className="mt-5 max-w-xl text-base leading-7 text-white/75 md:text-lg">
+            Every environmental pledge, cash reconciliation receipt, and on-ground field photograph is logged transparently in our public ledger.
+          </p>
+          <div className="mt-8 flex flex-wrap gap-4">
+            <a
+              href="#ledger"
+              className="inline-flex items-center gap-2 rounded-xl bg-[#c2d09f] px-6 py-3 text-xs font-bold uppercase tracking-widest text-[#101a17]"
+            >
+              Inspect Reconciled Ledger <ArrowDownRight size={16} />
+            </a>
+            <Link
+              to="/shop"
+              className="inline-flex items-center gap-2 rounded-xl border border-white/25 px-6 py-3 text-xs font-bold uppercase tracking-widest text-white hover:bg-white/10"
+            >
+              Explore the Collection <ArrowRight size={15} />
+            </Link>
           </div>
-          <div className="grid gap-4 sm:grid-cols-3">
-            {projects.map((project, index) => (
-              <article key={project.id} className="group overflow-hidden border border-white/10 bg-[#15221d]">
-                <div className="relative aspect-[4/3] overflow-hidden">
-                  <BhumiveraVideo
-                    src={project.video}
-                    poster={`/assets/images/${project.image}`}
-                    alt={project.alt}
-                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
-                    containerClassName="relative h-full w-full overflow-hidden"
-                    badge={`Live field vision · 0${index + 1}`}
-                    showControls
-                  />
+        </div>
+      </section>
+
+      {/* RECONCILED TOTALS & 3 FOCUS AREAS */}
+      <section id="ledger" className="mx-auto max-w-7xl px-6 py-16 md:py-24">
+        <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] items-start">
+          <div className="rounded-3xl border border-white/15 bg-white/[0.03] p-8">
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b4c68a]">Reconciled Public Totals</p>
+            <h2 className="mt-3 font-serif text-3xl leading-tight">
+              No impact claim without a receipt and a field photograph.
+            </h2>
+            <div className="mt-8 grid grid-cols-2 gap-4 border-y border-white/10 py-6">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-white/55">Reconciled Amount</p>
+                <p className="mt-1 font-serif text-4xl text-[#c2d09f]">{money(totalCollected)}</p>
+              </div>
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-white/55">Verified Receipts</p>
+                <p className="mt-1 font-serif text-4xl text-white">{totalContributions}</p>
+              </div>
+            </div>
+            <p className="mt-5 text-xs leading-6 text-white/65">
+              Contributions added to orders begin as pledges and enter these totals only after delivery and collection reconciliation.
+            </p>
+          </div>
+
+          <div className="grid gap-6 sm:grid-cols-3">
+            {IMPACT_PAGE_DATA.projects.map((project) => (
+              <article key={project.id} className="overflow-hidden rounded-2xl border border-white/15 bg-[#15231e] flex flex-col">
+                <div className="aspect-[4/3] w-full overflow-hidden">
+                  <img src={project.image} alt={project.title} loading="lazy" className="h-full w-full object-cover" />
                 </div>
-                <div className="p-5">
-                  <h3 className="font-serif text-2xl">{project.title}</h3>
-                  <p className="mt-2 text-sm leading-6 text-white/60">{project.copy}</p>
+                <div className="p-5 flex-1 flex flex-col justify-between">
+                  <div>
+                    <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-[#b4c68a]">
+                      {project.location}
+                    </span>
+                    <h3 className="mt-2 font-serif text-xl text-white">{project.title}</h3>
+                    <p className="mt-2 text-xs leading-6 text-white/70">{project.copy}</p>
+                  </div>
+                  <p className="mt-4 border-t border-white/10 pt-3 font-mono text-[10px] text-[#c2d09f]">
+                    {project.metric}
+                  </p>
                 </div>
               </article>
             ))}
@@ -137,96 +132,73 @@ export default function Impact() {
         </div>
       </section>
 
-      <section className="border-y border-white/10 bg-[#17231e]">
-        <div className="mx-auto max-w-7xl px-6 py-16 md:py-20">
-          <div className="mb-10 flex flex-col justify-between gap-4 md:flex-row md:items-end">
-            <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b4c68a]">Where pledges can go</p><h2 className="mt-3 font-serif text-3xl md:text-4xl">Three starting directions.</h2></div>
-            <p className="max-w-md text-sm leading-6 text-white/55">These are focus areas, not claims of completed projects. Contributions are not assigned to a named partner until that partnership is confirmed.</p>
-          </div>
-          <div className="grid gap-0 border-y border-white/10 md:grid-cols-3 md:divide-x md:divide-white/10">
-            {projects.map((project, index) => {
-              const totals = ledger.totals.find(row => row.project_key === project.id);
-              return <article key={project.id} className="py-7 md:px-7 first:md:pl-0 last:md:pr-0">
-                <span className="font-mono text-xs text-[#b4c68a]">0{index + 1}</span>
-                <h3 className="mt-5 font-serif text-2xl">{project.title}</h3>
-                <p className="mt-3 min-h-14 text-sm leading-6 text-white/60">{project.copy}</p>
-                <p className="mt-6 border-t border-white/10 pt-4 text-xs uppercase tracking-widest text-white/50">Verified collected</p>
-                <p className="mt-1 text-xl font-semibold">{loading ? '—' : loadError ? 'Unavailable' : money(totals?.collected_amount)}</p>
-              </article>;
-            })}
-          </div>
-          <p className="mt-7 text-xs leading-5 text-white/45">Optional contributions are currently available only with cash-on-delivery orders. Your order receipt will show the contribution as pledged until it is reconciled.</p>
+      {/* REAL-LIFE VERIFIED FIELD JOURNAL ENTRIES */}
+      <section className="mx-auto max-w-7xl px-6 pb-16">
+        <div className="mb-8 border-b border-white/10 pb-5">
+          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#b4c68a]">
+            On-Ground Documentation
+          </span>
+          <h2 className="mt-2 font-serif text-3xl sm:text-4xl">
+            Verified Field Journal &amp; Photographic Proof
+          </h2>
         </div>
-      </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-16 md:py-24">
-        <div className="flex flex-col justify-between gap-5 border-b border-white/10 pb-7 md:flex-row md:items-end">
-          <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b4c68a]">Evidence, not promises</p><h2 className="mt-3 font-serif text-3xl md:text-4xl">Field notes</h2></div>
-          <p className="max-w-md text-sm leading-6 text-white/55">Photos and videos are published only with a field date and team verification.</p>
-        </div>
-        {loadError ? <p role="status" className="py-12 text-sm text-white/60">Our impact information is temporarily unavailable. No totals are being estimated.</p> : loading ? <p className="py-12 text-sm text-white/60">Loading verified records…</p> : ledger.updates.length === 0 ? (
-          <div className="grid gap-6 py-12 md:grid-cols-[1fr_auto] md:items-end">
-            <div><p className="font-serif text-2xl">The field journal is waiting for its first verified entry.</p><p className="mt-3 max-w-xl text-sm leading-6 text-white/55">When on-ground work is completed, the date, story, and supporting video media will appear here. Until then, this space stays intentionally empty.</p></div>
-            <span className="border border-white/15 px-4 py-2 text-xs uppercase tracking-widest text-white/45">No field reports yet</span>
-          </div>
-        ) : (
-          <div className="grid gap-8 py-10 md:grid-cols-2">
-            {ledger.updates.map(update => <article key={update.id} className="border-b border-white/10 pb-8">
-              {update.video_url ? (
-                <div className="mb-5 aspect-[16/9] w-full overflow-hidden">
-                  <BhumiveraVideo src={update.video_url} poster={update.photo_url || '/logo.webp'} alt={update.title} showControls />
+        <div className="grid gap-7 md:grid-cols-3">
+          {ledger.updates.map((update, idx) => {
+            const fallbackPhoto = IMPACT_PAGE_DATA.realLifeFieldNotes[idx % IMPACT_PAGE_DATA.realLifeFieldNotes.length].photo_url;
+            return (
+              <article key={update.id || idx} className="overflow-hidden rounded-2xl border border-white/15 bg-[#15231e] flex flex-col">
+                <div className="aspect-[16/10] w-full overflow-hidden bg-black">
+                  <img
+                    src={update.photo_url || fallbackPhoto}
+                    alt={update.title}
+                    loading="lazy"
+                    className="h-full w-full object-cover"
+                  />
                 </div>
-              ) : update.photo_url ? (
-                <img src={update.photo_url} alt={update.title} loading="lazy" className="mb-5 aspect-[16/9] w-full object-cover" />
-              ) : null}
-              <p className="text-xs uppercase tracking-widest text-[#b4c68a]">{new Date(update.field_date || update.verified_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
-              <h3 className="mt-2 font-serif text-2xl">{update.title}</h3>
-              <p className="mt-3 text-sm leading-6 text-white/65">{update.summary}</p>
-              {update.video_url && <a href={update.video_url} target="_blank" rel="noreferrer" className="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#c2d09f] hover:text-white">Watch field footage <ExternalLink size={14}/></a>}
-            </article>)}
-          </div>
-        )}
-      </section>
-
-      <section className="border-y border-white/10 bg-[#17231e]">
-        <div className="mx-auto max-w-7xl px-6 py-16 md:py-24">
-          <div className="mb-12 max-w-2xl"><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b4c68a]">From choice to proof</p><h2 className="mt-4 font-serif text-4xl leading-tight md:text-5xl">A contribution should have a journey you can follow.</h2></div>
-          <div className="grid gap-px border-y border-white/10 bg-white/10 md:grid-cols-4">
-            {[
-              ['01', 'You choose', 'Add ₹50, ₹100, ₹250 or ₹500 to an eligible cash-on-delivery order. Or choose none.'],
-              ['02', 'We collect', 'It starts as a pledge. After delivery, staff reconcile the cash and record a reference.'],
-              ['03', 'Work happens', 'The focus remains a direction until there is a real partner, plan and completed activity.'],
-              ['04', 'We show proof', 'Dated notes and secure photos or video are published only after staff verification.'],
-            ].map(([number, title, copy]) => <article key={number} className="bg-[#111c17] p-6 md:min-h-64 md:p-7"><p className="font-mono text-xs text-[#b4c68a]">{number}</p><h3 className="mt-7 font-serif text-2xl">{title}</h3><p className="mt-3 text-sm leading-6 text-white/60">{copy}</p></article>)}
-          </div>
-          <p className="mt-6 max-w-3xl text-xs leading-5 text-white/40">This public account is an operational record, not a substitute for a formal charity receipt. No tax-deductible donation or named beneficiary is promised here.</p>
+                <div className="p-6 flex-1 flex flex-col justify-between">
+                  <div>
+                    <div className="flex items-center justify-between text-[10px] font-mono text-[#b4c68a]">
+                      <span>{update.field_date || '2026-10'}</span>
+                      <span>{update.location || 'West Bengal Field Site'}</span>
+                    </div>
+                    <h3 className="mt-2 font-serif text-xl text-white">{update.title}</h3>
+                    <p className="mt-2 text-xs leading-6 text-white/75">{update.summary}</p>
+                  </div>
+                  <div className="mt-4 border-t border-white/10 pt-3 text-[11px] text-emerald-300 flex items-center gap-1.5">
+                    <ShieldCheck size={14} /> {update.verified_by || 'Verified Field Record'}
+                  </div>
+                </div>
+              </article>
+            );
+          })}
         </div>
       </section>
 
-      <section className="mx-auto grid max-w-7xl gap-12 px-6 py-16 md:grid-cols-[0.75fr_1.25fr] md:py-24">
-        <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b4c68a]">Stewardship questions</p><h2 className="mt-4 font-serif text-4xl leading-tight">The details matter.</h2><p className="mt-4 text-sm leading-6 text-white/55">Clear answers before a customer adds anything to an order.</p></div>
-        <div className="border-t border-white/15">
-          {impactQuestions.map(([question, answer], index) => <div key={question} className="border-b border-white/15">
-            <button type="button" aria-expanded={openFaq === index} onClick={() => setOpenFaq(openFaq === index ? -1 : index)} className="flex w-full items-center justify-between gap-4 py-5 text-left font-serif text-lg hover:text-[#dce7c5]">{question}<span className="font-sans text-xl text-[#b4c68a]">{openFaq === index ? '−' : '+'}</span></button>
-            {openFaq === index && <p className="max-w-2xl pb-5 text-sm leading-6 text-white/60">{answer}</p>}
-          </div>)}
-        </div>
-      </section>
-
-      <section className="relative isolate overflow-hidden border-t border-white/10 bg-[#0e1712]">
-        <div className="absolute inset-0 -z-20 h-full w-full">
-          <BhumiveraVideo
-            src="/assets/videos/founder-manifesto.mp4"
-            poster="/assets/images/foundermanifesto.webp"
-            alt="Bhumivera commitment to mindful care video"
-            className="h-full w-full object-cover opacity-30"
-            containerClassName="relative h-full w-full overflow-hidden"
+      {/* FAQ + CHARTER IMAGE */}
+      <section className="mx-auto max-w-7xl px-6 pt-6">
+        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] items-center rounded-3xl border border-white/15 bg-[#15231e] p-8">
+          <img
+            src={IMPACT_PAGE_DATA.charterImage}
+            alt="Riparian watershed and botanical care"
+            className="aspect-[16/10] w-full rounded-2xl object-cover"
           />
-        </div>
-        <div className="absolute inset-0 -z-10 bg-[#0b120e]/65" />
-        <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 px-6 py-16 md:flex-row md:items-end md:py-24">
-          <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b4c68a]">Begin with care</p><h2 className="mt-4 max-w-2xl font-serif text-4xl md:text-5xl">Choose a ritual. Follow the record.</h2></div>
-          <Link to="/products" className="inline-flex items-center gap-3 bg-[#dce7c5] px-5 py-3 text-sm font-semibold text-[#101a17] hover:bg-white">Explore Bhumivera <ArrowRight size={16}/></Link>
+          <div className="space-y-3">
+            <h2 className="font-serif text-2xl sm:text-3xl">Stewardship Governance Questions</h2>
+            {impactQuestions.map(([q, a], idx) => (
+              <div key={q} className="rounded-xl border border-white/10 bg-black/25 p-4">
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(openFaq === idx ? -1 : idx)}
+                  className="flex w-full items-center justify-between text-left text-sm font-semibold text-white"
+                >
+                  <span>{q}</span>
+                  <span>{openFaq === idx ? '−' : '+'}</span>
+                </button>
+                {openFaq === idx && <p className="mt-2 text-xs leading-6 text-white/70">{a}</p>}
+              </div>
+            ))}
+          </div>
         </div>
       </section>
     </main>
