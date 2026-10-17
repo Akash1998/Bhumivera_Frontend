@@ -8,6 +8,7 @@ import {
   Sparkles,
   ShieldCheck,
   FlaskConical,
+  QrCode,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
