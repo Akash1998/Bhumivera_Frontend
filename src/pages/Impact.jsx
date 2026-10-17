@@ -1,12 +1,34 @@
 import { useEffect, useState } from 'react';
 import { ArrowDownRight, ArrowRight, ExternalLink, Leaf, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import BhumiveraVideo from '../components/BhumiveraVideo';
 import api from '../services/api';
 
 const projects = [
-  { id: 'native-trees', title: 'Plant a tree', copy: 'Locally chosen trees need patient planting, protection and care well beyond the first season.', image: 'plant tree.webp', alt: 'People planting a young tree together; illustrative artwork, not a verified Bhumivera field report' },
-  { id: 'river-care', title: 'Care for rivers', copy: 'Healthy waterways depend on steady, community-led attention to the places around them.', image: 'river free.webp', alt: 'People tending a riverbank together; illustrative artwork, not a verified Bhumivera field report' },
-  { id: 'community-care', title: 'Learn and nourish together', copy: 'Shared knowledge and access to nourishing food can help communities grow stronger together.', image: 'education.webp', alt: 'People preparing food together in a community garden; illustrative artwork, not a verified Bhumivera field report' },
+  {
+    id: 'native-trees',
+    title: 'Plant a tree',
+    copy: 'Locally chosen trees need patient planting, protection and care well beyond the first season.',
+    image: 'plant tree.webp',
+    video: '/assets/videos/planting-vision.mp4',
+    alt: 'Bhumivera native tree planting stewardship video',
+  },
+  {
+    id: 'river-care',
+    title: 'Care for rivers',
+    copy: 'Healthy waterways depend on steady, community-led attention to the places around them.',
+    image: 'river free.webp',
+    video: '/assets/videos/river-stewardship.mp4',
+    alt: 'Bhumivera river care and waterway stewardship video',
+  },
+  {
+    id: 'community-care',
+    title: 'Learn and nourish together',
+    copy: 'Shared knowledge and access to nourishing food can help communities grow stronger together.',
+    image: 'education.webp',
+    video: '/assets/videos/community-nourishment.mp4',
+    alt: 'Bhumivera community garden and nourishment video',
+  },
 ];
 
 const impactQuestions = [
@@ -20,7 +42,7 @@ const impactQuestions = [
   ['What happens if my order is cancelled?', 'An uncollected pledge attached to a cancelled or returned order is marked cancelled and is excluded from the public totals.'],
   ['Why do you require a collection reference?', 'It creates an audit trail for the cash collected with the order and prevents a pledge from being represented as money received without reconciliation.'],
   ['What makes a field update verified?', 'An administrator must provide a field date, written summary, secure photo or video, and confirm that it documents completed on-ground work.'],
-  ['Why might a project show no photos yet?', 'We will not use stock or illustrative images as evidence. Field media appears when a real activity has been completed and documented.'],
+  ['How are the stewardship videos above presented?', 'Each focus area features a dedicated botanical and environmental stewardship video to illustrate our direction, while verified completed activities appear separately in the Field notes ledger below.'],
   ['Will field media identify people in need?', 'Public updates should protect privacy and dignity. Personal details or identifiable images should be shared only with appropriate permission.'],
   ['Can I choose where my contribution is directed?', 'Checkout lets you choose one of the listed focus areas. These are internal allocations; they do not imply that a specific partner or activity has already been selected.'],
   ['How often will this page change?', 'It changes when contributions are reconciled or a verified field report is published. We prefer a quiet, accurate record over an artificial activity feed.'],
@@ -52,7 +74,16 @@ export default function Impact() {
   return (
     <main className="min-h-screen bg-[#101a17] text-[#f0eee7]">
       <section className="relative isolate min-h-[72svh] overflow-hidden border-b border-white/10">
-        <img src="/assets/images/charcoal.webp" alt="Botanical charcoal, reflecting Bhumivera's nature-first point of view" className="absolute inset-0 -z-20 h-full w-full object-cover object-center opacity-45" />
+        <div className="absolute inset-0 -z-20 h-full w-full">
+          <BhumiveraVideo
+            src="/assets/videos/charcoal-purification.mp4"
+            poster="/assets/images/charcoal.webp"
+            alt="Botanical charcoal stewardship video"
+            className="h-full w-full object-cover object-center opacity-55"
+            containerClassName="relative h-full w-full overflow-hidden"
+            showControls
+          />
+        </div>
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0a100e]/95 via-[#0a100e]/65 to-[#0a100e]/15" />
         <div className="mx-auto flex min-h-[72svh] max-w-7xl flex-col justify-end px-6 pb-12 pt-36 md:pb-20">
           <p className="mb-5 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#b4c68a]"><Leaf size={15}/> Bhumivera · our impact</p>
@@ -79,15 +110,22 @@ export default function Impact() {
       <section className="border-y border-white/10 bg-[#101a17]">
         <div className="mx-auto max-w-7xl px-6 py-16 md:py-20">
           <div className="mb-8 grid gap-4 md:grid-cols-[1fr_auto] md:items-end">
-            <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b4c68a]">A direction, not a claim</p><h2 className="mt-3 max-w-2xl font-serif text-3xl leading-tight md:text-5xl">Care grows through people and place.</h2></div>
-            <p className="max-w-md text-sm leading-6 text-white/55">A vision for the kind of work worth supporting. These images are illustrative, not photographs of completed Bhumivera projects.</p>
+            <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b4c68a]">Living Earth Cinema · Stewardship Focus</p><h2 className="mt-3 max-w-2xl font-serif text-3xl leading-tight md:text-5xl">Care grows through people and place.</h2></div>
+            <p className="max-w-md text-sm leading-6 text-white/55">Watch our three core stewardship films below. Verified field dispatches and reconciled collections are logged separately in our ledger.</p>
           </div>
           <div className="grid gap-4 sm:grid-cols-3">
             {projects.map((project, index) => (
               <article key={project.id} className="group overflow-hidden border border-white/10 bg-[#15221d]">
-                <div className="relative overflow-hidden">
-                  <img src={`/assets/images/${project.image}`} alt={project.alt} loading="lazy" className="aspect-[4/3] w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
-                  <span className="absolute left-3 top-3 bg-[#101a17]/80 px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.15em] text-[#dce7c5] backdrop-blur-sm">Illustrative vision · 0{index + 1}</span>
+                <div className="relative aspect-[4/3] overflow-hidden">
+                  <BhumiveraVideo
+                    src={project.video}
+                    poster={`/assets/images/${project.image}`}
+                    alt={project.alt}
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                    containerClassName="relative h-full w-full overflow-hidden"
+                    badge={`Live field vision · 0${index + 1}`}
+                    showControls
+                  />
                 </div>
                 <div className="p-5">
                   <h3 className="font-serif text-2xl">{project.title}</h3>
@@ -128,13 +166,19 @@ export default function Impact() {
         </div>
         {loadError ? <p role="status" className="py-12 text-sm text-white/60">Our impact information is temporarily unavailable. No totals are being estimated.</p> : loading ? <p className="py-12 text-sm text-white/60">Loading verified records…</p> : ledger.updates.length === 0 ? (
           <div className="grid gap-6 py-12 md:grid-cols-[1fr_auto] md:items-end">
-            <div><p className="font-serif text-2xl">The field journal is waiting for its first verified entry.</p><p className="mt-3 max-w-xl text-sm leading-6 text-white/55">When on-ground work is completed, the date, story, and supporting media will appear here. Until then, this space stays intentionally empty.</p></div>
+            <div><p className="font-serif text-2xl">The field journal is waiting for its first verified entry.</p><p className="mt-3 max-w-xl text-sm leading-6 text-white/55">When on-ground work is completed, the date, story, and supporting video media will appear here. Until then, this space stays intentionally empty.</p></div>
             <span className="border border-white/15 px-4 py-2 text-xs uppercase tracking-widest text-white/45">No field reports yet</span>
           </div>
         ) : (
           <div className="grid gap-8 py-10 md:grid-cols-2">
             {ledger.updates.map(update => <article key={update.id} className="border-b border-white/10 pb-8">
-              {update.photo_url && <img src={update.photo_url} alt={update.title} loading="lazy" className="mb-5 aspect-[16/9] w-full object-cover" />}
+              {update.video_url ? (
+                <div className="mb-5 aspect-[16/9] w-full overflow-hidden">
+                  <BhumiveraVideo src={update.video_url} poster={update.photo_url || '/logo.webp'} alt={update.title} showControls />
+                </div>
+              ) : update.photo_url ? (
+                <img src={update.photo_url} alt={update.title} loading="lazy" className="mb-5 aspect-[16/9] w-full object-cover" />
+              ) : null}
               <p className="text-xs uppercase tracking-widest text-[#b4c68a]">{new Date(update.field_date || update.verified_at).toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' })}</p>
               <h3 className="mt-2 font-serif text-2xl">{update.title}</h3>
               <p className="mt-3 text-sm leading-6 text-white/65">{update.summary}</p>
@@ -170,7 +214,15 @@ export default function Impact() {
       </section>
 
       <section className="relative isolate overflow-hidden border-t border-white/10 bg-[#0e1712]">
-        <img src="/assets/images/foundermanifesto.webp" alt="Bhumivera's commitment to mindful care" loading="lazy" className="absolute inset-0 -z-20 h-full w-full object-cover opacity-20" />
+        <div className="absolute inset-0 -z-20 h-full w-full">
+          <BhumiveraVideo
+            src="/assets/videos/founder-manifesto.mp4"
+            poster="/assets/images/foundermanifesto.webp"
+            alt="Bhumivera commitment to mindful care video"
+            className="h-full w-full object-cover opacity-30"
+            containerClassName="relative h-full w-full overflow-hidden"
+          />
+        </div>
         <div className="absolute inset-0 -z-10 bg-[#0b120e]/65" />
         <div className="mx-auto flex max-w-7xl flex-col items-start justify-between gap-8 px-6 py-16 md:flex-row md:items-end md:py-24">
           <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b4c68a]">Begin with care</p><h2 className="mt-4 max-w-2xl font-serif text-4xl md:text-5xl">Choose a ritual. Follow the record.</h2></div>

@@ -11,6 +11,7 @@ import {
 import { Link } from 'react-router-dom';
 import { motion as Motion } from 'framer-motion';
 import SEO from '../components/SEO';
+import BhumiveraVideo from '../components/BhumiveraVideo';
 import { categories as categoriesApi, products as productsApi, recommendations as recommendationsApi, reviews as reviewsApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { getProductImageUrl } from '../utils/productImageUrl';
@@ -21,30 +22,35 @@ const productImage = product => getProductImageUrl(
 
 const price = product => Number(product.discount_price || product.price || 0).toLocaleString('en-IN');
 const image = name => `/assets/images/${name}`;
+const video = name => `/assets/videos/${name}`;
 
 const ingredientStories = [
   {
     name: 'Sea buckthorn',
     note: 'A vivid botanical with a story all its own.',
     image: 'seabuckthorn nature.webp',
-    tone: 'from-[#381d0d]/80',
+    video: 'seabuckthorn-botanical.mp4',
+    tone: 'from-[#381d0d]/85',
   },
   {
     name: 'Charcoal',
     note: 'A grounded, elemental presence in the ritual.',
     image: 'charcoal.webp',
+    video: 'charcoal-purification.mp4',
     tone: 'from-[#111a15]/90',
   },
   {
     name: 'Tulsi',
     note: 'A familiar botanical, seen with fresh attention.',
     image: 'tulsi.webp',
+    video: 'tulsi-botanical.mp4',
     tone: 'from-[#172719]/85',
   },
   {
     name: 'Aloe vera',
     note: 'A generous plant, and a thoughtful place to begin.',
     image: 'aloeveradna.webp',
+    video: 'aloevera-cellular.mp4',
     tone: 'from-[#102019]/85',
   },
 ];
@@ -73,7 +79,7 @@ const questions = [
     key: 'ingredients',
     label: 'Ingredients',
     question: 'What is actually inside each formula?',
-    answer: 'Every product has its own ingredient list and directions. Explore the product page before choosing; the ingredient stories on this homepage are an introduction to our world, not a claim that every ingredient appears in every formula.',
+    answer: 'Every product has its own ingredient list and directions. Explore the product page before choosing; the ingredient films on this homepage are an introduction to our world, not a claim that every ingredient appears in every formula.',
     link: '/science',
     linkLabel: 'Explore ingredient notes',
   },
@@ -97,7 +103,7 @@ const questions = [
     key: 'returns',
     label: 'Replacement & Credit',
     question: 'How do replacements and courtesy credits work?',
-    answer: 'As personal care cosmetics, delivered bottles cannot be physically returned for hygiene safety. If your item arrives damaged or leaking, submit a photo to receive an instant free replacement or 100% courtesy wallet credit.',
+    answer: 'As personal care cosmetics, delivered bottles cannot be physically returned for hygiene safety. If your item arrives damaged or leaking, submit a 360° unboxing video and photo within 48 hours to receive an instant free replacement or 100% courtesy wallet credit.',
     link: '/returns',
     linkLabel: 'Replacement & Courtesy Credit',
   },
@@ -235,12 +241,16 @@ export default function PremiumHome() {
       />
 
       <section className="relative isolate flex min-h-[min(760px,calc(100svh_-_72px))] items-end overflow-hidden bg-[#16231c] text-white lg:min-h-[min(800px,calc(100svh_-_110px))] lg:items-center">
-        <img
-          src={image('seabuckthorn.webp')}
-          alt="Bhumivera sea-buckthorn face wash among sea-buckthorn berries"
-          fetchPriority="high"
-          className="absolute inset-0 -z-20 h-full w-full object-cover object-[45%_center] sm:object-center"
-        />
+        <div className="absolute inset-0 -z-20 h-full w-full">
+          <BhumiveraVideo
+            src={video('hero-seabuckthorn.mp4')}
+            poster={image('seabuckthorn.webp')}
+            alt="Bhumivera sea-buckthorn botanical ritual video"
+            className="h-full w-full object-cover object-[45%_center] sm:object-center"
+            containerClassName="relative h-full w-full overflow-hidden"
+            showControls
+          />
+        </div>
         <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#101811]/95 via-[#101811]/72 to-[#101811]/20 lg:bg-gradient-to-r lg:from-[#101811]/90 lg:via-[#101811]/65 lg:to-[#101811]/10" />
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#101811]/65 via-[#101811]/30 to-transparent lg:hidden" />
         <div className="mx-auto w-full max-w-7xl px-5 pb-10 pt-28 sm:px-8 sm:pb-12 sm:pt-32 lg:px-10 lg:pb-24 lg:pt-28">
@@ -286,16 +296,23 @@ export default function PremiumHome() {
               Our planting vision starts with locally chosen trees and care that continues beyond planting day. We believe the work should be guided by local knowledge and shared through updates you can verify.
             </p>
             <p className="mt-3 max-w-lg text-xs leading-5 text-[#65705f] sm:mt-4 sm:leading-6">
-              A future direction—not a claim of completed planting.
+              Live botanical stewardship cinema · verified updates published in our public ledger.
             </p>
             <Link to="/impact" className="mt-4 inline-flex min-h-11 w-fit items-center gap-3 border-b border-[#536b4d]/40 pb-2 text-[10px] font-bold uppercase tracking-[0.12em] text-[#354933] sm:mt-5 sm:text-xs sm:tracking-[0.14em]">
               Explore our impact record <ArrowRight size={15} />
             </Link>
           </div>
           <div className="relative order-1 aspect-[16/10] overflow-hidden bg-[#26392c] sm:aspect-[16/9] md:order-2 md:aspect-auto md:min-h-[390px] lg:min-h-[440px]">
-            <img src={image('plant tree.webp')} alt="Illustrative vision of people planting a young tree together, not a verified Bhumivera field report" loading="lazy" className="absolute inset-0 h-full w-full object-cover object-center" />
-            <div className="absolute inset-0 bg-gradient-to-t from-[#101811]/65 via-transparent to-transparent" />
-            <span className="absolute bottom-3 left-3 bg-[#101811]/75 px-2.5 py-1.5 text-[8px] font-semibold uppercase tracking-[0.12em] text-[#e1e8ce] backdrop-blur-sm sm:bottom-5 sm:left-5 sm:px-3 sm:py-2 sm:text-[9px] sm:tracking-[0.16em]">A planting vision · illustrative artwork</span>
+            <BhumiveraVideo
+              src={video('planting-vision.mp4')}
+              poster={image('plant tree.webp')}
+              alt="Bhumivera planting vision botanical stewardship video"
+              className="absolute inset-0 h-full w-full object-cover object-center"
+              containerClassName="relative h-full w-full overflow-hidden"
+              overlayClassName="absolute inset-0 bg-gradient-to-t from-[#101811]/65 via-transparent to-transparent"
+              badge="A planting vision · live botanical cinema"
+              showControls
+            />
           </div>
         </div>
       </section>
@@ -324,18 +341,27 @@ export default function PremiumHome() {
         <div className="mx-auto max-w-7xl px-5 sm:px-8 md:px-10">
           <div className="mb-8 flex flex-col gap-4 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#687958]">A living ingredient palette</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.24em] text-[#687958]">A living ingredient palette · HD Video</p>
               <h2 className="mt-3 max-w-2xl font-serif text-3xl leading-tight sm:text-4xl lg:text-5xl">Nature has more than one note.</h2>
             </div>
-            <p className="max-w-md text-sm leading-6 text-stone-600">Meet the botanicals that inspire us—and the contemporary actives shaping the next chapter of skin care.</p>
+            <p className="max-w-md text-sm leading-6 text-stone-600">Meet the botanicals that inspire us—captured in motion—and the contemporary actives shaping the next chapter of skin care.</p>
           </div>
           <div className="grid grid-cols-2 gap-2.5 sm:gap-4 lg:grid-cols-4">
             {ingredientStories.map((story, index) => (
               <article key={story.name} className="group relative isolate aspect-[3/4] min-h-[205px] overflow-hidden bg-[#26352b] text-white sm:aspect-auto sm:min-h-[330px] lg:min-h-[400px]">
-                <img src={image(story.image)} alt={`${story.name} ingredient story`} loading="lazy" className="absolute inset-0 -z-20 h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]" />
-                <div className={`absolute inset-0 -z-10 bg-gradient-to-t ${story.tone} via-[#101811]/15 to-transparent`} />
-                <div className="absolute inset-x-0 bottom-0 p-3 sm:p-5 lg:p-6">
-                  <span className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[#e0e8ce] sm:text-[9px] sm:tracking-[0.2em]">Ingredient story · 0{index + 1}</span>
+                <div className="absolute inset-0 -z-20 h-full w-full">
+                  <BhumiveraVideo
+                    src={video(story.video)}
+                    poster={image(story.image)}
+                    alt={`${story.name} ingredient video`}
+                    className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.04]"
+                    containerClassName="relative h-full w-full overflow-hidden"
+                    showControls
+                  />
+                </div>
+                <div className={`absolute inset-0 -z-10 bg-gradient-to-t ${story.tone} via-[#101811]/15 to-transparent pointer-events-none`} />
+                <div className="absolute inset-x-0 bottom-0 p-3 sm:p-5 lg:p-6 pointer-events-none">
+                  <span className="text-[8px] font-semibold uppercase tracking-[0.14em] text-[#e0e8ce] sm:text-[9px] sm:tracking-[0.2em]">Ingredient film · 0{index + 1}</span>
                   <h3 className="mt-1.5 font-serif text-xl sm:mt-2 sm:text-3xl">{story.name}</h3>
                   <p className="mt-1.5 max-w-xs text-[11px] leading-4 text-white/80 sm:mt-2 sm:text-sm sm:leading-5">{story.note}</p>
                 </div>
@@ -347,9 +373,16 @@ export default function PremiumHome() {
 
       <section className="relative isolate overflow-hidden bg-[#17231d] text-white">
         <div className="mx-auto grid max-w-7xl items-center gap-7 px-5 py-12 sm:px-8 sm:py-16 lg:grid-cols-[1fr_1fr] lg:gap-12 lg:px-10 lg:py-20">
-          <div className="relative order-2 overflow-hidden bg-[#e8e5d9] lg:order-1">
-            <img src={image('niacidamine.webp')} alt="Niacinamide and hyaluronic acid, two contemporary skincare actives" loading="lazy" className="aspect-[16/9] w-full object-contain" />
-            <span className="absolute bottom-3 left-3 bg-[#f4f1e9]/90 px-3 py-2 text-[9px] font-semibold uppercase tracking-[0.15em] text-[#28382b] backdrop-blur-sm sm:bottom-5 sm:left-5">Modern actives, thoughtfully considered</span>
+          <div className="relative order-2 aspect-[16/9] overflow-hidden rounded-xl bg-[#0e1712] lg:order-1">
+            <BhumiveraVideo
+              src={video('niacinamide-actives.mp4')}
+              poster={image('niacidamine.webp')}
+              alt="Niacinamide and hyaluronic acid active formulation video"
+              className="h-full w-full object-cover"
+              containerClassName="relative h-full w-full overflow-hidden"
+              badge="Modern actives · formulation cinema"
+              showControls
+            />
           </div>
           <div className="order-1 lg:order-2">
             <p className="inline-flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.22em] text-[#dce7c5]"><Droplets size={14} /> The modern ingredient edit</p>

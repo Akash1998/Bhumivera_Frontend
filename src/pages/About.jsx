@@ -1,7 +1,8 @@
 import React, { useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion, useScroll, useTransform } from 'framer-motion';
-import { Leaf, Droplets, Sparkles, ShieldCheck, Heart, Feather, RefreshCw, Activity, Zap, Terminal, ArrowRight, Briefcase, Mic } from 'lucide-react';
+import { Leaf, Sparkles, Activity, Zap, Terminal, ArrowRight, Briefcase, Mic } from 'lucide-react';
+import BhumiveraVideo from '../components/BhumiveraVideo';
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
@@ -23,7 +24,6 @@ export default function About() {
   const yPos = useTransform(scrollYProgress, [0, 1], [0, -150]);
   const location = useLocation();
 
-  // Scroll to hash logic for footer links
   useEffect(() => {
     if (location.hash) {
       const id = location.hash.replace('#', '');
@@ -31,7 +31,7 @@ export default function About() {
       if (element) {
         setTimeout(() => {
           element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }, 300); // small delay to ensure DOM
+        }, 300);
       }
     }
   }, [location]);
@@ -39,18 +39,21 @@ export default function About() {
   return (
     <div className="bg-[#faf8f5] text-[#2c2c2c] font-sans selection:bg-emerald-500/30 selection:text-white overflow-hidden">
       
-      {/* 1. HERO SECTION: BOTANICAL AUTHORITY */}
+      {/* 1. HERO SECTION: BOTANICAL AUTHORITY IN MOTION */}
       <section className="relative h-screen flex items-center justify-center overflow-hidden bg-[#050505]">
         <motion.div 
           style={{ y: yPos }}
-          className="absolute inset-0 z-0 opacity-40"
+          className="absolute inset-0 z-0 opacity-50"
         >
-          <img 
-            src="/assets/images/aloeverascience.webp" 
-            alt="Bhumivera Botanical Science" 
-            className="w-full h-full object-cover mix-blend-luminosity scale-110"
+          <BhumiveraVideo
+            src="/assets/videos/aloe-science-lab.mp4"
+            poster="/assets/images/aloeverascience.webp"
+            alt="Bhumivera Botanical Science Cinema"
+            className="w-full h-full object-cover scale-105"
+            containerClassName="relative w-full h-full overflow-hidden"
+            showControls
           />
-          <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]/80" />
+          <div className="absolute inset-0 bg-gradient-to-t from-[#050505] via-transparent to-[#050505]/80 pointer-events-none" />
         </motion.div>
         
         <div className="relative z-10 text-center px-6 max-w-5xl mx-auto mt-20">
@@ -59,41 +62,43 @@ export default function About() {
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full border border-emerald-500/30 bg-emerald-500/5 backdrop-blur-md mb-8"
           >
             <Sparkles size={14} className="text-emerald-500" />
-            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-emerald-400">A considered point of view</span>
+            <span className="text-[10px] font-bold uppercase tracking-[0.4em] text-emerald-400">A considered point of view · Live Cinema</span>
           </motion.div>
           <motion.h1 
             initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 1, delay: 0.2 }}
             className="text-6xl md:text-9xl font-serif text-white tracking-tight mb-8 drop-shadow-2xl"
           >
-            Care, <span className="italic font-light text-gray-500">with context.</span>
+            Care, <span className="italic font-light text-gray-400">with context.</span>
           </motion.h1>
           <motion.p 
             initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 1, delay: 0.5 }}
-            className="text-lg md:text-xl text-gray-400 font-light max-w-2xl mx-auto tracking-wider leading-relaxed"
+            className="text-lg md:text-xl text-gray-300 font-light max-w-2xl mx-auto tracking-wider leading-relaxed"
           >
             We are curious about the living world and the ingredients used in everyday care. Our aim is to make room for botanical inspiration, clear product information and considered choices.
           </motion.p>
         </div>
       </section>
 
-      {/* 2. OUR STORY: THE GENESIS */}
+      {/* 2. OUR STORY: THE GENESIS (VIDEO) */}
       <section className="py-32 px-6 relative bg-white">
         <div className="max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-20 items-center">
           <motion.div 
             initial="hidden" whileInView="visible" viewport={{ once: true }} variants={fadeInUp}
             className="relative group"
           >
-            <div className="absolute -top-4 -left-4 font-mono text-[8px] text-emerald-600 tracking-[0.5em] uppercase z-20 bg-white px-2 py-1">
-              A STORY GROUNDED IN NATURE
+            <div className="absolute -top-4 -left-4 font-mono text-[8px] text-emerald-600 tracking-[0.5em] uppercase z-20 bg-white px-2 py-1 shadow-sm">
+              A STORY GROUNDED IN NATURE · HD FILM
             </div>
-            <div className="aspect-[4/5] rounded-sm overflow-hidden shadow-2xl relative">
-              <img 
-                src="/assets/images/aloeveradna.webp" 
-                alt="A close study of a botanical leaf"
-                className="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-1000 group-hover:scale-105"
-                onError={(e) => { e.target.src = '/logo.webp'; }}
+            <div className="aspect-[4/5] rounded-sm overflow-hidden shadow-2xl relative bg-[#102019]">
+              <BhumiveraVideo
+                src="/assets/videos/aloevera-cellular.mp4"
+                poster="/assets/images/aloeveradna.webp"
+                alt="Close cellular study of a botanical leaf in motion"
+                className="w-full h-full object-cover transition-all duration-1000 group-hover:scale-105"
+                containerClassName="relative w-full h-full overflow-hidden"
+                badge="Botanical cellular study · live cinema"
+                showControls
               />
-              <div className="absolute inset-0 bg-emerald-950/10 mix-blend-overlay group-hover:opacity-0 transition-opacity" />
             </div>
           </motion.div>
           
@@ -195,15 +200,18 @@ export default function About() {
         </div>
       </section>
 
-      {/* 6. FOUNDER'S NOTE: THE MANIFESTO */}
+      {/* 6. FOUNDER'S NOTE: THE MANIFESTO (VIDEO) */}
       <section className="relative py-48 bg-[#0a0a0a] overflow-hidden">
         <div className="absolute inset-0 z-0">
-          <img 
-            src="/assets/images/foundermanifesto.webp" 
-            alt="Founder Manifesto Background" 
-            className="w-full h-full object-cover opacity-20"
+          <BhumiveraVideo
+            src="/assets/videos/founder-manifesto.mp4"
+            poster="/assets/images/foundermanifesto.webp"
+            alt="Founder Manifesto Background Video"
+            className="w-full h-full object-cover opacity-35"
+            containerClassName="relative w-full h-full overflow-hidden"
+            showControls
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-transparent to-[#0a0a0a]" />
+          <div className="absolute inset-0 bg-gradient-to-b from-[#0a0a0a] via-transparent to-[#0a0a0a] pointer-events-none" />
         </div>
         <div className="max-w-4xl mx-auto relative z-10 text-center px-6">
           <div className="inline-flex items-center gap-2 mb-12 text-[10px] font-mono text-emerald-500 tracking-[0.4em] uppercase border-b border-emerald-500/20 pb-2">
@@ -212,7 +220,7 @@ export default function About() {
           <h3 className="text-3xl md:text-5xl font-serif text-white mb-10 leading-tight italic">"Bhumivera began with curiosity about the natural world and how it can inspire more considered everyday care."</h3>
           <div className="w-12 h-0.5 bg-emerald-500 mx-auto mb-8" />
           <p className="text-emerald-400 font-bold uppercase tracking-[0.4em] text-sm mb-2">Akash Prasad</p>
-          <p className="text-gray-600 font-light text-[10px] uppercase tracking-widest font-mono">Founder, Bhumivera</p>
+          <p className="text-gray-500 font-light text-[10px] uppercase tracking-widest font-mono">Founder, Bhumivera</p>
         </div>
       </section>
 

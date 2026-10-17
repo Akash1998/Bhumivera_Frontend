@@ -3,6 +3,7 @@ import { ArrowRight, BookOpen, Clock, Droplets, Leaf, Microscope, ShieldCheck, S
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import SEO from '../components/SEO';
+import BhumiveraVideo from '../components/BhumiveraVideo';
 import { FRONTEND_PRODUCTS_GUIDE, FRONTEND_INGREDIENT_MEMORY } from '../utils/bhumiveraAiConciergeFallback';
 
 const ingredientStories = [
@@ -13,7 +14,8 @@ const ingredientStories = [
     concentration: '1.5% – 3.0% Cold-Pressed Berry & Seed Extract',
     note: 'Rich in rare Omega-7 (palmitoleic acid), Omega-3/6/9, beta-carotene, and Vitamins C & E. Cushions skin lipids during cleansing so skin feels supple, calm, and radiant after rinsing.',
     image: 'seabuckthorn nature.webp',
-    imageAlt: 'Sea buckthorn berries among narrow green leaves',
+    video: '/assets/videos/seabuckthorn-botanical.mp4',
+    imageAlt: 'Sea buckthorn berries in botanical motion',
     reference: 'https://powo.science.kew.org/results?q=Hippophae%20rhamnoides',
     aiPrompt: 'Tell me about Sea Buckthorn Face Wash and its key ingredients',
   },
@@ -24,7 +26,8 @@ const ingredientStories = [
     concentration: '0.1% – 1.0% Barrier & Pore Active',
     note: 'Water-soluble Vitamin B3 active that supports natural ceramide synthesis, regulates excess T-zone sebum, refines the appearance of enlarged pores, and calms redness without irritation.',
     image: 'aloeveradrop.webp',
-    imageAlt: 'Botanical and modern dermatological formulation droplets',
+    video: '/assets/videos/niacinamide-actives.mp4',
+    imageAlt: 'Botanical and modern dermatological formulation droplets in motion',
     reference: 'https://pubchem.ncbi.nlm.nih.gov/compound/Nicotinamide',
     aiPrompt: 'Tell me about Niacinamide in Sea Buckthorn Face Wash',
   },
@@ -35,7 +38,8 @@ const ingredientStories = [
     concentration: '0.1% – 0.5% Multi-Molecular Humectant',
     note: 'Biomimetic humectant that binds up to 1,000 times its weight in water, forming a breathable moisture cushion during washing so cleansing never leaves skin tight or dry.',
     image: 'aloeverascience.webp',
-    imageAlt: 'Hydrating botanical gel droplets',
+    video: '/assets/videos/aloe-science-lab.mp4',
+    imageAlt: 'Hydrating botanical gel droplets in motion',
     reference: 'https://pubchem.ncbi.nlm.nih.gov/compound/Sodium-Hyaluronate',
     aiPrompt: 'Tell me about Hyaluronic Acid in Sea Buckthorn Face Wash',
   },
@@ -46,7 +50,8 @@ const ingredientStories = [
     concentration: '3.0% – 5.0% Inner Leaf Fillet Gel',
     note: 'Rich in acemannan polysaccharides, amino acids, and soothing plant sterols. Cools heat-flushed skin and cushions surfactant action during morning and evening cleansing.',
     image: 'aloeveradrop.webp',
-    imageAlt: 'Aloe leaf represented in a clean botanical illustration',
+    video: '/assets/videos/aloevera-cellular.mp4',
+    imageAlt: 'Aloe leaf cellular structure in motion',
     reference: 'https://powo.science.kew.org/results?q=Aloe%20vera',
     aiPrompt: 'Tell me about Aloe Vera in Sea Buckthorn Face Wash',
   },
@@ -57,7 +62,8 @@ const ingredientStories = [
     concentration: '0.3% – 0.8% Standardized Leaf Extract',
     note: 'Contains rosmarinic acid, ursolic acid, and eugenol polyphenols that clarify urban pollution buildup and help calm blemish-prone skin.',
     image: 'tulsi.webp',
-    imageAlt: 'Tulsi leaves and flowering stems',
+    video: '/assets/videos/tulsi-botanical.mp4',
+    imageAlt: 'Tulsi leaves and flowering stems in motion',
     reference: 'https://powo.science.kew.org/results?q=Ocimum%20tenuiflorum',
     aiPrompt: 'Tell me about Tulsi in Sea Buckthorn Face Wash',
   },
@@ -68,7 +74,8 @@ const ingredientStories = [
     concentration: '1.0% – 2.0% Cosmetic Grade Charcoal',
     note: 'High-surface-area microporous carbon that acts like a gentle magnet for excess sebum, oxidized pore debris, and PM2.5 urban traffic soot.',
     image: 'charcoal.webp',
-    imageAlt: 'Pieces of charcoal with green leaves',
+    video: '/assets/videos/charcoal-purification.mp4',
+    imageAlt: 'Activated charcoal with botanical leaves in motion',
     reference: 'https://www.britannica.com/science/charcoal',
     aiPrompt: 'Tell me about Charcoal Face Wash and its key ingredients',
   },
@@ -134,12 +141,16 @@ export default function BhumiveraScience() {
       />
 
       <section className="relative isolate overflow-hidden bg-[#122019] text-white">
-        <img
-          src="/assets/images/aloeverascience.webp"
-          alt="A close botanical view of an aloe leaf"
-          fetchPriority="high"
-          className="absolute inset-0 -z-20 h-full w-full object-cover object-center opacity-30"
-        />
+        <div className="absolute inset-0 -z-20 h-full w-full">
+          <BhumiveraVideo
+            src="/assets/videos/aloe-science-lab.mp4"
+            poster="/assets/images/aloeverascience.webp"
+            alt="Botanical formulation science video"
+            className="h-full w-full object-cover object-center opacity-40"
+            containerClassName="relative h-full w-full overflow-hidden"
+            showControls
+          />
+        </div>
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#101a14]/95 via-[#101a14]/80 to-[#101a14]/35" />
         <div className="mx-auto flex min-h-[min(690px,calc(100svh_-_72px))] max-w-7xl flex-col justify-center px-5 py-20 sm:px-8 lg:px-10">
           <motion.div initial={{ opacity: 0, y: 18 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.65 }} className="max-w-3xl">
@@ -357,20 +368,27 @@ export default function BhumiveraScience() {
         <div className="mx-auto max-w-7xl px-5 py-12 sm:px-8 sm:py-16 lg:px-10 lg:py-20">
           <div className="mb-8 grid gap-4 border-b border-[#26392c]/15 pb-6 sm:mb-10 sm:grid-cols-[1fr_0.7fr] sm:items-end">
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#687958]">A small field guide</p>
+              <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#687958]">A small field guide · Live Video Specimens</p>
               <h2 className="mt-3 max-w-2xl font-serif text-3xl leading-tight sm:text-4xl lg:text-5xl">Names first. Context always.</h2>
             </div>
             <p className="max-w-xl text-sm leading-6 text-stone-600">
-              Botanical and dermatological references help identify each active. Click any ingredient card below to open its saved reference and 2+1 related suggestions in the Bhumivera Client Concierge.
+              Botanical and dermatological video specimens help identify each active. Click any ingredient card below to open its saved reference and 2+1 related suggestions in the Bhumivera Client Concierge.
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
             {ingredientStories.map((story, index) => (
               <article key={story.name} className="group flex flex-col justify-between overflow-hidden border border-[#26392c]/10 bg-[#f5f2e9]">
                 <div>
-                  <div className="relative aspect-[4/3] overflow-hidden bg-[#d8ddcf]">
-                    <img src={`/assets/images/${story.image}`} alt={story.imageAlt} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]" />
-                    <span className="absolute left-3 top-3 bg-[#15231c]/85 px-2.5 py-1.5 font-mono text-[9px] text-[#e0e8ce]">FIELD NOTE · 0{index + 1}</span>
+                  <div className="relative aspect-[4/3] overflow-hidden bg-[#15231c]">
+                    <BhumiveraVideo
+                      src={story.video}
+                      poster={`/assets/images/${story.image}`}
+                      alt={story.imageAlt}
+                      className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-[1.03]"
+                      containerClassName="relative h-full w-full overflow-hidden"
+                      badge={`FIELD FILM · 0${index + 1}`}
+                      showControls
+                    />
                   </div>
                   <div className="p-4 sm:p-5">
                     <h3 className="font-serif text-2xl">{story.name}</h3>

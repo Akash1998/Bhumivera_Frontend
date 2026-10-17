@@ -472,6 +472,13 @@ export const DOM_PHRASE_DICTIONARY = {
     'A future direction—not a claim of completed planting.': 'एक भविष्य की दिशा—वृक्षारोपण पूर्ण होने का कोई झूठा दावा नहीं।',
     'Explore our impact record': 'हमारा प्रभाव रिकॉर्ड देखें',
     'A planting vision · illustrative artwork': 'वृक्षारोपण दृष्टिकोण · कलात्मक चित्रण',
+    'A planting vision · live botanical cinema': 'वृक्षारोपण दृष्टिकोण · लाइव वानस्पतिक सिनेमा',
+    'Live field vision · 01': 'लाइव फील्ड विज़न · 01',
+    'Live field vision · 02': 'लाइव फील्ड विज़न · 02',
+    'Live field vision · 03': 'लाइव फील्ड विज़न · 03',
+    'Legal & Anti-Fraud Shield': 'कानूनी और धोखाधड़ी-रोधी सुरक्षा',
+    'Anti-Fraud & Unboxing Policy': 'धोखाधड़ी-रोधी और 360° अनबॉक्सिंग नीति',
+    'Grievance & Arbitration': 'शिकायत निवारण और मध्यस्थता',
     'See our verified impact record': 'हमारा सत्यापित प्रभाव रिकॉर्ड देखें',
 
     // Story & Philosophy
@@ -735,6 +742,13 @@ export const DOM_PHRASE_DICTIONARY = {
     'A future direction—not a claim of completed planting.': 'একটি ভবিষ্যৎ অঙ্গীকার—গাছ লাগানো শেষ হয়েছে এমন কোনো অলীক দাবি নয়।',
     'Explore our impact record': 'আমাদের প্রভাব রেকর্ড দেখুন',
     'A planting vision · illustrative artwork': 'বৃক্ষরোপণ পরিকল্পনা · কাল্পনিক চিত্রায়ন',
+    'A planting vision · live botanical cinema': 'বৃক্ষরোপণ পরিকল্পনা · লাইভ বোটানিক্যাল সিনেমা',
+    'Live field vision · 01': 'লাইভ ফিল্ড ভিশন · ০১',
+    'Live field vision · 02': 'লাইভ ফিল্ড ভিশন · ০২',
+    'Live field vision · 03': 'লাইভ ফিল্ড ভিশন · ০৩',
+    'Legal & Anti-Fraud Shield': 'আইনি ও জালিয়াতি-প্রতিরোধী সুরক্ষা',
+    'Anti-Fraud & Unboxing Policy': 'জালিয়াতি-প্রতিরোধ ও ৩৬০° আনবক্সিং নীতি',
+    'Grievance & Arbitration': 'অভিযোগ নিষ্পত্তি ও সালিশি',
     'See our verified impact record': 'আমাদের যাচাইকৃত প্রভাব রেকর্ড দেখুন',
 
     // Point of View & Story

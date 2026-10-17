@@ -1,31 +1,35 @@
 import React, { useState, useEffect } from 'react';
 import { ChevronLeft, ChevronRight, Zap, ShieldCheck, Globe, ArrowRight, Play, ShoppingBag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import BhumiveraVideo from './BhumiveraVideo';
 
 const slides = [
   {
-    title: "Premium Sound, No Compromises",
-    subtitle: "Experience Audio Excellence",
-    description: "Upgrade your vehicle with studio-grade amplifiers and basstubes designed for the audiophile in you.",
-    image: "https://images.unsplash.com/photo-1614850523296-d8c1af93d400?auto=format&fit=crop&q=80&w=2070",
+    title: "Rooted in Nature, Made With Care",
+    subtitle: "Himalayan Botanical Formulations",
+    description: "Cold-pressed Sea Buckthorn, Niacinamide, Hyaluronic Acid, and heritage Ayurvedic extracts crafted for daily skin and hair rituals.",
+    video: "/assets/videos/hero-seabuckthorn.mp4",
+    poster: "/assets/images/seabuckthorn.webp",
     cta: "Explore the Collection",
     link: "/products",
     accent: "emerald"
   },
   {
-    title: "Smart Driving, Connected Future",
-    subtitle: "Next-Gen Android Players",
-    description: "Seamless integration with Carplay and Android Auto. High-definition displays for your dashboard.",
-    image: "https://images.unsplash.com/photo-1593642632823-8f785ba67e45?auto=format&fit=crop&q=80&w=2066",
+    title: "Where Botanical Science, Meets Pure Soil",
+    subtitle: "Dermatological Active Synergy",
+    description: "Every formulation pairs heritage plant intelligence with precision modern actives and full label transparency.",
+    video: "/assets/videos/aloe-science-lab.mp4",
+    poster: "/assets/images/aloeverascience.webp",
     cta: "Explore the Collection",
     link: "/products",
     accent: "blue"
   },
   {
-    title: "Illuminate Your Journey",
-    subtitle: "High-Intensity LED Systems",
-    description: "Safety meets style with our advanced LED headlight kits. Precision engineered for maximum visibility.",
-    image: "https://images.unsplash.com/photo-1492144534655-ae79c964c9d7?auto=format&fit=crop&q=80&w=2066",
+    title: "Care Returned, To Its Source",
+    subtitle: "Living Earth Stewardship",
+    description: "Follow our verified stewardship ledger, 360° quality seal guarantee, and zero-friction courtesy protection.",
+    video: "/assets/videos/planting-vision.mp4",
+    poster: "/assets/images/plant tree.webp",
     cta: "Explore the Collection",
     link: "/products",
     accent: "purple"
@@ -34,7 +38,7 @@ const slides = [
 
 export default function HeroSection() {
   const [current, setCurrent] = useState(0);
-  const [isPaused, setIsPaused] = useState(false);
+  const [isPaused] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -47,7 +51,6 @@ export default function HeroSection() {
 
   return (
     <div className="relative h-[85vh] min-h-[600px] w-full overflow-hidden bg-slate-950 group">
-      {/* Background Slides */}
       {slides.map((slide, idx) => (
         <div
           key={idx}
@@ -55,19 +58,20 @@ export default function HeroSection() {
             idx === current ? 'opacity-100 scale-100' : 'opacity-0 scale-110 pointer-events-none'
           }`}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent z-10" />
-          <img
-            src={slide.image}
+          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent z-10 pointer-events-none" />
+          <BhumiveraVideo
+            src={slide.video}
+            poster={slide.poster}
             alt={slide.title}
             className="w-full h-full object-cover object-center"
+            containerClassName="relative w-full h-full overflow-hidden"
           />
         </div>
       ))}
 
-      {/* Content */}
       <div className="relative z-20 container mx-auto px-6 h-full flex flex-col justify-center">
         <div className="max-w-3xl">
-          <div className={`inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-[0.2em] mb-6 animate-fade-in`}>
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-[0.2em] mb-6 animate-fade-in">
             <Zap size={14} />
             {slides[current].subtitle}
           </div>
@@ -80,7 +84,7 @@ export default function HeroSection() {
             ))}
           </h1>
 
-          <p className="text-xl text-slate-400 mb-10 max-w-xl leading-relaxed font-medium">
+          <p className="text-xl text-slate-300 mb-10 max-w-xl leading-relaxed font-medium">
             {slides[current].description}
           </p>
 
@@ -104,7 +108,6 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Navigation Controls */}
       <div className="absolute bottom-12 right-12 z-30 flex items-center gap-6">
         <div className="flex gap-2">
           {slides.map((_, i) => (
@@ -134,7 +137,6 @@ export default function HeroSection() {
         </div>
       </div>
 
-      {/* Floating Badges */}
       <div className="absolute bottom-0 left-0 w-full z-20 border-t border-slate-800/50 bg-slate-950/50 backdrop-blur-xl py-6 hidden lg:block">
         <div className="container mx-auto px-6 flex justify-between items-center text-slate-400 font-bold uppercase tracking-widest text-[10px]">
           <div className="flex items-center gap-3">
