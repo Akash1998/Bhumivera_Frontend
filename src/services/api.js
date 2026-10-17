@@ -638,6 +638,8 @@ export const aiSupport = {
   getKnowledgeBase: params => api.get('/support/knowledge-base', { params: params || {}, notify: false }),
   addKnowledgeBaseEntry: data => api.post('/support/knowledge-base', data, { adminAuth: true }),
   askGeminiConcierge: data => api.post('/ai/ask', data, { notify: false }),
+  getVeoJobs: () => api.get('/ai/veo/jobs', { notify: false }),
+  generateVeoVideo: data => api.post('/ai/veo/generate', data, { adminAuth: true }),
 };
 export const loyalty = { getSystemConfig: () => api.get("/settings"), updateSystemConfig: d => api.put("/settings", d), getMembers: () => api.get("/admin/users"), adjustPoints: (u, d) => api.patch(`/admin/users/${u}/status`, d) };
 export const loyaltyTiers = {

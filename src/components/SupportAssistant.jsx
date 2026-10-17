@@ -3073,7 +3073,154 @@ const FOUR_CORE_RITUAL_PHASES = [
   },
 ];
 
-function PhaseVisualClip({ phaseId, isDark }) {
+function ConciergeVideoVisualizer({
+  videoSrc,
+  fallbackComponent: Fallback,
+  title,
+  badgeText = 'Veo 2 Visual Presentation',
+  isDark,
+  duration = 10,
+}) {
+  const [videoFailed, setVideoFailed] = useState(false);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [isMuted, setIsMuted] = useState(true);
+  const [currentTime, setCurrentTime] = useState(0);
+  const [videoDuration, setVideoDuration] = useState(duration);
+  const [videoLoaded, setVideoLoaded] = useState(false);
+  const videoRef = useRef(null);
+
+  useEffect(() => {
+    setVideoFailed(false);
+    setVideoLoaded(false);
+    setCurrentTime(0);
+    setIsPlaying(true);
+  }, [videoSrc]);
+
+  const togglePlay = () => {
+    if (!videoRef.current) return;
+    if (isPlaying) {
+      videoRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      videoRef.current.play().catch(() => {});
+      setIsPlaying(true);
+    }
+  };
+
+  const toggleMute = () => {
+    if (!videoRef.current) return;
+    videoRef.current.muted = !isMuted;
+    setIsMuted(!isMuted);
+  };
+
+  const handleTimeUpdate = () => {
+    if (videoRef.current) {
+      setCurrentTime(videoRef.current.currentTime);
+      if (videoRef.current.duration && !isNaN(videoRef.current.duration)) {
+        setVideoDuration(videoRef.current.duration);
+      }
+    }
+  };
+
+  // If the video asset is not yet rendered or fails, gracefully show the SVG fallback!
+  if (videoFailed || !videoSrc) {
+    return (
+      <div className="space-y-1">
+        {Fallback && <Fallback />}
+        <div className="flex items-center justify-between text-[8px] opacity-65 px-1 pt-0.5">
+          <span className="flex items-center gap-1 text-emerald-500 font-semibold">
+            ● Animated Dosing Graphic
+          </span>
+          <span className="text-[#D4AF37] font-medium">
+            ✦ Veo 2 MP4 Ready for Sync
+          </span>
+        </div>
+      </div>
+    );
+  }
+
+  const progressPercent = videoDuration > 0 ? (currentTime / videoDuration) * 100 : 0;
+
+  return (
+    <div
+      className={`relative w-full rounded-2xl overflow-hidden border transition-all ${
+        isDark
+          ? 'bg-[#071610] border-[#D4AF37]/35 shadow-lg'
+          : 'bg-[#faf7ee] border-[#D4AF37]/45 shadow-md'
+      }`}
+    >
+      <div className="relative w-full h-32 sm:h-36 bg-black flex items-center justify-center overflow-hidden">
+        <video
+          ref={videoRef}
+          src={videoSrc}
+          autoPlay
+          loop
+          muted={isMuted}
+          playsInline
+          onLoadedData={() => setVideoLoaded(true)}
+          onError={() => setVideoFailed(true)}
+          onTimeUpdate={handleTimeUpdate}
+          className={`w-full h-full object-cover transition-opacity duration-300 ${
+            videoLoaded ? 'opacity-100' : 'opacity-0'
+          }`}
+        />
+
+        {!videoLoaded && (
+          <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+            {Fallback && <Fallback />}
+          </div>
+        )}
+
+        {/* Top Badges */}
+        <div className="absolute top-2 left-2 right-2 flex items-center justify-between pointer-events-none z-10">
+          <span className="px-2 py-0.5 rounded-full text-[8px] font-bold uppercase tracking-wider bg-black/70 text-[#D4AF37] border border-[#D4AF37]/40 backdrop-blur-md">
+            ✦ {badgeText}
+          </span>
+          <span className="px-1.5 py-0.5 rounded-md text-[8px] font-mono font-bold bg-[#0B2419]/85 text-[#D4AF37] border border-[#D4AF37]/30">
+            {Math.floor(currentTime)}s / {Math.floor(videoDuration)}s
+          </span>
+        </div>
+
+        {/* Bottom Playback Controls */}
+        <div className="absolute bottom-2 left-2 right-2 flex items-center justify-between z-10">
+          <div className="flex items-center gap-1.5">
+            <button
+              type="button"
+              onClick={togglePlay}
+              className="px-1.5 py-0.5 rounded-md bg-black/70 text-[#D4AF37] hover:bg-black/95 transition border border-white/20 text-[9px] font-bold"
+              title={isPlaying ? 'Pause' : 'Play'}
+            >
+              {isPlaying ? '⏸' : '▶'}
+            </button>
+            <button
+              type="button"
+              onClick={toggleMute}
+              className="p-1 rounded-md bg-black/70 text-[#D4AF37] hover:bg-black/95 transition border border-white/20"
+              title={isMuted ? 'Unmute' : 'Mute'}
+            >
+              {isMuted ? <VolumeX className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
+            </button>
+          </div>
+          {title && (
+            <span className="text-[9px] font-medium text-white/95 drop-shadow truncate max-w-[190px]">
+              {title}
+            </span>
+          )}
+        </div>
+
+        {/* Progress Bar */}
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-white/20 z-10">
+          <div
+            className="h-full bg-gradient-to-r from-[#F5D061] to-[#D4AF37] transition-all duration-150"
+            style={{ width: `${progressPercent}%` }}
+          />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function PhaseSvgFallback({ phaseId, isDark }) {
   if (phaseId === 1) {
     return (
       <div className={`relative w-full h-28 rounded-2xl overflow-hidden border flex items-center justify-center p-2 transition-all ${
@@ -3234,6 +3381,26 @@ function PhaseVisualClip({ phaseId, isDark }) {
         <text x="245" y="84" fill="#10B981" fontSize="8" fontWeight="bold" textAnchor="middle">+40% Retention</text>
       </svg>
     </div>
+  );
+}
+
+function PhaseVisualClip({ phaseId, isDark }) {
+  const titles = {
+    1: 'Phase 01 · Thermal Water Prep & Apothecary Dosing',
+    2: 'Phase 02 · Palm Micro-Foam Activation',
+    3: 'Phase 03 · 40s Zonal Ayurvedic Sculpt Massage & Phyto-Dwell',
+    4: 'Phase 04 · Cool-Water Rinse & 60-Second Barrier Lock',
+  };
+
+  return (
+    <ConciergeVideoVisualizer
+      videoSrc={`/videos/concierge/facial_phase_${phaseId}.mp4`}
+      fallbackComponent={() => <PhaseSvgFallback phaseId={phaseId} isDark={isDark} />}
+      title={titles[phaseId] || `Phase ${phaseId}`}
+      badgeText="Veo 2 · 10s Visual Presentation"
+      isDark={isDark}
+      duration={10}
+    />
   );
 }
 
@@ -3476,6 +3643,32 @@ function IngredientEncyclopediaDrawer({
 
           {activeTab === 'story' && (
             <div className="space-y-2 text-[11px]">
+              {(() => {
+                const botanicalVideoMap = {
+                  sea_buckthorn: '/videos/concierge/botanical_sea_buckthorn.mp4',
+                  kashmiri_saffron: '/videos/concierge/botanical_saffron.mp4',
+                  kumkumadi: '/videos/concierge/botanical_kumkumadi.mp4',
+                  activated_charcoal: '/videos/concierge/botanical_charcoal.mp4',
+                };
+                const vSrc = botanicalVideoMap[selectedIngredient.id];
+                if (!vSrc) return null;
+                return (
+                  <div className="pt-0.5 pb-1">
+                    <ConciergeVideoVisualizer
+                      videoSrc={vSrc}
+                      title={`${selectedIngredient.name} · Botanical Active Extraction (10s)`}
+                      badgeText="Veo 2 · Botanical Profile"
+                      isDark={isDark}
+                      duration={10}
+                      fallbackComponent={() => (
+                        <div className="flex items-center justify-center p-3 text-center text-[10px] opacity-75">
+                          🌿 {selectedIngredient.name} Active Extraction Clip
+                        </div>
+                      )}
+                    />
+                  </div>
+                );
+              })()}
               <p className="font-serif italic text-[#D4AF37]">“{selectedIngredient.tagline}”</p>
               <p className="leading-relaxed opacity-90">{selectedIngredient.shortSummary}</p>
               <div className="grid grid-cols-2 gap-2 pt-1 text-[10px]">
@@ -3723,7 +3916,7 @@ function MasterRitualPlayerDrawer({ isOpen, onClose, isDark, onSendSummaryToChat
                   onClick={() => setShowVisualDemo(prev => !prev)}
                   className="px-2 py-0.5 rounded-lg border border-[#D4AF37]/30 text-[9px] font-semibold text-[#D4AF37] hover:bg-[#D4AF37]/15 transition-colors"
                 >
-                  {showVisualDemo ? 'Hide Clip ✕' : '▶ Animated Demo'}
+                  {showVisualDemo ? 'Hide Clip ✕' : '▶ 10s Veo Presentation'}
                 </button>
                 <span className="font-mono font-bold text-sm px-3 py-1 rounded-xl bg-[#0B2419] text-[#D4AF37] border border-[#D4AF37]/40 shrink-0">
                   {phaseSecondsLeft}s
@@ -3913,6 +4106,22 @@ function SkinDiagnosticQuizDrawer({ isOpen, onClose, isDark, onCompleteBlueprint
 
       {!isFinished && currentQuestion ? (
         <div className="space-y-3">
+          {stepIdx === 0 && (
+            <div className="pb-1">
+              <ConciergeVideoVisualizer
+                videoSrc="/videos/concierge/skin_quiz_diagnostic.mp4"
+                title="Ayurvedic Biometric Diagnostic Scan (10s)"
+                badgeText="Veo 2 · Diagnostic Scan"
+                isDark={isDark}
+                duration={10}
+                fallbackComponent={() => (
+                  <div className="flex items-center justify-center p-2 rounded-xl border border-dashed border-[#D4AF37]/30 text-center text-[10px] text-[#D4AF37]">
+                    ✨ 8-Step Personalized Botanical Blueprint Scan
+                  </div>
+                )}
+              />
+            </div>
+          )}
           {/* Progress Bar */}
           <div className="h-1.5 w-full rounded-full bg-current/10 overflow-hidden">
             <div
