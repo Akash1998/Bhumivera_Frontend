@@ -1,0 +1,924 @@
+import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
+import {
+  ArrowLeft,
+  ArrowRight,
+  ShieldCheck,
+  Leaf,
+  Calendar,
+  MapPin,
+  AlertTriangle,
+  TrendingUp,
+  CheckCircle2,
+  Droplets,
+  Heart,
+  Share2,
+  Download,
+  Info,
+  Scale,
+  Award,
+  Sparkles,
+  ExternalLink,
+} from 'lucide-react';
+import SEO from '../components/SEO';
+import {
+  IMPACT_PROJECTS,
+  findProjectById,
+  LEGAL_CHARTER_FRAMEWORK,
+  INDIA_SCARCITY_OVERVIEW,
+} from '../data/impactDeepDiveData';
+
+const formatInr = num => `₹${Number(num || 0).toLocaleString('en-IN')}`;
+
+export default function ImpactProjectDetail() {
+  const { imageId, projectId } = useParams();
+  const currentId = projectId || imageId || 'pampore-saffron';
+  const project = findProjectById(currentId);
+
+  // Pledge modal & Certificate state
+  const [isPledgeModalOpen, setIsPledgeModalOpen] = useState(false);
+  const [selectedUnit, setSelectedUnit] = useState(null);
+  const [customAmount, setCustomAmount] = useState('');
+  const [patronName, setPatronName] = useState('');
+  const [patronEmail, setPatronEmail] = useState('');
+  const [dedicationMessage, setDedicationMessage] = useState('');
+  const [certificateData, setCertificateData] = useState(null);
+  const [pledgeSuccess, setPledgeSuccess] = useState(false);
+  const [copiedLink, setCopiedLink] = useState(false);
+
+  // Dynamic local storage backer simulation / real persistence
+  const [livePledged, setLivePledged] = useState(project.funding.pledgedAmount);
+  const [liveBackers, setLiveBackers] = useState(project.funding.backersCount);
+
+  useEffect(() => {
+    try {
+      if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+    } catch {
+      // ignore
+    }
+    const savedPledgesKey = `bv_pledges_${project.id}`;
+    try {
+      const stored = localStorage.getItem(savedPledgesKey);
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        setLivePledged(project.funding.pledgedAmount + (parsed.totalPledged || 0));
+        setLiveBackers(project.funding.backersCount + (parsed.count || 0));
+      } else {
+        setLivePledged(project.funding.pledgedAmount);
+        setLiveBackers(project.funding.backersCount);
+      }
+    } catch {
+      // ignore storage error
+    }
+    // Set default package
+    if (project.funding?.unitPackages?.length > 0) {
+      setSelectedUnit(project.funding.unitPackages[1] || project.funding.unitPackages[0]);
+    }
+  }, [project.id]);
+
+  const handlePledgeSubmit = e => {
+    e.preventDefault();
+    const finalAmount = customAmount ? Number(customAmount) : selectedUnit ? selectedUnit.amount : 500;
+    if (!patronName.trim() || !patronEmail.trim() || finalAmount <= 0) return;
+
+    // Generate SHA-256 style unique certificate reference
+    const timestamp = Date.now();
+    const randomHex = Math.random().toString(16).substring(2, 8).toUpperCase();
+    const certCode = `BV-${project.id.toUpperCase().substring(0, 4)}-${timestamp.toString(36).toUpperCase()}-${randomHex}`;
+
+    const newCert = {
+      code: certCode,
+      date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
+      name: patronName.trim(),
+      amount: finalAmount,
+      projectTitle: project.title,
+      targetYear: project.phaseYear,
+      impactEquivalence: selectedUnit?.impactEquivalence || `Direct ecological contribution to ${project.title}.`,
+      dedication: dedicationMessage.trim(),
+      location: project.location,
+    };
+
+    // Save in localStorage
+    const savedPledgesKey = `bv_pledges_${project.id}`;
+    try {
+      const stored = localStorage.getItem(savedPledgesKey);
+      const parsed = stored ? JSON.parse(stored) : { totalPledged: 0, count: 0 };
+      parsed.totalPledged += finalAmount;
+      parsed.count += 1;
+      localStorage.setItem(savedPledgesKey, JSON.stringify(parsed));
+      setLivePledged(project.funding.pledgedAmount + parsed.totalPledged);
+      setLiveBackers(project.funding.backersCount + parsed.count);
+    } catch {
+      // ignore
+    }
+
+    setCertificateData(newCert);
+    setPledgeSuccess(true);
+  };
+
+  const handleShare = () => {
+    if (navigator.share) {
+      navigator
+        .share({
+          title: `${project.title} | Bhumivera 2027 Ecological Dossier`,
+          text: project.tagline,
+          url: window.location.href,
+        })
+        .catch(() => {});
+    } else {
+      navigator.clipboard.writeText(window.location.href);
+      setCopiedLink(true);
+      setTimeout(() => setCopiedLink(false), 2500);
+    }
+  };
+
+  const percentFunded = Math.min(
+    100,
+    Math.round((livePledged / (project.funding.targetAmount || 1)) * 100)
+  );
+
+  const relatedProjects = IMPACT_PROJECTS.filter(p => p.id !== project.id).slice(0, 3);
+
+  return (
+    <main className="min-h-screen bg-[#070a0e] text-[#e2e8f0] pb-24 font-sans selection:bg-[#d4af37]/30 selection:text-white">
+      <SEO
+        title={`${project.title} | Bhumivera 2027 Ecological Research Dossier`}
+        description={project.tagline}
+        route={`/impact/${project.slug}`}
+      />
+
+      {/* TOP NAVIGATION BREADCRUMB */}
+      <div className="border-b border-[#d4af37]/20 bg-[#070a0e]/90 backdrop-blur-md sticky top-0 z-30">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3.5 text-xs">
+          <Link
+            to="/impact#ledger"
+            className="inline-flex items-center gap-2 text-[#cbd5e1] hover:text-[#fce096] transition-colors"
+          >
+            <ArrowLeft size={14} className="text-[#d4af37]" /> Back to Public Stewardship Ledger
+          </Link>
+          <div className="flex items-center gap-3">
+            <span className="hidden sm:inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-2.5 py-0.5 text-[10px] font-mono text-emerald-400">
+              <ShieldCheck size={12} /> {project.statusBadge}
+            </span>
+            <button
+              onClick={handleShare}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[#d4af37]/30 bg-[#070a0e] px-2.5 py-1 text-[11px] font-semibold text-[#fce096] hover:bg-[#d4af37]/15 transition-colors"
+            >
+              <Share2 size={12} /> {copiedLink ? 'Link Copied!' : 'Share Dossier'}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 1. HERO DOSSIER SECTION */}
+      <section className="relative overflow-hidden border-b border-[#d4af37]/25 bg-gradient-to-b from-[#0b1410] via-[#070a0e] to-[#070a0e] pt-10 pb-16">
+        <div className="pointer-events-none absolute -top-40 right-1/4 h-96 w-96 rounded-full bg-[#d4af37]/10 blur-3xl" />
+        <div className="pointer-events-none absolute -bottom-40 left-10 h-96 w-96 rounded-full bg-emerald-600/10 blur-3xl" />
+
+        <div className="mx-auto max-w-7xl px-6">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-center">
+            {/* Left Column: Metadata, Badges, Title & Tagline */}
+            <div className="lg:col-span-7 space-y-6">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/40 bg-[#102219]/90 px-3.5 py-1 text-[10px] font-mono tracking-widest text-[#fce096] uppercase">
+                  <Leaf size={12} className="text-[#d4af37]" /> {project.phaseYear}
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-cyan-500/30 bg-cyan-500/10 px-3 py-1 text-[10px] font-mono text-cyan-300">
+                  <MapPin size={11} /> {project.location}
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[10px] font-mono text-amber-300">
+                  <Calendar size={11} /> Target Launch: {project.targetLaunch || 'Q1 2027'}
+                </span>
+              </div>
+
+              <h1 className="font-serif text-3xl sm:text-5xl lg:text-6xl text-white leading-[1.1] tracking-tight">
+                {project.title}
+              </h1>
+
+              <p className="font-serif italic text-lg sm:text-xl text-[#fce096]/90 border-l-2 border-[#d4af37] pl-4 py-1">
+                "{project.tagline}"
+              </p>
+
+              <p className="text-xs sm:text-sm text-[#94a3b8] font-mono flex items-center gap-2">
+                <ShieldCheck size={14} className="text-[#d4af37]" /> Lead Research Desk:{' '}
+                <span className="text-[#cbd5e1] font-sans font-medium">{project.leadScientist}</span>
+              </p>
+
+              {/* Quick Actions */}
+              <div className="pt-2 flex flex-wrap items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => setIsPledgeModalOpen(true)}
+                  className="btn-gold-luxury inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-xs font-bold uppercase tracking-widest text-white shadow-2xl hover:scale-[1.02] transition-transform"
+                >
+                  <Heart size={15} className="text-rose-400" /> Co-Sponsor This Corridor
+                </button>
+                <a
+                  href="#problem-crisis"
+                  className="btn-silver-luxury inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-xs font-semibold uppercase tracking-widest text-[#cbd5e1] hover:text-white transition-colors"
+                >
+                  Inspect Scarcity Data <TrendingUp size={14} />
+                </a>
+                <a
+                  href="#legal-rules"
+                  className="inline-flex items-center gap-1.5 text-xs font-mono text-[#fce096] hover:underline"
+                >
+                  <Scale size={13} /> Indian Legal Charter
+                </a>
+              </div>
+            </div>
+
+            {/* Right Column: Authentic Poster Artwork Frame */}
+            <div className="lg:col-span-5">
+              <div className="relative group overflow-hidden rounded-3xl border-2 border-[#d4af37]/40 bg-[#070a0e] shadow-2xl">
+                <img
+                  src={project.posterImage}
+                  alt={project.title}
+                  className="w-full h-auto object-contain transition-transform duration-500 group-hover:scale-[1.02]"
+                />
+                <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#070a0e] via-transparent to-transparent opacity-60" />
+                <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-[11px] font-mono text-[#fce096] bg-[#070a0e]/85 backdrop-blur-md px-3.5 py-2 rounded-xl border border-[#d4af37]/30">
+                  <span className="flex items-center gap-1.5">
+                    <Sparkles size={13} className="text-[#d4af37]" /> Official Field Poster #0{project.posterId?.slice(-1) || '1'}
+                  </span>
+                  <span className="text-emerald-400 font-bold">2027 Corridor</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 2. REAL-TIME FUNDING & CO-SPONSORSHIP PROGRESS BAR */}
+      <section className="mx-auto max-w-7xl px-6 -mt-8 relative z-20">
+        <div className="rounded-3xl border border-[#d4af37]/40 bg-gradient-to-r from-[#102219] via-[#070a0e] to-[#102219] p-6 sm:p-8 shadow-2xl">
+          <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-[#d4af37]/20">
+            <div>
+              <div className="flex items-center gap-2 mb-1">
+                <span className="font-sub-gold text-[10px] tracking-[0.2em] uppercase text-[#fce096]">
+                  Grassroots Ecological Deployment Fund
+                </span>
+                <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[9px] font-mono text-emerald-400 border border-emerald-500/30 uppercase">
+                  100% Direct Field Flow
+                </span>
+              </div>
+              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white">
+                {formatInr(livePledged)}{' '}
+                <span className="text-sm font-sans font-normal text-[#94a3b8]">
+                  pledged of {formatInr(project.funding.targetAmount)} target
+                </span>
+              </h2>
+            </div>
+
+            <div className="flex items-center gap-6">
+              <div className="text-right">
+                <div className="font-serif text-2xl font-bold text-[#fce096]">{liveBackers}</div>
+                <div className="text-[11px] font-mono text-[#94a3b8] uppercase">Nature Guardians</div>
+              </div>
+              <div className="text-right border-l border-[#d4af37]/20 pl-6">
+                <div className="font-serif text-2xl font-bold text-emerald-400">{percentFunded}%</div>
+                <div className="text-[11px] font-mono text-[#94a3b8] uppercase">Funded</div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsPledgeModalOpen(true)}
+                className="btn-gold-luxury rounded-xl px-5 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-xl hover:scale-105 transition-transform shrink-0"
+              >
+                Pledge Now
+              </button>
+            </div>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="mt-5 space-y-2">
+            <div className="h-3 w-full rounded-full bg-[#070a0e] border border-[#d4af37]/30 overflow-hidden">
+              <div
+                className="h-full rounded-full bg-gradient-to-r from-[#d4af37] via-[#fce096] to-emerald-400 transition-all duration-700"
+                style={{ width: `${percentFunded}%` }}
+              />
+            </div>
+            <div className="flex items-center justify-between text-[11px] font-mono text-[#94a3b8]">
+              <span>Zero administrative deductions · 100% audited field pass-through</span>
+              <span>Target Launch: {project.phaseYear}</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. MACRO CRISIS: THE PROBLEM WE CREATED TOWARDS NATURE */}
+      <section id="problem-crisis" className="mx-auto max-w-7xl px-6 pt-16">
+        <div className="rounded-3xl two-tone-card border border-rose-900/30 bg-[#070a0e] p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-rose-500/5 blur-3xl pointer-events-none" />
+
+          <div className="flex items-center gap-2 mb-3">
+            <AlertTriangle size={18} className="text-rose-400" />
+            <span className="font-sub-gold text-[10px] tracking-[0.25em] uppercase text-rose-300">
+              Ecological Crisis &amp; Historical Scarcity Dossier
+            </span>
+          </div>
+
+          <h2 className="font-serif text-2xl sm:text-4xl text-white max-w-3xl leading-tight">
+            {project.problemDossier.headline}
+          </h2>
+
+          <p className="mt-4 text-xs sm:text-sm text-[#cbd5e1] leading-7 max-w-4xl">
+            {project.problemDossier.historicalContext}
+          </p>
+
+          {/* 4 Stark Scarcity Metrics Grid */}
+          <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-4">
+            {project.problemDossier.scarcityStats.map((stat, i) => (
+              <div
+                key={i}
+                className="rounded-2xl border border-rose-500/20 bg-rose-950/20 p-5 text-left"
+              >
+                <div className="font-serif text-3xl sm:text-4xl font-bold text-rose-300">{stat.value}</div>
+                <div className="mt-1 text-xs font-semibold text-white">{stat.label}</div>
+                <div className="mt-1 text-[10px] font-mono text-rose-200/60">{stat.sub}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Key Contributing Human Factors */}
+          <div className="mt-8 rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/70 p-6">
+            <h3 className="font-serif text-base sm:text-lg font-bold text-white mb-4 flex items-center gap-2">
+              <span className="text-rose-400">●</span> Direct Human Degradation Factors We Must Undo:
+            </h3>
+            <ul className="space-y-2.5 text-xs sm:text-sm text-[#cbd5e1]">
+              {project.problemDossier.keyFactors.map((factor, idx) => (
+                <li key={idx} className="flex items-start gap-2.5">
+                  <span className="text-rose-400 font-bold shrink-0 mt-0.5">✕</span>
+                  <span>{factor}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* 4. THE DYSTOPIAN FUTURE: WHAT HAPPENS WITHOUT THIS PROJECT */}
+      <section className="mx-auto max-w-7xl px-6 pt-12">
+        <div className="rounded-3xl border border-amber-900/40 bg-gradient-to-br from-[#18110b] via-[#070a0e] to-[#070a0e] p-6 sm:p-10 shadow-2xl">
+          <div className="flex items-center gap-2 mb-2">
+            <span className="font-sub-gold text-[10px] tracking-[0.25em] uppercase text-amber-300">
+              The Cost of Inaction · Future Timeline
+            </span>
+          </div>
+          <h2 className="font-serif text-2xl sm:text-3xl text-white">
+            {project.futureWithout.headline}
+          </h2>
+          <p className="mt-3 text-xs sm:text-sm text-[#cbd5e1] leading-6 max-w-3xl">
+            {project.futureWithout.summary}
+          </p>
+
+          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            {project.futureWithout.consequences.map((item, idx) => (
+              <div
+                key={idx}
+                className="rounded-2xl border border-amber-500/20 bg-amber-950/10 p-5 flex items-start gap-3.5"
+              >
+                <span className="rounded-full bg-amber-500/20 p-2 text-amber-400 font-mono text-xs font-bold shrink-0">
+                  0{idx + 1}
+                </span>
+                <p className="text-xs sm:text-sm text-[#e2e8f0] leading-6">{item}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 5. THE BHUMIVERA 2027 SOLUTION BLUEPRINT */}
+      <section className="mx-auto max-w-7xl px-6 pt-16">
+        <div className="rounded-3xl two-tone-card border border-emerald-500/30 bg-[#070a0e] p-6 sm:p-10 shadow-2xl relative overflow-hidden">
+          <div className="absolute top-0 right-0 -mr-20 -mt-20 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
+
+          <div className="flex items-center gap-2 mb-2">
+            <Leaf size={16} className="text-emerald-400" />
+            <span className="font-sub-gold text-[10px] tracking-[0.25em] uppercase text-emerald-400">
+              The 2027 Scientific Restoration Blueprint
+            </span>
+          </div>
+
+          <h2 className="font-serif text-2xl sm:text-4xl text-white max-w-3xl">
+            {project.solutionBlueprint.headline}
+          </h2>
+
+          <p className="mt-4 text-xs sm:text-sm text-[#cbd5e1] leading-7 max-w-4xl">
+            {project.solutionBlueprint.methodology}
+          </p>
+
+          <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-6">
+            {project.solutionBlueprint.pillars.map((pillar, i) => (
+              <div
+                key={i}
+                className="rounded-2xl border border-emerald-500/20 bg-[#102219]/40 p-6 hover:border-emerald-500/40 transition-colors"
+              >
+                <div className="flex items-center gap-3 mb-2.5">
+                  <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-500/20 text-emerald-400 font-mono text-xs font-bold">
+                    0{i + 1}
+                  </span>
+                  <h3 className="font-serif text-lg font-bold text-white">{pillar.title}</h3>
+                </div>
+                <p className="text-xs sm:text-sm text-[#cbd5e1] leading-6 pl-10">{pillar.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 6. QUANTIFIABLE IMPACT & PERCENTAGE DATA COLUMNS */}
+      <section className="mx-auto max-w-7xl px-6 pt-16">
+        <div className="rounded-3xl border border-[#d4af37]/35 bg-gradient-to-b from-[#0b1410] to-[#070a0e] p-6 sm:p-10 shadow-2xl">
+          <div className="text-center max-w-3xl mx-auto mb-10">
+            <span className="font-sub-gold text-[10px] tracking-[0.25em] block uppercase text-[#fce096] mb-2">
+              Verifiable Ecological Transformation
+            </span>
+            <h2 className="font-serif text-2xl sm:text-4xl text-white">
+              Quantifiable Impact: Before vs 2027 Projections
+            </h2>
+            <p className="mt-2 text-xs sm:text-sm text-[#94a3b8]">
+              Measurable, percentage-backed benchmarks calibrated with regional agronomic and forestry institutions.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {project.impactColumns.map((col, idx) => (
+              <div
+                key={idx}
+                className="rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/80 p-6 space-y-4 hover:border-[#d4af37]/50 transition-colors"
+              >
+                <div className="flex items-center justify-between">
+                  <h3 className="font-serif text-base sm:text-lg font-bold text-white">{col.metric}</h3>
+                  <span className="rounded-full bg-emerald-500/20 px-3 py-1 text-xs font-mono font-bold text-emerald-400 border border-emerald-500/30">
+                    {col.gain}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-3 pt-2">
+                  <div className="rounded-xl border border-rose-500/20 bg-rose-950/20 p-3">
+                    <span className="block text-[10px] font-mono text-rose-300 uppercase tracking-wider">
+                      Current Crisis Baseline
+                    </span>
+                    <span className="font-serif text-lg font-bold text-white mt-1 block">{col.before}</span>
+                  </div>
+                  <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-3">
+                    <span className="block text-[10px] font-mono text-emerald-300 uppercase tracking-wider">
+                      2027 Bhumivera Target
+                    </span>
+                    <span className="font-serif text-lg font-bold text-[#fce096] mt-1 block">{col.after2027}</span>
+                  </div>
+                </div>
+
+                <p className="text-xs text-[#cbd5e1] leading-5 pt-1 border-t border-[#d4af37]/15">
+                  {col.detail}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Academic Citations */}
+          {project.academicCitations?.length > 0 && (
+            <div className="mt-8 rounded-2xl border border-[#d4af37]/15 bg-[#070a0e]/60 p-5">
+              <span className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8] block mb-2">
+                Scientific References &amp; Field Studies
+              </span>
+              <ul className="space-y-1.5 text-xs text-[#cbd5e1] font-mono">
+                {project.academicCitations.map((cite, i) => (
+                  <li key={i} className="flex items-center gap-2">
+                    <ExternalLink size={12} className="text-[#d4af37] shrink-0" />
+                    <span>{cite}</span>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </div>
+      </section>
+
+      {/* 7. TANGIBLE UNIT SPONSORSHIP PACKAGES */}
+      <section id="funding-packages" className="mx-auto max-w-7xl px-6 pt-16">
+        <div className="text-center max-w-3xl mx-auto mb-10">
+          <span className="font-sub-gold text-[10px] tracking-[0.25em] block uppercase text-[#fce096] mb-2">
+            Voluntary Ecological Co-Sponsorship
+          </span>
+          <h2 className="font-serif text-2xl sm:text-4xl text-white">
+            Choose What You Would Like To Restore
+          </h2>
+          <p className="mt-2 text-xs sm:text-sm text-[#94a3b8]">
+            Every rupee is dedicated to direct on-ground materials (jute bags, mycorrhizae, coir logs, apiaries). Zero administrative deduction.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          {project.funding.unitPackages.map((pkg, i) => {
+            const isSelected = selectedUnit?.amount === pkg.amount && !customAmount;
+            return (
+              <div
+                key={i}
+                onClick={() => {
+                  setSelectedUnit(pkg);
+                  setCustomAmount('');
+                  setIsPledgeModalOpen(true);
+                }}
+                className={`cursor-pointer rounded-2xl p-6 border transition-all duration-300 relative flex flex-col justify-between ${
+                  isSelected
+                    ? 'border-[#d4af37] bg-[#102219]/90 shadow-2xl scale-[1.02]'
+                    : 'border-[#d4af37]/25 bg-[#070a0e] hover:border-[#d4af37]/60 hover:bg-[#102219]/40'
+                }`}
+              >
+                <div>
+                  <span className="inline-block rounded-full bg-[#d4af37]/20 px-2.5 py-0.5 text-[10px] font-mono text-[#fce096] uppercase mb-3">
+                    {pkg.tag}
+                  </span>
+                  <div className="font-serif text-2xl font-bold text-white mb-2">{formatInr(pkg.amount)}</div>
+                  <h3 className="font-serif text-base font-bold text-[#fce096] mb-2">{pkg.title}</h3>
+                  <p className="text-xs text-[#cbd5e1] leading-5">{pkg.impactEquivalence}</p>
+                </div>
+
+                <div className="mt-6 pt-4 border-t border-[#d4af37]/15 flex items-center justify-between text-xs font-bold text-white">
+                  <span>Co-Sponsor Package</span>
+                  <ArrowRight size={14} className="text-[#d4af37]" />
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        <div className="mt-8 text-center">
+          <button
+            type="button"
+            onClick={() => {
+              setSelectedUnit(null);
+              setIsPledgeModalOpen(true);
+            }}
+            className="btn-silver-luxury rounded-xl px-6 py-3 text-xs font-mono uppercase tracking-wider text-[#cbd5e1] hover:text-white"
+          >
+            Or Sponsor A Custom Ecological Amount
+          </button>
+        </div>
+      </section>
+
+      {/* 8. INDIAN LEGAL RULES & HOW WE OPERATE CHARTER */}
+      <section id="legal-rules" className="mx-auto max-w-7xl px-6 pt-16">
+        <div className="rounded-3xl border border-[#d4af37]/35 bg-[#070a0e] p-6 sm:p-10 shadow-2xl space-y-6">
+          <div className="flex items-center gap-2">
+            <Scale size={20} className="text-[#d4af37]" />
+            <div>
+              <span className="font-sub-gold text-[10px] tracking-[0.25em] block uppercase text-[#fce096]">
+                Legal Transparency &amp; Compliance Under Indian Law
+              </span>
+              <h2 className="font-serif text-2xl sm:text-3xl text-white">
+                Can An Indian Company Take Donations? The Full Legal Truth
+              </h2>
+            </div>
+          </div>
+
+          <p className="text-xs sm:text-sm text-[#cbd5e1] leading-6">
+            At Bhumivera, we reject ambiguous corporate greenwashing. Indian corporate and tax jurisprudence creates clear, uncompromising rules regarding public money and environmental action. Here is how we comply 100%:
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+            {LEGAL_CHARTER_FRAMEWORK.rules.map(rule => (
+              <div
+                key={rule.id}
+                className="rounded-2xl border border-[#d4af37]/20 bg-[#102219]/30 p-6 space-y-3"
+              >
+                <div className="flex items-center justify-between">
+                  <h3 className="font-serif text-base font-bold text-white">{rule.title}</h3>
+                </div>
+                <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs font-semibold text-amber-200">
+                  {rule.shortAnswer}
+                </div>
+                <p className="text-xs text-[#cbd5e1] leading-5">{rule.fullExplanation}</p>
+                <div className="pt-2 border-t border-[#d4af37]/15 text-[11px] font-mono text-emerald-400 flex items-center gap-2">
+                  <CheckCircle2 size={13} className="shrink-0" />
+                  <span>{rule.implication}</span>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          <div className="rounded-2xl border border-emerald-500/30 bg-emerald-950/20 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="space-y-1">
+              <h4 className="font-serif text-sm font-bold text-white flex items-center gap-2">
+                <ShieldCheck size={16} className="text-emerald-400" />
+                The 2027 Bhumivera Earth Foundation Commitment
+              </h4>
+              <p className="text-xs text-[#cbd5e1]">
+                In 2027, our independent Section 8 not-for-profit company will offer direct 80G tax deductions for individual donors and receive corporate CSR-1 contributions.
+              </p>
+            </div>
+            <Link
+              to="/impact#ledger"
+              className="btn-gold-luxury rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shrink-0 text-center"
+            >
+              Inspect Public Ledger
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* 9. EXPLORE OTHER 2027 ENVIRONMENTAL CORRIDORS */}
+      <section className="mx-auto max-w-7xl px-6 pt-16">
+        <div className="flex items-center justify-between mb-8 pb-4 border-b border-[#d4af37]/20">
+          <div>
+            <span className="font-sub-gold text-[10px] tracking-[0.2em] uppercase text-[#fce096]">
+              2027 Ecological Roadmap
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl text-white">Explore Other Corridors</h2>
+          </div>
+          <Link
+            to="/impact#project-posters"
+            className="text-xs font-mono text-[#fce096] hover:underline flex items-center gap-1.5"
+          >
+            All 6 Megaprojects <ArrowRight size={13} />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+          {relatedProjects.map(rel => (
+            <Link
+              key={rel.id}
+              to={`/impact/${rel.slug}`}
+              className="group overflow-hidden rounded-2xl border border-[#d4af37]/25 bg-[#070a0e] transition-all hover:border-[#d4af37]/80 hover:shadow-2xl"
+            >
+              <div className="aspect-[16/10] overflow-hidden bg-[#070a0e]">
+                <img
+                  src={rel.posterImage}
+                  alt={rel.title}
+                  loading="lazy"
+                  className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
+                />
+              </div>
+              <div className="p-5 space-y-2">
+                <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[9px] font-mono uppercase text-emerald-400">
+                  {rel.phaseYear}
+                </span>
+                <h3 className="font-serif text-base font-bold text-white group-hover:text-[#fce096] transition-colors line-clamp-1">
+                  {rel.title}
+                </h3>
+                <p className="text-xs text-[#94a3b8] line-clamp-2">{rel.tagline}</p>
+              </div>
+            </Link>
+          ))}
+        </div>
+      </section>
+
+      {/* INTERACTIVE PLEDGE & CERTIFICATE MODAL */}
+      {isPledgeModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
+          <div className="relative w-full max-w-2xl rounded-3xl border border-[#d4af37]/50 bg-[#070a0e] p-6 sm:p-8 shadow-2xl my-8">
+            <button
+              type="button"
+              onClick={() => {
+                setIsPledgeModalOpen(false);
+                setPledgeSuccess(false);
+                setCertificateData(null);
+              }}
+              className="absolute top-5 right-5 text-[#94a3b8] hover:text-white text-xl font-bold font-mono"
+            >
+              ✕
+            </button>
+
+            {!pledgeSuccess ? (
+              <form onSubmit={handlePledgeSubmit} className="space-y-6">
+                <div>
+                  <div className="inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/30 bg-[#102219] px-3 py-1 text-[10px] font-mono text-[#fce096] uppercase mb-2">
+                    <Heart size={12} className="text-rose-400" /> Voluntary Ecological Co-Sponsorship
+                  </div>
+                  <h3 className="font-serif text-2xl font-bold text-white">
+                    Pledge Support for {project.title}
+                  </h3>
+                  <p className="mt-1 text-xs text-[#94a3b8]">
+                    Your voluntary pledge is ring-fenced 100% for on-ground botanical restoration in {project.targetLaunch || '2027'}. Zero administrative cut.
+                  </p>
+                </div>
+
+                {/* Amount Selection */}
+                <div className="space-y-3">
+                  <label className="block text-xs font-mono uppercase tracking-wider text-[#cbd5e1]">
+                    Select or Enter Co-Sponsorship Amount:
+                  </label>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                    {project.funding.unitPackages.map(pkg => (
+                      <button
+                        key={pkg.amount}
+                        type="button"
+                        onClick={() => {
+                          setSelectedUnit(pkg);
+                          setCustomAmount('');
+                        }}
+                        className={`rounded-xl border p-3 text-left transition-all ${
+                          selectedUnit?.amount === pkg.amount && !customAmount
+                            ? 'border-[#d4af37] bg-[#102219] text-[#fce096] shadow-md'
+                            : 'border-[#d4af37]/20 bg-[#070a0e] text-white hover:border-[#d4af37]/50'
+                        }`}
+                      >
+                        <div className="font-serif font-bold text-base">{formatInr(pkg.amount)}</div>
+                        <div className="text-[10px] font-mono text-[#94a3b8] truncate">{pkg.tag}</div>
+                      </button>
+                    ))}
+                  </div>
+
+                  <div className="pt-2">
+                    <div className="relative">
+                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-serif text-sm text-[#d4af37]">₹</span>
+                      <input
+                        type="number"
+                        min="50"
+                        step="50"
+                        placeholder="Or enter custom amount in INR"
+                        value={customAmount}
+                        onChange={e => {
+                          setCustomAmount(e.target.value);
+                          setSelectedUnit(null);
+                        }}
+                        className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] py-2.5 pl-8 pr-4 text-xs font-mono text-white placeholder-[#64748b] focus:border-[#d4af37] focus:outline-none"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Selected Impact Preview */}
+                <div className="rounded-xl border border-emerald-500/25 bg-emerald-950/20 p-3.5 text-xs text-[#cbd5e1] flex items-start gap-2.5">
+                  <Sparkles size={16} className="text-emerald-400 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-bold text-white">Your Tangible Field Impact: </span>
+                    {customAmount
+                      ? `Generates verified on-ground procurement equivalent to ${formatInr(customAmount)} of saplings, biochar, or river coir.`
+                      : selectedUnit?.impactEquivalence || 'Direct ecological restoration.'}
+                  </div>
+                </div>
+
+                {/* Patron Details */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-mono uppercase tracking-wider text-[#cbd5e1] mb-1">
+                      Patron Full Name *
+                    </label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g., Ananya Sharma"
+                      value={patronName}
+                      onChange={e => setPatronName(e.target.value)}
+                      className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white placeholder-[#64748b] focus:border-[#d4af37] focus:outline-none"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-mono uppercase tracking-wider text-[#cbd5e1] mb-1">
+                      Email Address (For Certificate) *
+                    </label>
+                    <input
+                      type="email"
+                      required
+                      placeholder="e.g., ananya@example.com"
+                      value={patronEmail}
+                      onChange={e => setPatronEmail(e.target.value)}
+                      className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white placeholder-[#64748b] focus:border-[#d4af37] focus:outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-mono uppercase tracking-wider text-[#cbd5e1] mb-1">
+                    Optional Nature Dedication (Printed on Certificate)
+                  </label>
+                  <input
+                    type="text"
+                    maxLength={100}
+                    placeholder="e.g., In honor of my grandmother, for clean rivers, or for native bees."
+                    value={dedicationMessage}
+                    onChange={e => setDedicationMessage(e.target.value)}
+                    className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white placeholder-[#64748b] focus:border-[#d4af37] focus:outline-none"
+                  />
+                </div>
+
+                {/* Legal Disclaimer Box */}
+                <div className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e] p-3 text-[11px] text-[#94a3b8] leading-5 space-y-1">
+                  <p className="flex items-center gap-1.5 font-bold text-amber-300">
+                    <Info size={13} /> Legal &amp; Fiscal Notice Under Indian Law:
+                  </p>
+                  <p>
+                    Bhumivera is a commercial botanical enterprise. This is a 100% voluntary ecological co-sponsorship / green pledge to procure verified botanical restoration goods. It is NOT an 80G tax-exempt charitable donation. 100% goes directly to field execution with 0% administrative deductions.
+                  </p>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsPledgeModalOpen(false)}
+                    className="rounded-xl border border-[#d4af37]/30 px-5 py-2.5 text-xs font-mono text-[#cbd5e1] hover:text-white"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-gold-luxury rounded-xl px-7 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-xl hover:scale-105 transition-transform"
+                  >
+                    Issue Stewardship Certificate
+                  </button>
+                </div>
+              </form>
+            ) : (
+              /* CERTIFICATE DISPLAY */
+              <div className="space-y-6 text-center">
+                <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 mb-1">
+                  <Award size={26} />
+                </div>
+                <h3 className="font-serif text-2xl sm:text-3xl font-bold text-white">
+                  Stewardship Certificate Issued
+                </h3>
+                <p className="text-xs text-[#cbd5e1] max-w-md mx-auto">
+                  Thank you, <strong className="text-[#fce096]">{certificateData?.name}</strong>. Your co-sponsorship pledge is recorded in our verifiable ledger registry.
+                </p>
+
+                {/* Styled Verifiable Certificate Frame */}
+                <div
+                  id="bhumivera-certificate"
+                  className="rounded-3xl border-2 border-[#d4af37] bg-gradient-to-b from-[#102219] via-[#070a0e] to-[#102219] p-6 sm:p-8 text-left shadow-2xl relative overflow-hidden"
+                >
+                  <div className="flex items-center justify-between border-b border-[#d4af37]/30 pb-4 mb-4">
+                    <div className="flex items-center gap-2">
+                      <Leaf size={18} className="text-[#d4af37]" />
+                      <span className="font-serif font-bold text-base tracking-widest text-white uppercase">
+                        Bhumivera Botanical Stewardship
+                      </span>
+                    </div>
+                    <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
+                      Verifiable Audit Record
+                    </span>
+                  </div>
+
+                  <div className="space-y-4">
+                    <div>
+                      <span className="text-[10px] font-mono uppercase tracking-widest text-[#94a3b8] block">
+                        Patron Certificate of Ecological Co-Sponsorship
+                      </span>
+                      <h4 className="font-serif text-2xl font-bold text-[#fce096] mt-0.5">
+                        {certificateData?.name}
+                      </h4>
+                    </div>
+
+                    <p className="text-xs text-[#e2e8f0] leading-6">
+                      Has co-sponsored the on-ground botanical restoration of{' '}
+                      <strong className="text-white">{certificateData?.projectTitle}</strong> in the amount of{' '}
+                      <strong className="text-[#fce096]">{formatInr(certificateData?.amount)}</strong>.
+                    </p>
+
+                    <div className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e]/80 p-3 text-xs text-[#cbd5e1]">
+                      <span className="font-mono text-[10px] uppercase text-[#94a3b8] block mb-0.5">
+                        Allocated Field Equivalency:
+                      </span>
+                      <span>{certificateData?.impactEquivalence}</span>
+                    </div>
+
+                    {certificateData?.dedication && (
+                      <p className="font-serif italic text-xs text-[#fce096] border-l-2 border-[#d4af37] pl-3 py-0.5">
+                        Dedication: "{certificateData.dedication}"
+                      </p>
+                    )}
+
+                    <div className="grid grid-cols-2 gap-4 pt-3 border-t border-[#d4af37]/20 text-[10px] font-mono text-[#94a3b8]">
+                      <div>
+                        <span className="block uppercase">Audit Certificate ID:</span>
+                        <span className="text-white font-bold">{certificateData?.code}</span>
+                      </div>
+                      <div className="text-right">
+                        <span className="block uppercase">Issued Date:</span>
+                        <span className="text-white font-bold">{certificateData?.date}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center gap-4 pt-2">
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="btn-gold-luxury inline-flex items-center gap-2 rounded-xl px-6 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-xl"
+                  >
+                    <Download size={14} /> Print / Save Certificate
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPledgeModalOpen(false);
+                      setPledgeSuccess(false);
+                      setCertificateData(null);
+                    }}
+                    className="rounded-xl border border-[#d4af37]/40 px-6 py-3 text-xs font-mono uppercase text-[#cbd5e1] hover:text-white"
+                  >
+                    Close Window
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+    </main>
+  );
+}

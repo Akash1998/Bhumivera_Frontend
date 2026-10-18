@@ -111,6 +111,7 @@ const PurchaseProtection = lazyWithRetry(() => import("./pages/PurchaseProtectio
 const Affiliate = lazyWithRetry(() => import("./pages/Affiliate.jsx"));
 const About = lazyWithRetry(() => import("./pages/About.jsx"));
 const Impact = lazyWithRetry(() => import("./pages/Impact.jsx"));
+const ImpactProjectDetail = lazyWithRetry(() => import("./pages/ImpactProjectDetail.jsx"));
 const Legal = lazyWithRetry(() => import("./pages/Legal.jsx"));
 const BhumiveraScience = lazyWithRetry(() => import("./pages/BhumiveraScience.jsx"));
 const MPGEBusinessLanding = lazyWithRetry(() => import("./pages/MPGEBusinessLanding.jsx"));
@@ -343,7 +344,8 @@ function AppContent() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
             <Route path="/impact" element={<Impact />} />
-            <Route path="/impact/:imageId" element={<main className="min-h-screen bg-[#070a0e]" aria-label="Impact image detail page" />} />
+            <Route path="/impact/:imageId" element={<ImpactProjectDetail />} />
+            <Route path="/impact/project/:projectId" element={<ImpactProjectDetail />} />
             <Route path="/legal" element={<Legal />} />
             <Route path="/legal/:sectionSlug" element={<Legal />} />
             
