@@ -43,41 +43,42 @@ export default function Impact() {
   const totalContributions = ledger.totals.reduce((sum, row) => sum + Number(row.contributions || 0), 0);
 
   return (
-    <main className="min-h-screen bg-[#101a17] text-[#f0eee7] pb-20">
+    <main className="min-h-screen bg-[#070a0e] text-[#e2e8f0] pb-24 font-sans selection:bg-[#d4af37]/30 selection:text-white">
       <SEO
         title="Our Impact & Public Stewardship Ledger | Bhumivera"
         description="Inspect Bhumivera's receipt-reconciled environmental stewardship ledger, native sapling nursery records, and riparian watershed field notes."
         route="/impact"
       />
-      <section className="relative isolate min-h-[68svh] overflow-hidden border-b border-white/10">
+      <section className="relative isolate min-h-[68svh] overflow-hidden border-b border-[#d4af37]/20 bg-[#070a0e]">
         <div className="absolute inset-0 -z-20 h-full w-full">
           <img
             src={IMPACT_PAGE_DATA.heroImage}
             alt="Bhumivera native sapling nursery and environmental stewardship"
-            className="h-full w-full object-cover object-center opacity-50"
+            className="h-full w-full object-cover object-center opacity-30"
           />
         </div>
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#0a100e]/95 via-[#0a100e]/70 to-[#0a100e]/25" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#070a0e]/95 via-[#070a0e]/80 to-[#070a0e]/40" />
         <div className="mx-auto flex min-h-[68svh] max-w-7xl flex-col justify-end px-6 pb-14 pt-32 md:pb-20">
-          <p className="mb-4 flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.24em] text-[#b4c68a]">
-            <Leaf size={15} /> Bhumivera · Public Stewardship Ledger
+          <p className="mb-4 flex items-center gap-2 font-sub-gold text-xs tracking-[0.24em]">
+            <Leaf size={15} className="text-[#d4af37]" /> Bhumivera · Public Stewardship Ledger
           </p>
-          <h1 className="max-w-4xl font-serif text-5xl leading-[1.04] md:text-7xl">
-            Care should leave a verifiable record.
+          <h1 className="max-w-4xl font-serif text-4xl sm:text-6xl md:text-7xl leading-[1.04] text-white">
+            <span className="font-headline-gold">Care Should Leave</span> <span className="font-headline-silver">A Verifiable Record.</span>
           </h1>
-          <p className="mt-5 max-w-xl text-base leading-7 text-white/75 md:text-lg">
+          <div className="gold-hairline my-5 max-w-xs" />
+          <p className="mt-4 max-w-xl text-base leading-7 text-[#cbd5e1] md:text-lg">
             Every environmental pledge, cash reconciliation receipt, and on-ground field photograph is logged transparently in our public ledger.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
             <a
               href="#ledger"
-              className="inline-flex items-center gap-2 rounded-xl bg-[#c2d09f] px-6 py-3 text-xs font-bold uppercase tracking-widest text-[#101a17]"
+              className="btn-gold-luxury inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-xs font-bold uppercase tracking-widest text-white shadow-xl"
             >
               Inspect Reconciled Ledger <ArrowDownRight size={16} />
             </a>
             <Link
               to="/shop"
-              className="inline-flex items-center gap-2 rounded-xl border border-white/25 px-6 py-3 text-xs font-bold uppercase tracking-widest text-white hover:bg-white/10"
+              className="btn-silver-luxury inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-xs font-semibold uppercase tracking-widest text-[#cbd5e1]"
             >
               Explore the Collection <ArrowRight size={15} />
             </Link>
@@ -88,41 +89,41 @@ export default function Impact() {
       {/* RECONCILED TOTALS & 3 FOCUS AREAS */}
       <section id="ledger" className="mx-auto max-w-7xl px-6 py-16 md:py-24">
         <div className="grid gap-10 lg:grid-cols-[0.85fr_1.15fr] items-start">
-          <div className="rounded-3xl border border-white/15 bg-white/[0.03] p-8">
-            <p className="text-xs font-bold uppercase tracking-[0.2em] text-[#b4c68a]">Reconciled Public Totals</p>
-            <h2 className="mt-3 font-serif text-3xl leading-tight">
+          <div className="rounded-3xl two-tone-panel-gold border border-[#d4af37]/40 p-8 shadow-2xl">
+            <p className="font-sub-gold text-xs tracking-[0.2em]">Reconciled Public Totals</p>
+            <h2 className="mt-3 font-serif text-3xl leading-tight text-white">
               No impact claim without a receipt and a field photograph.
             </h2>
-            <div className="mt-8 grid grid-cols-2 gap-4 border-y border-white/10 py-6">
+            <div className="mt-8 grid grid-cols-2 gap-4 border-y border-[#d4af37]/25 py-6">
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-widest text-white/55">Reconciled Amount</p>
-                <p className="mt-1 font-serif text-4xl text-[#c2d09f]">{money(totalCollected)}</p>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[#94a3b8]">Reconciled Amount</p>
+                <p className="mt-1 font-serif text-4xl font-bold text-[#fce096]">{money(totalCollected)}</p>
               </div>
               <div>
-                <p className="font-mono text-[10px] uppercase tracking-widest text-white/55">Verified Receipts</p>
-                <p className="mt-1 font-serif text-4xl text-white">{totalContributions}</p>
+                <p className="font-mono text-[10px] uppercase tracking-widest text-[#94a3b8]">Verified Receipts</p>
+                <p className="mt-1 font-serif text-4xl font-bold text-white">{totalContributions}</p>
               </div>
             </div>
-            <p className="mt-5 text-xs leading-6 text-white/65">
+            <p className="mt-5 text-xs leading-6 text-[#cbd5e1]">
               Contributions added to orders begin as pledges and enter these totals only after delivery and collection reconciliation.
             </p>
           </div>
 
           <div className="grid gap-6 sm:grid-cols-3">
             {IMPACT_PAGE_DATA.projects.map((project) => (
-              <article key={project.id} className="overflow-hidden rounded-2xl border border-white/15 bg-[#15231e] flex flex-col">
-                <div className="aspect-[4/3] w-full overflow-hidden">
-                  <img src={project.image} alt={project.title} loading="lazy" className="h-full w-full object-cover" />
+              <article key={project.id} className="overflow-hidden rounded-2xl two-tone-card border border-[#d4af37]/25 shadow-lg flex flex-col hover:border-[#d4af37]/60 transition-all">
+                <div className="aspect-[4/3] w-full overflow-hidden bg-[#070a0e]">
+                  <img src={project.image} alt={project.title} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 hover:scale-105" />
                 </div>
                 <div className="p-5 flex-1 flex flex-col justify-between">
                   <div>
-                    <span className="font-mono text-[9px] font-bold uppercase tracking-widest text-[#b4c68a]">
+                    <span className="font-sub-gold text-[9px] tracking-widest block">
                       {project.location}
                     </span>
-                    <h3 className="mt-2 font-serif text-xl text-white">{project.title}</h3>
-                    <p className="mt-2 text-xs leading-6 text-white/70">{project.copy}</p>
+                    <h3 className="mt-2 font-serif text-xl font-bold text-white">{project.title}</h3>
+                    <p className="mt-2 text-xs leading-6 text-[#cbd5e1]">{project.copy}</p>
                   </div>
-                  <p className="mt-4 border-t border-white/10 pt-3 font-mono text-[10px] text-[#c2d09f]">
+                  <p className="mt-4 border-t border-[#d4af37]/15 pt-3 font-mono text-[10px] font-bold text-[#fce096]">
                     {project.metric}
                   </p>
                 </div>
@@ -134,12 +135,12 @@ export default function Impact() {
 
       {/* REAL-LIFE VERIFIED FIELD JOURNAL ENTRIES */}
       <section className="mx-auto max-w-7xl px-6 pb-16">
-        <div className="mb-8 border-b border-white/10 pb-5">
-          <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#b4c68a]">
+        <div className="mb-8 border-b border-[#d4af37]/20 pb-5">
+          <span className="font-sub-gold text-[10px] tracking-[0.2em] block">
             On-Ground Documentation
           </span>
-          <h2 className="mt-2 font-serif text-3xl sm:text-4xl">
-            Verified Field Journal &amp; Photographic Proof
+          <h2 className="mt-2 font-serif text-3xl sm:text-4xl text-white">
+            <span className="font-headline-gold">Verified Field Journal</span> <span className="font-headline-silver">&amp; Photographic Proof</span>
           </h2>
         </div>
 
@@ -147,26 +148,26 @@ export default function Impact() {
           {ledger.updates.map((update, idx) => {
             const fallbackPhoto = IMPACT_PAGE_DATA.realLifeFieldNotes[idx % IMPACT_PAGE_DATA.realLifeFieldNotes.length].photo_url;
             return (
-              <article key={update.id || idx} className="overflow-hidden rounded-2xl border border-white/15 bg-[#15231e] flex flex-col">
-                <div className="aspect-[16/10] w-full overflow-hidden bg-black">
+              <article key={update.id || idx} className="overflow-hidden rounded-2xl two-tone-card border border-[#d4af37]/25 shadow-lg flex flex-col hover:border-[#d4af37]/60 transition-all">
+                <div className="aspect-[16/10] w-full overflow-hidden bg-[#070a0e]">
                   <img
                     src={update.photo_url || fallbackPhoto}
                     alt={update.title}
                     loading="lazy"
-                    className="h-full w-full object-cover"
+                    className="h-full w-full object-cover transition-transform duration-700 hover:scale-105"
                   />
                 </div>
                 <div className="p-6 flex-1 flex flex-col justify-between">
                   <div>
-                    <div className="flex items-center justify-between text-[10px] font-mono text-[#b4c68a]">
+                    <div className="flex items-center justify-between text-[10px] font-mono text-[#fce096]">
                       <span>{update.field_date || '2026-10'}</span>
                       <span>{update.location || 'West Bengal Field Site'}</span>
                     </div>
-                    <h3 className="mt-2 font-serif text-xl text-white">{update.title}</h3>
-                    <p className="mt-2 text-xs leading-6 text-white/75">{update.summary}</p>
+                    <h3 className="mt-2 font-serif text-xl font-bold text-white">{update.title}</h3>
+                    <p className="mt-2 text-xs leading-6 text-[#cbd5e1]">{update.summary}</p>
                   </div>
-                  <div className="mt-4 border-t border-white/10 pt-3 text-[11px] text-emerald-300 flex items-center gap-1.5">
-                    <ShieldCheck size={14} /> {update.verified_by || 'Verified Field Record'}
+                  <div className="mt-4 border-t border-[#d4af37]/15 pt-3 text-[11px] text-[#fce096] flex items-center gap-1.5 font-semibold">
+                    <ShieldCheck size={14} className="text-[#d4af37]" /> {update.verified_by || 'Verified Field Record'}
                   </div>
                 </div>
               </article>
@@ -177,25 +178,25 @@ export default function Impact() {
 
       {/* FAQ + CHARTER IMAGE */}
       <section className="mx-auto max-w-7xl px-6 pt-6">
-        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] items-center rounded-3xl border border-white/15 bg-[#15231e] p-8">
+        <div className="grid gap-10 lg:grid-cols-[0.9fr_1.1fr] items-center rounded-3xl two-tone-card border border-[#d4af37]/35 p-8 shadow-2xl">
           <img
             src={IMPACT_PAGE_DATA.charterImage}
             alt="Riparian watershed and botanical care"
-            className="aspect-[16/10] w-full rounded-2xl object-cover"
+            className="aspect-[16/10] w-full rounded-2xl object-cover border border-[#d4af37]/25"
           />
           <div className="space-y-3">
-            <h2 className="font-serif text-2xl sm:text-3xl">Stewardship Governance Questions</h2>
+            <h2 className="font-serif text-2xl sm:text-3xl text-white">Stewardship Governance Questions</h2>
             {impactQuestions.map(([q, a], idx) => (
-              <div key={q} className="rounded-xl border border-white/10 bg-black/25 p-4">
+              <div key={q} className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e] p-4 transition-all">
                 <button
                   type="button"
                   onClick={() => setOpenFaq(openFaq === idx ? -1 : idx)}
-                  className="flex w-full items-center justify-between text-left text-sm font-semibold text-white"
+                  className="flex w-full items-center justify-between text-left text-sm font-semibold text-white hover:text-[#fce096]"
                 >
                   <span>{q}</span>
-                  <span>{openFaq === idx ? '−' : '+'}</span>
+                  <span className="text-[#d4af37] font-bold text-base">{openFaq === idx ? '−' : '+'}</span>
                 </button>
-                {openFaq === idx && <p className="mt-2 text-xs leading-6 text-white/70">{a}</p>}
+                {openFaq === idx && <p className="mt-2 text-xs leading-6 text-[#cbd5e1]">{a}</p>}
               </div>
             ))}
           </div>

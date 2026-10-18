@@ -41,20 +41,24 @@ function ModuleLoadError({ error }) {
   }, [error]);
 
   return (
-    <section className="flex min-h-[60vh] flex-col items-center justify-center bg-[#f4f2eb] px-6 text-center text-[#1c2922]">
-      <p className="text-xs font-semibold uppercase tracking-[0.22em] text-[#607552]">Bhumivera</p>
-      <h1 className="mt-4 max-w-xl font-serif text-3xl md:text-4xl">A fresh connection is needed</h1>
-      <p className="mt-3 max-w-md text-sm leading-6 text-stone-600">
+    <section className="flex min-h-[60vh] flex-col items-center justify-center bg-[#070a0e] px-6 text-center text-[#e2e8f0]">
+      <p className="font-sub-gold uppercase tracking-[0.26em] text-xs font-bold">Bhumivera Luxury Botanical</p>
+      <h1 className="mt-4 max-w-xl font-serif text-3xl md:text-4xl font-bold">
+        <span className="font-headline-gold">A Fresh Connection</span>{' '}
+        <span className="font-headline-silver">Is Required</span>
+      </h1>
+      <div className="gold-hairline w-24 mx-auto my-3" />
+      <p className="mt-2 max-w-md text-sm leading-6 text-[#cbd5e1] font-light">
         {isOnline
-          ? 'This page could not be loaded. Refresh to get the latest version and try again.'
-          : 'This page could not be loaded while you are offline. Reconnect to the internet, then try again.'}
+          ? 'This formulation experience could not be loaded. Refresh to load the latest release and resume.'
+          : 'This formulation experience could not be loaded while offline. Reconnect to resume.'}
       </p>
       <button
         type="button"
         onClick={reloadLatestBuild}
-        className="mt-7 bg-[#1c2922] px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-[#35533c] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#607552]"
+        className="btn-gold-luxury mt-7 px-7 py-3 text-xs font-semibold uppercase tracking-wider text-white"
       >
-        {isOnline ? 'Refresh page' : 'Try again'}
+        {isOnline ? 'Refresh Experience' : 'Retry Connection'}
       </button>
     </section>
   );
@@ -125,8 +129,8 @@ const EWarranty = lazyWithRetry(() => import("./pages/EWarranty.jsx"));
 const SellOnBhumivera = lazyWithRetry(() => import("./pages/SellOnBhumivera.jsx"));
 
 const PageLoader = () => (
-  <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center">
-    <div className="w-12 h-12 border-4 border-[#D4AF37]/20 border-t-[#0B2419] rounded-full animate-spin"></div>
+  <div className="min-h-screen bg-[#070a0e] flex items-center justify-center">
+    <div className="w-12 h-12 border-4 border-[#d4af37]/20 border-t-[#d4af37] rounded-full animate-spin"></div>
   </div>
 );
 

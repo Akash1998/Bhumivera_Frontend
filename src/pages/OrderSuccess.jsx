@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
-import { ArrowRight, Check, Gift, Leaf, LoaderCircle, PackageCheck } from 'lucide-react';
+import { ArrowRight, Check, Gift, Leaf, LoaderCircle, PackageCheck, Sparkles } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
 import { gamification as gamificationApi, orders as ordersApi } from '../services/api';
 import { formatOrderNumber } from '../utils/formatOrderNumber';
@@ -77,72 +77,188 @@ export default function OrderSuccess() {
   const contribution = Number(order?.impact_amount || 0);
 
   return (
-    <main className="min-h-[80svh] bg-[#f3f1e8] px-5 py-16 text-[#1a261e] md:py-24">
+    <main className="min-h-[85svh] bg-[#070a0e] px-4 sm:px-6 lg:px-8 py-16 md:py-24 text-[#e2e8f0] font-sans">
       <div className="mx-auto max-w-4xl">
-        <div className="flex items-start gap-5 border-b border-[#263d31]/20 pb-8">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center bg-[#233c2f] text-[#dce6c5]"><Check size={23}/></span>
-          <div><p className="text-xs font-bold uppercase tracking-[0.2em] text-[#536b4d]">Order received</p><h1 className="mt-2 font-serif text-4xl md:text-5xl">Thank you for choosing with care.</h1><p className="mt-3 max-w-xl text-sm leading-6 text-stone-600">Your order is being prepared. The full order and payment details are available in your account.</p></div>
+        <div className="flex items-start gap-5 border-b border-[#d4af37]/20 pb-8">
+          <span className="flex h-13 w-13 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#d4af37] via-[#fce096] to-[#b38728] text-[#070a0e] shadow-lg shadow-[#d4af37]/20">
+            <Check size={24} strokeWidth={2.5} />
+          </span>
+          <div>
+            <p className="font-sub-gold text-xs font-semibold uppercase tracking-[0.26em]">
+              Order Confirmed &amp; In Cleanroom Queue
+            </p>
+            <h1 className="mt-2 font-serif text-3xl sm:text-5xl tracking-tight">
+              <span className="font-headline-gold">Thank You</span>{' '}
+              <span className="font-headline-silver">for Choosing Pure Botanical Care</span>
+            </h1>
+            <div className="gold-hairline w-28 my-3" />
+            <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#cbd5e1] font-light">
+              Your formulation is being precision-allocated. Complete order verification and delivery milestones have been registered to your profile.
+            </p>
+          </div>
         </div>
 
-        {!spinDismissed && spinStatus !== 'loading' && spinStatus !== 'disabled' && <section className="mt-8 rounded-2xl border border-[#cbd8bd] bg-[#fbfaf5] p-5 shadow-sm sm:p-7" aria-live="polite">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div className="flex items-start gap-3">
-              <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#e8efdf] text-[#35533c]"><Gift size={20}/></span>
-              <div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#526b4d]">A little thank-you</p><h2 className="mt-1 font-serif text-2xl text-[#14251c]">{spinClaim ? 'Your reward is ready' : 'Your order comes with a reward spin'}</h2><p className="mt-1 max-w-xl text-sm leading-5 text-stone-600">Spin once to reveal a personal offer, free delivery, or loyalty points for a future order.</p></div>
-            </div>
-            <button type="button" onClick={() => setSpinDismissed(true)} className="rounded-full border border-[#d9dfd2] bg-white p-2 text-[#526b4d] hover:bg-[#f3f7ed]" aria-label="Close reward spin"><span aria-hidden="true">×</span></button>
-          </div>
-          {!spinClaim && <div className="mt-6 flex flex-col items-center gap-5 sm:flex-row sm:justify-center">
-            <div className="relative h-40 w-40 shrink-0 rounded-full border-[6px] border-[#14251c] shadow-lg">
-              <Motion.div
-                className="h-full w-full rounded-full"
-                style={{ background: 'conic-gradient(#d9e5c8 0deg 58deg,#526b4d 60deg 118deg,#e5d7b8 120deg 178deg,#82956e 180deg 238deg,#f0e9d9 240deg 298deg,#294434 300deg 358deg,#d9e5c8 360deg)' }}
-                animate={{ rotate: spinRotation }}
-                transition={{ duration: 4, ease: 'easeOut' }}
-              />
-              <span className="absolute inset-0 m-auto flex h-12 w-12 items-center justify-center rounded-full border-4 border-[#14251c] bg-[#fbfaf5] text-[#526b4d]"><Gift size={18}/></span>
-              <span className="absolute -top-3 left-1/2 -translate-x-1/2 border-x-[9px] border-b-[14px] border-x-transparent border-b-[#d4af37]" aria-hidden="true"/>
-            </div>
-            <div className="max-w-sm text-center sm:text-left">
-              <button type="button" onClick={spinForReward} disabled={spinning} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#14251c] px-6 py-3 text-sm font-bold uppercase tracking-wider text-white shadow-md transition hover:bg-[#294434] disabled:cursor-wait disabled:opacity-70">
-                {spinning ? <><LoaderCircle size={17} className="animate-spin"/>Spinning…</> : <>Spin for my reward <ArrowRight size={16}/></>}
+        {!spinDismissed && spinStatus !== 'loading' && spinStatus !== 'disabled' && (
+          <section className="mt-8 two-tone-panel-gold rounded-2xl p-6 sm:p-8 shadow-2xl" aria-live="polite">
+            <div className="flex flex-wrap items-start justify-between gap-3">
+              <div className="flex items-start gap-3">
+                <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#d4af37]/15 border border-[#d4af37]/35 text-[#d4af37]">
+                  <Gift size={20} />
+                </span>
+                <div>
+                  <p className="font-sub-gold text-xs font-semibold uppercase tracking-[0.2em]">
+                    Artisanal Appreciation
+                  </p>
+                  <h2 className="mt-1 font-serif text-2xl text-white">
+                    {spinClaim ? 'Your reward is ready' : 'Your order unlocked a reward spin'}
+                  </h2>
+                  <p className="mt-1 max-w-xl text-xs sm:text-sm leading-relaxed text-[#cbd5e1] font-light">
+                    Spin once to reveal an exclusive reward, complimentary priority shipping, or tier credits for your next ritual.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setSpinDismissed(true)}
+                className="w-8 h-8 rounded-full border border-[#cbd5e1]/20 bg-white/5 text-[#cbd5e1] hover:bg-white/10 flex items-center justify-center text-sm transition-colors"
+                aria-label="Close reward spin"
+              >
+                <span aria-hidden="true">&times;</span>
               </button>
-              {spinError && <p role="alert" className="mt-3 text-sm text-rose-700">{spinError}</p>}
             </div>
-          </div>}
-          {spinClaim && <div className="mt-5 rounded-xl border border-emerald-200 bg-emerald-50 p-4 text-emerald-950">
-            <p className="text-sm font-extrabold">You won: {spinClaim.reward}</p>
-            {spinClaim.rewardType === 'points'
-              ? <p className="mt-1 text-sm">{spinClaim.pointsAwarded} loyalty points have been added to your account.</p>
-              : <p className="mt-1 text-sm">Your personal reward code is <code className="rounded bg-white px-2 py-1 font-mono font-bold">{spinClaim.couponCode}</code></p>}
-            <p className="mt-2 text-xs text-emerald-800">{spinClaim.rewardType === 'points' ? 'Your updated points balance is available in your profile.' : 'Find your spin reward in Coupons & offers when you open your next cart. This reward is account-specific.'}</p>
-          </div>}
-        </section>}
 
-        <section className="grid gap-10 py-9 md:grid-cols-[1fr_auto]">
+            {!spinClaim && (
+              <div className="mt-8 flex flex-col items-center gap-6 sm:flex-row sm:justify-center">
+                <div className="relative h-44 w-44 shrink-0 rounded-full border-[6px] border-[#d4af37]/40 shadow-2xl">
+                  <Motion.div
+                    className="h-full w-full rounded-full"
+                    style={{
+                      background: 'conic-gradient(#d4af37 0deg 58deg, #101a26 60deg 118deg, #fce096 120deg 178deg, #0d1520 180deg 238deg, #cbd5e1 240deg 298deg, #070a0e 300deg 358deg, #d4af37 360deg)'
+                    }}
+                    animate={{ rotate: spinRotation }}
+                    transition={{ duration: 4, ease: 'easeOut' }}
+                  />
+                  <span className="absolute inset-0 m-auto flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#d4af37] bg-[#070a0e] text-[#d4af37] shadow-md">
+                    <Sparkles size={18} />
+                  </span>
+                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 border-x-[9px] border-b-[14px] border-x-transparent border-b-[#d4af37]" aria-hidden="true" />
+                </div>
+                <div className="max-w-sm text-center sm:text-left">
+                  <button
+                    type="button"
+                    onClick={spinForReward}
+                    disabled={spinning}
+                    className="btn-gold-luxury inline-flex min-h-12 items-center justify-center gap-2 px-6 py-3 text-xs font-semibold uppercase tracking-wider rounded-xl shadow-lg disabled:cursor-wait disabled:opacity-70"
+                  >
+                    {spinning ? (
+                      <>
+                        <LoaderCircle size={17} className="animate-spin text-[#070a0e]" />
+                        Spinning…
+                      </>
+                    ) : (
+                      <>
+                        Spin for My Reward <ArrowRight size={15} />
+                      </>
+                    )}
+                  </button>
+                  {spinError && <p role="alert" className="mt-3 text-xs text-rose-400 font-medium">{spinError}</p>}
+                </div>
+              </div>
+            )}
+
+            {spinClaim && (
+              <div className="mt-6 rounded-xl border border-[#d4af37]/35 bg-[#070a0e]/80 p-5 text-white">
+                <p className="text-sm font-serif font-bold text-[#fce096] uppercase tracking-wide">
+                  You won: {spinClaim.reward}
+                </p>
+                {spinClaim.rewardType === 'points' ? (
+                  <p className="mt-1.5 text-xs text-[#cbd5e1] font-light">
+                    {spinClaim.pointsAwarded} loyalty points have been credited to your member balance.
+                  </p>
+                ) : (
+                  <p className="mt-1.5 text-xs text-[#cbd5e1] font-light">
+                    Your personal reward voucher code:{' '}
+                    <code className="rounded bg-[#d4af37]/20 border border-[#d4af37]/40 text-[#fce096] px-2 py-0.5 font-mono font-bold">
+                      {spinClaim.couponCode}
+                    </code>
+                  </p>
+                )}
+                <p className="mt-2 text-[11px] text-[#94a3b8]">
+                  {spinClaim.rewardType === 'points'
+                    ? 'Your updated loyalty credits are active now in your profile dashboard.'
+                    : 'Find your spin voucher automatically linked during your next checkout.'}
+                </p>
+              </div>
+            )}
+          </section>
+        )}
+
+        <section className="two-tone-card rounded-2xl p-6 sm:p-8 my-8 border border-[#d4af37]/20 grid gap-6 md:grid-cols-[1fr_auto]">
           <div>
-            <p className="text-xs font-bold uppercase tracking-widest text-stone-500">Order reference</p>
-            <p className="mt-2 font-mono text-2xl">#{formatOrderNumber(order?.order_number || order?.id || orderId)}</p>
-            {order?.payment_mode && <p className="mt-3 text-sm text-stone-600">Payment: {order.payment_mode === 'COD' ? 'Cash on delivery' : order.payment_mode}</p>}
-            {loading && <p className="mt-3 text-xs text-stone-500">Loading saved order details…</p>}
+            <p className="font-sub-gold text-[10px] font-semibold uppercase tracking-[0.24em]">
+              Order Reference
+            </p>
+            <p className="mt-1.5 font-mono text-2xl text-white font-bold">
+              #{formatOrderNumber(order?.order_number || order?.id || orderId)}
+            </p>
+            {order?.payment_mode && (
+              <p className="mt-2 text-xs text-[#cbd5e1] font-light">
+                Payment Method: <span className="text-white font-medium">{order.payment_mode === 'COD' ? 'Cash on Delivery' : order.payment_mode}</span>
+              </p>
+            )}
+            {loading && <p className="mt-2 text-xs text-[#94a3b8] animate-pulse">Retrieving order confirmation details…</p>}
           </div>
-          <div className="min-w-48 border-l border-[#263d31]/20 pl-6">
-            <p className="text-xs font-bold uppercase tracking-widest text-stone-500">Order total</p>
-            <p className="mt-2 font-serif text-3xl">{order ? `₹${Number(order.total || 0).toLocaleString('en-IN')}` : '—'}</p>
+          <div className="md:border-l md:border-[#d4af37]/20 md:pl-8 flex flex-col justify-center">
+            <p className="font-sub-gold text-[10px] font-semibold uppercase tracking-[0.24em]">
+              Total Payable
+            </p>
+            <p className="mt-1 font-serif text-3xl font-bold text-white">
+              {order ? `₹${Number(order.total || 0).toLocaleString('en-IN')}` : '—'}
+            </p>
           </div>
         </section>
 
-        {contribution > 0 && <section className="border-y border-[#536b4d]/25 py-6" aria-live="polite">
-          <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
-            <div className="flex items-start gap-3"><Leaf size={20} className="mt-1 shrink-0 text-[#536b4d]"/><div><p className="text-xs font-bold uppercase tracking-[0.16em] text-[#536b4d]">Cause contribution</p><h2 className="mt-1 font-serif text-2xl">₹{contribution.toLocaleString('en-IN')} · {projectNames[order.impact_project] || 'Selected focus'}</h2><p className="mt-2 max-w-xl text-sm leading-6 text-stone-600">This was added to the cash due on delivery. It remains a pledge until collection is reconciled; it is not yet counted as a donation.</p></div></div>
-            <span className={`w-fit border px-3 py-2 text-xs font-semibold uppercase tracking-widest ${order.impact_status === 'collected' ? 'border-emerald-800/30 text-emerald-900' : 'border-amber-800/30 text-amber-900'}`}><PackageCheck size={14} className="mr-2 inline"/>{order.impact_status || 'pledged'}</span>
-          </div>
-          <Link to="/impact" className="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#35533c] underline underline-offset-4">View the public impact ledger <ArrowRight size={15}/></Link>
-        </section>}
+        {contribution > 0 && (
+          <section className="two-tone-panel rounded-2xl p-6 my-6 border border-[#d4af37]/20" aria-live="polite">
+            <div className="flex flex-col justify-between gap-4 sm:flex-row sm:items-center">
+              <div className="flex items-start gap-3">
+                <Leaf size={20} className="mt-1 shrink-0 text-[#d4af37]" />
+                <div>
+                  <p className="font-sub-gold text-[10px] font-semibold uppercase tracking-[0.2em]">
+                    Artisanal Impact Contribution
+                  </p>
+                  <h2 className="mt-1 font-serif text-xl text-white">
+                    ₹{contribution.toLocaleString('en-IN')} &bull; {projectNames[order.impact_project] || 'Restoration Initiative'}
+                  </h2>
+                  <p className="mt-1.5 max-w-xl text-xs leading-relaxed text-[#cbd5e1] font-light">
+                    Direct pledge registered towards sustainable botanical stewardship.
+                  </p>
+                </div>
+              </div>
+              <span className="w-fit border border-[#d4af37]/40 bg-[#d4af37]/10 px-3.5 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider text-[#fce096]">
+                <PackageCheck size={14} className="mr-1.5 inline" />
+                {order.impact_status || 'pledged'}
+              </span>
+            </div>
+            <Link to="/impact" className="mt-4 inline-flex items-center gap-1.5 text-xs font-semibold uppercase tracking-wider text-[#cbd5e1] hover:text-[#fce096] transition-colors underline underline-offset-4">
+              View Public Impact Ledger <ArrowRight size={13} />
+            </Link>
+          </section>
+        )}
 
-        <div className="flex flex-wrap gap-3 pt-8">
-          <Link to="/profile" className="inline-flex items-center gap-2 bg-[#233c2f] px-5 py-3 text-sm font-semibold text-white hover:bg-[#35533c]">View your orders <ArrowRight size={16}/></Link>
-          <Link to="/shop" className="border border-[#263d31]/30 px-5 py-3 text-sm font-semibold text-[#233c2f] hover:bg-white">Continue exploring</Link>
+        <div className="flex flex-wrap gap-4 pt-6">
+          <Link
+            to="/profile"
+            className="btn-gold-luxury inline-flex items-center gap-2 px-6 py-3 rounded-xl text-xs font-semibold uppercase tracking-wider"
+          >
+            View Your Orders <ArrowRight size={15} />
+          </Link>
+          <Link
+            to="/shop"
+            className="btn-silver-luxury px-6 py-3 rounded-xl text-xs font-semibold uppercase tracking-wider"
+          >
+            Continue Exploring Formulations
+          </Link>
         </div>
       </div>
     </main>

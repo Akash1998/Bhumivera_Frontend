@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { Mail, Send, CheckCircle2, Shield, BellRing, Sparkles } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { newsletter as newsletterApi } from '../services/api';
 
 export default function NewsletterSection() {
@@ -24,86 +23,86 @@ export default function NewsletterSection() {
   };
 
   return (
-    <section className="relative py-24 overflow-hidden bg-slate-900">
-      <div className="absolute top-0 left-0 w-full h-full opacity-10 pointer-events-none">
-        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-500 rounded-full blur-[120px]" />
-        <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-cyan-500 rounded-full blur-[120px]" />
-      </div>
-
+    <section className="relative py-20 overflow-hidden bg-[#070a0e] border-y border-[#d4af37]/20">
       <div className="container relative z-10 mx-auto px-6">
-        <div className="max-w-5xl mx-auto bg-slate-950/50 backdrop-blur-2xl border border-slate-800 p-12 md:p-20 rounded-[3rem] shadow-2xl overflow-hidden group">
-          <div className="grid md:grid-cols-2 gap-16 items-center">
+        <div className="two-tone-panel-gold max-w-5xl mx-auto bg-[#0d1520] p-10 md:p-16 rounded-3xl shadow-2xl overflow-hidden">
+          <div className="grid md:grid-cols-2 gap-12 items-center">
             <div>
-              <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-[10px] font-black uppercase tracking-widest mb-6">
-                <Sparkles size={14} />
-                Stay Ahead of the Curve
+              <div className="font-sub-gold inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#070a0e] border border-[#d4af37]/40 text-[10px] tracking-widest mb-5">
+                <Sparkles size={13} className="text-[#d4af37]" />
+                Private Concierge Dispatch
               </div>
-              <h2 className="text-4xl md:text-5xl font-black text-white leading-tight mb-6 tracking-tighter">
-                Join the <span className="text-emerald-500">Elite Drivers</span> Club
+              <h2 className="font-serif text-3xl md:text-4xl lg:text-5xl uppercase tracking-wider font-normal text-white leading-tight mb-4">
+                <span className="font-headline-gold">Private Gazette</span>{' '}
+                <span className="font-headline-silver">&amp; Harvest Bulletins</span>
               </h2>
-              <p className="text-slate-400 text-lg mb-8 leading-relaxed">
-                Get early access to flash sales, expert installation guides, and new arrivals before anyone else.
+              <div className="gold-hairline my-4 max-w-xs" />
+              <p className="text-[#cbd5e1] text-xs sm:text-sm mb-6 leading-relaxed">
+                Receive confidential notifications on small-batch seasonal harvests, compounding certificates, and private botanical access before public release.
               </p>
               
-              <div className="space-y-4">
-                <div className="flex items-center gap-3 text-slate-300 font-medium">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                    <CheckCircle2 size={18} />
+              <div className="space-y-3 font-mono text-xs text-[#cbd5e1]">
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-[#070a0e] border border-[#d4af37]/40 flex items-center justify-center text-[#fce096]">
+                    <CheckCircle2 size={15} />
                   </div>
-                  Exclusive Weekly Discounts
+                  <span>Small-Batch Harvest Priority Allocations</span>
                 </div>
-                <div className="flex items-center gap-3 text-slate-300 font-medium">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                    <BellRing size={18} />
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-[#070a0e] border border-[#d4af37]/40 flex items-center justify-center text-[#fce096]">
+                    <BellRing size={15} />
                   </div>
-                  New Product Launch Alerts
+                  <span>Laboratory Genuinity &amp; Formulation Briefs</span>
                 </div>
-                <div className="flex items-center gap-3 text-slate-300 font-medium">
-                  <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500">
-                    <Shield size={18} />
+                <div className="flex items-center gap-3">
+                  <div className="w-7 h-7 rounded-lg bg-[#070a0e] border border-[#d4af37]/40 flex items-center justify-center text-[#fce096]">
+                    <Shield size={15} />
                   </div>
-                  Unsubscribe Anytime
+                  <span>Strict Confidentiality · One-Click Unsubscribe</span>
                 </div>
               </div>
             </div>
 
             <div className="relative">
               {status === 'success' ? (
-                <div className="bg-emerald-500/10 border border-emerald-500/30 p-10 rounded-3xl text-center animate-scale-in">
-                  <div className="w-20 h-20 bg-emerald-500 rounded-full flex items-center justify-center mx-auto mb-6 shadow-[0_0_30px_rgba(16,185,129,0.5)]">
-                    <CheckCircle2 size={40} className="text-black" />
+                <div className="bg-[#070a0e] border border-[#d4af37]/40 p-8 rounded-2xl text-center shadow-xl">
+                  <div className="w-16 h-16 bg-gradient-to-r from-[#d4af37] to-[#fce096] rounded-full flex items-center justify-center mx-auto mb-4 shadow-[0_0_25px_rgba(212,175,55,0.4)]">
+                    <CheckCircle2 size={32} className="text-black" />
                   </div>
-                  <h3 className="text-2xl font-black text-white mb-2">You're on the list!</h3>
-                  <p className="text-emerald-400/80 font-medium">Check your inbox for a special welcome gift.</p>
-                  <button onClick={() => setStatus('idle')} className="mt-8 text-slate-500 hover:text-white text-sm font-bold uppercase tracking-widest transition-colors">
-                    Back to Form
+                  <h3 className="font-serif text-2xl font-bold text-white mb-2">Welcome to the Gazette</h3>
+                  <p className="text-xs text-[#cbd5e1]">Your dossier has been recorded for upcoming artisanal harvests.</p>
+                  <button 
+                    onClick={() => setStatus('idle')} 
+                    className="btn-silver-luxury mt-6 px-4 py-2 rounded-xl text-xs font-mono font-bold uppercase tracking-wider text-[#cbd5e1]"
+                  >
+                    Register Another Patron
                   </button>
                 </div>
               ) : (
-                <form onSubmit={handleSubmit} className="space-y-6">
-                  {error && <p role="alert" className="text-sm text-rose-300">{error}</p>}
-                  <div className="relative group/input">
-                    <div className="absolute left-6 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within/input:text-emerald-500 transition-colors">
-                      <Mail size={24} />
+                <form onSubmit={handleSubmit} className="space-y-5">
+                  {error && <p role="alert" className="text-xs text-rose-300 font-mono">{error}</p>}
+                  <div className="relative">
+                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#d4af37]">
+                      <Mail size={20} />
                     </div>
                     <input
                       type="email"
                       required
-                      placeholder="Enter your email address"
+                      placeholder="Enter your patron email address"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      className="w-full h-20 pl-16 pr-6 bg-slate-900/50 border-2 border-slate-800 rounded-2xl text-white text-lg font-medium placeholder:text-slate-600 focus:outline-none focus:border-emerald-500 transition-all"
+                      className="w-full h-16 pl-14 pr-6 bg-[#070a0e] border border-white/15 rounded-xl text-white text-xs placeholder:text-white/30 focus:outline-none focus:border-[#d4af37] transition-all font-mono"
                     />
                   </div>
                   <button
                     type="submit"
                     disabled={status === 'loading'}
-                    className="w-full h-20 bg-emerald-500 hover:bg-white text-black font-black text-xl uppercase tracking-wider rounded-2xl transition-all duration-300 flex items-center justify-center gap-4 shadow-[0_10px_30px_rgba(16,185,129,0.3)] hover:shadow-[0_10px_40px_rgba(255,255,255,0.2)]"
+                    className="btn-gold-luxury w-full h-14 font-bold text-xs uppercase tracking-widest rounded-xl transition-all duration-300 flex items-center justify-center gap-3 text-white shadow-xl"
                   >
-                    {status === 'loading' ? 'Subscribing...' : (
+                    {status === 'loading' ? 'Encrypting & Recording...' : (
                       <>
-                        Subscribe Now
-                        <Send size={24} />
+                        <span>Join Private Inner Circle</span>
+                        <Send size={15} />
                       </>
                     )}
                   </button>

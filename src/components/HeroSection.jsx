@@ -34,15 +34,15 @@ export default function HeroSection() {
   const navigate = useNavigate();
 
   return (
-    <div className="relative h-[85vh] min-h-[600px] w-full overflow-hidden bg-slate-950 group">
+    <div className="relative h-[85vh] min-h-[600px] w-full overflow-hidden bg-[#070a0e] group">
       {slides.map((slide, idx) => (
         <div
           key={idx}
-          className={`absolute inset-0 transition-opacity duration-500 ${
+          className={`absolute inset-0 transition-opacity duration-700 ${
             idx === current ? 'opacity-100' : 'opacity-0 pointer-events-none'
           }`}
         >
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/80 to-transparent z-10 pointer-events-none" />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#070a0e] via-[#070a0e]/85 to-transparent z-10 pointer-events-none" />
           <img
             src={slide.image}
             alt={slide.title}
@@ -53,92 +53,96 @@ export default function HeroSection() {
 
       <div className="relative z-20 container mx-auto px-6 h-full flex flex-col justify-center">
         <div className="max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-bold uppercase tracking-[0.2em] mb-6">
-            <Zap size={14} />
+          <div className="font-sub-gold inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#070a0e] border border-[#d4af37]/40 text-[10px] tracking-[0.2em] mb-5 shadow-md">
+            <Zap size={13} className="text-[#d4af37]" />
             {slides[current].subtitle}
           </div>
           
-          <h1 className="text-5xl md:text-7xl font-black text-white leading-tight mb-6 tracking-tighter">
+          <h1 className="text-4xl md:text-6xl lg:text-7xl font-serif uppercase tracking-wider font-normal leading-tight text-white mb-4">
             {slides[current].title.split(',').map((part, i) => (
-              <span key={i} className="block last:text-transparent last:bg-clip-text last:bg-gradient-to-r last:from-emerald-400 last:to-cyan-400">
-                {part}
+              <span key={i} className={`block ${i === 0 ? 'font-headline-gold' : 'font-headline-silver'}`}>
+                {part.trim()}
               </span>
             ))}
           </h1>
+          <div className="gold-hairline my-4 max-w-xs" />
 
-          <p className="text-xl text-slate-300 mb-10 max-w-xl leading-relaxed font-medium">
+          <p className="text-sm sm:text-base text-[#cbd5e1] mb-8 max-w-xl leading-relaxed font-normal">
             {slides[current].description}
           </p>
 
           <div className="flex flex-wrap gap-4">
             <Link
               to={slides[current].link}
-              className="px-8 py-4 bg-emerald-500 hover:bg-white text-black font-black uppercase tracking-wider rounded-2xl transition-all duration-300 flex items-center gap-3 shadow-lg"
+              className="btn-gold-luxury px-8 py-3.5 text-white font-bold uppercase tracking-wider text-xs rounded-xl transition-all duration-300 flex items-center gap-3 shadow-xl"
             >
-              <ShoppingBag size={20} />
+              <ShoppingBag size={18} />
               {slides[current].cta}
             </Link>
             <button
               type="button"
               onClick={() => navigate('/about')}
-              className="px-8 py-4 bg-slate-900/50 hover:bg-slate-800 backdrop-blur-md border border-slate-800 text-white font-black uppercase tracking-wider rounded-2xl transition-all duration-300 flex items-center gap-3"
+              className="btn-silver-luxury px-8 py-3.5 text-[#cbd5e1] font-semibold uppercase tracking-wider text-xs rounded-xl transition-all duration-300 flex items-center gap-3"
             >
-              <Compass size={20} />
-              Explore Our Craft
+              <Compass size={18} className="text-[#d4af37]" />
+              Explore Our Genesis
             </button>
           </div>
         </div>
       </div>
 
-      <div className="absolute bottom-12 right-12 z-30 flex items-center gap-6">
+      <div className="absolute bottom-16 right-10 z-30 flex items-center gap-5">
         <div className="flex gap-2">
           {slides.map((_, i) => (
             <button
               key={i}
               onClick={() => setCurrent(i)}
               className={`h-1.5 transition-all duration-300 rounded-full ${
-                i === current ? 'w-12 bg-emerald-500' : 'w-3 bg-slate-700 hover:bg-slate-500'
+                i === current ? 'w-12 bg-gradient-to-r from-[#d4af37] to-[#fce096]' : 'w-3 bg-white/20 hover:bg-white/40'
               }`}
+              aria-label={`Go to slide ${i + 1}`}
             />
           ))}
         </div>
         
-        <div className="flex gap-3">
+        <div className="flex gap-2">
           <button
             onClick={() => setCurrent((prev) => (prev - 1 + slides.length) % slides.length)}
-            className="p-4 rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur-xl text-white hover:bg-emerald-500 hover:text-black hover:border-emerald-500 transition-all duration-300"
+            className="p-3 rounded-xl border border-white/15 bg-[#070a0e]/80 backdrop-blur-md text-[#cbd5e1] hover:border-[#d4af37] hover:text-[#fce096] transition-all"
+            aria-label="Previous slide"
           >
-            <ChevronLeft size={24} />
+            <ChevronLeft size={20} />
           </button>
           <button
             onClick={() => setCurrent((prev) => (prev + 1) % slides.length)}
-            className="p-4 rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur-xl text-white hover:bg-emerald-500 hover:text-black hover:border-emerald-500 transition-all duration-300"
+            className="p-3 rounded-xl border border-white/15 bg-[#070a0e]/80 backdrop-blur-md text-[#cbd5e1] hover:border-[#d4af37] hover:text-[#fce096] transition-all"
+            aria-label="Next slide"
           >
-            <ChevronRight size={24} />
+            <ChevronRight size={20} />
           </button>
         </div>
       </div>
 
-      <div className="absolute bottom-0 left-0 w-full z-20 border-t border-slate-800/50 bg-slate-950/50 backdrop-blur-xl py-6 hidden lg:block">
-        <div className="container mx-auto px-6 flex justify-between items-center text-slate-400 font-bold uppercase tracking-widest text-[10px]">
-          <div className="flex items-center gap-3">
-            <ShieldCheck size={18} className="text-emerald-500" />
-            Dedicated Customer Support
+      <div className="absolute bottom-0 left-0 w-full z-20 border-t border-[#d4af37]/20 bg-[#070a0e]/90 backdrop-blur-md py-4 hidden lg:block">
+        <div className="container mx-auto px-6 flex justify-between items-center text-[#94a3b8] font-mono uppercase tracking-widest text-[10px]">
+          <div className="flex items-center gap-2.5">
+            <ShieldCheck size={16} className="text-[#d4af37]" />
+            <span className="text-[#cbd5e1]">Dedicated Concierge Support</span>
           </div>
-          <div className="w-px h-4 bg-slate-800" />
-          <div className="flex items-center gap-3">
-            <Globe size={18} className="text-emerald-500" />
-            PAN India Delivery Support
+          <div className="w-px h-3 bg-white/15" />
+          <div className="flex items-center gap-2.5">
+            <Globe size={16} className="text-[#d4af37]" />
+            <span className="text-[#cbd5e1]">PAN India Express Delivery</span>
           </div>
-          <div className="w-px h-4 bg-slate-800" />
-          <div className="flex items-center gap-3">
-            <Zap size={18} className="text-emerald-500" />
-            Next-Day Dispatch Guaranteed
+          <div className="w-px h-3 bg-white/15" />
+          <div className="flex items-center gap-2.5">
+            <Zap size={16} className="text-[#d4af37]" />
+            <span className="text-[#cbd5e1]">48-Hour Virgin Cleanroom Dispatch</span>
           </div>
-          <div className="w-px h-4 bg-slate-800" />
-          <Link to="/about" className="flex items-center gap-3 group/link hover:text-emerald-400 transition-colors">
-            Learn More About Our Quality
-            <ArrowRight size={14} className="transition-transform group-hover/link:translate-x-1" />
+          <div className="w-px h-3 bg-white/15" />
+          <Link to="/about" className="flex items-center gap-2 text-[#fce096] hover:text-white transition-colors">
+            <span>Discover Apothecary Standards</span>
+            <ArrowRight size={13} />
           </Link>
         </div>
       </div>

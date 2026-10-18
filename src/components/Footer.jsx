@@ -19,18 +19,18 @@ export default function Footer() {
   const currentYear = new Date().getFullYear();
 
   return (
-    <footer className="mt-auto border-t border-[#d4af37]/25 bg-[#0c1712] font-sans text-[#e2e8f0] antialiased">
+    <footer className="mt-auto border-t border-[#d4af37]/25 bg-[#070a0e] font-sans text-[#e2e8f0] antialiased">
       {/* 1. ULTRA-PREMIUM BRAND SHOWCASE & CONCIERGE HERO */}
-      <div className="relative isolate overflow-hidden border-b border-[#d4af37]/20 bg-gradient-to-b from-[#0c1712] via-[#09130e] to-[#070f0b]">
-        {/* Subtle Ambient Gold & Emerald Glows */}
+      <div className="relative isolate overflow-hidden border-b border-[#d4af37]/20 bg-gradient-to-b from-[#070a0e] via-[#0d1520] to-[#070a0e]">
+        {/* Subtle Ambient Gold Glows */}
         <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-[#d4af37]/5 blur-[120px]" />
-        <div className="pointer-events-none absolute -right-32 -bottom-32 h-96 w-96 rounded-full bg-[#1b3a2b]/20 blur-[130px]" />
+        <div className="pointer-events-none absolute -right-32 -bottom-32 h-96 w-96 rounded-full bg-[#d4af37]/5 blur-[130px]" />
 
         <div className="mx-auto w-full max-w-7xl px-5 py-12 sm:px-8 sm:py-16 lg:px-12">
           <div className="flex flex-col gap-8 lg:flex-row lg:items-center lg:justify-between">
             <div className="max-w-2xl">
               <div className="flex items-center gap-3">
-                <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#d4af37]/50 bg-gradient-to-br from-[#13221b] to-[#050807] shadow-[0_0_20px_rgba(212,175,55,0.2)]">
+                <div className="relative flex h-12 w-12 shrink-0 items-center justify-center rounded-full border border-[#d4af37]/50 bg-gradient-to-br from-[#101a26] to-[#070a0e] shadow-[0_0_20px_rgba(212,175,55,0.2)]">
                   <img
                     src="/logo.webp"
                     alt="Bhumivera Crest"
@@ -51,10 +51,12 @@ export default function Footer() {
                 </div>
               </div>
 
-              <h2 className="mt-5 font-serif text-2xl leading-snug text-[#f8fafc] sm:text-3xl lg:text-4xl">
-                Pure care, rooted in its source.
+              <h2 className="mt-5 font-serif text-2xl leading-snug text-white sm:text-3xl lg:text-4xl font-bold">
+                <span className="font-headline-gold">Pure Care,</span>{' '}
+                <span className="font-headline-silver">Rooted In Its Source.</span>
               </h2>
-              <p className="mt-3 text-xs leading-relaxed text-[#cbd5e1] sm:text-sm max-w-xl">
+              <div className="gold-hairline w-24 my-3" />
+              <p className="mt-2 text-xs leading-relaxed text-[#cbd5e1] sm:text-sm max-w-xl font-light">
                 Formulated with cold-pressed Himalayan Sea Buckthorn, Pampore Kashmiri Saffron, and certified pH 5.5 clinical actives. Produced in micro-runs of 250 bottles with open label transparency and verifiable lab purity.
               </p>
             </div>
@@ -70,21 +72,21 @@ export default function Footer() {
                       'How may we assist your ritual today? I can help verify bottle genuinity, track transit weight logs, or inspect formulation ingredients.',
                   })
                 }
-                className="inline-flex min-h-12 items-center gap-2.5 rounded-full bg-gradient-to-r from-[#d4af37] to-[#e5c247] px-6 py-3 text-xs font-bold uppercase tracking-widest text-[#0c1712] shadow-[0_0_25px_rgba(212,175,55,0.3)] transition-all hover:scale-[1.02] hover:shadow-[0_0_35px_rgba(212,175,55,0.45)]"
+                className="btn-gold-luxury inline-flex min-h-12 items-center gap-2.5 rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-wider text-white shadow-xl"
               >
                 <Sparkles size={15} /> Client Concierge
               </button>
 
               <Link
                 to="/verify"
-                className="inline-flex min-h-12 items-center gap-2.5 rounded-full border border-[#d4af37]/60 bg-[#0c1712]/80 px-6 py-3 text-xs font-bold uppercase tracking-widest text-[#d4af37] shadow-[0_0_15px_rgba(212,175,55,0.15)] backdrop-blur transition-all hover:border-[#d4af37] hover:bg-[#d4af37]/15 hover:text-[#f8fafc]"
+                className="btn-silver-luxury inline-flex min-h-12 items-center gap-2.5 rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-wider"
               >
-                <ShieldCheck size={16} /> Verify Bottle Serial
+                <ShieldCheck size={16} className="text-[#d4af37]" /> Verify Bottle Serial
               </Link>
 
               <Link
                 to="/science"
-                className="inline-flex min-h-12 items-center gap-2 rounded-full border border-white/20 bg-white/5 px-5 py-3 text-xs font-medium uppercase tracking-widest text-[#e2e8f0] transition-colors hover:border-white/40 hover:bg-white/10"
+                className="two-tone-card inline-flex min-h-12 items-center gap-2 rounded-full border border-[#d4af37]/25 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-[#cbd5e1] hover:text-[#fce096] transition-colors"
               >
                 Lab Science <ArrowRight size={14} />
               </Link>
@@ -322,53 +324,53 @@ export default function Footer() {
       </div>
 
       {/* 3. STATUTORY COMPLIANCE & CONSUMER PROTECTION PILLARS */}
-      <div className="border-t border-[#d4af37]/20 bg-[#070f0b]">
+      <div className="border-t border-[#d4af37]/20 bg-[#070a0e]">
         <div className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 sm:py-10 lg:px-12">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             
-            <div className="flex items-start gap-3 rounded-2xl border border-[#d4af37]/20 bg-[#0c1712]/60 p-4 backdrop-blur-sm">
+            <div className="two-tone-panel flex items-start gap-3 rounded-2xl border border-[#d4af37]/25 p-4 shadow-sm">
               <ShieldCheck size={20} className="mt-0.5 shrink-0 text-[#d4af37]" />
               <div>
-                <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#d4af37]">
+                <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#fce096]">
                   100% Sealed Sanitary Custody
                 </h4>
-                <p className="mt-1 text-[11px] leading-relaxed text-[#94a3b8]">
+                <p className="mt-1 text-[11px] leading-relaxed text-[#cbd5e1] font-light">
                   Artisanal micro-batch personal care bottled with tamper-evident seals to safeguard uncompromised potency and pure hygiene.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 rounded-2xl border border-[#d4af37]/20 bg-[#0c1712]/60 p-4 backdrop-blur-sm">
+            <div className="two-tone-panel flex items-start gap-3 rounded-2xl border border-[#d4af37]/25 p-4 shadow-sm">
               <FileCheck2 size={20} className="mt-0.5 shrink-0 text-[#d4af37]" />
               <div>
-                <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#d4af37]">
+                <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#fce096]">
                   360° Unboxing Video Mandate
                 </h4>
-                <p className="mt-1 text-[11px] leading-relaxed text-[#94a3b8]">
+                <p className="mt-1 text-[11px] leading-relaxed text-[#cbd5e1] font-light">
                   Transit damage or shortage claims require an uncut 360° unboxing recording displaying outer AWB label within 48h.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 rounded-2xl border border-[#d4af37]/20 bg-[#0c1712]/60 p-4 backdrop-blur-sm">
+            <div className="two-tone-panel flex items-start gap-3 rounded-2xl border border-[#d4af37]/25 p-4 shadow-sm">
               <Lock size={20} className="mt-0.5 shrink-0 text-[#d4af37]" />
               <div>
-                <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#d4af37]">
+                <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#fce096]">
                   Digital Weight-Scan Shield
                 </h4>
-                <p className="mt-1 text-[11px] leading-relaxed text-[#94a3b8]">
+                <p className="mt-1 text-[11px] leading-relaxed text-[#cbd5e1] font-light">
                   Warehouse shipments are precision-calibrated by digital weight scanners to eliminate discrepancy and fraudulent substitutions.
                 </p>
               </div>
             </div>
 
-            <div className="flex items-start gap-3 rounded-2xl border border-[#d4af37]/20 bg-[#0c1712]/60 p-4 backdrop-blur-sm">
+            <div className="two-tone-panel flex items-start gap-3 rounded-2xl border border-[#d4af37]/25 p-4 shadow-sm">
               <Scale size={20} className="mt-0.5 shrink-0 text-[#d4af37]" />
               <div>
-                <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#d4af37]">
+                <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#fce096]">
                   Sovereign Legal Governance
                 </h4>
-                <p className="mt-1 text-[11px] leading-relaxed text-[#94a3b8]">
+                <p className="mt-1 text-[11px] leading-relaxed text-[#cbd5e1] font-light">
                   Protected under CPA 2019, IT Act 2000, and DPDP Act 2023 with binding arbitration seated under West Bengal jurisdiction.
                 </p>
               </div>
@@ -379,32 +381,32 @@ export default function Footer() {
       </div>
 
       {/* 4. BOTTOM TRADEMARK & PROMINENT DEVELOPER BRANDING BAR */}
-      <div className="border-t border-[#d4af37]/25 bg-[#050907] pb-28 sm:pb-8 pt-8">
+      <div className="border-t border-[#d4af37]/20 bg-[#05080c] pb-28 sm:pb-8 pt-8">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-6 px-5 sm:px-8 lg:flex-row lg:px-12">
           
           {/* Copyright & Trademark */}
           <div className="flex items-center gap-3 text-center sm:text-left">
-            <p className="text-xs tracking-wider text-[#94a3b8]">
+            <p className="text-xs tracking-wider text-[#94a3b8] font-light">
               © {currentYear} <span className="font-serif font-bold text-[#d4af37]">BHUMIVERA</span> · Botanical Maison · All Rights Reserved
             </p>
           </div>
 
           {/* PROMINENT DEVELOPER BRANDING: AKASH PRASAD */}
           <div className="flex flex-col sm:flex-row items-center gap-3">
-            <span className="text-[10px] uppercase tracking-[0.25em] text-[#94a3b8]">
+            <span className="text-[10px] uppercase tracking-[0.25em] text-[#94a3b8] font-light">
               Architectural Engineering &amp; Design
             </span>
             <span className="hidden sm:inline text-[#d4af37]/50">•</span>
             <div className="group inline-flex items-center gap-2 rounded-full border border-[#d4af37]/60 bg-[#d4af37]/15 px-4 py-1.5 shadow-[0_0_20px_rgba(212,175,55,0.25)] transition-all hover:bg-[#d4af37] hover:scale-105">
-              <Sparkles size={13} className="text-[#d4af37] group-hover:text-[#0c1712] transition-colors" />
-              <span className="font-serif text-xs font-bold uppercase tracking-[0.2em] text-[#d4af37] group-hover:text-[#0c1712] transition-colors">
+              <Sparkles size={13} className="text-[#d4af37] group-hover:text-[#070a0e] transition-colors" />
+              <span className="font-serif text-xs font-bold uppercase tracking-[0.2em] text-[#d4af37] group-hover:text-[#070a0e] transition-colors">
                 Developed By Akash Prasad
               </span>
             </div>
           </div>
 
           {/* Quick Legal Pill Links */}
-          <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-[#94a3b8]">
+          <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-[#cbd5e1] font-light">
             <Link to="/legal/privacy-dpdp" className="transition-colors hover:text-[#d4af37]">Privacy Policy</Link>
             <span>·</span>
             <Link to="/legal/conditions-of-use" className="transition-colors hover:text-[#d4af37]">Terms of Sale</Link>

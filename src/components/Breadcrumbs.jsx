@@ -13,6 +13,14 @@ const ROUTE_LABELS = {
   orders: 'Orders',
   about: 'About',
   contact: 'Contact',
+  verify: 'E-Warranty',
+  provenance: 'Provenance',
+  'provenance-engine': 'Provenance',
+  'purchase-protection': 'Custody',
+  science: 'Science',
+  impact: 'Impact',
+  affiliate: 'Affiliate',
+  legal: 'Legal',
 };
 
 export default function Breadcrumbs({ productName }) {
@@ -67,18 +75,18 @@ export default function Breadcrumbs({ productName }) {
   }, [pathname, productName]);
 
   return (
-    <nav aria-label="Breadcrumb" className="bg-white border-b border-gray-100 sticky top-0 z-40">
-      <div className="max-w-7xl mx-auto px-4 py-4 flex items-center gap-2 text-[13px] font-bold text-gray-400 uppercase tracking-wide flex-wrap">
-        <Link to="/" className="flex items-center gap-1 hover:text-gray-900 transition-colors">
-          <Home size={13} /> Home
+    <nav aria-label="Breadcrumb" className="bg-[#070a0e]/95 border-b border-[#d4af37]/20 sticky top-0 z-40 backdrop-blur-md">
+      <div className="max-w-7xl mx-auto px-4 py-3 flex items-center gap-2 text-xs font-mono font-medium text-[#94a3b8] uppercase tracking-wider flex-wrap">
+        <Link to="/" className="flex items-center gap-1 hover:text-[#fce096] transition-colors">
+          <Home size={13} className="text-[#d4af37]" /> Home
         </Link>
         {crumbs.map(({ path, label, isLast }) => (
           <React.Fragment key={path}>
-            <ChevronRight size={13} className="shrink-0" />
+            <ChevronRight size={13} className="shrink-0 text-white/30" />
             {isLast ? (
-              <span className="text-gray-900 truncate max-w-[200px]">{label}</span>
+              <span className="text-[#fce096] font-bold truncate max-w-[200px]">{label}</span>
             ) : (
-              <Link to={path} className="hover:text-gray-900 transition-colors truncate max-w-[120px]">{label}</Link>
+              <Link to={path} className="hover:text-white transition-colors truncate max-w-[120px]">{label}</Link>
             )}
           </React.Fragment>
         ))}

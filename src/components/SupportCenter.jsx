@@ -102,93 +102,136 @@ export default function SupportCenter({
     );
   };
 
-  const handleSendUnifiedMessage = async event => {
-    event.preventDefault();
-    if (!supportTicket?.message?.trim()) {
-      showToast?.('Please enter your message.', 'error');
-      return;
-    }
+  const handleSendUnifiedMessage = async e => {
+    e.preventDefault();
+    const msg = supportTicket?.message?.trim();
+    if (!msg) return;
+
     setSubmitting(true);
     try {
-      const res = await aiSupport.sendAsyncMessage({
-        sessionToken: sessionToken || undefined,
-        name,
-        email,
-        orderId: supportTicket.order_id || null,
-        productId: supportTicket.product_id || null,
-        subject: supportTicket.subject || 'Order & Account Support Inquiry',
-        message: supportTicket.message.trim(),
-      });
-      if (res.data?.sessionToken) {
-        setSessionToken(res.data.sessionToken);
-        localStorage.setItem('bhumivera_ai_support_session_v1', res.data.sessionToken);
+      const ordNum = selectedOrder?.order_number || selectedOrder?.id || supportTicket?.order_id || '';
+      const subj =
+        supportTicket?.subject?.trim() ||
+        (ordNum ? `Assistance with Order #${ordNum}` : 'Direct Account Inquiry');
+
+      await Promise.allSettled([
+        contactApi.submit({
+          name: name || 'Customer',
+          email: email || '',
+          subject: subj,
+          message: msg,
+          order_id: supportTicket?.order_id || null,
+          product_id: supportTicket?.product_id || null,
+        }),
+        aiSupport.sendMessage({
+          sessionToken,
+          message: msg,
+          orderContext: supportTicket?.order_id
+            ? {
+                orderId: supportTicket.order_id,
+                orderNumber: ordNum,
+                status: selectedOrder?.status,
+              }
+            : undefined,
+        }),
+      ]);
+
+      if (showToast) {
+        showToast(
+          'Message dispatched to Concierge, Telegram, and Email support!',
+          'success'
+        );
       }
-      setSupportTicket(prev => ({ ...prev, message: '' }));
-      showToast?.(
-        'Message sent to Bhumivera Support. Replies will arrive in your Email, Mobile App, and Live Chat.',
-        'success'
-      );
-      await loadUnifiedSupportChannel();
-    } catch (err) {
-      showToast?.(err.response?.data?.message || 'Could not send message.', 'error');
+
+      setChatMessages(prev => [
+        ...prev,
+        {
+          id: `tmp_${Date.now()}`,
+          sender: 'user',
+          content: msg,
+          createdAt: new Date().toISOString(),
+        },
+      ]);
+
+      setSupportTicket(prev => ({
+        ...prev,
+        message: '',
+        subject: '',
+      }));
+    } catch {
+      if (showToast) {
+        showToast('Unable to send message right now. Please try again.', 'error');
+      }
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleEndChatAndReview = async event => {
-    event.preventDefault();
+  const handleEndChatAndReview = async e => {
+    e.preventDefault();
     if (!sessionToken) return;
     try {
-      await aiSupport.endSatisfied(sessionToken, {
+      await aiSupport.endSession({
+        sessionToken,
         rating: reviewRating,
-        feedback: reviewFeedback.trim() || 'Satisfied with support resolution.',
+        feedback: reviewFeedback,
       });
       setReviewSubmitted(true);
-      showToast?.('Thank you! Your chat has been marked Resolved and your review was saved.', 'success');
-      await loadUnifiedSupportChannel();
+      if (showToast) {
+        showToast('Thank you for rating our concierge team!', 'success');
+      }
     } catch {
-      showToast?.('Could not submit review.', 'error');
+      if (showToast) {
+        showToast('Could not submit review at this moment.', 'error');
+      }
     }
   };
 
   return (
-    <div className="space-y-6">
-      {/* Unified Support Hero & Channel Selector */}
+    <div className="space-y-6 text-[#e2e8f0] font-sans">
+      {/* 2-Tone Concierge Hero Header */}
       <section className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-        <div className="lg:col-span-5 rounded-3xl bg-gradient-to-br from-[#0B2419] via-[#133325] to-[#1e4031] p-7 text-white shadow-xl border border-[#D4AF37]/30 flex flex-col justify-between">
+        <div className="two-tone-panel-gold lg:col-span-5 rounded-3xl p-7 relative overflow-hidden flex flex-col justify-between shadow-2xl">
           <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/40 text-[#D4AF37] text-[11px] font-bold uppercase tracking-wider mb-4">
-              <ShieldCheck className="w-3.5 h-3.5" /> Unified Bhumivera Support
+            <div className="flex items-center justify-between gap-3">
+              <span className="font-sub-gold inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#d4af37]/15 border border-[#d4af37]/35 text-[10px] font-semibold uppercase tracking-[0.22em]">
+                <ShieldCheck className="w-3.5 h-3.5" /> Direct Concierge Channel
+              </span>
+              <span className="flex items-center gap-1.5 text-xs text-[#cbd5e1]">
+                <span className="w-2 h-2 rounded-full bg-[#d4af37] animate-pulse" /> Live Team
+              </span>
             </div>
-            <h3 className="text-2xl font-serif font-bold mb-2">Customer Care & Order Desk</h3>
-            <p className="text-xs text-emerald-100/80 leading-relaxed mb-5">
-              {hasPlacedOrder
-                ? 'Your account has verified order history. You have full access to Live Support Chat, Instant Order/RMA Self-Service, and Two-Way Telegram Support.'
-                : 'Get help with products and orders here, or send a message below — our support team will reply by email or in the app.'}
+
+            <h2 className="mt-4 font-serif font-bold text-2xl sm:text-3xl tracking-tight">
+              <span className="font-headline-gold">Artisanal</span>{' '}
+              <span className="font-headline-silver">Concierge Desk</span>
+            </h2>
+            <div className="gold-hairline w-24 my-3" />
+            <p className="mt-2 text-xs text-[#cbd5e1] leading-relaxed font-light">
+              Direct line to our compounding apothecaries and logistics leads. Messages synchronize across our real-time Web Desk, Email, and Official Telegram Bot.
             </p>
 
-            <div className="space-y-2.5">
+            <div className="mt-6 space-y-2.5">
               <button
                 type="button"
                 onClick={handleOpenLiveChat}
-                className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-[#D4AF37] hover:bg-[#c49f2f] text-[#071510] font-bold text-xs transition shadow-md"
+                className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-gradient-to-r from-[#d4af37] to-[#b38728] text-[#070a0e] font-semibold text-xs shadow-md hover:brightness-110 transition"
               >
                 <span className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4" />
-                  Open Live Support Chat Widget
+                  <Sparkles className="w-4 h-4 text-[#070a0e]" />
+                  Launch Dedicated AI Concierge Chat
                 </span>
-                <span>Launch →</span>
+                <span>Launch &rarr;</span>
               </button>
 
               <a
                 href={telegramUrl}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/40 text-sky-100 font-semibold text-xs transition"
+                className="btn-silver-luxury w-full flex items-center justify-between p-3.5 rounded-2xl text-xs font-semibold"
               >
                 <span className="flex items-center gap-2">
-                  <Send className="w-4 h-4 text-sky-300" />
+                  <Send className="w-4 h-4 text-[#d4af37]" />
                   Chat on Telegram (@BhumiveraBot)
                 </span>
                 <ExternalLink className="w-3.5 h-3.5 opacity-80" />
@@ -196,50 +239,53 @@ export default function SupportCenter({
 
               <a
                 href="mailto:support@bhumivera.com"
-                className="flex items-center gap-3 p-3 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs transition"
+                className="flex items-center gap-3 p-3 rounded-xl bg-[#070a0e]/60 hover:bg-[#070a0e] border border-[#d4af37]/20 text-xs text-[#cbd5e1] hover:text-white transition"
               >
-                <Mail className="w-4 h-4 text-[#D4AF37]" />
+                <Mail className="w-4 h-4 text-[#d4af37]" />
                 <span>support@bhumivera.com</span>
               </a>
             </div>
           </div>
 
-          <div className="mt-6 pt-4 border-t border-white/10 text-[11px] text-emerald-100/70 flex items-center justify-between">
+          <div className="mt-6 pt-4 border-t border-[#d4af37]/20 text-[11px] text-[#94a3b8] flex items-center justify-between">
             <span>Encrypted Concierge Ledger</span>
-            <span>Status: {sessionData?.status ? sessionData.status.toUpperCase() : 'ACTIVE'}</span>
+            <span className="text-[#fce096]">Status: {sessionData?.status ? sessionData.status.toUpperCase() : 'ACTIVE'}</span>
           </div>
         </div>
 
         {/* Unified Order & Support Message Composer */}
         <form
           onSubmit={handleSendUnifiedMessage}
-          className="lg:col-span-7 rounded-3xl bg-white border border-stone-200 p-7 shadow-sm space-y-4"
+          className="two-tone-panel lg:col-span-7 rounded-3xl p-7 border border-[#d4af37]/25 space-y-4"
         >
-          <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center justify-between gap-3 pb-3 border-b border-[#d4af37]/20">
             <div className="flex items-center gap-2.5">
-              <MessageSquare className="w-5 h-5 text-[#0B2419]" />
+              <div className="w-9 h-9 rounded-xl bg-[#d4af37]/10 border border-[#d4af37]/30 flex items-center justify-center text-[#d4af37]">
+                <MessageSquare className="w-5 h-5" />
+              </div>
               <div>
-                <h3 className="font-serif font-bold text-[#0B2419] text-lg">
-                  Message Bhumivera Support
+                <h3 className="font-serif font-bold text-lg">
+                  <span className="font-headline-gold">Message</span>{' '}
+                  <span className="font-headline-silver">Bhumivera Support</span>
                 </h3>
-                <p className="text-xs text-stone-500">
-                  Synced directly with your Live Chat, Email ({email || 'account'}), Mobile App, and Telegram.
+                <p className="text-[11px] text-[#94a3b8]">
+                  Synced directly with Live Chat, Email ({email || 'account'}), and Telegram.
                 </p>
               </div>
             </div>
             <button
               type="button"
               onClick={loadUnifiedSupportChannel}
-              className="p-2 rounded-xl border border-stone-200 text-stone-600 hover:bg-stone-50"
+              className="p-2 rounded-xl border border-[#d4af37]/25 text-[#cbd5e1] hover:bg-white/5 transition-colors"
               title="Refresh conversation"
             >
-              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+              <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin text-[#d4af37]' : ''}`} />
             </button>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label htmlFor="support-order" className="text-xs font-semibold text-stone-600 mb-1 block">
+              <label htmlFor="support-order" className="text-xs font-medium text-[#cbd5e1] mb-1 block uppercase tracking-wider">
                 Select Order (Optional)
               </label>
               <select
@@ -248,56 +294,58 @@ export default function SupportCenter({
                 onChange={event =>
                   setSupportTicket(prev => ({ ...prev, order_id: event.target.value, product_id: '' }))
                 }
-                className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-xs text-[#0B2419]"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] text-xs text-white focus:outline-none focus:border-[#d4af37]"
               >
-                <option value="">General Inquiry — No specific order</option>
+                <option value="" className="bg-[#0d1520] text-white">General Inquiry — No specific order</option>
                 {orders.map(order => (
-                  <option key={order.id} value={order.id}>
-                    Order #{order.order_number || order.id} · {String(order.status || 'placed').toUpperCase()}
+                  <option key={order.id} value={order.id} className="bg-[#0d1520] text-white">
+                    Order #{order.order_number || order.id} &bull; {String(order.status || 'placed').toUpperCase()}
                   </option>
                 ))}
               </select>
             </div>
 
-            {selectedOrder && selectedItems.length > 0 && (
-              <div>
-                <label htmlFor="support-product" className="text-xs font-semibold text-stone-600 mb-1 block">
-                  Select Item in Order
-                </label>
-                <select
-                  id="support-product"
-                  value={supportTicket?.product_id || ''}
-                  onChange={event => setSupportTicket(prev => ({ ...prev, product_id: event.target.value }))}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 bg-white text-xs text-[#0B2419]"
-                >
-                  <option value="">Entire Order</option>
-                  {selectedItems.map((item, idx) => {
-                    const pid = item.product_id || item.id;
-                    return (
-                      <option key={`${pid}-${idx}`} value={pid}>
-                        {item.product_name || item.name || `Item #${pid}`}
-                      </option>
-                    );
-                  })}
-                </select>
-              </div>
-            )}
+            <div>
+              <label htmlFor="support-product" className="text-xs font-medium text-[#cbd5e1] mb-1 block uppercase tracking-wider">
+                Select Formulation (Optional)
+              </label>
+              <select
+                id="support-product"
+                value={supportTicket?.product_id || ''}
+                disabled={!selectedOrder || selectedItems.length === 0}
+                onChange={event =>
+                  setSupportTicket(prev => ({ ...prev, product_id: event.target.value }))
+                }
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] text-xs text-white disabled:opacity-40 focus:outline-none focus:border-[#d4af37]"
+              >
+                <option value="" className="bg-[#0d1520] text-white">Select a specific item from order</option>
+                {selectedItems.map((item, index) => {
+                  const itemId = item.product_id || item.id || `item_${index}`;
+                  const itemName = item.name || item.product_name || `Item #${itemId}`;
+                  return (
+                    <option key={itemId} value={String(itemId)} className="bg-[#0d1520] text-white">
+                      {itemName}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-stone-600 mb-1 block">Subject</label>
+            <label className="text-xs font-medium text-[#cbd5e1] mb-1 block uppercase tracking-wider">Subject</label>
             <input
-              required
+              type="text"
               maxLength={200}
               value={supportTicket?.subject || ''}
               onChange={event => setSupportTicket(prev => ({ ...prev, subject: event.target.value }))}
-              placeholder="e.g., Help with Order #815899599 or Delivery Update"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-[#0B2419]"
+              placeholder="e.g. Question on application timing, packaging check, or address correction"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] text-xs text-white placeholder-[#94a3b8] focus:outline-none focus:border-[#d4af37]"
             />
           </div>
 
           <div>
-            <label className="text-xs font-semibold text-stone-600 mb-1 block">Your Message</label>
+            <label className="text-xs font-medium text-[#cbd5e1] mb-1 block uppercase tracking-wider">Your Message</label>
             <textarea
               required
               rows={4}
@@ -305,15 +353,15 @@ export default function SupportCenter({
               value={supportTicket?.message || ''}
               onChange={event => setSupportTicket(prev => ({ ...prev, message: event.target.value }))}
               placeholder="Describe how our team can help you…"
-              className="w-full px-3.5 py-2.5 rounded-xl border border-stone-200 text-xs text-[#0B2419]"
+              className="w-full px-3.5 py-2.5 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] text-xs text-white placeholder-[#94a3b8] focus:outline-none focus:border-[#d4af37] resize-none"
             />
           </div>
 
-          <div className="flex flex-wrap items-center justify-between gap-3 pt-1">
+          <div className="flex flex-wrap items-center justify-between gap-3 pt-2">
             <button
               type="button"
               onClick={handleOpenLiveChat}
-              className="px-4 py-2.5 rounded-xl border border-[#0B2419]/20 text-[#0B2419] hover:bg-stone-100 text-xs font-semibold"
+              className="btn-silver-luxury px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider"
             >
               Continue in Floating Live Chat
             </button>
@@ -321,9 +369,9 @@ export default function SupportCenter({
             <button
               disabled={submitting}
               type="submit"
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[#0B2419] text-[#FDFBF7] text-xs font-semibold hover:bg-[#1e4031] disabled:opacity-50"
+              className="btn-gold-luxury inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider disabled:opacity-50"
             >
-              <Send className="w-3.5 h-3.5 text-[#D4AF37]" />
+              <Send className="w-3.5 h-3.5 text-[#070a0e]" />
               {submitting ? 'Sending to Support…' : 'Send Message (Email & App Sync)'}
             </button>
           </div>
@@ -331,60 +379,64 @@ export default function SupportCenter({
       </section>
 
       {/* Active Conversation Timeline & Customer Satisfaction Review */}
-      <section className="rounded-3xl bg-white border border-stone-200 p-6 shadow-sm space-y-4">
-        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-stone-100 pb-3">
+      <section className="two-tone-panel rounded-3xl p-6 border border-[#d4af37]/25 space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#d4af37]/20 pb-3">
           <div>
-            <h3 className="font-serif font-bold text-[#0B2419] text-lg">
-              Live Support Conversation & Replies
+            <h3 className="font-serif font-bold text-lg text-white">
+              Live Support Conversation &amp; Replies
             </h3>
-            <p className="text-xs text-stone-500">
+            <p className="text-xs text-[#94a3b8]">
               All messages exchanged via Web Chat, Mobile App, Email, and Telegram (@BhumiveraBot) appear here.
             </p>
           </div>
           {sessionData?.status && (
-            <span className="px-3 py-1 rounded-full text-xs font-bold uppercase bg-emerald-50 text-[#0B2419] border border-emerald-200">
+            <span className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-wider bg-[#d4af37]/15 text-[#fce096] border border-[#d4af37]/35">
               Status: {sessionData.status.replace(/_/g, ' ')}
             </span>
           )}
         </div>
 
         <div className="space-y-3 max-h-96 overflow-y-auto pr-1">
-          {chatMessages.map((msg, idx) => {
-            const isUser = msg.sender === 'user';
-            return (
-              <div
-                key={msg.id || idx}
-                className={`p-3.5 rounded-2xl text-xs max-w-[88%] ${
-                  isUser
-                    ? 'ml-auto bg-[#0B2419] text-white'
-                    : 'mr-auto bg-stone-100 border border-stone-200 text-[#0B2419]'
-                }`}
-              >
-                <div className="flex items-center justify-between gap-3 text-[10px] opacity-70 mb-1">
-                  <span className="font-bold uppercase">
-                    {isUser ? 'You' : msg.senderName || 'Bhumivera Support'}
-                  </span>
-                  <span>{formatDate(msg.createdAt)}</span>
+          {chatMessages.length === 0 ? (
+            <p className="text-xs text-[#94a3b8] py-4 text-center">No messages yet. Send a message above to start a conversation.</p>
+          ) : (
+            chatMessages.map((msg, idx) => {
+              const isUser = msg.sender === 'user';
+              return (
+                <div
+                  key={msg.id || idx}
+                  className={`p-3.5 rounded-2xl text-xs max-w-[88%] ${
+                    isUser
+                      ? 'ml-auto bg-gradient-to-r from-[#d4af37] to-[#b38728] text-[#070a0e] font-medium'
+                      : 'mr-auto bg-[#101a26] border border-[#d4af37]/20 text-[#e2e8f0]'
+                  }`}
+                >
+                  <div className="flex items-center justify-between gap-3 text-[10px] opacity-75 mb-1">
+                    <span className="font-bold uppercase tracking-wider">
+                      {isUser ? 'You' : msg.senderName || 'Bhumivera Support'}
+                    </span>
+                    <span>{formatDate(msg.createdAt)}</span>
+                  </div>
+                  <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
                 </div>
-                <p className="whitespace-pre-wrap leading-relaxed">{msg.content}</p>
-              </div>
-            );
-          })}
+              );
+            })
+          )}
         </div>
 
         {/* Satisfied? End Chat & Submit Review to SuperAdmin */}
         {!reviewSubmitted && sessionData?.status !== 'closed' && (
           <form
             onSubmit={handleEndChatAndReview}
-            className="mt-4 p-4 rounded-2xl bg-[#f8f6f0] border border-[#D4AF37]/40 space-y-3"
+            className="mt-4 p-4 rounded-2xl bg-[#070a0e]/80 border border-[#d4af37]/30 space-y-3"
           >
             <div className="flex flex-wrap items-center justify-between gap-2">
               <div>
-                <h4 className="text-xs font-bold text-[#0B2419] flex items-center gap-1.5">
-                  <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-                  Satisfied with our support reply? End Chat & Leave a Review
+                <h4 className="text-xs font-bold text-white flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-[#d4af37]" />
+                  Satisfied with our support reply? End Chat &amp; Leave a Review
                 </h4>
-                <p className="text-[11px] text-stone-600">
+                <p className="text-[11px] text-[#cbd5e1] font-light">
                   Your rating and review are saved directly to our SuperAdmin quality board.
                 </p>
               </div>
@@ -398,7 +450,7 @@ export default function SupportCenter({
                   >
                     <Star
                       className={`w-5 h-5 ${
-                        star <= reviewRating ? 'fill-[#D4AF37] text-[#D4AF37]' : 'text-stone-300'
+                        star <= reviewRating ? 'fill-[#d4af37] text-[#d4af37]' : 'text-[#94a3b8]/40'
                       }`}
                     />
                   </button>
@@ -412,13 +464,13 @@ export default function SupportCenter({
                 value={reviewFeedback}
                 onChange={e => setReviewFeedback(e.target.value)}
                 placeholder="Write a brief review of your support experience (optional)…"
-                className="flex-1 px-3.5 py-2 rounded-xl border border-stone-200 bg-white text-xs text-[#0B2419]"
+                className="flex-1 px-3.5 py-2 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] text-xs text-white placeholder-[#94a3b8] focus:outline-none focus:border-[#d4af37]"
               />
               <button
                 type="submit"
-                className="px-4 py-2 rounded-xl bg-[#0B2419] text-[#D4AF37] font-semibold text-xs shrink-0"
+                className="btn-gold-luxury px-4 py-2 rounded-xl font-semibold text-xs shrink-0 uppercase tracking-wider"
               >
-                End Chat & Submit Review ({reviewRating}★)
+                End Chat &amp; Submit Review ({reviewRating}&#9733;)
               </button>
             </div>
           </form>
@@ -426,21 +478,21 @@ export default function SupportCenter({
       </section>
 
       {generalFaqs.length > 0 && (
-        <section className="rounded-3xl bg-white border border-stone-200 p-6 shadow-sm">
-          <h3 className="mb-4 font-serif font-bold text-[#0B2419] text-lg">Frequently Asked Questions</h3>
+        <section className="two-tone-panel rounded-3xl p-6 border border-[#d4af37]/25">
+          <h3 className="mb-4 font-serif font-bold text-lg text-white">Frequently Asked Questions</h3>
           <div className="space-y-2">
             {generalFaqs.map((item, index) => (
-              <div key={item.q} className="rounded-xl border border-stone-200">
+              <div key={item.q} className="rounded-xl border border-[#d4af37]/15 bg-[#070a0e]/50">
                 <button
                   type="button"
                   onClick={() => toggleFaq(index)}
                   className="flex w-full items-center justify-between gap-3 p-4 text-left"
                 >
-                  <span className="text-sm font-medium text-[#0B2419]">{item.q}</span>
-                  <span className="text-stone-500">{faqOpen.has(index) ? '−' : '+'}</span>
+                  <span className="text-sm font-medium text-white">{item.q}</span>
+                  <span className="text-[#d4af37] text-lg font-bold">{faqOpen.has(index) ? '−' : '+'}</span>
                 </button>
                 {faqOpen.has(index) && (
-                  <p className="px-4 pb-4 text-sm leading-relaxed text-stone-600">{item.a}</p>
+                  <p className="px-4 pb-4 text-sm leading-relaxed text-[#cbd5e1] font-light border-t border-[#d4af37]/10 pt-3">{item.a}</p>
                 )}
               </div>
             ))}

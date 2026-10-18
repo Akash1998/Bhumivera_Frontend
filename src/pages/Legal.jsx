@@ -815,7 +815,7 @@ export default function Legal() {
   }, [selectedSection, searchQuery]);
 
   return (
-    <main className="min-h-screen bg-[#f7f5ef] px-4 py-10 font-sans text-[#1b2921] sm:px-8 sm:py-14 print:bg-white print:p-0">
+    <main className="min-h-screen bg-[#070a0e] px-4 py-10 font-sans text-[#e2e8f0] sm:px-8 sm:py-14 selection:bg-[#d4af37]/30 selection:text-white print:bg-white print:p-0">
       <SEO
         title={`${activeProfile.title} | Bhumivera Legal & Anti-Fraud Charter`}
         description={activeProfile.subtitle}
@@ -823,26 +823,27 @@ export default function Legal() {
       />
       <div className="mx-auto max-w-6xl">
         {/* 1. DYNAMIC DOMAIN-SPECIFIC LEGAL HEADER WITH UNIQUE REAL-LIFE PHOTOGRAPHY */}
-        <header className="overflow-hidden rounded-2xl border border-[#26392c]/20 bg-[#111e18] text-[#f4f1e9] shadow-xl">
+        <header className="overflow-hidden rounded-2xl border border-[#d4af37]/30 bg-[#0d1520] text-[#e2e8f0] shadow-xl">
           <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
             <div className="p-6 sm:p-9 lg:p-11">
               <div className="flex flex-wrap items-center gap-2">
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/40 bg-[#d4af37]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#d4af37]">
-                  <Scale size={12} /> {activeProfile.code} · Bhumivera Legal Shield
+                <span className="font-sub-gold inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/40 bg-[#070a0e] px-3.5 py-1 text-[10px] tracking-[0.2em] text-[#fce096]">
+                  <Scale size={12} className="text-[#d4af37]" /> {activeProfile.code} · Bhumivera Legal Shield
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/30 bg-emerald-500/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.16em] text-emerald-300">
-                  <ShieldCheck size={12} /> {activeProfile.statuteBadge}
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#cbd5e1]">
+                  <ShieldCheck size={12} className="text-[#d4af37]" /> {activeProfile.statuteBadge}
                 </span>
               </div>
 
-              <h1 className="mt-4 font-serif text-3xl leading-tight sm:text-5xl">
-                {activeProfile.title}
+              <h1 className="mt-4 font-serif text-3xl sm:text-5xl uppercase tracking-wider font-normal leading-tight text-white">
+                <span className="font-headline-gold">{activeProfile.title}</span>
               </h1>
-              <p className="mt-4 max-w-2xl text-xs leading-6 text-white/80 sm:text-sm sm:leading-7">
+              <div className="gold-hairline my-4 max-w-xs" />
+              <p className="mt-4 max-w-2xl text-xs leading-6 text-[#cbd5e1] sm:text-sm sm:leading-7">
                 {activeProfile.subtitle}
               </p>
 
-              <div className="mt-6 flex flex-wrap items-center gap-3 text-[11px] font-semibold text-[#c8d6aa]">
+              <div className="mt-6 flex flex-wrap items-center gap-3 text-[11px] font-semibold text-[#94a3b8]">
                 <span>Effective &amp; Verified: 17 October 2026</span>
                 <span>·</span>
                 <span>Charter Version: 2026-10-17-v4X</span>
@@ -850,39 +851,39 @@ export default function Legal() {
                 <button
                   type="button"
                   onClick={() => window.print()}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/10 px-3 py-1.5 text-[11px] font-bold text-white transition hover:bg-white hover:text-[#111e18]"
+                  className="btn-silver-luxury inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold text-[#cbd5e1] transition"
                 >
-                  <Printer size={13} /> Print / Save Official PDF
+                  <Printer size={13} className="text-[#d4af37]" /> Print / Save Official PDF
                 </button>
               </div>
             </div>
 
             {/* Unique Domain-Specific High-Resolution Static Photograph */}
-            <div className="relative min-h-[260px] border-t border-white/10 bg-[#0a130f] lg:border-l lg:border-t-0">
+            <div className="relative min-h-[260px] border-t border-white/10 bg-[#070a0e] lg:border-l lg:border-t-0">
               <img
                 src={activeProfile.heroImage}
                 alt={activeProfile.title}
                 className="h-full w-full object-cover"
               />
-              <div className="pointer-events-none absolute bottom-3 left-3 rounded-full border border-white/20 bg-black/70 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-[#d4af37]">
+              <div className="pointer-events-none absolute bottom-3 left-3 rounded-full border border-[#d4af37]/40 bg-black/80 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-[#fce096] backdrop-blur-md">
                 {activeProfile.code} · Verified Statutory Dossier
               </div>
             </div>
           </div>
 
           {/* Domain-Specific Key Metrics Bar */}
-          <div className="grid grid-cols-2 gap-px border-t border-white/10 bg-white/10 text-[11px] sm:grid-cols-4">
+          <div className="grid grid-cols-2 gap-px border-t border-[#d4af37]/20 bg-white/10 text-[11px] sm:grid-cols-4">
             {activeProfile.keyMetrics.map(([val, label]) => (
-              <div key={label} className="bg-[#15241c] p-3.5">
-                <p className="font-mono text-xs font-bold uppercase tracking-wider text-[#d4af37]">{val}</p>
-                <p className="mt-1 font-medium text-white/85">{label}</p>
+              <div key={label} className="bg-[#070a0e] p-3.5">
+                <p className="font-mono text-xs font-bold uppercase tracking-wider text-[#fce096]">{val}</p>
+                <p className="mt-1 font-medium text-[#cbd5e1]">{label}</p>
               </div>
             ))}
           </div>
         </header>
 
         {/* 2. STICKY SECTION NAVIGATION (LINKS TO ALL 8 UNIQUE LEGAL ROUTES) */}
-        <div className="sticky top-0 z-20 -mx-4 mt-6 border-b border-[#26392c]/15 bg-[#f7f5ef]/95 px-4 py-3.5 backdrop-blur sm:-mx-8 sm:px-8">
+        <div className="sticky top-0 z-20 -mx-4 mt-6 border-b border-[#d4af37]/20 bg-[#070a0e]/95 px-4 py-3.5 backdrop-blur-md sm:-mx-8 sm:px-8">
           <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
             <nav aria-label="Legal policy sections" className="flex gap-2 overflow-x-auto pb-1 [scrollbar-width:none]">
               {SECTIONS.map(section => (
@@ -893,8 +894,8 @@ export default function Legal() {
                   onClick={() => setSearchQuery('')}
                   className={`shrink-0 rounded-lg border px-3 py-2 text-xs font-semibold transition ${
                     selectedSection === section.id
-                      ? 'border-[#142019] bg-[#142019] text-[#f4f1e9] shadow-sm'
-                      : 'border-[#26392c]/20 bg-white/80 text-[#26392c] hover:bg-white'
+                      ? 'border-[#d4af37] bg-gradient-to-r from-[#d4af37] to-[#fce096] text-black font-bold shadow-md'
+                      : 'border-white/15 bg-white/5 text-[#cbd5e1] hover:border-[#d4af37]/40 hover:text-white'
                   }`}
                 >
                   <span className="mr-1.5 font-mono text-[10px] opacity-75">{section.code}:</span>
@@ -911,7 +912,7 @@ export default function Legal() {
                 onChange={e => setSearchQuery(e.target.value)}
                 placeholder="Search any clause, law, unboxing, wallet..."
                 aria-label="Search legal clauses"
-                className="w-full rounded-lg border border-[#26392c]/25 bg-white pl-9 pr-3 py-2 text-xs text-[#142019] outline-none focus:border-[#142019]"
+                className="w-full rounded-lg border border-white/20 bg-[#0d1520] pl-9 pr-3 py-2 text-xs text-white placeholder-white/40 outline-none focus:border-[#d4af37] transition-colors"
               />
             </div>
           </div>
@@ -921,18 +922,18 @@ export default function Legal() {
         {activeProfile.realLifeExamples && activeProfile.realLifeExamples.length > 0 && (
           <section className="mt-8">
             <div className="mb-4 flex items-center justify-between">
-              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#6b4226]">
+              <span className="font-sub-gold text-[10px] tracking-[0.2em] text-[#fce096] block">
                 Real-Life Case Precedents · {activeProfile.code}
               </span>
-              <span className="text-xs text-stone-500">Photographic &amp; Operational Examples</span>
+              <span className="text-xs text-[#94a3b8]">Photographic &amp; Operational Examples</span>
             </div>
             <div className="grid gap-6 md:grid-cols-2">
               {activeProfile.realLifeExamples.map((ex) => (
                 <article
                   key={ex.caseCode}
-                  className="overflow-hidden rounded-2xl border border-[#26392c]/15 bg-white shadow-sm"
+                  className="two-tone-card overflow-hidden rounded-2xl border border-[#d4af37]/25 bg-[#0d1520] shadow-md transition-all hover:border-[#d4af37]/60"
                 >
-                  <div className="aspect-[16/9] w-full overflow-hidden bg-[#111e18]">
+                  <div className="aspect-[16/9] w-full overflow-hidden bg-[#070a0e]">
                     <img
                       src={ex.image}
                       alt={ex.title}
@@ -941,13 +942,13 @@ export default function Legal() {
                     />
                   </div>
                   <div className="p-6">
-                    <span className="rounded bg-[#eef0e6] px-2.5 py-1 font-mono text-[10px] font-bold text-[#26392c]">
+                    <span className="rounded bg-[#070a0e] border border-[#d4af37]/35 px-2.5 py-1 font-mono text-[10px] font-bold text-[#fce096]">
                       {ex.caseCode}
                     </span>
-                    <h2 className="mt-3 font-serif text-xl font-bold text-[#142019]">{ex.title}</h2>
-                    <p className="mt-2 text-xs leading-6 text-stone-600 sm:text-sm">{ex.summary}</p>
-                    <div className="mt-4 rounded-xl border border-emerald-800/15 bg-[#f4f6ef] p-3 text-xs font-medium text-[#1b2921]">
-                      <strong>Verified Resolution:</strong> {ex.outcome}
+                    <h2 className="mt-3 font-serif text-xl font-bold text-white">{ex.title}</h2>
+                    <p className="mt-2 text-xs leading-6 text-[#94a3b8] sm:text-sm">{ex.summary}</p>
+                    <div className="mt-4 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] p-3 text-xs font-medium text-[#cbd5e1]">
+                      <strong className="text-white">Verified Resolution:</strong> <span className="text-[#fce096]">{ex.outcome}</span>
                     </div>
                   </div>
                 </article>
@@ -959,12 +960,12 @@ export default function Legal() {
         {/* 4. DETAILED CLAUSE ARTICLES */}
         <div className="mt-8 space-y-10">
           {activeSectionsToRender.length === 0 ? (
-            <div className="rounded-xl border border-[#26392c]/15 bg-white p-8 text-center">
-              <p className="font-serif text-xl text-[#142019]">No clauses matched &ldquo;{searchQuery}&rdquo;.</p>
+            <div className="two-tone-card rounded-xl border border-white/15 bg-[#0d1520] p-8 text-center">
+              <p className="font-serif text-xl text-white">No clauses matched &ldquo;{searchQuery}&rdquo;.</p>
               <button
                 type="button"
                 onClick={() => setSearchQuery('')}
-                className="mt-4 rounded-lg bg-[#142019] px-4 py-2 text-xs font-semibold text-white"
+                className="btn-gold-luxury mt-4 rounded-lg px-4 py-2 text-xs font-semibold text-white"
               >
                 Reset search filter
               </button>
@@ -974,37 +975,37 @@ export default function Legal() {
               <article
                 key={sec.id}
                 id={`legal-part-${sec.id}`}
-                className="rounded-2xl border border-[#26392c]/15 bg-white p-6 shadow-sm sm:p-9"
+                className="two-tone-card rounded-2xl border border-[#d4af37]/25 bg-[#0d1520] p-6 shadow-md sm:p-9"
               >
-                <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-[#26392c]/15 pb-4">
+                <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
                   <div>
-                    <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#6b4226]">
+                    <span className="font-sub-gold text-[10px] tracking-[0.2em] text-[#fce096] block">
                       {sec.code} · BHUMIVERA MASTER LEGAL SUITE
                     </span>
-                    <h2 className="mt-1 font-serif text-2xl text-[#142019] sm:text-3xl">{sec.label}</h2>
+                    <h2 className="mt-1 font-serif text-2xl text-white sm:text-3xl font-bold">{sec.label}</h2>
                   </div>
-                  <span className="rounded-full bg-[#eef0e6] px-3 py-1 font-mono text-[11px] font-bold text-[#26392c]">
+                  <span className="rounded-full border border-white/15 bg-[#070a0e] px-3.5 py-1 font-mono text-[11px] font-bold text-[#fce096]">
                     {sec.clauses.length} Clauses
                   </span>
                 </div>
 
-                <div className="space-y-7 text-sm leading-7 text-stone-700">
+                <div className="space-y-7 text-sm leading-7 text-[#cbd5e1]">
                   {sec.clauses.map(clause => (
                     <section
                       key={clause.num}
-                      className="border-l-2 border-[#26392c]/20 pl-4 transition hover:border-[#6b4226] sm:pl-5"
+                      className="border-l-2 border-[#d4af37]/40 pl-4 transition hover:border-[#d4af37] sm:pl-5"
                     >
                       <div className="flex items-baseline gap-2.5">
-                        <span className="rounded bg-[#142019] px-2 py-0.5 font-mono text-[10px] font-bold text-[#d4af37]">
+                        <span className="rounded bg-[#070a0e] border border-[#d4af37]/40 px-2 py-0.5 font-mono text-[10px] font-bold text-[#fce096]">
                           § {clause.num}
                         </span>
-                        <h3 className="font-serif text-xl font-semibold text-[#142019] sm:text-2xl">
+                        <h3 className="font-serif text-xl font-semibold text-white sm:text-2xl">
                           {clause.title}
                         </h3>
                       </div>
                       <div className="mt-2.5 space-y-3">
                         {clause.body.map((paragraph, pIdx) => (
-                          <p key={pIdx} className="whitespace-pre-line text-stone-700 leading-relaxed">
+                          <p key={pIdx} className="whitespace-pre-line text-[#cbd5e1] leading-relaxed">
                             {paragraph}
                           </p>
                         ))}
@@ -1018,35 +1019,35 @@ export default function Legal() {
         </div>
 
         {/* 5. MASTER PROTECTION MATRIX */}
-        <section className="mt-10 overflow-hidden rounded-xl border border-[#26392c]/15 bg-white shadow-sm">
-          <div className="border-b border-[#26392c]/10 bg-[#eef0e6] px-5 py-4 sm:px-6 flex flex-wrap items-center justify-between gap-2">
+        <section className="mt-10 overflow-hidden rounded-2xl border border-[#d4af37]/25 bg-[#0d1520] shadow-md">
+          <div className="border-b border-[#d4af37]/20 bg-[#070a0e] px-5 py-4 sm:px-6 flex flex-wrap items-center justify-between gap-2">
             <div className="flex items-center gap-2">
-              <Gavel size={16} className="text-[#26392c]" />
-              <h2 className="font-serif text-lg font-bold text-[#142019]">
+              <Gavel size={16} className="text-[#fce096]" />
+              <h2 className="font-serif text-lg font-bold text-white">
                 Quick Statutory &amp; Anti-Fraud Governance Matrix
               </h2>
             </div>
-            <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#536b4d]">
+            <span className="font-sub-gold text-[10px] tracking-wider text-[#fce096]">
               Binding Operational Rules Across All Orders
             </span>
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left text-xs border-collapse">
               <thead>
-                <tr className="border-b border-[#26392c]/15 bg-[#f7f5ef] text-[10px] font-bold uppercase tracking-wider text-[#354933]">
+                <tr className="border-b border-white/10 bg-[#070a0e] text-[10px] font-bold uppercase tracking-wider text-[#fce096]">
                   <th className="py-3 px-4">Scenario / Module</th>
                   <th className="py-3 px-4">Binding Bhumivera Rule</th>
                   <th className="py-3 px-4">Required Verification Proof</th>
                   <th className="py-3 px-4">Governing Legal Basis</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-[#26392c]/10 text-stone-700">
+              <tbody className="divide-y divide-white/10 text-[#cbd5e1]">
                 {PROTECTION_MATRIX.map(row => (
-                  <tr key={row.scenario} className="hover:bg-[#faf9f5]">
-                    <td className="py-3.5 px-4 font-semibold text-[#142019]">{row.scenario}</td>
+                  <tr key={row.scenario} className="hover:bg-white/[0.02] transition-colors">
+                    <td className="py-3.5 px-4 font-semibold text-white">{row.scenario}</td>
                     <td className="py-3.5 px-4 leading-relaxed">{row.policy}</td>
-                    <td className="py-3.5 px-4 leading-relaxed text-[#26392c] font-medium">{row.evidence}</td>
-                    <td className="py-3.5 px-4 font-mono text-[11px] text-stone-600">{row.statute}</td>
+                    <td className="py-3.5 px-4 leading-relaxed text-[#fce096] font-medium">{row.evidence}</td>
+                    <td className="py-3.5 px-4 font-mono text-[11px] text-[#94a3b8]">{row.statute}</td>
                   </tr>
                 ))}
               </tbody>

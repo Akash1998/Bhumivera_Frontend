@@ -60,7 +60,7 @@ export default function Compare() {
   ];
 
   return (
-    <main className="min-h-screen bg-[#f6f3ec] text-[#17251c] py-16 px-4 sm:px-8 font-sans">
+    <main className="min-h-screen bg-[#070a0e] text-[#e2e8f0] py-20 px-4 sm:px-8 font-sans selection:bg-[#d4af37]/30 selection:text-white">
       <SEO
         title="Compare Botanical Formulations Side-by-Side | Bhumivera"
         description="Compare Bhumivera facial cleansers, Kumkumadi night elixir, hair cleanser, and barrier hydro-gel across pH level, active concentrations, and skin types."
@@ -69,16 +69,20 @@ export default function Compare() {
 
       <div className="mx-auto max-w-7xl">
         {/* Header Banner */}
-        <div className="rounded-3xl bg-[#101d16] p-8 sm:p-12 text-white shadow-xl mb-10">
+        <div className="rounded-3xl two-tone-panel-gold p-8 sm:p-12 text-white shadow-2xl mb-10 border border-[#d4af37]/40">
           <div className="grid lg:grid-cols-[1.3fr_0.7fr] gap-8 items-center">
             <div>
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#d4af37]/40 bg-[#d4af37]/10 px-3.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#d4af37]">
-                <FlaskConical size={13} /> Side-by-Side Formulation &amp; INCI Comparison Matrix
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#d4af37]/40 bg-[#070a0e] px-3.5 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#fce096]">
+                <FlaskConical size={13} className="text-[#d4af37]" /> Side-by-Side Formulation &amp; INCI Matrix
               </span>
-              <h1 className="mt-4 font-serif text-3xl sm:text-5xl">
-                Compare Bhumivera Formulations
+              <h1 className="mt-4 font-serif text-3xl sm:text-5xl text-white">
+                <span className="font-headline-gold">Compare</span> <span className="font-headline-silver">Botanical Formulations</span>
               </h1>
-              <p className="mt-3 max-w-2xl text-xs sm:text-sm leading-6 text-white/75">
+              <div className="gold-hairline my-4 max-w-xs" />
+              <p className="font-sub-silver text-xs tracking-[0.2em] uppercase mb-3 text-[#fce096]/90">
+                pH calibration · INCI potency · Skin compatibility
+              </p>
+              <p className="mt-3 max-w-2xl text-xs sm:text-sm leading-6 text-[#cbd5e1]">
                 Inspect calibrated pH levels, exact botanical percentages, clinical co-actives, and surfactant systems side-by-side to choose the right ritual for your skin and scalp.
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
@@ -91,8 +95,8 @@ export default function Compare() {
                       onClick={() => toggleProductSelection(prod.id)}
                       className={`rounded-full border px-3.5 py-1.5 text-xs font-semibold transition ${
                         active
-                          ? 'border-[#d4af37] bg-[#d4af37] text-[#101d16]'
-                          : 'border-white/20 bg-white/5 text-white/75 hover:bg-white/15'
+                          ? 'border-[#d4af37] btn-gold-luxury text-white'
+                          : 'border-[#d4af37]/30 bg-[#070a0e] text-[#cbd5e1] hover:border-[#d4af37] hover:text-[#fce096]'
                       }`}
                     >
                       {active ? '✓ ' : '+ '}
@@ -102,30 +106,30 @@ export default function Compare() {
                 })}
               </div>
             </div>
-            <div className="overflow-hidden rounded-2xl border border-white/15 bg-black/30">
+            <div className="overflow-hidden rounded-2xl border border-[#d4af37]/30 bg-[#070a0e] shadow-lg">
               <img
                 src={HOME_VISUAL_ASSETS.realLifeFieldStudies[3].image}
                 alt="Four natural skincare formulation swatches on frosted glass"
                 className="h-52 w-full object-cover"
               />
-              <div className="p-3.5 text-[11px] text-[#dce7c5]">
-                <strong>Real-Life Texture Swatch Plate:</strong> Sea Buckthorn Amber Gel, Activated Bamboo Charcoal, Kashmiri Saffron Kumkumadi Oil, and Aloe-Gotu Kola Hydro-Gel.
+              <div className="p-3.5 text-[11px] text-[#cbd5e1] border-t border-[#d4af37]/20 bg-[#0d1520]/80">
+                <strong className="text-[#fce096]">Real-Life Texture Swatch Plate:</strong> Sea Buckthorn Amber Gel, Activated Bamboo Charcoal, Kashmiri Saffron Kumkumadi Oil, and Aloe-Gotu Kola Hydro-Gel.
               </div>
             </div>
           </div>
         </div>
 
         {/* Comparison Table */}
-        <div className="overflow-x-auto rounded-3xl border border-[#17251c]/15 bg-white shadow-sm">
+        <div className="overflow-x-auto rounded-3xl two-tone-card border border-[#d4af37]/30 shadow-2xl">
           <table className="w-full min-w-[920px] border-collapse text-left text-xs sm:text-sm">
             <thead>
-              <tr className="border-b border-[#17251c]/15 bg-[#faf8f3]">
-                <th className="w-56 p-6 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#536b4d]">
+              <tr className="border-b border-[#d4af37]/25 bg-[#070a0e]">
+                <th className="w-56 p-6 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#d4af37]">
                   Formulation Parameter
                 </th>
                 {activeProducts.map((product) => (
-                  <th key={product.id || product._id} className="w-64 border-l border-[#17251c]/10 p-6 align-top">
-                    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#101d16] mb-4">
+                  <th key={product.id || product._id} className="w-64 border-l border-[#d4af37]/20 p-6 align-top bg-[#070a0e]/60">
+                    <div className="relative aspect-[4/3] w-full overflow-hidden rounded-2xl bg-[#070a0e] border border-[#d4af37]/25 mb-4">
                       <img
                         src={product.image_url}
                         alt={product.name}
@@ -134,19 +138,19 @@ export default function Compare() {
                     </div>
                     <Link
                       to={`/product/${product.slug || product.id}`}
-                      className="font-serif text-lg font-bold text-[#17251c] hover:text-[#6b4226] block leading-snug"
+                      className="font-serif text-lg font-bold text-white hover:text-[#fce096] block leading-snug transition-colors"
                     >
                       {product.name}
                     </Link>
-                    <div className="mt-2 flex items-center gap-1 text-amber-600 text-xs font-semibold">
+                    <div className="mt-2 flex items-center gap-1 text-[#d4af37] text-xs font-semibold">
                       <Star size={13} className="fill-current" />
-                      <span>{product.rating || 4.9}</span>
-                      <span className="text-stone-400">({product.reviews || 90} verified reviews)</span>
+                      <span className="text-[#fce096]">{product.rating || 4.9}</span>
+                      <span className="text-[#94a3b8]">({product.reviews || 90} reviews)</span>
                     </div>
                     <button
                       type="button"
                       onClick={() => addToCart?.(product, 1)}
-                      className="mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#101d16] px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white hover:bg-[#233d2f]"
+                      className="btn-gold-luxury mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg"
                     >
                       <ShoppingCart size={14} /> Add to Bag · ₹{product.discount_price || product.price}
                     </button>
@@ -154,12 +158,12 @@ export default function Compare() {
                 ))}
               </tr>
             </thead>
-            <tbody className="divide-y divide-[#17251c]/10">
+            <tbody className="divide-y divide-[#d4af37]/15">
               {rows.map((row) => (
-                <tr key={row.key} className="hover:bg-[#faf9f5]">
-                  <td className="p-5 font-semibold text-[#17251c] bg-[#faf8f3]/60">{row.label}</td>
+                <tr key={row.key} className="hover:bg-[#0d1520]/60 transition-colors">
+                  <td className="p-5 font-semibold text-white bg-[#070a0e]/80">{row.label}</td>
                   {activeProducts.map((product) => (
-                    <td key={`${product.id}-${row.key}`} className="border-l border-[#17251c]/10 p-5 text-stone-700 leading-relaxed">
+                    <td key={`${product.id}-${row.key}`} className="border-l border-[#d4af37]/15 p-5 text-[#cbd5e1] leading-relaxed">
                       {row.render(product)}
                     </td>
                   ))}

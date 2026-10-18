@@ -1,4 +1,3 @@
-// QuickViewModal - Revamped with modern UI and lucide-react icons
 import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { X, ShoppingCart, Star, Check, Minus, Plus, ExternalLink, Tag, Package } from 'lucide-react';
@@ -46,29 +45,29 @@ export default function QuickViewModal({ product, onClose }) {
   return (
     <div
       onClick={onClose}
-      className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
+      className="fixed inset-0 bg-black/85 backdrop-blur-md z-50 flex items-center justify-center p-4 animate-in fade-in duration-200"
     >
       <div
         onClick={(e) => e.stopPropagation()}
-        className="bg-[#0d0d0d] border border-gray-800 rounded-2xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl shadow-black/60 animate-in zoom-in-95 duration-300"
+        className="two-tone-panel-gold relative bg-[#0d1520] rounded-3xl max-w-4xl w-full max-h-[90vh] overflow-y-auto shadow-2xl animate-in zoom-in-95 duration-300"
       >
         {/* Close Button */}
         <button
           onClick={onClose}
-          className="absolute top-4 right-4 z-10 p-2 bg-black/50 hover:bg-black/70 text-white rounded-full transition-colors backdrop-blur-sm"
+          className="absolute top-5 right-5 z-10 p-2.5 bg-[#070a0e] hover:bg-black text-[#cbd5e1] hover:text-white rounded-full border border-white/20 hover:border-[#d4af37] transition-all backdrop-blur-sm shadow-md"
           aria-label="Close"
         >
-          <X size={20} />
+          <X size={18} />
         </button>
 
-        <div className="grid md:grid-cols-2 gap-6 p-6">
+        <div className="grid md:grid-cols-2 gap-8 p-6 sm:p-8">
           {/* Left: Images */}
           <div className="space-y-4">
             {/* Main Image */}
-            <div className="relative aspect-square bg-gray-900 rounded-xl overflow-hidden border border-gray-800 group">
+            <div className="relative aspect-square bg-[#070a0e] rounded-2xl overflow-hidden border border-white/10 group">
               {discount > 0 && (
-                <div className="absolute top-3 left-3 z-10 bg-gradient-to-r from-red-600 to-pink-600 text-white px-3 py-1.5 rounded-full text-xs font-bold shadow-lg flex items-center gap-1">
-                  <Tag size={12} />
+                <div className="absolute top-3 left-3 z-10 bg-black/80 border border-[#d4af37]/40 text-[#fce096] px-3 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider shadow-lg flex items-center gap-1 backdrop-blur-md">
+                  <Tag size={12} className="text-[#d4af37]" />
                   {discount}% OFF
                 </div>
               )}
@@ -85,15 +84,15 @@ export default function QuickViewModal({ product, onClose }) {
 
             {/* Thumbnail Strip */}
             {images.length > 1 && (
-              <div className="flex gap-2 overflow-x-auto pb-2 scrollbar-thin scrollbar-thumb-gray-700">
+              <div className="flex gap-2.5 overflow-x-auto pb-2 custom-scrollbar">
                 {images.map((img, i) => (
                   <button
                     key={i}
                     onClick={() => setSelectedImg(i)}
-                    className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
+                    className={`flex-shrink-0 w-16 h-16 rounded-xl overflow-hidden border transition-all ${
                       selectedImg === i
-                        ? 'border-cyan-500 ring-2 ring-cyan-500/30'
-                        : 'border-gray-700 opacity-60 hover:opacity-100 hover:border-gray-600'
+                        ? 'border-[#d4af37] ring-1 ring-[#d4af37]/60'
+                        : 'border-white/10 opacity-60 hover:opacity-100 hover:border-white/30'
                     }`}
                   >
                     <img
@@ -112,14 +111,14 @@ export default function QuickViewModal({ product, onClose }) {
           <div className="flex flex-col gap-4">
             {/* Category Badge */}
             {product.category && (
-              <span className="inline-flex items-center gap-1 text-xs font-semibold text-cyan-400 bg-cyan-500/10 px-3 py-1.5 rounded-full border border-cyan-500/30 w-fit">
-                <Package size={12} />
+              <span className="font-sub-gold inline-flex items-center gap-1.5 text-[10px] tracking-wider border border-[#d4af37]/40 bg-[#070a0e] px-3 py-1 rounded-full w-fit">
+                <Package size={12} className="text-[#d4af37]" />
                 {typeof product.category === 'object' ? product.category.name : product.category}
               </span>
             )}
 
             {/* Product Name */}
-            <h2 className="text-2xl font-bold text-white leading-tight">
+            <h2 className="text-2xl sm:text-3xl font-serif font-bold text-white leading-tight">
               {product.name}
             </h2>
 
@@ -133,29 +132,29 @@ export default function QuickViewModal({ product, onClose }) {
                       size={14}
                       className={`${
                         i < Math.round(product.rating || 4)
-                          ? 'text-yellow-400 fill-yellow-400'
-                          : 'text-gray-600 fill-gray-600'
+                          ? 'text-[#fce096] fill-[#fce096]'
+                          : 'text-white/20'
                       }`}
                     />
                   ))}
                 </div>
                 {product.reviewCount && (
-                  <span className="text-xs text-gray-500">({product.reviewCount} reviews)</span>
+                  <span className="text-xs font-mono text-[#94a3b8]">({product.reviewCount} reviews)</span>
                 )}
               </div>
             )}
 
             {/* Price */}
-            <div className="flex items-baseline gap-3 py-2">
-              <span className="text-3xl font-bold bg-gradient-to-r from-cyan-400 to-purple-400 bg-clip-text text-transparent">
+            <div className="flex items-baseline gap-3 py-2 border-y border-white/5">
+              <span className="text-3xl font-mono font-bold text-[#fce096]">
                 ₹{price.toLocaleString()}
               </span>
               {discount > 0 && (
                 <>
-                  <span className="text-lg text-gray-500 line-through">
+                  <span className="text-base text-[#94a3b8] line-through">
                     ₹{original.toLocaleString()}
                   </span>
-                  <span className="text-sm font-semibold text-green-400 bg-green-500/10 px-2 py-1 rounded-md border border-green-500/30">
+                  <span className="text-xs font-mono font-bold text-[#fce096] bg-[#070a0e] px-2.5 py-1 rounded-md border border-[#d4af37]/35">
                     Save ₹{(original - price).toLocaleString()}
                   </span>
                 </>
@@ -164,8 +163,8 @@ export default function QuickViewModal({ product, onClose }) {
 
             {/* Description */}
             {product.description && (
-              <div className="bg-gray-900/50 border border-gray-800 rounded-lg p-4">
-                <p className="text-gray-300 text-sm leading-relaxed line-clamp-3">
+              <div className="bg-[#070a0e] border border-white/10 rounded-xl p-4">
+                <p className="text-[#cbd5e1] text-xs sm:text-sm leading-relaxed line-clamp-3">
                   {product.description}
                 </p>
               </div>
@@ -173,18 +172,18 @@ export default function QuickViewModal({ product, onClose }) {
 
             {/* Stock Status */}
             {product.quantity !== undefined && (
-              <div className="flex items-center gap-2 text-sm">
+              <div className="flex items-center gap-2 text-xs font-mono">
                 {product.quantity > 0 ? (
                   <>
-                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                    <span className="text-green-400 font-medium">
-                      In Stock ({product.quantity} available)
+                    <div className="w-2 h-2 bg-[#d4af37] rounded-full animate-pulse shadow-[0_0_8px_rgba(212,175,55,0.8)]" />
+                    <span className="text-[#fce096] font-medium">
+                      In Stock ({product.quantity} units available)
                     </span>
                   </>
                 ) : (
                   <>
-                    <div className="w-2 h-2 bg-red-400 rounded-full" />
-                    <span className="text-red-400 font-medium">Out of Stock</span>
+                    <div className="w-2 h-2 bg-rose-400 rounded-full" />
+                    <span className="text-rose-400 font-medium">Out of Stock</span>
                   </>
                 )}
               </div>
@@ -193,17 +192,17 @@ export default function QuickViewModal({ product, onClose }) {
             {/* Variant Options */}
             {product.variants && product.variants.length > 0 && (
               <div>
-                <h4 className="text-sm font-semibold text-gray-400 mb-2">Options</h4>
+                <h4 className="text-xs font-mono uppercase tracking-wider text-[#94a3b8] mb-2">Options</h4>
                 <div className="flex flex-wrap gap-2">
                   {product.variants.map((v, i) => (
                     <button
                       key={i}
                       type="button"
                       onClick={() => setSelectedVariant(i)}
-                      className={`px-3 py-1.5 text-sm border rounded-lg transition-colors ${
+                      className={`px-3 py-1.5 text-xs rounded-lg border transition-all ${
                         selectedVariant === i
-                          ? 'border-cyan-500 bg-cyan-500/15 text-cyan-300 font-semibold'
-                          : 'border-gray-700 text-gray-300 hover:border-cyan-500 hover:text-cyan-400'
+                          ? 'border-[#d4af37] bg-gradient-to-r from-[#d4af37] to-[#fce096] text-black font-bold shadow-md'
+                          : 'border-white/15 bg-[#070a0e] text-[#cbd5e1] hover:border-[#d4af37]/40'
                       }`}
                     >
                       {v.name || v}
@@ -214,24 +213,26 @@ export default function QuickViewModal({ product, onClose }) {
             )}
 
             {/* Quantity & Add to Cart */}
-            <div className="flex items-center gap-3 mt-auto pt-4 border-t border-gray-800">
+            <div className="flex items-center gap-3 mt-auto pt-4 border-t border-white/10">
               {/* Quantity Selector */}
-              <div className="flex items-center bg-gray-900 border border-gray-700 rounded-lg overflow-hidden">
+              <div className="flex items-center bg-[#070a0e] border border-white/15 rounded-xl overflow-hidden">
                 <button
                   onClick={() => setQty(q => Math.max(1, q - 1))}
-                  className="px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                  className="px-3.5 py-2.5 text-[#94a3b8] hover:text-white hover:bg-white/5 transition-colors"
                   disabled={qty <= 1}
+                  aria-label="Decrease quantity"
                 >
-                  <Minus size={16} />
+                  <Minus size={14} />
                 </button>
-                <span className="px-6 py-3 text-white font-semibold border-x border-gray-700">
+                <span className="px-4 py-2.5 text-white font-mono font-bold text-xs border-x border-white/15">
                   {qty}
                 </span>
                 <button
                   onClick={() => setQty(q => q + 1)}
-                  className="px-4 py-3 text-gray-400 hover:text-white hover:bg-gray-800 transition-colors"
+                  className="px-3.5 py-2.5 text-[#94a3b8] hover:text-white hover:bg-white/5 transition-colors"
+                  aria-label="Increase quantity"
                 >
-                  <Plus size={16} />
+                  <Plus size={14} />
                 </button>
               </div>
 
@@ -239,20 +240,16 @@ export default function QuickViewModal({ product, onClose }) {
               <button
                 onClick={handleAdd}
                 disabled={added || (product.quantity !== undefined && product.quantity === 0)}
-                className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-lg font-bold transition-all shadow-lg ${
-                  added
-                    ? 'bg-green-600 text-white shadow-green-500/30'
-                    : 'bg-gradient-to-r from-cyan-600 to-purple-600 hover:from-cyan-500 hover:to-purple-500 text-white shadow-cyan-500/30'
-                } disabled:opacity-50 disabled:cursor-not-allowed`}
+                className="btn-gold-luxury flex-1 flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-bold uppercase tracking-widest text-xs text-white shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {added ? (
                   <>
-                    <Check size={20} />
-                    <span>Added!</span>
+                    <Check size={18} />
+                    <span>Added to Cart</span>
                   </>
                 ) : (
                   <>
-                    <ShoppingCart size={20} />
+                    <ShoppingCart size={18} />
                     <span>Add to Cart</span>
                   </>
                 )}
@@ -263,10 +260,10 @@ export default function QuickViewModal({ product, onClose }) {
             <Link
               to={`/product/${product.slug || product.id}`}
               onClick={onClose}
-              className="flex items-center justify-center gap-2 text-sm text-cyan-400 hover:text-cyan-300 transition-colors py-2"
+              className="flex items-center justify-center gap-1.5 text-xs font-mono uppercase tracking-wider text-[#fce096] hover:text-white transition-colors py-1"
             >
-              <ExternalLink size={14} />
-              <span>View Full Details</span>
+              <ExternalLink size={13} />
+              <span>Inspect Full Technical Dossier</span>
             </Link>
           </div>
         </div>

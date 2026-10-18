@@ -642,60 +642,69 @@ export default function MiniCart() {
 
   return (
     <div className="mini-cart-overlay fixed inset-0 z-[200] overflow-hidden" role="presentation">
-      <button type="button" aria-label="Close cart" className="mini-cart-backdrop absolute inset-0 h-full w-full bg-[#14251c]/55" onClick={() => setIsCartOpen(false)} />
+      <button type="button" aria-label="Close cart" className="mini-cart-backdrop absolute inset-0 h-full w-full bg-black/80 backdrop-blur-md" onClick={() => setIsCartOpen(false)} />
       <aside
         role="dialog"
         aria-modal="true"
         aria-labelledby="mini-cart-title"
-        className="mini-cart-panel absolute inset-y-0 right-0 flex w-full max-w-[480px] flex-col border-l border-[#dedfd4] bg-[#f4f1e9] text-[#14251c] shadow-2xl"
+        className="mini-cart-panel absolute inset-y-0 right-0 flex w-full max-w-[480px] flex-col border-l border-[#d4af37]/30 bg-[#070a0e] text-[#e2e8f0] shadow-2xl"
       >
         <AnimatePresence>
-          {celebrationEvent && <Motion.div key={celebrationEvent.id} initial={{ opacity: 0, y: -18, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -12 }} className="absolute left-4 right-4 top-20 z-30 overflow-hidden rounded-2xl border border-[#c8d6ae] bg-[#f1f5e8] p-4 text-[#263d31] shadow-xl" aria-live="polite">
+          {celebrationEvent && <Motion.div key={celebrationEvent.id} initial={{ opacity: 0, y: -18, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -12 }} className="absolute left-4 right-4 top-20 z-30 overflow-hidden rounded-2xl border border-[#d4af37]/40 bg-[#0d1520] p-4 text-[#e2e8f0] shadow-2xl" aria-live="polite">
             <div className="absolute inset-0 pointer-events-none">
-              {[0, 1, 2, 3, 4, 5].map(index => <Motion.span key={index} initial={{ opacity: 0, y: 24, x: `${index * 18}%`, rotate: -20 }} animate={{ opacity: [0, 1, 0], y: -22, rotate: 24 }} transition={{ duration: 1.3, delay: index * 0.06 }} className="absolute bottom-0"><Leaf size={13} className="text-[#758c53]"/></Motion.span>)}
+              {[0, 1, 2, 3, 4, 5].map(index => <Motion.span key={index} initial={{ opacity: 0, y: 24, x: `${index * 18}%`, rotate: -20 }} animate={{ opacity: [0, 1, 0], y: -22, rotate: 24 }} transition={{ duration: 1.3, delay: index * 0.06 }} className="absolute bottom-0"><Sparkles size={13} className="text-[#d4af37]"/></Motion.span>)}
             </div>
-            <div className="relative flex items-start gap-3"><span className="rounded-full bg-white p-2 text-[#536b4d]"><Sparkles size={17}/></span><div><p className="text-xs font-bold uppercase tracking-widest">A thoughtful choice</p><p className="mt-1 text-xs leading-5">We’ve added {celebrationEvent.productName} to your cart. Thank you for choosing with care.</p>{rulePreview?.gifts?.length > 0 && <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-emerald-800"><Gift size={14}/>Your cart includes an admin-configured gift reward.</p>}</div></div>
+            <div className="relative flex items-start gap-3"><span className="rounded-full bg-white/10 p-2 text-[#d4af37] border border-[#d4af37]/30"><Sparkles size={17}/></span><div><p className="text-xs font-bold uppercase tracking-widest text-[#d4af37]">Considered Selection</p><p className="mt-1 text-xs leading-5 text-[#cbd5e1]">We’ve added <strong className="text-white">{celebrationEvent.productName}</strong> to your bag.</p>{rulePreview?.gifts?.length > 0 && <p className="mt-2 flex items-center gap-1.5 text-xs font-semibold text-[#faeec7]"><Gift size={14} className="text-[#d4af37]"/>Your bag includes an unlocked gift formulation.</p>}</div></div>
           </Motion.div>}
         </AnimatePresence>
-        <header className="mini-cart-header relative flex items-center justify-between border-b border-[#dedfd4] px-5 py-5 sm:px-7">
+
+        <header className="mini-cart-header relative flex items-center justify-between border-b border-[#d4af37]/25 px-5 py-5 sm:px-7 bg-[#0d1520]">
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#14251c] text-[#e2d6b8] shadow-lg shadow-[#14251c]/15"><ShoppingBag size={19}/></span>
-            <div><h2 id="mini-cart-title" className="font-serif text-xl text-[#14251c]">Your cart <span className="font-sans text-sm font-medium text-[#687466]">({cartCount} {cartCount === 1 ? 'item' : 'items'})</span></h2><p className="mt-1 text-[9px] font-bold uppercase tracking-[0.2em] text-[#526b4d]">A little care, on its way</p></div>
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#070a0e] text-[#d4af37] border border-[#d4af37]/40 shadow-lg"><ShoppingBag size={19}/></span>
+            <div>
+              <h2 id="mini-cart-title" className="font-serif text-xl sm:text-2xl font-bold">
+                <span className="font-headline-gold">Your</span> <span className="font-headline-silver">Bag</span> <span className="font-sans text-xs font-medium text-[#94a3b8]">({cartCount} {cartCount === 1 ? 'item' : 'items'})</span>
+              </h2>
+              <div className="gold-hairline my-1 w-32" />
+              <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-[#d4af37]">Considered Botanical Care</p>
+            </div>
           </div>
-          <button type="button" aria-label="Close cart" onClick={() => setIsCartOpen(false)} className="rounded-full border border-[#dedfd4] bg-white/80 p-2.5 text-[#526b4d] shadow-sm transition hover:-rotate-90 hover:bg-[#14251c] hover:text-white"><X size={18}/></button>
+          <button type="button" aria-label="Close cart" onClick={() => setIsCartOpen(false)} className="rounded-full border border-white/15 bg-white/5 p-2.5 text-[#cbd5e1] shadow-sm transition hover:rotate-90 hover:border-[#d4af37] hover:text-[#d4af37]"><X size={18}/></button>
         </header>
 
-        <div className="mini-cart-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:px-7">
-          {cartItems.length === 0 && <div className="mini-cart-empty relative flex min-h-[360px] flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-[#dedfd4] bg-[#fbfaf5] px-8 text-center shadow-sm">
+        <div className="mini-cart-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:px-7 bg-[#070a0e]">
+          {cartItems.length === 0 && <div className="mini-cart-empty relative flex min-h-[360px] flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-white/10 bg-[#0d1520] px-8 text-center shadow-lg">
             <span className="mini-cart-orbit mini-cart-orbit-one" aria-hidden="true"/>
             <span className="mini-cart-orbit mini-cart-orbit-two" aria-hidden="true"/>
-            <span className="mini-cart-empty-icon relative flex h-20 w-20 items-center justify-center rounded-full border border-[#d7dfce] bg-white text-[#526b4d] shadow-[0_12px_36px_rgba(20,37,28,0.1)]"><ShoppingBag size={31} strokeWidth={1.4}/><Sparkles size={15} className="absolute -right-1 top-1 text-[#b39a58]"/></span>
-            <p className="relative mt-6 text-[9px] font-bold uppercase tracking-[0.24em] text-[#526b4d]">Your next ritual starts here</p>
-            <p className="relative mt-2 font-serif text-2xl text-[#14251c]">Your cart is taking a breath</p>
-            <p className="relative mt-2 max-w-[250px] text-sm leading-6 text-[#687466]">Discover thoughtfully made essentials, chosen to feel good every day.</p>
-            <button type="button" onClick={() => { setIsCartOpen(false); navigate("/products"); }} className="relative mt-7 inline-flex items-center gap-2 rounded-full bg-[#14251c] px-6 py-3 text-[10px] font-bold uppercase tracking-[0.16em] text-white shadow-lg shadow-[#14251c]/15 transition duration-300 hover:-translate-y-0.5 hover:bg-[#294434]">Explore the Collection <ArrowRight size={14}/></button>
+            <span className="mini-cart-empty-icon relative flex h-20 w-20 items-center justify-center rounded-full border border-[#d4af37]/40 bg-[#070a0e] text-[#d4af37] shadow-[0_12px_36px_rgba(0,0,0,0.6)]"><ShoppingBag size={31} strokeWidth={1.4}/><Sparkles size={15} className="absolute -right-1 top-1 text-[#faeec7]"/></span>
+            <p className="relative mt-6 text-[9px] font-bold uppercase tracking-[0.28em] text-[#d4af37]">Your Next Daily Ritual</p>
+            <p className="relative mt-2 font-serif text-2xl text-white font-bold"><span className="font-headline-gold">Your Bag</span> <span className="font-headline-silver">Is Empty</span></p>
+            <p className="relative mt-2 max-w-[260px] text-xs leading-6 text-[#94a3b8]">Discover Himalayan sea buckthorn and certified pH 5.5 apothecary rituals.</p>
+            <button type="button" onClick={() => { setIsCartOpen(false); navigate("/products"); }} className="relative mt-7 inline-flex items-center gap-2 rounded-full btn-gold-luxury px-7 py-3 text-[10px] font-bold uppercase tracking-[0.18em]">Explore Collections <ArrowRight size={14}/></button>
           </div>}
+
           {cartItems.length > 0 && <>
-            {!checkoutOpen && <section className="mini-cart-benefits rounded-2xl border border-[#dfe3d8] bg-[#fffefa] px-4 py-3" aria-label="Cart rewards and delivery">
+            {!checkoutOpen && <section className="two-tone-panel-gold rounded-2xl p-4 border border-[#d4af37]/35" aria-label="Cart rewards and delivery">
               <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#526b4d]">Your cart benefits</span>
-                {rulePreview?.membershipTier && <span className="rounded-full bg-[#f4f1e9] px-2.5 py-1 text-[10px] font-semibold text-[#765d17]">{rulePreview.membershipTier} member</span>}
+                <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#d4af37]">Maison Rewards &amp; Dispatch</span>
+                {rulePreview?.membershipTier && <span className="rounded-full border border-[#d4af37]/40 bg-[#d4af37]/15 px-2.5 py-0.5 text-[10px] font-bold text-[#faeec7]">{rulePreview.membershipTier} Member</span>}
               </div>
-              <div className="mt-2 flex items-start gap-2 text-xs leading-5 text-[#526b4d]">
+              <div className="mt-2.5 flex items-start gap-2 text-xs leading-5 text-[#cbd5e1]">
                 {rulePreview?.gifts?.length > 0
-                  ? <><Gift size={14} className="mt-0.5 shrink-0 text-[#d4af37]"/><span>{rulePreview.gifts[0].productName ? `${rulePreview.gifts[0].productName} unlocked` : 'A free gift is unlocked'}{rulePreview.gifts.length > 1 ? ` and ${rulePreview.gifts.length - 1} more` : ''}</span></>
+                  ? <><Gift size={14} className="mt-0.5 shrink-0 text-[#d4af37]"/><span><strong className="text-white">{rulePreview.gifts[0].productName || 'Complimentary Gift'}</strong> unlocked</span></>
                   : upcomingCartReward
-                    ? <><Gift size={14} className="mt-0.5 shrink-0 text-[#d4af37]"/><span>Add {formatPrice(upcomingCartReward.missingAmount)} to unlock {upcomingCartReward.badge || upcomingCartReward.name}</span></>
+                    ? <><Gift size={14} className="mt-0.5 shrink-0 text-[#d4af37]"/><span>Add <strong className="text-[#faeec7]">{formatPrice(upcomingCartReward.missingAmount)}</strong> to unlock {upcomingCartReward.badge || upcomingCartReward.name}</span></>
                     : unlockedCartReward
                       ? <><Gift size={14} className="mt-0.5 shrink-0 text-[#d4af37]"/><span>{unlockedCartReward.badge || unlockedCartReward.name} reward unlocked</span></>
-                      : <><ShieldCheck size={14} className="mt-0.5 shrink-0"/><span>Rewards are applied automatically when your cart qualifies.</span></>}
+                      : <><ShieldCheck size={14} className="mt-0.5 shrink-0 text-[#d4af37]"/><span>Rewards and complimentary gifts apply automatically.</span></>}
               </div>
-              <div className="mt-2 flex items-center gap-2 border-t border-[#edf0e9] pt-2 text-xs text-[#526b4d]">
-                <Truck size={14} className="shrink-0"/>
-                <span>{amountToFreeShipping > 0 ? `Add ${formatPrice(amountToFreeShipping)} for free delivery` : 'Free delivery unlocked'}</span>
-                {rulePreviewLoading && <span className="ml-auto text-[10px] text-stone-400">Updating…</span>}
+              <div className="mt-2.5 flex items-center gap-2 border-t border-white/10 pt-2.5 text-xs text-[#cbd5e1]">
+                <Truck size={14} className="shrink-0 text-[#d4af37]"/>
+                <span>{amountToFreeShipping > 0 ? <>Add <strong className="text-[#faeec7]">{formatPrice(amountToFreeShipping)}</strong> for free delivery</> : <strong className="text-white">Complimentary Delivery Unlocked</strong>}</span>
+                {rulePreviewLoading && <span className="ml-auto text-[10px] text-[#94a3b8]">Updating…</span>}
               </div>
             </section>}
+
             {!checkoutOpen && cartItems.map(item => {
               const product = item.product || item;
               const id = item.product_id || product.id || product._id;
@@ -703,138 +712,134 @@ export default function MiniCart() {
               const price = Number(product.discount_price || item.unit_price || product.price) || 0;
               const itemBusy = busyCartItems.has(String(id));
               const saved = isWishlisted(id);
-              return <article key={id} className={`mini-cart-item flex gap-3 rounded-2xl border border-[#e1e3d9] bg-[#fffefa] p-3.5 transition-opacity ${itemBusy ? 'opacity-60' : ''}`}>
-                <div className="mini-cart-product-image flex h-[82px] w-[82px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-[#e5e7de] bg-[#f0f2e9]"><img src={getImageUrl(image)} alt={product.name || 'Cart product'} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-full w-full object-contain p-2 transition-transform duration-500 hover:scale-110"/></div>
+              return <article key={id} className={`two-tone-card flex gap-3 rounded-2xl p-4 transition-all ${itemBusy ? 'opacity-60' : ''}`}>
+                <div className="flex h-[84px] w-[84px] shrink-0 items-center justify-center overflow-hidden rounded-xl border border-white/10 bg-[#070a0e]"><img src={getImageUrl(image)} alt={product.name || 'Cart product'} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-full w-full object-contain p-1.5 transition-transform duration-500 hover:scale-110"/></div>
                 <div className="min-w-0 flex-1">
-                  <div className="flex items-start justify-between gap-2"><h3 className="line-clamp-2 text-sm font-semibold leading-snug text-[#2C3E2D]">{product.name || 'Bhumivera product'}</h3><button type="button" aria-label={`Remove ${product.name || 'product'}`} disabled={itemBusy} onClick={() => removeCartItem(id)} className="shrink-0 rounded-lg p-1.5 text-stone-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:cursor-wait"><Trash2 size={15}/></button></div>
-                  {product.sku && <p className="mt-1 text-[9px] font-bold uppercase tracking-wider text-stone-400">SKU: {product.sku}</p>}
-                  {Number(product.review_count) > 0 && Number(product.rating) > 0 && <button type="button" onClick={() => { setIsCartOpen(false); navigate(`/product/${product.slug || id}#product-reviews`); }} className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-[#765d17] hover:underline">
-                    <Star size={11} fill="currentColor"/> {Number(product.rating).toFixed(1)} <span className="text-stone-500">({Number(product.review_count)} reviews)</span>
-                  </button>}
-                  <div className="mt-2 flex items-center justify-between gap-2">
-                    <div className="mini-cart-quantity flex items-center rounded-full border border-[#dfe3d8] bg-[#f5f6f0]">
-                      <button type="button" aria-label="Decrease quantity" disabled={itemBusy || Number(item.quantity || 1) <= 1} onClick={() => changeCartQuantity(id, Number(item.quantity || 1) - 1)} className="rounded-full p-1.5 text-[#526b4d] transition hover:bg-[#14251c] hover:text-white disabled:cursor-not-allowed disabled:opacity-40"><Minus size={12}/></button>
-                      <span className="min-w-7 text-center text-xs font-bold text-[#14251c]">{item.quantity || 1}</span>
-                      <button type="button" aria-label="Increase quantity" disabled={itemBusy} onClick={() => changeCartQuantity(id, Number(item.quantity || 1) + 1)} className="rounded-full p-1.5 text-[#526b4d] transition hover:bg-[#14251c] hover:text-white disabled:cursor-wait disabled:opacity-40"><Plus size={12}/></button>
-                    </div>
-                    <span className="text-sm font-bold text-[#14251c]">{formatPrice(price * (Number(item.quantity) || 1))}</span>
+                  <div className="flex items-start justify-between gap-2">
+                    <h3 className="line-clamp-2 text-sm font-serif font-bold leading-snug text-white hover:text-[#d4af37] transition-colors">{product.name || 'Bhumivera product'}</h3>
+                    <button type="button" aria-label={`Remove ${product.name || 'product'}`} disabled={itemBusy} onClick={() => removeCartItem(id)} className="shrink-0 rounded-lg p-1.5 text-[#94a3b8] transition hover:bg-rose-500/10 hover:text-rose-400 disabled:cursor-wait"><Trash2 size={15}/></button>
                   </div>
-                  <button type="button" disabled={itemBusy} onClick={() => saveForLater(item)} className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-semibold text-stone-500 transition hover:text-[#d4af37] disabled:cursor-wait">
+                  {product.sku && <p className="mt-1 text-[9px] font-bold uppercase tracking-wider text-[#94a3b8]">LOT: {product.sku}</p>}
+                  {Number(product.review_count) > 0 && Number(product.rating) > 0 && <button type="button" onClick={() => { setIsCartOpen(false); navigate(`/product/${product.slug || id}#product-reviews`); }} className="mt-1 inline-flex items-center gap-1 text-[10px] font-semibold text-[#faeec7] hover:underline">
+                    <Star size={11} fill="currentColor" className="text-[#d4af37]"/> {Number(product.rating).toFixed(1)} <span className="text-[#94a3b8]">({Number(product.review_count)} reviews)</span>
+                  </button>}
+                  <div className="mt-2.5 flex items-center justify-between gap-2">
+                    <div className="flex items-center rounded-full border border-white/15 bg-[#070a0e] p-0.5">
+                      <button type="button" aria-label="Decrease quantity" disabled={itemBusy || Number(item.quantity || 1) <= 1} onClick={() => changeCartQuantity(id, Number(item.quantity || 1) - 1)} className="rounded-full p-1.5 text-[#cbd5e1] transition hover:bg-white/10 hover:text-[#d4af37] disabled:cursor-not-allowed disabled:opacity-30"><Minus size={12}/></button>
+                      <span className="min-w-7 text-center text-xs font-bold text-white">{item.quantity || 1}</span>
+                      <button type="button" aria-label="Increase quantity" disabled={itemBusy} onClick={() => changeCartQuantity(id, Number(item.quantity || 1) + 1)} className="rounded-full p-1.5 text-[#cbd5e1] transition hover:bg-white/10 hover:text-[#d4af37] disabled:cursor-wait disabled:opacity-30"><Plus size={12}/></button>
+                    </div>
+                    <span className="font-serif text-base font-bold text-[#d4af37]">{formatPrice(price * (Number(item.quantity) || 1))}</span>
+                  </div>
+                  <button type="button" disabled={itemBusy} onClick={() => saveForLater(item)} className="mt-2 inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#94a3b8] transition hover:text-[#d4af37] disabled:cursor-wait">
                     <Heart size={13} fill={saved ? 'currentColor' : 'none'} className={saved ? 'text-[#d4af37]' : ''}/>
-                    {saved ? 'Saved · remove from cart' : 'Save for later'}
+                    {saved ? 'Saved · in wishlist' : 'Save for later'}
                   </button>
                 </div>
               </article>;
             })}
 
-            {!checkoutOpen && <div className="grid grid-cols-2 gap-2 rounded-xl border border-[#e8dcc4] bg-[#fffdf8] p-3 text-[10px] font-semibold text-[#35533c]">
-              <span className="flex items-center gap-1.5"><ShieldCheck size={14} className="text-[#d4af37]"/>Secure checkout</span>
-              <span className="flex items-center gap-1.5"><BadgeCheck size={14} className="text-[#d4af37]"/>Customer-approved reviews</span>
+            {!checkoutOpen && <div className="grid grid-cols-2 gap-2 rounded-xl border border-white/10 bg-[#0d1520] p-3 text-[10px] font-semibold text-[#cbd5e1]">
+              <span className="flex items-center gap-1.5 text-[#cbd5e1]"><ShieldCheck size={14} className="text-[#d4af37]"/>Artisanal Tamper-Proof</span>
+              <span className="flex items-center gap-1.5 text-[#cbd5e1]"><BadgeCheck size={14} className="text-[#d4af37]"/>Lab Verified pH 5.5</span>
             </div>}
 
-            {checkoutOpen && <section className="mini-cart-checkout" aria-label="Checkout details">
-              <div className="space-y-4 rounded-2xl border border-[#d9dfd2] bg-[#f8f8f2] p-4">
+            {checkoutOpen && <section className="two-tone-panel rounded-2xl p-4 border border-white/15" aria-label="Checkout details">
+              <div className="space-y-4">
               <nav aria-label="Checkout progress" className="grid grid-cols-2 gap-2">
                 {['Delivery', 'Payment'].map((label, index) => {
                   const step = index + 1;
                   const active = checkoutStep === step;
                   const complete = checkoutStep > step;
-                  return <button type="button" key={label} disabled={step > checkoutStep} onClick={() => setCheckoutStep(step)} aria-current={active ? 'step' : undefined} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold ${active ? 'bg-[#14251c] text-white' : complete ? 'bg-[#e8eee3] text-[#35533c]' : 'bg-white text-stone-400'}`}>
-                    <span className="flex h-5 w-5 items-center justify-center rounded-full bg-white/15 text-[10px]">{complete ? '✓' : step}</span>{label}
+                  return <button type="button" key={label} disabled={step > checkoutStep} onClick={() => setCheckoutStep(step)} aria-current={active ? 'step' : undefined} className={`flex items-center gap-2 rounded-xl px-3 py-2 text-left text-xs font-semibold ${active ? 'bg-gradient-to-r from-[#faeec7] to-[#d4af37] text-[#070a0e]' : complete ? 'bg-white/10 text-white' : 'bg-white/5 text-[#94a3b8]'}`}>
+                    <span className={`flex h-5 w-5 items-center justify-center rounded-full text-[10px] font-bold ${active ? 'bg-[#070a0e] text-[#d4af37]' : 'bg-white/20'}`}>{complete ? '✓' : step}</span>{label}
                   </button>;
                 })}
               </nav>
-              <div className="flex items-center justify-between gap-3 border-b border-[#e5e7de] pb-3">
-                <div><p className="text-[9px] font-bold uppercase tracking-[0.16em] text-[#526b4d]">Step {checkoutStep} of 2</p><h3 id="mini-checkout-title" className="mt-1 flex items-center gap-2 font-serif text-lg text-[#14251c]">{checkoutStep === 1 ? <><MapPin size={17}/>Delivery details</> : <><ShieldCheck size={17}/>Payment &amp; review</>}</h3></div>
-                <button type="button" onClick={() => setCheckoutStep(0)} className="rounded-full border border-[#dfe3d8] bg-white px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#526b4d] transition hover:border-[#14251c] hover:bg-[#14251c] hover:text-white">Edit cart</button>
+              <div className="flex items-center justify-between gap-3 border-b border-white/10 pb-3">
+                <div><p className="text-[9px] font-bold uppercase tracking-[0.2em] text-[#d4af37]">Step {checkoutStep} of 2</p><h3 id="mini-checkout-title" className="mt-1 flex items-center gap-2 font-serif text-lg text-white font-bold">{checkoutStep === 1 ? <><MapPin size={17} className="text-[#d4af37]"/>Delivery Details</> : <><ShieldCheck size={17} className="text-[#d4af37]"/>Payment &amp; Review</>}</h3></div>
+                <button type="button" onClick={() => setCheckoutStep(0)} className="rounded-full border border-white/20 bg-white/5 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-[#cbd5e1] transition hover:border-[#d4af37] hover:text-[#d4af37]">Edit Bag</button>
               </div>
-              <p className="text-[11px] text-stone-500">{cartCount} {cartCount === 1 ? 'item' : 'items'} <span aria-hidden="true">·</span> Order total {formatPrice(finalTotal)}</p>
-              {!user ? <button type="button" onClick={() => { setIsCartOpen(false); navigate('/login', { state: { from: '/checkout', reopenCart: true } }); }} className="w-full rounded-xl bg-[#2C3E2D] px-4 py-3 text-sm font-semibold text-white">Sign in to continue</button> : <>
+              <p className="text-[11px] text-[#94a3b8]">{cartCount} {cartCount === 1 ? 'item' : 'items'} <span aria-hidden="true">·</span> Total <strong className="text-white">{formatPrice(finalTotal)}</strong></p>
+              {!user ? <button type="button" onClick={() => { setIsCartOpen(false); navigate('/login', { state: { from: '/checkout', reopenCart: true } }); }} className="w-full rounded-xl btn-gold-luxury px-4 py-3 text-sm font-bold">Sign in to continue</button> : <>
                 {checkoutStep === 1 && <>
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between gap-3"><p className="text-xs font-bold text-[#35533c]">Delivery address</p><button type="button" onClick={() => setAddressFormOpen(open => !open)} className="text-xs font-semibold text-[#d4af37] underline underline-offset-2">{addressFormOpen ? 'Cancel' : '+ Add address'}</button></div>
-                  {addresses.length > 0 ? addresses.map(address => <label key={address.id} className={`flex cursor-pointer gap-2 rounded-xl border bg-white p-3 text-xs ${String(selectedAddress) === String(address.id) ? 'border-[#536b4d] ring-1 ring-[#536b4d]/30' : 'border-[#e8dcc4]'}`}>
-                    <input type="radio" name="mini-cart-address" value={address.id} checked={String(selectedAddress) === String(address.id)} onChange={() => setSelectedAddress(String(address.id))} className="mt-0.5 accent-[#35533c]"/>
-                    <span className="min-w-0"><strong className="block text-[#263d31]">{address.full_name || address.fullName} · {address.label || 'Address'}</strong><span className="mt-1 block leading-5 text-stone-500">{address.address_line1 || address.street_address || address.line1}{address.address_line2 ? `, ${address.address_line2}` : ''}, {address.city}, {address.state} {address.pincode || address.postal_code}</span><span className="mt-1 block text-stone-500">{address.phone || address.phone_number}</span></span>
-                  </label>) : !addressFormOpen && <p className="rounded-xl border border-dashed border-[#d5cbb9] bg-white p-3 text-xs leading-5 text-stone-600">Add a delivery address here to finish your order without leaving the cart.</p>}
-                  {addressFormOpen && <form onSubmit={saveAddress} className="grid grid-cols-2 gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3">
-                    <label className="col-span-2 text-[10px] font-semibold text-stone-600">Full name<input required autoComplete="name" value={addressForm.fullName} onChange={event => setAddressForm(current => ({ ...current, fullName: event.target.value }))} className="mt-1 w-full rounded-lg border border-stone-200 px-2.5 py-2 text-xs"/></label>
-                    <label className="col-span-2 text-[10px] font-semibold text-stone-600">Phone<input required type="tel" autoComplete="tel" value={addressForm.phone} onChange={event => setAddressForm(current => ({ ...current, phone: event.target.value }))} className="mt-1 w-full rounded-lg border border-stone-200 px-2.5 py-2 text-xs"/></label>
-                    <label className="col-span-2 text-[10px] font-semibold text-stone-600">Address line 1<input required autoComplete="address-line1" value={addressForm.addressLine1} onChange={event => setAddressForm(current => ({ ...current, addressLine1: event.target.value }))} className="mt-1 w-full rounded-lg border border-stone-200 px-2.5 py-2 text-xs"/></label>
-                    <label className="col-span-2 text-[10px] font-semibold text-stone-600">Address line 2 (optional)<input autoComplete="address-line2" value={addressForm.addressLine2} onChange={event => setAddressForm(current => ({ ...current, addressLine2: event.target.value }))} className="mt-1 w-full rounded-lg border border-stone-200 px-2.5 py-2 text-xs"/></label>
-                    <label className="text-[10px] font-semibold text-stone-600">City<input required autoComplete="address-level2" value={addressForm.city} onChange={event => setAddressForm(current => ({ ...current, city: event.target.value }))} className="mt-1 w-full rounded-lg border border-stone-200 px-2.5 py-2 text-xs"/></label>
-                    <label className="text-[10px] font-semibold text-stone-600">State<input required autoComplete="address-level1" value={addressForm.state} onChange={event => setAddressForm(current => ({ ...current, state: event.target.value }))} className="mt-1 w-full rounded-lg border border-stone-200 px-2.5 py-2 text-xs"/></label>
-                    <label className="col-span-2 text-[10px] font-semibold text-stone-600">PIN code<input required inputMode="numeric" autoComplete="postal-code" value={addressForm.pincode} onChange={event => setAddressForm(current => ({ ...current, pincode: event.target.value }))} className="mt-1 w-full rounded-lg border border-stone-200 px-2.5 py-2 text-xs"/></label>
-                    <button disabled={addressSaving} className="col-span-2 rounded-lg bg-[#35533c] px-3 py-2.5 text-xs font-bold text-white disabled:opacity-50">{addressSaving ? 'Saving address…' : 'Save delivery address'}</button>
+                  <div className="flex items-center justify-between gap-3"><p className="text-xs font-bold text-white">Delivery address</p><button type="button" onClick={() => setAddressFormOpen(open => !open)} className="text-xs font-semibold text-[#d4af37] underline underline-offset-2">{addressFormOpen ? 'Cancel' : '+ Add Address'}</button></div>
+                  {addresses.length > 0 ? addresses.map(address => <label key={address.id} className={`flex cursor-pointer gap-2 rounded-xl border bg-[#0a1017] p-3 text-xs ${String(selectedAddress) === String(address.id) ? 'border-[#d4af37] ring-1 ring-[#d4af37]' : 'border-white/15'}`}>
+                    <input type="radio" name="mini-cart-address" value={address.id} checked={String(selectedAddress) === String(address.id)} onChange={() => setSelectedAddress(String(address.id))} className="mt-0.5 accent-[#d4af37]"/>
+                    <span className="min-w-0"><strong className="block text-white">{address.full_name || address.fullName} · {address.label || 'Address'}</strong><span className="mt-1 block leading-5 text-[#94a3b8]">{address.address_line1 || address.street_address || address.line1}{address.address_line2 ? `, ${address.address_line2}` : ''}, {address.city}, {address.state} {address.pincode || address.postal_code}</span><span className="mt-1 block text-[#94a3b8]">{address.phone || address.phone_number}</span></span>
+                  </label>) : !addressFormOpen && <p className="rounded-xl border border-dashed border-white/20 bg-[#0a1017] p-3 text-xs leading-5 text-[#94a3b8]">Add a delivery address here to finish your order without leaving the bag.</p>}
+                  {addressFormOpen && <form onSubmit={saveAddress} className="grid grid-cols-2 gap-2 rounded-xl border border-white/15 bg-[#0a1017] p-3">
+                    <label className="col-span-2 text-[10px] font-semibold text-[#cbd5e1]">Full name<input required autoComplete="name" value={addressForm.fullName} onChange={event => setAddressForm(current => ({ ...current, fullName: event.target.value }))} className="mt-1 w-full rounded-lg border border-white/15 bg-[#070a0e] text-white px-2.5 py-2 text-xs focus:border-[#d4af37]"/></label>
+                    <label className="col-span-2 text-[10px] font-semibold text-[#cbd5e1]">Phone<input required type="tel" autoComplete="tel" value={addressForm.phone} onChange={event => setAddressForm(current => ({ ...current, phone: event.target.value }))} className="mt-1 w-full rounded-lg border border-white/15 bg-[#070a0e] text-white px-2.5 py-2 text-xs focus:border-[#d4af37]"/></label>
+                    <label className="col-span-2 text-[10px] font-semibold text-[#cbd5e1]">Address line 1<input required autoComplete="address-line1" value={addressForm.addressLine1} onChange={event => setAddressForm(current => ({ ...current, addressLine1: event.target.value }))} className="mt-1 w-full rounded-lg border border-white/15 bg-[#070a0e] text-white px-2.5 py-2 text-xs focus:border-[#d4af37]"/></label>
+                    <label className="col-span-2 text-[10px] font-semibold text-[#cbd5e1]">Address line 2 (optional)<input autoComplete="address-line2" value={addressForm.addressLine2} onChange={event => setAddressForm(current => ({ ...current, addressLine2: event.target.value }))} className="mt-1 w-full rounded-lg border border-white/15 bg-[#070a0e] text-white px-2.5 py-2 text-xs focus:border-[#d4af37]"/></label>
+                    <label className="text-[10px] font-semibold text-[#cbd5e1]">City<input required autoComplete="address-level2" value={addressForm.city} onChange={event => setAddressForm(current => ({ ...current, city: event.target.value }))} className="mt-1 w-full rounded-lg border border-white/15 bg-[#070a0e] text-white px-2.5 py-2 text-xs focus:border-[#d4af37]"/></label>
+                    <label className="text-[10px] font-semibold text-[#cbd5e1]">State<input required autoComplete="address-level1" value={addressForm.state} onChange={event => setAddressForm(current => ({ ...current, state: event.target.value }))} className="mt-1 w-full rounded-lg border border-white/15 bg-[#070a0e] text-white px-2.5 py-2 text-xs focus:border-[#d4af37]"/></label>
+                    <label className="col-span-2 text-[10px] font-semibold text-[#cbd5e1]">PIN code<input required inputMode="numeric" autoComplete="postal-code" value={addressForm.pincode} onChange={event => setAddressForm(current => ({ ...current, pincode: event.target.value }))} className="mt-1 w-full rounded-lg border border-white/15 bg-[#070a0e] text-white px-2.5 py-2 text-xs focus:border-[#d4af37]"/></label>
+                    <button disabled={addressSaving} className="col-span-2 rounded-lg btn-gold-luxury px-3 py-2.5 text-xs font-bold disabled:opacity-50">{addressSaving ? 'Saving address…' : 'Save Delivery Address'}</button>
                   </form>}
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                  <button type="button" onClick={() => setShippingMethod('STANDARD')} aria-pressed={shippingMethod === 'STANDARD'} className={`rounded-xl border bg-white p-3 text-left ${shippingMethod === 'STANDARD' ? 'border-[#536b4d] ring-1 ring-[#536b4d]/30' : 'border-[#e8dcc4]'}`}>
-                    <span className="block text-xs font-semibold text-[#263d31]">Standard</span>
-                    <span className="mt-1 block text-[10px] text-stone-500">5–7 days · {standardDeliveryCost ? formatPrice(standardDeliveryCost) : 'Free'}</span>
+                  <button type="button" onClick={() => setShippingMethod('STANDARD')} aria-pressed={shippingMethod === 'STANDARD'} className={`rounded-xl border bg-[#0a1017] p-3 text-left ${shippingMethod === 'STANDARD' ? 'border-[#d4af37] ring-1 ring-[#d4af37]' : 'border-white/15'}`}>
+                    <span className="block text-xs font-semibold text-white">Standard Dispatch</span>
+                    <span className="mt-1 block text-[10px] text-[#94a3b8]">5–7 days · {standardDeliveryCost ? formatPrice(standardDeliveryCost) : 'Free'}</span>
                   </button>
-                  {(subtotal >= PREMIUM_DELIVERY_THRESHOLD || shippingMethod === 'PREMIUM') && <button type="button" onClick={() => setShippingMethod('PREMIUM')} aria-pressed={shippingMethod === 'PREMIUM'} className={`rounded-xl border bg-white p-3 text-left ${shippingMethod === 'PREMIUM' ? 'border-[#536b4d] ring-1 ring-[#536b4d]/30' : 'border-[#e8dcc4]'}`}>
-                    <span className="block text-xs font-semibold text-[#263d31]">Premium</span>
-                    <span className="mt-1 block text-[10px] text-stone-500">3–5 days · {premiumDeliveryCost ? formatPrice(premiumDeliveryCost) : 'Free'}</span>
+                  {(subtotal >= PREMIUM_DELIVERY_THRESHOLD || shippingMethod === 'PREMIUM') && <button type="button" onClick={() => setShippingMethod('PREMIUM')} aria-pressed={shippingMethod === 'PREMIUM'} className={`rounded-xl border bg-[#0a1017] p-3 text-left ${shippingMethod === 'PREMIUM' ? 'border-[#d4af37] ring-1 ring-[#d4af37]' : 'border-white/15'}`}>
+                    <span className="block text-xs font-semibold text-white">Priority Express</span>
+                    <span className="mt-1 block text-[10px] text-[#94a3b8]">2–4 days · {premiumDeliveryCost ? formatPrice(premiumDeliveryCost) : 'Free'}</span>
                   </button>}
                 </div>
                 {subtotal < PREMIUM_DELIVERY_THRESHOLD && shippingMethod === 'STANDARD' && <button type="button" onClick={() => setShippingMethod('PREMIUM')} className="inline-flex items-center gap-1.5 text-[10px] font-semibold text-[#d4af37] underline underline-offset-2">
-                  Want it sooner? Upgrade to Premium for {formatPrice(PREMIUM_DELIVERY_SURCHARGE)} extra <ArrowRight size={12}/>
+                  Upgrade to Priority Express for {formatPrice(PREMIUM_DELIVERY_SURCHARGE)} extra <ArrowRight size={12}/>
                 </button>}
                 </>}
                 {checkoutStep === 2 && <>
-                <div className="flex items-start justify-between gap-3 rounded-xl border border-[#e1e3d9] bg-white p-3 text-xs">
-                  <div className="min-w-0"><p className="font-semibold text-[#35533c]">{selectedAddressDetails?.full_name || selectedAddressDetails?.fullName || 'Delivery address'} · {selectedAddressDetails?.label || 'Address'}</p><p className="mt-1 truncate text-stone-500">{selectedAddressDetails ? `${selectedAddressDetails.address_line1 || selectedAddressDetails.street_address || selectedAddressDetails.line1}, ${selectedAddressDetails.city}, ${selectedAddressDetails.state} ${selectedAddressDetails.pincode || selectedAddressDetails.postal_code}` : 'Address selected'}</p><p className="mt-1 text-stone-500">{shippingMethod === 'PREMIUM' ? 'Premium delivery · 3–5 days' : 'Standard delivery · 5–7 days'} · {shippingCost ? formatPrice(shippingCost) : 'Free'}</p></div>
+                <div className="flex items-start justify-between gap-3 rounded-xl border border-white/15 bg-[#0a1017] p-3 text-xs">
+                  <div className="min-w-0"><p className="font-semibold text-white">{selectedAddressDetails?.full_name || selectedAddressDetails?.fullName || 'Delivery address'} · {selectedAddressDetails?.label || 'Address'}</p><p className="mt-1 truncate text-[#94a3b8]">{selectedAddressDetails ? `${selectedAddressDetails.address_line1 || selectedAddressDetails.street_address || selectedAddressDetails.line1}, ${selectedAddressDetails.city}, ${selectedAddressDetails.state} ${selectedAddressDetails.pincode || selectedAddressDetails.postal_code}` : 'Address selected'}</p><p className="mt-1 text-[#d4af37]">{shippingMethod === 'PREMIUM' ? 'Priority Express · 2–4 days' : 'Standard Delivery · 5–7 days'} · {shippingCost ? formatPrice(shippingCost) : 'Free'}</p></div>
                   <button type="button" onClick={() => setCheckoutStep(1)} className="shrink-0 font-semibold text-[#d4af37] underline underline-offset-2">Edit</button>
                 </div>
                 <div className="space-y-2">
-                  <p className="text-xs font-bold text-[#35533c]">Payment method</p>
-                  <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'online'} onChange={() => setPaymentMode('online')} className="accent-[#35533c]"/>Pay securely with Razorpay <span className="ml-auto text-[9px] font-bold uppercase tracking-wide text-emerald-700">Recommended</span></label>
-                  <label className="flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-[#e8dcc4] bg-white p-3 text-xs"><span className="flex items-center gap-2"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'WALLET'} onChange={() => setPaymentMode('WALLET')} className="accent-[#35533c]"/>Bhumivera wallet</span><span className="text-stone-500">{walletBalance === null ? 'Balance unavailable' : `Balance ${formatPrice(walletBalance)}`}</span></label>
-                  {walletBalanceError && <p role="alert" className="rounded-lg bg-rose-50 px-3 py-2 text-[10px] text-rose-700">{walletBalanceError}</p>}
-                  <label className={`flex items-center gap-2 rounded-xl border bg-white p-3 text-xs ${codEligibility.eligible ? 'cursor-pointer border-[#e8dcc4]' : 'cursor-not-allowed border-[#e8dcc4] opacity-70'}`}><input type="radio" name="mini-cart-payment" checked={paymentMode === 'COD'} disabled={!codEligibility.eligible} onChange={() => setPaymentMode('COD')} className="accent-[#35533c]"/>Cash on delivery</label>
-                  <p role="status" className="rounded-lg bg-[#f7f3ea] px-3 py-2 text-[10px] leading-4 text-stone-600">
+                  <p className="text-xs font-bold text-white">Payment Method</p>
+                  <label className="flex cursor-pointer items-center gap-2 rounded-xl border border-white/15 bg-[#0a1017] p-3 text-xs text-white"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'online'} onChange={() => setPaymentMode('online')} className="accent-[#d4af37]"/>Pay securely with Razorpay <span className="ml-auto text-[9px] font-bold uppercase tracking-wide text-[#d4af37]">Recommended</span></label>
+                  <label className="flex cursor-pointer items-center justify-between gap-2 rounded-xl border border-white/15 bg-[#0a1017] p-3 text-xs text-white"><span className="flex items-center gap-2"><input type="radio" name="mini-cart-payment" checked={paymentMode === 'WALLET'} onChange={() => setPaymentMode('WALLET')} className="accent-[#d4af37]"/>Bhumivera Wallet</span><span className="text-[#94a3b8]">{walletBalance === null ? 'Balance unavailable' : `Balance ${formatPrice(walletBalance)}`}</span></label>
+                  {walletBalanceError && <p role="alert" className="rounded-lg bg-rose-950/50 border border-rose-500/30 px-3 py-2 text-[10px] text-rose-300">{walletBalanceError}</p>}
+                  <label className={`flex items-center gap-2 rounded-xl border bg-[#0a1017] p-3 text-xs text-white ${codEligibility.eligible ? 'cursor-pointer border-white/15' : 'cursor-not-allowed border-white/10 opacity-60'}`}><input type="radio" name="mini-cart-payment" checked={paymentMode === 'COD'} disabled={!codEligibility.eligible} onChange={() => setPaymentMode('COD')} className="accent-[#d4af37]"/>Cash on Delivery (COD)</label>
+                  <p role="status" className="rounded-lg bg-[#070a0e] border border-white/10 px-3 py-2 text-[10px] leading-4 text-[#94a3b8]">
                     {!codEligibility.available
-                      ? 'Cash on delivery eligibility could not be checked. Please use Razorpay or Wallet, or try again shortly.'
+                      ? 'Cash on delivery eligibility could not be verified. Please use Razorpay or Wallet.'
                       : codEligibility.eligible
-                        ? 'Cash on delivery is available because you have 2 successfully delivered orders.'
-                        : `Cash on delivery unlocks after 2 orders are successfully delivered. You have ${codEligibility.deliveredOrderCount} delivered order${codEligibility.deliveredOrderCount === 1 ? '' : 's'} so far. You can still place your order with Razorpay or Wallet.`}
+                        ? 'Cash on delivery is available for your account.'
+                        : `Cash on delivery unlocks after 2 orders are successfully delivered (${codEligibility.deliveredOrderCount} delivered so far). Please choose Razorpay.`}
                   </p>
                 </div>
 
-                <label className="block text-[10px] font-semibold text-stone-600">Delivery note (optional)<textarea rows={2} value={orderNotes} onChange={event => setOrderNotes(event.target.value)} className="mt-1 w-full resize-none rounded-lg border border-stone-200 bg-white px-3 py-2 text-xs" placeholder="Anything the delivery team should know?"/></label>
+                <label className="block text-[10px] font-semibold text-[#cbd5e1]">Delivery note (optional)<textarea rows={2} value={orderNotes} onChange={event => setOrderNotes(event.target.value)} className="mt-1 w-full resize-none rounded-lg border border-white/15 bg-[#070a0e] text-white px-3 py-2 text-xs focus:border-[#d4af37]" placeholder="Any dispatch directions for our courier?"/></label>
                 </>}
               </>}
               </div>
             </section>}
 
-            {!checkoutOpen && <section className="overflow-hidden rounded-2xl border border-[#e8dcc4] bg-white">
+            {!checkoutOpen && <section className="overflow-hidden rounded-2xl border border-white/15 bg-[#0d1520]">
               <button type="button" onClick={() => setOffersOpen(open => !open)} aria-expanded={offersOpen} className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
-                <span className="flex items-center gap-2"><span className="rounded-lg bg-[#f5f1e8] p-2 text-[#d4af37]"><Tag size={15}/></span><span><span className="block text-sm font-semibold text-[#2C3E2D]">Coupons &amp; offers</span><span className="block text-[10px] text-stone-500">{offersToShow.length ? `${offersToShow.length} available offers — best savings first` : 'Enter a coupon code'}</span></span></span>
-                {offersOpen ? <ChevronUp size={16} className="text-stone-500"/> : <ChevronDown size={16} className="text-stone-500"/>}
+                <span className="flex items-center gap-2"><span className="rounded-lg bg-[#070a0e] p-2 text-[#d4af37] border border-[#d4af37]/30"><Tag size={15}/></span><span><span className="block text-sm font-serif font-bold text-white">Coupons &amp; Offers</span><span className="block text-[10px] text-[#94a3b8]">{offersToShow.length ? `${offersToShow.length} available offers` : 'Enter a promo code'}</span></span></span>
+                {offersOpen ? <ChevronUp size={16} className="text-[#94a3b8]"/> : <ChevronDown size={16} className="text-[#94a3b8]"/>}
               </button>
-              {offersOpen && <div className="border-t border-[#f0e8da] p-3">
-                {Number(referralReward?.balance) > 0 && <p className="mb-3 rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs leading-5 text-emerald-800">Shopping wallet balance {formatPrice(referralReward.balance)}{referralWalletAmount > 0 ? ` · ${formatPrice(referralWalletAmount)} automatically applied` : ' · applied automatically when an eligible order tier is reached'}</p>}
-                {loyalty?.enabled && <p className="mb-3 rounded-lg border border-[#dce7c5] bg-[#f4f7ed] px-3 py-2 text-xs leading-5 text-[#35533c]">{loyalty.currentTier?.name || 'Loyalty member'} · {Number(loyalty.lifetimePoints || 0).toLocaleString()} lifetime tier points · {Number(loyalty.pointsBalance || 0).toLocaleString()} points available to redeem{loyalty.nextTier ? ` · ${Number(loyalty.nextTier.min_points) - Number(loyalty.lifetimePoints || 0)} to ${loyalty.nextTier.name}` : ''}</p>}
-                {shoppingWalletRewardEstimate > 0 && <section className="mb-3 space-y-1.5 rounded-xl border border-emerald-200 bg-emerald-50/80 p-3 text-xs text-emerald-900" aria-label="Estimated shopping wallet reward after an eligible order">
-                  <div className="flex items-start justify-between gap-3"><p className="font-extrabold">Estimated reward after eligible order</p><strong className="shrink-0 text-sm">+{formatPrice(shoppingWalletRewardEstimate)}</strong></div>
-                  <div className="flex justify-between gap-3"><span>{SHOPPING_WALLET_REWARD_PERCENT}% shopping reward</span><span className="shrink-0 font-semibold">+{formatPrice(baseShoppingWalletRewardEstimate)}</span></div>
-                  {isNewCustomer && firstOrderRewardBonusEstimate > 0 && <div className="flex justify-between gap-3"><span>{NEW_CUSTOMER_BONUS_PERCENT}% first-order bonus</span><span className="shrink-0 font-semibold">+{formatPrice(firstOrderRewardBonusEstimate)}</span></div>}
-                  <p className="border-t border-emerald-200 pt-1.5 text-[10px] leading-4 text-emerald-800">Maximum {formatPrice(SHOPPING_WALLET_REWARD_CAP)}. Shopping-wallet credit only—not cash, not withdrawable, and not deducted from today’s total.</p>
-                </section>}
+              {offersOpen && <div className="border-t border-white/10 p-3 bg-[#0a1017]">
+                {Number(referralReward?.balance) > 0 && <p className="mb-3 rounded-lg border border-[#d4af37]/30 bg-[#121c28] px-3 py-2 text-xs leading-5 text-[#faeec7]">Shopping wallet balance {formatPrice(referralReward.balance)}{referralWalletAmount > 0 ? ` · ${formatPrice(referralWalletAmount)} applied` : ''}</p>}
+                {loyalty?.enabled && <p className="mb-3 rounded-lg border border-white/15 bg-[#101a26] px-3 py-2 text-xs leading-5 text-[#cbd5e1]">{loyalty.currentTier?.name || 'Loyalty Member'} · {Number(loyalty.pointsBalance || 0).toLocaleString()} points available</p>}
                 <form onSubmit={validateCoupon} className="flex gap-2">
-                  <input value={couponCode} onChange={event => setCouponCode(event.target.value)} aria-label="Coupon code" placeholder="Enter coupon code" className="min-w-0 flex-1 rounded-xl border border-dashed border-stone-300 px-3 py-2.5 text-sm outline-none focus:border-[#d4af37]"/>
-                  <button disabled={couponBusy || !couponCode.trim()} className="rounded-xl bg-[#2C3E2D] px-4 py-2 text-xs font-bold text-white disabled:opacity-50">{couponBusy ? 'Checking…' : 'Apply'}</button>
+                  <input value={couponCode} onChange={event => setCouponCode(event.target.value)} aria-label="Coupon code" placeholder="Enter coupon code" className="min-w-0 flex-1 rounded-xl border border-dashed border-white/20 bg-[#070a0e] text-white px-3 py-2.5 text-xs outline-none focus:border-[#d4af37]"/>
+                  <button disabled={couponBusy || !couponCode.trim()} className="rounded-xl btn-gold-luxury px-4 py-2 text-xs font-bold disabled:opacity-50">{couponBusy ? 'Checking…' : 'Apply'}</button>
                 </form>
-                {couponMessage && <p role="status" className={`mt-2 text-xs ${appliedCoupon && couponDiscount > 0 ? 'text-emerald-700' : appliedCoupon ? 'text-amber-700' : 'text-rose-700'}`}>{couponMessage}</p>}
+                {couponMessage && <p role="status" className={`mt-2 text-xs ${appliedCoupon && couponDiscount > 0 ? 'text-[#d4af37]' : appliedCoupon ? 'text-[#faeec7]' : 'text-rose-400'}`}>{couponMessage}</p>}
                 {offersToShow.length > 0 && <div className="mt-3 space-y-2">
                 {offersToShow.map((offer, index) => {
                   const minimum = Number(offer.min_order_amount ?? offer.min_order_value) || 0;
                   const amountNeeded = Math.max(0, minimum - subtotal);
                   const isReferralReward = offer.reward_type === 'referral_wallet';
                   const isFreeShipping = offer.reward_type === 'free_shipping';
-                  const isSpinReward = String(offer.description || '').startsWith('order_spin_reward:');
                   return (
                     <button
                       type="button"
@@ -844,31 +849,27 @@ export default function MiniCart() {
                         setCouponCode(offer.code);
                         void applyCouponCode(offer.code);
                       }}
-                      className="flex w-full items-center justify-between gap-3 rounded-lg bg-[#faf8f5] px-3 py-2 text-left text-xs hover:bg-[#f5f1e8] disabled:opacity-60"
+                      className="flex w-full items-center justify-between gap-3 rounded-lg bg-[#070a0e] border border-white/10 px-3 py-2 text-left text-xs hover:border-[#d4af37]/50 disabled:opacity-60"
                     >
                       <span className="min-w-0">
-                        <strong className="font-mono text-[#2C3E2D]">{offer.code}</strong>
-                        <span className="ml-2 text-stone-500">
+                        <strong className="font-mono text-[#d4af37]">{offer.code}</strong>
+                        <span className="ml-2 text-[#cbd5e1]">
                           {isReferralReward
-                            ? `Use shopping reward balance up to ${formatPrice(offer.wallet_per_order_limit || offer.discount_value)} per order`
+                            ? `Use shopping reward up to ${formatPrice(offer.wallet_per_order_limit || offer.discount_value)}`
                             : isFreeShipping
-                              ? 'Free shipping on your next order'
-                            : offer.discount_type === 'percentage' || offer.type === 'percentage'
-                              ? `${offer.discount_value ?? offer.value}% off`
-                              : `${formatPrice(offer.discount_value ?? offer.value)} off`}
+                              ? 'Free shipping'
+                            : `${offer.discount_value ?? offer.value}% off`}
                         </span>
-                        <span className="mt-1 block text-[10px] text-stone-500">
+                        <span className="mt-0.5 block text-[10px] text-[#94a3b8]">
                           {amountNeeded > 0
-                            ? `Add ${formatPrice(amountNeeded)} to meet the minimum order.`
+                            ? `Add ${formatPrice(amountNeeded)} to qualify.`
                             : offer.estimatedSaving > 0
-                              ? `Estimated saving ${formatPrice(offer.estimatedSaving)}${isReferralReward ? ' (uses your remaining shopping reward balance)' : ''}`
-                              : isFreeShipping && amountNeeded === 0
-                                ? 'Free shipping reward'
-                                : 'Not eligible with the current cart discounts.'}
+                              ? `Estimated saving ${formatPrice(offer.estimatedSaving)}`
+                              : 'Tap to apply'}
                         </span>
                       </span>
                       <span className="shrink-0 text-right text-[9px] font-bold uppercase tracking-wider text-[#d4af37]">
-                        {isSpinReward ? 'Spin reward' : index === 0 && offer.estimatedSaving > 0 ? 'Best saving' : offer.is_personal ? 'Your reward' : 'Apply'}
+                        {index === 0 && offer.estimatedSaving > 0 ? 'Best Saving' : 'Apply'}
                       </span>
                     </button>
                   );
@@ -877,51 +878,47 @@ export default function MiniCart() {
               </div>}
             </section>}
 
-            {!checkoutOpen && <section className="overflow-hidden rounded-2xl border border-[#e1e3d9] bg-[#fffefa]">
+            {!checkoutOpen && <section className="overflow-hidden rounded-2xl border border-white/15 bg-[#0d1520]">
               <button type="button" aria-expanded={recommendationsOpen} onClick={() => setRecommendationsOpen(open => !open)} className="flex w-full items-center justify-between px-4 py-3 text-left">
-                <span><span className="block text-xs font-bold uppercase tracking-wider text-[#2C3E2D]">A little more to love</span><span className="mt-0.5 block text-[10px] text-stone-500">Thoughtful picks for your routine</span></span>
-                {recommendationsOpen ? <ChevronUp size={16} className="text-[#526b4d]"/> : <ChevronDown size={16} className="text-[#526b4d]"/>}
+                <span><span className="block text-xs font-serif font-bold uppercase tracking-wider text-white">Considered Pairings</span><span className="mt-0.5 block text-[10px] text-[#94a3b8]">Curated for complete routine balance</span></span>
+                {recommendationsOpen ? <ChevronUp size={16} className="text-[#94a3b8]"/> : <ChevronDown size={16} className="text-[#94a3b8]"/>}
               </button>
-              {recommendationsOpen && <div className="space-y-2 border-t border-[#e5e7de] p-3">
-                {recommendationsLoading && <p className="text-xs text-stone-500">Finding a few good fits…</p>}
-                {recommendationsError && <div className="flex items-center justify-between gap-3 text-xs text-rose-700"><p role="alert">{recommendationsError}</p><button type="button" onClick={() => setRecommendationsRetry(retry => retry + 1)} className="shrink-0 font-semibold underline underline-offset-2">Retry</button></div>}
-                {!recommendationsLoading && !recommendationsError && recommendationsToShow.length === 0 && <p className="text-xs text-stone-500">We’ll have more thoughtful picks for you soon.</p>}
+              {recommendationsOpen && <div className="space-y-2 border-t border-white/10 p-3 bg-[#0a1017]">
                 <div className="grid grid-cols-2 gap-2">
-                  {recommendationsToShow.slice(0, 2).map(product => <article key={product.id || product._id} className="flex min-w-0 items-center gap-2 rounded-xl border border-[#e8dcc4] bg-white p-2">
-                    <img src={getImageUrl(product.image_url || product.images || product.image)} alt={product.name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-12 w-12 shrink-0 rounded-lg bg-[#faf8f5] object-contain p-1"/>
-                    <div className="min-w-0 flex-1"><p className="line-clamp-2 text-[10px] font-semibold leading-tight text-[#2C3E2D]">{product.name}</p><p className="mt-1 text-[10px] font-bold text-[#d4af37]">{formatPrice(product.discount_price || product.price)}</p></div>
-                    <button type="button" aria-label={`Add ${product.name} to cart`} onClick={() => addToCart(product)} className="shrink-0 rounded-lg border border-[#e8dcc4] p-1.5 text-[#d4af37] hover:bg-[#d4af37] hover:text-white"><Plus size={14}/></button>
+                  {recommendationsToShow.slice(0, 2).map(product => <article key={product.id || product._id} className="flex min-w-0 items-center gap-2 rounded-xl border border-white/10 bg-[#070a0e] p-2">
+                    <img src={getImageUrl(product.image_url || product.images || product.image)} alt={product.name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-12 w-12 shrink-0 rounded-lg bg-black/40 object-contain p-1"/>
+                    <div className="min-w-0 flex-1"><p className="line-clamp-2 text-[10px] font-semibold leading-tight text-white">{product.name}</p><p className="mt-1 text-[10px] font-bold text-[#d4af37]">{formatPrice(product.discount_price || product.price)}</p></div>
+                    <button type="button" aria-label={`Add ${product.name} to cart`} onClick={() => addToCart(product)} className="shrink-0 rounded-lg border border-[#d4af37]/40 p-1.5 text-[#d4af37] hover:bg-[#d4af37] hover:text-[#070a0e]"><Plus size={14}/></button>
                   </article>)}
                 </div>
               </div>}
             </section>}
           </>}
 
-          {!checkoutOpen && wishlist.length > 0 && <section className="overflow-hidden rounded-2xl border border-[#e8dcc4] bg-white" aria-label="Saved for later items">
-            <h3 id="saved-items-title" className="sr-only">Saved for later</h3>
+          {!checkoutOpen && wishlist.length > 0 && <section className="overflow-hidden rounded-2xl border border-white/15 bg-[#0d1520]" aria-label="Saved for later items">
             <button type="button" aria-expanded={savedListOpen} aria-controls="mini-cart-saved-items" onClick={() => setSavedListOpen(open => !open)} className="flex w-full items-center justify-between gap-3 p-4 text-left">
-              <span className="flex items-center gap-2 text-sm font-semibold text-[#2C3E2D]"><Heart size={16} className="text-[#d4af37]"/>Saved for later <span className="rounded-full bg-[#f5f0e8] px-2 py-0.5 text-[10px] text-stone-600">{wishlist.length}</span></span>
-              {savedListOpen ? <ChevronUp size={16} className="text-stone-500"/> : <ChevronDown size={16} className="text-stone-500"/>}
+              <span className="flex items-center gap-2 text-sm font-serif font-bold text-white"><Heart size={16} className="text-[#d4af37]"/>Saved for Later <span className="rounded-full bg-white/10 px-2 py-0.5 text-[10px] text-[#cbd5e1]">{wishlist.length}</span></span>
+              {savedListOpen ? <ChevronUp size={16} className="text-[#94a3b8]"/> : <ChevronDown size={16} className="text-[#94a3b8]"/>}
             </button>
-            {savedListOpen && <div id="mini-cart-saved-items" className="max-h-64 space-y-2 overflow-y-auto border-t border-[#f0e8da] p-3">
+            {savedListOpen && <div id="mini-cart-saved-items" className="max-h-64 space-y-2 overflow-y-auto border-t border-white/10 p-3 bg-[#0a1017]">
               {wishlist.map(savedItem => {
                 const product = savedItem.product || savedItem;
                 const id = savedItem.product_id || product.id || product._id;
                 const savedBusy = busySavedItem === String(id);
-                return <article key={id} className="flex items-center gap-2 rounded-xl bg-[#faf8f5] p-2">
-                  <img src={getImageUrl(product.image_url || product.images || product.image)} alt={product.name || 'Saved product'} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-11 w-11 shrink-0 rounded-lg bg-white object-contain p-1"/>
-                  <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-[#2C3E2D]">{product.name || 'Saved product'}</p><p className="mt-1 text-[10px] font-bold text-[#d4af37]">{formatPrice(product.discount_price || product.price)}</p></div>
-                  <button type="button" disabled={busySavedItem !== null} onClick={() => moveSavedItemToCart(savedItem)} className="rounded-lg bg-[#2C3E2D] px-2.5 py-2 text-[10px] font-semibold text-white transition hover:bg-[#1b2c20] disabled:cursor-wait disabled:opacity-50">{savedBusy ? 'Moving…' : 'Add'}</button>
-                  <button type="button" disabled={busySavedItem !== null} aria-label={`Remove ${product.name || 'saved product'} from wishlist`} onClick={() => removeSavedItem(id)} className="rounded-lg p-2 text-stone-400 transition hover:bg-rose-50 hover:text-rose-600 disabled:cursor-wait"><Trash2 size={14}/></button>
+                return <article key={id} className="flex items-center gap-2 rounded-xl bg-[#070a0e] border border-white/10 p-2">
+                  <img src={getImageUrl(product.image_url || product.images || product.image)} alt={product.name || 'Saved product'} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-11 w-11 shrink-0 rounded-lg bg-black object-contain p-1"/>
+                  <div className="min-w-0 flex-1"><p className="truncate text-xs font-semibold text-white">{product.name || 'Saved product'}</p><p className="mt-1 text-[10px] font-bold text-[#d4af37]">{formatPrice(product.discount_price || product.price)}</p></div>
+                  <button type="button" disabled={busySavedItem !== null} onClick={() => moveSavedItemToCart(savedItem)} className="rounded-lg btn-gold-luxury px-3 py-1.5 text-[10px] font-bold disabled:opacity-50">{savedBusy ? 'Moving…' : 'Add'}</button>
+                  <button type="button" disabled={busySavedItem !== null} aria-label={`Remove ${product.name || 'saved product'} from wishlist`} onClick={() => removeSavedItem(id)} className="rounded-lg p-2 text-[#94a3b8] transition hover:text-rose-400 disabled:cursor-wait"><Trash2 size={14}/></button>
                 </article>;
               })}
             </div>}
           </section>}
         </div>
 
-        {cartItems.length > 0 && <footer className={`mini-cart-footer shrink-0 border-t border-[#dedfd4] bg-[#fbfaf5] px-5 py-4 shadow-[0_-10px_30px_rgba(20,37,28,0.08)] sm:px-7 ${checkoutOpen ? `flex flex-col ${summaryExpanded ? 'h-[min(52vh,460px)]' : ''}` : ''}`}>
+        {cartItems.length > 0 && <footer className={`mini-cart-footer shrink-0 border-t border-[#d4af37]/25 bg-[#0a1017] px-5 py-4 shadow-2xl sm:px-7 ${checkoutOpen ? `flex flex-col ${summaryExpanded ? 'h-[min(52vh,460px)]' : ''}` : ''}`}>
           <div className={checkoutOpen && summaryExpanded ? 'flex min-h-0 flex-1 flex-col text-xs' : 'space-y-2 text-xs'}>
-            <div className="flex items-center justify-between text-stone-600">
+            <div className="flex items-center justify-between text-[#cbd5e1]">
               <span className="flex items-center gap-2">
                 <span>Subtotal</span>
                 {checkoutOpen && <button
@@ -930,50 +927,41 @@ export default function MiniCart() {
                   aria-expanded={summaryExpanded}
                   aria-controls="mini-cart-summary-details"
                   onClick={() => setSummaryExpanded(open => !open)}
-                  className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-[#d9dfd2] bg-white text-[#526b4d] shadow-sm transition hover:border-[#536b4d] hover:bg-[#f3f7ed] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#536b4d]"
+                  className="inline-flex h-6 w-6 items-center justify-center rounded-full border border-white/20 bg-white/5 text-[#cbd5e1] shadow-sm transition hover:text-[#d4af37]"
                 >
                   {summaryExpanded ? <ChevronDown size={14}/> : <ChevronUp size={14}/>}
                 </button>}
               </span>
-              <strong className="text-[#1A1C18]">{formatPrice(subtotal)}</strong>
+              <strong className="text-white font-serif font-bold text-sm">{formatPrice(subtotal)}</strong>
             </div>
             <div
               id="mini-cart-summary-details"
               className={`${checkoutOpen && summaryExpanded ? 'min-h-0 flex-1 overflow-y-auto pr-1' : ''} ${checkoutOpen && !summaryExpanded ? 'hidden' : 'space-y-2'}`}
             >
-            {discount > 0 && <div className="flex justify-between text-[#526b4d]"><span>Cart offers</span><span>−{formatPrice(discount)}</span></div>}
-            {couponDiscount > 0 && <div className="flex justify-between gap-3 font-extrabold text-[#d4af37]"><span className="min-w-0 truncate">Coupon{appliedCoupon?.code ? ` · ${appliedCoupon.code}` : ''}</span><span className="shrink-0">−{formatPrice(couponDiscount)}</span></div>}
-            {tierDiscount > 0 && <div className="flex justify-between text-[#526b4d]"><span>Membership saving</span><span>−{formatPrice(tierDiscount)}</span></div>}
-            {referralWalletAmount > 0 && <div className="flex justify-between font-semibold text-[#526b4d]"><span>Shopping wallet applied</span><span>−{formatPrice(referralWalletAmount)}</span></div>}
-            {loyalty?.enabled && Number(loyalty?.pointsBalance) >= Number(loyalty?.minimumRedemptionPoints) && pointsRedemption.points > 0 && <label className="flex items-center justify-between gap-3 font-semibold text-emerald-700"><span className="flex items-center gap-2"><input type="checkbox" checked={redeemLoyaltyPoints} onChange={event => setRedeemLoyaltyPoints(event.target.checked)} className="accent-[#35533c]"/>Use {(redeemLoyaltyPoints ? loyaltyPointsToRedeem : pointsRedemption.points).toLocaleString()} loyalty points</span><span>{loyaltyDiscount > 0 ? `−${formatPrice(loyaltyDiscount)}` : 'Not applied'}</span></label>}
-            {totalSavings > 0 && <div className="flex items-center justify-between rounded-lg bg-emerald-50 px-2.5 py-2 text-sm font-extrabold text-emerald-800"><span>Savings applied</span><span className="text-base font-black">−{formatPrice(totalSavings)}</span></div>}
-            {checkoutOpen && <div className="flex justify-between text-stone-600"><span>{shippingMethod === 'PREMIUM' ? 'Premium delivery · 3–5 days' : 'Standard delivery · 5–7 days'}</span><span>{shippingCost ? formatPrice(shippingCost) : 'Free'}</span></div>}
-            {checkoutOpen && shoppingWalletRewardEstimate > 0 && <section className="space-y-1.5 rounded-lg border border-emerald-200 bg-emerald-50/80 px-3 py-2.5 text-[11px] text-emerald-900" aria-label="Estimated shopping wallet reward">
-              <p className="font-extrabold">Estimated reward after your order</p>
-              <div className="flex justify-between gap-3"><span>{SHOPPING_WALLET_REWARD_PERCENT}% shopping reward</span><span className="shrink-0 font-semibold">+{formatPrice(baseShoppingWalletRewardEstimate)}</span></div>
-              {isNewCustomer && firstOrderRewardBonusEstimate > 0 && <div className="flex justify-between gap-3"><span>{NEW_CUSTOMER_BONUS_PERCENT}% first-order bonus</span><span className="shrink-0 font-semibold">+{formatPrice(firstOrderRewardBonusEstimate)}</span></div>}
-              <div className="flex justify-between gap-3 border-t border-emerald-200 pt-1.5 font-extrabold"><span>Estimated shopping wallet credit</span><span className="shrink-0">+{formatPrice(shoppingWalletRewardEstimate)}</span></div>
-              <p className="text-[10px] leading-4 text-emerald-800">Up to {formatPrice(SHOPPING_WALLET_REWARD_CAP)}. Non-withdrawable; for future Bhumivera shopping only. This reward is not deducted from today’s order.</p>
-            </section>}
+            {discount > 0 && <div className="flex justify-between text-[#d4af37]"><span>Cart Offers</span><span>−{formatPrice(discount)}</span></div>}
+            {couponDiscount > 0 && <div className="flex justify-between gap-3 font-bold text-[#d4af37]"><span className="min-w-0 truncate">Coupon{appliedCoupon?.code ? ` · ${appliedCoupon.code}` : ''}</span><span className="shrink-0">−{formatPrice(couponDiscount)}</span></div>}
+            {tierDiscount > 0 && <div className="flex justify-between text-[#d4af37]"><span>Membership Tier</span><span>−{formatPrice(tierDiscount)}</span></div>}
+            {referralWalletAmount > 0 && <div className="flex justify-between font-semibold text-[#d4af37]"><span>Shopping Wallet</span><span>−{formatPrice(referralWalletAmount)}</span></div>}
+            {loyalty?.enabled && Number(loyalty?.pointsBalance) >= Number(loyalty?.minimumRedemptionPoints) && pointsRedemption.points > 0 && <label className="flex items-center justify-between gap-3 font-semibold text-[#faeec7]"><span className="flex items-center gap-2"><input type="checkbox" checked={redeemLoyaltyPoints} onChange={event => setRedeemLoyaltyPoints(event.target.checked)} className="accent-[#d4af37]"/>Use {(redeemLoyaltyPoints ? loyaltyPointsToRedeem : pointsRedemption.points).toLocaleString()} loyalty points</span><span>{loyaltyDiscount > 0 ? `−${formatPrice(loyaltyDiscount)}` : 'Not applied'}</span></label>}
+            {totalSavings > 0 && <div className="flex items-center justify-between rounded-lg bg-[#142334] border border-[#d4af37]/30 px-3 py-2 text-sm font-bold text-[#d4af37]"><span>Total Savings Applied</span><span className="text-base font-black">−{formatPrice(totalSavings)}</span></div>}
+            {checkoutOpen && <div className="flex justify-between text-[#cbd5e1]"><span>{shippingMethod === 'PREMIUM' ? 'Priority Express · 2–4 days' : 'Standard Delivery · 5–7 days'}</span><span>{shippingCost ? formatPrice(shippingCost) : 'Free'}</span></div>}
             </div>
-            <div className={`flex justify-between border-t border-[#e5e7de] pt-2 text-sm font-extrabold text-[#14251c] ${checkoutOpen ? 'mt-2 shrink-0' : ''}`}><span>{checkoutOpen ? 'Order total' : 'Estimated total*'}</span><span>{checkoutOpen ? formatPrice(finalTotal) : formatPrice(estimatedTotal)}</span></div>
+            <div className={`flex justify-between border-t border-white/10 pt-2 text-sm font-extrabold text-white ${checkoutOpen ? 'mt-2 shrink-0' : ''}`}><span>{checkoutOpen ? 'Final Order Total' : 'Estimated Total'}</span><span className="font-serif text-lg font-bold text-[#d4af37]">{checkoutOpen ? formatPrice(finalTotal) : formatPrice(estimatedTotal)}</span></div>
           </div>
           {!checkoutOpen
-            ? <button type="button" onClick={continueToCheckout} className="mini-cart-primary-action mt-3 flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#14251c] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-lg shadow-[#14251c]/15 transition">Continue to checkout <ArrowRight size={16}/></button>
+            ? <button type="button" onClick={continueToCheckout} className="btn-gold-luxury mt-3.5 flex w-full shrink-0 items-center justify-center gap-2 rounded-xl py-3.5 text-xs font-bold uppercase tracking-[0.16em]">Proceed to Checkout <ArrowRight size={16}/></button>
             : checkoutStep === 1
-              ? <button type="button" onClick={continueToPayment} className="mini-cart-primary-action mt-3 flex w-full shrink-0 items-center justify-center gap-2 rounded-xl bg-[#14251c] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-lg shadow-[#14251c]/15 transition">Continue to payment <ArrowRight size={16}/></button>
+              ? <button type="button" onClick={continueToPayment} className="btn-gold-luxury mt-3.5 flex w-full shrink-0 items-center justify-center gap-2 rounded-xl py-3.5 text-xs font-bold uppercase tracking-[0.16em]">Continue to Payment <ArrowRight size={16}/></button>
               : <form onSubmit={placeOrder}>
               <div className="mb-2 flex items-center justify-between">
-                <button type="button" onClick={() => setCheckoutStep(1)} className="text-[10px] font-semibold text-[#526b4d] underline underline-offset-2">Back to delivery</button>
+                <button type="button" onClick={() => setCheckoutStep(1)} className="text-[10px] font-semibold text-[#d4af37] underline underline-offset-2">← Back to delivery</button>
               </div>
-              <button type={user ? 'submit' : 'button'} onClick={!user ? continueToCheckout : undefined} disabled={placingOrder || (user && paymentMode === 'WALLET' && (walletBalance === null || walletBalance < finalTotal))} className="mini-cart-primary-action flex w-full items-center justify-center gap-2 rounded-xl bg-[#14251c] px-4 py-3.5 text-xs font-bold uppercase tracking-[0.14em] text-white shadow-lg shadow-[#14251c]/15 transition disabled:cursor-not-allowed disabled:opacity-50">
-                {placingOrder ? 'Preparing your order…' : !user ? <>Sign in to continue <ArrowRight size={16}/></> : <>{paymentMode === 'COD' ? 'Place order · cash on delivery' : paymentMode === 'online' ? 'Pay securely with Razorpay' : 'Place wallet order'} <ArrowRight size={16}/></>}
+              <button type={user ? 'submit' : 'button'} onClick={!user ? continueToCheckout : undefined} disabled={placingOrder || (user && paymentMode === 'WALLET' && (walletBalance === null || walletBalance < finalTotal))} className="btn-gold-luxury flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-xs font-bold uppercase tracking-[0.16em] disabled:cursor-not-allowed disabled:opacity-50">
+                {placingOrder ? 'Processing Order…' : !user ? <>Sign In to Continue <ArrowRight size={16}/></> : <>{paymentMode === 'COD' ? 'Place Order · Cash on Delivery' : paymentMode === 'online' ? 'Pay Securely with Razorpay' : 'Place Wallet Order'} <ArrowRight size={16}/></>}
               </button>
-              {paymentMode === 'WALLET' && walletBalance !== null && walletBalance < finalTotal && <p className="mt-1 text-center text-[10px] text-rose-700">Add funds to your wallet or choose Razorpay.</p>}
-              <p className="mt-3 text-center text-[10px] leading-4 text-[#687466]">By placing your order, you agree to our <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold text-[#294434] underline underline-offset-2">Conditions of Sale</Link> and acknowledge the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold text-[#294434] underline underline-offset-2">Privacy Notice</Link>.</p>
-              <p className="mt-2 flex items-center justify-center gap-1.5 text-center text-[9px] font-medium text-[#687466]"><ShieldCheck size={12} className="text-[#526b4d]"/>{paymentMode === 'online' ? 'Payment details are handled securely by Razorpay.' : 'Your order total is shown clearly before confirmation.'}</p>
+              {paymentMode === 'WALLET' && walletBalance !== null && walletBalance < finalTotal && <p className="mt-1 text-center text-[10px] text-rose-400">Add funds to your wallet or choose Razorpay.</p>}
+              <p className="mt-3 text-center text-[10px] leading-4 text-[#94a3b8]">By placing your order, you agree to our <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold text-white underline underline-offset-2">Conditions of Sale</Link> and <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold text-white underline underline-offset-2">Privacy Notice</Link>.</p>
             </form>}
-          {!checkoutOpen && <p className="mt-2 text-center text-[9px] text-stone-400">Shipping and final discounts are confirmed at checkout.</p>}
         </footer>}
       </aside>
     </div>

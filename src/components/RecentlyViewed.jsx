@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Clock, Eye, ShoppingCart, Trash2, ChevronRight } from 'lucide-react';
+import { Clock, Trash2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useToast } from '../context/ToastContext';
 import { getProductImageUrl } from '../utils/productImageUrl';
@@ -32,51 +32,99 @@ export function addToRecentlyViewed(product) {
 export default function RecentlyViewed({ currentId }) {
   const toast = useToast();
   const [items, setItems] = useState([]);
+  
   useEffect(() => {
     loadItems();
     window.addEventListener('storage', loadItems);
     return () => window.removeEventListener('storage', loadItems);
   }, [currentId]);
+
   const loadItems = () => {
     try {
       const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) || '[]');
       const cid = String(currentId);
       setItems(stored.filter(p => String(p.id || p._id) !== cid));
-    } catch (err) { setItems([]); }
+    } catch { 
+      setItems([]); 
+    }
   };
+
   const clearAll = () => {
     try {
       localStorage.removeItem(STORAGE_KEY);
       setItems([]);
-      toast.success('Recently viewed history cleared.');
+      toast?.success?.('Recently viewed history cleared.');
     } catch (error) {
       console.error('Could not clear recently viewed history:', error);
-      toast.error('Could not clear recently viewed history.');
+      toast?.error?.('Could not clear recently viewed history.');
     }
   };
+
   if (!items.length) return null;
+
   return (
-    <section className="py-16 px-4 bg-gradient-to-b from-transparent to-[#050505]/30 rounded-[3rem] border border-white/5 mb-16 relative overflow-hidden">
-      <div className="absolute inset-0 bg-cyan-500/5 blur-[120px] rounded-full -z-10 opacity-30" />
+    <section className="two-tone-panel-gold rounded-3xl p-6 sm:p-8 my-16 bg-[#0d1520] relative overflow-hidden shadow-xl">
       <div className="max-w-7xl mx-auto">
-        <div className="flex items-center justify-between mb-10 px-4">
-          <div className="flex items-center gap-4">
-            <div className="p-3 bg-cyan-500/10 rounded-2xl border border-cyan-500/20 shadow-[0_0_20px_rgba(6,182,212,0.1)]"><Clock className="text-cyan-400" size={24} /></div>
-            <div><h3 className="text-2xl font-black text-white tracking-tighter uppercase">Recently Viewed</h3><p className="text-gray-500 text-xs font-bold tracking-widest uppercase mt-0.5">Pick up where you left off</p></div>
+        <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/10">
+          <div className="flex items-center gap-3.5">
+            <div className="w-10 h-10 rounded-xl bg-[#070a0e] border border-[#d4af37]/40 text-[#fce096] flex items-center justify-center shadow-md">
+              <Clock size={20} />
+            </div>
+            <div>
+              <h3 className="font-serif text-xl sm:text-2xl font-bold uppercase tracking-wider text-white">Recently Inspected</h3>
+              <p className="font-sub-gold text-[10px] tracking-widest mt-0.5">Resume your botanical formulation audit</p>
+            </div>
           </div>
-          <button onClick={clearAll} className="flex items-center gap-2 px-4 py-2 rounded-xl bg-white/5 hover:bg-red-500/10 text-gray-500 hover:text-red-400 transition-all border border-white/5 hover:border-red-500/20 text-[10px] font-black uppercase tracking-widest"><Trash2 size={14} />Clear History</button>
+          <button 
+            onClick={clearAll} 
+            className="btn-silver-luxury flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-[10px] font-mono font-bold uppercase tracking-wider text-[#cbd5e1]"
+          >
+            <Trash2 size={13} className="text-[#d4af37]" /> Clear History
+          </button>
         </div>
-        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4 px-2">
+
+        <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
           <AnimatePresence mode="popLayout">
             {items.map((item, idx) => {
               const selling = item.discount_price ? Number(item.discount_price) : Number(item.price);
               const original = Number(item.price);
               const discount = item.discount_price ? Math.round(((original - selling) / original) * 100) : 0;
               return (
-                <motion.div layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0, scale: 0.8 }} transition={{ delay: idx * 0.05 }} key={item.id} className="group relative bg-[#080808] border border-gray-900 rounded-2xl overflow-hidden hover:border-cyan-500/30 transition-all duration-500 hover:shadow-2xl hover:shadow-cyan-500/5 active:scale-95">
+                <motion.div 
+                  layout 
+                  initial={{ opacity: 0, scale: 0.9 }} 
+                  animate={{ opacity: 1, scale: 1 }} 
+                  exit={{ opacity: 0, scale: 0.8 }} 
+                  transition={{ delay: idx * 0.05 }} 
+                  key={item.id} 
+                  className="two-tone-card group relative bg-[#070a0e] border border-[#d4af37]/20 hover:border-[#d4af37]/60 rounded-xl overflow-hidden transition-all duration-300 shadow-md"
+                >
                   <Link to={`/product/${item.slug || item.id}`} className="block">
-                    <div className="aspect-[4/5] bg-[#0A0A0A] overflow-hidden relative p-3"><img src={getProductImageUrl(item.image) || '/logo.webp'} alt={item.name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-contain mix-blend-lighten transition-transform duration-700 group-hover:scale-110" loading="lazy" />{discount > 0 && (<div className="absolute top-2 left-2 bg-gradient-to-r from-red-600 to-pink-600 text-white text-[9px] font-black px-2 py-1 rounded-lg shadow-xl uppercase tracking-tighter z-10">{discount}% OFF</div>)}</div>
-                    <div className="p-3 bg-gradient-to-t from-black to-[#080808]"><h4 className="text-gray-400 text-[10px] font-bold truncate group-hover:text-white transition-colors uppercase tracking-tight mb-1">{item.name}</h4><div className="flex items-center gap-1.5"><span className="text-white font-black text-xs">₹{selling.toLocaleString()}</span>{discount > 0 && (<span className="text-gray-700 text-[9px] line-through font-bold">₹{original.toLocaleString()}</span>)}</div></div>
+                    <div className="aspect-[4/5] bg-black/40 overflow-hidden relative p-2.5">
+                      <img 
+                        src={getProductImageUrl(item.image) || '/logo.webp'} 
+                        alt={item.name} 
+                        onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} 
+                        className="w-full h-full object-contain transition-transform duration-500 group-hover:scale-105" 
+                        loading="lazy" 
+                      />
+                      {discount > 0 && (
+                        <div className="absolute top-2 left-2 bg-black/85 border border-[#d4af37]/40 text-[#fce096] text-[8px] font-mono font-bold px-2 py-0.5 rounded-full shadow-lg uppercase tracking-wider z-10 backdrop-blur-sm">
+                          {discount}% OFF
+                        </div>
+                      )}
+                    </div>
+                    <div className="p-2.5 bg-[#0d1520] border-t border-white/5">
+                      <h4 className="text-[#cbd5e1] text-[10px] font-medium truncate group-hover:text-white transition-colors uppercase tracking-tight mb-1">
+                        {item.name}
+                      </h4>
+                      <div className="flex items-center gap-1.5 font-mono">
+                        <span className="text-[#fce096] font-bold text-xs">₹{selling.toLocaleString()}</span>
+                        {discount > 0 && (
+                          <span className="text-[#94a3b8] text-[9px] line-through">₹{original.toLocaleString()}</span>
+                        )}
+                      </div>
+                    </div>
                   </Link>
                 </motion.div>
               );

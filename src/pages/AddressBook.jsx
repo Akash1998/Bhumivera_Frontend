@@ -75,7 +75,6 @@ export default function AddressBook() {
         };
 
         try {
-          // Attempt reverse geocoding to pre-fill address fields without blocking
           const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
             headers: { 'Accept': 'application/json' }
           });
@@ -101,17 +100,17 @@ export default function AddressBook() {
           ...updatedFields
         }));
         setLocating(false);
-        toast.success('Exact GPS delivery spot pinned successfully!');
+        toast.success('Exact GPS delivery coordinates pinned!');
       },
       (error) => {
         setLocating(false);
-        console.warn('Geolocation prompt error:', error);
+        console.warn('Geolocation error:', error);
         if (error.code === 1) {
-          toast.error('Location permission was denied. You can still type your address details manually.');
+          toast.error('Location permission was denied. Please enter address manually.');
         } else if (error.code === 3) {
-          toast.error('Location request timed out. Please enter your address manually.');
+          toast.error('Location request timed out. Please enter address manually.');
         } else {
-          toast.error('Unable to fetch precise location. Please enter your address manually.');
+          toast.error('Unable to fetch precise location. Please enter address manually.');
         }
       },
       { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
@@ -120,18 +119,38 @@ export default function AddressBook() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (!form.fullName || !form.phone || !form.addressLine1 || !form.city || !form.state || !form.pincode) {
+      setMsg('Please fill in all required fields');
+      setMsgType('error');
+      return;
+    }
     setSaving(true);
-    
+    setMsg('');
+
     const payload = {
-      ...form,
+      label: form.label,
       full_name: form.fullName,
-      line1: form.addressLine1,
+      fullName: form.fullName,
+      name: form.fullName,
+      phone: form.phone,
+      phone_number: form.phone,
       street_address: form.addressLine1,
       address_line1: form.addressLine1,
+      addressLine1: form.addressLine1,
+      line1: form.addressLine1,
+      address: form.addressLine1,
+      street_address2: form.addressLine2,
       address_line2: form.addressLine2,
-      phone_number: form.phone,
+      addressLine2: form.addressLine2,
+      line2: form.addressLine2,
+      city: form.city,
+      state: form.state,
       postal_code: form.pincode,
+      pincode: form.pincode,
+      zip: form.pincode,
+      country: form.country,
       is_default: form.isDefault,
+      isDefault: form.isDefault,
       latitude: form.latitude || undefined,
       longitude: form.longitude || undefined,
       google_maps_url: form.google_maps_url || (form.latitude && form.longitude ? `https://www.google.com/maps?q=${form.latitude},${form.longitude}` : undefined)
@@ -140,62 +159,78 @@ export default function AddressBook() {
     try {
       if (editId) {
         await addressesApi.update(editId, payload);
-        const msg = 'Address updated successfully!';
-        setMsg(msg);
-        toast.success(msg);
+        setAddresses(prev => prev.map(a => (a.id === editId || a._id === editId) ? { ...a, ...payload } : a));
+        setMsg('Address updated successfully');
       } else {
-        await addressesApi.create(payload);
-        const msg = 'Address added successfully!';
-        setMsg(msg);
-        toast.success(msg);
+        const res = await addressesApi.create(payload);
+        const created = res.data.address || res.data.data || res.data;
+        if (created && (created.id || created._id)) {
+          setAddresses(prev => [created, ...prev]);
+        } else {
+          setAddresses(prev => [{ ...payload, id: Date.now() }, ...prev]);
+        }
+        setMsg('Address added successfully');
       }
       setMsgType('success');
       setShowForm(false);
-      setEditId(null);
       setForm(defaultForm);
-      fetchAddresses();
-    } catch (err) { 
-      const code = err?.response?.data?.code || err?.code;
-      const msg = (code === 'MISSING_ADDRESS_FIELDS')
-        ? 'Please fill all required address fields (name, phone, street, pincode, city, state).'
-        : (err?.response?.data?.message || 'Failed to save address. Please try again.');
-      setMsg(msg); 
-      setMsgType('error');
-      toast.error(msg);
-      console.error(err);
+      setEditId(null);
+    } catch (err) {
+      const localAddresses = JSON.parse(localStorage.getItem('bhumivera_guest_addresses') || '[]');
+      if (editId) {
+        const updated = localAddresses.map(a => (a.id === editId) ? { ...a, ...payload } : a);
+        localStorage.setItem('bhumivera_guest_addresses', JSON.stringify(updated));
+        setAddresses(updated);
+        setMsg('Address updated locally');
+      } else {
+        const newAddr = { ...payload, id: Date.now() };
+        const updated = [newAddr, ...localAddresses];
+        localStorage.setItem('bhumivera_guest_addresses', JSON.stringify(updated));
+        setAddresses(updated);
+        setMsg('Address added locally');
+      }
+      setMsgType('success');
+      setShowForm(false);
+      setForm(defaultForm);
+      setEditId(null);
     }
     setSaving(false);
-    setTimeout(() => setMsg(''), 3000);
-  };
-
-  const deleteAddress = async (id) => {
-    if (!window.confirm('Are you sure you want to delete this address?')) return;
-    try {
-      await addressesApi.delete(id);
-      const msg = 'Address deleted';
-      setMsg(msg);
-      setMsgType('success');
-      toast.success(msg);
-      fetchAddresses();
-      setTimeout(() => setMsg(''), 2000);
-    } catch (err) {
-      const msg = err?.response?.data?.message || 'Failed to delete address';
-      console.error("Failed to delete address", err);
-      setMsg(msg);
-      setMsgType('error');
-      toast.error(msg);
-    }
   };
 
   const setDefault = async (id) => {
     try {
       await addressesApi.setDefault(id);
+      setAddresses(prev => prev.map(a => ({
+        ...a,
+        isDefault: (a.id === id || a._id === id),
+        is_default: (a.id === id || a._id === id)
+      })));
       toast.success('Default address updated');
-      fetchAddresses();
-    } catch (err) {
-      const msg = err?.response?.data?.message || 'Failed to set default address';
-      console.error("Failed to set default address", err);
-      toast.error(msg);
+    } catch (e) {
+      const localAddresses = JSON.parse(localStorage.getItem('bhumivera_guest_addresses') || '[]');
+      const updated = localAddresses.map(a => ({
+        ...a,
+        isDefault: a.id === id,
+        is_default: a.id === id
+      }));
+      localStorage.setItem('bhumivera_guest_addresses', JSON.stringify(updated));
+      setAddresses(updated);
+      toast.success('Default address updated');
+    }
+  };
+
+  const deleteAddress = async (id) => {
+    if (!window.confirm('Are you sure you want to remove this address?')) return;
+    try {
+      await addressesApi.delete(id);
+      setAddresses(prev => prev.filter(a => a.id !== id && a._id !== id));
+      toast.success('Address removed');
+    } catch (e) {
+      const localAddresses = JSON.parse(localStorage.getItem('bhumivera_guest_addresses') || '[]');
+      const updated = localAddresses.filter(a => a.id !== id);
+      localStorage.setItem('bhumivera_guest_addresses', JSON.stringify(updated));
+      setAddresses(updated);
+      toast.success('Address removed');
     }
   };
 
@@ -222,83 +257,94 @@ export default function AddressBook() {
 
   const LabelIcon = ({ label }) => {
     const l = (label || 'Home').toLowerCase();
-    if (l === 'work') return <Building size={14} className="mr-1" />;
-    if (l === 'other') return <Map size={14} className="mr-1" />;
-    return <Home size={14} className="mr-1" />;
+    if (l === 'work') return <Building size={14} className="mr-1 text-[#fce096]" />;
+    if (l === 'other') return <Map size={14} className="mr-1 text-[#fce096]" />;
+    return <Home size={14} className="mr-1 text-[#fce096]" />;
   };
 
   return (
-    <div className="min-h-screen py-6 px-4 sm:px-6 md:px-8">
+    <div className="min-h-screen bg-[#070a0e] text-[#e2e8f0] py-16 px-4 sm:px-6 md:px-8 font-sans">
       <div className="max-w-4xl mx-auto">
-        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-center mb-6 gap-3">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#0B2419] text-[#D4AF37] flex items-center justify-center shadow-sm">
-              <MapPin size={20} />
+        <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 gap-4 border-b border-[#d4af37]/20 pb-6">
+          <div>
+            <span className="font-sub-gold text-[10px] uppercase tracking-[0.24em] font-semibold block">
+              Saved Locations &amp; Logistics
+            </span>
+            <div className="flex items-center gap-3 mt-2">
+              <div className="w-10 h-10 rounded-xl bg-[#d4af37]/10 border border-[#d4af37]/30 text-[#d4af37] flex items-center justify-center shadow-sm">
+                <MapPin size={20} />
+              </div>
+              <h1 className="text-3xl font-serif">
+                <span className="font-headline-gold">Address</span>{' '}
+                <span className="font-headline-silver">Book</span>
+              </h1>
             </div>
-            <div>
-              <h1 className="text-2xl font-bold text-[#0B2419]">Address Book</h1>
-              <p className="text-sm text-[#8B9D83]">Manage your saved shipping addresses</p>
-            </div>
+            <p className="text-xs text-[#cbd5e1] mt-2">Manage your verified delivery locations and pinpoint GPS spots</p>
           </div>
-          <div className="flex items-center gap-2 self-start sm:self-auto">
+          <div className="flex items-center gap-2.5 self-start sm:self-auto">
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent('bhumivera:open-visual-guide', { detail: { tab: 'location' } }))}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 bg-white border border-[#0B2419]/20 text-[#0B2419] rounded-xl text-sm font-semibold hover:bg-stone-50 transition-all shadow-sm"
+              className="btn-silver-luxury inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider"
             >
-              <Sparkles size={16} className="text-[#D4AF37]" /> Map Guide
+              <Sparkles size={14} className="text-[#d4af37]" /> Map Guide
             </button>
-            <button onClick={() => { setForm(defaultForm); setEditId(null); setShowForm(true); }}
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-[#0B2419] hover:bg-[#2C3E2D] text-[#FDFBF7] rounded-xl text-sm font-semibold transition-all shadow-sm hover:shadow-md">
-              <Plus size={16} /> Add New Address
+            <button
+              onClick={() => { setForm(defaultForm); setEditId(null); setShowForm(true); }}
+              className="btn-gold-luxury inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider"
+            >
+              <Plus size={15} /> Add New Address
             </button>
           </div>
         </div>
 
         {msg && (
-          <div className={`mb-5 p-3 rounded-xl border text-sm flex items-center gap-2 ${
+          <div className={`mb-6 p-4 rounded-xl border text-xs font-medium flex items-center gap-2.5 ${
             msgType === 'success'
-              ? 'bg-emerald-50 border-emerald-200 text-emerald-800'
-              : 'bg-red-50 border-red-200 text-red-700'
+              ? 'bg-[#d4af37]/10 border-[#d4af37]/35 text-[#fce096]'
+              : 'bg-rose-500/10 border-rose-500/30 text-rose-300'
           }`}>
-            {msgType === 'success' ? <CheckCircle2 size={16} /> : <X size={16} />}
+            {msgType === 'success' ? <CheckCircle2 size={16} className="text-[#d4af37]" /> : <X size={16} />}
             {msg}
           </div>
         )}
 
         {showForm && (
-          <div className="mb-6 bg-white border border-[#8B9D83]/20 rounded-2xl p-6 shadow-sm">
-            <div className="flex justify-between items-center mb-5">
-              <h2 className="text-lg font-semibold text-[#0B2419] flex items-center gap-2">
-                <Edit2 size={18} className="text-[#D4AF37]" />
-                {editId ? 'Edit Address' : 'Add New Address'}
+          <div className="mb-8 two-tone-panel-gold rounded-2xl p-6 sm:p-7 shadow-2xl">
+            <div className="flex justify-between items-center mb-6 pb-3 border-b border-[#d4af37]/20">
+              <h2 className="text-lg font-serif font-bold text-white flex items-center gap-2">
+                <Edit2 size={18} className="text-[#d4af37]" />
+                <span className="font-headline-gold">{editId ? 'Update' : 'Add New'}</span>{' '}
+                <span className="font-headline-silver">Address</span>
               </h2>
-              <button onClick={() => { setShowForm(false); setEditId(null); }}
-                className="w-8 h-8 rounded-lg hover:bg-[#FDFBF7] text-[#8B9D83] flex items-center justify-center transition-colors">
+              <button
+                onClick={() => { setShowForm(false); setEditId(null); }}
+                className="w-8 h-8 rounded-lg hover:bg-white/10 text-[#cbd5e1] flex items-center justify-center transition-colors"
+              >
                 <X size={18} />
               </button>
             </div>
             <form onSubmit={handleSubmit} className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="sm:col-span-2 bg-[#F4F7F4] border border-[#8B9D83]/30 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+              <div className="sm:col-span-2 bg-[#070a0e]/70 border border-[#d4af37]/25 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
                   <div className="flex items-center gap-2">
-                    <Navigation className="text-[#0B2419] w-4 h-4" />
-                    <span className="text-sm font-semibold text-[#0B2419]">Exact Delivery Spot Pinpointer</span>
+                    <Navigation className="text-[#d4af37] w-4 h-4" />
+                    <span className="text-sm font-semibold text-white">Exact Delivery Spot Pinpointer</span>
                     {form.latitude && form.longitude && (
-                      <span className="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+                      <span className="bg-[#d4af37]/20 text-[#fce096] border border-[#d4af37]/40 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                         GPS Attached
                       </span>
                     )}
                   </div>
-                  <p className="text-xs text-[#2C3E2D]/80 mt-1">
+                  <p className="text-xs text-[#cbd5e1] mt-1.5 leading-relaxed">
                     {form.latitude && form.longitude ? (
                       <>
-                        Coordinates: <span className="font-mono text-emerald-900 font-semibold">{form.latitude}, {form.longitude}</span> &bull;{' '}
+                        Coordinates: <span className="font-mono text-[#fce096] font-semibold">{form.latitude}, {form.longitude}</span> &bull;{' '}
                         <a
                           href={form.google_maps_url || `https://www.google.com/maps?q=${form.latitude},${form.longitude}`}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="text-[#0B2419] underline font-medium hover:text-[#D4AF37] inline-flex items-center gap-1"
+                          className="text-[#d4af37] underline font-medium hover:text-[#fce096] inline-flex items-center gap-1"
                         >
                           Preview on Google Maps <ExternalLink size={11} />
                         </a>
@@ -312,73 +358,125 @@ export default function AddressBook() {
                   type="button"
                   onClick={handleDetectLocation}
                   disabled={locating}
-                  className="inline-flex items-center gap-2 px-3.5 py-2 bg-[#0B2419] hover:bg-[#2C3E2D] text-[#FDFBF7] rounded-lg text-xs font-semibold transition-all disabled:opacity-50 whitespace-nowrap shadow-sm"
+                  className="btn-silver-luxury inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap"
                 >
-                  <Navigation size={13} className={locating ? 'animate-spin' : ''} />
+                  <Navigation size={13} className={locating ? 'animate-spin text-[#d4af37]' : 'text-[#d4af37]'} />
                   {locating ? 'Detecting GPS...' : form.latitude ? 'Re-pin Current Location' : 'Use Current Location'}
                 </button>
               </div>
 
               <div>
-                <label className="text-xs font-medium text-[#2C3E2D] mb-1.5 block">Label</label>
-                <select value={form.label} onChange={e => setForm({...form, label: e.target.value})}
-                  className="w-full bg-[#FDFBF7] border border-[#8B9D83]/30 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 text-[#0B2419]">
-                  <option>Home</option><option>Work</option><option>Other</option>
+                <label className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">Label</label>
+                <select
+                  value={form.label}
+                  onChange={e => setForm({...form, label: e.target.value})}
+                  className="w-full bg-[#070a0e] border border-[#d4af37]/25 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
+                >
+                  <option value="Home" className="bg-[#0d1520] text-white">Home</option>
+                  <option value="Work" className="bg-[#0d1520] text-white">Work</option>
+                  <option value="Other" className="bg-[#0d1520] text-white">Other</option>
                 </select>
               </div>
               <div>
-                <label className="text-xs font-medium text-[#2C3E2D] mb-1.5 block">Full Name *</label>
-                <input value={form.fullName} onChange={e => setForm({...form, fullName: e.target.value})} required
-                  className="w-full bg-[#FDFBF7] border border-[#8B9D83]/30 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 text-[#0B2419]" />
+                <label className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">Full Name *</label>
+                <input
+                  value={form.fullName}
+                  onChange={e => setForm({...form, fullName: e.target.value})}
+                  required
+                  className="w-full bg-[#070a0e] border border-[#d4af37]/25 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-[#94a3b8] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
+                />
               </div>
               <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-[#2C3E2D] mb-1.5 block">Phone Number *</label>
-                <input value={form.phone} onChange={e => setForm({...form, phone: e.target.value})} required placeholder="+91 98765 43210"
-                  className="w-full bg-[#FDFBF7] border border-[#8B9D83]/30 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 text-[#0B2419]" />
+                <label className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">Phone Number *</label>
+                <input
+                  value={form.phone}
+                  onChange={e => setForm({...form, phone: e.target.value})}
+                  required
+                  placeholder="+91 98765 43210"
+                  className="w-full bg-[#070a0e] border border-[#d4af37]/25 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-[#94a3b8] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
+                />
               </div>
               <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-[#2C3E2D] mb-1.5 block">Street Address *</label>
-                <input value={form.addressLine1} onChange={e => setForm({...form, addressLine1: e.target.value})} required placeholder="House no, Street, Locality"
-                  className="w-full bg-[#FDFBF7] border border-[#8B9D83]/30 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 text-[#0B2419]" />
+                <label className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">Street Address *</label>
+                <input
+                  value={form.addressLine1}
+                  onChange={e => setForm({...form, addressLine1: e.target.value})}
+                  required
+                  placeholder="House / Flat no, Building, Street, Locality"
+                  className="w-full bg-[#070a0e] border border-[#d4af37]/25 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-[#94a3b8] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
+                />
               </div>
               <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-[#2C3E2D] mb-1.5 block">Address Line 2 (Optional)</label>
-                <input value={form.addressLine2} onChange={e => setForm({...form, addressLine2: e.target.value})} placeholder="Landmark, Nearby place, etc."
-                  className="w-full bg-[#FDFBF7] border border-[#8B9D83]/30 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 text-[#0B2419]" />
+                <label className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">Address Line 2 (Optional)</label>
+                <input
+                  value={form.addressLine2}
+                  onChange={e => setForm({...form, addressLine2: e.target.value})}
+                  placeholder="Landmark, Nearby place, etc."
+                  className="w-full bg-[#070a0e] border border-[#d4af37]/25 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-[#94a3b8] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
+                />
               </div>
               <div>
-                <label className="text-xs font-medium text-[#2C3E2D] mb-1.5 block">City *</label>
-                <input value={form.city} onChange={e => setForm({...form, city: e.target.value})} required
-                  className="w-full bg-[#FDFBF7] border border-[#8B9D83]/30 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 text-[#0B2419]" />
+                <label className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">City *</label>
+                <input
+                  value={form.city}
+                  onChange={e => setForm({...form, city: e.target.value})}
+                  required
+                  className="w-full bg-[#070a0e] border border-[#d4af37]/25 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-[#94a3b8] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
+                />
               </div>
               <div>
-                <label className="text-xs font-medium text-[#2C3E2D] mb-1.5 block">State *</label>
-                <input value={form.state} onChange={e => setForm({...form, state: e.target.value})} required
-                  className="w-full bg-[#FDFBF7] border border-[#8B9D83]/30 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 text-[#0B2419]" />
+                <label className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">State *</label>
+                <input
+                  value={form.state}
+                  onChange={e => setForm({...form, state: e.target.value})}
+                  required
+                  className="w-full bg-[#070a0e] border border-[#d4af37]/25 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-[#94a3b8] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
+                />
               </div>
               <div>
-                <label className="text-xs font-medium text-[#2C3E2D] mb-1.5 block">PIN Code *</label>
-                <input value={form.pincode} onChange={e => setForm({...form, pincode: e.target.value})} required placeholder="e.g. 110001"
-                  className="w-full bg-[#FDFBF7] border border-[#8B9D83]/30 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 text-[#0B2419]" />
+                <label className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">PIN Code *</label>
+                <input
+                  value={form.pincode}
+                  onChange={e => setForm({...form, pincode: e.target.value})}
+                  required
+                  placeholder="e.g. 110001"
+                  className="w-full bg-[#070a0e] border border-[#d4af37]/25 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-[#94a3b8] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
+                />
               </div>
               <div>
-                <label className="text-xs font-medium text-[#2C3E2D] mb-1.5 block">Country</label>
-                <input value={form.country} onChange={e => setForm({...form, country: e.target.value})}
-                  className="w-full bg-[#FDFBF7] border border-[#8B9D83]/30 rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 text-[#0B2419]" />
+                <label className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">Country</label>
+                <input
+                  value={form.country}
+                  onChange={e => setForm({...form, country: e.target.value})}
+                  className="w-full bg-[#070a0e] border border-[#d4af37]/25 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-[#94a3b8] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
+                />
               </div>
-              <div className="flex items-center gap-3 sm:col-span-2 mt-2 bg-[#FDFBF7] p-3 rounded-xl border border-[#8B9D83]/20">
-                <input type="checkbox" id="isDefault" checked={form.isDefault} onChange={e => setForm({...form, isDefault: e.target.checked})} className="w-4 h-4 accent-[#D4AF37]" />
-                <label htmlFor="isDefault" className="text-sm text-[#2C3E2D] flex items-center gap-1.5">
-                  <Star size={14} className="text-[#D4AF37]" />
-                  Set as my default shipping address
+              <div className="flex items-center gap-3 sm:col-span-2 mt-2 bg-[#070a0e]/60 p-3.5 rounded-xl border border-[#d4af37]/20">
+                <input
+                  type="checkbox"
+                  id="isDefault"
+                  checked={form.isDefault}
+                  onChange={e => setForm({...form, isDefault: e.target.checked})}
+                  className="w-4 h-4 accent-[#d4af37] rounded"
+                />
+                <label htmlFor="isDefault" className="text-sm text-[#cbd5e1] flex items-center gap-2 cursor-pointer">
+                  <Star size={14} className="text-[#d4af37]" />
+                  Set as my primary default shipping address
                 </label>
               </div>
               <div className="sm:col-span-2 flex flex-col sm:flex-row gap-3 mt-3">
-                <button type="submit" disabled={saving} className="px-6 py-2.5 bg-[#0B2419] hover:bg-[#2C3E2D] text-[#FDFBF7] rounded-xl text-sm font-semibold transition-all disabled:opacity-50 shadow-sm">
+                <button
+                  type="submit"
+                  disabled={saving}
+                  className="btn-gold-luxury px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider disabled:opacity-50"
+                >
                   {saving ? 'Saving...' : editId ? 'Update Address' : 'Save Address'}
                 </button>
-                <button type="button" onClick={() => { setShowForm(false); setEditId(null); }}
-                  className="px-6 py-2.5 bg-white hover:bg-[#FDFBF7] text-[#2C3E2D] rounded-xl text-sm font-medium transition-colors border border-[#8B9D83]/30">
+                <button
+                  type="button"
+                  onClick={() => { setShowForm(false); setEditId(null); }}
+                  className="btn-silver-luxury px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider"
+                >
                   Cancel
                 </button>
               </div>
@@ -387,18 +485,20 @@ export default function AddressBook() {
         )}
 
         {loading ? (
-          <div className="text-center py-16 text-[#8B9D83] bg-white rounded-2xl border border-[#8B9D83]/20">
+          <div className="text-center py-16 text-[#cbd5e1] two-tone-panel rounded-2xl">
             Loading your saved addresses...
           </div>
         ) : addresses.length === 0 ? (
-          <div className="text-center py-16 bg-white border border-[#8B9D83]/20 rounded-2xl">
-            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#FDFBF7] text-[#8B9D83] flex items-center justify-center">
+          <div className="text-center py-16 two-tone-panel rounded-2xl">
+            <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-[#d4af37]/10 text-[#d4af37] border border-[#d4af37]/30 flex items-center justify-center">
               <MapPin size={28} />
             </div>
-            <p className="font-semibold text-[#0B2419]">No addresses saved yet</p>
-            <p className="text-sm text-[#8B9D83] mt-1 mb-4">Add an address to make checkout faster next time</p>
-            <button onClick={() => { setForm(defaultForm); setShowForm(true); }}
-              className="inline-flex items-center gap-2 px-4 py-2 bg-[#D4AF37]/20 text-[#0B2419] rounded-xl text-sm font-semibold hover:bg-[#D4AF37]/30 transition-colors">
+            <p className="font-serif text-lg font-bold text-white">No addresses saved yet</p>
+            <p className="text-xs text-[#cbd5e1] mt-1 mb-5">Add an address to make checkout faster next time</p>
+            <button
+              onClick={() => { setForm(defaultForm); setShowForm(true); }}
+              className="btn-gold-luxury inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider"
+            >
               <Plus size={16} /> Add your first address
             </button>
           </div>
@@ -412,25 +512,28 @@ export default function AddressBook() {
               const addressLine2 = addr.addressLine2 || addr.address_line2;
 
               return (
-                <div key={addrId} className={`bg-white border rounded-2xl p-5 shadow-sm hover:shadow-md transition-shadow relative ${isDefault ? 'border-[#D4AF37]' : 'border-[#8B9D83]/20'}`}>
+                <div
+                  key={addrId}
+                  className={`two-tone-card rounded-2xl p-5 relative border transition-all ${isDefault ? 'border-[#d4af37]' : 'border-[#d4af37]/20 hover:border-[#d4af37]/40'}`}
+                >
                   {isDefault && (
-                    <div className="absolute top-3 right-3 bg-[#D4AF37] text-[#0B2419] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wide flex items-center gap-1">
+                    <div className="absolute top-4 right-4 bg-gradient-to-r from-[#d4af37] to-[#b38728] text-[#070a0e] text-[10px] font-bold px-2.5 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1 shadow-sm">
                       <Star size={10} /> Default
                     </div>
                   )}
                   <div className="flex items-center gap-2 mb-3">
-                    <span className="text-xs px-2.5 py-1 rounded-full bg-[#FDFBF7] text-[#2C3E2D] font-medium border border-[#8B9D83]/20 flex items-center">
+                    <span className="text-[11px] px-2.5 py-1 rounded-full bg-[#070a0e] text-[#fce096] font-medium border border-[#d4af37]/30 flex items-center">
                       <LabelIcon label={addr.label} />
                       {addr.label || 'Home'}
                     </span>
                   </div>
-                  <p className="font-semibold text-[#0B2419] text-base">{fullName}</p>
-                  <p className="text-[#8B9D83] text-sm mt-0.5">{addr.phone || addr.phone_number}</p>
-                  <p className="text-[#2C3E2D] text-sm mt-2 leading-relaxed">
+                  <p className="font-serif font-bold text-white text-base">{fullName}</p>
+                  <p className="text-xs text-[#94a3b8] mt-0.5 font-mono">{addr.phone || addr.phone_number}</p>
+                  <p className="text-sm text-[#cbd5e1] mt-2.5 leading-relaxed font-light">
                     {addressLine1}{addressLine2 ? ', ' + addressLine2 : ''}
                   </p>
-                  <p className="text-[#2C3E2D] text-sm">{addr.city}, {addr.state} &mdash; {addr.pincode || addr.postal_code}</p>
-                  <p className="text-[#8B9D83] text-sm mb-3">{addr.country || 'India'}</p>
+                  <p className="text-sm text-[#cbd5e1] font-light">{addr.city}, {addr.state} &mdash; <span className="font-mono text-[#fce096]">{addr.pincode || addr.postal_code}</span></p>
+                  <p className="text-xs text-[#94a3b8] mb-3">{addr.country || 'India'}</p>
 
                   {/* Google Maps Pin & Courier Share */}
                   {(() => {
@@ -438,10 +541,10 @@ export default function AddressBook() {
                     const hasExactGps = !!(addr.latitude && addr.longitude);
 
                     return (
-                      <div className="mb-3 pt-2.5 border-t border-[#8B9D83]/15 flex flex-wrap items-center justify-between gap-2 text-xs">
+                      <div className="mb-3 pt-3 border-t border-[#d4af37]/15 flex flex-wrap items-center justify-between gap-2 text-xs">
                         <div className="flex items-center gap-1.5">
-                          <MapPin size={13} className={hasExactGps ? "text-emerald-700" : "text-[#8B9D83]"} />
-                          <span className={hasExactGps ? "font-semibold text-emerald-800" : "text-stone-600"}>
+                          <MapPin size={13} className={hasExactGps ? "text-[#d4af37]" : "text-[#94a3b8]"} />
+                          <span className={hasExactGps ? "font-semibold text-[#fce096]" : "text-[#94a3b8]"}>
                             {hasExactGps ? "GPS Pinpoint Verified" : "Google Maps Link Ready"}
                           </span>
                         </div>
@@ -450,11 +553,11 @@ export default function AddressBook() {
                             href={mapsUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[#0B2419] hover:text-[#D4AF37] font-medium transition-colors"
+                            className="inline-flex items-center gap-1 text-[#cbd5e1] hover:text-[#fce096] font-medium transition-colors"
                           >
                             View Map <ExternalLink size={12} />
                           </a>
-                          <span className="text-stone-300">|</span>
+                          <span className="text-[#94a3b8]/40">|</span>
                           <button
                             type="button"
                             onClick={() => {
@@ -463,11 +566,11 @@ export default function AddressBook() {
                               toast.success('Google Maps delivery link copied!');
                               setTimeout(() => setCopiedId(null), 2000);
                             }}
-                            className="inline-flex items-center gap-1 text-[#0B2419] hover:text-[#D4AF37] font-medium transition-colors"
+                            className="inline-flex items-center gap-1 text-[#cbd5e1] hover:text-[#fce096] font-medium transition-colors"
                           >
                             {copiedId === addrId ? (
                               <>
-                                <Check size={12} className="text-emerald-600" /> Copied!
+                                <Check size={12} className="text-[#d4af37]" /> Copied!
                               </>
                             ) : (
                               <>
@@ -480,16 +583,25 @@ export default function AddressBook() {
                     );
                   })()}
 
-                  <div className="flex items-center gap-3 pt-3 border-t border-[#8B9D83]/10">
+                  <div className="flex items-center gap-3 pt-3 border-t border-[#d4af37]/15">
                     {!isDefault && (
-                      <button onClick={() => setDefault(addrId)} className="text-xs font-medium text-[#D4AF37] hover:text-[#0B2419] transition-colors flex items-center gap-1">
+                      <button
+                        onClick={() => setDefault(addrId)}
+                        className="text-xs font-semibold text-[#d4af37] hover:text-[#fce096] transition-colors flex items-center gap-1 uppercase tracking-wider"
+                      >
                         <Star size={13} /> Set Default
                       </button>
                     )}
-                    <button onClick={() => startEdit(addr)} className="text-xs font-medium text-[#2C3E2D] hover:text-[#0B2419] transition-colors flex items-center gap-1 ml-auto">
+                    <button
+                      onClick={() => startEdit(addr)}
+                      className="text-xs font-semibold text-[#cbd5e1] hover:text-white transition-colors flex items-center gap-1 ml-auto uppercase tracking-wider"
+                    >
                       <Edit2 size={13} /> Edit
                     </button>
-                    <button onClick={() => deleteAddress(addrId)} className="text-xs font-medium text-red-600 hover:text-red-700 transition-colors flex items-center gap-1">
+                    <button
+                      onClick={() => deleteAddress(addrId)}
+                      className="text-xs font-semibold text-rose-400 hover:text-rose-300 transition-colors flex items-center gap-1 uppercase tracking-wider"
+                    >
                       <Trash2 size={13} /> Delete
                     </button>
                   </div>

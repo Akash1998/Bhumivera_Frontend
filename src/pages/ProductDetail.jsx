@@ -281,7 +281,7 @@ export default function ProductDetail() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#f4f2eb] pb-28 pt-20 font-sans text-[#1b2821] selection:bg-[#253b2f] selection:text-white md:pb-32 md:pt-24">
+    <div className="relative min-h-screen bg-[#070a0e] pb-28 pt-20 font-sans text-[#e2e8f0] selection:bg-[#d4af37]/30 selection:text-white md:pb-32 md:pt-24">
       <SEOStructuredData product={product} />
       <SEO 
         title={`${product.name} | Bhumivera`}
@@ -292,12 +292,12 @@ export default function ProductDetail() {
         schema={productSchema} 
       />
 
-      <div className="relative z-10 mx-auto mb-4 flex max-w-7xl items-center gap-1.5 overflow-hidden px-4 text-[9px] font-bold uppercase tracking-[0.12em] text-stone-500 md:mb-8 md:gap-2 md:px-6 md:text-xs md:tracking-widest">
-        <Link to="/" className="hover:text-[#d4af37] transition-colors">Home</Link>
-        <ChevronRight size={12} className="shrink-0 md:h-[14px] md:w-[14px]" />
-        <Link to={`/shop?category=${product.category_id}`} className="shrink-0 hover:text-[#d4af37] transition-colors">{product.category_name || 'Botanicals'}</Link>
-        <ChevronRight size={12} className="shrink-0 md:h-[14px] md:w-[14px]" />
-        <span className="truncate text-[#35533c]">{product.name}</span>
+      <div className="relative z-10 mx-auto mb-4 flex max-w-7xl items-center gap-1.5 overflow-hidden px-4 text-[9px] font-bold uppercase tracking-[0.14em] text-[#94a3b8] md:mb-8 md:gap-2 md:px-6 md:text-xs md:tracking-widest">
+        <Link to="/" className="hover:text-[#fce096] transition-colors">Home</Link>
+        <ChevronRight size={12} className="shrink-0 text-[#d4af37]/60 md:h-[14px] md:w-[14px]" />
+        <Link to={`/shop?category=${product.category_id}`} className="shrink-0 hover:text-[#fce096] transition-colors">{product.category_name || 'Botanicals'}</Link>
+        <ChevronRight size={12} className="shrink-0 text-[#d4af37]/60 md:h-[14px] md:w-[14px]" />
+        <span className="truncate text-[#fce096]">{product.name}</span>
       </div>
 
       <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 gap-6 md:gap-10 lg:grid-cols-12 lg:gap-16">
@@ -313,16 +313,16 @@ export default function ProductDetail() {
                   aria-label={`View ${product.name} image ${idx + 1}`}
                   aria-pressed={getImageUrl(activeMedia) === url}
                   className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-300 sm:h-16 sm:w-16 md:h-20 md:w-20 md:rounded-2xl lg:h-24 lg:w-24 ${
-                    getImageUrl(activeMedia) === url ? 'border-[#d4af37] shadow-[2px_2px_0px_#6b4421]' : 'border-stone-200 hover:border-stone-300'
+                    getImageUrl(activeMedia) === url ? 'border-[#d4af37] shadow-[0_0_12px_rgba(212,175,55,0.4)]' : 'border-[#d4af37]/20 bg-[#0d1520] hover:border-[#d4af37]/60'
                   }`}
                 >
-                  <img src={url} alt={`${product.name} image ${idx + 1}`} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-cover grayscale hover:grayscale-0 transition-all duration-500" loading="lazy" />
+                  <img src={url} alt={`${product.name} image ${idx + 1}`} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-cover transition-all duration-500" loading="lazy" />
                 </button>
               );
             })}
           </div>
 
-          <div className="group relative aspect-[0.94] w-full overflow-hidden border-y border-[#253b2f]/10 bg-[#e9e8df] shadow-sm sm:aspect-square sm:rounded-2xl sm:border md:sticky md:top-28 md:aspect-auto md:h-[min(72vh,680px)] md:min-h-[500px] md:self-start lg:top-32">
+          <div className="group relative aspect-[0.94] w-full overflow-hidden rounded-2xl border border-[#d4af37]/25 bg-gradient-to-b from-[#0d1520] to-[#070a0e] shadow-2xl sm:aspect-square sm:rounded-2xl md:sticky md:top-28 md:aspect-auto md:h-[min(72vh,680px)] md:min-h-[500px] md:self-start lg:top-32">
             <AnimatePresence mode="wait">
               <motion.div
                 key={getImageUrl(activeMedia)}
@@ -332,90 +332,90 @@ export default function ProductDetail() {
                 transition={{ duration: 0.8 }}
                 className="h-full w-full p-5 sm:p-8 md:p-10 lg:p-12"
               >
-                <img src={getImageUrl(activeMedia)} alt={product.name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-contain mix-blend-multiply transition-transform duration-700 group-hover:scale-[1.025]" />
+                <img src={getImageUrl(activeMedia)} alt={product.name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-[1.025]" />
               </motion.div>
             </AnimatePresence>
 
             {product.images?.length > 1 && (
               <>
-                <button type="button" onClick={() => showAdjacentImage(-1)} aria-label="Previous product image" className="absolute left-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-stone-200 bg-white/90 p-2.5 text-[#35533c] shadow-lg transition hover:bg-white sm:left-4 sm:p-3">
+                <button type="button" onClick={() => showAdjacentImage(-1)} aria-label="Previous product image" className="absolute left-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-[#d4af37]/30 bg-[#070a0e]/85 p-2.5 text-[#fce096] shadow-lg transition hover:bg-[#d4af37] hover:text-[#070a0e] sm:left-4 sm:p-3">
                   <ChevronLeft size={18} className="sm:h-5 sm:w-5"/>
                 </button>
-                <button type="button" onClick={() => showAdjacentImage(1)} aria-label="Next product image" className="absolute right-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-stone-200 bg-white/90 p-2.5 text-[#35533c] shadow-lg transition hover:bg-white sm:right-4 sm:p-3">
+                <button type="button" onClick={() => showAdjacentImage(1)} aria-label="Next product image" className="absolute right-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-[#d4af37]/30 bg-[#070a0e]/85 p-2.5 text-[#fce096] shadow-lg transition hover:bg-[#d4af37] hover:text-[#070a0e] sm:right-4 sm:p-3">
                   <ChevronRight size={18} className="sm:h-5 sm:w-5"/>
                 </button>
-                <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2 rounded-full bg-white/85 px-3 py-2 shadow-sm backdrop-blur">
+                <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2 rounded-full bg-[#070a0e]/90 border border-[#d4af37]/30 px-3 py-2 shadow-sm backdrop-blur">
                   {product.images.map((image, index) => (
-                    <button key={image.id || `${getImageUrl(image)}-${index}`} type="button" onClick={() => setActiveMedia(image)} aria-label={`Show product image ${index + 1}`} aria-current={index === activeImageIndex} className={`h-2 rounded-full transition-all ${index === activeImageIndex ? 'w-6 bg-[#d4af37]' : 'w-2 bg-stone-400 hover:bg-stone-600'}`}/>
+                    <button key={image.id || `${getImageUrl(image)}-${index}`} type="button" onClick={() => setActiveMedia(image)} aria-label={`Show product image ${index + 1}`} aria-current={index === activeImageIndex} className={`h-2 rounded-full transition-all ${index === activeImageIndex ? 'w-6 bg-[#d4af37]' : 'w-2 bg-stone-600 hover:bg-stone-400'}`}/>
                   ))}
                 </div>
               </>
             )}
 
             <div className="absolute left-3 top-3 z-10 flex flex-col gap-3 sm:left-6 sm:top-6">
-              {product.is_featured === 1 && <span className="rounded-full bg-[#d4af37] px-3 py-1.5 font-mono text-[9px] uppercase tracking-widest text-white shadow-sm sm:px-4 sm:text-[10px]">Premium Selection</span>}
+              {product.is_featured === 1 && <span className="rounded-full btn-gold-luxury px-3 py-1.5 font-mono text-[9px] uppercase tracking-widest text-white shadow-sm sm:px-4 sm:text-[10px]">Premium Selection</span>}
             </div>
             
-            <button onClick={() => toggleWishlist(product)} aria-label={isWishlisted(product.id) ? 'Remove from saved products' : 'Save product'} aria-pressed={isWishlisted(product.id)} className="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border border-stone-200 bg-white/95 text-stone-500 shadow-sm transition-all duration-300 hover:border-[#536b4d] hover:text-[#35533c] sm:right-6 sm:top-6 sm:h-12 sm:w-12">
+            <button onClick={() => toggleWishlist(product)} aria-label={isWishlisted(product.id) ? 'Remove from saved products' : 'Save product'} aria-pressed={isWishlisted(product.id)} className={`absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 sm:right-6 sm:top-6 sm:h-12 sm:w-12 ${isWishlisted(product.id) ? 'border-[#d4af37] bg-[#d4af37] text-[#070a0e]' : 'border-[#d4af37]/30 bg-[#070a0e]/80 text-[#cbd5e1] hover:border-[#d4af37] hover:text-[#fce096]'}`}>
               <Heart size={18} fill={isWishlisted(product.id) ? 'currentColor' : 'none'} />
             </button>
           </div>
         </div>
 
         <div className="relative flex flex-col px-4 md:px-0 lg:col-span-5">
-          <div className="mb-5 border-b border-[#253b2f]/15 pb-5 md:mb-8 md:pb-8">
+          <div className="mb-5 border-b border-[#d4af37]/20 pb-5 md:mb-8 md:pb-8">
             <div className="mb-3 flex flex-wrap items-center gap-2 sm:gap-3">
-               <span className="block font-mono text-[9px] uppercase tracking-[0.16em] text-[#536b4d] sm:text-[10px] sm:tracking-[0.2em]">
+               <span className="block font-mono text-[9px] uppercase tracking-[0.2em] text-[#d4af37] sm:text-[10px]">
                  SKU: {product.sku || 'N/A'}
                </span>
                {product.brand && (
-                  <span className="flex items-center gap-1 rounded-full bg-stone-100 px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-stone-600 sm:px-3 sm:text-[10px]">
-                    <Tag size={12} /> {product.brand}
+                  <span className="flex items-center gap-1 rounded-full bg-[#0d1520] border border-[#d4af37]/30 px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-[#fce096] sm:px-3 sm:text-[10px]">
+                    <Tag size={12} className="text-[#d4af37]" /> {product.brand}
                   </span>
                )}
             </div>
             
-            <h1 className="mb-3 font-serif text-[2rem] leading-[1.08] text-[#17251c] sm:text-4xl md:mb-5 md:text-5xl">
+            <h1 className="mb-3 font-serif font-bold text-[2rem] leading-[1.08] text-white sm:text-4xl md:mb-5 md:text-5xl">
               {product.name}
             </h1>
 
-            {productRating > 0 && <a href="#product-reviews" onClick={() => setActiveTab('reviews')} className="mb-4 inline-flex min-h-10 items-center gap-2 text-xs text-[#526b4c] hover:text-[#d4af37] sm:text-sm">
-              <span className="flex" aria-label={`${productRating.toFixed(1)} out of 5 stars`}>{[1, 2, 3, 4, 5].map(star => <Star key={star} size={13} fill={star <= Math.round(productRating) ? 'currentColor' : 'none'} />)}</span>
+            {productRating > 0 && <a href="#product-reviews" onClick={() => setActiveTab('reviews')} className="mb-4 inline-flex min-h-10 items-center gap-2 text-xs text-[#cbd5e1] hover:text-[#fce096] sm:text-sm">
+              <span className="flex text-[#d4af37]" aria-label={`${productRating.toFixed(1)} out of 5 stars`}>{[1, 2, 3, 4, 5].map(star => <Star key={star} size={13} fill={star <= Math.round(productRating) ? 'currentColor' : 'none'} />)}</span>
               <span>{productRating.toFixed(1)}{reviewCount > 0 ? ` · ${reviewCount} reviews` : ''}</span>
             </a>}
             
             <div className="mb-4 flex flex-col gap-2 md:mb-5">
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <span className="font-serif text-3xl text-[#35533c] sm:text-4xl">
+                <span className="font-serif text-3xl font-bold text-[#fce096] sm:text-4xl">
                   ₹{product.discount_price || product.price}
                 </span>
                 {product.discount_price && (
-                  <span className="text-base font-medium text-stone-400 line-through sm:text-xl">₹{product.price}</span>
+                  <span className="text-base font-medium text-[#94a3b8] line-through sm:text-xl">₹{product.price}</span>
                 )}
               </div>
             </div>
 
-            <p className="line-clamp-3 text-sm leading-6 text-stone-600 md:line-clamp-none md:leading-7">
+            <p className="line-clamp-3 text-sm leading-6 text-[#cbd5e1] md:line-clamp-none md:leading-7">
               {product.description}
             </p>
           </div>
 
-          <div ref={purchaseSectionRef} className="relative mb-6 rounded-2xl border border-[#253b2f]/10 bg-white p-4 shadow-[0_12px_40px_rgba(28,41,34,0.07)] sm:p-6 md:mb-8 md:rounded-3xl md:p-7">
+          <div ref={purchaseSectionRef} className="relative mb-6 rounded-2xl two-tone-panel-gold p-4 shadow-2xl sm:p-6 md:mb-8 md:rounded-3xl md:p-7">
             <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
-              <span className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 py-1.5 text-[9px] font-mono uppercase tracking-[0.12em] sm:text-[10px] sm:tracking-widest ${isOutOfStock ? 'bg-red-50 text-red-600' : 'bg-[#eff3ec] text-[#526b4c]'}`}>
+              <span className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 py-1.5 text-[9px] font-mono uppercase tracking-[0.12em] sm:text-[10px] sm:tracking-widest ${isOutOfStock ? 'bg-red-950/60 border border-red-500/40 text-red-300' : 'bg-[#070a0e] border border-[#d4af37]/40 text-[#fce096]'}`}>
                 {isOutOfStock ? <AlertCircle size={16}/> : <Package size={16}/>}
                 {isOutOfStock ? 'Currently unavailable' : product.quantity <= 5 ? `Only ${product.quantity} left` : 'Available to order'}
               </span>
-              <span className="shrink-0 text-[10px] font-medium text-stone-500">Secure checkout</span>
+              <span className="shrink-0 text-[10px] font-medium text-[#94a3b8]">Secure checkout</span>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
-              <div className="flex h-12 w-full items-center justify-between rounded-xl border border-stone-200 bg-[#faf9f6] px-2 sm:h-auto sm:w-32">
-                <button type="button" aria-label="Decrease quantity" disabled={quantity <= 1} onClick={() => setQuantity(q => Math.max(1, q - 1))} className="flex h-10 w-10 items-center justify-center rounded-lg text-stone-500 transition-colors hover:bg-white hover:text-[#d4af37] disabled:opacity-40">
+              <div className="flex h-12 w-full items-center justify-between rounded-xl border border-[#d4af37]/30 bg-[#070a0e] px-2 sm:h-auto sm:w-32">
+                <button type="button" aria-label="Decrease quantity" disabled={quantity <= 1} onClick={() => setQuantity(q => Math.max(1, q - 1))} className="flex h-10 w-10 items-center justify-center rounded-lg text-[#cbd5e1] transition-colors hover:bg-[#0d1520] hover:text-[#fce096] disabled:opacity-40">
                   <Minus size={16} />
                 </button>
-                <span aria-live="polite" className="w-8 text-center font-mono text-base">{quantity}</span>
-                <button type="button" aria-label="Increase quantity" onClick={() => setQuantity(q => q + 1)} disabled={quantity >= product.quantity} className="flex h-10 w-10 items-center justify-center rounded-lg text-stone-500 transition-colors hover:bg-white hover:text-[#d4af37] disabled:opacity-40">
+                <span aria-live="polite" className="w-8 text-center font-mono text-base text-white">{quantity}</span>
+                <button type="button" aria-label="Increase quantity" onClick={() => setQuantity(q => q + 1)} disabled={quantity >= product.quantity} className="flex h-10 w-10 items-center justify-center rounded-lg text-[#cbd5e1] transition-colors hover:bg-[#0d1520] hover:text-[#fce096] disabled:opacity-40">
                   <Plus size={16} />
                 </button>
               </div>
@@ -424,12 +424,12 @@ export default function ProductDetail() {
                 type="button"
                 onClick={handleAddToCart} 
                 disabled={isOutOfStock || isAdding}
-                className="relative flex min-h-12 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl bg-[#35533c] px-4 text-xs font-bold uppercase tracking-[0.12em] text-white shadow-[0_8px_18px_rgba(53,83,60,0.2)] transition-all hover:bg-[#253b2f] active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-14 sm:tracking-widest"
+                className="btn-gold-luxury relative flex min-h-12 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl px-4 text-xs font-bold uppercase tracking-[0.12em] text-white shadow-xl transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-14 sm:tracking-widest"
               >
                 <span className={`flex items-center gap-2 transition-transform duration-300 ${isAdding ? '-translate-y-12' : ''}`}>
                   <Leaf size={16} /> {isAdding ? 'Adding...' : 'Add to Cart'}
                 </span>
-                <span className={`absolute inset-0 flex items-center justify-center gap-2 bg-[#6b4421] transition-transform duration-300 ${isAdding ? 'translate-y-0' : 'translate-y-12'}`}>
+                <span className={`absolute inset-0 flex items-center justify-center gap-2 bg-[#d4af37] text-[#070a0e] font-bold transition-transform duration-300 ${isAdding ? 'translate-y-0' : 'translate-y-12'}`}>
                   <CheckCircle2 size={16} /> Added to Cart
                 </span>
               </button>
@@ -438,38 +438,38 @@ export default function ProductDetail() {
             <ProductDeliveryPromise isOutOfStock={isOutOfStock} />
 
             {/* Artisanal Small-Batch & Genuinity Verification Plate */}
-            <div className="mt-5 rounded-2xl gold-plate-card p-4 sm:p-5 relative overflow-hidden border border-[#D4AF37]/50 shadow-md">
+            <div className="mt-5 rounded-2xl two-tone-card p-4 sm:p-5 relative overflow-hidden border border-[#d4af37]/40 shadow-md">
               <div className="flex items-center justify-between gap-3 mb-2.5">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[#0B2419] text-[#D4AF37] flex items-center justify-center border border-[#D4AF37]/40 shadow-sm shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-[#070a0e] text-[#d4af37] flex items-center justify-center border border-[#d4af37]/40 shadow-sm shrink-0">
                     <Sparkles size={16} />
                   </div>
                   <div>
                     <p className="font-mono text-[9px] font-bold uppercase tracking-widest text-[#d4af37]">Artisanal Compounding</p>
-                    <p className="font-serif text-sm font-bold text-[#0B2419]">Batch #{product.batchCode || 'BV-CH26-8841'} · 250 Units Run</p>
+                    <p className="font-serif text-sm font-bold text-white">Batch #{product.batchCode || 'BV-CH26-8841'} · 250 Units Run</p>
                   </div>
                 </div>
-                <span className="rounded-full bg-[#0B2419]/10 border border-[#0B2419]/20 px-2.5 py-1 text-[9px] font-mono font-bold text-[#0B2419]">
+                <span className="rounded-full bg-[#070a0e] border border-[#d4af37]/30 px-2.5 py-1 text-[9px] font-mono font-bold text-[#fce096]">
                   Virgin Seal
                 </span>
               </div>
 
-              <p className="text-xs text-stone-700 leading-relaxed mb-3.5">
+              <p className="text-xs text-[#cbd5e1] leading-relaxed mb-3.5">
                 Every bottle carries an individualized serial number (#087 of 250). Scan or enter your bottle serial to inspect analytical lab pH calibration ({product.phLevel || 'pH 5.51'}), heavy-metal assay (ND), and formulation monograph.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center gap-2">
                 <Link
                   to={`/verify?serial=${encodeURIComponent(product.batchCode || 'BV-CH26-8841')}`}
-                  className="w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#0B2419] to-[#163c2a] text-[#D4AF37] px-4 py-2.5 text-xs font-bold uppercase tracking-wider hover:brightness-110 shadow-sm transition-all"
+                  className="btn-gold-luxury w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-sm transition-all"
                 >
                   <QrCode size={14} /> Scan / Verify Genuinity Test
                 </Link>
                 <Link
                   to="/purchase-protection"
-                  className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl border border-[#0B2419]/20 bg-white/70 px-3.5 py-2.5 text-[11px] font-semibold text-[#0B2419] hover:bg-white transition-all"
+                  className="btn-silver-luxury w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2.5 text-[11px] font-semibold text-[#cbd5e1] transition-all"
                 >
-                  <Lock size={12} /> Sanitary Custody
+                  <Lock size={12} className="text-[#d4af37]" /> Sanitary Custody
                 </Link>
               </div>
             </div>
@@ -480,11 +480,11 @@ export default function ProductDetail() {
               { icon: <Shield />, title: 'Product support', sub: 'Help with orders and product questions', to: '/contact' },
               { icon: <Leaf />, title: 'Care beyond the product', sub: 'See the public, verified field ledger', to: '/impact' },
             ].map((item, i) => (
-              <Link to={item.to} key={i} className="group flex min-h-24 flex-row items-center gap-4 rounded-2xl border border-[#253b2f]/10 bg-white p-4 transition-colors hover:border-[#536b4d]/60 sm:min-h-36 sm:flex-col sm:items-start sm:p-5 md:p-6">
+              <Link to={item.to} key={i} className="group flex min-h-24 flex-row items-center gap-4 rounded-2xl two-tone-card border border-[#d4af37]/25 p-4 transition-all hover:border-[#d4af37]/60 sm:min-h-36 sm:flex-col sm:items-start sm:p-5 md:p-6">
                 <div className="text-[#d4af37] group-hover:scale-110 transition-transform origin-left">{item.icon}</div>
                 <div>
-                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-stone-800">{item.title}</h4>
-                  <p className="mt-1 text-[10px] leading-4 text-stone-500 sm:text-xs">{item.sub}</p>
+                  <h4 className="text-[10px] font-bold uppercase tracking-widest text-white">{item.title}</h4>
+                  <p className="mt-1 text-[10px] leading-4 text-[#94a3b8] sm:text-xs">{item.sub}</p>
                 </div>
               </Link>
             ))}
@@ -493,13 +493,13 @@ export default function ProductDetail() {
       </div>
 
       <div className="relative z-10 mx-auto mt-16 max-w-7xl px-4 md:mt-28 md:px-6">
-        <div className="no-scrollbar relative mb-8 flex overflow-x-auto border-b border-stone-200 sm:mb-12">
+        <div className="no-scrollbar relative mb-8 flex overflow-x-auto border-b border-[#d4af37]/20 sm:mb-12">
           {['details', 'formulation', 'specifications', 'reviews'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
               className={`relative min-h-12 whitespace-nowrap px-5 pb-3 text-[10px] font-mono uppercase tracking-widest transition-colors sm:px-8 sm:pb-6 sm:text-xs ${
-                activeTab === tab ? 'text-[#d4af37]' : 'text-stone-400 hover:text-stone-800'
+                activeTab === tab ? 'text-[#fce096]' : 'text-[#94a3b8] hover:text-[#fce096]'
               }`}
             >
               {tab === 'reviews' ? `Reviews (${reviewCount})` : tab === 'formulation' ? 'Formulation & Actives' : tab}
@@ -513,7 +513,7 @@ export default function ProductDetail() {
         <div className="min-h-[400px]">
           <AnimatePresence mode="wait">
             {activeTab === 'details' && (
-              <motion.div key="details" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="text-stone-600 leading-loose text-base max-w-4xl whitespace-pre-wrap">
+              <motion.div key="details" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="text-[#cbd5e1] leading-loose text-base max-w-4xl whitespace-pre-wrap">
                 {product.description}
               </motion.div>
             )}
@@ -521,19 +521,19 @@ export default function ProductDetail() {
             {activeTab === 'formulation' && (
               <motion.div key="formulation" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-4xl space-y-6">
                 {/* Physical Packaging Formulation Card with Gold/Silver Plate */}
-                <div className="rounded-3xl gold-plate-card p-6 md:p-8 border border-[#D4AF37]/50 shadow-lg relative overflow-hidden">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#D4AF37]/30 pb-4 mb-6">
+                <div className="rounded-3xl two-tone-card p-6 md:p-8 border border-[#d4af37]/40 shadow-xl relative overflow-hidden">
+                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#d4af37]/30 pb-4 mb-6">
                     <div>
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#0B2419] text-[#D4AF37] font-mono text-[9px] font-bold uppercase tracking-widest">
-                        <Sparkles size={12} /> Artisanal Compounding Monograph
+                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#070a0e] text-[#fce096] border border-[#d4af37]/40 font-mono text-[9px] font-bold uppercase tracking-widest">
+                        <Sparkles size={12} className="text-[#d4af37]" /> Artisanal Compounding Monograph
                       </span>
-                      <h3 className="mt-2 font-serif text-2xl sm:text-3xl text-[#0B2419]">
+                      <h3 className="mt-2 font-serif text-2xl sm:text-3xl text-white">
                         Full Potency Active Disclosure
                       </h3>
                     </div>
                     <div className="text-right">
-                      <span className="font-mono text-xs font-bold text-[#d4af37]">Batch #{product.batchCode || 'BV-CH26-8841'}</span>
-                      <p className="text-[10px] text-stone-600">Standard: 250 Units / Run</p>
+                      <span className="font-mono text-xs font-bold text-[#fce096]">Batch #{product.batchCode || 'BV-CH26-8841'}</span>
+                      <p className="text-[10px] text-[#94a3b8]">Standard: 250 Units / Run</p>
                     </div>
                   </div>
 
@@ -553,12 +553,12 @@ export default function ProductDetail() {
                           { name: 'Perfume / Aroma', potency: '0.5%', note: 'IFRA-compliant allergen-screened fragrance' },
                           { name: 'Aqua & Cleanser Base', potency: 'Q.S.', note: 'pH 5.51 balanced soap-free vehicle' },
                         ].map((ing, idx) => (
-                          <div key={idx} className="p-3.5 rounded-xl bg-white/80 border border-[#D4AF37]/30 flex items-start justify-between gap-3 shadow-xs">
+                          <div key={idx} className="p-3.5 rounded-xl bg-[#070a0e]/80 border border-[#d4af37]/30 flex items-start justify-between gap-3 shadow-xs">
                             <div>
-                              <p className="font-semibold text-xs text-[#0B2419]">{ing.name}</p>
-                              <p className="text-[11px] text-stone-600">{ing.note}</p>
+                              <p className="font-semibold text-xs text-white">{ing.name}</p>
+                              <p className="text-[11px] text-[#94a3b8]">{ing.note}</p>
                             </div>
-                            <span className="font-mono text-xs font-bold text-[#d4af37] shrink-0 bg-[#D4AF37]/15 px-2 py-0.5 rounded-md">
+                            <span className="font-mono text-xs font-bold text-[#fce096] shrink-0 bg-[#d4af37]/15 border border-[#d4af37]/30 px-2 py-0.5 rounded-md">
                               {ing.potency}
                             </span>
                           </div>
@@ -577,12 +577,12 @@ export default function ProductDetail() {
                           { name: 'Shikakai (Acacia concinna)', potency: '5 mg', note: 'Cuticle-smoothing natural conditioning' },
                           { name: 'Botanical Shampoo Base', potency: 'Q.S.', note: 'pH 5.24 sulfate-free lather vehicle' },
                         ].map((ing, idx) => (
-                          <div key={idx} className="p-3.5 rounded-xl bg-white/80 border border-[#D4AF37]/30 flex items-start justify-between gap-3 shadow-xs">
+                          <div key={idx} className="p-3.5 rounded-xl bg-[#070a0e]/80 border border-[#d4af37]/30 flex items-start justify-between gap-3 shadow-xs">
                             <div>
-                              <p className="font-semibold text-xs text-[#0B2419]">{ing.name}</p>
-                              <p className="text-[11px] text-stone-600">{ing.note}</p>
+                              <p className="font-semibold text-xs text-white">{ing.name}</p>
+                              <p className="text-[11px] text-[#94a3b8]">{ing.note}</p>
                             </div>
-                            <span className="font-mono text-xs font-bold text-[#d4af37] shrink-0 bg-[#D4AF37]/15 px-2 py-0.5 rounded-md">
+                            <span className="font-mono text-xs font-bold text-[#fce096] shrink-0 bg-[#d4af37]/15 border border-[#d4af37]/30 px-2 py-0.5 rounded-md">
                               {ing.potency}
                             </span>
                           </div>
@@ -590,55 +590,55 @@ export default function ProductDetail() {
                       </>
                     ) : (
                       <>
-                        <div className="p-3.5 rounded-xl bg-white/80 border border-[#D4AF37]/30">
-                          <p className="font-mono text-[10px] uppercase font-bold text-[#d4af37]">Key Botanicals</p>
-                          <p className="text-xs text-[#0B2419] mt-1">{product.primaryBotanicals || 'Cold-Pressed Himalayan Flora'}</p>
+                        <div className="p-3.5 rounded-xl bg-[#070a0e]/80 border border-[#d4af37]/30">
+                          <p className="font-mono text-[10px] uppercase font-bold text-[#fce096]">Key Botanicals</p>
+                          <p className="text-xs text-white mt-1">{product.primaryBotanicals || 'Cold-Pressed Himalayan Flora'}</p>
                         </div>
-                        <div className="p-3.5 rounded-xl bg-white/80 border border-[#D4AF37]/30">
-                          <p className="font-mono text-[10px] uppercase font-bold text-[#d4af37]">Clinical Actives</p>
-                          <p className="text-xs text-[#0B2419] mt-1">{product.clinicalActives || 'Biomimetic Humectants & Actives'}</p>
+                        <div className="p-3.5 rounded-xl bg-[#070a0e]/80 border border-[#d4af37]/30">
+                          <p className="font-mono text-[10px] uppercase font-bold text-[#fce096]">Clinical Actives</p>
+                          <p className="text-xs text-white mt-1">{product.clinicalActives || 'Biomimetic Humectants & Actives'}</p>
                         </div>
-                        <div className="p-3.5 rounded-xl bg-white/80 border border-[#D4AF37]/30">
-                          <p className="font-mono text-[10px] uppercase font-bold text-[#d4af37]">Acid Mantle Calibration</p>
-                          <p className="text-xs text-[#0B2419] mt-1">{product.phLevel || 'pH 5.50 (Skin-Identical)'}</p>
+                        <div className="p-3.5 rounded-xl bg-[#070a0e]/80 border border-[#d4af37]/30">
+                          <p className="font-mono text-[10px] uppercase font-bold text-[#fce096]">Acid Mantle Calibration</p>
+                          <p className="text-xs text-white mt-1">{product.phLevel || 'pH 5.50 (Skin-Identical)'}</p>
                         </div>
-                        <div className="p-3.5 rounded-xl bg-white/80 border border-[#D4AF37]/30">
-                          <p className="font-mono text-[10px] uppercase font-bold text-[#d4af37]">Artisanal Volume</p>
-                          <p className="text-xs text-[#0B2419] mt-1">{product.volume || '100 ml Amber Glass'}</p>
+                        <div className="p-3.5 rounded-xl bg-[#070a0e]/80 border border-[#d4af37]/30">
+                          <p className="font-mono text-[10px] uppercase font-bold text-[#fce096]">Artisanal Volume</p>
+                          <p className="text-xs text-white mt-1">{product.volume || '100 ml Amber Glass'}</p>
                         </div>
                       </>
                     )}
                   </div>
 
                   {/* Directions and Caution (Transcribed directly from bottle) */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-[#D4AF37]/30 pt-5">
-                    <div className="p-4 rounded-2xl bg-[#0B2419]/5 border border-[#0B2419]/10">
-                      <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#0B2419] flex items-center gap-1.5">
-                        <CheckCircle2 size={13} className="text-[#35533c]" /> Directions For Application
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-[#d4af37]/30 pt-5">
+                    <div className="p-4 rounded-2xl bg-[#070a0e]/60 border border-[#d4af37]/20">
+                      <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#fce096] flex items-center gap-1.5">
+                        <CheckCircle2 size={13} className="text-[#d4af37]" /> Directions For Application
                       </p>
-                      <p className="text-xs text-stone-700 leading-relaxed mt-2">
+                      <p className="text-xs text-[#cbd5e1] leading-relaxed mt-2">
                         {product.directions || 'Moisten face and neck, apply a small amount of this facewash, and gently work up a lather using a circular motion. Wash off and pat dry. Use twice daily.'}
                       </p>
                     </div>
 
-                    <div className="p-4 rounded-2xl bg-[#0B2419]/5 border border-[#0B2419]/10">
-                      <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#d4af37] flex items-center gap-1.5">
+                    <div className="p-4 rounded-2xl bg-[#070a0e]/60 border border-[#d4af37]/20">
+                      <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#fce096] flex items-center gap-1.5">
                         <AlertCircle size={13} className="text-[#d4af37]" /> Storage &amp; Natural Caution
                       </p>
-                      <p className="text-xs text-stone-700 leading-relaxed mt-2">
+                      <p className="text-xs text-[#cbd5e1] leading-relaxed mt-2">
                         {product.caution || 'Product contains natural ingredients & may change colour and fragrance, without losing effectiveness. Patch test recommended. Store in a cool and dry place, away from direct sunlight. For external use only.'}
                       </p>
                     </div>
                   </div>
 
-                  <div className="mt-6 flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-[#D4AF37]/30">
-                    <div className="flex items-center gap-2 text-xs text-stone-600">
+                  <div className="mt-6 flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-[#d4af37]/30">
+                    <div className="flex items-center gap-2 text-xs text-[#cbd5e1]">
                       <Lock size={14} className="text-[#d4af37]" />
                       <span>100% Sealed Sanitary Custody: Artisanal Personal Care Purity Standard</span>
                     </div>
                     <Link
                       to={`/verify?serial=${encodeURIComponent(product.batchCode || 'BV-CH26-8841')}`}
-                      className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#0B2419] to-[#163c2a] text-[#D4AF37] px-5 py-2.5 text-xs font-bold uppercase tracking-wider hover:brightness-110 shadow-sm transition-all"
+                      className="btn-gold-luxury inline-flex items-center gap-2 rounded-xl text-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider shadow-sm transition-all"
                     >
                       <QrCode size={14} /> Open Full Lab Assay Report
                     </Link>
@@ -648,87 +648,87 @@ export default function ProductDetail() {
             )}
             
             {activeTab === 'specifications' && (
-              <motion.div key="specs" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-4xl border border-[#253b2f]/15 bg-white p-6 md:p-8">
-                <h3 className="mb-6 border-b border-stone-100 pb-4 font-serif text-2xl">Product details</h3>
+              <motion.div key="specs" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-4xl rounded-3xl two-tone-card border border-[#d4af37]/30 p-6 md:p-8">
+                <h3 className="mb-6 border-b border-[#d4af37]/20 pb-4 font-serif text-2xl text-white">Product specifications</h3>
                 {specificationEntries.length > 0 ? <div className="grid grid-cols-1 gap-x-12 md:grid-cols-2">
                   {specificationEntries.map(([label, value]) => (
-                    <div key={label} className="flex justify-between py-2 border-b border-stone-100 border-dashed">
-                      <span className="text-stone-500 text-xs">{label.replaceAll('_', ' ')}</span>
-                      <span className="max-w-[60%] text-right text-sm font-medium text-[#35533c]">{typeof value === 'object' ? JSON.stringify(value) : String(value)}</span>
+                    <div key={label} className="flex justify-between py-2 border-b border-[#d4af37]/15 border-dashed">
+                      <span className="text-[#94a3b8] text-xs uppercase tracking-wider">{label.replaceAll('_', ' ')}</span>
+                      <span className="max-w-[60%] text-right text-sm font-medium text-[#fce096]">{typeof value === 'object' ? JSON.stringify(value) : String(value)}</span>
                     </div>
                   ))}
-                </div> : <p className="text-sm leading-6 text-stone-600">Detailed specifications have not been published for this product yet. Contact us for product-specific questions.</p>}
+                </div> : <p className="text-sm leading-6 text-[#cbd5e1]">Detailed specifications have not been published for this product yet. Contact us for product-specific questions.</p>}
               </motion.div>
             )}
 
             {activeTab === 'reviews' && (
               <motion.div id="product-reviews" key="reviews" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-4xl scroll-mt-28">
-                <div className="mb-8 grid gap-6 border border-[#253b2f]/15 bg-white p-6 md:grid-cols-[auto_1fr] md:items-center md:p-8">
+                <div className="mb-8 grid gap-6 rounded-3xl two-tone-panel-gold border border-[#d4af37]/40 p-6 md:grid-cols-[auto_1fr] md:items-center md:p-8 shadow-xl">
                   <div className="text-center md:min-w-32">
-                    <div className="font-serif text-5xl text-[#35533c]">{reviewCount ? productRating.toFixed(1) : '—'}</div>
+                    <div className="font-serif text-5xl font-bold text-[#fce096]">{reviewCount ? productRating.toFixed(1) : '—'}</div>
                     <div className="mt-2 flex justify-center text-[#d4af37]" aria-label={`${productRating.toFixed(1)} out of 5 stars`}>
                       {[1, 2, 3, 4, 5].map(star => <Star key={star} size={14} fill={star <= Math.round(productRating) ? 'currentColor' : 'none'} />)}
                     </div>
-                    <p className="mt-2 text-[10px] font-mono uppercase tracking-widest text-stone-500">{reviewCount} approved reviews</p>
+                    <p className="mt-2 text-[10px] font-mono uppercase tracking-widest text-[#94a3b8]">{reviewCount} approved reviews</p>
                   </div>
-                  <div className="border-t border-stone-100 pt-5 text-sm leading-7 text-stone-600 md:border-l md:border-t-0 md:pl-8 md:pt-0">
-                    <h3 className="mb-1 font-serif text-xl text-[#17251c]">Real experiences, thoughtfully shared</h3>
+                  <div className="border-t border-[#d4af37]/20 pt-5 text-sm leading-7 text-[#cbd5e1] md:border-l md:border-t-0 md:pl-8 md:pt-0">
+                    <h3 className="mb-1 font-serif text-xl text-white">Real experiences, thoughtfully shared</h3>
                     <p>Only currently approved reviews are shown. A verified-purchase label appears only when a review is linked to an order.</p>
-                    <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-semibold text-[#35533c] sm:grid-cols-3">
+                    <div className="mt-4 grid grid-cols-2 gap-2 text-xs font-semibold text-[#fce096] sm:grid-cols-3">
                       <span className="flex items-center gap-2"><Shield size={15} className="text-[#d4af37]"/>Secure checkout</span>
                       <span className="flex items-center gap-2"><BadgeCheck size={15} className="text-[#d4af37]"/>Verified reviews</span>
                       <span className="flex items-center gap-2"><Package size={15} className="text-[#d4af37]"/>Order support</span>
                     </div>
                   </div>
                 </div>
-                {reviewPhotos.length > 0 && <section className="mb-8 rounded-2xl border border-[#253b2f]/15 bg-white p-5 md:p-6">
-                  <div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#d4af37]">From our customers</p><h3 className="mt-1 font-serif text-2xl text-[#17251c]">Real photos, real reviews</h3></div><span className="text-xs text-stone-500">{reviewPhotos.length} customer {reviewPhotos.length === 1 ? 'photo' : 'photos'}</span></div>
+                {reviewPhotos.length > 0 && <section className="mb-8 rounded-2xl two-tone-card border border-[#d4af37]/25 p-5 md:p-6">
+                  <div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#d4af37]">From our customers</p><h3 className="mt-1 font-serif text-2xl text-white">Real photos, real reviews</h3></div><span className="text-xs text-[#94a3b8]">{reviewPhotos.length} customer {reviewPhotos.length === 1 ? 'photo' : 'photos'}</span></div>
                   <div className="flex gap-3 overflow-x-auto pb-2">
-                    {reviewPhotos.map(({ image, review }, index) => <a key={`${review.id || index}-${index}`} href={getImageUrl(image)} target="_blank" rel="noreferrer" aria-label={`View customer photo from ${review.user_name || 'a customer'}'s review`} className="group relative h-36 w-32 shrink-0 overflow-hidden rounded-xl border border-stone-200 bg-stone-50 sm:h-44 sm:w-40">
+                    {reviewPhotos.map(({ image, review }, index) => <a key={`${review.id || index}-${index}`} href={getImageUrl(image)} target="_blank" rel="noreferrer" aria-label={`View customer photo from ${review.user_name || 'a customer'}'s review`} className="group relative h-36 w-32 shrink-0 overflow-hidden rounded-xl border border-[#d4af37]/30 bg-[#070a0e] sm:h-44 sm:w-40">
                       <img src={getImageUrl(image)} alt={`Customer photo for ${product.name}`} className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}/>
-                      <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent px-2 pb-2 pt-7 text-left text-[10px] font-semibold text-white">{review.user_name || 'Customer'}{review.order_id ? ' · Verified' : ''}</span>
+                      <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 to-transparent px-2 pb-2 pt-7 text-left text-[10px] font-semibold text-[#fce096]">{review.user_name || 'Customer'}{review.order_id ? ' · Verified' : ''}</span>
                     </a>)}
                   </div>
                 </section>}
                 {reviewsData.length > 0 && <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-                  <p className="text-sm font-semibold text-[#35533c]">{visibleReviews.length} customer {visibleReviews.length === 1 ? 'review' : 'reviews'}</p>
+                  <p className="text-sm font-semibold text-[#fce096]">{visibleReviews.length} customer {visibleReviews.length === 1 ? 'review' : 'reviews'}</p>
                   <div className="flex gap-2">
                     <label className="sr-only" htmlFor="review-rating-filter">Filter reviews by rating</label>
-                    <select id="review-rating-filter" value={reviewRatingFilter} onChange={event => setReviewRatingFilter(event.target.value)} className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-xs text-[#35533c]">
+                    <select id="review-rating-filter" value={reviewRatingFilter} onChange={event => setReviewRatingFilter(event.target.value)} className="rounded-lg border border-[#d4af37]/30 bg-[#070a0e] px-3 py-2 text-xs text-[#fce096] outline-none">
                       <option value="all">All ratings</option>{[5, 4, 3, 2, 1].map(rating => <option key={rating} value={rating}>{rating} stars</option>)}
                     </select>
                     <label className="sr-only" htmlFor="review-sort">Sort reviews</label>
-                    <select id="review-sort" value={reviewSort} onChange={event => setReviewSort(event.target.value)} className="rounded-lg border border-stone-200 bg-white px-3 py-2 text-xs text-[#35533c]">
+                    <select id="review-sort" value={reviewSort} onChange={event => setReviewSort(event.target.value)} className="rounded-lg border border-[#d4af37]/30 bg-[#070a0e] px-3 py-2 text-xs text-[#fce096] outline-none">
                       <option value="newest">Newest</option><option value="highest">Highest rated</option><option value="lowest">Lowest rated</option>
                     </select>
                   </div>
                 </div>}
                 {visibleReviews.length > 0 ? (
                   visibleReviews.map((review, i) => (
-                    <article key={review.id || i} className="mb-4 rounded-2xl border border-stone-200 bg-white p-5 sm:p-7">
+                    <article key={review.id || i} className="mb-4 rounded-2xl two-tone-card border border-[#d4af37]/25 p-5 sm:p-7">
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-1 text-[#d4af37]" aria-label={`${review.rating} out of 5 stars`}>
                           {[...Array(5)].map((_, idx) => <Star key={idx} size={14} fill={idx < Number(review.rating) ? "currentColor" : "none"} />)}
                         </div>
-                        {review.order_id && <span className="inline-flex items-center gap-1 rounded-full bg-[#e9f7ef] px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-emerald-800"><BadgeCheck size={13}/>Verified purchase</span>}
+                        {review.order_id && <span className="inline-flex items-center gap-1 rounded-full bg-[#070a0e] border border-[#d4af37]/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide text-[#fce096]"><BadgeCheck size={13} className="text-[#d4af37]"/>Verified purchase</span>}
                       </div>
-                      {review.title && <h4 className="mb-2 text-lg font-semibold text-stone-800">{review.title}</h4>}
-                      <p className="whitespace-pre-line text-sm leading-6 text-stone-600">{review.comment}</p>
+                      {review.title && <h4 className="mb-2 text-lg font-semibold text-white">{review.title}</h4>}
+                      <p className="whitespace-pre-line text-sm leading-6 text-[#cbd5e1]">{review.comment}</p>
                       {Array.isArray(review.images) && review.images.length > 0 && <div className="mt-4 flex flex-wrap gap-3">
-                        {review.images.map((image, imageIndex) => <a key={`${review.id}-${imageIndex}`} href={getImageUrl(image)} target="_blank" rel="noreferrer" className="block h-24 w-24 overflow-hidden rounded-xl border border-stone-200 bg-stone-50 focus:outline-none focus:ring-2 focus:ring-[#d4af37]">
+                        {review.images.map((image, imageIndex) => <a key={`${review.id}-${imageIndex}`} href={getImageUrl(image)} target="_blank" rel="noreferrer" className="block h-24 w-24 overflow-hidden rounded-xl border border-[#d4af37]/30 bg-[#070a0e] focus:outline-none focus:ring-2 focus:ring-[#d4af37]">
                           <img src={getImageUrl(image)} alt={`Customer photo ${imageIndex + 1} for ${product.name}`} className="h-full w-full object-cover" loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}/>
                         </a>)}
                       </div>}
-                      <div className="mt-5 flex items-center justify-between gap-3 border-t border-stone-100 pt-4 text-[10px] font-bold uppercase tracking-widest text-stone-400">
+                      <div className="mt-5 flex items-center justify-between gap-3 border-t border-[#d4af37]/15 pt-4 text-[10px] font-bold uppercase tracking-widest text-[#94a3b8]">
                         <span>{review.user_name || 'Customer'}</span>
                         {review.created_at && <time dateTime={review.created_at}>{new Date(review.created_at).toLocaleDateString()}</time>}
                       </div>
                     </article>
                   ))
                 ) : (
-                  <div className="text-center py-24 bg-white border border-stone-200">
-                    <Microscope className="mx-auto text-stone-300 mb-4" size={40} />
-                    <h3 className="text-sm font-mono text-stone-500 uppercase tracking-widest">{reviewsData.length ? 'No reviews match this filter' : 'No approved reviews yet'}</h3>
+                  <div className="text-center py-24 two-tone-card border border-[#d4af37]/20 rounded-2xl">
+                    <Microscope className="mx-auto text-[#d4af37]/40 mb-4" size={40} />
+                    <h3 className="text-sm font-mono text-[#94a3b8] uppercase tracking-widest">{reviewsData.length ? 'No reviews match this filter' : 'No approved reviews yet'}</h3>
                   </div>
                 )}
               </motion.div>
@@ -741,28 +741,28 @@ export default function ProductDetail() {
         <section className="max-w-7xl mx-auto px-6 mt-16 relative z-10">
           {videoEmbeds.length > 0 && (
             <div className="mb-12">
-              <div className="mb-6 border-b border-[#253b2f]/15 pb-4">
+              <div className="mb-6 border-b border-[#d4af37]/20 pb-4">
                 <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#d4af37]">See it for yourself</p>
-                <h2 className="mt-2 font-serif text-3xl text-[#17251c]">Product videos</h2>
+                <h2 className="mt-2 font-serif text-3xl text-white">Product videos</h2>
               </div>
               <div className="flex snap-x gap-4 overflow-x-auto pb-3">
                 {videoEmbeds.map((video, index) => (
-                  <button key={video.embed} type="button" onClick={() => setActiveVideo(video)} aria-label={`Play product video ${index + 1}`} className="group relative aspect-[9/12] w-56 shrink-0 snap-start overflow-hidden rounded-2xl border border-[#253b2f]/15 bg-[#e9e8df] text-left shadow-sm sm:w-64">
-                    {video.embed.includes('youtube-nocookie.com/embed/') ? <img src={`https://img.youtube.com/vi/${video.embed.split('/').pop()}/hqdefault.jpg`} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.classList.add('hidden'); }}/> : <div className="absolute inset-0 bg-gradient-to-br from-[#253b2f] to-[#d4af37]"/>}
-                    <span className="absolute inset-0 flex items-center justify-center bg-black/10 transition group-hover:bg-black/25"><span className="rounded-full bg-white/95 p-4 text-[#35533c] shadow-xl"><Play size={22} fill="currentColor"/></span></span>
-                    <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/75 to-transparent p-4 pt-16 text-left text-sm font-semibold text-white">{product.name}<span className="mt-1 block text-[10px] font-bold uppercase tracking-widest text-white/80">Watch product video</span></span>
+                  <button key={video.embed} type="button" onClick={() => setActiveVideo(video)} aria-label={`Play product video ${index + 1}`} className="group relative aspect-[9/12] w-56 shrink-0 snap-start overflow-hidden rounded-2xl border border-[#d4af37]/30 bg-[#0d1520] text-left shadow-lg sm:w-64">
+                    {video.embed.includes('youtube-nocookie.com/embed/') ? <img src={`https://img.youtube.com/vi/${video.embed.split('/').pop()}/hqdefault.jpg`} alt="" className="h-full w-full object-cover transition duration-500 group-hover:scale-105" loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.classList.add('hidden'); }}/> : <div className="absolute inset-0 bg-gradient-to-br from-[#070a0e] to-[#0d1520]"/>}
+                    <span className="absolute inset-0 flex items-center justify-center bg-black/40 transition group-hover:bg-black/60"><span className="rounded-full bg-[#d4af37] p-4 text-[#070a0e] shadow-xl"><Play size={22} fill="currentColor"/></span></span>
+                    <span className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 to-transparent p-4 pt-16 text-left text-sm font-semibold text-white">{product.name}<span className="mt-1 block text-[10px] font-bold uppercase tracking-widest text-[#fce096]">Watch product video</span></span>
                   </button>
                 ))}
               </div>
             </div>
           )}
           {productLinks.length > 0 && (
-            <div className="mb-12 border border-[#253b2f]/15 bg-white p-6 md:p-8">
-              <h2 className="mb-4 font-serif text-2xl text-[#17251c]">Product resources</h2>
+            <div className="mb-12 rounded-3xl two-tone-card border border-[#d4af37]/25 p-6 md:p-8">
+              <h2 className="mb-4 font-serif text-2xl text-white">Product resources</h2>
               <div className="flex flex-wrap gap-3">
                 {productLinks.map(url => (
-                  <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="inline-flex items-center gap-2 border border-[#253b2f]/20 px-4 py-3 text-xs font-semibold text-[#35533c] transition hover:border-[#d4af37] hover:text-[#d4af37]">
-                    {new URL(url).hostname.replace(/^www\./, '')}<ChevronRight size={14}/>
+                  <a key={url} href={url} target="_blank" rel="noopener noreferrer" className="btn-silver-luxury inline-flex items-center gap-2 rounded-xl px-4 py-3 text-xs font-semibold text-[#cbd5e1] transition">
+                    {new URL(url).hostname.replace(/^www\./, '')}<ChevronRight size={14} className="text-[#d4af37]"/>
                   </a>
                 ))}
               </div>
@@ -773,21 +773,21 @@ export default function ProductDetail() {
 
       {canPersonalize && recommendedProducts.length > 0 && (
         <section className="max-w-7xl mx-auto px-6 mt-16 relative z-10">
-          <div className="mb-6 border-b border-[#253b2f]/15 pb-4">
+          <div className="mb-6 border-b border-[#d4af37]/20 pb-4">
             <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#d4af37]">Picked for you</p>
-            <h2 className="mt-2 font-serif text-3xl text-[#17251c]">You may also love</h2>
-            <p className="mt-2 text-sm text-stone-500">{recommendationReason}</p>
+            <h2 className="mt-2 font-serif text-3xl text-white">You may also love</h2>
+            <p className="mt-2 text-sm text-[#94a3b8]">{recommendationReason}</p>
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {recommendedProducts.map(recommended => (
-              <Link key={recommended.id} to={`/product/${recommended.slug || recommended.id}`} className="group overflow-hidden border border-[#253b2f]/15 bg-white transition hover:-translate-y-1 hover:shadow-lg">
-                <div className="aspect-[4/5] overflow-hidden bg-[#e9e8df] p-4">
-                  <img src={getImageUrl(recommended.images?.[0] || recommended.image_url)} alt={recommended.name} loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-full w-full object-contain mix-blend-multiply transition-transform duration-700 group-hover:scale-105"/>
+              <Link key={recommended.id} to={`/product/${recommended.slug || recommended.id}`} className="group overflow-hidden rounded-2xl two-tone-card border border-[#d4af37]/25 transition hover:-translate-y-1 hover:border-[#d4af37]/60 hover:shadow-2xl">
+                <div className="aspect-[4/5] overflow-hidden bg-[#070a0e] p-4">
+                  <img src={getImageUrl(recommended.images?.[0] || recommended.image_url)} alt={recommended.name} loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-full w-full object-contain transition-transform duration-700 group-hover:scale-105"/>
                 </div>
                 <div className="p-4">
-                  <h3 className="line-clamp-2 text-sm font-medium text-[#17251c]">{recommended.name}</h3>
-                  <p className="mt-2 font-mono text-sm text-[#35533c]">₹{recommended.discount_price || recommended.price}</p>
-                  {Number(recommended.review_count) > 0 && <p className="mt-1 text-xs text-stone-500">★ {Number(recommended.rating || 0).toFixed(1)} · {recommended.review_count} reviews</p>}
+                  <h3 className="line-clamp-2 text-sm font-medium text-white">{recommended.name}</h3>
+                  <p className="mt-2 font-mono text-sm text-[#fce096]">₹{recommended.discount_price || recommended.price}</p>
+                  {Number(recommended.review_count) > 0 && <p className="mt-1 text-xs text-[#94a3b8]">★ {Number(recommended.rating || 0).toFixed(1)} · {recommended.review_count} reviews</p>}
                 </div>
               </Link>
             ))}
@@ -796,19 +796,19 @@ export default function ProductDetail() {
       )}
 
       <AnimatePresence>
-        {activeVideo && <motion.div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/75 p-4 backdrop-blur-sm" role="presentation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={event => { if (event.target === event.currentTarget) setActiveVideo(null); }}>
-          <motion.section role="dialog" aria-modal="true" aria-labelledby="product-video-title" initial={{ opacity: 0, y: 20, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }} className="relative grid max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-2xl bg-[#FDFBF7] shadow-2xl md:grid-cols-[0.9fr_1.1fr]">
-            <button type="button" aria-label="Close video" onClick={() => setActiveVideo(null)} className="absolute right-3 top-3 z-10 rounded-full bg-white/90 p-2 text-stone-700 shadow"><X size={18}/></button>
+        {activeVideo && <motion.div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md" role="presentation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={event => { if (event.target === event.currentTarget) setActiveVideo(null); }}>
+          <motion.section role="dialog" aria-modal="true" aria-labelledby="product-video-title" initial={{ opacity: 0, y: 20, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }} className="relative grid max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-3xl two-tone-card border border-[#d4af37]/40 bg-[#070a0e] shadow-2xl md:grid-cols-[0.9fr_1.1fr]">
+            <button type="button" aria-label="Close video" onClick={() => setActiveVideo(null)} className="absolute right-3 top-3 z-10 rounded-full bg-[#0d1520] border border-[#d4af37]/30 p-2 text-[#fce096] shadow"><X size={18}/></button>
             <div className="aspect-[9/12] max-h-[72vh] bg-black md:aspect-auto">
               <iframe src={activeVideo.embed} title={`${product.name} product video`} className="h-full w-full" referrerPolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen/>
             </div>
             <div className="flex flex-col p-6 sm:p-8">
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#d4af37]">See it for yourself</p>
-              <h2 id="product-video-title" className="mt-2 font-serif text-2xl leading-tight text-[#17251c]">{product.name}</h2>
-              <p className="mt-3 text-xl font-semibold text-[#35533c]">₹{product.discount_price || product.price}</p>
-              <div className="mt-4 flex items-center gap-2 text-xs text-stone-600"><Shield size={15} className="text-[#d4af37]"/>Secure checkout · Bhumivera support</div>
+              <h2 id="product-video-title" className="mt-2 font-serif text-2xl leading-tight text-white">{product.name}</h2>
+              <p className="mt-3 text-xl font-serif font-bold text-[#fce096]">₹{product.discount_price || product.price}</p>
+              <div className="mt-4 flex items-center gap-2 text-xs text-[#cbd5e1]"><Shield size={15} className="text-[#d4af37]"/>Secure checkout · Bhumivera support</div>
               <div className="mt-auto pt-8">
-                <button type="button" onClick={async () => { await handleAddToCart(); setActiveVideo(null); }} disabled={isOutOfStock || isAdding} className="w-full rounded-xl bg-[#35533c] px-5 py-4 text-sm font-bold uppercase tracking-widest text-white transition hover:bg-[#253b2f] disabled:cursor-not-allowed disabled:opacity-50">{isAdding ? 'Adding…' : isOutOfStock ? 'Currently unavailable' : 'Add to cart'}</button>
+                <button type="button" onClick={async () => { await handleAddToCart(); setActiveVideo(null); }} disabled={isOutOfStock || isAdding} className="btn-gold-luxury w-full rounded-xl px-5 py-4 text-sm font-bold uppercase tracking-widest text-white transition disabled:cursor-not-allowed disabled:opacity-50">{isAdding ? 'Adding…' : isOutOfStock ? 'Currently unavailable' : 'Add to cart'}</button>
               </div>
             </div>
           </motion.section>
@@ -824,19 +824,19 @@ export default function ProductDetail() {
             transition={{ duration: 0.2 }}
             className="pointer-events-none fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5"
           >
-            <div className="pointer-events-auto mx-auto flex max-w-xl items-center gap-3 rounded-2xl border border-[#253b2f]/10 bg-white/95 p-2.5 shadow-[0_10px_40px_rgba(23,37,28,0.2)] backdrop-blur-xl sm:gap-4 sm:p-3 md:max-w-4xl">
-              <div className="h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-stone-200 bg-[#f4f2eb] sm:h-12 sm:w-12">
-                <img src={getImageUrl(activeMedia)} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-full w-full object-contain mix-blend-multiply" alt="" />
+            <div className="pointer-events-auto mx-auto flex max-w-xl items-center gap-3 rounded-2xl two-tone-panel-gold border border-[#d4af37]/40 p-2.5 shadow-[0_10px_40px_rgba(0,0,0,0.8)] backdrop-blur-xl sm:gap-4 sm:p-3 md:max-w-4xl">
+              <div className="h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-[#d4af37]/30 bg-[#070a0e] sm:h-12 sm:w-12">
+                <img src={getImageUrl(activeMedia)} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-full w-full object-contain" alt="" />
               </div>
               <div className="min-w-0 flex-1 md:flex md:items-center md:gap-4">
-                <h4 className="truncate text-xs font-medium text-stone-800 sm:text-sm">{product.name}</h4>
-                <p className="text-sm font-semibold text-[#35533c] md:text-base">₹{product.discount_price || product.price}</p>
+                <h4 className="truncate text-xs font-medium text-white sm:text-sm">{product.name}</h4>
+                <p className="text-sm font-serif font-bold text-[#fce096] md:text-base">₹{product.discount_price || product.price}</p>
               </div>
               <button
                 type="button"
                 onClick={handleAddToCart}
                 disabled={isOutOfStock || isAdding}
-                className="flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl bg-[#35533c] px-4 text-[10px] font-bold uppercase tracking-wider text-white transition-colors hover:bg-[#253b2f] disabled:cursor-not-allowed disabled:opacity-50 sm:px-6 sm:text-xs"
+                className="btn-gold-luxury flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-[10px] font-bold uppercase tracking-wider text-white transition disabled:cursor-not-allowed disabled:opacity-50 sm:px-6 sm:text-xs"
               >
                 {isAdding ? 'Adding...' : <><Leaf size={15} /> Add to cart</>}
               </button>
@@ -849,19 +849,19 @@ export default function ProductDetail() {
 }
 
 const SkeletonPDP = () => (
-  <div className="bg-[#FDFBF7] min-h-screen pt-24 pb-32 px-6">
+  <div className="bg-[#070a0e] min-h-screen pt-24 pb-32 px-6">
     <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 animate-pulse opacity-50">
       <div className="lg:col-span-7 flex flex-col md:flex-row gap-6">
         <div className="flex md:flex-col gap-4 w-full md:w-24">
-          {[1,2,3,4].map(i => <div key={i} className="w-20 h-20 md:w-24 md:h-24 bg-stone-200 shrink-0"></div>)}
+          {[1,2,3,4].map(i => <div key={i} className="w-20 h-20 md:w-24 md:h-24 bg-[#0d1520] border border-[#d4af37]/15 rounded-xl shrink-0"></div>)}
         </div>
-        <div className="w-full h-[500px] md:h-[700px] bg-stone-200"></div>
+        <div className="w-full h-[500px] md:h-[700px] bg-[#0d1520] border border-[#d4af37]/15 rounded-2xl"></div>
       </div>
       <div className="lg:col-span-5 flex flex-col gap-8 pt-8">
-        <div className="h-12 bg-stone-200 w-3/4"></div>
-        <div className="h-6 bg-stone-200 w-1/3"></div>
-        <div className="h-24 bg-stone-200 w-full"></div>
-        <div className="h-32 bg-stone-200 w-full mt-10"></div>
+        <div className="h-12 bg-[#0d1520] border border-[#d4af37]/15 rounded-xl w-3/4"></div>
+        <div className="h-6 bg-[#0d1520] border border-[#d4af37]/15 rounded-xl w-1/3"></div>
+        <div className="h-24 bg-[#0d1520] border border-[#d4af37]/15 rounded-xl w-full"></div>
+        <div className="h-32 bg-[#0d1520] border border-[#d4af37]/15 rounded-xl w-full mt-10"></div>
       </div>
     </div>
   </div>
