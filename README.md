@@ -24,9 +24,10 @@ The production website registers `public/sw.js`. It caches the app shell and sta
 
 Requirements:
 
-- Node.js supported by the installed Capacitor CLI
-- Android Studio with an Android SDK and an Android device/emulator
-- A configured `JAVA_HOME`/Android SDK environment when running Gradle outside Android Studio
+- Node.js 22.12 or newer (Node.js 24 LTS recommended)
+- Current stable Android Studio; its bundled JetBrains Runtime (JBR) is sufficient for Gradle
+- Android SDK Platform 36, Android SDK Build-Tools 36, Platform-Tools, and Android SDK Command-line Tools
+- An Android 7/API 24 or newer emulator image or physical device for testing
 
 From this directory:
 
@@ -36,9 +37,9 @@ npm run android:sync
 npm run android:open
 ```
 
-`android:sync` builds the web bundle into `dist` and copies it into the native project. In Android Studio, select a device and run the `app` configuration. To launch from the command line on a connected device, use `npm run android:run`.
+`android:sync` generates app assets, builds the web bundle into `dist`, and syncs native plugins. In Android Studio, select a device and run the `app` configuration. To launch from the command line on a connected device, use `npm run android:run`. The native project uses Android Gradle Plugin 8.13.0 and Gradle 8.13.
 
-The Android app targets Android API 36 and uses native status-bar and keyboard integration, native back navigation, haptics, geolocation, speech recognition, and push-notification plugins where supported. Location permission is requested only after a customer chooses **Use Current Location**. Review-photo capture and evidence selection use the operating system's file/camera picker; a native camera stream is not currently used. User-facing links can use the `bhumivera://` URI scheme. Verified HTTPS App Links require the app's release signing-certificate fingerprint to be published in the website's Digital Asset Links file before release.
+The Android app supports Android API 24+ (Android 7+) and targets API 36. When running Gradle from a terminal rather than Android Studio, set `JAVA_HOME` to Android Studio's bundled `jbr` directory and `ANDROID_SDK_ROOT` to the SDK directory. The app uses native status-bar and keyboard integration, native back navigation, haptics, geolocation, speech recognition, and push-notification plugins where supported. Location permission is requested only after a customer chooses **Use Current Location**. Review-photo capture and evidence selection use the operating system's file/camera picker; a native camera stream is not currently used. User-facing links can use the `bhumivera://` URI scheme. Verified HTTPS App Links require the app's release signing-certificate fingerprint to be published in the website's Digital Asset Links file before release.
 
 ## Release checklist
 
