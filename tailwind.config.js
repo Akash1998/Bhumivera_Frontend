@@ -12,14 +12,14 @@ export default {
         cormorant: ['"Cormorant Garamond"', 'Georgia', 'serif'],
       },
       colors: {
-        // Architectural Biophilic Green (Exact match to user's uploaded interior image)
+        // Muted botanical olive for restrained brand accents
         'brand-forest': {
-          DEFAULT: '#244A38',
-          deep: '#14291F',
-          dark: '#1C382B',
-          light: '#2E5A44',
-          muted: '#3D6C54',
-          accent: '#4E8569',
+          DEFAULT: '#46513D',
+          deep: '#171814',
+          dark: '#23251E',
+          light: '#5D6248',
+          muted: '#74785B',
+          accent: '#8E9069',
         },
         // Warm Organic Sand / Alabaster Plaster
         'brand-sand': {
@@ -36,15 +36,15 @@ export default {
           champagne: '#C8A97E',
           dark: '#B38B2B',
         },
-        'bhumivera-green': '#1C382B',
+        'bhumivera-green': '#344034',
         'bhumivera-gold': '#D4AF37',
         'bhumivera-silver': '#E2E8F0',
-        'bhumivera-black': '#0F1E17',
-        'two-tone-dark': '#14291F',
-        'two-tone-slate': '#1C382B',
-        'two-tone-navy': '#102219',
-        'two-tone-card': '#1C382B',
-        'two-tone-card-light': '#244A38',
+        'bhumivera-black': '#11120F',
+        'two-tone-dark': '#11120F',
+        'two-tone-slate': '#1B1C18',
+        'two-tone-navy': '#151612',
+        'two-tone-card': '#22231E',
+        'two-tone-card-light': '#2B2C24',
         'two-tone-white': '#FFFFFF',
         'two-tone-silver': '#E2E8F0',
         gold: {
