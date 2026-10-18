@@ -1,4 +1,5 @@
 import { Capacitor } from '@capacitor/core';
+import { SocialLogin } from '@capgo/capacitor-social-login';
 
 const GOOGLE_WEB_CLIENT_ID = import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID ||
   '445526551634-kr5t8oq6p1stodd8hf2mdmcpep201j9l.apps.googleusercontent.com';
@@ -25,7 +26,6 @@ const initializeGoogleSignIn = async SocialLogin => {
 };
 
 export const requestGoogleIdToken = async () => {
-  const { SocialLogin } = await import('@capgo/capacitor-social-login');
   await initializeGoogleSignIn(SocialLogin);
   const result = await SocialLogin.login({
     provider: 'google',

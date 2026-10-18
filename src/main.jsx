@@ -7,6 +7,8 @@ import { SettingsProvider } from "./context/SettingsContext.jsx";
 import { reportClientError } from "./services/api.js";
 import { initializeNativeApp } from "./utils/nativeApp.js";
 import { Capacitor } from "@capacitor/core";
+// Ensure OAuth popup redirects are handled even when Google returns to the homepage.
+import "@capgo/capacitor-social-login";
 
 void initializeNativeApp();
 
