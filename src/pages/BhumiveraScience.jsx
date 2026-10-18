@@ -179,6 +179,9 @@ export default function BhumiveraScience() {
               <h3 className="mt-2 font-serif text-2xl sm:text-3xl text-white">
                 The 60-Second Post-Wash Layering Rule
               </h3>
+              <p className="mt-2 text-xs sm:text-sm leading-6 text-[#cbd5e1]">
+                Apply your next skincare step while skin is still slightly damp after cleansing. Layer a lightweight hydrating product first, then finish with a moisturizer or facial oil suited to your routine.
+              </p>
             </div>
           </div>
         </div>
