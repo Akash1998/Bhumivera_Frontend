@@ -172,19 +172,13 @@ export default function BhumiveraScience() {
           <div className="overflow-hidden rounded-3xl two-tone-card border border-[#d4af37]/25 shadow-2xl">
             <img
               src={SCIENCE_PAGE_DATA.textureMatrixImage}
-              alt="Bhumivera formulation texture matrix"
+              alt="Applying Bhumivera face wash and skincare products"
               className="aspect-[16/9] w-full object-cover"
             />
             <div className="p-6 sm:p-8">
-              <span className="font-sub-gold text-[10px] tracking-widest block">
-                Epidermal Permeability Window
-              </span>
               <h3 className="mt-2 font-serif text-2xl sm:text-3xl text-white">
                 The 60-Second Post-Wash Layering Rule
               </h3>
-              <p className="mt-2 text-xs sm:text-sm leading-6 text-[#cbd5e1]">
-                Within 60 seconds of rinsing your cleanser and blotting with a soft muslin towel, mist damp skin with Copper-Distilled Tulsi-Rose Hydrosol and seal with Gotu Kola Barrier Gel (AM) or 2–3 warmed drops of Kumkumadi Night Elixir (PM).
-              </p>
             </div>
           </div>
         </div>

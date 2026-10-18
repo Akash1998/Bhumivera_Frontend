@@ -475,8 +475,8 @@ export const IMPACT_PAGE_DATA = {
 export const SCIENCE_PAGE_DATA = {
   heroImage: '/assets/images/aloeverascience.webp',
   labBenchImage: '/assets/images/cleanroom-qc.webp',
-  patchTestImage: '/assets/images/aloeveradna.webp',
-  textureMatrixImage: '/assets/images/aloeveradrop.webp',
+  patchTestImage: '/assets/images/patch-test.webp',
+  textureMatrixImage: '/assets/images/layering-rule.webp',
   ingredientSpecimens: [
     {
       id: 'sea_buckthorn',
