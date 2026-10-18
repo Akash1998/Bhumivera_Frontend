@@ -2576,16 +2576,23 @@ export function resolveEnhancedBotanicalConcierge(rawQuery = '') {
 
   // 2. Sea Buckthorn Face Wash
   if (
-    q.includes('sea buckthorn face wash') &&
-    (q.includes('key ingredient') || q.includes('tell me about') || q.includes('all ingredient') || q.includes('active'))
+    q.includes('sea buckthorn') ||
+    q.includes('seabuckthorn') ||
+    q.includes('seabuck') ||
+    (q.includes('face wash') && (q.includes('ingredient') || q.includes('tell me about') || q.includes('active') || q.includes('sea') || q.includes('radiance')))
   ) {
     return {
       reply: [
-        '**Bhumivera Sea Buckthorn Face Wash — Authentic Botanical & Active Architecture**',
-        '*“Himalayan Omega-7 Berry + 1% Niacinamide + 5% Aloe Vera + 0.5% Hyaluronic Acid”*',
-        '**The Complete Listed Ingredients:**\n- **Himalayan Sea Buckthorn:** Wild-harvested at 3,500m in Ladakh, nature’s richest source of rare Omega-7 and carotenoids for a zero-strip cleansing cushion.\n- **1.0% Niacinamide (Vitamin B3):** Enhances ceramide synthesis, refines enlarged pores, and balances oil.\n- **5.0% Pure Aloe Vera:** Cold-stabilized inner-fillet juice that cools redness and hydrates delicate skin.\n- **0.5% Biomimetic Hyaluronic Acid:** Binds water molecules to prevent post-rinse dryness.\n- **4.0% Botanical Glycerin:** Core plant humectant locking in suppleness.\n- **Sacred Tulsi (Holy Basil):** Adaptogenic shield defending the skin microbiome against urban stress.',
-        'Formulated at physiological **pH 5.5**, sulfate-free, non-comedogenic, and dermatologically tested for all skin types.',
-      ].join('\n\n'),
+        '**Bhumivera Sea Buckthorn Face Wash — Skin Barrier & Radiance Architecture**',
+        '*“High-Altitude Himalayan Omega-7 + 1% Niacinamide + 0.5% Hyaluronic Acid Synergy”*',
+        'Here is how our breakthrough botanical-clinical formula really works for your skin:\n',
+        '1. **Himalayan Sea Buckthorn (Omega-7 Palmitoleic Acid):** Wild-harvested at 3,500m in Ladakh, this rare super-berry bio-lipid mirrors human skin sebum, deeply cushioning and restoring the lipid barrier so your skin never feels dry or stripped after cleansing.',
+        '2. **Clinical 1% Niacinamide (Vitamin B3):** Accelerates epidermal ceramide production, visibly tightens enlarged pores, balances excess T-zone sebum, and calms post-blemish redness and uneven skin tone.',
+        '3. **Biomimetic 0.5% Hyaluronic Acid & 4% Botanical Glycerin:** Draws and binds up to 1,000x its molecular weight in moisture into the epidermal matrix, locking in hydration throughout the wash cycle.',
+        '4. **Pure 5% Cold-Filleted Aloe Vera & Sacred Tulsi:** Delivers soothing acemannan polysaccharides and adaptogenic eugenol that neutralize urban PM2.5 pollution and calm blemish-prone complexions.',
+        '5. **Physiological pH 5.3–5.6 & Zero-Sulfate Cleanse:** Cleanses gently with 100% biodegradable coconut/glucose surfactants at your skin’s natural acid mantle — 0% SLS/SLES, 0% parabens, 0% phthalates, and zero artificial dyes.',
+        '\n**Directions for Visible Results:** Massage 1 pump onto damp skin for 30–45 seconds with lukewarm water. Rinse thoroughly with cool water and follow within 60 seconds with your hydration ritual while skin is still damp.',
+      ].join('\n'),
       quickActions: [
         { id: 'layer_guide', label: 'Post-Wash Layering Guide', prompt: 'What skincare products should I apply right after using Sea Buckthorn Face Wash?', category: 'post_wash_routine' },
         { id: 'kumk_pair', label: 'Pair with Kumkumadi Night Elixir', prompt: 'How do I pair Sea Buckthorn Face Wash with Bhumivera Kumkumadi Night Elixir?', category: 'product_pairing' },
@@ -2600,10 +2607,15 @@ export function resolveEnhancedBotanicalConcierge(rawQuery = '') {
     return {
       reply: [
         '**Bhumivera Charcoal Face Wash — Elemental Pore Detox & Pollution Defense**',
-        '*“3% Steam-Activated Bamboo Charcoal + 0.5% Neem + 0.5% Haridra (Turmeric) + 5% Glycerin”*',
-        '**The Complete Listed Ingredients:**\n- **3.0% Steam-Activated Bamboo Charcoal:** Micro-porous carbon matrix that adsorbs PM2.5 smog particulates, excess sebum, and trapped impurities without scratching.\n- **0.5% Sacred Neem (Nimba):** Classical Ayurvedic purifier that soothes redness and curbs blemish-causing microbes.\n- **0.5% Haridra (Turmeric):** Standardized curcuminoid extract for antioxidant clarity and fading dark marks.\n- **5.0% Botanical Glycerin & Hyaluronic Acid:** Cushions the deep cleanse so pores are purified with zero tightness.',
-        '**Best Usage:** Ideal for your daily **Evening Detox Ritual** to remove sunscreen, sweat, and city pollution.',
-      ].join('\n\n'),
+        '*“3% Steam-Activated Bamboo Carbon + 0.5% Neem + 0.5% Haridra (Turmeric) + 5% Glycerin”*',
+        'Here is how our microporous purification formula really works for your skin:\n',
+        '1. **3.0% Steam-Activated Bamboo Charcoal:** Micro-milled to <15 microns with massive surface area (>900 m²/g), acting like a gentle magnet to adsorb PM2.5 city smog, trapped micro-pollutants, and oxidized pore sebum without abrasive scrubbing.',
+        '2. **0.5% Organic Neem (Nimba) Extract:** Rich in bio-active azadirachtin and nimbidin that purify pore-clogging microbes and soothe surface irritation.',
+        '3. **0.5% Standardized Haridra (Curcuminoid-Rich Turmeric):** Powerful Ayurvedic antioxidant that calms inflammation, promotes clarity, and helps fade the look of stubborn post-blemish spots.',
+        '4. **5.0% Botanical Glycerin & Hyaluronic Acid:** Cushions the deep cleanse with multi-layer humectants, ensuring zero tightness, rebound oiliness, or moisture barrier damage.',
+        '5. **Skin-Identical pH 5.5 Calibration:** Maintains your natural protective acid mantle while removing daily urban grime, making it ideal for daily evening detox.',
+        '\n**Directions for Visible Results:** Massage gently over damp face for 30–45 seconds, focusing on congested zones (nose, chin, forehead), then rinse clean with lukewarm water.',
+      ].join('\n'),
       quickActions: [
         { id: 'char_pm', label: 'PM Detox Ritual Guide', prompt: 'What is the step-by-step evening detox ritual with Charcoal Face Wash?', category: 'post_wash_routine' },
         { id: 'char_kumk', label: 'Pair with Kumkumadi Night Elixir', prompt: 'How does Charcoal Face Wash pair with Kumkumadi Night Elixir?', category: 'product_pairing' },
@@ -2617,9 +2629,15 @@ export function resolveEnhancedBotanicalConcierge(rawQuery = '') {
     return {
       reply: [
         '**Bhumivera Botanical Hair Vitality Shampoo — Ayurvedic Root & Follicle Rasayana**',
-        '*“Amla + Reetha + Shikakai + Bhringraj + Rosemary Leaf Oil + Neem”*',
-        '**Key Listed Actives & Benefits:**\n- **Therapeutic Rosemary Leaf Oil:** Stimulates scalp microcapillary perfusion, delivering oxygen directly to hair follicles.\n- **Classical Bhringraj (King of Hair):** Encourages follicles into active growth (anagen) phase and reduces hair shedding.\n- **Amla (Indian Gooseberry):** Packed with bioavailable Vitamin C and tannins that strengthen keratin protein bonds.\n- **Wild Reetha (Soapnut) & Shikakai:** Natural non-ionic saponins that cleanse excess scalp oil while smoothing hair cuticles with zero synthetic sulfates.',
-      ].join('\n\n'),
+        '*“Rosemary Leaf Oil + Bhringraj + Amla + Reetha + Shikakai + Neem”*',
+        'Here is how our sulfate-free botanical formulation revitalizes hair from root to tip:\n',
+        '1. **Therapeutic Rosemary Leaf Oil:** Contains carnosic acid that stimulates scalp micro-capillary circulation, feeding follicles with oxygen and nutrients to encourage robust growth.',
+        '2. **Classical Bhringraj (Eclipta Alba):** Known as the Ayurvedic "King of Hair", it helps transition resting follicles into the active anagen growth phase, reducing excess hair fall.',
+        '3. **Vitamin C-Rich Amla (Indian Gooseberry):** Delivers bioavailable tannins and antioxidants that strengthen hair roots, protect natural melanin, and enhance tensile strength.',
+        '4. **Wild Reetha & Shikakai Natural Saponins:** Naturally low pH plant mucilage that lifts scalp oil and product buildup without harsh synthetic sulfates (0% SLS/SLES).',
+        '5. **Cuticle-Smoothing Shine & Scalp Balance:** Infused with Neem and plant conditioners that clarify flakes and seal the outer hair cuticle for silky, resilient bounce.',
+        '\n**Directions for Visible Results:** Apply to wet scalp, massage gently for 60 seconds to stimulate circulation, work through hair ends, and rinse thoroughly.',
+      ].join('\n'),
       quickActions: [
         { id: 'shamp_use', label: 'How to Use Botanical Shampoo', prompt: 'How do I use Bhumivera Botanical Shampoo for maximum hair strength?' },
         { id: 'shamp_rosemary', label: 'Rosemary Oil in Shampoo', prompt: 'Tell me about Rosemary Leaf Oil in Bhumivera Botanical Shampoo' },
@@ -4945,7 +4963,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                 ? 'md:inset-0 md:w-auto'
                 : 'md:inset-y-6 md:right-6 md:left-auto md:w-1/2 md:max-w-[760px]'
             }`
-          : 'bottom-[calc(5.5rem+env(safe-area-inset-bottom))] right-4 items-end'
+          : 'bottom-20 right-4 sm:bottom-6 sm:right-6 items-end pointer-events-auto'
       }`}
     >
       {/* Subtle Luxury Assistance Nudge */}
@@ -4984,6 +5002,41 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             Open Concierge <ChevronRight className="w-3.5 h-3.5" />
           </button>
         </div>
+      )}
+
+      {/* Persistent Floating Action Button (FAB) - High-Visibility Luxury Launcher for Mobile & PC */}
+      {!isOpen && (
+        <button
+          type="button"
+          onClick={() => {
+            setIsOpen(true);
+            setProactiveBubble(null);
+          }}
+          aria-label="Open Bhumivera AI Skincare Concierge"
+          title="Open AI Concierge"
+          className="group relative flex items-center gap-2.5 rounded-full border border-[#D4AF37]/70 bg-gradient-to-r from-[#071911] via-[#0B2419] to-[#143725] px-4 py-3 sm:px-5 sm:py-3.5 text-[#FDFBF7] shadow-[0_12px_36px_rgba(0,0,0,0.55)] transition-all duration-300 hover:scale-105 hover:border-[#D4AF37] hover:shadow-[0_16px_44px_rgba(212,175,55,0.32)] active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/50"
+        >
+          <span className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#D4AF37]/30 to-[#10b981]/30 opacity-70 blur-md transition-opacity group-hover:opacity-100 animate-pulse pointer-events-none" />
+
+          <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/60 text-[#D4AF37] shrink-0 shadow-inner">
+            <Sparkles className="w-4 h-4 text-[#D4AF37] transition-transform duration-300 group-hover:rotate-12" />
+            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#0B2419] animate-pulse" />
+          </div>
+
+          <div className="relative flex flex-col text-left pr-1">
+            <div className="flex items-center gap-1.5 leading-none">
+              <span className="font-serif text-[12px] sm:text-xs font-bold tracking-wide text-[#FDFBF7]">
+                AI Concierge
+              </span>
+              <span className="inline-block text-[9px] font-bold text-[#D4AF37] uppercase tracking-wider bg-[#D4AF37]/20 px-1.5 py-0.5 rounded-full border border-[#D4AF37]/40">
+                Ask
+              </span>
+            </div>
+            <span className="hidden sm:inline text-[9px] text-[#D4AF37]/90 font-medium tracking-tight mt-1 leading-none">
+              Phytoscience & Skincare Guide
+            </span>
+          </div>
+        </button>
       )}
 
       {/* Expanded Luxury Concierge Window */}
@@ -5066,28 +5119,21 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             </div>
           </header>
 
-          {/* Luxury Two-Tier Switcher Bar */}
+          {/* Compact Luxury Phytoscience Navigation Bar */}
           <div
-            className={`px-4 py-2 border-b flex flex-col gap-1.5 text-[11px] shrink-0 transition-colors ${
-              isDark ? 'bg-[#0a1c15] border-white/10 text-stone-300' : 'bg-[#f5f2e8] border-[#0B2419]/10 text-[#1b2921]'
+            className={`px-3.5 py-2 border-b flex items-center justify-between gap-2 text-[11px] shrink-0 transition-colors ${
+              isDark ? 'bg-[#091d16] border-white/10 text-stone-300' : 'bg-[#f5f2e8] border-[#0B2419]/10 text-[#1b2921]'
             }`}
           >
-            <div className="flex items-center justify-between gap-2">
-              <span className="inline-flex items-center gap-1.5 truncate">
-                <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
-                {hasPlacedOrder ? (
-                  <span><strong>Verified Client:</strong> Private order & refund details accessible</span>
-                ) : (
-                  <span><strong>AI Skincare Concierge:</strong> Personalized guidance & ingredient science</span>
-                )}
-              </span>
-              <span className={`px-2 py-0.5 rounded-full text-[9px] font-semibold uppercase tracking-wider border shrink-0 ${activeStatusMeta.badgeClass}`}>
-                {activeStatusMeta.label}
+            <div className="flex items-center gap-1.5 shrink-0">
+              <span className="inline-flex items-center gap-1.5 font-bold uppercase tracking-wider text-[10px] text-[#D4AF37]">
+                <ShieldCheck className="w-3.5 h-3.5 text-[#D4AF37]" />
+                <span className="hidden sm:inline">Phytoscience Guide</span>
               </span>
             </div>
 
             {/* Interactive Luxury Module Navigation Pills */}
-            <div className="flex items-center gap-1.5 overflow-x-auto pt-0.5 scrollbar-none">
+            <div className="flex items-center gap-1.5 overflow-x-auto scrollbar-none">
               <button
                 type="button"
                 onClick={() => {
@@ -5096,7 +5142,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   setDiagnosticDrawerOpen(false);
                   setEscalationWizard(prev => ({ ...prev, open: false }));
                 }}
-                className={`shrink-0 px-3 py-1 rounded-xl text-[10px] font-bold border transition-all ${
+                className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${
                   ingredientDrawerOpen
                     ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37] shadow-sm'
                     : 'border-current/20 hover:border-[#D4AF37] hover:text-[#D4AF37]'
@@ -5112,13 +5158,13 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   setDiagnosticDrawerOpen(false);
                   setEscalationWizard(prev => ({ ...prev, open: false }));
                 }}
-                className={`shrink-0 px-3 py-1 rounded-xl text-[10px] font-bold border transition-all ${
+                className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${
                   ritualDrawerOpen
                     ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37] shadow-sm'
                     : 'border-current/20 hover:border-[#D4AF37] hover:text-[#D4AF37]'
                 }`}
               >
-                ⏳ Facial Ritual (4 Phases)
+                ⏳ 4-Phase Ritual
               </button>
               <button
                 type="button"
@@ -5128,7 +5174,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   setRitualDrawerOpen(false);
                   setEscalationWizard(prev => ({ ...prev, open: false }));
                 }}
-                className={`shrink-0 px-3 py-1 rounded-xl text-[10px] font-bold border transition-all ${
+                className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${
                   diagnosticDrawerOpen
                     ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37] shadow-sm'
                     : 'border-current/20 hover:border-[#D4AF37] hover:text-[#D4AF37]'
@@ -5139,7 +5185,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               <button
                 type="button"
                 onClick={() => openVerificationFlow('')}
-                className={`shrink-0 px-3 py-1 rounded-xl text-[10px] font-bold border transition-all ${
+                className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${
                   escalationWizard.open
                     ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37] shadow-sm'
                     : 'border-current/20 hover:border-[#D4AF37] hover:text-[#D4AF37]'
@@ -5149,6 +5195,30 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               </button>
             </div>
           </div>
+
+          {/* Quick Return Bar when Drawer is Active */}
+          {(ingredientDrawerOpen || ritualDrawerOpen || diagnosticDrawerOpen) && (
+            <div
+              className={`px-4 py-1.5 border-b flex items-center justify-between text-xs shrink-0 transition-colors ${
+                isDark ? 'bg-[#0f241d] border-[#D4AF37]/30 text-stone-200' : 'bg-[#e8e2d4] border-[#0B2419]/15 text-[#0B2419]'
+              }`}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setIngredientDrawerOpen(false);
+                  setRitualDrawerOpen(false);
+                  setDiagnosticDrawerOpen(false);
+                }}
+                className="inline-flex items-center gap-1 text-[11px] font-bold text-[#D4AF37] hover:underline"
+              >
+                ← Back to Conversation
+              </button>
+              <span className="text-[10px] opacity-75 font-medium">
+                {ingredientDrawerOpen ? '🌿 Botanical Library Active' : ritualDrawerOpen ? '⏳ Ritual Guide Active' : '✨ Skin Quiz Active'}
+              </span>
+            </div>
+          )}
 
           {/* Interactive 32-Ingredient Encyclopedia Drawer */}
           <IngredientEncyclopediaDrawer
@@ -5491,6 +5561,83 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               isDark ? 'bg-[#071510]' : 'bg-[#FDFBF7]'
             }`}
           >
+            {messages.length === 0 && (
+              <div className="flex flex-col items-center justify-center text-center p-4 sm:p-6 rounded-3xl bg-gradient-to-b from-[#D4AF37]/10 via-[#0B2419]/5 to-transparent border border-[#D4AF37]/25 my-2">
+                <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/50 flex items-center justify-center mb-3 shadow-inner">
+                  <Sparkles className="w-6 h-6 text-[#D4AF37]" />
+                </div>
+                <h3 className="font-serif text-base sm:text-lg font-bold text-stone-900 dark:text-stone-100">
+                  Welcome to Bhumivera Client Concierge
+                </h3>
+                <p className="mt-1 max-w-sm text-xs leading-relaxed text-stone-600 dark:text-stone-300">
+                  Your personal Ayurvedic phytoscience advisor. Tap any inquiry below or ask a question:
+                </p>
+
+                {/* Primary Interactive Quick Cards in Chat Stream */}
+                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md text-left">
+                  <button
+                    type="button"
+                    onClick={() => void sendMessage('Tell me about Bhumivera Sea Buckthorn Face Wash and its key ingredients')}
+                    className="p-3 rounded-2xl border border-[#D4AF37]/35 bg-white/70 dark:bg-[#10241f]/80 hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all text-xs group shadow-sm text-left"
+                  >
+                    <span className="font-bold text-[#D4AF37] block group-hover:text-stone-900 dark:group-hover:text-white">
+                      🌿 Sea Buckthorn Face Wash
+                    </span>
+                    <span className="text-[11px] text-stone-500 dark:text-stone-400 block mt-0.5">
+                      5-point active science & barrier guide
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => void sendMessage('Tell me about Bhumivera Charcoal Face Wash and its key ingredients')}
+                    className="p-3 rounded-2xl border border-[#D4AF37]/35 bg-white/70 dark:bg-[#10241f]/80 hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all text-xs group shadow-sm text-left"
+                  >
+                    <span className="font-bold text-[#D4AF37] block group-hover:text-stone-900 dark:group-hover:text-white">
+                      🌋 Charcoal Face Wash
+                    </span>
+                    <span className="text-[11px] text-stone-500 dark:text-stone-400 block mt-0.5">
+                      3% Bamboo carbon & pore detox
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setDiagnosticDrawerOpen(true);
+                      setIngredientDrawerOpen(false);
+                      setRitualDrawerOpen(false);
+                    }}
+                    className="p-3 rounded-2xl border border-[#D4AF37]/35 bg-white/70 dark:bg-[#10241f]/80 hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all text-xs group shadow-sm text-left"
+                  >
+                    <span className="font-bold text-[#D4AF37] block group-hover:text-stone-900 dark:group-hover:text-white">
+                      ✨ Skin Diagnostic Quiz
+                    </span>
+                    <span className="text-[11px] text-stone-500 dark:text-stone-400 block mt-0.5">
+                      8-step personalized skin blueprint
+                    </span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setRitualDrawerOpen(true);
+                      setIngredientDrawerOpen(false);
+                      setDiagnosticDrawerOpen(false);
+                    }}
+                    className="p-3 rounded-2xl border border-[#D4AF37]/35 bg-white/70 dark:bg-[#10241f]/80 hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all text-xs group shadow-sm text-left"
+                  >
+                    <span className="font-bold text-[#D4AF37] block group-hover:text-stone-900 dark:group-hover:text-white">
+                      ⏳ 4-Phase Facial Ritual
+                    </span>
+                    <span className="text-[11px] text-stone-500 dark:text-stone-400 block mt-0.5">
+                      Guided AM & PM chronobiology timer
+                    </span>
+                  </button>
+                </div>
+              </div>
+            )}
+
             {messages.map((msg, idx) => {
               const isUser = msg.sender === 'user';
               const isSystem = msg.sender === 'system';

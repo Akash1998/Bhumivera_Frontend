@@ -578,8 +578,40 @@ export function resolveClientSideConciergeFallback(message) {
 
   if (product) {
     const activeList = product.keyActives.map(active => `**${active.name}** (${active.pct})`).join(', ');
+    const isSeaBuckthorn = product.id.includes('sea_buckthorn');
+    const isCharcoal = product.id.includes('charcoal');
+
+    let breakdown = '';
+    if (isSeaBuckthorn) {
+      breakdown = [
+        `**${product.name} — Skin Barrier & Radiance Architecture**`,
+        `*“High-Altitude Himalayan Omega-7 + 1% Niacinamide (Vitamin B3) + 0.5% Hyaluronic Acid Synergy”*`,
+        `Here is how our breakthrough botanical-clinical formula really works for your skin:\n`,
+        `1. **Himalayan Sea Buckthorn (Omega-7 Palmitoleic Acid):** Wild-harvested at 3,500m in Ladakh, this rare super-berry bio-lipid mirrors human skin sebum, deeply cushioning and restoring the lipid barrier so your skin never feels dry or stripped after cleansing.`,
+        `2. **Clinical 1% Niacinamide (Vitamin B3):** Accelerates epidermal ceramide production, visibly tightens enlarged pores, balances excess T-zone sebum, and calms post-blemish redness and uneven skin tone.`,
+        `3. **Biomimetic 0.5% Hyaluronic Acid & 4% Botanical Glycerin:** Draws and binds up to 1,000x its molecular weight in moisture into the epidermal matrix, locking in hydration throughout the wash cycle.`,
+        `4. **Pure 5% Cold-Filleted Aloe Vera & Sacred Tulsi:** Delivers soothing acemannan polysaccharides and adaptogenic eugenol that neutralize urban PM2.5 pollution and calm blemish-prone complexions.`,
+        `5. **Physiological pH 5.3–5.6 & Zero-Sulfate Cleanse:** Cleanses gently with 100% biodegradable coconut/glucose surfactants at your skin’s natural acid mantle — 0% SLS/SLES, 0% parabens, 0% phthalates, and zero artificial dyes.`,
+        `\n**Directions for Visible Results:** Massage 1 pump onto damp skin for 30–45 seconds with lukewarm water. Rinse thoroughly with cool water and follow within 60 seconds with your hydration ritual while skin is still damp.`,
+      ].join('\n');
+    } else if (isCharcoal) {
+      breakdown = [
+        `**${product.name} — Elemental Pore Detox & Pollution Defense**`,
+        `*“3% Steam-Activated Bamboo Carbon + 0.5% Neem + 0.5% Haridra (Turmeric) + 5% Glycerin”*`,
+        `Here is how our microporous purification formula really works for your skin:\n`,
+        `1. **3.0% Steam-Activated Bamboo Charcoal:** Micro-milled to <15 microns with massive surface area (>900 m²/g), acting like a gentle magnet to adsorb PM2.5 city smog, trapped micro-pollutants, and oxidized pore sebum without abrasive scrubbing.`,
+        `2. **0.5% Organic Neem (Nimba) Extract:** Rich in bio-active azadirachtin and nimbidin that purify pore-clogging microbes and soothe surface irritation.`,
+        `3. **0.5% Standardized Haridra (Curcuminoid-Rich Turmeric):** Powerful Ayurvedic antioxidant that calms inflammation, promotes clarity, and helps fade the look of stubborn post-blemish spots.`,
+        `4. **5.0% Botanical Glycerin & Hyaluronic Acid:** Cushions the deep cleanse with multi-layer humectants, ensuring zero tightness, rebound oiliness, or moisture barrier damage.`,
+        `5. **Skin-Identical pH 5.5 Calibration:** Maintains your natural protective acid mantle while removing daily urban grime, making it ideal for daily evening detox.`,
+        `\n**Directions for Visible Results:** Massage gently over damp face for 30–45 seconds, focusing on congested zones (nose, chin, forehead), then rinse clean with lukewarm water.`,
+      ].join('\n');
+    } else {
+      breakdown = `**${product.name}**\n\n**Listed Key Ingredients:** ${activeList}.\n\n• **Skin Compatibility:** ${product.skinTypes}\n• **AM Timing:** ${product.bestTimeToUse.morning}\n• **PM Timing:** ${product.bestTimeToUse.evening}\n\n**Directions for Visible Results:** Massage 1 pump on damp skin for 30–45 seconds, rinse thoroughly with cool water, and follow with daily hydration.`;
+    }
+
     return {
-      reply: `**${product.name}**\n\n**Listed Key Ingredients:** ${activeList}.\n\n• **Skin Compatibility:** ${product.skinTypes}\n• **AM Timing:** ${product.bestTimeToUse.morning}\n• **PM Timing:** ${product.bestTimeToUse.evening}\n\nCheck the product packaging for the complete listed ingredients and batch directions.`,
+      reply: breakdown,
       quickActions: [
         {
           id: 'usage_time',
