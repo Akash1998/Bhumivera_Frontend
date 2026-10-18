@@ -313,7 +313,7 @@ export default function ProductDetail() {
                   aria-label={`View ${product.name} image ${idx + 1}`}
                   aria-pressed={getImageUrl(activeMedia) === url}
                   className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-300 sm:h-16 sm:w-16 md:h-20 md:w-20 md:rounded-2xl lg:h-24 lg:w-24 ${
-                    getImageUrl(activeMedia) === url ? 'border-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.4)]' : 'border-[#244A38] bg-[#102219] hover:border-[#D4AF37]/60'
+                    getImageUrl(activeMedia) === url ? 'border-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.4)]' : 'border-white/10 bg-[#171813] hover:border-[#D4AF37]/60'
                   }`}
                 >
                   <img src={url} alt={`${product.name} image ${idx + 1}`} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-cover transition-all duration-500" loading="lazy" />
@@ -322,7 +322,7 @@ export default function ProductDetail() {
             })}
           </div>
 
-          <div className="group relative aspect-[0.94] w-full overflow-hidden rounded-2xl border border-[#244A38] bg-gradient-to-b from-[#1C382B] to-[#102219] shadow-2xl sm:aspect-square sm:rounded-2xl md:sticky md:top-28 md:aspect-auto md:h-[min(72vh,680px)] md:min-h-[500px] md:self-start lg:top-32">
+          <div className="group relative aspect-[0.94] w-full overflow-hidden rounded-2xl border border-[#d4af37]/20 bg-[#171813] shadow-2xl sm:aspect-square sm:rounded-2xl md:sticky md:top-28 md:aspect-auto md:h-[min(72vh,680px)] md:min-h-[500px] md:self-start lg:top-32">
             <AnimatePresence mode="wait">
               <motion.div
                 key={getImageUrl(activeMedia)}
@@ -338,15 +338,15 @@ export default function ProductDetail() {
 
             {product.images?.length > 1 && (
               <>
-                <button type="button" onClick={() => showAdjacentImage(-1)} aria-label="Previous product image" className="absolute left-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-[#D4AF37]/30 bg-[#102219]/90 p-2.5 text-[#FCE096] shadow-lg transition hover:bg-[#D4AF37] hover:text-[#14291F] sm:left-4 sm:p-3">
+                <button type="button" onClick={() => showAdjacentImage(-1)} aria-label="Previous product image" className="absolute left-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-[#D4AF37]/30 bg-[#171813]/90 p-2.5 text-[#FCE096] shadow-lg transition hover:bg-[#D4AF37] hover:text-[#14291F] sm:left-4 sm:p-3">
                   <ChevronLeft size={18} className="sm:h-5 sm:w-5"/>
                 </button>
-                <button type="button" onClick={() => showAdjacentImage(1)} aria-label="Next product image" className="absolute right-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-[#D4AF37]/30 bg-[#102219]/90 p-2.5 text-[#FCE096] shadow-lg transition hover:bg-[#D4AF37] hover:text-[#14291F] sm:right-4 sm:p-3">
+                <button type="button" onClick={() => showAdjacentImage(1)} aria-label="Next product image" className="absolute right-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-[#D4AF37]/30 bg-[#171813]/90 p-2.5 text-[#FCE096] shadow-lg transition hover:bg-[#D4AF37] hover:text-[#14291F] sm:right-4 sm:p-3">
                   <ChevronRight size={18} className="sm:h-5 sm:w-5"/>
                 </button>
-                <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2 rounded-full bg-[#102219]/90 border border-[#D4AF37]/30 px-3 py-2 shadow-sm backdrop-blur">
+                <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2 rounded-full bg-[#171813]/90 border border-[#D4AF37]/30 px-3 py-2 shadow-sm backdrop-blur">
                   {product.images.map((image, index) => (
-                    <button key={image.id || `${getImageUrl(image)}-${index}`} type="button" onClick={() => setActiveMedia(image)} aria-label={`Show product image ${index + 1}`} aria-current={index === activeImageIndex} className={`h-2 rounded-full transition-all ${index === activeImageIndex ? 'w-6 bg-[#D4AF37]' : 'w-2 bg-[#244A38] hover:bg-[#9BB0A5]'}`}/>
+                    <button key={image.id || `${getImageUrl(image)}-${index}`} type="button" onClick={() => setActiveMedia(image)} aria-label={`Show product image ${index + 1}`} aria-current={index === activeImageIndex} className={`h-2 rounded-full transition-all ${index === activeImageIndex ? 'w-6 bg-[#D4AF37]' : 'w-2 bg-white/20 hover:bg-white/40'}`}/>
                   ))}
                 </div>
               </>
@@ -356,7 +356,7 @@ export default function ProductDetail() {
               {product.is_featured === 1 && <span className="rounded-full btn-gold-luxury px-3 py-1.5 font-mono text-[9px] uppercase tracking-widest text-white shadow-sm sm:px-4 sm:text-[10px]">Premium Selection</span>}
             </div>
             
-            <button onClick={() => toggleWishlist(product)} aria-label={isWishlisted(product.id) ? 'Remove from saved products' : 'Save product'} aria-pressed={isWishlisted(product.id)} className={`absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 sm:right-6 sm:top-6 sm:h-12 sm:w-12 ${isWishlisted(product.id) ? 'border-[#D4AF37] bg-[#D4AF37] text-[#14291F]' : 'border-[#D4AF37]/30 bg-[#102219]/80 text-[#DFD7C4] hover:border-[#D4AF37] hover:text-[#FCE096]'}`}>
+            <button onClick={() => toggleWishlist(product)} aria-label={isWishlisted(product.id) ? 'Remove from saved products' : 'Save product'} aria-pressed={isWishlisted(product.id)} className={`absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 sm:right-6 sm:top-6 sm:h-12 sm:w-12 ${isWishlisted(product.id) ? 'border-[#D4AF37] bg-[#D4AF37] text-[#14291F]' : 'border-[#D4AF37]/30 bg-[#171813]/80 text-[#DFD7C4] hover:border-[#D4AF37] hover:text-[#FCE096]'}`}>
               <Heart size={18} fill={isWishlisted(product.id) ? 'currentColor' : 'none'} />
             </button>
           </div>
@@ -369,7 +369,7 @@ export default function ProductDetail() {
                  SKU: {product.sku || 'N/A'}
                </span>
                 {product.brand && (
-                  <span className="flex items-center gap-1 rounded-full bg-[#102219] border border-[#244A38] px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-[#FCE096] sm:px-3 sm:text-[10px]">
+                  <span className="flex items-center gap-1 rounded-full bg-[#171813] border border-white/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-[#FCE096] sm:px-3 sm:text-[10px]">
                     <Tag size={12} className="text-[#D4AF37]" /> {product.brand}
                   </span>
                )}
@@ -402,7 +402,7 @@ export default function ProductDetail() {
 
           <div ref={purchaseSectionRef} className="relative mb-6 rounded-2xl two-tone-panel-gold p-4 shadow-2xl sm:p-6 md:mb-8 md:rounded-3xl md:p-7">
             <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
-              <span className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 py-1.5 text-[9px] font-mono uppercase tracking-[0.12em] sm:text-[10px] sm:tracking-widest ${isOutOfStock ? 'bg-red-950/60 border border-red-500/40 text-red-300' : 'bg-[#102219] border border-[#D4AF37]/40 text-[#FCE096]'}`}>
+              <span className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 py-1.5 text-[9px] font-mono uppercase tracking-[0.12em] sm:text-[10px] sm:tracking-widest ${isOutOfStock ? 'bg-red-950/60 border border-red-500/40 text-red-300' : 'bg-[#171813] border border-[#D4AF37]/40 text-[#FCE096]'}`}>
                 {isOutOfStock ? <AlertCircle size={16}/> : <Package size={16}/>}
                 {isOutOfStock ? 'Currently unavailable' : product.quantity <= 5 ? `Only ${product.quantity} left` : 'Available to order'}
               </span>
@@ -410,12 +410,12 @@ export default function ProductDetail() {
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
-              <div className="flex h-12 w-full items-center justify-between rounded-xl border border-[#244A38] bg-[#102219] px-2 sm:h-auto sm:w-32">
-                <button type="button" aria-label="Decrease quantity" disabled={quantity <= 1} onClick={() => setQuantity(q => Math.max(1, q - 1))} className="flex h-10 w-10 items-center justify-center rounded-lg text-[#DFD7C4] transition-colors hover:bg-[#1C382B] hover:text-[#FCE096] disabled:opacity-40">
+              <div className="flex h-12 w-full items-center justify-between rounded-xl border border-white/10 bg-[#171813] px-2 sm:h-auto sm:w-32">
+                <button type="button" aria-label="Decrease quantity" disabled={quantity <= 1} onClick={() => setQuantity(q => Math.max(1, q - 1))} className="flex h-10 w-10 items-center justify-center rounded-lg text-[#DFD7C4] transition-colors hover:bg-white/10 hover:text-[#FCE096] disabled:opacity-40">
                   <Minus size={16} />
                 </button>
                 <span aria-live="polite" className="w-8 text-center font-mono text-base text-white">{quantity}</span>
-                <button type="button" aria-label="Increase quantity" onClick={() => setQuantity(q => q + 1)} disabled={quantity >= product.quantity} className="flex h-10 w-10 items-center justify-center rounded-lg text-[#DFD7C4] transition-colors hover:bg-[#1C382B] hover:text-[#FCE096] disabled:opacity-40">
+                <button type="button" aria-label="Increase quantity" onClick={() => setQuantity(q => q + 1)} disabled={quantity >= product.quantity} className="flex h-10 w-10 items-center justify-center rounded-lg text-[#DFD7C4] transition-colors hover:bg-white/10 hover:text-[#FCE096] disabled:opacity-40">
                   <Plus size={16} />
                 </button>
               </div>
@@ -449,7 +449,7 @@ export default function ProductDetail() {
                     <p className="font-serif text-sm font-bold text-white">Batch #{product.batchCode || 'BV-CH26-8841'} · 250 Units Run</p>
                   </div>
                 </div>
-                <span className="rounded-full bg-[#102219] border border-[#D4AF37]/30 px-2.5 py-1 text-[9px] font-mono font-bold text-[#FCE096]">
+                <span className="rounded-full bg-[#171813] border border-[#D4AF37]/30 px-2.5 py-1 text-[9px] font-mono font-bold text-[#FCE096]">
                   Virgin Seal
                 </span>
               </div>
@@ -853,15 +853,15 @@ const SkeletonPDP = () => (
     <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 animate-pulse opacity-50">
       <div className="lg:col-span-7 flex flex-col md:flex-row gap-6">
         <div className="flex md:flex-col gap-4 w-full md:w-24">
-          {[1,2,3,4].map(i => <div key={i} className="w-20 h-20 md:w-24 md:h-24 bg-[#102219] border border-[#244A38] rounded-xl shrink-0"></div>)}
+          {[1,2,3,4].map(i => <div key={i} className="w-20 h-20 md:w-24 md:h-24 bg-[#171813] border border-white/10 rounded-xl shrink-0"></div>)}
         </div>
-        <div className="w-full h-[500px] md:h-[700px] bg-[#102219] border border-[#244A38] rounded-2xl"></div>
+        <div className="w-full h-[500px] md:h-[700px] bg-[#171813] border border-[#d4af37]/20 rounded-2xl"></div>
       </div>
       <div className="lg:col-span-5 flex flex-col gap-8 pt-8">
-        <div className="h-12 bg-[#102219] border border-[#244A38] rounded-xl w-3/4"></div>
-        <div className="h-6 bg-[#102219] border border-[#244A38] rounded-xl w-1/3"></div>
-        <div className="h-24 bg-[#102219] border border-[#244A38] rounded-xl w-full"></div>
-        <div className="h-32 bg-[#102219] border border-[#244A38] rounded-xl w-full mt-10"></div>
+        <div className="h-12 bg-[#171813] border border-white/10 rounded-xl w-3/4"></div>
+        <div className="h-6 bg-[#171813] border border-white/10 rounded-xl w-1/3"></div>
+        <div className="h-24 bg-[#171813] border border-white/10 rounded-xl w-full"></div>
+        <div className="h-32 bg-[#171813] border border-white/10 rounded-xl w-full mt-10"></div>
       </div>
     </div>
   </div>
