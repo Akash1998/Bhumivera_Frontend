@@ -419,8 +419,8 @@ export function matchAiIntentWithFuzzy(rawQuery = '', targetLangOverride) {
       reply: [
         '🌿 **Bhumivera Artisanal Custody & Executive Concierge Care**',
         '*“100% Sealed Virgin Unit Custody — Artisanal Small-Batch Formulations.”*',
-        '**Sealed Virgin Custody:**\nBecause our botanical formulations (Activated Bamboo Charcoal Face Wash, Botanical Hair Cleanser, and Sea Buckthorn Face Wash) are intimate personal care cosmetics, each bottle is compounded in small artisanal runs of 250 units and sealed with tamper-evident security to guarantee 100% sterile virgin purity.',
-        '**Verification & Concierge Resolution:**\nEvery bottle carries a serialized QR code verifiable on our /verify portal for calibrated pH (5.51) and spectrophotometric assays. If any parcel exhibits transit compromise upon arrival, submit your continuous 360° unboxing video showing the intact outer AWB label within 48 hours. Our executive concierge team directly reviews claims for verified patrons and coordinates immediate resolution.',
+        '**Sealed Virgin Custody (Why No Physical Returns?):**\nBecause our botanical formulations (Activated Bamboo Charcoal Face Wash, Botanical Hair Cleanser, and Sea Buckthorn Face Wash) are intimate personal care cosmetics, each bottle is compounded in small artisanal runs of 250 units and sealed with tamper-evident security to guarantee 100% sterile virgin purity.',
+        '**Verification & Concierge Resolution (Zero Return Shipping Hassle):**\nEvery bottle carries a serialized QR code verifiable on our /verify portal for calibrated pH (5.51) and spectrophotometric assays. If any parcel exhibits transit compromise upon arrival, submit your continuous 360° unboxing video showing the intact outer AWB label within 48 hours. Zero return shipping hassle — our executive concierge team directly reviews claims for verified patrons and coordinates immediate courtesy resolution.',
       ].join('\n\n'),
       quickActions: [
         { id: 'damaged_claim', label: '📹 Submit Unboxing Video Verification', prompt: 'I want to submit an unboxing verification video to concierge' },

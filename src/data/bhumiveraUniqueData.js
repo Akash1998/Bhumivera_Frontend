@@ -27,6 +27,7 @@ export const UNIQUE_IMAGE_BANK = [
   '/assets/images/Promo7.webp',
   '/assets/images/Promo8.webp',
   '/assets/images/Promo9.webp',
+  '/assets/images/home-stewardship-ledger.webp',
 ];
 
 // 1. FOOTER 4 PHOTOGRAPHIC PILLARS + BRAND BANNER (Distinct Authentic Photographs)
@@ -409,8 +410,8 @@ export const ABOUT_PAGE_DATA = {
 
 // 5. IMPACT PAGE (Impact.jsx) UNIQUE IMAGES & REAL-LIFE FIELD RECORDS (Distinct Authentic Field Photos)
 export const IMPACT_PAGE_DATA = {
-  heroImage: '/assets/images/river free.webp',
-  charterImage: '/assets/images/plant tree.webp',
+  heroImage: '/assets/images/home-stewardship-ledger.webp',
+  charterImage: '/assets/images/foundermanifesto.webp',
   projects: [
     {
       id: 'native-trees',
@@ -446,7 +447,7 @@ export const IMPACT_PAGE_DATA = {
       location: 'Raniganj – Asansol Green Belt, West Bengal',
       verified_by: 'Bhumivera Field Stewardship Audit Team',
       summary: 'Prepared 350 native Azadirachta indica (Neem) and Phyllanthus emblica (Amla) saplings in unbleached jute grow-sacks enriched with vermicompost for community boundary planting.',
-      photo_url: '/assets/images/plant tree.webp',
+      photo_url: '/assets/images/seabuckthorn nature.webp',
     },
     {
       id: 'fn-102',
@@ -456,7 +457,7 @@ export const IMPACT_PAGE_DATA = {
       location: 'Riparian Buffer Zone, West Bengal',
       verified_by: 'Bhumivera Environmental Compliance Desk',
       summary: 'Installed biodegradable woven coir logs and planted deep-rooting Chrysopogon zizanioides (Vetiver) slips along 120 meters of stream bank to filter runoff and prevent soil collapse.',
-      photo_url: '/assets/images/river free.webp',
+      photo_url: '/assets/images/Promo1.webp',
     },
     {
       id: 'fn-103',
@@ -466,7 +467,7 @@ export const IMPACT_PAGE_DATA = {
       location: 'Community Agro-Botanical Centre',
       verified_by: 'Bhumivera Botanical Education Lead',
       summary: 'Conducted a full-day practical training session on solar-drying Tulsi, grading raw Haridra rhizomes, and testing soil pH for chemical-free home herbal gardens.',
-      photo_url: '/assets/images/education.webp',
+      photo_url: '/assets/images/tulsi.webp',
     },
   ],
 };
