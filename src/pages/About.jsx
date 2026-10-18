@@ -154,7 +154,7 @@ export default function About() {
             </h2>
             <div className="gold-hairline my-4 max-w-xs" />
             <p className="text-xs sm:text-sm leading-6 text-[#cbd5e1]">
-              Whether you are checking a bottle’s serial number on E-Warranty, comparing INCI concentrations on the Somatic Label Registry, or reviewing our public environmental impact ledger, every Bhumivera claim is backed by a primary record.
+              Whether you are checking a bottle’s serial number on our Product Verification page, comparing INCI concentrations on the Somatic Label Registry, or reviewing our public environmental impact ledger, every Bhumivera claim is backed by a primary record.
             </p>
             <div className="pt-2 flex flex-wrap gap-3">
               <Link to="/shop" className="btn-gold-luxury rounded-xl px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg">

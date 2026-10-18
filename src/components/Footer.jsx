@@ -92,7 +92,7 @@ export default function Footer() {
                 to="/verify"
                 className="btn-silver-luxury inline-flex min-h-12 items-center gap-2.5 rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-wider"
               >
-                <ShieldCheck size={16} className="text-[#D4AF37]" /> Verify Bottle Serial
+                <ShieldCheck size={16} className="text-[#D4AF37]" /> Product Verification
               </Link>
 
               <Link
@@ -166,7 +166,7 @@ export default function Footer() {
               <li>
                 <Link to="/verify" className="inline-flex items-center gap-1.5 font-semibold text-[#D4AF37] transition-colors hover:text-white">
                   <ShieldCheck size={14} className="shrink-0" />
-                  <span>Verify Bottle Serial &amp; Purity</span>
+                  <span>Verify Product Serial</span>
                 </Link>
               </li>
               <li>

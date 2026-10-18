@@ -13,7 +13,7 @@ const ROUTE_LABELS = {
   orders: 'Orders',
   about: 'About',
   contact: 'Contact',
-  verify: 'E-Warranty',
+  verify: 'Product Verification',
   provenance: 'Provenance',
   'provenance-engine': 'Provenance',
   'purchase-protection': 'Custody',

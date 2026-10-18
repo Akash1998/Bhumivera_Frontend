@@ -45,7 +45,7 @@ const SECTIONS = [
   { id: 'orders', code: 'PART II', label: 'Orders, Sanitary Virgin Custody & Concierge Care', count: 12 },
   { id: 'antifraud', code: 'PART III', label: 'Anti-Scam, 360° Unboxing & Chargeback Shield', count: 10 },
   { id: 'referrals', code: 'PART IV', label: 'Wallet, Loyalty, Spin & Referral Governance', count: 10 },
-  { id: 'warranty_affiliate', code: 'PART V', label: 'E-Warranty, Authenticity, Affiliate & B2B Terms', count: 10 },
+  { id: 'warranty_affiliate', code: 'PART V', label: 'Product Verification, Affiliate & B2B Terms', count: 10 },
   { id: 'privacy', code: 'PART VI', label: 'Privacy Notice & DPDP Act 2023 Governance', count: 11 },
   { id: 'ip_disclaimer', code: 'PART VII', label: 'Medical Disclaimer, IP & Liability Cap', count: 10 },
   { id: 'grievance', code: 'PART VIII', label: 'Arbitration, Jurisdiction & Grievance Officer', count: 9 },
@@ -297,7 +297,7 @@ const LEGAL_CLAUSES = {
       num: '2.10',
       title: '10. Product warranty & serial registration scope',
       body: [
-        'Where an electronic appliance, accessory, or serialized Bhumivera item carries a stated warranty period, warranty coverage is governed strictly by the duration and terms displayed on that product’s page and certificate. Checking or registering a serial number on the E-Warranty portal confirms matching database records; it does not extend coverage to consumable cosmetic liquids or override the 48-hour unboxing verification rule.',
+        'Where a product carries a stated warranty period, coverage is governed by the duration and terms displayed on its product page. The product verification page only checks whether a serial number matches an issued record; it does not activate or extend warranty coverage or override the 48-hour unboxing verification rule.',
       ],
     },
     {
@@ -468,9 +468,9 @@ const LEGAL_CLAUSES = {
   warranty_affiliate: [
     {
       num: '5.1',
-      title: '1. Product serial number & E-Warranty registration scope',
+      title: '1. Product serial number verification',
       body: [
-        'Our E-Warranty and Serial Verification portal (`/ewarranty` and `/verify-product`) checks whether an entered serial number matches an issued record in Bhumivera’s database and records customer registration details for eligible serialized products.',
+        'The Product Verification page checks whether an entered serial number matches an issued record in Bhumivera’s database. It is a record lookup only and does not collect customer registration details or activate product coverage.',
       ],
     },
     {

@@ -442,7 +442,7 @@ export default function Navbar() {
                 <div className="space-y-1">
                   {[
                     { to: '/shop', label: 'Shop All Formulations', icon: Compass, badge: 'Catalog' },
-                    { to: '/verify', label: 'Verify Bottle Serial', icon: ShieldCheck, badge: 'Live Assay', highlight: true },
+                    { to: '/verify', label: 'Product Verification', icon: ShieldCheck, badge: 'Serial Check', highlight: true },
                     { to: '/about', label: 'Our Story & Heritage', icon: Leaf },
                     { to: '/science', label: 'Botanical Science & pH 5.5', icon: FlaskConical },
                     { to: '/order-tracking', label: 'Track An Order', icon: Truck },

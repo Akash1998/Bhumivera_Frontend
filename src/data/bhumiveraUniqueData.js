@@ -103,7 +103,7 @@ export const FOOTER_PHOTO_STORIES = [
 export const HOME_VISUAL_ASSETS = {
   heroPrimary: '/assets/images/seabuckthorn nature.webp',
   heroSecondary: '/assets/images/seabuckthorn.webp',
-  stewardshipBanner: '/assets/images/plant tree.webp',
+  stewardshipBanner: '/assets/images/home-stewardship-ledger.webp',
   activeSynergyBanner: '/assets/images/aloeverascience.webp',
   ingredients: [
     {
@@ -763,7 +763,7 @@ export const PROVENANCE_PAGE_DATA = {
   ],
 };
 
-// 9. E-WARRANTY & AUTHENTICITY REGISTRY (EWarranty.jsx) (Transcribed Bottle Active Data & Artisanal Serials)
+// 9. PRODUCT SERIAL VERIFICATION REFERENCE DATA
 export const EWARRANTY_PAGE_DATA = {
   heroImage: '/assets/images/foundermanifesto.webp',
   sealMacroImage: '/assets/images/charcoalFace wash.webp',
@@ -784,7 +784,6 @@ export const EWARRANTY_PAGE_DATA = {
       spectro_purity: '99.8% Active Bio-Carbon Adsorption',
       heavy_metals: 'Not Detected (0.0 ppm Lead, Mercury, Arsenic)',
       microbial_count: '0 CFU/g (Passed USP 51/61 Cleanroom Standard)',
-      master_herbalist: 'Dr. K. Mukherjee, Chief Herbal Formulator',
       dispatch_hub: 'West Bengal Formulation Atelier · Bay 02',
       base_warranty_months: 12,
       status: 'unregistered',
@@ -819,7 +818,6 @@ export const EWARRANTY_PAGE_DATA = {
       spectro_purity: '100% Natural Sapindus mukorossi Saponin Cleansing',
       heavy_metals: 'Not Detected (0.0 ppm)',
       microbial_count: '0 CFU/g (Passed USP Cleanroom Standard)',
-      master_herbalist: 'A. Sengupta, Master Ayurvedic Blender',
       dispatch_hub: 'West Bengal Formulation Atelier · Bay 01',
       base_warranty_months: 12,
       status: 'unregistered',
@@ -853,7 +851,6 @@ export const EWARRANTY_PAGE_DATA = {
       spectro_purity: '99.4% Bioactive Palmitoleic Acid Retention',
       heavy_metals: 'Not Detected (0.0 ppm)',
       microbial_count: '0 CFU/g (Cleanroom Verified)',
-      master_herbalist: 'Dr. K. Mukherjee, Chief Herbal Formulator',
       dispatch_hub: 'West Bengal Fulfilment Hub #01',
       base_warranty_months: 12,
       status: 'unregistered',
@@ -885,7 +882,6 @@ export const EWARRANTY_PAGE_DATA = {
       spectro_purity: 'ISO 3632 Grade-A Saffron (Crocin > 220)',
       heavy_metals: 'Not Detected (0.0 ppm)',
       microbial_count: '0 CFU/g (Anhydrous Sterile Oil)',
-      master_herbalist: 'A. Sengupta, Master Ayurvedic Blender',
       dispatch_hub: 'West Bengal Fulfilment Hub #02',
       base_warranty_months: 12,
       status: 'registered',
@@ -1190,7 +1186,7 @@ export const LEGAL_SECTION_PROFILES = {
     slug: 'warranty-affiliate-b2b',
     code: 'PART V',
     title: 'Warranty, Affiliate & B2B Partner Terms',
-    subtitle: 'E-Warranty Serial Authentication, ASCI Influencer Disclosures & Written Wholesale Contracts',
+    subtitle: 'Product Serial Verification, ASCI Influencer Disclosures & Written Wholesale Contracts',
     statuteBadge: 'ASCI Guidelines · Trade Marks Act 1999 · CPA 2019',
     heroImage: '/assets/images/Promo4.webp',
     keyMetrics: [

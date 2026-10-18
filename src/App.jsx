@@ -124,7 +124,7 @@ const SupportPortal = lazyWithRetry(() => import("./pages/SupportPortal.jsx"));
 const SuperAdminSupport = lazyWithRetry(() => import("./pages/SuperAdminSupport.jsx"));
 const AdminForgotPassword = lazyWithRetry(() => import("./pages/admin/AdminForgotPassword.jsx"));
 const CheckoutPage = lazyWithRetry(() => import("./pages/Checkout.jsx"));
-const EWarranty = lazyWithRetry(() => import("./pages/EWarranty.jsx"));
+const ProductVerification = lazyWithRetry(() => import("./pages/ProductVerification.jsx"));
 const SellOnBhumivera = lazyWithRetry(() => import("./pages/SellOnBhumivera.jsx"));
 
 const PageLoader = () => (
@@ -357,12 +357,12 @@ function AppContent() {
             <Route path="/earn-from-home" element={<Navigate to="/contact" replace />} />
             <Route path="/mpgebusiness" element={<Navigate to="/contact" replace />} />
 
-            {/* Authenticity & E-Warranty */}
-            <Route path="/verify" element={<EWarranty />} />
-            <Route path="/genuinity" element={<EWarranty />} />
-            <Route path="/ewarranty" element={<EWarranty />} />
-            <Route path="/verify-product" element={<EWarranty />} />
-            <Route path="/warranty" element={<EWarranty />} />
+            {/* Product verification */}
+            <Route path="/verify" element={<ProductVerification />} />
+            <Route path="/genuinity" element={<ProductVerification />} />
+            <Route path="/ewarranty" element={<ProductVerification />} />
+            <Route path="/verify-product" element={<ProductVerification />} />
+            <Route path="/warranty" element={<ProductVerification />} />
 
             {/* Tools & Tracking */}
             <Route path="/order-tracking" element={<OrderTracking />} />

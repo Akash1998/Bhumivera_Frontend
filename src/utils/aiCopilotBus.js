@@ -80,9 +80,9 @@ export const COMPLETE_SITE_NAVIGATION_DIRECTORY = [
   {
     id: 'ewarranty',
     category: 'Authenticity & Science',
-    title: 'E-Warranty & Serial Check (/ewarranty)',
-    path: '/ewarranty',
-    description: 'Verify your product serial hash and activate your digital E-Warranty certificate.',
+    title: 'Product Serial Verification (/verify)',
+    path: '/verify',
+    description: 'Check whether a product serial number matches a Bhumivera product record.',
     badge: 'Authenticity',
   },
   {
