@@ -10,7 +10,6 @@ import {
   AlertTriangle,
   TrendingUp,
   CheckCircle2,
-  Droplets,
   Heart,
   Share2,
   Download,
@@ -19,36 +18,40 @@ import {
   Award,
   Sparkles,
   ExternalLink,
+  Users,
+  HandHeart,
 } from 'lucide-react';
 import SEO from '../components/SEO';
 import {
   IMPACT_PROJECTS,
   findProjectById,
   LEGAL_CHARTER_FRAMEWORK,
-  INDIA_SCARCITY_OVERVIEW,
 } from '../data/impactDeepDiveData';
 
 const formatInr = num => `₹${Number(num || 0).toLocaleString('en-IN')}`;
 
 export default function ImpactProjectDetail() {
   const { imageId, projectId } = useParams();
-  const currentId = projectId || imageId || 'pampore-saffron';
+  const currentId = projectId || imageId || 'hungry-feeding';
   const project = findProjectById(currentId);
 
-  // Pledge modal & Certificate state
+  // Pledge / Volunteer modal & Certificate state
   const [isPledgeModalOpen, setIsPledgeModalOpen] = useState(false);
+  const [modalMode, setModalMode] = useState('sponsor'); // 'sponsor' or 'volunteer'
   const [selectedUnit, setSelectedUnit] = useState(null);
   const [customAmount, setCustomAmount] = useState('');
   const [patronName, setPatronName] = useState('');
   const [patronEmail, setPatronEmail] = useState('');
+  const [patronPhone, setPatronPhone] = useState('');
+  const [volunteerRole, setVolunteerRole] = useState('Ground Volunteer (Food / Planting)');
   const [dedicationMessage, setDedicationMessage] = useState('');
   const [certificateData, setCertificateData] = useState(null);
   const [pledgeSuccess, setPledgeSuccess] = useState(false);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // Dynamic local storage backer simulation / real persistence
-  const [livePledged, setLivePledged] = useState(project.funding.pledgedAmount);
-  const [liveBackers, setLiveBackers] = useState(project.funding.backersCount);
+  // Strict honest numbers: Starts from 0. Only updates when the current patron makes a pledge.
+  const [livePledged, setLivePledged] = useState(0);
+  const [liveBackers, setLiveBackers] = useState(0);
 
   useEffect(() => {
     try {
@@ -58,60 +61,76 @@ export default function ImpactProjectDetail() {
     } catch {
       // ignore
     }
-    const savedPledgesKey = `bv_pledges_${project.id}`;
+
+    const savedPledgesKey = `bv_real_pledges_${project.id}`;
     try {
       const stored = localStorage.getItem(savedPledgesKey);
       if (stored) {
         const parsed = JSON.parse(stored);
-        setLivePledged(project.funding.pledgedAmount + (parsed.totalPledged || 0));
-        setLiveBackers(project.funding.backersCount + (parsed.count || 0));
+        setLivePledged(parsed.totalPledged || 0);
+        setLiveBackers(parsed.count || 0);
       } else {
-        setLivePledged(project.funding.pledgedAmount);
-        setLiveBackers(project.funding.backersCount);
+        setLivePledged(0);
+        setLiveBackers(0);
       }
     } catch {
-      // ignore storage error
+      setLivePledged(0);
+      setLiveBackers(0);
     }
-    // Set default package
+
     if (project.funding?.unitPackages?.length > 0) {
-      setSelectedUnit(project.funding.unitPackages[1] || project.funding.unitPackages[0]);
+      setSelectedUnit(project.funding.unitPackages[0]);
     }
   }, [project.id]);
 
   const handlePledgeSubmit = e => {
     e.preventDefault();
-    const finalAmount = customAmount ? Number(customAmount) : selectedUnit ? selectedUnit.amount : 500;
-    if (!patronName.trim() || !patronEmail.trim() || finalAmount <= 0) return;
+    if (!patronName.trim() || !patronEmail.trim()) return;
 
-    // Generate SHA-256 style unique certificate reference
+    const finalAmount =
+      modalMode === 'volunteer'
+        ? 0
+        : customAmount
+        ? Number(customAmount)
+        : selectedUnit
+        ? selectedUnit.amount
+        : 100;
+
     const timestamp = Date.now();
     const randomHex = Math.random().toString(16).substring(2, 8).toUpperCase();
     const certCode = `BV-${project.id.toUpperCase().substring(0, 4)}-${timestamp.toString(36).toUpperCase()}-${randomHex}`;
 
     const newCert = {
       code: certCode,
+      type: modalMode,
       date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
       name: patronName.trim(),
       amount: finalAmount,
+      volunteerRole: modalMode === 'volunteer' ? volunteerRole : null,
       projectTitle: project.title,
       targetYear: project.phaseYear,
-      impactEquivalence: selectedUnit?.impactEquivalence || `Direct ecological contribution to ${project.title}.`,
+      impactEquivalence:
+        modalMode === 'volunteer'
+          ? `Registered Ground Volunteer · ${volunteerRole}`
+          : selectedUnit?.impactEquivalence || `Direct grassroots support for ${project.title}.`,
       dedication: dedicationMessage.trim(),
       location: project.location,
     };
 
     // Save in localStorage
-    const savedPledgesKey = `bv_pledges_${project.id}`;
-    try {
-      const stored = localStorage.getItem(savedPledgesKey);
-      const parsed = stored ? JSON.parse(stored) : { totalPledged: 0, count: 0 };
-      parsed.totalPledged += finalAmount;
-      parsed.count += 1;
-      localStorage.setItem(savedPledgesKey, JSON.stringify(parsed));
-      setLivePledged(project.funding.pledgedAmount + parsed.totalPledged);
-      setLiveBackers(project.funding.backersCount + parsed.count);
-    } catch {
-      // ignore
+    if (finalAmount > 0) {
+      const savedPledgesKey = `bv_real_pledges_${project.id}`;
+      try {
+        const stored = localStorage.getItem(savedPledgesKey);
+        const parsed = stored ? JSON.parse(stored) : { totalPledged: 0, count: 0 };
+        parsed.totalPledged += finalAmount;
+        parsed.count += 1;
+        localStorage.setItem(savedPledgesKey, JSON.stringify(parsed));
+        setLivePledged(parsed.totalPledged);
+        setLiveBackers(parsed.count);
+      } catch {
+        // ignore
+      }
     }
 
     setCertificateData(newCert);
@@ -122,7 +141,7 @@ export default function ImpactProjectDetail() {
     if (navigator.share) {
       navigator
         .share({
-          title: `${project.title} | Bhumivera 2027 Ecological Dossier`,
+          title: `${project.title} | Bhumivera Grassroots Dossier`,
           text: project.tagline,
           url: window.location.href,
         })
@@ -144,7 +163,7 @@ export default function ImpactProjectDetail() {
   return (
     <main className="min-h-screen bg-[#070a0e] text-[#e2e8f0] pb-24 font-sans selection:bg-[#d4af37]/30 selection:text-white">
       <SEO
-        title={`${project.title} | Bhumivera 2027 Ecological Research Dossier`}
+        title={`${project.title} | Bhumivera Community & Impact Dossier`}
         description={project.tagline}
         route={`/impact/${project.slug}`}
       />
@@ -189,7 +208,7 @@ export default function ImpactProjectDetail() {
                   <MapPin size={11} /> {project.location}
                 </span>
                 <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[10px] font-mono text-amber-300">
-                  <Calendar size={11} /> Target Launch: {project.targetLaunch || 'Q1 2027'}
+                  <Calendar size={11} /> Target Launch: {project.targetLaunch}
                 </span>
               </div>
 
@@ -202,7 +221,7 @@ export default function ImpactProjectDetail() {
               </p>
 
               <p className="text-xs sm:text-sm text-[#94a3b8] font-mono flex items-center gap-2">
-                <ShieldCheck size={14} className="text-[#d4af37]" /> Lead Research Desk:{' '}
+                <ShieldCheck size={14} className="text-[#d4af37]" /> Lead Community Desk:{' '}
                 <span className="text-[#cbd5e1] font-sans font-medium">{project.leadScientist}</span>
               </p>
 
@@ -210,22 +229,29 @@ export default function ImpactProjectDetail() {
               <div className="pt-2 flex flex-wrap items-center gap-4">
                 <button
                   type="button"
-                  onClick={() => setIsPledgeModalOpen(true)}
-                  className="btn-gold-luxury inline-flex items-center gap-2 rounded-xl px-7 py-3.5 text-xs font-bold uppercase tracking-widest text-white shadow-2xl hover:scale-[1.02] transition-transform"
+                  onClick={() => {
+                    setModalMode('volunteer');
+                    setIsPledgeModalOpen(true);
+                  }}
+                  className="btn-gold-luxury inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-xs font-bold uppercase tracking-widest text-white shadow-2xl hover:scale-[1.02] transition-transform"
                 >
-                  <Heart size={15} className="text-rose-400" /> Co-Sponsor This Corridor
+                  <HandHeart size={15} className="text-emerald-300" /> Join as a Volunteer
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setModalMode('sponsor');
+                    setIsPledgeModalOpen(true);
+                  }}
+                  className="btn-silver-luxury inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-xs font-semibold uppercase tracking-widest text-[#cbd5e1] hover:text-white transition-colors"
+                >
+                  <Heart size={14} className="text-rose-400" /> Co-Sponsor Materials
                 </button>
                 <a
                   href="#problem-crisis"
-                  className="btn-silver-luxury inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-xs font-semibold uppercase tracking-widest text-[#cbd5e1] hover:text-white transition-colors"
-                >
-                  Inspect Scarcity Data <TrendingUp size={14} />
-                </a>
-                <a
-                  href="#legal-rules"
                   className="inline-flex items-center gap-1.5 text-xs font-mono text-[#fce096] hover:underline"
                 >
-                  <Scale size={13} /> Indian Legal Charter
+                  Inspect Ground Scarcity <TrendingUp size={13} />
                 </a>
               </div>
             </div>
@@ -241,9 +267,9 @@ export default function ImpactProjectDetail() {
                 <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-[#070a0e] via-transparent to-transparent opacity-60" />
                 <div className="absolute bottom-4 left-4 right-4 flex items-center justify-between text-[11px] font-mono text-[#fce096] bg-[#070a0e]/85 backdrop-blur-md px-3.5 py-2 rounded-xl border border-[#d4af37]/30">
                   <span className="flex items-center gap-1.5">
-                    <Sparkles size={13} className="text-[#d4af37]" /> Official Field Poster #0{project.posterId?.slice(-1) || '1'}
+                    <Sparkles size={13} className="text-[#d4af37]" /> Authentic Field Record
                   </span>
-                  <span className="text-emerald-400 font-bold">2027 Corridor</span>
+                  <span className="text-emerald-400 font-bold">{project.phaseYear.split('·')[0]}</span>
                 </div>
               </div>
             </div>
@@ -251,23 +277,23 @@ export default function ImpactProjectDetail() {
         </div>
       </section>
 
-      {/* 2. REAL-TIME FUNDING & CO-SPONSORSHIP PROGRESS BAR */}
+      {/* 2. REAL-TIME CLEAN PUBLIC LEDGER BAR (STARTING CLEAN AT ZERO) */}
       <section className="mx-auto max-w-7xl px-6 -mt-8 relative z-20">
         <div className="rounded-3xl border border-[#d4af37]/40 bg-gradient-to-r from-[#102219] via-[#070a0e] to-[#102219] p-6 sm:p-8 shadow-2xl">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-[#d4af37]/20">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-sub-gold text-[10px] tracking-[0.2em] uppercase text-[#fce096]">
-                  Grassroots Ecological Deployment Fund
+                  Grassroots Field Deployment Fund · Honest Clean Slate
                 </span>
                 <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[9px] font-mono text-emerald-400 border border-emerald-500/30 uppercase">
-                  100% Direct Field Flow
+                  Zero Fake Numbers
                 </span>
               </div>
               <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white">
                 {formatInr(livePledged)}{' '}
                 <span className="text-sm font-sans font-normal text-[#94a3b8]">
-                  pledged of {formatInr(project.funding.targetAmount)} target
+                  raised of modest {formatInr(project.funding.targetAmount)} target
                 </span>
               </h2>
             </div>
@@ -275,7 +301,7 @@ export default function ImpactProjectDetail() {
             <div className="flex items-center gap-6">
               <div className="text-right">
                 <div className="font-serif text-2xl font-bold text-[#fce096]">{liveBackers}</div>
-                <div className="text-[11px] font-mono text-[#94a3b8] uppercase">Nature Guardians</div>
+                <div className="text-[11px] font-mono text-[#94a3b8] uppercase">Ground Patrons</div>
               </div>
               <div className="text-right border-l border-[#d4af37]/20 pl-6">
                 <div className="font-serif text-2xl font-bold text-emerald-400">{percentFunded}%</div>
@@ -283,10 +309,13 @@ export default function ImpactProjectDetail() {
               </div>
               <button
                 type="button"
-                onClick={() => setIsPledgeModalOpen(true)}
+                onClick={() => {
+                  setModalMode('sponsor');
+                  setIsPledgeModalOpen(true);
+                }}
                 className="btn-gold-luxury rounded-xl px-5 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-xl hover:scale-105 transition-transform shrink-0"
               >
-                Pledge Now
+                Co-Sponsor
               </button>
             </div>
           </div>
@@ -300,14 +329,14 @@ export default function ImpactProjectDetail() {
               />
             </div>
             <div className="flex items-center justify-between text-[11px] font-mono text-[#94a3b8]">
-              <span>Zero administrative deductions · 100% audited field pass-through</span>
-              <span>Target Launch: {project.phaseYear}</span>
+              <span>Every single rupee goes directly into buying on-ground materials. Zero admin overhead.</span>
+              <span>Launch: {project.phaseYear}</span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 3. MACRO CRISIS: THE PROBLEM WE CREATED TOWARDS NATURE */}
+      {/* 3. GROUND SCARCITY: THE LOCAL REALITY WE MUST FIX */}
       <section id="problem-crisis" className="mx-auto max-w-7xl px-6 pt-16">
         <div className="rounded-3xl two-tone-card border border-rose-900/30 bg-[#070a0e] p-6 sm:p-10 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 -mr-16 -mt-16 h-64 w-64 rounded-full bg-rose-500/5 blur-3xl pointer-events-none" />
@@ -315,7 +344,7 @@ export default function ImpactProjectDetail() {
           <div className="flex items-center gap-2 mb-3">
             <AlertTriangle size={18} className="text-rose-400" />
             <span className="font-sub-gold text-[10px] tracking-[0.25em] uppercase text-rose-300">
-              Ecological Crisis &amp; Historical Scarcity Dossier
+              Grassroots Scarcity &amp; Ground Reality Dossier
             </span>
           </div>
 
@@ -341,10 +370,10 @@ export default function ImpactProjectDetail() {
             ))}
           </div>
 
-          {/* Key Contributing Human Factors */}
+          {/* Key Human Factors */}
           <div className="mt-8 rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/70 p-6">
             <h3 className="font-serif text-base sm:text-lg font-bold text-white mb-4 flex items-center gap-2">
-              <span className="text-rose-400">●</span> Direct Human Degradation Factors We Must Undo:
+              <span className="text-rose-400">●</span> Key Ground Realities We Are Addressing:
             </h3>
             <ul className="space-y-2.5 text-xs sm:text-sm text-[#cbd5e1]">
               {project.problemDossier.keyFactors.map((factor, idx) => (
@@ -358,12 +387,12 @@ export default function ImpactProjectDetail() {
         </div>
       </section>
 
-      {/* 4. THE DYSTOPIAN FUTURE: WHAT HAPPENS WITHOUT THIS PROJECT */}
+      {/* 4. WHAT HAPPENS WITHOUT ACTION */}
       <section className="mx-auto max-w-7xl px-6 pt-12">
         <div className="rounded-3xl border border-amber-900/40 bg-gradient-to-br from-[#18110b] via-[#070a0e] to-[#070a0e] p-6 sm:p-10 shadow-2xl">
           <div className="flex items-center gap-2 mb-2">
             <span className="font-sub-gold text-[10px] tracking-[0.25em] uppercase text-amber-300">
-              The Cost of Inaction · Future Timeline
+              The Cost of Inaction
             </span>
           </div>
           <h2 className="font-serif text-2xl sm:text-3xl text-white">
@@ -389,7 +418,7 @@ export default function ImpactProjectDetail() {
         </div>
       </section>
 
-      {/* 5. THE BHUMIVERA 2027 SOLUTION BLUEPRINT */}
+      {/* 5. THE PRACTICAL GROUND BLUEPRINT */}
       <section className="mx-auto max-w-7xl px-6 pt-16">
         <div className="rounded-3xl two-tone-card border border-emerald-500/30 bg-[#070a0e] p-6 sm:p-10 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 -mr-20 -mt-20 h-72 w-72 rounded-full bg-emerald-500/10 blur-3xl pointer-events-none" />
@@ -397,7 +426,7 @@ export default function ImpactProjectDetail() {
           <div className="flex items-center gap-2 mb-2">
             <Leaf size={16} className="text-emerald-400" />
             <span className="font-sub-gold text-[10px] tracking-[0.25em] uppercase text-emerald-400">
-              The 2027 Scientific Restoration Blueprint
+              Practical On-Ground Action Blueprint
             </span>
           </div>
 
@@ -428,18 +457,18 @@ export default function ImpactProjectDetail() {
         </div>
       </section>
 
-      {/* 6. QUANTIFIABLE IMPACT & PERCENTAGE DATA COLUMNS */}
+      {/* 6. QUANTIFIABLE IMPACT DATA COLUMNS */}
       <section className="mx-auto max-w-7xl px-6 pt-16">
         <div className="rounded-3xl border border-[#d4af37]/35 bg-gradient-to-b from-[#0b1410] to-[#070a0e] p-6 sm:p-10 shadow-2xl">
           <div className="text-center max-w-3xl mx-auto mb-10">
             <span className="font-sub-gold text-[10px] tracking-[0.25em] block uppercase text-[#fce096] mb-2">
-              Verifiable Ecological Transformation
+              Measurable Local Change
             </span>
             <h2 className="font-serif text-2xl sm:text-4xl text-white">
-              Quantifiable Impact: Before vs 2027 Projections
+              Quantifiable Impact: Before vs After
             </h2>
             <p className="mt-2 text-xs sm:text-sm text-[#94a3b8]">
-              Measurable, percentage-backed benchmarks calibrated with regional agronomic and forestry institutions.
+              Realistic, ground-level outcomes that directly improve lives and nature in our local region.
             </p>
           </div>
 
@@ -459,13 +488,13 @@ export default function ImpactProjectDetail() {
                 <div className="grid grid-cols-2 gap-3 pt-2">
                   <div className="rounded-xl border border-rose-500/20 bg-rose-950/20 p-3">
                     <span className="block text-[10px] font-mono text-rose-300 uppercase tracking-wider">
-                      Current Crisis Baseline
+                      Current Baseline
                     </span>
                     <span className="font-serif text-lg font-bold text-white mt-1 block">{col.before}</span>
                   </div>
                   <div className="rounded-xl border border-emerald-500/30 bg-emerald-950/20 p-3">
                     <span className="block text-[10px] font-mono text-emerald-300 uppercase tracking-wider">
-                      2027 Bhumivera Target
+                      Bhumivera Target
                     </span>
                     <span className="font-serif text-lg font-bold text-[#fce096] mt-1 block">{col.after2027}</span>
                   </div>
@@ -482,7 +511,7 @@ export default function ImpactProjectDetail() {
           {project.academicCitations?.length > 0 && (
             <div className="mt-8 rounded-2xl border border-[#d4af37]/15 bg-[#070a0e]/60 p-5">
               <span className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8] block mb-2">
-                Scientific References &amp; Field Studies
+                Field References &amp; Local Documentation
               </span>
               <ul className="space-y-1.5 text-xs text-[#cbd5e1] font-mono">
                 {project.academicCitations.map((cite, i) => (
@@ -497,29 +526,30 @@ export default function ImpactProjectDetail() {
         </div>
       </section>
 
-      {/* 7. TANGIBLE UNIT SPONSORSHIP PACKAGES */}
+      {/* 7. PRACTICAL LOW-COST UNIT SPONSORSHIP PACKAGES */}
       <section id="funding-packages" className="mx-auto max-w-7xl px-6 pt-16">
         <div className="text-center max-w-3xl mx-auto mb-10">
           <span className="font-sub-gold text-[10px] tracking-[0.25em] block uppercase text-[#fce096] mb-2">
-            Voluntary Ecological Co-Sponsorship
+            Grassroots Co-Sponsorship Options
           </span>
           <h2 className="font-serif text-2xl sm:text-4xl text-white">
-            Choose What You Would Like To Restore
+            Simple, Transparent, Low-Budget Units
           </h2>
           <p className="mt-2 text-xs sm:text-sm text-[#94a3b8]">
-            Every rupee is dedicated to direct on-ground materials (jute bags, mycorrhizae, coir logs, apiaries). Zero administrative deduction.
+            Even ₹100 directly feeds 3 hungry people or plants 10 deep-rooting vetiver grass slips. 100% of funds go to physical ingredients and materials.
           </p>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {project.funding.unitPackages.map((pkg, i) => {
-            const isSelected = selectedUnit?.amount === pkg.amount && !customAmount;
+            const isSelected = selectedUnit?.amount === pkg.amount && !customAmount && modalMode === 'sponsor';
             return (
               <div
                 key={i}
                 onClick={() => {
                   setSelectedUnit(pkg);
                   setCustomAmount('');
+                  setModalMode('sponsor');
                   setIsPledgeModalOpen(true);
                 }}
                 className={`cursor-pointer rounded-2xl p-6 border transition-all duration-300 relative flex flex-col justify-between ${
@@ -538,7 +568,7 @@ export default function ImpactProjectDetail() {
                 </div>
 
                 <div className="mt-6 pt-4 border-t border-[#d4af37]/15 flex items-center justify-between text-xs font-bold text-white">
-                  <span>Co-Sponsor Package</span>
+                  <span>Co-Sponsor This Unit</span>
                   <ArrowRight size={14} className="text-[#d4af37]" />
                 </div>
               </div>
@@ -546,16 +576,27 @@ export default function ImpactProjectDetail() {
           })}
         </div>
 
-        <div className="mt-8 text-center">
+        <div className="mt-8 flex flex-wrap justify-center gap-4">
+          <button
+            type="button"
+            onClick={() => {
+              setModalMode('volunteer');
+              setIsPledgeModalOpen(true);
+            }}
+            className="btn-gold-luxury rounded-xl px-7 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-xl hover:scale-105 transition-transform"
+          >
+            <HandHeart size={14} className="inline mr-1 text-emerald-300" /> Sign Up to Volunteer Hands-On
+          </button>
           <button
             type="button"
             onClick={() => {
               setSelectedUnit(null);
+              setModalMode('sponsor');
               setIsPledgeModalOpen(true);
             }}
             className="btn-silver-luxury rounded-xl px-6 py-3 text-xs font-mono uppercase tracking-wider text-[#cbd5e1] hover:text-white"
           >
-            Or Sponsor A Custom Ecological Amount
+            Sponsor Custom Amount
           </button>
         </div>
       </section>
@@ -585,9 +626,7 @@ export default function ImpactProjectDetail() {
                 key={rule.id}
                 className="rounded-2xl border border-[#d4af37]/20 bg-[#102219]/30 p-6 space-y-3"
               >
-                <div className="flex items-center justify-between">
-                  <h3 className="font-serif text-base font-bold text-white">{rule.title}</h3>
-                </div>
+                <h3 className="font-serif text-base font-bold text-white">{rule.title}</h3>
                 <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-xs font-semibold text-amber-200">
                   {rule.shortAnswer}
                 </div>
@@ -604,10 +643,10 @@ export default function ImpactProjectDetail() {
             <div className="space-y-1">
               <h4 className="font-serif text-sm font-bold text-white flex items-center gap-2">
                 <ShieldCheck size={16} className="text-emerald-400" />
-                The 2027 Bhumivera Earth Foundation Commitment
+                The 2028 Bhumivera Earth Foundation Commitment
               </h4>
               <p className="text-xs text-[#cbd5e1]">
-                In 2027, our independent Section 8 not-for-profit company will offer direct 80G tax deductions for individual donors and receive corporate CSR-1 contributions.
+                By 2028, our independent Section 8 not-for-profit company will offer direct 80G tax deductions for individual donors and receive corporate CSR-1 contributions.
               </p>
             </div>
             <Link
@@ -620,20 +659,20 @@ export default function ImpactProjectDetail() {
         </div>
       </section>
 
-      {/* 9. EXPLORE OTHER 2027 ENVIRONMENTAL CORRIDORS */}
+      {/* 9. EXPLORE OTHER CORRIDORS */}
       <section className="mx-auto max-w-7xl px-6 pt-16">
         <div className="flex items-center justify-between mb-8 pb-4 border-b border-[#d4af37]/20">
           <div>
             <span className="font-sub-gold text-[10px] tracking-[0.2em] uppercase text-[#fce096]">
-              2027 Ecological Roadmap
+              Grassroots Action Roadmap
             </span>
-            <h2 className="font-serif text-2xl sm:text-3xl text-white">Explore Other Corridors</h2>
+            <h2 className="font-serif text-2xl sm:text-3xl text-white">Explore Other Community Drives</h2>
           </div>
           <Link
-            to="/impact#project-posters"
+            to="/impact#ledger"
             className="text-xs font-mono text-[#fce096] hover:underline flex items-center gap-1.5"
           >
-            All 6 Megaprojects <ArrowRight size={13} />
+            All Initiatives <ArrowRight size={13} />
           </Link>
         </div>
 
@@ -654,7 +693,7 @@ export default function ImpactProjectDetail() {
               </div>
               <div className="p-5 space-y-2">
                 <span className="rounded-full bg-emerald-500/15 px-2 py-0.5 text-[9px] font-mono uppercase text-emerald-400">
-                  {rel.phaseYear}
+                  {rel.statusBadge}
                 </span>
                 <h3 className="font-serif text-base font-bold text-white group-hover:text-[#fce096] transition-colors line-clamp-1">
                   {rel.title}
@@ -666,7 +705,7 @@ export default function ImpactProjectDetail() {
         </div>
       </section>
 
-      {/* INTERACTIVE PLEDGE & CERTIFICATE MODAL */}
+      {/* INTERACTIVE PLEDGE / VOLUNTEER & CERTIFICATE MODAL */}
       {isPledgeModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
           <div className="relative w-full max-w-2xl rounded-3xl border border-[#d4af37]/50 bg-[#070a0e] p-6 sm:p-8 shadow-2xl my-8">
@@ -685,124 +724,215 @@ export default function ImpactProjectDetail() {
             {!pledgeSuccess ? (
               <form onSubmit={handlePledgeSubmit} className="space-y-6">
                 <div>
-                  <div className="inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/30 bg-[#102219] px-3 py-1 text-[10px] font-mono text-[#fce096] uppercase mb-2">
-                    <Heart size={12} className="text-rose-400" /> Voluntary Ecological Co-Sponsorship
+                  <div className="flex items-center gap-2 mb-2">
+                    <button
+                      type="button"
+                      onClick={() => setModalMode('volunteer')}
+                      className={`px-3 py-1 rounded-full text-[11px] font-mono uppercase transition-colors ${
+                        modalMode === 'volunteer'
+                          ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-bold'
+                          : 'text-[#94a3b8] hover:text-white'
+                      }`}
+                    >
+                      <HandHeart size={12} className="inline mr-1" /> Volunteer Hands-On (₹0)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setModalMode('sponsor')}
+                      className={`px-3 py-1 rounded-full text-[11px] font-mono uppercase transition-colors ${
+                        modalMode === 'sponsor'
+                          ? 'bg-[#d4af37]/20 text-[#fce096] border border-[#d4af37]/40 font-bold'
+                          : 'text-[#94a3b8] hover:text-white'
+                      }`}
+                    >
+                      <Heart size={12} className="inline mr-1 text-rose-400" /> Co-Sponsor Materials
+                    </button>
                   </div>
+
                   <h3 className="font-serif text-2xl font-bold text-white">
-                    Pledge Support for {project.title}
+                    {modalMode === 'volunteer'
+                      ? `Sign Up to Volunteer for ${project.title}`
+                      : `Co-Sponsor Materials for ${project.title}`}
                   </h3>
                   <p className="mt-1 text-xs text-[#94a3b8]">
-                    Your voluntary pledge is ring-fenced 100% for on-ground botanical restoration in {project.targetLaunch || '2027'}. Zero administrative cut.
+                    {modalMode === 'volunteer'
+                      ? 'Join 100+ local citizens taking direct action in West Bengal. Give your hands and heart.'
+                      : '100% of your voluntary co-sponsorship goes directly into buying physical materials. Zero admin cuts.'}
                   </p>
                 </div>
 
-                {/* Amount Selection */}
-                <div className="space-y-3">
-                  <label className="block text-xs font-mono uppercase tracking-wider text-[#cbd5e1]">
-                    Select or Enter Co-Sponsorship Amount:
-                  </label>
-                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
-                    {project.funding.unitPackages.map(pkg => (
-                      <button
-                        key={pkg.amount}
-                        type="button"
-                        onClick={() => {
-                          setSelectedUnit(pkg);
-                          setCustomAmount('');
-                        }}
-                        className={`rounded-xl border p-3 text-left transition-all ${
-                          selectedUnit?.amount === pkg.amount && !customAmount
-                            ? 'border-[#d4af37] bg-[#102219] text-[#fce096] shadow-md'
-                            : 'border-[#d4af37]/20 bg-[#070a0e] text-white hover:border-[#d4af37]/50'
-                        }`}
+                {/* VOLUNTEER FORM FIELDS */}
+                {modalMode === 'volunteer' ? (
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-[#cbd5e1] mb-1">
+                        Select Your Preferred Volunteer Role *
+                      </label>
+                      <select
+                        value={volunteerRole}
+                        onChange={e => setVolunteerRole(e.target.value)}
+                        className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
                       >
-                        <div className="font-serif font-bold text-base">{formatInr(pkg.amount)}</div>
-                        <div className="text-[10px] font-mono text-[#94a3b8] truncate">{pkg.tag}</div>
-                      </button>
-                    ))}
-                  </div>
+                        <option value="Ground Volunteer (Food Preparation / Distribution)">
+                          Ground Volunteer: Food Preparation, Packing &amp; Serving
+                        </option>
+                        <option value="Animal Rescuer (Feeding Rounds & Stray Bed Setup)">
+                          Animal Care: Stray Dog/Cat Feeding Rounds &amp; Bed Setup
+                        </option>
+                        <option value="Tree Planter (Riverbank Vetiver & Sapling Care)">
+                          Ecological Volunteer: Tree Planting &amp; Riverbank Cleanups
+                        </option>
+                        <option value="Logistics & Driving (Transporting Grains & Tools)">
+                          Logistics: Driving / Transporting Food &amp; Plantation Tools
+                        </option>
+                        <option value="Field Photographer & Public Ledger Auditor">
+                          Media &amp; Audit: Taking Photos &amp; Verifying Field Receipts
+                        </option>
+                      </select>
+                    </div>
 
-                  <div className="pt-2">
-                    <div className="relative">
-                      <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-serif text-sm text-[#d4af37]">₹</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-mono uppercase tracking-wider text-[#cbd5e1] mb-1">
+                          Full Name *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g., Sourav Ganguly"
+                          value={patronName}
+                          onChange={e => setPatronName(e.target.value)}
+                          className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-mono uppercase tracking-wider text-[#cbd5e1] mb-1">
+                          WhatsApp / Mobile Number *
+                        </label>
+                        <input
+                          type="tel"
+                          required
+                          placeholder="e.g., 9876543210 (For drive updates)"
+                          value={patronPhone}
+                          onChange={e => setPatronPhone(e.target.value)}
+                          className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-[#cbd5e1] mb-1">
+                        Email Address (For Volunteer Certificate) *
+                      </label>
                       <input
-                        type="number"
-                        min="50"
-                        step="50"
-                        placeholder="Or enter custom amount in INR"
-                        value={customAmount}
-                        onChange={e => {
-                          setCustomAmount(e.target.value);
-                          setSelectedUnit(null);
-                        }}
-                        className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] py-2.5 pl-8 pr-4 text-xs font-mono text-white placeholder-[#64748b] focus:border-[#d4af37] focus:outline-none"
+                        type="email"
+                        required
+                        placeholder="e.g., sourav@example.com"
+                        value={patronEmail}
+                        onChange={e => setPatronEmail(e.target.value)}
+                        className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
                       />
                     </div>
                   </div>
-                </div>
+                ) : (
+                  /* CO-SPONSOR FORM FIELDS */
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <label className="block text-xs font-mono uppercase tracking-wider text-[#cbd5e1]">
+                        Select or Enter Co-Sponsorship Amount:
+                      </label>
+                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                        {project.funding.unitPackages.map(pkg => (
+                          <button
+                            key={pkg.amount}
+                            type="button"
+                            onClick={() => {
+                              setSelectedUnit(pkg);
+                              setCustomAmount('');
+                            }}
+                            className={`rounded-xl border p-3 text-left transition-all ${
+                              selectedUnit?.amount === pkg.amount && !customAmount
+                                ? 'border-[#d4af37] bg-[#102219] text-[#fce096] shadow-md'
+                                : 'border-[#d4af37]/20 bg-[#070a0e] text-white hover:border-[#d4af37]/50'
+                            }`}
+                          >
+                            <div className="font-serif font-bold text-base">{formatInr(pkg.amount)}</div>
+                            <div className="text-[10px] font-mono text-[#94a3b8] truncate">{pkg.tag}</div>
+                          </button>
+                        ))}
+                      </div>
 
-                {/* Selected Impact Preview */}
-                <div className="rounded-xl border border-emerald-500/25 bg-emerald-950/20 p-3.5 text-xs text-[#cbd5e1] flex items-start gap-2.5">
-                  <Sparkles size={16} className="text-emerald-400 shrink-0 mt-0.5" />
-                  <div>
-                    <span className="font-bold text-white">Your Tangible Field Impact: </span>
-                    {customAmount
-                      ? `Generates verified on-ground procurement equivalent to ${formatInr(customAmount)} of saplings, biochar, or river coir.`
-                      : selectedUnit?.impactEquivalence || 'Direct ecological restoration.'}
+                      <div className="pt-2">
+                        <div className="relative">
+                          <span className="absolute left-3.5 top-1/2 -translate-y-1/2 font-serif text-sm text-[#d4af37]">₹</span>
+                          <input
+                            type="number"
+                            min="50"
+                            step="50"
+                            placeholder="Or enter custom amount in INR"
+                            value={customAmount}
+                            onChange={e => {
+                              setCustomAmount(e.target.value);
+                              setSelectedUnit(null);
+                            }}
+                            className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] py-2.5 pl-8 pr-4 text-xs font-mono text-white placeholder-[#64748b] focus:border-[#d4af37] focus:outline-none"
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs font-mono uppercase tracking-wider text-[#cbd5e1] mb-1">
+                          Full Name *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="e.g., Ananya Sharma"
+                          value={patronName}
+                          onChange={e => setPatronName(e.target.value)}
+                          className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white placeholder-[#64748b] focus:border-[#d4af37] focus:outline-none"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-xs font-mono uppercase tracking-wider text-[#cbd5e1] mb-1">
+                          Email Address (For Certificate) *
+                        </label>
+                        <input
+                          type="email"
+                          required
+                          placeholder="e.g., ananya@example.com"
+                          value={patronEmail}
+                          onChange={e => setPatronEmail(e.target.value)}
+                          className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white placeholder-[#64748b] focus:border-[#d4af37] focus:outline-none"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono uppercase tracking-wider text-[#cbd5e1] mb-1">
+                        Optional Dedication (Printed on Certificate)
+                      </label>
+                      <input
+                        type="text"
+                        maxLength={100}
+                        placeholder="e.g., In memory of my mother, or for street animals of Bengal."
+                        value={dedicationMessage}
+                        onChange={e => setDedicationMessage(e.target.value)}
+                        className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white placeholder-[#64748b] focus:border-[#d4af37] focus:outline-none"
+                      />
+                    </div>
                   </div>
-                </div>
+                )}
 
-                {/* Patron Details */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-xs font-mono uppercase tracking-wider text-[#cbd5e1] mb-1">
-                      Patron Full Name *
-                    </label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g., Ananya Sharma"
-                      value={patronName}
-                      onChange={e => setPatronName(e.target.value)}
-                      className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white placeholder-[#64748b] focus:border-[#d4af37] focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-mono uppercase tracking-wider text-[#cbd5e1] mb-1">
-                      Email Address (For Certificate) *
-                    </label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="e.g., ananya@example.com"
-                      value={patronEmail}
-                      onChange={e => setPatronEmail(e.target.value)}
-                      className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white placeholder-[#64748b] focus:border-[#d4af37] focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono uppercase tracking-wider text-[#cbd5e1] mb-1">
-                    Optional Nature Dedication (Printed on Certificate)
-                  </label>
-                  <input
-                    type="text"
-                    maxLength={100}
-                    placeholder="e.g., In honor of my grandmother, for clean rivers, or for native bees."
-                    value={dedicationMessage}
-                    onChange={e => setDedicationMessage(e.target.value)}
-                    className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white placeholder-[#64748b] focus:border-[#d4af37] focus:outline-none"
-                  />
-                </div>
-
-                {/* Legal Disclaimer Box */}
+                {/* Legal Notice */}
                 <div className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e] p-3 text-[11px] text-[#94a3b8] leading-5 space-y-1">
                   <p className="flex items-center gap-1.5 font-bold text-amber-300">
                     <Info size={13} /> Legal &amp; Fiscal Notice Under Indian Law:
                   </p>
                   <p>
-                    Bhumivera is a commercial botanical enterprise. This is a 100% voluntary ecological co-sponsorship / green pledge to procure verified botanical restoration goods. It is NOT an 80G tax-exempt charitable donation. 100% goes directly to field execution with 0% administrative deductions.
+                    Bhumivera is a commercial botanical enterprise. This is a voluntary grassroots community pledge of tangible materials / volunteer participation, NOT an 80G tax-exempt charitable donation. 100% goes directly to field execution with 0% administrative cuts.
                   </p>
                 </div>
 
@@ -818,7 +948,9 @@ export default function ImpactProjectDetail() {
                     type="submit"
                     className="btn-gold-luxury rounded-xl px-7 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-xl hover:scale-105 transition-transform"
                   >
-                    Issue Stewardship Certificate
+                    {modalMode === 'volunteer'
+                      ? 'Confirm Volunteer Registration'
+                      : 'Issue Stewardship Certificate'}
                   </button>
                 </div>
               </form>
@@ -829,10 +961,12 @@ export default function ImpactProjectDetail() {
                   <Award size={26} />
                 </div>
                 <h3 className="font-serif text-2xl sm:text-3xl font-bold text-white">
-                  Stewardship Certificate Issued
+                  {certificateData?.type === 'volunteer'
+                    ? 'Volunteer Registration Confirmed!'
+                    : 'Stewardship Certificate Issued!'}
                 </h3>
                 <p className="text-xs text-[#cbd5e1] max-w-md mx-auto">
-                  Thank you, <strong className="text-[#fce096]">{certificateData?.name}</strong>. Your co-sponsorship pledge is recorded in our verifiable ledger registry.
+                  Thank you, <strong className="text-[#fce096]">{certificateData?.name}</strong>. Your commitment is recorded in our verifiable community ledger registry.
                 </p>
 
                 {/* Styled Verifiable Certificate Frame */}
@@ -844,18 +978,20 @@ export default function ImpactProjectDetail() {
                     <div className="flex items-center gap-2">
                       <Leaf size={18} className="text-[#d4af37]" />
                       <span className="font-serif font-bold text-base tracking-widest text-white uppercase">
-                        Bhumivera Botanical Stewardship
+                        Bhumivera Grassroots Stewardship
                       </span>
                     </div>
                     <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/30">
-                      Verifiable Audit Record
+                      Verifiable Community Record
                     </span>
                   </div>
 
                   <div className="space-y-4">
                     <div>
                       <span className="text-[10px] font-mono uppercase tracking-widest text-[#94a3b8] block">
-                        Patron Certificate of Ecological Co-Sponsorship
+                        {certificateData?.type === 'volunteer'
+                          ? 'Official Volunteer Certificate'
+                          : 'Patron Certificate of Ecological Co-Sponsorship'}
                       </span>
                       <h4 className="font-serif text-2xl font-bold text-[#fce096] mt-0.5">
                         {certificateData?.name}
@@ -863,14 +999,25 @@ export default function ImpactProjectDetail() {
                     </div>
 
                     <p className="text-xs text-[#e2e8f0] leading-6">
-                      Has co-sponsored the on-ground botanical restoration of{' '}
-                      <strong className="text-white">{certificateData?.projectTitle}</strong> in the amount of{' '}
-                      <strong className="text-[#fce096]">{formatInr(certificateData?.amount)}</strong>.
+                      {certificateData?.type === 'volunteer' ? (
+                        <>
+                          Is officially enrolled as a{' '}
+                          <strong className="text-emerald-300">{certificateData?.volunteerRole}</strong> for{' '}
+                          <strong className="text-white">{certificateData?.projectTitle}</strong> in{' '}
+                          <strong className="text-[#fce096]">{certificateData?.location}</strong>.
+                        </>
+                      ) : (
+                        <>
+                          Has co-sponsored the on-ground materials for{' '}
+                          <strong className="text-white">{certificateData?.projectTitle}</strong> in the amount of{' '}
+                          <strong className="text-[#fce096]">{formatInr(certificateData?.amount)}</strong>.
+                        </>
+                      )}
                     </p>
 
                     <div className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e]/80 p-3 text-xs text-[#cbd5e1]">
                       <span className="font-mono text-[10px] uppercase text-[#94a3b8] block mb-0.5">
-                        Allocated Field Equivalency:
+                        Allocated Field Action:
                       </span>
                       <span>{certificateData?.impactEquivalence}</span>
                     </div>
@@ -883,7 +1030,7 @@ export default function ImpactProjectDetail() {
 
                     <div className="grid grid-cols-2 gap-4 pt-3 border-t border-[#d4af37]/20 text-[10px] font-mono text-[#94a3b8]">
                       <div>
-                        <span className="block uppercase">Audit Certificate ID:</span>
+                        <span className="block uppercase">Certificate ID:</span>
                         <span className="text-white font-bold">{certificateData?.code}</span>
                       </div>
                       <div className="text-right">

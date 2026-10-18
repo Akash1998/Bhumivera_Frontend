@@ -21,9 +21,9 @@ describe('ImpactProjectDetail component', () => {
     localStorage.clear();
   });
 
-  it('resolves and renders the Pampore saffron project deep-dive dossier', () => {
+  it('resolves and renders the immediate December 2026 hunger relief project', () => {
     render(
-      <MemoryRouter initialEntries={['/impact/pampore-saffron']}>
+      <MemoryRouter initialEntries={['/impact/hungry-feeding']}>
         <Routes>
           <Route path="/impact/:imageId" element={<ImpactProjectDetail />} />
         </Routes>
@@ -32,12 +32,12 @@ describe('ImpactProjectDetail component', () => {
 
     // Title & tagline
     expect(
-      screen.getByText(/Pampore Saffron Corridors & Alpine Honeybee Sanctuaries/i)
+      screen.getByText(/Warm Meal Annadaan & Hunger Relief Kitchen/i)
     ).toBeTruthy();
 
     // Problem dossier
     expect(
-      screen.getByText(/The Catastrophe We Created/i)
+      screen.getByText(/The Reality: Hunger on the Streets of Our Own Towns/i)
     ).toBeTruthy();
 
     // Legal charter section
@@ -45,11 +45,11 @@ describe('ImpactProjectDetail component', () => {
       screen.getByText(/Can An Indian Company Take Donations\? The Full Legal Truth/i)
     ).toBeTruthy();
 
-    // Verifies 2027 phase badge
-    expect(screen.getAllByText(/2027 Phase II Execution/i).length).toBeGreaterThan(0);
+    // Verifies December 2026 badge
+    expect(screen.getAllByText(/Launching December 2026/i).length).toBeGreaterThan(0);
   });
 
-  it('renders all 6 upcoming 2027 projects without error', () => {
+  it('renders all immediate and ecological projects without error', () => {
     IMPACT_PROJECTS.forEach(project => {
       const match = findProjectById(project.slug);
       expect(match).toBeDefined();
@@ -62,7 +62,7 @@ describe('ImpactProjectDetail component', () => {
 
   it('generates an official verified stewardship certificate upon pledge submission', () => {
     render(
-      <MemoryRouter initialEntries={['/impact/sacred-groves']}>
+      <MemoryRouter initialEntries={['/impact/hungry-feeding']}>
         <Routes>
           <Route path="/impact/:imageId" element={<ImpactProjectDetail />} />
         </Routes>
@@ -70,8 +70,8 @@ describe('ImpactProjectDetail component', () => {
     );
 
     // Open co-sponsorship pledge modal
-    const pledgeBtns = screen.getAllByRole('button', { name: /Co-Sponsor This Corridor/i });
-    fireEvent.click(pledgeBtns[0]);
+    const sponsorBtns = screen.getAllByRole('button', { name: /Co-Sponsor Materials/i });
+    fireEvent.click(sponsorBtns[0]);
 
     // Fill in form
     const nameInput = screen.getByPlaceholderText(/e\.g\., Ananya Sharma/i);
@@ -84,7 +84,37 @@ describe('ImpactProjectDetail component', () => {
     fireEvent.click(submitBtn);
 
     // Verify certificate screen appears with patron name
-    expect(screen.getByText(/Stewardship Certificate Issued/i)).toBeTruthy();
+    expect(screen.getByText(/Stewardship Certificate Issued!/i)).toBeTruthy();
     expect(screen.getAllByText(/Meera Iyer/i).length).toBeGreaterThan(0);
+  });
+
+  it('allows registering as a volunteer and issues a volunteer certificate', () => {
+    render(
+      <MemoryRouter initialEntries={['/impact/stray-animal-care']}>
+        <Routes>
+          <Route path="/impact/:imageId" element={<ImpactProjectDetail />} />
+        </Routes>
+      </MemoryRouter>
+    );
+
+    // Open volunteer modal
+    const volunteerBtn = screen.getByRole('button', { name: /Join as a Volunteer/i });
+    fireEvent.click(volunteerBtn);
+
+    // Fill in form
+    const nameInput = screen.getByPlaceholderText(/e\.g\., Sourav Ganguly/i);
+    const phoneInput = screen.getByPlaceholderText(/e\.g\., 9876543210/i);
+    const emailInput = screen.getByPlaceholderText(/e\.g\., sourav@example\.com/i);
+    fireEvent.change(nameInput, { target: { value: 'Subhashish Roy' } });
+    fireEvent.change(phoneInput, { target: { value: '9832109876' } });
+    fireEvent.change(emailInput, { target: { value: 'subhashish@gmail.com' } });
+
+    // Submit
+    const submitBtn = screen.getByRole('button', { name: /Confirm Volunteer Registration/i });
+    fireEvent.click(submitBtn);
+
+    // Verify volunteer certificate appears
+    expect(screen.getByText(/Volunteer Registration Confirmed!/i)).toBeTruthy();
+    expect(screen.getAllByText(/Subhashish Roy/i).length).toBeGreaterThan(0);
   });
 });

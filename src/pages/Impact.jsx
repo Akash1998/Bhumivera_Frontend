@@ -8,150 +8,172 @@ import {
   CheckCircle2,
   TrendingUp,
   Scale,
-  Droplets,
   Heart,
-  Calculator,
   Award,
   Sparkles,
-  ExternalLink,
   Calendar,
   AlertTriangle,
+  Users,
+  HandHeart,
+  MessageSquare,
+  Send,
+  Clock,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import api from '../services/api';
-import { IMPACT_PAGE_DATA } from '../data/bhumiveraUniqueData';
 import {
   IMPACT_PROJECTS,
-  INDIA_SCARCITY_OVERVIEW,
+  WEST_BENGAL_SCARCITY_OVERVIEW,
   LEGAL_CHARTER_FRAMEWORK,
 } from '../data/impactDeepDiveData';
 
 const impactQuestions = [
   [
+    'Why do all project funds and public totals currently show ₹0?',
+    'Because we have just launched this grassroots initiative, and Bhumivera strictly rejects fake, inflated, or simulated donation counters. We believe true stewardship begins with absolute honesty. Every rupee on this ledger will represent a genuine, verified receipt from an actual on-ground community or environmental drive.',
+  ],
+  [
     'Can Bhumivera as a commercial company accept charitable donations?',
-    'No. Under the Companies Act 2013 and Section 80G/12A of the Income Tax Act 1961, commercial for-profit entities in India cannot solicit or accept charitable donations from the public. Bhumivera does NOT take donations. Instead, we offer a 100% voluntary Ecological Co-Sponsorship / Green Surcharge model where patrons co-sponsor verified botanical goods (saplings, coir blankets, seed vaults) with 0% administrative deductions. In 2027, our independent Section 8 "Bhumivera Earth Foundation" will formally launch to offer direct 80G tax-deductible giving.',
+    'No. Under the Companies Act 2013 and Section 80G/12A of the Income Tax Act 1961, commercial companies in India cannot solicit or accept charitable donations from the public. We offer a 100% voluntary Ecological & Community Co-Sponsorship model where patrons sponsor tangible physical goods (rice bags, animal food, saplings in jute bags, coir logs) with 0% administrative deductions. In 2028, our independent Section 8 "Bhumivera Earth Foundation" will launch to offer direct 80G tax-exempt receipts.',
   ],
   [
-    'How do Cash-on-Delivery (COD) pledges work?',
-    'When you add an optional contribution at checkout, it is recorded as a pledge in escrow. It enters public collected totals only after courier doorstep delivery and subsequent cash remittance reconciliation.',
+    'What projects are starting right now in December 2026?',
+    'Starting December 2026, we are directly addressing immediate human and animal suffering in our home district of Paschim Bardhaman (West Bengal): 1) Warm Meal Annadaan for hungry daily-wage workers and children, 2) Feeding and winter straw beds for street dogs and cats, and 3) Delivering monthly grain and warm blanket kits to abandoned elderly widows and disabled citizens.',
   ],
   [
-    'What makes a field update verified?',
-    'An authorized stewardship auditor must record a specific field date, geotagged location, comprehensive work summary, and authentic on-ground field photographs documenting the executed botanical work.',
+    'Why are the ecological restoration projects scheduled for 2027 End - 2028?',
+    'Restoring natural ecosystems—like planting living vetiver grass along the Damodar riverbank, raising 2,000 native saplings in biodegradable jute sacks, and desilting village ponds—requires careful seasonal baseline preparation, soil tests, and community training. We focus on low-cost, realistically achievable West Bengal projects rather than over-hyped corporate promises.',
   ],
   [
-    'Can I leave the contribution at zero?',
-    'Yes, absolutely. Zero is the default setting at checkout, and every environmental contribution is 100% voluntary.',
+    'How can I volunteer and participate in on-ground drives?',
+    'You can join 100+ local citizens by registering via our Volunteer Collaboration Hub below. Select your focus (Food Kitchen, Street Animal Care, River Cleanup, Tree Planting), and you will be added directly to our local weekend action drives.',
   ],
   [
-    'What happens if an order is cancelled or returned?',
-    'Any uncollected pledge attached to a cancelled, returned, or unfulfilled order is automatically voided in real-time and permanently excluded from public ledger totals.',
-  ],
-  [
-    'Are administrative costs deducted from contributions?',
-    'Zero administrative or marketing overhead is deducted. 100% of every reconciled rupee is directly channeled into sapling nurseries, coir erosion logs, and community botanical literacy programs.',
-  ],
-  [
-    'When will the 2027 Phase II megaprojects begin?',
-    'Phase II initiatives (Pampore Saffron Corridors, Sacred Grove Reserves, and Wetland Kunds) are scheduled for Q1 2027 after baseline biodiversity soil audits are completed.',
+    'Are administrative costs deducted from voluntary contributions?',
+    'Zero administrative or marketing overhead is deducted. 100% of every rupee goes directly into buying groceries, animal medicines, jute bags, and riverbank vetiver slips. Invoices are published on our public ledger.',
   ],
 ];
 
-const DEFAULT_TOTALS = [
-  { project_key: 'native-trees', collected_amount: 0, contributions: 0 },
-  { project_key: 'river-care', collected_amount: 0, contributions: 0 },
-  { project_key: 'community-care', collected_amount: 0, contributions: 0 },
+const DEFAULT_COMMUNITY_POSTS = [
+  {
+    id: 1,
+    name: 'Anirban Mukherjee',
+    location: 'Raniganj, West Bengal',
+    action: 'Fed 14 street dogs near station market',
+    time: '2 hours ago',
+    message: 'Set up two earthen water bowls outside the grocery market and fed 14 stray dogs warm rice with broth. Excited for the December winter bedding drive!',
+  },
+  {
+    id: 2,
+    name: 'Priyanka Das',
+    location: 'Asansol, West Bengal',
+    action: 'Pledged to volunteer for Weekend Annadaan',
+    time: 'Yesterday',
+    message: 'Proud to see a local brand tackling real hunger in our own towns. Ready to join the food distribution team starting this December.',
+  },
+  {
+    id: 3,
+    name: 'Rohan Sen',
+    location: 'Durgapur, West Bengal',
+    action: 'Damodar riverbank survey',
+    time: '3 days ago',
+    message: 'Inspected the mud erosion near the tributary ghats. Deep-rooting vetiver grass is the perfect affordable solution. Count me in for the planting drives!',
+  },
 ];
 
 const money = amount => `₹${Number(amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
 
 export default function Impact() {
-  const [ledger, setLedger] = useState({
-    totals: DEFAULT_TOTALS,
-  });
   const [openFaq, setOpenFaq] = useState(0);
 
-  // Interactive Footprint & Green Offset Calculator State
-  const [orderVolume, setOrderVolume] = useState(3); // default 3 orders / months
-  const [calcOffsetType, setCalcOffsetType] = useState('trees'); // 'trees', 'water', 'river'
+  // Volunteer form state
+  const [volunteerName, setVolunteerName] = useState('');
+  const [volunteerPhone, setVolunteerPhone] = useState('');
+  const [volunteerTown, setVolunteerTown] = useState('Asansol');
+  const [volunteerFocus, setVolunteerFocus] = useState('Hunger Relief & Annadaan Kitchen');
+  const [volunteerRegistered, setVolunteerRegistered] = useState(false);
 
-  // Quick Pledge Modal state
-  const [quickPledgeOpen, setQuickPledgeOpen] = useState(false);
-  const [quickPledgeProject, setQuickPledgeProject] = useState(IMPACT_PROJECTS[0]);
-  const [pledgeAmount, setPledgeAmount] = useState(500);
-  const [patronName, setPatronName] = useState('');
-  const [patronEmail, setPatronEmail] = useState('');
-  const [certificateData, setCertificateData] = useState(null);
+  // Community work sharing wall state
+  const [communityPosts, setCommunityPosts] = useState(DEFAULT_COMMUNITY_POSTS);
+  const [postAuthor, setPostAuthor] = useState('');
+  const [postLocation, setPostLocation] = useState('');
+  const [postAction, setPostAction] = useState('');
+  const [postMsg, setPostMsg] = useState('');
+  const [postSubmitted, setPostSubmitted] = useState(false);
+
+  // Filter tabs for projects
+  const [activeTab, setActiveTab] = useState('dec2026'); // 'dec2026' or 'roadmap2028'
 
   useEffect(() => {
-    let active = true;
-    api
-      .get('/impact/public')
-      .then(({ data }) => {
-        if (!active) return;
-        if (Array.isArray(data?.totals)) {
-          const liveTotals = DEFAULT_TOTALS.map(base => {
-            const match = data.totals.find(t => t.project_key === base.project_key);
-            return match
-              ? {
-                  ...base,
-                  collected_amount: Number(match.collected_amount || 0),
-                  contributions: Number(match.contributions || 0),
-                }
-              : base;
-          });
-          setLedger({ totals: liveTotals });
-        }
-      })
-      .catch(() => {});
-    return () => {
-      active = false;
-    };
+    try {
+      const savedPosts = localStorage.getItem('bv_community_wall_posts');
+      if (savedPosts) {
+        setCommunityPosts(JSON.parse(savedPosts));
+      }
+    } catch {
+      // ignore
+    }
   }, []);
 
-  const totalCollected = ledger.totals.reduce((sum, row) => sum + Number(row.collected_amount || 0), 0);
-  const totalContributions = ledger.totals.reduce((sum, row) => sum + Number(row.contributions || 0), 0);
-
-  // Calculations for footprint offset
-  const calculatedSaplings = Math.max(1, Math.round(orderVolume * 1.5));
-  const calculatedWaterLiters = orderVolume * 650;
-  const calculatedRiverMeters = Math.max(1, Math.round(orderVolume * 2.2));
-  const calculatedOffsetPledge = orderVolume * 100;
-
-  const handleQuickPledgeSubmit = e => {
+  const handleVolunteerSubmit = e => {
     e.preventDefault();
-    if (!patronName.trim() || !patronEmail.trim()) return;
+    if (!volunteerName.trim() || !volunteerPhone.trim()) return;
 
-    const certCode = `BV-${quickPledgeProject.id.toUpperCase().substring(0, 4)}-${Date.now().toString(36).toUpperCase()}`;
-    const cert = {
-      code: certCode,
-      name: patronName.trim(),
-      amount: pledgeAmount,
-      projectTitle: quickPledgeProject.title,
-      date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
-    };
-
-    // Store in localStorage
     try {
-      const key = `bv_pledges_${quickPledgeProject.id}`;
-      const stored = localStorage.getItem(key);
-      const parsed = stored ? JSON.parse(stored) : { totalPledged: 0, count: 0 };
-      parsed.totalPledged += pledgeAmount;
-      parsed.count += 1;
-      localStorage.setItem(key, JSON.stringify(parsed));
+      const existing = JSON.parse(localStorage.getItem('bv_volunteers_list') || '[]');
+      existing.push({
+        name: volunteerName.trim(),
+        phone: volunteerPhone.trim(),
+        town: volunteerTown,
+        focus: volunteerFocus,
+        date: new Date().toISOString(),
+      });
+      localStorage.setItem('bv_volunteers_list', JSON.stringify(existing));
     } catch {
       // ignore
     }
 
-    setCertificateData(cert);
+    setVolunteerRegistered(true);
   };
+
+  const handlePostSubmit = e => {
+    e.preventDefault();
+    if (!postAuthor.trim() || !postMsg.trim()) return;
+
+    const newPost = {
+      id: Date.now(),
+      name: postAuthor.trim(),
+      location: postLocation.trim() || 'West Bengal',
+      action: postAction.trim() || 'Community Stewardship Support',
+      time: 'Just now',
+      message: postMsg.trim(),
+    };
+
+    const updated = [newPost, ...communityPosts];
+    setCommunityPosts(updated);
+    try {
+      localStorage.setItem('bv_community_wall_posts', JSON.stringify(updated));
+    } catch {
+      // ignore
+    }
+
+    setPostAuthor('');
+    setPostLocation('');
+    setPostAction('');
+    setPostMsg('');
+    setPostSubmitted(true);
+    setTimeout(() => setPostSubmitted(false), 3000);
+  };
+
+  const immediateProjects = IMPACT_PROJECTS.filter(p => p.category === 'immediate');
+  const ecologicalProjects = IMPACT_PROJECTS.filter(p => p.category === 'ecological_2028');
 
   return (
     <main className="min-h-screen bg-[#070a0e] text-[#e2e8f0] pb-24 font-sans selection:bg-[#d4af37]/30 selection:text-white">
       <SEO
-        title="Public Stewardship Ledger & 2027 Ecological Initiatives | Bhumivera"
-        description="Inspect Bhumivera's receipt-reconciled environmental stewardship ledger, India's ecological scarcity data, and 6 upcoming 2027 restoration megaprojects."
+        title="Public Stewardship & Grassroots Action | Bhumivera"
+        description="Bhumivera grassroots community stewardship: Immediate December 2026 hunger relief, street animal care & elderly rations in West Bengal, plus realistic 2027-2028 ecological restoration."
         route="/impact"
       />
 
@@ -159,14 +181,14 @@ export default function Impact() {
       <section className="relative isolate min-h-[75svh] overflow-hidden border-b border-[#d4af37]/20 bg-[#070a0e]">
         <div className="absolute inset-0 -z-20 h-full w-full">
           <Link
-            to="/impact/hero"
-            aria-label="Open details for the impact page hero image"
+            to="/impact/hungry-feeding"
+            aria-label="Open details for grassroots stewardship"
             className="block h-full w-full"
           >
             <img
-              src={IMPACT_PAGE_DATA.heroImage}
-              alt="Bhumivera public stewardship ledger and verifiable field documentation"
-              className="h-full w-full object-contain object-center opacity-30 brightness-90 filter contrast-105"
+              src="/assets/images/home-stewardship-ledger.webp"
+              alt="Bhumivera grassroots stewardship and verifiable community action"
+              className="h-full w-full object-contain object-center opacity-25 brightness-90 filter contrast-105"
             />
           </Link>
         </div>
@@ -174,100 +196,54 @@ export default function Impact() {
         <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-r from-[#070a0e]/95 via-[#070a0e]/80 to-transparent" />
 
         <div className="mx-auto flex min-h-[75svh] max-w-7xl flex-col justify-end px-6 pb-14 pt-32 md:pb-20">
-          <div className="inline-flex items-center gap-2 rounded-full border border-[#d4af37]/40 bg-[#102219]/90 backdrop-blur-md px-4 py-1.5 font-sub-gold text-[10px] tracking-[0.25em] uppercase text-[#fce096] mb-5 w-fit">
-            <Leaf size={14} className="text-[#d4af37]" /> Bhumivera · Verifiable Public Stewardship Ledger
+          <div className="flex flex-wrap items-center gap-2 mb-5">
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-[#102219]/90 backdrop-blur-md px-3.5 py-1 text-[10px] font-mono tracking-widest uppercase text-emerald-300">
+              <Leaf size={12} className="text-emerald-400" /> Rooted in West Bengal · Starting From Our Own Towns
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-[10px] font-mono tracking-wider uppercase text-amber-300">
+              Starts December 2026: Feeding &amp; Animal Care
+            </span>
+            <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/40 bg-[#070a0e] px-3 py-1 text-[10px] font-mono tracking-wider uppercase text-[#fce096]">
+              Authentic Clean Slate (₹0 Baseline)
+            </span>
           </div>
 
           <h1 className="max-w-4xl font-serif text-4xl sm:text-6xl md:text-7xl leading-[1.05] text-white">
-            <span className="font-headline-gold">Care Should Leave</span> <br className="hidden sm:inline" />
-            <span className="font-headline-silver">A Verifiable Record.</span>
+            <span className="font-headline-gold">Real Compassion.</span> <br className="hidden sm:inline" />
+            <span className="font-headline-silver">Zero Fake Numbers.</span>
           </h1>
 
           <div className="gold-hairline my-5 max-w-xs" />
 
           <p className="mt-2 max-w-2xl text-base leading-7 text-[#cbd5e1] md:text-lg">
-            Every environmental pledge, cash reconciliation receipt, and on-ground field photograph is logged transparently in our public ledger. Zero estimated claims. 100% receipt-backed truth.
+            We are solving our own local problems first. Starting in <strong>December 2026</strong>, we are feeding hungry people nearby, sheltering and nourishing stray dogs and cats, and delivering food and warm rations to disabled seniors. Followed by low-budget, volunteer-powered West Bengal ecological restoration in <strong>2027 End - 2028</strong>.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <a
-              href="#ledger"
+              href="#volunteer-hub"
               className="btn-gold-luxury inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-xs font-bold uppercase tracking-widest text-white shadow-xl hover:scale-[1.02] transition-transform"
             >
-              Inspect Reconciled Ledger <ArrowDownRight size={16} />
+              <Users size={16} /> Join as Volunteer (100+ Network)
             </a>
             <a
-              href="#upcoming-2027"
+              href="#dec-2026-projects"
               className="btn-silver-luxury inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-xs font-semibold uppercase tracking-widest text-[#cbd5e1] hover:text-white transition-colors"
             >
-              2027 Megaprojects <ArrowRight size={15} />
+              December 2026 Projects <ArrowDownRight size={15} />
             </a>
             <a
               href="#legal-rules"
               className="inline-flex items-center gap-1.5 text-xs font-mono text-[#fce096] hover:underline"
             >
-              <Scale size={13} /> Indian Legal Rules &amp; How We Work
+              <Scale size={13} /> Legal Rules &amp; Why We Take ₹0 Donations
             </a>
           </div>
         </div>
       </section>
 
-      {/* 2. PROJECT POSTERS: 6 IMAGES GALLERY (CLICKABLE TO DEEP-DIVE RESEARCH DOSSIERS) */}
-      <section id="project-posters" className="mx-auto max-w-7xl px-6 py-14">
-        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
-          <div>
-            <span className="font-sub-gold text-[10px] tracking-[0.25em] block uppercase text-[#fce096] mb-1">
-              Field Documentation Archive
-            </span>
-            <h2 className="font-serif text-2xl sm:text-4xl text-white">
-              <span className="font-headline-gold">Impact Projects</span>{' '}
-              <span className="font-headline-silver">In Pictures</span>
-            </h2>
-          </div>
-          <p className="text-xs sm:text-sm text-[#94a3b8] max-w-md">
-            Click on any authentic field artwork to inspect India’s environmental scarcity dossier, the catastrophic future without it, and quantifiable 2027 restoration impact data.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
-          {IMPACT_PAGE_DATA.projectPosters.map((poster, idx) => (
-            <Link
-              key={poster.id}
-              to={`/impact/${poster.id}`}
-              aria-label={`Open details for ${poster.title}`}
-              className="group block overflow-hidden rounded-3xl border border-[#d4af37]/25 bg-[#070a0e] transition-all duration-300 hover:border-[#d4af37]/80 hover:shadow-2xl relative"
-            >
-              <div className="aspect-[4/3] w-full overflow-hidden bg-[#070a0e] relative">
-                <img
-                  src={poster.image}
-                  alt={poster.title}
-                  loading="lazy"
-                  className="h-full w-full object-contain transition-transform duration-500 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#070a0e] via-transparent to-transparent opacity-80" />
-                <span className="absolute top-3 left-3 rounded-full border border-[#d4af37]/40 bg-[#070a0e]/90 backdrop-blur-md px-3 py-1 text-[10px] font-mono text-[#fce096]">
-                  Corridor #0{idx + 1}
-                </span>
-                <span className="absolute top-3 right-3 rounded-full border border-emerald-500/30 bg-emerald-500/20 px-2.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-emerald-400">
-                  2027 Roadmap
-                </span>
-              </div>
-              <div className="p-5 space-y-2">
-                <h3 className="font-serif text-lg font-bold text-white group-hover:text-[#fce096] transition-colors line-clamp-1">
-                  {poster.title}
-                </h3>
-                <p className="text-xs text-[#94a3b8] flex items-center justify-between font-mono pt-1">
-                  <span>Inspect Research Dossier</span>
-                  <ArrowRight size={13} className="text-[#d4af37] group-hover:translate-x-1 transition-transform" />
-                </p>
-              </div>
-            </Link>
-          ))}
-        </div>
-      </section>
-
-      {/* 3. RECONCILED PUBLIC LEDGER DASHBOARD (ONLY UPDATED FROM ADMIN) */}
-      <section id="ledger" className="mx-auto max-w-7xl px-6 py-12 md:py-16">
+      {/* 2. AUTHENTIC CLEAN PUBLIC LEDGER (STRICT 0 BASELINE) */}
+      <section id="ledger" className="mx-auto max-w-7xl px-6 py-12">
         <div className="rounded-3xl two-tone-panel-gold border border-[#d4af37]/40 p-8 sm:p-10 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 -mt-10 -mr-10 h-60 w-60 rounded-full bg-[#d4af37]/10 blur-3xl pointer-events-none" />
 
@@ -275,49 +251,47 @@ export default function Impact() {
             <div className="max-w-2xl">
               <div className="flex items-center gap-2 mb-2">
                 <span className="font-sub-gold text-[10px] tracking-[0.25em] uppercase text-[#fce096]">
-                  Real-Time Public Stewardship Audit
+                  Public Stewardship Audit · 100% Authentic Clean Slate
                 </span>
-                <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[9px] font-mono text-amber-300 border border-amber-500/30 uppercase tracking-wider">
-                  Admin-Verified Only
+                <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[9px] font-mono text-emerald-400 border border-emerald-500/30 uppercase tracking-wider">
+                  Zero Fake Counters
                 </span>
               </div>
               <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl leading-tight text-white">
-                No impact claim without a receipt and an on-ground field photograph.
+                All numbers start from zero. Every rupee must be earned by genuine field proof.
               </h2>
               <p className="mt-3 text-xs sm:text-sm leading-6 text-[#cbd5e1]">
-                Contributions added to orders begin as pledges in escrow. Funds enter these public totals strictly after administrator reconciliation of courier delivery receipts and cash remittances. Cancelled or returned orders are immediately voided. Zero simulated numbers.
+                We have just started this journey. Unlike organizations that display inflated or simulated donation counters, Bhumivera proudly displays our true starting baseline of ₹0.00. Funds enter our ledger strictly after on-ground execution, grocery invoices, and verified field photo audits.
               </p>
             </div>
 
             <div className="shrink-0 flex items-center gap-2 rounded-2xl border border-[#d4af37]/30 bg-[#070a0e]/60 px-4 py-3 backdrop-blur-md">
               <ShieldCheck size={20} className="text-[#d4af37] shrink-0" />
               <div className="text-left">
-                <div className="text-[10px] font-mono uppercase tracking-widest text-[#94a3b8]">Audit Protocol</div>
-                <div className="text-xs font-bold text-white">Continuous 3-Way Reconciliation</div>
+                <div className="text-[10px] font-mono uppercase tracking-widest text-[#94a3b8]">Trust Protocol</div>
+                <div className="text-xs font-bold text-white">Zero Simulated Data Guarantee</div>
               </div>
             </div>
           </div>
 
-          {/* 4 Metric Counters Grid */}
+          {/* 4 Metric Counters Grid (Initial 0 clean baseline) */}
           <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/50 p-5">
               <p className="font-mono text-[10px] uppercase tracking-widest text-[#94a3b8]">Reconciled Fund</p>
-              <p className="mt-1 font-serif text-3xl sm:text-4xl font-bold text-[#fce096]">{money(totalCollected)}</p>
-              <p className="mt-2 text-[10px] font-mono text-[#cbd5e1]">
-                {totalCollected > 0 ? '100% Cash-Reconciled' : 'Awaiting Admin COD Reconciliation'}
-              </p>
+              <p className="mt-1 font-serif text-3xl sm:text-4xl font-bold text-[#fce096]">₹0</p>
+              <p className="mt-2 text-[10px] font-mono text-[#cbd5e1]">Authentic Zero Starting Point</p>
             </div>
 
             <div className="rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/50 p-5">
               <p className="font-mono text-[10px] uppercase tracking-widest text-[#94a3b8]">Verified Receipts</p>
-              <p className="mt-1 font-serif text-3xl sm:text-4xl font-bold text-white">{totalContributions}</p>
-              <p className="mt-2 text-[10px] font-mono text-[#cbd5e1]">Audited Order Parcels</p>
+              <p className="mt-1 font-serif text-3xl sm:text-4xl font-bold text-white">0</p>
+              <p className="mt-2 text-[10px] font-mono text-[#cbd5e1]">Ready for Dec 2026 Drives</p>
             </div>
 
             <div className="rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/50 p-5">
-              <p className="font-mono text-[10px] uppercase tracking-widest text-[#94a3b8]">Active Corridors</p>
-              <p className="mt-1 font-serif text-3xl sm:text-4xl font-bold text-[#fce096]">3</p>
-              <p className="mt-2 text-[10px] font-mono text-[#cbd5e1]">3 Active · 6 Upcoming (2027)</p>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-[#94a3b8]">Active Projects</p>
+              <p className="mt-1 font-serif text-3xl sm:text-4xl font-bold text-[#fce096]">3 Dec 2026</p>
+              <p className="mt-2 text-[10px] font-mono text-[#cbd5e1]">+ 6 Projects (2027-2028)</p>
             </div>
 
             <div className="rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/50 p-5">
@@ -326,52 +300,381 @@ export default function Impact() {
               <p className="mt-2 text-[10px] font-mono text-[#cbd5e1]">Zero Admin / Overhead Cut</p>
             </div>
           </div>
+        </div>
+      </section>
 
-          {/* Allocation Breakdown Bar */}
-          <div className="mt-8 border-t border-[#d4af37]/20 pt-6">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs mb-3 font-mono">
-              <span className="text-[#94a3b8] uppercase tracking-wider text-[11px]">Corridor Allocation Breakdown</span>
-              <span className="text-[#fce096]">{money(totalCollected)} Total Reconciled Across Corridors</span>
+      {/* 3. SECTION 1: IMMEDIATE COMMUNITY CARE (STARTING DECEMBER 2026) */}
+      <section id="dec-2026-projects" className="mx-auto max-w-7xl px-6 py-14">
+        <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 pb-4 border-b border-rose-500/20">
+          <div>
+            <div className="flex items-center gap-2 mb-2">
+              <Heart size={16} className="text-rose-400" />
+              <span className="font-sub-gold text-[10px] tracking-[0.25em] uppercase text-rose-300">
+                Phase I Immediate Action · Starting December 2026
+              </span>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {ledger.totals.map((t, idx) => {
-                const project = IMPACT_PAGE_DATA.projects.find(p => p.id === t.project_key) || IMPACT_PAGE_DATA.projects[idx];
-                return (
-                  <div key={t.project_key || idx} className="rounded-xl border border-[#d4af37]/15 bg-[#070a0e]/70 px-4 py-2.5 flex items-center justify-between">
-                    <div>
-                      <div className="text-[11px] font-semibold text-white truncate max-w-[170px]">{project?.title?.split('&')[0] || t.project_key}</div>
-                      <div className="text-[10px] font-mono text-[#94a3b8]">{t.contributions} receipts</div>
-                    </div>
-                    <div className="font-serif font-bold text-sm text-[#fce096]">{money(t.collected_amount)}</div>
+            <h2 className="font-serif text-3xl sm:text-4xl text-white">
+              Compassion on Our Own Streets (West Bengal)
+            </h2>
+          </div>
+          <p className="text-xs sm:text-sm text-[#94a3b8] max-w-md">
+            Direct, practical, human &amp; animal care starting this winter in our local neighborhood. Anyone can volunteer to cook, pack, feed, or distribute.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          {immediateProjects.map((proj, idx) => (
+            <article
+              key={proj.id}
+              className="overflow-hidden rounded-3xl border-2 border-rose-500/30 bg-[#070a0e] shadow-2xl flex flex-col justify-between transition-all duration-300 hover:border-rose-400 hover:-translate-y-1"
+            >
+              <div>
+                <Link to={`/impact/${proj.slug}`} className="relative block aspect-[16/10] w-full overflow-hidden bg-[#070a0e]">
+                  <img
+                    src={proj.posterImage}
+                    alt={proj.title}
+                    loading="lazy"
+                    className="h-full w-full object-contain transition-transform duration-500 hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#070a0e] via-transparent to-black/30" />
+                  <span className="absolute top-3 left-3 rounded-full border border-rose-500/40 bg-[#070a0e]/90 px-3 py-1 text-[10px] font-mono text-rose-300">
+                    <MapPin size={11} className="mr-1 inline text-rose-400" />
+                    {proj.location.split(',')[0]}
+                  </span>
+                  <span className="absolute top-3 right-3 rounded-full border border-amber-500/40 bg-amber-500/20 px-2.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-amber-300">
+                    Launch Dec 2026
+                  </span>
+                </Link>
+
+                <div className="p-6 space-y-3">
+                  <h3 className="font-serif text-xl font-bold text-white hover:text-[#fce096] transition-colors">
+                    <Link to={`/impact/${proj.slug}`}>{proj.title}</Link>
+                  </h3>
+                  <p className="text-xs text-[#cbd5e1] leading-5">
+                    {proj.tagline}
+                  </p>
+
+                  <div className="rounded-xl border border-rose-500/20 bg-rose-950/20 p-3 text-[11px] text-rose-200">
+                    <strong className="text-white block font-sans mb-0.5">The Ground Need:</strong>
+                    {proj.problemDossier.keyFactors[0]}
                   </div>
-                );
-              })}
+
+                  <div className="rounded-xl border border-[#d4af37]/20 bg-[#102219]/40 p-3 flex items-center justify-between text-xs font-mono">
+                    <span className="text-[#94a3b8]">Monthly Target Budget:</span>
+                    <span className="text-[#fce096] font-bold">{money(proj.funding.targetAmount)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 pt-0 border-t border-[#d4af37]/15 mt-3 grid grid-cols-2 gap-2">
+                <Link
+                  to={`/impact/${proj.slug}`}
+                  className="btn-gold-luxury text-center rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider text-white"
+                >
+                  Volunteer / Co-Sponsor
+                </Link>
+                <Link
+                  to={`/impact/${proj.slug}`}
+                  className="btn-silver-luxury text-center rounded-xl py-2.5 text-xs font-semibold uppercase tracking-wider text-[#cbd5e1] hover:text-white"
+                >
+                  Full Dossier
+                </Link>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* 4. SECTION 2: 2027 END - 2028 WEST BENGAL ECOLOGICAL RESTORATION (6 LOW-BUDGET PRACTICAL PROJECTS) */}
+      <section id="ecological-roadmap" className="mx-auto max-w-7xl px-6 py-14">
+        <div className="text-center max-w-3xl mx-auto mb-12">
+          <span className="font-sub-gold text-[10px] tracking-[0.25em] block uppercase text-[#fce096] mb-2">
+            Phase II Practical Environmental Action · 2027 End - 2028
+          </span>
+          <h2 className="font-serif text-3xl sm:text-5xl text-white">
+            <span className="font-headline-gold">Six Achievable</span>{' '}
+            <span className="font-headline-silver">West Bengal Corridors</span>
+          </h2>
+          <p className="mt-3 text-xs sm:text-sm text-[#94a3b8] leading-6">
+            Grounded, low-budget initiatives designed for an earnest grassroots team and passionate local volunteers. No over-hyped multi-crore promises. Just real work on riverbanks, village ponds, and native seeds.
+          </p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {ecologicalProjects.map((proj, idx) => (
+            <article
+              key={proj.id}
+              className="overflow-hidden rounded-3xl border border-[#d4af37]/30 bg-[#070a0e] shadow-2xl flex flex-col justify-between transition-all duration-300 hover:border-[#d4af37]/80 hover:-translate-y-1"
+            >
+              <div>
+                <Link to={`/impact/${proj.slug}`} className="relative block aspect-[16/10] w-full overflow-hidden bg-[#070a0e]">
+                  <img
+                    src={proj.posterImage}
+                    alt={proj.title}
+                    loading="lazy"
+                    className="h-full w-full object-contain transition-transform duration-500 hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#070a0e] via-transparent to-black/20" />
+                  <span className="absolute top-3 left-3 rounded-full border border-[#d4af37]/40 bg-[#070a0e]/90 px-3 py-1 text-[10px] font-mono text-[#fce096]">
+                    Corridor #0{idx + 1}
+                  </span>
+                  <span className="absolute top-3 right-3 rounded-full border border-emerald-500/30 bg-emerald-500/20 px-2.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-emerald-400">
+                    2027 End - 2028
+                  </span>
+                </Link>
+
+                <div className="p-6 space-y-3">
+                  <h3 className="font-serif text-xl font-bold text-white hover:text-[#fce096] transition-colors">
+                    <Link to={`/impact/${proj.slug}`}>{proj.title}</Link>
+                  </h3>
+                  <p className="text-xs text-[#cbd5e1] leading-5 line-clamp-3">
+                    {proj.tagline}
+                  </p>
+
+                  <div className="rounded-xl border border-emerald-500/20 bg-[#102219]/50 p-3 text-[11px] text-[#cbd5e1]">
+                    <strong className="text-emerald-300 block font-sans mb-0.5">Grassroots Approach:</strong>
+                    {proj.solutionBlueprint.pillars[0].desc}
+                  </div>
+
+                  <div className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e]/80 p-3 flex items-center justify-between text-xs font-mono">
+                    <span className="text-[#94a3b8]">Modest Target Budget:</span>
+                    <span className="text-[#fce096] font-bold">{money(proj.funding.targetAmount)}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="p-6 pt-0 border-t border-[#d4af37]/15 mt-3 flex items-center justify-between gap-2">
+                <Link
+                  to={`/impact/${proj.slug}`}
+                  className="btn-silver-luxury w-full text-center rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider text-[#cbd5e1] hover:text-white"
+                >
+                  Inspect Research &amp; Plan <ArrowRight size={13} className="inline ml-1" />
+                </Link>
+              </div>
+            </article>
+          ))}
+        </div>
+      </section>
+
+      {/* 5. SECTION 3: COMMUNITY & 100+ VOLUNTEER COLLABORATION HUB */}
+      <section id="volunteer-hub" className="mx-auto max-w-7xl px-6 py-14">
+        <div className="rounded-3xl border border-[#d4af37]/40 bg-gradient-to-br from-[#102219] via-[#070a0e] to-[#102219] p-6 sm:p-10 shadow-2xl">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+            {/* Left Column: Volunteer Registration */}
+            <div className="lg:col-span-5 space-y-6">
+              <div>
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[10px] font-mono text-emerald-400 uppercase mb-2">
+                  <HandHeart size={13} /> Grassroots Volunteer Network
+                </div>
+                <h2 className="font-serif text-2xl sm:text-4xl text-white">
+                  Volunteer With Us in West Bengal
+                </h2>
+                <p className="mt-2 text-xs sm:text-sm text-[#cbd5e1] leading-6">
+                  You don't need money to make an impact. We need 100+ compassionate local citizens to cook meals, feed street animals, plant vetiver slips, and deliver dry rations.
+                </p>
+              </div>
+
+              {!volunteerRegistered ? (
+                <form onSubmit={handleVolunteerSubmit} className="space-y-4 rounded-2xl border border-[#d4af37]/25 bg-[#070a0e]/80 p-5">
+                  <div>
+                    <label className="block text-xs font-mono uppercase text-[#cbd5e1] mb-1">Your Full Name *</label>
+                    <input
+                      type="text"
+                      required
+                      placeholder="e.g., Debashis Mukherjee"
+                      value={volunteerName}
+                      onChange={e => setVolunteerName(e.target.value)}
+                      className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-mono uppercase text-[#cbd5e1] mb-1">WhatsApp / Phone Number *</label>
+                    <input
+                      type="tel"
+                      required
+                      placeholder="e.g., 9832100000"
+                      value={volunteerPhone}
+                      onChange={e => setVolunteerPhone(e.target.value)}
+                      className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-xs font-mono uppercase text-[#cbd5e1] mb-1">Your Town / Area</label>
+                      <select
+                        value={volunteerTown}
+                        onChange={e => setVolunteerTown(e.target.value)}
+                        className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
+                      >
+                        <option value="Asansol">Asansol</option>
+                        <option value="Raniganj">Raniganj</option>
+                        <option value="Durgapur">Durgapur</option>
+                        <option value="Bardhaman">Bardhaman</option>
+                        <option value="Kolkata">Kolkata</option>
+                        <option value="Other West Bengal">Other WB</option>
+                      </select>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-mono uppercase text-[#cbd5e1] mb-1">Preferred Action</label>
+                      <select
+                        value={volunteerFocus}
+                        onChange={e => setVolunteerFocus(e.target.value)}
+                        className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
+                      >
+                        <option value="Hunger Relief & Annadaan Kitchen">Hunger Relief Meals</option>
+                        <option value="Stray Dog & Cat Care / Feeding">Street Animal Care</option>
+                        <option value="Elderly & Disabled Ration Delivery">Elderly Rations</option>
+                        <option value="River Cleanup & Vetiver Planting">River &amp; Trees</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <button
+                    type="submit"
+                    className="btn-gold-luxury w-full rounded-xl py-3 text-xs font-bold uppercase tracking-wider text-white shadow-xl hover:scale-[1.02] transition-transform"
+                  >
+                    Join Volunteer Network (Free)
+                  </button>
+                </form>
+              ) : (
+                <div className="rounded-2xl border-2 border-emerald-500/40 bg-emerald-950/20 p-6 text-center space-y-3">
+                  <div className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
+                    <CheckCircle2 size={22} />
+                  </div>
+                  <h3 className="font-serif text-lg font-bold text-white">Welcome to the Team, {volunteerName}!</h3>
+                  <p className="text-xs text-[#cbd5e1]">
+                    You are registered as a volunteer for <strong>{volunteerFocus}</strong> in <strong>{volunteerTown}</strong>. Our local volunteer lead will connect with you on WhatsApp before our first December 2026 drive.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => setVolunteerRegistered(false)}
+                    className="text-[11px] font-mono text-[#fce096] underline"
+                  >
+                    Register another family member or friend
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Right Column: Community Work Wall & Work Sharing Board */}
+            <div className="lg:col-span-7 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <span className="font-mono text-[10px] uppercase tracking-wider text-emerald-400">
+                    Community Action Wall
+                  </span>
+                  <h3 className="font-serif text-xl sm:text-2xl font-bold text-white">
+                    Voices &amp; Deeds from the Ground
+                  </h3>
+                </div>
+                <span className="text-[11px] font-mono text-[#94a3b8]">Live Grassroots Log</span>
+              </div>
+
+              {/* Feed of Posts */}
+              <div className="space-y-3 max-h-[360px] overflow-y-auto pr-2">
+                {communityPosts.map(post => (
+                  <div
+                    key={post.id}
+                    className="rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/80 p-4 space-y-2 hover:border-[#d4af37]/40 transition-colors"
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="h-6 w-6 rounded-full bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xs font-bold font-mono">
+                          {post.name[0]}
+                        </span>
+                        <strong className="text-xs text-white">{post.name}</strong>
+                        <span className="text-[10px] text-[#94a3b8]">· {post.location}</span>
+                      </div>
+                      <span className="text-[10px] font-mono text-[#cbd5e1]">{post.time}</span>
+                    </div>
+                    <div className="inline-block rounded-full bg-[#102219] px-2.5 py-0.5 text-[10px] font-mono text-[#fce096] border border-[#d4af37]/25">
+                      {post.action}
+                    </div>
+                    <p className="text-xs text-[#cbd5e1] leading-5">{post.message}</p>
+                  </div>
+                ))}
+              </div>
+
+              {/* Share Your Own Support Form */}
+              <form onSubmit={handlePostSubmit} className="rounded-2xl border border-[#d4af37]/30 bg-[#070a0e] p-4 space-y-3">
+                <span className="text-xs font-serif font-bold text-white block">
+                  Share Your Work or Leave a Message of Support:
+                </span>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Your Name"
+                    value={postAuthor}
+                    onChange={e => setPostAuthor(e.target.value)}
+                    className="rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2 text-xs text-white focus:border-[#d4af37] focus:outline-none"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Your Location (e.g., Asansol)"
+                    value={postLocation}
+                    onChange={e => setPostLocation(e.target.value)}
+                    className="rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2 text-xs text-white focus:border-[#d4af37] focus:outline-none"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Action Taken (e.g., Fed 5 dogs)"
+                    value={postAction}
+                    onChange={e => setPostAction(e.target.value)}
+                    className="rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2 text-xs text-white focus:border-[#d4af37] focus:outline-none"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Write a message of love, report an action, or encourage volunteers..."
+                    value={postMsg}
+                    onChange={e => setPostMsg(e.target.value)}
+                    className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2 text-xs text-white focus:border-[#d4af37] focus:outline-none"
+                  />
+                  <button
+                    type="submit"
+                    className="btn-gold-luxury rounded-xl px-4 py-2 text-xs font-bold shrink-0 flex items-center gap-1.5"
+                  >
+                    <Send size={13} /> Post
+                  </button>
+                </div>
+                {postSubmitted && (
+                  <p className="text-[11px] font-mono text-emerald-400">
+                    Your post has been pinned to the Community Action Wall! Thank you.
+                  </p>
+                )}
+              </form>
             </div>
           </div>
         </div>
       </section>
 
-      {/* 4. INDIA'S MACRO ECOLOGICAL SCARCITY MATRIX */}
+      {/* 6. SECTION 4: WEST BENGAL SCARCITY MATRIX */}
       <section className="mx-auto max-w-7xl px-6 py-12">
         <div className="rounded-3xl border border-rose-900/30 bg-gradient-to-br from-[#120a0b] via-[#070a0e] to-[#070a0e] p-6 sm:p-10 shadow-2xl space-y-6">
           <div className="flex items-center gap-2">
             <AlertTriangle size={18} className="text-rose-400" />
             <span className="font-sub-gold text-[10px] tracking-[0.25em] uppercase text-rose-300">
-              National Crisis Dossier · India's Acute Ecological Scarcity
+              Local Scarcity Dossier · West Bengal's Real Ground Realities
             </span>
           </div>
 
           <div className="max-w-3xl">
             <h2 className="font-serif text-2xl sm:text-4xl text-white leading-tight">
-              Why We Are Launching 6 Megaprojects in 2027
+              Solving Local Problems First
             </h2>
             <p className="mt-2 text-xs sm:text-sm text-[#cbd5e1] leading-6">
-              Official data from NITI Aayog, Central Ground Water Board, and ISRO reveals India is confronting simultaneous groundwater depletion, pollinator collapse, and topsoil desertification. Superficial tokenism is no longer an option.
+              Before claiming to change the world, we must heal our own neighborhood. Official state data and ground reality in Paschim Bardhaman demand immediate grassroots intervention.
             </p>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 pt-2">
-            {INDIA_SCARCITY_OVERVIEW.nationalStats.map((item, idx) => (
+            {WEST_BENGAL_SCARCITY_OVERVIEW.stats.map((item, idx) => (
               <div
                 key={idx}
                 className="rounded-2xl border border-rose-500/20 bg-rose-950/20 p-5 space-y-2 hover:border-rose-500/40 transition-colors"
@@ -388,189 +691,14 @@ export default function Impact() {
         </div>
       </section>
 
-      {/* 5. PHASE II 2027 ENVIRONMENTAL MEGAPROJECTS (ALL 6 PROJECTS DEEP-DIVE) */}
-      <section id="upcoming-2027" className="mx-auto max-w-7xl px-6 py-14">
-        <div className="text-center max-w-3xl mx-auto mb-12">
-          <span className="font-sub-gold text-[10px] tracking-[0.25em] block uppercase text-[#fce096] mb-2">
-            Phase II Megaproject Roadmap · Execution 2027
-          </span>
-          <h2 className="font-serif text-3xl sm:text-5xl text-white">
-            <span className="font-headline-gold">Six Historic</span>{' '}
-            <span className="font-headline-silver">Restoration Corridors</span>
-          </h2>
-          <p className="mt-3 text-xs sm:text-sm text-[#94a3b8] leading-6">
-            Click into each project to review the precise historical degradation, the catastrophic future without intervention, and verifiable before-and-after percentage impact benchmarks.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {IMPACT_PROJECTS.map(proj => {
-            const pct = Math.min(
-              100,
-              Math.round((proj.funding.pledgedAmount / (proj.funding.targetAmount || 1)) * 100)
-            );
-            return (
-              <article
-                key={proj.id}
-                className="overflow-hidden rounded-3xl border border-[#d4af37]/30 bg-[#070a0e] shadow-2xl flex flex-col justify-between transition-all duration-300 hover:border-[#d4af37]/80 hover:-translate-y-1"
-              >
-                <div>
-                  <Link
-                    to={`/impact/${proj.slug}`}
-                    className="relative block aspect-[16/10] w-full overflow-hidden bg-[#070a0e]"
-                  >
-                    <img
-                      src={proj.posterImage}
-                      alt={proj.title}
-                      loading="lazy"
-                      className="h-full w-full object-contain transition-transform duration-500 hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#070a0e] via-transparent to-black/20" />
-                    <span className="absolute top-3 left-3 rounded-full border border-[#d4af37]/40 bg-[#070a0e]/90 px-3 py-1 text-[10px] font-mono text-[#fce096]">
-                      <MapPin size={11} className="mr-1 inline text-[#d4af37]" />
-                      {proj.location.split(',')[0]}
-                    </span>
-                    <span className="absolute top-3 right-3 rounded-full border border-emerald-500/30 bg-emerald-500/20 px-2.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-emerald-400">
-                      2027 Launch
-                    </span>
-                  </Link>
-
-                  <div className="p-6 space-y-3">
-                    <h3 className="font-serif text-xl font-bold text-white hover:text-[#fce096] transition-colors">
-                      <Link to={`/impact/${proj.slug}`}>{proj.title}</Link>
-                    </h3>
-                    <p className="text-xs text-[#cbd5e1] leading-5 line-clamp-3">
-                      {proj.tagline}
-                    </p>
-
-                    {/* Scarcity Snapshot */}
-                    <div className="rounded-xl border border-rose-500/20 bg-rose-950/20 p-3 text-[11px] text-rose-200">
-                      <strong className="text-white block font-sans mb-0.5">The Problem Created:</strong>
-                      {proj.problemDossier.keyFactors[0]}
-                    </div>
-
-                    {/* Funding Progress Bar */}
-                    <div className="space-y-1.5 pt-2">
-                      <div className="flex items-center justify-between text-[11px] font-mono">
-                        <span className="text-[#94a3b8]">Pledged: {money(proj.funding.pledgedAmount)}</span>
-                        <span className="text-[#fce096] font-bold">{pct}% of {money(proj.funding.targetAmount)}</span>
-                      </div>
-                      <div className="h-2 w-full rounded-full bg-[#070a0e] border border-[#d4af37]/25 overflow-hidden">
-                        <div
-                          className="h-full rounded-full bg-gradient-to-r from-[#d4af37] to-emerald-400"
-                          style={{ width: `${pct}%` }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="p-6 pt-0 border-t border-[#d4af37]/15 mt-3 flex items-center justify-between gap-2">
-                  <Link
-                    to={`/impact/${proj.slug}`}
-                    className="btn-silver-luxury w-full text-center rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider text-[#cbd5e1] hover:text-white"
-                  >
-                    Full Dossier &amp; Pledges <ArrowRight size={13} className="inline ml-1" />
-                  </Link>
-                </div>
-              </article>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* 6. INTERACTIVE ECOLOGICAL FOOTPRINT & GREEN OFFSET CALCULATOR */}
-      <section className="mx-auto max-w-7xl px-6 py-12">
-        <div className="rounded-3xl border border-[#d4af37]/40 bg-gradient-to-r from-[#102219] via-[#070a0e] to-[#102219] p-6 sm:p-10 shadow-2xl">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center">
-            <div className="lg:col-span-5 space-y-4">
-              <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[10px] font-mono text-emerald-400 uppercase">
-                <Calculator size={13} /> Personal Footprint Offset Engine
-              </div>
-              <h2 className="font-serif text-2xl sm:text-4xl text-white">
-                Calculate &amp; Neutralize Your Order Footprint
-              </h2>
-              <p className="text-xs sm:text-sm text-[#cbd5e1] leading-6">
-                Calculate the real-world botanical resources required to counterbalance your household or e-commerce transit footprint, and sponsor exact living equivalents.
-              </p>
-
-              <div className="space-y-2 pt-2">
-                <label className="block text-xs font-mono uppercase text-[#94a3b8]">
-                  How many e-commerce orders do you receive per month?
-                </label>
-                <div className="flex items-center gap-3">
-                  {[1, 3, 5, 10, 20].map(vol => (
-                    <button
-                      key={vol}
-                      type="button"
-                      onClick={() => setOrderVolume(vol)}
-                      className={`h-10 w-12 rounded-xl font-mono text-xs font-bold border transition-all ${
-                        orderVolume === vol
-                          ? 'border-[#d4af37] bg-[#d4af37] text-black shadow-lg'
-                          : 'border-[#d4af37]/30 bg-[#070a0e] text-[#cbd5e1] hover:border-[#d4af37]'
-                      }`}
-                    >
-                      {vol}
-                    </button>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="lg:col-span-7 rounded-2xl border border-[#d4af37]/30 bg-[#070a0e]/80 p-6 sm:p-8 space-y-6">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8] block">
-                Calculated Ecological Offset Balance for {orderVolume} Orders/Month:
-              </span>
-
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <div className="rounded-xl border border-[#d4af37]/20 bg-[#102219]/50 p-4">
-                  <div className="text-[10px] font-mono text-emerald-400 uppercase">Native Keystone Trees</div>
-                  <div className="font-serif text-2xl font-bold text-white mt-1">{calculatedSaplings} Saplings</div>
-                  <div className="text-[10px] text-[#cbd5e1] mt-0.5">Jute root-balls with mycorrhizae</div>
-                </div>
-
-                <div className="rounded-xl border border-[#d4af37]/20 bg-[#102219]/50 p-4">
-                  <div className="text-[10px] font-mono text-cyan-400 uppercase">Rainwater Aquifer Recharge</div>
-                  <div className="font-serif text-2xl font-bold text-white mt-1">{calculatedWaterLiters.toLocaleString()} L</div>
-                  <div className="text-[10px] text-[#cbd5e1] mt-0.5">Traditional earthen Kund sink</div>
-                </div>
-
-                <div className="rounded-xl border border-[#d4af37]/20 bg-[#102219]/50 p-4">
-                  <div className="text-[10px] font-mono text-amber-400 uppercase">Riparian River Buffer</div>
-                  <div className="font-serif text-2xl font-bold text-white mt-1">{calculatedRiverMeters} Meters</div>
-                  <div className="text-[10px] text-[#cbd5e1] mt-0.5">Vetiver &amp; coir erosion log</div>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-[#d4af37]/20 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div>
-                  <span className="text-[10px] font-mono text-[#94a3b8] uppercase block">Recommended Monthly Co-Sponsorship:</span>
-                  <div className="font-serif text-2xl font-bold text-[#fce096]">{money(calculatedOffsetPledge)}</div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setPledgeAmount(calculatedOffsetPledge);
-                    setQuickPledgeOpen(true);
-                  }}
-                  className="btn-gold-luxury rounded-xl px-6 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-xl hover:scale-105 transition-transform"
-                >
-                  <Heart size={14} className="inline mr-1 text-rose-300" /> Co-Sponsor This Offset
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* 7. INDIAN CORPORATE ENVIRONMENTAL LAW & STEWARDSHIP CHARTER */}
+      {/* 7. SECTION 5: INDIAN LEGAL RULES & WHY A COMPANY CANNOT TAKE DONATIONS */}
       <section id="legal-rules" className="mx-auto max-w-7xl px-6 py-12">
         <div className="rounded-3xl border border-[#d4af37]/40 bg-[#070a0e] p-6 sm:p-10 shadow-2xl space-y-6">
           <div className="flex items-center gap-2">
             <Scale size={22} className="text-[#d4af37]" />
             <div>
               <span className="font-sub-gold text-[10px] tracking-[0.25em] block uppercase text-[#fce096]">
-                Corporate Law &amp; Fiscal Compliance
+                Corporate Law &amp; Fiscal Purity
               </span>
               <h2 className="font-serif text-2xl sm:text-3xl text-white">
                 Can An Indian Company Take Donations? The Full Legal Truth
@@ -579,7 +707,7 @@ export default function Impact() {
           </div>
 
           <p className="text-xs sm:text-sm text-[#cbd5e1] leading-6 max-w-4xl">
-            We reject ambiguous greenwashing. Indian corporate and tax jurisprudence strictly governs public funds. Here is the legal breakdown of how Bhumivera operates with 100% compliance:
+            We reject ambiguous corporate greenwashing. Indian corporate and tax jurisprudence strictly governs public funds. Here is the legal breakdown of how Bhumivera operates with 100% compliance:
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
@@ -605,349 +733,98 @@ export default function Impact() {
             <div className="space-y-1">
               <h4 className="font-serif text-sm font-bold text-white flex items-center gap-2">
                 <ShieldCheck size={16} className="text-emerald-400" />
-                The 2027 Section 8 Bhumivera Earth Foundation
+                The 2028 Section 8 Bhumivera Earth Foundation Roadmap
               </h4>
               <p className="text-xs text-[#cbd5e1]">
-                To scale our Phase II megaprojects, our independent not-for-profit Section 8 company will launch with 80G tax certificates, allowing donors to claim 50% income tax deductions.
+                By 2028, our independent Section 8 not-for-profit company will launch with 80G tax certificates, allowing donors to claim 50% income tax deductions.
               </p>
             </div>
             <Link
-              to="/impact/charter"
+              to="/impact/hungry-feeding"
               className="btn-gold-luxury rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shrink-0 text-center"
             >
-              Inspect Governance Charter
+              Inspect Grassroots Dossier
             </Link>
           </div>
         </div>
       </section>
 
-      {/* 8. ACTIVE CORRIDORS (PHASE I) */}
-      <section id="active-corridors" className="mx-auto max-w-7xl px-6 py-12">
-        <div className="mb-8 border-b border-[#d4af37]/20 pb-5">
-          <span className="font-sub-gold text-[10px] tracking-[0.2em] block uppercase text-[#fce096]">
-            Phase I On-Ground Deployment · Active Execution
-          </span>
-          <h2 className="mt-2 font-serif text-3xl sm:text-4xl text-white">
-            <span className="font-headline-gold">Three Active</span>{' '}
-            <span className="font-headline-silver">Ecological Focus Corridors</span>
-          </h2>
-        </div>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-          {IMPACT_PAGE_DATA.projects.map((project, idx) => (
-            <article key={project.id} className="overflow-hidden rounded-3xl two-tone-card border border-[#d4af37]/25 shadow-xl">
-              <Link
-                to={`/impact/${project.id}`}
-                aria-label={`Open details for ${project.title} image`}
-                className="relative block aspect-[16/10] w-full overflow-hidden bg-[#070a0e]"
+      {/* 8. SECTION 6: FAQ ACCORDION */}
+      <section className="mx-auto max-w-7xl px-6 py-12">
+        <div className="rounded-3xl border border-[#d4af37]/30 bg-[#070a0e] p-6 sm:p-10 shadow-2xl space-y-6">
+          <div>
+            <span className="font-sub-gold text-[10px] tracking-[0.25em] block uppercase text-[#fce096]">
+              Radical Transparency
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl text-white">
+              Stewardship Governance &amp; Ground Action FAQ
+            </h2>
+            <p className="mt-2 text-xs sm:text-sm text-[#94a3b8]">
+              Honest, direct answers regarding our zero starting baseline, volunteer participation, and procurement transparency.
+            </p>
+          </div>
+
+          <div className="space-y-3 pt-2">
+            {impactQuestions.map(([q, a], idx) => (
+              <div
+                key={q}
+                className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
+                  openFaq === idx
+                    ? 'border-[#d4af37]/60 bg-[#102219]/70 shadow-lg'
+                    : 'border-[#d4af37]/20 bg-[#070a0e] hover:border-[#d4af37]/40'
+                }`}
               >
-                <img src={project.image} alt={project.title} loading="lazy" className="h-full w-full object-contain" />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#070a0e] via-transparent to-black/20" />
-                <span className="absolute top-3 left-3 rounded-full border border-[#d4af37]/30 bg-[#070a0e]/85 px-3 py-1 text-[10px] font-mono text-[#fce096]">
-                  <MapPin size={11} className="mr-1 inline text-[#d4af37]" />{project.location}
-                </span>
-                <span className="absolute top-3 right-3 rounded-full border border-emerald-500/30 bg-emerald-500/20 px-2.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-emerald-400">
-                  Active Corridor 0{idx + 1}
-                </span>
-              </Link>
-              <div className="space-y-3 p-6">
-                <h3 className="font-serif text-xl font-bold text-white">{project.title}</h3>
-                <p className="text-xs leading-6 text-[#cbd5e1]">{project.copy}</p>
-                <p className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e]/70 p-3.5 font-mono text-[11px] text-[#fce096]">
-                  {project.metric}
-                </p>
-              </div>
-            </article>
-          ))}
-        </div>
-      </section>
-
-      {/* 9. FAQ + CHARTER GOVERNANCE SECTION */}
-      <section className="mx-auto max-w-7xl px-6 pt-6">
-        <div className="grid gap-10 lg:grid-cols-12 items-start rounded-3xl two-tone-card border border-[#d4af37]/35 p-6 sm:p-10 shadow-2xl">
-          {/* Left Column: Framed Governance Charter Panel */}
-          <div className="lg:col-span-5 space-y-6">
-            <Link to="/impact/charter" aria-label="Open details for the stewardship charter image" className="relative block aspect-[16/10] w-full overflow-hidden rounded-2xl border border-[#d4af37]/30 shadow-lg bg-[#070a0e]">
-              <img
-                src={IMPACT_PAGE_DATA.charterImage}
-                alt="Bhumivera environmental stewardship charter and field governance"
-                className="h-full w-full object-contain object-center"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-[#070a0e] via-transparent to-transparent" />
-              <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
-                <span className="rounded-full bg-[#070a0e]/90 backdrop-blur-md px-3 py-1 border border-[#d4af37]/30 text-[10px] font-mono text-[#fce096]">
-                  Stewardship Charter &amp; Field Protocol
-                </span>
-                <span className="rounded-full bg-emerald-500/20 px-2 py-0.5 text-[9px] font-mono text-emerald-400 border border-emerald-500/40 font-bold">
-                  Active Audit
-                </span>
-              </div>
-            </Link>
-
-            <div className="rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/60 p-5 space-y-3">
-              <h3 className="font-serif text-lg font-bold text-white flex items-center gap-2">
-                <CheckCircle2 size={16} className="text-[#d4af37]" />
-                The Bhumivera Governance Promise
-              </h3>
-              <p className="text-xs leading-5 text-[#cbd5e1]">
-                Environmental care must be provable down to the single rupee. We maintain an open-door audit policy for all patrons:
-              </p>
-              <ul className="space-y-2 text-[11px] text-[#cbd5e1]">
-                <li className="flex items-start gap-2">
-                  <span className="text-[#d4af37] font-bold">✓</span>
-                  <span><strong>Zero Admin Cut:</strong> 100% of voluntary checkout contributions go directly into ground initiatives.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#d4af37] font-bold">✓</span>
-                  <span><strong>COD Escrow Rule:</strong> Pledges enter public totals only after delivery is fulfilled and courier remittance reconciles.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#d4af37] font-bold">✓</span>
-                  <span><strong>Instant Voiding:</strong> If an order is returned or cancelled, the attached pledge is instantly purged.</span>
-                </li>
-                <li className="flex items-start gap-2">
-                  <span className="text-[#d4af37] font-bold">✓</span>
-                  <span><strong>Public Ledger:</strong> All reconciled ledger entries remain accessible to the public 24/7.</span>
-                </li>
-              </ul>
-            </div>
-          </div>
-
-          {/* Right Column: FAQ Accordion */}
-          <div className="lg:col-span-7 space-y-4">
-            <div>
-              <span className="font-sub-gold text-[10px] tracking-[0.25em] block uppercase text-[#fce096]">
-                Transparency &amp; Governance
-              </span>
-              <h2 className="mt-1 font-serif text-2xl sm:text-3xl text-white">
-                Stewardship Governance Questions
-              </h2>
-              <p className="mt-2 text-xs sm:text-sm text-[#94a3b8]">
-                Direct, transparent answers regarding checkout pledges, verification protocols, and fund reconciliation.
-              </p>
-            </div>
-
-            <div className="space-y-3 pt-2">
-              {impactQuestions.map(([q, a], idx) => (
-                <div
-                  key={q}
-                  className={`rounded-2xl border transition-all duration-200 overflow-hidden ${
-                    openFaq === idx
-                      ? 'border-[#d4af37]/60 bg-[#102219]/70 shadow-lg'
-                      : 'border-[#d4af37]/20 bg-[#070a0e] hover:border-[#d4af37]/40'
-                  }`}
+                <button
+                  type="button"
+                  onClick={() => setOpenFaq(openFaq === idx ? -1 : idx)}
+                  className="flex w-full items-center justify-between p-4 sm:p-5 text-left text-sm sm:text-base font-semibold text-white hover:text-[#fce096] transition-colors"
                 >
-                  <button
-                    type="button"
-                    onClick={() => setOpenFaq(openFaq === idx ? -1 : idx)}
-                    className="flex w-full items-center justify-between p-4 sm:p-5 text-left text-sm sm:text-base font-semibold text-white hover:text-[#fce096] transition-colors"
-                  >
-                    <span className="pr-4">{q}</span>
-                    <span className="text-[#d4af37] font-bold text-lg shrink-0">
-                      {openFaq === idx ? '−' : '+'}
-                    </span>
-                  </button>
-                  {openFaq === idx && (
-                    <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-0 border-t border-[#d4af37]/15 mt-1">
-                      <p className="text-xs sm:text-sm leading-6 text-[#cbd5e1]">{a}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
+                  <span className="pr-4">{q}</span>
+                  <span className="text-[#d4af37] font-bold text-lg shrink-0">
+                    {openFaq === idx ? '−' : '+'}
+                  </span>
+                </button>
+                {openFaq === idx && (
+                  <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-0 border-t border-[#d4af37]/15 mt-1">
+                    <p className="text-xs sm:text-sm leading-6 text-[#cbd5e1]">{a}</p>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
         </div>
       </section>
 
-      {/* 10. VERIFICATION & TRANSPARENCY CTA */}
-      <section className="mx-auto max-w-7xl px-6 pt-16">
+      {/* 9. BOTTOM VERIFICATION CTA */}
+      <section className="mx-auto max-w-7xl px-6 pt-6">
         <div className="rounded-3xl border border-[#d4af37]/30 bg-gradient-to-r from-[#102219] via-[#070a0e] to-[#102219] p-8 sm:p-12 text-center shadow-2xl relative overflow-hidden">
           <div className="mx-auto max-w-3xl space-y-4">
             <span className="font-sub-gold text-[10px] tracking-[0.25em] block uppercase text-[#fce096]">
               Radical Botanical &amp; Ledger Transparency
             </span>
             <h2 className="font-serif text-2xl sm:text-4xl text-white">
-              Every Bottle Has A Story. Every Rupee Has A Record.
+              Every Action Has A Record. Every Rupee Has A Face.
             </h2>
             <p className="text-xs sm:text-sm leading-6 text-[#cbd5e1] max-w-xl mx-auto">
-              Inspect your individual bottle's artisanal serial number, review independent lab assays, or explore the regional harvesting corridors that sustain our formulas.
+              Join us this December 2026. Whether you donate ₹50 for animal food or come join us on a Sunday to serve hot meals, your presence transforms our community.
             </p>
             <div className="pt-4 flex flex-wrap justify-center gap-4">
-              <Link
-                to="/verify"
+              <a
+                href="#volunteer-hub"
                 className="btn-gold-luxury inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-xs font-bold uppercase tracking-widest text-white shadow-xl"
               >
-                <ShieldCheck size={16} /> Verify Bottle Serial
-              </Link>
+                <HandHeart size={16} /> Register as Volunteer
+              </a>
               <Link
-                to="/provenance-engine"
+                to="/verify"
                 className="btn-silver-luxury inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-xs font-semibold uppercase tracking-widest text-[#cbd5e1] hover:text-white"
               >
-                <Leaf size={15} /> Sourcing &amp; Provenance
+                <ShieldCheck size={15} /> Verify Bottle Serial
               </Link>
             </div>
           </div>
         </div>
       </section>
-
-      {/* QUICK PLEDGE MODAL */}
-      {quickPledgeOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/85 backdrop-blur-md overflow-y-auto">
-          <div className="relative w-full max-w-xl rounded-3xl border border-[#d4af37]/50 bg-[#070a0e] p-6 sm:p-8 shadow-2xl my-8">
-            <button
-              type="button"
-              onClick={() => {
-                setQuickPledgeOpen(false);
-                setCertificateData(null);
-              }}
-              className="absolute top-5 right-5 text-[#94a3b8] hover:text-white text-xl font-bold font-mono"
-            >
-              ✕
-            </button>
-
-            {!certificateData ? (
-              <form onSubmit={handleQuickPledgeSubmit} className="space-y-5">
-                <div>
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/30 bg-[#102219] px-3 py-1 text-[10px] font-mono text-[#fce096] uppercase mb-2">
-                    <Heart size={12} className="text-rose-400" /> Voluntary Ecological Co-Sponsorship
-                  </span>
-                  <h3 className="font-serif text-2xl font-bold text-white">Co-Sponsor Environmental Action</h3>
-                  <p className="mt-1 text-xs text-[#94a3b8]">
-                    100% of your pledge is channeled directly to on-ground botanical restoration. Zero admin cut.
-                  </p>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono uppercase text-[#cbd5e1] mb-1">
-                    Select Environmental Corridor:
-                  </label>
-                  <select
-                    value={quickPledgeProject.id}
-                    onChange={e => {
-                      const match = IMPACT_PROJECTS.find(p => p.id === e.target.value);
-                      if (match) setQuickPledgeProject(match);
-                    }}
-                    className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
-                  >
-                    {IMPACT_PROJECTS.map(p => (
-                      <option key={p.id} value={p.id}>
-                        {p.title}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-mono uppercase text-[#cbd5e1] mb-1">
-                    Pledge Amount (INR):
-                  </label>
-                  <div className="grid grid-cols-4 gap-2 mb-2">
-                    {[100, 250, 500, 1000].map(amt => (
-                      <button
-                        key={amt}
-                        type="button"
-                        onClick={() => setPledgeAmount(amt)}
-                        className={`rounded-xl border p-2 text-xs font-mono font-bold ${
-                          pledgeAmount === amt
-                            ? 'border-[#d4af37] bg-[#102219] text-[#fce096]'
-                            : 'border-[#d4af37]/20 bg-[#070a0e] text-white hover:border-[#d4af37]'
-                        }`}
-                      >
-                        ₹{amt}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="block text-xs font-mono uppercase text-[#cbd5e1] mb-1">Your Full Name *</label>
-                    <input
-                      type="text"
-                      required
-                      placeholder="e.g., Rohan Gupta"
-                      value={patronName}
-                      onChange={e => setPatronName(e.target.value)}
-                      className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-mono uppercase text-[#cbd5e1] mb-1">Email (For Certificate) *</label>
-                    <input
-                      type="email"
-                      required
-                      placeholder="e.g., rohan@example.com"
-                      value={patronEmail}
-                      onChange={e => setPatronEmail(e.target.value)}
-                      className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
-                    />
-                  </div>
-                </div>
-
-                <div className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e] p-3 text-[11px] text-[#94a3b8] leading-5">
-                  <strong className="text-amber-300">Indian Legal Notice:</strong> Bhumivera is an eco-botanical enterprise. This is a voluntary green co-sponsorship pledge of tangible field materials, NOT an 80G tax donation.
-                </div>
-
-                <div className="flex items-center justify-end gap-3 pt-2">
-                  <button
-                    type="button"
-                    onClick={() => setQuickPledgeOpen(false)}
-                    className="rounded-xl border border-[#d4af37]/30 px-4 py-2 text-xs font-mono text-[#cbd5e1]"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    className="btn-gold-luxury rounded-xl px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-xl hover:scale-105 transition-transform"
-                  >
-                    Confirm &amp; Issue Certificate
-                  </button>
-                </div>
-              </form>
-            ) : (
-              <div className="space-y-5 text-center">
-                <div className="inline-flex h-12 w-12 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400">
-                  <Award size={26} />
-                </div>
-                <h3 className="font-serif text-2xl font-bold text-white">Stewardship Certificate Generated</h3>
-                <div className="rounded-2xl border-2 border-[#d4af37] bg-gradient-to-b from-[#102219] to-[#070a0e] p-6 text-left space-y-3">
-                  <div className="flex items-center justify-between border-b border-[#d4af37]/25 pb-2 text-[10px] font-mono text-[#fce096]">
-                    <span>Bhumivera Verified Ledger</span>
-                    <span>{certificateData.code}</span>
-                  </div>
-                  <h4 className="font-serif text-xl font-bold text-white">{certificateData.name}</h4>
-                  <p className="text-xs text-[#cbd5e1]">
-                    Has pledged <strong>₹{certificateData.amount}</strong> to support{' '}
-                    <strong className="text-[#fce096]">{certificateData.projectTitle}</strong>.
-                  </p>
-                  <div className="text-[10px] font-mono text-[#94a3b8]">
-                    Recorded on {certificateData.date} · 100% Direct Field Allocation
-                  </div>
-                </div>
-
-                <div className="flex justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => window.print()}
-                    className="btn-gold-luxury rounded-xl px-5 py-2.5 text-xs font-bold uppercase text-white shadow-xl"
-                  >
-                    Print Certificate
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setQuickPledgeOpen(false);
-                      setCertificateData(null);
-                    }}
-                    className="rounded-xl border border-[#d4af37]/40 px-5 py-2.5 text-xs font-mono text-[#cbd5e1]"
-                  >
-                    Done
-                  </button>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
     </main>
   );
 }
