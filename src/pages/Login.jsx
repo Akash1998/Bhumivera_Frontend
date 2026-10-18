@@ -30,6 +30,7 @@ const Login = () => {
   const passkeySupported = isPasskeySupported();
 
   useEffect(() => {
+    if (typeof location.state?.email === 'string') setEmail(location.state.email);
     const secondFactorEmail = location.state?.googleTwoFactorEmail;
     if (!secondFactorEmail) return;
     setEmail(secondFactorEmail);

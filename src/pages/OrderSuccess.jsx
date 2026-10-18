@@ -20,6 +20,7 @@ export default function OrderSuccess() {
   const [spinStatus, setSpinStatus] = useState('loading');
   const [spinError, setSpinError] = useState('');
   const [spinClaim, setSpinClaim] = useState(null);
+  const [spinRewards, setSpinRewards] = useState([]);
   const [spinRotation, setSpinRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [spinDismissed, setSpinDismissed] = useState(false);
@@ -44,6 +45,7 @@ export default function OrderSuccess() {
     try {
       const { data } = await gamificationApi.getOrderSpin(orderId);
       setSpinClaim(data.claim || null);
+      setSpinRewards(Array.isArray(data.rewards) ? data.rewards : []);
       setSpinStatus(data.enabled && data.eligible ? (data.claim ? 'claimed' : 'available') : 'disabled');
     } catch (error) {
       console.error('[ORDER_SUCCESS_SPIN_STATUS]', error);
@@ -62,7 +64,19 @@ export default function OrderSuccess() {
     setSpinError('');
     try {
       const { data } = await gamificationApi.claimOrderSpin(orderId);
-      setSpinRotation(rotation => rotation + 1800 + (Number(data.rewardIndex) % 6) * 60);
+      const segmentCount = spinRewards.length;
+      if (!segmentCount || !Number.isInteger(Number(data.rewardIndex)) ||
+          Number(data.rewardIndex) < 0 || Number(data.rewardIndex) >= segmentCount) {
+        throw new Error('The configured reward wheel could not be matched to the issued reward. Please refresh and try again.');
+      }
+      const segmentAngle = 360 / segmentCount;
+      const rewardCenterAngle = Number(data.rewardIndex) * segmentAngle + segmentAngle / 2;
+      setSpinRotation(rotation => {
+        const currentAngle = ((rotation % 360) + 360) % 360;
+        const targetAngle = (360 - rewardCenterAngle + 360) % 360;
+        const alignment = (targetAngle - currentAngle + 360) % 360;
+        return rotation + 5 * 360 + alignment;
+      });
       await new Promise(resolve => window.setTimeout(resolve, 4200));
       setSpinClaim({ reward: data.reward, couponCode: data.couponCode, rewardType: data.rewardType, pointsAwarded: data.pointsAwarded });
       setSpinStatus('claimed');
@@ -129,11 +143,18 @@ export default function OrderSuccess() {
 
             {!spinClaim && (
               <div className="mt-8 flex flex-col items-center gap-6 sm:flex-row sm:justify-center">
-                <div className="relative h-44 w-44 shrink-0 rounded-full border-[6px] border-[#d4af37]/40 shadow-2xl">
+                <div className="flex flex-col items-center gap-4">
+                <div className="relative h-48 w-48 shrink-0 rounded-full border-[6px] border-[#d4af37]/40 shadow-2xl">
                   <Motion.div
                     className="h-full w-full rounded-full"
                     style={{
-                      background: 'conic-gradient(#d4af37 0deg 58deg, #101a26 60deg 118deg, #fce096 120deg 178deg, #0d1520 180deg 238deg, #cbd5e1 240deg 298deg, #070a0e 300deg 358deg, #d4af37 360deg)'
+                      background: `conic-gradient(${spinRewards.map((reward, index) => {
+                        const segmentAngle = 360 / Math.max(spinRewards.length, 1);
+                        const start = index * segmentAngle;
+                        const end = (index + 1) * segmentAngle - 1;
+                        const colors = ['#d4af37', '#101a26', '#fce096', '#0d1520', '#cbd5e1', '#070a0e'];
+                        return `${colors[index % colors.length]} ${start}deg ${end}deg`;
+                      }).join(', ')})`
                     }}
                     animate={{ rotate: spinRotation }}
                     transition={{ duration: 4, ease: 'easeOut' }}
@@ -141,13 +162,29 @@ export default function OrderSuccess() {
                   <span className="absolute inset-0 m-auto flex h-12 w-12 items-center justify-center rounded-full border-2 border-[#d4af37] bg-[#070a0e] text-[#d4af37] shadow-md">
                     <Sparkles size={18} />
                   </span>
-                  <span className="absolute -top-3 left-1/2 -translate-x-1/2 border-x-[9px] border-b-[14px] border-x-transparent border-b-[#d4af37]" aria-hidden="true" />
+                  <span className="absolute -top-1 left-1/2 z-10 -translate-x-1/2 border-x-[9px] border-t-[14px] border-x-transparent border-t-[#d4af37] drop-shadow-md" aria-hidden="true" />
+                </div>
+                {spinRewards.length > 0 && (
+                  <div className="w-full max-w-[22rem]">
+                    <p className="mb-2 text-center font-sub-gold text-[10px] font-semibold uppercase tracking-[0.2em]">Possible rewards</p>
+                    <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
+                      {spinRewards.map((reward, index) => (
+                        <li key={`${reward.label}-${index}`} className="flex min-w-0 items-center gap-2 rounded-lg border border-white/10 bg-[#070a0e]/50 px-2.5 py-2 text-[11px]">
+                          <span className="flex min-w-0 items-center gap-2 text-[#fce096]">
+                            <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: ['#d4af37', '#101a26', '#fce096', '#0d1520', '#cbd5e1', '#070a0e'][index % 6] }} />
+                            <span className="truncate">{reward.label}</span>
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
                 </div>
                 <div className="max-w-sm text-center sm:text-left">
                   <button
                     type="button"
                     onClick={spinForReward}
-                    disabled={spinning}
+                    disabled={spinning || spinStatus !== 'available' || spinRewards.length === 0}
                     className="btn-gold-luxury inline-flex min-h-12 items-center justify-center gap-2 px-6 py-3 text-xs font-semibold uppercase tracking-wider rounded-xl shadow-lg disabled:cursor-wait disabled:opacity-70"
                   >
                     {spinning ? (

@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, Lock, Mail, AlertTriangle, User, 
@@ -21,9 +21,14 @@ const viewVariants = {
 
 export default function Register() {
   const { register, verifyEmail, googleLogin } = useAuth();
+  const location = useLocation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const referralToken = searchParams.get('ref') || '';
+  const returnTo = typeof location.state?.from === 'string' &&
+    location.state.from.startsWith('/') && !location.state.from.startsWith('//')
+    ? location.state.from
+    : '/profile';
   const [referralPreview, setReferralPreview] = useState({ loading: false, valid: false, referrerName: '' });
 
   // 1. Create the Ref for the Turnstile widget
@@ -31,7 +36,7 @@ export default function Register() {
 
   const [view, setView] = useState('INIT');
   const [formData, setFormData] = useState({
-    name: '', email: '', password: '', securityAnswer: '', marketingEmailOptIn: false,
+    name: '', email: searchParams.get('email') || '', password: '', securityAnswer: '', marketingEmailOptIn: false,
     adPersonalizationOptIn: false, referralCode: ''
   });
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -169,7 +174,7 @@ export default function Register() {
         securityAnswer: formData.securityAnswer 
       });
       setSuccessMsg("Identity verified. Initializing your Bhumivera profile...");
-      setTimeout(() => navigate('/profile', { replace: true }), 1500);
+      setTimeout(() => navigate(returnTo, { replace: true }), 1500);
     } catch (err) {
       setError(err.normalized?.message || err.response?.data?.message || err.message || 'Verification failed');
     } finally {
@@ -193,7 +198,7 @@ export default function Register() {
         });
         return;
       }
-      navigate('/profile', { replace: true });
+      navigate(returnTo, { replace: true });
     } catch (error) {
       const message = error.response?.data?.message || error.normalized?.message || error.message || 'Google sign-in failed.';
       setGoogleSignInError(message);

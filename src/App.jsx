@@ -6,6 +6,7 @@ import MobileBottomNav from "./components/MobileBottomNav.jsx";
 import { useNativeBackButton } from "./hooks/useNativeBackButton.js";
 import { initPushNotifications } from "./utils/pushNotifications.js";
 import Footer from "./components/Footer.jsx";
+import CartAuthPrompt from "./components/CartAuthPrompt.jsx";
 import { CartProvider, useCart } from "./context/CartContext.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { ToastProvider } from "./context/ToastContext.jsx";
@@ -445,6 +446,7 @@ function AppContent() {
           <MiniCart />
         </Suspense>
       )}
+      {!isManagementView && <CartAuthPrompt />}
       {!isManagementView && (
         <Suspense fallback={null}>
           <SupportAssistant />

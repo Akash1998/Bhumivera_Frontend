@@ -28,19 +28,21 @@ export default function GamificationStudio() {
 
   useEffect(() => {
     let active = true;
-    settingsApi.get().then(({ data }) => {
+    settingsApi.getGamification().then(({ data }) => {
       if (!active) return;
-      const gamification = data?.gamification || {};
+      const gamification = data || {};
       setValues(gamification);
       if (gamification.gamification_order_spin_rewards) {
         try {
           const parsedRewards = JSON.parse(gamification.gamification_order_spin_rewards);
-          if (Array.isArray(parsedRewards) && parsedRewards.length === 6) {
+          if (Array.isArray(parsedRewards) && parsedRewards.length >= 1 && parsedRewards.length <= 12) {
             setSpinRewards(parsedRewards.map(reward => ({
               ...reward,
               rewardType: reward.rewardType || 'discount',
               maxDiscount: reward.maxDiscount ?? '',
             })));
+          } else {
+            throw new Error('Saved spin reward configuration must contain between 1 and 12 rewards.');
           }
         } catch (error) {
           console.error('[ADMIN_ORDER_SPIN_SETTINGS_PARSE]', error);
@@ -78,7 +80,7 @@ export default function GamificationStudio() {
             }),
         }))),
       });
-      showToast?.('All six spin rewards and chances saved.', 'success');
+      showToast?.('Spin rewards and chances saved.', 'success');
     } catch (error) {
       showToast?.(error.normalized?.message || 'Could not save spin rewards.', 'error');
     } finally {

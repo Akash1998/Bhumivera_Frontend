@@ -227,6 +227,7 @@ export default function AdminDashboard() {
       title: 'Privilege & Bespoke Curation',
       items: [
         { id: 'growth-offers', label: 'Promotions & Offers' },
+        { id: 'gamification', label: 'Reward Spins & Activities' },
         { id: 'loyalty-tiers', label: 'Clientele Privilege & Tiers' },
         { id: 'loyalty-members', label: 'Privilege Members' },
         { id: 'personalization', label: 'Bespoke Client Curation' },
@@ -255,6 +256,7 @@ export default function AdminDashboard() {
     'users',
     'support',
     'growth-offers',
+    'gamification',
     'loyalty-tiers',
     'personalization',
   ];

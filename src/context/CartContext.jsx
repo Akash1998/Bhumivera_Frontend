@@ -11,6 +11,8 @@ import {
 import { getClientStockError } from "../utils/cartStock";
 
 const CartContext = createContext();
+const GUEST_CART_KEY = "Bhumivera_guest_cart";
+const PENDING_CART_ADD_KEY = "Bhumivera_pending_cart_add";
 
 export const getCartProductId = product => product?.product_id ?? product?._id ?? product?.id;
 
@@ -18,6 +20,7 @@ export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
   const [cartLoading, setCartLoading] = useState(false);
   const [isCartOpen, setIsCartOpen] = useState(false); 
+  const [isCartAuthPromptOpen, setIsCartAuthPromptOpen] = useState(false);
   const [cartAddEvent, setCartAddEvent] = useState(null);
   const [upsells, setUpsells] = useState([]); 
   const [rulePreview, setRulePreview] = useState(null);
@@ -38,9 +41,70 @@ export const CartProvider = ({ children }) => {
       setCartLoading(true);
       setRulePreviewLoading(true);
       try {
+        let guestItems = [];
+        let pendingAdd = null;
+        try {
+          const saved = localStorage.getItem(GUEST_CART_KEY);
+          const parsed = saved ? JSON.parse(saved) : [];
+          if (Array.isArray(parsed)) guestItems = parsed;
+          const pending = localStorage.getItem(PENDING_CART_ADD_KEY);
+          pendingAdd = pending ? JSON.parse(pending) : null;
+        } catch (error) {
+          console.error("Guest cart restore failed:", error);
+          toast.error('Your saved bag could not be read. Please try again before continuing.');
+          throw error;
+        }
+
+        if (pendingAdd) {
+          const pendingProductId = getCartProductId(pendingAdd) ?? pendingAdd.productId;
+          const pendingQuantity = Number(pendingAdd.quantity);
+          if (pendingProductId != null && Number.isInteger(pendingQuantity) && pendingQuantity > 0) {
+            const existing = guestItems.find(item => String(getCartProductId(item)) === String(pendingProductId));
+            if (existing) {
+              existing.quantity = (Number(existing.quantity) || 0) + pendingQuantity;
+            } else {
+              guestItems.push({
+                product_id: pendingProductId,
+                id: pendingProductId,
+                product: pendingAdd.product || { id: pendingProductId },
+                quantity: pendingQuantity,
+              });
+            }
+          }
+          localStorage.setItem(GUEST_CART_KEY, JSON.stringify(guestItems));
+          localStorage.removeItem(PENDING_CART_ADD_KEY);
+        }
+
+        let remainingGuestItems = [...guestItems];
+        for (const item of guestItems) {
+          const productId = getCartProductId(item);
+          const quantity = Number(item.quantity);
+          if (productId == null || !Number.isInteger(quantity) || quantity < 1) {
+            console.error("Skipping invalid saved guest cart item:", item);
+            continue;
+          }
+          try {
+            await cartApi.add({ productId, quantity });
+            remainingGuestItems = remainingGuestItems.filter(candidate => candidate !== item);
+            if (remainingGuestItems.length) {
+              localStorage.setItem(GUEST_CART_KEY, JSON.stringify(remainingGuestItems));
+            } else {
+              localStorage.removeItem(GUEST_CART_KEY);
+            }
+          } catch (error) {
+            console.error("Guest bag item could not be merged after sign-in:", error);
+            toast.error(error.response?.data?.message || 'Some items from your saved bag could not be moved to your account.');
+            break;
+          }
+        }
+
         const res = await cartApi.get();
         const fetchedData = res.data?.items || res.data;
-        setCart(Array.isArray(fetchedData) ? fetchedData : []);
+        const serverItems = Array.isArray(fetchedData) ? fetchedData : [];
+        const unmergedItems = remainingGuestItems.filter(item =>
+          !serverItems.some(serverItem => String(getCartProductId(serverItem)) === String(getCartProductId(item)))
+        );
+        setCart([...serverItems, ...unmergedItems]);
         setRulePreview(res.data?.rulePreview || null);
         setReferralReward(res.data?.referralReward || { balance: 0, estimatedAmount: 0, tiers: [] });
         setLoyalty(res.data?.loyalty || null);
@@ -60,7 +124,7 @@ export const CartProvider = ({ children }) => {
       }
     } else {
       try {
-        const saved = localStorage.getItem("Bhumivera_guest_cart");
+        const saved = localStorage.getItem(GUEST_CART_KEY);
         const parsed = saved ? JSON.parse(saved) : [];
         setCart(Array.isArray(parsed) ? parsed : []);
         setRulePreview(null);
@@ -73,11 +137,11 @@ export const CartProvider = ({ children }) => {
         setCart([]);
       }
     }
-  }, [isCustomerAuthenticated]);
+  }, [isCustomerAuthenticated, toast]);
 
   const saveGuestCart = (nextCart, failureMessage) => {
     try {
-      localStorage.setItem("Bhumivera_guest_cart", JSON.stringify(nextCart));
+      localStorage.setItem(GUEST_CART_KEY, JSON.stringify(nextCart));
       setCart(nextCart);
       return true;
     } catch (error) {
@@ -108,6 +172,22 @@ export const CartProvider = ({ children }) => {
         autoOpen: true,
       });
       return false;
+    }
+
+    if (!isCustomerAuthenticated) {
+      try {
+        localStorage.setItem(PENDING_CART_ADD_KEY, JSON.stringify({
+          product: { ...product, id: prodId },
+          productId: prodId,
+          quantity: qty,
+        }));
+        setIsCartAuthPromptOpen(true);
+        return false;
+      } catch (error) {
+        console.error("Pending bag item could not be saved:", error);
+        toast.error('Could not save this item before sign-in. Please try again.');
+        return false;
+      }
     }
 
     let cartProduct;
@@ -305,8 +385,10 @@ export const CartProvider = ({ children }) => {
       if (isCustomerAuthenticated) {
         setCart([]);
         await cartApi.clear();
+        localStorage.removeItem(GUEST_CART_KEY);
+        localStorage.removeItem(PENDING_CART_ADD_KEY);
       } else {
-        localStorage.removeItem("Bhumivera_guest_cart");
+        localStorage.removeItem(GUEST_CART_KEY);
         setCart([]);
       }
       toast.success('Cart cleared successfully.');
@@ -352,6 +434,11 @@ export const CartProvider = ({ children }) => {
       loading: cartLoading, 
       isCartOpen, 
       setIsCartOpen,
+      isCartAuthPromptOpen,
+      closeCartAuthPrompt: ({ keepPending = false } = {}) => {
+        setIsCartAuthPromptOpen(false);
+        if (!keepPending) localStorage.removeItem(PENDING_CART_ADD_KEY);
+      },
       cartAddEvent,
       addToCart, 
       updateQuantity, 
