@@ -246,12 +246,12 @@ export default function Impact() {
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            <a
-              href="#volunteer-hub"
+            <Link
+              to="/community"
               className="btn-gold-luxury inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-xs font-bold uppercase tracking-widest text-white shadow-xl hover:scale-[1.02] transition-transform"
             >
-              <Users size={16} /> Join as Volunteer (100+ Network)
-            </a>
+              <Users size={16} /> Community &amp; Volunteer Hub (100+ Network)
+            </Link>
             <a
               href="#dec-2026-projects"
               className="btn-silver-luxury inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-xs font-semibold uppercase tracking-widest text-[#cbd5e1] hover:text-white transition-colors"
@@ -602,7 +602,12 @@ export default function Impact() {
                     Voices &amp; Deeds from the Ground
                   </h3>
                 </div>
-                <span className="text-[11px] font-mono text-[#94a3b8]">Live Grassroots Log</span>
+                <Link
+                  to="/community"
+                  className="inline-flex items-center gap-1.5 text-xs font-mono text-[#fce096] hover:underline"
+                >
+                  Full Community Hub &amp; Calendar <ArrowRight size={13} />
+                </Link>
               </div>
 
               {/* Feed of Posts */}

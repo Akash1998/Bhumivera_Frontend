@@ -141,6 +141,12 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
+                <Link to="/community" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
+                  <span>Community &amp; Volunteer Hub</span>
+                  <span className="text-[10px] text-[#D4AF37] font-bold font-mono">Join Free</span>
+                </Link>
+              </li>
+              <li>
                 <Link to="/wishlist" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
                   <span>Saved Rituals &amp; Wishlist</span>
                 </Link>

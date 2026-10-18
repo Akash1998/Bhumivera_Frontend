@@ -172,6 +172,12 @@ export default function Navbar() {
             Small-Batch Botanical Care <span className="px-3 text-[#d4af37]">•</span> Thoughtfully Sourced Ingredients <span className="px-3 text-[#d4af37]">•</span> Crafted with Care in India
           </span>
           <div className="flex items-center gap-6">
+            <Link to="/community" className="flex items-center gap-1.5 transition-colors hover:text-[#d4af37] text-[#FAF7F2]/80">
+              <HeartHandshake size={13} className="text-[#d4af37]" /> Community Hub
+            </Link>
+            <Link to="/impact" className="flex items-center gap-1.5 transition-colors hover:text-[#d4af37] text-[#FAF7F2]/80">
+              <Leaf size={13} className="text-[#d4af37]" /> Impact Ledger
+            </Link>
             <Link to="/order-tracking" className="flex items-center gap-1.5 transition-colors hover:text-[#d4af37] text-[#FAF7F2]/80">
               <MapPin size={13} className="text-[#d4af37]" /> {t('nav_track_order', 'Track Order')}
             </Link>
@@ -443,7 +449,9 @@ export default function Navbar() {
                   {[
                     { to: '/shop', label: 'Shop All Formulations', icon: Compass, badge: 'Catalog' },
                     { to: '/verify', label: 'Verify Bottle Serial', icon: ShieldCheck, badge: 'Serial Check', highlight: true },
-                    { to: '/about', label: 'Our Story & Heritage', icon: Leaf },
+                    { to: '/community', label: 'Community & Volunteer Hub', icon: HeartHandshake, badge: 'Dec 2026' },
+                    { to: '/impact', label: 'Impact Ledger & Pledges', icon: Leaf },
+                    { to: '/about', label: 'Our Story & Heritage', icon: Sparkles },
                     { to: '/science', label: 'Botanical Science & pH 5.5', icon: FlaskConical },
                     { to: '/order-tracking', label: 'Track An Order', icon: Truck },
                     { to: '/wishlist', label: 'Saved Wishlist', icon: Heart },
