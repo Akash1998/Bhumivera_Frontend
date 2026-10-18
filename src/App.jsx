@@ -250,6 +250,7 @@ function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
   const { setIsCartOpen } = useCart();
+  const { token, user } = useAuth();
   const [pwaUpdateWorker, setPwaUpdateWorker] = React.useState(null);
   const [visualGuideState, setVisualGuideState] = React.useState({ isOpen: false, tab: 'password' });
 
@@ -289,11 +290,13 @@ function AppContent() {
   useNativeBackButton();
 
   useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      initPushNotifications(token);
+    const customerToken = localStorage.getItem('token');
+    if (customerToken && token === customerToken && !['admin', 'superadmin', 'warehouse_admin'].includes(user?.role)) {
+      initPushNotifications(token).catch(error => {
+        console.error('[PUSH_NOTIFICATIONS_INITIALIZATION_ERROR]', error);
+      });
     }
-  }, []);
+  }, [token, user?.role]);
 
   useEffect(() => {
     const params = new URLSearchParams(location.search);

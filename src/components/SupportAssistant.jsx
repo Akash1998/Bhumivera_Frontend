@@ -28,9 +28,11 @@ import {
   Mail,
   ShieldCheck,
   Award,
+  Search,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
+import ConciergeKnowledgeTreeViewer from './ConciergeKnowledgeTreeViewer';
 import api, { aiSupport as aiSupportApi, BASE_URL } from '../services/api';
 import { normalizeTelegramBotUrl } from '../utils/telegramUrl';
 import {
@@ -40,9 +42,11 @@ import {
 } from '../utils/aiCopilotBus';
 import { resolveClientSideConciergeFallback } from '../utils/bhumiveraAiConciergeFallback';
 import { matchAiIntentWithFuzzy } from '../utils/aiIntentMatcher';
+import { isOrderCancellationRequest } from '../utils/orderSupportIntent';
 
 const STORAGE_KEY = 'bhumivera_client_concierge_state_v3';
 const SESSION_TOKEN_KEY = 'bhumivera_client_concierge_token_v3';
+const THEME_PREFERENCE_KEY = 'bhumivera_client_concierge_theme';
 const PROACTIVE_TRIGGERED_KEY = 'bhumivera_concierge_proactive_v3';
 const RITUAL_PROGRESS_STORAGE_KEY = 'bhumivera_concierge_ritual_progress_v3';
 const DIAGNOSTIC_STATE_STORAGE_KEY = 'bhumivera_concierge_skin_diagnostic_v3';
@@ -4261,7 +4265,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuth() || {};
-  const { cart = [], isCartOpen = false } = useCart() || {};
+  const { cart = [], isCartOpen = false, addToCart } = useCart() || {};
   const t = (_key, fallback = '') => fallback;
 
   const persisted = useMemo(() => {
@@ -4282,8 +4286,11 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   const [isMaximized, setIsMaximized] = useState(false);
   const [supportCategory, setSupportCategory] = useState(persisted.supportCategory || null);
   const [isDark, setIsDark] = useState(() => {
-    if (typeof persisted.isDark === 'boolean') return persisted.isDark;
-    return typeof document !== 'undefined' && document.documentElement.classList.contains('dark');
+    try {
+      return typeof window === 'undefined' || window.localStorage.getItem(THEME_PREFERENCE_KEY) !== 'light';
+    } catch {
+      return true;
+    }
   });
   const [soundEnabled, setSoundEnabled] = useState(persisted.soundEnabled !== false);
   const [sessionToken, setSessionToken] = useState(
@@ -4577,7 +4584,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   };
 
   // Opens the Legitimate Customer Verification & Callback/Email Escalation Wizard
-  const openVerificationFlow = useCallback((prefillOrderId = '') => {
+  const openVerificationFlow = useCallback((prefillOrderId = '', options = {}) => {
     setIngredientDrawerOpen(false);
     setRitualDrawerOpen(false);
     setDiagnosticDrawerOpen(false);
@@ -4588,13 +4595,13 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       orderId: prefillOrderId ? String(prefillOrderId) : '',
       emailOrPhone: user?.email || user?.phone || '',
       verifiedOrder: null,
-      issueCategory: 'order_modification_or_delivery',
+      issueCategory: options.category || 'order_modification_or_delivery',
       sealCondition: 'intact_verified',
       remedyPreference: 'specialist_callback_or_resolution',
       contactPreference: 'email',
       callbackPhone: user?.phone ? String(user.phone).replace(/\D/g, '').slice(-10) : '',
       callbackTimeSlot: CALLBACK_SLOTS[0],
-      queryDetails: '',
+      queryDetails: options.details || '',
       busy: false,
       error: '',
       ticketReference: '',
@@ -4802,13 +4809,15 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     const text = String(overridePrompt !== null ? overridePrompt : input).trim();
     if ((!text && attachments.length === 0) || isTyping) return;
 
-    // Cancellation requests always require order verification; general requests for a person do not.
-    if (
-      /\bcancel\s*(?:my\s*|this\s*|the\s*)?order\b/i.test(text) &&
-      !escalationWizard.verifiedOrder
-    ) {
-      const matchOrd = text.match(/(?:BHVM[-_\s]*)?(\d{6,12})\b/i);
-      openVerificationFlow(matchOrd?.[1] || '');
+    if (isOrderCancellationRequest(text)) {
+      const matchOrd = text.match(/\b(?:BHVM[-_\s]*)?(\d{6,12})\b/i);
+      openVerificationFlow(matchOrd?.[1] || '', {
+        category: 'order_cancellation',
+        details: text,
+      });
+      if (overridePrompt === null) setInput('');
+      setAttachments([]);
+      return;
     }
 
     const currentAttachments = [...attachments];
@@ -4936,7 +4945,15 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       setIsOpen(true);
       setProactiveBubble(null);
       if (detail.verifyOrderId) {
-        openVerificationFlow(detail.verifyOrderId);
+        openVerificationFlow(
+          detail.verifyOrderId,
+          detail.cancelOrder
+            ? {
+                category: 'order_cancellation',
+                details: 'I am requesting cancellation of this order. Please verify ownership and arrange specialist review; this request is not confirmation that the order has been cancelled.',
+              }
+            : {}
+        );
       } else if (detail.ingredientId) {
         setSelectedIngredientId(detail.ingredientId);
         setIngredientDrawerOpen(true);
@@ -5057,7 +5074,15 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               </button>
               <button
                 type="button"
-                onClick={() => setIsDark(prev => !prev)}
+                onClick={() => setIsDark(prev => {
+                  const next = !prev;
+                  try {
+                    localStorage.setItem(THEME_PREFERENCE_KEY, next ? 'dark' : 'light');
+                  } catch (error) {
+                    console.error('[CONCIERGE_THEME_PERSIST_FAILED]', error);
+                  }
+                  return next;
+                })}
                 title={isDark ? 'Light mode' : 'Dark mode'}
                 aria-label={isDark ? 'Light mode' : 'Dark mode'}
                 className="p-1.5 rounded-lg text-stone-200 hover:bg-white/10 transition-colors"
@@ -5316,6 +5341,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                         isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-white border-stone-300 text-[#0B2419]'
                       }`}
                     >
+                      <option value="order_cancellation">Order Cancellation Request</option>
                       <option value="order_modification_or_delivery">Order / Address / Delivery Assist</option>
                       <option value="damaged_or_leaked_unit">Damaged / Leaked Bottle Inspection</option>
                       <option value="quality_verification_inquiry">Quality or Transit Verification</option>
@@ -5523,428 +5549,59 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             </div>
           )}
 
-          {/* Messages Stream */}
-          <div
-            className={`flex-1 overflow-y-auto px-5 py-4 space-y-4 ${
-              isDark ? 'bg-[#071510]' : 'bg-[#FDFBF7]'
-            }`}
-          >
-            {messages.length === 0 && (
-              <div className="flex flex-col items-center justify-center text-center p-4 sm:p-6 rounded-3xl bg-gradient-to-b from-[#D4AF37]/10 via-[#0B2419]/5 to-transparent border border-[#D4AF37]/25 my-2">
-                <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/50 flex items-center justify-center mb-3 shadow-inner">
-                  <Sparkles className="w-6 h-6 text-[#D4AF37]" />
-                </div>
-                <h3 className="font-serif text-base sm:text-lg font-bold text-stone-900 dark:text-stone-100">
-                  Welcome to Bhumivera Client Concierge
-                </h3>
-                <p className="mt-1 max-w-sm text-xs leading-relaxed text-stone-600 dark:text-stone-300">
-                  Your personal Ayurvedic phytoscience advisor. Tap any inquiry below or ask a question:
-                </p>
-
-                {/* Primary Interactive Quick Cards in Chat Stream */}
-                <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-md text-left">
-                  <button
-                    type="button"
-                    onClick={() => void sendMessage('Tell me about Bhumivera Sea Buckthorn Face Wash and its key ingredients')}
-                    className="p-3 rounded-2xl border border-[#D4AF37]/35 bg-white/70 dark:bg-[#10241f]/80 hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all text-xs group shadow-sm text-left"
-                  >
-                    <span className="font-bold text-[#D4AF37] block group-hover:text-stone-900 dark:group-hover:text-white">
-                      🌿 Sea Buckthorn Face Wash
-                    </span>
-                    <span className="text-[11px] text-stone-500 dark:text-stone-400 block mt-0.5">
-                      5-point active science & barrier guide
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => void sendMessage('Tell me about Bhumivera Charcoal Face Wash and its key ingredients')}
-                    className="p-3 rounded-2xl border border-[#D4AF37]/35 bg-white/70 dark:bg-[#10241f]/80 hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all text-xs group shadow-sm text-left"
-                  >
-                    <span className="font-bold text-[#D4AF37] block group-hover:text-stone-900 dark:group-hover:text-white">
-                      🌋 Charcoal Face Wash
-                    </span>
-                    <span className="text-[11px] text-stone-500 dark:text-stone-400 block mt-0.5">
-                      3% Bamboo carbon & pore detox
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setDiagnosticDrawerOpen(true);
-                      setIngredientDrawerOpen(false);
-                      setRitualDrawerOpen(false);
-                    }}
-                    className="p-3 rounded-2xl border border-[#D4AF37]/35 bg-white/70 dark:bg-[#10241f]/80 hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all text-xs group shadow-sm text-left"
-                  >
-                    <span className="font-bold text-[#D4AF37] block group-hover:text-stone-900 dark:group-hover:text-white">
-                      ✨ Skin Diagnostic Quiz
-                    </span>
-                    <span className="text-[11px] text-stone-500 dark:text-stone-400 block mt-0.5">
-                      8-step personalized skin blueprint
-                    </span>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRitualDrawerOpen(true);
-                      setIngredientDrawerOpen(false);
-                      setDiagnosticDrawerOpen(false);
-                    }}
-                    className="p-3 rounded-2xl border border-[#D4AF37]/35 bg-white/70 dark:bg-[#10241f]/80 hover:border-[#D4AF37] hover:bg-[#D4AF37]/10 transition-all text-xs group shadow-sm text-left"
-                  >
-                    <span className="font-bold text-[#D4AF37] block group-hover:text-stone-900 dark:group-hover:text-white">
-                      ⏳ 4-Phase Facial Ritual
-                    </span>
-                    <span className="text-[11px] text-stone-500 dark:text-stone-400 block mt-0.5">
-                      Guided AM & PM chronobiology timer
-                    </span>
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {messages.map((msg, idx) => {
-              const isUser = msg.sender === 'user';
-              const isSystem = msg.sender === 'system';
-              const isHumanStaff = ['agent', 'supervisor', 'manager', 'superadmin'].includes(msg.sender);
-
-              if (isSystem) {
-                return (
-                  <div key={msg.id || idx} className="flex justify-center">
-                    <div className="max-w-[92%] rounded-2xl px-4 py-2.5 text-[11px] text-center bg-[#D4AF37]/15 border border-[#D4AF37]/35 shadow-sm">
-                      <FormattedMarkdown content={msg.content} isDark={isDark} onNavigate={href => navigate(href)} />
-                    </div>
-                  </div>
-                );
+          {/* Bhumivera Master Knowledge Tree & Visual Decision Engine */}
+          <ConciergeKnowledgeTreeViewer
+            isDark={isDark}
+            searchQuery={input}
+            setSearchQuery={setInput}
+            onNavigate={path => {
+              navigate(path);
+              if (typeof window !== 'undefined' && window.innerWidth < 768) {
+                setIsOpen(false);
               }
-
-              return (
-                <div
-                  key={msg.id || idx}
-                  className={`flex flex-col ${isUser ? 'items-end' : 'items-start'}`}
-                >
-                  {!isUser && (
-                    <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-[#D4AF37] mb-1.5 pl-1">
-                      <Sparkles className="w-3 h-3 text-[#D4AF37]" />
-                      <span>{isHumanStaff ? msg.senderName || 'Bhumivera Specialist' : 'Bhumivera Client Concierge'}</span>
-                    </div>
-                  )}
-                  <div
-                    className={`max-w-[90%] rounded-2xl px-4.5 py-3.5 transition-all shadow-sm ${
-                      isUser
-                        ? 'bg-[#0B2419] text-[#FDFBF7] rounded-tr-sm border border-[#D4AF37]/25 shadow-md'
-                        : isHumanStaff
-                        ? 'bg-emerald-950 text-emerald-50 border border-emerald-400/40 rounded-tl-sm shadow-md'
-                        : isDark
-                        ? 'bg-[#0f241d] text-stone-100 border border-white/10 rounded-tl-sm shadow-md'
-                        : 'bg-white text-[#0B2419] border border-[#0B2419]/10 rounded-tl-sm shadow-md'
-                    }`}
-                  >
-                    <FormattedMarkdown
-                      content={msg.content}
-                      isDark={isUser || isHumanStaff || isDark}
-                      onNavigate={href => navigate(href)}
-                    />
-
-                    {Array.isArray(msg.attachments) && msg.attachments.length > 0 && (
-                      <div className="mt-2.5 flex flex-wrap gap-1.5">
-                        {msg.attachments.map((att, aIdx) => (
-                          <div
-                            key={aIdx}
-                            className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-black/20 text-[11px]"
-                          >
-                            <ImageIcon className="w-3.5 h-3.5 text-[#D4AF37]" />
-                            <span className="truncate max-w-[140px]">{att.name || 'Photo'}</span>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {Array.isArray(msg.orderCards) &&
-                      msg.orderCards.map(order => (
-                        <ChatOrderCard
-                          key={order.id || order.orderNumber}
-                          order={order}
-                          isDark={isDark}
-                          onQuickPrompt={promptText => void sendMessage(promptText)}
-                          onRequestOrderIntervention={ordRef => openVerificationFlow(ordRef)}
-                        />
-                      ))}
-
-                    {msg.escalation?.escalated && (
-                      <div className="mt-2.5 flex items-center gap-2 rounded-xl bg-amber-500/15 border border-amber-500/30 px-3 py-2 text-[11px] font-medium text-amber-700 dark:text-amber-300">
-                        <ShieldAlert className="w-4 h-4 shrink-0" />
-                        <span>
-                          Verified follow-up request{msg.escalation.ticketId ? ` #${msg.escalation.ticketId}` : ''} recorded. A specialist will review your details.
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              );
-            })}
-
-            {!isTyping && !messages.some(msg => msg.sender === 'user') && (
-              <div
-                className={`rounded-2xl border p-4 space-y-3 ${
-                  isDark ? 'border-white/10 bg-[#0d221a]' : 'border-[#0B2419]/10 bg-white shadow-sm'
-                }`}
-              >
-                <div>
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] block">
-                    Ayurvedic Bio-Active Consultation
-                  </span>
-                  <p className="font-serif text-sm font-semibold mt-0.5">How may we guide your skincare journey today?</p>
-                </div>
-                <div className="grid gap-2 sm:grid-cols-2">
-                  {SUPPORT_ENTRY_CHOICES.map(choice => (
-                    <button
-                      key={choice.id}
-                      type="button"
-                      onClick={() => {
-                        setSupportCategory(choice.id);
-                        void sendMessage(choice.prompt, choice.id);
-                      }}
-                      className={`rounded-xl border p-3 text-left transition-all flex flex-col justify-between ${
-                        isDark
-                          ? 'border-white/10 bg-white/5 hover:bg-white/10 hover:border-[#D4AF37]/50'
-                          : 'border-[#0B2419]/10 bg-[#FDFBF7] hover:bg-[#f4f1e9] hover:border-[#0B2419]/30'
-                      }`}
-                    >
-                      <span className="block text-xs font-bold text-[#D4AF37]">{choice.label}</span>
-                      <span className="mt-1 block text-[10px] opacity-75 leading-relaxed">{choice.description}</span>
-                    </button>
-                  ))}
-                </div>
-                <p className="text-[10px] opacity-65 italic">
-                  ✦ Automated botanical concierge. Verified follow-up requests are scheduled with human specialists.
-                </p>
-              </div>
-            )}
-
-            {['resolved', 'closed'].includes(chatStatus) && (
-              <div
-                className={`rounded-2xl border p-4 space-y-2.5 ${
-                  isDark ? 'bg-[#10241f] border-[#D4AF37]/35' : 'bg-white border-[#0B2419]/15 shadow-sm'
-                }`}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs font-bold">
-                    {csatSubmitted ? 'Thank you for your feedback.' : 'How was your support experience?'}
-                  </span>
-                  <a
-                    href={telegramBotUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-[10px] font-semibold text-[#D4AF37] underline"
-                  >
-                    Telegram Concierge ↗
-                  </a>
-                </div>
-                {!csatSubmitted && (
-                  <>
-                    <div className="flex items-center gap-1.5 py-1">
-                      {[1, 2, 3, 4, 5].map(star => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() => setCsatRating(star)}
-                          disabled={csatSubmitting}
-                          aria-label={`Rate ${star} stars`}
-                          className="p-1 hover:scale-125 transition-transform disabled:opacity-60"
-                        >
-                          <Star
-                            className={`w-4 h-4 ${
-                              star <= csatRating ? 'fill-[#D4AF37] text-[#D4AF37]' : 'text-stone-400'
-                            }`}
-                          />
-                        </button>
-                      ))}
-                    </div>
-                    <div className="flex gap-1.5">
-                      <input
-                        type="text"
-                        value={csatFeedback}
-                        onChange={e => setCsatFeedback(e.target.value)}
-                        placeholder="Share a note on your experience…"
-                        className={`flex-1 px-3 py-2 rounded-xl border text-[11px] ${
-                          isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-stone-50 border-stone-200 text-[#0B2419]'
-                        }`}
-                      />
-                      <button
-                        type="button"
-                        onClick={() => void handleSubmitCsat()}
-                        disabled={csatSubmitting}
-                        className="px-3.5 py-2 rounded-xl bg-[#0B2419] text-[#D4AF37] text-xs font-bold shrink-0 disabled:opacity-60 hover:bg-[#143928] transition-colors"
-                      >
-                        {csatSubmitting ? 'Saving…' : 'Send'}
-                      </button>
-                    </div>
-                  </>
-                )}
-                {csatError && <p role="alert" className="text-[11px] text-red-600">{csatError}</p>}
-              </div>
-            )}
-
-            {!['resolved', 'closed'].includes(chatStatus) && hasPlacedOrder && messages.length > 2 && (
-              <div className="flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => void handleEndChat()}
-                  disabled={csatSubmitting || isTyping}
-                  aria-label="End chat"
-                  className="rounded-xl border border-[#0B2419]/20 px-3.5 py-1.5 text-[11px] font-semibold text-[#0B2419] hover:bg-[#0B2419]/10 disabled:opacity-60 dark:text-stone-200 dark:border-white/20 transition-colors"
-                >
-                  {csatSubmitting ? 'Closing…' : 'End chat'}
-                </button>
-              </div>
-            )}
-
-            {isTyping && (
-              <div className="flex items-center gap-2 text-xs opacity-85 pl-1 animate-pulse">
-                <div className="flex items-center gap-1.5 px-3 py-2 rounded-2xl bg-[#0B2419]/10 dark:bg-white/10">
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-bounce" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-bounce [animation-delay:150ms]" />
-                  <span className="w-1.5 h-1.5 rounded-full bg-[#D4AF37] animate-bounce [animation-delay:300ms]" />
-                </div>
-                {statusLabel && <span className="text-[11px] italic font-serif">{statusLabel}</span>}
-              </div>
-            )}
-
-            <div ref={messagesEndRef} />
-          </div>
-
-          {/* Dynamic AI Suggested Actions Carousel */}
-          {Array.isArray(quickActions) && quickActions.length > 0 && (
-            <div
-              className={`px-4 py-2 border-t space-y-1.5 shrink-0 transition-colors ${
-                isDark ? 'bg-[#081a13] border-white/10' : 'bg-[#f6f3ea] border-[#0B2419]/10'
-              }`}
-            >
-              <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-[0.16em] text-[#D4AF37]">
-                <span>
-                  {quickActions.some(c => c.category === 'post_wash_routine' || c.category === 'product_pairing' || c.category === 'ingredient_synergy')
-                    ? '✦ Skincare Ritual & Layering Suggestions'
-                    : quickActions.some(c => c.category === 'ingredient_deep_dive' || c.category === 'closely_related_ingredient')
-                    ? '✦ Botanical Active Inquiries'
-                    : '✦ Recommended Inquiries'}
-                </span>
-                <span className="text-[8px] opacity-60 font-normal">Swipe for more</span>
-              </div>
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none">
-                {quickActions.map(chip => {
-                  const isRelated = chip.category === 'closely_related_ingredient' || chip.category === 'product_pairing';
-                  const isUsage = chip.category === 'usage_and_timing' || chip.category === 'post_wash_routine';
-                  const isSynergy = chip.category === 'ingredient_synergy' || chip.category === 'skin_compatibility';
-                  return (
-                    <button
-                      key={chip.id || chip.label}
-                      type="button"
-                      disabled={isTyping}
-                      onClick={() => void sendMessage(chip.prompt || chip.label)}
-                      className={`shrink-0 px-3.5 py-1.5 rounded-full text-[11px] font-medium border transition-all duration-150 ${
-                        isRelated
-                          ? 'bg-[#D4AF37]/15 border-[#D4AF37]/60 text-[#0B2419] dark:text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0B2419]'
-                          : isUsage
-                          ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-900 dark:text-emerald-200 hover:bg-emerald-600 hover:text-white'
-                          : isSynergy
-                          ? 'bg-amber-500/15 border-amber-500/40 text-amber-900 dark:text-amber-200 hover:bg-amber-600 hover:text-white'
-                          : isDark
-                          ? 'bg-[#10241f] border-[#D4AF37]/35 text-stone-200 hover:border-[#D4AF37] hover:text-[#D4AF37]'
-                          : 'bg-white border-[#0B2419]/15 text-[#0B2419] hover:border-[#0B2419] hover:bg-[#0B2419] hover:text-white shadow-sm'
-                      } disabled:opacity-50`}
-                    >
-                      {chip.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* Pending Image Attachments Bar */}
-          {attachments.length > 0 && (
-            <div className="px-4 py-1.5 border-t border-current/10 flex items-center gap-2 overflow-x-auto shrink-0">
-              {attachments.map((att, idx) => (
-                <div
-                  key={idx}
-                  className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-[#D4AF37]/15 text-[11px] font-medium border border-[#D4AF37]/30"
-                >
-                  <CheckCircle2 className="w-3 h-3 text-emerald-600" />
-                  <span className="truncate max-w-[110px]">{att.name}</span>
-                  <button
-                    type="button"
-                    onClick={() => setAttachments(prev => prev.filter((_, i) => i !== idx))}
-                    aria-label={`Remove ${att.name}`}
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {/* Composer Input Bar */}
-          <form
-            onSubmit={e => {
-              e.preventDefault();
-              void sendMessage();
             }}
-            className={`p-3.5 border-t flex items-center gap-2 shrink-0 ${
+            onOpenVerification={prefillOrderId => openVerificationFlow(prefillOrderId || '')}
+            onAddToCart={async product => {
+              if (addToCart) {
+                await addToCart(product, 1);
+              }
+            }}
+          />
+
+          {/* Instant Spotlight Live Finder Bar (Writing Access, NO Send Button!) */}
+          <div
+            className={`p-3.5 border-t flex items-center gap-2 shrink-0 transition-colors ${
               isDark ? 'bg-[#071610] border-white/10' : 'bg-white border-[#0B2419]/10'
             }`}
           >
-            <input
-              ref={fileInputRef}
-              type="file"
-              accept="image/jpeg,image/png,image/webp"
-              multiple
-              onChange={handleFileChange}
-              className="hidden"
-              aria-label="Attach product or order photo"
-            />
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              title="Attach unboxing photo or verification file"
-              aria-label="Attach photo"
-              className={`p-2.5 rounded-xl border transition-colors ${
-                isDark
-                  ? 'border-white/15 text-stone-300 hover:bg-white/10 hover:border-[#D4AF37]'
-                  : 'border-stone-200 text-stone-600 hover:bg-stone-100 hover:border-[#0B2419]'
-              }`}
-            >
-              <Paperclip className="w-4 h-4" />
-            </button>
-            <input
-              type="text"
-              value={input}
-              onChange={e => setInput(e.target.value)}
-              placeholder={
-                hasPlacedOrder
-                  ? t('concierge_input_placeholder_orders', 'Ask about your order, serial verification, or botanical rituals…')
-                  : t('concierge_input_placeholder', 'Ask about ingredients, skin concerns, or verify an Order ID…')
-              }
-              maxLength={2000}
-              aria-label="Message Bhumivera Client Concierge"
-              className={`flex-1 min-w-0 px-4 py-2.5 rounded-2xl border text-xs outline-none transition-all ${
-                isDark
-                  ? 'bg-[#10241f] border-white/15 text-stone-100 placeholder:text-stone-400 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40'
-                  : 'bg-[#FDFBF7] border-stone-200 text-[#0B2419] placeholder:text-stone-400 focus:border-[#0B2419] focus:ring-1 focus:ring-[#0B2419]/20'
-              }`}
-            />
-            <button
-              type="submit"
-              disabled={isTyping || (!input.trim() && attachments.length === 0)}
-              aria-label="Send message"
-              className="p-2.5 rounded-2xl bg-[#0B2419] text-[#D4AF37] border border-[#D4AF37]/40 hover:bg-[#163829] active:scale-95 disabled:opacity-40 transition-all shrink-0 shadow-md"
-            >
-              <Send className="w-4 h-4" />
-            </button>
-          </form>
+            <div className="relative flex-1 flex items-center">
+              <Search className="w-4 h-4 text-[#D4AF37] absolute left-3.5 pointer-events-none" />
+              <input
+                type="text"
+                value={input}
+                onChange={e => setInput(e.target.value)}
+                placeholder="Type to find instantly... (e.g., forgot password, track order, face wash, glow)"
+                maxLength={200}
+                aria-label="Instant Concierge Search"
+                className={`w-full pl-10 pr-9 py-2.5 rounded-2xl border text-xs outline-none transition-all ${
+                  isDark
+                    ? 'bg-[#10241f] border-white/15 text-stone-100 placeholder:text-stone-400 focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40'
+                    : 'bg-[#FDFBF7] border-stone-200 text-[#0B2419] placeholder:text-stone-400 focus:border-[#0B2419] focus:ring-1 focus:ring-[#0B2419]/20'
+                }`}
+              />
+              {input.trim().length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setInput('')}
+                  title="Clear search"
+                  aria-label="Clear search"
+                  className="absolute right-3 p-1 rounded-full text-stone-400 hover:text-white hover:bg-white/10 transition-colors"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+          </div>
         </section>
       )}
 

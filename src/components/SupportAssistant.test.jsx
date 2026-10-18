@@ -4,7 +4,6 @@ import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-libra
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import SupportAssistant from './SupportAssistant';
-import { aiSupport } from '../services/api';
 
 vi.mock('../context/AuthContext', () => ({
   useAuth: () => ({
@@ -12,10 +11,13 @@ vi.mock('../context/AuthContext', () => ({
   }),
 }));
 
+const mockAddToCart = vi.fn().mockResolvedValue(true);
+
 vi.mock('../context/CartContext', () => ({
   useCart: () => ({
     cart: [{ id: 1, name: 'Kumkumadi Night Elixir', quantity: 1 }],
     isCartOpen: false,
+    addToCart: mockAddToCart,
   }),
 }));
 
@@ -30,10 +32,11 @@ vi.mock('../services/api', () => ({
     escalate: vi.fn(),
     endSatisfied: vi.fn(),
     submitRating: vi.fn(),
+    passwordRescue: vi.fn(),
   },
 }));
 
-describe('SupportAssistant chat panel', () => {
+describe('SupportAssistant — 100% Deterministic Knowledge Tree & Instant Finder', () => {
   afterEach(cleanup);
 
   const openSupportChat = () => {
@@ -45,103 +48,9 @@ describe('SupportAssistant chat panel', () => {
     sessionStorage.clear();
     vi.clearAllMocks();
     Element.prototype.scrollIntoView = vi.fn();
-
-    aiSupport.initSession.mockResolvedValue({
-      data: {
-        sessionToken: 'sess_test_12345',
-        greeting: 'Hi Aarav, how can I help you today?',
-        quickActions: [
-          { id: 'track_order', label: 'Where is my order?', prompt: 'Where is my order?' },
-          { id: 'initiate_return', label: 'Initiate Return', prompt: 'Initiate return' },
-        ],
-        messages: [
-          {
-            id: 1,
-            sender: 'assistant',
-            content: 'Hi Aarav, how can I help you today?',
-            orderCards: [],
-            quickActions: [],
-            createdAt: new Date().toISOString(),
-          },
-        ],
-      },
-    });
-
-    aiSupport.sendMessage.mockResolvedValue({
-      data: {
-        sessionToken: 'sess_test_12345',
-        reply: 'Here is the real-time status for **Order #918273646**.',
-        orderCards: [
-          {
-            id: 102,
-            orderNumber: '918273646',
-            status: 'delivered',
-            currentStep: 4,
-            total: 1299,
-            trackingNumber: 'DLV99881122',
-            courier: 'Delhivery',
-            deliveryEstimate: 'Delivered on 13 Oct 2026',
-            cancellable: false,
-            canReturn: true,
-            items: [{ id: 2, name: 'Gotu Kola Barrier Repair Cream', quantity: 1, price: 1299 }],
-          },
-        ],
-        quickActions: [
-          { id: 'return_102', label: 'Return #918273646', prompt: 'Initiate return for order #918273646' },
-        ],
-        sentiment: { score: 0, frustrationScore: 0, priority: 'Low', label: 'neutral' },
-      },
-    });
-
-    aiSupport.updateContext.mockResolvedValue({
-      data: {
-        proactiveMessage: 'Need a hand with checkout? Free standard shipping on orders ₹500+.',
-        quickActions: [],
-      },
-    });
   });
 
-  it('opens the widget, initializes session, and renders order cards when querying an order', async () => {
-    render(
-      <MemoryRouter initialEntries={['/order-tracking']}>
-        <SupportAssistant />
-      </MemoryRouter>
-    );
-
-    openSupportChat();
-
-    await waitFor(() => {
-      expect(aiSupport.initSession).toHaveBeenCalledTimes(1);
-    });
-
-    expect(await screen.findByText(/Hi Aarav, how can I help you today/i)).toBeTruthy();
-
-    const quickChip = screen.getByRole('button', { name: /Where is my order\?/i });
-    fireEvent.click(quickChip);
-
-    await waitFor(() => {
-      expect(aiSupport.sendMessage).toHaveBeenCalled();
-    });
-
-    expect((await screen.findAllByText(/#918273646/i)).length).toBeGreaterThan(0);
-    expect(screen.getByText(/DLV99881122/i)).toBeTruthy();
-    expect(screen.queryByText(/How was your support experience/i)).toBeNull();
-    expect(screen.getByRole('button', { name: 'End chat' })).toBeTruthy();
-  });
-
-  it('shows the rating form only after the customer ends the chat', async () => {
-    aiSupport.endSatisfied.mockResolvedValue({
-      data: {
-        status: 'resolved',
-        systemMessage: {
-          id: 2,
-          sender: 'system',
-          content: 'This chat has ended.',
-        },
-      },
-    });
-    aiSupport.submitRating.mockResolvedValue({ data: { success: true } });
-
+  it('opens from navbar event as responsive luxury panel with 8 Master Pillars', async () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <SupportAssistant />
@@ -149,70 +58,27 @@ describe('SupportAssistant chat panel', () => {
     );
 
     openSupportChat();
-    await screen.findByText(/Hi Aarav, how can I help you today/i);
-    fireEvent.click(screen.getByRole('button', { name: /Where is my order\?/i }));
-    await waitFor(() => expect(aiSupport.sendMessage).toHaveBeenCalled());
 
-    expect(screen.queryByText(/How was your support experience/i)).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'End chat' }));
-
-    expect(await screen.findByText(/How was your support experience/i)).toBeTruthy();
-    expect(aiSupport.endSatisfied).toHaveBeenCalledWith('sess_test_12345', {});
-
-    fireEvent.click(screen.getByRole('button', { name: 'Send' }));
-    await waitFor(() => expect(aiSupport.submitRating).toHaveBeenCalledWith(
-      'sess_test_12345',
-      { rating: 5, feedback: '' }
-    ));
-    expect(await screen.findByText(/Thank you for your feedback/i)).toBeTruthy();
-  });
-
-  it('triggers proactive assistance bubble when lingering on checkout page', async () => {
-    render(
-      <MemoryRouter initialEntries={['/checkout']}>
-        <SupportAssistant lingerThresholdMs={50} />
-      </MemoryRouter>
-    );
-
-    await act(async () => {
-      await new Promise(resolve => setTimeout(resolve, 120));
-    });
-
-    expect(await screen.findByText(/Need a hand with checkout/i)).toBeTruthy();
-  });
-
-  it('opens from the navbar event as a responsive panel and supports closing', async () => {
-    render(
-      <MemoryRouter initialEntries={['/']}>
-        <SupportAssistant />
-      </MemoryRouter>
-    );
-
-    openSupportChat();
-    await screen.findByText(/Hi Aarav, how can I help you today/i);
-    expect(screen.getByRole('button', { name: /Order-related issue/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /General question/i })).toBeTruthy();
+    expect(await screen.findByText(/Bhumivera Guided Knowledge Concierge/i)).toBeTruthy();
+    expect(screen.getByText(/Shop & Routine Concierge/i)).toBeTruthy();
+    expect(screen.getByText(/Account & Security/i)).toBeTruthy();
+    expect(screen.getByText(/Orders & Live Tracking/i)).toBeTruthy();
+    expect(screen.getByText(/Returns & Refunds/i)).toBeTruthy();
+    expect(screen.getByText(/Payments, Wallet & GST/i)).toBeTruthy();
+    expect(screen.getByText(/Botanical Science & Lab/i)).toBeTruthy();
+    expect(screen.getByText(/Offers & Ambassador/i)).toBeTruthy();
+    expect(screen.getByText(/Specialist Escalation/i)).toBeTruthy();
 
     const assistant = screen.getByTestId('bhumivera-support-assistant');
     expect(assistant.className).toContain('inset-0');
     expect(assistant.className).toContain('md:w-1/2');
-    expect(screen.queryByRole('button', { name: /Open Bhumivera Support/i })).toBeNull();
     expect(document.body.style.overflow).toBe('hidden');
 
     fireEvent.click(screen.getByRole('button', { name: 'Close Concierge' }));
     expect(document.body.style.overflow).not.toBe('hidden');
-    openSupportChat();
-    expect(await screen.findByRole('button', { name: 'Close Concierge' })).toBeTruthy();
   });
 
-  it('sends the selected issue category and shows server cooldown errors instead of a fallback answer', async () => {
-    aiSupport.sendMessage.mockRejectedValueOnce({
-      response: {
-        status: 429,
-        data: { message: 'You already sent this message recently. Please wait 10 minutes.' },
-      },
-    });
-
+  it('renders Instant Spotlight Live Finder with NO submit/send button', async () => {
     render(
       <MemoryRouter initialEntries={['/']}>
         <SupportAssistant />
@@ -220,61 +86,101 @@ describe('SupportAssistant chat panel', () => {
     );
 
     openSupportChat();
-    await screen.findByText(/Hi Aarav, how can I help you today/i);
-    fireEvent.click(screen.getByRole('button', { name: /Order-related issue/i }));
+    await screen.findByText(/Bhumivera Guided Knowledge Concierge/i);
 
-    await waitFor(() => {
-      expect(aiSupport.sendMessage).toHaveBeenCalledWith(expect.objectContaining({
-        pageContext: expect.objectContaining({ supportCategory: 'order' }),
-      }));
-    });
+    const finderInput = screen.getByLabelText(/Instant Concierge Search/i);
+    expect(finderInput).toBeTruthy();
 
-    fireEvent.click(screen.getByRole('button', { name: /Where is my order\?/i }));
-    expect(await screen.findByText(/wait 10 minutes/i)).toBeTruthy();
-    expect(screen.queryByText(/I can help you fix/i)).toBeNull();
+    // Verify there is NO submit or send button
+    expect(screen.queryByRole('button', { name: /Send/i })).toBeNull();
+    expect(screen.queryByRole('button', { name: /Send message/i })).toBeNull();
   });
 
-  it('updates quickActions dynamically for Product -> Ingredient -> 2+1 Suggestions (Sea Buckthorn Face Wash -> Niacinamide)', async () => {
-    aiSupport.sendMessage.mockResolvedValueOnce({
-      data: {
-        sessionToken: 'sess_test_12345',
-        reply: '**Bhumivera Sea Buckthorn Face Wash** checks all listed ingredients in memory including Sea Buckthorn and Niacinamide.',
-        orderCards: [],
-        quickActions: [
-          { id: 'ing_niacinamide', label: 'Ingredient: Niacinamide', prompt: 'Tell me about Niacinamide in Sea Buckthorn Face Wash', category: 'ingredient_discovery' },
-          { id: 'ing_hyaluronic', label: 'Ingredient: Hyaluronic Acid', prompt: 'Tell me about Hyaluronic Acid in Sea Buckthorn Face Wash', category: 'ingredient_discovery' },
-          { id: 'usage_time', label: 'How & What Time to Use Sea Buckthorn Face Wash', prompt: 'How do I really use Sea Buckthorn Face Wash?', category: 'usage_and_timing' },
-        ],
-      },
-    }).mockResolvedValueOnce({
-      data: {
-        sessionToken: 'sess_test_12345',
-        reply: '**Niacinamide (Vitamin B3)** supports barrier ceramides and refines pores.',
-        orderCards: [],
-        quickActions: [
-          { id: 'nia_1', label: 'Niacinamide: Pores, Oil Control & Barrier Science', prompt: 'How does Niacinamide control oil?', category: 'ingredient_deep_dive' },
-          { id: 'nia_2', label: 'Niacinamide: Daily Layering & Active Pairing Guide', prompt: 'Can I pair Niacinamide with Vitamin C?', category: 'ingredient_deep_dive' },
-          { id: 'rel_ha', label: 'Related Ingredient: Hyaluronic Acid', prompt: 'Tell me about Hyaluronic Acid', category: 'closely_related_ingredient' },
-          { id: 'use_fw', label: 'How & What Time to Use Sea Buckthorn Face Wash', prompt: 'How do I really use Sea Buckthorn Face Wash?', category: 'usage_and_timing' },
-        ],
-      },
-    });
-
+  it('instant live filtering: typing "for" or "forgot password" portrays the visual Forgot Password resolution card', async () => {
     render(
-      <MemoryRouter initialEntries={['/science']}>
+      <MemoryRouter initialEntries={['/']}>
         <SupportAssistant />
       </MemoryRouter>
     );
 
     openSupportChat();
-    await screen.findByText(/Hi Aarav, how can I help you today/i);
+    await screen.findByText(/Bhumivera Guided Knowledge Concierge/i);
 
-    fireEvent.click(screen.getByRole('button', { name: /Where is my order\?/i }));
-    expect(await screen.findByRole('button', { name: /Ingredient: Niacinamide/i })).toBeTruthy();
+    const finderInput = screen.getByLabelText(/Instant Concierge Search/i);
 
-    fireEvent.click(screen.getByRole('button', { name: /Ingredient: Niacinamide/i }));
-    expect(await screen.findByRole('button', { name: /Niacinamide: Pores, Oil Control & Barrier Science/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Niacinamide: Daily Layering & Active Pairing Guide/i })).toBeTruthy();
-    expect(screen.getByRole('button', { name: /Related Ingredient: Hyaluronic Acid/i })).toBeTruthy();
+    // Type "for"
+    fireEvent.change(finderInput, { target: { value: 'for' } });
+
+    // Instant suggestion appears
+    expect(await screen.findByText(/Forgot Password — Step-by-Step Reset Guide/i)).toBeTruthy();
+
+    // Click the card
+    fireEvent.click(screen.getByText(/Forgot Password — Step-by-Step Reset Guide/i));
+
+    // Displays the 4-step visual workflow
+    expect(await screen.findByText(/Step-by-Step Resolution Guide/i)).toBeTruthy();
+    expect(screen.getByText(/Navigate to Sign In/i)).toBeTruthy();
+    expect(screen.getByText(/Select "Forgot Password\?"/i)).toBeTruthy();
+    expect(screen.getByText(/Enter Registered Email/i)).toBeTruthy();
+    expect(screen.getByText(/Verify OTP & Set New Password/i)).toBeTruthy();
+
+    // Displays direct action button
+    expect(screen.getByRole('button', { name: /Open Password Reset Page Now/i })).toBeTruthy();
+  });
+
+  it('sales concierge: product card portrays pricing, botanical actives, and 1-click Add to Bag', async () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <SupportAssistant />
+      </MemoryRouter>
+    );
+
+    openSupportChat();
+    await screen.findByText(/Bhumivera Guided Knowledge Concierge/i);
+
+    // Tap quick shortcut for Sea Buckthorn Face Wash
+    fireEvent.click(screen.getByRole('button', { name: /Sea Buckthorn Wash/i }));
+
+    // Product card details
+    expect(await screen.findByText(/Himalayan Sea Buckthorn Face Wash/i)).toBeTruthy();
+    expect(screen.getAllByText(/₹549/i).length).toBeGreaterThan(0);
+    expect(screen.getByText(/21% OFF/i)).toBeTruthy();
+    expect(screen.getByText(/In Stock \(48 units\)/i)).toBeTruthy();
+    expect(screen.getByText(/1.0% Active Strength/i)).toBeTruthy();
+
+    // Test 1-click Add to Bag
+    const addBtns = screen.getAllByRole('button', { name: /Add to Bag/i });
+    expect(addBtns.length).toBeGreaterThan(0);
+    const addBtn = addBtns[0];
+
+    fireEvent.click(addBtn);
+    expect(mockAddToCart).toHaveBeenCalledWith(expect.objectContaining({
+      id: 101,
+      name: 'Bhumivera Sea Buckthorn Face Wash',
+      price: 699,
+      discount_price: 549,
+    }), 1);
+  });
+
+  it('decision tree navigation: browse into pillar and back with breadcrumbs', async () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <SupportAssistant />
+      </MemoryRouter>
+    );
+
+    openSupportChat();
+    await screen.findByText(/Bhumivera Guided Knowledge Concierge/i);
+
+    // Click on "Orders & Live Tracking" pillar
+    fireEvent.click(screen.getByText(/Orders & Live Tracking/i));
+
+    // Shows cards inside this pillar
+    expect(await screen.findByText(/Track My Order in Real-Time/i)).toBeTruthy();
+    expect(screen.getByText(/Shipping Timelines & 2:00 PM Dispatch Cutoff/i)).toBeTruthy();
+
+    // Click back to categories
+    fireEvent.click(screen.getByRole('button', { name: /Back to All Categories/i }));
+    expect(await screen.findByText(/Bhumivera Guided Knowledge Concierge/i)).toBeTruthy();
   });
 });

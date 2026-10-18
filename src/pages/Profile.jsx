@@ -34,11 +34,12 @@ import {
   Leaf, Zap, Users, Coins, ExternalLink, Key, Camera, Image as ImageIcon, Fingerprint,
   Navigation, Check,
 } from 'lucide-react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { registerPasskey, isPasskeySupported } from '../utils/webauthnClient';
 import SupportCenter from '../components/SupportCenter';
 import { getProductImageUrl } from '../utils/productImageUrl';
 import { getCurrentCoordinates, getLocationErrorMessage, hasCoordinates, reverseGeocodeCoordinates } from '../utils/geolocation';
+import { enablePushNotifications, nativePushConfigured } from '../utils/pushNotifications';
 
 const getProfileImageUrl = getProductImageUrl;
 
@@ -194,10 +195,34 @@ export default function Profile() {
   const { user, logout, updateUser } = useAuth();
   const { addToCart } = useCart();
   const navigate = useNavigate();
+  const location = useLocation();
+  const isNativeApp = typeof window !== 'undefined' && Boolean(window.Capacitor?.isNativePlatform?.());
   const passkeySupported = isPasskeySupported();
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(false);
   const mobileTabsRef = useRef(null);
+
+  useEffect(() => {
+    const requestedTab = new URLSearchParams(location.search).get('tab');
+    if (requestedTab && TABS.some(tab => tab.id === requestedTab)) {
+      setActiveTab(requestedTab);
+    }
+  }, [location.search]);
+
+  useEffect(() => {
+    if (!isNativeApp || !nativePushConfigured || activeTab !== 'notifications') return undefined;
+    let active = true;
+    setPushBackendStatus('checking');
+    notificationsApi.getPushStatus()
+      .then(response => {
+        if (active) setPushBackendStatus(response.data?.configured ? 'ready' : 'unavailable');
+      })
+      .catch(error => {
+        console.error('[PROFILE_PUSH_STATUS_CHECK]', error);
+        if (active) setPushBackendStatus('unavailable');
+      });
+    return () => { active = false; };
+  }, [activeTab, isNativeApp]);
 
   const [profileData, setProfileData] = useState({ name: '', phone: '', marketing_email_opt_in: false });
   const [adPersonalizationOptIn, setAdPersonalizationOptIn] = useState(false);
@@ -213,6 +238,8 @@ export default function Profile() {
   const [returns, setReturns] = useState([]);
   const [returnEligibility, setReturnEligibility] = useState([]);
   const [notifications, setNotifications] = useState([]);
+  const [enablingPushNotifications, setEnablingPushNotifications] = useState(false);
+  const [pushBackendStatus, setPushBackendStatus] = useState('unknown');
   const [coupons, setCoupons] = useState([]);
   const [myReviews, setMyReviews] = useState([]);
   const [warranties, setWarranties] = useState([]);
@@ -576,9 +603,25 @@ export default function Profile() {
   const handleCancelOrder = (orderId) => {
     window.dispatchEvent(
       new CustomEvent('bhumivera:open-support-chat', {
-        detail: { verifyOrderId: orderId },
+        detail: { verifyOrderId: orderId, cancelOrder: true },
       })
     );
+  };
+  const handleEnablePushNotifications = async () => {
+    setEnablingPushNotifications(true);
+    try {
+      const enabled = await enablePushNotifications(localStorage.getItem('token'));
+      if (enabled) {
+        toast.success('Push notifications are enabled on this device.');
+      } else {
+        toast.error('Notifications were not enabled. Check the app permission in Android settings and try again.');
+      }
+    } catch (error) {
+      console.error('[PROFILE_PUSH_NOTIFICATIONS_ENABLE]', error);
+      toast.error('Could not enable notifications. Please try again or check Android settings.');
+    } finally {
+      setEnablingPushNotifications(false);
+    }
   };
   const handleRemoveWishlist = async (productId) => {
     try { await wishlistApi.remove(productId); setWishlist(w => w.filter(item => String(item.product_id || item.id || item._id) !== String(productId))); toast.success('Removed from wishlist'); }
@@ -1117,7 +1160,7 @@ export default function Profile() {
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                   {/* Recent orders */}
-                  <section className="lg:col-span-2 rounded-2xl two-tone-panel border border-[#d4af37]/25 p-6 shadow-xl">
+                  <section className="lg:col-span-2 rounded-2xl two-tone-panel border border-[#d4af37]/25 p-4 sm:p-6 shadow-xl">
                     <div className="flex items-center justify-between mb-5 pb-3 border-b border-[#d4af37]/15">
                       <h2 className="font-serif font-bold text-lg text-white">
                         <span className="font-headline-gold">Recent</span>{' '}
@@ -1132,24 +1175,28 @@ export default function Profile() {
                     ) : (
                       <div className="space-y-2.5">
                         {orders.slice(0,5).map(o => (
-                          <div key={o.id} className="flex items-center justify-between p-3.5 rounded-xl bg-[#070a0e]/60 hover:bg-[#101a26] border border-[#d4af37]/15 hover:border-[#d4af37]/40 transition-all">
-                            <div className="flex items-center gap-3.5 min-w-0">
+                          <div key={o.id} className="flex flex-col gap-3 p-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4 sm:p-3.5 rounded-xl bg-[#070a0e]/60 hover:bg-[#101a26] border border-[#d4af37]/15 hover:border-[#d4af37]/40 transition-all">
+                            <div className="flex items-center gap-3 min-w-0 sm:gap-3.5">
                               <div className="w-10 h-10 rounded-xl bg-[#d4af37]/10 border border-[#d4af37]/25 flex items-center justify-center shrink-0 text-[#d4af37]">
                                 <Package className="w-5 h-5"/>
                               </div>
                               <div className="min-w-0">
-                                <div className="font-serif font-bold text-sm text-white truncate">Order #{formatOrderNumber(o.order_number || o.id)}</div>
-                                <div className="text-xs text-[#94a3b8] flex items-center gap-2 mt-0.5">
-                                  <Calendar className="w-3 h-3"/>
-                                  {o.created_at ? new Date(o.created_at).toLocaleDateString() : '—'}
-                                  <span className="text-[#d4af37]/40">&bull;</span>
+                                <div className="font-serif font-bold text-sm text-white break-all sm:truncate" title={`Order #${formatOrderNumber(o.order_number || o.id)}`}>
+                                  Order #{formatOrderNumber(o.order_number || o.id)}
+                                </div>
+                                <div className="text-xs text-[#94a3b8] flex flex-wrap items-center gap-x-2 gap-y-1 mt-0.5">
+                                  <span className="inline-flex items-center gap-1.5">
+                                    <Calendar className="w-3 h-3 shrink-0"/>
+                                    {o.created_at ? new Date(o.created_at).toLocaleDateString() : '—'}
+                                  </span>
+                                  <span className="text-[#d4af37]/40 hidden sm:inline">&bull;</span>
                                   <span className="text-[#fce096] font-medium">₹{Number(o.total_amount || o.total || 0).toFixed(2)}</span>
                                 </div>
                               </div>
                             </div>
-                            <div className="flex items-center gap-3 shrink-0">
+                            <div className="flex items-center justify-between gap-3 shrink-0 sm:justify-end">
                               <StatusPill status={o.status}/>
-                              <button onClick={() => setSelectedOrder(o)} className="p-2 rounded-lg bg-[#070a0e] border border-[#d4af37]/20 text-[#cbd5e1] hover:text-white hover:border-[#d4af37]/50 transition-colors">
+                              <button aria-label={`View order ${formatOrderNumber(o.order_number || o.id)}`} onClick={() => setSelectedOrder(o)} className="p-2 rounded-lg bg-[#070a0e] border border-[#d4af37]/20 text-[#cbd5e1] hover:text-white hover:border-[#d4af37]/50 transition-colors">
                                 <Eye className="w-4 h-4"/>
                               </button>
                             </div>
@@ -1289,7 +1336,7 @@ export default function Profile() {
                                   </button>
                                   {canCancel && (
                                     <button onClick={() => handleCancelOrder(o.id)} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                                      <X className="w-3.5 h-3.5"/> Cancel
+                                      <X className="w-3.5 h-3.5"/> Request cancellation
                                     </button>
                                   )}
                                   {refundSupport && (
@@ -1731,6 +1778,37 @@ export default function Profile() {
                     </button>
                   )}
                 </div>
+                {isNativeApp && nativePushConfigured && (
+                  <div className="mb-5 rounded-xl border border-[#d4af37]/20 bg-[#070a0e]/50 p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <p className="text-xs text-[#cbd5e1]">Enable order and concierge alerts on this device.</p>
+                      <button
+                        type="button"
+                        onClick={handleEnablePushNotifications}
+                        disabled={enablingPushNotifications}
+                        className="btn-gold-luxury inline-flex min-h-11 items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-wider disabled:opacity-60"
+                      >
+                        <Bell className="h-4 w-4" />
+                        {enablingPushNotifications ? 'Enabling…' : 'Enable push notifications'}
+                      </button>
+                    </div>
+                    {pushBackendStatus === 'checking' && (
+                      <p role="status" className="mt-3 text-xs leading-relaxed text-[#94a3b8]">
+                        Checking the notification delivery service…
+                      </p>
+                    )}
+                    {pushBackendStatus === 'unavailable' && (
+                      <p role="status" className="mt-3 text-xs leading-relaxed text-amber-100">
+                        The delivery service could not be reached. You can still grant device permission; push delivery will work once the service is reachable.
+                      </p>
+                    )}
+                  </div>
+                )}
+                {isNativeApp && !nativePushConfigured && (
+                  <p role="status" className="mb-5 rounded-xl border border-amber-400/25 bg-amber-400/5 p-4 text-xs leading-relaxed text-amber-100">
+                    Push notifications are unavailable in this build because Firebase Cloud Messaging is not configured.
+                  </p>
+                )}
                 {notifications.length === 0 ? (
                   <EmptyState icon={Bell} title="No notifications yet" subtitle="You will receive alerts about order dispatches, concierge responses, and seasonal privileges here."/>
                 ) : (
@@ -2640,7 +2718,7 @@ export default function Profile() {
               <div className="flex flex-wrap gap-2">
                 {canCancelOrder(selectedOrder) && (
                   <button onClick={() => handleCancelOrder(selectedOrder.id)} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-semibold uppercase tracking-wider">
-                    <X className="w-4 h-4"/> Cancel Order
+                    <X className="w-4 h-4"/> Request cancellation
                   </button>
                 )}
                 {needsRefundSupport(selectedOrder) && (
@@ -2844,7 +2922,7 @@ export default function Profile() {
       {addressModal.open && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md p-0 sm:p-6" onClick={() => setAddressModal(m => ({ ...m, open:false }))}>
           <form onSubmit={handleAddressSave} onClick={e => e.stopPropagation()} className="w-full sm:max-w-2xl bg-[#0d1520] border border-[#d4af37]/30 sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] max-h-[92dvh]">
-            <div className="two-tone-panel-gold border-b border-[#d4af37]/25 text-white px-6 sm:px-8 py-5 flex items-start justify-between gap-4">
+            <div className="two-tone-panel-gold border-b border-[#d4af37]/25 text-white px-4 sm:px-8 py-4 sm:py-5 flex items-start justify-between gap-4 shrink-0">
               <div>
                 <div className="font-sub-gold uppercase tracking-[0.2em] font-bold text-xs mb-1">Destination</div>
                 <h3 className="text-xl font-serif font-bold text-white">{addressModal.editId ? 'Edit Address' : 'Add New Address'}</h3>
@@ -2853,7 +2931,7 @@ export default function Profile() {
                 <X className="w-4 h-4"/>
               </button>
             </div>
-            <div className="px-6 sm:px-8 py-5 space-y-4 overflow-y-auto flex-1 bg-[#0d1520]">
+            <div className="min-h-0 px-4 sm:px-8 py-4 sm:py-5 space-y-4 overflow-y-auto overscroll-contain flex-1 bg-[#0d1520]">
               <div className="flex flex-wrap gap-2">
                 {['Home','Work','Office','Other'].map(l => (
                   <button key={l} type="button" onClick={() => setAddressModal(m => ({ ...m, form:{ ...m.form, label: l }}))}
@@ -2957,7 +3035,7 @@ export default function Profile() {
                 </div>
               </div>
             </div>
-            <div className="border-t border-[#d4af37]/20 bg-[#070a0e] px-6 sm:px-8 py-4 flex flex-wrap items-center justify-end gap-2">
+            <div className="border-t border-[#d4af37]/20 bg-[#070a0e] px-4 sm:px-8 py-3 sm:py-4 pb-[max(0.75rem,env(safe-area-inset-bottom))] flex flex-wrap items-center justify-end gap-2 shrink-0">
               <button type="button" onClick={() => setAddressModal(m => ({ ...m, open:false }))} className="btn-silver-luxury min-h-11 px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider">Cancel</button>
               <button type="submit" className="btn-gold-luxury min-h-11 px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider inline-flex items-center gap-2 shadow-sm">
                 <CheckCircle2 className="w-4 h-4"/> {addressModal.editId ? 'Save Changes' : 'Save Address'}

@@ -480,7 +480,7 @@ export const recommendations = {
   recordProductView: productId => api.post('/recommendations/view', { product_id: productId }, { notify: false }),
   getForYou: productId => api.get('/recommendations/for-you', { params: { product_id: productId } })
 };
-export const notifications = { get: () => api.get("/notifications"), getAllAdmin: () => api.get("/notifications/admin/all"), markRead: id => api.patch(`/notifications/${id}/read`), markAllRead: () => api.patch("/notifications/read-all"), delete: id => api.delete(`/notifications/${id}`), createBroadcast: data => api.post("/notifications/admin/create", data), send: d => api.post("/notifications/admin/create", d) };
+export const notifications = { get: () => api.get("/notifications"), getPushStatus: () => api.get("/notifications/push-status", { notify: false }), getAllAdmin: () => api.get("/notifications/admin/all"), markRead: id => api.patch(`/notifications/${id}/read`), markAllRead: () => api.patch("/notifications/read-all"), delete: id => api.delete(`/notifications/${id}`), createBroadcast: data => api.post("/notifications/admin/create", data), send: d => api.post("/notifications/admin/create", d) };
 export const gamification = {
   spin: data => api.post('/gamification/spin', data),
   getOrderSpin: orderId => api.get(`/gamification/order-spin/${orderId}`),
