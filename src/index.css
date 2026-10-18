@@ -35,6 +35,85 @@ body {
   overflow-x: hidden;
 }
 
+.premium-page-loader {
+  display: flex;
+  min-height: 100vh;
+  min-height: 100dvh;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.8rem;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse at 50% 46%, rgba(212, 175, 55, 0.16), transparent 35%),
+    linear-gradient(145deg, #10120f, #18251b 52%, #10120f);
+  color: #fce096;
+}
+
+.premium-loader-mark {
+  position: relative;
+  display: grid;
+  width: 5rem;
+  height: 5rem;
+  place-items: center;
+}
+
+.premium-loader-orbit {
+  position: absolute;
+  inset: 0;
+  border: 2px solid rgba(212, 175, 55, 0.2);
+  border-top-color: #fce096;
+  border-right-color: #d4af37;
+  border-radius: 50%;
+  animation: premium-loader-spin 1.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+  box-shadow: 0 0 22px rgba(212, 175, 55, 0.28), inset 0 0 14px rgba(212, 175, 55, 0.08);
+}
+
+.premium-loader-core {
+  display: grid;
+  width: 3.55rem;
+  height: 3.55rem;
+  place-items: center;
+  border: 1px solid rgba(252, 224, 150, 0.44);
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 28%, #43513a, #142019 75%);
+  color: #fce096;
+  font-family: Georgia, serif;
+  font-size: 1.8rem;
+  text-shadow: 0 0 12px rgba(252, 224, 150, 0.6);
+  animation: premium-loader-glow 1.8s ease-in-out infinite alternate;
+}
+
+.premium-loader-wordmark {
+  margin-top: 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.35em;
+}
+
+.premium-loader-caption {
+  color: rgba(244, 239, 230, 0.68);
+  font-size: 0.7rem;
+  letter-spacing: 0.06em;
+}
+
+@keyframes premium-loader-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes premium-loader-glow {
+  from { box-shadow: 0 0 8px rgba(212, 175, 55, 0.18); }
+  to { box-shadow: 0 0 20px rgba(212, 175, 55, 0.42); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .premium-page-loader *,
+  .premium-page-loader *::before,
+  .premium-page-loader *::after {
+    animation: none !important;
+  }
+}
+
 html body {
   top: 0 !important;
   margin-top: 0 !important;

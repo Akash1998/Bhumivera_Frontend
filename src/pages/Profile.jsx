@@ -194,6 +194,7 @@ export default function Profile() {
   const { user, logout, updateUser } = useAuth();
   const { addToCart } = useCart();
   const navigate = useNavigate();
+  const passkeySupported = isPasskeySupported();
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(false);
   const mobileTabsRef = useRef(null);
@@ -222,12 +223,12 @@ export default function Profile() {
   const [loadingPasskey, setLoadingPasskey] = useState(false);
 
   useEffect(() => {
-    if (activeTab === 'security') {
+    if (activeTab === 'security' && passkeySupported) {
       authApi.listPasskeys()
         .then(res => setPasskeys(res.data?.passkeys || []))
         .catch(() => {});
     }
-  }, [activeTab]);
+  }, [activeTab, passkeySupported]);
 
   const handleRegisterPasskey = async () => {
     setLoadingPasskey(true);
@@ -2021,10 +2022,14 @@ export default function Profile() {
                           <span className="font-headline-gold">Passkeys &amp;</span>{' '}
                           <span className="font-headline-silver">Biometric Sign-In</span>
                         </h3>
-                        <p className="text-xs text-[#94a3b8] font-light">Authenticate seamlessly using Touch ID, Face ID, or Windows Hello hardware passkeys.</p>
+                        <p className="text-xs text-[#94a3b8] font-light">
+                          {passkeySupported
+                            ? 'Authenticate seamlessly using Touch ID, Face ID, or Windows Hello hardware passkeys.'
+                            : 'Passkeys are not available in the installed app. Use a supported browser to manage passkeys.'}
+                        </p>
                       </div>
                     </div>
-                    <button
+                    {passkeySupported && <button
                       type="button"
                       onClick={handleRegisterPasskey}
                       disabled={loadingPasskey}
@@ -2032,10 +2037,10 @@ export default function Profile() {
                     >
                       <Plus className="w-4 h-4" />
                       {loadingPasskey ? 'Registering…' : 'Add Passkey'}
-                    </button>
+                    </button>}
                   </div>
 
-                  <div className="space-y-3">
+                  {passkeySupported && <div className="space-y-3">
                     {passkeys.length > 0 ? (
                       passkeys.map(pk => (
                         <div key={pk.id} className="flex items-center justify-between p-3.5 rounded-xl bg-[#070a0e]/60 border border-[#d4af37]/25">
@@ -2065,7 +2070,7 @@ export default function Profile() {
                         <p className="text-[11px] text-[#94a3b8] mt-0.5 font-light">Add your trusted device for cryptographic, passwordless access.</p>
                       </div>
                     )}
-                  </div>
+                  </div>}
                 </section>
 
                 <section className="two-tone-panel rounded-2xl border border-[#d4af37]/25 p-6 shadow-xl">

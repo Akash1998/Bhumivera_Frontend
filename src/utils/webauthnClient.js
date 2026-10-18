@@ -1,8 +1,10 @@
 import { startAuthentication, startRegistration } from '@simplewebauthn/browser';
+import { Capacitor } from '@capacitor/core';
 import { auth } from '../services/api';
 
 export const isPasskeySupported = () => {
   return typeof window !== 'undefined' &&
+    !Capacitor.isNativePlatform() &&
     'PublicKeyCredential' in window &&
     window.isSecureContext !== false;
 };

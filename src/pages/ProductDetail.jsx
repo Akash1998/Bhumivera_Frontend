@@ -74,6 +74,9 @@ export default function ProductDetail() {
   const { addToCart } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { user } = useAuth();
+  const hasServerCheckedInventory = Boolean(
+    user?.id && !['admin', 'superadmin', 'warehouse_admin'].includes(user.role)
+  );
   const canPersonalize = Boolean(
     user?.id &&
     Number(user.ad_personalization_opt_in) === 1 &&
@@ -213,7 +216,14 @@ export default function ProductDetail() {
     }
   };
 
-  const isOutOfStock = product?.quantity <= 0;
+  const isOutOfStock = product?.quantity <= 0 && !hasServerCheckedInventory;
+  const stockStatus = product?.quantity <= 0 && hasServerCheckedInventory
+    ? 'Stock checked when adding to cart'
+    : isOutOfStock
+      ? 'Currently unavailable'
+      : product?.quantity <= 5
+        ? `Only ${product.quantity} left`
+        : 'Available to order';
   let rawSpecifications = product?.specifications || {};
   if (typeof rawSpecifications === 'string') {
     try { rawSpecifications = JSON.parse(rawSpecifications); } catch { rawSpecifications = {}; }
@@ -404,7 +414,7 @@ export default function ProductDetail() {
             <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
               <span className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 py-1.5 text-[9px] font-mono uppercase tracking-[0.12em] sm:text-[10px] sm:tracking-widest ${isOutOfStock ? 'bg-red-950/60 border border-red-500/40 text-red-300' : 'bg-[#171813] border border-[#D4AF37]/40 text-[#FCE096]'}`}>
                 {isOutOfStock ? <AlertCircle size={16}/> : <Package size={16}/>}
-                {isOutOfStock ? 'Currently unavailable' : product.quantity <= 5 ? `Only ${product.quantity} left` : 'Available to order'}
+                {stockStatus}
               </span>
               <span className="shrink-0 text-[10px] font-medium text-[#9BB0A5]">Secure checkout</span>
             </div>
@@ -415,7 +425,7 @@ export default function ProductDetail() {
                   <Minus size={16} />
                 </button>
                 <span aria-live="polite" className="w-8 text-center font-mono text-base text-white">{quantity}</span>
-                <button type="button" aria-label="Increase quantity" onClick={() => setQuantity(q => q + 1)} disabled={quantity >= product.quantity} className="flex h-10 w-10 items-center justify-center rounded-lg text-[#DFD7C4] transition-colors hover:bg-white/10 hover:text-[#FCE096] disabled:opacity-40">
+                <button type="button" aria-label="Increase quantity" onClick={() => setQuantity(q => q + 1)} disabled={!hasServerCheckedInventory && quantity >= product.quantity} className="flex h-10 w-10 items-center justify-center rounded-lg text-[#DFD7C4] transition-colors hover:bg-white/10 hover:text-[#FCE096] disabled:opacity-40">
                   <Plus size={16} />
                 </button>
               </div>

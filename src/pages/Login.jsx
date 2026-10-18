@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from 'react';
-import { Link, Navigate, useLocation } from 'react-router-dom';
-import api, { auth } from '../services/api';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router-dom';
+import api from '../services/api';
 import { toast } from 'react-hot-toast';
 import { Mail, Lock, Eye, EyeOff, ShieldCheck, ArrowLeft, Fingerprint, Key, Sparkles } from 'lucide-react';
-import { loginWithPasskey, storeBrowserPassword } from '../utils/webauthnClient';
+import { isPasskeySupported, loginWithPasskey } from '../utils/webauthnClient';
 import { useAuth } from '../context/AuthContext';
 import { triggerAiCopilotAssist } from '../utils/aiCopilotBus';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 
 const Login = () => {
-  const { isAuthenticated, user } = useAuth() || {};
-  const [mode, setMode] = useState('OTP'); // OTP | PASSWORD
+  const { isAuthenticated, user, login, googleLogin, completeLogin } = useAuth() || {};
+  const [mode, setMode] = useState('PASSWORD'); // PASSWORD | OTP
   const [step, setStep] = useState('FORM'); // FORM | OTP | 2FA
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -22,7 +23,20 @@ const Login = () => {
   const [lockoutMsg, setLockoutMsg] = useState('');
   const [lockoutSeconds, setLockoutSeconds] = useState(0);
   const [lockoutExpired, setLockoutExpired] = useState(false);
+  const [googleSignInError, setGoogleSignInError] = useState('');
+  const [googleTermsAccepted, setGoogleTermsAccepted] = useState(false);
   const location = useLocation();
+  const navigate = useNavigate();
+  const passkeySupported = isPasskeySupported();
+
+  useEffect(() => {
+    const secondFactorEmail = location.state?.googleTwoFactorEmail;
+    if (!secondFactorEmail) return;
+    setEmail(secondFactorEmail);
+    setMode('PASSWORD');
+    setTwoFactorMethod('authenticator');
+    setStep('2FA');
+  }, [location.state]);
 
   useEffect(() => {
     if (!showLockoutBanner || lockoutSeconds <= 0) return undefined;
@@ -43,20 +57,15 @@ const Login = () => {
     setLockoutMsg(`Account temporarily locked. Try again in ${mins}m ${secs}s or reset password now.`);
   }, [lockoutSeconds, showLockoutBanner]);
 
-  const _persistAndRedirect = (data, greetMsg = 'Welcome back to Bhumivera!') => {
-    if (data.token) {
-      localStorage.setItem('token', data.token);
-    }
-    if (data.user) {
-      localStorage.setItem('user', JSON.stringify(data.user));
-    }
+  const _persistAndRedirect = (data, greetMsg = 'Welcome back to Bhumivera!', sessionIsComplete = false) => {
+    if (!sessionIsComplete) completeLogin(data);
     toast.success(greetMsg);
     const requestedPath = typeof location.state?.from === 'string' &&
       location.state.from.startsWith('/') && !location.state.from.startsWith('//')
       ? location.state.from
       : '/profile';
     const destination = location.state?.reopenCart ? '/?cartCheckout=1' : requestedPath;
-    setTimeout(() => { window.location.replace(destination); }, 300);
+    navigate(destination, { replace: true });
   };
 
   const handleRequestOTP = async (e) => {
@@ -112,13 +121,33 @@ const Login = () => {
     }
   };
 
+  const handleGoogleLogin = async idToken => {
+    setGoogleSignInError('');
+    try {
+      const response = await googleLogin(idToken, googleTermsAccepted);
+      if (response.data?.requires2FA) {
+        setEmail(response.data.email || '');
+        setMode('PASSWORD');
+        setTwoFactorMethod('authenticator');
+        setStep('2FA');
+        toast(response.data.message || 'Enter your authenticator code to continue.', { icon: 'ℹ️' });
+        return;
+      }
+      _persistAndRedirect(response.data, 'Google sign-in successful', true);
+    } catch (error) {
+      const message = error.response?.data?.message || error.normalized?.message || error.message || 'Google sign-in failed.';
+      setGoogleSignInError(message);
+      toast.error(message);
+    }
+  };
+
   const handlePasswordLogin = async (e) => {
     e.preventDefault();
     setShowLockoutBanner(false);
     setLockoutExpired(false);
     setLoading(true);
     try {
-      const res = await auth.login({ email, password });
+      const res = await login({ email, password });
       if (res.status === 202 && res.data?.requires2FA) {
         setTwoFactorMethod(res.data.factor || 'authenticator');
         setStep('2FA');
@@ -126,7 +155,7 @@ const Login = () => {
         return;
       }
       if (res.data?.token) {
-        _persistAndRedirect(res.data);
+        _persistAndRedirect(res.data, 'Welcome back to Bhumivera!', true);
       } else {
         toast.error('Login failed. Please try again.');
       }
@@ -208,6 +237,34 @@ const Login = () => {
             <h1 className="text-3xl font-serif text-[#14251c] tracking-tight">Bhumivera</h1>
             <p className="text-[#0B2419]/60 text-sm mt-2">Natural Purity. Premium Care.</p>
           </div>
+
+          {step === 'FORM' && (
+            <div className="mb-6 space-y-3">
+              <GoogleSignInButton
+                onSignIn={handleGoogleLogin}
+                onError={error => {
+                  const message = error.message || 'Google sign-in could not be started.';
+                  setGoogleSignInError(message);
+                  toast.error(message);
+                }}
+                disabled={!googleTermsAccepted}
+              />
+              <label className="flex items-start gap-2 text-[11px] leading-relaxed text-[#0B2419]/70">
+                <input
+                  type="checkbox"
+                  checked={googleTermsAccepted}
+                  onChange={event => setGoogleTermsAccepted(event.target.checked)}
+                  className="mt-0.5 accent-[#0B2419]"
+                />
+                <span>I agree to the <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold underline">Conditions of Use &amp; Sale</Link> and acknowledge the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline">Privacy Notice</Link>. New customers can create an account with Google.</span>
+              </label>
+              {googleSignInError && <p role="alert" className="text-xs text-red-700">{googleSignInError}</p>}
+              <div className="relative flex items-center justify-center">
+                <div className="w-full border-t border-[#8B9D83]/20" />
+                <span className="absolute bg-white px-3 text-[11px] font-bold uppercase tracking-wider text-[#8B9D83]">or use email</span>
+              </div>
+            </div>
+          )}
 
           {step === 'FORM' && (
             <>
@@ -299,14 +356,14 @@ const Login = () => {
                     <div className="w-full border-t border-[#8B9D83]/20"></div>
                     <span className="bg-[#FDFBF7] px-3 text-[11px] font-bold uppercase tracking-wider text-[#8B9D83]">or</span>
                   </div>
-                  <button 
+                  {passkeySupported && <button
                     type="button"
                     onClick={handlePasskeyLogin}
                     disabled={loading}
                     className="w-full bg-[#FAF8F5] border border-[#D4AF37]/50 text-[#0B2419] font-bold py-3.5 rounded-2xl hover:bg-[#D4AF37]/10 transition-all flex justify-center items-center gap-2.5 text-xs uppercase tracking-wider disabled:opacity-60"
                   >
                     <Fingerprint size={18} className="text-[#D4AF37]" /> Sign In with Passkey / Face ID
-                  </button>
+                  </button>}
                 </form>
               ) : (
                 <form onSubmit={handleRequestOTP} className="space-y-5">
@@ -337,14 +394,14 @@ const Login = () => {
                     <div className="w-full border-t border-[#8B9D83]/20"></div>
                     <span className="bg-[#FDFBF7] px-3 text-[11px] font-bold uppercase tracking-wider text-[#8B9D83]">or</span>
                   </div>
-                  <button 
+                  {passkeySupported && <button
                     type="button"
                     onClick={handlePasskeyLogin}
                     disabled={loading}
                     className="w-full bg-[#FAF8F5] border border-[#D4AF37]/50 text-[#0B2419] font-bold py-3.5 rounded-2xl hover:bg-[#D4AF37]/10 transition-all flex justify-center items-center gap-2.5 text-xs uppercase tracking-wider disabled:opacity-60"
                   >
                     <Fingerprint size={18} className="text-[#D4AF37]" /> Sign In with Passkey / Face ID
-                  </button>
+                  </button>}
                 </form>
               )}
             </>

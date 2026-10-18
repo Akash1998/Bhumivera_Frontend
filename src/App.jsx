@@ -130,8 +130,13 @@ const ProductVerification = lazyWithRetry(() => import("./pages/ProductVerificat
 const SellOnBhumivera = lazyWithRetry(() => import("./pages/SellOnBhumivera.jsx"));
 
 const PageLoader = () => (
-  <div className="min-h-screen bg-[#14291F] flex items-center justify-center">
-    <div className="w-12 h-12 border-4 border-[#d4af37]/20 border-t-[#d4af37] rounded-full animate-spin"></div>
+  <div className="premium-page-loader" role="status" aria-live="polite" aria-label="Loading Bhumivera">
+    <div className="premium-loader-mark" aria-hidden="true">
+      <span className="premium-loader-orbit" />
+      <span className="premium-loader-core">B</span>
+    </div>
+    <span className="premium-loader-wordmark">BHUMIVERA</span>
+    <span className="premium-loader-caption">Preparing your experience</span>
   </div>
 );
 

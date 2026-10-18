@@ -8,6 +8,7 @@ import {
   classifyCartErrorForAiGuide,
   triggerAiCopilotAssist,
 } from "../utils/aiCopilotBus";
+import { getClientStockError } from "../utils/cartStock";
 
 const CartContext = createContext();
 
@@ -113,29 +114,9 @@ export const CartProvider = ({ children }) => {
       i => String(i.product_id || i.id) === String(prodId)
     );
     const currentQty = Number(existingItem?.quantity || 0);
-    const knownStock =
-      product?.stock !== undefined
-        ? Number(product.stock)
-        : product?.quantity !== undefined && product?.product_id === undefined
-        ? Number(product.quantity)
-        : null;
-
-    if (knownStock !== null && Number.isFinite(knownStock) && knownStock <= 0) {
-      const msg = `${product?.name || 'This item'} is currently out of stock.`;
-      toast.error(msg);
-      const diag = classifyCartErrorForAiGuide(msg, product, qty, currentQty);
-      triggerAiCopilotAssist({
-        ...diag,
-        requestedQuantity: qty,
-        currentCartQuantity: currentQty,
-        errorMessage: msg,
-        autoOpen: true,
-      });
-      return false;
-    }
-
-    if (knownStock !== null && Number.isFinite(knownStock) && currentQty + qty > knownStock) {
-      const msg = `Only ${knownStock} unit(s) of ${product?.name || 'this item'} available in stock.`;
+    const stockError = getClientStockError(product, currentQty, qty, isCustomerAuthenticated);
+    if (stockError) {
+      const msg = stockError;
       toast.error(msg);
       const diag = classifyCartErrorForAiGuide(msg, product, qty, currentQty);
       triggerAiCopilotAssist({

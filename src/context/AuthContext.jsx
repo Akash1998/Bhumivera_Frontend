@@ -122,10 +122,9 @@ export const AuthProvider = ({ children }) => {
     };
   }, []);
 
-  const login = async c => {
-    const r = await authApi.login(c);
-    if (r.status === 202 || r.data?.requires2FA) return r;
-    const { token: nt, user: ud } = r.data;
+  const completeLogin = data => {
+    const { token: nt, user: ud } = data || {};
+    if (!nt) throw new Error('Sign-in did not return a valid session.');
     const d = decodeJWT(nt);
     const role = d?.role || ud?.role || 'user';
     const f = { ...ud, role };
@@ -134,6 +133,18 @@ export const AuthProvider = ({ children }) => {
     localStorage.setItem('user', JSON.stringify(f));
     setToken(nt);
     setUser(f);
+    return f;
+  };
+  const login = async c => {
+    const r = await authApi.login(c);
+    if (r.status === 202 || r.data?.requires2FA) return r;
+    completeLogin(r.data);
+    return r;
+  };
+  const googleLogin = async (idToken, termsAccepted = false) => {
+    const r = await authApi.googleLogin({ idToken, termsAccepted });
+    if (r.status === 202 || r.data?.requires2FA) return r;
+    completeLogin(r.data);
     return r;
   };
   const mobileLogin = async d => { const r = await authApi.mobileLoginVerify(d); const { token: nt, user: ud } = r.data; const p = decodeJWT(nt); const f = { ...ud, role: p?.role || ud?.role || 'user' }; localStorage.setItem('token', nt); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
@@ -150,7 +161,7 @@ export const AuthProvider = ({ children }) => {
   };
   const warehouseLoginVerify = d => { const p = d.admin || d.user || d; const f = { ...p, role: p.role || 'warehouse_admin' }; const t = d.token || d.warehouseToken || d.ms_token; localStorage.setItem('warehouseToken', t); localStorage.setItem('token', t); localStorage.setItem('user', JSON.stringify(f)); setToken(t); setUser(f); return f; };
   const register = async d => (await authApi.register(d)).data;
-  const verifyEmail = async dt => { const r = await authApi.verifyEmail(dt); const { token: nt, user: ud } = r.data; const d = decodeJWT(nt); const f = { ...ud, role: d?.role || ud?.role || 'user' }; localStorage.setItem('token', nt); localStorage.setItem('user', JSON.stringify(f)); setToken(nt); setUser(f); return f; };
+  const verifyEmail = async dt => { const r = await authApi.verifyEmail(dt); return completeLogin(r.data); };
   const updateUser = updates => {
     setUser(current => {
       if (!current) return current;
@@ -240,7 +251,7 @@ export const AuthProvider = ({ children }) => {
     };
   }, [user?.role, token]);
 
-  return <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, loading, login, mobileLogin, adminLogin, adminOtpVerify, warehouseLoginVerify, register, verifyEmail, updateUser, logout }}>{!loading && children}</AuthContext.Provider>;
+  return <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, loading, login, googleLogin, completeLogin, mobileLogin, adminLogin, adminOtpVerify, warehouseLoginVerify, register, verifyEmail, updateUser, logout }}>{!loading && children}</AuthContext.Provider>;
 };
 
 export const useAuth = () => useContext(AuthContext);

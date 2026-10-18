@@ -232,7 +232,7 @@ const AdminLogin = () => {
         </div>
 
         {step === 1 && (
-          <div className="mb-6 grid grid-cols-2 gap-2 rounded-xl border border-white/10 bg-black/20 p-1">
+          <div className={`mb-6 grid ${isPasskeySupported() ? 'grid-cols-2' : 'grid-cols-1'} gap-2 rounded-xl border border-white/10 bg-black/20 p-1`}>
             <button
               type="button"
               onClick={() => { setLoginMode('PASSWORD'); setStatus({ type: '', message: '' }); }}
@@ -240,7 +240,7 @@ const AdminLogin = () => {
             >
               PASSWORD + EMAIL CODE
             </button>
-            <button
+            {isPasskeySupported() && <button
               type="button"
               onClick={() => { setLoginMode('PASSKEY'); setStatus({ type: '', message: '' }); }}
               disabled={!isPasskeySupported()}
@@ -248,7 +248,7 @@ const AdminLogin = () => {
               className={`rounded-lg px-3 py-2.5 text-xs font-bold transition-colors disabled:opacity-50 ${loginMode === 'PASSKEY' ? 'bg-emerald-500 text-emerald-950' : 'text-gray-300 hover:bg-white/5'}`}
             >
               PASSKEY
-            </button>
+            </button>}
           </div>
         )}
 

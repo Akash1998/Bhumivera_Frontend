@@ -9,6 +9,7 @@ import { Turnstile } from '@marsidev/react-turnstile';
 import { useAuth } from '../context/AuthContext';
 import { affiliate } from '../services/api';
 import { analyzePasswordForAiGuide, triggerAiCopilotAssist } from '../utils/aiCopilotBus';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 
 const MotionDiv = motion.div;
 
@@ -19,7 +20,7 @@ const viewVariants = {
 };
 
 export default function Register() {
-  const { register, verifyEmail } = useAuth();
+  const { register, verifyEmail, googleLogin } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const referralToken = searchParams.get('ref') || '';
@@ -41,6 +42,7 @@ export default function Register() {
   const [error, setError] = useState('');
   const [successMsg, setSuccessMsg] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
+  const [googleSignInError, setGoogleSignInError] = useState('');
 
   const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || "0x4AAAAAAADBENLaxaG5Y9r6D";
 
@@ -175,6 +177,31 @@ export default function Register() {
     }
   };
 
+  const handleGoogleRegistration = async idToken => {
+    if (!termsAccepted) {
+      setGoogleSignInError('Accept the Conditions of Use and acknowledge the Privacy Notice to continue.');
+      return;
+    }
+    setGoogleSignInError('');
+    setLoading(true);
+    try {
+      const response = await googleLogin(idToken, termsAccepted);
+      if (response.data?.requires2FA) {
+        navigate('/login', {
+          replace: true,
+          state: { googleTwoFactorEmail: response.data.email },
+        });
+        return;
+      }
+      navigate('/profile', { replace: true });
+    } catch (error) {
+      const message = error.response?.data?.message || error.normalized?.message || error.message || 'Google sign-in failed.';
+      setGoogleSignInError(message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-[#FAF8F5] flex flex-col items-center justify-center p-6 relative overflow-hidden pt-24 font-sans">
       {/* Botanical Background Accents */}
@@ -204,6 +231,22 @@ export default function Register() {
                 </div>
 
                 {error && <AlertBox type="error" msg={error} />}
+                {googleSignInError && <AlertBox type="error" msg={googleSignInError} />}
+                <label className="mb-4 flex items-start gap-3 rounded-xl border border-[#0B2419]/10 bg-white p-4 text-xs leading-relaxed text-[#0B2419]/75">
+                  <input type="checkbox" required checked={termsAccepted} onChange={event => setTermsAccepted(event.target.checked)} disabled={loading} className="mt-0.5 accent-[#0B2419]"/>
+                  <span>I agree to the <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold underline">Conditions of Use &amp; Sale</Link> and acknowledge the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline">Privacy Notice</Link>.</span>
+                </label>
+                <div className="mb-5">
+                  <GoogleSignInButton
+                    onSignIn={handleGoogleRegistration}
+                    onError={error => setGoogleSignInError(error.message || 'Google sign-in could not be started.')}
+                    disabled={loading || !termsAccepted}
+                  />
+                  <div className="relative mt-5 flex items-center justify-center">
+                    <div className="w-full border-t border-[#8B9D83]/20" />
+                    <span className="absolute bg-white px-3 text-[11px] font-bold uppercase tracking-wider text-[#8B9D83]">or create with email</span>
+                  </div>
+                </div>
 
                 <form onSubmit={handleRegisterInit} className="space-y-5 relative z-10">
                   <InputField icon={<User size={18}/>} type="text" name="name" autoComplete="name" value={formData.name} onChange={handleInputChange} placeholder="Full Name" disabled={loading} />
@@ -277,11 +320,6 @@ export default function Register() {
                       <strong className="block text-[#0B2419]">Optional: personalize Bhumivera product recommendations.</strong>
                       If I opt in, Bhumivera may use my purchases, saved products, approved reviews, and product views recorded while I am opted in to tailor product recommendations on Bhumivera services. This is separate from promotional email consent and is not required to register. I can withdraw it later in Profile; stored product-view signals will then be deleted. It does not authorize selling this data or sharing it with third-party advertising networks. We do not collect Wi-Fi names, precise location, device fingerprints, or raw IP for recommendations; see the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline">Privacy Notice</Link>.
                     </span>
-                  </label>
-
-                  <label className="flex items-start gap-3 rounded-xl border border-[#0B2419]/10 bg-white p-4 text-xs leading-relaxed text-[#0B2419]/75">
-                    <input type="checkbox" required checked={termsAccepted} onChange={event => setTermsAccepted(event.target.checked)} disabled={loading} className="mt-0.5 accent-[#0B2419]"/>
-                    <span>I agree to the <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold underline">Conditions of Use &amp; Sale</Link> and acknowledge the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline">Privacy Notice</Link>.</span>
                   </label>
 
                   <div className="flex justify-center pt-2">
