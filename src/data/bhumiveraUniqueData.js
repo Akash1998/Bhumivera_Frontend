@@ -474,7 +474,7 @@ export const IMPACT_PAGE_DATA = {
 // 6. PRODUCT SCIENCE PAGE (BhumiveraScience.jsx) UNIQUE IMAGES & LAB SPECIMENS (Distinct Authentic Photographic Assets)
 export const SCIENCE_PAGE_DATA = {
   heroImage: '/assets/images/aloeverascience.webp',
-  labBenchImage: '/assets/images/aloeverabeaker.webp',
+  labBenchImage: '/assets/images/cleanroom-qc.webp',
   patchTestImage: '/assets/images/aloeveradna.webp',
   textureMatrixImage: '/assets/images/aloeveradrop.webp',
   ingredientSpecimens: [
@@ -513,7 +513,7 @@ export const SCIENCE_PAGE_DATA = {
       origin: 'Plant-Glucose Bio-Fermentation · Zero Animal Source',
       note: 'Biomimetic humectant that binds up to 1,000 times its molecular weight in water, forming a breathable moisture cushion during washing so cleansing never leaves skin tight.',
       realLifeTest: 'Forms a hydrophilic film during the 40-second wash cycle that reduces post-rinse transepidermal water loss (TEWL).',
-      image: '/assets/images/aloeveradrop.webp',
+      image: '/assets/images/hyaluronic-acid-qc.webp',
       reference: 'https://pubchem.ncbi.nlm.nih.gov/compound/Sodium-Hyaluronate',
       aiPrompt: 'Tell me about Hyaluronic Acid in Sea Buckthorn Face Wash',
     },
