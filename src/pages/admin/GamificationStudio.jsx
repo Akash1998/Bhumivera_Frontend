@@ -10,12 +10,11 @@ const HOOKS = [
 ];
 
 const DEFAULT_SPIN_REWARDS = [
-  { label: '₹50 off', rewardType: 'discount', discountType: 'fixed', discountValue: 50, minimumOrderAmount: 500, maxDiscount: '', chance: 35, expiryDays: 30 },
-  { label: '5% off (up to ₹200)', rewardType: 'discount', discountType: 'percentage', discountValue: 5, minimumOrderAmount: 500, maxDiscount: 200, chance: 25, expiryDays: 30 },
-  { label: '₹100 off', rewardType: 'discount', discountType: 'fixed', discountValue: 100, minimumOrderAmount: 1000, maxDiscount: '', chance: 18, expiryDays: 30 },
-  { label: '10% off (up to ₹500)', rewardType: 'discount', discountType: 'percentage', discountValue: 10, minimumOrderAmount: 1500, maxDiscount: 500, chance: 12, expiryDays: 30 },
-  { label: '₹250 off', rewardType: 'discount', discountType: 'fixed', discountValue: 250, minimumOrderAmount: 2500, maxDiscount: '', chance: 7, expiryDays: 30 },
-  { label: '₹500 off', rewardType: 'discount', discountType: 'fixed', discountValue: 500, minimumOrderAmount: 5000, maxDiscount: '', chance: 3, expiryDays: 30 },
+  { label: '₹50 off', rewardType: 'discount', discountType: 'fixed', discountValue: 50, minimumOrderAmount: 500, maxDiscount: '', chance: 80, expiryDays: 30 },
+  { label: '5% off (up to ₹200)', rewardType: 'discount', discountType: 'percentage', discountValue: 5, minimumOrderAmount: 500, maxDiscount: 200, chance: 85, expiryDays: 30 },
+  { label: '₹100 off', rewardType: 'discount', discountType: 'fixed', discountValue: 100, minimumOrderAmount: 599, maxDiscount: '', chance: 20, expiryDays: 30 },
+  { label: '10% off (up to ₹500)', rewardType: 'discount', discountType: 'percentage', discountValue: 10, minimumOrderAmount: 1000, maxDiscount: 500, chance: 40, expiryDays: 30 },
+  { label: '₹500 off', rewardType: 'discount', discountType: 'fixed', discountValue: 500, minimumOrderAmount: 2000, maxDiscount: '', chance: 5, expiryDays: 30 },
 ];
 
 export default function GamificationStudio() {
@@ -58,8 +57,13 @@ export default function GamificationStudio() {
   const chanceTotal = spinRewards.reduce((sum, reward) => sum + (Number(reward.chance) || 0), 0);
 
   const saveSpinRewards = async () => {
-    if (spinRewards.length < 1 || spinRewards.length > 12 || chanceTotal !== 100) {
-      showToast?.('Configure 1–12 rewards and make their chances total exactly 100%.', 'error');
+    if (
+      spinRewards.length < 1 ||
+      spinRewards.length > 12 ||
+      !spinRewards.some(reward => Number.isInteger(Number(reward.chance)) && Number(reward.chance) > 0) ||
+      spinRewards.some(reward => !Number.isInteger(Number(reward.chance)) || Number(reward.chance) < 0 || Number(reward.chance) > 100000)
+    ) {
+      showToast?.('Configure 1–12 rewards and give at least one reward a positive chance weight.', 'error');
       return;
     }
     setSavingSpinRewards(true);
@@ -80,7 +84,7 @@ export default function GamificationStudio() {
             }),
         }))),
       });
-      showToast?.('Spin rewards and chances saved.', 'success');
+      showToast?.('Spin rewards and chance weights saved.', 'success');
     } catch (error) {
       showToast?.(error.normalized?.message || 'Could not save spin rewards.', 'error');
     } finally {
@@ -162,9 +166,9 @@ export default function GamificationStudio() {
         <div className="flex flex-wrap items-start justify-between gap-3">
           <div className="flex items-start gap-3">
             <span className="flex h-9 w-9 items-center justify-center rounded-lg bg-emerald-500/10 text-emerald-300"><Gift size={17}/></span>
-            <div><h3 className="text-sm font-bold text-white">Post-order spin rewards</h3><p className="mt-1 max-w-2xl text-xs leading-5 text-slate-400">Customers can spin once after an eligible order. Configure 1–12 discount coupons, free-shipping codes, or loyalty-point awards. Chances must total exactly 100%; coupons are added to the customer’s next-cart offers.</p></div>
+            <div><h3 className="text-sm font-bold text-white">Post-order spin rewards</h3><p className="mt-1 max-w-2xl text-xs leading-5 text-slate-400">Customers can spin once after an eligible order. Configure 1–12 discount coupons, free-shipping codes, or loyalty-point awards. Relative weights are converted into odds automatically; they do not need to total 100. Coupons are added to the customer’s next-cart offers.</p></div>
           </div>
-          <span className={`rounded-full px-3 py-1 text-xs font-bold ${chanceTotal === 100 ? 'bg-emerald-400/10 text-emerald-300' : 'bg-amber-400/10 text-amber-200'}`}>Chance total: {chanceTotal}%</span>
+          <span className={`rounded-full px-3 py-1 text-xs font-bold ${chanceTotal > 0 ? 'bg-emerald-400/10 text-emerald-300' : 'bg-amber-400/10 text-amber-200'}`}>Total weight: {chanceTotal}</span>
         </div>
         <div className="grid gap-3 xl:grid-cols-2">
           {spinRewards.map((reward, index) => (
@@ -200,8 +204,8 @@ export default function GamificationStudio() {
               <label className="text-[11px] font-semibold text-slate-400">Minimum order (₹)
                 <input type="number" min="0" step="1" value={reward.minimumOrderAmount ?? 0} onChange={event => updateSpinReward(index, 'minimumOrderAmount', event.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/50"/>
               </label>
-              <label className="text-[11px] font-semibold text-slate-400">Win chance (%)
-                <input type="number" min="0" max="100" step="1" value={reward.chance} onChange={event => updateSpinReward(index, 'chance', event.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/50"/>
+              <label className="text-[11px] font-semibold text-slate-400">Relative win weight
+                <input type="number" min="0" max="100000" step="1" value={reward.chance} onChange={event => updateSpinReward(index, 'chance', event.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/50"/>
               </label>
               <label className="text-[11px] font-semibold text-slate-400">Reward expiry (days)
                 <input type="number" min="1" max="365" step="1" value={reward.expiryDays} onChange={event => updateSpinReward(index, 'expiryDays', event.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/50"/>
@@ -212,7 +216,7 @@ export default function GamificationStudio() {
         </div>
         <div className="flex flex-wrap gap-2">
           <button type="button" onClick={addSpinReward} disabled={spinRewards.length >= 12} className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/30 px-4 py-2.5 text-sm font-bold text-emerald-200 disabled:opacity-50"><Plus size={16}/>Add reward</button>
-          <button type="button" onClick={saveSpinRewards} disabled={savingSpinRewards || chanceTotal !== 100} className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50">
+          <button type="button" onClick={saveSpinRewards} disabled={savingSpinRewards || chanceTotal < 1} className="inline-flex items-center gap-2 rounded-lg bg-emerald-500 px-4 py-2.5 text-sm font-bold text-slate-950 transition hover:bg-emerald-400 disabled:cursor-not-allowed disabled:opacity-50">
             {savingSpinRewards ? <LoaderCircle size={16} className="animate-spin"/> : <Save size={16}/>}
             Save rewards
           </button>
