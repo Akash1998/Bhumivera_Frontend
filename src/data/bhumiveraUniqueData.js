@@ -419,6 +419,7 @@ export const IMPACT_PAGE_DATA = {
     { id: 'earthen-kunds', title: 'Traditional Earthen Kunds & Wetland Aquifers', image: '/assets/images/impact-poster-03.webp' },
     { id: 'native-nurseries', title: 'Monsoon Sapling Preparation & Jute Potting', image: '/assets/images/impact-poster-04.webp' },
     { id: 'riparian-restoration', title: 'Riparian Coir & Vetiver Bank Stabilization', image: '/assets/images/impact-poster-05.webp' },
+    { id: 'botanical-workshop', title: 'Medicinal Herb & Botanical Sorting Workshop', image: '/assets/images/impact-poster-06.webp' },
   ],
   projects: [
     {

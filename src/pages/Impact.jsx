@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowDownRight, ArrowRight, Leaf, ShieldCheck, MapPin, Calendar, CheckCircle2, FileText, Droplets, Sparkles, Clock } from 'lucide-react';
+import { ArrowDownRight, ArrowRight, Leaf, ShieldCheck, MapPin, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import api from '../services/api';
@@ -25,7 +25,6 @@ const money = amount => `₹${Number(amount || 0).toLocaleString('en-IN', { maxi
 export default function Impact() {
   const [ledger, setLedger] = useState({
     totals: DEFAULT_TOTALS,
-    updates: IMPACT_PAGE_DATA.realLifeFieldNotes,
   });
   const [openFaq, setOpenFaq] = useState(0);
 
@@ -41,10 +40,7 @@ export default function Impact() {
             ? { ...base, collected_amount: Number(match.collected_amount || 0), contributions: Number(match.contributions || 0) }
             : base;
         });
-        setLedger(prev => ({
-          totals: liveTotals,
-          updates: Array.isArray(data?.updates) && data.updates.length > 0 ? data.updates : prev.updates,
-        }));
+        setLedger({ totals: liveTotals });
       }
     }).catch(() => {});
     return () => { active = false; };
@@ -103,7 +99,7 @@ export default function Impact() {
               Inspect Reconciled Ledger <ArrowDownRight size={16} />
             </a>
             <a
-              href="#active-corridors"
+              href="#project-posters"
               className="btn-silver-luxury inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-xs font-semibold uppercase tracking-widest text-[#cbd5e1] hover:text-white transition-colors"
             >
               Explore Corridors <ArrowRight size={15} />
@@ -112,7 +108,7 @@ export default function Impact() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-6 py-12">
+      <section id="project-posters" className="mx-auto max-w-7xl px-6 py-12">
         <h2 className="mb-6 font-serif text-2xl text-white sm:text-3xl">
           <span className="font-headline-gold">Impact Projects</span>{' '}
           <span className="font-headline-silver">In Pictures</span>
@@ -221,232 +217,45 @@ export default function Impact() {
           </div>
         </div>
 
-        {/* 3 ACTIVE CORE FOCUS CORRIDORS */}
         <div id="active-corridors" className="mt-16">
           <div className="mb-8 border-b border-[#d4af37]/20 pb-5">
             <span className="font-sub-gold text-[10px] tracking-[0.2em] block uppercase text-[#fce096]">
               Phase I On-Ground Deployment · Active Execution
             </span>
             <h2 className="mt-2 font-serif text-3xl sm:text-4xl text-white">
-              <span className="font-headline-gold">Three Active</span> <span className="font-headline-silver">Ecological Focus Corridors</span>
+              <span className="font-headline-gold">Three Active</span>{' '}
+              <span className="font-headline-silver">Ecological Focus Corridors</span>
             </h2>
           </div>
-
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
             {IMPACT_PAGE_DATA.projects.map((project, idx) => (
-              <article
-                key={project.id}
-                className="group overflow-hidden rounded-3xl two-tone-card border border-[#d4af37]/25 shadow-xl flex flex-col justify-between hover:border-[#d4af37]/60 hover:shadow-[0_12px_40px_rgba(212,175,55,0.12)] transition-all duration-300"
-              >
-                {/* Clean Aspect-Ratio Image Container */}
-                <Link to={`/impact/${project.id}`} aria-label={`Open details for ${project.title} image`} className="relative block aspect-[16/10] w-full overflow-hidden bg-[#070a0e]">
-                  <img
-                    src={project.image}
-                    alt={project.title}
-                    loading="lazy"
-                    className="h-full w-full object-contain object-center"
-                  />
+              <article key={project.id} className="overflow-hidden rounded-3xl two-tone-card border border-[#d4af37]/25 shadow-xl">
+                <Link
+                  to={`/impact/${project.id}`}
+                  aria-label={`Open details for ${project.title} image`}
+                  className="relative block aspect-[16/10] w-full overflow-hidden bg-[#070a0e]"
+                >
+                  <img src={project.image} alt={project.title} loading="lazy" className="h-full w-full object-contain" />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#070a0e] via-transparent to-black/20" />
-
-                  {/* Top-Left Location Badge */}
-                  <div className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-[#070a0e]/85 backdrop-blur-md px-3 py-1 border border-[#d4af37]/30 text-[10px] font-mono text-[#fce096]">
-                    <MapPin size={11} className="text-[#d4af37]" /> {project.location}
-                  </div>
-
-                  {/* Top-Right Active Corridor Tag */}
-                  <div className="absolute top-3 right-3 rounded-full bg-emerald-500/20 backdrop-blur-md px-2.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-emerald-400 border border-emerald-500/30">
+                  <span className="absolute top-3 left-3 rounded-full border border-[#d4af37]/30 bg-[#070a0e]/85 px-3 py-1 text-[10px] font-mono text-[#fce096]">
+                    <MapPin size={11} className="mr-1 inline text-[#d4af37]" />{project.location}
+                  </span>
+                  <span className="absolute top-3 right-3 rounded-full border border-emerald-500/30 bg-emerald-500/20 px-2.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-emerald-400">
                     Active Corridor 0{idx + 1}
-                  </div>
+                  </span>
                 </Link>
-
-                {/* Card Content with Aligned Typography */}
-                <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-4">
-                  <div>
-                    <span className="font-sub-gold text-[9px] tracking-widest block uppercase text-[#94a3b8]">
-                      On-Ground Initiative
-                    </span>
-                    <h3 className="mt-2 font-serif text-xl sm:text-2xl font-bold text-white min-h-[3.25rem] flex items-center leading-snug">
-                      {project.title}
-                    </h3>
-                    <p className="mt-3 text-xs sm:text-sm leading-6 text-[#cbd5e1]">
-                      {project.copy}
-                    </p>
-                  </div>
-
-                  {/* Bottom Specification Badge */}
-                  <div className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e]/70 p-3.5 mt-4">
-                    <span className="block text-[9px] font-mono uppercase tracking-widest text-[#94a3b8]">
-                      Verified Audit Specification
-                    </span>
-                    <span className="mt-1 block font-mono text-[11px] font-semibold text-[#fce096] leading-tight">
-                      {project.metric}
-                    </span>
-                  </div>
+                <div className="space-y-3 p-6">
+                  <h3 className="font-serif text-xl font-bold text-white">{project.title}</h3>
+                  <p className="text-xs leading-6 text-[#cbd5e1]">{project.copy}</p>
+                  <p className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e]/70 p-3.5 font-mono text-[11px] text-[#fce096]">
+                    {project.metric}
+                  </p>
                 </div>
               </article>
             ))}
           </div>
         </div>
 
-        {/* 4. THREE UPCOMING NATURAL PROJECTS (COMMENCING 2027) */}
-        <div id="upcoming-projects" className="mt-20">
-          <div className="mb-8 border-b border-[#d4af37]/20 pb-5">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="font-sub-gold text-[10px] tracking-[0.25em] block uppercase text-[#fce096]">
-                Future Botanical Horizons · Commencing 2027
-              </span>
-              <span className="rounded-full bg-[#d4af37]/15 px-3 py-0.5 text-[10px] font-mono font-bold text-[#fce096] border border-[#d4af37]/40 uppercase tracking-wider">
-                Phase II Corridors
-              </span>
-            </div>
-            <h2 className="font-serif text-3xl sm:text-4xl text-white">
-              <span className="font-headline-gold">Three Upcoming Natural Projects</span> <br className="hidden sm:inline" />
-              <span className="font-headline-silver">Will Start From 2027</span>
-            </h2>
-            <p className="mt-2 text-xs sm:text-sm text-[#94a3b8] max-w-3xl">
-              Expanding our ecological footprint with high-altitude pollinator sanctuaries, ancient sacred grove preservation, and traditional earthen rainwater aquifers. Baseline environmental surveys are currently underway.
-            </p>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-            {IMPACT_PAGE_DATA.upcomingProjects.map((project, idx) => (
-              <article
-                key={project.id}
-                className="group overflow-hidden rounded-3xl two-tone-card border border-[#d4af37]/35 shadow-xl flex flex-col justify-between hover:border-[#d4af37]/70 hover:shadow-[0_12px_40px_rgba(212,175,55,0.18)] transition-all duration-300 relative"
-              >
-                {/* Clean Aspect-Ratio Image Container */}
-                <Link to={`/impact/${project.id}`} aria-label={`Open details for ${project.title} image`} className="relative block aspect-[16/10] w-full overflow-hidden bg-[#070a0e]">
-                  <img
-                    src={project.image}
-                    alt={project.title}
-                    loading="lazy"
-                    className="h-full w-full object-contain object-center"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#070a0e] via-[#070a0e]/40 to-black/30" />
-
-                  {/* Prominent Upcoming 2027 Badge */}
-                  <div className="absolute top-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-[#d4af37] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#070a0e] shadow-lg">
-                    <Sparkles size={11} /> Upcoming · Will start from 2027
-                  </div>
-
-                  {/* Top-Left Location Badge */}
-                  <div className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-[#070a0e]/85 backdrop-blur-md px-3 py-1 border border-[#d4af37]/30 text-[10px] font-mono text-[#fce096]">
-                    <MapPin size={11} className="text-[#d4af37]" /> {project.location}
-                  </div>
-                </Link>
-
-                {/* Card Content with Aligned Typography */}
-                <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-4">
-                  <div>
-                    <div className="flex items-center justify-between">
-                      <span className="font-sub-gold text-[9px] tracking-widest block uppercase text-[#fce096]">
-                        Natural Project 0{idx + 4} · Phase II
-                      </span>
-                      <span className="font-mono text-[10px] text-amber-400/90 font-semibold flex items-center gap-1">
-                        <Clock size={11} /> Launch: 2027
-                      </span>
-                    </div>
-
-                    <h3 className="mt-2 font-serif text-xl sm:text-2xl font-bold text-white min-h-[3.25rem] flex items-center leading-snug">
-                      {project.title}
-                    </h3>
-
-                    <p className="mt-3 text-xs sm:text-sm leading-6 text-[#cbd5e1]">
-                      {project.copy}
-                    </p>
-                  </div>
-
-                  {/* Bottom Specification Badge */}
-                  <div className="rounded-xl border border-[#d4af37]/30 bg-[#070a0e]/80 p-3.5 mt-4">
-                    <span className="block text-[9px] font-mono uppercase tracking-widest text-amber-400">
-                      Phase II Target Specification
-                    </span>
-                    <span className="mt-1 block font-mono text-[11px] font-semibold text-[#fce096] leading-tight">
-                      {project.metric}
-                    </span>
-                  </div>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* 5. REAL-LIFE VERIFIED FIELD JOURNAL ENTRIES */}
-      <section id="field-journal" className="mx-auto max-w-7xl px-6 pb-20">
-        <div className="mb-8 border-b border-[#d4af37]/20 pb-5">
-          <span className="font-sub-gold text-[10px] tracking-[0.2em] block uppercase text-[#fce096]">
-            On-Ground Field Surveillance · Continuous Dated Evidence
-          </span>
-          <h2 className="mt-2 font-serif text-3xl sm:text-4xl text-white">
-            <span className="font-headline-gold">Verified Field Journal</span> <span className="font-headline-silver">&amp; Photographic Proof</span>
-          </h2>
-          <p className="mt-2 text-xs sm:text-sm text-[#94a3b8] max-w-2xl">
-            Every record documents a specific date, coordinates, verified scope of botanical work, and high-resolution ground photographs before and after completion.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
-          {ledger.updates.map((update, idx) => {
-            const fallbackPhoto = IMPACT_PAGE_DATA.realLifeFieldNotes[idx % IMPACT_PAGE_DATA.realLifeFieldNotes.length].photo_url;
-            return (
-              <article
-                key={update.id || idx}
-                className="group overflow-hidden rounded-3xl two-tone-card border border-[#d4af37]/25 shadow-xl flex flex-col justify-between hover:border-[#d4af37]/60 hover:shadow-[0_12px_40px_rgba(212,175,55,0.12)] transition-all duration-300"
-              >
-                {/* Clean Aspect-Ratio Image Container */}
-                <Link to={`/impact/${update.id || `field-note-${idx + 1}`}`} aria-label={`Open details for ${update.title} image`} className="relative block aspect-[16/10] w-full overflow-hidden bg-[#070a0e]">
-                  <img
-                    src={update.photo_url || fallbackPhoto}
-                    alt={update.title}
-                    loading="lazy"
-                    className="h-full w-full object-contain object-center"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#070a0e] via-transparent to-black/20" />
-
-                  {/* Top-Left Date Badge */}
-                  <div className="absolute top-3 left-3 inline-flex items-center gap-1.5 rounded-full bg-[#070a0e]/85 backdrop-blur-md px-3 py-1 border border-[#d4af37]/35 text-[10px] font-mono text-[#fce096]">
-                    <Calendar size={11} className="text-[#d4af37]" /> {update.field_date || '2026-10'}
-                  </div>
-
-                  {/* Top-Right Log ID */}
-                  <div className="absolute top-3 right-3 rounded-full bg-black/60 backdrop-blur-md px-2.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-[#cbd5e1] border border-white/10">
-                    {update.id?.toUpperCase() || `FN-${idx + 1}`}
-                  </div>
-                </Link>
-
-                {/* Card Body */}
-                <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-4">
-                  <div>
-                    <div className="flex items-center gap-1.5 text-[11px] font-mono text-[#94a3b8]">
-                      <MapPin size={12} className="text-[#d4af37]" />
-                      <span className="truncate">{update.location || 'West Bengal Field Site'}</span>
-                    </div>
-
-                    <h3 className="mt-2.5 font-serif text-lg sm:text-xl font-bold text-white min-h-[3rem] flex items-center leading-snug">
-                      {update.title}
-                    </h3>
-
-                    <p className="mt-3 text-xs sm:text-sm leading-6 text-[#cbd5e1]">
-                      {update.summary}
-                    </p>
-                  </div>
-
-                  {/* Verified Footer Bar */}
-                  <div className="mt-4 border-t border-[#d4af37]/20 pt-3 flex items-center justify-between text-[11px]">
-                    <span className="flex items-center gap-1.5 text-[#fce096] font-medium truncate max-w-[200px]">
-                      <ShieldCheck size={14} className="text-[#d4af37] shrink-0" />
-                      <span className="truncate">{update.verified_by || 'Bhumivera Field Audit'}</span>
-                    </span>
-                    <span className="shrink-0 inline-flex items-center gap-1 rounded-full bg-emerald-500/10 px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider text-emerald-400 border border-emerald-500/30">
-                      ● Verified
-                    </span>
-                  </div>
-                </div>
-              </article>
-            );
-          })}
-        </div>
       </section>
 
       {/* 6. FAQ + CHARTER GOVERNANCE SECTION */}
@@ -494,7 +303,7 @@ export default function Impact() {
                 </li>
                 <li className="flex items-start gap-2">
                   <span className="text-[#d4af37] font-bold">✓</span>
-                  <span><strong>Public Ledger:</strong> All ledger entries and photographic journals remain accessible to the public 24/7.</span>
+                  <span><strong>Public Ledger:</strong> All reconciled ledger entries remain accessible to the public 24/7.</span>
                 </li>
               </ul>
             </div>
