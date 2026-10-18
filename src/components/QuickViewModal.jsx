@@ -34,11 +34,13 @@ export default function QuickViewModal({ product, onClose }) {
       const itemToAdd = chosenVariant
         ? { ...product, selectedVariant: chosenVariant.name || chosenVariant }
         : product;
-      await addToCart(itemToAdd, qty);
-      setAdded(true);
-      setTimeout(() => setAdded(false), 2000);
+      const wasAdded = await addToCart(itemToAdd, qty);
+      if (wasAdded) {
+        setAdded(true);
+        setTimeout(() => setAdded(false), 2000);
+      }
     } catch (err) {
-      console.error('Add to cart error:', err);
+      console.error('Add to bag error:', err);
     }
   };
 
@@ -212,7 +214,7 @@ export default function QuickViewModal({ product, onClose }) {
               </div>
             )}
 
-            {/* Quantity & Add to Cart */}
+            {/* Quantity & Add to Bag */}
             <div className="flex items-center gap-3 mt-auto pt-4 border-t border-white/10">
               {/* Quantity Selector */}
               <div className="flex items-center bg-[#070a0e] border border-white/15 rounded-xl overflow-hidden">
@@ -236,7 +238,7 @@ export default function QuickViewModal({ product, onClose }) {
                 </button>
               </div>
 
-              {/* Add to Cart Button */}
+              {/* Add to Bag Button */}
               <button
                 onClick={handleAdd}
                 disabled={added || (product.quantity !== undefined && product.quantity === 0)}
@@ -245,12 +247,12 @@ export default function QuickViewModal({ product, onClose }) {
                 {added ? (
                   <>
                     <Check size={18} />
-                    <span>Added to Cart</span>
+                    <span>Added to Bag</span>
                   </>
                 ) : (
                   <>
                     <ShoppingCart size={18} />
-                    <span>Add to Cart</span>
+                    <span>Add to Bag</span>
                   </>
                 )}
               </button>

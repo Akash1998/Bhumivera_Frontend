@@ -197,7 +197,7 @@ export const CartProvider = ({ children }) => {
         await cartApi.add({ productId: prodId, quantity: qty });
         await loadCart(); // Re-sync to assure accuracy
         setCartAddEvent({ id: Date.now(), productName: product.name || 'your selection' });
-        toast.success('Added to cart successfully.');
+        toast.success('Added to bag successfully.');
         return true;
       } catch (err) {
         console.error("Failed to sync cart add to DB, reverting state", err);
@@ -216,11 +216,11 @@ export const CartProvider = ({ children }) => {
       }
     }
     setCartAddEvent({ id: Date.now(), productName: product.name || 'your selection' });
-    toast.success('Added to cart successfully.');
+    toast.success('Added to bag successfully.');
     return true;
   };
 
-  // Allow AI Co-Pilot rescue drawer to trigger 1-click Add to Cart retries
+  // Allow AI Co-Pilot rescue drawer to trigger 1-click Add to Bag retries
   useEffect(() => {
     const onRetry = e => {
       const detail = e?.detail || {};

@@ -909,7 +909,7 @@ export default function MiniCart() {
                   {recommendationsToShow.slice(0, 2).map(product => <article key={product.id || product._id} className="flex min-w-0 items-center gap-2 rounded-xl border border-[#244A38] bg-[#14291F] p-2">
                     <img src={getImageUrl(product.image_url || product.images || product.image)} alt={product.name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-12 w-12 shrink-0 rounded-lg bg-black/40 object-contain p-1"/>
                     <div className="min-w-0 flex-1"><p className="line-clamp-2 text-[10px] font-semibold leading-tight text-white">{product.name}</p><p className="mt-1 text-[10px] font-bold text-[#D4AF37]">{formatPrice(product.discount_price || product.price)}</p></div>
-                    <button type="button" aria-label={`Add ${product.name} to cart`} onClick={() => addToCart(product)} className="shrink-0 rounded-lg border border-[#D4AF37]/40 p-1.5 text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#14291F]"><Plus size={14}/></button>
+                    <button type="button" aria-label={`Add ${product.name} to bag`} onClick={() => addToCart(product)} className="shrink-0 rounded-lg border border-[#D4AF37]/40 p-1.5 text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#14291F]"><Plus size={14}/></button>
                   </article>)}
                 </div>
               </div>}

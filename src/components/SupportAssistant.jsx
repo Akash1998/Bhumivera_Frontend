@@ -5543,7 +5543,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   }}
                   className="rounded-lg bg-emerald-500 px-2.5 py-1 text-[10px] font-bold uppercase text-[#071510]"
                 >
-                  Add Available Quantity to Cart
+                  Add Available Quantity to Bag
                 </button>
               )}
             </div>

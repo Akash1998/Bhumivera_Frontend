@@ -70,7 +70,7 @@ describe('cart additions with live inventory', () => {
       { product_id: 17, quantity: 1, product: { quantity: 8, status: 'active' } },
     ]);
     expect(rescueEvent).not.toHaveBeenCalled();
-    expect(mockToast.success).toHaveBeenCalledWith('Added to cart successfully.');
+    expect(mockToast.success).toHaveBeenCalledWith('Added to bag successfully.');
     window.removeEventListener(AI_COPILOT_EVENT, rescueEvent);
   });
 

@@ -2,7 +2,7 @@
  * ============================================================================
  * BHUMIVERA 100X AI OMNIPRESENT CUSTOMER CO-PILOT & FRICTION-RESCUE BUS
  * ============================================================================
- * Connects every storefront action (Add to Cart, Quantity Change, Password
+ * Connects every storefront action (Add to Bag, Quantity Change, Password
  * Setup, Password Reset, Login, OTP Verification, Coupon Application, and
  * Checkout) directly to the Bhumivera AI Support Assistant so customers are
  * proactively guided whenever they encounter friction.
@@ -326,7 +326,7 @@ export function classifyCartErrorForAiGuide(error, product = null, requestedQuan
       explanation: `You tried to add ${requestedQuantity} unit(s) (total ${currentCartQuantity + requestedQuantity}), which exceeds the ${stock ?? maxAddable} unit(s) currently in stock.`,
       steps: [
         maxAddable > 0
-          ? `Reduce the quantity to ${maxAddable} unit(s) and click Add to Cart.`
+          ? `Reduce the quantity to ${maxAddable} unit(s) and click Add to Bag.`
           : `You already have all ${stock} available unit(s) in your cart! Proceed to Checkout to complete your order.`,
       ],
       productId: product?.id || product?._id || null,
@@ -340,10 +340,10 @@ export function classifyCartErrorForAiGuide(error, product = null, requestedQuan
       frictionType: 'cart_variant_required',
       cause: 'variant_required',
       headline: `Select an option for ${productName} first`,
-      explanation: 'Please click on a pack size or variant option badge above the Add to Cart button before adding the item.',
+      explanation: 'Please click on a pack size or variant option badge above the Add to Bag button before adding the item.',
       steps: [
         'Select your preferred size/variant option.',
-        'Then click Add to Cart.',
+        'Then click Add to Bag.',
       ],
       productId: product?.id || product?._id || null,
       productName,
@@ -357,7 +357,7 @@ export function classifyCartErrorForAiGuide(error, product = null, requestedQuan
     explanation: rawMessage,
     steps: [
       'Ensure you have selected a valid quantity (1 or more).',
-      'Click "Retry Add to Cart" in the AI Co-Pilot panel or open /shop to add directly.',
+      'Click "Retry Add to Bag" in the AI Co-Pilot panel or open /shop to add directly.',
     ],
     productId: product?.id || product?._id || null,
     productName,

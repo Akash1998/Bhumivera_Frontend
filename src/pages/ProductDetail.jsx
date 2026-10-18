@@ -95,6 +95,7 @@ export default function ProductDetail() {
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('details');
   const [isAdding, setIsAdding] = useState(false);
+  const [isAdded, setIsAdded] = useState(false);
   const [activeVideo, setActiveVideo] = useState(null);
   const [reviewRatingFilter, setReviewRatingFilter] = useState('all');
   const [reviewSort, setReviewSort] = useState('newest');
@@ -211,12 +212,23 @@ export default function ProductDetail() {
   const handleAddToCart = async () => {
     if (!product) return;
     setIsAdding(true);
+    setIsAdded(false);
+    let wasAdded = false;
     try {
-      await addToCart(product, quantity);
+      wasAdded = await addToCart(product, quantity) === true;
+      setIsAdded(wasAdded);
     } catch (err) {
       console.error("Cart error:", err);
     } finally {
-      setTimeout(() => setIsAdding(false), 800);
+      if (wasAdded) {
+        setTimeout(() => {
+          setIsAdding(false);
+          setIsAdded(false);
+        }, 800);
+      } else {
+        setIsAdding(false);
+        setIsAdded(false);
+      }
     }
   };
 
@@ -227,7 +239,7 @@ export default function ProductDetail() {
   const stockStatus = productUnavailable
     ? 'Not available for purchase'
     : product?.quantity <= 0 && hasServerCheckedInventory
-    ? 'Stock checked when adding to cart'
+    ? 'Stock checked when adding to bag'
     : isOutOfStock
       ? 'Currently unavailable'
       : product?.quantity <= 5
@@ -446,10 +458,10 @@ export default function ProductDetail() {
                 className="btn-gold-luxury relative flex min-h-12 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl px-4 text-xs font-bold uppercase tracking-[0.12em] shadow-xl transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-14 sm:tracking-widest"
               >
                 <span className={`flex items-center gap-2 transition-transform duration-300 ${isAdding ? '-translate-y-12' : ''}`}>
-                  <Leaf size={16} /> {isAdding ? 'Adding...' : 'Add to Cart'}
+                  <Leaf size={16} /> {isAdding ? 'Adding...' : 'Add to Bag'}
                 </span>
                 <span className={`absolute inset-0 flex items-center justify-center gap-2 bg-[#D4AF37] text-[#14291F] font-bold transition-transform duration-300 ${isAdding ? 'translate-y-0' : 'translate-y-12'}`}>
-                  <CheckCircle2 size={16} /> Added to Cart
+                  {isAdded ? <><CheckCircle2 size={16} /> Added to Bag</> : 'Adding...'}
                 </span>
               </button>
 
@@ -827,7 +839,7 @@ export default function ProductDetail() {
               <p className="mt-3 text-xl font-serif font-bold text-[#fce096]">₹{product.discount_price || product.price}</p>
               <div className="mt-4 flex items-center gap-2 text-xs text-[#cbd5e1]"><Shield size={15} className="text-[#d4af37]"/>Secure checkout · Bhumivera support</div>
               <div className="mt-auto pt-8">
-                <button type="button" onClick={async () => { await handleAddToCart(); setActiveVideo(null); }} disabled={isOutOfStock || isAdding} className="btn-gold-luxury w-full rounded-xl px-5 py-4 text-sm font-bold uppercase tracking-widest text-white transition disabled:cursor-not-allowed disabled:opacity-50">{isAdding ? 'Adding…' : isOutOfStock ? 'Currently unavailable' : 'Add to cart'}</button>
+                <button type="button" onClick={async () => { await handleAddToCart(); setActiveVideo(null); }} disabled={isOutOfStock || isAdding} className="btn-gold-luxury w-full rounded-xl px-5 py-4 text-sm font-bold uppercase tracking-widest text-white transition disabled:cursor-not-allowed disabled:opacity-50">{isAdding ? (isAdded ? 'Added to Bag' : 'Adding…') : isOutOfStock ? 'Currently unavailable' : 'Add to Bag'}</button>
               </div>
             </div>
           </motion.section>
@@ -857,7 +869,7 @@ export default function ProductDetail() {
                 disabled={isOutOfStock || isAdding}
                 className="btn-gold-luxury flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-[10px] font-bold uppercase tracking-wider text-white transition disabled:cursor-not-allowed disabled:opacity-50 sm:px-6 sm:text-xs"
               >
-                {isAdding ? 'Adding...' : <><Leaf size={15} /> Add to cart</>}
+                {isAdding ? (isAdded ? 'Added to Bag' : 'Adding...') : <><Leaf size={15} /> Add to Bag</>}
               </button>
             </div>
           </motion.div>
