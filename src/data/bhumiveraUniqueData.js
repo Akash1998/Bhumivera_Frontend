@@ -145,7 +145,7 @@ export const HOME_VISUAL_ASSETS = {
       title: 'Cold-Pressed Extraction at <28°C',
       subtitle: 'Preserving Heat-Sensitive Omega-7 & Vitamin C',
       description: 'Unlike steam-boiled commercial extracts, our Sea Buckthorn berries are cold-pressed in small batches so bioactive carotenoids remain intact.',
-      image: '/assets/images/Promo1.webp',
+      image: '/assets/images/home-cold-pressed-extraction.webp',
       tag: 'Batch QC #SB-2026-09',
     },
     {
@@ -153,7 +153,7 @@ export const HOME_VISUAL_ASSETS = {
       title: '24-Hour Forearm Patch Test Protocol',
       subtitle: 'Dermatological Compatibility Before Full Use',
       description: 'Every bottle includes clear instructions for a 24-hour inner-forearm patch test to verify individual skin compatibility with concentrated botanicals.',
-      image: '/assets/images/niacidamine.webp',
+      image: '/assets/images/home-forearm-patch-test.webp',
       tag: 'Safety Standard #PT-24H',
     },
     {
@@ -161,7 +161,7 @@ export const HOME_VISUAL_ASSETS = {
       title: 'Tamper-Evident Neck Seal & Weight Log',
       subtitle: 'Warehouse Digital Scale Verification',
       description: 'Each bottle is sealed with a matte-black and gold security strip and weighed on a digital platform scale before leaving our facility.',
-      image: '/assets/images/Promo9.webp',
+      image: '/assets/images/home-dispatch-weight-log.webp',
       tag: 'Dispatch Shield #WS-100',
     },
     {
@@ -169,7 +169,7 @@ export const HOME_VISUAL_ASSETS = {
       title: 'Four-Texture Apothecary Swatch Study',
       subtitle: 'Zero Artificial Dyes or Sulphate Foaming Agents',
       description: 'Natural amber, charcoal matte, golden saffron oil, and translucent aloe gel colors come strictly from the raw botanical extracts themselves.',
-      image: '/assets/images/Promo3.webp',
+      image: '/assets/images/home-apothecary-swatches.webp',
       tag: 'Apothecary Lab #SW-4',
     },
   ],
