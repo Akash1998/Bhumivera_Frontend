@@ -413,6 +413,13 @@ export const ABOUT_PAGE_DATA = {
 export const IMPACT_PAGE_DATA = {
   heroImage: '/assets/images/home-stewardship-ledger.webp',
   charterImage: '/assets/images/foundermanifesto.webp',
+  projectPosters: [
+    { id: 'pampore-saffron', title: 'Pampore Saffron Corridors & Honeybee Sanctuaries', image: '/assets/images/impact-poster-01.webp' },
+    { id: 'sacred-groves', title: 'Ancient Sacred Groves & Medicinal Reserves', image: '/assets/images/impact-poster-02.webp' },
+    { id: 'earthen-kunds', title: 'Traditional Earthen Kunds & Wetland Aquifers', image: '/assets/images/impact-poster-03.webp' },
+    { id: 'native-nurseries', title: 'Monsoon Sapling Preparation & Jute Potting', image: '/assets/images/impact-poster-04.webp' },
+    { id: 'riparian-restoration', title: 'Riparian Coir & Vetiver Bank Stabilization', image: '/assets/images/impact-poster-05.webp' },
+  ],
   projects: [
     {
       id: 'native-trees',

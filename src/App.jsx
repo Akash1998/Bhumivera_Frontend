@@ -343,6 +343,7 @@ function AppContent() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
             <Route path="/impact" element={<Impact />} />
+            <Route path="/impact/:imageId" element={<main className="min-h-screen bg-[#070a0e]" aria-label="Impact image detail page" />} />
             <Route path="/legal" element={<Legal />} />
             <Route path="/legal/:sectionSlug" element={<Legal />} />
             

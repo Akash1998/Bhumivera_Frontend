@@ -64,14 +64,20 @@ export default function Impact() {
       {/* 1. HERO SECTION */}
       <section className="relative isolate min-h-[70svh] overflow-hidden border-b border-[#d4af37]/20 bg-[#070a0e]">
         <div className="absolute inset-0 -z-20 h-full w-full">
-          <img
-            src={IMPACT_PAGE_DATA.heroImage}
-            alt="Bhumivera public stewardship ledger and verifiable field documentation"
-            className="h-full w-full object-cover object-center opacity-30 brightness-90 filter contrast-105"
-          />
+          <Link
+            to="/impact/hero"
+            aria-label="Open details for the impact page hero image"
+            className="block h-full w-full"
+          >
+            <img
+              src={IMPACT_PAGE_DATA.heroImage}
+              alt="Bhumivera public stewardship ledger and verifiable field documentation"
+              className="h-full w-full object-contain object-center opacity-30 brightness-90 filter contrast-105"
+            />
+          </Link>
         </div>
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-[#070a0e] via-[#070a0e]/80 to-[#070a0e]/50" />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#070a0e]/95 via-[#070a0e]/75 to-transparent" />
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-t from-[#070a0e] via-[#070a0e]/80 to-[#070a0e]/50" />
+        <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-r from-[#070a0e]/95 via-[#070a0e]/75 to-transparent" />
 
         <div className="mx-auto flex min-h-[70svh] max-w-7xl flex-col justify-end px-6 pb-14 pt-32 md:pb-20">
           <div className="inline-flex items-center gap-2 rounded-full border border-[#d4af37]/30 bg-[#070a0e]/80 backdrop-blur-md px-3.5 py-1.5 font-sub-gold text-[10px] tracking-[0.22em] uppercase text-[#fce096] mb-5 w-fit">
@@ -103,6 +109,30 @@ export default function Impact() {
               Explore Corridors <ArrowRight size={15} />
             </a>
           </div>
+        </div>
+      </section>
+
+      <section className="mx-auto max-w-7xl px-6 py-12">
+        <h2 className="mb-6 font-serif text-2xl text-white sm:text-3xl">
+          <span className="font-headline-gold">Impact Projects</span>{' '}
+          <span className="font-headline-silver">In Pictures</span>
+        </h2>
+        <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+          {IMPACT_PAGE_DATA.projectPosters.map(poster => (
+            <Link
+              key={poster.id}
+              to={`/impact/${poster.id}`}
+              aria-label={`Open details for ${poster.title}`}
+              className="block overflow-hidden rounded-2xl border border-[#d4af37]/25 bg-[#070a0e] transition-colors hover:border-[#d4af37]/70"
+            >
+              <img
+                src={poster.image}
+                alt={poster.title}
+                loading="lazy"
+                className="h-auto w-full object-contain"
+              />
+            </Link>
+          ))}
         </div>
       </section>
 
@@ -209,12 +239,12 @@ export default function Impact() {
                 className="group overflow-hidden rounded-3xl two-tone-card border border-[#d4af37]/25 shadow-xl flex flex-col justify-between hover:border-[#d4af37]/60 hover:shadow-[0_12px_40px_rgba(212,175,55,0.12)] transition-all duration-300"
               >
                 {/* Clean Aspect-Ratio Image Container */}
-                <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#070a0e]">
+                <Link to={`/impact/${project.id}`} aria-label={`Open details for ${project.title} image`} className="relative block aspect-[16/10] w-full overflow-hidden bg-[#070a0e]">
                   <img
                     src={project.image}
                     alt={project.title}
                     loading="lazy"
-                    className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                    className="h-full w-full object-contain object-center"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#070a0e] via-transparent to-black/20" />
 
@@ -227,7 +257,7 @@ export default function Impact() {
                   <div className="absolute top-3 right-3 rounded-full bg-emerald-500/20 backdrop-blur-md px-2.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-emerald-400 border border-emerald-500/30">
                     Active Corridor 0{idx + 1}
                   </div>
-                </div>
+                </Link>
 
                 {/* Card Content with Aligned Typography */}
                 <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-4">
@@ -285,12 +315,12 @@ export default function Impact() {
                 className="group overflow-hidden rounded-3xl two-tone-card border border-[#d4af37]/35 shadow-xl flex flex-col justify-between hover:border-[#d4af37]/70 hover:shadow-[0_12px_40px_rgba(212,175,55,0.18)] transition-all duration-300 relative"
               >
                 {/* Clean Aspect-Ratio Image Container */}
-                <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#070a0e]">
+                <Link to={`/impact/${project.id}`} aria-label={`Open details for ${project.title} image`} className="relative block aspect-[16/10] w-full overflow-hidden bg-[#070a0e]">
                   <img
                     src={project.image}
                     alt={project.title}
                     loading="lazy"
-                    className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                    className="h-full w-full object-contain object-center"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#070a0e] via-[#070a0e]/40 to-black/30" />
 
@@ -303,7 +333,7 @@ export default function Impact() {
                   <div className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-[#070a0e]/85 backdrop-blur-md px-3 py-1 border border-[#d4af37]/30 text-[10px] font-mono text-[#fce096]">
                     <MapPin size={11} className="text-[#d4af37]" /> {project.location}
                   </div>
-                </div>
+                </Link>
 
                 {/* Card Content with Aligned Typography */}
                 <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-4">
@@ -365,12 +395,12 @@ export default function Impact() {
                 className="group overflow-hidden rounded-3xl two-tone-card border border-[#d4af37]/25 shadow-xl flex flex-col justify-between hover:border-[#d4af37]/60 hover:shadow-[0_12px_40px_rgba(212,175,55,0.12)] transition-all duration-300"
               >
                 {/* Clean Aspect-Ratio Image Container */}
-                <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#070a0e]">
+                <Link to={`/impact/${update.id || `field-note-${idx + 1}`}`} aria-label={`Open details for ${update.title} image`} className="relative block aspect-[16/10] w-full overflow-hidden bg-[#070a0e]">
                   <img
                     src={update.photo_url || fallbackPhoto}
                     alt={update.title}
                     loading="lazy"
-                    className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                    className="h-full w-full object-contain object-center"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#070a0e] via-transparent to-black/20" />
 
@@ -383,7 +413,7 @@ export default function Impact() {
                   <div className="absolute top-3 right-3 rounded-full bg-black/60 backdrop-blur-md px-2.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-[#cbd5e1] border border-white/10">
                     {update.id?.toUpperCase() || `FN-${idx + 1}`}
                   </div>
-                </div>
+                </Link>
 
                 {/* Card Body */}
                 <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-4">
@@ -424,11 +454,11 @@ export default function Impact() {
         <div className="grid gap-10 lg:grid-cols-12 items-start rounded-3xl two-tone-card border border-[#d4af37]/35 p-6 sm:p-10 shadow-2xl">
           {/* Left Column: Framed Governance Charter Panel */}
           <div className="lg:col-span-5 space-y-6">
-            <div className="relative aspect-[16/10] w-full overflow-hidden rounded-2xl border border-[#d4af37]/30 shadow-lg bg-[#070a0e]">
+            <Link to="/impact/charter" aria-label="Open details for the stewardship charter image" className="relative block aspect-[16/10] w-full overflow-hidden rounded-2xl border border-[#d4af37]/30 shadow-lg bg-[#070a0e]">
               <img
                 src={IMPACT_PAGE_DATA.charterImage}
                 alt="Bhumivera environmental stewardship charter and field governance"
-                className="h-full w-full object-cover object-center"
+                className="h-full w-full object-contain object-center"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-[#070a0e] via-transparent to-transparent" />
               <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between">
@@ -439,7 +469,7 @@ export default function Impact() {
                   Active Audit
                 </span>
               </div>
-            </div>
+            </Link>
 
             <div className="rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/60 p-5 space-y-3">
               <h3 className="font-serif text-lg font-bold text-white flex items-center gap-2">
