@@ -219,7 +219,7 @@ export default function Navbar() {
                 value={searchQuery}
                 onChange={handleSearch}
                 onFocus={() => { if(searchQuery.length > 2) setShowSearchDropdown(true); }}
-                placeholder={t('search_placeholder', 'Search skincare, hair care, ingredients...')}
+                placeholder={t('search_placeholder', 'Discover skincare, hair care, botanical ingredients, and daily rituals...')}
                 aria-label="Search skincare products"
                 className="w-full rounded-full border border-[#D4AF37]/25 bg-[#1C382B]/60 backdrop-blur-md py-3.5 pl-12 pr-28 text-sm text-white shadow-inner outline-none transition-all placeholder:text-[#9BB0A5] focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40"
               />
@@ -315,7 +315,7 @@ export default function Navbar() {
                 value={searchQuery}
                 onChange={handleSearch}
                 onFocus={() => { if (searchQuery.length > 2) setShowSearchDropdown(true); }}
-                placeholder={t('search_placeholder', 'Search skincare, hair care, ingredients...')}
+                placeholder={t('search_placeholder', 'Discover skincare, hair care, botanical ingredients, and daily rituals...')}
                 aria-label="Search skincare products"
                 className="h-11 w-full rounded-full border border-[#D4AF37]/25 bg-[#1C382B]/70 backdrop-blur-md pl-10 pr-4 text-sm text-white shadow-sm outline-none placeholder:text-[#9BB0A5] focus:border-[#d4af37]"
               />
