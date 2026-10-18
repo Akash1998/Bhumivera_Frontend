@@ -107,7 +107,9 @@ export default function Shop() {
   const [searchParams] = useSearchParams();
   const { slug: categorySlug } = useParams();
   const location = useLocation();
-  const [products, setProducts] = useState(FALLBACK_CATALOG_PRODUCTS);
+  const [products, setProducts] = useState([]);
+  const [catalogStatus, setCatalogStatus] = useState('loading');
+  const [catalogRetry, setCatalogRetry] = useState(0);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState(categorySlug || searchParams.get('category') || 'all');
   const [sortBy, setSortBy] = useState('featured');
@@ -123,22 +125,34 @@ export default function Shop() {
       .getAllActive()
       .then(({ data }) => {
         const rows = data?.data || data;
-        if (active && Array.isArray(rows) && rows.length > 0) {
-          const enriched = rows.map((p, idx) => ({
+        if (!Array.isArray(rows)) {
+          throw new Error('The active product catalog returned an invalid response.');
+        }
+        const enriched = rows
+          .filter(p => p && (p.id ?? p._id) != null && (!p.status || String(p.status).toLowerCase() === 'active'))
+          .map((p, idx) => ({
             ...FALLBACK_CATALOG_PRODUCTS[idx % FALLBACK_CATALOG_PRODUCTS.length],
             ...p,
             image_url:
               p.image_url ||
               FALLBACK_CATALOG_PRODUCTS[idx % FALLBACK_CATALOG_PRODUCTS.length].image_url,
           }));
+        if (active) {
           setProducts(enriched);
+          setCatalogStatus('loaded');
         }
       })
-      .catch(() => {});
+      .catch(error => {
+        console.error('[SHOP_PRODUCT_CATALOG_LOAD_ERROR]', error);
+        if (active) {
+          setProducts([]);
+          setCatalogStatus('error');
+        }
+      });
     return () => {
       active = false;
     };
-  }, []);
+  }, [catalogRetry]);
 
   const filteredProducts = useMemo(() => {
     const list = products.filter((p) => {
@@ -187,7 +201,9 @@ export default function Shop() {
             </h1>
             <div className="gold-hairline w-24 my-4" />
             <p className="text-[#DFD7C4] font-light text-sm sm:text-base">
-              Showing {filteredProducts.length} plant-powered formulations with complete INCI percentage transparency.
+              {catalogStatus === 'loading'
+                ? 'Loading available formulations…'
+                : `Showing ${filteredProducts.length} plant-powered formulations with complete INCI percentage transparency.`}
             </p>
           </div>
 
@@ -254,7 +270,16 @@ export default function Shop() {
 
         {/* Product Grid or Empty State */}
         <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredProducts.length === 0 ? (
+          {catalogStatus === 'loading' ? (
+            <p role="status" className="col-span-full py-12 text-center text-sm text-[#DFD7C4]">Loading available formulations…</p>
+          ) : catalogStatus === 'error' ? (
+            <div role="alert" className="col-span-full py-12 text-center text-sm text-[#DFD7C4]">
+              <p>We couldn’t load the live catalog. Please check your connection and try again.</p>
+              <button type="button" onClick={() => setCatalogRetry(retry => retry + 1)} className="btn-gold-luxury mt-4 min-h-11 rounded-full px-6 py-2 text-xs font-bold uppercase tracking-wider">Retry</button>
+            </div>
+          ) : products.length === 0 ? (
+            <p className="col-span-full py-12 text-center text-sm text-[#DFD7C4]">No formulations are currently available.</p>
+          ) : filteredProducts.length === 0 ? (
             <div className="col-span-full card-glass-forest relative flex min-h-[420px] flex-col items-center justify-center overflow-hidden rounded-[2.5rem] border border-[#D4AF37]/30 p-10 text-center shadow-2xl">
               <span className="card-orbit-outer h-[340px] w-[340px]" aria-hidden="true" />
               <span className="card-orbit-inner h-[240px] w-[240px]" aria-hidden="true" />

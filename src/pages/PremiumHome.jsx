@@ -62,9 +62,11 @@ const questions = [
 export default function PremiumHome() {
   const { user } = useAuth() || {};
   const { addToCart } = useCart() || {};
-  const [products, setProducts] = useState(FALLBACK_CATALOG_PRODUCTS);
+  const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
   const [openQuestion, setOpenQuestion] = useState('ingredients');
+  const [catalogStatus, setCatalogStatus] = useState('loading');
+  const [catalogRetry, setCatalogRetry] = useState(0);
 
   useEffect(() => {
     let active = true;
@@ -72,18 +74,30 @@ export default function PremiumHome() {
       .getAllActive()
       .then(({ data }) => {
         const rows = data?.data || data;
-        if (active && Array.isArray(rows) && rows.length > 0) {
-          const enriched = rows.map((p, idx) => ({
+        if (!Array.isArray(rows)) {
+          throw new Error('The active product catalog returned an invalid response.');
+        }
+        const enriched = rows
+          .filter(p => p && (p.id ?? p._id) != null && (!p.status || String(p.status).toLowerCase() === 'active'))
+          .map((p, idx) => ({
             ...FALLBACK_CATALOG_PRODUCTS[idx % FALLBACK_CATALOG_PRODUCTS.length],
             ...p,
             image_url:
               p.image_url ||
               FALLBACK_CATALOG_PRODUCTS[idx % FALLBACK_CATALOG_PRODUCTS.length].image_url,
           }));
+        if (active) {
           setProducts(enriched);
+          setCatalogStatus('loaded');
         }
       })
-      .catch(() => {});
+      .catch(error => {
+        console.error('[HOME_PRODUCT_CATALOG_LOAD_ERROR]', error);
+        if (active) {
+          setProducts([]);
+          setCatalogStatus('error');
+        }
+      });
 
     categoriesApi
       .getAll()
@@ -96,7 +110,7 @@ export default function PremiumHome() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [catalogRetry]);
 
   return (
     <main className="min-h-screen bg-[#14291F] text-[#FAF7F2] font-sans">
@@ -200,12 +214,24 @@ export default function PremiumHome() {
               to="/shop"
               className="btn-gold-luxury inline-flex items-center gap-2 rounded-full px-6 py-3 text-xs font-bold uppercase tracking-[0.14em]"
             >
-              View All {products.length} Formulations <ArrowRight size={14} />
+              {catalogStatus === 'loaded' ? `View All ${products.length} Formulations` : 'Browse Formulations'} <ArrowRight size={14} />
             </Link>
           </div>
         </div>
 
         <div className="mt-10 grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
+          {catalogStatus === 'loading' && (
+            <p role="status" className="col-span-full py-8 text-center text-sm text-[#DFD7C4]">Loading available formulations…</p>
+          )}
+          {catalogStatus === 'error' && (
+            <div role="alert" className="col-span-full py-8 text-center text-sm text-[#DFD7C4]">
+              <p>We couldn’t load the live catalog. Please check your connection and try again.</p>
+              <button type="button" onClick={() => setCatalogRetry(retry => retry + 1)} className="btn-gold-luxury mt-4 min-h-11 rounded-full px-6 py-2 text-xs font-bold uppercase tracking-wider">Retry</button>
+            </div>
+          )}
+          {catalogStatus === 'loaded' && products.length === 0 && (
+            <p className="col-span-full py-8 text-center text-sm text-[#DFD7C4]">No formulations are currently available.</p>
+          )}
           {products.slice(0, 6).map((product, idx) => (
             <article
               key={product.id || product._id || idx}

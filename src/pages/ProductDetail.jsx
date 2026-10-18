@@ -85,6 +85,7 @@ export default function ProductDetail() {
   );
   
   const [product, setProduct] = useState(null);
+  const [productIsFallback, setProductIsFallback] = useState(false);
   const [reviewsData, setReviewsData] = useState([]);
   const [reviewSummary, setReviewSummary] = useState(null);
   const [recommendedProducts, setRecommendedProducts] = useState([]);
@@ -115,6 +116,7 @@ export default function ProductDetail() {
       try {
         setLoading(true);
         let fetchedProduct = null;
+        let loadedFromFallback = false;
         try {
           const prodRes = await productsApi.getById(id);
           fetchedProduct = prodRes.data?.data || prodRes.data;
@@ -127,6 +129,7 @@ export default function ProductDetail() {
               FALLBACK_CATALOG_PRODUCTS.find(
                 p => String(p.id) === String(id) || p.slug === String(id)
               ) || FALLBACK_CATALOG_PRODUCTS[0];
+            loadedFromFallback = true;
           }
         }
         
@@ -149,6 +152,7 @@ export default function ProductDetail() {
         }
 
         setProduct(fetchedProduct);
+        setProductIsFallback(loadedFromFallback);
         if (fetchedProduct?.images?.length > 0) {
           setActiveMedia(fetchedProduct.images[0]);
         }
@@ -216,8 +220,13 @@ export default function ProductDetail() {
     }
   };
 
-  const isOutOfStock = product?.quantity <= 0 && !hasServerCheckedInventory;
-  const stockStatus = product?.quantity <= 0 && hasServerCheckedInventory
+  const productUnavailable = productIsFallback || Boolean(
+    product?.status && String(product.status).toLowerCase() !== 'active'
+  );
+  const isOutOfStock = productUnavailable || (product?.quantity <= 0 && !hasServerCheckedInventory);
+  const stockStatus = productUnavailable
+    ? 'Not available for purchase'
+    : product?.quantity <= 0 && hasServerCheckedInventory
     ? 'Stock checked when adding to cart'
     : isOutOfStock
       ? 'Currently unavailable'

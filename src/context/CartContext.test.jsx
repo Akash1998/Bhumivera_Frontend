@@ -8,9 +8,11 @@ describe('cart product IDs', () => {
   });
 
   describe('cart stock validation', () => {
-    it('does not reject customer additions using potentially stale browser inventory', () => {
-      expect(getClientStockError({ name: 'Oil', quantity: 0 }, 0, 1, true)).toBeNull();
-      expect(getClientStockError({ name: 'Oil', stock: 1 }, 1, 1, true)).toBeNull();
+    it('applies stock validation to freshly verified customer inventory', () => {
+      expect(getClientStockError({ name: 'Oil', quantity: 0 }, 0, 1))
+        .toBe('Oil is currently out of stock.');
+      expect(getClientStockError({ name: 'Oil', stock: 1 }, 1, 1))
+        .toBe('Only 1 unit(s) of Oil available in stock.');
     });
 
     it('keeps the stock guard for guest carts without a live server check', () => {

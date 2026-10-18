@@ -110,42 +110,45 @@ export const CartProvider = ({ children }) => {
       return false;
     }
 
-    let cartProduct = product;
-    if (!isCustomerAuthenticated) {
-      try {
-        const response = await productsApi.getById(prodId);
-        const liveProduct = response.data?.data || response.data;
-        if (!liveProduct || typeof liveProduct !== 'object') {
-          throw new Error('Product inventory could not be verified.');
-        }
-        const liveProductId = getCartProductId(liveProduct);
-        const liveStock = liveProduct.stock ?? liveProduct.quantity;
-        if (
-          liveProductId === undefined ||
-          liveProductId === null ||
-          String(liveProductId) !== String(prodId) ||
-          liveStock === undefined ||
-          liveStock === null ||
-          liveStock === '' ||
-          !Number.isFinite(Number(liveStock))
-        ) {
-          throw new Error('Current product inventory could not be verified. Please try again.');
-        }
-        cartProduct = { ...product, ...liveProduct };
-        cartProduct.stock = Number(liveStock);
-        cartProduct.quantity = Number(liveStock);
-      } catch (error) {
-        const message = error.response?.data?.message || error.message || 'Could not verify current product availability. Please try again.';
-        toast.error(message);
-        return false;
+    let cartProduct;
+    try {
+      const response = await productsApi.getById(prodId);
+      const liveProduct = response.data?.data || response.data;
+      if (!liveProduct || typeof liveProduct !== 'object') {
+        throw new Error('Product inventory could not be verified.');
       }
+      const liveProductId = getCartProductId(liveProduct);
+      const liveStock = liveProduct.stock ?? liveProduct.quantity;
+      if (
+        liveProductId === undefined ||
+        liveProductId === null ||
+        String(liveProductId) !== String(prodId) ||
+        liveStock === undefined ||
+        liveStock === null ||
+        liveStock === '' ||
+        !Number.isFinite(Number(liveStock))
+      ) {
+        throw new Error('Current product inventory could not be verified. Please try again.');
+      }
+      if (liveProduct.status && String(liveProduct.status).toLowerCase() !== 'active') {
+        throw new Error(`${liveProduct.name || product.name || 'This product'} is currently unavailable.`);
+      }
+      cartProduct = { ...product, ...liveProduct };
+      cartProduct.stock = Number(liveStock);
+      cartProduct.quantity = Number(liveStock);
+    } catch (error) {
+      const message = error.response?.status === 404
+        ? 'This product is no longer available in the current catalog. Refresh the catalog and try again.'
+        : error.response?.data?.message || error.message || 'Could not verify current product availability. Please try again.';
+      toast.error(message);
+      return false;
     }
 
     const existingItem = (Array.isArray(cart) ? cart : []).find(
       i => String(i.product_id || i.id) === String(prodId)
     );
     const currentQty = Number(existingItem?.quantity || 0);
-    const stockError = getClientStockError(cartProduct, currentQty, qty, isCustomerAuthenticated);
+    const stockError = getClientStockError(cartProduct, currentQty, qty);
     if (stockError) {
       const msg = stockError;
       toast.error(msg);
@@ -159,11 +162,6 @@ export const CartProvider = ({ children }) => {
       });
       return false;
     }
-    if (!isCustomerAuthenticated && cartProduct.status && cartProduct.status !== 'active') {
-      toast.error(`${cartProduct.name || 'This product'} is currently unavailable.`);
-      return false;
-    }
-
     const addProduct = prev => {
       const safeCart = Array.isArray(prev) ? prev : [];
       const updated = [...safeCart];
