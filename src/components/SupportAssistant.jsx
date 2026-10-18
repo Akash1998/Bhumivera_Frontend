@@ -5004,41 +5004,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         </div>
       )}
 
-      {/* Persistent Floating Action Button (FAB) - High-Visibility Luxury Launcher for Mobile & PC */}
-      {!isOpen && (
-        <button
-          type="button"
-          onClick={() => {
-            setIsOpen(true);
-            setProactiveBubble(null);
-          }}
-          aria-label="Open Bhumivera AI Skincare Concierge"
-          title="Open AI Concierge"
-          className="group relative flex items-center gap-2.5 rounded-full border border-[#D4AF37]/70 bg-gradient-to-r from-[#071911] via-[#0B2419] to-[#143725] px-4 py-3 sm:px-5 sm:py-3.5 text-[#FDFBF7] shadow-[0_12px_36px_rgba(0,0,0,0.55)] transition-all duration-300 hover:scale-105 hover:border-[#D4AF37] hover:shadow-[0_16px_44px_rgba(212,175,55,0.32)] active:scale-95 focus:outline-none focus:ring-2 focus:ring-[#D4AF37]/50"
-        >
-          <span className="absolute -inset-1 rounded-full bg-gradient-to-r from-[#D4AF37]/30 to-[#10b981]/30 opacity-70 blur-md transition-opacity group-hover:opacity-100 animate-pulse pointer-events-none" />
-
-          <div className="relative flex items-center justify-center w-8 h-8 rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/60 text-[#D4AF37] shrink-0 shadow-inner">
-            <Sparkles className="w-4 h-4 text-[#D4AF37] transition-transform duration-300 group-hover:rotate-12" />
-            <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-emerald-400 border-2 border-[#0B2419] animate-pulse" />
-          </div>
-
-          <div className="relative flex flex-col text-left pr-1">
-            <div className="flex items-center gap-1.5 leading-none">
-              <span className="font-serif text-[12px] sm:text-xs font-bold tracking-wide text-[#FDFBF7]">
-                AI Concierge
-              </span>
-              <span className="inline-block text-[9px] font-bold text-[#D4AF37] uppercase tracking-wider bg-[#D4AF37]/20 px-1.5 py-0.5 rounded-full border border-[#D4AF37]/40">
-                Ask
-              </span>
-            </div>
-            <span className="hidden sm:inline text-[9px] text-[#D4AF37]/90 font-medium tracking-tight mt-1 leading-none">
-              Phytoscience & Skincare Guide
-            </span>
-          </div>
-        </button>
-      )}
-
       {/* Expanded Luxury Concierge Window */}
       {isOpen && (
         <section
