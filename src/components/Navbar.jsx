@@ -162,12 +162,15 @@ export default function Navbar() {
   return (
     <>
       <div className="bg-[#102219] text-[#FAF7F2] py-2 px-6 text-[10px] font-mono uppercase tracking-widest hidden md:block border-b border-[#244A38]/40">
-        <div className="max-w-7xl mx-auto flex justify-between items-center">
+        <div className="w-full flex justify-between items-center gap-6">
           <div className="flex items-center gap-6">
             <span className="flex items-center gap-2 text-[#FAF7F2]/90">
               <Droplets size={13} className="text-[#d4af37]" /> Complimentary Pan-India Artisanal Dispatch Over ₹999
             </span>
           </div>
+          <span className="hidden flex-1 text-center text-[#FAF7F2]/65 lg:block">
+            Small-Batch Botanical Care <span className="px-3 text-[#d4af37]">•</span> Thoughtfully Sourced Ingredients <span className="px-3 text-[#d4af37]">•</span> Crafted with Care in India
+          </span>
           <div className="flex items-center gap-6">
             <Link to="/order-tracking" className="flex items-center gap-1.5 transition-colors hover:text-[#d4af37] text-[#FAF7F2]/80">
               <MapPin size={13} className="text-[#d4af37]" /> {t('nav_track_order', 'Track Order')}
