@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "./AuthContext";
 import { useSettings } from "./SettingsContext";
-import { cart as cartApi } from "../services/api";
+import { cart as cartApi, products as productsApi } from "../services/api";
 import { useToast } from './ToastContext';
 import {
   AI_COPILOT_ADD_CART_RETRY_EVENT,
@@ -110,22 +110,57 @@ export const CartProvider = ({ children }) => {
       return false;
     }
 
+    let cartProduct = product;
+    if (!isCustomerAuthenticated) {
+      try {
+        const response = await productsApi.getById(prodId);
+        const liveProduct = response.data?.data || response.data;
+        if (!liveProduct || typeof liveProduct !== 'object') {
+          throw new Error('Product inventory could not be verified.');
+        }
+        const liveProductId = getCartProductId(liveProduct);
+        const liveStock = liveProduct.stock ?? liveProduct.quantity;
+        if (
+          liveProductId === undefined ||
+          liveProductId === null ||
+          String(liveProductId) !== String(prodId) ||
+          liveStock === undefined ||
+          liveStock === null ||
+          liveStock === '' ||
+          !Number.isFinite(Number(liveStock))
+        ) {
+          throw new Error('Current product inventory could not be verified. Please try again.');
+        }
+        cartProduct = { ...product, ...liveProduct };
+        cartProduct.stock = Number(liveStock);
+        cartProduct.quantity = Number(liveStock);
+      } catch (error) {
+        const message = error.response?.data?.message || error.message || 'Could not verify current product availability. Please try again.';
+        toast.error(message);
+        return false;
+      }
+    }
+
     const existingItem = (Array.isArray(cart) ? cart : []).find(
       i => String(i.product_id || i.id) === String(prodId)
     );
     const currentQty = Number(existingItem?.quantity || 0);
-    const stockError = getClientStockError(product, currentQty, qty, isCustomerAuthenticated);
+    const stockError = getClientStockError(cartProduct, currentQty, qty, isCustomerAuthenticated);
     if (stockError) {
       const msg = stockError;
       toast.error(msg);
-      const diag = classifyCartErrorForAiGuide(msg, product, qty, currentQty);
+      const diag = classifyCartErrorForAiGuide(msg, cartProduct, qty, currentQty);
       triggerAiCopilotAssist({
         ...diag,
         requestedQuantity: qty,
         currentCartQuantity: currentQty,
         errorMessage: msg,
-        autoOpen: true,
+        autoOpen: false,
       });
+      return false;
+    }
+    if (!isCustomerAuthenticated && cartProduct.status && cartProduct.status !== 'active') {
+      toast.error(`${cartProduct.name || 'This product'} is currently unavailable.`);
       return false;
     }
 
@@ -134,7 +169,7 @@ export const CartProvider = ({ children }) => {
       const updated = [...safeCart];
       const idx = updated.findIndex(i => String(i.product_id || i.id) === String(prodId));
       if (idx > -1) updated[idx] = { ...updated[idx], quantity: (Number(updated[idx].quantity) || 0) + qty };
-      else updated.push({ product_id: prodId, id: prodId, product, quantity: qty });
+      else updated.push({ product_id: prodId, id: prodId, product: cartProduct, quantity: qty });
       return updated;
     };
 
@@ -154,7 +189,7 @@ export const CartProvider = ({ children }) => {
 
     setIsCartOpen(true);
 
-    if (product.category === 'Lights' || product.category_name === 'Lights') {
+    if (cartProduct.category === 'Lights' || cartProduct.category_name === 'Lights') {
       setUpsells([{ _id: 'rel_1', name: 'Heavy Duty Wiring Relay', price: 499, img: '/logo.webp' }]);
     }
 
@@ -171,13 +206,13 @@ export const CartProvider = ({ children }) => {
         await loadCart(); // Auto-revert if offline/error
         const errMsg = err.normalized?.message || err.response?.data?.message || 'Could not add this product to your cart.';
         toast.error(errMsg);
-        const diag = classifyCartErrorForAiGuide(err, product, qty, currentQty);
+        const diag = classifyCartErrorForAiGuide(err, cartProduct, qty, currentQty);
         triggerAiCopilotAssist({
           ...diag,
           requestedQuantity: qty,
           currentCartQuantity: currentQty,
           errorMessage: errMsg,
-          autoOpen: true,
+          autoOpen: false,
         });
         return false;
       }

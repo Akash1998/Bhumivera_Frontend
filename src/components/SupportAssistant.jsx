@@ -4486,6 +4486,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
 
       const initialRescue = {
         frictionType: detail.frictionType || 'general',
+        cause: detail.cause || null,
         headline: detail.headline || 'Bhumivera Client Concierge Assistance',
         explanation:
           detail.explanation ||
@@ -5493,7 +5494,9 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   </button>
                 </div>
               ) : null}
-              {copilotRescue.productId && (
+              {copilotRescue.productId &&
+                copilotRescue.cause !== 'out_of_stock' &&
+                (copilotRescue.maxAddable === null || copilotRescue.maxAddable === undefined || copilotRescue.maxAddable > 0) && (
                 <button
                   type="button"
                   onClick={() => {
