@@ -209,8 +209,8 @@ export default function Navbar() {
             <span className="hidden font-serif text-2xl uppercase tracking-[0.2em] font-headline-gold sm:block">Bhumivera</span>
           </Link>
 
-          <div className="hidden md:flex min-w-0 flex-1 max-w-2xl items-center gap-2 relative" ref={searchDropdownRef}>
-            <form onSubmit={executeFullSearch} className="w-full min-w-0 relative group">
+          <div className="hidden md:flex min-w-0 flex-1 items-center gap-4 relative" ref={searchDropdownRef}>
+            <form onSubmit={executeFullSearch} className="flex-1 min-w-0 relative group">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#d4af37] transition-colors">
                 <Search size={18} />
               </div>
@@ -243,9 +243,9 @@ export default function Navbar() {
               onClick={openAiConcierge}
               aria-label="Open AI concierge"
               title="Ask the AI concierge"
-              className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-[#d4af37]/40 bg-[#1C382B]/70 backdrop-blur-md px-4 text-xs font-bold text-[#d4af37] shadow-sm transition hover:bg-[#244A38] hover:border-[#d4af37] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4af37]"
+              className="inline-flex h-12 shrink-0 items-center justify-center gap-2.5 rounded-full border border-[#d4af37]/45 bg-[#1C382B]/70 backdrop-blur-md px-7 text-sm font-bold text-[#d4af37] shadow-[0_8px_24px_rgba(0,0,0,0.2)] transition hover:bg-[#244A38] hover:border-[#d4af37] hover:shadow-[0_10px_30px_rgba(212,175,55,0.18)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4af37]"
             >
-              <Sparkles size={16} />
+              <Sparkles size={18} />
               <span>Ask AI</span>
             </button>
 
