@@ -142,10 +142,10 @@ describe('SupportAssistant — 100% Deterministic Knowledge Tree & Instant Finde
     fireEvent.click(screen.getByRole('button', { name: /Sea Buckthorn Wash/i }));
 
     // Product card details
-    expect(await screen.findByText(/Himalayan Sea Buckthorn Face Wash/i)).toBeTruthy();
-    expect(screen.getAllByText(/₹549/i).length).toBeGreaterThan(0);
+    expect(await screen.findByText(/Seabuckthorn Face wash by Bhumivera/i)).toBeTruthy();
+    expect(screen.getAllByText(/₹399/i).length).toBeGreaterThan(0);
     expect(screen.getByText(/21% OFF/i)).toBeTruthy();
-    expect(screen.getByText(/In Stock \(48 units\)/i)).toBeTruthy();
+    expect(screen.getByText(/In Stock \(92 units\)/i)).toBeTruthy();
     expect(screen.getByText(/1.0% Active Strength/i)).toBeTruthy();
 
     // Test 1-click Add to Bag
@@ -155,10 +155,10 @@ describe('SupportAssistant — 100% Deterministic Knowledge Tree & Instant Finde
 
     fireEvent.click(addBtn);
     expect(mockAddToCart).toHaveBeenCalledWith(expect.objectContaining({
-      id: 101,
-      name: 'Bhumivera Sea Buckthorn Face Wash',
-      price: 699,
-      discount_price: 549,
+      id: 8,
+      name: 'Seabuckthorn Face wash by Bhumivera',
+      price: 499,
+      discount_price: 399,
     }), 1);
   });
 

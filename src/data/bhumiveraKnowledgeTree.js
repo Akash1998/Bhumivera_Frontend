@@ -97,18 +97,18 @@ export const KNOWLEDGE_TREE_NODES = [
       'best facewash', 'sea buckthorn price', 'ingredients'
     ],
     productData: {
-      id: 101,
-      _id: '101',
-      name: 'Bhumivera Sea Buckthorn Face Wash',
-      slug: 'bhumivera-sea-buckthorn-face-wash',
-      price: 699,
-      discount_price: 549,
+      id: 8,
+      _id: '8',
+      name: 'Seabuckthorn Face wash by Bhumivera',
+      slug: 'aloe vera face wash',
+      price: 499,
+      discount_price: 399,
       discountPercent: '21% OFF',
       rating: 4.9,
       reviewsCount: 128,
       sku: 'BV-SBFW-100ML',
       inStock: true,
-      stockCount: 48,
+      stockCount: 92,
       image_url: '/assets/images/seabuckthorn.webp',
       keyActives: [
         { name: 'Himalayan Sea Buckthorn', conc: 'Cold-Pressed Omega-7 Berry Extract (2%)' },
@@ -123,7 +123,7 @@ export const KNOWLEDGE_TREE_NODES = [
       bundleRecommendation: {
         title: 'Complete the Radiance Ritual',
         description: 'Pair with Kashmiri Saffron Kumkumadi Night Elixir for 24h cellular nourishment & save ₹250.',
-        bundleSlug: 'bhumivera-kumkumadi-night-elixir',
+        bundleSlug: '9',
       },
     },
     richContent: `
@@ -133,9 +133,9 @@ export const KNOWLEDGE_TREE_NODES = [
 - **pH 5.5 Zero-Sulfate Matrix**: Uses plant-derived decyl glucoside so your natural protective acid mantle is never stripped.
     `,
     directActions: [
-      { label: '🛒 Add to Bag (₹549)', actionType: 'ADD_TO_CART', payload: { id: 101, name: 'Bhumivera Sea Buckthorn Face Wash', price: 699, discount_price: 549, slug: 'bhumivera-sea-buckthorn-face-wash', image_url: '/assets/images/seabuckthorn.webp' } },
-      { label: '⚡ Buy Now · Instant Checkout', actionType: 'BUY_NOW', payload: { id: 101, name: 'Bhumivera Sea Buckthorn Face Wash', price: 699, discount_price: 549, slug: 'bhumivera-sea-buckthorn-face-wash', image_url: '/assets/images/seabuckthorn.webp' } },
-      { label: '✨ View Complete Botanical INCI', actionType: 'NAVIGATE', target: '/product/bhumivera-sea-buckthorn-face-wash' },
+      { label: '🛒 Add to Bag (₹399)', actionType: 'ADD_TO_CART', payload: { id: 8, name: 'Seabuckthorn Face wash by Bhumivera', price: 499, discount_price: 399, slug: 'aloe vera face wash', image_url: '/assets/images/seabuckthorn.webp' } },
+      { label: '⚡ Buy Now · Instant Checkout', actionType: 'BUY_NOW', payload: { id: 8, name: 'Seabuckthorn Face wash by Bhumivera', price: 499, discount_price: 399, slug: 'aloe vera face wash', image_url: '/assets/images/seabuckthorn.webp' } },
+      { label: '✨ View Complete Botanical INCI', actionType: 'NAVIGATE', target: '/product/8' },
     ],
     relatedSuggestions: [
       'product_charcoal_facewash',
@@ -156,18 +156,18 @@ export const KNOWLEDGE_TREE_NODES = [
       'charcoal price', 'charcoal ingredients'
     ],
     productData: {
-      id: 102,
-      _id: '102',
-      name: 'Bhumivera Activated Bamboo Charcoal Face Wash',
-      slug: 'bhumivera-activated-charcoal-face-wash',
-      price: 649,
-      discount_price: 499,
+      id: 9,
+      _id: '9',
+      name: 'Charcoal face wash',
+      slug: 'charcoal-face-wash',
+      price: 399,
+      discount_price: 299,
       discountPercent: '23% OFF',
       rating: 4.8,
       reviewsCount: 96,
       sku: 'BV-CHFW-100ML',
       inStock: true,
-      stockCount: 62,
+      stockCount: 87,
       image_url: '/assets/images/charcoalFace wash.webp',
       keyActives: [
         { name: 'Activated Bamboo Carbon', conc: '3.0% Microporous Adsorption' },
@@ -182,7 +182,7 @@ export const KNOWLEDGE_TREE_NODES = [
       bundleRecommendation: {
         title: 'Post-Wash Clarifying Ritual',
         description: 'Pair with Sea Buckthorn Face Wash in an AM/PM dual regimen (Charcoal at night, Sea Buckthorn in morning).',
-        bundleSlug: 'bhumivera-sea-buckthorn-face-wash',
+        bundleSlug: '8',
       },
     },
     richContent: `
@@ -192,9 +192,9 @@ export const KNOWLEDGE_TREE_NODES = [
 - **5% Glycerin Humectant Buffer**: Leaves skin cleanly purified without the tightness common to conventional charcoal cleansers.
     `,
     directActions: [
-      { label: '🛒 Add to Bag (₹499)', actionType: 'ADD_TO_CART', payload: { id: 102, name: 'Bhumivera Activated Bamboo Charcoal Face Wash', price: 649, discount_price: 499, slug: 'bhumivera-activated-charcoal-face-wash', image_url: '/assets/images/charcoalFace wash.webp' } },
-      { label: '⚡ Buy Now · Instant Checkout', actionType: 'BUY_NOW', payload: { id: 102, name: 'Bhumivera Activated Bamboo Charcoal Face Wash', price: 649, discount_price: 499, slug: 'bhumivera-activated-charcoal-face-wash', image_url: '/assets/images/charcoalFace wash.webp' } },
-      { label: '✨ View Complete Botanical INCI', actionType: 'NAVIGATE', target: '/product/bhumivera-activated-charcoal-face-wash' },
+      { label: '🛒 Add to Bag (₹299)', actionType: 'ADD_TO_CART', payload: { id: 9, name: 'Charcoal face wash', price: 399, discount_price: 299, slug: 'charcoal-face-wash', image_url: '/assets/images/charcoalFace wash.webp' } },
+      { label: '⚡ Buy Now · Instant Checkout', actionType: 'BUY_NOW', payload: { id: 9, name: 'Charcoal face wash', price: 399, discount_price: 299, slug: 'charcoal-face-wash', image_url: '/assets/images/charcoalFace wash.webp' } },
+      { label: '✨ View Complete Botanical INCI', actionType: 'NAVIGATE', target: '/product/9' },
     ],
     relatedSuggestions: [
       'product_sea_buckthorn_facewash',
@@ -223,8 +223,8 @@ export const KNOWLEDGE_TREE_NODES = [
       rating: 4.95,
       reviewsCount: 142,
       sku: 'BV-KMNE-30ML',
-      inStock: true,
-      stockCount: 34,
+      inStock: false,
+      stockCount: 0,
       image_url: '/assets/images/Promo4.webp',
       keyActives: [
         { name: 'Pampore Kashmiri Saffron (Mongra)', conc: 'Crocin & Safranal Radiance Extract' },
@@ -242,8 +242,6 @@ export const KNOWLEDGE_TREE_NODES = [
 - **Rakta Chandana & Manjistha**: Promotes even skin tone, relieves daily photo-damage, and seals in essential barrier lipids while you sleep.
     `,
     directActions: [
-      { label: '🛒 Add to Bag (₹1,199)', actionType: 'ADD_TO_CART', payload: { id: 103, name: 'Bhumivera Kashmiri Saffron Kumkumadi Night Elixir', price: 1499, discount_price: 1199, slug: 'bhumivera-kumkumadi-night-elixir', image_url: '/assets/images/Promo4.webp' } },
-      { label: '⚡ Buy Now · Instant Checkout', actionType: 'BUY_NOW', payload: { id: 103, name: 'Bhumivera Kashmiri Saffron Kumkumadi Night Elixir', price: 1499, discount_price: 1199, slug: 'bhumivera-kumkumadi-night-elixir', image_url: '/assets/images/Promo4.webp' } },
       { label: '✨ View Formulation Story', actionType: 'NAVIGATE', target: '/product/bhumivera-kumkumadi-night-elixir' },
     ],
     relatedSuggestions: [
@@ -272,8 +270,8 @@ export const KNOWLEDGE_TREE_NODES = [
       rating: 4.85,
       reviewsCount: 84,
       sku: 'BV-ARSH-200ML',
-      inStock: true,
-      stockCount: 55,
+      inStock: false,
+      stockCount: 0,
       image_url: '/assets/images/Promo3.webp',
       keyActives: [
         { name: 'Reetha (25mg) & Shikakai (5mg)', conc: 'Natural Saponin Gentle Lather' },
@@ -292,8 +290,6 @@ export const KNOWLEDGE_TREE_NODES = [
 - **Rosemary & Bhringraj Clinical Synergy**: Stimulates microcapillary blood flow to hair roots, supporting natural follicle resilience and reduced shedding.
     `,
     directActions: [
-      { label: '🛒 Add to Bag (₹629)', actionType: 'ADD_TO_CART', payload: { id: 104, name: 'Bhumivera Botanical Hair Cleanser & Shampoo', price: 799, discount_price: 629, slug: 'bhumivera-amla-bhringraj-botanical-shampoo', image_url: '/assets/images/Promo3.webp' } },
-      { label: '⚡ Buy Now · Instant Checkout', actionType: 'BUY_NOW', payload: { id: 104, name: 'Bhumivera Botanical Hair Cleanser & Shampoo', price: 799, discount_price: 629, slug: 'bhumivera-amla-bhringraj-botanical-shampoo', image_url: '/assets/images/Promo3.webp' } },
     ],
     relatedSuggestions: [
       'product_sea_buckthorn_facewash',

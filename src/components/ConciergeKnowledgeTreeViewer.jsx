@@ -104,11 +104,12 @@ export default function ConciergeKnowledgeTreeViewer({
   };
 
   const handleAddProductToCart = async product => {
-    if (onAddToCart) {
-      setAddedProductId(product.id);
-      await onAddToCart(product);
-      setTimeout(() => setAddedProductId(null), 2000);
-    }
+    if (!onAddToCart || product.inStock === false) return false;
+    const added = await onAddToCart(product);
+    if (!added) return false;
+    setAddedProductId(product.id);
+    setTimeout(() => setAddedProductId(null), 2000);
+    return true;
   };
 
   const handleDirectAction = action => {
@@ -119,15 +120,11 @@ export default function ConciergeKnowledgeTreeViewer({
     } else if (action.actionType === 'VIEW_NODE' && action.target) {
       handleSelectNode(action.target);
     } else if (action.actionType === 'ADD_TO_CART' && action.payload) {
-      handleAddProductToCart(action.payload);
+      void handleAddProductToCart(action.payload);
     } else if (action.actionType === 'BUY_NOW' && action.payload) {
-      if (onAddToCart) {
-        onAddToCart(action.payload).then(() => {
-          if (onNavigate) onNavigate('/checkout');
-        });
-      } else if (onNavigate) {
-        onNavigate('/checkout');
-      }
+      void handleAddProductToCart(action.payload).then(added => {
+        if (added && onNavigate) onNavigate('/checkout');
+      });
     }
   };
 
@@ -329,8 +326,10 @@ export default function ConciergeKnowledgeTreeViewer({
                   <span className="text-xs text-stone-400 line-through">
                     ₹{activeNode.productData.price}
                   </span>
-                  <span className="text-[10px] text-emerald-400 font-semibold">
-                    In Stock ({activeNode.productData.stockCount} units)
+                  <span className={`text-[10px] font-semibold ${activeNode.productData.inStock ? 'text-emerald-400' : 'text-stone-400'}`}>
+                    {activeNode.productData.inStock
+                      ? `In Stock (${activeNode.productData.stockCount} units)`
+                      : 'Currently unavailable'}
                   </span>
                 </div>
 
@@ -359,38 +358,42 @@ export default function ConciergeKnowledgeTreeViewer({
             )}
 
             {/* Interactive 1-Click Action Buttons */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-              <button
-                type="button"
-                onClick={() => handleAddProductToCart(activeNode.productData)}
-                className="w-full py-2.5 px-3 rounded-2xl bg-[#D4AF37] text-[#0B2419] font-bold text-xs uppercase tracking-wider hover:bg-[#e4be42] active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-md"
-              >
-                {addedProductId === activeNode.productData.id ? (
-                  <>
-                    <Check className="w-4 h-4 text-emerald-900" />
-                    <span>Added to Bag!</span>
-                  </>
-                ) : (
-                  <>
-                    <ShoppingBag className="w-4 h-4" />
-                    <span>Add to Bag (₹{activeNode.productData.discount_price})</span>
-                  </>
-                )}
-              </button>
+            {activeNode.productData.inStock ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <button
+                  type="button"
+                  onClick={() => { void handleAddProductToCart(activeNode.productData); }}
+                  className="w-full py-2.5 px-3 rounded-2xl bg-[#D4AF37] text-[#0B2419] font-bold text-xs uppercase tracking-wider hover:bg-[#e4be42] active:scale-95 transition-all flex items-center justify-center gap-1.5 shadow-md"
+                >
+                  {addedProductId === activeNode.productData.id ? (
+                    <>
+                      <Check className="w-4 h-4 text-emerald-900" />
+                      <span>Added to Bag!</span>
+                    </>
+                  ) : (
+                    <>
+                      <ShoppingBag className="w-4 h-4" />
+                      <span>Add to Bag (₹{activeNode.productData.discount_price})</span>
+                    </>
+                  )}
+                </button>
 
-              <button
-                type="button"
-                onClick={() => {
-                  handleAddProductToCart(activeNode.productData).then(() => {
-                    if (onNavigate) onNavigate('/checkout');
-                  });
-                }}
-                className="w-full py-2.5 px-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider border border-white/20 active:scale-95 transition-all flex items-center justify-center gap-1.5"
-              >
-                <span>⚡ Instant Checkout</span>
-                <ArrowRight className="w-3.5 h-3.5" />
-              </button>
-            </div>
+                <button
+                  type="button"
+                  onClick={() => {
+                    void handleAddProductToCart(activeNode.productData).then(added => {
+                      if (added && onNavigate) onNavigate('/checkout');
+                    });
+                  }}
+                  className="w-full py-2.5 px-3 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase tracking-wider border border-white/20 active:scale-95 transition-all flex items-center justify-center gap-1.5"
+                >
+                  <span>⚡ Instant Checkout</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            ) : (
+              <p className="pt-1 text-center text-xs text-stone-400">This product is not currently available to purchase.</p>
+            )}
 
             {/* Complete the Ritual Upsell Banner */}
             {activeNode.productData.bundleRecommendation && (
@@ -425,7 +428,9 @@ export default function ConciergeKnowledgeTreeViewer({
               Direct Actions & Quick Navigation:
             </span>
             <div className="space-y-2">
-              {activeNode.directActions.map((action, idx) => (
+              {activeNode.directActions
+                .filter(action => activeNode.productData?.inStock !== false || !['ADD_TO_CART', 'BUY_NOW'].includes(action.actionType))
+                .map((action, idx) => (
                 <button
                   key={idx}
                   type="button"
