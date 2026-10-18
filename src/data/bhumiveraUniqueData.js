@@ -565,7 +565,7 @@ export const SCIENCE_PAGE_DATA = {
       origin: 'Pampore Karewa Highlands, Jammu & Kashmir',
       note: 'Rich in bioactive crocin, picrocrocin, and safranal antioxidants that brighten dull skin tone, soften post-blemish marks, and impart natural golden luminosity.',
       realLifeTest: 'Authenticated via spectrophotometric crocin absorbance before slow-infusion with Red Sandalwood and Manjistha.',
-      image: '/assets/images/Promo2.webp',
+      image: '/assets/images/kashmiri-saffron.webp',
       reference: 'https://powo.science.kew.org/results?q=Crocus%20sativus',
       aiPrompt: 'How do I pair Sea Buckthorn Face Wash with Bhumivera Kumkumadi Night Elixir?',
     },
