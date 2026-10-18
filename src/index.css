@@ -41,30 +41,6 @@ html body {
   margin-top: 0 !important;
 }
 
-.goog-te-banner-frame,
-iframe.goog-te-banner-frame,
-.goog-te-menu-frame,
-.goog-te-balloon-frame,
-#goog-gt-tt {
-  display: none !important;
-  visibility: hidden !important;
-}
-
-body > .skiptranslate {
-  display: none !important;
-}
-
-.google-translate-host {
-  position: fixed !important;
-  top: 0 !important;
-  left: -10000px !important;
-  width: 1px !important;
-  height: 1px !important;
-  overflow: hidden !important;
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
 html, body, button, input, textarea, select {
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
 }
@@ -147,19 +123,6 @@ html, body, button, input, textarea, select {
     backdrop-filter: blur(18px);
   }
 
-  html.translated-ltr .site-shell h1,
-  html.translated-rtl .site-shell h1 {
-    font-size: clamp(2rem, 10vw, 3.25rem) !important;
-    line-height: 1.15 !important;
-    letter-spacing: normal !important;
-    overflow-wrap: break-word;
-  }
-
-  html.translated-ltr .site-shell h2,
-  html.translated-rtl .site-shell h2 {
-    letter-spacing: normal !important;
-    overflow-wrap: break-word;
-  }
 }
 
 @layer components {

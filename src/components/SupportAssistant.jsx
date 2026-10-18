@@ -40,8 +40,6 @@ import {
 } from '../utils/aiCopilotBus';
 import { resolveClientSideConciergeFallback } from '../utils/bhumiveraAiConciergeFallback';
 import { matchAiIntentWithFuzzy } from '../utils/aiIntentMatcher';
-import LanguageSelector from './LanguageSelector';
-import { useLanguage } from '../context/LanguageContext';
 
 const STORAGE_KEY = 'bhumivera_client_concierge_state_v3';
 const SESSION_TOKEN_KEY = 'bhumivera_client_concierge_token_v3';
@@ -4246,7 +4244,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   const navigate = useNavigate();
   const { user } = useAuth() || {};
   const { cart = [], isCartOpen = false } = useCart() || {};
-  const { t } = useLanguage();
+  const t = (_key, fallback = '') => fallback;
 
   const persisted = useMemo(() => {
     if (typeof window === 'undefined') return {};
@@ -5020,7 +5018,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             </div>
 
             <div className="flex items-center gap-1 shrink-0">
-              <LanguageSelector variant="concierge" />
               <button
                 type="button"
                 onClick={() => openVerificationFlow('')}

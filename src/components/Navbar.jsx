@@ -12,12 +12,10 @@ import { useCart } from '../context/CartContext';
 import { search } from '../services/api';
 import { useVoiceSearch } from '../hooks/useVoiceSearch';
 import { getProductImageUrl } from '../utils/productImageUrl';
-import LanguageSelector from './LanguageSelector';
-import { useLanguage } from '../context/LanguageContext.jsx';
 
 export default function Navbar() {
   const { user } = useAuth();
-  const { t } = useLanguage();
+  const t = (_key, fallback = '') => fallback;
   const { cartItems, setIsCartOpen } = useCart();
   const cartCount = cartItems.reduce((count, item) => count + (Number(item.quantity) || 1), 0);
   const [isMenuOpen, setMenuOpen] = useState(false);
@@ -289,8 +287,6 @@ export default function Navbar() {
               </div>
             </Link>
 
-            <LanguageSelector className="hidden sm:inline-flex" />
-
             {user ? (
               <Link to="/profile" aria-label="Profile" className="flex items-center gap-3 group">
                 <div className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-[#1C382B]/70 backdrop-blur-md shadow-sm group-hover:border-[#d4af37]">
@@ -487,11 +483,6 @@ export default function Navbar() {
                       {user ? `My Account (${user.name || user.email?.split('@')[0]})` : 'Sign In / Register'}
                     </span>
                   </Link>
-                </div>
-
-                {/* 4. INLINE LANGUAGE SELECTOR (FIXES: LANGUAGE SETTING GOING DOWN SCREEN!) */}
-                <div className="border-t border-white/10 pt-3 pb-2">
-                  <LanguageSelector variant="inline" />
                 </div>
 
                 {/* PWA Install Button */}

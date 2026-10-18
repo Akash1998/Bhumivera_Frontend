@@ -13,16 +13,8 @@ vi.mock('../context/CartContext', () => ({
   useCart: () => ({ cartItems: [], setIsCartOpen: vi.fn() }),
 }));
 
-vi.mock('../context/LanguageContext.jsx', () => ({
-  useLanguage: () => ({ currentLang: 'en', t: (_key, fallback) => fallback }),
-}));
-
 vi.mock('../hooks/useVoiceSearch', () => ({
   useVoiceSearch: () => ({ isListening: false, startListening: vi.fn() }),
-}));
-
-vi.mock('./LanguageSelector', () => ({
-  default: () => null,
 }));
 
 describe('Navbar', () => {
@@ -46,6 +38,7 @@ describe('Navbar', () => {
 
     expect(screen.getByRole('dialog', { name: 'Main navigation' })).toBeTruthy();
     expect(screen.getByRole('link', { name: /Verify Bottle Serial/i })).toBeTruthy();
+    expect(screen.queryByText(/select language/i)).toBeNull();
   });
 
   it('opens the AI concierge from the search controls', () => {

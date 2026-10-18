@@ -4,8 +4,6 @@
  * and multi-language inputs across all critical customer trouble points.
  */
 
-import { getCurrentLanguage } from './indianLanguageEngine.js';
-
 /**
  * Calculates Damerau-Levenshtein distance between two strings
  */
@@ -390,7 +388,7 @@ export function matchAiIntentWithFuzzy(rawQuery = '', targetLangOverride) {
   const topIntent = scoreIntent(q);
   if (!topIntent) return null;
 
-  const currentL = targetLangOverride || getCurrentLanguage();
+  const currentL = targetLangOverride || 'en';
   if (currentL && currentL !== 'en' && LOCALIZED_INTENT_RESPONSES[currentL]?.[topIntent]) {
     return LOCALIZED_INTENT_RESPONSES[currentL][topIntent];
   }
