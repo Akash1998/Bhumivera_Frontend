@@ -14,9 +14,12 @@ import {
 import { impact as impactApi } from '../../services/api';
 
 const PROJECTS = [
-  ['native-trees', 'Native tree restoration'],
-  ['river-care', 'River care'],
-  ['community-care', 'Community care'],
+  ['native-trees', 'Native sapling nurseries & afforestation'],
+  ['river-care', 'Riparian bank & watershed stewardship'],
+  ['community-care', 'Botanical literacy & community gardens'],
+  ['saffron-pollinators', 'Pampore saffron & bee sanctuaries (Upcoming 2027)'],
+  ['sacred-groves', 'Ancient sacred grove reserves (Upcoming 2027)'],
+  ['wetland-rejuvenation', 'Earthen kunds & wetland revival (Upcoming 2027)'],
 ];
 
 const PROJECT_LABELS = Object.fromEntries(PROJECTS);
@@ -39,6 +42,24 @@ const PROJECT_BENCHMARKS = {
     inrPerUnit: 150,
     region: 'Wayanad, Idukki & Jaintia Hills Farmer Cooperatives',
     auditor: 'Fair-Harvest Community Guild',
+  },
+  'saffron-pollinators': {
+    unitLabel: 'Bee apiaries & organic saffron buffer belts',
+    inrPerUnit: 200,
+    region: 'Pampore Karewas & Kashmir Valley (1,600m)',
+    auditor: 'Alpine Pollinator & Saffron Stewardship Trust',
+  },
+  'sacred-groves': {
+    unitLabel: 'Heritage sacred grove reserves mapped & conserved',
+    inrPerUnit: 250,
+    region: 'Vindhya & Central Indian Forest Belts',
+    auditor: 'Ethnobotanical Heritage Trust',
+  },
+  'wetland-rejuvenation': {
+    unitLabel: 'Earthen percolation reservoirs & aquifers restored',
+    inrPerUnit: 180,
+    region: 'Arid & Drought-Prone Rural Belts',
+    auditor: 'Indigenous Watershed Restoration Council',
   },
 };
 

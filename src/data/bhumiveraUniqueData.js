@@ -28,6 +28,7 @@ export const UNIQUE_IMAGE_BANK = [
   '/assets/images/Promo8.webp',
   '/assets/images/Promo9.webp',
   '/assets/images/home-stewardship-ledger.webp',
+  '/assets/images/kashmiri-saffron.webp',
 ];
 
 // 1. FOOTER 4 PHOTOGRAPHIC PILLARS + BRAND BANNER (Distinct Authentic Photographs)
@@ -436,6 +437,43 @@ export const IMPACT_PAGE_DATA = {
       image: '/assets/images/education.webp',
       metric: 'Open-Source Herbarium & Seed-Saving Workshops',
       location: 'Asansol & Rural Bengal Clusters',
+      status: 'Active Corridor',
+      isUpcoming: false,
+    },
+  ],
+  upcomingProjects: [
+    {
+      id: 'saffron-pollinators',
+      title: 'Pampore Saffron Corridors & Alpine Honeybee Sanctuaries',
+      copy: 'Restoring high-altitude saffron soil vitality through pesticide-free floral buffer zones, wild biodiversity micro-hedges, and protected sanctuaries for indigenous Apis cerana honeybees.',
+      image: '/assets/images/kashmiri-saffron.webp',
+      metric: 'Target: 25 Community Apiaries & Organic Floral Buffer Belts',
+      location: 'Pampore Karewas & Kashmir Valley (1,600m)',
+      status: 'Upcoming · Will start from 2027',
+      isUpcoming: true,
+      upcomingYear: '2027',
+    },
+    {
+      id: 'sacred-groves',
+      title: 'Ancient Sacred Groves & Medicinal Ethnobotanical Reserves',
+      copy: 'Preserving centuries-old community sacred groves (Devrais) and reviving endangered Ayurvedic germplasm: wild Manjistha, Rakta Chandana, Haridra, and indigenous wild Amla.',
+      image: '/assets/images/Promo3.webp',
+      metric: 'Target: 6 Heritage Sacred Forests Mapped & Protected',
+      location: 'Vindhya & Central Indian Forest Belts',
+      status: 'Upcoming · Will start from 2027',
+      isUpcoming: true,
+      upcomingYear: '2027',
+    },
+    {
+      id: 'wetland-rejuvenation',
+      title: 'Traditional Earthen Kunds & Wetland Aquifer Revival',
+      copy: 'Restoring indigenous step-well aquifers, earthen percolation bunds, and deep vetiver bio-filters to naturally recharge ground water tables for local tribal grower settlements.',
+      image: '/assets/images/Promo7.webp',
+      metric: 'Target: 8 Desilted Percolation Reservoirs & Wetland Basins',
+      location: 'Arid & Drought-Prone Rural Belts',
+      status: 'Upcoming · Will start from 2027',
+      isUpcoming: true,
+      upcomingYear: '2027',
     },
   ],
   realLifeFieldNotes: [

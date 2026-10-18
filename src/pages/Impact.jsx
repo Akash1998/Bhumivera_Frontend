@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { ArrowDownRight, ArrowRight, Leaf, ShieldCheck, MapPin, Calendar, CheckCircle2, FileText, Droplets, Sparkles } from 'lucide-react';
+import { ArrowDownRight, ArrowRight, Leaf, ShieldCheck, MapPin, Calendar, CheckCircle2, FileText, Droplets, Sparkles, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import api from '../services/api';
@@ -11,17 +11,20 @@ const impactQuestions = [
   ['Can I leave the contribution at zero?', 'Yes, absolutely. Zero is the default setting at checkout, and every environmental contribution is 100% voluntary.'],
   ['What happens if an order is cancelled or returned?', 'Any uncollected pledge attached to a cancelled, returned, or unfulfilled order is automatically voided in real-time and permanently excluded from public ledger totals.'],
   ['Are administrative costs deducted from contributions?', 'Zero administrative or marketing overhead is deducted. 100% of every reconciled rupee is directly channeled into sapling nurseries, coir erosion logs, and community botanical literacy programs.'],
+  ['When will the 2027 Phase II projects begin?', 'Phase II initiatives (Pampore Saffron Corridors, Sacred Grove Reserves, and Wetland Kunds) are scheduled for Q1 2027 after baseline biodiversity soil audits are completed.'],
+];
+
+const DEFAULT_TOTALS = [
+  { project_key: 'native-trees', collected_amount: 0, contributions: 0 },
+  { project_key: 'river-care', collected_amount: 0, contributions: 0 },
+  { project_key: 'community-care', collected_amount: 0, contributions: 0 },
 ];
 
 const money = amount => `₹${Number(amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
 
 export default function Impact() {
   const [ledger, setLedger] = useState({
-    totals: [
-      { project_key: 'native-trees', collected_amount: 18450, contributions: 142 },
-      { project_key: 'river-care', collected_amount: 12300, contributions: 96 },
-      { project_key: 'community-care', collected_amount: 9850, contributions: 74 },
-    ],
+    totals: DEFAULT_TOTALS,
     updates: IMPACT_PAGE_DATA.realLifeFieldNotes,
   });
   const [openFaq, setOpenFaq] = useState(0);
@@ -30,12 +33,19 @@ export default function Impact() {
     let active = true;
     api.get('/impact/public').then(({ data }) => {
       if (!active) return;
-      const apiTotals = Array.isArray(data?.totals) && data.totals.length > 0 ? data.totals : null;
-      const apiUpdates = Array.isArray(data?.updates) && data.updates.length > 0 ? data.updates : null;
-      setLedger(prev => ({
-        totals: apiTotals || prev.totals,
-        updates: apiUpdates || prev.updates,
-      }));
+      if (Array.isArray(data?.totals)) {
+        // Map actual reconciled numbers strictly from admin/DB records (0 if no collected contributions exist)
+        const liveTotals = DEFAULT_TOTALS.map(base => {
+          const match = data.totals.find(t => t.project_key === base.project_key);
+          return match
+            ? { ...base, collected_amount: Number(match.collected_amount || 0), contributions: Number(match.contributions || 0) }
+            : base;
+        });
+        setLedger(prev => ({
+          totals: liveTotals,
+          updates: Array.isArray(data?.updates) && data.updates.length > 0 ? data.updates : prev.updates,
+        }));
+      }
     }).catch(() => {});
     return () => { active = false; };
   }, []);
@@ -87,16 +97,16 @@ export default function Impact() {
               Inspect Reconciled Ledger <ArrowDownRight size={16} />
             </a>
             <a
-              href="#field-journal"
+              href="#active-corridors"
               className="btn-silver-luxury inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-xs font-semibold uppercase tracking-widest text-[#cbd5e1] hover:text-white transition-colors"
             >
-              Explore Field Journal <ArrowRight size={15} />
+              Explore Corridors <ArrowRight size={15} />
             </a>
           </div>
         </div>
       </section>
 
-      {/* 2. RECONCILED PUBLIC LEDGER DASHBOARD */}
+      {/* 2. RECONCILED PUBLIC LEDGER DASHBOARD (RESET TO 0 - ONLY UPDATED FROM ADMIN) */}
       <section id="ledger" className="mx-auto max-w-7xl px-6 py-16 md:py-24">
         {/* Executive Reconciled Dashboard Panel */}
         <div className="rounded-3xl two-tone-panel-gold border border-[#d4af37]/40 p-8 sm:p-10 shadow-2xl relative overflow-hidden">
@@ -104,14 +114,19 @@ export default function Impact() {
 
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-8 pb-8 border-b border-[#d4af37]/20">
             <div className="max-w-2xl">
-              <span className="font-sub-gold text-[10px] tracking-[0.25em] block uppercase text-[#fce096]">
-                Real-Time Public Stewardship Audit
-              </span>
-              <h2 className="mt-2 font-serif text-2xl sm:text-3xl md:text-4xl leading-tight text-white">
+              <div className="flex items-center gap-2 mb-2">
+                <span className="font-sub-gold text-[10px] tracking-[0.25em] uppercase text-[#fce096]">
+                  Real-Time Public Stewardship Audit
+                </span>
+                <span className="rounded-full bg-amber-500/10 px-2.5 py-0.5 text-[9px] font-mono text-amber-300 border border-amber-500/30 uppercase tracking-wider">
+                  Admin-Verified Only
+                </span>
+              </div>
+              <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl leading-tight text-white">
                 No impact claim without a receipt and an on-ground field photograph.
               </h2>
               <p className="mt-3 text-xs sm:text-sm leading-6 text-[#cbd5e1]">
-                Contributions added to orders begin as pledges in escrow. Funds enter these public totals only after confirmed courier delivery and remittance reconciliation. Cancelled or returned orders are immediately voided.
+                Contributions added to orders begin as pledges in escrow. Funds enter these public totals strictly after administrator reconciliation of courier delivery receipts and cash remittances. Cancelled or returned orders are immediately voided. Zero simulated numbers.
               </p>
             </div>
 
@@ -124,12 +139,14 @@ export default function Impact() {
             </div>
           </div>
 
-          {/* 4 Metric Counters Grid */}
+          {/* 4 Metric Counters Grid (Initial 0 baseline) */}
           <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/50 p-5">
               <p className="font-mono text-[10px] uppercase tracking-widest text-[#94a3b8]">Reconciled Fund</p>
               <p className="mt-1 font-serif text-3xl sm:text-4xl font-bold text-[#fce096]">{money(totalCollected)}</p>
-              <p className="mt-2 text-[10px] font-mono text-[#cbd5e1]">100% Cash-Reconciled</p>
+              <p className="mt-2 text-[10px] font-mono text-[#cbd5e1]">
+                {totalCollected > 0 ? '100% Cash-Reconciled' : 'Awaiting Admin COD Reconciliation'}
+              </p>
             </div>
 
             <div className="rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/50 p-5">
@@ -141,7 +158,7 @@ export default function Impact() {
             <div className="rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/50 p-5">
               <p className="font-mono text-[10px] uppercase tracking-widest text-[#94a3b8]">Active Corridors</p>
               <p className="mt-1 font-serif text-3xl sm:text-4xl font-bold text-[#fce096]">3</p>
-              <p className="mt-2 text-[10px] font-mono text-[#cbd5e1]">Saplings · Rivers · Education</p>
+              <p className="mt-2 text-[10px] font-mono text-[#cbd5e1]">3 Active · 3 Upcoming (2027)</p>
             </div>
 
             <div className="rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/50 p-5">
@@ -155,7 +172,7 @@ export default function Impact() {
           <div className="mt-8 border-t border-[#d4af37]/20 pt-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs mb-3 font-mono">
               <span className="text-[#94a3b8] uppercase tracking-wider text-[11px]">Corridor Allocation Breakdown</span>
-              <span className="text-[#fce096]">₹40,600 Total Allocated Across 3 Corridors</span>
+              <span className="text-[#fce096]">{money(totalCollected)} Total Reconciled Across Corridors</span>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {ledger.totals.map((t, idx) => {
@@ -174,14 +191,14 @@ export default function Impact() {
           </div>
         </div>
 
-        {/* 3 CORE FOCUS AREAS (EQUAL CARD HEIGHTS & ALIGNED IMAGES) */}
-        <div className="mt-16">
+        {/* 3 ACTIVE CORE FOCUS CORRIDORS */}
+        <div id="active-corridors" className="mt-16">
           <div className="mb-8 border-b border-[#d4af37]/20 pb-5">
             <span className="font-sub-gold text-[10px] tracking-[0.2em] block uppercase text-[#fce096]">
-              Pillars of Reconciled Environmental Action
+              Phase I On-Ground Deployment · Active Execution
             </span>
             <h2 className="mt-2 font-serif text-3xl sm:text-4xl text-white">
-              <span className="font-headline-gold">Three Verified</span> <span className="font-headline-silver">Ecological Focus Corridors</span>
+              <span className="font-headline-gold">Three Active</span> <span className="font-headline-silver">Ecological Focus Corridors</span>
             </h2>
           </div>
 
@@ -206,9 +223,9 @@ export default function Impact() {
                     <MapPin size={11} className="text-[#d4af37]" /> {project.location}
                   </div>
 
-                  {/* Top-Right Corridor Tag */}
-                  <div className="absolute top-3 right-3 rounded-full bg-black/60 backdrop-blur-md px-2.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-[#cbd5e1] border border-white/10">
-                    {`Corridor 0${idx + 1}`}
+                  {/* Top-Right Active Corridor Tag */}
+                  <div className="absolute top-3 right-3 rounded-full bg-emerald-500/20 backdrop-blur-md px-2.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-emerald-400 border border-emerald-500/30">
+                    Active Corridor 0{idx + 1}
                   </div>
                 </div>
 
@@ -240,9 +257,92 @@ export default function Impact() {
             ))}
           </div>
         </div>
+
+        {/* 4. THREE UPCOMING NATURAL PROJECTS (COMMENCING 2027) */}
+        <div id="upcoming-projects" className="mt-20">
+          <div className="mb-8 border-b border-[#d4af37]/20 pb-5">
+            <div className="flex items-center gap-2 mb-2">
+              <span className="font-sub-gold text-[10px] tracking-[0.25em] block uppercase text-[#fce096]">
+                Future Botanical Horizons · Commencing 2027
+              </span>
+              <span className="rounded-full bg-[#d4af37]/15 px-3 py-0.5 text-[10px] font-mono font-bold text-[#fce096] border border-[#d4af37]/40 uppercase tracking-wider">
+                Phase II Corridors
+              </span>
+            </div>
+            <h2 className="font-serif text-3xl sm:text-4xl text-white">
+              <span className="font-headline-gold">Three Upcoming Natural Projects</span> <br className="hidden sm:inline" />
+              <span className="font-headline-silver">Will Start From 2027</span>
+            </h2>
+            <p className="mt-2 text-xs sm:text-sm text-[#94a3b8] max-w-3xl">
+              Expanding our ecological footprint with high-altitude pollinator sanctuaries, ancient sacred grove preservation, and traditional earthen rainwater aquifers. Baseline environmental surveys are currently underway.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-stretch">
+            {IMPACT_PAGE_DATA.upcomingProjects.map((project, idx) => (
+              <article
+                key={project.id}
+                className="group overflow-hidden rounded-3xl two-tone-card border border-[#d4af37]/35 shadow-xl flex flex-col justify-between hover:border-[#d4af37]/70 hover:shadow-[0_12px_40px_rgba(212,175,55,0.18)] transition-all duration-300 relative"
+              >
+                {/* Clean Aspect-Ratio Image Container */}
+                <div className="relative aspect-[16/10] w-full overflow-hidden bg-[#070a0e]">
+                  <img
+                    src={project.image}
+                    alt={project.title}
+                    loading="lazy"
+                    className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#070a0e] via-[#070a0e]/40 to-black/30" />
+
+                  {/* Prominent Upcoming 2027 Badge */}
+                  <div className="absolute top-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-[#d4af37] px-3 py-1 text-[10px] font-black uppercase tracking-wider text-[#070a0e] shadow-lg">
+                    <Sparkles size={11} /> Upcoming · Will start from 2027
+                  </div>
+
+                  {/* Top-Left Location Badge */}
+                  <div className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full bg-[#070a0e]/85 backdrop-blur-md px-3 py-1 border border-[#d4af37]/30 text-[10px] font-mono text-[#fce096]">
+                    <MapPin size={11} className="text-[#d4af37]" /> {project.location}
+                  </div>
+                </div>
+
+                {/* Card Content with Aligned Typography */}
+                <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between space-y-4">
+                  <div>
+                    <div className="flex items-center justify-between">
+                      <span className="font-sub-gold text-[9px] tracking-widest block uppercase text-[#fce096]">
+                        Natural Project 0{idx + 4} · Phase II
+                      </span>
+                      <span className="font-mono text-[10px] text-amber-400/90 font-semibold flex items-center gap-1">
+                        <Clock size={11} /> Launch: 2027
+                      </span>
+                    </div>
+
+                    <h3 className="mt-2 font-serif text-xl sm:text-2xl font-bold text-white min-h-[3.25rem] flex items-center leading-snug">
+                      {project.title}
+                    </h3>
+
+                    <p className="mt-3 text-xs sm:text-sm leading-6 text-[#cbd5e1]">
+                      {project.copy}
+                    </p>
+                  </div>
+
+                  {/* Bottom Specification Badge */}
+                  <div className="rounded-xl border border-[#d4af37]/30 bg-[#070a0e]/80 p-3.5 mt-4">
+                    <span className="block text-[9px] font-mono uppercase tracking-widest text-amber-400">
+                      Phase II Target Specification
+                    </span>
+                    <span className="mt-1 block font-mono text-[11px] font-semibold text-[#fce096] leading-tight">
+                      {project.metric}
+                    </span>
+                  </div>
+                </div>
+              </article>
+            ))}
+          </div>
+        </div>
       </section>
 
-      {/* 3. REAL-LIFE VERIFIED FIELD JOURNAL ENTRIES */}
+      {/* 5. REAL-LIFE VERIFIED FIELD JOURNAL ENTRIES */}
       <section id="field-journal" className="mx-auto max-w-7xl px-6 pb-20">
         <div className="mb-8 border-b border-[#d4af37]/20 pb-5">
           <span className="font-sub-gold text-[10px] tracking-[0.2em] block uppercase text-[#fce096]">
@@ -319,7 +419,7 @@ export default function Impact() {
         </div>
       </section>
 
-      {/* 4. FAQ + CHARTER GOVERNANCE SECTION */}
+      {/* 6. FAQ + CHARTER GOVERNANCE SECTION */}
       <section className="mx-auto max-w-7xl px-6 pt-6">
         <div className="grid gap-10 lg:grid-cols-12 items-start rounded-3xl two-tone-card border border-[#d4af37]/35 p-6 sm:p-10 shadow-2xl">
           {/* Left Column: Framed Governance Charter Panel */}
@@ -416,7 +516,7 @@ export default function Impact() {
         </div>
       </section>
 
-      {/* 5. VERIFICATION & TRANSPARENCY CTA */}
+      {/* 7. VERIFICATION & TRANSPARENCY CTA */}
       <section className="mx-auto max-w-7xl px-6 pt-16">
         <div className="rounded-3xl border border-[#d4af37]/30 bg-gradient-to-r from-[#102219] via-[#070a0e] to-[#102219] p-8 sm:p-12 text-center shadow-2xl relative overflow-hidden">
           <div className="mx-auto max-w-3xl space-y-4">
