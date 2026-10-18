@@ -150,7 +150,7 @@ export default function Compare() {
                     <button
                       type="button"
                       onClick={() => addToCart?.(product, 1)}
-                      className="btn-gold-luxury mt-4 inline-flex w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg"
+                      className="btn-gold-luxury mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg"
                     >
                       <ShoppingCart size={14} /> Add to Bag · ₹{product.discount_price || product.price}
                     </button>

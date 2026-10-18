@@ -253,7 +253,7 @@ export default function PremiumHome() {
                   <button
                     type="button"
                     onClick={() => addToCart?.(product, 1)}
-                    className="btn-gold-luxury rounded-full px-6 py-2.5 text-xs font-bold uppercase tracking-wider"
+                    className="btn-gold-luxury min-h-11 rounded-full px-6 py-2.5 text-xs font-bold uppercase tracking-wider"
                   >
                     Add to Bag
                   </button>

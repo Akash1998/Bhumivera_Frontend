@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { addresses as addressesApi } from '../services/api';
+import { getCurrentCoordinates, getLocationErrorMessage, hasCoordinates, reverseGeocodeCoordinates } from '../utils/geolocation';
 import { MapPin, Plus, Edit2, Trash2, Star, Home, Building, Map, X, CheckCircle2, Navigation, ExternalLink, Copy, Check, Sparkles } from 'lucide-react';
 
 const defaultForm = { 
@@ -20,6 +21,18 @@ const defaultForm = {
   google_maps_url: ''
 };
 
+const readGuestAddresses = () => {
+  try {
+    const saved = JSON.parse(localStorage.getItem('bhumivera_guest_addresses') || '[]');
+    return Array.isArray(saved) ? saved : [];
+  } catch (error) {
+    console.error('[GUEST_ADDRESS_STORAGE_READ_ERROR]', error);
+    return [];
+  }
+};
+
+const sameAddressId = (first, second) => String(first) === String(second);
+
 export default function AddressBook() {
   const { user } = useAuth();
   const toast = useToast();
@@ -34,87 +47,69 @@ export default function AddressBook() {
   const [msg, setMsg] = useState('');
   const [msgType, setMsgType] = useState('success');
 
-  useEffect(() => { 
-    fetchAddresses(); 
-  }, []);
-
-  const fetchAddresses = async () => {
+  const fetchAddresses = useCallback(async () => {
+    setLoading(true);
+    setMsg('');
     try {
-      const res = await addressesApi.getAll();
-      const list = res.data.addresses || res.data.data || res.data || [];
-      if (Array.isArray(list) && list.length > 0) {
-        setAddresses(list);
+      if (!user) {
+        setAddresses(readGuestAddresses());
       } else {
-        const localSaved = JSON.parse(localStorage.getItem('bhumivera_guest_addresses') || '[]');
-        setAddresses(localSaved);
+        const res = await addressesApi.getAll();
+        const list = res.data.addresses || res.data.data || res.data || [];
+        if (!Array.isArray(list)) {
+          throw new Error('The address service returned an invalid address list.');
+        }
+        setAddresses(list);
       }
-    } catch (e) {
-      const localSaved = JSON.parse(localStorage.getItem('bhumivera_guest_addresses') || '[]');
-      setAddresses(localSaved);
+    } catch (error) {
+      console.error('[ADDRESS_LIST_LOAD_ERROR]', error);
+      setAddresses([]);
+      setMsg('Unable to load saved addresses. Please try again.');
+      setMsgType('error');
+      toast.error('Unable to load saved addresses. Please try again.');
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
-  };
+  }, [toast, user]);
 
-  const handleDetectLocation = () => {
-    if (typeof window === 'undefined' || !navigator.geolocation) {
-      toast.error('Geolocation is not supported by your browser. Please enter your address details manually.');
-      return;
-    }
+  useEffect(() => {
+    fetchAddresses();
+  }, [fetchAddresses]);
 
+  const handleDetectLocation = async () => {
     setLocating(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = Number(position.coords.latitude.toFixed(7));
-        const lng = Number(position.coords.longitude.toFixed(7));
-        const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+    try {
+      const position = await getCurrentCoordinates();
+      const lat = Number(position.latitude.toFixed(7));
+      const lng = Number(position.longitude.toFixed(7));
+      const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+      const updatedFields = {
+        latitude: lat,
+        longitude: lng,
+        google_maps_url: mapsUrl
+      };
 
-        const updatedFields = {
-          latitude: lat,
-          longitude: lng,
-          google_maps_url: mapsUrl
-        };
+      try {
+        Object.assign(updatedFields, await reverseGeocodeCoordinates(lat, lng));
+      } catch (error) {
+        console.warn('[ADDRESS_REVERSE_GEOCODING_ERROR]', error);
+      }
 
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
-            headers: { 'Accept': 'application/json' }
-          });
-          if (res.ok) {
-            const data = await res.json();
-            const addr = data.address || {};
-            const street = addr.road || addr.suburb || addr.neighbourhood || addr.residential || '';
-            const city = addr.city || addr.town || addr.village || addr.county || addr.state_district || '';
-            const state = addr.state || '';
-            const pincode = addr.postcode || '';
-
-            if (street && !form.addressLine1) updatedFields.addressLine1 = street;
-            if (city) updatedFields.city = city;
-            if (state) updatedFields.state = state;
-            if (pincode) updatedFields.pincode = pincode;
-          }
-        } catch (geoErr) {
-          console.warn('Reverse geocoding network notice (non-blocking):', geoErr);
-        }
-
-        setForm(prev => ({
-          ...prev,
-          ...updatedFields
-        }));
-        setLocating(false);
-        toast.success('Exact GPS delivery coordinates pinned!');
-      },
-      (error) => {
-        setLocating(false);
-        console.warn('Geolocation error:', error);
-        if (error.code === 1) {
-          toast.error('Location permission was denied. Please enter address manually.');
-        } else if (error.code === 3) {
-          toast.error('Location request timed out. Please enter address manually.');
-        } else {
-          toast.error('Unable to fetch precise location. Please enter address manually.');
-        }
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+      setForm(prev => ({
+        ...prev,
+        ...updatedFields,
+        addressLine1: prev.addressLine1 || updatedFields.addressLine1 || '',
+        city: prev.city || updatedFields.city || '',
+        state: prev.state || updatedFields.state || '',
+        pincode: prev.pincode || updatedFields.pincode || ''
+      }));
+      toast.success('GPS pin added. Review the suggested address details before saving.');
+    } catch (error) {
+      console.warn('[GEOLOCATION_ERROR]', error);
+      toast.error(getLocationErrorMessage(error));
+    } finally {
+      setLocating(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -151,86 +146,110 @@ export default function AddressBook() {
       country: form.country,
       is_default: form.isDefault,
       isDefault: form.isDefault,
-      latitude: form.latitude || undefined,
-      longitude: form.longitude || undefined,
-      google_maps_url: form.google_maps_url || (form.latitude && form.longitude ? `https://www.google.com/maps?q=${form.latitude},${form.longitude}` : undefined)
+      latitude: form.latitude ?? undefined,
+      longitude: form.longitude ?? undefined,
+      google_maps_url: form.google_maps_url || (hasCoordinates(form.latitude, form.longitude) ? `https://www.google.com/maps?q=${form.latitude},${form.longitude}` : undefined)
     };
 
     try {
-      if (editId) {
-        await addressesApi.update(editId, payload);
-        setAddresses(prev => prev.map(a => (a.id === editId || a._id === editId) ? { ...a, ...payload } : a));
-        setMsg('Address updated successfully');
+      if (!user) {
+        const savedAddresses = readGuestAddresses();
+        const updated = editId
+          ? savedAddresses.map(address => sameAddressId(address.id || address._id, editId) ? { ...address, ...payload } : address)
+          : [{ ...payload, id: Date.now() }, ...savedAddresses];
+        localStorage.setItem('bhumivera_guest_addresses', JSON.stringify(updated));
+        setAddresses(updated);
       } else {
-        const res = await addressesApi.create(payload);
-        const created = res.data.address || res.data.data || res.data;
-        if (created && (created.id || created._id)) {
-          setAddresses(prev => [created, ...prev]);
+        if (editId) {
+          const res = await addressesApi.update(editId, payload);
+          const serverAddresses = res.data?.addresses || res.data?.data;
+          if (Array.isArray(serverAddresses)) {
+            setAddresses(serverAddresses);
+          } else {
+            setAddresses(prev => prev.map(address =>
+              sameAddressId(address.id || address._id, editId) ? { ...address, ...payload } : address
+            ));
+          }
         } else {
-          setAddresses(prev => [{ ...payload, id: Date.now() }, ...prev]);
+          const res = await addressesApi.create(payload);
+          const serverAddresses = res.data?.addresses || res.data?.data;
+          if (Array.isArray(serverAddresses)) {
+            setAddresses(serverAddresses);
+          } else {
+            setAddresses(prev => [{ ...payload, id: Date.now() }, ...prev]);
+          }
         }
-        setMsg('Address added successfully');
       }
+      setMsg(editId ? 'Address updated successfully' : 'Address added successfully');
       setMsgType('success');
       setShowForm(false);
       setForm(defaultForm);
       setEditId(null);
     } catch (err) {
-      const localAddresses = JSON.parse(localStorage.getItem('bhumivera_guest_addresses') || '[]');
-      if (editId) {
-        const updated = localAddresses.map(a => (a.id === editId) ? { ...a, ...payload } : a);
-        localStorage.setItem('bhumivera_guest_addresses', JSON.stringify(updated));
-        setAddresses(updated);
-        setMsg('Address updated locally');
-      } else {
-        const newAddr = { ...payload, id: Date.now() };
-        const updated = [newAddr, ...localAddresses];
-        localStorage.setItem('bhumivera_guest_addresses', JSON.stringify(updated));
-        setAddresses(updated);
-        setMsg('Address added locally');
-      }
-      setMsgType('success');
-      setShowForm(false);
-      setForm(defaultForm);
-      setEditId(null);
+      console.error('[ADDRESS_SAVE_ERROR]', err);
+      const message = err.response?.data?.message || 'Unable to save this address. Please try again.';
+      setMsg(message);
+      setMsgType('error');
+      toast.error(message);
+    } finally {
+      setSaving(false);
     }
-    setSaving(false);
   };
 
   const setDefault = async (id) => {
     try {
-      await addressesApi.setDefault(id);
-      setAddresses(prev => prev.map(a => ({
-        ...a,
-        isDefault: (a.id === id || a._id === id),
-        is_default: (a.id === id || a._id === id)
-      })));
+      if (!user) {
+        const updated = readGuestAddresses().map(address => ({
+          ...address,
+          isDefault: sameAddressId(address.id || address._id, id),
+          is_default: sameAddressId(address.id || address._id, id)
+        }));
+        localStorage.setItem('bhumivera_guest_addresses', JSON.stringify(updated));
+        setAddresses(updated);
+      } else {
+        const res = await addressesApi.setDefault(id);
+        const serverAddresses = res.data?.addresses || res.data?.data;
+        if (Array.isArray(serverAddresses)) {
+          setAddresses(serverAddresses);
+        } else {
+          setAddresses(prev => prev.map(address => ({
+            ...address,
+            isDefault: sameAddressId(address.id || address._id, id),
+            is_default: sameAddressId(address.id || address._id, id)
+          })));
+        }
+      }
       toast.success('Default address updated');
-    } catch (e) {
-      const localAddresses = JSON.parse(localStorage.getItem('bhumivera_guest_addresses') || '[]');
-      const updated = localAddresses.map(a => ({
-        ...a,
-        isDefault: a.id === id,
-        is_default: a.id === id
-      }));
-      localStorage.setItem('bhumivera_guest_addresses', JSON.stringify(updated));
-      setAddresses(updated);
-      toast.success('Default address updated');
+    } catch (error) {
+      console.error('[ADDRESS_DEFAULT_UPDATE_ERROR]', error);
+      toast.error(error.response?.data?.message || 'Unable to update the default address. Please try again.');
     }
   };
 
   const deleteAddress = async (id) => {
     if (!window.confirm('Are you sure you want to remove this address?')) return;
     try {
-      await addressesApi.delete(id);
-      setAddresses(prev => prev.filter(a => a.id !== id && a._id !== id));
+      if (!user) {
+        const updated = readGuestAddresses().filter(address =>
+          !sameAddressId(address.id || address._id, id)
+        );
+        localStorage.setItem('bhumivera_guest_addresses', JSON.stringify(updated));
+        setAddresses(updated);
+      } else {
+        const res = await addressesApi.delete(id);
+        const serverAddresses = res.data?.addresses || res.data?.data;
+        if (Array.isArray(serverAddresses)) {
+          setAddresses(serverAddresses);
+        } else {
+          setAddresses(prev => prev.filter(address =>
+            !sameAddressId(address.id || address._id, id)
+          ));
+        }
+      }
       toast.success('Address removed');
-    } catch (e) {
-      const localAddresses = JSON.parse(localStorage.getItem('bhumivera_guest_addresses') || '[]');
-      const updated = localAddresses.filter(a => a.id !== id);
-      localStorage.setItem('bhumivera_guest_addresses', JSON.stringify(updated));
-      setAddresses(updated);
-      toast.success('Address removed');
+    } catch (error) {
+      console.error('[ADDRESS_DELETE_ERROR]', error);
+      toast.error(error.response?.data?.message || 'Unable to remove this address. Please try again.');
     }
   };
 
@@ -248,9 +267,9 @@ export default function AddressBook() {
       pincode: addr.pincode || addr.postal_code || '', 
       country: addr.country || 'India', 
       isDefault: addr.isDefault || addr.is_default || false,
-      latitude: addr.latitude || null,
-      longitude: addr.longitude || null,
-      google_maps_url: addr.google_maps_url || (addr.latitude && addr.longitude ? `https://www.google.com/maps?q=${addr.latitude},${addr.longitude}` : '')
+      latitude: addr.latitude ?? null,
+      longitude: addr.longitude ?? null,
+      google_maps_url: addr.google_maps_url || (hasCoordinates(addr.latitude, addr.longitude) ? `https://www.google.com/maps?q=${addr.latitude},${addr.longitude}` : '')
     });
     setShowForm(true);
   };
@@ -285,13 +304,14 @@ export default function AddressBook() {
             <button
               type="button"
               onClick={() => window.dispatchEvent(new CustomEvent('bhumivera:open-visual-guide', { detail: { tab: 'location' } }))}
-              className="btn-silver-luxury inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider"
+              className="btn-silver-luxury inline-flex min-h-11 items-center gap-1.5 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider"
             >
               <Sparkles size={14} className="text-[#d4af37]" /> Map Guide
             </button>
             <button
+              type="button"
               onClick={() => { setForm(defaultForm); setEditId(null); setShowForm(true); }}
-              className="btn-gold-luxury inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider"
+              className="btn-gold-luxury inline-flex min-h-11 items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider"
             >
               <Plus size={15} /> Add New Address
             </button>
@@ -318,8 +338,10 @@ export default function AddressBook() {
                 <span className="font-headline-silver">Address</span>
               </h2>
               <button
+                type="button"
+                aria-label="Close address form"
                 onClick={() => { setShowForm(false); setEditId(null); }}
-                className="w-8 h-8 rounded-lg hover:bg-white/10 text-[#cbd5e1] flex items-center justify-center transition-colors"
+                className="min-h-11 min-w-11 rounded-lg hover:bg-white/10 text-[#cbd5e1] flex items-center justify-center transition-colors"
               >
                 <X size={18} />
               </button>
@@ -330,14 +352,14 @@ export default function AddressBook() {
                   <div className="flex items-center gap-2">
                     <Navigation className="text-[#d4af37] w-4 h-4" />
                     <span className="text-sm font-semibold text-white">Exact Delivery Spot Pinpointer</span>
-                    {form.latitude && form.longitude && (
+                    {hasCoordinates(form.latitude, form.longitude) && (
                       <span className="bg-[#d4af37]/20 text-[#fce096] border border-[#d4af37]/40 text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                         GPS Attached
                       </span>
                     )}
                   </div>
                   <p className="text-xs text-[#cbd5e1] mt-1.5 leading-relaxed">
-                    {form.latitude && form.longitude ? (
+                    {hasCoordinates(form.latitude, form.longitude) ? (
                       <>
                         Coordinates: <span className="font-mono text-[#fce096] font-semibold">{form.latitude}, {form.longitude}</span> &bull;{' '}
                         <a
@@ -350,7 +372,7 @@ export default function AddressBook() {
                         </a>
                       </>
                     ) : (
-                      'Pin your exact location so couriers navigate straight to your doorstep without landmark confusion.'
+                      "Your coordinates are sent to OpenStreetMap to suggest address details and create a Google Maps pin. Review them before saving."
                     )}
                   </p>
                 </div>
@@ -358,16 +380,17 @@ export default function AddressBook() {
                   type="button"
                   onClick={handleDetectLocation}
                   disabled={locating}
-                  className="btn-silver-luxury inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap"
+                  className="btn-silver-luxury inline-flex min-h-11 items-center gap-2 px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap"
                 >
                   <Navigation size={13} className={locating ? 'animate-spin text-[#d4af37]' : 'text-[#d4af37]'} />
-                  {locating ? 'Detecting GPS...' : form.latitude ? 'Re-pin Current Location' : 'Use Current Location'}
+                  {locating ? 'Detecting GPS...' : hasCoordinates(form.latitude, form.longitude) ? 'Re-pin Current Location' : 'Use Current Location'}
                 </button>
               </div>
 
               <div>
-                <label className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">Label</label>
+                <label htmlFor="address-label" className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">Label</label>
                 <select
+                  id="address-label"
                   value={form.label}
                   onChange={e => setForm({...form, label: e.target.value})}
                   className="w-full bg-[#070a0e] border border-[#d4af37]/25 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
@@ -378,74 +401,91 @@ export default function AddressBook() {
                 </select>
               </div>
               <div>
-                <label className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">Full Name *</label>
+                <label htmlFor="address-full-name" className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">Full Name *</label>
                 <input
+                  id="address-full-name"
                   value={form.fullName}
                   onChange={e => setForm({...form, fullName: e.target.value})}
+                  autoComplete="name"
                   required
                   className="w-full bg-[#070a0e] border border-[#d4af37]/25 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-[#94a3b8] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">Phone Number *</label>
+                <label htmlFor="address-phone" className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">Phone Number *</label>
                 <input
+                  id="address-phone"
                   value={form.phone}
                   onChange={e => setForm({...form, phone: e.target.value})}
                   required
+                  autoComplete="tel"
+                  inputMode="tel"
                   placeholder="+91 98765 43210"
                   className="w-full bg-[#070a0e] border border-[#d4af37]/25 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-[#94a3b8] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">Street Address *</label>
+                <label htmlFor="address-line-1" className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">Street Address *</label>
                 <input
+                  id="address-line-1"
                   value={form.addressLine1}
                   onChange={e => setForm({...form, addressLine1: e.target.value})}
                   required
+                  autoComplete="address-line1"
                   placeholder="House / Flat no, Building, Street, Locality"
                   className="w-full bg-[#070a0e] border border-[#d4af37]/25 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-[#94a3b8] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
                 />
               </div>
               <div className="sm:col-span-2">
-                <label className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">Address Line 2 (Optional)</label>
+                <label htmlFor="address-line-2" className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">Address Line 2 (Optional)</label>
                 <input
+                  id="address-line-2"
                   value={form.addressLine2}
                   onChange={e => setForm({...form, addressLine2: e.target.value})}
+                  autoComplete="address-line2"
                   placeholder="Landmark, Nearby place, etc."
                   className="w-full bg-[#070a0e] border border-[#d4af37]/25 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-[#94a3b8] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">City *</label>
+                <label htmlFor="address-city" className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">City *</label>
                 <input
+                  id="address-city"
                   value={form.city}
                   onChange={e => setForm({...form, city: e.target.value})}
                   required
+                  autoComplete="address-level2"
                   className="w-full bg-[#070a0e] border border-[#d4af37]/25 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-[#94a3b8] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">State *</label>
+                <label htmlFor="address-state" className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">State *</label>
                 <input
+                  id="address-state"
                   value={form.state}
                   onChange={e => setForm({...form, state: e.target.value})}
                   required
+                  autoComplete="address-level1"
                   className="w-full bg-[#070a0e] border border-[#d4af37]/25 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-[#94a3b8] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">PIN Code *</label>
+                <label htmlFor="address-postal-code" className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">PIN Code *</label>
                 <input
+                  id="address-postal-code"
                   value={form.pincode}
                   onChange={e => setForm({...form, pincode: e.target.value})}
                   required
+                  autoComplete="postal-code"
+                  inputMode="numeric"
                   placeholder="e.g. 110001"
                   className="w-full bg-[#070a0e] border border-[#d4af37]/25 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-[#94a3b8] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
                 />
               </div>
               <div>
-                <label className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">Country</label>
+                <label htmlFor="address-country" className="text-xs font-medium text-[#cbd5e1] mb-1.5 block uppercase tracking-wider">Country</label>
                 <input
+                  id="address-country"
                   value={form.country}
                   onChange={e => setForm({...form, country: e.target.value})}
                   className="w-full bg-[#070a0e] border border-[#d4af37]/25 rounded-xl px-3.5 py-2.5 text-sm text-white placeholder-[#94a3b8] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]"
@@ -468,14 +508,14 @@ export default function AddressBook() {
                 <button
                   type="submit"
                   disabled={saving}
-                  className="btn-gold-luxury px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider disabled:opacity-50"
+                  className="btn-gold-luxury min-h-11 px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider disabled:opacity-50"
                 >
                   {saving ? 'Saving...' : editId ? 'Update Address' : 'Save Address'}
                 </button>
                 <button
                   type="button"
                   onClick={() => { setShowForm(false); setEditId(null); }}
-                  className="btn-silver-luxury px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider"
+                  className="btn-silver-luxury min-h-11 px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider"
                 >
                   Cancel
                 </button>
@@ -496,8 +536,9 @@ export default function AddressBook() {
             <p className="font-serif text-lg font-bold text-white">No addresses saved yet</p>
             <p className="text-xs text-[#cbd5e1] mt-1 mb-5">Add an address to make checkout faster next time</p>
             <button
-              onClick={() => { setForm(defaultForm); setShowForm(true); }}
-              className="btn-gold-luxury inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider"
+              type="button"
+              onClick={() => { setForm(defaultForm); setEditId(null); setShowForm(true); }}
+              className="btn-gold-luxury inline-flex min-h-11 items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider"
             >
               <Plus size={16} /> Add your first address
             </button>
@@ -537,8 +578,8 @@ export default function AddressBook() {
 
                   {/* Google Maps Pin & Courier Share */}
                   {(() => {
-                    const mapsUrl = addr.google_maps_url || (addr.latitude && addr.longitude ? `https://www.google.com/maps?q=${addr.latitude},${addr.longitude}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([addressLine1, addressLine2, addr.city, addr.state, addr.pincode || addr.postal_code, addr.country || 'India'].filter(Boolean).join(', '))}`);
-                    const hasExactGps = !!(addr.latitude && addr.longitude);
+                    const hasExactGps = hasCoordinates(addr.latitude, addr.longitude);
+                    const mapsUrl = addr.google_maps_url || (hasExactGps ? `https://www.google.com/maps?q=${addr.latitude},${addr.longitude}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([addressLine1, addressLine2, addr.city, addr.state, addr.pincode || addr.postal_code, addr.country || 'India'].filter(Boolean).join(', '))}`);
 
                     return (
                       <div className="mb-3 pt-3 border-t border-[#d4af37]/15 flex flex-wrap items-center justify-between gap-2 text-xs">
@@ -553,20 +594,25 @@ export default function AddressBook() {
                             href={mapsUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1 text-[#cbd5e1] hover:text-[#fce096] font-medium transition-colors"
+                            className="inline-flex min-h-11 items-center gap-1 px-2 text-[#cbd5e1] hover:text-[#fce096] font-medium transition-colors"
                           >
                             View Map <ExternalLink size={12} />
                           </a>
                           <span className="text-[#94a3b8]/40">|</span>
                           <button
                             type="button"
-                            onClick={() => {
-                              navigator.clipboard.writeText(mapsUrl);
-                              setCopiedId(addrId);
-                              toast.success('Google Maps delivery link copied!');
-                              setTimeout(() => setCopiedId(null), 2000);
+                            onClick={async () => {
+                              try {
+                                await navigator.clipboard.writeText(mapsUrl);
+                                setCopiedId(addrId);
+                                toast.success('Google Maps delivery link copied!');
+                                setTimeout(() => setCopiedId(null), 2000);
+                              } catch (error) {
+                                console.error('[ADDRESS_MAP_COPY_ERROR]', error);
+                                toast.error('Unable to copy the map link. Open the map and copy its URL instead.');
+                              }
                             }}
-                            className="inline-flex items-center gap-1 text-[#cbd5e1] hover:text-[#fce096] font-medium transition-colors"
+                            className="inline-flex min-h-11 items-center gap-1 px-2 text-[#cbd5e1] hover:text-[#fce096] font-medium transition-colors"
                           >
                             {copiedId === addrId ? (
                               <>
@@ -587,20 +633,20 @@ export default function AddressBook() {
                     {!isDefault && (
                       <button
                         onClick={() => setDefault(addrId)}
-                        className="text-xs font-semibold text-[#d4af37] hover:text-[#fce096] transition-colors flex items-center gap-1 uppercase tracking-wider"
+                        className="min-h-11 rounded-md px-2 text-xs font-semibold text-[#d4af37] hover:text-[#fce096] transition-colors flex items-center gap-1 uppercase tracking-wider"
                       >
                         <Star size={13} /> Set Default
                       </button>
                     )}
                     <button
                       onClick={() => startEdit(addr)}
-                      className="text-xs font-semibold text-[#cbd5e1] hover:text-white transition-colors flex items-center gap-1 ml-auto uppercase tracking-wider"
+                      className="min-h-11 rounded-md px-2 text-xs font-semibold text-[#cbd5e1] hover:text-white transition-colors flex items-center gap-1 ml-auto uppercase tracking-wider"
                     >
                       <Edit2 size={13} /> Edit
                     </button>
                     <button
                       onClick={() => deleteAddress(addrId)}
-                      className="text-xs font-semibold text-rose-400 hover:text-rose-300 transition-colors flex items-center gap-1 uppercase tracking-wider"
+                      className="min-h-11 rounded-md px-2 text-xs font-semibold text-rose-400 hover:text-rose-300 transition-colors flex items-center gap-1 uppercase tracking-wider"
                     >
                       <Trash2 size={13} /> Delete
                     </button>

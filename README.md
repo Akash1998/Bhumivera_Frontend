@@ -38,7 +38,7 @@ npm run android:open
 
 `android:sync` builds the web bundle into `dist` and copies it into the native project. In Android Studio, select a device and run the `app` configuration. To launch from the command line on a connected device, use `npm run android:run`.
 
-The Android app targets Android API 36 and uses native status-bar and keyboard integration, native back navigation, haptics, camera, speech recognition, and push-notification plugins where supported. User-facing links can use the `bhumivera://` URI scheme. Verified HTTPS App Links require the app's release signing-certificate fingerprint to be published in the website's Digital Asset Links file before release.
+The Android app targets Android API 36 and uses native status-bar and keyboard integration, native back navigation, haptics, geolocation, speech recognition, and push-notification plugins where supported. Location permission is requested only after a customer chooses **Use Current Location**. Review-photo capture and evidence selection use the operating system's file/camera picker; a native camera stream is not currently used. User-facing links can use the `bhumivera://` URI scheme. Verified HTTPS App Links require the app's release signing-certificate fingerprint to be published in the website's Digital Asset Links file before release.
 
 ## Release checklist
 

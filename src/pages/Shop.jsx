@@ -93,7 +93,7 @@ const ProductCard = ({ product, index }) => {
           <button
             type="button"
             onClick={() => addToCart?.(product, 1)}
-            className="btn-gold-luxury px-5 py-3 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all flex items-center gap-2"
+            className="btn-gold-luxury min-h-11 px-5 py-3 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all flex items-center gap-2"
           >
             <ShoppingBag size={14} /> Add to Bag
           </button>
@@ -222,7 +222,7 @@ export default function Shop() {
                 key={cat}
                 type="button"
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition ${
+                className={`min-h-11 px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition ${
                   selectedCategory === cat
                     ? 'btn-gold-luxury shadow-lg'
                     : 'bg-[#102219]/70 backdrop-blur-md border border-[#D4AF37]/25 text-[#DFD7C4] hover:border-[#D4AF37] hover:text-[#FCE096]'

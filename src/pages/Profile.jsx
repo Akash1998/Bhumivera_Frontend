@@ -38,6 +38,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { registerPasskey, isPasskeySupported } from '../utils/webauthnClient';
 import SupportCenter from '../components/SupportCenter';
 import { getProductImageUrl } from '../utils/productImageUrl';
+import { getCurrentCoordinates, getLocationErrorMessage, hasCoordinates, reverseGeocodeCoordinates } from '../utils/geolocation';
 
 const getProfileImageUrl = getProductImageUrl;
 
@@ -442,9 +443,13 @@ export default function Profile() {
   const loadAddresses = async () => {
     try {
       const res = await addressesApi.getAll();
-      const a = safeArr(safeExtract(res, 'addresses')) || safeArr(safeExtract(res, 'data')) || safeArr(res?.data);
-      setAddresses(a);
-    } catch (_) {}
+      const addressList = res?.data?.addresses ?? res?.data?.data ?? res?.data;
+      if (!Array.isArray(addressList)) throw new Error('The address service returned an invalid address list.');
+      setAddresses(addressList);
+    } catch (error) {
+      console.error('[PROFILE_ADDRESSES_LOAD]', error);
+      toast.error(error.response?.data?.message || 'Could not load your saved addresses.');
+    }
   };
   const loadReturns = async () => {
     try {
@@ -830,69 +835,43 @@ export default function Profile() {
       return true;
     } catch (err) { toast.error(err.response?.data?.message || 'Failed'); return false; }
   };
-  const handleDetectProfileLocation = () => {
-    if (typeof window === 'undefined' || !navigator.geolocation) {
-      toast.error('Geolocation is not supported by your browser. Please enter your address details manually.');
-      return;
-    }
-
+  const handleDetectProfileLocation = async () => {
     setLocatingAddress(true);
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        const lat = Number(position.coords.latitude.toFixed(7));
-        const lng = Number(position.coords.longitude.toFixed(7));
-        const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+    try {
+      const position = await getCurrentCoordinates();
+      const lat = Number(position.latitude.toFixed(7));
+      const lng = Number(position.longitude.toFixed(7));
+      const updatedFields = {
+        latitude: lat,
+        longitude: lng,
+        google_maps_url: `https://www.google.com/maps?q=${lat},${lng}`,
+      };
 
-        const updatedFields = {
-          latitude: lat,
-          longitude: lng,
-          google_maps_url: mapsUrl
-        };
+      let suggestions = {};
+      try {
+        suggestions = await reverseGeocodeCoordinates(lat, lng);
+      } catch (error) {
+        console.warn('[PROFILE_ADDRESS_REVERSE_GEOCODING_ERROR]', error);
+      }
 
-        try {
-          const res = await fetch(`https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`, {
-            headers: { 'Accept': 'application/json' }
-          });
-          if (res.ok) {
-            const data = await res.json();
-            const addr = data.address || {};
-            const street = addr.road || addr.suburb || addr.neighbourhood || addr.residential || '';
-            const city = addr.city || addr.town || addr.village || addr.county || addr.state_district || '';
-            const state = addr.state || '';
-            const pincode = addr.postcode || '';
-
-            if (street && !addressModal.form.line1) updatedFields.line1 = street;
-            if (city) updatedFields.city = city;
-            if (state) updatedFields.state = state;
-            if (pincode) updatedFields.postal_code = pincode;
-          }
-        } catch (geoErr) {
-          console.warn('Reverse geocoding network notice (non-blocking):', geoErr);
-        }
-
-        setAddressModal(m => ({
-          ...m,
-          form: {
-            ...m.form,
-            ...updatedFields
-          }
-        }));
-        setLocatingAddress(false);
-        toast.success('Exact GPS delivery spot pinned successfully!');
-      },
-      (error) => {
-        setLocatingAddress(false);
-        console.warn('Geolocation error:', error);
-        if (error.code === 1) {
-          toast.error('Location permission was denied. You can still type your address details manually.');
-        } else if (error.code === 3) {
-          toast.error('Location request timed out. Please enter your address manually.');
-        } else {
-          toast.error('Unable to fetch precise location. Please enter your address manually.');
-        }
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
+      setAddressModal(current => ({
+        ...current,
+        form: {
+          ...current.form,
+          ...updatedFields,
+          line1: current.form.line1 || suggestions.addressLine1 || '',
+          city: suggestions.city || current.form.city,
+          state: suggestions.state || current.form.state,
+          postal_code: suggestions.pincode || current.form.postal_code,
+        },
+      }));
+      toast.success('GPS pin added. Review the suggested address details before saving.');
+    } catch (error) {
+      console.warn('[PROFILE_GEOLOCATION_ERROR]', error);
+      toast.error(getLocationErrorMessage(error));
+    } finally {
+      setLocatingAddress(false);
+    }
   };
 
   const handleAddressSave = async (e) => {
@@ -906,9 +885,9 @@ export default function Profile() {
       line2: f.line2, address_line2: f.line2, street_address2: f.line2,
       city: f.city, state: f.state, postal_code: f.postal_code, zip: f.postal_code,
       country: f.country, is_default: f.is_default,
-      latitude: f.latitude || undefined,
-      longitude: f.longitude || undefined,
-      google_maps_url: f.google_maps_url || (f.latitude && f.longitude ? `https://www.google.com/maps?q=${f.latitude},${f.longitude}` : undefined)
+      latitude: f.latitude ?? undefined,
+      longitude: f.longitude ?? undefined,
+      google_maps_url: f.google_maps_url || (hasCoordinates(f.latitude, f.longitude) ? `https://www.google.com/maps?q=${f.latitude},${f.longitude}` : undefined)
     };
     try {
       if (addressModal.editId) {
@@ -925,11 +904,17 @@ export default function Profile() {
   const handleAddressDelete = async (id) => {
     if (!window.confirm('Delete address?')) return;
     try { await addressesApi.delete(id); toast.success('Address deleted'); await loadAddresses(); }
-    catch (_) { toast.error('Failed'); }
+    catch (error) {
+      console.error('[PROFILE_ADDRESS_DELETE_ERROR]', error);
+      toast.error(error.response?.data?.message || 'Unable to delete this address.');
+    }
   };
   const handleSetDefaultAddr = async (id) => {
     try { await addressesApi.setDefault(id); toast.success('Default address updated'); await loadAddresses(); }
-    catch (_) { toast.error('Failed to set default address'); }
+    catch (error) {
+      console.error('[PROFILE_ADDRESS_DEFAULT_ERROR]', error);
+      toast.error(error.response?.data?.message || 'Unable to set the default address.');
+    }
   };
 
   const handleLogout = () => { if (window.confirm('Log out of your account?')) { logout(); navigate('/'); } };
@@ -1521,8 +1506,8 @@ export default function Profile() {
                       const addrId = a.id || a._id;
                       const addrLine1 = a.line1 || a.street_address || a.address_line1 || a.address || '';
                       const addrLine2 = a.line2 || a.address_line2 || '';
-                      const mapsUrl = a.google_maps_url || (a.latitude && a.longitude ? `https://www.google.com/maps?q=${a.latitude},${a.longitude}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([addrLine1, addrLine2, a.city, a.state, a.postal_code || a.zip, a.country || 'India'].filter(Boolean).join(', '))}`);
-                      const hasExactGps = !!(a.latitude && a.longitude);
+                      const hasExactGps = hasCoordinates(a.latitude, a.longitude);
+                      const mapsUrl = a.google_maps_url || (hasExactGps ? `https://www.google.com/maps?q=${a.latitude},${a.longitude}` : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent([addrLine1, addrLine2, a.city, a.state, a.postal_code || a.zip, a.country || 'India'].filter(Boolean).join(', '))}`);
 
                       return (
                         <div key={addrId} className={`rounded-2xl two-tone-card border p-5 transition-all relative ${a.is_default || a.default ? 'border-[#d4af37]' : 'border-[#d4af37]/20 hover:border-[#d4af37]/40'}`}>
@@ -1568,11 +1553,16 @@ export default function Profile() {
                               <span className="text-[#94a3b8]/40">|</span>
                               <button
                                 type="button"
-                                onClick={() => {
-                                  navigator.clipboard.writeText(mapsUrl);
-                                  setCopiedAddressId(addrId);
-                                  toast.success('Google Maps delivery link copied!');
-                                  setTimeout(() => setCopiedAddressId(null), 2000);
+                                onClick={async () => {
+                                  try {
+                                    await navigator.clipboard.writeText(mapsUrl);
+                                    setCopiedAddressId(addrId);
+                                    toast.success('Google Maps delivery link copied!');
+                                    setTimeout(() => setCopiedAddressId(null), 2000);
+                                  } catch (error) {
+                                    console.error('[PROFILE_ADDRESS_MAP_COPY_ERROR]', error);
+                                    toast.error('Unable to copy the map link. Open the map and copy its URL instead.');
+                                  }
                                 }}
                                 className="inline-flex items-center gap-1 text-[#cbd5e1] hover:text-[#fce096] font-medium transition-colors"
                               >
@@ -1593,7 +1583,7 @@ export default function Profile() {
                             {!(a.is_default || a.default) && (
                               <button onClick={() => handleSetDefaultAddr(addrId)} className="text-xs px-3 py-1.5 rounded-lg border border-[#d4af37]/30 text-[#fce096] hover:bg-[#d4af37]/10 font-semibold uppercase tracking-wider">Set Default</button>
                             )}
-                            <button onClick={() => setAddressModal({ open:true, editId:addrId, form:{ label:a.label||'Home', full_name:a.full_name||a.name||'', phone:a.phone||a.phone_number||'', line1:addrLine1, line2:addrLine2, city:a.city||'', state:a.state||'', postal_code:a.postal_code||a.zip||'', country:a.country||'India', is_default: !!(a.is_default||a.default), latitude: a.latitude || null, longitude: a.longitude || null, google_maps_url: a.google_maps_url || (a.latitude && a.longitude ? `https://www.google.com/maps?q=${a.latitude},${a.longitude}` : '') }})} className="btn-silver-luxury text-xs px-3 py-1.5 rounded-lg inline-flex items-center gap-1 font-semibold uppercase tracking-wider">
+                            <button type="button" onClick={() => setAddressModal({ open:true, editId:addrId, form:{ label:a.label||'Home', full_name:a.full_name||a.name||'', phone:a.phone||a.phone_number||'', line1:addrLine1, line2:addrLine2, city:a.city||'', state:a.state||'', postal_code:a.postal_code||a.zip||'', country:a.country||'India', is_default: !!(a.is_default||a.default), latitude: a.latitude ?? null, longitude: a.longitude ?? null, google_maps_url: a.google_maps_url || (hasCoordinates(a.latitude, a.longitude) ? `https://www.google.com/maps?q=${a.latitude},${a.longitude}` : '') }})} className="btn-silver-luxury min-h-11 text-xs px-3 py-1.5 rounded-lg inline-flex items-center gap-1 font-semibold uppercase tracking-wider">
                               <Edit2 className="w-3 h-3"/> Edit
                             </button>
                             <button onClick={() => handleAddressDelete(addrId)} className="text-xs px-3 py-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/25 inline-flex items-center gap-1 font-semibold uppercase tracking-wider">
@@ -2848,13 +2838,13 @@ export default function Profile() {
       {/* ======== ADDRESS FORM MODAL ======== */}
       {addressModal.open && (
         <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md p-0 sm:p-6" onClick={() => setAddressModal(m => ({ ...m, open:false }))}>
-          <form onSubmit={handleAddressSave} onClick={e => e.stopPropagation()} className="w-full sm:max-w-2xl bg-[#0d1520] border border-[#d4af37]/30 sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+          <form onSubmit={handleAddressSave} onClick={e => e.stopPropagation()} className="w-full sm:max-w-2xl bg-[#0d1520] border border-[#d4af37]/30 sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh] max-h-[92dvh]">
             <div className="two-tone-panel-gold border-b border-[#d4af37]/25 text-white px-6 sm:px-8 py-5 flex items-start justify-between gap-4">
               <div>
                 <div className="font-sub-gold uppercase tracking-[0.2em] font-bold text-xs mb-1">Destination</div>
                 <h3 className="text-xl font-serif font-bold text-white">{addressModal.editId ? 'Edit Address' : 'Add New Address'}</h3>
               </div>
-              <button type="button" onClick={() => setAddressModal(m => ({ ...m, open:false }))} className="w-9 h-9 rounded-xl bg-[#070a0e]/60 hover:bg-[#d4af37]/20 border border-[#d4af37]/30 flex items-center justify-center text-[#cbd5e1] hover:text-[#fce096]">
+              <button type="button" aria-label="Close address form" onClick={() => setAddressModal(m => ({ ...m, open:false }))} className="min-h-11 min-w-11 rounded-xl bg-[#070a0e]/60 hover:bg-[#d4af37]/20 border border-[#d4af37]/30 flex items-center justify-center text-[#cbd5e1] hover:text-[#fce096]">
                 <X className="w-4 h-4"/>
               </button>
             </div>
@@ -2862,7 +2852,7 @@ export default function Profile() {
               <div className="flex flex-wrap gap-2">
                 {['Home','Work','Office','Other'].map(l => (
                   <button key={l} type="button" onClick={() => setAddressModal(m => ({ ...m, form:{ ...m.form, label: l }}))}
-                    className={`px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider inline-flex items-center gap-1.5 border transition-all ${
+                    className={`min-h-11 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider inline-flex items-center gap-1.5 border transition-all ${
                       addressModal.form.label === l ? 'bg-[#d4af37] text-[#070a0e] border-[#d4af37]' : 'bg-[#070a0e] text-[#cbd5e1] border-[#d4af37]/25 hover:border-[#d4af37]'
                     }`}>
                     <LabelIcon label={l}/> {l}
@@ -2875,14 +2865,14 @@ export default function Profile() {
                     <div className="flex items-center gap-2">
                       <Navigation className="text-[#d4af37] w-4 h-4" />
                       <span className="text-sm font-serif font-bold text-white">Exact Delivery Spot Pinpointer</span>
-                      {addressModal.form.latitude && addressModal.form.longitude && (
+                      {hasCoordinates(addressModal.form.latitude, addressModal.form.longitude) && (
                         <span className="bg-[#d4af37]/20 border border-[#d4af37]/40 text-[#fce096] text-[10px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
                           GPS Attached
                         </span>
                       )}
                     </div>
                     <p className="text-xs text-[#cbd5e1] mt-1 font-light">
-                      {addressModal.form.latitude && addressModal.form.longitude ? (
+                      {hasCoordinates(addressModal.form.latitude, addressModal.form.longitude) ? (
                         <>
                           Coordinates: <span className="font-mono text-[#fce096] font-semibold">{addressModal.form.latitude}, {addressModal.form.longitude}</span> &bull;{' '}
                           <a
@@ -2895,7 +2885,7 @@ export default function Profile() {
                           </a>
                         </>
                       ) : (
-                        'Pin your exact location so couriers deliver directly to your residence door.'
+                        "Your coordinates are sent to OpenStreetMap to suggest address details and create a Google Maps pin. Review them before saving."
                       )}
                     </p>
                   </div>
@@ -2903,51 +2893,51 @@ export default function Profile() {
                     type="button"
                     onClick={handleDetectProfileLocation}
                     disabled={locatingAddress}
-                    className="btn-gold-luxury inline-flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider disabled:opacity-50 whitespace-nowrap shadow-sm"
+                    className="btn-gold-luxury inline-flex min-h-11 items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider disabled:opacity-50 whitespace-nowrap shadow-sm"
                   >
                     <Navigation className={`w-3.5 h-3.5 ${locatingAddress ? 'animate-spin' : ''}`} />
-                    {locatingAddress ? 'Detecting GPS...' : addressModal.form.latitude ? 'Re-pin Location' : 'Use Current Location'}
+                    {locatingAddress ? 'Detecting GPS...' : hasCoordinates(addressModal.form.latitude, addressModal.form.longitude) ? 'Re-pin Location' : 'Use Current Location'}
                   </button>
                 </div>
 
                 <div className="sm:col-span-2">
-                  <label className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">Full Name</label>
-                  <input required value={addressModal.form.full_name} onChange={e => setAddressModal(m => ({ ...m, form:{ ...m.form, full_name: e.target.value }}))}
+                  <label htmlFor="profile-address-name" className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">Full Name</label>
+                  <input id="profile-address-name" autoComplete="name" required value={addressModal.form.full_name} onChange={e => setAddressModal(m => ({ ...m, form:{ ...m.form, full_name: e.target.value }}))}
                     className="w-full px-4 py-2.5 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] text-white focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/20 text-sm"/>
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">Phone Number</label>
-                  <input required value={addressModal.form.phone} onChange={e => setAddressModal(m => ({ ...m, form:{ ...m.form, phone: e.target.value }}))}
+                  <label htmlFor="profile-address-phone" className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">Phone Number</label>
+                  <input id="profile-address-phone" type="tel" inputMode="tel" autoComplete="tel" required value={addressModal.form.phone} onChange={e => setAddressModal(m => ({ ...m, form:{ ...m.form, phone: e.target.value }}))}
                     className="w-full px-4 py-2.5 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] text-white focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/20 text-sm"/>
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">Street / House / Floor (Address Line 1)</label>
-                  <input required value={addressModal.form.line1} onChange={e => setAddressModal(m => ({ ...m, form:{ ...m.form, line1: e.target.value }}))}
+                  <label htmlFor="profile-address-line1" className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">Street / House / Floor (Address Line 1)</label>
+                  <input id="profile-address-line1" autoComplete="address-line1" required value={addressModal.form.line1} onChange={e => setAddressModal(m => ({ ...m, form:{ ...m.form, line1: e.target.value }}))}
                     className="w-full px-4 py-2.5 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] text-white focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/20 text-sm"/>
                 </div>
                 <div className="sm:col-span-2">
-                  <label className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">Address Line 2 (optional)</label>
-                  <input value={addressModal.form.line2} onChange={e => setAddressModal(m => ({ ...m, form:{ ...m.form, line2: e.target.value }}))}
+                  <label htmlFor="profile-address-line2" className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">Address Line 2 (optional)</label>
+                  <input id="profile-address-line2" autoComplete="address-line2" value={addressModal.form.line2} onChange={e => setAddressModal(m => ({ ...m, form:{ ...m.form, line2: e.target.value }}))}
                     className="w-full px-4 py-2.5 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] text-white focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/20 text-sm"/>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">City</label>
-                  <input required value={addressModal.form.city} onChange={e => setAddressModal(m => ({ ...m, form:{ ...m.form, city: e.target.value }}))}
+                  <label htmlFor="profile-address-city" className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">City</label>
+                  <input id="profile-address-city" autoComplete="address-level2" required value={addressModal.form.city} onChange={e => setAddressModal(m => ({ ...m, form:{ ...m.form, city: e.target.value }}))}
                     className="w-full px-4 py-2.5 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] text-white focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/20 text-sm"/>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">State</label>
-                  <input required value={addressModal.form.state} onChange={e => setAddressModal(m => ({ ...m, form:{ ...m.form, state: e.target.value }}))}
+                  <label htmlFor="profile-address-state" className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">State</label>
+                  <input id="profile-address-state" autoComplete="address-level1" required value={addressModal.form.state} onChange={e => setAddressModal(m => ({ ...m, form:{ ...m.form, state: e.target.value }}))}
                     className="w-full px-4 py-2.5 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] text-white focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/20 text-sm"/>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">Postal Code</label>
-                  <input required value={addressModal.form.postal_code} onChange={e => setAddressModal(m => ({ ...m, form:{ ...m.form, postal_code: e.target.value }}))}
+                  <label htmlFor="profile-address-postal-code" className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">Postal Code</label>
+                  <input id="profile-address-postal-code" inputMode="numeric" autoComplete="postal-code" required value={addressModal.form.postal_code} onChange={e => setAddressModal(m => ({ ...m, form:{ ...m.form, postal_code: e.target.value }}))}
                     className="w-full px-4 py-2.5 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] text-white focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/20 text-sm"/>
                 </div>
                 <div>
-                  <label className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">Country</label>
-                  <input required value={addressModal.form.country} onChange={e => setAddressModal(m => ({ ...m, form:{ ...m.form, country: e.target.value }}))}
+                  <label htmlFor="profile-address-country" className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">Country</label>
+                  <input id="profile-address-country" autoComplete="country-name" required value={addressModal.form.country} onChange={e => setAddressModal(m => ({ ...m, form:{ ...m.form, country: e.target.value }}))}
                     className="w-full px-4 py-2.5 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] text-white focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/20 text-sm"/>
                 </div>
                 <div className="sm:col-span-2">
@@ -2963,8 +2953,8 @@ export default function Profile() {
               </div>
             </div>
             <div className="border-t border-[#d4af37]/20 bg-[#070a0e] px-6 sm:px-8 py-4 flex flex-wrap items-center justify-end gap-2">
-              <button type="button" onClick={() => setAddressModal(m => ({ ...m, open:false }))} className="btn-silver-luxury px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider">Cancel</button>
-              <button type="submit" className="btn-gold-luxury px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider inline-flex items-center gap-2 shadow-sm">
+              <button type="button" onClick={() => setAddressModal(m => ({ ...m, open:false }))} className="btn-silver-luxury min-h-11 px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider">Cancel</button>
+              <button type="submit" className="btn-gold-luxury min-h-11 px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider inline-flex items-center gap-2 shadow-sm">
                 <CheckCircle2 className="w-4 h-4"/> {addressModal.editId ? 'Save Changes' : 'Save Address'}
               </button>
             </div>

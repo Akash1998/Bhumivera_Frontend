@@ -252,12 +252,12 @@ export default function Footer() {
                   value={newsletterEmail}
                   onChange={(e) => setNewsletterEmail(e.target.value)}
                   placeholder="Enter email address"
-                  className="w-full rounded-xl border border-[#244A38] bg-[#102219] px-3.5 py-2.5 text-xs text-[#FAF7F2] placeholder-[#9BB0A5] focus:border-[#D4AF37] focus:outline-none transition-colors"
+                  className="w-full min-h-14 rounded-xl border border-[#244A38] bg-[#102219] px-3.5 py-2.5 pr-14 text-xs text-[#FAF7F2] placeholder-[#9BB0A5] focus:border-[#D4AF37] focus:outline-none transition-colors"
                 />
                 <button
                   type="submit"
                   aria-label="Subscribe to Gazette"
-                  className="absolute right-1.5 top-1.5 rounded-lg bg-[#D4AF37] p-1.5 text-[#14291F] hover:bg-[#FCE096] transition-colors"
+                  className="absolute right-1.5 top-1.5 grid min-h-11 min-w-11 place-items-center rounded-lg bg-[#D4AF37] text-[#14291F] hover:bg-[#FCE096] transition-colors"
                 >
                   <Send size={13} />
                 </button>

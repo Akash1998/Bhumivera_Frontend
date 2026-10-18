@@ -56,4 +56,15 @@ describe('Navbar', () => {
     expect(openHandler).toHaveBeenCalledTimes(1);
     window.removeEventListener('bhumivera:open-support-chat', openHandler);
   });
+
+  it('keeps desktop search actions within touch-friendly target sizes', () => {
+    render(
+      <MemoryRouter>
+        <Navbar />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByRole('button', { name: 'Voice Search' }).className).toContain('h-11 w-11');
+    expect(screen.getByRole('button', { name: 'Search' }).className).toContain('min-h-11');
+  });
 });
