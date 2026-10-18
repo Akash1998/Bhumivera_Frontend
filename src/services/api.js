@@ -112,6 +112,7 @@ api.interceptors.request.use(c => {
     url.startsWith("/warranty") && c.method === "get" && !url.includes("/my") ||
     url.startsWith("/products") && (c.method === "post" || c.method === "put" || c.method === "delete" || c.method === "patch") ||
     url.startsWith("/products") && c.method === "get" && !url.startsWith("/products/active") && !url.startsWith("/products/slug/") && !url.includes("/qa") && !/\/products\/\d+/.test(url) && !/\/products\/[a-f0-9]{24}/.test(url) ||
+    url.startsWith("/categories/admin/") ||
     url.startsWith("/categories") && (c.method === "post" || c.method === "put" || c.method === "delete") ||
     url.startsWith("/subcategories") && (c.method === "post" || c.method === "put" || c.method === "delete") ||
     url.startsWith("/coupons") && url !== "/coupons/mine" && !url.startsWith("/coupons/validate") && (c.method === "post" || c.method === "put" || c.method === "delete" || url.includes("/coupons") && c.method === "get" && !url.includes("/public/")) ||
@@ -156,6 +157,7 @@ const _resolveTokenKind = (url = '', method = '', adminAuth = false) => {
   if (adminAuth) return 'admin';
   const isAdminUrl = url.startsWith("/admin/") ||
     url === "/auth/profile" ||
+    url.startsWith("/categories/admin/") ||
     url === "/reviews" && method === 'get' ||
     url.startsWith("/contact") && method !== 'post' && !url.startsWith("/contact/my") ||
     url.startsWith("/serials/admin/") ||

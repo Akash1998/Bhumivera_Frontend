@@ -54,8 +54,12 @@ export default function CategoryManagement() {
       }
       setAuditEvents(response.data.data);
     } catch (err) {
-      console.error('Category audit history error:', err);
-      setAuditError('Audit history could not be loaded. Refresh to try again.');
+      if (err.response?.status !== 403) {
+        console.error('Category audit history error:', err);
+      }
+      setAuditError(err.response?.status === 403
+        ? 'Your admin profile does not have permission to view category audit history. Ask an administrator to grant Categories access.'
+        : err.response?.data?.message || 'Audit history could not be loaded. Try again.');
     } finally {
       setAuditLoading(false);
     }
@@ -690,7 +694,12 @@ export default function CategoryManagement() {
               {auditLoading ? (
                 <p className="py-4 text-center text-xs text-slate-400" role="status">Loading saved category changes…</p>
               ) : auditError ? (
-                <p className="py-4 text-center text-xs leading-5 text-rose-200" role="alert">{auditError}</p>
+                <div className="py-4 text-center">
+                  <p className="text-xs leading-5 text-rose-200" role="alert">{auditError}</p>
+                  <button type="button" onClick={fetchAuditHistory} className="mt-3 rounded-lg border border-slate-700 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-300 transition hover:border-emerald-500/50 hover:text-white">
+                    Retry audit history
+                  </button>
+                </div>
               ) : auditEvents.length === 0 ? (
                 <p className="py-4 text-center text-xs leading-5 text-slate-400">No category changes have been recorded yet.</p>
               ) : (
@@ -719,11 +728,11 @@ export default function CategoryManagement() {
       {/* --- UNIFIED CREATION MODAL --- */}
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#081b15]/90 backdrop-blur-xl/90 backdrop-blur-md animate-in fade-in duration-200">
-          <div className="bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 w-full max-w-2xl rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden animate-in zoom-in-95 duration-300">
+          <div className="bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 w-full max-w-2xl max-h-[90dvh] rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
             
             <div className="relative h-1 w-full bg-gradient-to-r from-purple-500 to-blue-500"></div>
 
-            <div className="p-6 border-b border-slate-800/80 flex justify-between items-start bg-[#081b15]/55 backdrop-blur-xl">
+            <div className="p-6 border-b border-slate-800/80 flex justify-between items-start bg-[#081b15]/55 backdrop-blur-xl shrink-0">
               <div className="flex items-center gap-4">
                 <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${modalMode === 'category' ? 'bg-purple-500/10 border-purple-500/30 text-purple-400' : 'bg-blue-500/10 border-blue-500/30 text-blue-400'}`}>
                   {modalMode === 'category' ? <Layers size={24} /> : <Component size={24} />}
@@ -740,8 +749,8 @@ export default function CategoryManagement() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmit} className="flex flex-col max-h-[70vh]">
-              <div className="p-6 space-y-6 overflow-y-auto content-scroll">
+            <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+              <div className="min-h-0 flex-1 p-6 space-y-6 overflow-y-auto content-scroll">
                 
                 {/* Mode Specific Logic */}
                 {modalMode === 'subcategory' && (
@@ -815,13 +824,13 @@ export default function CategoryManagement() {
                 </div>
               </div>
 
-              <div className="p-5 border-t border-slate-800 bg-[#081b15]/90 backdrop-blur-xl flex justify-end gap-3">
+              <div className="shrink-0 p-5 border-t border-slate-800 bg-[#081b15]/95 backdrop-blur-xl flex justify-end gap-3">
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-slate-400 text-xs font-bold rounded-xl hover:bg-slate-800 hover:text-white transition-colors">
                   Cancel
                 </button>
                 <button type="submit" disabled={isProcessing} className={`px-8 py-3 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg flex items-center gap-2 ${modalMode === 'category' ? 'bg-purple-600 hover:bg-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.3)]' : 'bg-blue-600 hover:bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.3)]'} disabled:opacity-50`}>
                   {isProcessing ? <RefreshCw size={16} className="animate-spin" /> : <ShieldAlert size={16} />}
-                  {editingItem ? 'Execute Update' : 'Initialize access'}
+                  {isProcessing ? 'Saving...' : editingItem ? 'Save Changes' : `Save ${modalMode === 'category' ? 'Category' : 'Subcategory'}`}
                 </button>
               </div>
             </form>
