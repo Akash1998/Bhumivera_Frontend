@@ -500,7 +500,7 @@ export const DETAILED_ORDER_LIFECYCLE_STEPS = [
     stepIndex: 2,
     code: 'PACKED',
     label: 'Packed',
-    title: 'Eco-Luxury Honeycomb Cushion Packaging',
+    title: 'Protective Bubble-Wrap Packaging',
     description:
       'Hand-wrapped in FSC-certified botanical kraft sleeves with thermal shock protection and your personalized ritual guide card.',
     typicalDuration: '6–18 hours',

@@ -14,8 +14,8 @@ const protectionPillars = [
   },
   {
     icon: Truck,
-    title: 'Digital Weight-Scan & Honeycomb Dispatch',
-    copy: 'Every parcel is cushioned in biodegradable honeycomb kraft wrap, weighed on a calibrated digital scale (±0.5g), and barcode-scanned prior to courier pickup.',
+    title: 'Digital Weight-Scan & Bubble-Wrap Dispatch',
+    copy: 'Every parcel is cushioned with bubble wrap and weighed before the courier label is prepared.',
     image: PURCHASE_PROTECTION_DATA.scaleShieldImage,
     example: 'Real-Life Protection: Pre-dispatch weight certificates protect patrons against transit pilferage.',
   },

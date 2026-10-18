@@ -69,13 +69,13 @@ export const FOOTER_PHOTO_STORIES = [
     id: 'unboxing',
     code: '03',
     title: 'Tamper-Seal & Weight-Scan Verification',
-    subtitle: 'Warehouse Digital Scale & Honeycomb Protection',
+    subtitle: 'Warehouse Digital Scale & Bubble-Wrap Protection',
     image: '/assets/images/Promo9.webp',
     modalDetailImage: '/assets/images/Promo2.webp',
     location: 'West Bengal Fulfilment Hub · Dispatch Bay 02',
     metric: '±0.5g Digital Weight-Scan Tolerance',
     description:
-      'Every Bhumivera parcel is cushioned in biodegradable honeycomb kraft wrap, sealed with tamper-evident security tape, and weighed on a calibrated stainless-steel scale before AWB generation.',
+      'Every Bhumivera parcel is cushioned with bubble wrap, sealed with tamper-evident security tape, and weighed before the courier label is prepared.',
     realLifeExample:
       'Real-Life Dispatch #AWB-DLV998811: 210g gross parcel weight logged on digital scale with intact gold-black neck security seal.',
     link: '/purchase-protection',
@@ -394,8 +394,8 @@ export const ABOUT_PAGE_DATA = {
     },
     {
       year: 'Fulfilment Shield',
-      title: 'Digital Weight-Scan & Honeycomb Eco-Packaging',
-      copy: 'Every parcel is wrapped in plastic-free honeycomb kraft paper, weighed on a digital scale, and recorded under warehouse CCTV to protect customers and prevent transit tampering.',
+      title: 'Digital Weight-Scan & Bubble-Wrap Packaging',
+      copy: 'Bubble wrap cushions products inside the parcel for transit, and the packed parcel is weighed before the courier label is prepared.',
       image: '/assets/images/Promo8.webp',
     },
     {
@@ -925,7 +925,7 @@ export const AFFILIATE_PAGE_DATA = {
       name: 'Rohan & Kavya · Himalayan Slow-Living Journal',
       location: 'Manali & Leh Corridor',
       focus: 'Botanical Sourcing & Plastic-Free Packaging Stories',
-      outcome: 'Documented high-altitude Sea Buckthorn harvesting and honeycomb kraft unboxing for 180+ verified first-time customers.',
+      outcome: 'Documented high-altitude Sea Buckthorn harvesting and protective bubble-wrap packaging for first-time customers.',
       tier: 'Tier-3 Heritage Storyteller',
       image: '/assets/images/seabuckthorn nature.webp',
     },
@@ -960,8 +960,8 @@ export const SELL_ON_BHUMIVERA_DATA = {
     },
     {
       code: 'B2B-03',
-      category: 'Primary Glass, Cork & Honeycomb Packaging Artisans',
-      requirements: 'Heavy-metal-free UV-amber glass, FSC-certified honeycomb kraft wrap, and tamper-evident security seals.',
+      category: 'Primary Glass, Cork & Protective Packaging',
+      requirements: 'Heavy-metal-free UV-amber glass, protective bubble wrap, and tamper-evident security seals.',
       example: 'Zero-bubble-wrap corrugated transit boxes tested for 1.5m drop-impact resilience.',
       image: '/assets/images/Promo8.webp',
     },
@@ -976,51 +976,13 @@ export const SELL_ON_BHUMIVERA_DATA = {
 };
 
 // 12. CUSTOMER CARE: ORDER TRACKING, SANITARY CUSTODY, PURCHASE PROTECTION (Distinct Authentic Assets)
-export const ORDER_TRACKING_DEMO_DATA = {
-  heroImage: '/assets/images/Promo9.webp',
+export const ORDER_TRACKING_DATA = {
+  heroImage: '/assets/images/tracking-digital-scale.webp',
   stageImages: [
-    '/assets/images/Promo1.webp', // Order Placed & Batch Allocated
-    '/assets/images/Promo2.webp', // QC & Tamper-Seal Applied
-    '/assets/images/Promo3.webp', // Digital Weight-Scan & Honeycomb Packed
-    '/assets/images/Promo4.webp', // Courier AWB Hand-Off & Line-Haul
-  ],
-  sampleOrders: [
-    {
-      id: '918273646',
-      order_number: '918273646',
-      status: 'delivered',
-      payment_mode: 'Online (UPI / Razorpay Verified)',
-      payment_status: 'paid',
-      total_amount: 1748,
-      courier: 'Delhivery Surface Express',
-      tracking_number: 'DLV99881122IN',
-      dispatch_weight: '420g (Verified on Scale #02 · CCTV Log #CC-8841)',
-      created_at: '2026-10-10T09:15:00+05:30',
-      delivered_at: '2026-10-13T16:40:00+05:30',
-      shipping_address: 'Flat 4B, Park Street Enclave, Kolkata, West Bengal – 700016',
-      items: [
-        { id: 101, name: 'Bhumivera Sea Buckthorn & Niacinamide Face Wash (100ml)', quantity: 1, price: 549, image: '/assets/images/seabuckthorn.webp' },
-        { id: 103, name: 'Bhumivera Kashmiri Saffron Kumkumadi Night Elixir (30ml)', quantity: 1, price: 1199, image: '/assets/images/Promo4.webp' },
-      ],
-    },
-    {
-      id: '940118205',
-      order_number: '940118205',
-      status: 'shipped',
-      payment_mode: 'Online (Card / 3D Secure)',
-      payment_status: 'paid',
-      total_amount: 1128,
-      courier: 'BlueDart Priority Air',
-      tracking_number: 'BD774410928IN',
-      dispatch_weight: '465g (Verified on Scale #01 · CCTV Log #CC-9104)',
-      created_at: '2026-10-15T14:20:00+05:30',
-      delivered_at: null,
-      shipping_address: 'Sector 18, Indiranagar, Bengaluru, Karnataka – 560038',
-      items: [
-        { id: 102, name: 'Bhumivera Activated Bamboo Charcoal Face Wash (100ml)', quantity: 1, price: 499, image: '/assets/images/charcoalFace wash.webp' },
-        { id: 104, name: 'Bhumivera Botanical Hair Cleanser & Shampoo (200ml)', quantity: 1, price: 629, image: '/assets/images/Promo3.webp' },
-      ],
-    },
+    '/assets/images/tracking-batch-allocation.webp',
+    '/assets/images/tracking-tamper-seal.webp',
+    '/assets/images/tracking-digital-scale.webp',
+    '/assets/images/tracking-bubble-wrap.webp',
   ],
 };
 
@@ -1036,7 +998,7 @@ export const RETURNS_COURTESY_DATA = {
     {
       step: 'Step 02 · Tamper-Evident Gold Neck Seal',
       title: 'Verify Virgin Sanitary Custody Strip',
-      detail: 'Unwrap the honeycomb cushioning and verify the unbroken metallic gold tamper-evident security band over the cap collar.',
+      detail: 'Remove the bubble-wrap cushioning and verify the unbroken metallic gold tamper-evident security band over the cap collar.',
       image: '/assets/images/Promo9.webp',
     },
     {
@@ -1155,7 +1117,7 @@ export const LEGAL_SECTION_PROFILES = {
       {
         caseCode: 'CASE-LGL-202',
         title: 'Tamper Seal Intactness & Quality Resolution',
-        summary: 'An order parcel arrived with transit impact to outer honeycomb wrap. Our concierge verified the intact gold neck seal and batch assay.',
+        summary: 'An order parcel arrived with transit impact to its outer bubble-wrap cushioning. Our concierge verified the intact gold neck seal and batch assay.',
         outcome: 'Concierge priority support provided directly to verified patron.',
         image: '/assets/images/Promo8.webp',
       },
