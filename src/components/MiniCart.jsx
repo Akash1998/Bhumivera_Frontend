@@ -647,10 +647,10 @@ export default function MiniCart() {
         role="dialog"
         aria-modal="true"
         aria-labelledby="mini-cart-title"
-        className="mini-cart-panel absolute inset-y-0 right-0 flex w-full max-w-[480px] flex-col border-l border-[#244A38] bg-[#14291F] text-[#FAF7F2] shadow-2xl"
+        className="mini-cart-panel absolute inset-y-0 right-0 flex w-full max-w-[480px] flex-col border-l border-[#D4AF37]/20 bg-[#102219]/95 backdrop-blur-2xl text-[#FAF7F2] shadow-2xl"
       >
         <AnimatePresence>
-          {celebrationEvent && <Motion.div key={celebrationEvent.id} initial={{ opacity: 0, y: -18, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -12 }} className="absolute left-4 right-4 top-20 z-30 overflow-hidden rounded-2xl border border-[#D4AF37]/40 bg-[#1C382B] p-4 text-[#FAF7F2] shadow-2xl" aria-live="polite">
+          {celebrationEvent && <Motion.div key={celebrationEvent.id} initial={{ opacity: 0, y: -18, scale: 0.94 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: -12 }} className="absolute left-4 right-4 top-20 z-30 overflow-hidden rounded-2xl border border-[#D4AF37]/40 bg-[#1C382B]/90 backdrop-blur-xl p-4 text-[#FAF7F2] shadow-2xl" aria-live="polite">
             <div className="absolute inset-0 pointer-events-none">
               {[0, 1, 2, 3, 4, 5].map(index => <Motion.span key={index} initial={{ opacity: 0, y: 24, x: `${index * 18}%`, rotate: -20 }} animate={{ opacity: [0, 1, 0], y: -22, rotate: 24 }} transition={{ duration: 1.3, delay: index * 0.06 }} className="absolute bottom-0"><Sparkles size={13} className="text-[#D4AF37]"/></Motion.span>)}
             </div>
@@ -658,9 +658,9 @@ export default function MiniCart() {
           </Motion.div>}
         </AnimatePresence>
 
-        <header className="mini-cart-header relative flex items-center justify-between border-b border-[#244A38] px-5 py-5 sm:px-7 bg-[#102219]">
+        <header className="mini-cart-header relative flex items-center justify-between border-b border-[#D4AF37]/20 px-5 py-5 sm:px-7 bg-[#14291F]/80 backdrop-blur-xl">
           <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#14291F] text-[#D4AF37] border border-[#244A38] shadow-lg"><ShoppingBag size={19}/></span>
+            <span className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#14291F] text-[#D4AF37] border border-[#D4AF37]/30 shadow-lg"><ShoppingBag size={19}/></span>
             <div>
               <h2 id="mini-cart-title" className="font-serif text-xl sm:text-2xl font-bold">
                 <span className="font-headline-gold">Your</span> <span className="font-headline-silver">Bag</span> <span className="font-sans text-xs font-medium text-[#9BB0A5]">({cartCount} {cartCount === 1 ? 'item' : 'items'})</span>
@@ -669,19 +669,40 @@ export default function MiniCart() {
               <p className="text-[9px] font-bold uppercase tracking-[0.25em] text-[#D4AF37]">Considered Botanical Care</p>
             </div>
           </div>
-          <button type="button" aria-label="Close cart" onClick={() => setIsCartOpen(false)} className="rounded-full border border-[#244A38] bg-[#14291F] p-2.5 text-[#DFD7C4] shadow-sm transition hover:rotate-90 hover:border-[#D4AF37] hover:text-[#D4AF37]"><X size={18}/></button>
+          <button type="button" aria-label="Close cart" onClick={() => setIsCartOpen(false)} className="rounded-full border border-[#D4AF37]/30 bg-[#14291F]/80 p-2.5 text-[#DFD7C4] shadow-sm transition hover:rotate-90 hover:border-[#D4AF37] hover:text-[#D4AF37]"><X size={18}/></button>
         </header>
 
-        <div className="mini-cart-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:px-7 bg-[#14291F]">
-          {cartItems.length === 0 && <div className="mini-cart-empty relative flex min-h-[360px] flex-col items-center justify-center overflow-hidden rounded-[2rem] border border-[#244A38] bg-[#102219] px-8 text-center shadow-lg">
-            <span className="mini-cart-orbit mini-cart-orbit-one" aria-hidden="true"/>
-            <span className="mini-cart-orbit mini-cart-orbit-two" aria-hidden="true"/>
-            <span className="mini-cart-empty-icon relative flex h-20 w-20 items-center justify-center rounded-full border border-[#D4AF37]/40 bg-[#14291F] text-[#D4AF37] shadow-[0_12px_36px_rgba(0,0,0,0.6)]"><ShoppingBag size={31} strokeWidth={1.4}/><Sparkles size={15} className="absolute -right-1 top-1 text-[#FCE096]"/></span>
-            <p className="relative mt-6 text-[9px] font-bold uppercase tracking-[0.28em] text-[#D4AF37]">Your Next Daily Ritual</p>
-            <p className="relative mt-2 font-serif text-2xl text-white font-bold"><span className="font-headline-gold">Your Bag</span> <span className="font-headline-silver">Is Empty</span></p>
-            <p className="relative mt-2 max-w-[260px] text-xs leading-6 text-[#9BB0A5]">Discover Himalayan sea buckthorn and certified pH 5.5 apothecary rituals.</p>
-            <button type="button" onClick={() => { setIsCartOpen(false); navigate("/shop"); }} className="relative mt-7 inline-flex items-center gap-2 rounded-full btn-gold-luxury px-7 py-3 text-[10px] font-bold uppercase tracking-[0.18em]">Explore Collections <ArrowRight size={14}/></button>
-          </div>}
+        <div className="mini-cart-scroll min-h-0 flex-1 space-y-4 overflow-y-auto px-5 py-5 sm:px-7 bg-[#0D1C14]/80">
+          {cartItems.length === 0 && (
+            <div className="mini-cart-empty relative flex min-h-[440px] flex-col items-center justify-center overflow-hidden rounded-[2.5rem] border border-[#D4AF37]/25 bg-[#102219]/80 backdrop-blur-2xl px-6 py-12 text-center shadow-2xl">
+              {/* Outer Dashed Golden Orbit Ring */}
+              <span className="mini-cart-orbit mini-cart-orbit-two" aria-hidden="true" />
+              {/* Inner Solid Golden Ring with Aura */}
+              <span className="mini-cart-orbit mini-cart-orbit-one" aria-hidden="true" />
+              {/* Center Circular Emblem with Sparkle */}
+              <div className="mini-cart-empty-icon relative flex h-20 w-20 items-center justify-center rounded-full border border-[#D4AF37]/50 bg-[#13231B] text-[#D4AF37] shadow-[0_12px_36px_rgba(0,0,0,0.65)] ring-1 ring-[#D4AF37]/20">
+                <ShoppingBag size={30} strokeWidth={1.5} className="text-[#E6C57E]" />
+                <Sparkles size={16} className="absolute -top-1 -right-1 text-[#E6C57E] fill-[#E6C57E]/20" />
+              </div>
+              <p className="relative mt-8 text-[10px] font-bold uppercase tracking-[0.28em] text-[#D4AF37]">
+                Your Next Daily Ritual
+              </p>
+              <h3 className="relative mt-2 font-serif text-3xl sm:text-[34px] font-bold tracking-tight">
+                <span className="text-[#D4AF37]">Your Bag</span> <span className="text-[#FAF7F2]">Is Empty</span>
+              </h3>
+              <p className="relative mt-3 max-w-[280px] text-xs leading-relaxed text-[#9BB0A5]">
+                Discover Himalayan sea buckthorn and certified pH 5.5 apothecary rituals.
+              </p>
+              <button
+                type="button"
+                onClick={() => { setIsCartOpen(false); navigate('/shop'); }}
+                className="relative mt-8 inline-flex items-center justify-center gap-2.5 rounded-full btn-gold-luxury px-8 py-3.5 text-xs font-bold uppercase tracking-[0.18em]"
+              >
+                <span>Explore Collections</span>
+                <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
+              </button>
+            </div>
+          )}
 
           {cartItems.length > 0 && <>
             {!checkoutOpen && <section className="two-tone-panel-gold rounded-2xl p-4 border border-[#244A38]" aria-label="Cart rewards and delivery">
@@ -916,7 +937,7 @@ export default function MiniCart() {
           </section>}
         </div>
 
-        {cartItems.length > 0 && <footer className={`mini-cart-footer shrink-0 border-t border-[#244A38] bg-[#102219] px-5 py-4 shadow-2xl sm:px-7 ${checkoutOpen ? `flex flex-col ${summaryExpanded ? 'h-[min(52vh,460px)]' : ''}` : ''}`}>
+        {cartItems.length > 0 && <footer className={`mini-cart-footer shrink-0 border-t border-[#D4AF37]/20 bg-[#102219]/90 backdrop-blur-xl px-5 py-4 shadow-2xl sm:px-7 ${checkoutOpen ? `flex flex-col ${summaryExpanded ? 'h-[min(52vh,460px)]' : ''}` : ''}`}>
           <div className={checkoutOpen && summaryExpanded ? 'flex min-h-0 flex-1 flex-col text-xs' : 'space-y-2 text-xs'}>
             <div className="flex items-center justify-between text-[#DFD7C4]">
               <span className="flex items-center gap-2">

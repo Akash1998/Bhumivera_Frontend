@@ -184,7 +184,7 @@ export default function Navbar() {
         </div>
       </div>
 
-      <nav className="sticky top-0 z-[100] border-b border-[#244A38]/35 bg-[#14291F]/95 backdrop-blur-xl">
+      <nav className="sticky top-0 z-[100] border-b border-[#D4AF37]/20 bg-[#14291F]/85 backdrop-blur-2xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:gap-6 sm:px-6 sm:py-4 lg:gap-8">
           
           <button 
@@ -223,7 +223,7 @@ export default function Navbar() {
                 onFocus={() => { if(searchQuery.length > 2) setShowSearchDropdown(true); }}
                 placeholder={t('search_placeholder', 'Search skincare, hair care, ingredients...')}
                 aria-label="Search skincare products"
-                className="w-full rounded-full border border-white/10 bg-[#1C382B] py-3.5 pl-12 pr-28 text-sm text-white shadow-sm outline-none transition-all placeholder:text-[#9BB0A5] focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/30"
+                className="w-full rounded-full border border-[#D4AF37]/25 bg-[#1C382B]/60 backdrop-blur-md py-3.5 pl-12 pr-28 text-sm text-white shadow-inner outline-none transition-all placeholder:text-[#9BB0A5] focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40"
               />
               <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-[#d4af37]">
                 <button
@@ -236,7 +236,7 @@ export default function Navbar() {
                   <Mic size={16} />
                 </button>
               </div>
-              <button type="submit" aria-label="Search" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-[#faeec7] to-[#d4af37] px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-[#14291F] opacity-0 transition-opacity group-focus-within:opacity-100 hover:brightness-110">
+              <button type="submit" aria-label="Search" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full btn-gold-luxury px-5 py-2 text-[10px] font-bold uppercase tracking-widest opacity-0 transition-opacity group-focus-within:opacity-100 hover:brightness-110">
                 {t('search_action', 'Discover')}
               </button>
             </form>
@@ -245,15 +245,15 @@ export default function Navbar() {
               onClick={openAiConcierge}
               aria-label="Open AI concierge"
               title="Ask the AI concierge"
-              className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-[#d4af37]/50 bg-[#1C382B] px-4 text-xs font-bold text-[#d4af37] shadow-sm transition hover:bg-[#244A38] hover:border-[#d4af37] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4af37]"
+              className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-[#d4af37]/40 bg-[#1C382B]/70 backdrop-blur-md px-4 text-xs font-bold text-[#d4af37] shadow-sm transition hover:bg-[#244A38] hover:border-[#d4af37] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4af37]"
             >
               <Sparkles size={16} />
               <span>Ask AI</span>
             </button>
 
             {showSearchDropdown && (searchQuery.length > 2) && (
-              <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-[#1C382B] rounded-2xl border border-[#d4af37]/35 shadow-2xl overflow-hidden z-50">
-                 <div className="flex items-center justify-between border-b border-white/10 bg-[#14291F] px-5 py-3">
+              <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-[#14291F]/95 backdrop-blur-2xl rounded-2xl border border-[#d4af37]/35 shadow-2xl overflow-hidden z-50">
+                 <div className="flex items-center justify-between border-b border-white/10 bg-[#102219]/90 px-5 py-3">
                    <div className="flex items-center text-[10px] font-bold uppercase tracking-[0.2em] text-[#d4af37]">
                      <Sparkles size={14} className="mr-2 animate-pulse" />
                      {isAiPowered ? 'Semantic Formulation Results' : 'Standard Search'}
@@ -281,7 +281,7 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center space-x-4 sm:space-x-6 shrink-0">
-            <Link to="/science" aria-label="Botanical Science" className="hidden xl:flex items-center space-x-3 rounded-full border border-white/10 bg-[#1C382B] px-5 py-2.5 shadow-sm transition-all hover:border-[#d4af37] hover:bg-[#244A38] group">
+            <Link to="/science" aria-label="Botanical Science" className="hidden xl:flex items-center space-x-3 rounded-full border border-[#D4AF37]/25 bg-[#1C382B]/60 backdrop-blur-md px-5 py-2.5 shadow-sm transition-all hover:border-[#d4af37] hover:bg-[#244A38] group">
               <Sparkles size={16} className="text-[#d4af37]" />
               <div className="text-left">
                 <div className="text-[8px] font-bold uppercase tracking-widest leading-none text-[#9BB0A5] group-hover:text-[#d4af37]">{t('nav_science', 'Botanical Science')}</div>
@@ -293,7 +293,7 @@ export default function Navbar() {
 
             {user ? (
               <Link to="/profile" aria-label="Profile" className="flex items-center gap-3 group">
-                <div className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#1C382B] shadow-sm group-hover:border-[#d4af37]">
+                <div className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-[#1C382B]/70 backdrop-blur-md shadow-sm group-hover:border-[#d4af37]">
                    <User size={18} className="text-[#d4af37]" />
                    <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[#14291F] bg-[#d4af37]"></span>
                 </div>
@@ -302,7 +302,7 @@ export default function Navbar() {
               <Link to="/login" className="hidden rounded-full btn-gold-luxury px-6 py-2.5 text-xs font-bold uppercase tracking-widest shadow-sm transition-all sm:flex">{t('nav_signin', 'Sign In')}</Link>
             )}
 
-            <button type="button" onClick={() => setIsCartOpen(true)} aria-label={`Open cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`} className="group relative rounded-full border border-white/15 bg-[#1C382B] p-2.5 text-[#FAF7F2] shadow-sm transition-all hover:border-[#d4af37] hover:text-[#d4af37]">
+            <button type="button" onClick={() => setIsCartOpen(true)} aria-label={`Open cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`} className="group relative rounded-full border border-[#D4AF37]/30 bg-[#1C382B]/70 backdrop-blur-md p-2.5 text-[#FAF7F2] shadow-sm transition-all hover:border-[#d4af37] hover:text-[#d4af37]">
               <ShoppingCart size={20} className="group-hover:scale-110 transition-transform" />
               {cartCount > 0 && (
                 <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full border-2 border-[#14291F] bg-[#d4af37] text-[10px] font-black text-[#14291F] shadow-sm">{cartCount}</span>
@@ -321,7 +321,7 @@ export default function Navbar() {
                 onFocus={() => { if (searchQuery.length > 2) setShowSearchDropdown(true); }}
                 placeholder={t('search_placeholder', 'Search skincare, hair care, ingredients...')}
                 aria-label="Search skincare products"
-                className="h-11 w-full rounded-full border border-white/10 bg-[#1C382B] pl-10 pr-4 text-sm text-white shadow-sm outline-none placeholder:text-[#9BB0A5] focus:border-[#d4af37]"
+                className="h-11 w-full rounded-full border border-[#D4AF37]/25 bg-[#1C382B]/70 backdrop-blur-md pl-10 pr-4 text-sm text-white shadow-sm outline-none placeholder:text-[#9BB0A5] focus:border-[#d4af37]"
               />
             </form>
             {showSearchDropdown && searchQuery.length > 2 && (

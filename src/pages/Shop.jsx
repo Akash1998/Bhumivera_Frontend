@@ -8,6 +8,8 @@ import {
   Heart,
   X,
   FlaskConical,
+  Sparkles,
+  ArrowRight,
 } from 'lucide-react';
 import { products as productsApi } from '../services/api';
 import { useCart } from '../context/CartContext';
@@ -26,7 +28,7 @@ const ProductCard = ({ product, index }) => {
     FALLBACK_CATALOG_PRODUCTS[index % FALLBACK_CATALOG_PRODUCTS.length].image_url;
 
   return (
-    <div className="group relative flex flex-col two-tone-card border border-[#244A38] rounded-[1.5rem] sm:rounded-[2.2rem] overflow-hidden hover:border-[#D4AF37]/60 hover:shadow-2xl transition-all duration-500">
+    <div className="group relative flex flex-col two-tone-card border border-[#D4AF37]/20 rounded-[1.8rem] sm:rounded-[2.4rem] overflow-hidden hover:border-[#D4AF37]/60 hover:shadow-2xl transition-all duration-500">
       <Link to={`/product/${product.slug || prodId}`} className="relative aspect-[4/3] overflow-hidden bg-[#102219]">
         <img
           src={imgSrc}
@@ -91,7 +93,7 @@ const ProductCard = ({ product, index }) => {
           <button
             type="button"
             onClick={() => addToCart?.(product, 1)}
-            className="btn-gold-luxury px-5 py-3 text-white text-[10px] font-semibold uppercase tracking-widest rounded-xl transition-all flex items-center gap-2"
+            className="btn-gold-luxury px-5 py-3 text-[10px] font-bold uppercase tracking-widest rounded-xl transition-all flex items-center gap-2"
           >
             <ShoppingBag size={14} /> Add to Bag
           </button>
@@ -197,7 +199,7 @@ export default function Shop() {
                 placeholder="Search Sea Buckthorn, Charcoal, Kumkumadi, Niacinamide..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full bg-[#102219] border border-[#244A38] rounded-full pl-12 pr-12 py-4 text-sm text-[#FAF7F2] placeholder-[#9BB0A5] outline-none focus:border-[#D4AF37] shadow-sm transition-colors"
+                className="w-full bg-[#102219]/75 backdrop-blur-xl border border-[#D4AF37]/25 rounded-full pl-12 pr-12 py-4 text-sm text-[#FAF7F2] placeholder-[#9BB0A5] outline-none focus:border-[#D4AF37] shadow-xl transition-colors"
               />
               {searchTerm && (
                 <button
@@ -220,10 +222,10 @@ export default function Shop() {
                 key={cat}
                 type="button"
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider transition ${
+                className={`px-5 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider transition ${
                   selectedCategory === cat
-                    ? 'btn-gold-luxury text-white'
-                    : 'two-tone-card border border-[#244A38] text-[#DFD7C4] hover:border-[#D4AF37] hover:text-[#FCE096]'
+                    ? 'btn-gold-luxury shadow-lg'
+                    : 'bg-[#102219]/70 backdrop-blur-md border border-[#D4AF37]/25 text-[#DFD7C4] hover:border-[#D4AF37] hover:text-[#FCE096]'
                 }`}
               >
                 {cat === 'all' ? 'All Formulations' : cat}
@@ -233,14 +235,14 @@ export default function Shop() {
           <div className="flex items-center gap-3">
             <Link
               to="/science"
-              className="btn-silver-luxury inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wider"
+              className="btn-silver-luxury inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider"
             >
               <FlaskConical size={14} className="text-[#D4AF37]" /> Lab Science Dossier
             </Link>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="rounded-full border border-[#244A38] bg-[#102219] text-[#DFD7C4] px-4 py-2 text-xs font-semibold uppercase tracking-wider outline-none focus:border-[#D4AF37]"
+              className="rounded-full border border-[#D4AF37]/25 bg-[#102219]/80 backdrop-blur-md text-[#DFD7C4] px-4 py-2.5 text-xs font-semibold uppercase tracking-wider outline-none focus:border-[#D4AF37]"
             >
               <option value="featured" className="bg-[#102219] text-white">Sort: Featured</option>
               <option value="price_asc" className="bg-[#102219] text-white">Price: Low to High</option>
@@ -250,11 +252,39 @@ export default function Shop() {
           </div>
         </div>
 
-        {/* Product Grid */}
+        {/* Product Grid or Empty State */}
         <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
-          {filteredProducts.map((product, index) => (
-            <ProductCard key={product.id || product._id || index} product={product} index={index} />
-          ))}
+          {filteredProducts.length === 0 ? (
+            <div className="col-span-full card-glass-forest relative flex min-h-[420px] flex-col items-center justify-center overflow-hidden rounded-[2.5rem] border border-[#D4AF37]/30 p-10 text-center shadow-2xl">
+              <span className="card-orbit-outer h-[340px] w-[340px]" aria-hidden="true" />
+              <span className="card-orbit-inner h-[240px] w-[240px]" aria-hidden="true" />
+              <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-[#D4AF37]/50 bg-[#14231C] text-[#D4AF37] shadow-[0_12px_32px_rgba(0,0,0,0.65)] ring-1 ring-[#D4AF37]/20">
+                <ShoppingBag size={30} strokeWidth={1.5} className="text-[#E6C57E]" />
+                <Sparkles size={16} className="absolute -top-1 -right-1 text-[#E6C57E] fill-[#E6C57E]/20" />
+              </div>
+              <p className="relative mt-8 text-[10px] font-bold uppercase tracking-[0.28em] text-[#D4AF37]">
+                Ritual Search Dossier
+              </p>
+              <h3 className="relative mt-2 font-serif text-3xl font-bold tracking-tight">
+                <span className="text-[#D4AF37]">No Formulations</span> <span className="text-[#FAF7F2]">Match Criteria</span>
+              </h3>
+              <p className="relative mt-3 max-w-md text-xs leading-relaxed text-[#9BB0A5]">
+                Adjust your botanical filters or keyword terms to explore our small-batch Himalayan apothecaries.
+              </p>
+              <button
+                type="button"
+                onClick={() => { setSearchTerm(''); setSelectedCategory('all'); }}
+                className="btn-gold-luxury relative mt-8 inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-xs font-bold uppercase tracking-[0.18em]"
+              >
+                <span>Reset All Filters</span>
+                <ArrowRight size={15} />
+              </button>
+            </div>
+          ) : (
+            filteredProducts.map((product, index) => (
+              <ProductCard key={product.id || product._id || index} product={product} index={index} />
+            ))
+          )}
         </div>
       </div>
     </div>

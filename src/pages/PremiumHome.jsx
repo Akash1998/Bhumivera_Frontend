@@ -142,9 +142,9 @@ export default function PremiumHome() {
             <div className="mt-8 flex flex-wrap gap-4 items-center">
               <Link
                 to="/shop"
-                className="btn-gold-luxury inline-flex min-h-12 items-center gap-2.5 rounded-full px-7 py-3.5 text-xs font-semibold uppercase tracking-wider text-white"
+                className="btn-gold-luxury inline-flex min-h-12 items-center gap-2.5 rounded-full px-8 py-3.5 text-xs font-bold uppercase tracking-[0.16em]"
               >
-                Shop Collections <ArrowRight size={15} />
+                Explore Collections <ArrowRight size={15} />
               </Link>
               <Link
                 to="/verify"
@@ -198,7 +198,7 @@ export default function PremiumHome() {
           <div className="flex flex-wrap gap-3">
             <Link
               to="/shop"
-              className="btn-gold-luxury inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-white"
+              className="btn-gold-luxury inline-flex items-center gap-2 rounded-full px-6 py-3 text-xs font-bold uppercase tracking-[0.14em]"
             >
               View All {products.length} Formulations <ArrowRight size={14} />
             </Link>
@@ -209,7 +209,7 @@ export default function PremiumHome() {
           {products.slice(0, 6).map((product, idx) => (
             <article
               key={product.id || product._id || idx}
-              className="group flex flex-col overflow-hidden rounded-3xl border border-[#244A38] two-tone-card shadow-sm transition hover:border-[#D4AF37]/60 hover:shadow-2xl"
+              className="group flex flex-col overflow-hidden rounded-3xl border border-[#D4AF37]/20 two-tone-card shadow-lg transition hover:border-[#D4AF37]/60 hover:shadow-2xl"
             >
               <Link
                 to={`/product/${product.slug || product.id}`}
@@ -221,7 +221,7 @@ export default function PremiumHome() {
                   loading="lazy"
                   className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <span className="absolute left-4 top-4 rounded-full bg-[#102219]/90 border border-[#D4AF37]/40 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-[#FCE096] backdrop-blur-sm">
+                <span className="absolute left-4 top-4 rounded-full bg-[#102219]/90 border border-[#D4AF37]/40 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-[#FCE096] backdrop-blur-md">
                   {product.phLevel || 'pH 5.5 Calibrated'}
                 </span>
               </Link>
@@ -253,7 +253,7 @@ export default function PremiumHome() {
                   <button
                     type="button"
                     onClick={() => addToCart?.(product, 1)}
-                    className="btn-gold-luxury rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-white"
+                    className="btn-gold-luxury rounded-full px-6 py-2.5 text-xs font-bold uppercase tracking-wider"
                   >
                     Add to Bag
                   </button>
@@ -329,29 +329,34 @@ export default function PremiumHome() {
             ))}
           </div>
 
-          {/* SERIAL QR GENUINITY BANNER */}
-          <div className="mt-12 two-tone-panel-gold rounded-3xl p-6 sm:p-8 border border-[#D4AF37]/50 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
-            <div className="flex items-center gap-4">
-              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#102219] border border-[#D4AF37]/40 text-[#FCE096] shrink-0">
-                <QrCode size={28} />
-              </span>
+          {/* SERIAL QR GENUINITY BANNER WITH CONCENTRIC ORBIT AURA */}
+          <div className="relative mt-14 overflow-hidden rounded-[2.5rem] card-glass-forest p-8 sm:p-12 border border-[#D4AF37]/35 shadow-2xl flex flex-col lg:flex-row items-center justify-between gap-8">
+            {/* Concentric Dashed & Solid Gold Orbit Rings */}
+            <span className="absolute -right-28 -top-28 h-96 w-96 rounded-full border border-dashed border-[#D4AF37]/20 pointer-events-none" aria-hidden="true" />
+            <span className="absolute -right-14 -top-14 h-72 w-72 rounded-full border border-[#D4AF37]/25 shadow-[0_0_30px_rgba(212,175,55,0.08)] pointer-events-none" aria-hidden="true" />
+
+            <div className="relative flex flex-col sm:flex-row items-center sm:items-start gap-5 text-center sm:text-left">
+              <div className="relative flex h-16 w-16 items-center justify-center rounded-2xl bg-[#14231C] border border-[#D4AF37]/50 text-[#D4AF37] shadow-[0_12px_32px_rgba(0,0,0,0.6)] ring-1 ring-[#D4AF37]/25 shrink-0">
+                <QrCode size={30} className="text-[#E6C57E]" />
+                <Sparkles size={16} className="absolute -top-1.5 -right-1.5 text-[#E6C57E] fill-[#E6C57E]/20" />
+              </div>
               <div>
-                <p className="font-sub-gold uppercase tracking-[0.2em] font-bold text-[10px]">
+                <p className="font-sub-gold uppercase tracking-[0.26em] font-bold text-[10px] text-[#D4AF37]">
                   Artisanal Provenance &amp; Verification
                 </p>
-                <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#FAF7F2] mt-0.5">
-                  Scan Your Bottle Serial Number
+                <h3 className="font-serif text-2xl sm:text-3xl font-bold tracking-tight mt-1.5">
+                  <span className="text-[#D4AF37]">Scan Your Bottle</span> <span className="text-[#FAF7F2]">Serial Number</span>
                 </h3>
-                <p className="text-xs sm:text-sm text-[#DFD7C4] font-light mt-1 max-w-xl">
+                <p className="text-xs sm:text-sm text-[#DFD7C4] font-light mt-2 max-w-xl leading-relaxed">
                   Inspect the live spectrophotometric purity assay, calibrated pH record, small-batch run allocation (250 bottles), and master herbalist seal for your specific bottle.
                 </p>
               </div>
             </div>
             <Link
               to="/verify"
-              className="btn-gold-luxury inline-flex items-center gap-2 rounded-2xl px-7 py-4 text-xs font-semibold uppercase tracking-wider text-white shadow-xl shrink-0"
+              className="btn-gold-luxury relative inline-flex items-center justify-center gap-2.5 rounded-full px-8 py-4 text-xs font-bold uppercase tracking-[0.16em] shadow-xl shrink-0"
             >
-              <ShieldCheck size={16} /> Open Genuinity Test Report <ArrowRight size={14} />
+              <ShieldCheck size={16} /> Open Genuinity Test Report <ArrowRight size={15} className="transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
         </div>

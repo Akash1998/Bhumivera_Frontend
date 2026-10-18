@@ -1024,13 +1024,16 @@ export default function Profile() {
   return (
     <div className="min-h-screen bg-[#14291F] text-[#FAF7F2] font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* === Header Card === */}
-        <div className="relative overflow-hidden rounded-3xl two-tone-panel-gold px-6 sm:px-10 py-8 sm:py-10 shadow-2xl mb-7 border border-[#244A38]">
-          <div className="absolute -top-20 -right-16 w-72 h-72 rounded-full bg-[#D4AF37]/10 blur-3xl pointer-events-none"/>
+        {/* === Header Card with Concentric Orbit Rings & Glassmorphism === */}
+        <div className="relative overflow-hidden rounded-[2.5rem] card-glass-forest px-6 sm:px-10 py-8 sm:py-10 shadow-2xl mb-7 border border-[#D4AF37]/35">
+          {/* Subtle concentric orbit rings in background */}
+          <span className="absolute -right-24 -top-24 h-80 w-80 rounded-full border border-dashed border-[#D4AF37]/20 pointer-events-none" aria-hidden="true" />
+          <span className="absolute -right-12 -top-12 h-60 w-60 rounded-full border border-[#D4AF37]/25 shadow-[0_0_30px_rgba(212,175,55,0.06)] pointer-events-none" aria-hidden="true" />
           <div className="absolute -bottom-20 -left-16 w-80 h-80 rounded-full bg-[#244A38]/30 blur-3xl pointer-events-none"/>
+
           <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
             <div className="flex items-center gap-5">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#D4AF37] via-[#FCE096] to-[#C8A97E] flex items-center justify-center text-[#14291F] font-serif font-bold text-2xl shadow-xl ring-2 ring-[#D4AF37]/50">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#E6C57E] via-[#C89B3C] to-[#A87B24] flex items-center justify-center text-[#14291F] font-serif font-bold text-2xl shadow-xl ring-2 ring-[#D4AF37]/50">
                 {initials}
               </div>
               <div>
@@ -1048,12 +1051,12 @@ export default function Profile() {
             </div>
             <div className="flex flex-wrap gap-3">
               <button onClick={() => navigate('/shop')}
-                className="btn-silver-luxury inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider">
+                className="btn-silver-luxury inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider">
                 <ShoppingBag className="w-4 h-4"/>
                 Explore Shop
               </button>
               <button onClick={handleLogout}
-                className="btn-gold-luxury inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider">
+                className="btn-gold-luxury inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider">
                 <LogOut className="w-4 h-4"/>
                 Logout
               </button>

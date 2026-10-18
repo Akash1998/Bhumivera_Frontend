@@ -424,7 +424,7 @@ export default function ProductDetail() {
                 type="button"
                 onClick={handleAddToCart} 
                 disabled={isOutOfStock || isAdding}
-                className="btn-gold-luxury relative flex min-h-12 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl px-4 text-xs font-bold uppercase tracking-[0.12em] text-white shadow-xl transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-14 sm:tracking-widest"
+                className="btn-gold-luxury relative flex min-h-12 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl px-4 text-xs font-bold uppercase tracking-[0.12em] shadow-xl transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-14 sm:tracking-widest"
               >
                 <span className={`flex items-center gap-2 transition-transform duration-300 ${isAdding ? '-translate-y-12' : ''}`}>
                   <Leaf size={16} /> {isAdding ? 'Adding...' : 'Add to Cart'}
@@ -438,10 +438,10 @@ export default function ProductDetail() {
             <ProductDeliveryPromise isOutOfStock={isOutOfStock} />
 
             {/* Artisanal Small-Batch & Genuinity Verification Plate */}
-            <div className="mt-5 rounded-2xl two-tone-card p-4 sm:p-5 relative overflow-hidden border border-[#244A38] shadow-md">
+            <div className="mt-5 rounded-2xl card-glass-forest p-4 sm:p-5 relative overflow-hidden border border-[#D4AF37]/30 shadow-xl">
               <div className="flex items-center justify-between gap-3 mb-2.5">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[#102219] text-[#D4AF37] flex items-center justify-center border border-[#D4AF37]/40 shadow-sm shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-[#14231C] text-[#D4AF37] flex items-center justify-center border border-[#D4AF37]/40 shadow-sm shrink-0">
                     <Sparkles size={16} />
                   </div>
                   <div>
@@ -461,7 +461,7 @@ export default function ProductDetail() {
               <div className="flex flex-col sm:flex-row items-center gap-2">
                 <Link
                   to={`/verify?serial=${encodeURIComponent(product.batchCode || 'BV-CH26-8841')}`}
-                  className="btn-gold-luxury w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-sm transition-all"
+                  className="btn-gold-luxury w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider shadow-md transition-all"
                 >
                   <QrCode size={14} /> Scan / Verify Genuinity Test
                 </Link>

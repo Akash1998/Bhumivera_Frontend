@@ -290,7 +290,7 @@ export default function Checkout() {
           {/* Main Steps */}
           <div className="space-y-6 lg:col-span-2">
             {/* Step 1: Address & Delivery Speed */}
-            <div className="two-tone-panel rounded-2xl p-6 sm:p-8 border border-[#244A38] shadow-xl">
+            <div className="two-tone-panel rounded-3xl p-6 sm:p-8 border border-[#D4AF37]/25 shadow-2xl">
               <div className="flex items-center justify-between border-b border-[#244A38] pb-4">
                 <div className="flex items-center gap-3">
                   <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#D4AF37] text-xs font-black text-[#14291F]">1</span>
@@ -306,7 +306,7 @@ export default function Checkout() {
               {step === 1 ? (
                 <div className="mt-6 space-y-5">
                   {userAddresses.length === 0 ? (
-                    <div className="rounded-xl border border-[#244A38] bg-[#102219] p-6 text-center">
+                    <div className="rounded-2xl border border-[#D4AF37]/20 bg-[#102219]/80 backdrop-blur-md p-6 text-center">
                       <p className="text-sm text-[#DFD7C4]">No saved addresses found.</p>
                       <button
                         type="button"
@@ -322,10 +322,10 @@ export default function Checkout() {
                         <div
                           key={addr.id}
                           onClick={() => setSelectedAddressId(addr.id)}
-                          className={`cursor-pointer rounded-xl border p-4 transition-all ${
+                          className={`cursor-pointer rounded-2xl border p-4 transition-all ${
                             selectedAddressId === addr.id
-                              ? 'border-[#D4AF37] bg-[#102219] ring-1 ring-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.18)]'
-                              : 'border-[#244A38] bg-[#1C382B] hover:border-[#D4AF37]/50'
+                              ? 'border-[#D4AF37] bg-[#14231C]/90 ring-1 ring-[#D4AF37] shadow-[0_0_24px_rgba(200,155,60,0.22)]'
+                              : 'border-[#D4AF37]/20 bg-[#1C382B]/60 backdrop-blur-md hover:border-[#D4AF37]/50'
                           }`}
                         >
                           <div className="flex items-center justify-between">
@@ -407,7 +407,7 @@ export default function Checkout() {
             </div>
 
             {/* Step 2: Payment */}
-            <div className="two-tone-panel rounded-2xl p-6 sm:p-8 border border-[#244A38] shadow-xl">
+            <div className="two-tone-panel rounded-3xl p-6 sm:p-8 border border-[#D4AF37]/25 shadow-2xl">
               <div className="flex items-center gap-3 border-b border-[#244A38] pb-4">
                 <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#D4AF37] text-xs font-black text-[#14291F]">2</span>
                 <h2 className="font-serif text-xl sm:text-2xl font-bold text-white">Payment Method</h2>
@@ -415,7 +415,11 @@ export default function Checkout() {
 
               {step === 2 && (
                 <div className="mt-6 space-y-4">
-                  <label className="flex cursor-pointer items-center justify-between rounded-xl border border-[#244A38] bg-[#102219] p-4 transition hover:border-[#D4AF37]/60">
+                  <label className={`flex cursor-pointer items-center justify-between rounded-2xl border p-4 transition-all ${
+                    paymentMode === 'online'
+                      ? 'border-[#D4AF37] bg-[#14231C]/90 ring-1 ring-[#D4AF37] shadow-[0_0_24px_rgba(200,155,60,0.2)]'
+                      : 'border-[#D4AF37]/20 bg-[#102219]/70 backdrop-blur-md hover:border-[#D4AF37]/50'
+                  }`}>
                     <div className="flex items-center gap-3">
                       <input
                         type="radio"
@@ -432,7 +436,11 @@ export default function Checkout() {
                     <CreditCard className="h-5 w-5 text-[#D4AF37]" />
                   </label>
 
-                  <label className="flex cursor-pointer items-center justify-between rounded-xl border border-[#244A38] bg-[#102219] p-4 transition hover:border-[#D4AF37]/60">
+                  <label className={`flex cursor-pointer items-center justify-between rounded-2xl border p-4 transition-all ${
+                    paymentMode === 'WALLET'
+                      ? 'border-[#D4AF37] bg-[#14231C]/90 ring-1 ring-[#D4AF37] shadow-[0_0_24px_rgba(200,155,60,0.2)]'
+                      : 'border-[#D4AF37]/20 bg-[#102219]/70 backdrop-blur-md hover:border-[#D4AF37]/50'
+                  }`}>
                     <div className="flex items-center gap-3">
                       <input
                         type="radio"
@@ -452,7 +460,11 @@ export default function Checkout() {
                     <Wallet className="h-5 w-5 text-[#D4AF37]" />
                   </label>
 
-                  <label className="flex cursor-pointer items-center justify-between rounded-xl border border-[#244A38] bg-[#102219] p-4 transition hover:border-[#D4AF37]/60">
+                  <label className={`flex cursor-pointer items-center justify-between rounded-2xl border p-4 transition-all ${
+                    paymentMode === 'COD'
+                      ? 'border-[#D4AF37] bg-[#14231C]/90 ring-1 ring-[#D4AF37] shadow-[0_0_24px_rgba(200,155,60,0.2)]'
+                      : 'border-[#D4AF37]/20 bg-[#102219]/70 backdrop-blur-md hover:border-[#D4AF37]/50'
+                  }`}>
                     <div className="flex items-center gap-3">
                       <input
                         type="radio"
@@ -491,7 +503,7 @@ export default function Checkout() {
 
           {/* Order Summary & Tamper-Proof Coupon Sidebar */}
           <div className="space-y-4">
-            <div className="two-tone-panel-gold rounded-2xl p-6 border border-[#244A38] shadow-xl">
+            <div className="two-tone-panel-gold rounded-3xl p-6 border border-[#D4AF37]/30 shadow-2xl">
               <h3 className="font-serif text-xl font-bold text-white mb-2">Order Summary</h3>
               <div className="gold-hairline mb-4" />
               <div className="divide-y divide-[#244A38]">
