@@ -30,8 +30,8 @@ import {
 
 const impactQuestions = [
   [
-    'Why do all project funds and public totals currently show ₹0?',
-    'Because we have just launched this grassroots initiative, and Bhumivera strictly rejects fake, inflated, or simulated donation counters. We believe true stewardship begins with absolute honesty. Every rupee on this ledger will represent a genuine, verified receipt from an actual on-ground community or environmental drive.',
+    'How are impact contributions and public totals verified?',
+    'The public ledger updates only after a Razorpay payment is verified or a cash-on-delivery contribution is reconciled by our team. We do not simulate totals; on-ground invoices and field reports are published separately as work is completed.',
   ],
   [
     'Can Bhumivera as a commercial company accept charitable donations?',
@@ -96,6 +96,8 @@ export default function Impact() {
 
   // Community work sharing wall state
   const [communityPosts, setCommunityPosts] = useState(DEFAULT_COMMUNITY_POSTS);
+  const [impactLedger, setImpactLedger] = useState(null);
+  const [impactLedgerError, setImpactLedgerError] = useState(false);
   const [postAuthor, setPostAuthor] = useState('');
   const [postLocation, setPostLocation] = useState('');
   const [postAction, setPostAction] = useState('');
@@ -115,6 +117,26 @@ export default function Impact() {
       // ignore
     }
   }, []);
+
+  useEffect(() => {
+    let active = true;
+    api.get('/impact/public')
+      .then(({ data }) => {
+        if (active) setImpactLedger(data);
+      })
+      .catch(error => {
+        console.error('[IMPACT_LEDGER_LOAD]', error);
+        if (active) setImpactLedgerError(true);
+      });
+    return () => { active = false; };
+  }, []);
+
+  const collectedAmount = Array.isArray(impactLedger?.totals)
+    ? impactLedger.totals.reduce((total, row) => total + (Number(row.collected_amount) || 0), 0)
+    : 0;
+  const verifiedReceipts = Array.isArray(impactLedger?.totals)
+    ? impactLedger.totals.reduce((total, row) => total + (Number(row.contributions) || 0), 0)
+    : 0;
 
   const handleVolunteerSubmit = e => {
     e.preventDefault();
@@ -204,7 +226,11 @@ export default function Impact() {
               Starts December 2026: Feeding &amp; Animal Care
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/40 bg-[#070a0e] px-3 py-1 text-[10px] font-mono tracking-wider uppercase text-[#fce096]">
-              Authentic Clean Slate (₹0 Baseline)
+              {impactLedger
+                ? `Verified Ledger · ${money(collectedAmount)} Recorded`
+                : impactLedgerError
+                  ? 'Verified Ledger Temporarily Unavailable'
+                  : 'Loading Verified Ledger…'}
             </span>
           </div>
 
@@ -236,13 +262,13 @@ export default function Impact() {
               href="#legal-rules"
               className="inline-flex items-center gap-1.5 text-xs font-mono text-[#fce096] hover:underline"
             >
-              <Scale size={13} /> Legal Rules &amp; Why We Take ₹0 Donations
+              <Scale size={13} /> Legal Rules &amp; Voluntary Co-Sponsorship
             </a>
           </div>
         </div>
       </section>
 
-      {/* 2. AUTHENTIC CLEAN PUBLIC LEDGER (STRICT 0 BASELINE) */}
+      {/* 2. AUTHENTIC PUBLIC LEDGER */}
       <section id="ledger" className="mx-auto max-w-7xl px-6 py-12">
         <div className="rounded-3xl two-tone-panel-gold border border-[#d4af37]/40 p-8 sm:p-10 shadow-2xl relative overflow-hidden">
           <div className="absolute top-0 right-0 -mt-10 -mr-10 h-60 w-60 rounded-full bg-[#d4af37]/10 blur-3xl pointer-events-none" />
@@ -251,17 +277,17 @@ export default function Impact() {
             <div className="max-w-2xl">
               <div className="flex items-center gap-2 mb-2">
                 <span className="font-sub-gold text-[10px] tracking-[0.25em] uppercase text-[#fce096]">
-                  Public Stewardship Audit · 100% Authentic Clean Slate
+                  Public Stewardship Audit · Live Verified Contributions
                 </span>
                 <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[9px] font-mono text-emerald-400 border border-emerald-500/30 uppercase tracking-wider">
                   Zero Fake Counters
                 </span>
               </div>
               <h2 className="font-serif text-2xl sm:text-3xl md:text-4xl leading-tight text-white">
-                All numbers start from zero. Every rupee must be earned by genuine field proof.
+                Every contribution has a verified payment or collection record.
               </h2>
               <p className="mt-3 text-xs sm:text-sm leading-6 text-[#cbd5e1]">
-                We have just started this journey. Unlike organizations that display inflated or simulated donation counters, Bhumivera proudly displays our true starting baseline of ₹0.00. Funds enter our ledger strictly after on-ground execution, grocery invoices, and verified field photo audits.
+                No simulated counters: this ledger updates only for verified online payments and reconciled cash collections. Field reports and proof of on-ground execution are published separately.
               </p>
             </div>
 
@@ -274,18 +300,24 @@ export default function Impact() {
             </div>
           </div>
 
-          {/* 4 Metric Counters Grid (Initial 0 clean baseline) */}
+          {/* Live counters include only verified payments and reconciled collections. */}
           <div className="mt-8 grid grid-cols-2 lg:grid-cols-4 gap-6">
             <div className="rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/50 p-5">
-              <p className="font-mono text-[10px] uppercase tracking-widest text-[#94a3b8]">Reconciled Fund</p>
-              <p className="mt-1 font-serif text-3xl sm:text-4xl font-bold text-[#fce096]">₹0</p>
-              <p className="mt-2 text-[10px] font-mono text-[#cbd5e1]">Authentic Zero Starting Point</p>
+              <p className="font-mono text-[10px] uppercase tracking-widest text-[#94a3b8]">Verified Contribution Total</p>
+              <p className="mt-1 font-serif text-3xl sm:text-4xl font-bold text-[#fce096]">
+                {impactLedger ? money(collectedAmount) : '—'}
+              </p>
+              <p className="mt-2 text-[10px] font-mono text-[#cbd5e1]">
+                {impactLedgerError ? 'Ledger temporarily unavailable' : 'Verified payments & reconciled collections'}
+              </p>
             </div>
 
             <div className="rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/50 p-5">
               <p className="font-mono text-[10px] uppercase tracking-widest text-[#94a3b8]">Verified Receipts</p>
-              <p className="mt-1 font-serif text-3xl sm:text-4xl font-bold text-white">0</p>
-              <p className="mt-2 text-[10px] font-mono text-[#cbd5e1]">Ready for Dec 2026 Drives</p>
+              <p className="mt-1 font-serif text-3xl sm:text-4xl font-bold text-white">
+                {impactLedger ? verifiedReceipts.toLocaleString('en-IN') : '—'}
+              </p>
+              <p className="mt-2 text-[10px] font-mono text-[#cbd5e1]">Payment-verified / collection-reconciled</p>
             </div>
 
             <div className="rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/50 p-5">
@@ -760,7 +792,7 @@ export default function Impact() {
               Stewardship Governance &amp; Ground Action FAQ
             </h2>
             <p className="mt-2 text-xs sm:text-sm text-[#94a3b8]">
-              Honest, direct answers regarding our zero starting baseline, volunteer participation, and procurement transparency.
+              Honest, direct answers regarding verified contributions, volunteer participation, and procurement transparency.
             </p>
           </div>
 

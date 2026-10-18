@@ -27,11 +27,14 @@ import {
   findProjectById,
   LEGAL_CHARTER_FRAMEWORK,
 } from '../data/impactDeepDiveData';
+import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 
 const formatInr = num => `₹${Number(num || 0).toLocaleString('en-IN')}`;
 
 export default function ImpactProjectDetail() {
   const { imageId, projectId } = useParams();
+  const { user, isAuthenticated } = useAuth() || {};
   const currentId = projectId || imageId || 'hungry-feeding';
   const project = findProjectById(currentId);
 
@@ -47,13 +50,24 @@ export default function ImpactProjectDetail() {
   const [dedicationMessage, setDedicationMessage] = useState('');
   const [certificateData, setCertificateData] = useState(null);
   const [pledgeSuccess, setPledgeSuccess] = useState(false);
+  const [paymentLoading, setPaymentLoading] = useState(false);
+  const [paymentError, setPaymentError] = useState('');
+  const [certificateSent, setCertificateSent] = useState(false);
+  const [paymentReceipt, setPaymentReceipt] = useState(null);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // Strict honest numbers: Starts from 0. Only updates when the current patron makes a pledge.
+  // Project totals are loaded from the verified public contribution ledger.
   const [livePledged, setLivePledged] = useState(0);
   const [liveBackers, setLiveBackers] = useState(0);
+  const [impactLedgerLoaded, setImpactLedgerLoaded] = useState(false);
+  const [impactLedgerError, setImpactLedgerError] = useState(false);
 
   useEffect(() => {
+    let active = true;
+    setLivePledged(0);
+    setLiveBackers(0);
+    setImpactLedgerLoaded(false);
+    setImpactLedgerError(false);
     try {
       if (typeof window !== 'undefined' && typeof window.scrollTo === 'function') {
         window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -62,30 +76,61 @@ export default function ImpactProjectDetail() {
       // ignore
     }
 
-    const savedPledgesKey = `bv_real_pledges_${project.id}`;
-    try {
-      const stored = localStorage.getItem(savedPledgesKey);
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        setLivePledged(parsed.totalPledged || 0);
-        setLiveBackers(parsed.count || 0);
-      } else {
-        setLivePledged(0);
-        setLiveBackers(0);
-      }
-    } catch {
-      setLivePledged(0);
-      setLiveBackers(0);
-    }
+    api.get('/impact/public')
+      .then(({ data }) => {
+        if (!active) return;
+        const total = data.totals?.find(row => row.project_key === project.id);
+        setLivePledged(Number(total?.collected_amount) || 0);
+        setLiveBackers(Number(total?.contributions) || 0);
+        setImpactLedgerLoaded(true);
+      })
+      .catch(error => {
+        console.error('[IMPACT_PROJECT_LEDGER_LOAD]', error);
+        if (active) {
+          setImpactLedgerLoaded(true);
+          setImpactLedgerError(true);
+        }
+      });
 
     if (project.funding?.unitPackages?.length > 0) {
       setSelectedUnit(project.funding.unitPackages[0]);
     }
-  }, [project.id]);
+    return () => { active = false; };
+  }, [project.id, project.funding?.unitPackages]);
 
-  const handlePledgeSubmit = e => {
+  const confirmImpactPayment = async verification => {
+    const { data: result } = await api.post('/impact/donations/verify-payment', verification, { notify: false });
+    const certificate = {
+      ...result.certificate,
+      type: 'sponsor',
+      date: new Date(result.certificate.issuedAt).toLocaleDateString('en-IN', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }),
+      impactEquivalence: selectedUnit?.impactEquivalence || `Direct grassroots support for ${project.title}.`,
+      location: project.location,
+    };
+    setCertificateData(certificate);
+    setCertificateSent(result.certificateSent);
+    setPledgeSuccess(true);
+    try {
+      const { data } = await api.get('/impact/public');
+      const total = data.totals?.find(row => row.project_key === project.id);
+      setLivePledged(Number(total?.collected_amount) || 0);
+      setLiveBackers(Number(total?.contributions) || 0);
+      setImpactLedgerLoaded(true);
+      setImpactLedgerError(false);
+    } catch (error) {
+      console.error('[IMPACT_PROJECT_LEDGER_REFRESH]', error);
+      setImpactLedgerError(true);
+    }
+    return result;
+  };
+
+  const handlePledgeSubmit = async e => {
     e.preventDefault();
-    if (!patronName.trim() || !patronEmail.trim()) return;
+    setPaymentError('');
 
     const finalAmount =
       modalMode === 'volunteer'
@@ -96,45 +141,129 @@ export default function ImpactProjectDetail() {
         ? selectedUnit.amount
         : 100;
 
-    const timestamp = Date.now();
-    const randomHex = Math.random().toString(16).substring(2, 8).toUpperCase();
-    const certCode = `BV-${project.id.toUpperCase().substring(0, 4)}-${timestamp.toString(36).toUpperCase()}-${randomHex}`;
-
-    const newCert = {
-      code: certCode,
-      type: modalMode,
-      date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
-      name: patronName.trim(),
-      amount: finalAmount,
-      volunteerRole: modalMode === 'volunteer' ? volunteerRole : null,
-      projectTitle: project.title,
-      targetYear: project.phaseYear,
-      impactEquivalence:
-        modalMode === 'volunteer'
-          ? `Registered Ground Volunteer · ${volunteerRole}`
-          : selectedUnit?.impactEquivalence || `Direct grassroots support for ${project.title}.`,
-      dedication: dedicationMessage.trim(),
-      location: project.location,
-    };
-
-    // Save in localStorage
-    if (finalAmount > 0) {
-      const savedPledgesKey = `bv_real_pledges_${project.id}`;
-      try {
-        const stored = localStorage.getItem(savedPledgesKey);
-        const parsed = stored ? JSON.parse(stored) : { totalPledged: 0, count: 0 };
-        parsed.totalPledged += finalAmount;
-        parsed.count += 1;
-        localStorage.setItem(savedPledgesKey, JSON.stringify(parsed));
-        setLivePledged(parsed.totalPledged);
-        setLiveBackers(parsed.count);
-      } catch {
-        // ignore
-      }
+    if (modalMode === 'volunteer') {
+      if (!patronName.trim() || !patronEmail.trim()) return;
+      const timestamp = Date.now();
+      const randomHex = Math.random().toString(16).substring(2, 8).toUpperCase();
+      setCertificateData({
+        code: `BV-${project.id.toUpperCase().substring(0, 4)}-${timestamp.toString(36).toUpperCase()}-${randomHex}`,
+        type: 'volunteer',
+        date: new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'long', year: 'numeric' }),
+        name: patronName.trim(),
+        amount: 0,
+        volunteerRole,
+        projectTitle: project.title,
+        targetYear: project.phaseYear,
+        impactEquivalence: `Registered Ground Volunteer · ${volunteerRole}`,
+        dedication: '',
+        location: project.location,
+      });
+      setPledgeSuccess(true);
+      return;
     }
 
-    setCertificateData(newCert);
-    setPledgeSuccess(true);
+    if (!isAuthenticated || !user?.email) {
+      setPaymentError('Sign in to your Bhumivera account before co-sponsoring materials. Your certificate is sent to your registered email address.');
+      return;
+    }
+    if (!Number.isSafeInteger(finalAmount) || finalAmount < 50 || finalAmount > 500000) {
+      setPaymentError('Enter a contribution amount between ₹50 and ₹5,00,000.');
+      return;
+    }
+
+    setPaymentLoading(true);
+    let razorpayOrder;
+    try {
+      const { data } = await api.post('/impact/donations/create-order', {
+        amount: finalAmount,
+        projectKey: project.id,
+        dedication: dedicationMessage.trim(),
+      }, { notify: false });
+      razorpayOrder = data;
+      if (!window.Razorpay) {
+        await new Promise((resolve, reject) => {
+          const script = document.createElement('script');
+          script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+          script.onload = resolve;
+          script.onerror = () => reject(new Error('Unable to load the secure payment checkout.'));
+          document.body.appendChild(script);
+        });
+      }
+      if (!window.Razorpay) throw new Error('Secure payment checkout is unavailable. Please try again.');
+
+      const checkout = new window.Razorpay({
+        key: razorpayOrder.key_id,
+        amount: razorpayOrder.amount,
+        currency: razorpayOrder.currency,
+        name: 'Bhumivera',
+        description: `Grassroots co-sponsorship · ${project.title}`,
+        order_id: razorpayOrder.order_id,
+        prefill: {
+          name: user.name || '',
+          email: user.email,
+          contact: user.phone || '',
+        },
+        theme: { color: '#0b2419' },
+        handler: async response => {
+          const verification = {
+            razorpay_order_id: response.razorpay_order_id,
+            razorpay_payment_id: response.razorpay_payment_id,
+            razorpay_signature: response.razorpay_signature,
+            amountPaise: razorpayOrder.amount,
+            dedication: dedicationMessage.trim(),
+          };
+          setPaymentReceipt(verification);
+          try {
+            await confirmImpactPayment(verification);
+          } catch (error) {
+            setPaymentError(error.response?.data?.message || error.message || 'Payment completed, but verification could not be confirmed. Retry verification before making another payment.');
+          } finally {
+            setPaymentLoading(false);
+          }
+        },
+        modal: {
+          ondismiss: () => setPaymentLoading(false),
+        },
+      });
+      checkout.on('payment.failed', event => {
+        setPaymentError(event.error?.description || 'Payment did not complete. You have not been charged.');
+        setPaymentLoading(false);
+      });
+      checkout.open();
+    } catch (error) {
+      setPaymentError(error.response?.data?.message || error.message || 'Unable to start payment. Please try again.');
+      setPaymentLoading(false);
+    }
+  };
+
+  const retryPaymentVerification = async () => {
+    if (!paymentReceipt) return;
+    setPaymentLoading(true);
+    setPaymentError('');
+    try {
+      await confirmImpactPayment(paymentReceipt);
+    } catch (error) {
+      setPaymentError(error.response?.data?.message || 'Unable to verify this payment yet. Retry verification or contact support; do not pay again.');
+    } finally {
+      setPaymentLoading(false);
+    }
+  };
+
+  const retryCertificateEmail = async () => {
+    if (!paymentReceipt) return;
+    setPaymentLoading(true);
+    setPaymentError('');
+    try {
+      const { data: result } = await api.post('/impact/donations/verify-payment', paymentReceipt, { notify: false });
+      setCertificateSent(result.certificateSent);
+      if (!result.certificateSent) {
+        setPaymentError('Your payment is recorded, but the certificate email could not be delivered yet. Please retry or contact support.');
+      }
+    } catch (error) {
+      setPaymentError(error.response?.data?.message || 'Unable to retry certificate delivery. Please contact support.');
+    } finally {
+      setPaymentLoading(false);
+    }
   };
 
   const handleShare = () => {
@@ -277,21 +406,21 @@ export default function ImpactProjectDetail() {
         </div>
       </section>
 
-      {/* 2. REAL-TIME CLEAN PUBLIC LEDGER BAR (STARTING CLEAN AT ZERO) */}
+      {/* 2. REAL-TIME PUBLIC CONTRIBUTION LEDGER */}
       <section className="mx-auto max-w-7xl px-6 -mt-8 relative z-20">
         <div className="rounded-3xl border border-[#d4af37]/40 bg-gradient-to-r from-[#102219] via-[#070a0e] to-[#102219] p-6 sm:p-8 shadow-2xl">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b border-[#d4af37]/20">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <span className="font-sub-gold text-[10px] tracking-[0.2em] uppercase text-[#fce096]">
-                  Grassroots Field Deployment Fund · Honest Clean Slate
+                  Grassroots Field Deployment Fund · Verified Live Ledger
                 </span>
                 <span className="rounded-full bg-emerald-500/10 px-2.5 py-0.5 text-[9px] font-mono text-emerald-400 border border-emerald-500/30 uppercase">
                   Zero Fake Numbers
                 </span>
               </div>
               <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white">
-                {formatInr(livePledged)}{' '}
+                {impactLedgerLoaded && !impactLedgerError ? formatInr(livePledged) : '—'}{' '}
                 <span className="text-sm font-sans font-normal text-[#94a3b8]">
                   raised of modest {formatInr(project.funding.targetAmount)} target
                 </span>
@@ -300,11 +429,15 @@ export default function ImpactProjectDetail() {
 
             <div className="flex items-center gap-6">
               <div className="text-right">
-                <div className="font-serif text-2xl font-bold text-[#fce096]">{liveBackers}</div>
+                <div className="font-serif text-2xl font-bold text-[#fce096]">
+                  {impactLedgerLoaded && !impactLedgerError ? liveBackers : '—'}
+                </div>
                 <div className="text-[11px] font-mono text-[#94a3b8] uppercase">Ground Patrons</div>
               </div>
               <div className="text-right border-l border-[#d4af37]/20 pl-6">
-                <div className="font-serif text-2xl font-bold text-emerald-400">{percentFunded}%</div>
+                <div className="font-serif text-2xl font-bold text-emerald-400">
+                  {impactLedgerLoaded && !impactLedgerError ? `${percentFunded}%` : '—'}
+                </div>
                 <div className="text-[11px] font-mono text-[#94a3b8] uppercase">Funded</div>
               </div>
               <button
@@ -868,6 +1001,7 @@ export default function ImpactProjectDetail() {
                           <input
                             type="number"
                             min="50"
+                            max="500000"
                             step="50"
                             placeholder="Or enter custom amount in INR"
                             value={customAmount}
@@ -884,28 +1018,24 @@ export default function ImpactProjectDetail() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
                         <label className="block text-xs font-mono uppercase tracking-wider text-[#cbd5e1] mb-1">
-                          Full Name *
+                          Account Name
                         </label>
                         <input
                           type="text"
-                          required
-                          placeholder="e.g., Ananya Sharma"
-                          value={patronName}
-                          onChange={e => setPatronName(e.target.value)}
-                          className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white placeholder-[#64748b] focus:border-[#d4af37] focus:outline-none"
+                          value={user?.name || ''}
+                          readOnly
+                          className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white"
                         />
                       </div>
                       <div>
                         <label className="block text-xs font-mono uppercase tracking-wider text-[#cbd5e1] mb-1">
-                          Email Address (For Certificate) *
+                          Registered Email (Certificate Delivery)
                         </label>
                         <input
                           type="email"
-                          required
-                          placeholder="e.g., ananya@example.com"
-                          value={patronEmail}
-                          onChange={e => setPatronEmail(e.target.value)}
-                          className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white placeholder-[#64748b] focus:border-[#d4af37] focus:outline-none"
+                          value={user?.email || ''}
+                          readOnly
+                          className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white"
                         />
                       </div>
                     </div>
@@ -937,6 +1067,24 @@ export default function ImpactProjectDetail() {
                 </div>
 
                 <div className="flex items-center justify-end gap-3 pt-2">
+                  {paymentError && (
+                    <p role="alert" className="mr-auto max-w-sm text-left text-xs leading-5 text-rose-300">
+                      {paymentError}
+                      {!isAuthenticated && (
+                        <> <Link to="/login" className="font-bold text-[#fce096] underline">Sign in</Link></>
+                      )}
+                    </p>
+                  )}
+                  {paymentReceipt && !pledgeSuccess && (
+                    <button
+                      type="button"
+                      onClick={retryPaymentVerification}
+                      disabled={paymentLoading}
+                      className="rounded-xl border border-emerald-500/40 px-4 py-2.5 text-xs font-mono text-emerald-200 disabled:opacity-60"
+                    >
+                      {paymentLoading ? 'Verifying…' : 'Verify Completed Payment'}
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => setIsPledgeModalOpen(false)}
@@ -946,11 +1094,14 @@ export default function ImpactProjectDetail() {
                   </button>
                   <button
                     type="submit"
+                    disabled={paymentLoading}
                     className="btn-gold-luxury rounded-xl px-7 py-3 text-xs font-bold uppercase tracking-wider text-white shadow-xl hover:scale-105 transition-transform"
                   >
-                    {modalMode === 'volunteer'
-                      ? 'Confirm Volunteer Registration'
-                      : 'Issue Stewardship Certificate'}
+                    {paymentLoading
+                      ? 'Processing Secure Payment…'
+                      : modalMode === 'volunteer'
+                        ? 'Confirm Volunteer Registration'
+                        : `Pay ${formatInr(customAmount ? Number(customAmount) : selectedUnit?.amount || 100)} & Co-Sponsor`}
                   </button>
                 </div>
               </form>
@@ -968,6 +1119,14 @@ export default function ImpactProjectDetail() {
                 <p className="text-xs text-[#cbd5e1] max-w-md mx-auto">
                   Thank you, <strong className="text-[#fce096]">{certificateData?.name}</strong>. Your commitment is recorded in our verifiable community ledger registry.
                 </p>
+                {certificateData?.type === 'sponsor' && (
+                  <p className={`text-xs ${certificateSent ? 'text-emerald-300' : 'text-amber-300'}`}>
+                    {certificateSent
+                      ? `Your payment is verified. The certificate was emailed to ${certificateData.email}.`
+                      : 'Your payment is verified and recorded. Certificate email delivery needs a retry.'}
+                  </p>
+                )}
+                {paymentError && <p role="alert" className="text-xs text-rose-300">{paymentError}</p>}
 
                 {/* Styled Verifiable Certificate Frame */}
                 <div
@@ -1049,6 +1208,16 @@ export default function ImpactProjectDetail() {
                   >
                     <Download size={14} /> Print / Save Certificate
                   </button>
+                  {certificateData?.type === 'sponsor' && !certificateSent && (
+                    <button
+                      type="button"
+                      onClick={retryCertificateEmail}
+                      disabled={paymentLoading}
+                      className="rounded-xl border border-[#d4af37]/40 px-6 py-3 text-xs font-mono uppercase text-[#fce096] hover:text-white disabled:opacity-60"
+                    >
+                      {paymentLoading ? 'Retrying…' : 'Retry Email'}
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={() => {

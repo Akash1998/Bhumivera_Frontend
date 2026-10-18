@@ -1,6 +1,6 @@
 // Bhumivera Environmental & Community Stewardship Dossier
 // Focus: Immediate West Bengal Community Care (Dec 2026) & Practical 2027 End - 2028 Ecological Restoration
-// ALL AMOUNTS AND CONTRIBUTIONS START STRICTLY AT ₹0. ZERO FAKE OR SIMULATED NUMBERS.
+// Contribution totals are sourced from the verified public ledger; no values are simulated.
 
 export const LEGAL_CHARTER_FRAMEWORK = {
   title: 'Indian Law & Grassroots Community Stewardship Charter',
@@ -33,9 +33,9 @@ export const LEGAL_CHARTER_FRAMEWORK = {
     {
       id: 'rule-04',
       title: 'Our Absolute Zero-Fake-Data Guarantee',
-      shortAnswer: 'All ledger totals start at ₹0. Every claim must have a verified field receipt.',
+      shortAnswer: 'Ledger totals include verified payments and reconciled collections only.',
       fullExplanation:
-        'We refuse to display inflated, simulated, or pre-filled donation counters. All public counters begin at ₹0.00 and increase only when a volunteer drive or order pledge is completed, receipt-reconciled, and backed by authentic on-ground photographs.',
+        'We refuse to display inflated, simulated, or pre-filled counters. Public contribution totals increase only after a verified payment or a reconciled collection. Invoices and authentic on-ground photographs are published separately as field work is completed.',
       implication: 'Total transparency. You see the honest, raw reality of a young grassroots initiative.',
     },
   ],
