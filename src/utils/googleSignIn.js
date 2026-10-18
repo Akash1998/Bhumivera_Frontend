@@ -7,10 +7,14 @@ let initializationPromise;
 
 const initializeGoogleSignIn = async SocialLogin => {
   if (!initializationPromise) {
+    const redirectUrl = Capacitor.isNativePlatform()
+      ? undefined
+      : `${window.location.origin}/`;
     initializationPromise = SocialLogin.initialize({
       google: {
         webClientId: GOOGLE_WEB_CLIENT_ID,
         mode: 'online',
+        ...(redirectUrl ? { redirectUrl } : {}),
       },
     }).catch(error => {
       initializationPromise = undefined;

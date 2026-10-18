@@ -1,4 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
+import { Capacitor } from '@capacitor/core';
 
 vi.mock('@capacitor/core', () => ({
   Capacitor: { isNativePlatform: vi.fn() },
@@ -15,6 +16,8 @@ describe('requestGoogleIdToken', () => {
   beforeEach(() => {
     vi.resetModules();
     vi.clearAllMocks();
+    Capacitor.isNativePlatform.mockReturnValue(false);
+    vi.stubGlobal('window', { location: { origin: 'https://www.bhumivera.com' } });
   });
 
   it('initializes Google and returns the identity token from the plugin response', async () => {
@@ -31,6 +34,7 @@ describe('requestGoogleIdToken', () => {
       google: expect.objectContaining({
         webClientId: expect.stringMatching(/\.apps\.googleusercontent\.com$/),
         mode: 'online',
+        redirectUrl: `${window.location.origin}/`,
       }),
     }));
     expect(SocialLogin.login).toHaveBeenCalledWith({
