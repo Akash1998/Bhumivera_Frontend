@@ -27,6 +27,10 @@
 
 body {
   background-color: var(--two-tone-dark);
+  background-image:
+    radial-gradient(ellipse at 14% 12%, rgba(46, 90, 68, 0.34), transparent 42%),
+    radial-gradient(ellipse at 88% 48%, rgba(212, 175, 55, 0.08), transparent 34%);
+  background-attachment: fixed;
   color: var(--bhumivera-silver);
   overflow-x: hidden;
 }
@@ -66,7 +70,7 @@ html, body, button, input, textarea, select {
 
 .site-shell {
   color: var(--bhumivera-silver);
-  background-color: var(--two-tone-dark);
+  background-color: transparent;
   min-height: 100vh;
   min-height: 100dvh;
   font-family: 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, system-ui, sans-serif;
@@ -132,9 +136,9 @@ html, body, button, input, textarea, select {
 
 @media (max-width: 767px) {
   .site-shell nav.sticky {
-    background-color: #fbfaf5;
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
+    background-color: rgba(20, 41, 31, 0.86);
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
   }
 
   html.translated-ltr .site-shell h1,
@@ -676,6 +680,41 @@ html.native-app .site-shell > footer {
   box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.6), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
 }
 
+@media (min-width: 1024px) {
+  .site-shell main [class~="max-w-5xl"]:not([class~="my-auto"]) {
+    max-width: min(92vw, 1280px);
+  }
+
+  .site-shell main [class~="max-w-6xl"] {
+    max-width: min(94vw, 1400px);
+  }
+
+  .site-shell main [class~="max-w-7xl"] {
+    max-width: min(96vw, 1536px);
+  }
+}
+
+.site-shell main :is(div, section, article)[class*="rounded-"][class*="border"]:is(
+  [class~="p-4"],
+  [class~="p-5"],
+  [class~="p-6"],
+  [class~="p-8"],
+  [class~="p-10"]
+),
+.management-shell main :is(div, section, article)[class*="rounded-"][class*="border"]:is(
+  [class~="p-4"],
+  [class~="p-5"],
+  [class~="p-6"],
+  [class~="p-8"],
+  [class~="p-10"]
+) {
+  background-color: rgba(20, 41, 31, 0.62);
+  -webkit-backdrop-filter: blur(22px);
+  backdrop-filter: blur(22px);
+  border-color: rgba(212, 175, 55, 0.24);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07), 0 14px 36px rgba(0, 0, 0, 0.2);
+}
+
 /* --- EXACT IMAGE 2 HEADER TYPOGRAPHY & DIVIDER SUITE --- */
 .font-headline-gold {
   font-family: 'Playfair Display', Georgia, serif;
@@ -877,4 +916,3 @@ html.native-app .site-shell > footer {
   border-color: #244A38;
   transform: translateY(-1px);
 }
-
