@@ -21,7 +21,7 @@ import { FALLBACK_CATALOG_PRODUCTS, HOME_VISUAL_ASSETS } from '../data/bhumivera
 export default function Compare() {
   const { addToCart } = useCart() || {};
   const { compareItems = [], addToCompare, removeFromCompare } = useCompare() || {};
-  const [selectedIds, setSelectedIds] = useState([101, 102, 103, 104]);
+  const [selectedIds, setSelectedIds] = useState([8, 9, 103, 104]);
 
   // Combine user's compareItems with our pre-loaded signature formulations so the page is NEVER empty or broken!
   const activeProducts =
@@ -147,13 +147,15 @@ export default function Compare() {
                       <span className="text-[#fce096]">{product.rating || 4.9}</span>
                       <span className="text-[#94a3b8]">({product.reviews || 90} reviews)</span>
                     </div>
-                    <button
-                      type="button"
-                      onClick={() => addToCart?.(product, 1)}
-                      className="btn-gold-luxury mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg"
-                    >
-                      <ShoppingCart size={14} /> Add to Bag · ₹{product.discount_price || product.price}
-                    </button>
+                    {product.inStock !== false && (
+                      <button
+                        type="button"
+                        onClick={() => addToCart?.(product, 1)}
+                        className="btn-gold-luxury mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-white shadow-lg"
+                      >
+                        <ShoppingCart size={14} /> Add to Bag · ₹{product.discount_price || product.price}
+                      </button>
+                    )}
                   </th>
                 ))}
               </tr>

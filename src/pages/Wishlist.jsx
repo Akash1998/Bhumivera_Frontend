@@ -188,13 +188,19 @@ export default function Wishlist() {
                       >
                         <Heart size={13} className="text-[#d4af37]" /> Save
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => addToCart?.(prod, 1)}
-                        className="btn-gold-luxury inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider"
-                      >
-                        + Bag
-                      </button>
+                      {prod.inStock ? (
+                        <button
+                          type="button"
+                          onClick={() => addToCart?.(prod, 1)}
+                          className="btn-gold-luxury inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider"
+                        >
+                          + Bag
+                        </button>
+                      ) : (
+                        <span className="px-3.5 py-1.5 text-xs font-semibold uppercase tracking-wider text-[#94a3b8]">
+                          Unavailable
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
