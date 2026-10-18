@@ -253,7 +253,7 @@ export default function ProductDetail() {
 
   if (!product) {
     return (
-      <div className="min-h-screen flex items-center justify-center text-[#d4af37] bg-[#FDFBF7] font-black uppercase tracking-widest text-2xl">
+      <div className="min-h-screen flex items-center justify-center text-[#D4AF37] bg-[#14291F] font-black uppercase tracking-widest text-2xl">
         Botanical Profile Not Found.
       </div>
     );
@@ -281,7 +281,7 @@ export default function ProductDetail() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#070a0e] pb-28 pt-20 font-sans text-[#e2e8f0] selection:bg-[#d4af37]/30 selection:text-white md:pb-32 md:pt-24">
+    <div className="relative min-h-screen bg-[#14291F] pb-28 pt-20 font-sans text-[#FAF7F2] selection:bg-[#D4AF37]/30 selection:text-white md:pb-32 md:pt-24">
       <SEOStructuredData product={product} />
       <SEO 
         title={`${product.name} | Bhumivera`}
@@ -313,7 +313,7 @@ export default function ProductDetail() {
                   aria-label={`View ${product.name} image ${idx + 1}`}
                   aria-pressed={getImageUrl(activeMedia) === url}
                   className={`relative h-14 w-14 shrink-0 overflow-hidden rounded-xl border-2 transition-all duration-300 sm:h-16 sm:w-16 md:h-20 md:w-20 md:rounded-2xl lg:h-24 lg:w-24 ${
-                    getImageUrl(activeMedia) === url ? 'border-[#d4af37] shadow-[0_0_12px_rgba(212,175,55,0.4)]' : 'border-[#d4af37]/20 bg-[#0d1520] hover:border-[#d4af37]/60'
+                    getImageUrl(activeMedia) === url ? 'border-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.4)]' : 'border-[#244A38] bg-[#102219] hover:border-[#D4AF37]/60'
                   }`}
                 >
                   <img src={url} alt={`${product.name} image ${idx + 1}`} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-cover transition-all duration-500" loading="lazy" />
@@ -322,7 +322,7 @@ export default function ProductDetail() {
             })}
           </div>
 
-          <div className="group relative aspect-[0.94] w-full overflow-hidden rounded-2xl border border-[#d4af37]/25 bg-gradient-to-b from-[#0d1520] to-[#070a0e] shadow-2xl sm:aspect-square sm:rounded-2xl md:sticky md:top-28 md:aspect-auto md:h-[min(72vh,680px)] md:min-h-[500px] md:self-start lg:top-32">
+          <div className="group relative aspect-[0.94] w-full overflow-hidden rounded-2xl border border-[#244A38] bg-gradient-to-b from-[#1C382B] to-[#102219] shadow-2xl sm:aspect-square sm:rounded-2xl md:sticky md:top-28 md:aspect-auto md:h-[min(72vh,680px)] md:min-h-[500px] md:self-start lg:top-32">
             <AnimatePresence mode="wait">
               <motion.div
                 key={getImageUrl(activeMedia)}
@@ -338,15 +338,15 @@ export default function ProductDetail() {
 
             {product.images?.length > 1 && (
               <>
-                <button type="button" onClick={() => showAdjacentImage(-1)} aria-label="Previous product image" className="absolute left-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-[#d4af37]/30 bg-[#070a0e]/85 p-2.5 text-[#fce096] shadow-lg transition hover:bg-[#d4af37] hover:text-[#070a0e] sm:left-4 sm:p-3">
+                <button type="button" onClick={() => showAdjacentImage(-1)} aria-label="Previous product image" className="absolute left-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-[#D4AF37]/30 bg-[#102219]/90 p-2.5 text-[#FCE096] shadow-lg transition hover:bg-[#D4AF37] hover:text-[#14291F] sm:left-4 sm:p-3">
                   <ChevronLeft size={18} className="sm:h-5 sm:w-5"/>
                 </button>
-                <button type="button" onClick={() => showAdjacentImage(1)} aria-label="Next product image" className="absolute right-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-[#d4af37]/30 bg-[#070a0e]/85 p-2.5 text-[#fce096] shadow-lg transition hover:bg-[#d4af37] hover:text-[#070a0e] sm:right-4 sm:p-3">
+                <button type="button" onClick={() => showAdjacentImage(1)} aria-label="Next product image" className="absolute right-3 top-1/2 z-20 -translate-y-1/2 rounded-full border border-[#D4AF37]/30 bg-[#102219]/90 p-2.5 text-[#FCE096] shadow-lg transition hover:bg-[#D4AF37] hover:text-[#14291F] sm:right-4 sm:p-3">
                   <ChevronRight size={18} className="sm:h-5 sm:w-5"/>
                 </button>
-                <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2 rounded-full bg-[#070a0e]/90 border border-[#d4af37]/30 px-3 py-2 shadow-sm backdrop-blur">
+                <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 gap-2 rounded-full bg-[#102219]/90 border border-[#D4AF37]/30 px-3 py-2 shadow-sm backdrop-blur">
                   {product.images.map((image, index) => (
-                    <button key={image.id || `${getImageUrl(image)}-${index}`} type="button" onClick={() => setActiveMedia(image)} aria-label={`Show product image ${index + 1}`} aria-current={index === activeImageIndex} className={`h-2 rounded-full transition-all ${index === activeImageIndex ? 'w-6 bg-[#d4af37]' : 'w-2 bg-stone-600 hover:bg-stone-400'}`}/>
+                    <button key={image.id || `${getImageUrl(image)}-${index}`} type="button" onClick={() => setActiveMedia(image)} aria-label={`Show product image ${index + 1}`} aria-current={index === activeImageIndex} className={`h-2 rounded-full transition-all ${index === activeImageIndex ? 'w-6 bg-[#D4AF37]' : 'w-2 bg-[#244A38] hover:bg-[#9BB0A5]'}`}/>
                   ))}
                 </div>
               </>
@@ -356,7 +356,7 @@ export default function ProductDetail() {
               {product.is_featured === 1 && <span className="rounded-full btn-gold-luxury px-3 py-1.5 font-mono text-[9px] uppercase tracking-widest text-white shadow-sm sm:px-4 sm:text-[10px]">Premium Selection</span>}
             </div>
             
-            <button onClick={() => toggleWishlist(product)} aria-label={isWishlisted(product.id) ? 'Remove from saved products' : 'Save product'} aria-pressed={isWishlisted(product.id)} className={`absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 sm:right-6 sm:top-6 sm:h-12 sm:w-12 ${isWishlisted(product.id) ? 'border-[#d4af37] bg-[#d4af37] text-[#070a0e]' : 'border-[#d4af37]/30 bg-[#070a0e]/80 text-[#cbd5e1] hover:border-[#d4af37] hover:text-[#fce096]'}`}>
+            <button onClick={() => toggleWishlist(product)} aria-label={isWishlisted(product.id) ? 'Remove from saved products' : 'Save product'} aria-pressed={isWishlisted(product.id)} className={`absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 sm:right-6 sm:top-6 sm:h-12 sm:w-12 ${isWishlisted(product.id) ? 'border-[#D4AF37] bg-[#D4AF37] text-[#14291F]' : 'border-[#D4AF37]/30 bg-[#102219]/80 text-[#DFD7C4] hover:border-[#D4AF37] hover:text-[#FCE096]'}`}>
               <Heart size={18} fill={isWishlisted(product.id) ? 'currentColor' : 'none'} />
             </button>
           </div>
@@ -368,9 +368,9 @@ export default function ProductDetail() {
                <span className="block font-mono text-[9px] uppercase tracking-[0.2em] text-[#d4af37] sm:text-[10px]">
                  SKU: {product.sku || 'N/A'}
                </span>
-               {product.brand && (
-                  <span className="flex items-center gap-1 rounded-full bg-[#0d1520] border border-[#d4af37]/30 px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-[#fce096] sm:px-3 sm:text-[10px]">
-                    <Tag size={12} className="text-[#d4af37]" /> {product.brand}
+                {product.brand && (
+                  <span className="flex items-center gap-1 rounded-full bg-[#102219] border border-[#244A38] px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-[#FCE096] sm:px-3 sm:text-[10px]">
+                    <Tag size={12} className="text-[#D4AF37]" /> {product.brand}
                   </span>
                )}
             </div>
@@ -379,43 +379,43 @@ export default function ProductDetail() {
               {product.name}
             </h1>
 
-            {productRating > 0 && <a href="#product-reviews" onClick={() => setActiveTab('reviews')} className="mb-4 inline-flex min-h-10 items-center gap-2 text-xs text-[#cbd5e1] hover:text-[#fce096] sm:text-sm">
-              <span className="flex text-[#d4af37]" aria-label={`${productRating.toFixed(1)} out of 5 stars`}>{[1, 2, 3, 4, 5].map(star => <Star key={star} size={13} fill={star <= Math.round(productRating) ? 'currentColor' : 'none'} />)}</span>
+            {productRating > 0 && <a href="#product-reviews" onClick={() => setActiveTab('reviews')} className="mb-4 inline-flex min-h-10 items-center gap-2 text-xs text-[#DFD7C4] hover:text-[#FCE096] sm:text-sm">
+              <span className="flex text-[#D4AF37]" aria-label={`${productRating.toFixed(1)} out of 5 stars`}>{[1, 2, 3, 4, 5].map(star => <Star key={star} size={13} fill={star <= Math.round(productRating) ? 'currentColor' : 'none'} />)}</span>
               <span>{productRating.toFixed(1)}{reviewCount > 0 ? ` · ${reviewCount} reviews` : ''}</span>
             </a>}
             
             <div className="mb-4 flex flex-col gap-2 md:mb-5">
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <span className="font-serif text-3xl font-bold text-[#fce096] sm:text-4xl">
+                <span className="font-serif text-3xl font-bold text-[#FCE096] sm:text-4xl">
                   ₹{product.discount_price || product.price}
                 </span>
                 {product.discount_price && (
-                  <span className="text-base font-medium text-[#94a3b8] line-through sm:text-xl">₹{product.price}</span>
+                  <span className="text-base font-medium text-[#9BB0A5] line-through sm:text-xl">₹{product.price}</span>
                 )}
               </div>
             </div>
 
-            <p className="line-clamp-3 text-sm leading-6 text-[#cbd5e1] md:line-clamp-none md:leading-7">
+            <p className="line-clamp-3 text-sm leading-6 text-[#DFD7C4] md:line-clamp-none md:leading-7">
               {product.description}
             </p>
           </div>
 
           <div ref={purchaseSectionRef} className="relative mb-6 rounded-2xl two-tone-panel-gold p-4 shadow-2xl sm:p-6 md:mb-8 md:rounded-3xl md:p-7">
             <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
-              <span className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 py-1.5 text-[9px] font-mono uppercase tracking-[0.12em] sm:text-[10px] sm:tracking-widest ${isOutOfStock ? 'bg-red-950/60 border border-red-500/40 text-red-300' : 'bg-[#070a0e] border border-[#d4af37]/40 text-[#fce096]'}`}>
+              <span className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 py-1.5 text-[9px] font-mono uppercase tracking-[0.12em] sm:text-[10px] sm:tracking-widest ${isOutOfStock ? 'bg-red-950/60 border border-red-500/40 text-red-300' : 'bg-[#102219] border border-[#D4AF37]/40 text-[#FCE096]'}`}>
                 {isOutOfStock ? <AlertCircle size={16}/> : <Package size={16}/>}
                 {isOutOfStock ? 'Currently unavailable' : product.quantity <= 5 ? `Only ${product.quantity} left` : 'Available to order'}
               </span>
-              <span className="shrink-0 text-[10px] font-medium text-[#94a3b8]">Secure checkout</span>
+              <span className="shrink-0 text-[10px] font-medium text-[#9BB0A5]">Secure checkout</span>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
-              <div className="flex h-12 w-full items-center justify-between rounded-xl border border-[#d4af37]/30 bg-[#070a0e] px-2 sm:h-auto sm:w-32">
-                <button type="button" aria-label="Decrease quantity" disabled={quantity <= 1} onClick={() => setQuantity(q => Math.max(1, q - 1))} className="flex h-10 w-10 items-center justify-center rounded-lg text-[#cbd5e1] transition-colors hover:bg-[#0d1520] hover:text-[#fce096] disabled:opacity-40">
+              <div className="flex h-12 w-full items-center justify-between rounded-xl border border-[#244A38] bg-[#102219] px-2 sm:h-auto sm:w-32">
+                <button type="button" aria-label="Decrease quantity" disabled={quantity <= 1} onClick={() => setQuantity(q => Math.max(1, q - 1))} className="flex h-10 w-10 items-center justify-center rounded-lg text-[#DFD7C4] transition-colors hover:bg-[#1C382B] hover:text-[#FCE096] disabled:opacity-40">
                   <Minus size={16} />
                 </button>
                 <span aria-live="polite" className="w-8 text-center font-mono text-base text-white">{quantity}</span>
-                <button type="button" aria-label="Increase quantity" onClick={() => setQuantity(q => q + 1)} disabled={quantity >= product.quantity} className="flex h-10 w-10 items-center justify-center rounded-lg text-[#cbd5e1] transition-colors hover:bg-[#0d1520] hover:text-[#fce096] disabled:opacity-40">
+                <button type="button" aria-label="Increase quantity" onClick={() => setQuantity(q => q + 1)} disabled={quantity >= product.quantity} className="flex h-10 w-10 items-center justify-center rounded-lg text-[#DFD7C4] transition-colors hover:bg-[#1C382B] hover:text-[#FCE096] disabled:opacity-40">
                   <Plus size={16} />
                 </button>
               </div>
@@ -429,7 +429,7 @@ export default function ProductDetail() {
                 <span className={`flex items-center gap-2 transition-transform duration-300 ${isAdding ? '-translate-y-12' : ''}`}>
                   <Leaf size={16} /> {isAdding ? 'Adding...' : 'Add to Cart'}
                 </span>
-                <span className={`absolute inset-0 flex items-center justify-center gap-2 bg-[#d4af37] text-[#070a0e] font-bold transition-transform duration-300 ${isAdding ? 'translate-y-0' : 'translate-y-12'}`}>
+                <span className={`absolute inset-0 flex items-center justify-center gap-2 bg-[#D4AF37] text-[#14291F] font-bold transition-transform duration-300 ${isAdding ? 'translate-y-0' : 'translate-y-12'}`}>
                   <CheckCircle2 size={16} /> Added to Cart
                 </span>
               </button>
@@ -438,23 +438,23 @@ export default function ProductDetail() {
             <ProductDeliveryPromise isOutOfStock={isOutOfStock} />
 
             {/* Artisanal Small-Batch & Genuinity Verification Plate */}
-            <div className="mt-5 rounded-2xl two-tone-card p-4 sm:p-5 relative overflow-hidden border border-[#d4af37]/40 shadow-md">
+            <div className="mt-5 rounded-2xl two-tone-card p-4 sm:p-5 relative overflow-hidden border border-[#244A38] shadow-md">
               <div className="flex items-center justify-between gap-3 mb-2.5">
                 <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-lg bg-[#070a0e] text-[#d4af37] flex items-center justify-center border border-[#d4af37]/40 shadow-sm shrink-0">
+                  <div className="w-8 h-8 rounded-lg bg-[#102219] text-[#D4AF37] flex items-center justify-center border border-[#D4AF37]/40 shadow-sm shrink-0">
                     <Sparkles size={16} />
                   </div>
                   <div>
-                    <p className="font-mono text-[9px] font-bold uppercase tracking-widest text-[#d4af37]">Artisanal Compounding</p>
+                    <p className="font-mono text-[9px] font-bold uppercase tracking-widest text-[#D4AF37]">Artisanal Compounding</p>
                     <p className="font-serif text-sm font-bold text-white">Batch #{product.batchCode || 'BV-CH26-8841'} · 250 Units Run</p>
                   </div>
                 </div>
-                <span className="rounded-full bg-[#070a0e] border border-[#d4af37]/30 px-2.5 py-1 text-[9px] font-mono font-bold text-[#fce096]">
+                <span className="rounded-full bg-[#102219] border border-[#D4AF37]/30 px-2.5 py-1 text-[9px] font-mono font-bold text-[#FCE096]">
                   Virgin Seal
                 </span>
               </div>
 
-              <p className="text-xs text-[#cbd5e1] leading-relaxed mb-3.5">
+              <p className="text-xs text-[#DFD7C4] leading-relaxed mb-3.5">
                 Every bottle carries an individualized serial number (#087 of 250). Scan or enter your bottle serial to inspect analytical lab pH calibration ({product.phLevel || 'pH 5.51'}), heavy-metal assay (ND), and formulation monograph.
               </p>
 
@@ -466,10 +466,10 @@ export default function ProductDetail() {
                   <QrCode size={14} /> Scan / Verify Genuinity Test
                 </Link>
                 <Link
-                  to="/purchase-protection"
-                  className="btn-silver-luxury w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2.5 text-[11px] font-semibold text-[#cbd5e1] transition-all"
+                  to="/science"
+                  className="btn-silver-luxury w-full sm:w-auto inline-flex items-center justify-center gap-1.5 rounded-xl px-3.5 py-2.5 text-[11px] font-semibold text-[#DFD7C4] transition-all"
                 >
-                  <Lock size={12} className="text-[#d4af37]" /> Sanitary Custody
+                  <Lock size={12} className="text-[#D4AF37]" /> Sanitary Custody
                 </Link>
               </div>
             </div>
@@ -849,19 +849,19 @@ export default function ProductDetail() {
 }
 
 const SkeletonPDP = () => (
-  <div className="bg-[#070a0e] min-h-screen pt-24 pb-32 px-6">
+  <div className="bg-[#14291F] min-h-screen pt-24 pb-32 px-6">
     <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 animate-pulse opacity-50">
       <div className="lg:col-span-7 flex flex-col md:flex-row gap-6">
         <div className="flex md:flex-col gap-4 w-full md:w-24">
-          {[1,2,3,4].map(i => <div key={i} className="w-20 h-20 md:w-24 md:h-24 bg-[#0d1520] border border-[#d4af37]/15 rounded-xl shrink-0"></div>)}
+          {[1,2,3,4].map(i => <div key={i} className="w-20 h-20 md:w-24 md:h-24 bg-[#102219] border border-[#244A38] rounded-xl shrink-0"></div>)}
         </div>
-        <div className="w-full h-[500px] md:h-[700px] bg-[#0d1520] border border-[#d4af37]/15 rounded-2xl"></div>
+        <div className="w-full h-[500px] md:h-[700px] bg-[#102219] border border-[#244A38] rounded-2xl"></div>
       </div>
       <div className="lg:col-span-5 flex flex-col gap-8 pt-8">
-        <div className="h-12 bg-[#0d1520] border border-[#d4af37]/15 rounded-xl w-3/4"></div>
-        <div className="h-6 bg-[#0d1520] border border-[#d4af37]/15 rounded-xl w-1/3"></div>
-        <div className="h-24 bg-[#0d1520] border border-[#d4af37]/15 rounded-xl w-full"></div>
-        <div className="h-32 bg-[#0d1520] border border-[#d4af37]/15 rounded-xl w-full mt-10"></div>
+        <div className="h-12 bg-[#102219] border border-[#244A38] rounded-xl w-3/4"></div>
+        <div className="h-6 bg-[#102219] border border-[#244A38] rounded-xl w-1/3"></div>
+        <div className="h-24 bg-[#102219] border border-[#244A38] rounded-xl w-full"></div>
+        <div className="h-32 bg-[#102219] border border-[#244A38] rounded-xl w-full mt-10"></div>
       </div>
     </div>
   </div>

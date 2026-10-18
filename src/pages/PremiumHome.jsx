@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
-import { categories as categoriesApi, products as productsApi, recommendations as recommendationsApi, reviews as reviewsApi } from '../services/api';
+import { categories as categoriesApi, products as productsApi } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { getProductImageUrl } from '../utils/productImageUrl';
@@ -29,7 +29,7 @@ const questions = [
     key: 'ingredients',
     label: 'Ingredients',
     question: 'What is actually inside each formula?',
-    answer: 'Every product has its own transcribed ingredient list, calibrated pH level, and directions. Explore the product page or Somatic Label Registry before choosing.',
+    answer: 'Every product has its own transcribed ingredient list, calibrated pH level, and directions. Explore the product page or Lab Science dossier before choosing.',
     link: '/science',
     linkLabel: 'Explore ingredient science',
   },
@@ -37,15 +37,15 @@ const questions = [
     key: 'choosing',
     label: 'Choosing a ritual',
     question: 'Where should I begin?',
-    answer: 'Begin with the cleanser or elixir that fits your skin type, or compare our 6 formulations side-by-side on the Compare Formulations matrix.',
-    link: '/compare',
-    linkLabel: 'Compare formulations',
+    answer: 'Begin with the cleanser or elixir that fits your skin type, or explore our full artisanal micro-batch catalog.',
+    link: '/shop',
+    linkLabel: 'Explore formulations',
   },
   {
     key: 'orders',
     label: 'Orders',
     question: 'Where can I follow an order?',
-    answer: 'Use your 9-digit order reference on the Order Tracking page to inspect warehouse digital weight-scan logs and courier AWB milestones.',
+    answer: 'Use your order reference on the Order Tracking page to inspect warehouse digital weight-scan logs and courier AWB milestones.',
     link: '/order-tracking',
     linkLabel: 'Track an order',
   },
@@ -73,7 +73,6 @@ export default function PremiumHome() {
       .then(({ data }) => {
         const rows = data?.data || data;
         if (active && Array.isArray(rows) && rows.length > 0) {
-          // Ensure every product has a unique non-repeating image if missing
           const enriched = rows.map((p, idx) => ({
             ...FALLBACK_CATALOG_PRODUCTS[idx % FALLBACK_CATALOG_PRODUCTS.length],
             ...p,
@@ -100,7 +99,7 @@ export default function PremiumHome() {
   }, []);
 
   return (
-    <main className="min-h-screen bg-[#070a0e] text-[#e2e8f0] font-sans">
+    <main className="min-h-screen bg-[#14291F] text-[#FAF7F2] font-sans">
       <SEO
         title="Bhumivera | Himalayan Botanical & Dermatological Skincare Maison"
         description="Cold-pressed Himalayan Sea Buckthorn, Pampore Kashmiri Saffron, Niacinamide, and Hyaluronic Acid formulations with full label transparency."
@@ -108,21 +107,21 @@ export default function PremiumHome() {
         ogImage={HOME_VISUAL_ASSETS.heroPrimary}
       />
 
-      {/* 1. TWO-TONE LUXURY HERO SECTION */}
-      <section className="relative isolate min-h-[88svh] overflow-hidden bg-[#070a0e] text-[#e2e8f0]">
+      {/* 1. TWO-TONE ARCHITECTURAL LUXURY HERO SECTION */}
+      <section className="relative isolate min-h-[88svh] overflow-hidden bg-[#14291F] text-[#FAF7F2]">
         <div className="absolute inset-0 -z-20">
           <img
             src={HOME_VISUAL_ASSETS.heroPrimary}
             alt="Himalayan Sea Buckthorn harvest in Ladakh mountain valley"
-            className="h-full w-full object-cover object-center opacity-40"
+            className="h-full w-full object-cover object-center opacity-30"
           />
         </div>
-        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#070a0e]/95 via-[#070a0e]/80 to-[#070a0e]/40" />
+        <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#14291F] via-[#14291F]/85 to-[#14291F]/40" />
 
         <div className="mx-auto flex min-h-[88svh] max-w-7xl flex-col justify-between px-6 pb-14 pt-28 sm:px-10 lg:pb-20">
           <div className="max-w-3xl pt-8">
             <p className="font-sub-gold uppercase tracking-[0.26em] text-xs font-bold inline-flex items-center gap-2">
-              <Leaf size={14} className="text-[#d4af37]" /> Bhumivera Botanical Maison · Est. India
+              <Leaf size={14} className="text-[#D4AF37]" /> Bhumivera Botanical Maison · Est. India
             </p>
             
             <h1 className="mt-5 font-serif text-4xl leading-[1.08] sm:text-6xl lg:text-7xl font-bold tracking-tight">
@@ -132,11 +131,11 @@ export default function PremiumHome() {
 
             <div className="gold-hairline my-5 max-w-xs" />
 
-            <p className="font-sub-silver uppercase tracking-[0.22em] text-xs font-medium">
+            <p className="font-sub-silver uppercase tracking-[0.22em] text-xs font-medium text-[#DFD7C4]">
               Small-Batch Artisanal Compounding · Cold-Pressed High-Altitude Actives
             </p>
 
-            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[#cbd5e1] font-light sm:text-base">
+            <p className="mt-4 max-w-2xl text-sm leading-relaxed text-[#DFD7C4] font-light sm:text-base">
               Cold-pressed Himalayan Sea Buckthorn (Omega-7), Pampore Kashmiri Saffron, and fresh Aloe Vera inner fillet paired with pH 5.5 Niacinamide and Hyaluronic Acid. Every concentration printed openly on the label with verified virgin custody.
             </p>
 
@@ -145,39 +144,39 @@ export default function PremiumHome() {
                 to="/shop"
                 className="btn-gold-luxury inline-flex min-h-12 items-center gap-2.5 rounded-full px-7 py-3.5 text-xs font-semibold uppercase tracking-wider text-white"
               >
-                Shop the Collection <ArrowRight size={15} />
+                Shop Collections <ArrowRight size={15} />
               </Link>
               <Link
                 to="/verify"
                 className="btn-silver-luxury inline-flex min-h-12 items-center gap-2.5 rounded-full px-6 py-3.5 text-xs font-semibold uppercase tracking-wider"
               >
-                <ShieldCheck size={16} className="text-[#d4af37]" /> Verify Bottle Serial
+                <ShieldCheck size={16} className="text-[#D4AF37]" /> Verify Bottle Serial
               </Link>
               <Link
-                to="/compare"
-                className="two-tone-card inline-flex min-h-12 items-center gap-2.5 rounded-full border border-[#d4af37]/25 px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-[#cbd5e1] hover:text-[#fce096] transition"
+                to="/science"
+                className="two-tone-card inline-flex min-h-12 items-center gap-2.5 rounded-full border border-[#D4AF37]/30 px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-[#FAF7F2] hover:text-[#FCE096] transition"
               >
-                Compare Formulations
+                Lab Science
               </Link>
             </div>
           </div>
 
-          <div className="mt-12 grid grid-cols-2 gap-4 border-t border-[#d4af37]/20 pt-6 sm:grid-cols-4 text-xs">
-            <div className="two-tone-card p-3.5 rounded-2xl border border-[#d4af37]/20">
+          <div className="mt-12 grid grid-cols-2 gap-4 border-t border-[#244A38]/60 pt-6 sm:grid-cols-4 text-xs">
+            <div className="two-tone-card p-3.5 rounded-2xl border border-[#244A38]">
               <p className="font-sub-gold text-[10px] uppercase tracking-widest font-bold">Acid Mantle Standard</p>
-              <p className="mt-1 font-serif text-sm font-bold text-white">pH 5.3 – 5.6 Calibrated</p>
+              <p className="mt-1 font-serif text-sm font-bold text-[#FAF7F2]">pH 5.3 – 5.6 Calibrated</p>
             </div>
-            <div className="two-tone-card p-3.5 rounded-2xl border border-[#d4af37]/20">
+            <div className="two-tone-card p-3.5 rounded-2xl border border-[#244A38]">
               <p className="font-sub-gold text-[10px] uppercase tracking-widest font-bold">Surfactant Matrix</p>
-              <p className="mt-1 font-serif text-sm font-bold text-white">0% SLS / SLES / Parabens</p>
+              <p className="mt-1 font-serif text-sm font-bold text-[#FAF7F2]">0% SLS / SLES / Parabens</p>
             </div>
-            <div className="two-tone-card p-3.5 rounded-2xl border border-[#d4af37]/20">
+            <div className="two-tone-card p-3.5 rounded-2xl border border-[#244A38]">
               <p className="font-sub-gold text-[10px] uppercase tracking-widest font-bold">Dispatch Integrity</p>
-              <p className="mt-1 font-serif text-sm font-bold text-white">±0.5g Digital Scale Logged</p>
+              <p className="mt-1 font-serif text-sm font-bold text-[#FAF7F2]">±0.5g Digital Scale Logged</p>
             </div>
-            <div className="two-tone-card p-3.5 rounded-2xl border border-[#d4af37]/20">
+            <div className="two-tone-card p-3.5 rounded-2xl border border-[#244A38]">
               <p className="font-sub-gold text-[10px] uppercase tracking-widest font-bold">Sanitary Custody</p>
-              <p className="mt-1 font-serif text-sm font-bold text-[#fce096]">100% Sealed &amp; Serial Tested</p>
+              <p className="mt-1 font-serif text-sm font-bold text-[#FCE096]">100% Sealed &amp; Serial Tested</p>
             </div>
           </div>
         </div>
@@ -185,24 +184,18 @@ export default function PremiumHome() {
 
       {/* 2. FEATURED FORMULATIONS COLLECTION GRID */}
       <section className="mx-auto max-w-7xl px-6 py-16 sm:px-10 sm:py-24">
-        <div className="flex flex-col justify-between gap-4 border-b border-[#d4af37]/20 pb-6 md:flex-row md:items-end">
+        <div className="flex flex-col justify-between gap-4 border-b border-[#244A38]/60 pb-6 md:flex-row md:items-end">
           <div>
             <p className="font-sub-gold uppercase tracking-[0.26em] text-xs font-bold">
               Apothecary Formulations
             </p>
-            <h2 className="mt-2 font-serif text-3xl sm:text-5xl font-bold text-white">
+            <h2 className="mt-2 font-serif text-3xl sm:text-5xl font-bold text-[#FAF7F2]">
               <span className="font-headline-gold">Considered Daily</span>{' '}
               <span className="font-headline-silver">Rituals</span>
             </h2>
             <div className="gold-hairline w-24 my-3" />
           </div>
           <div className="flex flex-wrap gap-3">
-            <Link
-              to="/compare"
-              className="btn-silver-luxury inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider"
-            >
-              Side-by-Side Comparison
-            </Link>
             <Link
               to="/shop"
               className="btn-gold-luxury inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider text-white"
@@ -216,11 +209,11 @@ export default function PremiumHome() {
           {products.slice(0, 6).map((product, idx) => (
             <article
               key={product.id || product._id || idx}
-              className="group flex flex-col overflow-hidden rounded-3xl border border-[#d4af37]/25 two-tone-card shadow-sm transition hover:border-[#d4af37]/60 hover:shadow-2xl"
+              className="group flex flex-col overflow-hidden rounded-3xl border border-[#244A38] two-tone-card shadow-sm transition hover:border-[#D4AF37]/60 hover:shadow-2xl"
             >
               <Link
                 to={`/product/${product.slug || product.id}`}
-                className="relative aspect-[4/3] w-full overflow-hidden bg-[#070a0e]"
+                className="relative aspect-[4/3] w-full overflow-hidden bg-[#102219]"
               >
                 <img
                   src={productImage(product, idx)}
@@ -228,31 +221,31 @@ export default function PremiumHome() {
                   loading="lazy"
                   className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 />
-                <span className="absolute left-4 top-4 rounded-full bg-[#070a0e]/85 border border-[#d4af37]/40 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-[#fce096] backdrop-blur-sm">
+                <span className="absolute left-4 top-4 rounded-full bg-[#102219]/90 border border-[#D4AF37]/40 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-[#FCE096] backdrop-blur-sm">
                   {product.phLevel || 'pH 5.5 Calibrated'}
                 </span>
               </Link>
               <div className="flex flex-1 flex-col justify-between p-6">
                 <div>
-                  <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#fce096]">
+                  <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#FCE096]">
                     {product.category_name || 'Botanical Care'} · {product.volume || '100 ml'}
                   </p>
                   <Link to={`/product/${product.slug || product.id}`}>
-                    <h3 className="mt-2 font-serif text-2xl font-bold text-white group-hover:text-[#fce096] transition-colors">
+                    <h3 className="mt-2 font-serif text-2xl font-bold text-[#FAF7F2] group-hover:text-[#FCE096] transition-colors">
                       {product.name}
                     </h3>
                   </Link>
-                  <p className="mt-2 text-xs leading-6 text-[#cbd5e1] font-light line-clamp-3">
+                  <p className="mt-2 text-xs leading-6 text-[#DFD7C4] font-light line-clamp-3">
                     {product.description}
                   </p>
                 </div>
-                <div className="mt-6 flex items-center justify-between border-t border-[#d4af37]/20 pt-4">
+                <div className="mt-6 flex items-center justify-between border-t border-[#244A38]/60 pt-4">
                   <div>
-                    <span className="font-serif text-2xl font-bold text-[#fce096]">
+                    <span className="font-serif text-2xl font-bold text-[#FCE096]">
                       ₹{price(product)}
                     </span>
                     {product.discount_price && (
-                      <span className="ml-2 text-xs text-[#94a3b8] line-through font-light">
+                      <span className="ml-2 text-xs text-[#9BB0A5] line-through font-light">
                         ₹{product.price}
                       </span>
                     )}
@@ -272,19 +265,19 @@ export default function PremiumHome() {
       </section>
 
       {/* 3. 4 CORE BOTANICAL SPECIMEN CARDS */}
-      <section className="bg-[#070a0e] py-16 text-white sm:py-24 border-y border-[#d4af37]/20">
+      <section className="bg-[#102219] py-16 text-white sm:py-24 border-y border-[#244A38]/50">
         <div className="mx-auto max-w-7xl px-6 sm:px-10">
-          <div className="flex flex-col justify-between gap-4 border-b border-[#d4af37]/30 pb-8 md:flex-row md:items-end">
+          <div className="flex flex-col justify-between gap-4 border-b border-[#244A38] pb-8 md:flex-row md:items-end">
             <div>
               <p className="font-sub-gold uppercase tracking-[0.26em] text-xs font-bold flex items-center gap-2">
-                <Sparkles size={13} className="text-[#d4af37]" /> Small-Batch Botanical Potency &amp; Origin
+                <Sparkles size={13} className="text-[#D4AF37]" /> Small-Batch Botanical Potency &amp; Origin
               </p>
-              <h2 className="mt-2 font-serif text-3xl sm:text-5xl font-bold text-white">
+              <h2 className="mt-2 font-serif text-3xl sm:text-5xl font-bold text-[#FAF7F2]">
                 <span className="font-headline-gold">Cornerstone Botanical</span>{' '}
                 <span className="font-headline-silver">Actives</span>
               </h2>
               <div className="gold-hairline w-24 my-3" />
-              <p className="mt-2 max-w-xl text-xs sm:text-sm text-[#cbd5e1] font-light">
+              <p className="mt-2 max-w-xl text-xs sm:text-sm text-[#DFD7C4] font-light">
                 Transcribed from our physical bottle labels: pure steam-activated charcoal, high-altitude Sea Buckthorn, sacred neem, haridra, and triphala saponins.
               </p>
             </div>
@@ -296,19 +289,19 @@ export default function PremiumHome() {
                 <ShieldCheck size={14} /> Test Bottle Genuinity
               </Link>
               <Link
-                to="/provenance-engine"
+                to="/science"
                 className="btn-silver-luxury inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider"
               >
-                Inspect 6 Harvest Corridors <ArrowRight size={14} />
+                Lab Science Dossier <ArrowRight size={14} />
               </Link>
             </div>
           </div>
 
           <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
-            {HOME_VISUAL_ASSETS.ingredients.map((ing, idx) => (
+            {HOME_VISUAL_ASSETS.ingredients.map((ing) => (
               <article
                 key={ing.name}
-                className="group relative overflow-hidden rounded-3xl two-tone-card border border-[#d4af37]/30 transition-all duration-500 hover:-translate-y-1 hover:border-[#d4af37]"
+                className="group relative overflow-hidden rounded-3xl two-tone-card border border-[#244A38] transition-all duration-500 hover:-translate-y-1 hover:border-[#D4AF37]"
               >
                 <div className="aspect-[4/5] w-full overflow-hidden relative">
                   <img
@@ -317,39 +310,39 @@ export default function PremiumHome() {
                     loading="lazy"
                     className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
-                  <div className={`absolute inset-0 bg-gradient-to-t ${ing.tone} via-[#070a0e]/40 to-transparent`} />
+                  <div className={`absolute inset-0 bg-gradient-to-t ${ing.tone} via-[#14291F]/40 to-transparent`} />
                 </div>
                 
                 {/* Gold Accent Top Ribbon */}
                 <div className="absolute top-3.5 left-3.5 right-3.5 flex justify-between items-center pointer-events-none">
-                  <span className="rounded-full bg-[#070a0e]/85 px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-widest text-[#fce096] border border-[#d4af37]/40 backdrop-blur-md">
+                  <span className="rounded-full bg-[#102219]/90 px-3 py-1 font-mono text-[9px] font-bold uppercase tracking-widest text-[#FCE096] border border-[#D4AF37]/40 backdrop-blur-md">
                     {ing.badge}
                   </span>
                 </div>
 
-                <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-[#070a0e]/95 via-[#070a0e]/85 to-transparent">
-                  <h3 className="font-serif text-2xl font-bold text-white group-hover:text-[#fce096] transition-colors">{ing.name}</h3>
-                  <p className="text-[11px] font-mono text-[#fce096] mt-0.5">{ing.botanical}</p>
-                  <p className="mt-2 text-xs leading-5 text-[#cbd5e1] font-light">{ing.note}</p>
+                <div className="absolute inset-x-0 bottom-0 p-5 bg-gradient-to-t from-[#14291F]/95 via-[#14291F]/85 to-transparent">
+                  <h3 className="font-serif text-2xl font-bold text-[#FAF7F2] group-hover:text-[#FCE096] transition-colors">{ing.name}</h3>
+                  <p className="text-[11px] font-mono text-[#FCE096] mt-0.5">{ing.botanical}</p>
+                  <p className="mt-2 text-xs leading-5 text-[#DFD7C4] font-light">{ing.note}</p>
                 </div>
               </article>
             ))}
           </div>
 
           {/* SERIAL QR GENUINITY BANNER */}
-          <div className="mt-12 two-tone-panel-gold rounded-3xl p-6 sm:p-8 border border-[#d4af37]/50 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+          <div className="mt-12 two-tone-panel-gold rounded-3xl p-6 sm:p-8 border border-[#D4AF37]/50 shadow-2xl flex flex-col md:flex-row items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#070a0e]/80 border border-[#d4af37]/40 text-[#fce096] shrink-0">
+              <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#102219] border border-[#D4AF37]/40 text-[#FCE096] shrink-0">
                 <QrCode size={28} />
               </span>
               <div>
                 <p className="font-sub-gold uppercase tracking-[0.2em] font-bold text-[10px]">
                   Artisanal Provenance &amp; Verification
                 </p>
-                <h3 className="font-serif text-xl sm:text-2xl font-bold text-white mt-0.5">
+                <h3 className="font-serif text-xl sm:text-2xl font-bold text-[#FAF7F2] mt-0.5">
                   Scan Your Bottle Serial Number
                 </h3>
-                <p className="text-xs sm:text-sm text-[#cbd5e1] font-light mt-1 max-w-xl">
+                <p className="text-xs sm:text-sm text-[#DFD7C4] font-light mt-1 max-w-xl">
                   Inspect the live spectrophotometric purity assay, calibrated pH record, small-batch run allocation (250 bottles), and master herbalist seal for your specific bottle.
                 </p>
               </div>
@@ -366,12 +359,12 @@ export default function PremiumHome() {
 
       {/* 4. REAL-LIFE LABORATORY & FULFILMENT STUDIES */}
       <section className="mx-auto max-w-7xl px-6 py-16 sm:px-10 sm:py-24">
-        <div className="mb-10 flex flex-col justify-between gap-4 border-b border-[#d4af37]/20 pb-6 md:flex-row md:items-end">
+        <div className="mb-10 flex flex-col justify-between gap-4 border-b border-[#244A38]/60 pb-6 md:flex-row md:items-end">
           <div>
             <p className="font-sub-gold uppercase tracking-[0.26em] text-xs font-bold">
               Real-Life Quality Benchmarks
             </p>
-            <h2 className="mt-2 font-serif text-3xl sm:text-5xl font-bold text-white">
+            <h2 className="mt-2 font-serif text-3xl sm:text-5xl font-bold text-[#FAF7F2]">
               <span className="font-headline-gold">Inside Our Lab</span>{' '}
               <span className="font-headline-silver">&amp; Dispatch Protocol</span>
             </h2>
@@ -381,7 +374,7 @@ export default function PremiumHome() {
             to="/science"
             className="btn-silver-luxury inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-xs font-semibold uppercase tracking-wider"
           >
-            Read Full Formulation Science <ArrowRight size={14} />
+            Read Formulation Science <ArrowRight size={14} />
           </Link>
         </div>
 
@@ -389,9 +382,9 @@ export default function PremiumHome() {
           {HOME_VISUAL_ASSETS.realLifeFieldStudies.map((study) => (
             <article
               key={study.id}
-              className="flex flex-col overflow-hidden rounded-2xl border border-[#d4af37]/25 two-tone-card shadow-sm"
+              className="flex flex-col overflow-hidden rounded-2xl border border-[#244A38] two-tone-card shadow-sm"
             >
-              <div className="aspect-[16/10] w-full overflow-hidden bg-[#070a0e]">
+              <div className="aspect-[16/10] w-full overflow-hidden bg-[#102219]">
                 <img
                   src={study.image}
                   alt={study.title}
@@ -401,12 +394,12 @@ export default function PremiumHome() {
               </div>
               <div className="p-5 flex-1 flex flex-col justify-between">
                 <div>
-                  <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#fce096]">
+                  <span className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#FCE096]">
                     {study.tag}
                   </span>
-                  <h3 className="mt-2 font-serif text-xl font-bold text-white">{study.title}</h3>
-                  <p className="mt-1 text-xs font-medium text-[#cbd5e1]">{study.subtitle}</p>
-                  <p className="mt-2.5 text-xs leading-6 text-[#94a3b8] font-light">{study.description}</p>
+                  <h3 className="mt-2 font-serif text-xl font-bold text-[#FAF7F2]">{study.title}</h3>
+                  <p className="mt-1 text-xs font-medium text-[#DFD7C4]">{study.subtitle}</p>
+                  <p className="mt-2.5 text-xs leading-6 text-[#9BB0A5] font-light">{study.description}</p>
                 </div>
               </div>
             </article>
@@ -415,9 +408,9 @@ export default function PremiumHome() {
       </section>
 
       {/* 5. STEWARDSHIP & FAQ SECTION */}
-      <section className="border-t border-[#d4af37]/20 bg-[#070a0e] px-6 py-16 sm:px-10 sm:py-24">
+      <section className="border-t border-[#244A38]/50 bg-[#102219] px-6 py-16 sm:px-10 sm:py-24">
         <div className="mx-auto max-w-7xl grid gap-12 lg:grid-cols-[0.95fr_1.05fr] items-center">
-          <div className="overflow-hidden rounded-3xl two-tone-panel-gold border border-[#d4af37]/40 shadow-xl">
+          <div className="overflow-hidden rounded-3xl two-tone-panel-gold border border-[#D4AF37]/40 shadow-xl">
             <img
               src={HOME_VISUAL_ASSETS.stewardshipBanner}
               alt="Bhumivera copper hydrosol distillation and botanical craft"
@@ -428,10 +421,10 @@ export default function PremiumHome() {
               <span className="font-sub-gold uppercase tracking-widest text-[10px] font-bold">
                 Verified Stewardship Ledger
               </span>
-              <h3 className="mt-2 font-serif text-2xl sm:text-3xl font-bold text-white">
+              <h3 className="mt-2 font-serif text-2xl sm:text-3xl font-bold text-[#FAF7F2]">
                 No impact claim without a receipt and a field record.
               </h3>
-              <p className="mt-3 text-xs sm:text-sm leading-6 text-[#cbd5e1] font-light">
+              <p className="mt-3 text-xs sm:text-sm leading-6 text-[#DFD7C4] font-light">
                 Inspect our public environmental ledger, native sapling nursery photographs, and riparian care records.
               </p>
               <Link
@@ -447,7 +440,7 @@ export default function PremiumHome() {
             <p className="font-sub-gold uppercase tracking-[0.26em] text-xs font-bold">
               Practical Answers
             </p>
-            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-white">
+            <h2 className="font-serif text-3xl sm:text-4xl font-bold text-[#FAF7F2]">
               <span className="font-headline-gold">Common Inquiries</span>{' '}
               <span className="font-headline-silver">Before You Choose</span>
             </h2>
@@ -459,7 +452,7 @@ export default function PremiumHome() {
                 return (
                   <div
                     key={item.key}
-                    className="two-tone-panel rounded-2xl border border-[#d4af37]/25 p-5 shadow-sm transition-all"
+                    className="two-tone-panel rounded-2xl border border-[#244A38] p-5 shadow-sm transition-all"
                   >
                     <button
                       type="button"
@@ -467,21 +460,21 @@ export default function PremiumHome() {
                       className="flex w-full items-center justify-between gap-4 text-left"
                     >
                       <div>
-                        <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#fce096]">
+                        <span className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#FCE096]">
                           {item.label}
                         </span>
-                        <h3 className="mt-1 font-serif text-lg sm:text-xl font-bold text-white">
+                        <h3 className="mt-1 font-serif text-lg sm:text-xl font-bold text-[#FAF7F2]">
                           {item.question}
                         </h3>
                       </div>
-                      <span className="text-xl font-bold text-[#d4af37]">{isOpen ? '−' : '+'}</span>
+                      <span className="text-xl font-bold text-[#D4AF37]">{isOpen ? '−' : '+'}</span>
                     </button>
                     {isOpen && (
-                      <div className="mt-3 border-t border-[#d4af37]/20 pt-3 text-xs sm:text-sm leading-6 text-[#cbd5e1] font-light">
+                      <div className="mt-3 border-t border-[#244A38]/60 pt-3 text-xs sm:text-sm leading-6 text-[#DFD7C4] font-light">
                         <p>{item.answer}</p>
                         <Link
                           to={item.link}
-                          className="mt-3 inline-flex items-center gap-1.5 font-semibold text-[#fce096] hover:text-white transition-colors"
+                          className="mt-3 inline-flex items-center gap-1.5 font-semibold text-[#FCE096] hover:text-white transition-colors"
                         >
                           {item.linkLabel} <ArrowUpRight size={14} />
                         </Link>

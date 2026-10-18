@@ -163,28 +163,34 @@ export default function Navbar() {
 
   return (
     <>
-      <div className="bg-[#070a0e] text-[#cbd5e1] py-2 px-6 text-[10px] font-bold uppercase tracking-widest hidden md:block border-b border-[#d4af37]/20">
+      <div className="bg-[#102219] text-[#FAF7F2] py-2 px-6 text-[10px] font-mono uppercase tracking-widest hidden md:block border-b border-[#244A38]/40">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-6">
-            <Link to="/impact" className="flex items-center gap-2 transition-colors hover:text-[#d4af37]"><Droplets size={14} className="text-[#d4af37]" /> {t('nav_impact', 'Our impact')}</Link>
-            <Link to="/order-tracking" className="flex items-center gap-2 transition-colors hover:text-[#d4af37]"><MapPin size={14} className="text-[#d4af37]" /> {t('nav_track_order', 'Track Order')}</Link>
+            <span className="flex items-center gap-2 text-[#FAF7F2]/90">
+              <Droplets size={13} className="text-[#d4af37]" /> Complimentary Pan-India Artisanal Dispatch Over ₹999
+            </span>
           </div>
           <div className="flex items-center gap-6">
-            <Link to="/contact" className="hover:text-[#d4af37] transition-colors">{t('nav_support', 'Boutique Support')}</Link>
+            <Link to="/order-tracking" className="flex items-center gap-1.5 transition-colors hover:text-[#d4af37] text-[#FAF7F2]/80">
+              <MapPin size={13} className="text-[#d4af37]" /> {t('nav_track_order', 'Track Order')}
+            </Link>
+            <Link to="/contact" className="hover:text-[#d4af37] transition-colors text-[#FAF7F2]/80">
+              {t('nav_support', 'Client Concierge')}
+            </Link>
             {user?.role === 'admin' && (
-              <Link to="/admin" className="text-[#d4af37] flex items-center gap-1.5"><Activity size={14}/> Admin Terminal</Link>
+              <Link to="/admin" className="text-[#d4af37] flex items-center gap-1.5 font-bold"><Activity size={13}/> Admin Terminal</Link>
             )}
           </div>
         </div>
       </div>
 
-      <nav className="sticky top-0 z-[100] border-b border-[#d4af37]/25 bg-[#070a0e]/95 backdrop-blur-xl">
+      <nav className="sticky top-0 z-[100] border-b border-[#244A38]/35 bg-[#14291F]/95 backdrop-blur-xl">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:gap-6 sm:px-6 sm:py-4 lg:gap-8">
           
           <button 
             type="button"
             onClick={() => setMenuOpen(!isMenuOpen)} 
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#cbd5e1] transition-colors hover:bg-white/5 hover:text-[#d4af37] md:hidden"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#FAF7F2] transition-colors hover:bg-white/5 hover:text-[#d4af37] md:hidden"
             aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={isMenuOpen}
             aria-controls="mobile-navigation"
@@ -217,7 +223,7 @@ export default function Navbar() {
                 onFocus={() => { if(searchQuery.length > 2) setShowSearchDropdown(true); }}
                 placeholder={t('search_placeholder', 'Search skincare, hair care, ingredients...')}
                 aria-label="Search skincare products"
-                className="w-full rounded-full border border-white/15 bg-[#0d1520] py-3.5 pl-12 pr-28 text-sm text-white shadow-sm outline-none transition-all placeholder:text-[#94a3b8] focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/30"
+                className="w-full rounded-full border border-white/10 bg-[#1C382B] py-3.5 pl-12 pr-28 text-sm text-white shadow-sm outline-none transition-all placeholder:text-[#9BB0A5] focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/30"
               />
               <div className="absolute right-4 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-[#d4af37]">
                 <button
@@ -230,7 +236,7 @@ export default function Navbar() {
                   <Mic size={16} />
                 </button>
               </div>
-              <button type="submit" aria-label="Search" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-[#faeec7] to-[#d4af37] px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-[#070a0e] opacity-0 transition-opacity group-focus-within:opacity-100 hover:brightness-110">
+              <button type="submit" aria-label="Search" className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-gradient-to-r from-[#faeec7] to-[#d4af37] px-5 py-2 text-[10px] font-bold uppercase tracking-widest text-[#14291F] opacity-0 transition-opacity group-focus-within:opacity-100 hover:brightness-110">
                 {t('search_action', 'Discover')}
               </button>
             </form>
@@ -239,15 +245,15 @@ export default function Navbar() {
               onClick={openAiConcierge}
               aria-label="Open AI concierge"
               title="Ask the AI concierge"
-              className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-[#d4af37]/50 bg-[#0d1520] px-4 text-xs font-bold text-[#d4af37] shadow-sm transition hover:bg-[#121d2c] hover:border-[#d4af37] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4af37]"
+              className="inline-flex h-11 shrink-0 items-center justify-center gap-2 rounded-full border border-[#d4af37]/50 bg-[#1C382B] px-4 text-xs font-bold text-[#d4af37] shadow-sm transition hover:bg-[#244A38] hover:border-[#d4af37] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#d4af37]"
             >
               <Sparkles size={16} />
               <span>Ask AI</span>
             </button>
 
             {showSearchDropdown && (searchQuery.length > 2) && (
-              <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-[#0d1520] rounded-2xl border border-[#d4af37]/35 shadow-2xl overflow-hidden z-50">
-                 <div className="flex items-center justify-between border-b border-white/10 bg-[#111b27] px-5 py-3">
+              <div className="absolute top-[calc(100%+8px)] left-0 right-0 bg-[#1C382B] rounded-2xl border border-[#d4af37]/35 shadow-2xl overflow-hidden z-50">
+                 <div className="flex items-center justify-between border-b border-white/10 bg-[#14291F] px-5 py-3">
                    <div className="flex items-center text-[10px] font-bold uppercase tracking-[0.2em] text-[#d4af37]">
                      <Sparkles size={14} className="mr-2 animate-pulse" />
                      {isAiPowered ? 'Semantic Formulation Results' : 'Standard Search'}
@@ -256,16 +262,16 @@ export default function Navbar() {
                  </div>
                  <div className="max-h-[60vh] overflow-y-auto">
                    {suggestions.length === 0 && !isSearching ? (
-                     <div className="p-8 text-center font-serif text-sm uppercase tracking-widest text-[#cbd5e1]/70">No botanical matches found.</div>
+                     <div className="p-8 text-center font-serif text-sm uppercase tracking-widest text-[#FAF7F2]/70">No botanical matches found.</div>
                    ) : (
                      suggestions.map(s => (
                        <Link key={s.id || s._id} to={`/product/${s.slug || s.id || s._id}`} onClick={() => setShowSearchDropdown(false)} className="group flex items-center border-b border-white/10 p-4 transition-colors hover:bg-white/5 last:border-none">
-                          <img src={getProductImageUrl(s.image_url || s.images || s.image) || '/logo.webp'} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="mr-4 h-12 w-12 rounded-full border border-white/10 bg-[#070a0e] object-cover p-1" alt={s.name} />
+                          <img src={getProductImageUrl(s.image_url || s.images || s.image) || '/logo.webp'} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="mr-4 h-12 w-12 rounded-full border border-white/10 bg-[#14291F] object-cover p-1" alt={s.name} />
                           <div className="flex-1">
                              <div className="truncate text-sm font-bold uppercase text-white group-hover:text-[#d4af37]">{s.name}</div>
                              <div className="mt-1 font-serif text-xs text-[#d4af37]">₹{s.discount_price || s.price}</div>
                           </div>
-                          <ChevronDown size={16} className="-rotate-90 text-[#cbd5e1]/50 group-hover:text-[#d4af37]" />
+                          <ChevronDown size={16} className="-rotate-90 text-[#FAF7F2]/50 group-hover:text-[#d4af37]" />
                        </Link>
                      ))
                    )}
@@ -275,10 +281,10 @@ export default function Navbar() {
           </div>
 
           <div className="flex items-center space-x-4 sm:space-x-6 shrink-0">
-            <Link to="/science" aria-label="Botanical Science" className="hidden xl:flex items-center space-x-3 rounded-full border border-white/15 bg-[#0d1520] px-5 py-2.5 shadow-sm transition-all hover:border-[#d4af37] hover:bg-[#121d2c] group">
+            <Link to="/science" aria-label="Botanical Science" className="hidden xl:flex items-center space-x-3 rounded-full border border-white/10 bg-[#1C382B] px-5 py-2.5 shadow-sm transition-all hover:border-[#d4af37] hover:bg-[#244A38] group">
               <Sparkles size={16} className="text-[#d4af37]" />
               <div className="text-left">
-                <div className="text-[8px] font-bold uppercase tracking-widest leading-none text-[#94a3b8] group-hover:text-[#d4af37]">{t('nav_science', 'Botanical Science')}</div>
+                <div className="text-[8px] font-bold uppercase tracking-widest leading-none text-[#9BB0A5] group-hover:text-[#d4af37]">{t('nav_science', 'Botanical Science')}</div>
                 <div className="text-[11px] font-serif font-bold uppercase tracking-widest text-white group-hover:text-[#faeec7] truncate max-w-[120px]">{t('discover_science', 'pH 5.5 Assays')}</div>
               </div>
             </Link>
@@ -287,19 +293,19 @@ export default function Navbar() {
 
             {user ? (
               <Link to="/profile" aria-label="Profile" className="flex items-center gap-3 group">
-                <div className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#0d1520] shadow-sm group-hover:border-[#d4af37]">
+                <div className="relative flex h-10 w-10 items-center justify-center rounded-full border border-white/15 bg-[#1C382B] shadow-sm group-hover:border-[#d4af37]">
                    <User size={18} className="text-[#d4af37]" />
-                   <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[#070a0e] bg-[#d4af37]"></span>
+                   <span className="absolute bottom-0 right-0 h-2.5 w-2.5 rounded-full border-2 border-[#14291F] bg-[#d4af37]"></span>
                 </div>
               </Link>
             ) : (
               <Link to="/login" className="hidden rounded-full btn-gold-luxury px-6 py-2.5 text-xs font-bold uppercase tracking-widest shadow-sm transition-all sm:flex">{t('nav_signin', 'Sign In')}</Link>
             )}
 
-            <button type="button" onClick={() => setIsCartOpen(true)} aria-label={`Open cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`} className="group relative rounded-full border border-white/15 bg-[#0d1520] p-2.5 text-[#cbd5e1] shadow-sm transition-all hover:border-[#d4af37] hover:text-[#d4af37]">
+            <button type="button" onClick={() => setIsCartOpen(true)} aria-label={`Open cart, ${cartCount} ${cartCount === 1 ? 'item' : 'items'}`} className="group relative rounded-full border border-white/15 bg-[#1C382B] p-2.5 text-[#FAF7F2] shadow-sm transition-all hover:border-[#d4af37] hover:text-[#d4af37]">
               <ShoppingCart size={20} className="group-hover:scale-110 transition-transform" />
               {cartCount > 0 && (
-                <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full border-2 border-[#070a0e] bg-[#d4af37] text-[10px] font-black text-[#070a0e] shadow-sm">{cartCount}</span>
+                <span className="absolute -right-2 -top-2 flex h-5 w-5 items-center justify-center rounded-full border-2 border-[#14291F] bg-[#d4af37] text-[10px] font-black text-[#14291F] shadow-sm">{cartCount}</span>
               )}
             </button>
           </div>
@@ -315,12 +321,12 @@ export default function Navbar() {
                 onFocus={() => { if (searchQuery.length > 2) setShowSearchDropdown(true); }}
                 placeholder={t('search_placeholder', 'Search skincare, hair care, ingredients...')}
                 aria-label="Search skincare products"
-                className="h-11 w-full rounded-full border border-white/15 bg-[#0d1520] pl-10 pr-4 text-sm text-white shadow-sm outline-none placeholder:text-[#94a3b8] focus:border-[#d4af37]"
+                className="h-11 w-full rounded-full border border-white/10 bg-[#1C382B] pl-10 pr-4 text-sm text-white shadow-sm outline-none placeholder:text-[#9BB0A5] focus:border-[#d4af37]"
               />
             </form>
             {showSearchDropdown && searchQuery.length > 2 && (
-              <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-[120] overflow-hidden rounded-2xl border border-[#d4af37]/35 bg-[#0d1520] shadow-2xl">
-                <div className="flex items-center justify-between border-b border-white/10 bg-[#111b27] px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest text-[#d4af37]">
+              <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-[120] overflow-hidden rounded-2xl border border-[#d4af37]/35 bg-[#1C382B] shadow-2xl">
+                <div className="flex items-center justify-between border-b border-white/10 bg-[#14291F] px-4 py-2.5 text-[10px] font-bold uppercase tracking-widest text-[#d4af37]">
                   <span>{isAiPowered ? 'AI suggestions' : 'Search suggestions'}</span>
                   {isSearching && <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/20 border-t-[#d4af37]" />}
                 </div>
@@ -335,7 +341,7 @@ export default function Navbar() {
                       <img
                         src={getProductImageUrl(item.image_url || item.images || item.image) || '/logo.webp'}
                         onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}
-                        className="h-10 w-10 rounded-full border border-white/15 bg-[#070a0e] object-cover p-1"
+                        className="h-10 w-10 rounded-full border border-white/15 bg-[#14291F] object-cover p-1"
                         alt=""
                       />
                       <span className="min-w-0 flex-1 truncate font-semibold text-white">{item.name}</span>
@@ -343,7 +349,7 @@ export default function Navbar() {
                     </Link>
                   ))}
                   {!isSearching && suggestions.length === 0 && (
-                    <p className="px-4 py-5 text-center text-xs text-[#cbd5e1]">No botanical matches found.</p>
+                    <p className="px-4 py-5 text-center text-xs text-[#FAF7F2]/70">No botanical matches found.</p>
                   )}
                 </div>
               </div>
@@ -353,7 +359,7 @@ export default function Navbar() {
             type="button"
             onClick={openAiConcierge}
             aria-label="Open AI concierge"
-            className="inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#d4af37]/50 bg-[#0d1520] px-3.5 text-xs font-bold text-[#d4af37] shadow-sm transition hover:bg-[#121d2c]"
+            className="inline-flex h-11 shrink-0 items-center justify-center gap-1.5 rounded-full border border-[#d4af37]/50 bg-[#1C382B] px-3.5 text-xs font-bold text-[#d4af37] shadow-sm transition hover:bg-[#244A38]"
           >
             <Sparkles size={16} />
             <span>AI</span>
@@ -385,23 +391,23 @@ export default function Navbar() {
               animate={{ x: 0 }}
               exit={{ x: '-100%' }}
               transition={{ type: 'spring', stiffness: 350, damping: 35 }}
-              className="relative z-10 flex h-full w-[85vw] max-w-[340px] flex-col overflow-hidden border-r border-[#d4af37]/30 bg-[#0c1712] text-white shadow-[10px_0_40px_rgba(0,0,0,0.8)]"
+              className="relative z-10 flex h-full w-[85vw] max-w-[340px] flex-col overflow-hidden border-r border-[#244A38]/50 bg-[#14291F] text-white shadow-[10px_0_40px_rgba(0,0,0,0.8)]"
             >
               {/* 1. Sidebar Header */}
-              <div className="flex items-center justify-between border-b border-[#d4af37]/20 bg-[#070f0b] p-4">
+              <div className="flex items-center justify-between border-b border-[#244A38]/40 bg-[#102219] p-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#d4af37]/50 bg-[#13221b]">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#d4af37]/50 bg-[#1C382B]">
                     <img src="/logo.webp" alt="Bhumivera" className="h-8 w-8 object-contain" />
                   </div>
                   <div>
                     <span className="block font-bold tracking-[0.16em] text-[#d4af37] text-base">BHUMIVERA</span>
-                    <span className="block text-[9px] uppercase tracking-[0.2em] text-[#94a3b8]">Botanical Maison</span>
+                    <span className="block text-[9px] uppercase tracking-[0.2em] text-[#9BB0A5]">Botanical Maison</span>
                   </div>
                 </div>
                 <button
                   type="button"
                   onClick={() => setMenuOpen(false)}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-[#cbd5e1] hover:border-[#d4af37] hover:text-[#d4af37] transition-colors"
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 text-[#FAF7F2] hover:border-[#d4af37] hover:text-[#d4af37] transition-colors"
                   aria-label="Close sidebar"
                 >
                   <X size={18} />
@@ -409,7 +415,7 @@ export default function Navbar() {
               </div>
 
               {/* 2. Quick Search */}
-              <div className="border-b border-white/10 p-3.5 bg-[#09130e]">
+              <div className="border-b border-white/10 p-3.5 bg-[#102219]">
                 <form onSubmit={executeFullSearch} className="relative">
                   <Search size={15} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#d4af37]" />
                   <input
@@ -417,7 +423,7 @@ export default function Navbar() {
                     value={searchQuery}
                     onChange={handleSearch}
                     placeholder="Search botanical rituals..."
-                    className="w-full rounded-full border border-[#d4af37]/30 bg-[#070f0b] py-2 pl-9 pr-8 text-xs text-white placeholder:text-[#94a3b8] outline-none focus:border-[#d4af37]"
+                    className="w-full rounded-full border border-[#244A38] bg-[#14291F] py-2 pl-9 pr-8 text-xs text-white placeholder:text-[#9BB0A5] outline-none focus:border-[#d4af37]"
                   />
                   {searchQuery && (
                     <button
@@ -431,18 +437,18 @@ export default function Navbar() {
                 </form>
               </div>
 
-              {/* 3. Scrollable Sidebar Navigation Body */}
+              {/* 3. Scrollable Sidebar Navigation Body (Clean, essential links) */}
               <div className="flex-1 overflow-y-auto px-4 py-3 space-y-4">
                 {/* Storefront Nav Links */}
                 <div className="space-y-1">
                   {[
                     { to: '/shop', label: 'Shop All Formulations', icon: Compass, badge: 'Catalog' },
                     { to: '/verify', label: 'Verify Bottle Serial', icon: ShieldCheck, badge: 'Live Assay', highlight: true },
-                    { to: '/compare', label: 'Compare Formulations', icon: GitCompareArrows },
-                    { to: '/science', label: 'Botanical Science & pH 5.5', icon: FlaskConical },
                     { to: '/about', label: 'Our Story & Heritage', icon: Leaf },
+                    { to: '/science', label: 'Botanical Science & pH 5.5', icon: FlaskConical },
                     { to: '/order-tracking', label: 'Track An Order', icon: Truck },
                     { to: '/wishlist', label: 'Saved Wishlist', icon: Heart },
+                    { to: '/contact', label: 'Client Concierge & FAQ', icon: Sparkles },
                   ].map(item => (
                     <Link
                       key={item.to}
@@ -451,16 +457,16 @@ export default function Navbar() {
                       className={`flex items-center justify-between p-3 rounded-xl text-xs font-semibold transition-all ${
                         item.highlight
                           ? 'bg-[#d4af37]/15 border border-[#d4af37]/50 text-[#d4af37]'
-                          : 'text-[#cbd5e1] hover:bg-white/5 hover:text-white'
+                          : 'text-[#FAF7F2] hover:bg-white/5 hover:text-white'
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        <item.icon size={16} className={item.highlight ? 'text-[#d4af37]' : 'text-[#94a3b8]'} />
+                        <item.icon size={16} className={item.highlight ? 'text-[#d4af37]' : 'text-[#9BB0A5]'} />
                         <span>{item.label}</span>
                       </div>
                       {item.badge && (
                         <span className={`text-[9px] uppercase tracking-wider px-2 py-0.5 rounded-full ${
-                          item.highlight ? 'bg-[#d4af37] text-[#0c1712] font-black' : 'bg-white/10 text-[#94a3b8]'
+                          item.highlight ? 'bg-[#d4af37] text-[#14291F] font-black' : 'bg-white/10 text-[#9BB0A5]'
                         }`}>
                           {item.badge}
                         </span>

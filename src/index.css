@@ -4,23 +4,25 @@
 
 :root {
   --olive-stripe: rgba(212, 175, 55, 0.08);
-  --alabaster: #070a0e;
-  --bhumivera-forest: #070a0e;
-  --bhumivera-leaf: #0d1520;
+  --alabaster: #FAF7F2;
+  --bhumivera-forest: #1C382B;
+  --bhumivera-leaf: #244A38;
   --bhumivera-gold: #d4af37;
   --bhumivera-gold-bright: #faeec7;
   --bhumivera-gold-dark: #b8860b;
-  --bhumivera-silver: #e2e8f0;
-  --bhumivera-silver-light: #f8fafc;
-  --bhumivera-silver-muted: #94a3b8;
+  --bhumivera-silver: #F4EFE6;
+  --bhumivera-silver-light: #FAF7F2;
+  --bhumivera-silver-muted: #9BB0A5;
   --bhumivera-white: #ffffff;
-  --bhumivera-black: #05070a;
-  --bhumivera-paper: #070a0e;
+  --bhumivera-black: #0F1E17;
+  --bhumivera-paper: #14291F;
   --bhumivera-line: rgba(212, 175, 55, 0.22);
-  --two-tone-dark: #070a0e;
-  --two-tone-slate: #0d1520;
-  --two-tone-card: #101a26;
-  --two-tone-card-light: #162434;
+  --two-tone-dark: #14291F;
+  --two-tone-slate: #1C382B;
+  --two-tone-card: #1E3E2F;
+  --two-tone-card-light: #244A38;
+  --two-tone-sand: #F4EFE6;
+  --two-tone-alabaster: #FAF7F2;
 }
 
 body {
@@ -707,41 +709,62 @@ html.native-app .site-shell > footer {
   background: linear-gradient(90deg, transparent 0%, rgba(226, 232, 240, 0.5) 15%, rgba(226, 232, 240, 0.5) 85%, transparent 100%);
 }
 
-/* --- TWO-TONE ARCHITECTURAL CONTAINERS (INSPIRED BY IMAGE 1 & 2) --- */
+/* --- TWO-TONE ARCHITECTURAL CONTAINERS (MATCHING USER REFERENCE IMAGE) --- */
 .two-tone-panel {
-  background: linear-gradient(180deg, #0d1520 0%, #070a0e 100%);
-  border: 1px solid rgba(226, 232, 240, 0.15);
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  background: linear-gradient(180deg, #1C382B 0%, #14291F 100%);
+  border: 1px solid rgba(244, 239, 230, 0.15);
+  box-shadow: 0 14px 40px rgba(10, 20, 15, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .two-tone-panel-gold {
-  background: linear-gradient(180deg, #101c2b 0%, #080d14 100%);
+  background: linear-gradient(180deg, #204233 0%, #14291F 100%);
   border: 1px solid rgba(212, 175, 55, 0.35);
-  box-shadow: 0 14px 40px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(212, 175, 55, 0.25);
+  box-shadow: 0 14px 40px rgba(10, 20, 15, 0.5), inset 0 1px 0 rgba(212, 175, 55, 0.25);
+}
+
+.two-tone-panel-sand {
+  background: #F4EFE6;
+  color: #14291F;
+  border: 1px solid rgba(36, 74, 56, 0.2);
+  box-shadow: 0 14px 40px rgba(10, 20, 15, 0.08);
 }
 
 .two-tone-split-header {
-  border-top: 2px solid #ffffff;
-  background: linear-gradient(180deg, #121e2c 0%, #080d14 100%);
+  border-top: 2px solid #FAF7F2;
+  background: linear-gradient(180deg, #244A38 0%, #14291F 100%);
   border-bottom: 1px solid rgba(212, 175, 55, 0.3);
 }
 
 .two-tone-card {
-  background: #0d1520;
-  border: 1px solid rgba(226, 232, 240, 0.12);
-  color: #e2e8f0;
+  background: #1C382B;
+  border: 1px solid rgba(244, 239, 230, 0.14);
+  color: #F4EFE6;
   transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .two-tone-card:hover {
-  border-color: rgba(212, 175, 55, 0.4);
-  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px rgba(212, 175, 55, 0.12);
+  border-color: rgba(212, 175, 55, 0.45);
+  box-shadow: 0 10px 30px -5px rgba(10, 20, 15, 0.5), 0 0 20px rgba(212, 175, 55, 0.12);
 }
 
-/* --- LUXURY BUTTONS (STRICTLY GOLD, SILVER, WHITE) --- */
+.fluted-wall {
+  background-image: repeating-linear-gradient(
+    90deg,
+    transparent,
+    transparent 14px,
+    rgba(244, 239, 230, 0.04) 14px,
+    rgba(244, 239, 230, 0.04) 15px
+  );
+}
+
+.arch-curved {
+  border-radius: 2.5rem;
+}
+
+/* --- LUXURY BUTTONS (ARCHITECTURAL GREEN, CHAMPAGNE GOLD, WARM ALABASTER) --- */
 .btn-gold-luxury {
   background: linear-gradient(135deg, #faeec7 0%, #d4af37 50%, #b8860b 100%);
-  color: #070a0e;
+  color: #14291F;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -756,9 +779,9 @@ html.native-app .site-shell > footer {
 }
 
 .btn-silver-luxury {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(226, 232, 240, 0.3);
-  color: #ffffff;
+  background: rgba(244, 239, 230, 0.06);
+  border: 1px solid rgba(244, 239, 230, 0.3);
+  color: #FAF7F2;
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -766,9 +789,44 @@ html.native-app .site-shell > footer {
 }
 
 .btn-silver-luxury:hover {
-  background: rgba(255, 255, 255, 0.14);
-  border-color: #ffffff;
+  background: rgba(244, 239, 230, 0.15);
+  border-color: #FAF7F2;
   color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.btn-forest-luxury {
+  background: #244A38;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: #FAF7F2;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  box-shadow: 0 4px 18px rgba(20, 41, 31, 0.35);
+  transition: all 0.25s ease;
+}
+
+.btn-forest-luxury:hover {
+  background: #2E5A44;
+  border-color: #D4AF37;
+  color: #FFFFFF;
+  transform: translateY(-1px);
+}
+
+.btn-sand-luxury {
+  background: #F4EFE6;
+  border: 1px solid rgba(36, 74, 56, 0.25);
+  color: #14291F;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  transition: all 0.25s ease;
+}
+
+.btn-sand-luxury:hover {
+  background: #FFFFFF;
+  color: #14291F;
+  border-color: #244A38;
   transform: translateY(-1px);
 }
 

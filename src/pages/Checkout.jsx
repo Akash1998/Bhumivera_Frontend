@@ -266,15 +266,15 @@ export default function Checkout() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070a0e] text-[#e2e8f0] py-12 px-4 sm:px-6">
+    <div className="min-h-screen bg-[#14291F] text-[#FAF7F2] py-12 px-4 sm:px-6 font-sans">
       <div className="mx-auto max-w-5xl">
         <div className="mb-6">
-          <span className="font-royal text-[10px] font-bold uppercase tracking-[0.26em] text-[#d4af37] block mb-2">Bhumivera Botanical Dispatch</span>
+          <span className="font-royal text-[10px] font-bold uppercase tracking-[0.26em] text-[#D4AF37] block mb-2">Bhumivera Botanical Dispatch</span>
           <h1 className="font-serif text-3xl font-bold md:text-5xl">
             <span className="font-headline-gold">Secure</span> <span className="font-headline-silver">Checkout</span>
           </h1>
           <div className="gold-hairline my-3 w-48" />
-          <p className="text-xs text-[#cbd5e1] uppercase tracking-wider">Artisanal Small-Batch Custody · Direct Lab Dispatch</p>
+          <p className="text-xs text-[#DFD7C4] uppercase tracking-wider">Artisanal Small-Batch Custody · Direct Lab Dispatch</p>
         </div>
 
         {error && (
@@ -290,14 +290,14 @@ export default function Checkout() {
           {/* Main Steps */}
           <div className="space-y-6 lg:col-span-2">
             {/* Step 1: Address & Delivery Speed */}
-            <div className="two-tone-panel rounded-2xl p-6 sm:p-8 border border-white/15 shadow-xl">
-              <div className="flex items-center justify-between border-b border-white/10 pb-4">
+            <div className="two-tone-panel rounded-2xl p-6 sm:p-8 border border-[#244A38] shadow-xl">
+              <div className="flex items-center justify-between border-b border-[#244A38] pb-4">
                 <div className="flex items-center gap-3">
-                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#d4af37] text-xs font-black text-[#070a0e]">1</span>
+                  <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#D4AF37] text-xs font-black text-[#14291F]">1</span>
                   <h2 className="font-serif text-xl sm:text-2xl font-bold text-white">Shipping Address &amp; Delivery</h2>
                 </div>
                 {step === 2 && (
-                  <button type="button" onClick={() => setStep(1)} className="text-xs font-bold text-[#d4af37] underline tracking-wider uppercase">
+                  <button type="button" onClick={() => setStep(1)} className="text-xs font-bold text-[#D4AF37] underline tracking-wider uppercase">
                     Edit
                   </button>
                 )}
@@ -306,8 +306,8 @@ export default function Checkout() {
               {step === 1 ? (
                 <div className="mt-6 space-y-5">
                   {userAddresses.length === 0 ? (
-                    <div className="rounded-xl border border-white/15 bg-[#0a1017] p-6 text-center">
-                      <p className="text-sm text-[#cbd5e1]">No saved addresses found.</p>
+                    <div className="rounded-xl border border-[#244A38] bg-[#102219] p-6 text-center">
+                      <p className="text-sm text-[#DFD7C4]">No saved addresses found.</p>
                       <button
                         type="button"
                         onClick={() => navigate('/address-book')}
@@ -324,23 +324,23 @@ export default function Checkout() {
                           onClick={() => setSelectedAddressId(addr.id)}
                           className={`cursor-pointer rounded-xl border p-4 transition-all ${
                             selectedAddressId === addr.id
-                              ? 'border-[#d4af37] bg-[#0a1017] ring-1 ring-[#d4af37] shadow-[0_0_20px_rgba(212,175,55,0.18)]'
-                              : 'border-white/15 bg-[#0d1520] hover:border-white/30'
+                              ? 'border-[#D4AF37] bg-[#102219] ring-1 ring-[#D4AF37] shadow-[0_0_20px_rgba(212,175,55,0.18)]'
+                              : 'border-[#244A38] bg-[#1C382B] hover:border-[#D4AF37]/50'
                           }`}
                         >
                           <div className="flex items-center justify-between">
                             <span className="font-serif font-bold text-sm text-white">{addr.full_name}</span>
                             {addr.is_default ? (
-                              <span className="rounded-full bg-[#d4af37]/20 border border-[#d4af37]/50 px-2 py-0.5 text-[9px] font-bold text-[#faeec7] uppercase tracking-wider">Default</span>
+                              <span className="rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/50 px-2 py-0.5 text-[9px] font-bold text-[#FCE096] uppercase tracking-wider">Default</span>
                             ) : null}
                           </div>
-                          <p className="mt-2 text-xs text-[#cbd5e1] leading-relaxed">
+                          <p className="mt-2 text-xs text-[#DFD7C4] leading-relaxed">
                             {addr.street_address || addr.line1}, {addr.city}, {addr.state} - {addr.postal_code || addr.pincode}
                           </p>
-                          <p className="mt-1 text-xs text-[#94a3b8]">Phone: {addr.phone_number || addr.phone}</p>
+                          <p className="mt-1 text-xs text-[#9BB0A5]">Phone: {addr.phone_number || addr.phone}</p>
                           {(addr.latitude && addr.longitude) || addr.google_maps_url ? (
-                            <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-[#d4af37]/10 px-2.5 py-0.5 text-[10px] font-semibold text-[#faeec7] border border-[#d4af37]/30">
-                              <MapPin className="h-3 w-3 text-[#d4af37]" /> GPS Verified Location
+                            <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-[#D4AF37]/10 px-2.5 py-0.5 text-[10px] font-semibold text-[#FCE096] border border-[#D4AF37]/30">
+                              <MapPin className="h-3 w-3 text-[#D4AF37]" /> GPS Verified Location
                             </div>
                           ) : null}
                         </div>
@@ -349,25 +349,25 @@ export default function Checkout() {
                   )}
 
                   {/* Delivery Method Selector */}
-                  <div className="pt-3 border-t border-white/10">
-                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#d4af37] mb-3">Delivery Speed &amp; Handling</p>
+                  <div className="pt-3 border-t border-[#244A38]">
+                    <p className="text-xs font-bold uppercase tracking-[0.18em] text-[#D4AF37] mb-3">Delivery Speed &amp; Handling</p>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <button
                         type="button"
                         onClick={() => setDeliveryType('standard')}
                         className={`p-4 rounded-xl border text-left transition-all ${
                           deliveryType === 'standard'
-                            ? 'border-[#d4af37] bg-[#0a1017] ring-1 ring-[#d4af37]'
-                            : 'border-white/15 bg-[#0d1520] hover:border-white/30'
+                            ? 'border-[#D4AF37] bg-[#102219] ring-1 ring-[#D4AF37]'
+                            : 'border-[#244A38] bg-[#1C382B] hover:border-[#D4AF37]/40'
                         }`}
                       >
                         <div className="flex justify-between items-center text-xs font-bold">
                           <span className="text-white">Standard Botanical Dispatch</span>
-                          <span className="text-[#faeec7] font-serif">
+                          <span className="text-[#FCE096] font-serif">
                             {freeShippingFromCoupon || subtotal >= 500 ? 'FREE' : '₹50'}
                           </span>
                         </div>
-                        <p className="text-[11px] text-[#94a3b8] mt-1.5 leading-relaxed">4–6 business days (Complimentary on ₹500+)</p>
+                        <p className="text-[11px] text-[#9BB0A5] mt-1.5 leading-relaxed">4–6 business days (Complimentary on ₹500+)</p>
                       </button>
 
                       <button
@@ -375,15 +375,15 @@ export default function Checkout() {
                         onClick={() => setDeliveryType('express')}
                         className={`p-4 rounded-xl border text-left transition-all ${
                           deliveryType === 'express'
-                            ? 'border-[#d4af37] bg-[#0a1017] ring-1 ring-[#d4af37]'
-                            : 'border-white/15 bg-[#0d1520] hover:border-white/30'
+                            ? 'border-[#D4AF37] bg-[#102219] ring-1 ring-[#D4AF37]'
+                            : 'border-[#244A38] bg-[#1C382B] hover:border-[#D4AF37]/40'
                         }`}
                       >
                         <div className="flex justify-between items-center text-xs font-bold">
                           <span className="text-white">Priority Express Air</span>
-                          <span className="text-[#d4af37] font-serif">₹{subtotal >= 799 ? 150 : 250}</span>
+                          <span className="text-[#D4AF37] font-serif">₹{subtotal >= 799 ? 150 : 250}</span>
                         </div>
-                        <p className="text-[11px] text-[#94a3b8] mt-1.5 leading-relaxed">Expedited 2–3 business day courier priority</p>
+                        <p className="text-[11px] text-[#9BB0A5] mt-1.5 leading-relaxed">Expedited 2–3 business day courier priority</p>
                       </button>
                     </div>
                   </div>
@@ -398,41 +398,41 @@ export default function Checkout() {
                   </button>
                 </div>
               ) : (
-                <div className="mt-3 text-xs text-[#cbd5e1]">
+                <div className="mt-3 text-xs text-[#DFD7C4]">
                   <strong className="text-white">{userAddresses.find((a) => a.id === selectedAddressId)?.full_name}</strong> •{' '}
                   {userAddresses.find((a) => a.id === selectedAddressId)?.city} ({userAddresses.find((a) => a.id === selectedAddressId)?.postal_code || 'Verified'}) •{' '}
-                  <span className="uppercase font-semibold text-[#d4af37]">{deliveryType} Delivery</span>
+                  <span className="uppercase font-semibold text-[#D4AF37]">{deliveryType} Delivery</span>
                 </div>
               )}
             </div>
 
             {/* Step 2: Payment */}
-            <div className="two-tone-panel rounded-2xl p-6 sm:p-8 border border-white/15 shadow-xl">
-              <div className="flex items-center gap-3 border-b border-white/10 pb-4">
-                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#d4af37] text-xs font-black text-[#070a0e]">2</span>
+            <div className="two-tone-panel rounded-2xl p-6 sm:p-8 border border-[#244A38] shadow-xl">
+              <div className="flex items-center gap-3 border-b border-[#244A38] pb-4">
+                <span className="flex h-7 w-7 items-center justify-center rounded-full bg-[#D4AF37] text-xs font-black text-[#14291F]">2</span>
                 <h2 className="font-serif text-xl sm:text-2xl font-bold text-white">Payment Method</h2>
               </div>
 
               {step === 2 && (
                 <div className="mt-6 space-y-4">
-                  <label className="flex cursor-pointer items-center justify-between rounded-xl border border-white/15 bg-[#0a1017] p-4 transition hover:border-[#d4af37]/60">
+                  <label className="flex cursor-pointer items-center justify-between rounded-xl border border-[#244A38] bg-[#102219] p-4 transition hover:border-[#D4AF37]/60">
                     <div className="flex items-center gap-3">
                       <input
                         type="radio"
                         name="payment"
                         checked={paymentMode === 'online'}
                         onChange={() => setPaymentMode('online')}
-                        className="accent-[#d4af37]"
+                        className="accent-[#D4AF37]"
                       />
                       <div>
                         <span className="font-semibold text-sm text-white">UPI, Cards, NetBanking (Razorpay)</span>
-                        <p className="text-xs text-[#94a3b8]">Instant confirmation with GPay, PhonePe, Paytm, or Credit/Debit Cards</p>
+                        <p className="text-xs text-[#9BB0A5]">Instant confirmation with GPay, PhonePe, Paytm, or Credit/Debit Cards</p>
                       </div>
                     </div>
-                    <CreditCard className="h-5 w-5 text-[#d4af37]" />
+                    <CreditCard className="h-5 w-5 text-[#D4AF37]" />
                   </label>
 
-                  <label className="flex cursor-pointer items-center justify-between rounded-xl border border-white/15 bg-[#0a1017] p-4 transition hover:border-[#d4af37]/60">
+                  <label className="flex cursor-pointer items-center justify-between rounded-xl border border-[#244A38] bg-[#102219] p-4 transition hover:border-[#D4AF37]/60">
                     <div className="flex items-center gap-3">
                       <input
                         type="radio"
@@ -440,40 +440,40 @@ export default function Checkout() {
                         checked={paymentMode === 'WALLET'}
                         onChange={() => setPaymentMode('WALLET')}
                         disabled={walletBalance < total}
-                        className="accent-[#d4af37]"
+                        className="accent-[#D4AF37]"
                       />
                       <div>
                         <span className="font-semibold text-sm text-white">Bhumivera Wallet</span>
-                        <p className="text-xs text-[#94a3b8]">
-                          Available Balance: <strong className="text-[#faeec7]">₹{walletBalance.toFixed(2)}</strong> {walletBalance < total ? '(Insufficient funds)' : ''}
+                        <p className="text-xs text-[#9BB0A5]">
+                          Available Balance: <strong className="text-[#FCE096]">₹{walletBalance.toFixed(2)}</strong> {walletBalance < total ? '(Insufficient funds)' : ''}
                         </p>
                       </div>
                     </div>
-                    <Wallet className="h-5 w-5 text-[#d4af37]" />
+                    <Wallet className="h-5 w-5 text-[#D4AF37]" />
                   </label>
 
-                  <label className="flex cursor-pointer items-center justify-between rounded-xl border border-white/15 bg-[#0a1017] p-4 transition hover:border-[#d4af37]/60">
+                  <label className="flex cursor-pointer items-center justify-between rounded-xl border border-[#244A38] bg-[#102219] p-4 transition hover:border-[#D4AF37]/60">
                     <div className="flex items-center gap-3">
                       <input
                         type="radio"
                         name="payment"
                         checked={paymentMode === 'COD'}
                         onChange={() => setPaymentMode('COD')}
-                        className="accent-[#d4af37]"
+                        className="accent-[#D4AF37]"
                       />
                       <div>
                         <span className="font-semibold text-sm text-white">Cash on Delivery (COD)</span>
-                        <p className="text-xs text-[#94a3b8]">Pay cash or scan courier QR at doorstep</p>
+                        <p className="text-xs text-[#9BB0A5]">Pay cash or scan courier QR at doorstep</p>
                       </div>
                     </div>
-                    <Truck className="h-5 w-5 text-[#d4af37]" />
+                    <Truck className="h-5 w-5 text-[#D4AF37]" />
                   </label>
 
-                  <p className="mt-4 text-center text-xs leading-5 text-[#94a3b8]">
+                  <p className="mt-4 text-center text-xs leading-5 text-[#9BB0A5]">
                     By placing your order, you agree to our{' '}
-                    <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold text-white underline underline-offset-2">Conditions of Sale</Link>
+                    <Link to="/legal/conditions-of-use" target="_blank" rel="noreferrer" className="font-semibold text-white underline underline-offset-2">Conditions of Sale</Link>
                     {' '}and acknowledge the{' '}
-                    <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold text-white underline underline-offset-2">Privacy Notice</Link>.
+                    <Link to="/legal/privacy-dpdp" target="_blank" rel="noreferrer" className="font-semibold text-white underline underline-offset-2">Privacy Notice</Link>.
                   </p>
 
                   <button
@@ -491,24 +491,24 @@ export default function Checkout() {
 
           {/* Order Summary & Tamper-Proof Coupon Sidebar */}
           <div className="space-y-4">
-            <div className="two-tone-panel-gold rounded-2xl p-6 border border-[#d4af37]/35 shadow-xl">
+            <div className="two-tone-panel-gold rounded-2xl p-6 border border-[#244A38] shadow-xl">
               <h3 className="font-serif text-xl font-bold text-white mb-2">Order Summary</h3>
               <div className="gold-hairline mb-4" />
-              <div className="divide-y divide-white/10">
+              <div className="divide-y divide-[#244A38]">
                 {cartItems.map((item) => (
                   <div key={item.id || item.product_id} className="flex items-center justify-between py-2.5 text-xs">
                     <div className="flex items-center gap-2.5">
                       <img
                         src={getProductImageUrl(item.image || item.image_url || item.images) || '/logo.webp'}
                         alt={item.name}
-                        className="h-10 w-10 rounded-lg object-cover border border-white/15 bg-[#070a0e]"
+                        className="h-10 w-10 rounded-lg object-cover border border-[#244A38] bg-[#102219]"
                       />
                       <div>
                         <p className="font-serif font-bold text-white line-clamp-1">{item.name}</p>
-                        <p className="text-[#94a3b8]">Qty: {item.quantity}</p>
+                        <p className="text-[#9BB0A5]">Qty: {item.quantity}</p>
                       </div>
                     </div>
-                    <span className="font-serif font-bold text-[#d4af37]">
+                    <span className="font-serif font-bold text-[#D4AF37]">
                       ₹{((Number(item.discount_price || item.price) || 0) * (Number(item.quantity) || 1)).toFixed(2)}
                     </span>
                   </div>
@@ -516,15 +516,15 @@ export default function Checkout() {
               </div>
 
               {/* Tamper-Proof Coupon Box */}
-              <div className="mt-4 pt-4 border-t border-white/10 space-y-2.5">
-                <label className="block text-xs font-bold uppercase tracking-wider text-[#d4af37] flex items-center gap-1.5">
-                  <Ticket className="h-3.5 w-3.5 text-[#d4af37]" /> Apply Promo / Voucher
+              <div className="mt-4 pt-4 border-t border-[#244A38] space-y-2.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-[#D4AF37] flex items-center gap-1.5">
+                  <Ticket className="h-3.5 w-3.5 text-[#D4AF37]" /> Apply Promo / Voucher
                 </label>
                 {appliedCoupon ? (
-                  <div className="flex items-center justify-between rounded-xl bg-[#0a1017] border border-[#d4af37]/40 px-3.5 py-2.5 text-xs">
+                  <div className="flex items-center justify-between rounded-xl bg-[#102219] border border-[#D4AF37]/40 px-3.5 py-2.5 text-xs">
                     <div>
-                      <span className="font-mono font-bold text-[#faeec7]">{appliedCoupon.code}</span>
-                      <p className="text-[11px] text-[#d4af37]">
+                      <span className="font-mono font-bold text-[#FCE096]">{appliedCoupon.code}</span>
+                      <p className="text-[11px] text-[#D4AF37]">
                         {appliedCoupon.rewardType === 'free_shipping'
                           ? 'Free Shipping Applied'
                           : `Saved ₹${appliedCoupon.discount.toFixed(2)}`}
@@ -545,7 +545,7 @@ export default function Checkout() {
                       value={promoInput}
                       onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
                       placeholder="ENTER CODE"
-                      className="flex-1 rounded-xl border border-white/15 bg-[#070a0e] px-3 py-2 text-xs font-mono uppercase text-white focus:border-[#d4af37] focus:outline-none"
+                      className="flex-1 rounded-xl border border-[#244A38] bg-[#14291F] px-3 py-2 text-xs font-mono uppercase text-white focus:border-[#D4AF37] focus:outline-none"
                     />
                     <button
                       type="button"
@@ -558,12 +558,12 @@ export default function Checkout() {
                   </div>
                 )}
 
-                {couponMessage && <p className="text-[11px] font-medium text-[#faeec7]">{couponMessage}</p>}
+                {couponMessage && <p className="text-[11px] font-medium text-[#FCE096]">{couponMessage}</p>}
 
                 {/* Available Eligible Coupons Picker */}
                 {!appliedCoupon && availableCoupons.length > 0 && (
                   <div className="space-y-1.5 pt-1">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#94a3b8]">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-[#9BB0A5]">
                       Available Offers for You:
                     </p>
                     <div className="max-h-32 overflow-y-auto space-y-1.5 pr-1">
@@ -578,13 +578,13 @@ export default function Checkout() {
                             onClick={() => handleApplyCouponCode(c.code)}
                             className={`w-full text-left p-2 rounded-lg border text-[11px] transition flex items-center justify-between ${
                               eligible
-                                ? 'border-white/15 hover:border-[#d4af37] bg-[#070a0e]'
-                                : 'border-white/10 opacity-50 cursor-not-allowed bg-black/30'
+                                ? 'border-[#244A38] hover:border-[#D4AF37] bg-[#14291F]'
+                                : 'border-[#244A38]/40 opacity-50 cursor-not-allowed bg-[#102219]'
                             }`}
                           >
                             <div>
-                              <span className="font-mono font-bold text-[#d4af37]">{c.code}</span>
-                              <span className="block text-[10px] text-[#cbd5e1]">
+                              <span className="font-mono font-bold text-[#D4AF37]">{c.code}</span>
+                              <span className="block text-[10px] text-[#DFD7C4]">
                                 {c.reward_type === 'free_shipping'
                                   ? 'Free Shipping'
                                   : c.discount_type === 'percentage'
@@ -593,7 +593,7 @@ export default function Checkout() {
                                 {minOrd > 0 ? `(Min ₹${minOrd})` : ''}
                               </span>
                             </div>
-                            <span className="text-[10px] font-bold text-[#faeec7]">
+                            <span className="text-[10px] font-bold text-[#FCE096]">
                               {eligible ? 'Tap to Apply' : `Add ₹${Math.ceil(minOrd - subtotal)}`}
                             </span>
                           </button>
@@ -606,42 +606,42 @@ export default function Checkout() {
 
               {/* Loyalty Points Redemption Toggle */}
               {redeemablePoints > 0 && (
-                <div className="mt-3 pt-3 border-t border-white/10">
+                <div className="mt-3 pt-3 border-t border-[#244A38]">
                   <label className="flex items-center justify-between cursor-pointer text-xs">
-                    <span className="flex items-center gap-1.5 font-medium text-[#cbd5e1]">
-                      <Sparkles className="h-3.5 w-3.5 text-[#d4af37]" />
+                    <span className="flex items-center gap-1.5 font-medium text-[#DFD7C4]">
+                      <Sparkles className="h-3.5 w-3.5 text-[#D4AF37]" />
                       Redeem {redeemablePoints} Points (-₹{Math.floor(redeemablePoints / pointsPerRupee)})
                     </span>
                     <input
                       type="checkbox"
                       checked={redeemLoyalty}
                       onChange={(e) => setRedeemLoyalty(e.target.checked)}
-                      className="rounded accent-[#d4af37]"
+                      className="rounded accent-[#D4AF37]"
                     />
                   </label>
                 </div>
               )}
 
               {/* Totals Breakdown */}
-              <div className="mt-4 space-y-2 border-t border-white/10 pt-4 text-xs text-[#cbd5e1]">
+              <div className="mt-4 space-y-2 border-t border-[#244A38] pt-4 text-xs text-[#DFD7C4]">
                 <div className="flex justify-between">
                   <span>Subtotal</span>
                   <span className="text-white font-medium">₹{subtotal.toFixed(2)}</span>
                 </div>
                 {ruleDiscount > 0 && (
-                  <div className="flex justify-between text-[#d4af37]">
+                  <div className="flex justify-between text-[#D4AF37]">
                     <span>Cart Tier Discount</span>
                     <span>-₹{ruleDiscount.toFixed(2)}</span>
                   </div>
                 )}
                 {couponDiscount > 0 && (
-                  <div className="flex justify-between text-[#d4af37] font-medium">
+                  <div className="flex justify-between text-[#D4AF37] font-medium">
                     <span>Coupon ({appliedCoupon?.code})</span>
                     <span>-₹{couponDiscount.toFixed(2)}</span>
                   </div>
                 )}
                 {loyaltyDiscount > 0 && (
-                  <div className="flex justify-between text-[#faeec7] font-medium">
+                  <div className="flex justify-between text-[#FCE096] font-medium">
                     <span>Loyalty Redemption</span>
                     <span>-₹{loyaltyDiscount.toFixed(2)}</span>
                   </div>
@@ -650,20 +650,20 @@ export default function Checkout() {
                   <span>Shipping ({deliveryType})</span>
                   <span>
                     {shippingCost === 0 ? (
-                      <strong className="text-[#faeec7]">FREE</strong>
+                      <strong className="text-[#FCE096]">FREE</strong>
                     ) : (
                       `₹${shippingCost.toFixed(2)}`
                     )}
                   </span>
                 </div>
-                <div className="flex justify-between border-t border-white/15 pt-2 text-sm font-bold text-white">
+                <div className="flex justify-between border-t border-[#244A38] pt-2 text-sm font-bold text-white">
                   <span>Total Payable</span>
-                  <span className="font-serif text-lg text-[#d4af37]">₹{total.toFixed(2)}</span>
+                  <span className="font-serif text-lg text-[#D4AF37]">₹{total.toFixed(2)}</span>
                 </div>
               </div>
 
-              <div className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-[#070a0e] border border-white/10 p-3 text-center text-[11px] text-[#cbd5e1]">
-                <ShieldCheck className="h-4 w-4 text-[#d4af37]" /> 256-Bit Encrypted &amp; Serial Verified Lab Delivery
+              <div className="mt-6 flex items-center justify-center gap-2 rounded-xl bg-[#102219] border border-[#244A38] p-3 text-center text-[11px] text-[#DFD7C4]">
+                <ShieldCheck className="h-4 w-4 text-[#D4AF37]" /> 256-Bit Encrypted &amp; Serial Verified Lab Delivery
               </div>
             </div>
           </div>

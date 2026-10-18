@@ -1022,15 +1022,15 @@ export default function Profile() {
 
   // ========== RENDER ==========
   return (
-    <div className="min-h-screen bg-[#070a0e] text-[#e2e8f0] font-sans">
+    <div className="min-h-screen bg-[#14291F] text-[#FAF7F2] font-sans">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* === Header Card === */}
-        <div className="relative overflow-hidden rounded-3xl two-tone-panel-gold px-6 sm:px-10 py-8 sm:py-10 shadow-2xl mb-7 border border-[#d4af37]/30">
-          <div className="absolute -top-20 -right-16 w-72 h-72 rounded-full bg-[#d4af37]/10 blur-3xl pointer-events-none"/>
-          <div className="absolute -bottom-20 -left-16 w-80 h-80 rounded-full bg-[#cbd5e1]/10 blur-3xl pointer-events-none"/>
+        <div className="relative overflow-hidden rounded-3xl two-tone-panel-gold px-6 sm:px-10 py-8 sm:py-10 shadow-2xl mb-7 border border-[#244A38]">
+          <div className="absolute -top-20 -right-16 w-72 h-72 rounded-full bg-[#D4AF37]/10 blur-3xl pointer-events-none"/>
+          <div className="absolute -bottom-20 -left-16 w-80 h-80 rounded-full bg-[#244A38]/30 blur-3xl pointer-events-none"/>
           <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
             <div className="flex items-center gap-5">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#d4af37] via-[#fce096] to-[#b38728] flex items-center justify-center text-[#070a0e] font-serif font-bold text-2xl shadow-xl ring-2 ring-[#d4af37]/50">
+              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#D4AF37] via-[#FCE096] to-[#C8A97E] flex items-center justify-center text-[#14291F] font-serif font-bold text-2xl shadow-xl ring-2 ring-[#D4AF37]/50">
                 {initials}
               </div>
               <div>
@@ -1038,12 +1038,12 @@ export default function Profile() {
                   <h1 className="text-2xl sm:text-3xl font-serif font-bold text-white tracking-tight">
                     Hi, <span className="font-headline-gold">{displayName.split(' ')[0]}</span>
                   </h1>
-                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#d4af37]/15 text-[#fce096] border border-[#d4af37]/40 text-xs font-semibold uppercase tracking-wider">
-                    <Award className="w-3.5 h-3.5 text-[#d4af37]"/>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#D4AF37]/15 text-[#FCE096] border border-[#D4AF37]/40 text-xs font-semibold uppercase tracking-wider">
+                    <Award className="w-3.5 h-3.5 text-[#D4AF37]"/>
                     Bhumivera Patron
                   </span>
                 </div>
-                <p className="text-[#cbd5e1] text-xs sm:text-sm mt-1.5 font-light">{user?.email || 'Welcome to your apothecary vault'}</p>
+                <p className="text-[#DFD7C4] text-xs sm:text-sm mt-1.5 font-light">{user?.email || 'Welcome to your apothecary vault'}</p>
               </div>
             </div>
             <div className="flex flex-wrap gap-3">
@@ -1072,8 +1072,8 @@ export default function Profile() {
                 <button key={t.id} onClick={() => setActiveTab(t.id)}
                   className={`snap-start flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-semibold uppercase tracking-wider whitespace-nowrap transition-all border ${
                     active
-                      ? 'bg-gradient-to-r from-[#d4af37] to-[#b38728] text-[#070a0e] border-[#fce096] shadow-md'
-                      : 'bg-[#0d1520] text-[#cbd5e1] border-[#d4af37]/15 hover:border-[#d4af37]/40'
+                      ? 'bg-gradient-to-r from-[#D4AF37] to-[#C8A97E] text-[#14291F] border-[#FCE096] shadow-md font-bold'
+                      : 'bg-[#102219] text-[#DFD7C4] border-[#244A38] hover:border-[#D4AF37]/40'
                   }`}>
                   <Icon className="w-4 h-4"/>
                   {t.label}
@@ -1088,7 +1088,7 @@ export default function Profile() {
         <div className="flex flex-col md:flex-row gap-7">
           {/* Sidebar desktop */}
           <aside className="hidden md:block w-64 shrink-0">
-            <nav className="sticky top-24 rounded-2xl two-tone-panel border border-[#d4af37]/25 p-3 space-y-1">
+            <nav className="sticky top-24 rounded-2xl two-tone-panel border border-[#244A38] p-3 space-y-1">
               {TABS.map(t => {
                 const Icon = t.icon;
                 const active = activeTab === t.id;
@@ -1097,13 +1097,13 @@ export default function Profile() {
                   <button key={t.id} onClick={() => setActiveTab(t.id)}
                     className={`w-full flex items-center gap-3 px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all ${
                       active
-                        ? 'bg-[#d4af37]/15 text-[#fce096] border border-[#d4af37]/40 shadow-sm'
-                        : 'text-[#cbd5e1] hover:text-white hover:bg-white/5 border border-transparent'
+                        ? 'bg-[#D4AF37]/15 text-[#FCE096] border border-[#D4AF37]/40 shadow-sm font-bold'
+                        : 'text-[#DFD7C4] hover:text-white hover:bg-[#1C382B]/50 border border-transparent'
                     }`}>
-                    <Icon className="w-4 h-4 text-[#d4af37]"/>
+                    <Icon className="w-4 h-4 text-[#D4AF37]"/>
                     <span className="flex-1 text-left">{t.label}</span>
                     {isNotif && <span className="text-[10px] bg-rose-500 text-white rounded-full w-4 h-4 flex items-center justify-center font-bold">{unreadCount}</span>}
-                    {active && <ChevronRight className="w-4 h-4 text-[#d4af37]"/>}
+                    {active && <ChevronRight className="w-4 h-4 text-[#D4AF37]"/>}
                   </button>
                 );
               })}

@@ -129,7 +129,7 @@ const EWarranty = lazyWithRetry(() => import("./pages/EWarranty.jsx"));
 const SellOnBhumivera = lazyWithRetry(() => import("./pages/SellOnBhumivera.jsx"));
 
 const PageLoader = () => (
-  <div className="min-h-screen bg-[#070a0e] flex items-center justify-center">
+  <div className="min-h-screen bg-[#14291F] flex items-center justify-center">
     <div className="w-12 h-12 border-4 border-[#d4af37]/20 border-t-[#d4af37] rounded-full animate-spin"></div>
   </div>
 );
@@ -305,9 +305,7 @@ function AppContent() {
       path.startsWith("/warehouse") || 
       path.startsWith("/support") ||
       path.startsWith("/superadminsupport") ||
-      path === "/warehouseadmin" || 
-      path === "/earn-from-home" || 
-      path === "/mpgebusiness"
+      path === "/warehouseadmin"
     );
   }, [location.pathname]);
 
@@ -356,9 +354,9 @@ function AppContent() {
             <Route path="/returns" element={<Navigate to="/verify" replace />} />
             <Route path="/sell-on-bhumivera" element={<SellOnBhumivera />} />
 
-            {/* Campaign Inbound Routes */}
-            <Route path="/earn-from-home" element={<MPGEBusinessLanding />} />
-            <Route path="/mpgebusiness" element={<MPGEBusinessLanding />} />
+            {/* Campaign Inbound Routes (Clean Redirects for Obsolete Links) */}
+            <Route path="/earn-from-home" element={<Navigate to="/contact" replace />} />
+            <Route path="/mpgebusiness" element={<Navigate to="/contact" replace />} />
 
             {/* Authenticity & E-Warranty */}
             <Route path="/verify" element={<EWarranty />} />
@@ -379,7 +377,7 @@ function AppContent() {
             <Route path="/provenance" element={<ProvenanceEngine />} />
             <Route path="/addresses" element={<AddressBook />} />
             <Route path="/support-center" element={<Contact />} />
-            <Route path="/spin-registration" element={<SpinRegistration />} />
+            <Route path="/spin-registration" element={<Navigate to="/register" replace />} />
             
             {/* Auth Routes */}
             <Route path="/login" element={<Login />} />
