@@ -308,8 +308,8 @@ export default function Footer() {
         <div className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 sm:py-10 lg:px-12">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
             
-            <div className="two-tone-panel flex items-start gap-3 rounded-2xl border border-[#244A38] p-4 shadow-sm">
-              <ShieldCheck size={20} className="mt-0.5 shrink-0 text-[#D4AF37]" />
+            <div className="footer-assurance-panel flex items-start gap-3 rounded-2xl p-4">
+              <ShieldCheck size={20} className="footer-assurance-icon mt-0.5 shrink-0 text-[#D4AF37]" />
               <div>
                 <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#FCE096]">
                   100% Sealed Sanitary Custody
@@ -320,8 +320,8 @@ export default function Footer() {
               </div>
             </div>
 
-            <div className="two-tone-panel flex items-start gap-3 rounded-2xl border border-[#244A38] p-4 shadow-sm">
-              <FileCheck2 size={20} className="mt-0.5 shrink-0 text-[#D4AF37]" />
+            <div className="footer-assurance-panel flex items-start gap-3 rounded-2xl p-4">
+              <FileCheck2 size={20} className="footer-assurance-icon mt-0.5 shrink-0 text-[#D4AF37]" />
               <div>
                 <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#FCE096]">
                   360° Unboxing Video Mandate
@@ -332,8 +332,8 @@ export default function Footer() {
               </div>
             </div>
 
-            <div className="two-tone-panel flex items-start gap-3 rounded-2xl border border-[#244A38] p-4 shadow-sm">
-              <Lock size={20} className="mt-0.5 shrink-0 text-[#D4AF37]" />
+            <div className="footer-assurance-panel flex items-start gap-3 rounded-2xl p-4">
+              <Lock size={20} className="footer-assurance-icon mt-0.5 shrink-0 text-[#D4AF37]" />
               <div>
                 <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#FCE096]">
                   Digital Weight-Scan Shield
@@ -344,8 +344,8 @@ export default function Footer() {
               </div>
             </div>
 
-            <div className="two-tone-panel flex items-start gap-3 rounded-2xl border border-[#244A38] p-4 shadow-sm">
-              <Scale size={20} className="mt-0.5 shrink-0 text-[#D4AF37]" />
+            <div className="footer-assurance-panel flex items-start gap-3 rounded-2xl p-4">
+              <Scale size={20} className="footer-assurance-icon mt-0.5 shrink-0 text-[#D4AF37]" />
               <div>
                 <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#FCE096]">
                   Sovereign Legal Governance

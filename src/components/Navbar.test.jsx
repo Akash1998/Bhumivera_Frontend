@@ -64,7 +64,10 @@ describe('Navbar', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByRole('button', { name: 'Voice Search' }).className).toContain('h-11 w-11');
-    expect(screen.getByRole('button', { name: 'Search' }).className).toContain('min-h-11');
+    const voiceSearchButtons = screen.getAllByRole('button', { name: 'Voice Search' });
+    expect(voiceSearchButtons).toHaveLength(2);
+    expect(voiceSearchButtons[0].className).toContain('h-10 w-10');
+    expect(voiceSearchButtons[1].className).toContain('h-9 w-9');
+    expect(screen.getByRole('button', { name: 'Search' }).className).toContain('h-10 w-10');
   });
 });
