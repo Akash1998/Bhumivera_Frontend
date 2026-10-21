@@ -181,14 +181,29 @@ const _resolveTokenKind = (url = '', method = '', adminAuth = false) => {
   return 'user';
 };
 
-const _attemptRefresh = async (kind = 'user') => {
+const _getStoredAuthToken = kind => kind === 'admin'
+  ? localStorage.getItem("adminToken")
+  : localStorage.getItem("token") || localStorage.getItem("ms_token");
+
+const _getRequestAuthToken = config => {
+  const authorization = config?.headers?.Authorization || config?.headers?.authorization;
+  return typeof authorization === 'string' && authorization.startsWith('Bearer ')
+    ? authorization.slice(7)
+    : null;
+};
+
+const _setRequestAuthToken = (config, token) => {
+  config.headers = config.headers || {};
+  config.headers.Authorization = ['Bearer', token].join(' ');
+};
+
+const _attemptRefresh = async (kind = 'user', failedToken = null) => {
   if (_refreshPromises[kind]) return _refreshPromises[kind];
   _refreshPromises[kind] = (async () => {
     try {
-      const currentToken = kind === 'admin'
-        ? localStorage.getItem("adminToken")
-        : localStorage.getItem("token") || localStorage.getItem("ms_token");
+      const currentToken = _getStoredAuthToken(kind);
       if (!currentToken) throw new Error("No token to refresh");
+      if (failedToken && currentToken !== failedToken) return currentToken;
       const { data } = await axios.post(`${BASE_URL}/api/auth/refresh`, {}, {
         withCredentials: true,
         headers: { Authorization: `Bearer ${currentToken}` }
@@ -305,17 +320,30 @@ api.interceptors.response.use(async response => {
     }
 
     const kind = _resolveTokenKind(url, e.config?.method, e.config?.adminAuth);
+    const requestToken = _getRequestAuthToken(e.config);
+    const storedToken = ['admin', 'user'].includes(kind) ? _getStoredAuthToken(kind) : null;
+    if (!e.config?._retry && requestToken && storedToken && requestToken !== storedToken) {
+      e.config._retry = true;
+      _setRequestAuthToken(e.config, storedToken);
+      return api.request(e.config);
+    }
 
     if (kind === 'admin') {
       if (!e.config?._retry) {
         try {
-          const newToken = await _attemptRefresh('admin');
+          const newToken = await _attemptRefresh('admin', requestToken);
           if (newToken) {
             e.config._retry = true;
-            e.config.headers.Authorization = `Bearer ${newToken}`;
+            _setRequestAuthToken(e.config, newToken);
             return api.request(e.config);
           }
         } catch (refreshError) {
+          const latestToken = _getStoredAuthToken('admin');
+          if (requestToken && latestToken && latestToken !== requestToken) {
+            e.config._retry = true;
+            _setRequestAuthToken(e.config, latestToken);
+            return api.request(e.config);
+          }
           if (refreshError.response?.status !== 401 && refreshError.message !== "No token to refresh") {
             e.normalized = {
               ...e.normalized,
@@ -361,13 +389,19 @@ api.interceptors.response.use(async response => {
 
     if (refreshable) {
       try {
-        const newToken = await _attemptRefresh('user');
+        const newToken = await _attemptRefresh('user', requestToken);
         if (newToken) {
           e.config._retry = true;
-          e.config.headers.Authorization = `Bearer ${newToken}`;
+          _setRequestAuthToken(e.config, newToken);
           return api.request(e.config);
         }
       } catch (_refreshErr) {
+        const latestToken = _getStoredAuthToken('user');
+        if (!e.config?._retry && requestToken && latestToken && latestToken !== requestToken) {
+          e.config._retry = true;
+          _setRequestAuthToken(e.config, latestToken);
+          return api.request(e.config);
+        }
         if (_refreshErr.response?.status === 401) {
           e.response.data = { ...e.response.data, ..._refreshErr.response.data };
         } else if (_refreshErr.response || _refreshErr.message !== "No token to refresh") {
