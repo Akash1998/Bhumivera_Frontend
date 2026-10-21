@@ -78,7 +78,15 @@ export default function OrderSuccess() {
         return rotation + 5 * 360 + alignment;
       });
       await new Promise(resolve => window.setTimeout(resolve, 4200));
-      setSpinClaim({ reward: data.reward, couponCode: data.couponCode, rewardType: data.rewardType, pointsAwarded: data.pointsAwarded });
+      setSpinClaim({
+        reward: data.reward,
+        couponCode: data.couponCode,
+        rewardType: data.rewardType,
+        pointsAwarded: data.pointsAwarded,
+        rewardDescription: data.rewardDescription,
+        termsAndConditions: data.termsAndConditions,
+        minimumOrderAmount: data.minimumOrderAmount,
+      });
       setSpinStatus('claimed');
     } catch (error) {
       console.error('[ORDER_SUCCESS_SPIN_CLAIM]', error);
@@ -169,10 +177,18 @@ export default function OrderSuccess() {
                     <p className="mb-2 text-center font-sub-gold text-[10px] font-semibold uppercase tracking-[0.2em]">Possible rewards</p>
                     <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
                       {spinRewards.map((reward, index) => (
-                        <li key={`${reward.label}-${index}`} className="flex min-w-0 items-center gap-2 rounded-lg border border-white/10 bg-[#070a0e]/50 px-2.5 py-2 text-[11px]">
+                        <li key={`${reward.label}-${index}`} className="flex min-w-0 items-start gap-2 rounded-lg border border-white/10 bg-[#070a0e]/50 px-2.5 py-2 text-[11px]">
                           <span className="flex min-w-0 items-center gap-2 text-[#fce096]">
                             <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: ['#d4af37', '#101a26', '#fce096', '#0d1520', '#cbd5e1', '#070a0e'][index % 6] }} />
-                            <span className="truncate">{reward.label}</span>
+                            <span className="min-w-0">
+                              <span className="block truncate">{reward.label}</span>
+                              {(reward.description || Number(reward.minimumOrderAmount) > 0) && (
+                                <span className="mt-0.5 block text-[10px] leading-snug text-[#94a3b8]">
+                                  {reward.description}
+                                  {Number(reward.minimumOrderAmount) > 0 && ` · Min. ₹${Number(reward.minimumOrderAmount).toLocaleString('en-IN')}`}
+                                </span>
+                              )}
+                            </span>
                           </span>
                         </li>
                       ))}
@@ -208,6 +224,9 @@ export default function OrderSuccess() {
                 <p className="text-sm font-serif font-bold text-[#fce096] uppercase tracking-wide">
                   You won: {spinClaim.reward}
                 </p>
+                {spinClaim.rewardDescription && !String(spinClaim.rewardDescription).startsWith('order_spin_reward:') && (
+                  <p className="mt-1.5 text-xs text-[#cbd5e1] font-light">{spinClaim.rewardDescription}</p>
+                )}
                 {spinClaim.rewardType === 'points' ? (
                   <p className="mt-1.5 text-xs text-[#cbd5e1] font-light">
                     {spinClaim.pointsAwarded} loyalty points have been credited to your member balance.
@@ -225,6 +244,12 @@ export default function OrderSuccess() {
                     ? 'Your updated loyalty credits are active now in your profile dashboard.'
                     : 'Find your spin voucher automatically linked during your next checkout.'}
                 </p>
+                {spinClaim.rewardType !== 'points' && (
+                  <div className="mt-3 space-y-1.5 border-t border-[#d4af37]/15 pt-3 text-xs text-[#cbd5e1]">
+                    <p>Minimum order: {Number(spinClaim.minimumOrderAmount) > 0 ? `₹${Number(spinClaim.minimumOrderAmount).toLocaleString('en-IN')}` : 'No minimum spend'}</p>
+                    {spinClaim.termsAndConditions && <p>Terms and conditions: {spinClaim.termsAndConditions}</p>}
+                  </div>
+                )}
               </div>
             )}
           </section>

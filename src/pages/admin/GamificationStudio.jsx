@@ -10,11 +10,11 @@ const HOOKS = [
 ];
 
 const DEFAULT_SPIN_REWARDS = [
-  { label: '₹50 off', rewardType: 'discount', discountType: 'fixed', discountValue: 50, minimumOrderAmount: 500, maxDiscount: '', chance: 80, expiryDays: 30 },
-  { label: '5% off (up to ₹200)', rewardType: 'discount', discountType: 'percentage', discountValue: 5, minimumOrderAmount: 500, maxDiscount: 200, chance: 85, expiryDays: 30 },
-  { label: '₹100 off', rewardType: 'discount', discountType: 'fixed', discountValue: 100, minimumOrderAmount: 599, maxDiscount: '', chance: 20, expiryDays: 30 },
-  { label: '10% off (up to ₹500)', rewardType: 'discount', discountType: 'percentage', discountValue: 10, minimumOrderAmount: 1000, maxDiscount: 500, chance: 40, expiryDays: 30 },
-  { label: '₹500 off', rewardType: 'discount', discountType: 'fixed', discountValue: 500, minimumOrderAmount: 2000, maxDiscount: '', chance: 5, expiryDays: 30 },
+  { label: '₹50 off', description: '', termsAndConditions: '', rewardType: 'discount', discountType: 'fixed', discountValue: 50, minimumOrderAmount: 500, maxDiscount: '', chance: 80, expiryDays: 30 },
+  { label: '5% off (up to ₹200)', description: '', termsAndConditions: '', rewardType: 'discount', discountType: 'percentage', discountValue: 5, minimumOrderAmount: 500, maxDiscount: 200, chance: 85, expiryDays: 30 },
+  { label: '₹100 off', description: '', termsAndConditions: '', rewardType: 'discount', discountType: 'fixed', discountValue: 100, minimumOrderAmount: 599, maxDiscount: '', chance: 20, expiryDays: 30 },
+  { label: '10% off (up to ₹500)', description: '', termsAndConditions: '', rewardType: 'discount', discountType: 'percentage', discountValue: 10, minimumOrderAmount: 1000, maxDiscount: 500, chance: 40, expiryDays: 30 },
+  { label: '₹500 off', description: '', termsAndConditions: '', rewardType: 'discount', discountType: 'fixed', discountValue: 500, minimumOrderAmount: 2000, maxDiscount: '', chance: 5, expiryDays: 30 },
 ];
 
 export default function GamificationStudio() {
@@ -104,6 +104,8 @@ export default function GamificationStudio() {
     if (spinRewards.length >= 12) return;
     setSpinRewards(current => [...current, {
       label: 'New reward',
+      description: '',
+      termsAndConditions: '',
       rewardType: 'discount',
       discountType: 'fixed',
       discountValue: 50,
@@ -177,6 +179,12 @@ export default function GamificationStudio() {
               <button type="button" onClick={() => setSpinRewards(current => current.filter((_, rewardIndex) => rewardIndex !== index))} disabled={spinRewards.length <= 1} aria-label={`Remove reward ${index + 1}`} className="inline-flex items-center gap-1 text-xs text-rose-300 disabled:opacity-40"><Trash2 size={13}/>Remove</button>
               <label className="text-[11px] font-semibold text-slate-400 sm:col-span-2">Reward shown to customer
                 <input value={reward.label} maxLength={120} onChange={event => updateSpinReward(index, 'label', event.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/50"/>
+              </label>
+              <label className="text-[11px] font-semibold text-slate-400 sm:col-span-2">Reward description
+                <textarea value={reward.description || ''} maxLength={255} rows={2} onChange={event => updateSpinReward(index, 'description', event.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/50" placeholder="Explain what the customer receives"/>
+              </label>
+              <label className="text-[11px] font-semibold text-slate-400 sm:col-span-2">Terms and conditions
+                <textarea value={reward.termsAndConditions || ''} maxLength={2000} rows={3} onChange={event => updateSpinReward(index, 'termsAndConditions', event.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/50" placeholder="Add any restrictions or redemption conditions"/>
               </label>
               <label className="text-[11px] font-semibold text-slate-400">Reward type
                 <select value={reward.rewardType || 'discount'} onChange={event => updateSpinReward(index, 'rewardType', event.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/50">

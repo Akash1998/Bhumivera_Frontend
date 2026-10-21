@@ -241,6 +241,7 @@ export default function Profile() {
   const [enablingPushNotifications, setEnablingPushNotifications] = useState(false);
   const [pushBackendStatus, setPushBackendStatus] = useState('unknown');
   const [coupons, setCoupons] = useState([]);
+  const [selectedCoupon, setSelectedCoupon] = useState(null);
   const [myReviews, setMyReviews] = useState([]);
   const [warranties, setWarranties] = useState([]);
 
@@ -1237,12 +1238,13 @@ export default function Profile() {
                         <div className="space-y-2.5">
                           {coupons.slice(0,3).map(c => (
                             <div key={c.id} className="flex items-center justify-between p-3 rounded-xl border border-dashed border-[#d4af37]/30 bg-[#070a0e]/60 hover:border-[#d4af37] transition-colors">
-                              <div>
+                              <button type="button" onClick={() => setSelectedCoupon(c)} className="min-w-0 text-left">
                                 <div className="font-mono font-bold text-xs text-[#fce096]">{c.code}</div>
                                 <div className="text-xs text-[#cbd5e1] mt-0.5 font-light">
-                                  {c.discount_type === 'percent' ? `${c.discount_value}% off` : `₹${c.discount_value} off`}
+                                  {c.reward_type === 'free_shipping' ? 'Free shipping' : ['percent', 'percentage'].includes(c.discount_type) ? `${c.discount_value}% off` : `₹${c.discount_value} off`}
                                 </div>
-                              </div>
+                                <span className="mt-1 block text-[10px] text-[#94a3b8]">View reward details</span>
+                              </button>
                               <button onClick={() => handleCouponCopy(c.code)} className="p-2 rounded-lg bg-[#070a0e] border border-[#d4af37]/20 text-[#cbd5e1] hover:text-[#fce096]">
                                 <Copy className="w-3.5 h-3.5"/>
                               </button>
@@ -1900,21 +1902,22 @@ export default function Profile() {
                         return (
                           <div key={c.id} className="relative rounded-2xl border-2 border-dashed border-[#d4af37]/35 hover:border-[#d4af37] two-tone-card overflow-hidden p-5 transition-all group">
                             <div className="flex items-start justify-between gap-4">
-                              <div className="min-w-0">
+                              <button type="button" onClick={() => setSelectedCoupon(c)} className="min-w-0 text-left">
                                 <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-[#d4af37]/15 text-[#fce096] border border-[#d4af37]/35 text-[10px] font-bold uppercase tracking-wider mb-2">
                                   <Ticket className="w-3 h-3 text-[#d4af37]"/> {c.is_personal ? 'Your reward' : valid ? 'Live' : 'Expired'}
                                 </div>
                                 <div className="font-mono text-2xl font-bold tracking-tight text-white mb-1.5">{c.code}</div>
                                 <div className="text-2xl sm:text-3xl font-serif font-bold text-[#d4af37] mb-1 leading-none">
-                                  {c.discount_type === 'percent' ? `${c.discount_value}%` : `₹${c.discount_value}`}
-                                  <span className="text-xs uppercase tracking-wider font-semibold text-[#cbd5e1] ml-1.5">OFF</span>
+                                  {c.reward_type === 'free_shipping' ? 'Free shipping' : ['percent', 'percentage'].includes(c.discount_type) ? `${c.discount_value}%` : `₹${c.discount_value}`}
+                                  {c.reward_type !== 'free_shipping' && <span className="text-xs uppercase tracking-wider font-semibold text-[#cbd5e1] ml-1.5">OFF</span>}
                                 </div>
                                 <div className="text-xs text-[#cbd5e1] mt-2 font-light">
-                                  {c.description || 'No minimum spend required'}
+                                  {c.description || (Number(c.minimum_order_amount) > 0 ? `Minimum order ₹${Number(c.minimum_order_amount).toLocaleString('en-IN')}` : 'No minimum spend required')}
                                   {c.expires_at && <div className="mt-1 inline-flex items-center gap-1 text-[#94a3b8]"><Clock className="w-3 h-3 text-[#d4af37]"/> Expires {new Date(c.expires_at).toLocaleDateString()}</div>}
                                 </div>
-                              </div>
-                              <button onClick={() => handleCouponCopy(c.code)} className="shrink-0 w-11 h-11 rounded-xl bg-[#070a0e] border border-[#d4af37]/30 hover:border-[#d4af37] text-[#cbd5e1] hover:text-[#fce096] transition-colors flex items-center justify-center">
+                                <span className="mt-2 block text-[10px] font-semibold uppercase tracking-wider text-[#fce096]">View terms and reward details</span>
+                              </button>
+                              <button type="button" onClick={() => handleCouponCopy(c.code)} aria-label={`Copy coupon ${c.code}`} className="shrink-0 w-11 h-11 rounded-xl bg-[#070a0e] border border-[#d4af37]/30 hover:border-[#d4af37] text-[#cbd5e1] hover:text-[#fce096] transition-colors flex items-center justify-center">
                                 <Copy className="w-4 h-4"/>
                               </button>
                             </div>
@@ -2540,6 +2543,39 @@ export default function Profile() {
           </main>
         </div>
       </div>
+
+      {selectedCoupon && (
+        <div className="fixed inset-0 z-[65] flex items-end justify-center bg-black/80 p-0 backdrop-blur-md sm:items-center sm:p-6" onClick={() => setSelectedCoupon(null)}>
+          <section role="dialog" aria-modal="true" aria-labelledby="coupon-details-title" onClick={event => event.stopPropagation()} className="w-full max-w-lg overflow-hidden rounded-t-3xl border border-[#d4af37]/30 bg-[#0d1520] shadow-2xl sm:rounded-3xl">
+            <header className="flex items-start justify-between gap-4 border-b border-[#d4af37]/20 two-tone-panel-gold px-6 py-5">
+              <div>
+                <p className="font-sub-gold text-xs font-bold uppercase tracking-widest">Your coupon</p>
+                <h2 id="coupon-details-title" className="mt-1 font-serif text-xl font-bold text-white">{selectedCoupon.code}</h2>
+              </div>
+              <button type="button" onClick={() => setSelectedCoupon(null)} aria-label="Close coupon details" className="rounded-xl border border-[#d4af37]/30 p-2 text-[#cbd5e1] hover:text-white"><X className="h-4 w-4"/></button>
+            </header>
+            <div className="space-y-4 px-6 py-5 text-sm text-[#cbd5e1]">
+              <div className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e]/70 p-4">
+                <p className="font-semibold text-[#fce096]">Reward</p>
+                <p className="mt-1">{selectedCoupon.description && !String(selectedCoupon.description).startsWith('order_spin_reward:') ? selectedCoupon.description : selectedCoupon.reward_type === 'free_shipping' ? 'Free shipping' : `${['percent', 'percentage'].includes(selectedCoupon.discount_type) ? `${selectedCoupon.discount_value}%` : `₹${selectedCoupon.discount_value}`} off`}</p>
+              </div>
+              <p><strong className="text-white">Minimum order amount:</strong> {Number(selectedCoupon.minimum_order_amount) > 0 ? `₹${Number(selectedCoupon.minimum_order_amount).toLocaleString('en-IN')}` : 'No minimum spend'}</p>
+              {Number(selectedCoupon.max_discount) > 0 && <p><strong className="text-white">Maximum discount:</strong> ₹{Number(selectedCoupon.max_discount).toLocaleString('en-IN')}</p>}
+              {selectedCoupon.terms_and_conditions ? (
+                <div>
+                  <p className="font-semibold text-white">Terms and conditions</p>
+                  <p className="mt-1 whitespace-pre-wrap leading-relaxed">{selectedCoupon.terms_and_conditions}</p>
+                </div>
+              ) : <p><strong className="text-white">Terms and conditions:</strong> No additional terms provided.</p>}
+              {selectedCoupon.expires_at && <p><strong className="text-white">Valid until:</strong> {new Date(selectedCoupon.expires_at).toLocaleDateString()}</p>}
+            </div>
+            <footer className="flex justify-end gap-2 border-t border-[#d4af37]/20 bg-[#070a0e] px-6 py-4">
+              <button type="button" onClick={() => handleCouponCopy(selectedCoupon.code)} className="btn-gold-luxury inline-flex items-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-wider"><Copy className="h-4 w-4"/>Copy code</button>
+              <button type="button" onClick={() => setSelectedCoupon(null)} className="btn-silver-luxury rounded-xl px-4 py-2 text-xs font-semibold uppercase tracking-wider">Close</button>
+            </footer>
+          </section>
+        </div>
+      )}
 
       {/* ======== ORDER DETAIL MODAL ======== */}
       {selectedOrder && (
