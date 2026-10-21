@@ -1,9 +1,10 @@
 import React, { useState, useRef } from 'react';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { useAuth } from '../context/AuthContext';
+import { BASE_URL } from '../services/api';
 import './AdminLogin.css';
 
-const API = import.meta.env.VITE_API_URL || 'https://service.Bhumivera.com';
+const API = BASE_URL;
 
 const WarehouseAdminLogin = () => {
   const [step, setStep] = useState(1);

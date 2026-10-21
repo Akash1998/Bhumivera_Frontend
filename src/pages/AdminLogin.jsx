@@ -2,11 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Fingerprint } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { auth as authApi } from '../services/api';
+import { auth as authApi, BASE_URL } from '../services/api';
 import { isPasskeySupported, loginWithPasskey, registerPasskey } from '../utils/webauthnClient';
 import './AdminLogin.css';
 
-const API = import.meta.env.VITE_API_URL || 'https://service.Bhumivera.com';
+const API = BASE_URL;
 
 const AdminLogin = () => {
   const [step, setStep] = useState(1);

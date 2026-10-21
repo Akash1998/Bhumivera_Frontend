@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import { BASE_URL } from '../services/api';
 import {
   ThumbsUp,
   Star,
@@ -17,8 +18,6 @@ import {
   Flag,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-
-const BASE_URL = import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL || 'http://localhost:5000';
 
 function StarRating({ rating, interactive = false, onRate, size = 16 }) {
   const [hovered, setHovered] = useState(0);

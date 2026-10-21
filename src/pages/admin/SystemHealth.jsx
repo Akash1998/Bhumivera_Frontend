@@ -76,8 +76,8 @@ export default function SystemHealth() {
         `Application connection-pool limit: ${health?.databaseUsage?.connectionLimit ?? 'unknown'}`,
         `Maximum idle pool connections: ${health?.databaseUsage?.maxIdleConnections ?? 'unknown'}`,
         `Queued database calls allowed before rejecting: ${health?.databaseUsage?.queueLimit ?? 'unbounded'}`,
-        'This connection pool is the backend application-to-MySQL limit, not the Railway MySQL service RAM graph.',
-        'Railway MySQL service memory is not exposed by the database SQL health check. Review Railway Metrics for the actual server RAM graph.',
+        'This connection pool is the backend application-to-TiDB limit, not the TiDB cluster memory allocation.',
+        'Database memory is not exposed by this SQL health check. Review TiDB Cloud metrics for actual cluster resource usage.',
       ],
     },
     {
@@ -126,7 +126,7 @@ export default function SystemHealth() {
           ? `TTL: ${services.responseCache.ttlSeconds} seconds; responses larger than ${Math.round(services.responseCache.maxCacheableResponseBytes / 1024)} KiB are skipped.`
           : 'Configure REDIS_URL or CACHE_REDIS_URL to cache eligible anonymous API responses.',
         `Process counters: ${services.responseCache?.metrics?.hits ?? 0} hits (${services.responseCache?.metrics?.hitRatePercent ?? 0}% hit rate), ${services.responseCache?.metrics?.misses ?? 0} misses, ${services.responseCache?.metrics?.writes ?? 0} writes, ${services.responseCache?.metrics?.readErrors ?? 0} read errors, ${services.responseCache?.metrics?.writeErrors ?? 0} write errors.`,
-        'Redis caching reduces repeated eligible reads. It does not change Railway MySQL RAM limits or replace persistent database records.',
+        'Redis caching reduces repeated eligible reads. It does not change TiDB cluster capacity or replace persistent database records.',
       ],
     },
   ];
