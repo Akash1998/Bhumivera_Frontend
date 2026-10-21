@@ -2968,7 +2968,7 @@ function ChatOrderCard({ order, isDark, onQuickPrompt, onRequestOrderInterventio
 
       {Array.isArray(order.items) && order.items.length > 0 && (
         <div className="mt-2.5 pt-2 border-t border-current/10 space-y-1.5">
-          {order.items.slice(0, 2).map((item, idx) => (
+          {order.items.map((item, idx) => (
             <div key={item.id || idx} className="flex items-center justify-between gap-2 text-[11px]">
               <span className="truncate font-medium">
                 {item.quantity || 1}× {item.name}
@@ -2976,13 +2976,23 @@ function ChatOrderCard({ order, isDark, onQuickPrompt, onRequestOrderInterventio
               <span className="shrink-0 opacity-75">₹{Number(item.price || 0).toLocaleString('en-IN')}</span>
             </div>
           ))}
-          {order.items.length > 2 && (
-            <p className="text-[10px] opacity-60">+{order.items.length - 2} more item(s)</p>
-          )}
         </div>
       )}
 
-      {/* Strict Order Policy: Self-service cancellation is disabled; customers use Verified Specialist Escalation */}
+      <div className="mt-2.5 border-t border-current/10 pt-2 space-y-1 text-[10px] opacity-80">
+        <p>Payment: {order.paymentMode || '—'} · {order.paymentStatus || 'pending'}</p>
+        <p>
+          Subtotal ₹{Number(order.subtotal || 0).toLocaleString('en-IN')}
+          {' · '}Discount ₹{Number(order.discount || 0).toLocaleString('en-IN')}
+          {' · '}Shipping ₹{Number(order.shippingCost || 0).toLocaleString('en-IN')}
+        </p>
+        {order.couponCode && <p>Coupon: {order.couponCode}</p>}
+        {Number(order.loyaltyPointsRedeemed) > 0 && <p>Loyalty points redeemed: {Number(order.loyaltyPointsRedeemed).toLocaleString('en-IN')}</p>}
+        {Number(order.loyaltyPointsAwarded) > 0 && <p>Loyalty points earned: {Number(order.loyaltyPointsAwarded).toLocaleString('en-IN')}</p>}
+        {order.deliveryCity && <p>Delivery area: {order.deliveryCity}{order.deliveryPincode ? ` · ${order.deliveryPincode}` : ''}</p>}
+        {order.trackingUrl && <a className="inline-block text-[#D4AF37] underline" href={order.trackingUrl} target="_blank" rel="noreferrer">Open live tracking</a>}
+      </div>
+
       <div className="mt-3 pt-2 border-t border-current/10 flex flex-wrap gap-1.5">
         {!isTerminal && status !== 'delivered' && (
           <button
@@ -4345,6 +4355,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     callbackPhone: '',
     callbackTimeSlot: CALLBACK_SLOTS[0],
     queryDetails: '',
+    cancellationConfirmed: false,
     busy: false,
     error: '',
     ticketReference: '',
@@ -4602,6 +4613,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       callbackPhone: user?.phone ? String(user.phone).replace(/\D/g, '').slice(-10) : '',
       callbackTimeSlot: CALLBACK_SLOTS[0],
       queryDetails: options.details || '',
+      cancellationConfirmed: false,
       busy: false,
       error: '',
       ticketReference: '',
@@ -4679,7 +4691,16 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       callbackPhone,
       callbackTimeSlot,
       queryDetails,
+      cancellationConfirmed,
     } = escalationWizard;
+
+    if (issueCategory === 'order_cancellation' && !cancellationConfirmed) {
+      setEscalationWizard(prev => ({
+        ...prev,
+        error: 'Please confirm you still want support to review cancellation after checking the order impact.',
+      }));
+      return;
+    }
 
     const cleanPhone = String(callbackPhone || '').replace(/\D/g, '').slice(-10);
     if (contactPreference === 'phone_call' && cleanPhone.length !== 10) {
@@ -4707,6 +4728,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           callbackPhone: cleanPhone,
           callbackTimeSlot,
           queryDetails: enrichedDetails,
+          issueCategory,
+          cancellationConfirmed,
         },
         { notify: false }
       );
@@ -4810,7 +4833,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     if ((!text && attachments.length === 0) || isTyping) return;
 
     if (isOrderCancellationRequest(text)) {
-      const matchOrd = text.match(/\b(?:BHVM[-_\s]*)?(\d{6,12})\b/i);
+      const matchOrd = text.match(/\b(?:order\s*(?:(?:id|no|number)\s*)?[:#-]?\s*|#)\s*(?:BHVM[-_\s]*)?(\d{1,12})\b/i) ||
+        text.match(/\bBHVM[-_\s]*(\d{1,12})\b/i);
       openVerificationFlow(matchOrd?.[1] || '', {
         category: 'order_cancellation',
         details: text,
@@ -5330,12 +5354,82 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   <p className="text-[11px] leading-relaxed">
                     Verified <strong>Order #{escalationWizard.verifiedOrder?.orderNumber}</strong>. Your request can be saved for later review; replies are not live and may take some time. Would you prefer an update via <strong>Email</strong> or a <strong>Phone Call</strong>?
                   </p>
+                  {escalationWizard.verifiedOrder && (
+                    <div className={`space-y-2 rounded-xl border p-3 text-[11px] ${
+                      isDark ? 'border-white/10 bg-black/25 text-stone-200' : 'border-[#0B2419]/15 bg-white/70 text-[#0B2419]'
+                    }`}>
+                      <div className="flex flex-wrap items-center justify-between gap-2">
+                        <strong>Order #{escalationWizard.verifiedOrder.orderNumber} · {String(escalationWizard.verifiedOrder.status || '').replace(/_/g, ' ')}</strong>
+                        <span>₹{Number(escalationWizard.verifiedOrder.total || 0).toLocaleString('en-IN')}</span>
+                      </div>
+                      <p>
+                        Payment: {escalationWizard.verifiedOrder.paymentMode} ({escalationWizard.verifiedOrder.paymentStatus})
+                        {' · '}Delivery: {escalationWizard.verifiedOrder.deliveryEstimate}
+                      </p>
+                      <p>
+                        {escalationWizard.verifiedOrder.trackingNumber
+                          ? `Tracking: ${escalationWizard.verifiedOrder.trackingNumber}${escalationWizard.verifiedOrder.courier ? ` · ${escalationWizard.verifiedOrder.courier}` : ''}`
+                          : 'Tracking number will appear after dispatch.'}
+                      </p>
+                      {escalationWizard.verifiedOrder.items?.length > 0 && (
+                        <ul className="list-inside list-disc">
+                          {escalationWizard.verifiedOrder.items.map((item, index) => (
+                            <li key={`${item.name}-${index}`}>
+                              {item.name} × {item.quantity} · ₹{Number(item.price).toLocaleString('en-IN')}
+                            </li>
+                          ))}
+                        </ul>
+                      )}
+                      {(Number(escalationWizard.verifiedOrder.discount) > 0 || escalationWizard.verifiedOrder.couponCode) && (
+                        <p>
+                          Discount: ₹{Number(escalationWizard.verifiedOrder.discount || 0).toLocaleString('en-IN')}
+                          {escalationWizard.verifiedOrder.couponCode ? ` · Coupon ${escalationWizard.verifiedOrder.couponCode}` : ''}
+                        </p>
+                      )}
+                      {escalationWizard.verifiedOrder.trackingUrl && (
+                        <a href={escalationWizard.verifiedOrder.trackingUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-semibold text-[#D4AF37] underline">
+                          Open live tracking <ChevronRight className="h-3 w-3"/>
+                        </a>
+                      )}
+                    </div>
+                  )}
+                  {escalationWizard.issueCategory === 'order_cancellation' && escalationWizard.verifiedOrder && (
+                    <div className={`rounded-xl border border-amber-500/30 p-3 text-[11px] leading-relaxed ${
+                      isDark ? 'bg-amber-950/30 text-amber-100' : 'bg-amber-50 text-amber-950'
+                    }`}>
+                      <strong>Before requesting cancellation:</strong>
+                      <ul className="mt-1 list-inside list-disc">
+                        {Number(escalationWizard.verifiedOrder.impactAmount) > 0 && (
+                          <li>The ₹{Number(escalationWizard.verifiedOrder.impactAmount).toLocaleString('en-IN')} nature-impact pledge on this order will be cancelled.</li>
+                        )}
+                        {Number(escalationWizard.verifiedOrder.loyaltyPointsAwarded) > 0 && (
+                          <li>{Number(escalationWizard.verifiedOrder.loyaltyPointsAwarded).toLocaleString()} points earned on this order may be reversed.</li>
+                        )}
+                        {Number(escalationWizard.verifiedOrder.loyaltyPointsRedeemed) > 0 && (
+                          <li>{Number(escalationWizard.verifiedOrder.loyaltyPointsRedeemed).toLocaleString()} redeemed points are restored when cancellation is processed.</li>
+                        )}
+                        {escalationWizard.verifiedOrder.couponCode && (
+                          <li>Coupon {escalationWizard.verifiedOrder.couponCode} usage is released after cancellation processing, subject to its validity and terms.</li>
+                        )}
+                        <li>This is a request for review, not an immediate cancellation. A support SuperAdmin can act only after your explicit confirmation.</li>
+                      </ul>
+                      <label className="mt-2 flex items-start gap-2 font-semibold">
+                        <input
+                          type="checkbox"
+                          checked={escalationWizard.cancellationConfirmed}
+                          onChange={event => setEscalationWizard(prev => ({ ...prev, cancellationConfirmed: event.target.checked, error: '' }))}
+                          className="mt-0.5 accent-[#D4AF37]"
+                        />
+                        <span>I have reviewed these effects and still want support to review my cancellation request.</span>
+                      </label>
+                    </div>
+                  )}
 
                   {/* Granular Inspection & Remedy Selectors */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <select
                       value={escalationWizard.issueCategory}
-                      onChange={e => setEscalationWizard(prev => ({ ...prev, issueCategory: e.target.value }))}
+                      onChange={e => setEscalationWizard(prev => ({ ...prev, issueCategory: e.target.value, cancellationConfirmed: false, error: '' }))}
                       aria-label="Issue Category"
                       className={`px-2.5 py-1.5 rounded-xl border text-[11px] outline-none ${
                         isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-white border-stone-300 text-[#0B2419]'
@@ -5434,7 +5528,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
 
                   <button
                     type="submit"
-                    disabled={escalationWizard.busy}
+                    disabled={escalationWizard.busy || (escalationWizard.issueCategory === 'order_cancellation' && !escalationWizard.cancellationConfirmed)}
                     className="w-full py-2 rounded-xl bg-[#0B2419] text-[#D4AF37] border border-[#D4AF37]/40 font-semibold text-xs hover:bg-[#163829] disabled:opacity-50"
                   >
                     {escalationWizard.busy ? 'Saving Verified Request…' : 'Submit Follow-up Request'}

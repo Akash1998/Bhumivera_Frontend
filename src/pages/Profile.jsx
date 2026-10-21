@@ -85,14 +85,9 @@ const SECURITY_QUESTIONS = [
   "What is your favorite book?",
 ];
 
-const CANCELLABLE_STATUSES = ['pending', 'confirmed'];
 const DELIVERED_STATUSES = ['delivered', 'completed'];
-const canCancelOrder = order => (
-  CANCELLABLE_STATUSES.includes((order.status || '').toLowerCase()) &&
-  !(order.payment_mode === 'online' && order.payment_status === 'paid')
-);
 const needsRefundSupport = order => (
-  CANCELLABLE_STATUSES.includes((order.status || '').toLowerCase()) &&
+  ['pending', 'confirmed'].includes((order.status || '').toLowerCase()) &&
   order.payment_mode === 'online' &&
   order.payment_status === 'paid'
 );
@@ -600,13 +595,6 @@ export default function Profile() {
   const handleDisable2FA = async () => {
     try { await usersApi.disable2FA(); setTwoFactor(p => ({ ...p, isEnabled:false })); toast.success('2FA disabled'); }
     catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
-  };
-  const handleCancelOrder = (orderId) => {
-    window.dispatchEvent(
-      new CustomEvent('bhumivera:open-support-chat', {
-        detail: { verifyOrderId: orderId, cancelOrder: true },
-      })
-    );
   };
   const handleEnablePushNotifications = async () => {
     setEnablingPushNotifications(true);
@@ -1321,12 +1309,11 @@ export default function Profile() {
                       <tbody className="divide-y divide-[#d4af37]/10">
                         {orders.map(o => {
                           const items = safeArr(o.items || o.order_items || o.Items);
-                          const canCancel = canCancelOrder(o);
                           const refundSupport = needsRefundSupport(o);
                           const delivered = DELIVERED_STATUSES.includes((o.status||'').toLowerCase());
                           return (
                             <tr key={o.id} className="hover:bg-white/5 transition-colors">
-                              <td className="py-4 px-3 font-serif font-bold text-white">#{o.id}</td>
+                              <td className="py-4 px-3 font-serif font-bold text-white">#{formatOrderNumber(o.order_number || o.id)}</td>
                               <td className="py-4 px-3 text-[#cbd5e1] whitespace-nowrap text-xs font-light">{o.created_at? new Date(o.created_at).toLocaleDateString():'—'}</td>
                               <td className="py-4 px-3 text-[#cbd5e1] text-xs font-light">{items.length || o.quantity || 1} items</td>
                               <td className="py-4 px-3 font-serif font-bold text-white tracking-tight">₹{Number(o.total_amount || o.total || 0).toFixed(2)}</td>
@@ -1336,11 +1323,18 @@ export default function Profile() {
                                   <button onClick={() => setSelectedOrder(o)} className="btn-silver-luxury inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider">
                                     <Eye className="w-3.5 h-3.5"/> View
                                   </button>
-                                  {canCancel && (
-                                    <button onClick={() => handleCancelOrder(o.id)} className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                                      <X className="w-3.5 h-3.5"/> Request cancellation
-                                    </button>
-                                  )}
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      const orderNumber = formatOrderNumber(o.order_number || o.id);
+                                      window.dispatchEvent(new CustomEvent('bhumivera:open-support-chat', {
+                                        detail: { prompt: `I need help with Order #${orderNumber}.` },
+                                      }));
+                                    }}
+                                    className="btn-silver-luxury inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider"
+                                  >
+                                    <LifeBuoy className="w-3.5 h-3.5"/> Order support
+                                  </button>
                                   {refundSupport && (
                                     <button onClick={() => setActiveTab('support')} className="btn-silver-luxury inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider">
                                       Contact support
@@ -2585,7 +2579,7 @@ export default function Profile() {
               <div className="relative flex items-start justify-between gap-4">
                 <div>
                   <div className="font-sub-gold uppercase tracking-[0.2em] font-bold text-xs mb-1">Patron Order</div>
-                  <div className="text-3xl font-serif font-bold tracking-tight mb-1 text-white">#{selectedOrder.id}</div>
+                  <div className="text-3xl font-serif font-bold tracking-tight mb-1 text-white">#{formatOrderNumber(selectedOrder.order_number || selectedOrder.id)}</div>
                   <div className="text-sm text-[#cbd5e1] inline-flex items-center gap-2 font-light">
                     <Calendar className="w-3.5 h-3.5 text-[#d4af37]"/>
                     {selectedOrder.created_at ? new Date(selectedOrder.created_at).toLocaleString() : ''}
@@ -2750,13 +2744,8 @@ export default function Profile() {
               </div>
             </div>
             <div className="border-t border-[#d4af37]/20 bg-[#070a0e] px-6 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-3">
-              <div className="text-xs text-[#94a3b8] font-light">Need assistance? <button onClick={() => { const ordNum = formatOrderNumber(selectedOrder.order_number || selectedOrder.id); setSelectedOrder(null); setActiveTab('support'); window.dispatchEvent(new CustomEvent('bhumivera:open-support-chat', { detail: { orderId: selectedOrder.id, orderNumber: ordNum, prompt: `I need help with Order #${ordNum}.` } })); }} className="text-[#fce096] font-semibold underline underline-offset-2 hover:text-white">Open Live Order Support Chat</button>.</div>
+              <div className="text-xs text-[#94a3b8] font-light">Need assistance? <button onClick={() => { const ordNum = formatOrderNumber(selectedOrder.order_number || selectedOrder.id); setSelectedOrder(null); setActiveTab('support'); window.dispatchEvent(new CustomEvent('bhumivera:open-support-chat', { detail: { prompt: `I need help with Order #${ordNum}.` } })); }} className="text-[#fce096] font-semibold underline underline-offset-2 hover:text-white">Open Live Order Support Chat</button>.</div>
               <div className="flex flex-wrap gap-2">
-                {canCancelOrder(selectedOrder) && (
-                  <button onClick={() => handleCancelOrder(selectedOrder.id)} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-300 border border-rose-500/30 text-xs font-semibold uppercase tracking-wider">
-                    <X className="w-4 h-4"/> Request cancellation
-                  </button>
-                )}
                 {needsRefundSupport(selectedOrder) && (
                   <button onClick={() => { setSelectedOrder(null); setActiveTab('support'); }} className="btn-silver-luxury px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider">
                     Contact concierge about refund
