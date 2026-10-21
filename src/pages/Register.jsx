@@ -208,7 +208,7 @@ export default function Register() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAF8F5] flex flex-col items-center justify-center p-6 relative overflow-hidden pt-24 font-sans">
+    <div className="auth-luxury min-h-screen bg-[#FAF8F5] flex flex-col items-center justify-center p-6 relative overflow-hidden pt-24 font-sans">
       {/* Botanical Background Accents */}
       <div className="absolute inset-0 pointer-events-none">
         <div className="absolute top-[5%] right-[15%] w-[600px] h-[600px] bg-[#0B2419]/5 rounded-full blur-[120px]"></div>
@@ -216,7 +216,7 @@ export default function Register() {
       </div>
 
       <div className="w-full max-w-md relative z-10">
-        <div className="bg-white/80 backdrop-blur-2xl border border-[#0B2419]/10 rounded-[3rem] p-8 sm:p-12 shadow-2xl relative overflow-hidden">
+        <div className="auth-luxury__card bg-white/80 backdrop-blur-2xl border border-[#0B2419]/10 rounded-[3rem] p-8 sm:p-12 shadow-2xl relative overflow-hidden">
           
           {/* Decorative Leaf Accent */}
           <div className="absolute top-0 right-0 p-6 opacity-10 text-[#0B2419]">

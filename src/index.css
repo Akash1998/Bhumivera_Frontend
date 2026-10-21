@@ -788,7 +788,7 @@ html.native-app .site-shell > footer {
   [class~="p-6"],
   [class~="p-8"],
   [class~="p-10"]
-) {
+):not([class*="bg-emerald"]):not([class*="bg-green"]):not([class*="bg-red"]):not([class*="bg-yellow"]):not([class*="bg-amber"]):not([class*="bg-blue"]) {
   background-color: rgba(27, 28, 25, 0.48);
   -webkit-backdrop-filter: blur(20px) saturate(125%);
   backdrop-filter: blur(20px) saturate(125%);
@@ -1112,18 +1112,16 @@ html.native-app .site-shell > footer {
 
 /* Storefront finish: translucent botanical surfaces, warmer light, and clearer type. */
 .site-shell nav.sticky {
-  border-color: rgba(226, 198, 128, 0.24);
-  background:
-    linear-gradient(105deg, rgba(35, 45, 35, 0.78), rgba(19, 25, 20, 0.72)),
-    rgba(20, 41, 31, 0.68);
-  -webkit-backdrop-filter: blur(26px) saturate(145%);
-  backdrop-filter: blur(26px) saturate(145%);
-  box-shadow: 0 12px 34px rgba(4, 10, 7, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.055);
+  border-color: rgba(226, 198, 128, 0.2);
+  background: linear-gradient(105deg, rgba(4, 11, 7, 0.64), rgba(5, 12, 8, 0.58));
+  -webkit-backdrop-filter: blur(28px) saturate(135%);
+  backdrop-filter: blur(28px) saturate(135%);
+  box-shadow: 0 14px 38px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.045);
 }
 
 .site-shell nav.sticky input {
   border-color: rgba(222, 190, 112, 0.27);
-  background-color: rgba(17, 25, 19, 0.52);
+  background-color: rgba(4, 11, 7, 0.46);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 8px 22px rgba(0, 0, 0, 0.12);
 }
 
@@ -1134,7 +1132,7 @@ html.native-app .site-shell > footer {
 
 .site-shell nav.sticky :is(button[aria-label="Open cart"], a[aria-label="Profile"] > div) {
   border-color: rgba(226, 198, 128, 0.34);
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.09), rgba(29, 39, 30, 0.48));
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(5, 13, 8, 0.54));
   box-shadow: 0 5px 16px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
 }
@@ -1154,32 +1152,33 @@ html.native-app .site-shell > footer {
   [class~="p-8"],
   [class~="p-10"]
 ) {
-  background-color: rgba(34, 38, 31, 0.34);
+  background-color: rgba(5, 13, 8, 0.38);
   -webkit-backdrop-filter: blur(22px) saturate(138%);
   backdrop-filter: blur(22px) saturate(138%);
   border-color: rgba(222, 190, 112, 0.23);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.085), 0 18px 44px rgba(0, 0, 0, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055), 0 18px 44px rgba(0, 0, 0, 0.28);
 }
 
-.site-shell main :is(.two-tone-panel, .two-tone-panel-gold, .two-tone-card) {
-  background-color: rgba(34, 38, 31, 0.34);
+.site-shell main :is(.two-tone-panel, .two-tone-panel-gold, .two-tone-card),
+.management-shell main :is(.two-tone-panel, .two-tone-panel-gold, .two-tone-card) {
+  background-color: rgba(5, 13, 8, 0.38);
   background-image:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.055), transparent 62%),
-    radial-gradient(ellipse at 10% 0%, rgba(212, 175, 55, 0.055), transparent 58%);
+    linear-gradient(145deg, rgba(255, 255, 255, 0.035), rgba(4, 10, 6, 0.12) 62%),
+    radial-gradient(ellipse at 10% 0%, rgba(212, 175, 55, 0.035), transparent 58%);
   -webkit-backdrop-filter: blur(24px) saturate(142%);
   backdrop-filter: blur(24px) saturate(142%);
   border-color: rgba(222, 190, 112, 0.25);
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08), 0 18px 46px rgba(0, 0, 0, 0.22);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.055), inset 0 -20px 36px rgba(0, 0, 0, 0.12), 0 18px 46px rgba(0, 0, 0, 0.3);
 }
 
 .site-shell main .two-tone-card:hover {
-  background-color: rgba(48, 51, 40, 0.58);
+  background-color: rgba(10, 20, 12, 0.5);
   border-color: rgba(232, 201, 130, 0.48);
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.3), 0 0 26px rgba(200, 155, 60, 0.12);
 }
 
 .site-shell main .premium-home-hero__image {
-  filter: saturate(1.14) contrast(1.04) brightness(1.12);
+  filter: saturate(1.1) contrast(1.04) brightness(1.02);
 }
 
 .site-shell main .premium-home-hero::after {
@@ -1187,7 +1186,7 @@ html.native-app .site-shell > footer {
   inset: 0;
   z-index: -1;
   background:
-    radial-gradient(ellipse at 78% 34%, rgba(223, 191, 116, 0.12), transparent 38%),
+    radial-gradient(ellipse at 78% 34%, rgba(223, 191, 116, 0.08), transparent 38%),
     linear-gradient(90deg, rgba(14, 27, 19, 0.12), transparent 64%);
   content: "";
   pointer-events: none;
@@ -1198,7 +1197,7 @@ html.native-app .site-shell > footer {
 }
 
 .site-shell main .premium-home-hero__content > div:last-child > div {
-  background-color: rgba(28, 34, 27, 0.46);
+  background-color: rgba(5, 13, 8, 0.42);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
   backdrop-filter: blur(18px) saturate(140%);
 }
@@ -1228,8 +1227,136 @@ html.native-app .site-shell > footer {
 
 @media (max-width: 767px) {
   .site-shell nav.sticky {
-    background:
-      linear-gradient(105deg, rgba(35, 45, 35, 0.82), rgba(19, 25, 20, 0.78)),
-      rgba(20, 41, 31, 0.74);
+    background: linear-gradient(105deg, rgba(4, 11, 7, 0.68), rgba(5, 12, 8, 0.62));
   }
+}
+
+.site-shell main :is(div, section, article)[class*="rounded-"][class*="border"]:not([class*="bg-emerald"]):not([class*="bg-green"]):not([class*="bg-red"]):not([class*="bg-yellow"]):not([class*="bg-amber"]):not([class*="bg-blue"]),
+.management-shell main :is(div, section, article)[class*="rounded-"][class*="border"]:not([class*="bg-emerald"]):not([class*="bg-green"]):not([class*="bg-red"]):not([class*="bg-yellow"]):not([class*="bg-amber"]):not([class*="bg-blue"]) {
+  background-color: rgba(5, 13, 8, 0.38);
+  -webkit-backdrop-filter: blur(22px) saturate(138%);
+  backdrop-filter: blur(22px) saturate(138%);
+  border-color: rgba(212, 175, 55, 0.2);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), inset 0 -18px 32px rgba(0, 0, 0, 0.12), 0 16px 38px rgba(0, 0, 0, 0.24);
+}
+
+.site-shell main :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select),
+.management-shell main :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select) {
+  border-color: rgba(212, 175, 55, 0.22);
+  background-color: rgba(4, 11, 7, 0.58);
+  color: #f7f2e7;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.site-shell main :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select)::placeholder,
+.management-shell main :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select)::placeholder {
+  color: rgba(223, 215, 196, 0.58);
+}
+
+.site-shell main :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select):focus,
+.management-shell main :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select):focus {
+  border-color: rgba(232, 201, 130, 0.66);
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.04);
+}
+
+.auth-luxury {
+  isolation: isolate;
+  background:
+    radial-gradient(ellipse at 14% 14%, rgba(37, 65, 44, 0.46), transparent 42%),
+    radial-gradient(ellipse at 88% 82%, rgba(113, 83, 30, 0.16), transparent 38%),
+    linear-gradient(145deg, #080f0a, #111a12 52%, #070d09) !important;
+  color: #f7f2e7;
+}
+
+.auth-luxury__card {
+  border-radius: 2rem !important;
+  border: 1px solid rgba(212, 175, 55, 0.28) !important;
+  background: linear-gradient(145deg, rgba(7, 16, 10, 0.68), rgba(4, 11, 7, 0.58)) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(135%) !important;
+  backdrop-filter: blur(30px) saturate(135%) !important;
+  box-shadow: 0 30px 90px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.075), inset 0 -24px 44px rgba(0, 0, 0, 0.18) !important;
+}
+
+.auth-luxury :is(h1, h2, h3, label) {
+  color: #f1ead9;
+}
+
+.auth-luxury [class*="text-[#0B2419]"],
+.auth-luxury [class*="text-[#14251c]"],
+.auth-luxury [class*="text-[#2C3E2D]"] {
+  color: #eee7d6 !important;
+}
+
+.auth-luxury [class*="text-[#0B2419]/"],
+.auth-luxury [class*="text-[#14251c]/"] {
+  color: rgba(238, 231, 214, 0.72) !important;
+}
+
+.auth-luxury [class*="bg-white"],
+.auth-luxury [class*="bg-[#F3F9F1]"],
+.auth-luxury [class*="bg-[#FDFBF7]"],
+.auth-luxury [class*="bg-emerald-50"] {
+  border-color: rgba(212, 175, 55, 0.18);
+  background-color: rgba(4, 12, 8, 0.56) !important;
+  color: #f1ead9 !important;
+}
+
+.auth-luxury :is(input:not([type="checkbox"]), textarea, select) {
+  border: 1px solid rgba(212, 175, 55, 0.22) !important;
+  background: rgba(3, 10, 6, 0.64) !important;
+  color: #fbf7eb !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.auth-luxury :is(input:not([type="checkbox"]), textarea, select)::placeholder {
+  color: rgba(226, 218, 199, 0.5) !important;
+}
+
+.auth-luxury :is(input:not([type="checkbox"]), textarea, select):focus {
+  border-color: rgba(232, 201, 130, 0.72) !important;
+  background: rgba(5, 14, 8, 0.8) !important;
+  box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1) !important;
+}
+
+.auth-luxury__card button[type="submit"] {
+  border: 1px solid rgba(232, 201, 130, 0.32);
+  background: linear-gradient(135deg, #d9ba71, #b28a37 58%, #8c6929) !important;
+  color: #10170f !important;
+  box-shadow: 0 12px 30px rgba(0, 0, 0, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.32);
+}
+
+.auth-luxury__card button[type="submit"]:hover:not(:disabled) {
+  filter: brightness(1.08);
+  box-shadow: 0 15px 36px rgba(0, 0, 0, 0.38), 0 0 22px rgba(212, 175, 55, 0.12);
+}
+
+.mini-cart-panel {
+  background: linear-gradient(145deg, rgba(5, 13, 8, 0.72), rgba(3, 9, 6, 0.64));
+  -webkit-backdrop-filter: blur(30px) saturate(138%);
+  backdrop-filter: blur(30px) saturate(138%);
+  border-color: rgba(212, 175, 55, 0.24);
+  box-shadow: -28px 0 88px rgba(0, 0, 0, 0.62), inset 1px 0 0 rgba(255, 255, 255, 0.04);
+}
+
+.mini-cart-header,
+.mini-cart-checkout {
+  background-color: rgba(3, 10, 6, 0.62);
+  -webkit-backdrop-filter: blur(28px) saturate(135%);
+  backdrop-filter: blur(28px) saturate(135%);
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.mini-cart-scroll {
+  background-color: rgba(4, 11, 7, 0.34);
+}
+
+.mini-cart-item {
+  background-color: rgba(4, 11, 7, 0.44);
+}
+
+.mini-cart-empty {
+  background:
+    radial-gradient(circle at 50% 30%, rgba(212, 175, 55, 0.08), transparent 68%),
+    rgba(4, 11, 7, 0.52);
 }
