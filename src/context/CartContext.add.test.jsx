@@ -141,6 +141,25 @@ describe('cart additions with live inventory', () => {
     expect(cart.add).toHaveBeenCalledWith({ productId: 17, quantity: 1 });
   });
 
+  it('uses the canonical live ID when a legacy product ID redirects to the live product', async () => {
+    authState.isAuthenticated = true;
+    authState.user = { id: 21, role: 'customer' };
+    products.getById.mockResolvedValue({
+      data: { success: true, data: { id: 17, name: 'Sea Buckthorn Oil', quantity: 8, status: 'active' } },
+    });
+    cart.add.mockResolvedValue({ data: { items: [] } });
+    cart.get
+      .mockResolvedValueOnce({ data: { items: [] } })
+      .mockResolvedValue({ data: { items: [] } });
+
+    render(<CartProvider><CartHarness productId={106} /></CartProvider>);
+    await waitFor(() => expect(screen.getByTestId('cart-items').textContent).toBe('[]'));
+    await act(async () => screen.getByRole('button', { name: 'Add product' }).click());
+
+    expect(products.getById).toHaveBeenCalledWith(106);
+    expect(cart.add).toHaveBeenCalledWith({ productId: 17, quantity: 1 });
+  });
+
   it('enforces verified stock limits for signed-in customers', async () => {
     authState.isAuthenticated = true;
     authState.user = { id: 21, role: 'customer' };

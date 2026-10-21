@@ -172,7 +172,7 @@ export const CartProvider = ({ children }) => {
 
   // ZERO-LATENCY OPTIMISTIC UPDATE WITH 100X AI CO-PILOT RESCUE
   const addToCart = async (product, qty = 1) => {
-    const prodId = getCartProductId(product);
+    let prodId = getCartProductId(product);
     if (prodId === undefined || prodId === null) {
       const msg = 'This product cannot be added to your cart right now.';
       toast.error(msg);
@@ -215,7 +215,6 @@ export const CartProvider = ({ children }) => {
       if (
         liveProductId === undefined ||
         liveProductId === null ||
-        String(liveProductId) !== String(prodId) ||
         liveStock === undefined ||
         liveStock === null ||
         liveStock === '' ||
@@ -223,6 +222,7 @@ export const CartProvider = ({ children }) => {
       ) {
         throw new Error('Current product inventory could not be verified. Please try again.');
       }
+      prodId = liveProductId;
       if (liveProduct.status && String(liveProduct.status).toLowerCase() !== 'active') {
         throw new Error(`${liveProduct.name || product.name || 'This product'} is currently unavailable.`);
       }
