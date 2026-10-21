@@ -4449,17 +4449,18 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           role="dialog"
           aria-modal="true"
           aria-label="Bhumivera Client Concierge"
-          className={`flex min-h-0 flex-1 flex-col overflow-hidden rounded-none border-0 transition-all duration-200 backdrop-blur-xl md:rounded-3xl md:border ${
+          data-theme={isDark ? 'dark' : 'light'}
+          className={`bhumivera-concierge-panel flex min-h-0 flex-1 flex-col overflow-hidden rounded-none border-0 transition-all duration-200 backdrop-blur-xl md:rounded-3xl md:border ${
             isDark
-              ? 'bg-[#071610]/98 border-[#D4AF37]/35 text-stone-100 shadow-[0_24px_70px_rgba(0,0,0,0.55)]'
-              : 'bg-[#FDFBF7]/98 border-[#D4AF37]/40 text-[#0B2419] shadow-[0_24px_70px_rgba(11,36,25,0.22)]'
+              ? 'bhumivera-concierge-panel--dark border-[#D4AF37]/35 text-stone-100 shadow-[0_24px_70px_rgba(0,0,0,0.55)]'
+              : 'bhumivera-concierge-panel--light border-[#D4AF37]/40 text-[#0B2419] shadow-[0_24px_70px_rgba(11,36,25,0.22)]'
           }`}
         >
           {/* Haute Luxury Header */}
-          <header className="bg-gradient-to-r from-[#071911] via-[#0B2419] to-[#143725] px-5 py-3.5 text-[#FDFBF7] flex items-center justify-between gap-3 border-b border-[#D4AF37]/30 shrink-0 shadow-sm">
+          <header className="bhumivera-concierge-header px-5 py-3.5 text-[#FDFBF7] flex items-center justify-between gap-3 border-b border-[#D4AF37]/30 shrink-0 shadow-sm">
             <div className="flex items-center gap-3 min-w-0">
-              <div className="w-10 h-10 rounded-2xl bg-[#D4AF37]/15 border border-[#D4AF37]/50 flex items-center justify-center shrink-0 shadow-inner">
-                <Sparkles className="w-4 h-4 text-[#D4AF37]" />
+              <div className="bhumivera-concierge-logo h-11 w-11 rounded-2xl border border-[#D4AF37]/50 flex items-center justify-center shrink-0 shadow-inner">
+                <img src="/logo.webp" alt="Bhumivera" width="36" height="36" decoding="async" className="h-9 w-9 object-contain" />
               </div>
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
@@ -4525,7 +4526,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           {/* Compact Luxury Phytoscience Navigation Bar */}
           <div
             className={`px-3.5 py-2 border-b flex items-center justify-between gap-2 text-[11px] shrink-0 transition-colors ${
-              isDark ? 'bg-[#091d16] border-white/10 text-stone-300' : 'bg-[#f5f2e8] border-[#0B2419]/10 text-[#1b2921]'
+              isDark ? 'bg-[#091d16]/45 border-white/10 text-stone-300' : 'bg-[#f5f2e8]/65 border-[#0B2419]/10 text-[#1b2921]'
             }`}
           >
             <div className="flex items-center gap-1.5 shrink-0">
@@ -4589,7 +4590,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           {(ingredientDrawerOpen || ritualDrawerOpen || diagnosticDrawerOpen) && (
             <div
               className={`px-4 py-1.5 border-b flex items-center justify-between text-xs shrink-0 transition-colors ${
-                isDark ? 'bg-[#0f241d] border-[#D4AF37]/30 text-stone-200' : 'bg-[#e8e2d4] border-[#0B2419]/15 text-[#0B2419]'
+                isDark ? 'bg-[#0f241d]/45 border-[#D4AF37]/30 text-stone-200' : 'bg-[#e8e2d4]/65 border-[#0B2419]/15 text-[#0B2419]'
               }`}
             >
               <button
@@ -4771,7 +4772,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           {/* Instant Spotlight Live Finder Bar (Writing Access, NO Send Button!) */}
           <div
             className={`p-3.5 border-t flex items-center gap-2 shrink-0 transition-colors ${
-              isDark ? 'bg-[#071610] border-white/10' : 'bg-white border-[#0B2419]/10'
+              isDark ? 'bg-[#071610]/45 border-white/10' : 'bg-white/65 border-[#0B2419]/10'
             }`}
           >
             <div className="relative flex-1 flex items-center">

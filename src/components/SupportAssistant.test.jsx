@@ -78,6 +78,27 @@ describe('SupportAssistant — 100% Deterministic Knowledge Tree & Instant Finde
     expect(document.body.style.overflow).not.toBe('hidden');
   });
 
+  it('defaults to dark smoked glass, shows the brand logo, and persists the light theme switch', async () => {
+    render(
+      <MemoryRouter initialEntries={['/']}>
+        <SupportAssistant />
+      </MemoryRouter>
+    );
+
+    openSupportChat();
+    const dialog = await screen.findByRole('dialog', { name: 'Bhumivera Client Concierge' });
+    expect(dialog.getAttribute('data-theme')).toBe('dark');
+    expect(screen.getByRole('img', { name: 'Bhumivera' })).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Light mode' }));
+    expect(dialog.getAttribute('data-theme')).toBe('light');
+    expect(localStorage.getItem('bhumivera_client_concierge_theme')).toBe('light');
+
+    fireEvent.click(screen.getByRole('button', { name: 'Dark mode' }));
+    expect(dialog.getAttribute('data-theme')).toBe('dark');
+    expect(localStorage.getItem('bhumivera_client_concierge_theme')).toBe('dark');
+  });
+
   it('renders Instant Spotlight Live Finder with NO submit/send button', async () => {
     render(
       <MemoryRouter initialEntries={['/']}>

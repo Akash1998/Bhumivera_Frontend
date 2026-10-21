@@ -1113,7 +1113,7 @@ html.native-app .site-shell > footer {
 /* Storefront finish: translucent botanical surfaces, warmer light, and clearer type. */
 .site-shell nav.sticky {
   border-color: rgba(226, 198, 128, 0.2);
-  background: linear-gradient(105deg, rgba(4, 11, 7, 0.64), rgba(5, 12, 8, 0.58));
+  background: linear-gradient(105deg, rgba(4, 11, 7, 0.29), rgba(5, 12, 8, 0.26));
   -webkit-backdrop-filter: blur(28px) saturate(135%);
   backdrop-filter: blur(28px) saturate(135%);
   box-shadow: 0 14px 38px rgba(0, 0, 0, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.045);
@@ -1121,7 +1121,7 @@ html.native-app .site-shell > footer {
 
 .site-shell nav.sticky input {
   border-color: rgba(222, 190, 112, 0.27);
-  background-color: rgba(4, 11, 7, 0.46);
+  background-color: rgba(4, 11, 7, 0.21);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), 0 8px 22px rgba(0, 0, 0, 0.12);
 }
 
@@ -1132,7 +1132,7 @@ html.native-app .site-shell > footer {
 
 .site-shell nav.sticky :is(button[aria-label="Open cart"], a[aria-label="Profile"] > div) {
   border-color: rgba(226, 198, 128, 0.34);
-  background: linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(5, 13, 8, 0.54));
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.055), rgba(5, 13, 8, 0.24));
   box-shadow: 0 5px 16px rgba(0, 0, 0, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.1);
   transition: transform 220ms ease, border-color 220ms ease, box-shadow 220ms ease;
 }
@@ -1151,8 +1151,8 @@ html.native-app .site-shell > footer {
   [class~="p-6"],
   [class~="p-8"],
   [class~="p-10"]
-) {
-  background-color: rgba(5, 13, 8, 0.38);
+):not([class*="bg-emerald"]):not([class*="bg-green"]):not([class*="bg-red"]):not([class*="bg-yellow"]):not([class*="bg-amber"]):not([class*="bg-blue"]) {
+  background-color: rgba(5, 13, 8, 0.17);
   -webkit-backdrop-filter: blur(22px) saturate(138%);
   backdrop-filter: blur(22px) saturate(138%);
   border-color: rgba(222, 190, 112, 0.23);
@@ -1161,7 +1161,7 @@ html.native-app .site-shell > footer {
 
 .site-shell main :is(.two-tone-panel, .two-tone-panel-gold, .two-tone-card),
 .management-shell main :is(.two-tone-panel, .two-tone-panel-gold, .two-tone-card) {
-  background-color: rgba(5, 13, 8, 0.38);
+  background-color: rgba(5, 13, 8, 0.17);
   background-image:
     linear-gradient(145deg, rgba(255, 255, 255, 0.035), rgba(4, 10, 6, 0.12) 62%),
     radial-gradient(ellipse at 10% 0%, rgba(212, 175, 55, 0.035), transparent 58%);
@@ -1172,7 +1172,7 @@ html.native-app .site-shell > footer {
 }
 
 .site-shell main .two-tone-card:hover {
-  background-color: rgba(10, 20, 12, 0.5);
+  background-color: rgba(10, 20, 12, 0.22);
   border-color: rgba(232, 201, 130, 0.48);
   box-shadow: 0 20px 48px rgba(0, 0, 0, 0.3), 0 0 26px rgba(200, 155, 60, 0.12);
 }
@@ -1197,7 +1197,7 @@ html.native-app .site-shell > footer {
 }
 
 .site-shell main .premium-home-hero__content > div:last-child > div {
-  background-color: rgba(5, 13, 8, 0.42);
+  background-color: rgba(5, 13, 8, 0.19);
   -webkit-backdrop-filter: blur(18px) saturate(140%);
   backdrop-filter: blur(18px) saturate(140%);
 }
@@ -1227,13 +1227,13 @@ html.native-app .site-shell > footer {
 
 @media (max-width: 767px) {
   .site-shell nav.sticky {
-    background: linear-gradient(105deg, rgba(4, 11, 7, 0.68), rgba(5, 12, 8, 0.62));
+    background: linear-gradient(105deg, rgba(4, 11, 7, 0.31), rgba(5, 12, 8, 0.28));
   }
 }
 
 .site-shell main :is(div, section, article)[class*="rounded-"][class*="border"]:not([class*="bg-emerald"]):not([class*="bg-green"]):not([class*="bg-red"]):not([class*="bg-yellow"]):not([class*="bg-amber"]):not([class*="bg-blue"]),
 .management-shell main :is(div, section, article)[class*="rounded-"][class*="border"]:not([class*="bg-emerald"]):not([class*="bg-green"]):not([class*="bg-red"]):not([class*="bg-yellow"]):not([class*="bg-amber"]):not([class*="bg-blue"]) {
-  background-color: rgba(5, 13, 8, 0.38);
+  background-color: rgba(5, 13, 8, 0.17);
   -webkit-backdrop-filter: blur(22px) saturate(138%);
   backdrop-filter: blur(22px) saturate(138%);
   border-color: rgba(212, 175, 55, 0.2);
@@ -1243,7 +1243,7 @@ html.native-app .site-shell > footer {
 .site-shell main :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select),
 .management-shell main :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select) {
   border-color: rgba(212, 175, 55, 0.22);
-  background-color: rgba(4, 11, 7, 0.58);
+  background-color: rgba(4, 11, 7, 0.26);
   color: #f7f2e7;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
@@ -1272,7 +1272,7 @@ html.native-app .site-shell > footer {
 .auth-luxury__card {
   border-radius: 2rem !important;
   border: 1px solid rgba(212, 175, 55, 0.28) !important;
-  background: linear-gradient(145deg, rgba(7, 16, 10, 0.68), rgba(4, 11, 7, 0.58)) !important;
+  background: linear-gradient(145deg, rgba(7, 16, 10, 0.26), rgba(4, 11, 7, 0.26)) !important;
   -webkit-backdrop-filter: blur(30px) saturate(135%) !important;
   backdrop-filter: blur(30px) saturate(135%) !important;
   box-shadow: 0 30px 90px rgba(0, 0, 0, 0.52), inset 0 1px 0 rgba(255, 255, 255, 0.075), inset 0 -24px 44px rgba(0, 0, 0, 0.18) !important;
@@ -1298,13 +1298,13 @@ html.native-app .site-shell > footer {
 .auth-luxury [class*="bg-[#FDFBF7]"],
 .auth-luxury [class*="bg-emerald-50"] {
   border-color: rgba(212, 175, 55, 0.18);
-  background-color: rgba(4, 12, 8, 0.56) !important;
+  background-color: rgba(4, 12, 8, 0.25) !important;
   color: #f1ead9 !important;
 }
 
 .auth-luxury :is(input:not([type="checkbox"]), textarea, select) {
   border: 1px solid rgba(212, 175, 55, 0.22) !important;
-  background: rgba(3, 10, 6, 0.64) !important;
+  background: rgba(3, 10, 6, 0.29) !important;
   color: #fbf7eb !important;
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
@@ -1315,7 +1315,7 @@ html.native-app .site-shell > footer {
 
 .auth-luxury :is(input:not([type="checkbox"]), textarea, select):focus {
   border-color: rgba(232, 201, 130, 0.72) !important;
-  background: rgba(5, 14, 8, 0.8) !important;
+  background: rgba(5, 14, 8, 0.36) !important;
   box-shadow: 0 0 0 3px rgba(212, 175, 55, 0.1) !important;
 }
 
@@ -1332,7 +1332,7 @@ html.native-app .site-shell > footer {
 }
 
 .mini-cart-panel {
-  background: linear-gradient(145deg, rgba(5, 13, 8, 0.72), rgba(3, 9, 6, 0.64));
+  background: linear-gradient(145deg, rgba(5, 13, 8, 0.32), rgba(3, 9, 6, 0.29));
   -webkit-backdrop-filter: blur(30px) saturate(138%);
   backdrop-filter: blur(30px) saturate(138%);
   border-color: rgba(212, 175, 55, 0.24);
@@ -1341,22 +1341,109 @@ html.native-app .site-shell > footer {
 
 .mini-cart-header,
 .mini-cart-checkout {
-  background-color: rgba(3, 10, 6, 0.62);
+  background-color: rgba(3, 10, 6, 0.28);
   -webkit-backdrop-filter: blur(28px) saturate(135%);
   backdrop-filter: blur(28px) saturate(135%);
   box-shadow: 0 12px 34px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
 .mini-cart-scroll {
-  background-color: rgba(4, 11, 7, 0.34);
+  background-color: rgba(4, 11, 7, 0.15);
 }
 
 .mini-cart-item {
-  background-color: rgba(4, 11, 7, 0.44);
+  background-color: rgba(4, 11, 7, 0.2);
 }
 
 .mini-cart-empty {
   background:
     radial-gradient(circle at 50% 30%, rgba(212, 175, 55, 0.08), transparent 68%),
-    rgba(4, 11, 7, 0.52);
+    rgba(4, 11, 7, 0.23);
+}
+
+.bhumivera-concierge-panel {
+  isolation: isolate;
+  border-color: rgba(226, 198, 128, 0.38) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(150%);
+  backdrop-filter: blur(30px) saturate(150%);
+}
+
+.bhumivera-concierge-panel--dark {
+  background:
+    radial-gradient(ellipse at 5% 0%, rgba(212, 175, 55, 0.04), transparent 40%),
+    linear-gradient(145deg, rgba(4, 13, 8, 0.1), rgba(3, 9, 6, 0.1)) !important;
+  color: #f5f0e5 !important;
+  box-shadow: 0 28px 90px rgba(0, 0, 0, 0.48), inset 0 1px 0 rgba(255, 255, 255, 0.1) !important;
+}
+
+.bhumivera-concierge-panel--light {
+  background:
+    radial-gradient(ellipse at 5% 0%, rgba(212, 175, 55, 0.04), transparent 42%),
+    linear-gradient(145deg, rgba(250, 248, 242, 0.1), rgba(244, 239, 230, 0.1)) !important;
+  color: #17251b !important;
+  box-shadow: 0 28px 90px rgba(4, 11, 7, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.42) !important;
+}
+
+.bhumivera-concierge-header {
+  background: linear-gradient(110deg, rgba(3, 10, 6, 0.58), rgba(7, 21, 12, 0.42)) !important;
+  -webkit-backdrop-filter: blur(28px) saturate(150%);
+  backdrop-filter: blur(28px) saturate(150%);
+  box-shadow: 0 12px 36px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.bhumivera-concierge-panel--light .bhumivera-concierge-header {
+  background: linear-gradient(110deg, rgba(250, 248, 242, 0.84), rgba(236, 230, 214, 0.72)) !important;
+  color: #17251b !important;
+}
+
+.bhumivera-concierge-logo {
+  background: linear-gradient(145deg, rgba(212, 175, 55, 0.2), rgba(4, 13, 8, 0.34));
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.22), inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.bhumivera-concierge-panel--dark [class*="bg-[#10241f]"],
+.bhumivera-concierge-panel--dark [class*="bg-[#091d16]"],
+.bhumivera-concierge-panel--dark [class*="bg-[#071610]"],
+.bhumivera-concierge-panel--dark [class*="bg-[#0f241d]"] {
+  background-color: rgba(3, 10, 6, 0.19) !important;
+}
+
+.bhumivera-concierge-panel--light .bhumivera-concierge-logo {
+  background: linear-gradient(145deg, rgba(212, 175, 55, 0.2), rgba(250, 248, 242, 0.58));
+}
+
+.bhumivera-concierge-panel--light :is(
+  [class~="bg-white"],
+  [class~="bg-[#f5f2e8]/65"],
+  [class~="bg-[#e8e2d4]/65"]
+) {
+  background-color: rgba(250, 248, 242, 0.9) !important;
+  border-color: rgba(23, 37, 27, 0.16);
+}
+
+.bhumivera-concierge-panel--light [class*="bg-gradient-to"] {
+  background-image: none !important;
+  background-color: rgba(250, 248, 242, 0.9) !important;
+}
+
+.bhumivera-concierge-panel--light [class*="text-stone-100"],
+.bhumivera-concierge-panel--light [class*="text-stone-200"],
+.bhumivera-concierge-panel--light [class*="text-stone-300"] {
+  color: #1b2921 !important;
+}
+
+.bhumivera-concierge-panel--light [class*="text-stone-400"],
+.bhumivera-concierge-panel--light [class*="text-stone-500"] {
+  color: #526257 !important;
+}
+
+.bhumivera-concierge-panel--light [class*="text-[#D4AF37]"],
+.bhumivera-concierge-panel--light [class*="text-[#d4af37]"] {
+  color: #795d1d !important;
+}
+
+.bhumivera-concierge-panel--light input,
+.bhumivera-concierge-panel--light textarea {
+  background-color: rgba(250, 248, 242, 0.64) !important;
+  color: #1b2921 !important;
 }
