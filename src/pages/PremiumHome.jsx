@@ -122,17 +122,17 @@ export default function PremiumHome() {
       />
 
       {/* 1. TWO-TONE ARCHITECTURAL LUXURY HERO SECTION */}
-      <section className="relative isolate min-h-[88svh] overflow-hidden bg-[#14291F] text-[#FAF7F2]">
+      <section className="premium-home-hero relative isolate min-h-[88svh] overflow-hidden bg-[#14291F] text-[#FAF7F2]">
         <div className="absolute inset-0 -z-20">
           <img
             src={HOME_VISUAL_ASSETS.heroPrimary}
             alt="Himalayan Sea Buckthorn harvest in Ladakh mountain valley"
-            className="h-full w-full object-cover object-center opacity-30"
+            className="premium-home-hero__image h-full w-full object-cover object-center opacity-30"
           />
         </div>
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#14291F] via-[#14291F]/85 to-[#14291F]/40" />
 
-        <div className="mx-auto flex min-h-[88svh] max-w-7xl flex-col justify-between px-6 pb-14 pt-28 sm:px-10 lg:pb-20">
+        <div className="premium-home-hero__content mx-auto flex min-h-[88svh] max-w-7xl flex-col justify-between px-6 pb-14 pt-28 sm:px-10 lg:pb-20">
           <div className="max-w-3xl pt-8">
             <p className="font-sub-gold uppercase tracking-[0.26em] text-xs font-bold inline-flex items-center gap-2">
               <Leaf size={14} className="text-[#D4AF37]" /> Bhumivera Botanical Maison · Est. 2016 · 10+ Years of Botanical Stewardship
