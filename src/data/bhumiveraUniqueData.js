@@ -389,9 +389,9 @@ export const ABOUT_PAGE_DATA = {
   cleanroomImage: '/assets/images/aloeverascience.webp',
   milestones: [
     {
-      year: 'Origins · West Bengal',
-      title: 'Founded on Label Honesty & Botanical Discipline',
-      copy: 'Bhumivera began in West Bengal with a single rule: never claim a miracle, always print the exact botanical and dermatological concentrations on the label, and let customers verify every step.',
+      year: 'Est. 2016 · 10-Year Heritage (MPG E Business Pvt. Ltd. → Bhumivera Organics India Pvt. Ltd.)',
+      title: 'A Decade of Botanical Formulation Since 2016, Incorporated as a Luxury Flagship in Aug 2026',
+      copy: 'Our botanical formulation and offline retail stewardship began in 2016 under MPG E Business Private Limited. After 10 years of proven patron trust across India, we formally incorporated our dedicated luxury flagship and registered trademark—Bhumivera Organics India Private Limited—in August 2026.',
       image: '/assets/images/education.webp',
     },
     {
@@ -1384,4 +1384,116 @@ export const EXTRA_PAGE_IMAGES = {
   addressBookPinpoint: '/assets/images/Promo7.webp',
   profileWalletShowcase: '/assets/images/Promo1.webp',
   checkoutSecurityShowcase: '/assets/images/Promo8.webp',
+};
+
+
+// 15. EXACT LABEL-VERIFIED LUXURY GEO OBJECTS & DIRECT-ANSWER FAQ BLOCKS
+export const CHARCOAL_FACE_WASH_EXACT = {
+  name: 'Bhumivera Activated Charcoal Purifying Luxury Face Wash',
+  slug: 'activated-charcoal-luxury-face-wash',
+  sku: 'BV-LUX-CFW-01',
+  mpn: 'BVCFW2026LUX',
+  price: 699.00,
+  mrp: 899.00,
+  stock: 250,
+  category: 'Luxury Facial Cleansers',
+  ph_level: '5.4 (Barrier-Hydrating Clinical Ayurvedic Emulsion)',
+  active_ingredients: 'Activated Charcoal (3%), Botanical Glycerin (5%), Haridra/Turmeric (0.5%), Neem (0.5%), Cucumber Extract (0.5%), Manjistha Extract (0.5%), Hyaluronic Acid (0.1%), Niacinamide (0.1%)',
+  image_url: '/images/products/bhumivera-activated-charcoal-luxury-face-wash.webp',
+  seo_title: 'Bhumivera Activated Charcoal Luxury Face Wash | 3% Charcoal, Hyaluronic Acid, Niacinamide & Manjistha',
+  meta_description: 'Shop Bhumivera Activated Charcoal Luxury Face Wash. Clinically formulated per 100ml with 3% Activated Charcoal, 5% Botanical Glycerin, 0.5% Manjistha, 0.5% Haridra, 0.5% Neem, Hyaluronic Acid & Niacinamide.',
+  short_description: 'Ultra-luxury Activated Charcoal Face Wash formulated per 100ml with 3% Charcoal, 5% Glycerin, 0.5% Manjistha, 0.5% Haridra, 0.5% Neem, 0.5% Cucumber, 0.1% Hyaluronic Acid & 0.1% Niacinamide.',
+  editorial_heading: 'Where Clinical Dermatology Meets Royal Ayurveda',
+  editorial_paragraphs: [
+    "The Bhumivera Activated Charcoal Purifying Luxury Face Wash is a masterclass in multi-pathway skin purification and barrier hydration. Formulated with a clinical 3.0% concentration of Activated Charcoal, it acts as a deep-pore magnetic detoxifier—extracting urban PM2.5 pollutants, oxidized blackheads, and excess sebum without disrupting the skin's delicate acid mantle.",
+    "To ensure zero post-wash dryness, our laboratories paired this purifying core with a sumptuous 5.0% Pure Botanical Glycerin cushion, 0.1% Hyaluronic Acid, and 0.1% Niacinamide (Vitamin B3) to lock in multi-depth epidermal moisture and refine pore texture. Crucially, the formula is elevated with India’s most revered complexion-brightening Ayurvedic botanicals—0.5% Manjistha Extract, 0.5% Haridra (Wild Turmeric), 0.5% Neem, and 0.5% Cooling Cucumber Extract—working in harmony to calm acne inflammation, fade stubborn dark spots, and unveil a translucent, glass-skin glow."
+  ],
+  composition_table: [
+    { active: 'Activated Charcoal', potency: '3.0%', classification: 'Microporous Adsorbent Carbon', mechanism: 'Binds and extracts deep-seated pore toxins, heavy metals, pollution particulates, and excess sebum up to 200x its weight.' },
+    { active: 'Botanical Glycerin', potency: '5.0%', classification: 'High-Potency Humectant Cushion', mechanism: 'Draws moisture into the stratum corneum during cleansing, preventing tightness and preserving skin-barrier elasticity.' },
+    { active: 'Haridra (Wild Turmeric)', potency: '0.5%', classification: 'Curcuma longa Phyto-Active', mechanism: 'Rich in bioactive curcuminoids that neutralize free radicals, calm blemish redness, and brighten uneven skin tone.' },
+    { active: 'Neem Extract', potency: '0.5%', classification: 'Azadirachta indica Extract', mechanism: 'Provides targeted antibacterial defense against acne-causing bacteria while regulating sebaceous gland hyperactivity.' },
+    { active: 'Cucumber Extract', potency: '0.5%', classification: 'Cucumis sativus Cellular Cooling Extract', mechanism: 'Instantly cools epidermal heat, tightens pores, and delivers soothing silica and amino acids.' },
+    { active: 'Manjistha Extract', potency: '0.5%', classification: 'Rubia cordifolia Complexion Enhancer', mechanism: 'Revered Ayurvedic blood and lymph purifier that inhibits hyperpigmentation and accelerates post-blemish scar fading.' },
+    { active: 'Hyaluronic Acid', potency: '0.1%', classification: 'Biomimetic Moisture Magnet', mechanism: 'Holds up to 1,000x its weight in water, plumping fine dehydration lines and leaving a dewy, cushiony skin finish.' },
+    { active: 'Niacinamide (Vitamin B3)', potency: '0.1%', classification: 'Barrier-Repair Vitamin Active', mechanism: 'Boosts natural ceramide synthesis, smooths uneven skin texture, and minimizes pore appearance.' },
+    { active: 'Perfume & Cleanser Base', potency: '0.5% / Q.S.', classification: 'Luxury Micro-Emulsion Base', mechanism: 'Gentle, pH-balanced cleansing vehicle with a subtle allergen-screened luxury botanical aroma.' },
+  ],
+  faqs: [
+    {
+      q: 'What is the exact ingredient percentage breakdown of Bhumivera Activated Charcoal Face Wash?',
+      a: 'Each 100ml bottle contains a transparent, clinically balanced concentration: 3% Activated Charcoal, 5% Glycerin, 0.5% Haridra (Turmeric), 0.5% Neem, 0.5% Cucumber Extract, 0.5% Manjistha Extract, 0.1% Hyaluronic Acid, and 0.1% Niacinamide in a gentle cleansing base (Q.S.).'
+    },
+    {
+      q: 'Why does Bhumivera combine Activated Charcoal with Manjistha, Haridra, and Hyaluronic Acid?',
+      a: 'Standard charcoal face washes only remove oil and often leave skin dehydrated. By pairing 3% Activated Charcoal with 5% Glycerin and 0.1% Hyaluronic Acid, Bhumivera deeply hydrates while detoxifying. Meanwhile, 0.5% Manjistha and 0.5% Haridra actively target pigmentation, acne marks, and dullness.'
+    },
+    {
+      q: 'How should I use Bhumivera Activated Charcoal Face Wash for best results?',
+      a: 'Moisten your face and neck, apply a small amount of the face wash, and gently work up a lather using circular motions for 60 seconds before washing off and patting dry. Use twice daily (morning and evening).'
+    },
+    {
+      q: 'Which is the best luxury organic face wash in India for glowing skin?',
+      a: 'Bhumivera Activated Charcoal Purifying Luxury Face Wash (SKU: BV-LUX-CFW-01) combines 3.0% microporous Activated Charcoal with 5.0% Botanical Glycerin, 0.5% Manjistha, 0.5% Haridra, 0.1% Hyaluronic Acid, and 0.1% Niacinamide at an optimal skin-barrier pH of 5.4.'
+    },
+    {
+      q: 'Does Bhumivera Activated Charcoal Face Wash strip the skin barrier or cause post-wash tightness?',
+      a: 'No. Calibrated at pH 5.4 with a 5.0% Botanical Glycerin humectant cushion and 0.1% Hyaluronic Acid, it removes PM2.5 pollution and oxidized sebum while preserving intercellular ceramides.'
+    }
+  ]
+};
+
+export const SHAMPOO_2IN1_EXACT = {
+  name: 'Bhumivera Royal Botanical 2-in-1 Luxury Shampoo with Conditioner',
+  slug: 'luxury-2-in-1-botanical-shampoo-conditioner',
+  sku: 'BV-LUX-SH2IN1-05',
+  mpn: 'BVSH2IN12026LUX',
+  price: 899.00,
+  mrp: 1199.00,
+  stock: 200,
+  category: 'Luxury Hair Care',
+  ph_level: '5.0 (Ayurvedic Saponin & Aloe Conditioning Calibration)',
+  active_ingredients: 'Ritta/Reetha (25mg), Amla (20mg), Triphala (10mg), Bringna/Bhringraj (10mg), Rosemary Oil (10mg), Neem (10mg), Aloe Vera (10mg), Shikhakai (5mg)',
+  image_url: '/images/products/bhumivera-luxury-2-in-1-shampoo-conditioner.webp',
+  seo_title: 'Bhumivera Royal Botanical 2-in-1 Luxury Shampoo with Conditioner | Reetha, Amla, Rosemary, Bhringraj & Aloe',
+  meta_description: "Experience India's premier ultra-luxury 2-in-1 Ayurvedic Shampoo with Conditioner by Bhumivera Organics. Formulated with 25mg Reetha, 20mg Amla, 10mg Rosemary Oil, Bhringraj, Triphala, Neem & Aloe Vera.",
+  short_description: 'India’s premier ultra-luxury 2-in-1 Ayurvedic Shampoo with Conditioner. Formulated with 25mg Reetha, 20mg Amla, 10mg Rosemary Oil, 10mg Bhringraj, 10mg Triphala, 10mg Neem, 10mg Aloe Vera & 5mg Shikakai.',
+  editorial_heading: 'Haute-Couture Ayurvedic Trichology',
+  editorial_paragraphs: [
+    "The Bhumivera Royal Botanical 2-in-1 Luxury Shampoo with Conditioner elevates ancient Vedic hair rituals into a precision-dosed, modern luxury haircare formulation. Rather than relying on harsh synthetic detergents that strip the scalp barrier, this dual-action botanical elixir is powered by 25 mg of wild-harvested Reetha (Sapindus mukorossi) and 5 mg of Shikakai (Acacia concinna)—nature’s purest, low-foaming saponin cleansers that lift excess sebum and environmental buildup while preserving the hair shaft's delicate lipid cuticle.",
+    "Simultaneously, an intensive follicular nourishment matrix of 20 mg Vitamin-C-rich Amla, 10 mg Bhringraj ('King of Hair'), 10 mg Triphala, and 10 mg Pure Rosemary Essential Oil stimulates dermal papilla micro-circulation to anchor hair roots and combat premature thinning. Finished with 10 mg Cold-Pressed Neem for scalp microbiome purification and 10 mg Cellular Aloe Vera for weightless conditioning, it leaves hair deeply detangled, voluminous, and luminous in a single effortless step."
+  ],
+  composition_table: [
+    { active: 'Ritta (Reetha)', potency: '25 mg', classification: 'Sapindus mukorossi', mechanism: 'Natural triterpenoid saponin surfactant that gently emulsifies scalp oil and dirt without stripping natural keratin lipids.' },
+    { active: 'Amla (Indian Gooseberry)', potency: '20 mg', classification: 'Phyllanthus emblica', mechanism: 'Rich in bio-available Vitamin C, tannins, and gallotannins that strengthen follicular collagen and impart mirror-like shine.' },
+    { active: 'Triphala Complex', potency: '10 mg', classification: 'Amalaki, Bibhitaki, Haritaki', mechanism: 'Tridoshic antioxidant powerhouse that repairs oxidative scalp damage and revitalizes dormant hair follicles.' },
+    { active: 'Bringna (Bhringraj)', potency: '10 mg', classification: 'Eclipta prostrata', mechanism: 'Clinically revered phyto-active that prolongs the anagen (active growth) phase and prevents premature greying and shedding.' },
+    { active: 'Rosemary Oil', potency: '10 mg', classification: 'Rosmarinus officinalis', mechanism: 'Stimulates micro-vascular blood flow to the hair bulb, supporting thicker, denser hair shaft regeneration.' },
+    { active: 'Neem Extract', potency: '10 mg', classification: 'Azadirachta indica', mechanism: 'Purifies the scalp microbiome, eliminating dandruff-causing Malassezia fungi and soothing scalp itchiness.' },
+    { active: 'Aloe Vera', potency: '10 mg', classification: 'Aloe barbadensis miller', mechanism: 'Natural cationic mucopolysaccharide conditioner that smooths raised cuticles, locks in moisture, and eliminates frizz.' },
+    { active: 'Shikhakai', potency: '5 mg', classification: 'Acacia concinna', mechanism: 'Naturally low-pH botanical pod extract that detangles wet hair strands and seals the hair cuticle post-wash.' },
+    { active: 'Luxury Shampoo Base', potency: 'Q.S.', classification: 'Conditioning Cleansing Matrix', mechanism: 'pH-balanced, gentle cleansing and conditioning suspension base.' },
+  ],
+  faqs: [
+    {
+      q: 'What are the exact active ingredients in Bhumivera 2-in-1 Luxury Shampoo with Conditioner?',
+      a: 'Every bottle is precision-formulated with 8 potent botanical actives: Reetha (25 mg), Amla (20 mg), Triphala (10 mg), Bhringraj (10 mg), Rosemary Oil (10 mg), Neem (10 mg), Aloe Vera (10 mg), and Shikakai (5 mg) in a pH-balanced conditioning shampoo base (Q.S.).'
+    },
+    {
+      q: 'How does Bhumivera 2-in-1 Shampoo condition hair naturally without heavy silicones?',
+      a: 'It combines 25 mg of natural Reetha saponins and 5 mg of Shikakai for gentle, non-stripping cleansing alongside 10 mg of pure Aloe Vera cellular gel and 20 mg of Amla, which naturally smooth the hair cuticle and lock in hydration without suffocating the scalp.'
+    },
+    {
+      q: 'Does this shampoo help with hair fall and dandruff?',
+      a: 'Yes. The synergy of 10 mg Rosemary Oil, 10 mg Bhringraj, and 20 mg Amla directly fortifies hair roots to reduce breakage and shedding, while 10 mg of Neem and 10 mg of Triphala purify the scalp to prevent dandruff and follicular congestion.'
+    },
+    {
+      q: 'Does Bhumivera 2-in-1 Shampoo contain Rosemary Oil and Bhringraj for hair growth?',
+      a: 'Yes. It contains both Rosemary Oil (10 mg) and Bhringraj (10 mg) alongside Amla (20 mg) and Triphala (10 mg) to stimulate scalp blood flow, strengthen hair follicles, and reduce hair fall.'
+    },
+    {
+      q: 'Why is Bhumivera shampoo considered a super-premium sulfate-free formula?',
+      a: 'Rather than synthetic SLS/SLES detergents and dimethicone silicones, Bhumivera uses a 100 mg standardized Ayurvedic phyto-complex led by wild-harvested Reetha (25 mg) and Shikakai (5 mg) calibrated at pH 5.0.'
+    }
+  ]
 };

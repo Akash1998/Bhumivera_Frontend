@@ -32,8 +32,12 @@ const ProductCard = ({ product, index }) => {
       <Link to={`/product/${product.slug || prodId}`} className="relative aspect-[4/3] overflow-hidden bg-[#102219]">
         <img
           src={imgSrc}
+          width="640"
+          height="480"
+          loading="lazy"
+          decoding="async"
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-          alt={product.name}
+          alt={`${product.name} - ${product.primaryBotanicals || product.phLevel || 'Bhumivera Organics Luxury Botanical Formula'}`}
           onError={event => {
             event.currentTarget.onerror = null;
             event.currentTarget.src = FALLBACK_CATALOG_PRODUCTS[index % FALLBACK_CATALOG_PRODUCTS.length].image_url;

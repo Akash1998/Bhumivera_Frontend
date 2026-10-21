@@ -97,7 +97,7 @@ const LEGAL_CLAUSES = {
       num: '1.1',
       title: '1. Who these terms cover & binding electronic contract',
       body: [
-        '“Bhumivera”, “we”, “us” and “our” refer to the Bhumivera-branded e-commerce platform, mobile/web applications, and the operating enterprise (RS Enterprises / Bhumivera Maison, headquartered in West Bengal, India) and/or the seller identified on the relevant product listing, checkout summary, and tax invoice. These Master Conditions of Use & Sale (“Conditions”) constitute a legally binding electronic contract under the Indian Contract Act, 1872 and Section 10A of the Information Technology Act, 2000.',
+        '“Bhumivera”, “we”, “us” and “our” refer to the Bhumivera-branded e-commerce platform, mobile/web applications, and the operating enterprise (Bhumivera Organics India Private Limited, incorporated in August 2026 as the luxury flagship corporate entity of the 2016 botanical formulation and retail heritage established under MPG E Business Private Limited, headquartered in Asansol, West Bengal, India) and/or the seller identified on the relevant product listing, checkout summary, and tax invoice. These Master Conditions of Use & Sale (“Conditions”) constitute a legally binding electronic contract under the Indian Contract Act, 1872 and Section 10A of the Information Technology Act, 2000.',
         'By accessing, browsing, registering an account, using the AI Client Concierge, participating in any loyalty/referral/spin program, or placing an order on Bhumivera, you unconditionally agree to be bound by all 8 Parts of these Conditions. Product-specific disclosures, checkout breakdowns, and GST tax invoices form an integral part of the transaction record. Where any mandatory statutory consumer protection, product-safety, or data-protection right cannot lawfully be waived, these Conditions operate harmoniously with that statutory right.',
       ],
     },
@@ -200,9 +200,9 @@ const LEGAL_CLAUSES = {
     },
     {
       num: '1.14',
-      title: '14. Business, wholesale, MPGE and affiliate enquiries',
+      title: '14. Institutional wholesale, B2B retail and supplier enquiries',
       body: [
-        'Submitting an enquiry regarding affiliate marketing, retail dealership, wholesale supply, cultivation, contract manufacturing, or MPGE work-from-home opportunities does NOT create an offer, employment relationship, agency, franchise, direct-selling appointment, buyback guarantee, or promise of income. No commercial arrangement is valid unless executed in a formal written agreement signed by authorized signatories of the legal entity. Never pay any unauthorized registration or material fee based on informal phone or chat messages.',
+        'Submitting an enquiry regarding institutional B2B retail dealership, luxury spa back-bar supply, raw botanical cultivation, or contract manufacturing does NOT create an automatic commercial contract, employment relationship, agency, or franchise. No commercial arrangement is valid unless executed in a formal written agreement signed by authorized signatories of the legal entity. Never pay any unauthorized registration or material fee based on informal phone or chat messages.',
       ],
     },
     {
@@ -510,9 +510,9 @@ const LEGAL_CLAUSES = {
     },
     {
       num: '5.7',
-      title: '7. MPGE / Work-from-Home / Cultivation / Supply enquiry anti-scam notice',
+      title: '7. Institutional B2B Supply & Raw Botanical Procurement Notice',
       body: [
-        'Our Business Enquiries landing page (`/earn-from-home` and `/mpgebusiness`) provides a transparent channel to request written information regarding potential supply, craft, or production arrangements. That page is NOT a job offer, guaranteed income scheme, buyback contract, or investment solicitation. Bhumivera strictly warns the public NEVER to pay any cash deposit, registration fee, or raw-material fee to any individual based on verbal phone or WhatsApp promises without a signed written contract from the registered legal entity.',
+        'Our Institutional B2B & Supplier desk (`/sell-on-bhumivera` and `/contact`) provides a formal channel for certified raw botanical growers, NABL testing laboratories, and luxury retail boutiques to request written B2B procurement terms. Bhumivera strictly warns the public NEVER to pay any cash deposit, registration fee, or raw-material fee to any individual based on verbal phone or WhatsApp promises without a signed written contract from the registered legal entity.',
       ],
     },
     {

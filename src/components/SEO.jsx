@@ -1,22 +1,122 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
-export default function SEO({ product, title, description, keywords, ogImage, route, schema }) {
-  const siteUrl = import.meta.env.VITE_SITE_URL || 'https://www.bhumivera.com';
+const SITE_URL = 'https://www.bhumivera.com';
+
+export const GLOBAL_ORGANIZATION_LD = {
+  '@type': 'Organization',
+  '@id': `${SITE_URL}/#organization`,
+  name: 'Bhumivera Organics',
+  legalName: 'Bhumivera Organics India Private Limited',
+  alternateName: [
+    'Bhumivera',
+    'Bhumivera Botanical Maison (Est. 2016)',
+    'MPG E Business Private Limited (Founding Botanical Division Est. 2016)',
+  ],
+  url: SITE_URL,
+  logo: {
+    '@type': 'ImageObject',
+    url: `${SITE_URL}/logo.webp`,
+    width: 512,
+    height: 512,
+  },
+  foundingDate: '2016',
+  description:
+    'Established in 2016 under its founding enterprise MPG E Business Private Limited, Bhumivera has spent over a decade formulating and distributing authentic botanical and Ayurvedic personal care across brick-and-mortar retail and apothecary channels in India. In August 2026, marking 10 years of patron trust, the house formally incorporated its luxury flagship division and registered trademark as Bhumivera Organics India Private Limited.',
+  disambiguatingDescription:
+    'Bhumivera is a 10-year-old Indian botanical skincare and haircare brand established in 2016 (originally operating offline retail and apothecary distribution under MPG E Business Private Limited since 2016) and formally incorporated as a dedicated luxury corporate flagship, Bhumivera Organics India Private Limited, in August 2026. It is strictly a luxury retail and direct-to-consumer cosmetics maison with zero affiliation to Anritvox or automotive electronics.',
+  parentOrganization: {
+    '@type': 'Organization',
+    name: 'MPG E Business Private Limited',
+    foundingDate: '2016',
+    description: 'Founding Indian botanical formulation and brick-and-mortar retail stewardship enterprise established in 2016.',
+  },
+  foundingLocation: {
+    '@type': 'Place',
+    name: 'Asansol, West Bengal, India',
+    address: {
+      '@type': 'PostalAddress',
+      addressLocality: 'Asansol',
+      addressRegion: 'West Bengal',
+      postalCode: '713304',
+      addressCountry: 'IN',
+    },
+  },
+  areaServed: [
+    { '@type': 'Country', name: 'IN' },
+    { '@type': 'Place', name: 'Global' },
+  ],
+  sameAs: [
+    'https://linktr.ee/bhumivera',
+    'https://www.instagram.com/bhumivera',
+    'https://www.youtube.com/@bhumivera',
+    'https://www.facebook.com/bhumivera',
+    'https://www.amazon.in/s?k=Bhumivera+Organics',
+  ],
+};
+
+export const GLOBAL_BRAND_LD = {
+  '@type': 'Brand',
+  '@id': `${SITE_URL}/#brand`,
+  name: 'Bhumivera Organics',
+  alternateName: 'Bhumivera (Est. 2016)',
+  url: SITE_URL,
+  logo: `${SITE_URL}/logo.webp`,
+  slogan: 'Where Clinical Dermatology Meets Royal Ayurveda · Crafted Since 2016.',
+};
+
+export default function SEO({ product, title, description, keywords, ogImage, route, schema, faqs = [], breadcrumbs = [] }) {
+  const siteUrl = SITE_URL;
 
   if (!product) {
-    const pageTitle = title || 'Bhumivera | Considered botanical care';
-    const pageDescription = description || 'Discover Bhumivera’s considered botanical stories, modern skincare ingredients and everyday rituals.';
+    const pageTitle = title || 'Bhumivera Organics (Est. 2016) | Best Luxury Organic Face Wash & Botanical Shampoo in India';
+    const pageDescription =
+      description ||
+      'Established in 2016 under founding enterprise MPG E Business Private Limited and incorporated as luxury flagship Bhumivera Organics India Private Limited in August 2026. Tier-1 pH-calibrated botanical skincare and haircare.';
     const canonicalUrl = route ? new URL(route, siteUrl).toString() : siteUrl;
-    const imageUrl = ogImage ? new URL(ogImage, siteUrl).toString() : `${siteUrl}/logo.webp`;
+    const imageUrl = ogImage
+      ? (ogImage.startsWith('http') ? ogImage : new URL(ogImage, siteUrl).toString())
+      : `${siteUrl}/images/products/bhumivera-activated-charcoal-luxury-face-wash.webp`;
+
+    const graphNodes = [GLOBAL_ORGANIZATION_LD, GLOBAL_BRAND_LD];
+    if (schema) {
+      if (schema['@graph']) graphNodes.push(...schema['@graph']);
+      else graphNodes.push(schema);
+    }
+    if (Array.isArray(breadcrumbs) && breadcrumbs.length > 0) {
+      graphNodes.push({
+        '@type': 'BreadcrumbList',
+        itemListElement: breadcrumbs.map((c, idx) => ({
+          '@type': 'ListItem',
+          position: idx + 1,
+          name: c.name,
+          item: c.url.startsWith('http') ? c.url : `${siteUrl}${c.url}`,
+        })),
+      });
+    }
+    if (Array.isArray(faqs) && faqs.length > 0) {
+      graphNodes.push({
+        '@type': 'FAQPage',
+        mainEntity: faqs.map(f => ({
+          '@type': 'Question',
+          name: f.q || f.question,
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: f.a || f.answer,
+          },
+        })),
+      });
+    }
 
     return (
       <Helmet>
         <title>{pageTitle}</title>
         <meta name="description" content={pageDescription} />
         {keywords && <meta name="keywords" content={keywords} />}
-        {route && <link rel="canonical" href={canonicalUrl} />}
+        <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
+        <link rel="canonical" href={canonicalUrl} />
         <meta property="og:type" content="website" />
+        <meta property="og:site_name" content="Bhumivera Organics (Est. 2016)" />
         <meta property="og:title" content={pageTitle} />
         <meta property="og:description" content={pageDescription} />
         <meta property="og:url" content={canonicalUrl} />
@@ -25,73 +125,67 @@ export default function SEO({ product, title, description, keywords, ogImage, ro
         <meta name="twitter:title" content={pageTitle} />
         <meta name="twitter:description" content={pageDescription} />
         <meta name="twitter:image" content={imageUrl} />
-        {schema && <script type="application/ld+json">{JSON.stringify(schema)}</script>}
+        <script type="application/ld+json">
+          {JSON.stringify({ '@context': 'https://schema.org', '@graph': graphNodes })}
+        </script>
       </Helmet>
     );
   }
 
-  const productUrl = `${siteUrl}/product/${product.slug}`;
-  
-  // Safely extract the first image or default to logo
-  const imageUrl = product.images?.[0] 
-    ? (product.images[0].startsWith('http') ? product.images[0] : `${import.meta.env.VITE_IMAGE_BASE_URL}/${product.images[0]}`)
-    : `${siteUrl}/logo.webp`;
+  const productSlug = product.seoSlug || product.slug || product.id;
+  const productUrl = `${siteUrl}/product/${productSlug}`;
+  const rawImg =
+    product.seoImage ||
+    (typeof product.images?.[0] === 'object' ? product.images[0]?.url : product.images?.[0]) ||
+    product.image_url ||
+    '/images/products/bhumivera-activated-charcoal-luxury-face-wash.webp';
+  const imageUrl = String(rawImg).startsWith('http')
+    ? rawImg
+    : `${siteUrl}${String(rawImg).startsWith('/') ? '' : '/'}${rawImg}`;
 
-  // Compile the exact JSON-LD Schema Google requires for Product Rich Results
-  const jsonLdSchema = {
-    "@context": "https://schema.org/",
-    "@type": "Product",
-    "name": product.name,
-    "image": [imageUrl],
-    "description": product.meta_description || product.description,
-    "sku": product.sku || `BHU-${product.id}`,
-    "brand": {
-      "@type": "Brand",
-      "name": product.brand || "Bhumivera"
-    },
-    "offers": {
-      "@type": "Offer",
-      "url": productUrl,
-      "priceCurrency": "INR",
-      "price": product.discount_price || product.price,
-      "itemCondition": "https://schema.org/NewCondition",
-      "availability": product.status === 'active' && product.quantity > 0 
-        ? "https://schema.org/InStock" 
-        : "https://schema.org/OutOfStock",
-      "seller": {
-        "@type": "Organization",
-        "name": "Bhumivera"
-      }
-    }
-  };
+  const seoTitle =
+    title ||
+    product.seo_title ||
+    product.meta_title ||
+    `${product.luxuryName || product.name} | Bhumivera Organics (Est. 2016)`;
+  const seoDesc =
+    description ||
+    product.meta_description ||
+    product.short_description ||
+    product.description?.substring(0, 160);
 
   return (
     <Helmet>
-      {/* Standard HTML Metadata */}
-      <title>{product.meta_title || `${product.name} | Bhumivera`}</title>
-      <meta name="description" content={product.meta_description || product.description?.substring(0, 155)} />
-      <meta name="keywords" content={product.tags} />
+      <title>{seoTitle}</title>
+      <meta name="description" content={seoDesc} />
+      <meta
+        name="keywords"
+        content={
+          keywords ||
+          product.tags ||
+          `${product.luxuryName || product.name}, Bhumivera Organics, Est 2016, luxury organic face wash India, luxury herbal shampoo India`
+        }
+      />
+      <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
       <link rel="canonical" href={productUrl} />
 
-      {/* Open Graph / Facebook / Instagram Metadata */}
       <meta property="og:type" content="product" />
-      <meta property="og:title" content={product.meta_title || product.name} />
-      <meta property="og:description" content={product.meta_description || product.description?.substring(0, 155)} />
+      <meta property="og:site_name" content="Bhumivera Organics (Est. 2016)" />
+      <meta property="og:title" content={seoTitle} />
+      <meta property="og:description" content={seoDesc} />
       <meta property="og:url" content={productUrl} />
       <meta property="og:image" content={imageUrl} />
-      <meta property="product:price:amount" content={product.discount_price || product.price} />
+      <meta property="product:price:amount" content={product.luxuryPrice || product.discount_price || product.price} />
       <meta property="product:price:currency" content="INR" />
 
-      {/* Twitter Cards Metadata */}
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={product.meta_title || product.name} />
-      <meta name="twitter:description" content={product.meta_description || product.description?.substring(0, 155)} />
+      <meta name="twitter:title" content={seoTitle} />
+      <meta name="twitter:description" content={seoDesc} />
       <meta name="twitter:image" content={imageUrl} />
 
-      {/* Google JSON-LD Schema Script */}
-      <script type="application/ld+json">
-        {JSON.stringify(jsonLdSchema)}
-      </script>
+      {schema && (
+        <script type="application/ld+json">{JSON.stringify(schema)}</script>
+      )}
     </Helmet>
   );
 }

@@ -24,7 +24,7 @@ export default function EWarrantyManagement() {
   
   // Generator State
   const [genModal, setGenModal] = useState(false);
-  const [genData, setGenData] = useState({ productId: '', count: 10, prefix: 'ANRI', format: 'advanced', warranty: 12 });
+  const [genData, setGenData] = useState({ productId: '', count: 10, prefix: 'BHMV', format: 'advanced', warranty: 12 });
   const [isProcessing, setIsProcessing] = useState(false);
   
   const { showToast } = useToast() || {};
@@ -536,7 +536,7 @@ export default function EWarrantyManagement() {
                 <div className="space-y-2">
                   <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-1">Hash Prefix (Max 4)</label>
                   <input 
-                    type="text" maxLength="4" placeholder="ANRI" 
+                    type="text" maxLength="4" placeholder="BHMV" 
                     className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl p-4 text-xs font-mono font-black text-purple-400 uppercase outline-none focus:border-purple-500/50"
                     value={genData.prefix} onChange={e => setGenData({...genData, prefix: e.target.value.toUpperCase()})}
                   />

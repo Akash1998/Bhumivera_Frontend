@@ -115,8 +115,8 @@ export default function PremiumHome() {
   return (
     <main className="min-h-screen bg-[#14291F] text-[#FAF7F2] font-sans">
       <SEO
-        title="Bhumivera | Himalayan Botanical & Dermatological Skincare Maison"
-        description="Cold-pressed Himalayan Sea Buckthorn, Pampore Kashmiri Saffron, Niacinamide, and Hyaluronic Acid formulations with full label transparency."
+        title="Bhumivera Organics (Est. 2016) | Himalayan Botanical & Dermatological Skincare Maison"
+        description="Established in 2016 under founding enterprise MPG E Business Private Limited and incorporated as luxury flagship Bhumivera Organics India Private Limited in August 2026. Cold-pressed Himalayan Sea Buckthorn, Kashmiri Saffron, Activated Charcoal & Royal 2-in-1 Botanical Shampoo."
         route="/"
         ogImage={HOME_VISUAL_ASSETS.heroPrimary}
       />
@@ -135,7 +135,7 @@ export default function PremiumHome() {
         <div className="mx-auto flex min-h-[88svh] max-w-7xl flex-col justify-between px-6 pb-14 pt-28 sm:px-10 lg:pb-20">
           <div className="max-w-3xl pt-8">
             <p className="font-sub-gold uppercase tracking-[0.26em] text-xs font-bold inline-flex items-center gap-2">
-              <Leaf size={14} className="text-[#D4AF37]" /> Bhumivera Botanical Maison · Est. India
+              <Leaf size={14} className="text-[#D4AF37]" /> Bhumivera Botanical Maison · Est. 2016 · 10+ Years of Botanical Stewardship
             </p>
             
             <h1 className="mt-5 font-serif text-4xl leading-[1.08] sm:text-6xl lg:text-7xl font-bold tracking-tight">

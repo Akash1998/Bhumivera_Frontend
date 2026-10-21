@@ -1,4 +1,4 @@
-import { FALLBACK_CATALOG_PRODUCTS } from '../data/bhumiveraUniqueData';
+import { FALLBACK_CATALOG_PRODUCTS, CHARCOAL_FACE_WASH_EXACT, SHAMPOO_2IN1_EXACT } from '../data/bhumiveraUniqueData';
 import SEO from '../components/SEO';
 import SEOStructuredData from '../components/SEOStructuredData';
 import ProductDeliveryPromise from '../components/ProductDeliveryPromise';
@@ -126,9 +126,14 @@ export default function ProductDetail() {
             const slugRes = await productsApi.getBySlug(id);
             fetchedProduct = slugRes.data?.data || slugRes.data;
           } catch {
+            const normId = String(id).toLowerCase();
             fetchedProduct =
               FALLBACK_CATALOG_PRODUCTS.find(
-                p => String(p.id) === String(id) || p.slug === String(id)
+                p =>
+                  String(p.id) === String(id) ||
+                  p.slug === String(id) ||
+                  (normId.includes('charcoal') && p.slug?.includes('charcoal')) ||
+                  ((normId.includes('shampoo') || normId.includes('2-in-1')) && p.slug?.includes('shampoo'))
               ) || FALLBACK_CATALOG_PRODUCTS[0];
             loadedFromFallback = true;
           }
@@ -140,6 +145,46 @@ export default function ProductDetail() {
            );
            if (fallbackMatch) {
              fetchedProduct = { ...fallbackMatch, ...fetchedProduct, batchCode: fallbackMatch.batchCode || fetchedProduct.batchCode, directions: fallbackMatch.directions || fetchedProduct.directions, caution: fallbackMatch.caution || fetchedProduct.caution, phLevel: fallbackMatch.phLevel || fetchedProduct.phLevel, primaryBotanicals: fallbackMatch.primaryBotanicals || fetchedProduct.primaryBotanicals, clinicalActives: fallbackMatch.clinicalActives || fetchedProduct.clinicalActives };
+           }
+           const lowerIdOrName = `${id} ${fetchedProduct?.slug || ''} ${fetchedProduct?.name || ''}`.toLowerCase();
+           if (lowerIdOrName.includes('charcoal')) {
+             fetchedProduct = {
+               ...fetchedProduct,
+               luxuryName: CHARCOAL_FACE_WASH_EXACT.name,
+               seoSlug: CHARCOAL_FACE_WASH_EXACT.slug,
+               luxurySku: CHARCOAL_FACE_WASH_EXACT.sku,
+               mpn: CHARCOAL_FACE_WASH_EXACT.mpn,
+               luxuryCategory: CHARCOAL_FACE_WASH_EXACT.category,
+               seo_title: CHARCOAL_FACE_WASH_EXACT.seo_title,
+               meta_description: CHARCOAL_FACE_WASH_EXACT.meta_description,
+               short_description: CHARCOAL_FACE_WASH_EXACT.short_description,
+               ph_level: CHARCOAL_FACE_WASH_EXACT.ph_level,
+               active_ingredients: CHARCOAL_FACE_WASH_EXACT.active_ingredients,
+               seoImage: CHARCOAL_FACE_WASH_EXACT.image_url,
+               directAnswerFaqs: CHARCOAL_FACE_WASH_EXACT.faqs,
+               exactCompositionTable: CHARCOAL_FACE_WASH_EXACT.composition_table,
+               editorialHeading: CHARCOAL_FACE_WASH_EXACT.editorial_heading,
+               editorialParagraphs: CHARCOAL_FACE_WASH_EXACT.editorial_paragraphs,
+             };
+           } else if (lowerIdOrName.includes('shampoo') || lowerIdOrName.includes('2-in-1') || lowerIdOrName.includes('hair')) {
+             fetchedProduct = {
+               ...fetchedProduct,
+               luxuryName: SHAMPOO_2IN1_EXACT.name,
+               seoSlug: SHAMPOO_2IN1_EXACT.slug,
+               luxurySku: SHAMPOO_2IN1_EXACT.sku,
+               mpn: SHAMPOO_2IN1_EXACT.mpn,
+               luxuryCategory: SHAMPOO_2IN1_EXACT.category,
+               seo_title: SHAMPOO_2IN1_EXACT.seo_title,
+               meta_description: SHAMPOO_2IN1_EXACT.meta_description,
+               short_description: SHAMPOO_2IN1_EXACT.short_description,
+               ph_level: SHAMPOO_2IN1_EXACT.ph_level,
+               active_ingredients: SHAMPOO_2IN1_EXACT.active_ingredients,
+               seoImage: SHAMPOO_2IN1_EXACT.image_url,
+               directAnswerFaqs: SHAMPOO_2IN1_EXACT.faqs,
+               exactCompositionTable: SHAMPOO_2IN1_EXACT.composition_table,
+               editorialHeading: SHAMPOO_2IN1_EXACT.editorial_heading,
+               editorialParagraphs: SHAMPOO_2IN1_EXACT.editorial_paragraphs,
+             };
            }
            let safeImages = [];
            if (typeof fetchedProduct.images === 'string') {
@@ -347,7 +392,7 @@ export default function ProductDetail() {
                     getImageUrl(activeMedia) === url ? 'border-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.4)]' : 'border-white/10 bg-[#171813] hover:border-[#D4AF37]/60'
                   }`}
                 >
-                  <img src={url} alt={`${product.name} image ${idx + 1}`} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-cover transition-all duration-500" loading="lazy" />
+                  <img src={url} width="96" height="96" alt={`${product.luxuryName || product.name} thumbnail ${idx + 1} - ${product.active_ingredients || "Bhumivera Organics"}`} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-cover transition-all duration-500" loading="lazy" />
                 </button>
               );
             })}
@@ -363,7 +408,7 @@ export default function ProductDetail() {
                 transition={{ duration: 0.8 }}
                 className="h-full w-full p-5 sm:p-8 md:p-10 lg:p-12"
               >
-                <img src={getImageUrl(activeMedia)} alt={product.name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-[1.025]" />
+                <img src={getImageUrl(activeMedia)} width="800" height="800" fetchpriority="high" alt={`${product.luxuryName || product.name} - ${product.active_ingredients || product.primaryBotanicals || "Bhumivera Luxury Botanical Formula"}`} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-[1.025]" />
               </motion.div>
             </AnimatePresence>
 
@@ -767,6 +812,139 @@ export default function ProductDetail() {
           </AnimatePresence>
         </div>
       </div>
+
+      
+      {/* PHASE 3 & 5: RAG CITATION ARCHITECTURE — EXACT LABEL COMPOSITION TABLE, COMPARISON MATRIX, DIRECT-ANSWER FAQ BLOCK & PILLAR LINK SILOS */}
+      <section className="relative z-10 mx-auto mt-16 max-w-7xl px-4 md:px-6 space-y-12">
+        {product.editorialParagraphs && (
+          <div className="rounded-3xl two-tone-card border border-[#d4af37]/35 p-6 sm:p-8 shadow-xl">
+            <span className="font-mono text-[10px] uppercase tracking-widest text-[#fce096] block mb-2">
+              Luxury Editorial Monograph · {product.luxurySku || product.sku}
+            </span>
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white mb-4">
+              {product.editorialHeading}
+            </h2>
+            <div className="space-y-4 text-sm sm:text-base text-[#cbd5e1] leading-relaxed">
+              {product.editorialParagraphs.map((para, idx) => (
+                <p key={idx}>{para}</p>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {product.exactCompositionTable && (
+          <div className="rounded-3xl two-tone-card border border-[#d4af37]/35 p-6 sm:p-8 shadow-xl overflow-hidden">
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white mb-2">
+              Exact Label Composition &amp; Clinical Mechanism Table
+            </h2>
+            <p className="text-xs font-mono uppercase tracking-wider text-[#fce096] mb-6">
+              100% Label-Verified Active Concentrations · Calibrated at {product.ph_level || product.phLevel}
+            </p>
+            <div className="overflow-x-auto rounded-2xl border border-[#d4af37]/25 bg-[#070a0e]/80">
+              <table className="w-full text-left border-collapse text-xs sm:text-sm">
+                <thead>
+                  <tr className="border-b border-[#d4af37]/30 bg-[#102219] text-[#fce096] font-mono uppercase text-[11px]">
+                    <th className="p-4">Active Ingredient (Label Verified)</th>
+                    <th className="p-4">Standardized Potency</th>
+                    <th className="p-4">Clinical / Botanical Classification</th>
+                    <th className="p-4">Dermatological / Trichological Mechanism of Action</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-white/10 text-[#cbd5e1]">
+                  {product.exactCompositionTable.map((row, idx) => (
+                    <tr key={idx} className="hover:bg-white/5">
+                      <td className="p-4 font-bold text-white">{row.active}</td>
+                      <td className="p-4 font-mono font-bold text-[#fce096]">{row.potency}</td>
+                      <td className="p-4 italic text-[#94a3b8]">{row.classification}</td>
+                      <td className="p-4 leading-relaxed">{row.mechanism}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
+
+        <div className="rounded-3xl two-tone-card border border-[#d4af37]/35 p-6 sm:p-8 shadow-xl overflow-hidden">
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white mb-6">
+            Bhumivera Luxury Botanical Formula vs. Conventional Commercial Cleansers
+          </h2>
+          <div className="overflow-x-auto rounded-2xl border border-[#d4af37]/25 bg-[#070a0e]/80">
+            <table className="w-full text-left border-collapse text-xs sm:text-sm">
+              <thead>
+                <tr className="border-b border-[#d4af37]/30 bg-[#102219] text-[#fce096] font-mono uppercase text-[11px]">
+                  <th className="p-4">Evaluation Metric</th>
+                  <th className="p-4">Bhumivera Organics Luxury Formula</th>
+                  <th className="p-4">Conventional Commercial Cleansers</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10 text-[#cbd5e1]">
+                <tr>
+                  <td className="p-4 font-bold text-white">pH Calibration</td>
+                  <td className="p-4 text-[#fce096] font-semibold">{product.ph_level || product.phLevel || 'pH 5.0–5.5 Skin & Cuticle Identical'}</td>
+                  <td className="p-4">Alkaline pH 7.5–9.5 (Disrupts acid mantle &amp; swells cuticles)</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold text-white">Cleansing Surfactants</td>
+                  <td className="p-4 text-[#fce096] font-semibold">Wild Reetha Saponins (25mg), Shikakai (5mg) &amp; Plant Glucosides (0% SLS/SLES)</td>
+                  <td className="p-4">Harsh Sodium Lauryl Sulfate (SLS) &amp; Sodium Laureth Sulfate (SLES)</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold text-white">Active Disclosure</td>
+                  <td className="p-4 text-[#fce096] font-semibold">100% Exact Percentages &amp; Milligram Potencies Printed on Label</td>
+                  <td className="p-4">Proprietary blends with &lt;0.01% trace botanical dustings</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold text-white">Barrier Hydration</td>
+                  <td className="p-4 text-[#fce096] font-semibold">5.0% Botanical Glycerin, 0.1% Hyaluronic Acid, Niacinamide &amp; Aloe Vera</td>
+                  <td className="p-4">Synthetic PEGs, drying alcohols &amp; occlusive silicones</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <div className="rounded-3xl two-tone-panel-gold border border-[#d4af37]/40 p-6 sm:p-8 shadow-xl">
+          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white mb-6">
+            Direct-Answer Clinical &amp; Ayurvedic Q&amp;A
+          </h2>
+          <div className="space-y-4">
+            {(product.directAnswerFaqs || CHARCOAL_FACE_WASH_EXACT.faqs).map((item, idx) => (
+              <div key={idx} className="rounded-2xl bg-[#070a0e]/85 border border-[#d4af37]/25 p-5">
+                <h3 className="font-serif text-base sm:text-lg font-bold text-[#fce096] mb-2">
+                  {idx + 1}. {item.q}
+                </h3>
+                <p className="text-xs sm:text-sm text-[#cbd5e1] leading-relaxed">{item.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="rounded-3xl two-tone-card border border-[#d4af37]/30 p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+          <div>
+            <span className="font-mono text-[10px] uppercase tracking-widest text-[#fce096]">
+              Authority Buying Guides &amp; Clinical Research
+            </span>
+            <h2 className="font-serif text-xl sm:text-2xl font-bold text-white mt-1">
+              Explore Our Complete Skincare &amp; Trichology Monographs
+            </h2>
+          </div>
+          <div className="flex flex-wrap gap-3">
+            <Link
+              to="/guides/ultimate-guide-luxury-organic-face-wash-india"
+              className="btn-gold-luxury px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-white"
+            >
+              Luxury Organic Face Wash Guide
+            </Link>
+            <Link
+              to="/guides/science-of-sulfate-free-luxury-herbal-shampoos"
+              className="btn-silver-luxury px-4 py-2.5 rounded-xl text-xs font-semibold text-[#FAF7F2]"
+            >
+              Sulfate-Free Herbal Shampoo Science
+            </Link>
+          </div>
+        </div>
+      </section>
 
       {(videoEmbeds.length > 0 || productLinks.length > 0) && (
         <section className="max-w-7xl mx-auto px-6 mt-16 relative z-10">

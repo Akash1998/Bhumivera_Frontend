@@ -116,6 +116,7 @@ const ImpactProjectDetail = lazyWithRetry(() => import("./pages/ImpactProjectDet
 const Community = lazyWithRetry(() => import("./pages/Community.jsx"));
 const Legal = lazyWithRetry(() => import("./pages/Legal.jsx"));
 const BhumiveraScience = lazyWithRetry(() => import("./pages/BhumiveraScience.jsx"));
+const LuxuryGuides = lazyWithRetry(() => import("./pages/LuxuryGuides.jsx"));
 const MPGEBusinessLanding = lazyWithRetry(() => import("./pages/MPGEBusinessLanding.jsx"));
 const FlashSales = lazyWithRetry(() => import("./pages/FlashSales.jsx"));
 const SomaticRegistry = lazyWithRetry(() => import("./pages/SomaticRegistry.jsx"));
@@ -362,6 +363,9 @@ function AppContent() {
             
             {/* Bhumivera Brand & Partner Routes */}
             <Route path="/science" element={<BhumiveraScience />} />
+            <Route path="/bhumivera-science" element={<BhumiveraScience />} />
+            <Route path="/guides" element={<LuxuryGuides />} />
+            <Route path="/guides/:slug" element={<LuxuryGuides />} />
             <Route path="/purchase-protection" element={<PurchaseProtection />} />
             <Route path="/returns-centre" element={<Navigate to="/verify" replace />} />
             <Route path="/returns" element={<Navigate to="/verify" replace />} />

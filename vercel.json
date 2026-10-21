@@ -11,11 +11,36 @@
         {
           "key": "Cache-Control",
           "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
         }
       ]
     },
     {
-      "source": "/(.*).(webp|jpg|png|svg|xml|txt|css|js)",
+      "source": "/(llms\\.txt|llms-full\\.txt)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "index, follow"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).(webp|avif|jpg|png|svg|xml|txt|css|js)",
       "headers": [
         {
           "key": "Strict-Transport-Security",
@@ -29,6 +54,19 @@
     },
     {
       "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/images/(.*)",
       "headers": [
         {
           "key": "Strict-Transport-Security",
@@ -99,8 +137,12 @@
           "value": "1; mode=block"
         },
         {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
           "key": "Permissions-Policy",
-          "value": "geolocation=(self), microphone=(), camera=(self)"
+          "value": "geolocation=(self), microphone=(), camera=(self), browsing-topics=()"
         }
       ]
     }
@@ -108,6 +150,9 @@
   "rewrites": [
     { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
     { "source": "/robots.txt", "destination": "/robots.txt" },
-    { "source": "/((?!api|assets|.*\\..*).*)", "destination": "/index.html" }
+    { "source": "/llms.txt", "destination": "/llms.txt" },
+    { "source": "/llms-full.txt", "destination": "/llms-full.txt" },
+    { "source": "/bhumivera-indexnow-2026.txt", "destination": "/bhumivera-indexnow-2026.txt" },
+    { "source": "/((?!api|assets|images|.*\\..*).*)", "destination": "/index.html" }
   ]
 }

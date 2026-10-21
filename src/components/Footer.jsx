@@ -57,7 +57,7 @@ export default function Footer() {
                     BHUMIVERA
                   </span>
                   <span className="block text-[9px] font-semibold uppercase tracking-[0.28em] text-[#9BB0A5]">
-                    Botanical Maison · Est. India
+                    Botanical Maison · Est. 2016 · India
                   </span>
                 </div>
               </div>
@@ -68,7 +68,7 @@ export default function Footer() {
               </h2>
               <div className="gold-hairline w-24 my-3" />
               <p className="mt-2 text-xs leading-relaxed text-[#DFD7C4] sm:text-sm max-w-xl font-light">
-                Formulated with cold-pressed Himalayan Sea Buckthorn, Pampore Kashmiri Saffron, and certified pH 5.5 clinical actives. Produced in micro-runs of 250 bottles with open label transparency and verifiable lab purity.
+                Established in 2016 (MPG E Business Pvt. Ltd.) with a decade of proven offline botanical apothecary heritage, and formally incorporated as luxury flagship Bhumivera Organics India Private Limited in August 2026. Formulated with pH 5.0–5.5 clinical-Ayurvedic actives in serialized 250-bottle micro-runs.
               </p>
             </div>
 
@@ -133,6 +133,16 @@ export default function Footer() {
               <li>
                 <Link to="/science" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
                   <span>Botanical Science &amp; pH 5.5</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/guides/ultimate-guide-luxury-organic-face-wash-india" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
+                  <span>Guide: Best Luxury Organic Face Wash</span>
+                </Link>
+              </li>
+              <li>
+                <Link to="/guides/science-of-sulfate-free-luxury-herbal-shampoos" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
+                  <span>Guide: Sulfate-Free Herbal Shampoos</span>
                 </Link>
               </li>
               <li>

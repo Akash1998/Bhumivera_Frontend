@@ -82,9 +82,8 @@ export default function FilterSidebar({ onFilterChange, onApply }) {
 
   const [filters, setFilters] = useState({
     price: 5000,
-    lumens: 8000,
-    wattage: 150,
-    rms: 1200,
+    concentrationMg: 100,
+    volumeMl: 200,
     categories: [],
   });
 
@@ -106,7 +105,7 @@ export default function FilterSidebar({ onFilterChange, onApply }) {
   };
 
   const resetFilters = () => {
-    const defaults = { price: 5000, lumens: 8000, wattage: 150, rms: 1200, categories: [] };
+    const defaults = { price: 5000, concentrationMg: 100, volumeMl: 200, categories: [] };
     setFilters(defaults);
     onFilterChange?.(defaults);
   };
@@ -121,7 +120,7 @@ export default function FilterSidebar({ onFilterChange, onApply }) {
       <div className="flex items-center justify-between mb-8 pb-4 border-b border-white/10">
         <div className="flex items-center gap-2.5">
           <SlidersHorizontal size={18} className="text-[#fce096]" />
-          <h2 className="font-serif text-lg font-bold uppercase tracking-wider text-white">Filters</h2>
+          <h2 className="font-serif text-lg font-bold uppercase tracking-wider text-white">Botanical Filters</h2>
         </div>
         <button
           type="button"
@@ -158,20 +157,20 @@ export default function FilterSidebar({ onFilterChange, onApply }) {
         >
           <div className="space-y-6">
             <RangeSlider
-              label="Botanical Concentration"
-              min={100}
-              max={10000}
+              label="Botanical Phyto-Complex"
+              min={50}
+              max={1000}
               unit=" mg"
-              value={filters.lumens}
-              onChange={(v) => updateFilter('lumens', v)}
+              value={filters.concentrationMg}
+              onChange={(v) => updateFilter('concentrationMg', v)}
             />
             <RangeSlider
-              label="Pack Volume"
+              label="Vessel Volume"
               min={15}
               max={500}
               unit=" ml"
-              value={filters.wattage}
-              onChange={(v) => updateFilter('wattage', v)}
+              value={filters.volumeMl}
+              onChange={(v) => updateFilter('volumeMl', v)}
             />
           </div>
         </FilterSection>
@@ -183,7 +182,7 @@ export default function FilterSidebar({ onFilterChange, onApply }) {
           onToggle={() => toggleSection('categories')}
         >
           <div className="grid grid-cols-1 gap-2">
-            {['Facial Oils', 'Barrier Creams', 'Botanical Serums', 'Hair Elixirs', 'Bath & Body Rituals'].map((cat) => (
+            {['Luxury Facial Cleansers', 'Luxury Hair Care', 'Night Elixirs & Serums', 'Barrier Hydration'].map((cat) => (
               <button
                 key={cat}
                 type="button"
