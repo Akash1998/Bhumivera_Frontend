@@ -1,7 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { 
-  ShoppingBag, 
   Heart, 
   Star, 
   ArrowRight, 
@@ -174,16 +173,7 @@ const ProductGrid = ({ products = [], isLoading = false }) => {
                   <Heart size={16} className={wished ? "fill-current" : ""} />
                 </button>
                 
-                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-3">
-                  <button
-                    type="button"
-                    onClick={() => addToCart?.(product, 1)}
-                    className="w-11 h-11 rounded-full bg-gradient-to-r from-[#d4af37] to-[#fce096] text-black flex items-center justify-center hover:scale-110 transition-transform shadow-xl"
-                    title="Add to Bag"
-                    aria-label={`Add ${product.name} to bag`}
-                  >
-                    <ShoppingBag size={18} />
-                  </button>
+                <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
                   <Link
                     to={`/product/${product.slug || product.id}`}
                     className="w-11 h-11 rounded-full bg-[#070a0e] border border-white/20 text-white flex items-center justify-center hover:border-[#d4af37] hover:text-[#fce096] hover:scale-110 transition-all shadow-xl"
@@ -231,16 +221,15 @@ const ProductGrid = ({ products = [], isLoading = false }) => {
                     )}
                   </div>
                   
-                  {viewMode === 'list' && (
-                    <button
-                      type="button"
-                      onClick={() => addToCart?.(product, 1)}
-                      className="btn-gold-luxury flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold uppercase tracking-widest text-xs text-white shadow-lg"
-                    >
-                      <span>Add to Bag</span>
-                      <Zap size={13} className="fill-current" />
-                    </button>
-                  )}
+                  <button
+                    type="button"
+                    onClick={() => addToCart?.(product, 1)}
+                    aria-label={`Add ${product.name} to bag`}
+                    className="btn-gold-luxury flex items-center gap-2 px-5 py-2.5 rounded-xl font-bold uppercase tracking-widest text-xs text-white shadow-lg"
+                  >
+                    <span>Add to Bag</span>
+                    <Zap size={13} className="fill-current" />
+                  </button>
                 </div>
               </div>
             </div>

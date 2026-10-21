@@ -99,8 +99,8 @@ export default function ProductDetail() {
   const [activeVideo, setActiveVideo] = useState(null);
   const [reviewRatingFilter, setReviewRatingFilter] = useState('all');
   const [reviewSort, setReviewSort] = useState('newest');
-  const purchaseSectionRef = useRef(null);
-  const isPurchaseSectionVisible = useInView(purchaseSectionRef, { amount: 0.2 });
+  const addToBagButtonRef = useRef(null);
+  const isAddToBagButtonVisible = useInView(addToBagButtonRef, { amount: 0.01, initial: true });
 
   useEffect(() => {
     if (location.hash === '#product-reviews') setActiveTab('reviews');
@@ -481,7 +481,7 @@ export default function ProductDetail() {
             </p>
           </div>
 
-          <div ref={purchaseSectionRef} className="relative mb-6 rounded-2xl two-tone-panel-gold p-4 shadow-2xl sm:p-6 md:mb-8 md:rounded-3xl md:p-7">
+          <div className="relative mb-6 rounded-2xl two-tone-panel-gold p-4 shadow-2xl sm:p-6 md:mb-8 md:rounded-3xl md:p-7">
             <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
               <span className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 py-1.5 text-[9px] font-mono uppercase tracking-[0.12em] sm:text-[10px] sm:tracking-widest ${isOutOfStock ? 'bg-red-950/60 border border-red-500/40 text-red-300' : 'bg-[#171813] border border-[#D4AF37]/40 text-[#FCE096]'}`}>
                 {isOutOfStock ? <AlertCircle size={16}/> : <Package size={16}/>}
@@ -502,6 +502,7 @@ export default function ProductDetail() {
               </div>
 
               <button 
+                ref={addToBagButtonRef}
                 type="button"
                 onClick={handleAddToCart} 
                 disabled={isOutOfStock || isAdding}
@@ -1021,16 +1022,13 @@ export default function ProductDetail() {
               <h2 id="product-video-title" className="mt-2 font-serif text-2xl leading-tight text-white">{product.name}</h2>
               <p className="mt-3 text-xl font-serif font-bold text-[#fce096]">₹{product.discount_price || product.price}</p>
               <div className="mt-4 flex items-center gap-2 text-xs text-[#cbd5e1]"><Shield size={15} className="text-[#d4af37]"/>Secure checkout · Bhumivera support</div>
-              <div className="mt-auto pt-8">
-                <button type="button" onClick={async () => { await handleAddToCart(); setActiveVideo(null); }} disabled={isOutOfStock || isAdding} className="btn-gold-luxury w-full rounded-xl px-5 py-4 text-sm font-bold uppercase tracking-widest text-white transition disabled:cursor-not-allowed disabled:opacity-50">{isAdding ? (isAdded ? 'Added to Bag' : 'Adding…') : isOutOfStock ? 'Currently unavailable' : 'Add to Bag'}</button>
-              </div>
             </div>
           </motion.section>
         </motion.div>}
       </AnimatePresence>
 
       <AnimatePresence>
-        {!isPurchaseSectionVisible && (
+        {!isAddToBagButtonVisible && !activeVideo && (
           <motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
