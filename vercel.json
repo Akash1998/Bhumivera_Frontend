@@ -1,0 +1,158 @@
+{
+  "version": 2,
+  "headers": [
+    {
+      "source": "/((?!api|assets|.*\\..*).*)",
+      "headers": [
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        }
+      ]
+    },
+    {
+      "source": "/(llms\\.txt|llms-full\\.txt)",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "index, follow"
+        }
+      ]
+    },
+    {
+      "source": "/(.*).(webp|avif|jpg|png|svg|xml|txt|css|js)",
+      "headers": [
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/images/(.*)",
+      "headers": [
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/sw.js",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    },
+    {
+      "source": "/manifest.json",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "no-cache"
+        }
+      ]
+    },
+    {
+      "source": "/index.html",
+      "headers": [
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "no-cache, no-store, must-revalidate"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        }
+      ]
+    },
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "Content-Security-Policy",
+          "value": "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://accounts.google.com/gsi/ https://challenges.cloudflare.com https://vercel.live https://www.google-analytics.com https://ssl.google-analytics.com https://www.googletagmanager.com https://overbridgenet.com https://checkout.razorpay.com https://cdn.razorpay.com https://translate.google.com https://translate.googleapis.com https://translate-pa.googleapis.com blob:; script-src-elem 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://accounts.google.com/gsi/ https://challenges.cloudflare.com https://vercel.live https://www.google-analytics.com https://ssl.google-analytics.com https://www.googletagmanager.com https://overbridgenet.com https://checkout.razorpay.com https://cdn.razorpay.com https://translate.google.com https://translate.googleapis.com https://translate-pa.googleapis.com blob:; worker-src 'self' blob:; frame-src 'self' https://accounts.google.com https://accounts.google.com/gsi/ https://challenges.cloudflare.com https://vercel.live https://*.google.com https://www.youtube-nocookie.com https://www.instagram.com https://checkout.razorpay.com https://api.razorpay.com; connect-src 'self' https://accounts.google.com https://oauth2.googleapis.com https://www.googleapis.com https://challenges.cloudflare.com https://vercel.live https://bhumivera-backend.railway.app https://bhumiverabackend-production.up.railway.app https://service.bhumivera.com https://www.google-analytics.com https://analytics.google.com https://*.google-analytics.com https://*.analytics.google.com https://*.r2.cloudflarestorage.com https://overbridgenet.com https://api.razorpay.com https://lumberjack.razorpay.com https://translate.google.com https://translate.googleapis.com https://translate-pa.googleapis.com https://nominatim.openstreetmap.org; img-src 'self' data: blob: https: https://*.google-analytics.com https://*.analytics.google.com https://*.razorpay.com; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.gstatic.com https://accounts.google.com; style-src-elem 'self' 'unsafe-inline' https://fonts.googleapis.com https://www.gstatic.com https://accounts.google.com; font-src 'self' data: https://fonts.gstatic.com https://fonts.googleapis.com;"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "DENY"
+        },
+        {
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "geolocation=(self), microphone=(), camera=(self), browsing-topics=()"
+        }
+      ]
+    }
+  ],
+  "rewrites": [
+    { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
+    { "source": "/robots.txt", "destination": "/robots.txt" },
+    { "source": "/llms.txt", "destination": "/llms.txt" },
+    { "source": "/llms-full.txt", "destination": "/llms-full.txt" },
+    { "source": "/bhumivera-indexnow-2026.txt", "destination": "/bhumivera-indexnow-2026.txt" },
+    { "source": "/((?!api|assets|images|.*\\..*).*)", "destination": "/index.html" }
+  ]
+}

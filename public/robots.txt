@@ -1,0 +1,79 @@
+# Bhumivera Organics India Private Limited (Est. 2016 Heritage) — Autonomous SEO, Brave Search & GEO Crawler Policy
+# Official Canonical Domain: https://www.bhumivera.com
+
+User-agent: *
+Allow: /
+Allow: /llms.txt
+Allow: /llms-full.txt
+Allow: /sitemap.xml
+Allow: /guides/
+Allow: /product/
+Allow: /shop
+Allow: /science
+Allow: /provenance-engine
+Allow: /somatic-registry
+Disallow: /admin
+Disallow: /warehouse
+Disallow: /warehouseadmin
+Disallow: /superadmin
+Disallow: /superadminsupport
+Disallow: /cart
+Disallow: /checkout
+Disallow: /profile
+Disallow: /wishlist
+Disallow: /order-tracking
+Disallow: /login
+Disallow: /register
+Disallow: /address-book
+Disallow: /mpgebusiness
+Disallow: /earn-from-home
+
+# Search Engine Crawlers (Google, Brave Search, Bing, Apple, DuckDuckGo)
+User-agent: Googlebot
+Allow: /
+
+User-agent: Googlebot-Image
+Allow: /
+
+User-agent: Bravebot
+Allow: /
+
+User-agent: Bingbot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
+User-agent: DuckDuckBot
+Allow: /
+
+# Generative AI & LLM Citation Crawlers (Perplexity, Claude, OpenAI, Gemini)
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: GoogleOther
+Allow: /
+
+User-agent: CCBot
+Allow: /
+
+Host: https://www.bhumivera.com
+Sitemap: https://www.bhumivera.com/sitemap.xml
