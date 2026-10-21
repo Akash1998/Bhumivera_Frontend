@@ -165,7 +165,7 @@ const LEGAL_CLAUSES = {
       title: '9. Loyalty matrix: earning, tiers and redemption',
       body: [
         'The Clientele Privilege (Loyalty) programme is promotional and governed by server-side rates shown at checkout. The baseline earning rate is 0.1 point per ₹1 of eligible net merchandise spend (1 point per ₹10), with 10 points converting to ₹1 of checkout discount, a minimum redemption threshold of 100 points, and a maximum redemption ceiling of 20% of remaining eligible merchandise value. Points have zero cash or monetary value and cannot be withdrawn or transferred.',
-        'Tier qualification is based on lifetime net points earned: Bronze (0+), Silver (500+), Gold (1,000+), and Platinum (5,000+), unlocking 1.0×, 1.25×, 1.5×, and 2.0× base point multipliers respectively, plus configured tier discounts (2% Gold, 3% Platinum), loyalty cashback points (0.5% Gold, 1% Platinum), and tier shipping privileges. Cancelled, returned, or reversed transactions automatically reverse earned points and adjust lifetime tier qualification.',
+        'Tier qualification is based on lifetime net points earned: Bronze (0+), Silver (500+), Gold (1,000+), and Platinum (5,000+), unlocking 1.0×, 1.25×, 1.5×, and 2.0× base point multipliers respectively, plus configured tier discounts (2% Gold, 3% Platinum), loyalty cashback points (0.5% Gold, 1% Platinum), and tier shipping privileges. Cancelled, refunded, or reversed transactions automatically reverse earned points and adjust lifetime tier qualification.',
       ],
     },
     {
@@ -304,7 +304,7 @@ const LEGAL_CLAUSES = {
       num: '2.11',
       title: '11. Promotional gifts, freebies & bundle adjustments on partial claims',
       body: [
-        'If an order qualified for a free gift, tier discount, or threshold coupon, and a partial cancellation or refund reduces the net retained order value below the qualifying threshold, the value of the unreturned free gift or threshold discount is proportionally adjusted in the refund calculation.',
+        'If an order qualified for a free gift, tier discount, or threshold coupon, and a partial cancellation or refund reduces the net retained order value below the qualifying threshold, the value of the retained free gift or threshold discount is proportionally adjusted in the refund calculation.',
       ],
     },
     {
@@ -423,7 +423,7 @@ const LEGAL_CLAUSES = {
     },
     {
       num: '4.5',
-      title: '5. Shopping Wallet Rewards (10% returning / 15% first order)',
+      title: '5. Shopping Wallet Rewards (10% repeat buyer / 15% first order)',
       body: [
         'Eligible paid orders earn 10% of net merchandise spend as restricted shopping rewards, plus a 5% welcome bonus (15% total) on a customer’s first completed order, subject to a hard cap of ₹500 per order. Shipping fees, taxes, free gifts, and redeemed discounts/credits are excluded from the reward calculation.',
       ],
@@ -439,7 +439,7 @@ const LEGAL_CLAUSES = {
       num: '4.7',
       title: '7. Clawback and reversal on cancelled or refunded orders',
       body: [
-        'If an order that generated shopping rewards, loyalty points, spin rewards, or referral qualification is subsequently cancelled, returned, refused on COD, or refunded, all promotional credits and points earned from that order are automatically reversed from the customer’s ledger. If the customer has already redeemed those promotional credits on a subsequent order, the redeemed value may be deducted from any refund due or recorded as a negative promotional adjustment.',
+        'If an order that generated shopping rewards, loyalty points, spin rewards, or referral qualification is subsequently cancelled, refused on COD, or refunded (all personal care items being strictly 100% non-returnable once delivered), all promotional credits and points earned from that order are automatically reversed from the customer’s ledger. If the customer has already redeemed those promotional credits on a subsequent order, the redeemed value may be deducted from any refund due or recorded as a negative promotional adjustment.',
       ],
     },
     {

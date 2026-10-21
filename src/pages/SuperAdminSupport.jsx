@@ -374,7 +374,9 @@ export default function SuperAdminSupport() {
       await fetchCommandCenterData();
       showNotice(
         'success',
-        `Telegram (@BhumiveraBot) synced — ${res.data?.synced || 0} new customer message(s) pulled.`
+        res.data?.webhookActive
+          ? 'Telegram webhook is active; new customer messages sync automatically.'
+          : `Telegram (@BhumiveraBot) synced — ${res.data?.synced || 0} new customer message(s) pulled.`
       );
     } catch (err) {
       showNotice('error', err.response?.data?.message || 'Telegram sync failed.');
@@ -2090,13 +2092,13 @@ export default function SuperAdminSupport() {
                   },
                   {
                     key: 'ai_auto_cancel_enabled',
-                    title: 'Allow Self-Service Order Cancellation (Pending/Confirmed Orders)',
-                    desc: 'Lets customers cancel eligible unshipped orders and restores product stock.',
+                    title: 'Allow Self-Service Order Cancellation (Pre-Dispatch Only)',
+                    desc: 'Lets customers cancel eligible unshipped orders (before packing and dispatch) and restores product stock.',
                   },
                   {
                     key: 'ai_auto_return_rma_enabled',
-                    title: 'Allow Self-Service Return RMA Creation (Delivered Orders)',
-                    desc: 'Lets customers submit return/replacement requests within the return window.',
+                    title: '100% Non-Returnable Hygiene Enforcement',
+                    desc: 'Enforces strict non-returnable policy across all intimate botanical personal-care formulations once delivered.',
                   },
                   {
                     key: 'telegram_alerts_enabled',

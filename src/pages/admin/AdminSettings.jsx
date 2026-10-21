@@ -25,7 +25,6 @@ export default function AdminSettings() {
   const [shippingSettings, setShippingSettings] = useState({ standard_charge: '50', express_charge: '150', free_shipping_threshold: '500' });
   const [cartSettingsLoading, setCartSettingsLoading] = useState(true);
   const [cartSettingsSaving, setCartSettingsSaving] = useState(false);
-  const [returnPolicyDays, setReturnPolicyDays] = useState('7');
   const [securityLoading, setSecurityLoading] = useState(true);
   const [securityBusy, setSecurityBusy] = useState(false);
   const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
@@ -45,7 +44,6 @@ export default function AdminSettings() {
         const shipping = response.data?.shipping || {};
         const policy = response.data?.policy || {};
         setShippingSettings(current => ({ ...current, ...shipping }));
-        setReturnPolicyDays(policy.return_policy_days || response.data?.general?.return_policy_days || '7');
         setCartSettings({
           coupon_stack_policy: values.coupon_stack_policy || 'both',
           enforce_cart_rule_minimum: values.enforce_cart_rule_minimum || '0',
@@ -208,25 +206,6 @@ export default function AdminSettings() {
       setMessage('Shipping tiers saved.');
     } catch (saveError) {
       setError(saveError.normalized?.message || saveError.response?.data?.message || 'Failed to save shipping tiers.');
-    } finally {
-      setCartSettingsSaving(false);
-    }
-  };
-
-  const saveReturnPolicy = async event => {
-    event.preventDefault();
-    const days = Number(returnPolicyDays);
-    if (!Number.isInteger(days) || days < 1 || days > 90) {
-      setError('Return windows must be between 1 and 90 days.');
-      return;
-    }
-    setCartSettingsSaving(true);
-    setError(null);
-    try {
-      await settingsApi.update({ return_policy_days: String(days) });
-      setMessage('Return policy saved. Customers can request returns from 30 minutes after delivery.');
-    } catch (saveError) {
-      setError(saveError.normalized?.message || saveError.response?.data?.message || 'Failed to save the return policy.');
     } finally {
       setCartSettingsSaving(false);
     }

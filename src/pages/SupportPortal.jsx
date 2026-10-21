@@ -41,7 +41,7 @@ const ROLE_LIMIT_RULES = {
     canCancelOrder: false,
     canDeleteChat: false,
     canDeleteTicket: false,
-    summary: 'Can search by Order ID / Tracking ID / Email / Phone, verify customer identity, view full order details, reply to live & Telegram chats, create RMAs, and issue at most ONE courtesy coupon (max 10% off) per customer.',
+    summary: 'Can search by Order ID / Tracking ID / Email / Phone, verify customer identity, view full order details, reply to live & Telegram chats, assist with pre-dispatch cancellations, and issue at most ONE courtesy coupon (max 10% off) per customer.',
   },
   supervisor: {
     title: 'Support Supervisor (L2)',
@@ -79,7 +79,7 @@ const HELP_TERMS_GUIDE = [
   },
   {
     term: 'Customer Identity Verification Checklist',
-    meaning: 'Before sharing sensitive order details or issuing a return/coupon, verify at least 2 details with the customer (Registered Name, Email, Phone Number, or Delivery City/Pincode) and click "Mark Customer Verified".',
+    meaning: 'Before sharing sensitive order details or issuing a concession/coupon, verify at least 2 details with the customer (Registered Name, Email, Phone Number, or Delivery City/Pincode) and click "Mark Customer Verified".',
   },
   {
     term: 'Status: Pending vs. Waiting for Review vs. Resolved',
@@ -268,7 +268,11 @@ export default function SupportPortal() {
     try {
       const res = await supportPortal.syncTelegram();
       await loadWorkspaceData();
-      setNotice(`Synced Telegram (@BhumiveraBot) — ${res.data?.synced || 0} new message(s) pulled.`);
+      setNotice(
+        res.data?.webhookActive
+          ? 'Telegram webhook is active; new messages sync automatically.'
+          : `Synced Telegram (@BhumiveraBot) — ${res.data?.synced || 0} new message(s) pulled.`
+      );
     } catch (err) {
       setError(errorText(err));
     } finally {
@@ -1132,23 +1136,15 @@ export default function SupportPortal() {
                         placeholder="Order # or ID"
                         className="px-2.5 py-1 rounded-lg bg-black/40 border border-white/15 text-white w-28"
                       />
-                      <button
-                        type="button"
-                        onClick={() => handleExecuteChatAction('initiate_return')}
-                        className="px-2.5 py-1 rounded-lg bg-sky-500/15 border border-sky-400/30 text-sky-200 text-[11px]"
-                      >
-                        <RotateCcw className="w-3 h-3 inline mr-1" />
-                        Create Return RMA
-                      </button>
-
                       {roleRule.canCancelOrder && (
                         <button
                           type="button"
                           onClick={() => handleExecuteChatAction('cancel_order')}
                           className="px-2.5 py-1 rounded-lg bg-rose-500/15 border border-rose-400/30 text-rose-200 text-[11px]"
+                          title="Cancel order before it is packed or shipped"
                         >
                           <Ban className="w-3 h-3 inline mr-1" />
-                          Cancel Order
+                          Cancel Order (Pre-Dispatch Only)
                         </button>
                       )}
 

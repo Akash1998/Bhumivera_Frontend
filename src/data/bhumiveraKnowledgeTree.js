@@ -72,12 +72,12 @@ export const MASTER_PILLARS = [
   },
   {
     id: 'human_escalation',
-    title: 'Customer Support',
-    shortTitle: 'Customer Care',
+    title: 'Specialist Escalation',
+    shortTitle: 'Human Support',
     iconName: 'PhoneCall',
     accentColor: '#8B5CF6',
-    badge: 'Profile Support',
-    description: 'Contact the customer-care team through Profile → Support for account-specific assistance.',
+    badge: 'Verified Callback',
+    description: 'Anti-spam 3-step order verification for scheduled morning, afternoon, or evening callbacks.',
   },
 ];
 
@@ -518,23 +518,33 @@ Your password must satisfy:
   },
 
   // =========================================================================
-  // PILLAR 3: DELIVERY INFORMATION
+  // PILLAR 3: ORDERS & LIVE TRACKING
   // =========================================================================
   {
     id: 'orders_track_my_order',
     pillarId: 'orders_tracking',
-    title: 'Order Delivery Information',
-    badge: 'Dispatch & Timelines',
-    summary: 'General delivery timelines and guidance. For an update on a specific order, contact Customer Support from Profile → Support.',
+    title: 'Track My Order in Real-Time',
+    badge: 'Real-Time Tracking',
+    summary: 'Enter your 9-digit or BHVM Order ID to inspect live courier transit status, dispatch notes, and delivery date.',
     keywords: [
-      'delivery time', 'shipping time', 'when will it arrive', 'dispatch time', 'dispatch cutoff',
-      'courier', 'awb', 'shipment', 'package', 'parcel', 'dispatch status'
+      'track', 'tracking', 'order status', 'where is my order', 'track order', 'delivery status',
+      'courier', 'awb', 'shipment', 'package', 'parcel', 'bhvm', 'dispatch status'
     ],
     visualSteps: [
       {
         stepNumber: 1,
-        title: 'Need an update on your order?',
-        description: 'Open Profile → Support and select the order so the customer-care team can securely review its latest status.',
+        title: 'Locate Your Order ID',
+        description: 'Find your 9-digit Order Number (e.g. BHVM815899599) in your SMS confirmation, email invoice, or Profile -> Orders tab.',
+      },
+      {
+        stepNumber: 2,
+        title: 'Open Live Order Tracker',
+        description: 'Visit the Bhumivera Live Order Tracking portal at /order-tracking.',
+      },
+      {
+        stepNumber: 3,
+        title: 'Inspect Transit Milestones',
+        description: 'View real-time hub scans, courier partner assignment (BlueDart, Delhivery, DTDC), and delivery estimate.',
       },
     ],
     richContent: `
@@ -542,7 +552,8 @@ Your password must satisfy:
 > Orders placed before **2:00 PM IST** are packed, weight-calibrated (±0.5g tolerance), and dispatched the exact same working day!
     `,
     directActions: [
-      { label: '👤 Open Customer Support', actionType: 'OPEN_ESCALATION' },
+      { label: '🚚 Open Live Order Tracking', actionType: 'NAVIGATE', target: '/order-tracking' },
+      { label: '👤 View My Orders in Profile', actionType: 'NAVIGATE', target: '/profile' },
     ],
     relatedSuggestions: [
       'orders_dispatch_timelines',
@@ -884,23 +895,40 @@ Healthy human facial skin maintains a slightly acidic surface pH between 5.2 and
   },
 
   // =========================================================================
-  // PILLAR 8: CUSTOMER SUPPORT
+  // PILLAR 8: VERIFIED HUMAN SPECIALIST ESCALATION
   // =========================================================================
   {
     id: 'human_callback_wizard',
     pillarId: 'human_escalation',
-    title: 'Contact Customer Support',
-    badge: 'Customer Care',
-    summary: 'Use Profile → Support to send account-specific questions directly to the customer-care team.',
+    title: 'Schedule a Verified Specialist Callback',
+    badge: 'Executive Support',
+    summary: 'Verified 3-step order support with a dedicated specialist reaching out via email or phone call within 12 hours.',
     keywords: [
       'human', 'agent', 'support agent', 'call me', 'callback', 'speak to human',
       'executive', 'talk to person', 'real person', 'customer care', 'phone support'
     ],
+    visualSteps: [
+      {
+        stepNumber: 1,
+        title: 'Validate Order ID & Contact',
+        description: 'Enter your 9-digit Order Number and registered email or phone to confirm ownership.',
+      },
+      {
+        stepNumber: 2,
+        title: 'Select Contact Preference',
+        description: 'Choose between an in-depth Email resolution or a Direct Phone Callback.',
+      },
+      {
+        stepNumber: 3,
+        title: 'Pick Convenient Time Slot',
+        description: 'Slots: Morning (10 AM–1 PM), Afternoon (1 PM–5 PM), or Evening (5 PM–8 PM IST).',
+      },
+    ],
     richContent: `
-Order details, delivery updates, pre-dispatch cancellations, refunds, and account-specific requests are handled by the customer-care team in Profile → Support.
+Our executive team operates Monday through Saturday, 9:30 AM to 7:00 PM IST, to assist with verified order queries, transit exceptions, and customized skincare consultations.
     `,
     directActions: [
-      { label: '👤 Open Customer Support', actionType: 'OPEN_ESCALATION' },
+      { label: '📞 Launch 3-Step Verification Wizard', actionType: 'OPEN_ESCALATION' },
     ],
     relatedSuggestions: [
       'orders_track_my_order',
