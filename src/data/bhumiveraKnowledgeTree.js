@@ -32,16 +32,16 @@ export const MASTER_PILLARS = [
     iconName: 'Truck',
     accentColor: '#2D8A5E',
     badge: 'Live Status & Dispatch',
-    description: 'Real-time AWB courier tracking (BlueDart/Delhivery/DTDC), dispatch cutoff, and timelines.',
+    description: 'Real-time AWB courier tracking, dispatch cutoff, and delivery timelines.',
   },
   {
     id: 'returns_cancellations',
-    title: 'Returns & Refunds',
-    shortTitle: 'Returns & RMA',
-    iconName: 'RotateCcw',
+    title: 'Non-Returnable Policy & Cancellation',
+    shortTitle: 'Cancellation & Policy',
+    iconName: 'ShieldAlert',
     accentColor: '#C25E5E',
-    badge: '7-Day Policy',
-    description: '7-day self-service returns, instant Bhumivera Wallet credits, and cancellation guidelines.',
+    badge: '100% Non-Returnable',
+    description: 'Strict non-returnable hygiene standard, pre-dispatch cancellation rules, and transit damage claims.',
   },
   {
     id: 'payments_wallet_gst',
@@ -72,12 +72,12 @@ export const MASTER_PILLARS = [
   },
   {
     id: 'human_escalation',
-    title: 'Specialist Escalation',
-    shortTitle: 'Human Support',
+    title: 'Customer Support',
+    shortTitle: 'Customer Care',
     iconName: 'PhoneCall',
     accentColor: '#8B5CF6',
-    badge: 'Verified Callback',
-    description: 'Anti-spam 3-step order verification for scheduled morning, afternoon, or evening callbacks.',
+    badge: 'Profile Support',
+    description: 'Contact the customer-care team through Profile → Support for account-specific assistance.',
   },
 ];
 
@@ -518,33 +518,23 @@ Your password must satisfy:
   },
 
   // =========================================================================
-  // PILLAR 3: ORDERS & LIVE TRACKING
+  // PILLAR 3: DELIVERY INFORMATION
   // =========================================================================
   {
     id: 'orders_track_my_order',
     pillarId: 'orders_tracking',
-    title: 'Track My Order in Real-Time',
-    badge: 'Real-Time Tracking',
-    summary: 'Enter your 9-digit or BHVM Order ID to inspect live courier transit status, dispatch notes, and delivery date.',
+    title: 'Order Delivery Information',
+    badge: 'Dispatch & Timelines',
+    summary: 'General delivery timelines and guidance. For an update on a specific order, contact Customer Support from Profile → Support.',
     keywords: [
-      'track', 'tracking', 'order status', 'where is my order', 'track order', 'delivery status',
-      'courier', 'awb', 'shipment', 'package', 'parcel', 'bhvm', 'dispatch status'
+      'delivery time', 'shipping time', 'when will it arrive', 'dispatch time', 'dispatch cutoff',
+      'courier', 'awb', 'shipment', 'package', 'parcel', 'dispatch status'
     ],
     visualSteps: [
       {
         stepNumber: 1,
-        title: 'Locate Your Order ID',
-        description: 'Find your 9-digit Order Number (e.g. BHVM815899599) in your SMS confirmation, email invoice, or Profile -> Orders tab.',
-      },
-      {
-        stepNumber: 2,
-        title: 'Open Live Order Tracker',
-        description: 'Visit the Bhumivera Live Order Tracking portal at /order-tracking.',
-      },
-      {
-        stepNumber: 3,
-        title: 'Inspect Transit Milestones',
-        description: 'View real-time hub scans, courier partner assignment (BlueDart, Delhivery, DTDC), and delivery estimate.',
+        title: 'Need an update on your order?',
+        description: 'Open Profile → Support and select the order so the customer-care team can securely review its latest status.',
       },
     ],
     richContent: `
@@ -552,8 +542,7 @@ Your password must satisfy:
 > Orders placed before **2:00 PM IST** are packed, weight-calibrated (±0.5g tolerance), and dispatched the exact same working day!
     `,
     directActions: [
-      { label: '🚚 Open Live Order Tracking', actionType: 'NAVIGATE', target: '/order-tracking' },
-      { label: '👤 View My Orders in Profile', actionType: 'NAVIGATE', target: '/profile' },
+      { label: '👤 Open Customer Support', actionType: 'OPEN_ESCALATION' },
     ],
     relatedSuggestions: [
       'orders_dispatch_timelines',
@@ -577,9 +566,6 @@ Your password must satisfy:
 - **North-East, J&K, Island Territories**: **5 to 7 Working Days**.
 - **Same-Day Dispatch Guarantee**: Orders confirmed before **2:00 PM IST** (Mon–Sat) leave our West Bengal fulfillment hub the same day.
     `,
-    directActions: [
-      { label: '🚚 Track Existing Order', actionType: 'NAVIGATE', target: '/order-tracking' },
-    ],
     relatedSuggestions: [
       'orders_track_my_order',
       'offers_free_shipping_info',
@@ -607,43 +593,49 @@ Every parcel is packed with biodegradable cushioning, verified on a digital scal
   },
 
   // =========================================================================
-  // PILLAR 4: RETURNS, REPLACEMENTS & REFUNDS
+  // PILLAR 4: NON-RETURNABLE POLICY & PRE-DISPATCH CANCELLATION
   // =========================================================================
   {
     id: 'returns_policy_and_rma',
     pillarId: 'returns_cancellations',
-    title: '7-Day Return & Replacement Policy',
-    badge: 'Hassle-Free Policy',
-    summary: 'Self-service returns and replacements are open for 7 days post-delivery for damaged, defective, or incorrect items.',
+    title: 'Strict Non-Returnable Policy (100% Non-Returnable Items)',
+    badge: '100% Non-Returnable',
+    summary: 'All Bhumivera formulations are intimate personal care cosmetics sealed with tamper-evident security. Items are strictly non-returnable once delivered.',
     keywords: [
       'return', 'returns', 'refund', 'replacement', 'exchange', 'rma', 'broken bottle',
-      'damaged product', 'leaked', 'wrong item', 'how to return'
+      'damaged product', 'leaked', 'wrong item', 'how to return', 'non-returnable', 'can i return'
     ],
     visualSteps: [
       {
         stepNumber: 1,
-        title: 'Check Eligibility Window',
-        description: 'Returns are accepted within 7 days of verified courier delivery for damaged, leaked, or wrong items.',
+        title: '100% Non-Returnable Standard',
+        description: 'Personal care cosmetics, cleansers, and elixirs cannot be returned once shipped or delivered to uphold absolute microbial safety and purity.',
       },
       {
         stepNumber: 2,
-        title: 'Capture Unboxing Photos',
-        description: 'Take clear photos of the shipping label, tamper seal, and the product issue.',
+        title: 'Pre-Dispatch Cancellation Window',
+        description: 'Orders can only be cancelled before they are packed and shipped from the warehouse. Once marked Packed or Shipped, orders cannot be cancelled.',
       },
       {
         stepNumber: 3,
-        title: 'Initiate Self-Service RMA',
-        description: 'Navigate to Profile -> Orders, select the order, and tap "Request Return / Replacement".',
+        title: 'Transit Damage or Wrong Item Claims',
+        description: 'If an item arrives damaged, leaking, or incorrect, share an uncut 360° unboxing video within 48 hours to support for a direct replacement or refund without return shipping.',
       },
     ],
     richContent: `
-### 💳 Refund Methods
-- **Bhumivera Wallet (Instant)**: Credited immediately upon RMA inspection; spendable with zero expiry across all products.
-- **Original Payment Gateway (UPI / Card)**: Credited within 5 to 7 banking days via Razorpay.
+### 🛡️ Strict Non-Returnable Policy
+All Bhumivera products are intimate personal care cosmetics (face washes, botanical cleansers, night elixirs, shampoos) compounded in small artisanal batches of 250 units and sealed with tamper-evident virgin security strips. In compliance with cosmetic hygiene standards and the Drugs & Cosmetics Act, **all sold items are 100% NON-RETURNABLE once shipped or delivered**.
+
+### 📦 Pre-Dispatch Cancellation Only
+You can cancel your order **only if it has not yet been packed and shipped** (while in Pending, Confirmed, or Processing status). Once marked Packed or Shipped, fulfillment is locked with the carrier and cannot be cancelled or recalled.
+
+### 🎥 Damaged in Transit Claims (Zero Return Shipping)
+If a parcel arrives damaged, leaking through a broken seal, or with missing items:
+- Submit an uncut continuous 360° unboxing video within **48 hours of delivery**.
+- Our concierge team coordinates **direct replacement or refund** without requiring return shipping.
     `,
     directActions: [
-      { label: '📦 Go to My Orders to Start RMA', actionType: 'NAVIGATE', target: '/profile' },
-      { label: '📞 Request Specialist Verification', actionType: 'VIEW_NODE', target: 'human_callback_wizard' },
+      { label: '👤 Open Customer Support', actionType: 'OPEN_ESCALATION' },
     ],
     relatedSuggestions: [
       'returns_cancellation_safeguard',
@@ -653,23 +645,22 @@ Every parcel is packed with biodegradable cushioning, verified on a digital scal
   {
     id: 'returns_cancellation_safeguard',
     pillarId: 'returns_cancellations',
-    title: 'Order Cancellation Policy (SuperAdmin Exclusive)',
-    badge: 'Order Integrity Safeguard',
-    summary: 'Why customers cannot self-cancel confirmed orders and how our executive team handles address/item corrections.',
+    title: 'Pre-Dispatch Order Cancellation Rules',
+    badge: 'Pre-Dispatch Only',
+    summary: 'Orders can only be cancelled before they are packed and shipped. Once packed or shipped, fulfillment is locked and cancellation is unavailable.',
     keywords: [
       'cancel order', 'cancellation', 'stop order', 'cancel', 'modify order',
-      'change address', 'cancel item'
+      'change address', 'cancel item', 'can i cancel'
     ],
     richContent: `
-### 🔒 High-Integrity Fulfillment Architecture
-Once an order is placed, our warehouse immediately reserves fresh artisanal batch bottles and begins automated packaging. 
-
-- **Customer Self-Cancellation Disabled**: To prevent inventory drift and fraudulent disputes, orders cannot be self-cancelled directly by bot or non-admin users.
-- **Need an Address Change or Urgent Correction?**: Connect with our SuperAdmin Support team within 60 minutes of placement using our verified escalation wizard below!
+### 🔒 Pre-Dispatch Order Cancellation Rules
+- **Eligible for Cancellation**: Orders in **Pending**, **Confirmed**, or **Processing** status (before warehouse packaging begins) can be cancelled.
+- **Locked from Cancellation**: Once an order status is updated to **Packed**, **Shipped**, or **Out for Delivery**, automated courier logistics and AWB manifest locks prevent cancellation.
+- **After Delivery**: Because all items are intimate personal care cosmetics, products are **100% non-returnable** after delivery.
     `,
     directActions: [
-      { label: '📞 Request Urgent Cancellation Review', actionType: 'VIEW_NODE', target: 'human_callback_wizard' },
-      { label: '🚚 Check Order Dispatch Status', actionType: 'NAVIGATE', target: '/order-tracking' },
+      { label: '👤 Open Customer Support', actionType: 'OPEN_ESCALATION' },
+      { label: '🚚 Live Order Tracking', actionType: 'NAVIGATE', target: '/order-tracking' },
     ],
     relatedSuggestions: [
       'returns_policy_and_rma',
@@ -893,40 +884,23 @@ Healthy human facial skin maintains a slightly acidic surface pH between 5.2 and
   },
 
   // =========================================================================
-  // PILLAR 8: VERIFIED HUMAN SPECIALIST ESCALATION
+  // PILLAR 8: CUSTOMER SUPPORT
   // =========================================================================
   {
     id: 'human_callback_wizard',
     pillarId: 'human_escalation',
-    title: 'Schedule a Verified Specialist Callback',
-    badge: 'Executive Support',
-    summary: 'Verified 3-step order support with a dedicated specialist reaching out via email or phone call within 12 hours.',
+    title: 'Contact Customer Support',
+    badge: 'Customer Care',
+    summary: 'Use Profile → Support to send account-specific questions directly to the customer-care team.',
     keywords: [
       'human', 'agent', 'support agent', 'call me', 'callback', 'speak to human',
       'executive', 'talk to person', 'real person', 'customer care', 'phone support'
     ],
-    visualSteps: [
-      {
-        stepNumber: 1,
-        title: 'Validate Order ID & Contact',
-        description: 'Enter your 9-digit Order Number and registered email or phone to confirm ownership.',
-      },
-      {
-        stepNumber: 2,
-        title: 'Select Contact Preference',
-        description: 'Choose between an in-depth Email resolution or a Direct Phone Callback.',
-      },
-      {
-        stepNumber: 3,
-        title: 'Pick Convenient Time Slot',
-        description: 'Slots: Morning (10 AM–1 PM), Afternoon (1 PM–5 PM), or Evening (5 PM–8 PM IST).',
-      },
-    ],
     richContent: `
-Our executive team operates Monday through Saturday, 9:30 AM to 7:00 PM IST, to assist with verified order queries, transit exceptions, and customized skincare consultations.
+Order details, delivery updates, pre-dispatch cancellations, refunds, and account-specific requests are handled by the customer-care team in Profile → Support.
     `,
     directActions: [
-      { label: '📞 Launch 3-Step Verification Wizard', actionType: 'OPEN_ESCALATION' },
+      { label: '👤 Open Customer Support', actionType: 'OPEN_ESCALATION' },
     ],
     relatedSuggestions: [
       'orders_track_my_order',

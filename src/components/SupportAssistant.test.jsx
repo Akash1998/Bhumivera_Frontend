@@ -63,7 +63,7 @@ describe('SupportAssistant — 100% Deterministic Knowledge Tree & Instant Finde
     expect(screen.getByText(/Shop & Routine Concierge/i)).toBeTruthy();
     expect(screen.getByText(/Account & Security/i)).toBeTruthy();
     expect(screen.getByText(/Orders & Live Tracking/i)).toBeTruthy();
-    expect(screen.getByText(/Returns & Refunds/i)).toBeTruthy();
+    expect(screen.getByText(/Non-Returnable Policy & Cancellation/i)).toBeTruthy();
     expect(screen.getByText(/Payments, Wallet & GST/i)).toBeTruthy();
     expect(screen.getByText(/Botanical Science & Lab/i)).toBeTruthy();
     expect(screen.getByText(/Offers & Ambassador/i)).toBeTruthy();

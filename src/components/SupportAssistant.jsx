@@ -8,7 +8,6 @@ import {
   Send,
   Sparkles,
   Package,
-  Truck,
   RotateCcw,
   ShieldAlert,
   Volume2,
@@ -16,18 +15,13 @@ import {
   Sun,
   Moon,
   Paperclip,
-  CheckCircle2,
   Clock,
-  PhoneCall,
   RefreshCw,
-  Copy,
-  Check,
   ChevronRight,
   Image as ImageIcon,
   Star,
   Mail,
   ShieldCheck,
-  Award,
   Search,
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -42,7 +36,6 @@ import {
 } from '../utils/aiCopilotBus';
 import { resolveClientSideConciergeFallback } from '../utils/bhumiveraAiConciergeFallback';
 import { matchAiIntentWithFuzzy } from '../utils/aiIntentMatcher';
-import { isOrderCancellationRequest } from '../utils/orderSupportIntent';
 
 const STORAGE_KEY = 'bhumivera_client_concierge_state_v3';
 const SESSION_TOKEN_KEY = 'bhumivera_client_concierge_token_v3';
@@ -52,21 +45,6 @@ const RITUAL_PROGRESS_STORAGE_KEY = 'bhumivera_concierge_ritual_progress_v3';
 const DIAGNOSTIC_STATE_STORAGE_KEY = 'bhumivera_concierge_skin_diagnostic_v3';
 const SAVED_INGREDIENTS_STORAGE_KEY = 'bhumivera_concierge_saved_ingredients_v3';
 const LINGER_THRESHOLD_MS = 45000;
-const SUPPORT_ENTRY_CHOICES = [
-  {
-    id: 'order',
-    label: 'Order-related issue',
-    description: 'Delivery, payment, bottle verification, or an existing order',
-    prompt: 'I need help with an order.',
-  },
-  {
-    id: 'general',
-    label: 'General question',
-    description: 'Products, ingredients, or store policies',
-    prompt: 'I have a general question about Bhumivera products, ingredients, or policies.',
-  },
-];
-
 /**
  * Hero Ingredient Stories directly inspired by the Bhumivera Botanical Showcase:
  * "Nature has more than one note. Meet the botanicals that inspire us—and the
@@ -334,12 +312,6 @@ export const HERO_INGREDIENT_STORIES = [
 
 export const PUBLIC_GENERAL_CHIPS = [
   {
-    id: 'track_order',
-    label: 'Where is my order?',
-    prompt: 'Where is my order?',
-    category: 'order_tracking',
-  },
-  {
     id: 'know_sb_fw',
     label: 'Sea Buckthorn Face Wash',
     prompt: 'Tell me about Sea Buckthorn Face Wash and its key ingredients',
@@ -405,129 +377,51 @@ export const PUBLIC_GENERAL_CHIPS = [
     prompt: '__OPEN_SKIN_DIAGNOSTIC__',
     category: 'skin_compatibility',
   },
-  {
-    id: 'verify_order',
-    label: 'Order Support & Verification',
-    prompt: '__OPEN_VERIFICATION_FLOW__',
-    category: 'verification',
-  },
 ];
 
-export const VERIFIED_BUYER_CHIPS = [
-  { id: 'track_order', label: 'Track My Order', prompt: 'Where is my latest order?' },
-  {
-    id: 'verify_genuinity',
-    label: 'Verify Bottle Serial & Genuinity',
-    prompt: 'How do I test my bottle serial for genuinity and laboratory pH calibration?',
-  },
-  {
-    id: 'layering_guide_v',
-    label: 'Post-Wash Layering Guide',
-    prompt: 'What skincare products should I apply right after using Sea Buckthorn Face Wash?',
-  },
-  {
-    id: 'order_assistance',
-    label: 'Specialist Escalation',
-    prompt: '__OPEN_VERIFICATION_FLOW__',
-  },
-  {
-    id: 'wallet_loyalty',
-    label: 'Privilege Tier & Rewards',
-    prompt: 'What is my current wallet balance and loyalty points?',
-  },
-  {
-    id: 'all_catalog_ingredients_verified',
-    label: 'Botanical Library',
-    prompt: '__OPEN_INGREDIENT_ENCYCLOPEDIA__',
-    category: 'ingredient_deep_dive',
-  },
-  {
-    id: 'ritual_timer_verified',
-    label: 'Facial Ritual Guide (4 Phases)',
-    prompt: '__OPEN_RITUAL_PLAYER__',
-    category: 'usage_and_timing',
-  },
-];
+const ACCOUNT_ORDER_REQUEST_PATTERN =
+  /\b(?:my|latest|recent|this|that)\s+(?:order|orders|shipment|delivery|package|parcel|refund|return)\b|\b(?:where\s+is|track|tracking|cancel|refund|return|replacement|invoice)\b.{0,40}\border\b|\b(?:live\s+tracking|tracking\s+status|delivery\s+status|order\s+tracking|track\s+(?:my|this|the)?\s*(?:order|shipment|package|parcel))\b|\b(?:initiate|start|request|process|submit)\s+(?:a\s+)?(?:return|replacement|refund)\b|\b(?:want|need|request)\s+(?:a\s+)?(?:refund|return|replacement)\b|\b(?:how\s+(?:can|do)\s+i|would\s+like\s+to|want\s+to|need\s+to)\s+(?:return|replace|exchange|refund)\b|\b(?:want|need|would like|request)\s+to\s+cancel\b|\bcancel\s+(?:my|this|the)\b|\breturn\s+(?:my|this|the)\s+(?:item|product|purchase|package)\b|\b(?:my|your)\s+(?:gst\s+)?(?:tax\s+)?(?:invoice|receipt|order\s+history|purchase\s+history)\b|\bwhat\s+(?:did|have)\s+i\s+order(?:ed)?\b|\b(?:help|issue|problem|update|assistance)\b.{0,40}\b(?:order|delivery|shipment|package|parcel|payment|refund|return)\b|\border\s*#\s*(?:BHVM[-_\s]*)?[\w-]+/i;
+const CUSTOMER_SUPPORT_REQUEST_PATTERN =
+  /\b(?:customer support|support team|customer care|support agent|specialist support|live agent|real person|talk to (?:an?\s+)?(?:agent|human|person)|connect me (?:to|with)|need\s+(?:some\s+)?support)\b/i;
+const ACCOUNT_ORDER_RESPONSE_PATTERN =
+  /\border\s*#\s*(?:BHVM[-_\s]*)?[\w-]+|\btracking\s+(?:number|link)|\b(?:order|shipment)\s+(?:status|details|total)\b|\b(?:cancellation|refund)\s+(?:request|status)\b/i;
+const ACCOUNT_ORDER_ACTION_PATTERN =
+  /\b(?:where\s+is|track|tracking|cancel|refund|replacement|invoice)\b.{0,40}\b(?:my|latest|recent|this|that)?\s*orders?\b|\b(?:my|latest|recent)\s+(?:orders?|shipments?|deliveries?|refunds?)\b|\b(?:order|live)\s+tracking\b|\border\s+tracker\b|\b(?:verify\s+order|order-related issue|support agent|specialist support)\b/i;
 
-export const CALLBACK_SLOTS = [
-  'Morning (10 AM–1 PM)',
-  'Afternoon (1 PM–5 PM)',
-  'Evening (5 PM–8 PM)',
-];
+function filterWebsiteBotQuickActions(actions = []) {
+  return (Array.isArray(actions) ? actions : []).filter(action => {
+    const value = `${action?.label || ''} ${action?.prompt || ''}`;
+    return !ACCOUNT_ORDER_ACTION_PATTERN.test(value);
+  });
+}
 
-export const EXTENDED_CALLBACK_SLOTS = [
-  {
-    id: 'slot_morning_early',
-    label: 'Morning (10 AM–1 PM)',
-    window: '10:00 AM – 01:00 PM IST',
-    specialistTeam: 'Senior Botanical & Order Operations Desk',
-    avgWaitMinutes: 25,
-  },
-  {
-    id: 'slot_afternoon_mid',
-    label: 'Afternoon (1 PM–5 PM)',
-    window: '01:00 PM – 05:00 PM IST',
-    specialistTeam: 'Logistics, Dispatch & Formulation Desk',
-    avgWaitMinutes: 35,
-  },
-  {
-    id: 'slot_evening_prime',
-    label: 'Evening (5 PM–8 PM)',
-    window: '05:00 PM – 08:00 PM IST',
-    specialistTeam: 'Executive Client Concierge Desk',
-    avgWaitMinutes: 20,
-  },
-];
+function isWebsiteBotAccountSupportMessage(value = '') {
+  const text = String(value || '');
+  if (/\b(?:what\s+is\s+(?:your|the)\s+return\s+policy|how\s+do\s+returns?\s+work)\b/i.test(text)) {
+    return false;
+  }
+  const fuzzyPersonalOrderRequest =
+    /\b(?:my|latest|recent|this|that)\s+(?:orders?|ordr|shipments?|deliveries?|packages?|parcels?)\b|\bwhere\s+is\s+my\b|\b(?:BHVM|order\s*#)/i.test(text) &&
+    matchAiIntentWithFuzzy(text)?.intent === 'ORDER_TRACKING';
+  const reportedProductIssue =
+    /\b(?:my|i\s+(?:received|got)|it\s+(?:arrived|came|was\s+delivered))\b.{0,60}\b(?:damaged|leaking|broken|wrong|defective)\b|\b(?:damaged|leaking|broken|wrong|defective)\s+(?:item|product|order|bottle|parcel)\b/i.test(text);
+  return ACCOUNT_ORDER_REQUEST_PATTERN.test(text) ||
+    CUSTOMER_SUPPORT_REQUEST_PATTERN.test(text) ||
+    fuzzyPersonalOrderRequest ||
+    reportedProductIssue;
+}
 
-export const ORDER_STEPS = ['Placed', 'Confirmed', 'Packed', 'Shipped', 'Delivered'];
-
-export const DETAILED_ORDER_LIFECYCLE_STEPS = [
-  {
-    stepIndex: 0,
-    code: 'PLACED',
-    label: 'Placed',
-    title: 'Order Authenticated & Reserved',
-    description:
-      'Your order has been cryptographically logged and fresh small-batch botanical units have been reserved in our climate-controlled vault.',
-    typicalDuration: 'Instant (0–15 mins)',
-  },
-  {
-    stepIndex: 1,
-    code: 'CONFIRMED',
-    label: 'Confirmed',
-    title: 'Batch Quality & Seal Verification',
-    description:
-      'Our apothecary quality assurance specialist verifies batch manufacturing date, pH stability certificate, and tamper-evident gold seal integrity.',
-    typicalDuration: '2–6 hours',
-  },
-  {
-    stepIndex: 2,
-    code: 'PACKED',
-    label: 'Packed',
-    title: 'Protective Bubble-Wrap Packaging',
-    description:
-      'Hand-wrapped in FSC-certified botanical kraft sleeves with thermal shock protection and your personalized ritual guide card.',
-    typicalDuration: '6–18 hours',
-  },
-  {
-    stepIndex: 3,
-    code: 'SHIPPED',
-    label: 'Shipped',
-    title: 'Dispatched via Priority Surface/Air Courier',
-    description:
-      'Handed over to our express logistics partner with live AWB telemetry and SMS/Email milestone alerts.',
-    typicalDuration: '2–5 business days',
-  },
-  {
-    stepIndex: 4,
-    code: 'DELIVERED',
-    label: 'Delivered',
-    title: 'Delivered · Sealed Virgin Personal Care',
-    description:
-      'Package safely delivered. Sealed under our strict personal care hygiene standard for virgin botanical purity.',
-    typicalDuration: 'Completed',
-  },
-];
+function filterWebsiteBotMessages(messages = []) {
+  let skippingOrderTurn = false;
+  return (Array.isArray(messages) ? messages : []).filter(message => {
+    const content = String(message?.content || '');
+    const isUserMessage = message?.sender === 'user';
+    if (isUserMessage) skippingOrderTurn = isWebsiteBotAccountSupportMessage(content);
+    if (skippingOrderTurn) return false;
+    if (message?.escalation?.escalated || message?.orderCards?.length || ACCOUNT_ORDER_RESPONSE_PATTERN.test(content)) return false;
+    return true;
+  });
+}
 
 export const STATUS_META = {
   active: {
@@ -2321,91 +2215,6 @@ export const SKIN_DIAGNOSTIC_STEPS = [
   },
 ];
 
-export const VERIFICATION_WIZARD_STEP_DEFINITIONS = [
-  {
-    step: 1,
-    code: 'STEP_1_VERIFY_ORDER',
-    title: 'Step 1 of 7 · Order ID & Registered Contact Authentication',
-    shortTitle: '1. Verify Order',
-    description: 'Validate your Order ID (e.g., BHVM...) and registered Email or 10-digit Phone against our encrypted order ledger.',
-  },
-  {
-    step: 2,
-    code: 'STEP_2_SELECT_CATEGORY',
-    title: 'Step 2 of 7 · Inquiry Category & Line-Item Selection',
-    shortTitle: '2. Issue Scope',
-    description: 'Select the specific order intervention needed (Delivery Expedite, Address/Phone Edit, Damaged/Leakage, Batch Verification, or Ritual Consultation).',
-  },
-  {
-    step: 3,
-    code: 'STEP_3_CONDITION_CHECKLIST',
-    title: 'Step 3 of 7 · Packaging, Seal & Batch Inspection Checklist',
-    shortTitle: '3. Inspection',
-    description: 'Confirm outer tamper seal status, bottle pump condition, and optional photo evidence for priority processing.',
-  },
-  {
-    step: 4,
-    code: 'STEP_4_REMEDY_PREFERENCE',
-    title: 'Step 4 of 7 · Preferred Resolution Remedy',
-    shortTitle: '4. Resolution',
-    description: 'Choose your preferred concierge resolution: Direct Concierge Review, Instant Wallet Credit (+10% Bonus), Source Refund, or Live Modification.',
-  },
-  {
-    step: 5,
-    code: 'STEP_5_OUTREACH_CHANNEL',
-    title: 'Step 5 of 7 · Follow-up Contact Preference',
-    shortTitle: '5. Contact Slot',
-    description: 'Choose whether you prefer an email or phone follow-up. Replies are not live and may take some time.',
-  },
-  {
-    step: 6,
-    code: 'STEP_6_REVIEW_DOSSIER',
-    title: 'Step 6 of 7 · Review Your Verified Follow-up Request',
-    shortTitle: '6. Review & Confirm',
-    description: 'Verify your complete ticket summary before dispatching to our Senior Client Concierge Desk.',
-  },
-  {
-    step: 7,
-    code: 'STEP_7_CONFIRMED_SLA',
-    title: 'Step 7 of 7 · Follow-up Request Recorded',
-    shortTitle: '7. Confirmed',
-    description: 'Your verified request is saved for later review. Replies are not live and may take some time.',
-  },
-];
-
-export const RETURN_INSPECTION_STEP_DEFINITIONS = [
-  {
-    step: 1,
-    title: 'Step 1 of 6 · 100% Sealed Virgin Custody Standard',
-    detail: 'Personal care cosmetics (face washes, soaps, shampoos) are bottled with virgin tamper-evident security in micro-batches of 250 units to guarantee absolute purity.',
-  },
-  {
-    step: 2,
-    title: 'Step 2 of 6 · Outer Carton & Serial Verification',
-    detail: 'Locate the laser-etched serial number or QR code on your Bhumivera bottle or outer carton to verify against our laboratory master registry.',
-  },
-  {
-    step: 3,
-    title: 'Step 3 of 6 · Unboxing Documentation (Continuous 360°)',
-    detail: 'Use the Paperclip button in the Concierge composer to attach continuous unboxing footage showing the intact courier AWB label and parcel condition.',
-  },
-  {
-    step: 4,
-    title: 'Step 4 of 6 · Multi-Order Loyal Patron Review',
-    detail: 'For patrons who have placed multiple orders, complaints are reviewed directly with priority by our Executive Concierge Desk.',
-  },
-  {
-    step: 5,
-    title: 'Step 5 of 6 · Untouched Sterile Freshness',
-    detail: 'Every bottle is sealed at cleanroom standards. Verified patrons receive direct resolution with uncompromised virgin freshness and zero shipping hassle.',
-  },
-  {
-    step: 6,
-    title: 'Step 6 of 6 · Direct Verification & Refund Review',
-    detail: 'Upon concierge verification of verified patron complaint, direct resolution is processed directly to your original payment source or wallet.',
-  },
-];
-
 export const AMBASSADOR_ONBOARDING_STEPS = [
   {
     step: 1,
@@ -2553,6 +2362,12 @@ export function resolveEnhancedBotanicalConcierge(rawQuery = '') {
   try {
     const fuzzyIntent = matchAiIntentWithFuzzy(rawQuery);
     if (fuzzyIntent) {
+      if (fuzzyIntent.intent === 'ORDER_TRACKING' && isWebsiteBotAccountSupportMessage(rawQuery)) {
+        return {
+          reply: 'For an update on a specific order, please use Profile → Support so the customer-care team can securely review it.',
+          quickActions: [{ label: 'Open Customer Support', prompt: '__OPEN_SUPPORT_CENTER__' }],
+        };
+      }
       return fuzzyIntent;
     }
   } catch (err) {
@@ -2735,8 +2550,8 @@ export function resolveEnhancedBotanicalConcierge(rawQuery = '') {
   return {
     reply: [
       '**Welcome to the Bhumivera Client Concierge.**',
-      'I can guide you through our **authentic botanical catalog** (featuring *Sea Buckthorn Face Wash*, *Charcoal Face Wash*, *Kumkumadi Night Elixir*, and *Botanical Shampoo*), our **4-Phase Facial Cleansing Ritual**, our **Personalized Skin Quiz**, or real-time **Order Tracking & Account Details**.',
-      'Select any option below or enter your question or Order ID.',
+      'I can guide you through our **botanical catalog**, ingredients and formulations, **4-Phase Facial Cleansing Ritual**, **Personalized Skin Quiz**, rewards, policies, and website features.',
+      'Select any option below or ask a question about Bhumivera.',
     ].join('\n\n'),
     quickActions: PUBLIC_GENERAL_CHIPS,
   };
@@ -2846,184 +2661,6 @@ function FormattedMarkdown({ content, isDark, onNavigate }) {
     </div>
   );
 }
-
-function ChatOrderCard({ order, isDark, onQuickPrompt, onRequestOrderIntervention }) {
-  const [copied, setCopied] = useState(false);
-  const [showLifecycleDetails, setShowLifecycleDetails] = useState(false);
-  const status = String(order.status || 'pending').toLowerCase();
-  const isTerminal = ['cancelled', 'returned'].includes(status);
-  const stepIndex = Math.max(0, Math.min(4, Number(order.currentStep ?? 0)));
-
-  const copyTracking = () => {
-    if (!order.trackingNumber || !navigator.clipboard) return;
-    navigator.clipboard.writeText(order.trackingNumber).then(() => {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1800);
-    }).catch(() => {});
-  };
-
-  return (
-    <div
-      className={`mt-2.5 rounded-2xl border p-3.5 text-xs transition-all ${
-        isDark
-          ? 'bg-[#071510]/90 border-white/15 text-stone-100'
-          : 'bg-white border-[#0B2419]/15 text-[#0B2419] shadow-sm'
-      }`}
-    >
-      <div className="flex items-center justify-between gap-2 pb-2.5 border-b border-current/10">
-        <div>
-          <span className="text-[10px] uppercase tracking-wider opacity-60 block">Order Reference</span>
-          <span className="font-mono font-bold text-sm">#{order.orderNumber || order.id}</span>
-        </div>
-        <div className="text-right">
-          <span
-            className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-              isTerminal
-                ? 'bg-rose-500/15 text-rose-500 border border-rose-500/30'
-                : status === 'delivered'
-                ? 'bg-emerald-500/15 text-emerald-500 border border-emerald-500/30'
-                : 'bg-[#D4AF37]/20 text-[#b38f22] dark:text-[#D4AF37] border border-[#D4AF37]/40'
-            }`}
-          >
-            {status}
-          </span>
-          <span className="block font-bold text-xs mt-0.5">₹{Number(order.total || 0).toLocaleString('en-IN')}</span>
-        </div>
-      </div>
-
-      {!isTerminal && (
-        <div className="py-3">
-          <div className="grid grid-cols-5 gap-1 text-[9px] font-medium text-center">
-            {ORDER_STEPS.map((label, idx) => {
-              const active = idx <= stepIndex;
-              return (
-                <div key={label} className="flex flex-col items-center gap-1">
-                  <div
-                    className={`h-1.5 w-full rounded-full transition-all ${
-                      active ? 'bg-[#D4AF37]' : isDark ? 'bg-white/10' : 'bg-stone-200'
-                    }`}
-                  />
-                  <span className={active ? 'opacity-100 font-semibold' : 'opacity-45'}>{label}</span>
-                </div>
-              );
-            })}
-          </div>
-          <div className="mt-2 flex items-center justify-between text-[10px] opacity-75">
-            <span>{DETAILED_ORDER_LIFECYCLE_STEPS[stepIndex]?.title || 'Order in Progress'}</span>
-            <button
-              type="button"
-              onClick={() => setShowLifecycleDetails(prev => !prev)}
-              className="text-[#D4AF37] underline font-semibold"
-            >
-              {showLifecycleDetails ? 'Hide 5-Step Log' : 'View 5-Step Log'}
-            </button>
-          </div>
-          {showLifecycleDetails && (
-            <div className="mt-2 space-y-1.5 rounded-xl bg-current/5 p-2.5 text-[10px]">
-              {DETAILED_ORDER_LIFECYCLE_STEPS.map(stepObj => {
-                const done = stepObj.stepIndex <= stepIndex;
-                return (
-                  <div key={stepObj.code} className={`flex items-start gap-2 ${done ? 'opacity-100' : 'opacity-45'}`}>
-                    <CheckCircle2 className={`w-3.5 h-3.5 shrink-0 mt-0.5 ${done ? 'text-[#D4AF37]' : 'opacity-40'}`} />
-                    <div>
-                      <div className="font-semibold">
-                        Step {stepObj.stepIndex + 1}: {stepObj.title} ({stepObj.typicalDuration})
-                      </div>
-                      <div className="opacity-80">{stepObj.description}</div>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-      )}
-
-      <div className="space-y-1 text-[11px] opacity-85 pt-1">
-        {order.deliveryEstimate && (
-          <div className="flex items-center gap-1.5">
-            <Clock className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
-            <span>{order.deliveryEstimate}</span>
-          </div>
-        )}
-        {order.trackingNumber && (
-          <div className="flex items-center justify-between gap-2 rounded-lg bg-current/5 px-2 py-1">
-            <span className="flex items-center gap-1.5 truncate">
-              <Truck className="w-3.5 h-3.5 text-[#D4AF37] shrink-0" />
-              <span className="font-mono truncate">
-                {order.courier ? `${order.courier}: ` : ''}{order.trackingNumber}
-              </span>
-            </span>
-            <button
-              type="button"
-              onClick={copyTracking}
-              className="p-1 rounded hover:bg-current/10 shrink-0"
-              title="Copy tracking number"
-            >
-              {copied ? <Check className="w-3 h-3 text-emerald-500" /> : <Copy className="w-3 h-3" />}
-            </button>
-          </div>
-        )}
-      </div>
-
-      {Array.isArray(order.items) && order.items.length > 0 && (
-        <div className="mt-2.5 pt-2 border-t border-current/10 space-y-1.5">
-          {order.items.map((item, idx) => (
-            <div key={item.id || idx} className="flex items-center justify-between gap-2 text-[11px]">
-              <span className="truncate font-medium">
-                {item.quantity || 1}× {item.name}
-              </span>
-              <span className="shrink-0 opacity-75">₹{Number(item.price || 0).toLocaleString('en-IN')}</span>
-            </div>
-          ))}
-        </div>
-      )}
-
-      <div className="mt-2.5 border-t border-current/10 pt-2 space-y-1 text-[10px] opacity-80">
-        <p>Payment: {order.paymentMode || '—'} · {order.paymentStatus || 'pending'}</p>
-        <p>
-          Subtotal ₹{Number(order.subtotal || 0).toLocaleString('en-IN')}
-          {' · '}Discount ₹{Number(order.discount || 0).toLocaleString('en-IN')}
-          {' · '}Shipping ₹{Number(order.shippingCost || 0).toLocaleString('en-IN')}
-        </p>
-        {order.couponCode && <p>Coupon: {order.couponCode}</p>}
-        {Number(order.loyaltyPointsRedeemed) > 0 && <p>Loyalty points redeemed: {Number(order.loyaltyPointsRedeemed).toLocaleString('en-IN')}</p>}
-        {Number(order.loyaltyPointsAwarded) > 0 && <p>Loyalty points earned: {Number(order.loyaltyPointsAwarded).toLocaleString('en-IN')}</p>}
-        {order.deliveryCity && <p>Delivery area: {order.deliveryCity}{order.deliveryPincode ? ` · ${order.deliveryPincode}` : ''}</p>}
-        {order.trackingUrl && <a className="inline-block text-[#D4AF37] underline" href={order.trackingUrl} target="_blank" rel="noreferrer">Open live tracking</a>}
-      </div>
-
-      <div className="mt-3 pt-2 border-t border-current/10 flex flex-wrap gap-1.5">
-        {!isTerminal && status !== 'delivered' && (
-          <button
-            type="button"
-            onClick={() => onRequestOrderIntervention?.(order.orderNumber || order.id)}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-[#D4AF37]/15 text-[#8a6a12] dark:text-[#D4AF37] hover:bg-[#D4AF37]/25 transition-colors"
-          >
-            <PhoneCall className="w-3 h-3" /> Request Specialist Assistance
-          </button>
-        )}
-        <button
-          type="button"
-          onClick={() => onQuickPrompt(`I want to verify the bottle serial and lab assay for order #${order.orderNumber}`)}
-          className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-[#D4AF37]/15 text-[#8a6a12] dark:text-[#D4AF37] hover:bg-[#D4AF37]/25 transition-colors"
-        >
-          <Award className="w-3 h-3" /> Verify Bottle Serial
-        </button>
-        {order.activeReturn && (
-          <button
-            type="button"
-            onClick={() => onQuickPrompt(`Check refund status for ${order.activeReturn.rmaNumber || `order #${order.orderNumber}`}`)}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-semibold bg-sky-500/15 text-sky-700 dark:text-sky-300"
-          >
-            <RefreshCw className="w-3 h-3" /> Status: {order.activeReturn.rmaNumber}
-          </button>
-        )}
-      </div>
-    </div>
-  );
-}
-
 
 const INGREDIENT_PATHWAY_GROUPS = [
   { id: 'ALL', label: 'All Catalog Actives (16)', icon: '✦' },
@@ -4307,12 +3944,10 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     () => localStorage.getItem(SESSION_TOKEN_KEY) || sessionStorage.getItem(SESSION_TOKEN_KEY) || null
   );
   const [chatStatus, setChatStatus] = useState(persisted.chatStatus || 'active');
-  const [assignedAgentName, setAssignedAgentName] = useState(persisted.assignedAgentName || null);
-  const [messages, setMessages] = useState(() => (Array.isArray(persisted.messages) ? persisted.messages : []));
-  const [hasPlacedOrder, setHasPlacedOrder] = useState(Boolean(persisted.hasPlacedOrder));
+  const [messages, setMessages] = useState(() => filterWebsiteBotMessages(persisted.messages));
   const [quickActions, setQuickActions] = useState(() =>
-    Array.isArray(persisted.quickActions) && persisted.quickActions.length
-      ? persisted.quickActions
+    filterWebsiteBotQuickActions(persisted.quickActions).length
+      ? filterWebsiteBotQuickActions(persisted.quickActions)
       : PUBLIC_GENERAL_CHIPS
   );
   const [input, setInput] = useState('');
@@ -4339,28 +3974,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   const [ritualDrawerOpen, setRitualDrawerOpen] = useState(false);
   const [diagnosticDrawerOpen, setDiagnosticDrawerOpen] = useState(false);
 
-  // Multi-Step Legitimate Customer Verification & Specialist Escalation Flow State
-  // Supports both direct 3-Step Express Verification AND Detailed 7-Step Granular Inspection
-  const [escalationWizard, setEscalationWizard] = useState({
-    open: false,
-    step: 1, // 1 = Verify Order ID + Email/Phone, 2 = Contact Preference & Granular Checklist, 3 = Confirmed
-    detailedSubStep: 1, // 1..7 granular checklist view inside the verification flow
-    orderId: '',
-    emailOrPhone: '',
-    verifiedOrder: null,
-    issueCategory: 'order_modification_or_delivery',
-    sealCondition: 'intact_verified',
-    remedyPreference: 'specialist_callback_or_resolution',
-    contactPreference: 'email', // 'email' | 'phone_call'
-    callbackPhone: '',
-    callbackTimeSlot: CALLBACK_SLOTS[0],
-    queryDetails: '',
-    cancellationConfirmed: false,
-    busy: false,
-    error: '',
-    ticketReference: '',
-  });
-
   const messagesEndRef = useRef(null);
   const fileInputRef = useRef(null);
   const sessionInitializedRef = useRef(false);
@@ -4373,9 +3986,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         isDark,
         soundEnabled,
         chatStatus,
-        assignedAgentName,
-        hasPlacedOrder,
-        messages: messages.slice(-50),
+        messages: filterWebsiteBotMessages(messages).slice(-50),
         quickActions,
         conciergeFlow,
         supportCategory,
@@ -4387,13 +3998,13 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         sessionStorage.setItem(SESSION_TOKEN_KEY, sessionToken);
       }
     } catch {}
-  }, [isOpen, isDark, soundEnabled, chatStatus, assignedAgentName, hasPlacedOrder, messages, quickActions, conciergeFlow, supportCategory, sessionToken]);
+  }, [isOpen, isDark, soundEnabled, chatStatus, messages, quickActions, conciergeFlow, supportCategory, sessionToken]);
 
   useEffect(() => {
     if (isOpen && messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth', block: 'end' });
     }
-  }, [messages, isTyping, isOpen, escalationWizard.open, ingredientDrawerOpen, ritualDrawerOpen, diagnosticDrawerOpen]);
+  }, [messages, isTyping, isOpen, ingredientDrawerOpen, ritualDrawerOpen, diagnosticDrawerOpen]);
 
   useEffect(() => {
     if (!isOpen) return undefined;
@@ -4430,18 +4041,12 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       if (data.session?.status) {
         setChatStatus(data.session.status);
       }
-      setAssignedAgentName(data.session?.assignedAgentName || null);
-      const buyerVerified = Boolean(data.hasPlacedOrder);
-      setHasPlacedOrder(buyerVerified);
       if (data.telegramBotUrl) setTelegramBotUrl(normalizeTelegramBotUrl(data.telegramBotUrl));
       if (Array.isArray(data.messages) && data.messages.length > 0 && messages.length === 0) {
-        setMessages(data.messages);
+        setMessages(filterWebsiteBotMessages(data.messages));
       }
-      if (Array.isArray(data.quickActions) && data.quickActions.length > 0) {
-        setQuickActions(data.quickActions);
-      } else {
-        setQuickActions(buyerVerified ? VERIFIED_BUYER_CHIPS : PUBLIC_GENERAL_CHIPS);
-      }
+      const safeQuickActions = filterWebsiteBotQuickActions(data.quickActions);
+      setQuickActions(safeQuickActions.length ? safeQuickActions : PUBLIC_GENERAL_CHIPS);
       return data.sessionToken || sessionToken;
     } catch {
       if (messages.length === 0) {
@@ -4452,8 +4057,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             sender: 'assistant',
             senderName: 'Bhumivera Client Concierge',
             content: user?.name
-              ? `Welcome back, ${user.name.split(' ')[0]}. How may the Bhumivera Client Concierge assist you today? Explore our 4 Hero Botanical Stories (Sea Buckthorn, Charcoal, Tulsi, Aloe Vera), our authentic formulations (Sea Buckthorn Face Wash, Charcoal Face Wash, Kumkumadi Night Elixir, Botanical Shampoo), our 4-Phase Facial Cleansing Ritual, or verify an Order ID.`
-              : 'Welcome to Bhumivera. Ask about our 4 Hero Botanical Stories (Sea Buckthorn, Charcoal, Tulsi, Aloe Vera), our authentic catalog formulations, our 4-Phase Facial Cleansing Ritual, Brand Ambassador Program, or verify an Order ID for dedicated order support.',
+              ? `Welcome back, ${user.name.split(' ')[0]}. Ask the Bhumivera Client Concierge about our botanical ingredients, formulations, skincare rituals, policies, rewards, or personalized skin quiz.`
+              : 'Welcome to Bhumivera. Ask about our botanical ingredients, formulations, skincare rituals, policies, rewards, or personalized skin quiz.',
             quickActions: PUBLIC_GENERAL_CHIPS,
             orderCards: [],
             createdAt: new Date().toISOString(),
@@ -4471,28 +4076,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       void ensureSession();
     }
   }, [isOpen, ensureSession]);
-
-  // Poll for live specialist replies ONLY when buyer has a verified order thread
-  useEffect(() => {
-    if (!isOpen || !sessionToken || !hasPlacedOrder || typeof aiSupportApi.getHistory !== 'function') return undefined;
-    const interval = window.setInterval(async () => {
-      if (isTyping) return;
-      try {
-        const res = await aiSupportApi.getHistory(sessionToken);
-        const remoteSession = res?.data?.session;
-        const remoteMessages = res?.data?.messages;
-        if (remoteSession?.status) setChatStatus(remoteSession.status);
-        if (remoteSession?.assignedAgentName !== undefined) {
-          setAssignedAgentName(remoteSession.assignedAgentName || null);
-        }
-        if (Array.isArray(remoteMessages) && remoteMessages.length > messages.length) {
-          setMessages(remoteMessages);
-          playSupportChime(soundEnabled);
-        }
-      } catch {}
-    }, 10000);
-    return () => window.clearInterval(interval);
-  }, [isOpen, sessionToken, hasPlacedOrder, isTyping, messages.length, soundEnabled]);
 
   // Client Concierge Friction Rescue Listener
   useEffect(() => {
@@ -4538,8 +4121,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     const path = location.pathname;
     const isHighIntentPage =
       path.startsWith('/checkout') ||
-      path.startsWith('/order-tracking') ||
-      path.startsWith('/returns') ||
       Boolean(isCartOpen);
 
     if (!isHighIntentPage || isOpen) return undefined;
@@ -4548,9 +4129,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
 
     const timer = window.setTimeout(async () => {
       sessionStorage.setItem(`${PROACTIVE_TRIGGERED_KEY}:${path}`, '1');
-      let nudge = path.startsWith('/checkout') || isCartOpen
-        ? 'Need a hand with checkout? Free standard shipping on orders ₹500+.'
-        : 'Looking for live tracking or order assistance? Our Client Concierge is here.';
+      let nudge = 'Need a hand with checkout? Free standard shipping on orders ₹500+.';
       try {
         if (typeof aiSupportApi.updateContext === 'function') {
           const ctxRes = await aiSupportApi.updateContext({
@@ -4594,180 +4173,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     event.target.value = '';
   };
 
-  // Opens the Legitimate Customer Verification & Callback/Email Escalation Wizard
-  const openVerificationFlow = useCallback((prefillOrderId = '', options = {}) => {
-    setIngredientDrawerOpen(false);
-    setRitualDrawerOpen(false);
-    setDiagnosticDrawerOpen(false);
-    setEscalationWizard({
-      open: true,
-      step: 1,
-      detailedSubStep: 1,
-      orderId: prefillOrderId ? String(prefillOrderId) : '',
-      emailOrPhone: user?.email || user?.phone || '',
-      verifiedOrder: null,
-      issueCategory: options.category || 'order_modification_or_delivery',
-      sealCondition: 'intact_verified',
-      remedyPreference: 'specialist_callback_or_resolution',
-      contactPreference: 'email',
-      callbackPhone: user?.phone ? String(user.phone).replace(/\D/g, '').slice(-10) : '',
-      callbackTimeSlot: CALLBACK_SLOTS[0],
-      queryDetails: options.details || '',
-      cancellationConfirmed: false,
-      busy: false,
-      error: '',
-      ticketReference: '',
-    });
-  }, [user?.email, user?.phone]);
-
-  // Step 1 Handler: Verify Order ID + Registered Email/Phone against backend database
-  const handleVerifyOrderStep1 = async e => {
-    e.preventDefault();
-    if (!escalationWizard.orderId.trim() || !escalationWizard.emailOrPhone.trim()) {
-      setEscalationWizard(prev => ({
-        ...prev,
-        error: 'Please enter both your Order ID (e.g., BHVM...) and your registered Email or 10-digit Phone Number.',
-      }));
-      return;
-    }
-
-    setEscalationWizard(prev => ({ ...prev, busy: true, error: '' }));
-    try {
-      const res = await api.post(
-        '/support/chat/verify-escalation',
-        {
-          sessionToken,
-          step: 'verify_order',
-          orderId: escalationWizard.orderId.trim(),
-          emailOrPhone: escalationWizard.emailOrPhone.trim(),
-        },
-        { notify: false }
-      );
-      const verifiedOrder = res.data?.order;
-      setHasPlacedOrder(true);
-      setQuickActions(VERIFIED_BUYER_CHIPS);
-      setEscalationWizard(prev => ({
-        ...prev,
-        busy: false,
-        step: 2,
-        detailedSubStep: 2,
-        verifiedOrder,
-        callbackPhone: verifiedOrder?.verifiedPhone || prev.callbackPhone,
-        error: '',
-      }));
-      setMessages(prev => [
-        ...prev,
-        {
-          id: `ver-step2-${Date.now()}`,
-          sender: 'assistant',
-          senderName: 'Bhumivera Client Concierge',
-          content:
-            res.data?.conciergePrompt ||
-            'Your verified follow-up request can be recorded for later review; replies are not live and may take some time. Would you prefer an update via Email or a Phone Call?',
-          createdAt: new Date().toISOString(),
-        },
-      ]);
-    } catch (err) {
-      setEscalationWizard(prev => ({
-        ...prev,
-        busy: false,
-        error:
-          err.response?.data?.message ||
-          'Could not verify Order ID with the provided Email/Phone. Please check your details and try again.',
-      }));
-    }
-  };
-
-  // Step 2 & 3 Handler: Submit Contact Preference (Email vs Phone Call + Slot) & Create Single Verified Ticket
-  const handleSubmitEscalationStep2 = async e => {
-    e.preventDefault();
-    const {
-      orderId,
-      emailOrPhone,
-      issueCategory,
-      sealCondition,
-      remedyPreference,
-      contactPreference,
-      callbackPhone,
-      callbackTimeSlot,
-      queryDetails,
-      cancellationConfirmed,
-    } = escalationWizard;
-
-    if (issueCategory === 'order_cancellation' && !cancellationConfirmed) {
-      setEscalationWizard(prev => ({
-        ...prev,
-        error: 'Please confirm you still want support to review cancellation after checking the order impact.',
-      }));
-      return;
-    }
-
-    const cleanPhone = String(callbackPhone || '').replace(/\D/g, '').slice(-10);
-    if (contactPreference === 'phone_call' && cleanPhone.length !== 10) {
-      setEscalationWizard(prev => ({
-        ...prev,
-        error: 'Please enter a valid 10-digit Phone Number for your callback.',
-      }));
-      return;
-    }
-
-    setEscalationWizard(prev => ({ ...prev, busy: true, error: '' }));
-    try {
-      const enrichedDetails = queryDetails.trim()
-        ? `${queryDetails.trim()} [Category: ${issueCategory} | Seal: ${sealCondition} | Remedy: ${remedyPreference}]`
-        : `Verified assistance request for Order #${orderId} [Category: ${issueCategory}]`;
-
-      const res = await api.post(
-        '/support/chat/verify-escalation',
-        {
-          sessionToken,
-          step: 'submit_preference',
-          orderId,
-          emailOrPhone,
-          contactPreference,
-          callbackPhone: cleanPhone,
-          callbackTimeSlot,
-          queryDetails: enrichedDetails,
-          issueCategory,
-          cancellationConfirmed,
-        },
-        { notify: false }
-      );
-      const data = res.data || {};
-      setChatStatus('escalated');
-      setEscalationWizard(prev => ({
-        ...prev,
-        busy: false,
-        step: 3,
-        detailedSubStep: 7,
-        ticketReference: data.ticketReference || data.ticketId || 'VERIFIED',
-      }));
-      setMessages(prev => [
-        ...prev,
-        {
-          id: `esc-done-${Date.now()}`,
-          sender: 'assistant',
-          senderName: 'Bhumivera Client Concierge',
-          content:
-            data.reply ||
-            'Your verified follow-up request has been recorded. A team member will review it and reply when available; replies are not live.',
-          escalation: {
-            escalated: true,
-            ticketId: data.ticketReference || data.ticketId,
-          },
-          createdAt: new Date().toISOString(),
-        },
-      ]);
-      playSupportChime(soundEnabled);
-    } catch (err) {
-      setEscalationWizard(prev => ({
-        ...prev,
-        busy: false,
-        error: err.response?.data?.message || 'Could not save your follow-up request.',
-      }));
-    }
-  };
-
   const handleEndChat = async () => {
     if (!sessionToken) return;
     setCsatSubmitting(true);
@@ -4802,27 +4207,29 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     }
   };
 
+  const openCustomerSupport = useCallback(() => {
+    setIsOpen(false);
+    navigate(user?.id ? '/profile?tab=support' : '/login', user?.id ? undefined : { state: { from: '/profile?tab=support' } });
+  }, [navigate, user?.id]);
+
   const sendMessage = useCallback(async (overridePrompt = null, selectedCategory = null) => {
-    if (overridePrompt === '__OPEN_VERIFICATION_FLOW__') {
-      openVerificationFlow('');
+    if (overridePrompt === '__OPEN_SUPPORT_CENTER__') {
+      openCustomerSupport();
       return;
     }
     if (overridePrompt === '__OPEN_INGREDIENT_ENCYCLOPEDIA__') {
-      setEscalationWizard(prev => ({ ...prev, open: false }));
       setRitualDrawerOpen(false);
       setDiagnosticDrawerOpen(false);
       setIngredientDrawerOpen(true);
       return;
     }
     if (overridePrompt === '__OPEN_RITUAL_PLAYER__') {
-      setEscalationWizard(prev => ({ ...prev, open: false }));
       setIngredientDrawerOpen(false);
       setDiagnosticDrawerOpen(false);
       setRitualDrawerOpen(true);
       return;
     }
     if (overridePrompt === '__OPEN_SKIN_DIAGNOSTIC__') {
-      setEscalationWizard(prev => ({ ...prev, open: false }));
       setIngredientDrawerOpen(false);
       setRitualDrawerOpen(false);
       setDiagnosticDrawerOpen(true);
@@ -4831,18 +4238,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
 
     const text = String(overridePrompt !== null ? overridePrompt : input).trim();
     if ((!text && attachments.length === 0) || isTyping) return;
-
-    if (isOrderCancellationRequest(text)) {
-      const matchOrd = text.match(/\b(?:order\s*(?:(?:id|no|number)\s*)?[:#-]?\s*|#)\s*(?:BHVM[-_\s]*)?(\d{1,12})\b/i) ||
-        text.match(/\bBHVM[-_\s]*(\d{1,12})\b/i);
-      openVerificationFlow(matchOrd?.[1] || '', {
-        category: 'order_cancellation',
-        details: text,
-      });
-      if (overridePrompt === null) setInput('');
-      setAttachments([]);
-      return;
-    }
 
     const currentAttachments = [...attachments];
     if (overridePrompt === null) setInput('');
@@ -4868,6 +4263,25 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     setStatusLabel('Consulting Bhumivera Client Concierge…');
 
     try {
+      const isCustomerSupportRequest = isWebsiteBotAccountSupportMessage(text);
+      if (isCustomerSupportRequest) {
+        const quickActions = [{ label: 'Open Customer Support', prompt: '__OPEN_SUPPORT_CENTER__' }];
+        setQuickActions(quickActions);
+        setMessages(prev => [
+          ...prev,
+          {
+            id: assistantStreamId,
+            sender: 'assistant',
+            senderName: 'Bhumivera Client Concierge',
+            content: 'For order details or help from our customer-care team, please use Profile → Support so your request can be securely reviewed.',
+            quickActions,
+            createdAt: new Date().toISOString(),
+          },
+        ]);
+        playSupportChime(soundEnabled);
+        return;
+      }
+
       const response = await aiSupportApi.sendMessage({
         sessionToken,
         message: text,
@@ -4885,16 +4299,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       if (data.sessionToken) setSessionToken(data.sessionToken);
       if (data.status) setChatStatus(data.status);
       if (data.conciergeFlow) setConciergeFlow(data.conciergeFlow);
-      if (Array.isArray(data.orderCards) && data.orderCards.length > 0) {
-        setHasPlacedOrder(true);
-      }
-      if (Array.isArray(data.quickActions) && data.quickActions.length > 0) {
-        setQuickActions(data.quickActions);
-      }
-
-      if (data.escalation?.verificationStep === 'STEP_1_VERIFY_ORDER') {
-        openVerificationFlow('');
-      }
+      const safeQuickActions = filterWebsiteBotQuickActions(data.quickActions);
+      if (safeQuickActions.length > 0) setQuickActions(safeQuickActions);
 
       setMessages(prev => [
         ...prev,
@@ -4903,8 +4309,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           sender: 'assistant',
           senderName: 'Bhumivera Client Concierge',
           content: data.reply || data.message?.content || 'How else may I assist you today?',
-          orderCards: data.orderCards || [],
-          quickActions: data.quickActions || [],
+          orderCards: [],
+          quickActions: safeQuickActions,
           conciergeFlow: data.conciergeFlow || null,
           escalation: data.escalation || null,
           createdAt: new Date().toISOString(),
@@ -4927,8 +4333,9 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
         return;
       }
       const localConcierge = resolveEnhancedBotanicalConcierge(text);
-      if (Array.isArray(localConcierge.quickActions) && localConcierge.quickActions.length > 0) {
-        setQuickActions(localConcierge.quickActions);
+      const safeQuickActions = filterWebsiteBotQuickActions(localConcierge.quickActions);
+      if (safeQuickActions.length > 0) {
+        setQuickActions(safeQuickActions);
       }
       setMessages(prev => [
         ...prev,
@@ -4938,7 +4345,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           senderName: 'Bhumivera Client Concierge',
           content: localConcierge.reply,
           orderCards: [],
-          quickActions: localConcierge.quickActions || (hasPlacedOrder ? VERIFIED_BUYER_CHIPS : PUBLIC_GENERAL_CHIPS),
+          quickActions: safeQuickActions.length ? safeQuickActions : PUBLIC_GENERAL_CHIPS,
           createdAt: new Date().toISOString(),
         },
       ]);
@@ -4958,9 +4365,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     supportCategory,
     user?.name,
     soundEnabled,
-    hasPlacedOrder,
-    escalationWizard.verifiedOrder,
-    openVerificationFlow,
+    openCustomerSupport,
   ]);
 
   useEffect(() => {
@@ -4968,16 +4373,8 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       const detail = event?.detail || {};
       setIsOpen(true);
       setProactiveBubble(null);
-      if (detail.verifyOrderId) {
-        openVerificationFlow(
-          detail.verifyOrderId,
-          detail.cancelOrder
-            ? {
-                category: 'order_cancellation',
-                details: 'I am requesting cancellation of this order. Please verify ownership and arrange specialist review; this request is not confirmation that the order has been cancelled.',
-              }
-            : {}
-        );
+      if (detail.verifyOrderId || detail.cancelOrder) {
+        openCustomerSupport();
       } else if (detail.ingredientId) {
         setSelectedIngredientId(detail.ingredientId);
         setIngredientDrawerOpen(true);
@@ -4991,7 +4388,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
     };
     window.addEventListener('bhumivera:open-support-chat', handleExternalOpen);
     return () => window.removeEventListener('bhumivera:open-support-chat', handleExternalOpen);
-  }, [openVerificationFlow, sendMessage]);
+  }, [openCustomerSupport, sendMessage]);
 
   const activeStatusMeta = STATUS_META[chatStatus] || STATUS_META.active;
 
@@ -5080,15 +4477,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
             <div className="flex items-center gap-1 shrink-0">
               <button
                 type="button"
-                onClick={() => openVerificationFlow('')}
-                title="Verify an order to submit a follow-up request"
-                aria-label="Verify Order for Follow-up"
-                className="hidden sm:inline-flex px-2.5 py-1 rounded-xl text-[10px] font-bold tracking-wider uppercase border border-[#D4AF37]/50 text-[#D4AF37] hover:bg-[#D4AF37]/15 transition-all shadow-sm"
-              >
-                {t('concierge_verify_order', 'Verify Order')}
-              </button>
-              <button
-                type="button"
                 onClick={() => setSoundEnabled(prev => !prev)}
                 title={soundEnabled ? 'Mute chimes' : 'Enable chimes'}
                 aria-label={soundEnabled ? 'Mute chimes' : 'Enable chimes'}
@@ -5155,7 +4543,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   setIngredientDrawerOpen(prev => !prev);
                   setRitualDrawerOpen(false);
                   setDiagnosticDrawerOpen(false);
-                  setEscalationWizard(prev => ({ ...prev, open: false }));
                 }}
                 className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${
                   ingredientDrawerOpen
@@ -5171,7 +4558,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   setRitualDrawerOpen(prev => !prev);
                   setIngredientDrawerOpen(false);
                   setDiagnosticDrawerOpen(false);
-                  setEscalationWizard(prev => ({ ...prev, open: false }));
                 }}
                 className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${
                   ritualDrawerOpen
@@ -5187,7 +4573,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                   setDiagnosticDrawerOpen(prev => !prev);
                   setIngredientDrawerOpen(false);
                   setRitualDrawerOpen(false);
-                  setEscalationWizard(prev => ({ ...prev, open: false }));
                 }}
                 className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${
                   diagnosticDrawerOpen
@@ -5196,17 +4581,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                 }`}
               >
                 ✨ Skin Quiz
-              </button>
-              <button
-                type="button"
-                onClick={() => openVerificationFlow('')}
-                className={`shrink-0 px-2.5 py-1 rounded-full text-[10px] font-bold border transition-all ${
-                  escalationWizard.open
-                    ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37] shadow-sm'
-                    : 'border-current/20 hover:border-[#D4AF37] hover:text-[#D4AF37]'
-                }`}
-              >
-                🛡️ Specialist Support
               </button>
             </div>
           </div>
@@ -5281,274 +4655,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
               ]);
             }}
           />
-
-          {/* Multi-Step Legitimate Customer Verification & Specialist Callback/Email Drawer */}
-          {escalationWizard.open && (
-            <div
-              className={`px-4 py-3.5 border-b space-y-3 text-xs shrink-0 max-h-80 overflow-y-auto ${
-                isDark ? 'bg-[#0d2219] border-[#D4AF37]/40 text-stone-100' : 'bg-[#fbf9f2] border-[#D4AF37]/50 text-[#0B2419]'
-              }`}
-            >
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[10px] font-bold uppercase tracking-[0.16em] text-[#D4AF37]">
-                  {escalationWizard.step === 1
-                    ? 'Step 1 of 2 · Customer Order Verification (7-Point Protocol)'
-                    : escalationWizard.step === 2
-                    ? 'Step 2 of 2 · Follow-up Contact Preference'
-                    : 'Verified Follow-up Request Recorded'}
-                </span>
-                <button
-                  type="button"
-                  onClick={() => setEscalationWizard(prev => ({ ...prev, open: false }))}
-                  className="text-xs opacity-70 hover:opacity-100"
-                >
-                  ✕
-                </button>
-              </div>
-
-              {escalationWizard.error && (
-                <div className="rounded-xl bg-rose-500/15 border border-rose-500/30 px-3 py-2 text-[11px] text-rose-500 dark:text-rose-300">
-                  {escalationWizard.error}
-                </div>
-              )}
-
-              {escalationWizard.step === 1 && (
-                <form onSubmit={handleVerifyOrderStep1} className="space-y-2.5">
-                  <p className="text-[11px] opacity-85 leading-relaxed">
-                    To protect your account and prevent automated spam, please validate your <strong>Order ID</strong> and <strong>Registered Email or 10-Digit Phone Number</strong>.
-                  </p>
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <input
-                      type="text"
-                      required
-                      value={escalationWizard.orderId}
-                      onChange={e => setEscalationWizard(prev => ({ ...prev, orderId: e.target.value }))}
-                      placeholder="Order ID (e.g. BHVM815899599)"
-                      className={`px-3 py-2 rounded-xl border text-xs outline-none ${
-                        isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-white border-stone-300 text-[#0B2419]'
-                      }`}
-                    />
-                    <input
-                      type="text"
-                      required
-                      value={escalationWizard.emailOrPhone}
-                      onChange={e => setEscalationWizard(prev => ({ ...prev, emailOrPhone: e.target.value }))}
-                      placeholder="Registered Email or 10-Digit Phone"
-                      className={`px-3 py-2 rounded-xl border text-xs outline-none ${
-                        isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-white border-stone-300 text-[#0B2419]'
-                      }`}
-                    />
-                  </div>
-                  <button
-                    type="submit"
-                    disabled={escalationWizard.busy}
-                    className="w-full py-2 rounded-xl bg-[#0B2419] text-[#D4AF37] border border-[#D4AF37]/40 font-semibold text-xs hover:bg-[#163829] disabled:opacity-50"
-                  >
-                    {escalationWizard.busy ? 'Verifying Order Record…' : 'Verify Order & Continue'}
-                  </button>
-                </form>
-              )}
-
-              {escalationWizard.step === 2 && (
-                <form onSubmit={handleSubmitEscalationStep2} className="space-y-2.5">
-                  <p className="text-[11px] leading-relaxed">
-                    Verified <strong>Order #{escalationWizard.verifiedOrder?.orderNumber}</strong>. Your request can be saved for later review; replies are not live and may take some time. Would you prefer an update via <strong>Email</strong> or a <strong>Phone Call</strong>?
-                  </p>
-                  {escalationWizard.verifiedOrder && (
-                    <div className={`space-y-2 rounded-xl border p-3 text-[11px] ${
-                      isDark ? 'border-white/10 bg-black/25 text-stone-200' : 'border-[#0B2419]/15 bg-white/70 text-[#0B2419]'
-                    }`}>
-                      <div className="flex flex-wrap items-center justify-between gap-2">
-                        <strong>Order #{escalationWizard.verifiedOrder.orderNumber} · {String(escalationWizard.verifiedOrder.status || '').replace(/_/g, ' ')}</strong>
-                        <span>₹{Number(escalationWizard.verifiedOrder.total || 0).toLocaleString('en-IN')}</span>
-                      </div>
-                      <p>
-                        Payment: {escalationWizard.verifiedOrder.paymentMode} ({escalationWizard.verifiedOrder.paymentStatus})
-                        {' · '}Delivery: {escalationWizard.verifiedOrder.deliveryEstimate}
-                      </p>
-                      <p>
-                        {escalationWizard.verifiedOrder.trackingNumber
-                          ? `Tracking: ${escalationWizard.verifiedOrder.trackingNumber}${escalationWizard.verifiedOrder.courier ? ` · ${escalationWizard.verifiedOrder.courier}` : ''}`
-                          : 'Tracking number will appear after dispatch.'}
-                      </p>
-                      {escalationWizard.verifiedOrder.items?.length > 0 && (
-                        <ul className="list-inside list-disc">
-                          {escalationWizard.verifiedOrder.items.map((item, index) => (
-                            <li key={`${item.name}-${index}`}>
-                              {item.name} × {item.quantity} · ₹{Number(item.price).toLocaleString('en-IN')}
-                            </li>
-                          ))}
-                        </ul>
-                      )}
-                      {(Number(escalationWizard.verifiedOrder.discount) > 0 || escalationWizard.verifiedOrder.couponCode) && (
-                        <p>
-                          Discount: ₹{Number(escalationWizard.verifiedOrder.discount || 0).toLocaleString('en-IN')}
-                          {escalationWizard.verifiedOrder.couponCode ? ` · Coupon ${escalationWizard.verifiedOrder.couponCode}` : ''}
-                        </p>
-                      )}
-                      {escalationWizard.verifiedOrder.trackingUrl && (
-                        <a href={escalationWizard.verifiedOrder.trackingUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 font-semibold text-[#D4AF37] underline">
-                          Open live tracking <ChevronRight className="h-3 w-3"/>
-                        </a>
-                      )}
-                    </div>
-                  )}
-                  {escalationWizard.issueCategory === 'order_cancellation' && escalationWizard.verifiedOrder && (
-                    <div className={`rounded-xl border border-amber-500/30 p-3 text-[11px] leading-relaxed ${
-                      isDark ? 'bg-amber-950/30 text-amber-100' : 'bg-amber-50 text-amber-950'
-                    }`}>
-                      <strong>Before requesting cancellation:</strong>
-                      <ul className="mt-1 list-inside list-disc">
-                        {Number(escalationWizard.verifiedOrder.impactAmount) > 0 && (
-                          <li>The ₹{Number(escalationWizard.verifiedOrder.impactAmount).toLocaleString('en-IN')} nature-impact pledge on this order will be cancelled.</li>
-                        )}
-                        {Number(escalationWizard.verifiedOrder.loyaltyPointsAwarded) > 0 && (
-                          <li>{Number(escalationWizard.verifiedOrder.loyaltyPointsAwarded).toLocaleString()} points earned on this order may be reversed.</li>
-                        )}
-                        {Number(escalationWizard.verifiedOrder.loyaltyPointsRedeemed) > 0 && (
-                          <li>{Number(escalationWizard.verifiedOrder.loyaltyPointsRedeemed).toLocaleString()} redeemed points are restored when cancellation is processed.</li>
-                        )}
-                        {escalationWizard.verifiedOrder.couponCode && (
-                          <li>Coupon {escalationWizard.verifiedOrder.couponCode} usage is released after cancellation processing, subject to its validity and terms.</li>
-                        )}
-                        <li>This is a request for review, not an immediate cancellation. A support SuperAdmin can act only after your explicit confirmation.</li>
-                      </ul>
-                      <label className="mt-2 flex items-start gap-2 font-semibold">
-                        <input
-                          type="checkbox"
-                          checked={escalationWizard.cancellationConfirmed}
-                          onChange={event => setEscalationWizard(prev => ({ ...prev, cancellationConfirmed: event.target.checked, error: '' }))}
-                          className="mt-0.5 accent-[#D4AF37]"
-                        />
-                        <span>I have reviewed these effects and still want support to review my cancellation request.</span>
-                      </label>
-                    </div>
-                  )}
-
-                  {/* Granular Inspection & Remedy Selectors */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                    <select
-                      value={escalationWizard.issueCategory}
-                      onChange={e => setEscalationWizard(prev => ({ ...prev, issueCategory: e.target.value, cancellationConfirmed: false, error: '' }))}
-                      aria-label="Issue Category"
-                      className={`px-2.5 py-1.5 rounded-xl border text-[11px] outline-none ${
-                        isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-white border-stone-300 text-[#0B2419]'
-                      }`}
-                    >
-                      <option value="order_cancellation">Order Cancellation Request</option>
-                      <option value="order_modification_or_delivery">Order / Address / Delivery Assist</option>
-                      <option value="damaged_or_leaked_unit">Damaged / Leaked Bottle Inspection</option>
-                      <option value="quality_verification_inquiry">Quality or Transit Verification</option>
-                      <option value="botanical_formulation_consult">Botanical Regimen Consultation</option>
-                    </select>
-                    <select
-                      value={escalationWizard.remedyPreference}
-                      onChange={e => setEscalationWizard(prev => ({ ...prev, remedyPreference: e.target.value }))}
-                      aria-label="Preferred Remedy"
-                      className={`px-2.5 py-1.5 rounded-xl border text-[11px] outline-none ${
-                        isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-white border-stone-300 text-[#0B2419]'
-                      }`}
-                    >
-                      <option value="specialist_callback_or_resolution">Follow-up & Resolution</option>
-                      <option value="direct_concierge_review">Direct Concierge Quality Review</option>
-                      <option value="wallet_credit_with_bonus">Instant Wallet Credit</option>
-                      <option value="original_payment_refund">Original Source Refund</option>
-                    </select>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setEscalationWizard(prev => ({ ...prev, contactPreference: 'email' }))}
-                      className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border text-xs font-semibold transition ${
-                        escalationWizard.contactPreference === 'email'
-                          ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37]'
-                          : 'border-current/20 opacity-80'
-                      }`}
-                    >
-                      <Mail className="w-3.5 h-3.5" /> Email Update
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setEscalationWizard(prev => ({ ...prev, contactPreference: 'phone_call' }))}
-                      className={`flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl border text-xs font-semibold transition ${
-                        escalationWizard.contactPreference === 'phone_call'
-                          ? 'bg-[#D4AF37] text-[#0B2419] border-[#D4AF37]'
-                          : 'border-current/20 opacity-80'
-                      }`}
-                    >
-                      <PhoneCall className="w-3.5 h-3.5" /> Direct Phone Call
-                    </button>
-                  </div>
-
-                  {escalationWizard.contactPreference === 'phone_call' && (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <input
-                        type="tel"
-                        required
-                        maxLength={10}
-                        value={escalationWizard.callbackPhone}
-                        onChange={e =>
-                          setEscalationWizard(prev => ({
-                            ...prev,
-                            callbackPhone: e.target.value.replace(/\D/g, '').slice(0, 10),
-                          }))
-                        }
-                        placeholder="10-Digit Phone Number"
-                        className={`px-3 py-2 rounded-xl border text-xs outline-none ${
-                          isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-white border-stone-300 text-[#0B2419]'
-                        }`}
-                      />
-                      <select
-                        value={escalationWizard.callbackTimeSlot}
-                        onChange={e => setEscalationWizard(prev => ({ ...prev, callbackTimeSlot: e.target.value }))}
-                        className={`px-3 py-2 rounded-xl border text-xs outline-none ${
-                          isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-white border-stone-300 text-[#0B2419]'
-                        }`}
-                      >
-                        {CALLBACK_SLOTS.map(slot => (
-                          <option key={slot} value={slot}>
-                            {slot}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-                  )}
-
-                  <textarea
-                    rows={2}
-                    required
-                    value={escalationWizard.queryDetails}
-                    onChange={e => setEscalationWizard(prev => ({ ...prev, queryDetails: e.target.value }))}
-                    placeholder="Briefly describe how our specialist team may assist with this order…"
-                    className={`w-full px-3 py-2 rounded-xl border text-xs outline-none ${
-                      isDark ? 'bg-black/30 border-white/15 text-white' : 'bg-white border-stone-300 text-[#0B2419]'
-                    }`}
-                  />
-
-                  <button
-                    type="submit"
-                    disabled={escalationWizard.busy || (escalationWizard.issueCategory === 'order_cancellation' && !escalationWizard.cancellationConfirmed)}
-                    className="w-full py-2 rounded-xl bg-[#0B2419] text-[#D4AF37] border border-[#D4AF37]/40 font-semibold text-xs hover:bg-[#163829] disabled:opacity-50"
-                  >
-                    {escalationWizard.busy ? 'Saving Verified Request…' : 'Submit Follow-up Request'}
-                  </button>
-                </form>
-              )}
-
-              {escalationWizard.step === 3 && (
-                <div className="space-y-2 py-1">
-                  <div className="flex items-center gap-2 text-emerald-500 font-semibold">
-                    <CheckCircle2 className="w-4 h-4" />
-                    <span>Escalation Ticket #{escalationWizard.ticketReference} Confirmed</span>
-                  </div>
-                  <p className="text-[11px] opacity-85">
-                    Your verified request has been recorded for later review. Replies are not live and may take some time.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Client Concierge Friction Rescue Card */}
           {copilotRescue && (
@@ -5654,7 +4760,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
                 setIsOpen(false);
               }
             }}
-            onOpenVerification={prefillOrderId => openVerificationFlow(prefillOrderId || '')}
+            onOpenCustomerSupport={openCustomerSupport}
             onAddToCart={async product => {
               if (addToCart) {
                 await addToCart(product, 1);

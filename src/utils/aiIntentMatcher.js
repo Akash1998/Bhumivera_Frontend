@@ -217,15 +217,10 @@ export const LOCALIZED_INTENT_RESPONSES = {
     ORDER_TRACKING: {
       intent: 'ORDER_TRACKING',
       reply: [
-        '📦 **भूमिअवेरा लाइव एक्सप्रेस डिलीवरी ट्रैकिंग गाइड**',
-        'हमारे सभी ऑर्डर **Delhivery, BlueDart, और DTDC Express** द्वारा पूरे भारत में एसएमएस और व्हाट्सएप ट्रैकिंग के साथ भेजे जाते हैं।',
-        '**डिलीवरी समय सीमा:**\n- **मेट्रो शहर (दिल्ली, मुंबई, बेंगलुरु, हैदराबाद, चेन्नई, कोलकाता):** 2 से 3 कार्य दिवस।\n- **टियर 2 / टियर 3 शहर:** 3 से 5 कार्य दिवस।\n- **पूर्वोत्तर और दूरदराज के क्षेत्र:** 4 से 6 कार्य दिवस।',
-        '**ट्रैक कैसे करें:**\n- अपनी **ऑर्डर आईडी** (उदा. #BHU-84920) सीधे इस चैट में दर्ज करें या हमारे [लाइव ऑर्डर ट्रैकिंग पेज](/order-tracking) पर जाएं।\n- प्रेषण के बाद आपको कूरियर को लाइव ट्रैक करने के लिए एक सीधा AWB लिंक एसएमएस पर मिलता है।',
+        'अपने विशिष्ट ऑर्डर की डिलीवरी स्थिति देखने या सहायता पाने के लिए **प्रोफ़ाइल → सहायता** खोलें। सामान्य डिलीवरी समय और शुल्क चेकआउट पर दिखते हैं।',
       ].join('\n\n'),
       quickActions: [
-        { id: 'open_tracker', label: '🚚 ऑर्डर ट्रैकर खोलें', prompt: 'Open the Live Order Tracking page' },
-        { id: 'deliv_estimate', label: '⏱ पिनकोड डिलीवरी समय जांचें', prompt: 'How long will delivery take to my pin code?' },
-        { id: 'order_history', label: '📋 हाल के ऑर्डर देखें', prompt: 'Show me my recent orders and tracking status' },
+        { id: 'customer_support', label: '👤 ग्राहक सहायता खोलें', prompt: '__OPEN_SUPPORT_CENTER__' },
       ],
     },
     ADDRESS_PINPOINT: {
@@ -298,11 +293,10 @@ export const LOCALIZED_INTENT_RESPONSES = {
     ORDER_TRACKING: {
       intent: 'ORDER_TRACKING',
       reply: [
-        '📦 **ভূমিভেরা লাইভ এক্সপ্রেস ডেলিভারি ট্র্যাকিং**',
-        'আপনার অর্ডারটি Delhivery, BlueDart অথবা DTDC এক্সপ্রেসের মাধ্যমে পাঠানো হয়।\n- মেট্রো শহর: ২-৩ দিন\n- অন্যান্য শহর: ৩-৫ দিন\nআপনার অর্ডার আইডি লিখে সরাসরি চ্যাটে পাঠান বা ট্র্যাকিং পেজ দেখুন।',
+        'আপনার নির্দিষ্ট অর্ডারের ডেলিভারি অবস্থা বা সহায়তার জন্য **প্রোফাইল → সাপোর্ট** খুলুন। সাধারণ ডেলিভারির সময় ও চার্জ চেকআউটে দেখানো হয়।',
       ].join('\n\n'),
       quickActions: [
-        { id: 'open_tracker', label: '🚚 ট্র্যাকিং পেজ খুলুন', prompt: 'Open the Live Order Tracking page' },
+        { id: 'customer_support', label: '👤 কাস্টমার সাপোর্ট খুলুন', prompt: '__OPEN_SUPPORT_CENTER__' },
       ],
     },
     ADDRESS_PINPOINT: {
@@ -371,11 +365,10 @@ export const LOCALIZED_INTENT_RESPONSES = {
     ORDER_TRACKING: {
       intent: 'ORDER_TRACKING',
       reply: [
-        '📦 **भूमीवेरा थेट एक्सप्रेस डिलिव्हरी ट्रॅकिंग**',
-        'सर्व ऑर्डर्स Delhivery आणि BlueDart द्वारे पाठवल्या जातात.\nमेट्रो शहरे: २ ते ३ दिवस | इतर शहरे: ३ ते ५ दिवस\nआपला ऑर्डर आयडी टाकून थेट ट्रॅक करा.',
+        'तुमच्या विशिष्ट ऑर्डरची डिलिव्हरी स्थिती किंवा मदतीसाठी **प्रोफाइल → सपोर्ट** उघडा. सामान्य डिलिव्हरी वेळ आणि शुल्क चेकआउटमध्ये दिसतील.',
       ].join('\n\n'),
       quickActions: [
-        { id: 'open_tracker', label: '🚚 ट्रॅकिंग पेज उघडा', prompt: 'Open the Live Order Tracking page' },
+        { id: 'customer_support', label: '👤 ग्राहक सहाय्य उघडा', prompt: '__OPEN_SUPPORT_CENTER__' },
       ],
     },
   },
@@ -417,10 +410,11 @@ export function matchAiIntentWithFuzzy(rawQuery = '', targetLangOverride) {
     return {
       intent: 'DAMAGED_ITEM_CREDIT',
       reply: [
-        '🌿 **Bhumivera Artisanal Custody & Executive Concierge Care**',
+        '🌿 **Bhumivera Artisanal Custody & Strict Non-Returnable Policy**',
         '*“100% Sealed Virgin Unit Custody — Artisanal Small-Batch Formulations.”*',
-        '**Sealed Virgin Custody (Why No Physical Returns?):**\nBecause our botanical formulations (Activated Bamboo Charcoal Face Wash, Botanical Hair Cleanser, and Sea Buckthorn Face Wash) are intimate personal care cosmetics, each bottle is compounded in small artisanal runs of 250 units and sealed with tamper-evident security to guarantee 100% sterile virgin purity.',
-        '**Verification & Concierge Resolution (Zero Return Shipping Hassle):**\nEvery bottle carries a serialized QR code verifiable on our /verify portal for calibrated pH (5.51) and spectrophotometric assays. If any parcel exhibits transit compromise upon arrival, submit your continuous 360° unboxing video showing the intact outer AWB label within 48 hours. Zero return shipping hassle — our executive concierge team directly reviews claims for verified patrons and coordinates immediate courtesy resolution.',
+        '**Sealed Virgin Custody (Why No Physical Returns?):**\nBecause our botanical formulations (Activated Bamboo Charcoal Face Wash, Botanical Hair Cleanser, and Sea Buckthorn Face Wash) are intimate personal care cosmetics, each bottle is compounded in small artisanal runs of 250 units and sealed with tamper-evident security to guarantee 100% sterile virgin purity. All items are strictly 100% NON-RETURNABLE once shipped or delivered.',
+        '**Pre-Dispatch Order Cancellation:**\nOrders can be cancelled ONLY before they are packed and shipped from the warehouse (status Pending, Confirmed, or Processing). Once marked Packed or Shipped, orders cannot be cancelled or recalled.',
+        '**Verification & Concierge Resolution (Zero Return Shipping Hassle):**\nEvery bottle carries a serialized QR code verifiable on our /verify portal for calibrated pH (5.51) and spectrophotometric assays. If any parcel exhibits transit compromise upon arrival, submit your continuous 360° unboxing video showing the intact outer AWB label within 48 hours. Zero return shipping hassle — our executive concierge team directly reviews claims for verified patrons and coordinates immediate courtesy resolution or refund.',
       ].join('\n\n'),
       quickActions: [
         { id: 'damaged_claim', label: '📹 Submit Unboxing Video Verification', prompt: 'I want to submit an unboxing verification video to concierge' },
@@ -435,15 +429,10 @@ export function matchAiIntentWithFuzzy(rawQuery = '', targetLangOverride) {
     return {
       intent: 'ORDER_TRACKING',
       reply: [
-        '📦 **Bhumivera Live Express Delivery Tracking Guide**',
-        'All Bhumivera orders are hand-calibrated and dispatched from our botanical apothecary via **Delhivery, BlueDart, and DTDC Express** with end-to-end SMS & WhatsApp tracking.',
-        '**Standard Delivery Timelines:**\n- **Metro Cities (Delhi NCR, Mumbai, Bengaluru, Hyderabad, Chennai, Kolkata):** 2 to 3 Business Days.\n- **Tier 2 / Tier 3 Cities:** 3 to 5 Business Days.\n- **Northeast, Jammu & Kashmir, and Remote Pin Codes:** 4 to 6 Business Days.',
-        '**How to Track Your Shipment:**\n- Enter your **Order ID** (e.g., `#BHU-84920` or 24-character ID) directly in this chat, or visit our [Live Order Tracking Page](/order-tracking).\n- Once dispatched, you receive a direct AWB tracking link via SMS to monitor the courier truck in real-time.',
+        'For the status of a specific order, please use **Profile → Support** so the customer-care team can securely review it. General delivery estimates and charges are shown at checkout.',
       ].join('\n\n'),
       quickActions: [
-        { id: 'open_tracker', label: '🚚 Open Order Tracker Page', prompt: 'Open the Live Order Tracking page' },
-        { id: 'deliv_estimate', label: '⏱ Check Pin Code Delivery Time', prompt: 'How long will delivery take to my pin code?' },
-        { id: 'order_history', label: '📋 View My Recent Orders', prompt: 'Show me my recent orders and tracking status' },
+        { id: 'customer_support', label: 'Open Customer Support', prompt: '__OPEN_SUPPORT_CENTER__' },
       ],
     };
   }

@@ -11,7 +11,6 @@ import {
   wallet as walletApi,
   affiliate as affiliateApi,
   addresses as addressesApi,
-  returns as returnsApi,
   notifications as notificationsApi,
   coupons as couponsApi,
   payments as paymentsApi,
@@ -281,11 +280,7 @@ export default function Profile() {
   const [supportTicket, setSupportTicket] = useState({ subject: '', message: '', order_id: '', product_id: '' });
 
   const [selectedOrder, setSelectedOrder] = useState(null);
-  const [returnOrder, setReturnOrder] = useState(null);
-  const [returnSubmitting, setReturnSubmitting] = useState(false);
-  const [returnUploadProgress, setReturnUploadProgress] = useState(0);
-  const returnPhotoInputRef = useRef(null);
-  const [returnEligibilityClock, setReturnEligibilityClock] = useState(Date.now());
+  const [cancellingOrderId, setCancellingOrderId] = useState(null);
   const [addressModal, setAddressModal] = useState({ open:false, editId:null, form:{ label:'Home', full_name:'', phone:'', line1:'', line2:'', city:'', state:'', postal_code:'', country:'India', is_default:false, latitude:null, longitude:null, google_maps_url:'' }});
   const [locatingAddress, setLocatingAddress] = useState(false);
   const [copiedAddressId, setCopiedAddressId] = useState(null);
@@ -308,11 +303,6 @@ export default function Profile() {
   const unreadCount = notifications.filter(n => !n.is_read && !n.read_at && n.status !== 'read').length;
 
   useEffect(() => { fetchAllForActiveTab(); }, [activeTab]);
-  useEffect(() => {
-    if (!['orders', 'returns'].includes(activeTab)) return undefined;
-    const timer = setInterval(() => setReturnEligibilityClock(Date.now()), 15000);
-    return () => clearInterval(timer);
-  }, [activeTab]);
 
   const safeExtract = (res, ...keys) => {
     let d = res?.data;
@@ -326,11 +316,10 @@ export default function Profile() {
     try {
       const tab = activeTab;
       const needsProfile = ['overview','security'];
-      const needsOrders = ['overview','orders','returns','support'];
+      const needsOrders = ['overview','orders','support'];
       const needsWishlist = ['overview','wishlist'];
       const needsWallet = ['overview','wallet'];
       const needsAddresses = ['addresses'];
-      const needsReturns = ['orders','returns'];
       const needsNotifications = ['notifications'];
       const needsCoupons = ['overview','coupons'];
       const needsReviews = ['orders','reviews'];
@@ -342,7 +331,6 @@ export default function Profile() {
       if (needsWishlist.includes(tab)) jobs.push(loadWishlist());
       if (needsWallet.includes(tab)) jobs.push(loadWallet());
       if (needsAddresses.includes(tab)) jobs.push(loadAddresses());
-      if (needsReturns.includes(tab)) jobs.push(loadReturns());
       if (needsNotifications.includes(tab)) jobs.push(loadNotifications());
       if (needsCoupons.includes(tab)) jobs.push(loadCoupons());
       if (needsReviews.includes(tab)) jobs.push(loadReviews());
@@ -475,17 +463,7 @@ export default function Profile() {
       toast.error(error.response?.data?.message || 'Could not load your saved addresses.');
     }
   };
-  const loadReturns = async () => {
-    try {
-      const [res, eligibilityRes] = await Promise.all([returnsApi.getMyReturns(), returnsApi.getEligibility()]);
-      setReturns(safeArr(safeExtract(res, 'returns')) || safeArr(safeExtract(res, 'data')) || safeArr(res?.data));
-      const eligibility = safeExtract(eligibilityRes, 'data') || eligibilityRes?.data;
-      setReturnEligibility(safeArr(eligibility));
-    } catch (error) {
-      console.error('[PROFILE_RETURNS_LOAD]', error);
-      toast.error(error.response?.data?.message || 'Could not load return eligibility.');
-    }
-  };
+
   const loadNotifications = async () => {
     try {
       const res = await notificationsApi.get();
@@ -621,96 +599,21 @@ export default function Profile() {
     if (added) toast.success('Added to your cart');
     else toast.error('Could not add this product to your cart.');
   };
-  const openReturnRequest = order => {
-    const orderItems = safeArr(order.items || order.order_items);
-    setReturnOrder({
-      orderId: order.id,
-      order,
-      form: { orderItemId: orderItems[0]?.id || '', quantity: 1, reason: '', refundMethod: 'wallet', notes: '', images: [] },
-    });
-  };
-  const addReturnImages = event => {
-    const selected = Array.from(event.target.files || []);
-    event.target.value = '';
-    const accepted = [];
-    for (const file of selected) {
-      if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
-        toast.error('Evidence photos must be JPEG, PNG, or WebP images.');
-      } else if (file.size > 8 * 1024 * 1024) {
-        toast.error(`${file.name} exceeds the 8 MB photo limit.`);
-      } else accepted.push({ file, preview: URL.createObjectURL(file) });
+  const handleCancelOrder = async (orderId) => {
+    if (!window.confirm(`Are you sure you want to cancel this order? Cancellation is only available before the order is packed and shipped.`)) {
+      return;
     }
-    setReturnOrder(current => {
-      if (!current) {
-        accepted.forEach(image => URL.revokeObjectURL(image.preview));
-        return current;
-      }
-      const existingImages = Array.isArray(current.form?.images) ? current.form.images : [];
-      const room = Math.max(0, 5 - existingImages.length);
-      if (accepted.length > room) toast.error('You can attach up to 5 evidence photos.');
-      accepted.slice(room).forEach(image => URL.revokeObjectURL(image.preview));
-      return { ...current, form: { ...current.form, images: [...existingImages, ...accepted.slice(0, room)] } };
-    });
-  };
-  const removeReturnImage = index => setReturnOrder(current => {
-    const existingImages = Array.isArray(current?.form?.images) ? current.form.images : [];
-    const image = existingImages[index];
-    if (image?.preview) URL.revokeObjectURL(image.preview);
-    return current ? { ...current, form: { ...current.form, images: existingImages.filter((_, imageIndex) => imageIndex !== index) } } : current;
-  });
-  const closeReturnRequest = () => {
-    if (returnSubmitting) return;
-    (returnOrder?.form?.images || []).forEach(image => URL.revokeObjectURL(image.preview));
-    setReturnOrder(null);
-  };
-  const uploadReturnPhoto = async (file, orderId, index, total) => {
-    const compressedFile = await compressImageForUpload(file);
-    const { data } = await returnsApi.createUploadUrl({
-      filename: compressedFile.name,
-      fileType: compressedFile.type,
-      size: compressedFile.size,
-      order_id: orderId,
-    });
-    return new Promise((resolve, reject) => {
-      const request = new XMLHttpRequest();
-      request.open('PUT', data.uploadUrl);
-      request.setRequestHeader('Content-Type', compressedFile.type);
-      request.upload.onprogress = progress => {
-        if (progress.lengthComputable) setReturnUploadProgress(Math.round(((index + progress.loaded / progress.total) / total) * 100));
-      };
-      request.onload = () => request.status >= 200 && request.status < 300 ? resolve(data.key) : reject(new Error('Evidence photo upload failed. Please try again.'));
-      request.onerror = () => reject(new Error('Evidence photo upload failed. Check your connection.'));
-      request.send(compressedFile);
-    });
-  };
-  const handleSubmitReturn = async (e) => {
-    e.preventDefault();
-    const f = returnOrder?.form || {};
-    const evidenceImages = Array.isArray(f.images) ? f.images : [];
-    if (!returnOrder?.orderId) return;
-    if (!f.reason) { toast.error('Please provide a return reason'); return; }
-    if (!f.orderItemId) { toast.error('Select the item you need help returning.'); return; }
-    setReturnSubmitting(true);
-    setReturnUploadProgress(0);
+    setCancellingOrderId(orderId);
     try {
-      const imageUrls = [];
-      for (let index = 0; index < evidenceImages.length; index += 1) {
-        imageUrls.push(await uploadReturnPhoto(evidenceImages[index].file, returnOrder.orderId, index, evidenceImages.length));
-      }
-      await returnsApi.submit({
-        order_id: returnOrder.orderId,
-        items: [{ order_item_id: f.orderItemId, quantity: Number(f.quantity) || 1 }],
-        reason: f.reason,
-        refund_method: f.refundMethod || 'wallet',
-        description: f.notes || '',
-        image_urls: imageUrls,
-      });
-      toast.success('Request sent for admin review. Your order remains delivered while the team reviews it.');
-      evidenceImages.forEach(image => URL.revokeObjectURL(image.preview));
-      setReturnOrder(null);
-      await loadReturns();
-    } catch (err) { toast.error(err.response?.data?.message || err.message || 'Could not submit the return request.'); }
-    finally { setReturnSubmitting(false); }
+      const res = await ordersApi.cancel(orderId);
+      toast.success(res.data?.message || 'Order cancelled successfully. Full refund has been initiated.');
+      setSelectedOrder(null);
+      await loadOrders();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Could not cancel order. It may have already been packed or shipped.');
+    } finally {
+      setCancellingOrderId(null);
+    }
   };
   const handleMarkNotifRead = async (id) => {
     try { await notificationsApi.markRead(id); setNotifications(ns => ns.map(n => n.id===id ? { ...n, is_read:1, status:'read' } : n)); }
@@ -1012,31 +915,6 @@ export default function Profile() {
 
   const displayName = profileData.name || user?.name || user?.first_name || user?.full_name || 'Customer';
   const initials = displayName.split(/\s+/).map(s => s[0]).filter(Boolean).slice(0,2).join('').toUpperCase() || 'B';
-  const eligibilityForOrder = orderId => returnEligibility.find(item => String(item.id) === String(orderId));
-  const canRequestReturn = orderId => {
-    const eligibility = eligibilityForOrder(orderId);
-    if (!eligibility || Number(eligibility.has_return_request)) return false;
-    const opensAt = new Date(eligibility.return_available_at || '').getTime();
-    const expiresAt = new Date(eligibility.return_expires_at || '').getTime();
-    return Number.isFinite(opensAt) && Number.isFinite(expiresAt) && returnEligibilityClock >= opensAt && returnEligibilityClock <= expiresAt;
-  };
-  const returnWindowMessage = orderId => {
-    const eligibility = eligibilityForOrder(orderId);
-    if (!eligibility) return 'Checking return window…';
-    if (Number(eligibility.has_return_request)) return 'Return request already on file';
-    const opensAt = new Date(eligibility.return_available_at || '').getTime();
-    const expiresAt = new Date(eligibility.return_expires_at || '').getTime();
-    if (!Number.isFinite(opensAt) || !Number.isFinite(expiresAt)) return 'Contact support to check eligibility';
-    if (Number.isFinite(opensAt) && returnEligibilityClock < opensAt) {
-      const remainingMinutes = Math.ceil((opensAt - returnEligibilityClock) / 60000);
-      return `Return opens in ${Math.floor(remainingMinutes / 60)}h ${remainingMinutes % 60}m`;
-    }
-    if (Number.isFinite(expiresAt) && returnEligibilityClock > expiresAt) return 'Return window closed';
-    return 'Return request available';
-  };
-  const eligibleReturnOrders = orders.filter(order =>
-    DELIVERED_STATUSES.includes(String(order.status || '').toLowerCase()) && canRequestReturn(order.id)
-  );
 
   // ========== RENDER ==========
   return (
@@ -1327,9 +1205,13 @@ export default function Profile() {
                                     type="button"
                                     onClick={() => {
                                       const orderNumber = formatOrderNumber(o.order_number || o.id);
-                                      window.dispatchEvent(new CustomEvent('bhumivera:open-support-chat', {
-                                        detail: { prompt: `I need help with Order #${orderNumber}.` },
-                                      }));
+                                      setSupportTicket({
+                                        subject: `Help with Order #${orderNumber}`,
+                                        message: `I need help with Order #${orderNumber}.`,
+                                        order_id: String(o.id),
+                                        product_id: '',
+                                      });
+                                      setActiveTab('support');
                                     }}
                                     className="btn-silver-luxury inline-flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider"
                                   >
@@ -2744,8 +2626,28 @@ export default function Profile() {
               </div>
             </div>
             <div className="border-t border-[#d4af37]/20 bg-[#070a0e] px-6 sm:px-8 py-4 flex flex-wrap items-center justify-between gap-3">
-              <div className="text-xs text-[#94a3b8] font-light">Need assistance? <button onClick={() => { const ordNum = formatOrderNumber(selectedOrder.order_number || selectedOrder.id); setSelectedOrder(null); setActiveTab('support'); window.dispatchEvent(new CustomEvent('bhumivera:open-support-chat', { detail: { prompt: `I need help with Order #${ordNum}.` } })); }} className="text-[#fce096] font-semibold underline underline-offset-2 hover:text-white">Open Live Order Support Chat</button>.</div>
-              <div className="flex flex-wrap gap-2">
+              <div className="text-xs text-[#94a3b8] font-light">Need assistance? <button onClick={() => { const ordNum = formatOrderNumber(selectedOrder.order_number || selectedOrder.id); setSupportTicket({ subject: `Help with Order #${ordNum}`, message: `I need help with Order #${ordNum}.`, order_id: String(selectedOrder.id), product_id: '' }); setSelectedOrder(null); setActiveTab('support'); }} className="text-[#fce096] font-semibold underline underline-offset-2 hover:text-white">Open Customer Support</button>.</div>
+              <div className="flex flex-wrap gap-2 items-center">
+                {['pending', 'confirmed', 'placed', 'processing'].includes(String(selectedOrder.status || '').toLowerCase()) && (
+                  <button
+                    type="button"
+                    onClick={() => handleCancelOrder(selectedOrder.id)}
+                    disabled={cancellingOrderId === selectedOrder.id}
+                    className="btn-silver-luxury px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider text-rose-300 border-rose-500/40 hover:bg-rose-500/10 disabled:opacity-50"
+                  >
+                    {cancellingOrderId === selectedOrder.id ? 'Cancelling…' : 'Cancel Order (Pre-Dispatch)'}
+                  </button>
+                )}
+                {['packed', 'shipped', 'out_for_delivery'].includes(String(selectedOrder.status || '').toLowerCase()) && (
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-xl text-[11px] font-mono text-[#fce096] bg-[#070a0e] border border-[#d4af37]/30">
+                    Dispatched · Cannot cancel
+                  </span>
+                )}
+                {DELIVERED_STATUSES.includes(String(selectedOrder.status || '').toLowerCase()) && (
+                  <span className="inline-flex items-center px-3 py-1.5 rounded-xl text-[11px] font-mono text-[#cbd5e1] bg-[#070a0e] border border-white/10">
+                    Delivered · 100% Non-Returnable
+                  </span>
+                )}
                 {needsRefundSupport(selectedOrder) && (
                   <button onClick={() => { setSelectedOrder(null); setActiveTab('support'); }} className="btn-silver-luxury px-4 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider">
                     Contact concierge about refund
@@ -2835,113 +2737,7 @@ export default function Profile() {
         </div>
       )}
 
-      {/* ======== RETURN REQUEST MODAL ======== */}
-      {returnOrder && (() => {
-        const deliveredOrders = eligibleReturnOrders;
-        const selectedOrderItems = safeArr(returnOrder.order?.items || returnOrder.order?.order_items);
-        const form = returnOrder.form || {};
-        const evidenceImages = Array.isArray(form.images) ? form.images : [];
-        return (
-          <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-md p-0 sm:p-6" onClick={closeReturnRequest}>
-            <form onSubmit={handleSubmitReturn} onClick={e => e.stopPropagation()} className="w-full sm:max-w-xl bg-[#0d1520] border border-[#d4af37]/30 sm:rounded-3xl rounded-t-3xl shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
-              <div className="two-tone-panel-gold border-b border-[#d4af37]/25 text-white px-6 sm:px-8 py-6 flex items-start justify-between gap-4">
-                <div>
-                  <div className="font-sub-gold uppercase tracking-[0.2em] font-bold text-xs mb-1">Return Request</div>
-                  <h3 className="text-2xl font-serif font-bold text-white">Submit Return</h3>
-                  <p className="text-sm text-[#cbd5e1] mt-1 font-light">Your order stays delivered while our team reviews the request.</p>
-                </div>
-                <button type="button" onClick={closeReturnRequest} className="w-9 h-9 rounded-xl bg-[#070a0e]/60 hover:bg-[#d4af37]/20 border border-[#d4af37]/30 flex items-center justify-center text-[#cbd5e1] hover:text-[#fce096]">
-                  <X className="w-4 h-4"/>
-                </button>
-              </div>
-              <div className="px-6 sm:px-8 py-6 space-y-4 flex-1 overflow-y-auto bg-[#0d1520]">
-                <div>
-                  <label className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">Delivered Order</label>
-                  <select value={returnOrder.orderId} onChange={e => {
-                    const order = deliveredOrders.find(item => String(item.id) === e.target.value);
-                    setReturnOrder(current => ({ ...current, orderId: Number(e.target.value), order, form: { ...current.form, orderItemId: (order?.items || order?.order_items || [])[0]?.id || '', quantity: 1 } }));
-                  }}
-                    className="w-full px-4 py-2.5 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] text-white text-sm focus:border-[#d4af37]">
-                    {deliveredOrders.map(o => (
-                      <option key={o.id} value={o.id} className="bg-[#070a0e] text-white">Order #{formatOrderNumber(o.order_number || o.id)} — ₹{Number(o.total_amount||o.total||0).toFixed(2)} ({o.created_at? new Date(o.created_at).toLocaleDateString():''})</option>
-                    ))}
-                    {deliveredOrders.length === 0 && <option value="" className="bg-[#070a0e] text-white">No currently eligible delivered orders</option>}
-                  </select>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-[1fr_120px] gap-3">
-                  <div>
-                    <label className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">Item to return</label>
-                    <select value={form.orderItemId} onChange={e => setReturnOrder(current => ({ ...current, form: { ...current.form, orderItemId: e.target.value, quantity: 1 } }))}
-                      className="w-full px-4 py-2.5 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] text-white text-sm">
-                      <option value="" className="bg-[#070a0e] text-white">Select an item…</option>
-                      {selectedOrderItems.map(item => <option key={item.id} value={item.id} className="bg-[#070a0e] text-white">{item.name || item.product_name || `Product #${item.product_id}`} · {item.quantity} purchased</option>)}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">Quantity</label>
-                    <input type="number" min="1" max={selectedOrderItems.find(item => String(item.id) === String(form.orderItemId))?.quantity || 1} value={form.quantity} onChange={e => setReturnOrder(current => ({ ...current, form: { ...current.form, quantity: e.target.value } }))} className="w-full px-4 py-2.5 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] text-white text-sm"/>
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">Return Reason</label>
-                  <select value={form.reason} onChange={e => setReturnOrder(r => ({ ...r, form:{ ...r.form, reason: e.target.value }}))}
-                    className="w-full px-4 py-2.5 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] text-white text-sm focus:border-[#d4af37]">
-                    <option value="" className="bg-[#070a0e] text-white">Select a reason…</option>
-                    <option className="bg-[#070a0e] text-white">Defective product</option>
-                    <option className="bg-[#070a0e] text-white">Wrong item received</option>
-                    <option className="bg-[#070a0e] text-white">Item damaged during shipping</option>
-                    <option className="bg-[#070a0e] text-white">Not as described on website</option>
-                    <option className="bg-[#070a0e] text-white">Changed my mind</option>
-                    <option className="bg-[#070a0e] text-white">Other</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">Refund Method</label>
-                  <div className="grid grid-cols-2 gap-2.5">
-                    {[
-                      { v:'wallet', l:'Bhumivera Wallet', d:'Instant credit • use for future orders', i: Wallet },
-                      { v:'original', l:'Original Payment', d:'Refunded in 5-7 business days', i: ArrowUpRight },
-                    ].map(o => {
-                      const I = o.i;
-                      const active = form.refundMethod === o.v;
-                      return (
-                        <button key={o.v} type="button" onClick={() => setReturnOrder(r => ({ ...r, form:{ ...r.form, refundMethod: o.v }}))}
-                          className={`p-4 rounded-2xl border text-left transition-all ${active ? 'bg-[#070a0e] border-[#d4af37] ring-1 ring-[#d4af37]' : 'border-[#d4af37]/20 bg-[#070a0e]/60 hover:border-[#d4af37]/40'}`}>
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center mb-2.5 ${active ? 'bg-[#d4af37]/20 text-[#fce096]' : 'bg-[#0d1520] text-[#94a3b8]'}`}>
-                            <I className="w-4.5 h-4.5"/>
-                          </div>
-                          <div className="font-serif font-bold text-sm text-white">{o.l}</div>
-                          <div className="text-xs text-[#94a3b8] mt-0.5 font-light">{o.d}</div>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-                <div>
-                  <label className="text-xs font-semibold text-[#fce096] uppercase tracking-wider mb-1.5 block">What happened? (optional details)</label>
-                  <textarea rows={3} value={form.notes} onChange={e => setReturnOrder(r => ({ ...r, form:{ ...r.form, notes: e.target.value }}))}
-                    maxLength={2000} placeholder="Share what happened so our team can review the right solution."
-                    className="w-full px-4 py-3 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] text-white focus:border-[#d4af37] text-sm resize-none font-light"/>
-                </div>
-                <div>
-                  <div className="mb-2 flex items-center justify-between gap-3"><label className="text-xs font-semibold text-[#fce096] uppercase tracking-wider">Evidence photos (optional, up to 5)</label><span className="text-[10px] text-[#94a3b8]">{evidenceImages.length}/5</span></div>
-                  <input ref={returnPhotoInputRef} type="file" accept="image/jpeg,image/png,image/webp" multiple onChange={addReturnImages} className="hidden"/>
-                  <button type="button" onClick={() => returnPhotoInputRef.current?.click()} disabled={evidenceImages.length >= 5 || returnSubmitting} className="w-full rounded-xl border border-dashed border-[#d4af37]/30 bg-[#070a0e] px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-[#cbd5e1] hover:border-[#d4af37] disabled:opacity-50"><Camera className="mr-2 inline h-4 w-4 text-[#d4af37]"/>Add photos — JPEG, PNG, or WebP; max 8 MB each</button>
-                  {evidenceImages.length > 0 && <div className="mt-3 grid grid-cols-5 gap-2">{evidenceImages.map((image, index) => <div key={image.preview} className="relative aspect-square overflow-hidden rounded-lg border border-[#d4af37]/30"><img src={image.preview} alt={`Return evidence ${index + 1}`} className="h-full w-full object-cover"/><button type="button" onClick={() => removeReturnImage(index)} disabled={returnSubmitting} aria-label="Remove evidence photo" className="absolute right-1 top-1 rounded-full bg-black/80 p-1 text-white"><X className="h-3 w-3"/></button></div>)}</div>}
-                  {returnSubmitting && evidenceImages.length > 0 && <div className="mt-3"><div className="h-2 overflow-hidden rounded-full bg-[#070a0e]"><div className="h-full bg-[#d4af37] transition-all" style={{ width: `${returnUploadProgress}%` }}/></div><p className="mt-1 text-right text-xs text-[#94a3b8]">{returnUploadProgress}% uploaded</p></div>}
-                </div>
-                <div className="rounded-xl border border-[#d4af37]/25 bg-[#070a0e]/60 p-3 text-xs text-[#cbd5e1] font-light">Our concierge team reviews every submission. Need urgent assistance? <button type="button" onClick={() => { closeReturnRequest(); setSupportTicket(ticket => ({ ...ticket, subject: `Return help for order #${returnOrder.orderId}`, order_id: String(returnOrder.orderId) })); setActiveTab('support'); }} className="text-[#fce096] font-semibold underline underline-offset-2 hover:text-white">Chat with customer care</button>.</div>
-              </div>
-              <div className="border-t border-[#d4af37]/20 bg-[#070a0e] px-6 sm:px-8 py-4 flex flex-wrap items-center justify-end gap-2">
-                <button type="button" onClick={closeReturnRequest} disabled={returnSubmitting} className="btn-silver-luxury px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider disabled:opacity-50">Cancel</button>
-                <button type="submit" disabled={returnSubmitting} className="btn-gold-luxury px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider inline-flex items-center gap-2 disabled:opacity-50">
-                  <CheckCircle2 className="w-4 h-4"/> {returnSubmitting ? 'Sending for review…' : 'Submit for review'}
-                </button>
-              </div>
-            </form>
-          </div>
-        );
-      })()}
+
 
       {/* ======== ADDRESS FORM MODAL ======== */}
       {addressModal.open && (

@@ -49,7 +49,7 @@ export default function ConciergeKnowledgeTreeViewer({
   searchQuery = '',
   setSearchQuery,
   onNavigate,
-  onOpenVerification,
+  onOpenCustomerSupport,
   onAddToCart,
 }) {
   const [activePillarId, setActivePillarId] = useState(null);
@@ -115,8 +115,8 @@ export default function ConciergeKnowledgeTreeViewer({
   const handleDirectAction = action => {
     if (action.actionType === 'NAVIGATE' && onNavigate && action.target) {
       onNavigate(action.target);
-    } else if (action.actionType === 'OPEN_ESCALATION' && onOpenVerification) {
-      onOpenVerification();
+    } else if (action.actionType === 'OPEN_ESCALATION' && onOpenCustomerSupport) {
+      onOpenCustomerSupport();
     } else if (action.actionType === 'VIEW_NODE' && action.target) {
       handleSelectNode(action.target);
     } else if (action.actionType === 'ADD_TO_CART' && action.payload) {
@@ -155,7 +155,7 @@ export default function ConciergeKnowledgeTreeViewer({
             <Info className="w-8 h-8 text-[#D4AF37] mx-auto mb-2 opacity-80" />
             <h4 className="font-serif text-sm font-semibold">No direct card match for "{searchQuery}"</h4>
             <p className="text-xs text-stone-400 mt-1 max-w-xs mx-auto">
-              Browse our 8 master categories below or schedule a verified specialist callback.
+              Browse our 8 master categories below or contact Customer Support from your profile.
             </p>
             <div className="mt-4 flex flex-wrap justify-center gap-2">
               <button
@@ -164,13 +164,6 @@ export default function ConciergeKnowledgeTreeViewer({
                 className="px-3 py-1.5 rounded-xl text-[11px] font-medium bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0B2419] transition-all"
               >
                 🔐 Forgot Password Guide
-              </button>
-              <button
-                type="button"
-                onClick={() => handleSelectNode('orders_track_my_order')}
-                className="px-3 py-1.5 rounded-xl text-[11px] font-medium bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#0B2419] transition-all"
-              >
-                🚚 Track My Order
               </button>
               <button
                 type="button"
@@ -580,13 +573,6 @@ export default function ConciergeKnowledgeTreeViewer({
             className="px-2.5 py-1 rounded-xl text-[10px] font-bold uppercase tracking-wider bg-[#E07A24]/15 border border-[#E07A24]/40 text-[#E07A24] hover:bg-[#E07A24] hover:text-white transition-all"
           >
             🔐 Forgot Password
-          </button>
-          <button
-            type="button"
-            onClick={() => handleSelectNode('orders_track_my_order')}
-            className="px-2.5 py-1 rounded-xl text-[10px] font-bold uppercase tracking-wider bg-[#2D8A5E]/15 border border-[#2D8A5E]/40 text-emerald-400 hover:bg-emerald-600 hover:text-white transition-all"
-          >
-            🚚 Track Order
           </button>
           <button
             type="button"

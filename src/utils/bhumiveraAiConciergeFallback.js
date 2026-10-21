@@ -18,10 +18,10 @@ const supportActions = [
     category: 'usage_and_timing',
   },
   {
-    id: 'verify_order',
-    label: 'Order support',
-    prompt: '__OPEN_VERIFICATION_FLOW__',
-    category: 'verification',
+    id: 'customer_support',
+    label: 'Open Customer Support',
+    prompt: '__OPEN_SUPPORT_CENTER__',
+    category: 'customer_support',
   },
 ];
 
@@ -124,12 +124,6 @@ const buildClientCompatibilityFollowUps = () => [
     label: '🌙 Pair with Kumkumadi Night Elixir',
     prompt: 'How do I pair Sea Buckthorn Face Wash with Bhumivera Kumkumadi Night Elixir?',
     category: 'product_pairing',
-  },
-  {
-    id: 'verify_order',
-    label: 'Order support',
-    prompt: '__OPEN_VERIFICATION_FLOW__',
-    category: 'verification',
   },
 ];
 
@@ -375,9 +369,19 @@ export function resolveClientSideConciergeFallback(message) {
     };
   }
 
-  if (/\b(order|track|tracking|return|refund|wallet|coupon)\b/.test(normalizedQuery)) {
+  if (/\b(?:what\s+is\s+(?:your|the)\s+return\s+policy|how\s+do\s+returns?\s+work|can\s+i\s+return|return\s+policy|do\s+you\s+accept\s+returns?|are\s+items\s+returnable)\b/.test(normalizedQuery)) {
     return {
-      reply: 'I cannot access live account or order information right now. Please open the order-support verification flow, or try again when the Client Concierge service is available.',
+      reply: `**🌿 Bhumivera Strict Non-Returnable Policy:**\n\n` +
+        `All Bhumivera formulations are intimate, personal care and botanical cosmetics sealed with tamper-evident security. In accordance with cosmetic safety and hygiene standards under the Drugs and Cosmetics Act, **all sold products are strictly 100% NON-RETURNABLE once shipped or delivered**.\n\n` +
+        `• **Pre-Dispatch Order Cancellation:** You can cancel an order **only if it has not yet been packed and shipped** (while in Pending, Confirmed, or Processing status). Once packed or shipped, cancellation is locked.\n` +
+        `• **Damaged in Transit / Defective Parcel:** If your order arrives leaking, damaged, or with an incorrect item, submit an uncut 360° unboxing video within 48 hours to our support desk. We provide direct free replacement or refund without requiring return shipping.`,
+      quickActions: supportActions,
+    };
+  }
+
+  if (/\b(?:my|latest|recent|this|that)\s+(?:orders?|shipments?|deliveries?|packages?|parcels?|refunds?|wallet|coupons?)\b|\b(?:track|tracking|cancel|refund|return)\b.{0,40}\b(?:order|shipment|package|parcel)\b/.test(normalizedQuery)) {
+    return {
+      reply: 'For an update or action on a specific order, please use Profile → Support so the customer-care team can securely review it.',
       quickActions: supportActions,
     };
   }
@@ -565,12 +569,6 @@ export function resolveClientSideConciergeFallback(message) {
           label: '⏰ How & What Time to Use',
           prompt: `How do I use ${prodName} and what time of day should I use it?`,
           category: 'usage_and_timing',
-        },
-        {
-          id: 'verify_order',
-          label: 'Order support',
-          prompt: '__OPEN_VERIFICATION_FLOW__',
-          category: 'verification',
         },
       ],
     };

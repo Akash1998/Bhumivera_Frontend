@@ -491,14 +491,11 @@ export default function AdminSettings() {
       </div>
 
       <div className="admin-glass-panel mt-6 rounded-2xl p-6">
-        <h3 className="text-lg font-semibold text-white mb-2">Return window</h3>
-        <p className="mb-4 text-sm text-gray-400">The return option opens 30 minutes after an order is marked delivered. This setting controls how long it stays available after delivery.</p>
-        <form onSubmit={saveReturnPolicy} className="flex flex-wrap items-end gap-4">
-          <label className="text-sm text-gray-300">Eligible for (days after delivery)
-            <input type="number" min="1" max="90" required value={returnPolicyDays} onChange={event => setReturnPolicyDays(event.target.value)} className="admin-glass-control mt-2 block w-full rounded-lg px-3 py-2 sm:w-48"/>
-          </label>
-          <button type="submit" disabled={cartSettingsLoading || cartSettingsSaving} className="flex items-center gap-2 rounded-lg bg-cyan-500 px-4 py-2 text-sm font-semibold text-slate-950 hover:bg-cyan-400 disabled:opacity-50"><FiSave/>{cartSettingsSaving ? 'Saving…' : 'Save return window'}</button>
-        </form>
+        <h3 className="text-lg font-semibold text-white mb-2">Store Return Policy: 100% Non-Returnable</h3>
+        <p className="mb-4 text-sm text-gray-400">All Bhumivera formulations are intimate personal care cosmetics and are strictly non-returnable across the storefront once delivered. Pre-dispatch cancellations are allowed only before orders are packed and shipped.</p>
+        <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs text-amber-200">
+          Customer self-service returns are disabled. Transit damage claims require an uncut 360° unboxing video within 48 hours for direct replacement or refund without physical return.
+        </div>
       </div>
 
       <div className="admin-glass-panel mt-6 rounded-2xl p-6">

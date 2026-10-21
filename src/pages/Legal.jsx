@@ -72,8 +72,8 @@ const PROTECTION_MATRIX = [
     statute: 'Section 63, Bharatiya Sakshya Adhiniyam, 2023 (Electronic Evidence).',
   },
   {
-    scenario: 'Order Cancellation After Confirmation / Processing / Dispatch',
-    policy: 'Self-cancellation and bot cancellation are locked once confirmed/processing/shipped. Only SuperAdmin may authorize exceptions.',
+    scenario: 'Order Cancellation (Pre-Dispatch Only; Blocked Once Packed or Shipped)',
+    policy: 'Orders may only be cancelled before they are packed and shipped. Once marked packed or shipped, cancellation is locked. Once delivered, all items are 100% non-returnable.',
     evidence: 'Immutable order state machine & SHA-512 audit ledger.',
     statute: 'Indian Contract Act, 1872 (Binding Electronic Offer & Acceptance).',
   },
@@ -137,10 +137,10 @@ const LEGAL_CLAUSES = {
     },
     {
       num: '1.6',
-      title: '6. Order offer, acceptance & SuperAdmin-exclusive cancellation lock',
+      title: '6. Order offer, acceptance & Pre-dispatch cancellation rule',
       body: [
         'Submitting an order at checkout constitutes a binding offer to purchase the selected merchandise under these Conditions. Order acceptance occurs when our system confirms the order and allocates warehouse inventory. We reserve the right to decline or cancel any order prior to delivery due to stock unavailability, unserviceable pin code, failed security/fraud screening, pricing error, or regulatory restriction, with a full refund of any captured online payment.',
-        'To maintain automated warehouse picking, barcode serialization, and carrier manifest integrity, orders that have entered Confirmed, Processing, Packed, or Shipped status CANNOT be self-cancelled by the customer or cancelled by automated chat bots or L1/L2/L3 support agents. Only the authorized SuperAdmin control centre may execute an administrative cancellation where operationally feasible prior to delivery.',
+        'PRE-DISPATCH ORDER CANCELLATION: An order may be cancelled ONLY before it is packed and shipped from the warehouse (while in Pending, Confirmed, or Processing status). Once an order has entered Packed or Shipped status, automated warehouse picking, serial registration, and courier manifest handover are complete, and the order CANNOT be cancelled or recalled. Furthermore, once delivered, all products are strictly non-returnable.',
       ],
     },
     {
@@ -233,9 +233,9 @@ const LEGAL_CLAUSES = {
     },
     {
       num: '2.2',
-      title: '2. Artisanal Sealed Virgin Custody Standard for Personal Care Cosmetics',
+      title: '2. Strict 100% Non-Returnable Policy & Sealed Virgin Custody Standard',
       body: [
-        'Bhumivera formulations—including Face Washes, Shampoos, Hair Cleansers, Night Elixirs, Serums, and Botanical Gels—are intimate, microbial-sensitive personal hygiene and cosmetic products compounded in small artisanal batches of 250 units. In compliance with health and cosmetic safety standards under the Drugs and Cosmetics Act, 1940 and sealed-hygiene custody practices, all delivered vessels are sealed with tamper-evident virgin security to guarantee 100% untouched botanical purity for every patron.',
+        'STRICT 100% NON-RETURNABLE POLICY: Bhumivera formulations—including Face Washes, Shampoos, Hair Cleansers, Night Elixirs, Serums, and Botanical Gels—are intimate, microbial-sensitive personal hygiene and cosmetic products compounded in small artisanal batches of 250 units. In compliance with health and cosmetic safety standards under the Drugs and Cosmetics Act, 1940 and sealed-hygiene custody practices, all sold products are strictly 100% NON-RETURNABLE once shipped or delivered. We do not accept returns under any circumstances to prevent potential cross-contamination.',
         'Each bottle carries a unique serial number verifiable on our /verify portal to inspect individual batch laboratory assays, calibrated pH, and chemical purity.',
       ],
     },
