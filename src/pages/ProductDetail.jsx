@@ -118,12 +118,17 @@ export default function ProductDetail() {
         setLoading(true);
         let fetchedProduct = null;
         let loadedFromFallback = false;
+        const fallbackProduct = FALLBACK_CATALOG_PRODUCTS.find(
+          product => String(product.id) === String(id) || product.slug === String(id)
+        );
         try {
-          const prodRes = await productsApi.getById(id);
+          const prodRes = fallbackProduct?.slug && String(fallbackProduct.id) === String(id)
+            ? await productsApi.getBySlug(fallbackProduct.slug)
+            : await productsApi.getById(id);
           fetchedProduct = prodRes.data?.data || prodRes.data;
         } catch (err) {
           try {
-            const slugRes = await productsApi.getBySlug(id);
+            const slugRes = await productsApi.getBySlug(fallbackProduct?.slug || id);
             fetchedProduct = slugRes.data?.data || slugRes.data;
           } catch {
             const normId = String(id).toLowerCase();

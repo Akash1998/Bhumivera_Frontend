@@ -77,13 +77,26 @@ export const CartProvider = ({ children }) => {
 
         let remainingGuestItems = [...guestItems];
         for (const item of guestItems) {
-          const productId = getCartProductId(item);
+          let productId = getCartProductId(item);
           const quantity = Number(item.quantity);
           if (productId == null || !Number.isInteger(quantity) || quantity < 1) {
             console.error("Skipping invalid saved guest cart item:", item);
             continue;
           }
           try {
+            const savedProduct = item.product && typeof item.product === 'object' ? item.product : item;
+            if (savedProduct.slug) {
+              try {
+                const response = await productsApi.getBySlug(savedProduct.slug);
+                const liveProduct = response.data?.data || response.data;
+                const liveProductId = getCartProductId(liveProduct);
+                if (liveProductId !== undefined && liveProductId !== null) {
+                  productId = liveProductId;
+                }
+              } catch (error) {
+                if (error.response?.status !== 404) throw error;
+              }
+            }
             await cartApi.add({ productId, quantity });
             remainingGuestItems = remainingGuestItems.filter(candidate => candidate !== item);
             if (remainingGuestItems.length) {
