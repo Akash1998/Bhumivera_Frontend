@@ -255,18 +255,6 @@ export default function Navbar() {
             </form>
             <button
               type="button"
-              onClick={isListening ? undefined : startListening}
-              disabled={isListening}
-              aria-label={isListening ? 'Listening for voice search' : 'Search by voice'}
-              title={voiceError || (isListening ? 'Listening...' : 'Search by voice')}
-              className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#d4af37]/40 bg-[#1C382B] transition ${
-                isListening ? 'animate-pulse text-rose-400' : 'text-[#d4af37] hover:bg-[#244A38]'
-              }`}
-            >
-              <Mic size={17} />
-            </button>
-            <button
-              type="button"
               onClick={openAiConcierge}
               aria-label="Open AI concierge"
               title="Ask the AI concierge"
@@ -378,6 +366,18 @@ export default function Navbar() {
               </div>
             )}
           </div>
+          <button
+            type="button"
+            onClick={startListening}
+            title={voiceError || (isListening ? 'Listening...' : 'Search by voice')}
+            aria-label={isListening ? 'Listening for voice search' : 'Search by voice'}
+            aria-pressed={isListening}
+            className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#d4af37]/40 bg-[#1C382B] transition ${
+              isListening ? 'animate-pulse text-rose-400' : 'text-[#d4af37] hover:bg-[#244A38]'
+            }`}
+          >
+            <Mic size={17} />
+          </button>
           <button
             type="button"
             onClick={openAiConcierge}
