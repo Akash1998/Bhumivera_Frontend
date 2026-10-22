@@ -8,9 +8,9 @@ import {
   savePublicCatalogResponse,
 } from "../utils/offlineCatalogCache";
 
-let b = import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL || "https://bhumivera-backend.vercel.app";
+let b = import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL || "https://bhumivera-backend-bhumivera.vercel.app";
 if (/^https?:\/\/service\.bhumivera\.com(?:\/|$)/i.test(b)) {
-  b = "https://bhumivera-backend.vercel.app";
+  b = "https://bhumivera-backend-bhumivera.vercel.app";
 }
 if (b.startsWith("http://") && !b.includes("localhost")) b = b.replace("http://", "https://");
 export const BASE_URL = b;
