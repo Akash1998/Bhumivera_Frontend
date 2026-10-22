@@ -615,7 +615,7 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      <div className="relative z-10 mx-auto mt-16 max-w-7xl px-4 md:mt-28 md:px-6">
+      <div className="relative z-10 mx-auto mt-10 max-w-7xl px-4 md:mt-16 md:px-6">
         <div className="no-scrollbar relative mb-8 flex overflow-x-auto border-b border-[#d4af37]/20 sm:mb-12">
           {['details', 'formulation', 'specifications', 'reviews'].map((tab) => (
             <button
