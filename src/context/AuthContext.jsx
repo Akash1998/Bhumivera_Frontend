@@ -203,6 +203,36 @@ export const AuthProvider = ({ children }) => {
   };
 
   useEffect(() => {
+    // Re-pull the profile from the server so edits made on another device appear here.
+    if (!token || !user || user.role !== 'customer') return undefined;
+    let busy = false;
+    const sync = async () => {
+      if (busy || document.visibilityState === 'hidden') return;
+      busy = true;
+      try {
+        const res = await usersApi.getProfile();
+        const fresh = res.data?.user || res.data;
+        if (fresh && typeof fresh === 'object') {
+          setUser(current => {
+            if (!current) return current;
+            const merged = { ...current, ...fresh, role: current.role };
+            localStorage.setItem('user', JSON.stringify(merged));
+            return JSON.stringify(merged) === JSON.stringify(current) ? current : merged;
+          });
+        }
+      } catch (_) { /* keep local copy when offline */ } finally { busy = false; }
+    };
+    window.addEventListener('focus', sync);
+    document.addEventListener('visibilitychange', sync);
+    const timer = setInterval(sync, 60000);
+    return () => {
+      window.removeEventListener('focus', sync);
+      document.removeEventListener('visibilitychange', sync);
+      clearInterval(timer);
+    };
+  }, [token, user?.id, user?.role]);
+
+  useEffect(() => {
     if (!['admin', 'superadmin'].includes(user?.role) || !localStorage.getItem('adminToken')) return undefined;
 
     const idleLimitMs = 24 * 60 * 60 * 1000;

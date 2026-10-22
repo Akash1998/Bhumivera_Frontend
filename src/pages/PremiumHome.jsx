@@ -11,6 +11,21 @@ const tiles = [
   { to: '/science', label: 'Lab Science', note: 'pH 5.5 dossier', icon: Leaf },
 ];
 
+const promises = [
+  { icon: Leaf, title: 'Cold-Pressed Actives', text: 'Extracted below 28°C to keep Omega-7 and Vitamin C intact.' },
+  { icon: FlaskConical, title: 'pH 5.5 Calibrated', text: 'Matched to the skin acid mantle and printed on the label.' },
+  { icon: ShieldCheck, title: 'Serial Verified', text: 'Every bottle is serialised in micro-batches of 250.' },
+  { icon: Sprout, title: 'Zero SLS / Parabens', text: 'No artificial dyes, sulphates or foaming agents.' },
+  { icon: ShoppingBag, title: 'Sealed Dispatch', text: 'Tamper-evident seal and weight-logged before shipping.' },
+];
+
+const stats = [
+  { value: '2016', label: 'Established' },
+  { value: '250', label: 'Bottles per batch' },
+  { value: '0%', label: 'SLS / Parabens' },
+  { value: '5.5', label: 'Calibrated pH' },
+];
+
 export default function PremiumHome() {
   return (
     <main className="min-h-screen bg-[#14291F] text-[#FAF7F2] font-sans">
@@ -21,7 +36,7 @@ export default function PremiumHome() {
         ogImage={HOME_VISUAL_ASSETS.heroPrimary}
       />
 
-      <section className="premium-home-hero relative isolate overflow-hidden bg-[#14291F]">
+      <section className="premium-home-hero relative isolate min-h-[82svh] overflow-hidden bg-[#14291F]">
         <div className="absolute inset-0 -z-20">
           <img
             src={HOME_VISUAL_ASSETS.heroPrimary}
@@ -34,7 +49,7 @@ export default function PremiumHome() {
         </div>
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#14291F] via-[#14291F]/85 to-[#14291F]/40" />
 
-        <div className="mx-auto max-w-7xl px-6 pb-12 pt-28 sm:px-10 lg:pb-20">
+        <div className="mx-auto flex min-h-[82svh] max-w-7xl flex-col justify-center px-6 pb-12 pt-28 sm:px-10 lg:pb-20">
           <p className="font-sub-gold inline-flex items-center gap-2 text-xs font-bold uppercase tracking-[0.26em]">
             <Leaf size={14} className="text-[#D4AF37]" /> Bhumivera Botanical Maison · Est. 2016
           </p>
@@ -87,6 +102,50 @@ export default function PremiumHome() {
           </span>
           <ArrowRight size={18} className="shrink-0 text-[#D4AF37]" />
         </Link>
+
+        <div className="mt-10">
+          <p className="font-sub-gold text-xs font-bold uppercase tracking-[0.26em]">Why Bhumivera</p>
+          <h2 className="mt-2 font-serif text-2xl font-bold sm:text-4xl">
+            <span className="font-headline-gold">Five Promises</span>{' '}
+            <span className="font-headline-silver">On Every Bottle</span>
+          </h2>
+          <div className="gold-hairline my-3 w-24" />
+          <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
+            {promises.map(item => (
+              <div key={item.title} className="rounded-2xl border border-[#244A38] bg-[#102219] p-4">
+                <item.icon size={22} className="text-[#D4AF37]" />
+                <h3 className="mt-3 font-serif text-base font-bold">{item.title}</h3>
+                <p className="mt-1 text-[11px] font-light leading-5 text-[#9BB0A5]">{item.text}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="mt-10 grid grid-cols-2 gap-3 sm:grid-cols-4">
+          {stats.map(stat => (
+            <div key={stat.label} className="rounded-2xl border border-[#D4AF37]/25 bg-[#102219] p-4 text-center">
+              <p className="font-serif text-2xl font-bold text-[#D4AF37]">{stat.value}</p>
+              <p className="mt-1 text-[10px] uppercase tracking-wider text-[#9BB0A5]">{stat.label}</p>
+            </div>
+          ))}
+        </div>
+
+        <div className="mt-10 rounded-3xl border border-[#D4AF37]/35 bg-[#102219] p-6 text-center sm:p-10">
+          <h2 className="font-serif text-2xl font-bold sm:text-3xl">
+            <span className="font-headline-gold">Begin Your</span> <span className="font-headline-silver">Botanical Ritual</span>
+          </h2>
+          <p className="mx-auto mt-3 max-w-xl text-xs font-light leading-6 text-[#DFD7C4]">
+            Browse the full collection in the Shop, see how every batch is made, or read the public impact ledger.
+          </p>
+          <div className="mt-5 flex flex-wrap justify-center gap-3">
+            <Link to="/shop" className="btn-gold-luxury inline-flex min-h-11 items-center gap-2 rounded-full px-6 py-3 text-xs font-bold uppercase tracking-wider">
+              Visit the Shop <ArrowRight size={14} />
+            </Link>
+            <Link to="/about" className="btn-silver-luxury inline-flex min-h-11 items-center gap-2 rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-wider">
+              Our Story
+            </Link>
+          </div>
+        </div>
       </section>
     </main>
   );
