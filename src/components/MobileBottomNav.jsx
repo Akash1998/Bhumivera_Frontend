@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
-import { Home, Compass, User, ShoppingBag, ShieldCheck } from 'lucide-react';
+import { Home, Compass, User, ShoppingBag } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
 import { haptics } from '../utils/haptics';
@@ -24,7 +24,7 @@ export default function MobileBottomNav() {
   }
 
   return (
-    <nav className="mobile-bottom-nav md:hidden border-t border-[#244A38]/60 bg-[#14291F]/95 backdrop-blur-md" aria-label="Mobile Navigation">
+    <nav className="mobile-bottom-nav md:hidden border-t border-[#244A38]/60 bg-[#14291F]" aria-label="Mobile Navigation">
       <NavLink
         to="/"
         onClick={() => haptics.impactLight()}
@@ -52,16 +52,28 @@ export default function MobileBottomNav() {
       </NavLink>
 
       <NavLink
-        to="/verify"
+        to="/lab"
         onClick={() => haptics.impactLight()}
-        className={({ isActive }) =>
-          `flex flex-col items-center justify-center gap-1 text-[10px] font-medium transition-all ${
-            isActive ? 'text-[#D4AF37] font-bold scale-105' : 'text-[#9BB0A5] hover:text-[#FAF7F2]'
-          }`
-        }
+        aria-label="Earth and stewardship"
+        className="relative -mt-9 flex h-[68px] w-[68px] shrink-0 items-center justify-center rounded-full border-2 border-[#D4AF37] bg-[#0f2a1d] shadow-[0_6px_18px_rgba(0,0,0,0.55)] transition-transform active:scale-95"
       >
-        <ShieldCheck className="h-5 w-5" />
-        <span>Verify</span>
+        <svg viewBox="0 0 64 64" className="h-[52px] w-[52px]" aria-hidden="true">
+          <defs>
+            <radialGradient id="earthSea" cx="35%" cy="30%" r="80%">
+              <stop offset="0" stopColor="#4fb6d8" />
+              <stop offset="1" stopColor="#14577a" />
+            </radialGradient>
+          </defs>
+          <circle cx="32" cy="32" r="28" fill="url(#earthSea)" />
+          <path d="M10 26c6-8 14-8 18-4s-2 8-8 9-8 6-10-5zM38 40c6-4 14-2 16 4-4 8-12 10-18 8s-2-8 2-12z" fill="#3f9b52" opacity=".9" />
+          <path d="M32 54V34" stroke="#5b3a1e" strokeWidth="3.4" strokeLinecap="round" />
+          <path d="M32 40l-7-5M32 37l7-5" stroke="#5b3a1e" strokeWidth="2.2" strokeLinecap="round" />
+          <circle cx="32" cy="24" r="10" fill="#2fbf5b" />
+          <circle cx="24" cy="30" r="6.5" fill="#25a24c" />
+          <circle cx="40" cy="30" r="6.5" fill="#25a24c" />
+          <circle cx="29" cy="21" r="3" fill="#7be08f" opacity=".8" />
+          <circle cx="32" cy="32" r="28" fill="none" stroke="#e6c57e" strokeWidth="1.5" />
+        </svg>
       </NavLink>
 
       <button

@@ -7,6 +7,8 @@ import { useNativeBackButton } from "./hooks/useNativeBackButton.js";
 import { initPushNotifications } from "./utils/pushNotifications.js";
 import Footer from "./components/Footer.jsx";
 import CartAuthPrompt from "./components/CartAuthPrompt.jsx";
+import NativePermissionSetup from "./components/NativePermissionSetup.jsx";
+import PhoneRequiredGate from "./components/PhoneRequiredGate.jsx";
 import { CartProvider, useCart } from "./context/CartContext.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { ToastProvider } from "./context/ToastContext.jsx";
@@ -91,6 +93,7 @@ const VisualGuideModal = lazyWithRetry(() => import("./components/VisualGuideMod
 
 // Storefront & Portal Pages
 const Home = lazyWithRetry(() => import("./pages/PremiumHome.jsx"));
+const LabProtocol = lazyWithRetry(() => import("./pages/LabProtocol.jsx"));
 const Warehouse = lazyWithRetry(() => import("./pages/Warehouse.jsx"));
 const WarehouseAdmin = lazyWithRetry(() => import("./pages/admin/WarehouseAdmin.jsx"));
 const WarehouseManagement = lazyWithRetry(() => import("./pages/admin/WarehouseManagement.jsx"));
@@ -391,6 +394,7 @@ function AppContent() {
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
             <Route path="/impact" element={<Impact />} />
+            <Route path="/lab" element={<LabProtocol />} />
             <Route path="/impact/:imageId" element={<ImpactProjectDetail />} />
             <Route path="/impact/project/:projectId" element={<ImpactProjectDetail />} />
             <Route path="/community" element={<Community />} />
@@ -505,6 +509,42 @@ function AppContent() {
   );
 }
 
+function NativeLaunchGate() {
+  const { isAuthenticated, loading } = useAuth();
+  const location = useLocation();
+
+  if (!Capacitor.isNativePlatform()) return <PhoneRequiredGate><AppContent /></PhoneRequiredGate>;
+  if (loading) return <PageLoader />;
+  if (!isAuthenticated) {
+    const requestedPath = `${location.pathname}${location.search}`;
+    return (
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route
+            path="*"
+            element={
+              <Navigate
+                to="/login"
+                replace
+                state={{ from: requestedPath === '/login' ? '/profile' : requestedPath }}
+              />
+            }
+          />
+        </Routes>
+      </Suspense>
+    );
+  }
+
+  return (
+    <NativePermissionSetup>
+      <PhoneRequiredGate>
+        <AppContent />
+      </PhoneRequiredGate>
+    </NativePermissionSetup>
+  );
+}
+
 function App() {
   return (
     <BrowserRouter>
@@ -513,7 +553,7 @@ function App() {
           <CartProvider>
             <WishlistProvider>
               <CompareProvider>
-                <AppContent />
+                <NativeLaunchGate />
               </CompareProvider>
             </WishlistProvider>
           </CartProvider>

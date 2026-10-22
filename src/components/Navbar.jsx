@@ -470,6 +470,7 @@ export default function Navbar() {
                     { to: '/community', label: 'Community & Volunteer Hub', icon: HeartHandshake, badge: 'Dec 2026' },
                     { to: '/impact', label: 'Impact Ledger & Pledges', icon: Leaf },
                     { to: '/about', label: 'Our Story & Heritage', icon: Sparkles },
+                    { to: '/lab', label: 'Lab & Dispatch Protocol', icon: FlaskConical },
                     { to: '/science', label: 'Botanical Science & pH 5.5', icon: FlaskConical },
                     { to: '/order-tracking', label: 'Track An Order', icon: Truck },
                     { to: '/wishlist', label: 'Saved Wishlist', icon: Heart },

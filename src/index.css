@@ -286,14 +286,12 @@ body {
   right: 0;
   height: calc(62px + var(--sab));
   padding-bottom: var(--sab);
-  background: rgba(20, 21, 18, 0.66);
-  -webkit-backdrop-filter: blur(22px) saturate(130%);
-  backdrop-filter: blur(22px) saturate(130%);
+  background: #14291f;
   border-top: 1px solid rgba(212, 175, 55, 0.24);
   display: flex;
   justify-content: space-around;
   align-items: center;
-  z-index: 50;
+  z-index: 40;
   box-shadow: 0 -8px 30px rgba(0, 0, 0, 0.65);
 }
 
@@ -335,6 +333,22 @@ html.native-app .site-shell {
 
 html.native-app #main-content {
   padding-bottom: calc(68px + var(--sab));
+}
+
+@media (max-width: 767px) {
+  #main-content {
+    padding-bottom: calc(84px + var(--sab));
+  }
+
+  /* Remove expensive GPU blur effects on phones */
+  .backdrop-blur-sm,
+  .backdrop-blur-md,
+  .backdrop-blur,
+  .backdrop-blur-lg,
+  .backdrop-blur-xl {
+    -webkit-backdrop-filter: none !important;
+    backdrop-filter: none !important;
+  }
 }
 
 html.native-app .mobile-bottom-nav {

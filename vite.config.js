@@ -10,7 +10,7 @@ export default defineConfig(({ mode }) => {
   const hasAndroidFirebaseConfig = existsSync(
     resolve(cwd(), 'android', 'app', 'google-services.json')
   );
-  const nativePushEnabled = env.VITE_FCM_ENABLED === 'true' && hasAndroidFirebaseConfig;
+  const nativePushEnabled = env.VITE_FCM_ENABLED !== 'false' && hasAndroidFirebaseConfig;
 
   return {
     define: {

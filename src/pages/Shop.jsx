@@ -137,6 +137,10 @@ export default function Shop() {
           .map((p, idx) => ({
             ...FALLBACK_CATALOG_PRODUCTS[idx % FALLBACK_CATALOG_PRODUCTS.length],
             ...p,
+            id: p.id ?? p._id,
+            _id: p._id ?? p.id,
+            product_id: p.product_id ?? p.id ?? p._id,
+            slug: p.slug || p.id,
             image_url:
               p.image_url ||
               FALLBACK_CATALOG_PRODUCTS[idx % FALLBACK_CATALOG_PRODUCTS.length].image_url,
