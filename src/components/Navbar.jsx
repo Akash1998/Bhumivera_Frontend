@@ -197,7 +197,7 @@ export default function Navbar() {
           <button 
             type="button"
             onClick={() => setMenuOpen(!isMenuOpen)} 
-            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#FAF7F2] transition-colors hover:bg-white/5 hover:text-[#d4af37] lg:hidden"
+            className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-[#FAF7F2] transition-colors hover:bg-white/5 hover:text-[#d4af37] md:hidden"
             aria-label={isMenuOpen ? "Close menu" : "Open menu"}
             aria-expanded={isMenuOpen}
             aria-controls="mobile-navigation"
@@ -218,7 +218,7 @@ export default function Navbar() {
             <span className="hidden font-serif text-2xl uppercase tracking-[0.2em] font-headline-gold sm:block">Bhumivera</span>
           </Link>
 
-          <div className="hidden lg:flex min-w-0 flex-1 items-center gap-4 relative" ref={searchDropdownRef}>
+          <div className="hidden md:flex min-w-0 flex-1 items-center gap-4 relative" ref={searchDropdownRef}>
             <form onSubmit={executeFullSearch} className="flex-1 min-w-0 relative group">
               <div className="absolute left-4 top-1/2 -translate-y-1/2 text-[#d4af37] transition-colors">
                 <Search size={18} />
@@ -230,22 +230,22 @@ export default function Navbar() {
                 onFocus={() => { if(searchQuery.length > 2) setShowSearchDropdown(true); }}
                 placeholder={t('search_placeholder', 'Discover skincare, hair care, botanical ingredients, and daily rituals...')}
                 aria-label="Search skincare products"
-                className="w-full rounded-full border border-[#D4AF37]/25 bg-[#1C382B]/60 backdrop-blur-md py-3.5 pl-12 pr-28 text-sm text-white shadow-inner outline-none transition-all placeholder:text-[#9BB0A5] focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40"
+                className="w-full rounded-full border border-[#D4AF37]/25 bg-[#1C382B]/60 backdrop-blur-md py-3.5 pl-12 pr-44 text-sm text-white shadow-inner outline-none transition-all placeholder:text-[#9BB0A5] focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40"
               />
-              <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-1 text-[#d4af37]">
+              <div className="absolute right-32 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-[#d4af37]">
                 <button
                   type="button"
                   onClick={startListening}
                   title="Voice Search"
                   aria-label="Voice Search"
-                  className={`inline-flex h-10 w-10 items-center justify-center rounded-full hover:bg-white/10 transition ${isListening ? 'text-rose-400 animate-pulse' : 'text-[#d4af37]'}`}
+                  className={`inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-white/10 transition ${isListening ? 'text-rose-400 animate-pulse' : 'text-[#d4af37]'}`}
                 >
                   <Mic size={16} />
                 </button>
-                <button type="submit" aria-label="Search" title={t('search_action', 'Search')} className="inline-flex h-10 w-10 items-center justify-center rounded-full btn-gold-luxury transition hover:brightness-110">
-                  <Search size={16} />
-                </button>
               </div>
+              <button type="submit" aria-label="Search" className="absolute right-2 top-1/2 -translate-y-1/2 min-h-11 rounded-full btn-gold-luxury px-5 py-2 text-[10px] font-bold uppercase tracking-widest opacity-0 transition-opacity group-focus-within:opacity-100 hover:brightness-110">
+                {t('search_action', 'Discover')}
+              </button>
             </form>
             <button
               type="button"
@@ -315,7 +315,7 @@ export default function Navbar() {
             </button>
           </div>
         </div>
-        <div ref={mobileSearchRef} className="mx-auto flex max-w-7xl items-center gap-2 px-4 pb-3 lg:hidden">
+        <div ref={mobileSearchRef} className="mx-auto flex max-w-7xl items-center gap-2 px-4 pb-3 md:hidden">
           <div className="relative min-w-0 flex-1">
             <form onSubmit={executeFullSearch} className="relative">
               <Search size={16} className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-[#d4af37]" />
@@ -326,17 +326,8 @@ export default function Navbar() {
                 onFocus={() => { if (searchQuery.length > 2) setShowSearchDropdown(true); }}
                 placeholder={t('search_placeholder', 'Discover skincare, hair care, botanical ingredients, and daily rituals...')}
                 aria-label="Search skincare products"
-                className="h-11 w-full rounded-full border border-[#D4AF37]/25 bg-[#1C382B]/70 backdrop-blur-md pl-10 pr-12 text-sm text-white shadow-sm outline-none placeholder:text-[#9BB0A5] focus:border-[#d4af37]"
+                className="h-11 w-full rounded-full border border-[#D4AF37]/25 bg-[#1C382B]/70 backdrop-blur-md pl-10 pr-4 text-sm text-white shadow-sm outline-none placeholder:text-[#9BB0A5] focus:border-[#d4af37]"
               />
-              <button
-                type="button"
-                onClick={startListening}
-                title="Voice Search"
-                aria-label="Voice Search"
-                className={`absolute right-1 top-1/2 inline-flex h-9 w-9 -translate-y-1/2 items-center justify-center rounded-full transition hover:bg-white/10 ${isListening ? 'text-rose-400 animate-pulse' : 'text-[#d4af37]'}`}
-              >
-                <Mic size={16} />
-              </button>
             </form>
             {showSearchDropdown && searchQuery.length > 2 && (
               <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-[120] overflow-hidden rounded-2xl border border-[#d4af37]/35 bg-[#1C382B] shadow-2xl">
@@ -383,7 +374,7 @@ export default function Navbar() {
       {/* REAL LUXURY MOBILE SIDEBAR DRAWER (SLIDES IN FROM LEFT) */}
       <AnimatePresence>
         {isMenuOpen && (
-          <div className="fixed inset-0 z-[250] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] lg:hidden">
+          <div className="fixed inset-0 z-[250] pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)] md:hidden">
             {/* Backdrop Overlay */}
             <Motion.div
               initial={{ opacity: 0 }}
