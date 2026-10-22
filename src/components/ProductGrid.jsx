@@ -144,6 +144,8 @@ const ProductGrid = ({ products = [], isLoading = false }) => {
                 <img 
                   src={getProductImageUrl(product.image_url || product.images || product.image) || '/logo.webp'}
                   alt={product.name}
+                  loading="lazy"
+                  decoding="async"
                   onError={(e) => { 
                     e.target.onerror = null; 
                     e.target.src = '/logo.webp'; 

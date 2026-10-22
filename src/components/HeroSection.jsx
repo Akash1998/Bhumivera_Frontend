@@ -47,6 +47,9 @@ export default function HeroSection() {
             src={slide.image}
             alt={slide.title}
             className="w-full h-full object-cover object-center"
+            loading={idx === current ? 'eager' : 'lazy'}
+            fetchPriority={idx === current ? 'high' : 'low'}
+            decoding="async"
           />
         </div>
       ))}

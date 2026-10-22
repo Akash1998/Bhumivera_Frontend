@@ -142,6 +142,16 @@ const PageLoader = () => (
   </div>
 );
 
+const WidgetLoader = ({ label }) => (
+  <div
+    className="fixed inset-0 z-[250] grid place-items-center bg-black/60 backdrop-blur-sm"
+    role="status"
+    aria-label={label}
+  >
+    <span className="h-10 w-10 animate-spin rounded-full border-2 border-[#d4af37]/30 border-t-[#fce096]" aria-hidden="true" />
+  </div>
+);
+
 function NetworkStatus() {
   const [isOnline, setIsOnline] = React.useState(navigator.onLine);
   const [savedCatalogAt, setSavedCatalogAt] = React.useState(null);
@@ -251,10 +261,36 @@ function WebOnlyManagement({ children }) {
 function AppContent() {
   const location = useLocation();
   const navigate = useNavigate();
-  const { setIsCartOpen } = useCart();
+  const { isCartOpen, setIsCartOpen } = useCart();
   const { token, user } = useAuth();
   const [pwaUpdateWorker, setPwaUpdateWorker] = React.useState(null);
   const [visualGuideState, setVisualGuideState] = React.useState({ isOpen: false, tab: 'password' });
+  const [hasOpenedCart, setHasOpenedCart] = React.useState(false);
+  const [supportAssistantReady, setSupportAssistantReady] = React.useState(false);
+
+  useEffect(() => {
+    if (isCartOpen) setHasOpenedCart(true);
+  }, [isCartOpen]);
+
+  useEffect(() => {
+    let idleCallbackId;
+    const timeoutId = window.setTimeout(() => {
+      if (typeof window.requestIdleCallback === 'function') {
+        idleCallbackId = window.requestIdleCallback(
+          () => setSupportAssistantReady(true),
+          { timeout: 1000 }
+        );
+      } else {
+        setSupportAssistantReady(true);
+      }
+    }, 1000);
+    return () => {
+      window.clearTimeout(timeoutId);
+      if (idleCallbackId !== undefined && typeof window.cancelIdleCallback === 'function') {
+        window.cancelIdleCallback(idleCallbackId);
+      }
+    };
+  }, []);
 
   useEffect(() => {
     const handleOpenGuide = event => {
@@ -445,13 +481,13 @@ function AppContent() {
       </main>
 
       {!isManagementView && <Footer />}
-      {!isManagementView && (
-        <Suspense fallback={null}>
+      {!isManagementView && (hasOpenedCart || isCartOpen) && (
+        <Suspense fallback={<WidgetLoader label="Opening your bag" />}>
           <MiniCart />
         </Suspense>
       )}
       {!isManagementView && <CartAuthPrompt />}
-      {!isManagementView && (
+      {!isManagementView && supportAssistantReady && (
         <Suspense fallback={null}>
           <SupportAssistant />
         </Suspense>

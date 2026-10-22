@@ -128,6 +128,9 @@ export default function PremiumHome() {
             src={HOME_VISUAL_ASSETS.heroPrimary}
             alt="Himalayan Sea Buckthorn harvest in Ladakh mountain valley"
             className="premium-home-hero__image h-full w-full object-cover object-center opacity-30"
+            loading="eager"
+            fetchPriority="high"
+            decoding="async"
           />
         </div>
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#14291F] via-[#14291F]/85 to-[#14291F]/40" />
