@@ -62,14 +62,14 @@ export const GLOBAL_BRAND_LD = {
   alternateName: 'Bhumivera (Est. 2016)',
   url: SITE_URL,
   logo: `${SITE_URL}/logo.webp`,
-  slogan: 'Where Clinical Dermatology Meets Royal Ayurveda · Crafted Since 2016.',
+  slogan: 'Where Botanical Science Meets Royal Ayurveda · Crafted Since 2016.',
 };
 
 export default function SEO({ product, title, description, keywords, ogImage, route, schema, faqs = [], breadcrumbs = [] }) {
   const siteUrl = SITE_URL;
 
   if (!product) {
-    const pageTitle = title || 'Bhumivera Organics (Est. 2016) | Best Luxury Organic Face Wash & Botanical Shampoo in India';
+    const pageTitle = title || 'Bhumivera Organics (Est. 2016) | Luxury Botanical Face Wash, 2-in-1 Shampoo, Handmade Soaps & 7-Tulsi Drops';
     const pageDescription =
       description ||
       'Established in 2016 under founding enterprise MPG E Business Private Limited and incorporated as luxury flagship Bhumivera Organics India Private Limited in August 2026. Tier-1 pH-calibrated botanical skincare and haircare.';

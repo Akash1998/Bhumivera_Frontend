@@ -13,7 +13,7 @@ const slides = [
   },
   {
     title: "Where Botanical Science, Meets Pure Soil",
-    subtitle: "Dermatological Active Synergy",
+    subtitle: "Botanical & Active Synergy",
     description: "Every formulation pairs heritage plant intelligence with precision modern actives and full label transparency.",
     image: "/assets/images/aloeverascience.webp",
     cta: "Explore Our Science",

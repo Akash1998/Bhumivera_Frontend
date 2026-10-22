@@ -512,7 +512,7 @@ const LEGAL_CLAUSES = {
       num: '5.7',
       title: '7. Institutional B2B Supply & Raw Botanical Procurement Notice',
       body: [
-        'Our Institutional B2B & Supplier desk (`/sell-on-bhumivera` and `/contact`) provides a formal channel for certified raw botanical growers, NABL testing laboratories, and luxury retail boutiques to request written B2B procurement terms. Bhumivera strictly warns the public NEVER to pay any cash deposit, registration fee, or raw-material fee to any individual based on verbal phone or WhatsApp promises without a signed written contract from the registered legal entity.',
+        'Our Institutional B2B & Supplier desk (`/sell-on-bhumivera` and `/contact`) provides a formal channel for traceable raw botanical growers, analytical testing laboratories, and luxury retail boutiques to request written B2B procurement terms. Bhumivera strictly warns the public NEVER to pay any cash deposit, registration fee, or raw-material fee to any individual based on verbal phone or WhatsApp promises without a signed written contract from the registered legal entity.',
       ],
     },
     {

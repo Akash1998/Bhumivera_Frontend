@@ -22,7 +22,7 @@ export default function BhumiveraScience() {
     <main className="min-h-screen bg-[#070a0e] text-[#e2e8f0] pb-24 font-sans selection:bg-[#d4af37]/30 selection:text-white">
       <SEO
         title="Product & Formulation Science | Bhumivera"
-        description="Inspect Bhumivera's 8 cornerstone botanical and dermatological actives, pH 5.5 calibration, cold-pressed extraction, and 60-second layering science."
+        description="Inspect Bhumivera's 8 cornerstone botanical and cosmetic actives, pH 5.5 calibration, cold-pressed extraction, and 60-second layering science."
         route="/science"
       />
 
@@ -147,13 +147,13 @@ export default function BhumiveraScience() {
         </div>
       </section>
 
-      {/* 3. DERMATOLOGICAL PATCH TEST & 60-SECOND LAYERING RULE */}
+      {/* 3. 24-HOUR SKIN COMPATIBILITY PATCH TEST & 60-SECOND LAYERING RULE */}
       <section className="mx-auto max-w-7xl px-6 pb-8">
         <div className="grid gap-8 lg:grid-cols-2">
           <div className="overflow-hidden rounded-3xl two-tone-card border border-[#d4af37]/25 shadow-2xl">
             <img
               src={SCIENCE_PAGE_DATA.patchTestImage}
-              alt="24-hour inner forearm dermatological patch test"
+              alt="24-hour inner forearm skin compatibility patch test"
               className="aspect-[16/9] w-full object-cover"
             />
             <div className="p-6 sm:p-8">

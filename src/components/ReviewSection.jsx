@@ -71,7 +71,7 @@ export default function ReviewSection({ productId }) {
           id: 'rev-1',
           rating: 5,
           comment: 'Absorbs seamlessly into the lipid barrier without comedogenic residue. Visible reduction in transepidermal water loss within 72 hours.',
-          user: { name: 'Dr. Radhika Sen', avatar: '' },
+          user: { name: 'Radhika Sen', avatar: '' },
           verified: true,
           createdAt: new Date().toISOString(),
           images: [],

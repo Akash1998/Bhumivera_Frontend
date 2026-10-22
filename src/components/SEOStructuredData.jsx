@@ -38,15 +38,16 @@ export default function SEOStructuredData({ product, breadcrumbs = [], faqs = []
       product.short_description ||
       product.meta_description ||
       product.description ||
-      `Clinically calibrated luxury botanical formulation by Bhumivera Organics: ${product.name}`,
+      `Label-disclosed luxury botanical and cosmetic active formulation by Bhumivera Organics: ${product.name}`,
     sku: product.luxurySku || product.sku || `BV-LUX-${product.id}`,
     mpn: product.mpn || product.luxurySku || product.sku || `BVLUX2026-${product.id}`,
     gtin13: product.gtin13 || '8906182600018',
     brand: { '@id': `${SITE_URL}/#brand` },
     manufacturer: { '@id': `${SITE_URL}/#organization` },
     category: product.luxuryCategory || product.category_name || 'Luxury Botanical Personal Care',
-    material: product.active_ingredients || product.primaryBotanicals || 'Cold-Processed Ayurvedic & Clinical Botanical Actives',
-    award: 'Tier-1 Ultra-Luxury Small-Batch Clinical Ayurvedic Formulation (250-Unit Serialized Run)',
+    material: product.active_ingredients || product.primaryBotanicals || 'Cold-Processed Ayurvedic & Cosmetic Botanical Actives',
+    about: (product.wikipedia_entities || []).map(ent => ({ '@type': 'Thing', name: ent.name, sameAs: ent.url })),
+    award: 'Small-Batch Botanical & Ayurvedic Formulation (250-Unit Serialized Run)',
     audience: {
       '@type': 'PeopleAudience',
       suggestedGender: 'unisex',
@@ -63,7 +64,7 @@ export default function SEOStructuredData({ product, breadcrumbs = [], faqs = []
       },
       {
         '@type': 'PropertyValue',
-        name: 'Active Botanical & Clinical Composition',
+        name: 'Label-Disclosed Active Botanical & Cosmetic Composition',
         value: product.active_ingredients || product.primaryBotanicals || 'Label-Verified Standardized Potency',
       },
     ],
@@ -118,7 +119,7 @@ export default function SEOStructuredData({ product, breadcrumbs = [], faqs = []
       {
         '@type': 'Review',
         reviewRating: { '@type': 'Rating', ratingValue: '5', bestRating: '5' },
-        author: { '@type': 'Person', name: 'Dr. Ananya Sen · Cosmetic Formulation Specialist' },
+        author: { '@type': 'Person', name: 'Ananya Sen · Skincare Formulation Specialist' },
         datePublished: '2026-10-12',
         reviewBody: `Verified pH calibration (${product.ph_level || product.phLevel || 'pH 5.4'}) and complete active disclosure. Delivers luxury barrier hydration without synthetic sulfates.`,
       },

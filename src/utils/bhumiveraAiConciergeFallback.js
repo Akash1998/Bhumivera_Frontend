@@ -419,7 +419,7 @@ export function resolveClientSideConciergeFallback(message) {
   // Sensitive & Acne-Prone Skin Compatibility
   if (/\b(sensitive skin|acne.?prone|patch test|breakout|irritation|safety for skin|clog pores|non.?comedogenic)\b/.test(normalizedQuery)) {
     return {
-      reply: `**Dermatological Compatibility & Patch Testing:**\n\n` +
+      reply: `**Skin-Barrier Compatibility & Patch Testing:**\n\n` +
         `• **Acne-Prone Skin:** Yes, highly suitable. Formulated to be **non-comedogenic** (will not clog pores). Niacinamide helps regulate sebum production, and Holy Basil Tulsi naturally purifies blemish-causing bacteria without causing flaking or rebound oiliness.\n\n` +
         `• **Sensitive Skin:** Formulated at **pH 5.5** (skin's natural physiological pH) with zero harsh sulphates (SLS/SLES-free), soap, or parabens. Pure Aloe Vera (5%) and Botanical Glycerin (4%) cushion the cleansing base to prevent redness or stinging.\n\n` +
         `• **How to Perform a 24-Hour Patch Test:**\n` +
@@ -541,7 +541,7 @@ export function resolveClientSideConciergeFallback(message) {
         `  2. **Rinse & Blot:** Rinse with cool water to soothe pores and lightly blot with a soft muslin towel.\n` +
         `  3. **Elixir Press:** Warm 2 to 3 drops of **Bhumivera Kumkumadi Night Elixir** (authentic 26-herb Kashmiri Saffron formula) between your palms and gently press into face and neck for deep overnight restoration.\n\n` +
         `• **🌿 Safety & Skin Compatibility:**\n` +
-        `  Formulated at physiological **pH 5.5**, SLS/SLES sulphate-free, non-comedogenic, and dermatologically tested for all skin types including sensitive and acne-prone skin.`,
+        `  Formulated at physiological **pH 5.5**, SLS/SLES sulphate-free, non-comedogenic, and gentle for everyday use across skin types (24-hour patch test advised) including sensitive and acne-prone skin.`,
       quickActions: buildClientUsageFollowUps(targetProduct.name.replace(/^Bhumivera\s+/i, '')),
     };
   }

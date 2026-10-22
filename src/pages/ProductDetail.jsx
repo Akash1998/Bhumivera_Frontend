@@ -1,4 +1,5 @@
-import { FALLBACK_CATALOG_PRODUCTS, CHARCOAL_FACE_WASH_EXACT, SHAMPOO_2IN1_EXACT } from '../data/bhumiveraUniqueData';
+import { FALLBACK_CATALOG_PRODUCTS, CHARCOAL_FACE_WASH_EXACT, SHAMPOO_2IN1_EXACT, BHUMIVERA_6_PRODUCTS } from '../data/bhumiveraUniqueData';
+import LuxuryProductSeoSection from '../components/LuxuryProductSeoSection';
 import SEO from '../components/SEO';
 import SEOStructuredData from '../components/SEOStructuredData';
 import ProductDeliveryPromise from '../components/ProductDeliveryPromise';
@@ -120,6 +121,8 @@ export default function ProductDetail() {
         let loadedFromFallback = false;
         const fallbackProduct = FALLBACK_CATALOG_PRODUCTS.find(
           product => String(product.id) === String(id) || product.slug === String(id)
+        ) || (BHUMIVERA_6_PRODUCTS || []).find(
+          product => String(product.id) === String(id) || product.slug === String(id)
         );
         try {
           const prodRes = fallbackProduct?.slug && String(fallbackProduct.id) === String(id)
@@ -152,6 +155,44 @@ export default function ProductDetail() {
              fetchedProduct = { ...fallbackMatch, ...fetchedProduct, batchCode: fallbackMatch.batchCode || fetchedProduct.batchCode, directions: fallbackMatch.directions || fetchedProduct.directions, caution: fallbackMatch.caution || fetchedProduct.caution, phLevel: fallbackMatch.phLevel || fetchedProduct.phLevel, primaryBotanicals: fallbackMatch.primaryBotanicals || fetchedProduct.primaryBotanicals, clinicalActives: fallbackMatch.clinicalActives || fetchedProduct.clinicalActives };
            }
            const lowerIdOrName = `${id} ${fetchedProduct?.slug || ''} ${fetchedProduct?.name || ''}`.toLowerCase();
+           const sixMatch = (BHUMIVERA_6_PRODUCTS || []).find(p =>
+             String(p.id) === String(id) ||
+             p.slug === String(id).toLowerCase() ||
+             p.slug === fetchedProduct?.slug ||
+             p.sku === fetchedProduct?.sku ||
+             p.legacySlugs?.includes(String(id).toLowerCase()) ||
+             p.legacyIds?.includes(Number(id)) ||
+             (lowerIdOrName.includes('charcoal') && lowerIdOrName.includes('soap') && p.slug.includes('charcoal-handmade-soap')) ||
+             (lowerIdOrName.includes('charcoal') && !lowerIdOrName.includes('soap') && p.slug.includes('charcoal-luxury-face-wash')) ||
+             ((lowerIdOrName.includes('seabuckthorn') || lowerIdOrName.includes('sea buckthorn')) && p.slug.includes('seabuckthorn')) ||
+             ((lowerIdOrName.includes('shampoo') || lowerIdOrName.includes('2-in-1')) && p.slug.includes('shampoo')) ||
+             ((lowerIdOrName.includes('soothing') || (lowerIdOrName.includes('aloe') && lowerIdOrName.includes('soap'))) && p.slug.includes('aloe-vera-handmade-soap')) ||
+             (lowerIdOrName.includes('tulsi') && p.slug.includes('tulsi'))
+           );
+           if (sixMatch) {
+             fetchedProduct = {
+               ...sixMatch,
+               ...fetchedProduct,
+               luxuryName: sixMatch.name,
+               seoSlug: sixMatch.slug,
+               luxurySku: sixMatch.sku,
+               mpn: sixMatch.mpn,
+               net_volume: sixMatch.net_volume,
+               luxuryCategory: sixMatch.category,
+               seo_title: sixMatch.seo_title,
+               meta_description: sixMatch.meta_description || sixMatch.short_description,
+               short_description: sixMatch.short_description,
+               full_description: sixMatch.full_description,
+               ph_level: sixMatch.ph_level,
+               active_ingredients: sixMatch.active_ingredients,
+               seoImage: sixMatch.image_url,
+               wikipedia_entities: sixMatch.wikipedia_entities,
+               conscious_buyer_highlights: sixMatch.conscious_buyer_highlights,
+               composition_table: sixMatch.composition_table,
+               faqs: sixMatch.faqs,
+               directAnswerFaqs: sixMatch.faqs,
+             };
+           }
            if (lowerIdOrName.includes('charcoal')) {
              fetchedProduct = {
                ...fetchedProduct,
@@ -820,6 +861,8 @@ export default function ProductDetail() {
       </div>
 
       
+      <LuxuryProductSeoSection product={product} />
+
       {/* PHASE 3 & 5: RAG CITATION ARCHITECTURE — EXACT LABEL COMPOSITION TABLE, COMPARISON MATRIX, DIRECT-ANSWER FAQ BLOCK & PILLAR LINK SILOS */}
       <section className="relative z-10 mx-auto mt-16 max-w-7xl px-4 md:px-6 space-y-12">
         {product.editorialParagraphs && (
@@ -853,7 +896,7 @@ export default function ProductDetail() {
                     <th className="p-4">Active Ingredient (Label Verified)</th>
                     <th className="p-4">Standardized Potency</th>
                     <th className="p-4">Clinical / Botanical Classification</th>
-                    <th className="p-4">Dermatological / Trichological Mechanism of Action</th>
+                    <th className="p-4">Botanical & Cosmetic Action</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-white/10 text-[#cbd5e1]">
@@ -912,7 +955,7 @@ export default function ProductDetail() {
 
         <div className="rounded-3xl two-tone-panel-gold border border-[#d4af37]/40 p-6 sm:p-8 shadow-xl">
           <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white mb-6">
-            Direct-Answer Clinical &amp; Ayurvedic Q&amp;A
+            Direct-Answer Botanical &amp; Ayurvedic Q&amp;A
           </h2>
           <div className="space-y-4">
             {(product.directAnswerFaqs || CHARCOAL_FACE_WASH_EXACT.faqs).map((item, idx) => (
@@ -929,7 +972,7 @@ export default function ProductDetail() {
         <div className="rounded-3xl two-tone-card border border-[#d4af37]/30 p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
           <div>
             <span className="font-mono text-[10px] uppercase tracking-widest text-[#fce096]">
-              Authority Buying Guides &amp; Clinical Research
+              Authority Buying Guides &amp; Botanical Science
             </span>
             <h2 className="font-serif text-xl sm:text-2xl font-bold text-white mt-1">
               Explore Our Complete Skincare &amp; Trichology Monographs

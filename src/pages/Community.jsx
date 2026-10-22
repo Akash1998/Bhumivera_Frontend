@@ -54,7 +54,7 @@ const INITIAL_COMMUNITY_POSTS = [
   },
   {
     id: 104,
-    author: 'Dr. Sunita Chatterjee',
+    author: 'Sunita Chatterjee',
     location: 'Bardhaman',
     role: 'Elder Care Volunteer',
     action: 'Identified 8 isolated elderly widows',

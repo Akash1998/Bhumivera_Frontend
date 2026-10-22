@@ -152,11 +152,51 @@
     }
   ],
   "rewrites": [
-    { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
-    { "source": "/robots.txt", "destination": "/robots.txt" },
-    { "source": "/llms.txt", "destination": "/llms.txt" },
-    { "source": "/llms-full.txt", "destination": "/llms-full.txt" },
-    { "source": "/bhumivera-indexnow-2026.txt", "destination": "/bhumivera-indexnow-2026.txt" },
-    { "source": "/((?!api|assets|images|.*\\..*).*)", "destination": "/index.html" }
+    {
+      "source": "/sitemap.xml",
+      "destination": "/api/sitemap.xml"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/robots.txt"
+    },
+    {
+      "source": "/llms.txt",
+      "destination": "/llms.txt"
+    },
+    {
+      "source": "/llms-full.txt",
+      "destination": "/llms-full.txt"
+    },
+    {
+      "source": "/bhumivera-indexnow-2026.txt",
+      "destination": "/bhumivera-indexnow-2026.txt"
+    },
+    {
+      "source": "/products/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Googlebot|Bingbot|PerplexityBot|ClaudeBot|anthropic-ai|GPTBot|OAI-SearchBot|ChatGPT-User|Google-Extended|facebookexternalhit|WhatsApp|Twitterbot).*"
+        }
+      ],
+      "destination": "/api/seo-prerender/products/:slug"
+    },
+    {
+      "source": "/product/:slug",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Googlebot|Bingbot|PerplexityBot|ClaudeBot|anthropic-ai|GPTBot|OAI-SearchBot|ChatGPT-User|Google-Extended|facebookexternalhit|WhatsApp|Twitterbot).*"
+        }
+      ],
+      "destination": "/api/seo-prerender/product/:slug"
+    },
+    {
+      "source": "/((?!api|assets|images|.*\\..*).*)",
+      "destination": "/index.html"
+    }
   ]
 }

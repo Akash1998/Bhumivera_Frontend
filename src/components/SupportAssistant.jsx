@@ -1121,7 +1121,7 @@ export const BOTANICAL_INGREDIENT_ENCYCLOPEDIA = [
     "noteFamily": "Vitamin B3 · Cellular Energy Cofactor",
     "tagline": "Essential barrier vitamin for refined pores and even tone.",
     "shortSummary": "Calibrated at 1% concentration in Bhumivera Sea Buckthorn Face Wash and 0.1% in Charcoal Face Wash. Stimulates natural epidermal ceramide synthesis, refines enlarged pores, regulates excess sebum, and fades post-blemish redness without irritation.",
-    "originRegion": "Pharmaceutical-Grade Synthesis",
+    "originRegion": "High-Purity Cosmetic-Grade Synthesis",
     "harvestSeason": "All Seasons",
     "extractionMethod": "High-Purity Bio-Identical Purification",
     "concentrationInFormula": "1.00% Calibrated Active (Face Wash)",
@@ -1329,7 +1329,7 @@ export const BOTANICAL_INGREDIENT_ENCYCLOPEDIA = [
     "noteFamily": "Ayurvedic Nimba · Purifying Bitter",
     "tagline": "Classical Ayurvedic guardian against blemishes and follicular congestion.",
     "shortSummary": "Calibrated at 0.5% in Charcoal Face Wash and included in Botanical Shampoo. Rich in margosic acids, nimbidin, and azadirachtin that clarify blemish-prone skin, soothe scalp irritation, and curb bacterial colonization without stripping.",
-    "originRegion": "Certified Organic Neem Orchards, India",
+    "originRegion": "Sustainably Cultivated Neem Orchards, India",
     "harvestSeason": "Early Summer Leaf Harvest",
     "extractionMethod": "Hydro-Glycolic Phyto-Extraction & Cold Leaf Distillation",
     "concentrationInFormula": "0.50% Calibrated Botanical Extract",
@@ -1402,7 +1402,7 @@ export const BOTANICAL_INGREDIENT_ENCYCLOPEDIA = [
     "noteFamily": "Golden Rhizome · Curcuminoid Glow",
     "tagline": "Sacred golden rhizome for radiant clarity and even tone.",
     "shortSummary": "Calibrated at 0.5% in Charcoal Face Wash and infused in Kumkumadi Night Elixir. Standardized for antioxidant curcuminoids, it visibly brightens hyperpigmentation, protects against photo-oxidative stress, and imparts warmth and clarity to the complexion.",
-    "originRegion": "Certified Organic Farms, Western Ghats, India",
+    "originRegion": "Sustainably Cultivated Farms, Western Ghats, India",
     "harvestSeason": "Winter Rhizome Harvest",
     "extractionMethod": "Standardized Supercritical Phyto-Extraction",
     "concentrationInFormula": "Standardized Active Extract in Face Wash & Elixir",
@@ -1592,7 +1592,7 @@ export const BOTANICAL_INGREDIENT_ENCYCLOPEDIA = [
         "partnerId": "rosemary",
         "partnerName": "Rosemary Leaf Oil",
         "synergyScore": "98/100",
-        "combinedBenefit": "Clinically proven herbal synergy for hair density and scalp circulation."
+        "combinedBenefit": "Traditional Ayurvedic herbal synergy for hair density and scalp circulation."
       }
     ],
     "recommendedChips": [

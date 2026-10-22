@@ -391,6 +391,7 @@ function AppContent() {
             <Route path="/collections" element={<Shop />} />
             <Route path="/category/:slug" element={<Shop />} />
             <Route path="/product/:id" element={<ProductDetail />} />
+            <Route path="/products/:id" element={<ProductDetail />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
             <Route path="/impact" element={<Impact />} />

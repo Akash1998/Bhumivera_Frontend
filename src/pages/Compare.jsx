@@ -51,7 +51,7 @@ export default function Compare() {
     { label: 'Ritual Category', key: 'category_name', render: (p) => p.category_name || 'Botanical Care' },
     { label: 'Calibrated pH Window', key: 'phLevel', render: (p) => p.phLevel || 'pH 5.5 Balanced' },
     { label: 'Primary Botanical Extracts', key: 'primaryBotanicals', render: (p) => p.primaryBotanicals || 'Cold-Pressed Himalayan Botanicals' },
-    { label: 'Clinical & Dermatological Actives', key: 'clinicalActives', render: (p) => p.clinicalActives || 'Niacinamide & Hyaluronic Acid' },
+    { label: 'Cosmetic & Botanical Actives', key: 'clinicalActives', render: (p) => p.clinicalActives || 'Niacinamide & Hyaluronic Acid' },
     { label: 'Skin / Scalp Compatibility', key: 'skinTypeCompatibility', render: (p) => p.skinTypeCompatibility || 'All Skin Types (24h Patch Test)' },
     { label: 'Cleansing / Carrier Matrix', key: 'surfactantSystem', render: (p) => p.surfactantSystem || 'Sulfate-Free Plant Glucoside' },
     { label: 'Recommended AM / PM Ritual', key: 'ritualTiming', render: (p) => p.ritualTiming || 'AM & PM Daily Ritual' },

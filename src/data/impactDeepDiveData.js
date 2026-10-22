@@ -1142,7 +1142,7 @@ export const IMPACT_PROJECTS = [
       {
         metric: 'Chemical Fertilizer Replaced',
         before: 'Chemical Urea Purchased',
-        after2027: '100% Organic Soil Food',
+        after2027: 'Natural Vermicompost Soil Food',
         gain: 'Zero Chemicals',
         detail: 'Nourishes native trees without burning roots or polluting groundwater.',
       },

@@ -102,7 +102,7 @@ const PERSONA_PRESETS = [
         gstRate: '18%',
         price: 680,
         matchScore: 94.0,
-        reason: 'Complements night elixir regimen; #1 cart bundle enhancer for skincare orders',
+        reason: 'Complements night elixir regimen; Top cart bundle enhancer for skincare orders',
         slot: 'Free-Shipping Threshold Helper',
       },
     ],

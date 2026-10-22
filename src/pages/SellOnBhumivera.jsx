@@ -85,7 +85,7 @@ export default function SellOnBhumivera() {
           </h1>
           <div className="gold-hairline my-5 max-w-xs" />
           <p className="mt-4 max-w-2xl text-sm leading-7 text-[#cbd5e1] sm:text-base">
-            Unlike open third-party marketplaces, every item on Bhumivera undergoes strict GMP batch verification, pH calibration, and heavy-metal screening. We partner with certified organic grower cooperatives, luxury spas, and sustainable packaging artisans under formal written B2B contracts.
+            Unlike open third-party marketplaces, every item on Bhumivera undergoes strict GMP batch verification, pH calibration, and heavy-metal screening. We partner with traceable botanical grower cooperatives, luxury spas, and sustainable packaging artisans under formal written B2B contracts.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
             <a
@@ -245,7 +245,7 @@ export default function SellOnBhumivera() {
                   <option className="bg-[#070a0e] text-white">Raw Botanical Farmer Cooperative</option>
                   <option className="bg-[#070a0e] text-white">Luxury Spa / Wellness Retreat Stockist</option>
                   <option className="bg-[#070a0e] text-white">Sustainable Glass &amp; Honeycomb Packaging</option>
-                  <option className="bg-[#070a0e] text-white">NABL Analytical Testing Laboratory</option>
+                  <option className="bg-[#070a0e] text-white">Independent Analytical Testing Laboratory</option>
                 </select>
               </div>
               <div>
