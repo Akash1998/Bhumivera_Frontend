@@ -195,6 +195,9 @@ export default function Profile() {
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(false);
   const mobileTabsRef = useRef(null);
+  const profileImageInputRef = useRef(null);
+  const [profileImageUploading, setProfileImageUploading] = useState(false);
+  const [profileSaving, setProfileSaving] = useState(false);
 
   useEffect(() => {
     const requestedTab = new URLSearchParams(location.search).get('tab');
@@ -346,6 +349,7 @@ export default function Profile() {
       setProfileData({
         name: u.name || u.first_name || u.full_name || '',
         phone: u.phone || u.mobile || u.phone_number || '',
+        profile_image_url: u.profile_image_url || null,
         marketing_email_opt_in: Boolean(Number(u.marketing_email_opt_in)),
       });
       setAdPersonalizationOptIn(Boolean(Number(u.ad_personalization_opt_in)));
@@ -504,10 +508,71 @@ export default function Profile() {
   // ======== Actions ========
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
+    setProfileSaving(true);
     try {
-      await usersApi.updateProfile(profileData);
+      const response = await usersApi.updateProfile(profileData);
+      updateUser({
+        name: profileData.name,
+        phone: profileData.phone,
+        profile_image_url: profileData.profile_image_url || null,
+        marketing_email_opt_in: profileData.marketing_email_opt_in ? 1 : 0,
+      });
+      if (response.data?.profile_image_url) {
+        setProfileData(current => ({ ...current, profile_image_url: response.data.profile_image_url }));
+      }
       toast.success('Profile updated successfully');
-    } catch (err) { toast.error(err.response?.data?.message || 'Failed to update profile'); }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to update profile');
+    } finally {
+      setProfileSaving(false);
+    }
+  };
+  const handleProfileImageChange = async event => {
+    const file = event.target.files?.[0];
+    event.target.value = '';
+    if (!file) return;
+    if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+      toast.error('Choose a JPEG, PNG, or WebP profile photo.');
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      toast.error('Profile photos must be 8 MB or smaller.');
+      return;
+    }
+
+    setProfileImageUploading(true);
+    try {
+      const compressedFile = await compressImageForUpload(file);
+      const { data } = await usersApi.createProfileImageUploadUrl({
+        filename: compressedFile.name,
+        fileType: compressedFile.type,
+        size: compressedFile.size,
+      });
+      await new Promise((resolve, reject) => {
+        const request = new XMLHttpRequest();
+        request.open('PUT', data.uploadUrl);
+        request.setRequestHeader('Content-Type', compressedFile.type);
+        request.onload = () => {
+          if (request.status >= 200 && request.status < 300) resolve();
+          else reject(new Error('Profile photo upload failed. Please try again.'));
+        };
+        request.onerror = () => reject(new Error('Profile photo upload failed. Check your connection and try again.'));
+        request.send(compressedFile);
+      });
+      const response = await usersApi.updateProfile({
+        ...profileData,
+        profile_image_url: data.key,
+      });
+      const imageKey = response.data?.profile_image_url || data.key;
+      setProfileData(current => ({ ...current, profile_image_url: imageKey }));
+      updateUser({ profile_image_url: imageKey });
+      toast.success('Profile photo updated successfully.');
+    } catch (error) {
+      console.error('[PROFILE_IMAGE_UPLOAD]', error);
+      toast.error(error.response?.data?.message || error.message || 'Could not save your profile photo.');
+    } finally {
+      setProfileImageUploading(false);
+    }
   };
   const handleAdPersonalizationChange = async enabled => {
     const previousValue = adPersonalizationOptIn;
@@ -915,6 +980,7 @@ export default function Profile() {
 
   const displayName = profileData.name || user?.name || user?.first_name || user?.full_name || 'Customer';
   const initials = displayName.split(/\s+/).map(s => s[0]).filter(Boolean).slice(0,2).join('').toUpperCase() || 'B';
+  const profileImageUrl = getProfileImageUrl(profileData.profile_image_url || user?.profile_image_url);
 
   // ========== RENDER ==========
   return (
@@ -929,8 +995,31 @@ export default function Profile() {
 
           <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5">
             <div className="flex items-center gap-5">
-              <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-[#E6C57E] via-[#C89B3C] to-[#A87B24] flex items-center justify-center text-[#14291F] font-serif font-bold text-2xl shadow-xl ring-2 ring-[#D4AF37]/50">
-                {initials}
+              <div className="relative h-20 w-20 shrink-0">
+                <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-br from-[#E6C57E] via-[#C89B3C] to-[#A87B24] text-[#14291F] font-serif font-bold text-2xl shadow-xl ring-2 ring-[#D4AF37]/50">
+                  {profileImageUrl
+                    ? <img src={profileImageUrl} alt={`${displayName}'s profile`} className="h-full w-full object-cover" />
+                    : initials}
+                </div>
+                <input
+                  ref={profileImageInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={handleProfileImageChange}
+                />
+                <button
+                  type="button"
+                  onClick={() => profileImageInputRef.current?.click()}
+                  disabled={profileImageUploading}
+                  aria-label={profileImageUploading ? 'Saving profile photo' : 'Change profile photo'}
+                  title={profileImageUploading ? 'Saving profile photo...' : 'Change profile photo'}
+                  className="absolute -bottom-2 -right-2 flex h-9 w-9 items-center justify-center rounded-full border-2 border-[#14291F] bg-[#D4AF37] text-[#14291F] shadow-lg transition hover:bg-[#FCE096] disabled:cursor-wait disabled:opacity-60"
+                >
+                  {profileImageUploading
+                    ? <span className="h-4 w-4 animate-spin rounded-full border-2 border-[#14291F]/30 border-t-[#14291F]" />
+                    : <Camera className="h-4 w-4" />}
+                </button>
               </div>
               <div>
                 <div className="flex items-center gap-2.5 flex-wrap">
@@ -950,6 +1039,14 @@ export default function Profile() {
                 className="btn-silver-luxury inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider">
                 <ShoppingBag className="w-4 h-4"/>
                 Explore Shop
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveTab('security')}
+                className="btn-silver-luxury inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-semibold uppercase tracking-wider"
+              >
+                <Edit2 className="h-4 w-4" />
+                Edit Profile
               </button>
               <button onClick={handleLogout}
                 className="btn-gold-luxury inline-flex items-center gap-2 px-6 py-2.5 rounded-full text-xs font-bold uppercase tracking-wider">
@@ -1859,8 +1956,8 @@ export default function Profile() {
                       </span>
                     </label>
                     <div className="sm:col-span-2">
-                      <button type="submit" className="btn-gold-luxury inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider">
-                        <CheckCircle2 className="w-4 h-4"/> Save Profile Changes
+                      <button type="submit" disabled={profileSaving} className="btn-gold-luxury inline-flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider disabled:cursor-wait disabled:opacity-60">
+                        <CheckCircle2 className="w-4 h-4"/> {profileSaving ? 'Saving...' : 'Save Profile Changes'}
                       </button>
                     </div>
                   </form>

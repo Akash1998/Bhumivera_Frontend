@@ -20,7 +20,7 @@ export default function Navbar() {
   const cartCount = cartItems.reduce((count, item) => count + (Number(item.quantity) || 1), 0);
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { isListening, startListening } = useVoiceSearch((text) => {
+  const { isListening, voiceError, startListening } = useVoiceSearch((text) => {
     setSearchQuery(text);
     navigate(`/shop?q=${encodeURIComponent(text)}`);
   });
@@ -159,6 +159,12 @@ export default function Navbar() {
     }
   };
 
+  useEffect(() => {
+    if (voiceError) {
+      console.error('[VOICE_SEARCH_ERROR]', voiceError);
+    }
+  }, [voiceError]);
+
   return (
     <>
       <div className="bg-[#102219] text-[#FAF7F2] py-2 px-6 text-[10px] font-mono uppercase tracking-widest hidden md:block border-b border-[#244A38]/40">
@@ -236,8 +242,8 @@ export default function Navbar() {
                 <button
                   type="button"
                   onClick={startListening}
-                  title="Voice Search"
-                  aria-label="Voice Search"
+                  title={voiceError || 'Voice Search'}
+                  aria-label={voiceError || 'Voice Search'}
                   className={`inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-white/10 transition ${isListening ? 'text-rose-400 animate-pulse' : 'text-[#d4af37]'}`}
                 >
                   <Mic size={16} />
@@ -247,6 +253,18 @@ export default function Navbar() {
                 {t('search_action', 'Discover')}
               </button>
             </form>
+            <button
+              type="button"
+              onClick={isListening ? undefined : startListening}
+              disabled={isListening}
+              aria-label={isListening ? 'Listening for voice search' : 'Search by voice'}
+              title={voiceError || (isListening ? 'Listening...' : 'Search by voice')}
+              className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#d4af37]/40 bg-[#1C382B] transition ${
+                isListening ? 'animate-pulse text-rose-400' : 'text-[#d4af37] hover:bg-[#244A38]'
+              }`}
+            >
+              <Mic size={17} />
+            </button>
             <button
               type="button"
               onClick={openAiConcierge}

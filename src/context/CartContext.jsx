@@ -187,22 +187,6 @@ export const CartProvider = ({ children }) => {
       return false;
     }
 
-    if (!isCustomerAuthenticated) {
-      try {
-        localStorage.setItem(PENDING_CART_ADD_KEY, JSON.stringify({
-          product: { ...product, id: prodId },
-          productId: prodId,
-          quantity: qty,
-        }));
-        setIsCartAuthPromptOpen(true);
-        return false;
-      } catch (error) {
-        console.error("Pending bag item could not be saved:", error);
-        toast.error('Could not save this item before sign-in. Please try again.');
-        return false;
-      }
-    }
-
     let cartProduct;
     try {
       const response = await productsApi.getById(prodId);

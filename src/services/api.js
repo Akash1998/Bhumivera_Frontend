@@ -479,7 +479,20 @@ Object.assign(auth, {
 });
 export const adminLogin = async c => (await api.post("/auth/admin/login", c)).data;
 export const search = { query: q => api.get('/products/active', { params: { search: q } }), global: q => api.get('/products', { params: { search: q } }) };
-export const users = { updateProfile: d => api.put('/users/profile', d), updateAdPersonalizationPreference: enabled => api.patch('/users/profile/ad-personalization-preference', { ad_personalization_opt_in: enabled }), changePassword: d => api.post('/users/change-password', d), getProfile: () => api.get('/users/profile'), generate2FA: () => api.post('/users/2fa/generate-setup'), verifyAndEnable2FA: d => api.post('/users/2fa/enable', d), disable2FA: () => api.post('/users/2fa/disable'), updateSecurityQuestion: d => api.put('/users/security-question', d) };
+export const users = {
+  updateProfile: data => api.put('/users/profile', data),
+  createProfileImageUploadUrl: data => api.post('/users/profile/image-upload-url', data),
+  updateAdPersonalizationPreference: enabled => api.patch(
+    '/users/profile/ad-personalization-preference',
+    { ad_personalization_opt_in: enabled }
+  ),
+  changePassword: data => api.post('/users/change-password', data),
+  getProfile: () => api.get('/users/profile'),
+  generate2FA: () => api.post('/users/2fa/generate-setup'),
+  verifyAndEnable2FA: data => api.post('/users/2fa/enable', data),
+  disable2FA: () => api.post('/users/2fa/disable'),
+  updateSecurityQuestion: data => api.put('/users/security-question', data),
+};
 export const products = { getAllActive: p => api.get("/products/active", { params: p }), getAllAdmin: () => api.get("/products"), getById: id => api.get(`/products/${id}`), getBySlug: s => api.get(`/products/slug/${s}`), create: (d, options) => api.post("/products", d, options), update: (id, d, options) => api.put(`/products/${id}`, d, options), toggleStatus: (id, s) => api.patch(`/products/${id}/status`, { status: s }), getUploadUrl: (f, t, options) => api.post("/products/presign", { filename: f, fileType: t }, options), saveImageKeys: (id, k, options) => api.post(`/products/${id}/images/save`, { imageKeys: k }, options), deleteImage: (id, image, options = {}) => api.delete(`/products/${id}/images`, { ...options, data: typeof image === 'object' ? { imageId: image.id, imagePath: image.file_path } : { imageId: image } }), addSerials: (id, s) => api.post(`/serials/${id}/add`, { serials: s }), delete: id => api.delete(`/products/${id}`) };
 export const categories = { getAll: () => api.get("/categories"), getById: id => api.get(`/categories/${id}`), create: d => api.post("/categories", d), update: (id, d) => api.put(`/categories/${id}`, d), delete: id => api.delete(`/categories/${id}`) };
 export const subcategories = { getAll: () => api.get("/subcategories"), getById: id => api.get(`/subcategories/${id}`), create: d => api.post("/subcategories", d), update: (id, d) => api.put(`/subcategories/${id}`, d), delete: id => api.delete(`/subcategories/${id}`) };
