@@ -70,12 +70,12 @@ export const FOOTER_PHOTO_STORIES = [
   {
     id: 'unboxing',
     code: '03',
-    title: 'Tamper-Seal & Weight-Scan Verification',
+    title: 'Artisanal Wax-Sealed Tamper Custody',
     subtitle: 'Warehouse Digital Scale & Bubble-Wrap Protection',
     image: '/assets/images/Promo9.webp',
     modalDetailImage: '/assets/images/Promo2.webp',
     location: 'West Bengal Fulfilment Hub · Dispatch Bay 02',
-    metric: '±0.5g Digital Weight-Scan Tolerance',
+    metric: '±0.5g Atelier Gravimetric Certificate',
     description:
       'Every Bhumivera parcel is cushioned with bubble wrap, sealed with tamper-evident security tape, and weighed before the courier label is prepared.',
     realLifeExample:
@@ -1176,7 +1176,7 @@ export const LEGAL_SECTION_PROFILES = {
     id: 'antifraud',
     slug: 'unboxing-antiscam',
     code: 'PART III',
-    title: '360° Unboxing & Anti-Scam Shield',
+    title: 'Artisanal Wax-Sealed Custody & Patron Shield',
     subtitle: 'Warehouse Digital Weight-Scan Logs, Tamper-Evident Seals & Chargeback Forensics',
     statuteBadge: 'Bharatiya Sakshya Adhiniyam 2023 Sec. 63 · BNS 2023',
     heroImage: '/assets/images/Promo9.webp',
@@ -2125,7 +2125,7 @@ export const BHUMIVERA_6_PRODUCTS = [
     ],
     "seo_title": "Bhumivera Kalpvriksh Satva Tulsi Drops (30 ML) | Concentrated Liquid Extract of 7 Types of Tulsi (9.0ml per 10ml)",
     "meta_description": "Shop Bhumivera Kalpvriksh Satva Tulsi (30 ML): concentrated Ayurvedic wellness drops containing 9.0ml per 10ml liquid extract of 7 Tulsi varieties (Van, Sweet, Marua, Bisva, Kala, Rama & Lemon Tulsi).",
-    "short_description": "Concentrated Ayurvedic daily wellness elixir. Each 10ml of Bhumivera Kalpvriksh Satva Tulsi contains 9.0ml concentrated liquid extract of 7 distinct Tulsi varieties (Van, Sweet, Marua, Bisva, Kala, Rama & Lemon Tulsi) for daily seasonal wellness and antioxidant support.",
+    "short_description": "The Ingestible Skin-Clearing & Cortisol Adaptogen in the Bhumivera Inside-Out Botanical Ritual. Each 10ml contains 9.0ml concentrated liquid extract of 7 distinct Tulsi varieties (Van, Sweet, Marua, Bisva, Kala, Rama & Lemon Tulsi) to calm cortisol spikes, support the gut-skin axis, and promote radiant clarity from within.",
     "search_keywords": "kalpvriksh satva tulsi drops, 7 tulsi liquid extract drops India, seven tulsi ark immunity wellness drops, panchtulsi vs 7 tulsi drops bhumivera",
     "conscious_buyer_highlights": [
       "7 Distinct Tulsi Varieties (Not Just 5): Combines Van, Sweet, Marua, Bisva, Kala, Rama, and Lemon Tulsi.",
@@ -2188,3 +2188,127 @@ export const BHUMIVERA_6_PRODUCTS = [
   }
 ]
 ;
+
+
+export const MAISON_REGIMEN_BUNDLES = [
+  {
+    id: 'bundle-daily-regimen',
+    sku: 'BV-BND-DAILY-01',
+    name: 'The Complete Botanical Daily Regimen',
+    badge: 'Flagship AOV Hero · Save ₹548 (27% Off)',
+    tagline: 'Morning 4% Sea Buckthorn Radiance + 8-Herb Saponin Hair Ritual + Soothing Aloe-Neem-Tulsi Bar',
+    items: [
+      { id: 2, slug: 'himalayan-seabuckthorn-luxury-face-wash', name: 'Himalayan Sea Buckthorn Cellular Radiance Face Wash (100 ML)', price: 799, active: '4% Sea Buckthorn + 5% Glycerin + 0.1% HA & Niacinamide' },
+      { id: 3, slug: 'luxury-2-in-1-botanical-shampoo-conditioner', name: 'Royal Botanical 2-in-1 Luxury Shampoo with Conditioner (200 ML)', price: 899, active: '25mg Reetha + 20mg Amla + 10mg Rosemary Oil + 10mg Bhringraj' },
+      { id: 5, slug: 'artisanal-aloe-vera-handmade-soap', name: 'Soothing Bar — Aloe Vera, Neem & Tulsi (100 GM)', price: 349, active: 'Aloe Vera + Purifying Neem + Sacred Tulsi' }
+    ],
+    mrpTotal: 2047,
+    bundlePrice: 1499,
+    savings: 548,
+    phWindow: 'pH 5.0 – 5.5 Acid-Mantle Calibrated',
+    batchAllocation: 'Batch 04/26 · 42 Regimen Sets Remaining',
+    image_url: '/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp'
+  },
+  {
+    id: 'bundle-inside-out-ritual',
+    sku: 'BV-BND-INSIDEOUT-02',
+    name: 'The Inside-Out Skin-Clearing & Cortisol Ritual',
+    badge: 'Dual Topical + Internal System · Save ₹298',
+    tagline: 'Topical 3% Activated Carbon Pore Detox + Internal 90% 7-Tulsi Cortisol & Gut-Skin Adaptogen',
+    items: [
+      { id: 1, slug: 'activated-charcoal-luxury-face-wash', name: 'Activated Charcoal Purifying Luxury Face Wash (100 ML)', price: 699, active: '3% Activated Charcoal + 5% Glycerin + 0.5% Manjistha' },
+      { id: 6, slug: 'kalpvriksh-satva-tulsi-7-tulsi-extract', name: 'Kalpvriksh Satva 7-Tulsi Ingestible Skin & Cortisol Adaptogen (30 ML)', price: 499, active: '9.0 ml / 10 ml Seven-Tulsi Extract (Eugenol & Rosmarinic Acid)' },
+      { id: 4, slug: 'artisanal-charcoal-handmade-soap', name: 'Charcoal Deep Cleansing Bar with Aloe Vera (100 GM)', price: 399, active: 'Microporous Carbon + Soothing Aloe Matrix' }
+    ],
+    mrpTotal: 1597,
+    bundlePrice: 1299,
+    savings: 298,
+    phWindow: 'pH 5.4 Topical + 90% Phyto-Extract',
+    batchAllocation: 'Batch 04/26 · 37 Ritual Sets Remaining',
+    image_url: '/images/products/bhumivera-kalpvriksh-satva-tulsi-drops.webp'
+  },
+  {
+    id: 'bundle-grand-maison-vault',
+    sku: 'BV-BND-VAULT-06',
+    name: 'The Grand Maison 6-Piece Apothecary Vault',
+    badge: 'Complete Collector Edition · Save ₹845',
+    tagline: 'All 6 100% Label-Disclosed Formulations in an Artisanal Wax-Sealed Collector Vault',
+    items: [
+      { id: 1, slug: 'activated-charcoal-luxury-face-wash', name: 'Activated Charcoal Purifying Luxury Face Wash (100 ML)', price: 699, active: '3% Charcoal + 5% Glycerin' },
+      { id: 2, slug: 'himalayan-seabuckthorn-luxury-face-wash', name: 'Himalayan Sea Buckthorn Cellular Radiance Face Wash (100 ML)', price: 799, active: '4% Sea Buckthorn + 5% Glycerin' },
+      { id: 3, slug: 'luxury-2-in-1-botanical-shampoo-conditioner', name: 'Royal Botanical 2-in-1 Luxury Shampoo with Conditioner (200 ML)', price: 899, active: '100mg Standardized 8-Herb Complex' },
+      { id: 4, slug: 'artisanal-charcoal-handmade-soap', name: 'Charcoal Deep Cleansing Bar (100 GM)', price: 399, active: 'Activated Charcoal + Aloe' },
+      { id: 5, slug: 'artisanal-aloe-vera-handmade-soap', name: 'Soothing Bar — Aloe Vera, Neem & Tulsi (100 GM)', price: 349, active: 'Aloe + Neem + Sacred Tulsi' },
+      { id: 6, slug: 'kalpvriksh-satva-tulsi-7-tulsi-extract', name: 'Kalpvriksh Satva 7-Tulsi Ingestible Adaptogen Drops (30 ML)', price: 499, active: '9.0ml / 10ml 7-Tulsi Extract' }
+    ],
+    mrpTotal: 3644,
+    bundlePrice: 2799,
+    savings: 845,
+    phWindow: 'Signed Batch 04/26 Lab Certificates Included',
+    batchAllocation: 'Batch 04/26 · 19 Collector Vaults Remaining',
+    image_url: '/assets/images/Promo7.webp'
+  }
+];
+
+export const SAMPLE_BATCH_COAS = {
+  'BHMV-2610-SB083': {
+    serial: 'BHMV-2610-SB083',
+    batchCode: 'BATCH-04/26-SB',
+    productName: 'Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash (100 ML)',
+    bottleSequence: 'Bottle #083 of 250',
+    remainingInBatch: 83,
+    pressedDate: 'Oct 18, 2026',
+    extractionTemp: '26.4°C (Sub-28°C Cold-Pressed Verified)',
+    calibratedPh: '5.42 pH (at 25.0°C Digital Electrode)',
+    microbiologicalAssay: 'Total Aerobic Count < 10 CFU/ml · Zero Pathogens',
+    heavyMetals: 'Pb <0.05 ppm · As <0.02 ppm · Hg ND (ICP-MS)',
+    disclosedActives: '4.0% Sea Buckthorn, 5.0% Glycerin, 0.5% Manjistha, 0.5% Haridra, 0.5% Neem, 0.5% Cucumber, 0.1% Hyaluronic Acid, 0.1% Niacinamide',
+    tamperCustody: 'Artisanal Wax-Sealed & Gold-Foil Neck Collar · 214.5g Verified',
+    originLot: 'Ladakh Nubra Valley Cooperative Lot #LDK-SB-2026'
+  },
+  'BHMV-2610-CH041': {
+    serial: 'BHMV-2610-CH041',
+    batchCode: 'BATCH-04/26-CH',
+    productName: 'Bhumivera Activated Charcoal Purifying Luxury Face Wash (100 ML)',
+    bottleSequence: 'Bottle #041 of 250',
+    remainingInBatch: 64,
+    pressedDate: 'Oct 16, 2026',
+    extractionTemp: '25.8°C (Sub-28°C Cold-Compounded)',
+    calibratedPh: '5.48 pH (at 25.0°C Digital Electrode)',
+    microbiologicalAssay: 'Total Aerobic Count < 10 CFU/ml · Sterile Fill',
+    heavyMetals: 'Pb <0.04 ppm · As <0.01 ppm · Hg ND (ICP-MS)',
+    disclosedActives: '3.0% Activated Charcoal, 5.0% Glycerin, 0.5% Manjistha, 0.5% Haridra, 0.5% Neem, 0.5% Cucumber, 0.1% Hyaluronic Acid, 0.1% Niacinamide',
+    tamperCustody: 'Artisanal Wax-Sealed & Gold-Foil Neck Collar · 215.0g Verified',
+    originLot: 'Assam Microporous Bamboo Carbon Lot #ASM-BC-2026'
+  },
+  'BHMV-2610-SH112': {
+    serial: 'BHMV-2610-SH112',
+    batchCode: 'BATCH-04/26-SH',
+    productName: 'Bhumivera Royal Botanical 2-in-1 Luxury Shampoo with Conditioner (200 ML)',
+    bottleSequence: 'Bottle #112 of 250',
+    remainingInBatch: 91,
+    pressedDate: 'Oct 19, 2026',
+    extractionTemp: '27.1°C (Sub-28°C Saponin Infusion)',
+    calibratedPh: '5.18 pH (Cuticle-Smoothing Calibration)',
+    microbiologicalAssay: 'Total Aerobic Count < 10 CFU/ml · Passed',
+    heavyMetals: 'Pb <0.03 ppm · As ND · Hg ND (ICP-MS)',
+    disclosedActives: '25mg Reetha, 20mg Amla, 10mg Triphala, 10mg Bhringraj, 10mg Rosemary Oil, 10mg Neem, 10mg Aloe Vera, 5mg Shikakai',
+    tamperCustody: 'Artisanal Wax-Sealed & Gold-Foil Neck Collar · 342.0g Verified',
+    originLot: 'Himachal & Central India Saponin Estate Lot #HIM-RP-2026'
+  },
+  'BHMV-2610-TL019': {
+    serial: 'BHMV-2610-TL019',
+    batchCode: 'BATCH-04/26-TL',
+    productName: 'Kalpvriksh Satva Tulsi — Ingestible Skin-Clearing & Cortisol Adaptogen (30 ML)',
+    bottleSequence: 'Bottle #019 of 250',
+    remainingInBatch: 58,
+    pressedDate: 'Oct 20, 2026',
+    extractionTemp: '24.9°C (Cold-Hydro-Distilled Phyto-Essence)',
+    calibratedPh: '90% Seven-Tulsi Distillate (9.0 ml / 10 ml)',
+    microbiologicalAssay: 'Food-Grade Botanical Purity · Zero Solvents',
+    heavyMetals: 'Pb ND · As ND · Cd ND · Hg ND',
+    disclosedActives: '9.0 ml / 10 ml Seven-Tulsi Spectrum: Van, Sweet, Marua, Bisva, Kala, Rama & Lemon Tulsi',
+    tamperCustody: 'Artisanal Dropper Security Seal · 98.5g Verified',
+    originLot: 'Vrindavan & Bundelkhand Tulsi Sanctuary Lot #VRN-7T-2026'
+  }
+};

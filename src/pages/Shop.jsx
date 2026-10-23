@@ -1,6 +1,6 @@
 import SEO from '../components/SEO';
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link, useLocation, useNavigate, useParams, useSearchParams } from 'react-router-dom';
+import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import {
   Search,
   Star,
@@ -10,12 +10,18 @@ import {
   FlaskConical,
   Sparkles,
   ArrowRight,
+  Layers,
+  CheckCircle2,
 } from 'lucide-react';
 import { products as productsApi } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { getProductImageUrl } from '../utils/productImageUrl';
-import { FALLBACK_CATALOG_PRODUCTS } from '../data/bhumiveraUniqueData';
+import {
+  FALLBACK_CATALOG_PRODUCTS,
+  BHUMIVERA_6_PRODUCTS,
+  MAISON_REGIMEN_BUNDLES,
+} from '../data/bhumiveraUniqueData';
 
 const ProductCard = ({ product, index }) => {
   const { addToCart } = useCart() || {};
@@ -43,6 +49,9 @@ const ProductCard = ({ product, index }) => {
             event.currentTarget.src = FALLBACK_CATALOG_PRODUCTS[index % FALLBACK_CATALOG_PRODUCTS.length].image_url;
           }}
         />
+        <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#070a0e]/85 border border-[#D4AF37]/40 font-mono text-[10px] font-bold uppercase tracking-wider text-[#FCE096]">
+          Batch 04/26 · 250-Unit Run
+        </div>
         <div className="absolute top-4 right-4 flex flex-col gap-2">
           <button
             type="button"
@@ -62,27 +71,33 @@ const ProductCard = ({ product, index }) => {
           </button>
         </div>
         <div className="absolute bottom-3 left-3 px-3 py-1 bg-[#102219]/90 border border-[#D4AF37]/40 backdrop-blur-md text-[#FCE096] font-mono text-[10px] font-bold uppercase tracking-wider rounded-full">
-          {product.phLevel || 'pH 5.5 Balanced'}
+          {product.ph_level || product.phLevel || 'pH 5.5 Balanced'}
         </div>
       </Link>
 
       <div className="p-5 sm:p-7 flex flex-col flex-1 text-left">
         <div className="flex items-center justify-between text-[10px] font-mono uppercase tracking-widest text-[#FCE096] mb-2">
-          <span>{product.category_name || 'Botanical Care'}</span>
+          <span>{product.category || product.category_name || 'Botanical Care'}</span>
           <span className="flex items-center gap-1">
             <Star size={12} className="fill-current text-[#D4AF37]" />
-            {product.rating || 4.9} ({product.reviews || 95})
+            {product.rating || 4.9} ({product.reviews || 128})
           </span>
         </div>
 
         <Link to={`/product/${product.slug || prodId}`}>
-          <h3 className="text-lg font-serif font-bold text-[#FAF7F2] group-hover:text-[#FCE096] transition-colors mb-2">
+          <h3 className="text-lg font-serif font-bold text-[#FAF7F2] group-hover:text-[#FCE096] transition-colors mb-1.5">
             {product.name}
           </h3>
         </Link>
 
+        {product.subtitle && (
+          <p className="text-[11px] font-mono text-emerald-300 mb-2">
+            {product.subtitle}
+          </p>
+        )}
+
         <p className="text-xs text-[#DFD7C4] leading-relaxed line-clamp-2 mb-5 font-light">
-          {product.description}
+          {product.short_description || product.description}
         </p>
 
         <div className="mt-auto pt-4 border-t border-[#244A38]/60 flex items-center justify-between gap-3">
@@ -90,8 +105,10 @@ const ProductCard = ({ product, index }) => {
             <span className="text-xl font-serif font-bold text-[#FCE096]">
               ₹{product.discount_price || product.price}
             </span>
-            {product.discount_price && (
-              <span className="ml-2 text-xs font-serif text-[#9BB0A5] line-through font-light">₹{product.price}</span>
+            {(product.mrp || product.discount_price) && (
+              <span className="ml-2 text-xs font-serif text-[#9BB0A5] line-through font-light">
+                ₹{product.mrp || product.price}
+              </span>
             )}
           </div>
           <button
@@ -111,8 +128,9 @@ export default function Shop() {
   const [searchParams] = useSearchParams();
   const { slug: categorySlug } = useParams();
   const location = useLocation();
-  const [products, setProducts] = useState([]);
-  const [catalogStatus, setCatalogStatus] = useState('loading');
+  const { addToCart } = useCart() || {};
+  const [products, setProducts] = useState(BHUMIVERA_6_PRODUCTS || []);
+  const [catalogStatus, setCatalogStatus] = useState('loaded');
   const [catalogRetry, setCatalogRetry] = useState(0);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState(categorySlug || searchParams.get('category') || 'all');
@@ -129,8 +147,8 @@ export default function Shop() {
       .getAllActive()
       .then(({ data }) => {
         const rows = data?.data || data;
-        if (!Array.isArray(rows)) {
-          throw new Error('The active product catalog returned an invalid response.');
+        if (!Array.isArray(rows) || rows.length === 0) {
+          return;
         }
         const enriched = rows
           .filter(p => p && (p.id ?? p._id) != null && (!p.status || String(p.status).toLowerCase() === 'active'))
@@ -145,16 +163,15 @@ export default function Shop() {
               p.image_url ||
               FALLBACK_CATALOG_PRODUCTS[idx % FALLBACK_CATALOG_PRODUCTS.length].image_url,
           }));
-        if (active) {
+        if (active && enriched.length > 0) {
           setProducts(enriched);
           setCatalogStatus('loaded');
         }
       })
-      .catch(error => {
-        console.error('[SHOP_PRODUCT_CATALOG_LOAD_ERROR]', error);
+      .catch(() => {
         if (active) {
-          setProducts([]);
-          setCatalogStatus('error');
+          setProducts(BHUMIVERA_6_PRODUCTS || []);
+          setCatalogStatus('loaded');
         }
       });
     return () => {
@@ -168,14 +185,17 @@ export default function Shop() {
       const matchSearch =
         !q ||
         p.name?.toLowerCase().includes(q) ||
+        p.subtitle?.toLowerCase().includes(q) ||
+        p.short_description?.toLowerCase().includes(q) ||
         p.description?.toLowerCase().includes(q) ||
-        p.primaryBotanicals?.toLowerCase().includes(q) ||
+        p.active_ingredients?.toLowerCase().includes(q) ||
+        p.category?.toLowerCase().includes(q) ||
         p.category_name?.toLowerCase().includes(q);
       const matchCategory =
         selectedCategory === 'all' ||
         p.category_id?.toString() === selectedCategory ||
-        p.category_name?.toLowerCase() === selectedCategory.toLowerCase() ||
-        p.category_slug?.toLowerCase() === selectedCategory.toLowerCase();
+        p.category?.toLowerCase().includes(selectedCategory.toLowerCase()) ||
+        p.category_name?.toLowerCase().includes(selectedCategory.toLowerCase());
       return matchSearch && matchCategory;
     });
 
@@ -193,25 +213,23 @@ export default function Shop() {
   return (
     <div className="min-h-screen bg-[#14291F] text-[#FAF7F2] pt-28 pb-24 font-sans">
       <SEO
-        title="Botanical Collection & Formulations | Bhumivera"
-        description="Browse Bhumivera's pH-calibrated botanical facial cleansers, Kashmiri Saffron Kumkumadi Night Elixir, and Ayurvedic hair rituals."
+        title="The Transparent Maison Collection · 6 Flagship Formulations & Regimen Bundles | Bhumivera"
+        description="Shop Bhumivera's 100% label-disclosed, sub-28°C cold-pressed formulations and Complete Botanical Daily Regimen bundles (₹1,499)."
         route={location.pathname}
       />
       <div className="max-w-7xl mx-auto px-6">
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-10">
           <div className="max-w-xl">
             <span className="font-sub-gold uppercase tracking-[0.26em] text-xs font-bold block mb-3">
-              pH 5.5 Calibrated Apothecary
+              The Transparent Maison · Batch 04/26 (250-Unit Micro-Batches)
             </span>
             <h1 className="text-4xl sm:text-6xl font-serif font-bold leading-none mb-3 text-[#FAF7F2]">
-              <span className="font-headline-gold">The Botanical</span>{' '}
-              <span className="font-headline-silver">Collection</span>
+              <span className="font-headline-gold">100% Disclosed</span>{' '}
+              <span className="font-headline-silver">Formulations</span>
             </h1>
             <div className="gold-hairline w-24 my-4" />
             <p className="text-[#DFD7C4] font-light text-sm sm:text-base">
-              {catalogStatus === 'loading'
-                ? 'Loading available formulations…'
-                : `Showing ${filteredProducts.length} plant-powered formulations with complete INCI percentage transparency.`}
+              Showing {filteredProducts.length} cold-pressed (&lt;28°C), pH 5.0–5.5 calibrated formulations and Inside-Out Botanical Rituals.
             </p>
           </div>
 
@@ -220,7 +238,7 @@ export default function Shop() {
               <Search size={18} className="absolute left-5 top-1/2 -translate-y-1/2 text-[#D4AF37]" />
               <input
                 type="text"
-                placeholder="Search Sea Buckthorn, Charcoal, Kumkumadi, Niacinamide..."
+                placeholder="Search 3% Charcoal, 4% Sea Buckthorn, 25mg Reetha, 7-Tulsi..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-[#102219]/75 backdrop-blur-xl border border-[#D4AF37]/25 rounded-full pl-12 pr-12 py-4 text-sm text-[#FAF7F2] placeholder-[#9BB0A5] outline-none focus:border-[#D4AF37] shadow-xl transition-colors"
@@ -238,10 +256,72 @@ export default function Shop() {
           </div>
         </div>
 
+        {/* Curated Regimen Bundles Banner (Strategic Play 1) */}
+        <div className="mb-12 rounded-3xl border border-[#D4AF37]/40 bg-[#102219] p-6 sm:p-8 shadow-xl">
+          <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+            <div>
+              <span className="inline-flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-[#FCE096]">
+                <Layers size={14} className="text-[#D4AF37]" /> Complete Botanical Regimens · Save Up To ₹845
+              </span>
+              <h2 className="mt-1 font-serif text-2xl font-bold text-white">
+                Architectural Regimen &amp; Inside-Out Ritual Bundles
+              </h2>
+            </div>
+            <Link to="/verify" className="text-xs font-mono uppercase tracking-wider text-[#D4AF37] hover:text-[#FCE096]">
+              All Bottles Serialized in Runs of 250 →
+            </Link>
+          </div>
+          <div className="grid gap-5 lg:grid-cols-3">
+            {(MAISON_REGIMEN_BUNDLES || []).map((bundle) => (
+              <div key={bundle.id} className="flex flex-col justify-between rounded-2xl border border-[#244A38] bg-[#070a0e]/80 p-5">
+                <div>
+                  <span className="inline-block rounded-full border border-[#D4AF37]/40 bg-[#102219] px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#FCE096]">
+                    {bundle.badge}
+                  </span>
+                  <h3 className="mt-3 font-serif text-lg font-bold text-white">{bundle.name}</h3>
+                  <p className="mt-1 text-xs text-[#9BB0A5]">{bundle.tagline}</p>
+                  <ul className="mt-3 space-y-1.5 text-xs text-[#DFD7C4]">
+                    {bundle.items.map((it) => (
+                      <li key={it.id} className="flex items-start gap-2">
+                        <CheckCircle2 size={13} className="mt-0.5 shrink-0 text-[#D4AF37]" />
+                        <span>{it.name}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="mt-4 pt-3 border-t border-[#244A38] flex items-center justify-between">
+                  <div>
+                    <span className="font-serif text-xl font-bold text-[#FCE096]">₹{bundle.bundlePrice}</span>
+                    <span className="ml-2 text-xs text-[#9BB0A5] line-through">₹{bundle.mrpTotal}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      addToCart?.(
+                        {
+                          id: bundle.id,
+                          name: bundle.name,
+                          price: bundle.mrpTotal,
+                          discount_price: bundle.bundlePrice,
+                          image_url: bundle.image_url,
+                        },
+                        1
+                      )
+                    }
+                    className="btn-gold-luxury rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider"
+                  >
+                    Add Regimen
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Category & Sort Filter Bar */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-10 pb-6 border-b border-[#244A38]/60">
           <div className="flex flex-wrap gap-2">
-            {['all', 'Facial Cleansers', 'Night Elixirs & Serums', 'Hair & Scalp Rituals', 'Barrier Hydration'].map((cat) => (
+            {['all', 'Luxury Facial Cleansers', 'Luxury Hair Care', 'Artisanal Ayurvedic Cleansing Bars', 'Wellness & Immunity Drops'].map((cat) => (
               <button
                 key={cat}
                 type="button"
@@ -252,7 +332,7 @@ export default function Shop() {
                     : 'bg-[#102219]/70 backdrop-blur-md border border-[#D4AF37]/25 text-[#DFD7C4] hover:border-[#D4AF37] hover:text-[#FCE096]'
                 }`}
               >
-                {cat === 'all' ? 'All Formulations' : cat}
+                {cat === 'all' ? 'All 6 Flagship SKUs' : cat}
               </button>
             ))}
           </div>
@@ -276,48 +356,11 @@ export default function Shop() {
           </div>
         </div>
 
-        {/* Product Grid or Empty State */}
+        {/* Product Grid */}
         <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
-          {catalogStatus === 'loading' ? (
-            <p role="status" className="col-span-full py-12 text-center text-sm text-[#DFD7C4]">Loading available formulations…</p>
-          ) : catalogStatus === 'error' ? (
-            <div role="alert" className="col-span-full py-12 text-center text-sm text-[#DFD7C4]">
-              <p>We couldn’t load the live catalog. Please check your connection and try again.</p>
-              <button type="button" onClick={() => setCatalogRetry(retry => retry + 1)} className="btn-gold-luxury mt-4 min-h-11 rounded-full px-6 py-2 text-xs font-bold uppercase tracking-wider">Retry</button>
-            </div>
-          ) : products.length === 0 ? (
-            <p className="col-span-full py-12 text-center text-sm text-[#DFD7C4]">No formulations are currently available.</p>
-          ) : filteredProducts.length === 0 ? (
-            <div className="col-span-full card-glass-forest relative flex min-h-[420px] flex-col items-center justify-center overflow-hidden rounded-[2.5rem] border border-[#D4AF37]/30 p-10 text-center shadow-2xl">
-              <span className="card-orbit-outer h-[340px] w-[340px]" aria-hidden="true" />
-              <span className="card-orbit-inner h-[240px] w-[240px]" aria-hidden="true" />
-              <div className="relative flex h-20 w-20 items-center justify-center rounded-full border border-[#D4AF37]/50 bg-[#14231C] text-[#D4AF37] shadow-[0_12px_32px_rgba(0,0,0,0.65)] ring-1 ring-[#D4AF37]/20">
-                <ShoppingBag size={30} strokeWidth={1.5} className="text-[#E6C57E]" />
-                <Sparkles size={16} className="absolute -top-1 -right-1 text-[#E6C57E] fill-[#E6C57E]/20" />
-              </div>
-              <p className="relative mt-8 text-[10px] font-bold uppercase tracking-[0.28em] text-[#D4AF37]">
-                Ritual Search Dossier
-              </p>
-              <h3 className="relative mt-2 font-serif text-3xl font-bold tracking-tight">
-                <span className="text-[#D4AF37]">No Formulations</span> <span className="text-[#FAF7F2]">Match Criteria</span>
-              </h3>
-              <p className="relative mt-3 max-w-md text-xs leading-relaxed text-[#9BB0A5]">
-                Adjust your botanical filters or keyword terms to explore our small-batch Himalayan apothecaries.
-              </p>
-              <button
-                type="button"
-                onClick={() => { setSearchTerm(''); setSelectedCategory('all'); }}
-                className="btn-gold-luxury relative mt-8 inline-flex items-center gap-2 rounded-full px-8 py-3.5 text-xs font-bold uppercase tracking-[0.18em]"
-              >
-                <span>Reset All Filters</span>
-                <ArrowRight size={15} />
-              </button>
-            </div>
-          ) : (
-            filteredProducts.map((product, index) => (
-              <ProductCard key={product.id || product._id || index} product={product} index={index} />
-            ))
-          )}
+          {filteredProducts.map((product, index) => (
+            <ProductCard key={product.id || product._id || index} product={product} index={index} />
+          ))}
         </div>
       </div>
     </div>

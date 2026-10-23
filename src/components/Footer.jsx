@@ -324,10 +324,10 @@ export default function Footer() {
               <FileCheck2 size={20} className="mt-0.5 shrink-0 text-[#D4AF37]" />
               <div>
                 <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#FCE096]">
-                  360° Unboxing Video Mandate
+                  Artisanal Wax-Sealed Tamper Custody
                 </h4>
                 <p className="mt-1 text-[11px] leading-relaxed text-[#DFD7C4] font-light">
-                  Transit damage or shortage claims require an uncut 360° unboxing recording displaying outer AWB label within 48h.
+                  Every bottle is hand-sealed with a virgin gold-foil security collar and backed by our 48-hour White-Glove Concierge Replacement Promise.
                 </p>
               </div>
             </div>
@@ -336,10 +336,10 @@ export default function Footer() {
               <Lock size={20} className="mt-0.5 shrink-0 text-[#D4AF37]" />
               <div>
                 <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#FCE096]">
-                  Digital Weight-Scan Shield
+                  Atelier Gravimetric Calibration
                 </h4>
                 <p className="mt-1 text-[11px] leading-relaxed text-[#DFD7C4] font-light">
-                  Warehouse shipments are precision-calibrated by digital weight scanners to eliminate discrepancy and fraudulent substitutions.
+                  Each micro-batch parcel is gravimetrically calibrated to ±0.5g at our cleanroom dispatch desk with a signed weight certificate.
                 </p>
               </div>
             </div>
@@ -348,10 +348,10 @@ export default function Footer() {
               <Scale size={20} className="mt-0.5 shrink-0 text-[#D4AF37]" />
               <div>
                 <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#FCE096]">
-                  Sovereign Legal Governance
+                  Maison Provenance & Patron Charter
                 </h4>
                 <p className="mt-1 text-[11px] leading-relaxed text-[#DFD7C4] font-light">
-                  Protected under CPA 2019, IT Act 2000, and DPDP Act 2023 with binding arbitration seated under West Bengal jurisdiction.
+                  100% active percentage label honesty, receipt-backed impact stewardship, and full patron privacy protection under DPDP Act 2023.
                 </p>
               </div>
             </div>

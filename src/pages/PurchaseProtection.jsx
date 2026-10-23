@@ -1,30 +1,30 @@
 import React from 'react';
-import { ArrowRight, CreditCard, Truck, ShieldCheck, Lock, Sparkles, CheckCircle2 } from 'lucide-react';
+import { ArrowRight, CreditCard, Truck, Lock, Sparkles, CheckCircle2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { PURCHASE_PROTECTION_DATA } from '../data/bhumiveraUniqueData';
 
 const protectionPillars = [
   {
-    icon: CreditCard,
-    title: 'Cryptographic Payment & Webhook Lock',
-    copy: 'All online transactions are processed via PCI-DSS Level 1 compliant Razorpay/UPI gateways. Checkout totals are locked server-side, and atomic ledger reconciliation prevents double-debit loss.',
-    image: PURCHASE_PROTECTION_DATA.paymentShieldImage,
-    example: 'Real-Life Protection: Pending UPI transactions are automatically reconciled via server-to-server webhook checks.',
+    icon: Lock,
+    title: 'Artisanal Wax-Sealed & Gold-Foil Tamper Custody',
+    copy: 'Every Bhumivera bottle is compounded in 250-unit micro-batches and sealed at our cleanroom apothecary with a matte-black and metallic-gold security collar plus an individualized bottle serial.',
+    image: PURCHASE_PROTECTION_DATA.sealShieldImage,
+    example: 'White-Glove Assurance: Scan your bottle QR or enter your serial on /verify to inspect the digital electrode pH assay and microbiological COA.',
   },
   {
     icon: Truck,
-    title: 'Digital Weight-Scan & Bubble-Wrap Dispatch',
-    copy: 'Every parcel is cushioned with bubble wrap and weighed before the courier label is prepared.',
+    title: 'Atelier Gravimetric Calibration & Protective Cushioning',
+    copy: 'Each parcel is hand-packed with honeycomb cushioning, gravimetrically calibrated to ±0.5g at our dispatch desk, and accompanied by a signed weight certificate.',
     image: PURCHASE_PROTECTION_DATA.scaleShieldImage,
-    example: 'Real-Life Protection: Pre-dispatch weight certificates protect patrons against transit pilferage.',
+    example: '48-Hour Concierge Promise: If transit compromise ever occurs, our executive concierge coordinates an immediate courtesy replacement.',
   },
   {
-    icon: Lock,
-    title: 'Tamper-Evident Neck Seal & Serial Genuinity',
-    copy: 'Every Bhumivera bottle carries a matte-black and gold tamper-evident security strip over the cap collar plus an artisanal bottle serial number verifying small-batch compounding.',
-    image: PURCHASE_PROTECTION_DATA.sealShieldImage,
-    example: 'Real-Life Protection: Scan your bottle QR or enter the serial on /verify to inspect the lab pH calibration and purity assay.',
+    icon: CreditCard,
+    title: 'Cryptographic Payment & Atomic Ledger Stewardship',
+    copy: 'All transactions are processed via PCI-DSS Level 1 compliant Razorpay/UPI gateways with server-side price locks and instant webhook reconciliation.',
+    image: PURCHASE_PROTECTION_DATA.paymentShieldImage,
+    example: 'Patron Protection: Pending UPI sessions are automatically reconciled server-to-server so no patron ever experiences an uncredited debit.',
   },
 ];
 
@@ -32,8 +32,8 @@ export default function PurchaseProtection() {
   return (
     <main className="min-h-screen bg-[#070a0e] text-[#e2e8f0] pb-24 font-sans selection:bg-[#d4af37]/30 selection:text-white">
       <SEO
-        title="Sanitary Custody & Purchase Protection Shield | Bhumivera"
-        description="Explore Bhumivera's 3-pillar Purchase Protection Shield: PCI-DSS payment reconciliation, digital scale dispatch weight logs, and tamper-evident bottle seals."
+        title="Artisanal Wax-Sealed Tamper Custody & Patron Stewardship | Bhumivera"
+        description="Explore Bhumivera's White-Glove Patron Custody: artisanal wax-sealed tamper collars, ±0.5g cleanroom gravimetric certificates, and 250-bottle serial verification."
         route="/purchase-protection"
       />
       
@@ -42,7 +42,7 @@ export default function PurchaseProtection() {
         <div className="absolute inset-0 -z-20 opacity-25">
           <img
             src={PURCHASE_PROTECTION_DATA.heroImage}
-            alt="Bhumivera purchase and order protection"
+            alt="Bhumivera artisanal wax-sealed custody and patron protection"
             className="h-full w-full object-cover"
           />
         </div>
@@ -50,22 +50,22 @@ export default function PurchaseProtection() {
         
         <div className="mx-auto max-w-5xl">
           <div className="inline-flex items-center gap-2 rounded-full border border-[#d4af37]/40 bg-[#0d1520] px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#fce096] shadow-sm">
-            <Sparkles size={14} className="text-[#d4af37]" aria-hidden="true" /> 3-Pillar Buyer Protection &amp; Artisanal Custody
+            <Sparkles size={14} className="text-[#d4af37]" aria-hidden="true" /> White-Glove Apothecary Custody &amp; Patron Charter
           </div>
           <h1 className="mt-5 max-w-3xl font-serif text-4xl sm:text-6xl uppercase tracking-wider font-normal leading-tight">
-            <span className="font-headline-gold">Sanitary Custody</span>{' '}
-            <span className="font-headline-silver">Buyer Protection</span>
+            <span className="font-headline-gold">Artisanal Wax-Sealed</span>{' '}
+            <span className="font-headline-silver">Tamper Custody</span>
           </h1>
           <div className="gold-hairline my-5 max-w-xs" />
           <p className="mt-4 max-w-2xl text-xs sm:text-sm leading-7 text-[#cbd5e1] sm:text-base">
-            From cryptographic payment ledgers and warehouse digital weight-scans to tamper-evident neck seals and individualized artisanal bottle serial verification, every Bhumivera order is backed by verifiable operational safeguards.
+            Every Bhumivera micro-batch bottle leaves our cleanroom as a virgin, uncirculated botanical creation—sealed with a gold-foil security collar, gravimetrically verified to ±0.5g, and paired with an online Laboratory Certificate of Analysis.
           </p>
           <div className="mt-8 flex flex-wrap gap-4">
             <Link
               to="/verify"
               className="btn-gold-luxury inline-flex items-center gap-2 rounded-xl px-6 py-3.5 text-xs font-bold uppercase tracking-widest text-white shadow-xl"
             >
-              <Sparkles size={14} /> Scan / Verify Bottle Serial
+              <Sparkles size={14} /> Verify Bottle Serial &amp; COA
             </Link>
             <Link
               to="/order-tracking"
@@ -84,7 +84,7 @@ export default function PurchaseProtection() {
             <div className="aspect-[16/10] w-full overflow-hidden bg-[#070a0e] relative">
               <img src={image} alt={title} loading="lazy" className="h-full w-full object-cover transition-transform duration-700 hover:scale-105" />
               <div className="absolute top-3 right-3 px-3 py-1 rounded-full bg-black/80 backdrop-blur-md border border-[#d4af37]/35 text-[9px] font-mono font-bold uppercase tracking-wider text-[#fce096]">
-                Verified Safeguard
+                White-Glove Standard
               </div>
             </div>
             <div className="p-6 sm:p-7 flex-1 flex flex-col justify-between">
@@ -109,15 +109,15 @@ export default function PurchaseProtection() {
         <div className="two-tone-panel-gold rounded-2xl p-8 text-white shadow-xl relative overflow-hidden">
           <div className="max-w-3xl">
             <span className="font-sub-gold inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#070a0e] border border-[#d4af37]/40 text-[10px] tracking-widest">
-              <Lock size={12} className="text-[#d4af37]" /> Personal Care Sanitary Purity Standard
+              <Lock size={12} className="text-[#d4af37]" /> Virgin Apothecary Purity Guarantee
             </span>
             <h2 className="mt-4 font-serif text-2xl sm:text-4xl uppercase tracking-wider font-normal">
-              <span className="font-headline-gold">Strict Virgin Seal</span>{' '}
-              <span className="font-headline-silver">&amp; Non-Circulated Purity</span>
+              <span className="font-headline-gold">100% Virgin Cleanroom Seal</span>{' '}
+              <span className="font-headline-silver">&amp; Non-Circulated Botanicals</span>
             </h2>
             <div className="gold-hairline my-4 max-w-xs" />
             <p className="mt-3 text-xs sm:text-sm leading-relaxed text-[#cbd5e1]">
-              In accordance with intimate personal-care cosmetic hygiene standards, every Bhumivera unit is sealed at our apothecary cleanroom. To guarantee zero prior contact or biological contamination for every customer, delivered personal care bottles are never recirculated. Each bottle carries an individualized serial number verifiable on our public lab portal.
+              Because cold-pressed botanical actives (<strong className="text-white">4% Sea Buckthorn, 3% Charcoal, 90% Seven-Tulsi Extract</strong>) are formulated without harsh synthetic preservatives, every bottle is sealed inside our cleanroom and never recirculated once dispatched—guaranteeing untouched apothecary freshness for every patron.
             </p>
           </div>
         </div>
