@@ -2,200 +2,146 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <url>
     <loc>https://www.bhumivera.com</loc>
-    <lastmod>2026-10-22</lastmod>
+    <lastmod>2026-10-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://www.bhumivera.com/shop</loc>
-    <lastmod>2026-10-22</lastmod>
+    <lastmod>2026-10-23</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.85</priority>
+    <priority>0.90</priority>
   </url>
   <url>
     <loc>https://www.bhumivera.com/products</loc>
-    <lastmod>2026-10-22</lastmod>
+    <lastmod>2026-10-23</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.85</priority>
+    <priority>0.90</priority>
   </url>
   <url>
     <loc>https://www.bhumivera.com/science</loc>
-    <lastmod>2026-10-22</lastmod>
+    <lastmod>2026-10-23</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.85</priority>
+    <priority>0.95</priority>
   </url>
   <url>
     <loc>https://www.bhumivera.com/guides</loc>
-    <lastmod>2026-10-22</lastmod>
+    <lastmod>2026-10-23</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.85</priority>
+    <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://www.bhumivera.com/guides/ultimate-guide-luxury-organic-face-wash-india</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.85</priority>
+    <loc>https://www.bhumivera.com/guides/the-gut-skin-axis-systemic-inflammation-topical-barrier</loc>
+    <lastmod>2026-10-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://www.bhumivera.com/guides/science-of-sulfate-free-luxury-herbal-shampoos</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.85</priority>
+    <loc>https://www.bhumivera.com/guides/postbiotic-cellular-emulsions-ph-5-5-acid-mantle-science</loc>
+    <lastmod>2026-10-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
+  </url>
+  <url>
+    <loc>https://www.bhumivera.com/guides/sub-28c-cold-pressed-botanical-bio-extraction-vs-boiling</loc>
+    <lastmod>2026-10-23</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.90</priority>
   </url>
   <url>
     <loc>https://www.bhumivera.com/verify</loc>
-    <lastmod>2026-10-22</lastmod>
+    <lastmod>2026-10-23</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.85</priority>
+    <priority>0.90</priority>
   </url>
   <url>
     <loc>https://www.bhumivera.com/impact</loc>
-    <lastmod>2026-10-22</lastmod>
+    <lastmod>2026-10-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.bhumivera.com/about</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>daily</changefreq>
+    <lastmod>2026-10-23</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.bhumivera.com/contact</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>daily</changefreq>
+    <lastmod>2026-10-23</lastmod>
+    <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.bhumivera.com/llms.txt</loc>
-    <lastmod>2026-10-22</lastmod>
+    <lastmod>2026-10-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
     <loc>https://www.bhumivera.com/llms-full.txt</loc>
-    <lastmod>2026-10-22</lastmod>
+    <lastmod>2026-10-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://www.bhumivera.com/products/activated-charcoal-luxury-face-wash</loc>
-    <lastmod>2026-10-22</lastmod>
+    <loc>https://www.bhumivera.com/product/the-biotic-cellular-reset-30-day-gut-skin-protocol</loc>
+    <lastmod>2026-10-23</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.95</priority>
-    <image:image>
-      <image:loc>https://www.bhumivera.com/images/products/bhumivera-activated-charcoal-luxury-face-wash.webp</image:loc>
-      <image:title>Bhumivera Activated Charcoal Purifying Luxury Face Wash</image:title>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://www.bhumivera.com/product/activated-charcoal-luxury-face-wash</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.95</priority>
-    <image:image>
-      <image:loc>https://www.bhumivera.com/images/products/bhumivera-activated-charcoal-luxury-face-wash.webp</image:loc>
-      <image:title>Bhumivera Activated Charcoal Purifying Luxury Face Wash</image:title>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://www.bhumivera.com/products/himalayan-seabuckthorn-luxury-face-wash</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.95</priority>
+    <priority>1.0</priority>
     <image:image>
       <image:loc>https://www.bhumivera.com/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp</image:loc>
-      <image:title>Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash</image:title>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://www.bhumivera.com/product/himalayan-seabuckthorn-luxury-face-wash</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.95</priority>
-    <image:image>
-      <image:loc>https://www.bhumivera.com/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp</image:loc>
-      <image:title>Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash</image:title>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://www.bhumivera.com/products/luxury-2-in-1-botanical-shampoo-conditioner</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.95</priority>
-    <image:image>
-      <image:loc>https://www.bhumivera.com/images/products/bhumivera-luxury-2-in-1-shampoo-conditioner.webp</image:loc>
-      <image:title>Bhumivera Royal Botanical 2-in-1 Luxury Shampoo with Conditioner</image:title>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://www.bhumivera.com/product/luxury-2-in-1-botanical-shampoo-conditioner</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.95</priority>
-    <image:image>
-      <image:loc>https://www.bhumivera.com/images/products/bhumivera-luxury-2-in-1-shampoo-conditioner.webp</image:loc>
-      <image:title>Bhumivera Royal Botanical 2-in-1 Luxury Shampoo with Conditioner</image:title>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://www.bhumivera.com/products/artisanal-charcoal-handmade-soap</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.95</priority>
-    <image:image>
-      <image:loc>https://www.bhumivera.com/images/products/bhumivera-artisanal-charcoal-handmade-soap.webp</image:loc>
-      <image:title>Bhumivera Charcoal Deep Cleansing Bar (Handmade Ayurvedic Luxury Soap)</image:title>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://www.bhumivera.com/product/artisanal-charcoal-handmade-soap</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.95</priority>
-    <image:image>
-      <image:loc>https://www.bhumivera.com/images/products/bhumivera-artisanal-charcoal-handmade-soap.webp</image:loc>
-      <image:title>Bhumivera Charcoal Deep Cleansing Bar (Handmade Ayurvedic Luxury Soap)</image:title>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://www.bhumivera.com/products/artisanal-aloe-vera-handmade-soap</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.95</priority>
-    <image:image>
-      <image:loc>https://www.bhumivera.com/images/products/bhumivera-artisanal-aloe-vera-handmade-soap.webp</image:loc>
-      <image:title>Bhumivera Soothing Bar (Aloe Vera, Neem &amp; Tulsi Handmade Ayurvedic Soap)</image:title>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://www.bhumivera.com/product/artisanal-aloe-vera-handmade-soap</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.95</priority>
-    <image:image>
-      <image:loc>https://www.bhumivera.com/images/products/bhumivera-artisanal-aloe-vera-handmade-soap.webp</image:loc>
-      <image:title>Bhumivera Soothing Bar (Aloe Vera, Neem &amp; Tulsi Handmade Ayurvedic Soap)</image:title>
-    </image:image>
-  </url>
-  <url>
-    <loc>https://www.bhumivera.com/products/kalpvriksh-satva-tulsi-7-tulsi-extract</loc>
-    <lastmod>2026-10-22</lastmod>
-    <changefreq>daily</changefreq>
-    <priority>0.95</priority>
-    <image:image>
-      <image:loc>https://www.bhumivera.com/images/products/bhumivera-kalpvriksh-satva-tulsi-drops.webp</image:loc>
-      <image:title>Bhumivera Kalpvriksh Satva Tulsi (Liquid Extract of 7 Types of Tulsi)</image:title>
+      <image:title>The Biotic Cellular Reset: 30-Day 2-Step Gut-Skin Protocol</image:title>
     </image:image>
   </url>
   <url>
     <loc>https://www.bhumivera.com/product/kalpvriksh-satva-tulsi-7-tulsi-extract</loc>
-    <lastmod>2026-10-22</lastmod>
+    <lastmod>2026-10-23</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.98</priority>
+    <image:image>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-kalpvriksh-satva-tulsi-drops.webp</image:loc>
+      <image:title>Kalpvriksh Satva 7-Tulsi Cellular Reset Drops (9.0 ml / 10 ml)</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.bhumivera.com/product/himalayan-seabuckthorn-luxury-face-wash</loc>
+    <lastmod>2026-10-23</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.98</priority>
+    <image:image>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp</image:loc>
+      <image:title>Himalayan Sea Buckthorn Postbiotic Cellular Emulsion (4% Omega-7 + 1.5% Lactobacillus)</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.bhumivera.com/product/activated-charcoal-luxury-face-wash</loc>
+    <lastmod>2026-10-23</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-activated-charcoal-luxury-face-wash.webp</image:loc>
+      <image:title>Activated Charcoal Postbiotic Clarifying Emulsion (3% Charcoal + 1.5% Lactobacillus)</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.bhumivera.com/product/restorative-seabuckthorn-prebiotic-barrier-creme</loc>
+    <lastmod>2026-10-23</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp</image:loc>
+      <image:title>Restorative Sea Buckthorn &amp; Prebiotic Barrier Crème (2% Prebiotic GOS + 3% Omega-7)</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://www.bhumivera.com/product/fermented-7-tulsi-hydrosol-cellular-hydration-mist</loc>
+    <lastmod>2026-10-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
     <image:image>
       <image:loc>https://www.bhumivera.com/images/products/bhumivera-kalpvriksh-satva-tulsi-drops.webp</image:loc>
-      <image:title>Bhumivera Kalpvriksh Satva Tulsi (Liquid Extract of 7 Types of Tulsi)</image:title>
+      <image:title>Fermented 7-Tulsi Hydrosol Cellular Hydration Mist (pH 5.38 Microbiome Toner)</image:title>
     </image:image>
   </url>
 </urlset>

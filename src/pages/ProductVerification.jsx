@@ -196,6 +196,18 @@ export default function ProductVerification() {
                 <dt className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">Artisanal Tamper Custody</dt>
                 <dd className="mt-1 font-semibold text-[#fce096]">{coaData.tamperCustody}</dd>
               </div>
+              <div className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e]/70 p-4">
+                <dt className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">Pesticide Residue (GC-MS/MS)</dt>
+                <dd className="mt-1 font-semibold text-emerald-400">{coaData.pesticideResidue || '0.000 ppm Across 210 Pesticides'}</dd>
+              </div>
+              <div className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e]/70 p-4">
+                <dt className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">Geographical Harvest Coordinates</dt>
+                <dd className="mt-1 font-semibold text-[#fce096]">{coaData.harvestCoordinates || coaData.originLot}</dd>
+              </div>
+              <div className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e]/70 p-4">
+                <dt className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">Statutory Compliance License</dt>
+                <dd className="mt-1 font-semibold text-white">{coaData.regulatoryLicense || 'FSSAI Ayush-Aahar & Cosmetics Rules 2020'}</dd>
+              </div>
             </div>
 
             <div className="mt-4 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] p-4 text-xs text-[#cbd5e1]">

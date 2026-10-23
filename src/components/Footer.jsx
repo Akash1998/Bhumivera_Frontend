@@ -33,7 +33,6 @@ export default function Footer() {
     <footer className="mt-auto border-t border-[#244A38]/50 bg-[#14291F] font-sans text-[#FAF7F2] antialiased">
       {/* 1. ARCHITECTURAL BRAND SHOWCASE & CLIENT CONCIERGE HERO */}
       <div className="relative isolate overflow-hidden border-b border-[#244A38]/60 bg-gradient-to-b from-[#102219] via-[#14291F] to-[#102219]">
-        {/* Subtle Ambient Sage / Brass Glows */}
         <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-[#D4AF37]/5 blur-[120px]" />
         <div className="pointer-events-none absolute -right-32 -bottom-32 h-96 w-96 rounded-full bg-[#244A38]/30 blur-[130px]" />
 
@@ -57,18 +56,18 @@ export default function Footer() {
                     BHUMIVERA
                   </span>
                   <span className="block text-[9px] font-semibold uppercase tracking-[0.28em] text-[#9BB0A5]">
-                    Botanical Maison · Est. 2016 · India
+                    Synchronized Gut-Skin Biotic Maison · Est. 2016 · India
                   </span>
                 </div>
               </div>
 
               <h2 className="mt-5 font-serif text-2xl leading-snug text-[#FAF7F2] sm:text-3xl lg:text-4xl font-bold">
-                <span className="font-headline-gold">Pure Care,</span>{' '}
-                <span className="font-headline-silver">Rooted In Its Source.</span>
+                <span className="font-headline-gold">Inside-Out Biotic Reset,</span>{' '}
+                <span className="font-headline-silver">Rooted In Clinical Proof.</span>
               </h2>
               <div className="gold-hairline w-24 my-3" />
               <p className="mt-2 text-xs leading-relaxed text-[#DFD7C4] sm:text-sm max-w-xl font-light">
-                Established in 2016 (MPG E Business Pvt. Ltd.) with a decade of proven offline botanical apothecary heritage, and formally incorporated as luxury flagship Bhumivera Organics India Private Limited on 8 April 2026 (CIN: U20237WB2026PTC295842). Formulated with pH 5.0–5.5 clinical-Ayurvedic actives in serialized 250-bottle micro-runs.
+                Established in 2016 and incorporated as Bhumivera Organics India Private Limited (CIN: U20237WB2026PTC295842). Pioneering India's Synchronized 2-Step Gut-Skin Biotic Protocol pairing Kalpvriksh Satva 7-Tulsi Cellular Reset Drops (9.0 ml / 10 ml) with sub-28°C Himalayan Sea Buckthorn Postbiotic Emulsions at pH 5.3–5.5 in serialized 250-bottle Biophotonic UV glass micro-runs.
               </p>
             </div>
 
@@ -80,7 +79,7 @@ export default function Footer() {
                     mode: 'navigation_rescue',
                     title: 'Bhumivera Client Concierge & Site Guide',
                     message:
-                      'How may we assist your ritual today? I can help verify bottle genuinity, track transit weight logs, or inspect formulation ingredients.',
+                      'How may we assist your Gut-Skin Biotic Protocol today? I can help verify bottle QR Batch COAs, track transit weight logs, or inspect active formulation concentrations.',
                   })
                 }
                 className="btn-gold-luxury inline-flex min-h-12 items-center gap-2.5 rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-wider text-white shadow-xl"
@@ -92,14 +91,14 @@ export default function Footer() {
                 to="/verify"
                 className="btn-silver-luxury inline-flex min-h-12 items-center gap-2.5 rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-wider"
               >
-                <ShieldCheck size={16} className="text-[#D4AF37]" /> Product Verification
+                <ShieldCheck size={16} className="text-[#D4AF37]" /> QR Batch COA Verification
               </Link>
 
               <Link
                 to="/science"
                 className="two-tone-card inline-flex min-h-12 items-center gap-2 rounded-full border border-[#D4AF37]/30 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-[#FAF7F2] hover:text-[#FCE096] transition-colors"
               >
-                Lab Science <ArrowRight size={14} />
+                Gut-Skin Science <ArrowRight size={14} />
               </Link>
             </div>
           </div>
@@ -115,39 +114,40 @@ export default function Footer() {
             <div className="mb-5 flex items-center gap-2 border-b border-[#244A38] pb-3">
               <span className="h-1.5 w-1.5 rounded-full bg-[#D4AF37]" />
               <h3 className="font-serif text-sm font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
-                The Maison
+                The Gut-Skin Protocol
               </h3>
             </div>
             <ul className="space-y-3 text-xs sm:text-[13px] text-[#DFD7C4]">
               <li>
+                <Link to="/product/the-biotic-cellular-reset-30-day-gut-skin-protocol" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
+                  <span>30-Day 2-Step Biotic Reset</span>
+                  <span className="text-[10px] text-[#D4AF37] font-bold font-mono">₹1,199</span>
+                </Link>
+              </li>
+              <li>
                 <Link to="/shop" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
-                  <span>Shop Collections</span>
+                  <span>All 6 Protocol Formulations</span>
                   <span className="text-[10px] text-[#9BB0A5] opacity-0 transition-opacity group-hover:opacity-100">Catalog</span>
                 </Link>
               </li>
               <li>
-                <Link to="/about" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
-                  <span>Our Heritage &amp; Ethos</span>
-                </Link>
-              </li>
-              <li>
                 <Link to="/science" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
-                  <span>Botanical Science &amp; pH 5.5</span>
+                  <span>Gut-Skin Axis &amp; pH 5.3–5.5 Science</span>
                 </Link>
               </li>
               <li>
-                <Link to="/guides/ultimate-guide-luxury-organic-face-wash-india" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
-                  <span>Guide: Best Luxury Organic Face Wash</span>
+                <Link to="/guides/the-gut-skin-axis-systemic-inflammation-topical-barrier" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
+                  <span>Monograph: The Gut-Skin Axis</span>
                 </Link>
               </li>
               <li>
-                <Link to="/guides/science-of-sulfate-free-luxury-herbal-shampoos" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
-                  <span>Guide: Sulfate-Free Herbal Shampoos</span>
+                <Link to="/guides/sub-28c-cold-pressed-botanical-bio-extraction-vs-boiling" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
+                  <span>Monograph: Sub-28°C Bio-Extraction</span>
                 </Link>
               </li>
               <li>
                 <Link to="/impact" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
-                  <span>Himalayan Harvest &amp; Impact</span>
+                  <span>Ladakh &gt;11,000 ft Wildcrafting Ledger</span>
                 </Link>
               </li>
               <li>
@@ -158,7 +158,7 @@ export default function Footer() {
               </li>
               <li>
                 <Link to="/wishlist" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
-                  <span>Saved Rituals &amp; Wishlist</span>
+                  <span>Saved Protocols &amp; Wishlist</span>
                 </Link>
               </li>
             </ul>
@@ -169,7 +169,7 @@ export default function Footer() {
             <div className="mb-5 flex items-center gap-2 border-b border-[#244A38] pb-3">
               <span className="h-1.5 w-1.5 rounded-full bg-[#D4AF37]" />
               <h3 className="font-serif text-sm font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
-                Client Care
+                Client Care &amp; COA
               </h3>
             </div>
             <ul className="space-y-3 text-xs sm:text-[13px] text-[#DFD7C4]">
@@ -182,7 +182,7 @@ export default function Footer() {
               <li>
                 <Link to="/verify" className="inline-flex items-center gap-1.5 font-semibold text-[#D4AF37] transition-colors hover:text-white">
                   <ShieldCheck size={14} className="shrink-0" />
-                  <span>Verify Product Serial</span>
+                  <span>Verify Bottle Serial &amp; COA</span>
                 </Link>
               </li>
               <li>
@@ -211,12 +211,12 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Column 3: Transparency & Legal */}
+          {/* Column 3: Transparency & Statutory Compliance */}
           <div>
             <div className="mb-5 flex items-center gap-2 border-b border-[#244A38] pb-3">
               <span className="h-1.5 w-1.5 rounded-full bg-[#D4AF37]" />
               <h3 className="font-serif text-sm font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
-                Transparency &amp; Legal
+                Statutory &amp; Legal
               </h3>
             </div>
             <ul className="space-y-3 text-xs sm:text-[13px] text-[#DFD7C4]">
@@ -232,27 +232,27 @@ export default function Footer() {
               </li>
               <li>
                 <Link to="/legal/shipping-hygiene" className="transition-colors hover:text-[#D4AF37]">
-                  Sanitary Sealed Custody Standard
+                  Cosmetics Rules 2020 &amp; Ayush-Aahar
                 </Link>
               </li>
               <li>
                 <Link to="/legal/arbitration-grievance" className="transition-colors hover:text-[#D4AF37]">
-                  Statutory Grievance &amp; Redressal
+                  Legal Metrology Rules 2011 Disclosure
                 </Link>
               </li>
             </ul>
           </div>
 
-          {/* Column 4: The Gazette & Direct Channels */}
+          {/* Column 4: The Journal of Cutaneous Ecology */}
           <div>
             <div className="mb-5 flex items-center gap-2 border-b border-[#244A38] pb-3">
               <span className="h-1.5 w-1.5 rounded-full bg-[#D4AF37]" />
               <h3 className="font-serif text-sm font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
-                The Botanical Gazette
+                Cutaneous Ecology Gazette
               </h3>
             </div>
             <p className="text-xs text-[#DFD7C4] leading-relaxed mb-3 font-light">
-              Receive private micro-batch release schedules, botanical harvest essays, and client privilege invitations.
+              Receive peer-reviewed gut-skin monographs, 250-bottle micro-batch release schedules, and NABL COA harvest dispatches.
             </p>
             <form onSubmit={handleNewsletterSubmit} className="space-y-2">
               <div className="relative">
@@ -312,10 +312,10 @@ export default function Footer() {
               <ShieldCheck size={20} className="mt-0.5 shrink-0 text-[#D4AF37]" />
               <div>
                 <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#FCE096]">
-                  100% Sealed Sanitary Custody
+                  Biophotonic UV Glass Protection
                 </h4>
                 <p className="mt-1 text-[11px] leading-relaxed text-[#DFD7C4] font-light">
-                  Artisanal micro-batch personal care bottled with tamper-evident seals to safeguard uncompromised potency and pure hygiene.
+                  Blocks 450–720 nm visible light while transmitting 380–420 nm UVA/violet frequencies to protect Omega-7 &amp; postbiotics without synthetic BHT/EDTA.
                 </p>
               </div>
             </div>
@@ -324,10 +324,10 @@ export default function Footer() {
               <FileCheck2 size={20} className="mt-0.5 shrink-0 text-[#D4AF37]" />
               <div>
                 <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#FCE096]">
-                  Artisanal Wax-Sealed Tamper Custody
+                  On-Bottle QR Batch COA Registry
                 </h4>
                 <p className="mt-1 text-[11px] leading-relaxed text-[#DFD7C4] font-light">
-                  Every bottle is hand-sealed with a virgin gold-foil security collar and backed by our 48-hour White-Glove Concierge Replacement Promise.
+                  Scan any serialized 250-bottle vessel to inspect exact harvest date, pH 5.42 assay, 0.000 ppm pesticide residue, and ICP-MS heavy metal clearance.
                 </p>
               </div>
             </div>
@@ -336,10 +336,10 @@ export default function Footer() {
               <Lock size={20} className="mt-0.5 shrink-0 text-[#D4AF37]" />
               <div>
                 <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#FCE096]">
-                  Atelier Gravimetric Calibration
+                  FSSAI Ayush-Aahar &amp; Cosmetics 2020
                 </h4>
                 <p className="mt-1 text-[11px] leading-relaxed text-[#DFD7C4] font-light">
-                  Each micro-batch parcel is gravimetrically calibrated to ±0.5g at our cleanroom dispatch desk with a signed weight certificate.
+                  Dual-licensed internal botanical extract (AYUSH/WB/2026/BV-07) and topical postbiotic emulsions (COS-WB-2026-8841) with Legal Metrology 2011 disclosure.
                 </p>
               </div>
             </div>
@@ -348,10 +348,10 @@ export default function Footer() {
               <Scale size={20} className="mt-0.5 shrink-0 text-[#D4AF37]" />
               <div>
                 <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#FCE096]">
-                  Maison Provenance & Patron Charter
+                  100% Active Concentration Honesty
                 </h4>
                 <p className="mt-1 text-[11px] leading-relaxed text-[#DFD7C4] font-light">
-                  100% active percentage label honesty, receipt-backed impact stewardship, and full patron privacy protection under DPDP Act 2023.
+                  Every w/w% active concentration and sub-28°C extraction temperature is declared on the front of the bottle with full DPDP Act 2023 privacy protection.
                 </p>
               </div>
             </div>
@@ -364,14 +364,12 @@ export default function Footer() {
       <div className="border-t border-[#244A38]/50 bg-[#0D1C14] pb-28 sm:pb-8 pt-8">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-6 px-5 sm:px-8 lg:flex-row lg:px-12">
           
-          {/* Copyright & Trademark */}
           <div className="flex items-center gap-3 text-center sm:text-left">
             <p className="text-xs tracking-wider text-[#9BB0A5] font-light">
-              © {currentYear} <span className="font-serif font-bold text-[#D4AF37]">BHUMIVERA</span> · Botanical Maison · All Rights Reserved
+              © {currentYear} <span className="font-serif font-bold text-[#D4AF37]">BHUMIVERA</span> · Synchronized Gut-Skin Biotic Maison · All Rights Reserved
             </p>
           </div>
 
-          {/* PROMINENT DEVELOPER BRANDING: AKASH PRASAD */}
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <span className="text-[10px] uppercase tracking-[0.25em] text-[#9BB0A5] font-light">
               Architectural Engineering &amp; Design
@@ -385,7 +383,6 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick Legal Links */}
           <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-[#DFD7C4] font-light">
             <Link to="/legal/privacy-dpdp" className="transition-colors hover:text-[#D4AF37]">Privacy Policy</Link>
             <span>·</span>

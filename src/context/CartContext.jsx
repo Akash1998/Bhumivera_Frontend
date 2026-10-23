@@ -264,8 +264,8 @@ export const CartProvider = ({ children }) => {
 
     setIsCartOpen(true);
 
-    if (cartProduct.category === 'Lights' || cartProduct.category_name === 'Lights') {
-      setUpsells([{ _id: 'rel_1', name: 'Heavy Duty Wiring Relay', price: 499, img: '/logo.webp' }]);
+    if (cartProduct.category?.includes('Postbiotic') || cartProduct.category_name?.includes('Cleanser')) {
+      setUpsells([{ _id: '6', id: 6, name: 'Step 1: Kalpvriksh Satva 7-Tulsi Cellular Reset Drops (30 ml)', price: 499, img: '/images/products/bhumivera-kalpvriksh-satva-tulsi-drops.webp' }]);
     }
 
     // 3. Background DB Sync

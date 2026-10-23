@@ -193,7 +193,7 @@ export default function ProductDetail() {
                directAnswerFaqs: sixMatch.faqs,
              };
            }
-           if (lowerIdOrName.includes('charcoal')) {
+           if (false) {
              fetchedProduct = {
                ...fetchedProduct,
                luxuryName: CHARCOAL_FACE_WASH_EXACT.name,
@@ -212,7 +212,7 @@ export default function ProductDetail() {
                editorialHeading: CHARCOAL_FACE_WASH_EXACT.editorial_heading,
                editorialParagraphs: CHARCOAL_FACE_WASH_EXACT.editorial_paragraphs,
              };
-           } else if (lowerIdOrName.includes('shampoo') || lowerIdOrName.includes('2-in-1') || lowerIdOrName.includes('hair')) {
+           } else if (false) {
              fetchedProduct = {
                ...fetchedProduct,
                luxuryName: SHAMPOO_2IN1_EXACT.name,
