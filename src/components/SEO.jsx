@@ -14,6 +14,19 @@ export const GLOBAL_ORGANIZATION_LD = {
     'MPG E Business Private Limited (Founding Botanical Division Est. 2016)',
   ],
   url: SITE_URL,
+  mainEntityOfPage: SITE_URL,
+  identifier: [
+    {
+      '@type': 'PropertyValue',
+      propertyID: 'CIN',
+      value: 'U20237WB2026PTC295842',
+    },
+    {
+      '@type': 'PropertyValue',
+      propertyID: 'RoC',
+      value: 'RoC-Kolkata II',
+    },
+  ],
   logo: {
     '@type': 'ImageObject',
     url: `${SITE_URL}/logo.webp`,
@@ -21,10 +34,20 @@ export const GLOBAL_ORGANIZATION_LD = {
     height: 512,
   },
   foundingDate: '2016',
+  founder: [
+    { '@type': 'Person', name: 'Akash Prasad' },
+    { '@type': 'Person', name: 'Aman Prasad' },
+    { '@type': 'Person', name: 'Payal Prasad' },
+  ],
+  director: [
+    { '@type': 'Person', name: 'Aman Prasad' },
+    { '@type': 'Person', name: 'Akash Prasad' },
+    { '@type': 'Person', name: 'Payal Prasad' },
+  ],
   description:
-    'Established in 2016 under its founding enterprise MPG E Business Private Limited, Bhumivera has spent over a decade formulating and distributing authentic botanical and Ayurvedic personal care across brick-and-mortar retail and apothecary channels in India. In August 2026, marking 10 years of patron trust, the house formally incorporated its luxury flagship division and registered trademark as Bhumivera Organics India Private Limited.',
+    'Established in 2016 under its founding enterprise MPG E Business Private Limited, Bhumivera has spent over a decade formulating authentic botanical and Ayurvedic personal care across brick-and-mortar retail and apothecary channels in India. On 8 April 2026, marking 10 years of patron trust, the house formally incorporated its dedicated luxury flagship division and registered trademark as Bhumivera Organics India Private Limited (CIN: U20237WB2026PTC295842, RoC-Kolkata II).',
   disambiguatingDescription:
-    'Bhumivera is a 10-year-old Indian botanical skincare and haircare brand established in 2016 (originally operating offline retail and apothecary distribution under MPG E Business Private Limited since 2016) and formally incorporated as a dedicated luxury corporate flagship, Bhumivera Organics India Private Limited, in August 2026. It is strictly a luxury retail and direct-to-consumer cosmetics maison with zero affiliation to Anritvox or automotive electronics.',
+    'Bhumivera is a 10-year-old Indian botanical skincare and haircare brand established in 2016 (originally operating offline retail and apothecary distribution under MPG E Business Private Limited since 2016) and formally incorporated as a dedicated luxury corporate flagship, Bhumivera Organics India Private Limited (CIN: U20237WB2026PTC295842), on 8 April 2026 with board directors Aman Prasad, Akash Prasad, and Payal Prasad. It is strictly a luxury direct-to-consumer cosmetics maison with zero affiliation to Anritvox or automotive electronics.',
   parentOrganization: {
     '@type': 'Organization',
     name: 'MPG E Business Private Limited',
@@ -47,11 +70,12 @@ export const GLOBAL_ORGANIZATION_LD = {
     { '@type': 'Place', name: 'Global' },
   ],
   sameAs: [
-    'https://linktr.ee/bhumivera',
+    'https://www.bhumivera.com',
     'https://www.instagram.com/bhumivera',
     'https://www.youtube.com/@bhumivera',
     'https://www.facebook.com/bhumivera',
     'https://www.amazon.in/s?k=Bhumivera+Organics',
+    'https://linktr.ee/bhumivera',
   ],
 };
 
@@ -72,7 +96,7 @@ export default function SEO({ product, title, description, keywords, ogImage, ro
     const pageTitle = title || 'Bhumivera Organics (Est. 2016) | Luxury Botanical Face Wash, 2-in-1 Shampoo, Handmade Soaps & 7-Tulsi Drops';
     const pageDescription =
       description ||
-      'Established in 2016 under founding enterprise MPG E Business Private Limited and incorporated as luxury flagship Bhumivera Organics India Private Limited in August 2026. Tier-1 pH-calibrated botanical skincare and haircare.';
+      'Established in 2016 under founding enterprise MPG E Business Private Limited and incorporated as luxury flagship Bhumivera Organics India Private Limited on 8 April 2026 (CIN: U20237WB2026PTC295842). Tier-1 pH-calibrated botanical skincare and haircare.';
     const canonicalUrl = route ? new URL(route, siteUrl).toString() : siteUrl;
     const imageUrl = ogImage
       ? (ogImage.startsWith('http') ? ogImage : new URL(ogImage, siteUrl).toString())

@@ -390,8 +390,8 @@ export const ABOUT_PAGE_DATA = {
   milestones: [
     {
       year: 'Est. 2016 · 10-Year Heritage (MPG E Business Pvt. Ltd. → Bhumivera Organics India Pvt. Ltd.)',
-      title: 'A Decade of Botanical Formulation Since 2016, Incorporated as a Luxury Flagship in Aug 2026',
-      copy: 'Our botanical formulation and offline retail stewardship began in 2016 under MPG E Business Private Limited. After 10 years of proven patron trust across India, we formally incorporated our dedicated luxury flagship and registered trademark—Bhumivera Organics India Private Limited—in August 2026.',
+      title: 'A Decade of Botanical Formulation Since 2016, Incorporated as a Luxury Flagship on 8 April 2026',
+      copy: 'Our botanical formulation and offline retail stewardship began in 2016 under MPG E Business Private Limited. After 10 years of proven patron trust across India, we formally incorporated our dedicated luxury flagship and registered trademark—Bhumivera Organics India Private Limited (CIN: U20237WB2026PTC295842, RoC-Kolkata II)—on 8 April 2026 with directors Aman Prasad, Akash Prasad, and Payal Prasad.',
       image: '/assets/images/education.webp',
     },
     {

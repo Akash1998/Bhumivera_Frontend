@@ -154,7 +154,7 @@
   "rewrites": [
     {
       "source": "/sitemap.xml",
-      "destination": "/api/sitemap.xml"
+      "destination": "/sitemap.xml"
     },
     {
       "source": "/robots.txt",
@@ -173,6 +173,10 @@
       "destination": "/bhumivera-indexnow-2026.txt"
     },
     {
+      "source": "/api/seo-prerender/:path*",
+      "destination": "https://bhumivera-backend-theta.vercel.app/api/seo-prerender/:path*"
+    },
+    {
       "source": "/products/:slug",
       "has": [
         {
@@ -181,7 +185,7 @@
           "value": ".*(Googlebot|Bingbot|PerplexityBot|ClaudeBot|anthropic-ai|GPTBot|OAI-SearchBot|ChatGPT-User|Google-Extended|facebookexternalhit|WhatsApp|Twitterbot).*"
         }
       ],
-      "destination": "/api/seo-prerender/products/:slug"
+      "destination": "https://bhumivera-backend-theta.vercel.app/api/seo-prerender/products/:slug"
     },
     {
       "source": "/product/:slug",
@@ -192,7 +196,29 @@
           "value": ".*(Googlebot|Bingbot|PerplexityBot|ClaudeBot|anthropic-ai|GPTBot|OAI-SearchBot|ChatGPT-User|Google-Extended|facebookexternalhit|WhatsApp|Twitterbot).*"
         }
       ],
-      "destination": "/api/seo-prerender/product/:slug"
+      "destination": "https://bhumivera-backend-theta.vercel.app/api/seo-prerender/product/:slug"
+    },
+    {
+      "source": "/about",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Googlebot|Bingbot|PerplexityBot|ClaudeBot|anthropic-ai|GPTBot|OAI-SearchBot|ChatGPT-User|Google-Extended).*"
+        }
+      ],
+      "destination": "https://bhumivera-backend-theta.vercel.app/api/seo-prerender/about"
+    },
+    {
+      "source": "/science",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Googlebot|Bingbot|PerplexityBot|ClaudeBot|anthropic-ai|GPTBot|OAI-SearchBot|ChatGPT-User|Google-Extended).*"
+        }
+      ],
+      "destination": "https://bhumivera-backend-theta.vercel.app/api/seo-prerender/science"
     },
     {
       "source": "/((?!api|assets|images|.*\\..*).*)",

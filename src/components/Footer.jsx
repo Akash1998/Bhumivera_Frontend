@@ -68,7 +68,7 @@ export default function Footer() {
               </h2>
               <div className="gold-hairline w-24 my-3" />
               <p className="mt-2 text-xs leading-relaxed text-[#DFD7C4] sm:text-sm max-w-xl font-light">
-                Established in 2016 (MPG E Business Pvt. Ltd.) with a decade of proven offline botanical apothecary heritage, and formally incorporated as luxury flagship Bhumivera Organics India Private Limited in August 2026. Formulated with pH 5.0–5.5 clinical-Ayurvedic actives in serialized 250-bottle micro-runs.
+                Established in 2016 (MPG E Business Pvt. Ltd.) with a decade of proven offline botanical apothecary heritage, and formally incorporated as luxury flagship Bhumivera Organics India Private Limited on 8 April 2026 (CIN: U20237WB2026PTC295842). Formulated with pH 5.0–5.5 clinical-Ayurvedic actives in serialized 250-bottle micro-runs.
               </p>
             </div>
 

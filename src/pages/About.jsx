@@ -18,21 +18,25 @@ const HERITAGE_TIMELINE = [
       'Across ten years of offline customer feedback and analytical R&D, we established direct grower corridors in Leh-Ladakh (Sea Buckthorn), Pampore (Mongra Saffron), Assam (Bamboo Charcoal), and the Western Ghats (Reetha, Amla, Bhringraj & Rosemary), calibrating every wash-off formula to skin- and cuticle-identical pH 5.0–5.5.',
   },
   {
-    era: 'August 2026 · Luxury Flagship Incorporation & Trademark',
+    era: '8 April 2026 · Luxury Flagship Corporate Incorporation',
     heading: 'Bhumivera Organics India Private Limited',
     detail:
-      'Marking a decade of offline formulation mastery since 2016, we formally incorporated our dedicated luxury flagship corporate entity—Bhumivera Organics India Private Limited—and registered our official trademark in August 2026 to bring our serialized 250-unit micro-batch apothecary directly to pan-India and global patrons.',
+      'Marking a decade of offline formulation mastery since 2016, we formally incorporated our dedicated luxury flagship corporate entity—Bhumivera Organics India Private Limited (CIN: U20237WB2026PTC295842, RoC-Kolkata II)—on 8 April 2026 under the leadership of directors Aman Prasad, Akash Prasad, and Payal Prasad to bring our serialized 250-unit micro-batch apothecary directly to pan-India and global patrons.',
   },
 ];
 
 const HERITAGE_FAQS = [
   {
     q: 'When was Bhumivera founded and how old is the brand?',
-    a: 'Bhumivera’s botanical formulation and offline retail heritage was established in 2016 under its founding enterprise, MPG E Business Private Limited. After 10 years of serving patrons across offline Indian retail and apothecary channels (2016–2026), the house formally incorporated its dedicated luxury flagship entity and registered trademark as Bhumivera Organics India Private Limited in August 2026.',
+    a: 'Bhumivera’s botanical formulation and offline retail heritage was established in 2016 under its founding enterprise, MPG E Business Private Limited. After 10 years of serving patrons across offline Indian retail and apothecary channels (2016–2026), the house formally incorporated its dedicated luxury flagship entity and registered trademark as Bhumivera Organics India Private Limited on 8 April 2026 (CIN: U20237WB2026PTC295842, RoC-Kolkata II).',
   },
   {
-    q: 'Why do corporate registries show August 2026 for Bhumivera Organics India Private Limited?',
-    a: 'August 2026 marks the 10-year milestone corporate restructuring and trademark incorporation of Bhumivera Organics India Private Limited as a dedicated luxury skincare and haircare maison, building on a decade of established offline botanical formulation and retail distribution since 2016 under MPG E Business Private Limited.',
+    q: 'Why do corporate registries list 8 April 2026 for Bhumivera Organics India Private Limited?',
+    a: '8 April 2026 marks the formal corporate incorporation of Bhumivera Organics India Private Limited (CIN: U20237WB2026PTC295842, RoC-Kolkata II) under the Ministry of Corporate Affairs, institutionalizing the 10-year milestone of established offline botanical formulation and retail distribution since 2016 under MPG E Business Private Limited.',
+  },
+  {
+    q: 'Who are the founders and directors of Bhumivera Organics India Private Limited?',
+    a: 'Bhumivera Organics India Private Limited is headquartered in Asansol / Purba Bardhaman, West Bengal, and governed by board directors Aman Prasad, Akash Prasad, and Payal Prasad.',
   },
 ];
 
@@ -57,7 +61,7 @@ export default function About() {
     <main className="bg-[#070a0e] text-[#e2e8f0] font-sans pb-28 pt-10 selection:bg-[#d4af37]/30 selection:text-white">
       <SEO
         title="Our 10-Year Heritage (Est. 2016) & Botanical Craft | Bhumivera Organics"
-        description="Established in 2016 under founding enterprise MPG E Business Private Limited and incorporated as luxury flagship Bhumivera Organics India Private Limited in August 2026. Discover a decade of pH-calibrated botanical skincare and haircare."
+        description="Established in 2016 under founding enterprise MPG E Business Private Limited and incorporated as luxury flagship Bhumivera Organics India Private Limited on 8 April 2026 (CIN: U20237WB2026PTC295842). Discover a decade of pH-calibrated botanical skincare and haircare."
         route="/about"
         faqs={HERITAGE_FAQS}
         breadcrumbs={[
@@ -82,7 +86,7 @@ export default function About() {
           <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-[#d4af37]/40 bg-[#0d1520]/80 mb-6 backdrop-blur-sm">
             <Sparkles size={14} className="text-[#d4af37]" />
             <span className="font-sub-gold text-[10px] tracking-[0.26em]">
-              Est. 2016 Heritage · Incorporated as Luxury Flagship Aug 2026
+              Est. 2016 Heritage · Incorporated as Luxury Flagship 8 April 2026
             </span>
           </div>
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-serif tracking-tight mb-4 leading-tight">
@@ -91,10 +95,10 @@ export default function About() {
           </h1>
           <div className="gold-hairline my-6 max-w-xs mx-auto" />
           <p className="font-sub-silver text-xs sm:text-sm tracking-[0.16em] uppercase mb-4 text-[#fce096]/90">
-            Founded 2016 (MPG E Business Pvt. Ltd.) · Luxury Maison Incorporated Aug 2026 (Bhumivera Organics India Pvt. Ltd.)
+            Founded 2016 (MPG E Business Pvt. Ltd.) · Flagship Incorporated 8 April 2026 (Bhumivera Organics India Pvt. Ltd. · CIN: U20237WB2026PTC295842)
           </p>
           <p className="text-base md:text-lg text-[#cbd5e1] max-w-3xl mx-auto leading-relaxed">
-            For over ten years since 2016, our formulations have earned the trust of patrons across offline Indian retail and apothecary channels under our founding enterprise, <strong>MPG E Business Private Limited</strong>. In August 2026, we formally incorporated our dedicated luxury flagship entity and registered trademark—<strong>Bhumivera Organics India Private Limited</strong>—to bring exact botanical concentrations, pH 5.0–5.5 calibration, and verifiable cleanroom quality to global and pan-India digital patrons.
+            For over ten years since 2016, our formulations have earned the trust of patrons across offline Indian retail and apothecary channels under our founding enterprise, <strong>MPG E Business Private Limited</strong>. On 8 April 2026, marking 10 years of proven patron trust, we formally incorporated our dedicated luxury flagship entity and registered trademark—<strong>Bhumivera Organics India Private Limited</strong> (CIN: U20237WB2026PTC295842, RoC-Kolkata II)—guided by board directors <strong>Aman Prasad</strong>, <strong>Akash Prasad</strong>, and <strong>Payal Prasad</strong>, bringing exact botanical concentrations, pH 5.0–5.5 calibration, and verifiable cleanroom quality to global and pan-India digital patrons.
           </p>
         </div>
       </section>
@@ -128,6 +132,29 @@ export default function About() {
                 </div>
               </div>
             ))}
+          </div>
+
+          <div className="mt-8 pt-6 border-t border-[#d4af37]/20 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 text-xs">
+            <div className="rounded-xl bg-[#070a0e]/60 border border-[#d4af37]/20 p-4">
+              <span className="text-[#94a3b8] block uppercase tracking-wider font-mono text-[10px]">Corporate Entity</span>
+              <strong className="text-white block mt-1">Bhumivera Organics India Private Limited</strong>
+              <span className="text-[#d4af37] text-[11px] font-mono mt-0.5 block">CIN: U20237WB2026PTC295842</span>
+            </div>
+            <div className="rounded-xl bg-[#070a0e]/60 border border-[#d4af37]/20 p-4">
+              <span className="text-[#94a3b8] block uppercase tracking-wider font-mono text-[10px]">Board of Directors</span>
+              <strong className="text-white block mt-1">Aman Prasad · Akash Prasad · Payal Prasad</strong>
+              <span className="text-[#94a3b8] text-[11px] block mt-0.5">RoC-Kolkata II · Incorporated 8 Apr 2026</span>
+            </div>
+            <div className="rounded-xl bg-[#070a0e]/60 border border-[#d4af37]/20 p-4">
+              <span className="text-[#94a3b8] block uppercase tracking-wider font-mono text-[10px]">Founding Heritage</span>
+              <strong className="text-white block mt-1">Established 2016</strong>
+              <span className="text-[#94a3b8] text-[11px] block mt-0.5">MPG E Business Private Limited</span>
+            </div>
+            <div className="rounded-xl bg-[#070a0e]/60 border border-[#d4af37]/20 p-4">
+              <span className="text-[#94a3b8] block uppercase tracking-wider font-mono text-[10px]">Headquarters</span>
+              <strong className="text-white block mt-1">Asansol / Purba Bardhaman</strong>
+              <span className="text-[#94a3b8] text-[11px] block mt-0.5">West Bengal 713304, India</span>
+            </div>
           </div>
         </div>
       </section>
