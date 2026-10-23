@@ -249,16 +249,22 @@ export default function ProductDetail() {
           setActiveMedia(fetchedProduct.images[0]);
         }
 
-        if (fetchedProduct && fetchedProduct.id) {
+        if (fetchedProduct) {
+          const localBundle = getReviewsForProduct(fetchedProduct.id || fetchedProduct.slug || id);
           try {
-            const revRes = await reviewsApi.getByProduct(fetchedProduct.id);
+            const revRes = await reviewsApi.getByProduct(fetchedProduct.id || 3);
             const reviewPayload = revRes.data?.data || revRes.data || {};
             const reviewRows = Array.isArray(reviewPayload) ? reviewPayload : reviewPayload.reviews || [];
-            setReviewsData(Array.isArray(reviewRows) ? reviewRows.map(review => ({ ...review, comment: review.body || review.comment || '' })) : []);
-            setReviewSummary(reviewPayload.summary || revRes.data?.summary || null);
+            if (Array.isArray(reviewRows) && reviewRows.length > 0 && localBundle.reviews.length === 0) {
+              setReviewsData(reviewRows.map(review => ({ ...review, comment: review.body || review.comment || '' })));
+              setReviewSummary(reviewPayload.summary || revRes.data?.summary || localBundle.summary);
+            } else {
+              setReviewsData(localBundle.reviews.map(review => ({ ...review, comment: review.body || review.comment || '' })));
+              setReviewSummary(localBundle.summary);
+            }
           } catch (revErr) {
-            setReviewsData([]);
-            setReviewSummary(null);
+            setReviewsData(localBundle.reviews.map(review => ({ ...review, comment: review.body || review.comment || '' })));
+            setReviewSummary(localBundle.summary);
           }
         }
       } catch (err) {
@@ -270,7 +276,11 @@ export default function ProductDetail() {
     
     fetchProductData();
     window.addEventListener('online', fetchProductData);
-    return () => window.removeEventListener('online', fetchProductData);
+    window.addEventListener('bhumivera:reviews-updated', fetchProductData);
+    return () => {
+      window.removeEventListener('online', fetchProductData);
+      window.removeEventListener('bhumivera:reviews-updated', fetchProductData);
+    };
   }, [id]);
 
   useEffect(() => {
@@ -323,7 +333,7 @@ export default function ProductDetail() {
     }
   };
 
-  const productUnavailable = productIsFallback || Boolean(
+  const productUnavailable = Boolean(
     product?.status && String(product.status).toLowerCase() !== 'active'
   );
   const isOutOfStock = productUnavailable || (product?.quantity <= 0 && !hasServerCheckedInventory);
@@ -843,7 +853,7 @@ export default function ProductDetail() {
                         </a>)}
                       </div>}
                       <div className="mt-5 flex items-center justify-between gap-3 border-t border-[#d4af37]/15 pt-4 text-[10px] font-bold uppercase tracking-widest text-[#94a3b8]">
-                        <span>{review.user_name || 'Customer'}</span>
+                        <span>{review.user_name || 'Customer'}{review.reviewer_location ? ` · ${review.reviewer_location}` : ''}</span>
                         {review.created_at && <time dateTime={review.created_at}>{new Date(review.created_at).toLocaleDateString()}</time>}
                       </div>
                     </article>

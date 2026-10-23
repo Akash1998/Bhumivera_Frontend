@@ -525,6 +525,7 @@ export const reviews = {
   submit: data => api.post('/reviews', data),
   createUploadUrl: data => api.post('/reviews/upload-url', data),
   createAdminUploadUrl: data => api.post('/reviews/admin/upload-url', data, { adminAuth: true }),
+  createAdmin: data => api.post('/reviews/admin', data, { adminAuth: true }),
   updateAdmin: (id, data) => api.put(`/reviews/admin/${id}`, data, { adminAuth: true }),
   approve: id => api.put(`/reviews/${id}/approve`, {}, { adminAuth: true }),
   delete: id => api.delete(`/reviews/${id}`, { adminAuth: true })

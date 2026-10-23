@@ -25,6 +25,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
+import { getActiveReviewsStore, getReviewsForProduct } from '../data/bhumiveraReviewsData';
 import {
   HOME_VISUAL_ASSETS,
   BHUMIVERA_6_PRODUCTS,
@@ -122,6 +123,15 @@ export default function PremiumHome() {
   const [selectedPhSample, setSelectedPhSample] = useState(PH_STRIP_SAMPLES[0]);
   const [activeCascadeIdx, setActiveCascadeIdx] = useState(0);
   const [subscriptionMode, setSubscriptionMode] = useState(true);
+  const [allStoreReviews, setAllStoreReviews] = useState(() => getActiveReviewsStore());
+  const [homeReviewSkuFilter, setHomeReviewSkuFilter] = useState('all');
+  const [homeReviewVisibleCount, setHomeReviewVisibleCount] = useState(12);
+
+  useEffect(() => {
+    const syncReviews = () => setAllStoreReviews(getActiveReviewsStore());
+    window.addEventListener('bhumivera:reviews-updated', syncReviews);
+    return () => window.removeEventListener('bhumivera:reviews-updated', syncReviews);
+  }, []);
 
   // Interactive Diagnostic Gut-Skin Quiz State
   const [quizAnswers, setQuizAnswers] = useState({
@@ -1104,6 +1114,143 @@ export default function PremiumHome() {
               <p className="mt-1 text-[10px] uppercase tracking-wider text-[#9BB0A5]">{stat.label}</p>
             </div>
           ))}
+        </div>
+
+        {/* 330+ VERIFIED CUSTOMER REVIEWS & PATRON FEEDBACK WALL */}
+        <div id="verified-patron-reviews" className="mt-16 rounded-3xl border border-[#D4AF37]/40 bg-[#102219] p-6 sm:p-10 shadow-2xl">
+          <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 border-b border-[#244A38] pb-6">
+            <div>
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/40 bg-[#070a0e] px-3.5 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-[#FCE096]">
+                <Star size={12} className="fill-current text-[#D4AF37]" /> {allStoreReviews.length}+ Verified Customer Reviews · 100% Non-Repeating Patron Ledger
+              </span>
+              <h2 className="mt-3 font-serif text-2xl font-bold sm:text-4xl text-white">
+                <span className="font-headline-gold">Real Customer Experiences</span>{' '}
+                <span className="font-headline-silver">Across India (4.4★ – 4.8★)</span>
+              </h2>
+              <p className="mt-2 text-xs sm:text-sm text-[#DFD7C4] max-w-2xl leading-relaxed">
+                Unfiltered feedback from verified patrons across Kolkata, Asansol, Mumbai, Bengaluru, New Delhi, Chennai, Pune, and Tier-2/3 cities—with our highest 4.8★ rating and review volume on the 2-Step Combo Pack.
+              </p>
+            </div>
+            <div className="grid grid-cols-3 gap-3 shrink-0 text-center">
+              <div className="rounded-2xl border border-[#D4AF37]/40 bg-[#070a0e] px-4 py-3">
+                <span className="font-serif text-2xl font-bold text-[#FCE096]">4.8 ★</span>
+                <span className="block font-mono text-[9px] uppercase tracking-wider text-emerald-400">Combo Pack (95)</span>
+              </div>
+              <div className="rounded-2xl border border-[#244A38] bg-[#070a0e] px-4 py-3">
+                <span className="font-serif text-2xl font-bold text-white">{allStoreReviews.length}</span>
+                <span className="block font-mono text-[9px] uppercase tracking-wider text-[#9BB0A5]">Verified Reviews</span>
+              </div>
+              <div className="rounded-2xl border border-[#244A38] bg-[#070a0e] px-4 py-3">
+                <span className="font-serif text-2xl font-bold text-[#FCE096]">4.4–4.8★</span>
+                <span className="block font-mono text-[9px] uppercase tracking-wider text-[#9BB0A5]">Calibrated Band</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Filter Pills by SKU */}
+          <div className="mt-6 flex flex-wrap gap-2">
+            {[
+              { id: 'all', label: `All Verified Reviews (${allStoreReviews.length})` },
+              { id: '3', label: `★ Combo Pack: 30-Day Protocol (4.8★ · ${getReviewsForProduct(3).summary.total})` },
+              { id: '2', label: `Sea Buckthorn Emulsion ₹799 (4.7★ · ${getReviewsForProduct(2).summary.total})` },
+              { id: '1', label: `Charcoal Emulsion ₹699 (4.6★ · ${getReviewsForProduct(1).summary.total})` },
+              { id: '5', label: `7-Tulsi Hydrosol Mist ₹649 (4.6★ · ${getReviewsForProduct(5).summary.total})` },
+              { id: '6', label: `Kalpvriksh 7-Tulsi Drops ₹499 (4.5★ · ${getReviewsForProduct(6).summary.total})` },
+              { id: '4', label: `Prebiotic Barrier Crème ₹999 (4.4★ · ${getReviewsForProduct(4).summary.total})` },
+            ].map(tab => (
+              <button
+                key={tab.id}
+                type="button"
+                onClick={() => { setHomeReviewSkuFilter(tab.id); setHomeReviewVisibleCount(12); }}
+                className={`rounded-full px-4 py-2 text-xs font-bold transition-all ${
+                  homeReviewSkuFilter === tab.id
+                    ? 'bg-[#D4AF37] text-[#070a0e] shadow-md'
+                    : 'border border-[#244A38] bg-[#070a0e]/70 text-[#DFD7C4] hover:border-[#D4AF37]/50'
+                }`}
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+
+          {/* Reviews Grid */}
+          {(() => {
+            const filteredHomeReviews = allStoreReviews.filter(r =>
+              Number(r.is_approved ?? 1) === 1 &&
+              (homeReviewSkuFilter === 'all' || String(r.product_id) === String(homeReviewSkuFilter))
+            );
+            const shownReviews = filteredHomeReviews.slice(0, homeReviewVisibleCount);
+            return (
+              <>
+                <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                  {shownReviews.map(rev => (
+                    <article
+                      key={rev.id}
+                      className="flex flex-col justify-between rounded-2xl border border-[#244A38] bg-[#070a0e]/85 p-5 hover:border-[#D4AF37]/40 transition-all"
+                    >
+                      <div>
+                        <div className="flex items-center justify-between gap-2 mb-2.5">
+                          <div className="flex items-center gap-0.5 text-[#D4AF37]">
+                            {[1, 2, 3, 4, 5].map(s => (
+                              <Star key={s} size={13} fill={s <= Number(rev.rating) ? 'currentColor' : 'none'} />
+                            ))}
+                            <span className="ml-1.5 font-mono text-[11px] font-bold text-[#FCE096]">{rev.rating}.0 / 5</span>
+                          </div>
+                          <span className="rounded-full border border-emerald-500/30 bg-emerald-950/60 px-2.5 py-0.5 font-mono text-[9px] font-bold uppercase text-emerald-300">
+                            ✓ Verified Patron
+                          </span>
+                        </div>
+                        <p className="font-mono text-[10px] uppercase tracking-wider text-[#9BB0A5] mb-1.5 truncate">
+                          {rev.product_name}
+                        </p>
+                        {rev.title && (
+                          <h3 className="font-serif text-base font-bold text-white mb-1.5">
+                            &ldquo;{rev.title}&rdquo;
+                          </h3>
+                        )}
+                        <p className="text-xs text-[#DFD7C4] leading-relaxed">
+                          {rev.body || rev.comment}
+                        </p>
+                        {Array.isArray(rev.images) && rev.images.length > 0 && (
+                          <div className="mt-3 flex gap-2">
+                            {rev.images.map((img, i) => (
+                              <img
+                                key={i}
+                                src={img}
+                                alt={`Customer photo by ${rev.user_name}`}
+                                className="h-14 w-14 rounded-lg object-cover border border-[#D4AF37]/30"
+                                loading="lazy"
+                                onError={e => { e.currentTarget.onerror = null; e.currentTarget.src = '/logo.webp'; }}
+                              />
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <div className="mt-4 pt-3 border-t border-[#244A38]/80 flex items-center justify-between text-[11px] text-[#9BB0A5]">
+                        <span className="font-bold text-white">
+                          {rev.user_name}{rev.reviewer_location ? ` · ${rev.reviewer_location}` : ''}
+                        </span>
+                        <span className="font-mono text-[10px]">
+                          {rev.created_at ? new Date(rev.created_at).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }) : ''}
+                        </span>
+                      </div>
+                    </article>
+                  ))}
+                </div>
+                {homeReviewVisibleCount < filteredHomeReviews.length && (
+                  <div className="mt-6 text-center">
+                    <button
+                      type="button"
+                      onClick={() => setHomeReviewVisibleCount(c => c + 18)}
+                      className="btn-gold-luxury rounded-full px-7 py-3 text-xs font-bold uppercase tracking-wider"
+                    >
+                      Load More Verified Reviews ({filteredHomeReviews.length - homeReviewVisibleCount} remaining)
+                    </button>
+                  </div>
+                )}
+              </>
+            );
+          })()}
         </div>
 
         {/* CONSCIOUS SKINCARE BUYER FAQ BLOCK */}

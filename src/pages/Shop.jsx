@@ -17,6 +17,7 @@ import { products as productsApi } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { getProductImageUrl } from '../utils/productImageUrl';
+import { getReviewsForProduct } from '../data/bhumiveraReviewsData';
 import {
   FALLBACK_CATALOG_PRODUCTS,
   BHUMIVERA_6_PRODUCTS,
@@ -80,7 +81,7 @@ const ProductCard = ({ product, index }) => {
           <span>{product.category || product.category_name || 'Botanical Care'}</span>
           <span className="flex items-center gap-1">
             <Star size={12} className="fill-current text-[#D4AF37]" />
-            {product.rating || 4.9} ({product.reviews || 128})
+            {(() => { const s = getReviewsForProduct(product.id || product.slug).summary; return `${s.average || product.rating || 4.7} (${s.total || product.reviews || 65})`; })()}
           </span>
         </div>
 
