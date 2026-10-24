@@ -93,7 +93,7 @@ const ROLE_CONFIG = {
   superadmin: {
     label: 'SuperAdmin / Owner',
     badge: 'bg-[#D4AF37]/25 text-[#D4AF37] border-[#D4AF37]/50',
-    description: 'Full Owner Authority: Can permanently delete resolved chats, issue multiple coupons without per-customer limits, override credit caps, and govern cryptographic security & Telegram settings.',
+    description: 'Full Owner Authority: Can permanently delete resolved chats, issue multiple coupons without per-customer limits, override credit caps, and govern cryptographic security settings.',
   },
 };
 
@@ -102,7 +102,7 @@ const PERMISSION_LABELS = {
   can_reply_chats: { label: 'Reply & Private Notes', desc: 'Send live replies or private internal staff notes.' },
   can_close_chats: { label: 'Mark Resolved & Close Chats', desc: 'Mark customer conversations Resolved or Closed.' },
   can_mark_pending_review: { label: 'Mark Pending / Waiting Review', desc: 'Move chats to Pending Customer or Waiting for Review.' },
-  can_escalate: { label: 'Escalate Urgent Cases', desc: 'Escalate high-priority cases to L2/L3 and alert Telegram/Email.' },
+  can_escalate: { label: 'Escalate Urgent Cases', desc: 'Escalate high-priority cases to L2/L3 and alert Email.' },
   can_view_customers: { label: 'Search Orders & Verify Customers', desc: 'Search by Order ID, Tracking ID, Email, or Phone and view order details.' },
   can_send_reset_link: { label: 'Send Password Reset Links', desc: 'Send 1-time 30-minute password reset emails to customers.' },
   can_initiate_returns: { label: 'Create Return RMAs', desc: 'Create return or replacement requests for delivered orders.' },
@@ -122,7 +122,6 @@ const HELP_DICTIONARY = [
   { no: 3, term: 'Delete Resolved Chat (SuperAdmin Only)', category: 'Security', desc: 'Permanently deletes a Resolved or Closed chat transcript. Restricted strictly to SuperAdmin — Agents, Supervisors, and Managers cannot delete chats.' },
   { no: 4, term: 'One-Time Staff Coupon vs. Unlimited SuperAdmin Coupon', category: 'Anti-Fraud', desc: 'Support Staff can issue a courtesy coupon ONLY ONCE per customer (capped at 10%–15% by role) so no agent can abuse discounts. Only SuperAdmin can issue coupons multiple times.' },
   { no: 5, term: 'Goodwill Wallet Credit Guardrail', category: 'Anti-Fraud', desc: 'Agents cannot issue wallet credits (₹0). Supervisors are capped at ₹150 once per customer; Managers at ₹250 once per customer. Every credit is signed with a cryptographic SHA-512 hash.' },
-  { no: 6, term: 'Two-Way Telegram Bot (@BhumiveraBot)', category: 'Telegram', desc: 'Customers can message @BhumiveraBot on Telegram and their messages appear here in Live Customer Chats. When you reply here, your reply is sent straight back to their Telegram app.' },
   { no: 7, term: 'Order-Gated Live Agent Rule', category: 'Protection', desc: 'Customers cannot demand a live human agent unless they have placed an order after payment. Visitors without an order chat with the AI Bot or leave a message for Email/App reply.' },
   { no: 8, term: 'Customer Satisfaction Reviews', category: 'Quality', desc: 'When a customer is satisfied with Support’s reply, they can end the chat and leave a 1–5 star rating and written review, which is saved and displayed in the Customer Reviews tab.' },
 ];
@@ -367,24 +366,6 @@ export default function SuperAdminSupport() {
     }
   };
 
-  const handleSyncTelegram = async () => {
-    setLoading(true);
-    try {
-      const res = await api.post('/support/telegram/sync', {}, requestConfig);
-      await fetchCommandCenterData();
-      showNotice(
-        'success',
-        res.data?.webhookActive
-          ? 'Telegram webhook is active; new customer messages sync automatically.'
-          : `Telegram (@BhumiveraBot) synced — ${res.data?.synced || 0} new customer message(s) pulled.`
-      );
-    } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Telegram sync failed.');
-    } finally {
-      setLoading(false);
-    }
-  };
-
   const handleDeleteResolvedSession = async sessionTok => {
     try {
       const res = await api.delete(`/support/sessions/${encodeURIComponent(sessionTok)}`, requestConfig);
@@ -452,7 +433,7 @@ export default function SuperAdminSupport() {
       await fetchCommandCenterData();
       showNotice(
         'success',
-        isWhisper ? 'Private staff note saved.' : 'Reply delivered to customer (Web, App & Telegram).'
+        isWhisper ? 'Private staff note saved.' : 'Reply delivered to customer (Web and App).'
       );
     } catch (err) {
       showNotice('error', err.response?.data?.message || 'Could not send message.');
@@ -705,7 +686,7 @@ export default function SuperAdminSupport() {
 
           <p className="text-xs text-emerald-100/75 mb-5 leading-relaxed">
             Sign in with your <strong>Website Admin Email</strong> or <strong>Support Manager ID</strong> to govern live
-            chats, order verification, staff permissions, and Telegram support.
+            chats, order verification, and staff permissions.
           </p>
 
           {loginError && (
@@ -837,16 +818,6 @@ export default function SuperAdminSupport() {
 
             <button
               type="button"
-              onClick={handleSyncTelegram}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 text-xs text-sky-200 font-semibold"
-              title="Sync customer messages from @BhumiveraBot on Telegram"
-            >
-              <Send className="w-3.5 h-3.5" />
-              Sync Telegram (@BhumiveraBot)
-            </button>
-
-            <button
-              type="button"
               onClick={handleExportCsv}
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/30 text-xs text-emerald-200 font-semibold"
             >
@@ -952,7 +923,7 @@ export default function SuperAdminSupport() {
               id: 'monitor',
               label: `2. Live Customer Chats (${sessions.length})`,
               icon: MessageSquare,
-              explain: 'Reply to Web & Telegram chats, change chat status, delete resolved chats (SuperAdmin only), or issue coupons/credits.',
+              explain: 'Reply to Web chats, change chat status, delete resolved chats (SuperAdmin only), or issue coupons/credits.',
             },
             {
               id: 'crm360',
@@ -974,9 +945,9 @@ export default function SuperAdminSupport() {
             },
             {
               id: 'features',
-              label: '6. Support Rules, Macros & Telegram Bot',
+              label: '6. Support Rules & Macros',
               icon: Sliders,
-              explain: 'Control automated order rules, SLA timers, quick-reply templates, and @BhumiveraBot Telegram settings.',
+              explain: 'Control automated order rules, SLA timers, and quick-reply templates.',
             },
             {
               id: 'guide',
@@ -1096,11 +1067,11 @@ export default function SuperAdminSupport() {
                 </div>
               </div>
 
-              {/* Customer Satisfaction & Telegram Bot Status */}
+              {/* Customer Satisfaction */}
               <div className="p-5 rounded-2xl bg-[#0B2419] border border-white/10 space-y-4">
                 <h3 className="text-sm font-bold text-white flex items-center gap-2">
                   <Award className="w-4 h-4 text-[#D4AF37]" />
-                  Customer Satisfaction & Telegram Bot
+                  Customer Satisfaction
                 </h3>
                 <div className="grid grid-cols-2 gap-3 text-xs">
                   <button
@@ -1112,14 +1083,6 @@ export default function SuperAdminSupport() {
                     <div className="text-xl font-bold text-[#D4AF37] mt-1">
                       {overview?.metrics?.averageCsat ? `${overview.metrics.averageCsat} / 5.0 ★` : '4.9 ★'}
                     </div>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setActiveTab("features")}
-                    className="text-left p-3 rounded-xl bg-black/30 border border-white/5 hover:border-sky-400/40 transition"
-                  >
-                    <span className="text-emerald-100/60">Telegram Bot Bridge</span>
-                    <div className="text-sm font-bold text-sky-300 mt-1.5">@BhumiveraBot Active →</div>
                   </button>
                 </div>
               </div>
@@ -1307,7 +1270,7 @@ export default function SuperAdminSupport() {
                   <Eye className="w-10 h-10 text-[#D4AF37] mb-3 opacity-80" />
                   <h4 className="text-sm font-bold text-white">Select a Chat Session to View or Reply</h4>
                   <p className="text-xs max-w-md mt-1">
-                    Reply to Web, Mobile App, and Telegram (@BhumiveraBot) conversations, transition chat statuses, or
+                    Reply to Web and Mobile App conversations, transition chat statuses, or
                     delete resolved chats (SuperAdmin only).
                   </p>
                 </div>
@@ -1545,7 +1508,7 @@ export default function SuperAdminSupport() {
                         placeholder={
                           isWhisper
                             ? 'Write a private note visible only to support staff…'
-                            : 'Type reply to customer (delivers to Web, Mobile App & Telegram)…'
+                            : 'Type reply to customer (delivers to Web and Mobile App)…'
                         }
                         className="flex-1 px-3.5 py-2 rounded-xl bg-black/40 border border-white/15 text-xs text-white focus:border-[#D4AF37] focus:outline-none"
                       />
@@ -2061,27 +2024,12 @@ export default function SuperAdminSupport() {
         )}
 
         {/* ===================================================================
-            TAB 6: SUPPORT RULES, MACROS & TELEGRAM BOT
+            TAB 6: SUPPORT RULES & MACROS
            =================================================================== */}
         {activeTab === 'features' && features && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-7 bg-[#0B2419] border border-white/10 rounded-2xl p-5 space-y-4">
-              <h3 className="text-base font-bold text-white">Support Automation Rules & Telegram Bot (@BhumiveraBot)</h3>
-              <div className="p-4 rounded-xl bg-sky-500/10 border border-sky-400/30 flex flex-wrap items-center justify-between gap-3 text-xs">
-                <div>
-                  <div className="font-bold text-sky-200">Live Telegram Bot Connected: t.me/BhumiveraBot</div>
-                  <p className="text-[11px] text-emerald-100/75 mt-0.5">
-                    Customers can message @BhumiveraBot and receive live replies directly from this panel.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={handleSyncTelegram}
-                  className="px-3.5 py-2 rounded-xl bg-sky-400 text-[#071510] font-bold text-xs"
-                >
-                  Sync Telegram Messages Now
-                </button>
-              </div>
+              <h3 className="text-base font-bold text-white">Support Automation Rules</h3>
 
               <div className="space-y-2.5">
                 {[
@@ -2099,11 +2047,6 @@ export default function SuperAdminSupport() {
                     key: 'ai_auto_return_rma_enabled',
                     title: '100% Non-Returnable Hygiene Enforcement',
                     desc: 'Enforces strict non-returnable policy across all intimate botanical personal-care formulations once delivered.',
-                  },
-                  {
-                    key: 'telegram_alerts_enabled',
-                    title: 'Enable Two-Way Telegram Support & Alerts (@BhumiveraBot)',
-                    desc: 'Routes customer Telegram messages and priority alerts through @BhumiveraBot.',
                   },
                 ].map(item => {
                   const isOn = Boolean(features[item.key]);
@@ -2156,13 +2099,6 @@ export default function SuperAdminSupport() {
                     className="px-4 py-2 rounded-xl bg-[#D4AF37] text-[#071510] font-bold text-xs"
                   >
                     + Save Quick Reply
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleTestWebhook("telegram")}
-                    className="px-3.5 py-2 rounded-xl bg-sky-500/20 hover:bg-sky-500/30 border border-sky-400/30 text-sky-200 font-bold text-xs"
-                  >
-                    Test @BhumiveraBot Alert
                   </button>
                 </div>
               </form>

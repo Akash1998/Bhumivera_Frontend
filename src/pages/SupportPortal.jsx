@@ -41,7 +41,7 @@ const ROLE_LIMIT_RULES = {
     canCancelOrder: false,
     canDeleteChat: false,
     canDeleteTicket: false,
-    summary: 'Can search by Order ID / Tracking ID / Email / Phone, verify customer identity, view full order details, reply to live & Telegram chats, assist with pre-dispatch cancellations, and issue at most ONE courtesy coupon (max 10% off) per customer.',
+    summary: 'Can search by Order ID / Tracking ID / Email / Phone, verify customer identity, view full order details, reply to live chats, assist with pre-dispatch cancellations, and issue at most ONE courtesy coupon (max 10% off) per customer.',
   },
   supervisor: {
     title: 'Support Supervisor (L2)',
@@ -68,7 +68,7 @@ const ROLE_LIMIT_RULES = {
     canCancelOrder: true,
     canDeleteChat: true,
     canDeleteTicket: true,
-    summary: 'Unrestricted access: Can permanently delete support tickets (single & bulk) and resolved chats with cryptographic SHA-512 audit logging, issue multiple coupons without per-customer limits, and manage all security & Telegram settings.',
+    summary: 'Unrestricted access: Can permanently delete support tickets (single & bulk) and resolved chats with cryptographic SHA-512 audit logging, issue multiple coupons without per-customer limits, and manage all security settings.',
   },
 };
 
@@ -262,24 +262,6 @@ export default function SupportPortal() {
     }
   };
 
-  const handleSyncTelegram = async () => {
-    setBusy(true);
-    setError('');
-    try {
-      const res = await supportPortal.syncTelegram();
-      await loadWorkspaceData();
-      setNotice(
-        res.data?.webhookActive
-          ? 'Telegram webhook is active; new messages sync automatically.'
-          : `Synced Telegram (@BhumiveraBot) — ${res.data?.synced || 0} new message(s) pulled.`
-      );
-    } catch (err) {
-      setError(errorText(err));
-    } finally {
-      setBusy(false);
-    }
-  };
-
   const handleSendChatReply = async event => {
     event.preventDefault();
     if (!selectedSessionToken || !chatReply.trim()) return;
@@ -297,7 +279,7 @@ export default function SupportPortal() {
       setNotice(
         isWhisperMode
           ? 'Private staff note saved.'
-          : 'Reply delivered to customer (Web, Mobile App & Telegram if linked).'
+          : 'Reply delivered to customer (Web and Mobile App).'
       );
     } catch (err) {
       setError(errorText(err));
@@ -593,7 +575,7 @@ export default function SupportPortal() {
           </div>
           <p className="text-xs text-emerald-100/75 mb-5 leading-relaxed">
             Sign in with your Support Executive, Supervisor, Manager, or SuperAdmin ID to search orders, verify customers,
-            manage live Web & Telegram chats, and run Bhumivera Client Concierge diagnostics.
+            manage live Web chats, and run Bhumivera Client Concierge diagnostics.
           </p>
           {error && (
             <p role="alert" className="mb-4 rounded-xl bg-rose-500/15 border border-rose-500/30 p-3 text-xs text-rose-200">
@@ -683,16 +665,6 @@ export default function SupportPortal() {
               ? Help & Role Rules
             </button>
 
-            <button
-              type="button"
-              onClick={handleSyncTelegram}
-              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-sky-500/15 hover:bg-sky-500/25 border border-sky-400/30 text-xs text-sky-200 font-semibold"
-              title="Pull latest customer messages from @BhumiveraBot on Telegram"
-            >
-              <Send className="w-3.5 h-3.5" />
-              Sync Telegram (@BhumiveraBot)
-            </button>
-
             {['manager', 'superadmin'].includes(agent.role) && (
               <Link
                 to="/superadminsupport"
@@ -772,7 +744,7 @@ export default function SupportPortal() {
         <div className="max-w-[1600px] mx-auto flex flex-wrap items-center gap-2">
           {[
             { id: 'search', label: '1. Order, Tracking, Email & Phone Search (Verify Customer)', icon: Search },
-            { id: 'chats', label: `2. Live Customer & Telegram Chats (${chatSessions.length})`, icon: MessageSquare },
+            { id: 'chats', label: `2. Live Customer Chats (${chatSessions.length})`, icon: MessageSquare },
             { id: 'tickets', label: `3. Support Tickets (${tickets.length})`, icon: Mail },
             { id: 'customers', label: '4. Customer Accounts & Password Reset', icon: UserRound },
             { id: 'copilot', label: '5. Bhumivera Client Concierge & Route Directory', icon: Sparkles },
@@ -1036,7 +1008,7 @@ export default function SupportPortal() {
         )}
 
         {/* ===================================================================
-            SECTION 2: LIVE CUSTOMER & TELEGRAM CHATS
+            SECTION 2: LIVE CUSTOMER CHATS
            =================================================================== */}
         {section === 'chats' && (
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -1075,7 +1047,7 @@ export default function SupportPortal() {
                       <span className="text-[10px] uppercase text-[#D4AF37]">{sess.status}</span>
                     </div>
                     <div className="text-[11px] text-emerald-100/60 mt-1">
-                      {sess.customerEmail || sess.guestEmail || 'Web / Telegram Session'}
+                      {sess.customerEmail || sess.guestEmail || 'Web Session'}
                     </div>
                     {sess.lastMessagePreview && (
                       <p className="text-[11px] text-emerald-100/80 mt-1.5 line-clamp-1 bg-black/25 px-2 py-1 rounded">
@@ -1234,7 +1206,7 @@ export default function SupportPortal() {
                         type="text"
                         value={chatReply}
                         onChange={e => setChatReply(e.target.value)}
-                        placeholder="Type reply to customer (delivers to Web, App & Telegram)…"
+                        placeholder="Type reply to customer (delivers to Web and App)…"
                         className="flex-1 px-3.5 py-2 rounded-xl bg-black/40 border border-white/15 text-xs text-white"
                       />
                       <button

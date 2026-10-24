@@ -28,7 +28,6 @@ import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import ConciergeKnowledgeTreeViewer from './ConciergeKnowledgeTreeViewer';
 import api, { aiSupport as aiSupportApi, BASE_URL } from '../services/api';
-import { normalizeTelegramBotUrl } from '../utils/telegramUrl';
 import {
   AI_COPILOT_ADD_CART_RETRY_EVENT,
   AI_COPILOT_EVENT,
@@ -3960,7 +3959,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
   const [csatSubmitted, setCsatSubmitted] = useState(false);
   const [csatSubmitting, setCsatSubmitting] = useState(false);
   const [csatError, setCsatError] = useState('');
-  const [telegramBotUrl, setTelegramBotUrl] = useState('https://web.telegram.org/k/#@BhumiveraBot');
   const [copilotRescue, setCopilotRescue] = useState(null);
   const [copilotEmailInput, setCopilotEmailInput] = useState('');
   const [copilotSendingReset, setCopilotSendingReset] = useState(false);
@@ -4041,7 +4039,6 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
       if (data.session?.status) {
         setChatStatus(data.session.status);
       }
-      if (data.telegramBotUrl) setTelegramBotUrl(normalizeTelegramBotUrl(data.telegramBotUrl));
       if (Array.isArray(data.messages) && data.messages.length > 0 && messages.length === 0) {
         setMessages(filterWebsiteBotMessages(data.messages));
       }

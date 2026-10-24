@@ -659,7 +659,6 @@ export const supportPortal = {
   escalations: (params = {}) => supportRequest('get', `/ai-escalations${params?.status ? `?status=${encodeURIComponent(params.status)}` : ''}`),
   universalSearch: query => supportRequest('get', `/universal-search?q=${encodeURIComponent(query)}`),
   deleteSession: sessionToken => supportRequest('delete', `/sessions/${encodeURIComponent(sessionToken)}`),
-  syncTelegram: () => supportRequest('post', '/telegram/sync', {}),
 };
 export const supportAgents = {
   list: () => api.get('/support/agents', { adminAuth: true }),

@@ -366,7 +366,7 @@ const LEGAL_CLAUSES = {
       num: '3.7',
       title: '7. Official communication channels & anti-phishing warning',
       body: [
-        'Bhumivera communicates exclusively through our official domain (bhumivera.com), official email (support@bhumivera.com), verified Telegram bot (@BhumiveraBot), and published helpline numbers (+91 74309 85647 / +91 83708 04458). We never ask customers to install remote-desktop apps (AnyDesk/TeamViewer), scan QR codes to “receive” a refund, or pay “customs/insurance/spin-claim fees” to external UPI IDs.',
+        'Bhumivera communicates exclusively through our official domain (bhumivera.com), official email (support@bhumivera.com), and published helpline numbers (+91 74309 85647 / +91 83708 04458). We never ask customers to install remote-desktop apps (AnyDesk/TeamViewer), scan QR codes to “receive” a refund, or pay “customs/insurance/spin-claim fees” to external UPI IDs.',
       ],
     },
     {
