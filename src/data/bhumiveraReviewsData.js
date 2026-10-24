@@ -124,12 +124,15 @@ export const getReviewsForProduct = idOrSlug => {
   const pid = resolveProductId(idOrSlug);
   const product = PRODUCT_SEEDS.find(seed => seed.id === pid);
   const productIds = new Set([pid, ...(product?.legacyIds || [])].map(String));
-  const reviews = pid === null
+  const storedProductReviews = pid === null
     ? []
     : getActiveReviewsStore().filter(r =>
-      (productIds.has(String(r.product_id)) || r.product_slug === product?.slug) &&
-      Number(r.is_approved ?? 1) === 1
+      r && (productIds.has(String(r.product_id)) || r.product_slug === product?.slug)
     );
+  const sourceReviews = storedProductReviews.length > 0
+    ? storedProductReviews
+    : INITIAL_REVIEWS_SEED.filter(r => Number(r.product_id) === pid);
+  const reviews = sourceReviews.filter(r => Number(r.is_approved ?? 1) === 1);
   const total = reviews.length;
   const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
   let sum = 0;
