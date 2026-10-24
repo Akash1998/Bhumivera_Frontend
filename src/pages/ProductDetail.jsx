@@ -15,6 +15,7 @@ import {
 } from 'lucide-react';
 import { 
   products as productsApi, 
+  scarcitySimulator,
   reviews as reviewsApi,
   recommendations as recommendationsApi
 } from '../services/api';
@@ -90,6 +91,7 @@ export default function ProductDetail() {
   );
   
   const [product, setProduct] = useState(null);
+  const [unitsOrderedToday, setUnitsOrderedToday] = useState(null);
   const [productIsFallback, setProductIsFallback] = useState(false);
   const [reviewsData, setReviewsData] = useState([]);
   const [reviewSummary, setReviewSummary] = useState(null);
@@ -114,6 +116,34 @@ export default function ProductDetail() {
     useScarcitySimulator(product?.id != null ? [product.id] : []);
   const addToBagButtonRef = useRef(null);
   const isAddToBagButtonVisible = useInView(addToBagButtonRef, { amount: 0.01, initial: true });
+
+  useEffect(() => {
+    if (!product?.id) {
+      setUnitsOrderedToday(null);
+      return undefined;
+    }
+
+    let active = true;
+    setUnitsOrderedToday(null);
+    scarcitySimulator.getPopularToday()
+      .then(response => {
+        const products = response.data?.products;
+        if (!Array.isArray(products)) {
+          throw new Error('Order popularity response was invalid.');
+        }
+        const matchingProduct = products.find(item => String(item.id) === String(product.id));
+        const count = Number(matchingProduct?.unitsOrdered);
+        if (active) setUnitsOrderedToday(matchingProduct && Number.isFinite(count) ? count : null);
+      })
+      .catch(error => {
+        console.error('[PRODUCT_TODAYS_ORDERS]', error);
+        if (active) setUnitsOrderedToday(null);
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [product?.id]);
 
   useEffect(() => {
     if (location.hash === '#product-reviews') setActiveTab('reviews');
@@ -367,6 +397,15 @@ export default function ProductDetail() {
   const productUnavailable = Boolean(
     product?.status && String(product.status).toLowerCase() !== 'active'
   );
+  const hasKnownStock = product?.quantity !== null &&
+    product?.quantity !== undefined &&
+    product?.quantity !== '';
+  const stockQuantity = Number(product?.quantity);
+  const isLowStock = !productUnavailable &&
+    hasKnownStock &&
+    Number.isFinite(stockQuantity) &&
+    stockQuantity > 0 &&
+    stockQuantity <= 5;
   const isOutOfStock = productUnavailable || (product?.quantity <= 0 && !hasServerCheckedInventory);
   const stockStatus = productUnavailable
     ? 'Not available for purchase'
@@ -374,8 +413,8 @@ export default function ProductDetail() {
     ? 'Stock checked when adding to bag'
     : isOutOfStock
       ? 'Currently unavailable'
-      : product?.quantity <= 5
-        ? `Only ${product.quantity} left`
+      : isLowStock
+        ? `Only ${stockQuantity} left — order soon`
         : 'Available to order';
   let rawSpecifications = product?.specifications || {};
   if (typeof rawSpecifications === 'string') {
@@ -560,6 +599,21 @@ export default function ProductDetail() {
               </div>
             </div>
 
+            {unitsOrderedToday > 0 && (
+              <div className="mb-4 rounded-xl border border-rose-400/30 bg-rose-950/25 px-4 py-3">
+                <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-rose-200">
+                  <span className="relative flex h-2 w-2" aria-hidden="true">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-300 opacity-60 motion-reduce:animate-none" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-400" />
+                  </span>
+                  Going fast today
+                </p>
+                <p className="mt-1 text-sm text-[#DFD7C4]">
+                  {unitsOrderedToday} {unitsOrderedToday === 1 ? 'unit ordered' : 'units ordered'} today. Shop now while your pick is still in stock.
+                </p>
+              </div>
+            )}
+
             {simulatorEnabled && (
               <div className="mb-4">
                 <ScarcitySimulationBadge
@@ -582,7 +636,13 @@ export default function ProductDetail() {
 
           <div className="relative mb-6 rounded-2xl two-tone-panel-gold p-4 shadow-2xl sm:p-6 md:mb-8 md:rounded-3xl md:p-7">
             <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
-              <span className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 py-1.5 text-[9px] font-mono uppercase tracking-[0.12em] sm:text-[10px] sm:tracking-widest ${isOutOfStock ? 'bg-red-950/60 border border-red-500/40 text-red-300' : 'bg-[#171813] border border-[#D4AF37]/40 text-[#FCE096]'}`}>
+              <span className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 py-1.5 text-[9px] font-mono uppercase tracking-[0.12em] sm:text-[10px] sm:tracking-widest ${isOutOfStock || isLowStock ? 'bg-red-950/60 border border-red-500/40 text-red-300' : 'bg-[#171813] border border-[#D4AF37]/40 text-[#FCE096]'}`}>
+                {isLowStock && (
+                  <span className="relative flex h-2 w-2" aria-hidden="true">
+                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-300 opacity-60 motion-reduce:animate-none" />
+                    <span className="relative inline-flex h-2 w-2 rounded-full bg-red-400" />
+                  </span>
+                )}
                 {isOutOfStock ? <AlertCircle size={16}/> : <Package size={16}/>}
                 {stockStatus}
               </span>

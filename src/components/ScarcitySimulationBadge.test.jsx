@@ -7,31 +7,38 @@ import ScarcitySimulationBadge from './ScarcitySimulationBadge';
 describe('ScarcitySimulationBadge', () => {
   afterEach(cleanup);
 
-  it('prominently labels simulated counters and distinguishes actual checkout availability', () => {
+  it('labels stock and order counters as illustrative', () => {
     render(
       <ScarcitySimulationBadge
-        snapshot={{ enabled: true, remaining: 123, dailyCap: 250, lifetimeSold: 18000 }}
+        snapshot={{ enabled: true, remaining: 123, dailyCap: 250, simulatedSoldToday: 127 }}
         productName="Sea Buckthorn Face Wash"
       />
     );
 
-    expect(screen.getByText(/Live Sales/i)).toBeTruthy();
-    expect(screen.getByText(/Not live inventory, actual sales, or verified customer activity/i)).toBeTruthy();
-    expect(screen.getByText(/Today's units remaining:/i)).toBeTruthy();
-    expect(screen.getByText(/Illustrative sold total:/i)).toBeTruthy();
+    expect(screen.getByText(/Illustrative inventory simulation/i)).toBeTruthy();
+    expect(screen.getByText(/not live stock, customer orders, or buyer identities/i)).toBeTruthy();
+    expect(screen.getByText(/Illustrative units remaining:/i)).toBeTruthy();
+    expect(screen.getByText(/Simulated units sold today:/i)).toBeTruthy();
+    expect(screen.getByText(/127/)).toBeTruthy();
+    expect(screen.queryByText(/lifetime/i)).toBeNull();
   });
 
-  it('labels sample activity as a non-real order', () => {
+  it('labels sample buyers as fictional, not real orders', () => {
     render(
       <ScarcitySimulationBadge
-        snapshot={{ enabled: true, remaining: 123, dailyCap: 250, lifetimeSold: 18000 }}
+        snapshot={{
+          enabled: true,
+          remaining: 123,
+          dailyCap: 250,
+          sampleActivity: [{ buyer: 'Sample shopper #123', city: 'Kolkata', time: '10:30 am' }],
+        }}
         productName="Sea Buckthorn Face Wash"
         sampleActivityEnabled
       />
     );
 
-    expect(screen.getByText(/Sample scenario only:/i)).toBeTruthy();
-    expect(screen.getByText(/Not a real order/i)).toBeTruthy();
+    expect(screen.getByText(/Fictional sample shoppers · Not real orders/i)).toBeTruthy();
+    expect(screen.getByText(/Sample shopper #123 · Sea Buckthorn Face Wash · Kolkata · 10:30 am/i)).toBeTruthy();
   });
 
   it('does not render when the simulator is disabled for a product', () => {

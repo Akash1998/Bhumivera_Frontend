@@ -8,9 +8,8 @@ const DEFAULT_PRODUCT_CONFIG = {
   paused: false,
   outOfStock: false,
   dailyCap: 250,
-  minDailySold: 200,
+  minDailySold: 0,
   maxDailySold: 250,
-  lifetimeSold: 20000,
 };
 
 const getRows = response => {
@@ -34,6 +33,7 @@ export default function ScarcitySimulator() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
+  const [snapshotError, setSnapshotError] = useState('');
   const [saved, setSaved] = useState(false);
 
   const refresh = async () => {
@@ -60,19 +60,13 @@ export default function ScarcitySimulator() {
       for (const product of rows) {
         const id = String(product.id);
         const existing = initial.products[id];
-        const snapshot = mergedSnapshots[id];
         configuredProducts[id] = existing
           ? { ...DEFAULT_PRODUCT_CONFIG, ...existing }
-          : {
-              ...DEFAULT_PRODUCT_CONFIG,
-              lifetimeSold: Math.max(
-                0,
-                Number(snapshot?.lifetimeSold || DEFAULT_PRODUCT_CONFIG.lifetimeSold) - Number(snapshot?.soldToday || 0)
-              ),
-            };
+          : { ...DEFAULT_PRODUCT_CONFIG };
       }
       setProducts(rows);
       setSnapshots(mergedSnapshots);
+      setSnapshotError('');
       setConfig({
         enabled: initial.enabled !== false,
         sampleActivityEnabled: initial.sampleActivityEnabled === true,
@@ -90,6 +84,35 @@ export default function ScarcitySimulator() {
   useEffect(() => {
     refresh();
   }, []);
+
+  useEffect(() => {
+    if (!products.length) return undefined;
+
+    let active = true;
+    const refreshSnapshots = async () => {
+      try {
+        const results = await Promise.all(
+          chunksOf(products.map(product => String(product.id)), 100)
+            .map(ids => scarcitySimulator.getPublic(ids))
+        );
+        if (active) {
+          setSnapshots(Object.assign({}, ...results.map(result => result.data?.products || {})));
+          setSnapshotError('');
+        }
+      } catch (refreshError) {
+        console.error('[SCARCITY_SIMULATOR_ADMIN_REFRESH]', refreshError);
+        if (active) {
+          setSnapshotError(refreshError.response?.data?.message || 'Could not refresh simulated stock progression.');
+        }
+      }
+    };
+
+    const timer = window.setInterval(refreshSnapshots, 30_000);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, [products]);
 
   const summary = useMemo(() => {
     const values = Object.values(config.products);
@@ -177,9 +200,15 @@ export default function ScarcitySimulator() {
         <p>
           Storefront counters must remain visibly labeled as simulated. These settings never update{' '}
           <code className="rounded bg-black/25 px-1">products.quantity</code>, order records, or actual checkout availability.
-          The display resets daily at 00:00 Asia/Kolkata.
+          Simulated units decrease from 00:00 to 12:00 Asia/Kolkata, then remain steady until the next daily reset.
         </p>
       </div>
+
+      {snapshotError && (
+        <div role="status" className="rounded-lg border border-amber-300/30 bg-amber-950/30 px-4 py-3 text-sm text-amber-100">
+          {snapshotError}
+        </div>
+      )}
 
       {error && (
         <div role="alert" className="rounded-lg border border-rose-400/30 bg-rose-950/30 px-4 py-3 text-sm text-rose-200">
@@ -237,7 +266,7 @@ export default function ScarcitySimulator() {
         <div className="flex flex-col gap-1 border-b border-white/10 px-4 py-4 sm:px-5">
           <h3 className="font-bold text-white">Per-product visual controls</h3>
           <p className="text-xs text-slate-400">
-            Daily capacity can be set from 0 to 250. The default illustrative daily progression is 200–250 units.
+            Daily targets are randomized from 0 to the configured maximum, with the hourly pace based on the last 30 days of order timing. Targets reset daily and never add to lifetime totals.
             Current simulator day: {dayKey || 'loading'} (Asia/Kolkata).
           </p>
         </div>
@@ -249,17 +278,17 @@ export default function ScarcitySimulator() {
               const id = String(product.id);
               const item = config.products[id] || DEFAULT_PRODUCT_CONFIG;
               const snapshot = snapshots[id];
-              const previewSoldToday = item.paused || item.outOfStock
+              const previewSoldToday = !config.enabled || !item.enabled || item.paused || item.outOfStock
                 ? 0
-                : Math.min(item.dailyCap, Number(snapshot?.soldToday) || 0);
+                : Math.min(item.dailyCap, Number(snapshot?.simulatedSoldToday ?? snapshot?.soldToday) || 0);
               const previewSnapshot = snapshot ? {
                 ...snapshot,
                 enabled: config.enabled && item.enabled,
                 paused: item.paused,
                 outOfStock: item.outOfStock,
                 dailyCap: item.dailyCap,
+                simulatedSoldToday: previewSoldToday,
                 remaining: item.outOfStock ? 0 : Math.max(0, item.dailyCap - previewSoldToday),
-                lifetimeSold: item.lifetimeSold + previewSoldToday,
               } : null;
               return (
                 <article key={id} className="grid gap-4 p-4 sm:p-5 xl:grid-cols-[minmax(180px,1.4fr)_repeat(3,minmax(100px,0.65fr))_minmax(190px,1.2fr)] xl:items-center">
@@ -270,7 +299,7 @@ export default function ScarcitySimulator() {
                     </p>
                     {previewSnapshot && (
                       <p className="mt-1 text-xs text-amber-200">
-                        Preview: {previewSnapshot.remaining}/{previewSnapshot.dailyCap} Today's units remaining
+                        Preview: {previewSnapshot.simulatedSoldToday} simulated units sold · {previewSnapshot.remaining}/{previewSnapshot.dailyCap} units remaining
                       </p>
                     )}
                   </div>
@@ -283,8 +312,7 @@ export default function ScarcitySimulator() {
                       value={item.dailyCap}
                       onChange={event => {
                         const dailyCap = Math.max(0, Math.min(250, Number(event.target.value) || 0));
-                        const minimumSales = Math.min(200, dailyCap);
-                        const minDailySold = Math.max(minimumSales, Math.min(item.minDailySold, dailyCap));
+                        const minDailySold = Math.min(item.minDailySold, dailyCap);
                         updateProduct(id, {
                           dailyCap,
                           minDailySold,
@@ -298,12 +326,12 @@ export default function ScarcitySimulator() {
                     Daily sold min
                     <input
                       type="number"
-                      min={Math.min(200, item.dailyCap)}
+                      min="0"
                       max={item.dailyCap}
                       value={item.minDailySold}
                       onChange={event => {
                         const minDailySold = Math.max(
-                          Math.min(200, item.dailyCap),
+                          0,
                           Math.min(item.dailyCap, Number(event.target.value) || 0)
                         );
                         updateProduct(id, {
