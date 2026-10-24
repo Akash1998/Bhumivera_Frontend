@@ -39,7 +39,7 @@ export default function ScarcitySimulationBadge({
                 Illustrative units remaining: <strong>{simulatedRemaining}</strong> / {snapshot.dailyCap}
               </span>
               <span>
-                Illustrative sold total: <strong>{Number(snapshot.lifetimeSold || 0).toLocaleString('en-IN')}</strong>
+                Live Sales: <strong>{Number(snapshot.lifetimeSold || 0).toLocaleString('en-IN')}</strong>
               </span>
             </div>
           )}
