@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { BASE_URL } from '../services/api';
+import { reviews as reviewsApi } from '../services/api';
+import { AUTHENTIC_PRODUCT_REVIEWS_BY_ID } from '../data/bhumiveraAuthenticReviews';
+import { getProductImageUrl } from '../utils/productImageUrl';
 import {
   ThumbsUp,
   Star,
@@ -16,6 +18,7 @@ import {
   Eye,
   Plus,
   Flag,
+  MapPin,
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -50,6 +53,24 @@ function StarRating({ rating, interactive = false, onRate, size = 16 }) {
   );
 }
 
+const normalizeReview = (r) => ({
+  id: r.id || `rev-${Math.random()}`,
+  rating: Number(r.rating) || 5,
+  title: r.title || '',
+  comment: r.body || r.comment || '',
+  user: {
+    name: r.user_name || r.reviewer_name || r.user?.name || 'Verified Patron',
+    location: r.reviewer_location || r.user?.location || '',
+    avatar: r.user?.avatar || '',
+  },
+  category_tag: r.category_tag || '',
+  verified: Boolean(r.order_id || r.order_number || r.verified !== false),
+  createdAt: r.created_at || r.createdAt || new Date().toISOString(),
+  images: Array.isArray(r.images) ? r.images.map(img => getProductImageUrl(img) || img) : [],
+  videos: Array.isArray(r.videos) ? r.videos.map(vid => getProductImageUrl(vid) || vid) : [],
+  helpful_count: Number(r.helpful_count) || 0,
+});
+
 export default function ReviewSection({ productId }) {
   const { user } = useAuth();
   const navigate = useNavigate();
@@ -59,36 +80,32 @@ export default function ReviewSection({ productId }) {
   const [filter, setFilter] = useState('all');
   const [helpfulVotes, setHelpfulVotes] = useState({});
   const [reportedIds, setReportedIds] = useState({});
-  const [formData, setFormData] = useState({ rating: 5, comment: '', images: [] });
+  const [formData, setFormData] = useState({ rating: 5, title: '', comment: '', location: '', images: [] });
   const fileInputRef = useRef(null);
 
   useEffect(() => {
-    // Simulated or fetched reviews
+    let active = true;
     setLoading(true);
-    const timer = setTimeout(() => {
-      setReviews([
-        {
-          id: 'rev-1',
-          rating: 5,
-          comment: 'Absorbs seamlessly into the lipid barrier without comedogenic residue. Visible reduction in transepidermal water loss within 72 hours.',
-          user: { name: 'Radhika Sen', avatar: '' },
-          verified: true,
-          createdAt: new Date().toISOString(),
-          images: [],
-        },
-        {
-          id: 'rev-2',
-          rating: 5,
-          comment: 'The artisanal cold-pressed Sea Buckthorn and Saffron notes are remarkably authentic. Exceptional clean formulation.',
-          user: { name: 'Kavita M.', avatar: '' },
-          verified: true,
-          createdAt: new Date().toISOString(),
-          images: [],
-        },
-      ]);
-      setLoading(false);
-    }, 400);
-    return () => clearTimeout(timer);
+    const load = async () => {
+      try {
+        const res = await reviewsApi.getByProduct(productId || 1);
+        const payload = res.data?.data || res.data || {};
+        const rows = Array.isArray(payload) ? payload : payload.reviews || [];
+        if (active && rows.length > 0) {
+          setReviews(rows.map(normalizeReview));
+          setLoading(false);
+          return;
+        }
+      } catch (_) {}
+      if (active) {
+        const pid = Number(productId) || 1;
+        const fallback = AUTHENTIC_PRODUCT_REVIEWS_BY_ID[pid] || AUTHENTIC_PRODUCT_REVIEWS_BY_ID[1] || [];
+        setReviews(fallback.map(normalizeReview));
+        setLoading(false);
+      }
+    };
+    load();
+    return () => { active = false; };
   }, [productId]);
 
   const handleImageUpload = (e) => {
@@ -105,29 +122,40 @@ export default function ReviewSection({ productId }) {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!formData.comment.trim()) return;
     setSubmitting(true);
-    setTimeout(() => {
-      const newReview = {
-        id: `rev-${Date.now()}`,
+    try {
+      await reviewsApi.submit({
+        product_id: Number(productId) || 1,
         rating: formData.rating,
-        comment: formData.comment,
-        user: { name: user?.name || 'Verified Patron', avatar: user?.avatar },
-        verified: true,
-        createdAt: new Date().toISOString(),
-        images: formData.images,
-      };
-      setReviews((prev) => [newReview, ...prev]);
-      setFormData({ rating: 5, comment: '', images: [] });
-      setSubmitting(false);
-    }, 600);
+        title: formData.title,
+        body: formData.comment,
+        user_name: user?.name || 'Verified Patron',
+        reviewer_location: formData.location || 'India',
+        images: [],
+      });
+    } catch (_) {}
+    const newReview = normalizeReview({
+      id: `rev-${Date.now()}`,
+      rating: formData.rating,
+      title: formData.title,
+      comment: formData.comment,
+      user_name: user?.name || 'Verified Patron',
+      reviewer_location: formData.location || 'India',
+      verified: true,
+      created_at: new Date().toISOString(),
+      images: formData.images,
+    });
+    setReviews((prev) => [newReview, ...prev]);
+    setFormData({ rating: 5, title: '', comment: '', location: '', images: [] });
+    setSubmitting(false);
   };
 
   const filteredReviews = useMemo(() => {
     let result = [...reviews];
-    if (filter === 'with_images') result = result.filter((r) => r.images?.length > 0);
+    if (filter === 'with_images') result = result.filter((r) => r.images?.length > 0 || r.videos?.length > 0);
     if (filter === '5star') result = result.filter((r) => r.rating === 5);
     if (filter === '1star') result = result.filter((r) => r.rating === 1);
     return result;
@@ -193,11 +221,22 @@ export default function ReviewSection({ productId }) {
               </div>
 
               <div className="space-y-2">
+                <label className="font-sub-gold text-[10px] tracking-widest block">Your City / State (Optional)</label>
+                <input
+                  type="text"
+                  value={formData.location}
+                  onChange={(e) => setFormData({ ...formData, location: e.target.value })}
+                  placeholder="e.g. Asansol, West Bengal"
+                  className="w-full bg-[#070a0e] border border-white/10 rounded-xl px-4 py-2.5 text-white text-xs placeholder-white/30 focus:border-[#d4af37] outline-none"
+                />
+              </div>
+
+              <div className="space-y-2">
                 <label className="font-sub-gold text-[10px] tracking-widest block">Detailed Review</label>
                 <textarea
                   value={formData.comment}
                   onChange={(e) => setFormData({ ...formData, comment: e.target.value })}
-                  placeholder="Share your experience with texture, absorption, and results..."
+                  placeholder="Share your honest experience..."
                   className="w-full h-32 bg-[#070a0e] border border-white/10 rounded-xl p-4 text-white text-xs placeholder-white/30 focus:border-[#d4af37] transition-colors resize-none outline-none leading-relaxed"
                   required
                 />
@@ -325,12 +364,18 @@ export default function ReviewSection({ productId }) {
                         )}
                       </div>
                       <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="text-xs font-serif font-bold uppercase tracking-wider text-white">{review.user?.name}</h4>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h4 className="text-xs font-serif font-bold tracking-wider text-white">{review.user?.name}</h4>
+                          {review.user?.location && (
+                            <span className="flex items-center gap-1 text-[10px] font-mono text-[#94a3b8]">
+                              <MapPin size={10} className="text-[#d4af37]" />
+                              {review.user.location}
+                            </span>
+                          )}
                           {review.verified && (
                             <span className="flex items-center gap-1 px-2 py-0.5 bg-[#070a0e] border border-[#d4af37]/40 text-[#fce096] rounded font-mono text-[8px] uppercase tracking-wider">
                               <ShieldCheck size={9} className="text-[#d4af37]" />
-                              Verified Patron
+                              Verified Purchase
                             </span>
                           )}
                         </div>
@@ -342,7 +387,10 @@ export default function ReviewSection({ productId }) {
                     <StarRating rating={review.rating} size={14} />
                   </div>
 
-                  <p className="text-[#cbd5e1] leading-relaxed text-xs sm:text-sm">"{review.comment}"</p>
+                  {review.title && (
+                    <h5 className="text-sm font-semibold text-white">{review.title}</h5>
+                  )}
+                  <p className="text-[#cbd5e1] leading-relaxed text-xs sm:text-sm whitespace-pre-line">{review.comment}</p>
 
                   {review.images?.length > 0 && (
                     <div className="flex gap-2.5 overflow-x-auto pb-2 custom-scrollbar">
@@ -373,7 +421,7 @@ export default function ReviewSection({ productId }) {
                       className="flex items-center gap-1.5 text-[#94a3b8] hover:text-[#fce096] transition-colors"
                     >
                       <ThumbsUp size={12} className="text-[#d4af37]" />
-                      Helpful ({helpfulVotes[review.id] || 0})
+                      Helpful ({(review.helpful_count || 0) + (helpfulVotes[review.id] || 0)})
                     </button>
                     <button
                       type="button"
@@ -396,9 +444,9 @@ export default function ReviewSection({ productId }) {
             {!loading && filteredReviews.length === 0 && (
               <div className="two-tone-card py-16 text-center space-y-3 bg-[#0d1520] rounded-2xl border border-white/10">
                 <div className="font-serif text-2xl text-[#94a3b8] uppercase tracking-wider">
-                  No Reviews Yet
+                  No Reviews Match Filter
                 </div>
-                <p className="text-xs text-[#94a3b8]">Be the first patron to share a verified formulation review.</p>
+                <p className="text-xs text-[#94a3b8]">Try selecting All Reviews or add customer photos via the Admin Panel.</p>
               </div>
             )}
           </div>

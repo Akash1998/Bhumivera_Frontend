@@ -192,21 +192,32 @@ export default function ReviewManagement() {
     });
   };
 
+  const fileToDataUrl = file => new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onerror = () => reject(new Error('Could not read local media file.'));
+    reader.readAsDataURL(file);
+  });
+
   const uploadAdminReviewMedia = async file => {
     if (file.size > MAX_REVIEW_MEDIA_BYTES) {
       throw new Error('Review media must be 25 MB or smaller.');
     }
-    const response = await api.post('/reviews/admin/upload-url', {
-      filename: file.name,
-      fileType: file.type,
-      size: file.size,
-    }, { adminAuth: true });
-    const { uploadUrl, key } = response.data || {};
-    if (!uploadUrl || !key) {
-      throw new Error('The server did not return a review media upload URL.');
+    try {
+      const response = await api.post('/reviews/admin/upload-url', {
+        filename: file.name,
+        fileType: file.type,
+        size: file.size,
+      }, { adminAuth: true });
+      const { uploadUrl, key, fallbackDataUrlMode } = response.data || {};
+      if (fallbackDataUrlMode || !uploadUrl || !key) {
+        return await fileToDataUrl(file);
+      }
+      await axios.put(uploadUrl, file, { headers: { 'Content-Type': file.type } });
+      return key;
+    } catch {
+      return await fileToDataUrl(file);
     }
-    await axios.put(uploadUrl, file, { headers: { 'Content-Type': file.type } });
-    return key;
   };
 
   const handleAdminImageAdd = async event => {
