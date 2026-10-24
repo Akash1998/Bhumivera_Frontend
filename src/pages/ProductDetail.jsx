@@ -256,7 +256,7 @@ export default function ProductDetail() {
             const revRes = await reviewsApi.getByProduct(fetchedProduct.id || 3);
             const reviewPayload = revRes.data?.data || revRes.data || {};
             const reviewRows = Array.isArray(reviewPayload) ? reviewPayload : reviewPayload.reviews || [];
-            if (Array.isArray(reviewRows) && reviewRows.length > 0 && localBundle.reviews.length === 0) {
+            if (Array.isArray(reviewRows)) {
               setReviewsData(reviewRows.map(review => ({ ...review, comment: review.body || review.comment || '' })));
               setReviewSummary(reviewPayload.summary || revRes.data?.summary || localBundle.summary);
             } else {
