@@ -36,7 +36,7 @@ export default function ScarcitySimulationBadge({
           ) : (
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold">
               <span>
-                Illustrative units remaining: <strong>{simulatedRemaining}</strong> / {snapshot.dailyCap}
+                Today's units remaining: <strong>{simulatedRemaining}</strong> / {snapshot.dailyCap}
               </span>
               <span>
                 Live Sales: <strong>{Number(snapshot.lifetimeSold || 0).toLocaleString('en-IN')}</strong>

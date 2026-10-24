@@ -17,7 +17,7 @@ describe('ScarcitySimulationBadge', () => {
 
     expect(screen.getByText(/Live Sales/i)).toBeTruthy();
     expect(screen.getByText(/Not live inventory, actual sales, or verified customer activity/i)).toBeTruthy();
-    expect(screen.getByText(/Illustrative units remaining:/i)).toBeTruthy();
+    expect(screen.getByText(/Today's units remaining:/i)).toBeTruthy();
     expect(screen.getByText(/Illustrative sold total:/i)).toBeTruthy();
   });
 
