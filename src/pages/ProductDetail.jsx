@@ -1,6 +1,5 @@
 import { FALLBACK_CATALOG_PRODUCTS, CHARCOAL_FACE_WASH_EXACT, SHAMPOO_2IN1_EXACT, BHUMIVERA_6_PRODUCTS } from '../data/bhumiveraUniqueData';
 import LuxuryProductSeoSection from '../components/LuxuryProductSeoSection';
-import { getReviewsForProduct } from '../data/bhumiveraReviewsData';
 import SEO from '../components/SEO';
 import SEOStructuredData from '../components/SEOStructuredData';
 import ProductDeliveryPromise from '../components/ProductDeliveryPromise';
@@ -91,6 +90,7 @@ export default function ProductDetail() {
   const [productIsFallback, setProductIsFallback] = useState(false);
   const [reviewsData, setReviewsData] = useState([]);
   const [reviewSummary, setReviewSummary] = useState(null);
+  const [reviewLoadError, setReviewLoadError] = useState('');
   const [recommendedProducts, setRecommendedProducts] = useState([]);
   const [recommendationReason, setRecommendationReason] = useState('');
   const [loading, setLoading] = useState(true);
@@ -252,18 +252,30 @@ export default function ProductDetail() {
         }
 
         if (fetchedProduct) {
-          const localBundle = getReviewsForProduct(fetchedProduct.slug || fetchedProduct.id || id);
-          setReviewsData(localBundle.reviews);
-          setReviewSummary(localBundle.summary);
+          setReviewsData([]);
+          setReviewSummary(null);
+          setReviewLoadError('');
           try {
-            const revRes = await reviewsApi.getByProduct(fetchedProduct.id || 2);
+            const productKey = fetchedProduct.id ?? fetchedProduct.slug ?? id;
+            const revRes = await reviewsApi.getByProduct(productKey);
             const reviewPayload = revRes.data?.data || revRes.data || {};
             const reviewRows = Array.isArray(reviewPayload) ? reviewPayload : reviewPayload.reviews || [];
-            if (Array.isArray(reviewRows) && reviewRows.length >= localBundle.reviews.length) {
-              setReviewsData(reviewRows.map(review => ({ ...review, comment: review.body || review.comment || '' })));
-              setReviewSummary(reviewPayload.summary || revRes.data?.summary || localBundle.summary);
+            const summary = reviewPayload.summary || revRes.data?.summary;
+            if (!Array.isArray(reviewRows) || !summary) {
+              throw new Error('The product reviews response is incomplete.');
             }
-          } catch (_) {}
+            setReviewsData(reviewRows.map(review => ({ ...review, comment: review.body || review.comment || '' })));
+            setReviewSummary(summary);
+          } catch (error) {
+            console.error('Failed to load product reviews:', error);
+            setReviewsData([]);
+            setReviewSummary(null);
+            setReviewLoadError('Customer reviews could not be loaded. Please try again shortly.');
+          }
+        } else {
+          setReviewsData([]);
+          setReviewSummary(null);
+          setReviewLoadError('');
         }
       } catch (err) {
         console.error("Failed to load product ecosystem:", err);
@@ -353,8 +365,8 @@ export default function ProductDetail() {
     : [];
   const productRating = reviewSummary
     ? Number(reviewSummary.average || 0)
-    : Number(product?.rating || 0);
-  const reviewCount = Number(reviewSummary?.total ?? product?.review_count ?? 0);
+    : 0;
+  const reviewCount = Number(reviewSummary?.total ?? 0);
   const videoEmbeds = [] && splitUrls(product?.video_urls)
     .map(url => ({ source: url, embed: toVideoEmbedUrl(url) }))
     .filter(video => video.embed);
@@ -861,7 +873,7 @@ export default function ProductDetail() {
                 ) : (
                   <div className="text-center py-24 two-tone-card border border-[#d4af37]/20 rounded-2xl">
                     <Microscope className="mx-auto text-[#d4af37]/40 mb-4" size={40} />
-                    <h3 className="text-sm font-mono text-[#94a3b8] uppercase tracking-widest">{reviewsData.length ? 'No reviews match this filter' : 'No approved reviews yet'}</h3>
+                    <h3 className="text-sm font-mono text-[#94a3b8] uppercase tracking-widest">{reviewLoadError || (reviewsData.length ? 'No reviews match this filter' : 'No approved reviews yet')}</h3>
                   </div>
                 )}
               </motion.div>

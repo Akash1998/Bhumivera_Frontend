@@ -5,17 +5,14 @@ import {
   ShieldAlert, ThumbsUp, BarChart2, Camera, Video, Play, Save, X,
   Calendar, MapPin, Plus, Image as ImageIcon, ChevronLeft, ChevronRight, Edit3, Layers, Truck
 } from 'lucide-react';
+import axios from 'axios';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import compressImageForUpload from '../../utils/compressImageForUpload';
 import { getProductImageUrl as getImageUrl } from '../../utils/productImageUrl';
-import {
-  INITIAL_REVIEWS_SEED,
-  getActiveReviewsStore,
-  saveActiveReviewsStore
-} from '../../data/bhumiveraReviewsData';
 
 const REVIEW_MEDIA_PLACEHOLDER = '/images/review-placeholder.svg';
+const MAX_REVIEW_MEDIA_BYTES = 25 * 1024 * 1024;
 
 const STATUS_MAP = {
   'pending': { label: 'Awaiting Moderation', color: 'amber', icon: AlertTriangle },
@@ -68,16 +65,10 @@ const toDateInputValue = isoString => {
   return d.toISOString().slice(0, 10);
 };
 
-const fileToDataUrl = file => new Promise((resolve, reject) => {
-  const reader = new FileReader();
-  reader.onload = () => resolve(String(reader.result || ''));
-  reader.onerror = () => reject(new Error('Could not read selected media file.'));
-  reader.readAsDataURL(file);
-});
-
 export default function ReviewManagement() {
-  const [reviews, setReviews] = useState(() => getActiveReviewsStore());
-  const [loading, setLoading] = useState(false);
+  const [reviews, setReviews] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [reviewLoadError, setReviewLoadError] = useState('');
   
   // Filtering & Pagination
   const [searchTerm, setSearchTerm] = useState('');
@@ -100,7 +91,7 @@ export default function ReviewManagement() {
 
   const { showToast } = useToast() || {};
 
-  const normalizeReviewRecord = r => ({
+  const normalizeReviewRecord = useCallback(r => ({
     ...r,
     id: r.id || r._id,
     product_id: Number(r.product_id) || 2,
@@ -115,34 +106,27 @@ export default function ReviewManagement() {
     comment: r.comment || r.body || '',
     images: Array.isArray(r.images) ? r.images : [],
     videos: Array.isArray(r.videos) ? r.videos : [],
-  });
+  }), []);
 
   const fetchReviews = useCallback(async () => {
     setLoading(true);
     try {
       const res = await api.get('/reviews', { adminAuth: true });
       const data = Array.isArray(res.data) ? res.data : (res.data?.reviews || res.data?.data || []);
-      if (data.length >= 1000) {
-        const normalized = data.map(normalizeReviewRecord);
-        setReviews(normalized);
-        saveActiveReviewsStore(normalized);
-      } else {
-        const localStore = getActiveReviewsStore().map(normalizeReviewRecord);
-        const serverMap = new Map(data.map(item => [String(item.id || item._id), normalizeReviewRecord(item)]));
-        const merged = localStore.map(item => serverMap.get(String(item.id)) || item);
-        for (const [id, sItem] of serverMap.entries()) {
-          if (!merged.some(m => String(m.id) === id)) merged.unshift(sItem);
-        }
-        setReviews(merged);
-        saveActiveReviewsStore(merged);
+      if (!Array.isArray(data)) {
+        throw new Error('The reviews API returned an invalid response.');
       }
-    } catch (_) {
-      const fallback = getActiveReviewsStore().map(normalizeReviewRecord);
-      setReviews(fallback);
+      setReviews(data.map(normalizeReviewRecord));
+      setReviewLoadError('');
+    } catch (error) {
+      console.error('[ADMIN_REVIEWS_LOAD]', error);
+      setReviews([]);
+      setReviewLoadError('Reviews could not be loaded from the database. Check the API connection and retry.');
+      showToast?.('Could not load reviews from the database.', 'error');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [normalizeReviewRecord, showToast]);
 
   useEffect(() => {
     fetchReviews();
@@ -154,7 +138,7 @@ export default function ReviewManagement() {
     setCustomImageUrl('');
     setCustomVideoUrl('');
     setReviewDraft({
-      product_id: Number(review.product_id) || 2,
+      product_id: PRODUCT_OPTIONS.find(product => product.slug === review.product_slug)?.id || Number(review.product_id) || 2,
       user_name: review.user_name || review.reviewer_name || 'Verified Patron',
       reviewer_location: review.reviewer_location || 'India',
       rating: Number(review.rating) || 5,
@@ -208,6 +192,23 @@ export default function ReviewManagement() {
     });
   };
 
+  const uploadAdminReviewMedia = async file => {
+    if (file.size > MAX_REVIEW_MEDIA_BYTES) {
+      throw new Error('Review media must be 25 MB or smaller.');
+    }
+    const response = await api.post('/reviews/admin/upload-url', {
+      filename: file.name,
+      fileType: file.type,
+      size: file.size,
+    }, { adminAuth: true });
+    const { uploadUrl, key } = response.data || {};
+    if (!uploadUrl || !key) {
+      throw new Error('The server did not return a review media upload URL.');
+    }
+    await axios.put(uploadUrl, file, { headers: { 'Content-Type': file.type } });
+    return key;
+  };
+
   const handleAdminImageAdd = async event => {
     const files = Array.from(event.target.files || []);
     event.target.value = '';
@@ -221,14 +222,17 @@ export default function ReviewManagement() {
     try {
       const added = [];
       for (const file of files.slice(0, remainingSlots)) {
-        const compressed = await compressImageForUpload(file).catch(() => file);
-        const dataUrl = await fileToDataUrl(compressed);
-        if (dataUrl) added.push(dataUrl);
+        const compressed = await compressImageForUpload(file);
+        const key = await uploadAdminReviewMedia(compressed);
+        added.push(key);
+        setReviewDraft(cur => ({ ...cur, images: [...(cur.images || []), key].slice(0, 5) }));
       }
       if (added.length) {
-        setReviewDraft(cur => ({ ...cur, images: [...(cur.images || []), ...added].slice(0, 5) }));
         showToast?.(`${added.length} photo(s) attached to review.`, 'success');
       }
+    } catch (error) {
+      console.error('[ADMIN_REVIEW_IMAGE_UPLOAD]', error);
+      showToast?.(error.response?.data?.message || error.message || 'Could not upload review photo.', 'error');
     } finally {
       setMediaUploading(false);
     }
@@ -247,13 +251,16 @@ export default function ReviewManagement() {
     try {
       const added = [];
       for (const file of files.slice(0, remainingSlots)) {
-        const dataUrl = await fileToDataUrl(file);
-        if (dataUrl) added.push(dataUrl);
+        const key = await uploadAdminReviewMedia(file);
+        added.push(key);
+        setReviewDraft(cur => ({ ...cur, videos: [...(cur.videos || []), key].slice(0, 3) }));
       }
       if (added.length) {
-        setReviewDraft(cur => ({ ...cur, videos: [...(cur.videos || []), ...added].slice(0, 3) }));
         showToast?.(`${added.length} video(s) attached to review.`, 'success');
       }
+    } catch (error) {
+      console.error('[ADMIN_REVIEW_VIDEO_UPLOAD]', error);
+      showToast?.(error.response?.data?.message || error.message || 'Could not upload review video.', 'error');
     } finally {
       setMediaUploading(false);
     }
@@ -293,40 +300,28 @@ export default function ReviewManagement() {
       };
 
       if (isCreatingNew) {
-        let newId = Math.max(3000, ...reviews.map(r => Number(r.id) || 0)) + 1;
-        try {
-          const res = await api.post('/reviews/admin', payload, { adminAuth: true });
-          if (res.data?.review?.id) newId = res.data.review.id;
-        } catch (_) {}
-
-        const newRecord = normalizeReviewRecord({
-          ...payload,
-          id: newId,
-          order_id: 90000 + Number(newId),
-          order_number: `BV-${isoCreatedAt.slice(0, 4)}-${90000 + Number(newId)}`,
-          verified_purchase: true,
-        });
-
-        setReviews(current => {
-          const next = [newRecord, ...current];
-          saveActiveReviewsStore(next);
-          return next;
-        });
-        showToast?.('New customer review saved to database & published on product page!', 'success');
+        const response = await api.post('/reviews/admin', payload, { adminAuth: true });
+        if (!response.data?.review?.id) throw new Error('The server did not return the saved review.');
+        const savedReview = normalizeReviewRecord(response.data.review);
+        setReviews(current => [savedReview, ...current]);
+        showToast?.('Customer review saved to the database.', 'success');
       } else {
         const reviewId = selectedReview.id || selectedReview._id;
-        await api.put(`/reviews/admin/${reviewId}`, payload, { adminAuth: true }).catch(() => null);
-        setReviews(current => {
-          const next = current.map(r => String(r.id) === String(reviewId) ? normalizeReviewRecord({ ...r, ...payload }) : r);
-          saveActiveReviewsStore(next);
-          return next;
-        });
-        showToast?.('Review updated in database (date, rating, classification, photos & videos saved)!', 'success');
+        const response = await api.put(`/reviews/admin/${reviewId}`, payload, { adminAuth: true });
+        if (!response.data?.review) throw new Error('The server did not return the updated review.');
+        const savedReview = normalizeReviewRecord(response.data.review);
+        setReviews(current => current.map(review =>
+          String(review.id) === String(reviewId) ? savedReview : review
+        ));
+        showToast?.('Review updated in the database.', 'success');
       }
 
       setSelectedReview(null);
       setReviewDraft(null);
       setIsCreatingNew(false);
+    } catch (error) {
+      console.error('[ADMIN_REVIEW_SAVE]', error);
+      showToast?.(error.response?.data?.message || error.message || 'Could not save the review.', 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -334,35 +329,31 @@ export default function ReviewManagement() {
 
   const handleDelete = async (reviewId) => {
     if (!window.confirm('Delete this review from the database?')) return;
-    await api.delete(`/reviews/${reviewId}`, { adminAuth: true }).catch(() => null);
-    setReviews(current => {
-      const next = current.filter(r => String(r.id) !== String(reviewId));
-      saveActiveReviewsStore(next);
-      return next;
-    });
-    showToast?.('Review deleted from database.', 'success');
-    if (selectedReview && String(selectedReview.id) === String(reviewId)) {
-      setSelectedReview(null);
-      setReviewDraft(null);
+    try {
+      await api.delete(`/reviews/${reviewId}`, { adminAuth: true });
+      setReviews(current => current.filter(review => String(review.id) !== String(reviewId)));
+      showToast?.('Review deleted from the database.', 'success');
+      if (selectedReview && String(selectedReview.id) === String(reviewId)) {
+        setSelectedReview(null);
+        setReviewDraft(null);
+      }
+    } catch (error) {
+      console.error('[ADMIN_REVIEW_DELETE]', error);
+      showToast?.(error.response?.data?.message || 'Could not delete the review.', 'error');
     }
-  };
-
-  const handleResetToDefault1080 = () => {
-    if (!window.confirm('Restore all 1,080 default classified customer reviews (2020–2026)?')) return;
-    const fresh = INITIAL_REVIEWS_SEED.map(normalizeReviewRecord);
-    setReviews(fresh);
-    saveActiveReviewsStore(fresh);
-    showToast?.('Restored all 1,080 classified customer reviews into database.', 'success');
   };
 
   // --- ANALYTICS & PRODUCT BREAKDOWN ---
   const productBreakdown = useMemo(() => {
     return PRODUCT_OPTIONS.map(prod => {
-      const pRevs = reviews.filter(r => Number(r.product_id) === Number(prod.id) && r.status === 'approved');
+      const pRevs = reviews.filter(r =>
+        (r.product_slug === prod.slug || (!r.product_slug && Number(r.product_id) === Number(prod.id))) &&
+        r.status === 'approved'
+      );
       const count = pRevs.length;
       const avg = count > 0
         ? (pRevs.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / count).toFixed(2)
-        : '4.60';
+        : '0.00';
       return { ...prod, count, avg };
     });
   }, [reviews]);
@@ -371,7 +362,7 @@ export default function ReviewManagement() {
     return reviews.filter(r => {
       const searchStr = `${r.title || ''} ${r.body || r.comment || ''} ${r.user_name || ''} ${r.reviewer_location || ''} ${r.product_name || ''} ${r.category_tag || ''} ${r.order_number || ''}`.toLowerCase();
       if (searchTerm.trim() && !searchStr.includes(searchTerm.toLowerCase())) return false;
-      if (productFilter !== 'all' && String(r.product_id) !== String(productFilter)) return false;
+      if (productFilter !== 'all' && r.product_slug !== productFilter) return false;
       if (categoryFilter !== 'all') {
         if (categoryFilter === 'Combo Pack Ritual') {
           if (!r.is_combo_review && r.category_tag !== 'Combo Pack Ritual') return false;
@@ -395,9 +386,12 @@ export default function ReviewManagement() {
   const comboRevs = reviews.filter(r => r.is_combo_review || r.category_tag === 'Combo Pack Ritual');
   const comboAvg = comboRevs.length > 0
     ? (comboRevs.reduce((a, r) => a + (Number(r.rating) || 5), 0) / comboRevs.length).toFixed(2)
-    : '4.92';
-  const oneStarShippingCount = reviews.filter(r => Number(r.rating) === 1).length;
+    : '0.00';
+  const oneStarShippingCount = reviews.filter(r =>
+    Number(r.rating) === 1 && /shipping|packaging|transit/i.test(r.category_tag || '')
+  ).length;
   const mediaReviewsCount = reviews.filter(r => (r.images?.length || 0) > 0 || (r.videos?.length || 0) > 0).length;
+  const reviewedProductCount = productBreakdown.filter(product => product.count > 0).length;
 
   return (
     <div className="space-y-6 text-slate-300 font-sans animate-in fade-in duration-500">
@@ -406,10 +400,10 @@ export default function ReviewManagement() {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#d4af37]/20">
         <div>
           <h1 className="text-2xl font-semibold text-white tracking-tight flex items-center gap-3">
-            Customer Reviews &amp; Media Database ({totalReviews} Classified Reviews · 2020–2026)
+            Customer Reviews &amp; Media Database ({totalReviews} reviews)
           </h1>
           <p className="text-slate-400 text-xs mt-1 flex items-center gap-2">
-            <BarChart2 size={13} className="text-[#d4af37]" /> All {totalReviews} reviews seeded in database across 6 products · Manual Date (2020–2029), Star Rating, Photo &amp; Video Studio
+            <BarChart2 size={13} className="text-[#d4af37]" /> Database-backed reviews across {reviewedProductCount} of 6 products · Manual date, star rating, photo &amp; video uploads
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
@@ -422,13 +416,6 @@ export default function ReviewManagement() {
           </button>
           <button
             type="button"
-            onClick={handleResetToDefault1080}
-            className="px-3.5 py-2.5 bg-[#10241f]/85 border border-slate-800 text-slate-300 rounded-xl text-xs font-bold hover:border-[#d4af37]/40 hover:text-[#fce096] transition-all"
-          >
-            Restore Default 1,080
-          </button>
-          <button
-            type="button"
             onClick={fetchReviews}
             disabled={loading}
             aria-label="Refresh customer reviews"
@@ -438,14 +425,15 @@ export default function ReviewManagement() {
           </button>
         </div>
       </div>
+      {reviewLoadError && <p role="alert" className="rounded-xl border border-rose-500/40 bg-rose-950/40 p-4 text-sm text-rose-200">{reviewLoadError}</p>}
 
       {/* KPI DASHBOARD */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-[#10241f]/45 border border-slate-800/80 p-5 rounded-3xl flex items-center gap-4">
           <div className="p-3.5 rounded-2xl bg-[#081b15]/90 border border-slate-800 text-emerald-400"><MessageSquare size={22} /></div>
           <div>
-            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Database Reviews (2020–2026)</p>
-            <h4 className="text-2xl font-black text-white mt-0.5">{totalReviews} <span className="text-xs font-normal text-emerald-400">All 6 SKUs &gt; 4.5★</span></h4>
+            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">Database Reviews</p>
+            <h4 className="text-2xl font-black text-white mt-0.5">{totalReviews} <span className="text-xs font-normal text-emerald-400">{reviewedProductCount} products</span></h4>
           </div>
         </div>
         <div className="bg-[#10241f]/45 border border-[#d4af37]/35 p-5 rounded-3xl flex items-center gap-4">
@@ -458,8 +446,8 @@ export default function ReviewManagement() {
         <div className="bg-[#10241f]/45 border border-slate-800/80 p-5 rounded-3xl flex items-center gap-4">
           <div className="p-3.5 rounded-2xl bg-[#081b15]/90 border border-slate-800 text-amber-400"><Truck size={22} /></div>
           <div>
-            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">1★ Transit / Box Only</p>
-            <h4 className="text-2xl font-black text-white mt-0.5">{oneStarShippingCount} <span className="text-xs text-amber-300">0 against product</span></h4>
+            <p className="text-[10px] font-black uppercase text-slate-400 tracking-widest">1★ Shipping / Packaging</p>
+            <h4 className="text-2xl font-black text-white mt-0.5">{oneStarShippingCount} <span className="text-xs text-amber-300">database reviews</span></h4>
           </div>
         </div>
         <div className="bg-[#10241f]/45 border border-slate-800/80 p-5 rounded-3xl flex items-center gap-4">
@@ -475,7 +463,7 @@ export default function ReviewManagement() {
       <div className="bg-[#10241f]/45 border border-slate-800/80 rounded-3xl p-5">
         <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
           <span className="text-[10px] font-black uppercase tracking-widest text-[#d4af37]">
-            Product-Wise Review Classification (Every Product &gt; 4.5★ · Click any SKU to filter)
+            Product-wise database reviews · Click a SKU to filter
           </span>
           {productFilter !== 'all' && (
             <button
@@ -489,12 +477,12 @@ export default function ReviewManagement() {
         </div>
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2.5">
           {productBreakdown.map(item => {
-            const active = String(productFilter) === String(item.id);
+            const active = productFilter === item.slug;
             return (
               <button
                 key={item.id}
                 type="button"
-                onClick={() => { setProductFilter(active ? 'all' : String(item.id)); setCurrentPage(1); }}
+                onClick={() => { setProductFilter(active ? 'all' : item.slug); setCurrentPage(1); }}
                 className={`text-left p-3 rounded-2xl border transition-all ${
                   active
                     ? 'bg-[#d4af37]/20 border-[#d4af37] text-white'
@@ -603,6 +591,13 @@ export default function ReviewManagement() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800/50">
+              {paginatedReviews.length === 0 && (
+                <tr>
+                  <td colSpan={5} className="p-10 text-center text-sm text-slate-400">
+                    {loading ? 'Loading reviews from the database…' : reviewLoadError || 'No database reviews match these filters.'}
+                  </td>
+                </tr>
+              )}
               {paginatedReviews.map(review => {
                 const rRating = parseInt(review.rating, 10) || 5;
                 return (

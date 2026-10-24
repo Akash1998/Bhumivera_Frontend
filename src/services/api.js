@@ -8,10 +8,10 @@ import {
   savePublicCatalogResponse,
 } from "../utils/offlineCatalogCache";
 
-let b = import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL || "https://bhumivera-backend-theta.vercel.app";
-if (/^https?:\/\/service\.bhumivera\.com(?:\/|$)/i.test(b)) {
-  b = "https://bhumivera-backend-theta.vercel.app";
-}
+const configuredBaseUrl = import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL;
+let b = /^https?:\/\/bhumivera-backend-theta\.vercel\.app(?:\/|$)/i.test(configuredBaseUrl || '')
+  ? 'https://service.bhumivera.com'
+  : configuredBaseUrl || 'https://service.bhumivera.com';
 if (b.startsWith("http://") && !b.includes("localhost")) b = b.replace("http://", "https://");
 export const BASE_URL = b;
 

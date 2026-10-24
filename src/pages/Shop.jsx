@@ -17,7 +17,6 @@ import { products as productsApi } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { getProductImageUrl } from '../utils/productImageUrl';
-import { getReviewsForProduct } from '../data/bhumiveraReviewsData';
 import {
   FALLBACK_CATALOG_PRODUCTS,
   BHUMIVERA_6_PRODUCTS,
@@ -29,6 +28,8 @@ const ProductCard = ({ product, index }) => {
   const { isWishlisted, toggleWishlist } = useWishlist() || {};
   const prodId = product.id || product._id;
   const wishlisted = typeof isWishlisted === 'function' ? isWishlisted(prodId) : false;
+  const rating = Number(product.rating) || 0;
+  const reviewCount = Number(product.review_count) || 0;
 
   const imgSrc =
     getProductImageUrl(product.image_url || product.images || product.image) ||
@@ -81,7 +82,7 @@ const ProductCard = ({ product, index }) => {
           <span>{product.category || product.category_name || 'Botanical Care'}</span>
           <span className="flex items-center gap-1">
             <Star size={12} className="fill-current text-[#D4AF37]" />
-            {(() => { const s = getReviewsForProduct(product.id || product.slug).summary; return `${Number(s.average || product.rating || 4.6).toFixed(2)} (${s.total || product.reviews || 160})`; })()}
+            {reviewCount > 0 ? `${rating.toFixed(2)} (${reviewCount})` : 'No reviews yet'}
           </span>
         </div>
 
