@@ -3,12 +3,12 @@ const REVIEW_MEDIA_PLACEHOLDER = '/images/review-placeholder.svg';
 export const REVIEWS_UPDATED_EVENT = 'bhumivera:reviews-updated';
 
 const PRODUCT_SEEDS = [
-  { id: 1, slug: 'activated-charcoal-luxury-face-wash', ratings: { 5: 174, 4: 24, 3: 9, 2: 4, 1: 9 }, photos: 86, videos: 16, combo: { ratings: { 5: 77, 4: 1 }, photos: 36, videos: 8 } },
-  { id: 2, slug: 'himalayan-seabuckthorn-luxury-face-wash', ratings: { 5: 192, 4: 25, 3: 10, 2: 4, 1: 9 }, photos: 124, videos: 16, combo: { ratings: { 5: 84, 4: 1 }, photos: 52, videos: 8 } },
-  { id: 3, slug: 'luxury-2-in-1-botanical-shampoo-conditioner', ratings: { 5: 124, 4: 17, 3: 7, 2: 4, 1: 8 }, photos: 55, videos: 11, combo: { ratings: { 5: 56, 4: 1 }, photos: 23, videos: 5 } },
-  { id: 4, slug: 'artisanal-charcoal-handmade-soap', ratings: { 5: 102, 4: 12, 3: 5, 2: 3, 1: 8 }, photos: 44, videos: 9, combo: { ratings: { 5: 45, 4: 1 }, photos: 18, videos: 4 } },
-  { id: 5, slug: 'artisanal-aloe-vera-handmade-soap', ratings: { 5: 95, 4: 10, 3: 4, 2: 3, 1: 8 }, photos: 42, videos: 8, combo: { ratings: { 5: 42 }, photos: 18, videos: 4 } },
-  { id: 6, slug: 'kalpvriksh-satva-tulsi-7-tulsi-extract', ratings: { 5: 170, 4: 20, 3: 8, 2: 4, 1: 8 }, photos: 84, videos: 14, combo: { ratings: { 5: 47, 4: 20, 3: 3 }, photos: 35, videos: 9 } },
+  { id: 1, legacyIds: [9], slug: 'activated-charcoal-luxury-face-wash', ratings: { 5: 174, 4: 24, 3: 9, 2: 4, 1: 9 }, photos: 86, videos: 16, combo: { ratings: { 5: 77, 4: 1 }, photos: 36, videos: 8 } },
+  { id: 2, legacyIds: [8], slug: 'himalayan-seabuckthorn-luxury-face-wash', ratings: { 5: 192, 4: 25, 3: 10, 2: 4, 1: 9 }, photos: 124, videos: 16, combo: { ratings: { 5: 84, 4: 1 }, photos: 52, videos: 8 } },
+  { id: 3, legacyIds: [104], slug: 'luxury-2-in-1-botanical-shampoo-conditioner', ratings: { 5: 124, 4: 17, 3: 7, 2: 4, 1: 8 }, photos: 55, videos: 11, combo: { ratings: { 5: 56, 4: 1 }, photos: 23, videos: 5 } },
+  { id: 4, legacyIds: [103], slug: 'artisanal-charcoal-handmade-soap', ratings: { 5: 102, 4: 12, 3: 5, 2: 3, 1: 8 }, photos: 44, videos: 9, combo: { ratings: { 5: 45, 4: 1 }, photos: 18, videos: 4 } },
+  { id: 5, legacyIds: [105], slug: 'artisanal-aloe-vera-handmade-soap', ratings: { 5: 95, 4: 10, 3: 4, 2: 3, 1: 8 }, photos: 42, videos: 8, combo: { ratings: { 5: 42 }, photos: 18, videos: 4 } },
+  { id: 6, legacyIds: [106], slug: 'kalpvriksh-satva-tulsi-7-tulsi-extract', ratings: { 5: 170, 4: 20, 3: 8, 2: 4, 1: 8 }, photos: 84, videos: 14, combo: { ratings: { 5: 47, 4: 20, 3: 3 }, photos: 35, videos: 9 } },
 ];
 
 const NAMES = [
@@ -114,15 +114,22 @@ export const saveActiveReviewsStore = reviews => {
 const resolveProductId = idOrSlug => {
   const key = String(idOrSlug ?? '');
   if (PRODUCT_SLUGS[key]) return Number(key);
-  const entry = Object.entries(PRODUCT_SLUGS).find(([, slug]) => slug === key);
-  return entry ? Number(entry[0]) : null;
+  const product = PRODUCT_SEEDS.find(({ id, legacyIds = [], slug }) =>
+    slug === key || String(id) === key || legacyIds.some(legacyId => String(legacyId) === key)
+  );
+  return product?.id ?? null;
 };
 
 export const getReviewsForProduct = idOrSlug => {
   const pid = resolveProductId(idOrSlug);
+  const product = PRODUCT_SEEDS.find(seed => seed.id === pid);
+  const productIds = new Set([pid, ...(product?.legacyIds || [])].map(String));
   const reviews = pid === null
     ? []
-    : getActiveReviewsStore().filter(r => Number(r.product_id) === pid && Number(r.is_approved ?? 1) === 1);
+    : getActiveReviewsStore().filter(r =>
+      (productIds.has(String(r.product_id)) || r.product_slug === product?.slug) &&
+      Number(r.is_approved ?? 1) === 1
+    );
   const total = reviews.length;
   const distribution = { 1: 0, 2: 0, 3: 0, 4: 0, 5: 0 };
   let sum = 0;

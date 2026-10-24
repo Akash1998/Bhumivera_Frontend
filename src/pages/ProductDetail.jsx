@@ -252,7 +252,7 @@ export default function ProductDetail() {
         }
 
         if (fetchedProduct) {
-          const localBundle = getReviewsForProduct(fetchedProduct.id || fetchedProduct.slug || id);
+          const localBundle = getReviewsForProduct(fetchedProduct.slug || fetchedProduct.id || id);
           setReviewsData(localBundle.reviews);
           setReviewSummary(localBundle.summary);
           try {
