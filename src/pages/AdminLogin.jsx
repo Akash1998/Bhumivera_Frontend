@@ -356,11 +356,6 @@ const AdminLogin = () => {
             <button type="submit" disabled={loading} className="admin-login-btn">
               {loading ? 'DEPLOYING OTP...' : 'REQUEST SECURE ACCESS'}
             </button>
-            <div className="mt-4 text-center">
-              <Link to="/admin/forgot-password" className="text-xs text-cyan-400 hover:text-cyan-300 font-medium">
-                Forgot admin password? Reset with email OTP
-              </Link>
-            </div>
           </form>
         ) : (
           <form onSubmit={handleVerifyOtp} className="admin-login-form">
