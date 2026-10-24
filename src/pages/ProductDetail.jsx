@@ -1,4 +1,5 @@
 import { FALLBACK_CATALOG_PRODUCTS, CHARCOAL_FACE_WASH_EXACT, SHAMPOO_2IN1_EXACT, BHUMIVERA_6_PRODUCTS } from '../data/bhumiveraUniqueData';
+import { getReviewsForProduct } from '../data/bhumiveraReviewsData';
 import LuxuryProductSeoSection from '../components/LuxuryProductSeoSection';
 import SEO from '../components/SEO';
 import SEOStructuredData from '../components/SEOStructuredData';
