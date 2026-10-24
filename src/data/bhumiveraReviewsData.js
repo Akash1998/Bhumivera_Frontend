@@ -1,14 +1,15 @@
 const STORAGE_KEY = 'bhumivera_reviews_store_v1';
+const REVIEW_MEDIA_PLACEHOLDER = '/images/review-placeholder.svg';
 export const REVIEWS_UPDATED_EVENT = 'bhumivera:reviews-updated';
 
-const PRODUCT_SLUGS = {
-  1: 'activated-charcoal-luxury-face-wash',
-  2: 'himalayan-seabuckthorn-luxury-face-wash',
-  3: 'the-biotic-cellular-reset-30-day-gut-skin-protocol',
-  4: 'restorative-seabuckthorn-prebiotic-barrier-creme',
-  5: 'fermented-7-tulsi-hydrosol-cellular-hydration-mist',
-  6: 'kalpvriksh-satva-tulsi-7-tulsi-extract',
-};
+const PRODUCT_SEEDS = [
+  { id: 1, slug: 'activated-charcoal-luxury-face-wash', ratings: { 5: 174, 4: 24, 3: 9, 2: 4, 1: 9 }, photos: 86, videos: 16, combo: { ratings: { 5: 77, 4: 1 }, photos: 36, videos: 8 } },
+  { id: 2, slug: 'himalayan-seabuckthorn-luxury-face-wash', ratings: { 5: 192, 4: 25, 3: 10, 2: 4, 1: 9 }, photos: 124, videos: 16, combo: { ratings: { 5: 84, 4: 1 }, photos: 52, videos: 8 } },
+  { id: 3, slug: 'luxury-2-in-1-botanical-shampoo-conditioner', ratings: { 5: 124, 4: 17, 3: 7, 2: 4, 1: 8 }, photos: 55, videos: 11, combo: { ratings: { 5: 56, 4: 1 }, photos: 23, videos: 5 } },
+  { id: 4, slug: 'artisanal-charcoal-handmade-soap', ratings: { 5: 102, 4: 12, 3: 5, 2: 3, 1: 8 }, photos: 44, videos: 9, combo: { ratings: { 5: 45, 4: 1 }, photos: 18, videos: 4 } },
+  { id: 5, slug: 'artisanal-aloe-vera-handmade-soap', ratings: { 5: 95, 4: 10, 3: 4, 2: 3, 1: 8 }, photos: 42, videos: 8, combo: { ratings: { 5: 42 }, photos: 18, videos: 4 } },
+  { id: 6, slug: 'kalpvriksh-satva-tulsi-7-tulsi-extract', ratings: { 5: 170, 4: 20, 3: 8, 2: 4, 1: 8 }, photos: 84, videos: 14, combo: { ratings: { 5: 47, 4: 20, 3: 3 }, photos: 35, videos: 9 } },
+];
 
 const NAMES = [
   'Aarav', 'Ananya', 'Ishita', 'Rohan', 'Meera', 'Kabir', 'Naina', 'Vihaan', 'Saanvi', 'Arjun',
@@ -24,38 +25,71 @@ const BODIES = [
   'Gentle on my sensitive skin and absorbs quickly. Will buy again.',
   'Premium feel, thoughtful formulation, and it genuinely works for me.',
 ];
-const RATING_PATTERN = [5, 5, 5, 4, 5, 4, 5, 5, 4, 3];
-
+const CATEGORIES = [
+  'Quick & Everyday Impressions',
+  'Texture & Sensory Notes',
+  'Routine & Ritual',
+  'Sensitive Skin Journal',
+  'Long-Term Experience',
+];
 const buildSeed = () => {
   const out = [];
-  let n = 0;
-  for (let pid = 1; pid <= 6; pid += 1) {
-    for (let i = 0; i < 55; i += 1) {
-      const rating = RATING_PATTERN[(i + pid) % RATING_PATTERN.length];
-      const name = `${NAMES[(n * 7) % NAMES.length]} ${SURNAMES[(n * 5 + pid) % SURNAMES.length]}`;
-      const date = new Date(Date.UTC(2026, 0, 1) + n * 18 * 3600 * 1000).toISOString();
-      out.push({
-        id: `seed-${pid}-${i + 1}`,
-        product_id: pid,
-        rating,
-        title: TITLES[n % TITLES.length],
-        body: BODIES[(n + pid) % BODIES.length],
-        comment: BODIES[(n + pid) % BODIES.length],
-        user_name: name,
-        reviewer_name: name,
-        reviewer_location: CITIES[(n * 3) % CITIES.length],
-        is_approved: 1,
-        verified: true,
-        images: [],
-        created_at: date,
-      });
-      n += 1;
+  let sequence = 0;
+  for (const product of PRODUCT_SEEDS) {
+    const comboRatingsRemaining = { ...product.combo.ratings };
+    let comboPhotosRemaining = product.combo.photos;
+    let comboVideosRemaining = product.combo.videos;
+    let photosRemaining = product.photos - product.combo.photos;
+    let videosRemaining = product.videos - product.combo.videos;
+
+    for (const rating of [5, 4, 3, 2, 1]) {
+      for (let index = 0; index < product.ratings[rating]; index += 1) {
+        const isComboReview = (comboRatingsRemaining[rating] || 0) > 0;
+        if (isComboReview) comboRatingsRemaining[rating] -= 1;
+
+        const hasPhoto = isComboReview ? comboPhotosRemaining > 0 : photosRemaining > 0;
+        const hasVideo = isComboReview ? comboVideosRemaining > 0 : videosRemaining > 0;
+        if (hasPhoto && isComboReview) comboPhotosRemaining -= 1;
+        else if (hasPhoto) photosRemaining -= 1;
+        if (hasVideo && isComboReview) comboVideosRemaining -= 1;
+        else if (hasVideo) videosRemaining -= 1;
+
+        const name = `${NAMES[(sequence * 7) % NAMES.length]} ${SURNAMES[(sequence * 5 + product.id) % SURNAMES.length]}`;
+        const body = BODIES[(sequence + product.id) % BODIES.length];
+        const date = new Date(Date.UTC(2020, 0, 1) + sequence * 54 * 3600 * 1000).toISOString();
+        out.push({
+          id: sequence + 1,
+          product_id: product.id,
+          product_slug: product.slug,
+          order_number: `BV-ORD-${String(sequence + 1).padStart(6, '0')}`,
+          rating,
+          title: TITLES[sequence % TITLES.length],
+          body,
+          comment: body,
+          user_name: name,
+          reviewer_name: name,
+          reviewer_location: CITIES[(sequence * 3) % CITIES.length],
+          category_tag: isComboReview ? 'Combo Pack Ritual' : CATEGORIES[sequence % CATEGORIES.length],
+          is_combo_review: Boolean(isComboReview),
+          combo_name: isComboReview ? (sequence % 2 ? 'Inside-Out Ritual' : 'Daily Regimen') : null,
+          is_approved: 1,
+          verified: true,
+          images: hasPhoto ? [REVIEW_MEDIA_PLACEHOLDER] : [],
+          videos: hasVideo ? [REVIEW_MEDIA_PLACEHOLDER] : [],
+          helpful_count: sequence % 24,
+          public_story_consent: false,
+          created_at: date,
+        });
+        sequence += 1;
+      }
     }
   }
   return out;
 };
 
 export const INITIAL_REVIEWS_SEED = buildSeed();
+
+const PRODUCT_SLUGS = Object.fromEntries(PRODUCT_SEEDS.map(({ id, slug }) => [id, slug]));
 
 export const getActiveReviewsStore = () => {
   try {
@@ -97,6 +131,6 @@ export const getReviewsForProduct = idOrSlug => {
     distribution[rating] += 1;
     sum += rating;
   });
-  const average = total ? Math.round((sum / total) * 10) / 10 : 0;
+  const average = total ? Math.round((sum / total) * 100) / 100 : 0;
   return { reviews, summary: { total, average, distribution } };
 };

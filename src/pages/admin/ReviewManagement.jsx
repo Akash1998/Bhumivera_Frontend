@@ -15,6 +15,8 @@ import {
   saveActiveReviewsStore
 } from '../../data/bhumiveraReviewsData';
 
+const REVIEW_MEDIA_PLACEHOLDER = '/images/review-placeholder.svg';
+
 const STATUS_MAP = {
   'pending': { label: 'Awaiting Moderation', color: 'amber', icon: AlertTriangle },
   'approved': { label: 'Published (Live)', color: 'emerald', icon: CheckCircle },
@@ -967,7 +969,9 @@ export default function ReviewManagement() {
                 <div className="flex flex-wrap gap-3 pt-1">
                   {(reviewDraft.videos || []).map((vid, index) => (
                     <div key={`${vid}-${index}`} className="relative h-24 w-32 overflow-hidden rounded-xl border border-emerald-500/50 bg-black">
-                      <video src={getImageUrl(vid)} controls className="h-full w-full object-cover" />
+                      {vid === REVIEW_MEDIA_PLACEHOLDER
+                        ? <img src={getImageUrl(vid)} alt="Video placeholder; replace with the uploaded customer video" className="h-full w-full object-cover" />
+                        : <video src={getImageUrl(vid)} controls className="h-full w-full object-cover" />}
                       <button
                         type="button"
                         onClick={() => setReviewDraft(cur => ({ ...cur, videos: cur.videos.filter((_, idx) => idx !== index) }))}

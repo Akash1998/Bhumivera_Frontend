@@ -1,6 +1,5 @@
 import { FALLBACK_CATALOG_PRODUCTS, CHARCOAL_FACE_WASH_EXACT, SHAMPOO_2IN1_EXACT, BHUMIVERA_6_PRODUCTS } from '../data/bhumiveraUniqueData';
 import LuxuryProductSeoSection from '../components/LuxuryProductSeoSection';
-import LuxuryProductReviewStudio from '../components/LuxuryProductReviewStudio';
 import { getReviewsForProduct } from '../data/bhumiveraReviewsData';
 import SEO from '../components/SEO';
 import SEOStructuredData from '../components/SEOStructuredData';
@@ -70,6 +69,7 @@ const getSecureExternalUrl = value => {
 };
 
 const getImageUrl = image => getProductImageUrl(image) || '/logo.webp';
+const REVIEW_MEDIA_PLACEHOLDER = '/images/review-placeholder.svg';
 
 export default function ProductDetail() {
   const { id } = useParams();
@@ -358,7 +358,9 @@ export default function ProductDetail() {
   const videoEmbeds = [] && splitUrls(product?.video_urls)
     .map(url => ({ source: url, embed: toVideoEmbedUrl(url) }))
     .filter(video => video.embed);
-  const reviewPhotos = reviewsData.flatMap(review => (Array.isArray(review.images) ? review.images : []).map(image => ({ image, review })));
+  const reviewPhotos = reviewsData.flatMap(review => (Array.isArray(review.images) ? review.images : [])
+    .filter(image => image !== REVIEW_MEDIA_PLACEHOLDER)
+    .map(image => ({ image, review })));
   const visibleReviews = reviewsData
     .filter(review => reviewRatingFilter === 'all' || Number(review.rating) === Number(reviewRatingFilter))
     .slice()
@@ -845,8 +847,8 @@ export default function ProductDetail() {
                       </div>
                       {review.title && <h4 className="mb-2 text-lg font-semibold text-white">{review.title}</h4>}
                       <p className="whitespace-pre-line text-sm leading-6 text-[#cbd5e1]">{review.comment}</p>
-                      {Array.isArray(review.images) && review.images.length > 0 && <div className="mt-4 flex flex-wrap gap-3">
-                        {review.images.map((image, imageIndex) => <a key={`${review.id}-${imageIndex}`} href={getImageUrl(image)} target="_blank" rel="noreferrer" className="block h-24 w-24 overflow-hidden rounded-xl border border-[#d4af37]/30 bg-[#070a0e] focus:outline-none focus:ring-2 focus:ring-[#d4af37]">
+                      {Array.isArray(review.images) && review.images.some(image => image !== REVIEW_MEDIA_PLACEHOLDER) && <div className="mt-4 flex flex-wrap gap-3">
+                        {review.images.filter(image => image !== REVIEW_MEDIA_PLACEHOLDER).map((image, imageIndex) => <a key={`${review.id}-${imageIndex}`} href={getImageUrl(image)} target="_blank" rel="noreferrer" className="block h-24 w-24 overflow-hidden rounded-xl border border-[#d4af37]/30 bg-[#070a0e] focus:outline-none focus:ring-2 focus:ring-[#d4af37]">
                           <img src={getImageUrl(image)} alt={`Customer photo ${imageIndex + 1} for ${product.name}`} className="h-full w-full object-cover" loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}/>
                         </a>)}
                       </div>}
@@ -867,9 +869,6 @@ export default function ProductDetail() {
           </AnimatePresence>
         </div>
       </div>
-
-      
-      <LuxuryProductReviewStudio product={product} />
 
       <LuxuryProductSeoSection product={product} />
 
