@@ -24,7 +24,7 @@ export default function ScarcitySimulationBadge({
         <FlaskConical size={16} className="mt-0.5 shrink-0 text-amber-300" aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-black uppercase tracking-[0.13em] text-amber-200">
-            Simulation ·Live Sales
+            Live Sales
           </p>
           <p className="mt-1 text-xs leading-relaxed text-amber-50/90">
             Not live inventory, actual sales, or verified customer activity. Checkout uses actual stock.
