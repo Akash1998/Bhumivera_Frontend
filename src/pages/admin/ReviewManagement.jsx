@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { 
   MessageSquare, Star, CheckCircle, XCircle, AlertTriangle, 
-  Search, Filter, RefreshCw, Trash2, Eye, User, Box, 
+  Search, Filter, RefreshCw, Archive, Eye, User, Box, 
   ShieldAlert, ThumbsUp, BarChart2, Camera, Video, Play, Save, X,
   Calendar, MapPin, Plus, Image as ImageIcon, ChevronLeft, ChevronRight, Edit3, Layers, Truck
 } from 'lucide-react';
@@ -338,19 +338,19 @@ export default function ReviewManagement() {
     }
   };
 
-  const handleDelete = async (reviewId) => {
-    if (!window.confirm('Delete this review from the database?')) return;
+  const handleArchive = async (reviewId) => {
+    if (!window.confirm('Hide this review from customers? It will be retained in the database.')) return;
     try {
       await api.delete(`/reviews/${reviewId}`, { adminAuth: true });
       setReviews(current => current.filter(review => String(review.id) !== String(reviewId)));
-      showToast?.('Review deleted from the database.', 'success');
+      showToast?.('Review hidden and retained in the database.', 'success');
       if (selectedReview && String(selectedReview.id) === String(reviewId)) {
         setSelectedReview(null);
         setReviewDraft(null);
       }
     } catch (error) {
-      console.error('[ADMIN_REVIEW_DELETE]', error);
-      showToast?.(error.response?.data?.message || 'Could not delete the review.', 'error');
+      console.error('[ADMIN_REVIEW_ARCHIVE]', error);
+      showToast?.(error.response?.data?.message || 'Could not hide the review.', 'error');
     }
   };
 
@@ -1006,10 +1006,10 @@ export default function ReviewManagement() {
                   {!isCreatingNew && (
                     <button
                       type="button"
-                      onClick={() => handleDelete(selectedReview.id)}
+                      onClick={() => handleArchive(selectedReview.id)}
                       className="px-4 py-3 bg-rose-950/50 border border-rose-500/30 text-rose-300 font-bold uppercase text-xs rounded-xl hover:bg-rose-600 hover:text-white flex items-center gap-1.5"
                     >
-                      <Trash2 size={14} /> Delete
+                      <Archive size={14} /> Archive
                     </button>
                   )}
                   <button
