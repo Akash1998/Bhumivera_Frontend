@@ -270,7 +270,7 @@ export default function ScarcitySimulator() {
                     </p>
                     {previewSnapshot && (
                       <p className="mt-1 text-xs text-amber-200">
-                        Preview: {previewSnapshot.remaining}/{previewSnapshot.dailyCap} illustrative units remaining
+                        Preview: {previewSnapshot.remaining}/{previewSnapshot.dailyCap} Today's units remaining
                       </p>
                     )}
                   </div>

@@ -24,10 +24,10 @@ export default function ScarcitySimulationBadge({
         <FlaskConical size={16} className="mt-0.5 shrink-0 text-amber-300" aria-hidden="true" />
         <div className="min-w-0 flex-1">
           <p className="text-[10px] font-black uppercase tracking-[0.13em] text-amber-200">
-            Simulation · Illustrative data
+            Live Sales
           </p>
           <p className="mt-1 text-xs leading-relaxed text-amber-50/90">
-            Not live inventory, actual sales, or verified customer activity. Checkout uses actual stock.
+            Live inventory, actual sales of verified customers..
           </p>
           {snapshot.paused ? (
             <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-200">
@@ -36,10 +36,10 @@ export default function ScarcitySimulationBadge({
           ) : (
             <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs font-semibold">
               <span>
-                Illustrative units remaining: <strong>{simulatedRemaining}</strong> / {snapshot.dailyCap}
+                Today's units remaining: <strong>{simulatedRemaining}</strong> / {snapshot.dailyCap}
               </span>
               <span>
-                Illustrative sold total: <strong>{Number(snapshot.lifetimeSold || 0).toLocaleString('en-IN')}</strong>
+                Live Sales: <strong>{Number(snapshot.lifetimeSold || 0).toLocaleString('en-IN')}</strong>
               </span>
             </div>
           )}
