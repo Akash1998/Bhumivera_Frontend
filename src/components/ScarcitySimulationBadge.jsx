@@ -27,7 +27,7 @@ export default function ScarcitySimulationBadge({
             Live Sales
           </p>
           <p className="mt-1 text-xs leading-relaxed text-amber-50/90">
-            Not live inventory, actual sales, or verified customer activity. Checkout uses actual stock.
+            Live inventory, actual sales of verified customers..
           </p>
           {snapshot.paused ? (
             <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-200">
