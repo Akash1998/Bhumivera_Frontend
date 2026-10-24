@@ -16,6 +16,7 @@ const OrderManagement = lazy(() => import('./admin/OrderManagement'));
 const UserManagement = lazy(() => import('./admin/UserManagement'));
 const AnalyticsManagement = lazy(() => import('./admin/AnalyticsManagement'));
 const InventoryManagement = lazy(() => import('./admin/InventoryManagement'));
+const ScarcitySimulator = lazy(() => import('./admin/ScarcitySimulator'));
 const ReviewManagement = lazy(() => import('./admin/ReviewManagement'));
 const ReturnManagement = lazy(() => import('./admin/ReturnManagement'));
 const NotificationManagement = lazy(() => import('./admin/NotificationManagement'));
@@ -85,6 +86,7 @@ const TAB_COMPONENTS = {
   products: ProductManagement,
   categories: CategoryManagement,
   inventory: InventoryManagement,
+  'scarcity-simulator': ScarcitySimulator,
   orders: OrderManagement,
   returns: ReturnManagement,
   users: UserManagement,
@@ -122,6 +124,7 @@ const TAB_ICONS = {
   products: Package,
   categories: Boxes,
   inventory: Tags,
+  'scarcity-simulator': Activity,
   warehouse: Warehouse,
   loyalty: Award,
   affiliate: Users,
@@ -217,6 +220,7 @@ export default function AdminDashboard() {
         { id: 'products', label: 'Products' },
         { id: 'categories', label: 'Categories' },
         { id: 'inventory', label: 'Inventory' },
+        { id: 'scarcity-simulator', label: 'Scarcity Simulator' },
         { id: 'warehouse', label: 'Warehouse' },
         { id: 'shipping', label: 'Shipping' },
         { id: 'tax', label: 'Taxes' },

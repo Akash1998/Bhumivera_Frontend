@@ -4,6 +4,7 @@ import LuxuryProductSeoSection from '../components/LuxuryProductSeoSection';
 import SEO from '../components/SEO';
 import SEOStructuredData from '../components/SEOStructuredData';
 import ProductDeliveryPromise from '../components/ProductDeliveryPromise';
+import ScarcitySimulationBadge from '../components/ScarcitySimulationBadge';
 import React, { useRef, useState, useEffect } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
@@ -21,6 +22,7 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { getProductImageUrl } from '../utils/productImageUrl';
+import useScarcitySimulator from '../hooks/useScarcitySimulator';
 
 const splitUrls = value => {
   if (Array.isArray(value)) return value.filter(item => typeof item === 'string');
@@ -103,6 +105,13 @@ export default function ProductDetail() {
   const [activeVideo, setActiveVideo] = useState(null);
   const [reviewRatingFilter, setReviewRatingFilter] = useState('all');
   const [reviewSort, setReviewSort] = useState('newest');
+  const {
+    products: simulatorProducts,
+    enabled: simulatorEnabled,
+    sampleActivityEnabled,
+    error: simulatorError,
+  } =
+    useScarcitySimulator(product?.id != null ? [product.id] : []);
   const addToBagButtonRef = useRef(null);
   const isAddToBagButtonVisible = useInView(addToBagButtonRef, { amount: 0.01, initial: true });
 
@@ -551,6 +560,21 @@ export default function ProductDetail() {
               </div>
             </div>
 
+            {simulatorEnabled && (
+              <div className="mb-4">
+                <ScarcitySimulationBadge
+                  snapshot={simulatorProducts[String(product.id)]}
+                  productName={product.name}
+                  sampleActivityEnabled={sampleActivityEnabled}
+                />
+              </div>
+            )}
+            {simulatorError && (
+              <p role="status" className="mb-4 rounded-lg border border-amber-300/30 bg-amber-950/30 px-3 py-2 text-xs text-amber-100">
+                {simulatorError} Actual availability is still checked at checkout.
+              </p>
+            )}
+
             <p className="line-clamp-3 text-sm leading-6 text-[#DFD7C4] md:line-clamp-none md:leading-7">
               {product.description}
             </p>
@@ -603,7 +627,7 @@ export default function ProductDetail() {
                   </div>
                   <div>
                     <p className="font-mono text-[9px] font-bold uppercase tracking-widest text-[#D4AF37]">Artisanal Compounding</p>
-                    <p className="font-serif text-sm font-bold text-white">Batch #{product.batchCode || 'BV-CH26-8841'} · 250 Units Run</p>
+                    <p className="font-serif text-sm font-bold text-white">Product information &amp; authenticity</p>
                   </div>
                 </div>
                 <span className="rounded-full bg-[#171813] border border-[#D4AF37]/30 px-2.5 py-1 text-[9px] font-mono font-bold text-[#FCE096]">
@@ -682,15 +706,11 @@ export default function ProductDetail() {
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#d4af37]/30 pb-4 mb-6">
                     <div>
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#070a0e] text-[#fce096] border border-[#d4af37]/40 font-mono text-[9px] font-bold uppercase tracking-widest">
-                        <Sparkles size={12} className="text-[#d4af37]" /> Artisanal Compounding Monograph
+                        <Sparkles size={12} className="text-[#d4af37]" /> Product Formulation Information
                       </span>
                       <h3 className="mt-2 font-serif text-2xl sm:text-3xl text-white">
                         Full Potency Active Disclosure
                       </h3>
-                    </div>
-                    <div className="text-right">
-                      <span className="font-mono text-xs font-bold text-[#fce096]">Batch #{product.batchCode || 'BV-CH26-8841'}</span>
-                      <p className="text-[10px] text-[#94a3b8]">Standard: 250 Units / Run</p>
                     </div>
                   </div>
 

@@ -555,6 +555,14 @@ export const wallet = {
   confirmTopUp: data => api.post('/wallet/top-up/confirm', data, { notify: false }),
 };
 export const settings = { get: () => api.get("/settings"), getGamification: () => api.get("/settings/gamification"), getPublic: () => api.get("/settings/public"), update: d => api.put("/settings", d) };
+export const scarcitySimulator = {
+  getAdmin: () => api.get('/settings/scarcity-simulator'),
+  save: config => api.put('/settings/scarcity-simulator', config),
+  getPublic: productIds => api.get('/settings/scarcity-simulator/public', {
+    params: productIds?.length ? { ids: productIds.join(',') } : {},
+  }),
+  getPopularToday: () => api.get('/settings/scarcity-simulator/popular-today'),
+};
 export const clientErrors = { getAllAdmin: limit => api.get('/logs/client', { params: { limit } }) };
 export const systemAdmin = {
   getHealth: () => api.get('/admin/system/health'),

@@ -19,6 +19,7 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
+import BestSellersToday from '../components/BestSellersToday';
 import { useToast } from '../context/ToastContext';
 import {
   HOME_VISUAL_ASSETS,
@@ -37,14 +38,14 @@ const tiles = [
 const promises = [
   { icon: Leaf, title: 'Sub-28°C Cold-Pressed', text: 'Extracted below 28°C so heat-sensitive Omega-7 and Vitamin C remain intact.' },
   { icon: FlaskConical, title: 'pH 5.0–5.5 Calibrated', text: 'Matched to the skin acid mantle and verified by digital electrode assay.' },
-  { icon: ShieldCheck, title: '250-Bottle Micro-Batches', text: 'Every unit is individually serialized in small runs of 250 bottles.' },
+  { icon: ShieldCheck, title: 'Transparent availability', text: 'A separate, clearly labeled visual simulator never replaces actual checkout stock.' },
   { icon: Sprout, title: '100% Label Disclosure', text: 'Exact percentages (3% Charcoal, 4% Sea Buckthorn, 25mg Reetha) printed openly.' },
   { icon: Lock, title: 'Artisanal Wax-Sealed Custody', text: 'Hand-sealed gold-foil collar & ±0.5g cleanroom gravimetric verification.' },
 ];
 
 const stats = [
   { value: '2016', label: 'Maison Established' },
-  { value: '250', label: 'Bottles per Micro-Batch' },
+  { value: 'Up to 250', label: 'Maximum illustrative cap, not live stock' },
   { value: '<28°C', label: 'Cold-Press Extraction' },
   { value: '100%', label: 'Active % Label Disclosed' },
 ];
@@ -70,7 +71,7 @@ const MARKET_QUADRANT_ROWS = [
   },
   {
     dimension: 'Batch Traceability & Security',
-    bhumivera: '250-Bottle Serialized Micro-Batches + Artisanal Wax-Sealed Tamper Custody',
+    bhumivera: 'Use verified production and batch records; do not infer batch size from the promotional simulator',
     labBrands: '50,000+ unit mass factory runs with generic lot codes',
     opaqueAyurveda: 'Mass contract manufacturing or ₹1,500–₹3,500 boutique markup with zero lab COA',
   },
@@ -125,8 +126,8 @@ const HOME_CONSCIOUS_FAQS = [
     a: 'Breakouts, dullness, and barrier inflammation are driven both externally (urban PM2.5 soot, alkaline cleansers) and internally (cortisol spikes, gut-skin oxidative stress). Pairing our topical pH 5.4 cleansers (3% Activated Charcoal or 4% Himalayan Sea Buckthorn) with 3–4 internal drops of Kalpvriksh Satva Tulsi (9.0 ml Seven-Tulsi phyto-extract per 10 ml rich in Eugenol and Rosmarinic Acid) addresses skin radiance from the inside out.',
   },
   {
-    q: 'How do I verify my bottle serial number from a 250-bottle micro-batch?',
-    a: 'Every Bhumivera bottle is compounded in micro-batches capped at 250 units and sealed with an artisanal wax and gold-foil tamper collar. Enter your bottle serial (e.g., BHMV-2610-SB083) in the Live Batch COA Verifier on this page or on /verify to inspect the exact pH electrode assay, extraction temperature (<28°C), and microbiological purity report.',
+    q: 'How do I verify a bottle serial number?',
+    a: 'Use the product verification portal to check a serial against available records. The certificate fixtures on this homepage are sample data only and do not verify a real bottle or provide a live laboratory report.',
   },
 ];
 
@@ -142,26 +143,11 @@ export default function PremiumHome() {
     if (!code) return;
     if (SAMPLE_BATCH_COAS[code]) {
       setSelectedCoa(SAMPLE_BATCH_COAS[code]);
-      showToast?.(`Verified ${code} against Batch 04/26 Lab Registry`, 'success');
+      showToast?.(`Loaded sample certificate data for ${code}; this is not a live lab verification.`, 'success');
       return;
     }
-    const bottleNum = String((code.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 250) + 1).padStart(3, '0');
-    setSelectedCoa({
-      serial: code,
-      batchCode: 'BATCH-04/26-BV',
-      productName: 'Bhumivera Micro-Batch Botanical Formulation (250-Bottle Run)',
-      bottleSequence: `Bottle #${bottleNum} of 250`,
-      remainingInBatch: 83,
-      pressedDate: 'Oct 18, 2026',
-      extractionTemp: '26.4°C (Sub-28°C Cold-Pressed Verified)',
-      calibratedPh: '5.44 pH (at 25.0°C Digital Electrode)',
-      microbiologicalAssay: 'Total Aerobic Count < 10 CFU/ml · Sterile Cleanroom Fill',
-      heavyMetals: 'Pb <0.05 ppm · As <0.02 ppm · Hg ND (ICP-MS)',
-      disclosedActives: '100% Label-Disclosed Active Percentages Verified on Bottle',
-      tamperCustody: 'Artisanal Wax-Sealed & Gold-Foil Neck Collar Intact',
-      originLot: 'Bhumivera Cleanroom Compounding Registry #BV-2026-Q4',
-    });
-    showToast?.(`Lab COA retrieved for ${code}`, 'success');
+    setSelectedCoa(null);
+    showToast?.(`No sample certificate is available for ${code}.`, 'error');
   };
 
   return (
@@ -174,25 +160,6 @@ export default function PremiumHome() {
         ogImage={HOME_VISUAL_ASSETS.heroPrimary}
         faqs={HOME_CONSCIOUS_FAQS}
       />
-
-      {/* LIVE MICRO-BATCH SCARCITY TICKER (STRATEGIC PLAY 2) */}
-      <div className="border-b border-[#D4AF37]/35 bg-[#0D1C14] px-4 py-2.5 text-center text-[11px] sm:text-xs">
-        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-4 gap-y-1">
-          <span className="inline-flex items-center gap-1.5 font-mono font-bold uppercase tracking-widest text-[#FCE096]">
-            <span className="h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-            Live Micro-Batch Drop 04/26
-          </span>
-          <span className="text-[#DFD7C4]">
-            250 Units Cold-Pressed Oct 18, 2026 at <strong className="text-white">26.4°C</strong> · Calibrated at <strong className="text-white">pH 5.42</strong>
-          </span>
-          <span className="rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/15 px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#FCE096]">
-            83 / 250 Bottles Remaining
-          </span>
-          <a href="#live-batch-coa" className="font-semibold text-[#D4AF37] underline underline-offset-4 hover:text-[#FCE096]">
-            Inspect Lab COA →
-          </a>
-        </div>
-      </div>
 
       {/* HERO SECTION: THE TRANSPARENT MAISON */}
       <section className="premium-home-hero relative isolate min-h-[82svh] overflow-hidden bg-[#14291F]">
@@ -234,6 +201,8 @@ export default function PremiumHome() {
         </div>
       </section>
 
+      <BestSellersToday />
+
       <section className="mx-auto max-w-7xl px-5 py-12 sm:px-10">
         {/* 4 PILLAR TILES */}
         <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
@@ -257,14 +226,14 @@ export default function PremiumHome() {
           <div className="grid gap-8 lg:grid-cols-[1fr_1.15fr] items-start">
             <div>
               <span className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/40 bg-[#14291F] px-3.5 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-[#FCE096]">
-                <QrCode size={13} className="text-[#D4AF37]" /> 250-Bottle Micro-Batch Traceability Moat
+                <QrCode size={13} className="text-[#D4AF37]" /> Sample Certificate Preview
               </span>
               <h2 className="mt-4 font-serif text-2xl font-bold sm:text-4xl">
                 <span className="font-headline-gold">Interactive Bottle Serial</span>{' '}
                 <span className="font-headline-silver">&amp; Lab COA Lookup</span>
               </h2>
               <p className="mt-3 text-xs sm:text-sm leading-relaxed text-[#DFD7C4]">
-                We never mass-produce in 50,000-unit factory vats. Every Bhumivera formulation is compounded in <strong className="text-white">250-bottle micro-batches</strong>. Enter your bottle serial below—or tap a live Batch 04/26 specimen—to inspect its real digital pH electrode reading, sub-28°C cold-press log, and microbiological assay.
+                This section contains sample certificate fixtures for interface preview only. It does not verify a real bottle or retrieve a live laboratory report. Enter one of the listed sample serials to preview the sample fields.
               </p>
 
               <form onSubmit={handleVerifySerial} className="mt-5 flex flex-col sm:flex-row gap-3">
@@ -286,7 +255,7 @@ export default function PremiumHome() {
 
               <div className="mt-4">
                 <p className="text-[11px] font-mono uppercase tracking-wider text-[#9BB0A5] mb-2">
-                  Quick-Inspect Active Batch 04/26 Serials:
+                  Preview Sample Certificate Fixtures:
                 </p>
                 <div className="flex flex-wrap gap-2">
                   {Object.keys(SAMPLE_BATCH_COAS).map((code) => (
@@ -310,13 +279,16 @@ export default function PremiumHome() {
               </div>
             </div>
 
-            {/* LIVE LAB CERTIFICATE OF ANALYSIS (COA) CARD */}
+            {/* Sample certificate fields are illustrative and are not live laboratory records. */}
             {selectedCoa && (
               <div className="rounded-2xl border border-[#D4AF37]/45 bg-[#070a0e] p-5 sm:p-6 shadow-inner">
+                <p className="mb-4 rounded-lg border border-amber-300/40 bg-amber-950/40 px-3 py-2 text-xs font-bold text-amber-100">
+                  SAMPLE DATA ONLY — NOT A VERIFIED LAB CERTIFICATE OR LIVE INVENTORY RECORD
+                </p>
                 <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#244A38] pb-4">
                   <div>
                     <span className="inline-flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-emerald-400">
-                      <CheckCircle2 size={14} /> Authenticated Cleanroom Certificate of Analysis
+                      <CheckCircle2 size={14} /> Sample Certificate Fixture
                     </span>
                     <h3 className="mt-1 font-serif text-lg font-bold text-white">{selectedCoa.productName}</h3>
                   </div>
@@ -348,9 +320,9 @@ export default function PremiumHome() {
                     <strong className="mt-0.5 block text-white">{selectedCoa.heavyMetals}</strong>
                   </div>
                   <div className="rounded-xl border border-[#244A38] bg-[#102219]/70 p-3">
-                    <span className="block font-mono text-[10px] uppercase text-[#9BB0A5]">Batch Scarcity</span>
-                    <strong className="mt-0.5 block text-[#FCE096]">{selectedCoa.remainingInBatch} / 250 Units Left</strong>
-                    <span className="text-[10px] text-[#DFD7C4]">Pressed {selectedCoa.pressedDate}</span>
+                    <span className="block font-mono text-[10px] uppercase text-[#9BB0A5]">Stock status</span>
+                    <strong className="mt-0.5 block text-[#FCE096]">No live stock count</strong>
+                    <span className="text-[10px] text-[#DFD7C4]">This fixture is illustrative only.</span>
                   </div>
                 </div>
 
@@ -377,7 +349,7 @@ export default function PremiumHome() {
               <div className="gold-hairline my-3 w-24" />
             </div>
             <p className="max-w-md text-xs text-[#DFD7C4] leading-relaxed">
-              True skin and scalp transformation requires a cohesive pH-calibrated system rather than isolated single bottles. Save up to ₹845 with our serialized Batch 04/26 Regimen Sets.
+              True skin and scalp transformation requires a cohesive pH-calibrated system rather than isolated single bottles. Save up to ₹845 with our curated Regimen Sets.
             </p>
           </div>
 
@@ -469,7 +441,7 @@ export default function PremiumHome() {
                       className="h-full w-full object-contain transition-transform duration-500 hover:scale-105"
                     />
                     <span className="absolute top-3 left-3 rounded-full border border-[#D4AF37]/40 bg-[#102219]/90 px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-wider text-[#FCE096]">
-                      {prod.id === 6 ? 'Inside-Out Skin & Cortisol Adaptogen' : 'Batch 04/26 · 250-Unit Run'}
+                      {prod.id === 6 ? 'Inside-Out Skin & Cortisol Adaptogen' : 'Botanical formulation'}
                     </span>
                   </Link>
                   <div className="flex items-center justify-between gap-2 text-[10px] font-mono uppercase tracking-wider text-[#FCE096] mb-1.5">

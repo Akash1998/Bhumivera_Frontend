@@ -14,16 +14,19 @@ import {
   CheckCircle2,
 } from 'lucide-react';
 import { products as productsApi } from '../services/api';
+import { scarcitySimulator } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { getProductImageUrl } from '../utils/productImageUrl';
+import useScarcitySimulator from '../hooks/useScarcitySimulator';
+import ScarcitySimulationBadge from '../components/ScarcitySimulationBadge';
 import {
   FALLBACK_CATALOG_PRODUCTS,
   BHUMIVERA_6_PRODUCTS,
   MAISON_REGIMEN_BUNDLES,
 } from '../data/bhumiveraUniqueData';
 
-const ProductCard = ({ product, index }) => {
+const ProductCard = ({ product, index, bestsellerUnits, simulation, sampleActivityEnabled }) => {
   const { addToCart } = useCart() || {};
   const { isWishlisted, toggleWishlist } = useWishlist() || {};
   const prodId = product.id || product._id;
@@ -51,9 +54,11 @@ const ProductCard = ({ product, index }) => {
             event.currentTarget.src = FALLBACK_CATALOG_PRODUCTS[index % FALLBACK_CATALOG_PRODUCTS.length].image_url;
           }}
         />
-        <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-[#070a0e]/85 border border-[#D4AF37]/40 font-mono text-[10px] font-bold uppercase tracking-wider text-[#FCE096]">
-          Batch 04/26 · 250-Unit Run
-        </div>
+        {Number(bestsellerUnits) > 0 && (
+          <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-emerald-950/90 border border-emerald-300/40 font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-100">
+            {bestsellerUnits} ordered today
+          </div>
+        )}
         <div className="absolute top-4 right-4 flex flex-col gap-2">
           <button
             type="button"
@@ -102,6 +107,17 @@ const ProductCard = ({ product, index }) => {
           {product.short_description || product.description}
         </p>
 
+        {simulation?.enabled && (
+          <div className="mb-4">
+            <ScarcitySimulationBadge
+              snapshot={simulation}
+              productName={product.name}
+              sampleActivityEnabled={sampleActivityEnabled}
+              compact
+            />
+          </div>
+        )}
+
         <div className="mt-auto pt-4 border-t border-[#244A38]/60 flex items-center justify-between gap-3">
           <div>
             <span className="text-xl font-serif font-bold text-[#FCE096]">
@@ -133,12 +149,31 @@ export default function Shop() {
   const [products, setProducts] = useState(BHUMIVERA_6_PRODUCTS || []);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState(categorySlug || searchParams.get('category') || 'all');
-  const [sortBy, setSortBy] = useState('featured');
+  const [sortBy, setSortBy] = useState('popular_today');
+  const [popularToday, setPopularToday] = useState([]);
+  const [popularError, setPopularError] = useState('');
+  const { products: simulations, enabled: simulatorEnabled, sampleActivityEnabled, error: simulatorError } =
+    useScarcitySimulator(products.map(product => product.id || product._id));
 
   useEffect(() => {
     const qParam = searchParams.get('q') || searchParams.get('search') || '';
     setSearchTerm(qParam);
   }, [searchParams]);
+
+  useEffect(() => {
+    let active = true;
+    scarcitySimulator.getPopularToday()
+      .then(({ data }) => {
+        if (active) setPopularToday(Array.isArray(data?.products) ? data.products : []);
+      })
+      .catch(error => {
+        console.error('[SHOP_POPULAR_TODAY]', error);
+        if (active) setPopularError('Today’s verified order ranking is temporarily unavailable.');
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -199,7 +234,17 @@ export default function Shop() {
     });
 
     const sorted = [...list];
-    if (sortBy === 'price_asc') {
+    if (sortBy === 'popular_today') {
+      const ranking = new Map(popularToday.map((item, index) => [String(item.id), index]));
+      sorted.sort((a, b) => {
+        const rankA = ranking.get(String(a.id || a._id));
+        const rankB = ranking.get(String(b.id || b._id));
+        if (rankA === undefined && rankB === undefined) return 0;
+        if (rankA === undefined) return 1;
+        if (rankB === undefined) return -1;
+        return rankA - rankB;
+      });
+    } else if (sortBy === 'price_asc') {
       sorted.sort((a, b) => Number(a.discount_price || a.price || 0) - Number(b.discount_price || b.price || 0));
     } else if (sortBy === 'price_desc') {
       sorted.sort((a, b) => Number(b.discount_price || b.price || 0) - Number(a.discount_price || a.price || 0));
@@ -207,7 +252,12 @@ export default function Shop() {
       sorted.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
     }
     return sorted;
-  }, [products, searchTerm, selectedCategory, sortBy]);
+  }, [products, searchTerm, selectedCategory, sortBy, popularToday]);
+
+  const unitsOrderedToday = useMemo(
+    () => new Map(popularToday.map(item => [String(item.id), Number(item.unitsOrdered) || 0])),
+    [popularToday]
+  );
 
   return (
     <div className="min-h-screen bg-[#14291F] text-[#FAF7F2] pt-28 pb-24 font-sans">
@@ -220,7 +270,7 @@ export default function Shop() {
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-8 mb-10">
           <div className="max-w-xl">
             <span className="font-sub-gold uppercase tracking-[0.26em] text-xs font-bold block mb-3">
-              The Transparent Maison · Batch 04/26 (250-Unit Micro-Batches)
+              The Transparent Maison · Explore our botanical collection
             </span>
             <h1 className="text-4xl sm:text-6xl font-serif font-bold leading-none mb-3 text-[#FAF7F2]">
               <span className="font-headline-gold">100% Disclosed</span>{' '}
@@ -230,6 +280,18 @@ export default function Shop() {
             <p className="text-[#DFD7C4] font-light text-sm sm:text-base">
               Showing {filteredProducts.length} cold-pressed (&lt;28°C), pH 5.0–5.5 calibrated formulations and Inside-Out Botanical Rituals.
             </p>
+            <p className="mt-2 text-xs text-[#9BB0A5]">
+              {popularError
+                ? popularError
+                : popularToday.length
+                  ? '“Most ordered today” rankings use eligible real orders. Simulated availability is labeled separately.'
+                  : 'No verified eligible orders have been recorded today yet; products are shown without invented sales claims.'}
+            </p>
+            {simulatorError && (
+              <p role="status" className="mt-2 text-xs text-amber-200">
+                {simulatorError} Actual availability is still checked by the store.
+              </p>
+            )}
           </div>
 
           <div className="flex-1 max-w-xl w-full">
@@ -267,7 +329,7 @@ export default function Shop() {
               </h2>
             </div>
             <Link to="/verify" className="text-xs font-mono uppercase tracking-wider text-[#D4AF37] hover:text-[#FCE096]">
-              All Bottles Serialized in Runs of 250 →
+              Product verification →
             </Link>
           </div>
           <div className="grid gap-5 lg:grid-cols-3">
@@ -333,6 +395,7 @@ export default function Shop() {
               className="rounded-full border border-[#D4AF37]/25 bg-[#102219]/80 backdrop-blur-md text-[#DFD7C4] px-4 py-2.5 text-xs font-semibold uppercase tracking-wider outline-none focus:border-[#D4AF37]"
             >
               <option value="featured" className="bg-[#102219] text-white">Sort: Featured</option>
+              <option value="popular_today" className="bg-[#102219] text-white">Most ordered today</option>
               <option value="price_asc" className="bg-[#102219] text-white">Price: Low to High</option>
               <option value="price_desc" className="bg-[#102219] text-white">Price: High to Low</option>
               <option value="rating" className="bg-[#102219] text-white">Highest Rated</option>
@@ -343,7 +406,14 @@ export default function Shop() {
         {/* Product Grid */}
         <div className="grid gap-7 sm:grid-cols-2 lg:grid-cols-3">
           {filteredProducts.map((product, index) => (
-            <ProductCard key={product.id || product._id || index} product={product} index={index} />
+            <ProductCard
+              key={product.id || product._id || index}
+              product={product}
+              index={index}
+              bestsellerUnits={unitsOrderedToday.get(String(product.id || product._id))}
+              simulation={simulatorEnabled ? simulations[String(product.id || product._id)] : null}
+              sampleActivityEnabled={sampleActivityEnabled}
+            />
           ))}
         </div>
       </div>
