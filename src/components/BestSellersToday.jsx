@@ -68,14 +68,14 @@ export default function BestSellersToday() {
         <div>
           <p className="inline-flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-[#D4AF37]">
             <ShoppingBag size={14} aria-hidden="true" />
-            {rankedProducts.length ? 'Verified orders · Today' : 'Explore the collection'}
+            {rankedProducts.length ? "Today's customer favourites" : 'Explore the collection'}
           </p>
           <h2 id="todays-order-highlights" className="mt-2 font-serif text-3xl font-bold text-[#FAF7F2] sm:text-4xl">
-            {rankedProducts.length ? 'Most ordered today' : 'Find your daily botanical ritual'}
+            {rankedProducts.length ? 'Going fast today' : 'Find your daily botanical ritual'}
           </h2>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-[#DFD7C4]">
             {rankedProducts.length
-              ? 'Ranked from eligible real orders placed today. Simulated counters below are separate illustrative displays.'
+              ? 'Today’s most-ordered favourites. Shop now while your pick is still in stock.'
               : error || (loading
                 ? 'Loading today’s verified order highlights.'
                 : 'No eligible orders have been recorded today yet. Browse the collection without invented popularity claims.')}
@@ -103,6 +103,14 @@ export default function BestSellersToday() {
             const id = product.id || product._id;
             const image = getProductImageUrl(product.image_url || product.images || product.image) ||
               FALLBACK_CATALOG_PRODUCTS[index % FALLBACK_CATALOG_PRODUCTS.length].image_url;
+            const hasKnownStock = product.quantity !== null &&
+              product.quantity !== undefined &&
+              product.quantity !== '';
+            const stockQuantity = Number(product.quantity);
+            const isLowStock = hasKnownStock &&
+              Number.isFinite(stockQuantity) &&
+              stockQuantity > 0 &&
+              stockQuantity <= 5;
             return (
               <article key={id} className="overflow-hidden rounded-2xl border border-[#D4AF37]/20 bg-[#102219]">
                 <Link to={`/product/${product.slug || id}`} className="block">
@@ -114,11 +122,22 @@ export default function BestSellersToday() {
                   />
                 </Link>
                 <div className="space-y-3 p-4">
-                  {Number.isFinite(Number(product.unitsOrdered)) && (
-                    <span className="inline-flex rounded-full border border-emerald-300/30 bg-emerald-950/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-200">
-                      {product.unitsOrdered} {product.unitsOrdered === 1 ? 'unit ordered' : 'units ordered'} today
-                    </span>
-                  )}
+                  <div className="flex flex-wrap items-center gap-2">
+                    {Number.isFinite(Number(product.unitsOrdered)) && (
+                      <span className="inline-flex rounded-full border border-emerald-300/30 bg-emerald-950/30 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-200">
+                        {product.unitsOrdered} {product.unitsOrdered === 1 ? 'unit ordered' : 'units ordered'} today
+                      </span>
+                    )}
+                    {isLowStock && (
+                      <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-400/35 bg-rose-950/35 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-rose-200">
+                        <span className="relative flex h-2 w-2" aria-hidden="true">
+                          <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-300 opacity-60 motion-reduce:animate-none" />
+                          <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-400" />
+                        </span>
+                        Only {stockQuantity} left
+                      </span>
+                    )}
+                  </div>
                   <Link to={`/product/${product.slug || id}`} className="block font-serif text-lg font-bold text-white hover:text-[#FCE096]">
                     {product.name}
                   </Link>
