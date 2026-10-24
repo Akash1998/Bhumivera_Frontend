@@ -100,6 +100,7 @@ const WarehouseManagement = lazyWithRetry(() => import("./pages/admin/WarehouseM
 const WarehouseAdminLogin = lazyWithRetry(() => import("./pages/WarehouseAdminLogin.jsx"));
 const Shop = lazyWithRetry(() => import("./pages/Shop.jsx"));
 const ProductDetail = lazyWithRetry(() => import("./pages/ProductDetail.jsx"));
+const BundleDetail = lazyWithRetry(() => import("./pages/BundleDetail.jsx"));
 const Contact = lazyWithRetry(() => import("./pages/Contact.jsx"));
 const OrderSuccess = lazyWithRetry(() => import("./pages/OrderSuccess.jsx"));
 const Login = lazyWithRetry(() => import("./pages/Login.jsx"));
@@ -392,6 +393,7 @@ function AppContent() {
             <Route path="/category/:slug" element={<Shop />} />
             <Route path="/product/:id" element={<ProductDetail />} />
             <Route path="/products/:id" element={<ProductDetail />} />
+            <Route path="/combo/:slug" element={<BundleDetail />} />
             <Route path="/contact" element={<Contact />} />
             <Route path="/about" element={<About />} />
             <Route path="/impact" element={<Impact />} />

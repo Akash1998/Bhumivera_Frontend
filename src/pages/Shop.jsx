@@ -130,10 +130,7 @@ export default function Shop() {
   const [searchParams] = useSearchParams();
   const { slug: categorySlug } = useParams();
   const location = useLocation();
-  const { addToCart } = useCart() || {};
   const [products, setProducts] = useState(BHUMIVERA_6_PRODUCTS || []);
-  const [catalogStatus, setCatalogStatus] = useState('loaded');
-  const [catalogRetry, setCatalogRetry] = useState(0);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState(categorySlug || searchParams.get('category') || 'all');
   const [sortBy, setSortBy] = useState('featured');
@@ -153,7 +150,9 @@ export default function Shop() {
           return;
         }
         const enriched = rows
-          .filter(p => p && (p.id ?? p._id) != null && (!p.status || String(p.status).toLowerCase() === 'active'))
+          .filter(p => p && (p.id ?? p._id) != null &&
+            (!p.status || String(p.status).toLowerCase() === 'active') &&
+            !String(p.sku || '').startsWith('BV-BND-'))
           .map((p, idx) => ({
             ...FALLBACK_CATALOG_PRODUCTS[idx % FALLBACK_CATALOG_PRODUCTS.length],
             ...p,
@@ -167,19 +166,17 @@ export default function Shop() {
           }));
         if (active && enriched.length > 0) {
           setProducts(enriched);
-          setCatalogStatus('loaded');
         }
       })
       .catch(() => {
         if (active) {
           setProducts(BHUMIVERA_6_PRODUCTS || []);
-          setCatalogStatus('loaded');
         }
       });
     return () => {
       active = false;
     };
-  }, [catalogRetry]);
+  }, []);
 
   const filteredProducts = useMemo(() => {
     const list = products.filter((p) => {
@@ -280,7 +277,7 @@ export default function Shop() {
                   <span className="inline-block rounded-full border border-[#D4AF37]/40 bg-[#102219] px-2.5 py-0.5 font-mono text-[10px] font-bold text-[#FCE096]">
                     {bundle.badge}
                   </span>
-                  <h3 className="mt-3 font-serif text-lg font-bold text-white">{bundle.name}</h3>
+                  <Link to={`/combo/${bundle.id}`} className="mt-3 block font-serif text-lg font-bold text-white hover:text-[#FCE096]">{bundle.name}</Link>
                   <p className="mt-1 text-xs text-[#9BB0A5]">{bundle.tagline}</p>
                   <ul className="mt-3 space-y-1.5 text-xs text-[#DFD7C4]">
                     {bundle.items.map((it) => (
@@ -296,24 +293,9 @@ export default function Shop() {
                     <span className="font-serif text-xl font-bold text-[#FCE096]">₹{bundle.bundlePrice}</span>
                     <span className="ml-2 text-xs text-[#9BB0A5] line-through">₹{bundle.mrpTotal}</span>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      addToCart?.(
-                        {
-                          id: bundle.id,
-                          name: bundle.name,
-                          price: bundle.mrpTotal,
-                          discount_price: bundle.bundlePrice,
-                          image_url: bundle.image_url,
-                        },
-                        1
-                      )
-                    }
-                    className="btn-gold-luxury rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider"
-                  >
-                    Add Regimen
-                  </button>
+                  <Link to={`/combo/${bundle.id}`} className="btn-gold-luxury rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider">
+                    View details
+                  </Link>
                 </div>
               </div>
             ))}

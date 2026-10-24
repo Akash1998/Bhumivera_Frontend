@@ -19,7 +19,6 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
-import { useCart } from '../context/CartContext';
 import { useToast } from '../context/ToastContext';
 import {
   HOME_VISUAL_ASSETS,
@@ -132,7 +131,6 @@ const HOME_CONSCIOUS_FAQS = [
 ];
 
 export default function PremiumHome() {
-  const { addToCart } = useCart() || {};
   const { showToast } = useToast() || {};
   const [serialInput, setSerialInput] = useState('BHMV-2610-SB083');
   const [selectedCoa, setSelectedCoa] = useState(SAMPLE_BATCH_COAS['BHMV-2610-SB083']);
@@ -164,23 +162,6 @@ export default function PremiumHome() {
       originLot: 'Bhumivera Cleanroom Compounding Registry #BV-2026-Q4',
     });
     showToast?.(`Lab COA retrieved for ${code}`, 'success');
-  };
-
-  const handleAddBundleToCart = (bundle) => {
-    if (typeof addToCart === 'function') {
-      addToCart(
-        {
-          id: bundle.id,
-          name: bundle.name,
-          price: bundle.mrpTotal,
-          discount_price: bundle.bundlePrice,
-          image_url: bundle.image_url,
-          category_name: 'Curated Maison Regimen Bundle',
-        },
-        1
-      );
-      showToast?.(`Added ${bundle.name} (₹${bundle.bundlePrice}) to your bag`, 'success');
-    }
   };
 
   return (
@@ -413,7 +394,7 @@ export default function PremiumHome() {
                     </span>
                     <span className="font-mono text-[10px] text-emerald-400">{bundle.batchAllocation}</span>
                   </div>
-                  <div className="mt-4 flex items-center justify-between gap-2"><h3 className="font-serif text-xl font-bold text-white">{bundle.name}</h3><span className="shrink-0 rounded-full border border-[#D4AF37]/50 bg-[#070a0e] px-2.5 py-1 font-mono text-xs font-bold text-[#FCE096]">★ {bundle.rating || 4.92} ({bundle.reviews || 378})</span></div>
+                  <div className="mt-4 flex items-center justify-between gap-2"><Link to={`/combo/${bundle.id}`} className="font-serif text-xl font-bold text-white hover:text-[#FCE096]">{bundle.name}</Link><span className="shrink-0 rounded-full border border-[#D4AF37]/50 bg-[#070a0e] px-2.5 py-1 font-mono text-xs font-bold text-[#FCE096]">★ {bundle.rating || 4.92} ({bundle.reviews || 378})</span></div>
                   <p className="mt-1 text-xs text-[#DFD7C4] leading-relaxed">{bundle.tagline}</p>
 
                   <ul className="mt-4 space-y-2.5 border-t border-[#244A38] pt-4 text-xs">
@@ -431,6 +412,9 @@ export default function PremiumHome() {
                 </div>
 
                 <div className="mt-6 border-t border-[#244A38] pt-4">
+                  <Link to={`/combo/${bundle.id}`} className="inline-flex text-xs font-bold uppercase tracking-wider text-[#FCE096] hover:text-white">
+                    View regimen details <ArrowRight size={14} className="ml-1" />
+                  </Link>
                   <div className="flex items-baseline justify-between">
                     <div>
                       <span className="font-serif text-2xl font-bold text-[#FCE096]">₹{bundle.bundlePrice}</span>
@@ -440,13 +424,12 @@ export default function PremiumHome() {
                       </span>
                     </div>
                   </div>
-                  <button
-                    type="button"
-                    onClick={() => handleAddBundleToCart(bundle)}
+                  <Link
+                    to={`/combo/${bundle.id}`}
                     className="btn-gold-luxury mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-xs font-bold uppercase tracking-widest"
                   >
-                    <ShoppingBag size={15} /> Add Complete Regimen to Bag
-                  </button>
+                    <ShoppingBag size={15} /> View regimen &amp; add to bag
+                  </Link>
                 </div>
               </article>
             ))}
