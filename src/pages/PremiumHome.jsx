@@ -19,6 +19,7 @@ import {
   Microscope,
   ExternalLink,
   RefreshCw,
+  Star,
   Zap,
 } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
