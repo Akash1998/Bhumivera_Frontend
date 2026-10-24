@@ -1,6 +1,7 @@
 import { FALLBACK_CATALOG_PRODUCTS, CHARCOAL_FACE_WASH_EXACT, SHAMPOO_2IN1_EXACT, BHUMIVERA_6_PRODUCTS } from '../data/bhumiveraUniqueData';
-import { getReviewsForProduct } from '../data/bhumiveraReviewsData';
 import LuxuryProductSeoSection from '../components/LuxuryProductSeoSection';
+import LuxuryProductReviewStudio from '../components/LuxuryProductReviewStudio';
+import { getReviewsForProduct } from '../data/bhumiveraReviewsData';
 import SEO from '../components/SEO';
 import SEOStructuredData from '../components/SEOStructuredData';
 import ProductDeliveryPromise from '../components/ProductDeliveryPromise';
@@ -194,7 +195,7 @@ export default function ProductDetail() {
                directAnswerFaqs: sixMatch.faqs,
              };
            }
-           if (false) {
+           if (lowerIdOrName.includes('charcoal')) {
              fetchedProduct = {
                ...fetchedProduct,
                luxuryName: CHARCOAL_FACE_WASH_EXACT.name,
@@ -213,7 +214,7 @@ export default function ProductDetail() {
                editorialHeading: CHARCOAL_FACE_WASH_EXACT.editorial_heading,
                editorialParagraphs: CHARCOAL_FACE_WASH_EXACT.editorial_paragraphs,
              };
-           } else if (false) {
+           } else if (lowerIdOrName.includes('shampoo') || lowerIdOrName.includes('2-in-1') || lowerIdOrName.includes('hair')) {
              fetchedProduct = {
                ...fetchedProduct,
                luxuryName: SHAMPOO_2IN1_EXACT.name,
@@ -252,21 +253,17 @@ export default function ProductDetail() {
 
         if (fetchedProduct) {
           const localBundle = getReviewsForProduct(fetchedProduct.id || fetchedProduct.slug || id);
+          setReviewsData(localBundle.reviews);
+          setReviewSummary(localBundle.summary);
           try {
-            const revRes = await reviewsApi.getByProduct(fetchedProduct.id || 3);
+            const revRes = await reviewsApi.getByProduct(fetchedProduct.id || 2);
             const reviewPayload = revRes.data?.data || revRes.data || {};
             const reviewRows = Array.isArray(reviewPayload) ? reviewPayload : reviewPayload.reviews || [];
-            if (Array.isArray(reviewRows)) {
+            if (Array.isArray(reviewRows) && reviewRows.length >= localBundle.reviews.length) {
               setReviewsData(reviewRows.map(review => ({ ...review, comment: review.body || review.comment || '' })));
               setReviewSummary(reviewPayload.summary || revRes.data?.summary || localBundle.summary);
-            } else {
-              setReviewsData(localBundle.reviews.map(review => ({ ...review, comment: review.body || review.comment || '' })));
-              setReviewSummary(localBundle.summary);
             }
-          } catch (revErr) {
-            setReviewsData(localBundle.reviews.map(review => ({ ...review, comment: review.body || review.comment || '' })));
-            setReviewSummary(localBundle.summary);
-          }
+          } catch (_) {}
         }
       } catch (err) {
         console.error("Failed to load product ecosystem:", err);
@@ -854,7 +851,7 @@ export default function ProductDetail() {
                         </a>)}
                       </div>}
                       <div className="mt-5 flex items-center justify-between gap-3 border-t border-[#d4af37]/15 pt-4 text-[10px] font-bold uppercase tracking-widest text-[#94a3b8]">
-                        <span>{review.user_name || 'Customer'}{review.reviewer_location ? ` · ${review.reviewer_location}` : ''}</span>
+                        <span>{review.user_name || 'Customer'}</span>
                         {review.created_at && <time dateTime={review.created_at}>{new Date(review.created_at).toLocaleDateString()}</time>}
                       </div>
                     </article>
@@ -872,6 +869,8 @@ export default function ProductDetail() {
       </div>
 
       
+      <LuxuryProductReviewStudio product={product} />
+
       <LuxuryProductSeoSection product={product} />
 
       {/* PHASE 3 & 5: RAG CITATION ARCHITECTURE — EXACT LABEL COMPOSITION TABLE, COMPARISON MATRIX, DIRECT-ANSWER FAQ BLOCK & PILLAR LINK SILOS */}

@@ -154,7 +154,7 @@ export const COMPLETE_SITE_NAVIGATION_DIRECTORY = [
     category: 'Support & Policies',
     title: 'Customer Help & Ticket Center (/support-center)',
     path: '/support-center',
-    description: 'FAQs, support tickets, and live chat.',
+    description: 'FAQs, support tickets, live chat, and @BhumiveraBot Telegram handoff.',
     badge: '24/7 Support',
   },
   {

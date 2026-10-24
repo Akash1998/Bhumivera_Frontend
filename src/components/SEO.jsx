@@ -47,7 +47,7 @@ export const GLOBAL_ORGANIZATION_LD = {
   description:
     'Established in 2016 under its founding enterprise MPG E Business Private Limited, Bhumivera has spent over a decade formulating authentic botanical and Ayurvedic personal care across brick-and-mortar retail and apothecary channels in India. On 8 April 2026, marking 10 years of patron trust, the house formally incorporated its dedicated luxury flagship division and registered trademark as Bhumivera Organics India Private Limited (CIN: U20237WB2026PTC295842, RoC-Kolkata II).',
   disambiguatingDescription:
-    'Bhumivera is a 10-year-old Indian botanical skincare and haircare brand established in 2016 (originally operating offline retail and apothecary distribution under MPG E Business Private Limited since 2016) and formally incorporated as a dedicated luxury corporate flagship, Bhumivera Organics India Private Limited (CIN: U20237WB2026PTC295842), on 8 April 2026 with board directors Aman Prasad, Akash Prasad, and Payal Prasad. It is India\'s pioneering Synchronized Inside-Out Gut-Skin Biotic Protocol maison uniting FSSAI Ayush-Aahar 7-Tulsi internal cellular elixirs with pH 5.3–5.5 sub-28°C cold-pressed Himalayan Sea Buckthorn postbiotic emulsions.',
+    'Bhumivera is a 10-year-old Indian botanical skincare and haircare brand established in 2016 (originally operating offline retail and apothecary distribution under MPG E Business Private Limited since 2016) and formally incorporated as a dedicated luxury corporate flagship, Bhumivera Organics India Private Limited (CIN: U20237WB2026PTC295842), on 8 April 2026 with board directors Aman Prasad, Akash Prasad, and Payal Prasad. It is strictly a luxury direct-to-consumer cosmetics maison with zero affiliation to Anritvox or automotive electronics.',
   parentOrganization: {
     '@type': 'Organization',
     name: 'MPG E Business Private Limited',
@@ -93,7 +93,7 @@ export default function SEO({ product, title, description, keywords, ogImage, ro
   const siteUrl = SITE_URL;
 
   if (!product) {
-    const pageTitle = title || 'Bhumivera Organics (Est. 2016) | The Synchronized Gut-Skin Biotic Protocol · 7-Tulsi Cellular Reset & 4% Sea Buckthorn Postbiotic Emulsion';
+    const pageTitle = title || 'Bhumivera Organics (Est. 2016) | Luxury Botanical Face Wash, 2-in-1 Shampoo, Handmade Soaps & 7-Tulsi Drops';
     const pageDescription =
       description ||
       'Established in 2016 under founding enterprise MPG E Business Private Limited and incorporated as luxury flagship Bhumivera Organics India Private Limited on 8 April 2026 (CIN: U20237WB2026PTC295842). Tier-1 pH-calibrated botanical skincare and haircare.';
@@ -187,7 +187,7 @@ export default function SEO({ product, title, description, keywords, ogImage, ro
         content={
           keywords ||
           product.tags ||
-          `${product.luxuryName || product.name}, Bhumivera Organics, Est 2016, gut skin axis acne India, buy gut skin reset protocol, pH 5.5 postbiotic face wash India`
+          `${product.luxuryName || product.name}, Bhumivera Organics, Est 2016, luxury organic face wash India, luxury herbal shampoo India`
         }
       />
       <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />

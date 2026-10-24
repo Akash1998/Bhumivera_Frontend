@@ -8,9 +8,9 @@ import {
   savePublicCatalogResponse,
 } from "../utils/offlineCatalogCache";
 
-let b = import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL || "https://service.bhumivera.com";
-if (/^https?:\/\/bhumivera-backend-theta\.vercel\.app(?:\/|$)/i.test(b)) {
-  b = b.replace(/^https?:\/\/bhumivera-backend-theta\.vercel\.app/i, "https://service.bhumivera.com");
+let b = import.meta.env.VITE_BASE_URL || import.meta.env.VITE_API_URL || "https://bhumivera-backend-theta.vercel.app";
+if (/^https?:\/\/service\.bhumivera\.com(?:\/|$)/i.test(b)) {
+  b = "https://bhumivera-backend-theta.vercel.app";
 }
 if (b.startsWith("http://") && !b.includes("localhost")) b = b.replace("http://", "https://");
 export const BASE_URL = b;
@@ -658,6 +658,7 @@ export const supportPortal = {
   escalations: (params = {}) => supportRequest('get', `/ai-escalations${params?.status ? `?status=${encodeURIComponent(params.status)}` : ''}`),
   universalSearch: query => supportRequest('get', `/universal-search?q=${encodeURIComponent(query)}`),
   deleteSession: sessionToken => supportRequest('delete', `/sessions/${encodeURIComponent(sessionToken)}`),
+  syncTelegram: () => supportRequest('post', '/telegram/sync', {}),
 };
 export const supportAgents = {
   list: () => api.get('/support/agents', { adminAuth: true }),

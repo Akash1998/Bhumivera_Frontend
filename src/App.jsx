@@ -141,7 +141,7 @@ const PageLoader = () => (
       <span className="premium-loader-core">B</span>
     </div>
     <span className="premium-loader-wordmark">BHUMIVERA</span>
-    <span className="premium-loader-caption">Calibrating pH 5.42 Gut-Skin Biotic Protocol</span>
+    <span className="premium-loader-caption">Preparing your experience</span>
   </div>
 );
 

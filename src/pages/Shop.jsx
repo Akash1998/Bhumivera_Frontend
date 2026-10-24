@@ -81,7 +81,7 @@ const ProductCard = ({ product, index }) => {
           <span>{product.category || product.category_name || 'Botanical Care'}</span>
           <span className="flex items-center gap-1">
             <Star size={12} className="fill-current text-[#D4AF37]" />
-            {(() => { const s = getReviewsForProduct(product.id || product.slug).summary; return `${s.average || product.rating || 4.7} (${s.total || product.reviews || 65})`; })()}
+            {(() => { const s = getReviewsForProduct(product.id || product.slug).summary; return `${Number(s.average || product.rating || 4.6).toFixed(2)} (${s.total || product.reviews || 160})`; })()}
           </span>
         </div>
 
