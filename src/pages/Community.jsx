@@ -318,7 +318,7 @@ export default function Community() {
                 </div>
                 <ul className="space-y-1 text-[11px] text-[#cbd5e1] pl-6 list-disc">
                   <li>Official Digital Volunteer Pass &amp; ID number</li>
-                  <li>Direct coordination in local WhatsApp/Telegram groups</li>
+                  <li>Direct coordination in local WhatsApp groups</li>
                   <li>Verified Ground Steward Certificate after your first drive</li>
                 </ul>
               </div>

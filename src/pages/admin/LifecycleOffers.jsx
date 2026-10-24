@@ -45,7 +45,7 @@ const LIFECYCLE_JOURNEY_BLUEPRINTS = [
     stageName: 'Second-Order Replenishment Nudge',
     triggerEvent: 'First Order Delivered + 21 Days',
     delayWindow: '21 Days Post-Delivery',
-    channelMix: 'Email + WhatsApp/Telegram Bot',
+    channelMix: 'Email + WhatsApp',
     defaultIncentive: '5% Loyalty Multiplier Boost',
     targetCohort: '1-Time Buyers',
     guardrail: 'Suppressed if 2nd order placed',

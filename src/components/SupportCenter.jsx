@@ -1,6 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { aiSupport, contact as contactApi } from '../services/api';
-import { normalizeTelegramBotUrl } from '../utils/telegramUrl';
 import { useToast } from '../context/ToastContext';
 import {
   LifeBuoy,
@@ -11,7 +10,6 @@ import {
   Send,
   Star,
   CheckCircle2,
-  ExternalLink,
   ShieldCheck,
   Sparkles,
 } from 'lucide-react';
@@ -39,7 +37,6 @@ export default function SupportCenter({
   const [sessionData, setSessionData] = useState(null);
   const [chatMessages, setChatMessages] = useState([]);
   const [hasPlacedOrder, setHasPlacedOrder] = useState(orders.length > 0);
-  const [telegramUrl, setTelegramUrl] = useState('https://web.telegram.org/k/#@BhumiveraBot');
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
@@ -73,7 +70,6 @@ export default function SupportCenter({
       setSessionData(data.session || null);
       setChatMessages(data.messages || []);
       setHasPlacedOrder(Boolean(data.hasPlacedOrder || orders.length > 0));
-      if (data.telegramBotUrl) setTelegramUrl(normalizeTelegramBotUrl(data.telegramBotUrl));
       setTickets(Array.isArray(ticketRes.data?.data) ? ticketRes.data.data : []);
     } catch {
       // Fallback silently
@@ -138,7 +134,7 @@ export default function SupportCenter({
 
       if (showToast) {
         showToast(
-          'Message dispatched to Concierge, Telegram, and Email support!',
+          'Message sent to the Concierge support team!',
           'success'
         );
       }
@@ -208,7 +204,7 @@ export default function SupportCenter({
             </h2>
             <div className="gold-hairline w-24 my-3" />
             <p className="mt-2 text-xs text-[#cbd5e1] leading-relaxed font-light">
-              Direct line to our compounding apothecaries and logistics leads. Messages synchronize across our real-time Web Desk, Email, and Official Telegram Bot.
+              Direct line to our compounding apothecaries and logistics leads. Messages synchronize across our real-time Web Desk and customer support team.
             </p>
 
             <div className="mt-6 space-y-2.5">
@@ -223,19 +219,6 @@ export default function SupportCenter({
                 </span>
                 <span>Launch &rarr;</span>
               </button>
-
-              <a
-                href={telegramUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-silver-luxury w-full flex items-center justify-between p-3.5 rounded-2xl text-xs font-semibold"
-              >
-                <span className="flex items-center gap-2">
-                  <Send className="w-4 h-4 text-[#d4af37]" />
-                  Chat on Telegram (@BhumiveraBot)
-                </span>
-                <ExternalLink className="w-3.5 h-3.5 opacity-80" />
-              </a>
 
               <a
                 href="mailto:support@bhumivera.com"
@@ -269,7 +252,7 @@ export default function SupportCenter({
                   <span className="font-headline-silver">Bhumivera Support</span>
                 </h3>
                 <p className="text-[11px] text-[#94a3b8]">
-                  Synced directly with Live Chat, Email ({email || 'account'}), and Telegram.
+                  Synced directly with Live Chat and Email ({email || 'account'}).
                 </p>
               </div>
             </div>
@@ -386,7 +369,7 @@ export default function SupportCenter({
               Live Support Conversation &amp; Replies
             </h3>
             <p className="text-xs text-[#94a3b8]">
-              All messages exchanged via Web Chat, Mobile App, Email, and Telegram (@BhumiveraBot) appear here.
+              All messages exchanged via Web Chat, Mobile App, and Email appear here.
             </p>
           </div>
           {sessionData?.status && (

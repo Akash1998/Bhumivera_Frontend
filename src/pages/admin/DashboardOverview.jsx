@@ -72,7 +72,7 @@ const modules = [
   },
   {
     title: 'SuperAdmin Support & Ticket Delete',
-    description: 'Full ticket deletion (single & bulk), AI Co-Pilot & Telegram sync',
+    description: 'Full ticket deletion (single & bulk) and AI Co-Pilot',
     icon: Headphones,
     href: '/superadminsupport',
     color: 'text-purple-200 bg-purple-400/15',
