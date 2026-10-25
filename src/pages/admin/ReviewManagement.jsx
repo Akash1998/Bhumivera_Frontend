@@ -3,7 +3,7 @@ import {
   MessageSquare, Star, CheckCircle, XCircle, AlertTriangle, 
   Search, Filter, RefreshCw, Archive, Eye, User, Box, 
   ShieldAlert, ThumbsUp, BarChart2, Camera, Video, Play, Save, X,
-  Calendar, MapPin, Plus, Image as ImageIcon, ChevronLeft, ChevronRight, Edit3, Layers, Truck
+  Calendar, MapPin, Plus, Image as ImageIcon, ChevronLeft, ChevronRight, Edit3, Layers, Truck, Trash2
 } from 'lucide-react';
 import axios from 'axios';
 import api from '../../services/api';
@@ -20,14 +20,16 @@ const STATUS_MAP = {
   'rejected': { label: 'Filtered (Hidden)', color: 'rose', icon: XCircle }
 };
 
-const PRODUCT_OPTIONS = [
-  { id: 2, name: 'Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash (₹799)', shortName: 'Sea Buckthorn Face Wash', slug: 'himalayan-seabuckthorn-luxury-face-wash', price: 799 },
-  { id: 1, name: 'Bhumivera Activated Charcoal Purifying Luxury Face Wash (₹699)', shortName: 'Activated Charcoal Face Wash', slug: 'activated-charcoal-luxury-face-wash', price: 699 },
-  { id: 6, name: 'Bhumivera Kalpvriksh Satva Tulsi — 7-Tulsi Liquid Extract (₹499)', shortName: 'Kalpvriksh 7-Tulsi Drops', slug: 'kalpvriksh-satva-tulsi-7-tulsi-extract', price: 499 },
-  { id: 3, name: 'Bhumivera Royal Botanical 2-in-1 Luxury Shampoo with Conditioner (₹899)', shortName: 'Royal 2-in-1 Shampoo', slug: 'luxury-2-in-1-botanical-shampoo-conditioner', price: 899 },
-  { id: 4, name: 'Bhumivera Charcoal Deep Cleansing Bar — Handmade Ayurvedic Soap (₹399)', shortName: 'Charcoal Cleansing Bar', slug: 'artisanal-charcoal-handmade-soap', price: 399 },
-  { id: 5, name: 'Bhumivera Soothing Bar — Aloe Vera, Neem & Tulsi Soap (₹349)', shortName: 'Aloe Neem Tulsi Bar', slug: 'artisanal-aloe-vera-handmade-soap', price: 349 },
+const DEFAULT_PRODUCT_OPTIONS = [
+  { id: 11, legacyId: 2, skuNumber: 2, name: 'Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash (₹799)', shortName: 'Sea Buckthorn Face Wash', slug: 'himalayan-seabuckthorn-luxury-face-wash', price: 799 },
+  { id: 10, legacyId: 1, skuNumber: 1, name: 'Bhumivera Activated Charcoal Purifying Luxury Face Wash (₹699)', shortName: 'Activated Charcoal Face Wash', slug: 'activated-charcoal-luxury-face-wash', price: 699 },
+  { id: 15, legacyId: 6, skuNumber: 6, name: 'Bhumivera Kalpvriksh Satva Tulsi — 7-Tulsi Liquid Extract (₹499)', shortName: 'Kalpvriksh 7-Tulsi Drops', slug: 'kalpvriksh-satva-tulsi-7-tulsi-extract', price: 499 },
+  { id: 12, legacyId: 3, skuNumber: 3, name: 'Bhumivera Royal Botanical 2-in-1 Luxury Shampoo with Conditioner (₹899)', shortName: 'Royal 2-in-1 Shampoo', slug: 'luxury-2-in-1-botanical-shampoo-conditioner', price: 899 },
+  { id: 13, legacyId: 4, skuNumber: 4, name: 'Bhumivera Charcoal Deep Cleansing Bar — Handmade Ayurvedic Soap (₹399)', shortName: 'Charcoal Cleansing Bar', slug: 'artisanal-charcoal-handmade-soap', price: 399 },
+  { id: 14, legacyId: 5, skuNumber: 5, name: 'Bhumivera Soothing Bar — Aloe Vera, Neem & Tulsi Soap (₹349)', shortName: 'Aloe Neem Tulsi Bar', slug: 'artisanal-aloe-vera-handmade-soap', price: 349 },
 ];
+
+const PRODUCT_OPTIONS = DEFAULT_PRODUCT_OPTIONS;
 
 const CATEGORY_OPTIONS = [
   'Quick & Everyday Impressions',
@@ -91,22 +93,30 @@ export default function ReviewManagement() {
 
   const { showToast } = useToast() || {};
 
-  const normalizeReviewRecord = useCallback(r => ({
-    ...r,
-    id: r.id || r._id,
-    product_id: Number(r.product_id) || 2,
-    user_name: r.user_name || r.reviewer_name || r.user?.name || 'Verified Patron',
-    reviewer_name: r.reviewer_name || r.user_name || r.user?.name || 'Verified Patron',
-    reviewer_location: r.reviewer_location || 'India',
-    category_tag: r.category_tag || 'Quick & Everyday Impressions',
-    is_combo_review: Boolean(r.is_combo_review || r.category_tag === 'Combo Pack Ritual'),
-    status: Number(r.is_approved ?? 1) === 1 ? 'approved' : 'pending',
-    is_approved: Number(r.is_approved ?? 1) === 1 ? 1 : 0,
-    body: r.body || r.comment || '',
-    comment: r.comment || r.body || '',
-    images: Array.isArray(r.images) ? r.images : [],
-    videos: Array.isArray(r.videos) ? r.videos : [],
-  }), []);
+  const normalizeReviewRecord = useCallback(r => {
+    const slug = r.product_slug ||
+      PRODUCT_OPTIONS.find(p => Number(p.id) === Number(r.product_id) || Number(p.legacyId) === Number(r.product_id))?.slug ||
+      '';
+    const prod = PRODUCT_OPTIONS.find(p => p.slug === slug || Number(p.id) === Number(r.product_id) || Number(p.legacyId) === Number(r.product_id));
+    return {
+      ...r,
+      id: r.id || r._id,
+      product_id: prod?.id || Number(r.product_id) || 10,
+      product_slug: slug || prod?.slug || '',
+      product_name: r.product_name || prod?.name || 'Bhumivera Product',
+      user_name: r.user_name || r.reviewer_name || r.user?.name || 'Verified Patron',
+      reviewer_name: r.reviewer_name || r.user_name || r.user?.name || 'Verified Patron',
+      reviewer_location: r.reviewer_location || 'India',
+      category_tag: r.category_tag || 'Quick & Everyday Impressions',
+      is_combo_review: Boolean(r.is_combo_review || r.category_tag === 'Combo Pack Ritual'),
+      status: Number(r.is_approved ?? 1) === 1 ? 'approved' : 'pending',
+      is_approved: Number(r.is_approved ?? 1) === 1 ? 1 : 0,
+      body: r.body || r.comment || '',
+      comment: r.comment || r.body || '',
+      images: Array.isArray(r.images) ? r.images : [],
+      videos: Array.isArray(r.videos) ? r.videos : [],
+    };
+  }, []);
 
   const fetchReviews = useCallback(async () => {
     setLoading(true);
@@ -137,8 +147,11 @@ export default function ReviewManagement() {
     setSelectedReview(review);
     setCustomImageUrl('');
     setCustomVideoUrl('');
+    const prod = PRODUCT_OPTIONS.find(p => p.slug === review.product_slug || Number(p.id) === Number(review.product_id) || Number(p.legacyId) === Number(review.product_id)) || PRODUCT_OPTIONS[0];
     setReviewDraft({
-      product_id: PRODUCT_OPTIONS.find(product => product.slug === review.product_slug)?.id || Number(review.product_id) || 2,
+      product_id: prod.id,
+      product_slug: prod.slug,
+      product_name: prod.name,
       user_name: review.user_name || review.reviewer_name || 'Verified Patron',
       reviewer_location: review.reviewer_location || 'India',
       rating: Number(review.rating) || 5,
@@ -285,7 +298,7 @@ export default function ReviewManagement() {
     }
     setIsUpdating(true);
     try {
-      const prodObj = PRODUCT_OPTIONS.find(p => Number(p.id) === Number(reviewDraft.product_id)) || PRODUCT_OPTIONS[0];
+      const prodObj = PRODUCT_OPTIONS.find(p => Number(p.id) === Number(reviewDraft.product_id) || p.slug === reviewDraft.product_slug || Number(p.legacyId) === Number(reviewDraft.product_id)) || PRODUCT_OPTIONS[0];
       const isoCreatedAt = reviewDraft.created_date
         ? new Date(`${reviewDraft.created_date}T12:00:00Z`).toISOString()
         : new Date().toISOString();
@@ -338,27 +351,34 @@ export default function ReviewManagement() {
     }
   };
 
-  const handleArchive = async (reviewId) => {
-    if (!window.confirm('Hide this review from customers? It will be retained in the database.')) return;
+  const handleDeleteReview = async (reviewId, isPermanent = true) => {
+    const actionText = isPermanent ? 'permanently delete' : 'hide/archive';
+    if (!window.confirm(`Are you sure you want to ${actionText} review #${reviewId}?`)) return;
     try {
-      await api.delete(`/reviews/${reviewId}`, { adminAuth: true });
+      await api.delete(`/reviews/admin/${reviewId}?permanent=${isPermanent}`, { adminAuth: true });
       setReviews(current => current.filter(review => String(review.id) !== String(reviewId)));
-      showToast?.('Review hidden and retained in the database.', 'success');
+      showToast?.(`Review #${reviewId} deleted successfully.`, 'success');
       if (selectedReview && String(selectedReview.id) === String(reviewId)) {
         setSelectedReview(null);
         setReviewDraft(null);
       }
     } catch (error) {
-      console.error('[ADMIN_REVIEW_ARCHIVE]', error);
-      showToast?.(error.response?.data?.message || 'Could not hide the review.', 'error');
+      console.error('[ADMIN_REVIEW_DELETE]', error);
+      showToast?.(error.response?.data?.message || 'Could not delete the review.', 'error');
     }
+  };
+
+  const handleArchive = async (reviewId) => {
+    return handleDeleteReview(reviewId, false);
   };
 
   // --- ANALYTICS & PRODUCT BREAKDOWN ---
   const productBreakdown = useMemo(() => {
     return PRODUCT_OPTIONS.map(prod => {
       const pRevs = reviews.filter(r =>
-        (r.product_slug === prod.slug || (!r.product_slug && Number(r.product_id) === Number(prod.id))) &&
+        (r.product_slug === prod.slug ||
+         Number(r.product_id) === Number(prod.id) ||
+         Number(r.product_id) === Number(prod.legacyId)) &&
         r.status === 'approved'
       );
       const count = pRevs.length;
@@ -373,7 +393,11 @@ export default function ReviewManagement() {
     return reviews.filter(r => {
       const searchStr = `${r.title || ''} ${r.body || r.comment || ''} ${r.user_name || ''} ${r.reviewer_location || ''} ${r.product_name || ''} ${r.category_tag || ''} ${r.order_number || ''}`.toLowerCase();
       if (searchTerm.trim() && !searchStr.includes(searchTerm.toLowerCase())) return false;
-      if (productFilter !== 'all' && r.product_slug !== productFilter) return false;
+      if (productFilter !== 'all') {
+        const matchesSlug = r.product_slug === productFilter;
+        const matchesOption = PRODUCT_OPTIONS.some(p => p.slug === productFilter && (Number(p.id) === Number(r.product_id) || Number(p.legacyId) === Number(r.product_id)));
+        if (!matchesSlug && !matchesOption) return false;
+      }
       if (categoryFilter !== 'all') {
         if (categoryFilter === 'Combo Pack Ritual') {
           if (!r.is_combo_review && r.category_tag !== 'Combo Pack Ritual') return false;
@@ -491,21 +515,21 @@ export default function ReviewManagement() {
             const active = productFilter === item.slug;
             return (
               <button
-                key={item.id}
+                key={item.slug || item.id}
                 type="button"
                 onClick={() => { setProductFilter(active ? 'all' : item.slug); setCurrentPage(1); }}
                 className={`text-left p-3 rounded-2xl border transition-all ${
                   active
-                    ? 'bg-[#d4af37]/20 border-[#d4af37] text-white'
+                    ? 'bg-[#d4af37]/25 border-[#d4af37] text-white ring-2 ring-[#d4af37]/40 shadow-lg'
                     : 'bg-[#081b15]/80 border-slate-800/90 hover:border-slate-700 text-slate-300'
                 }`}
               >
                 <div className="flex items-center justify-between gap-1">
                   <span className="text-xs font-black text-amber-400">{item.avg} ★</span>
-                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-white">{item.count} rev</span>
+                  <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-white/10 text-white font-bold">{item.count} rev</span>
                 </div>
                 <p className="text-[11px] font-bold text-white truncate mt-1">{item.shortName}</p>
-                <p className="text-[10px] text-slate-400 font-mono">SKU #{item.id} · ₹{item.price}</p>
+                <p className="text-[10px] text-slate-400 font-mono">SKU #{item.skuNumber || item.legacyId || item.id} · ₹{item.price}</p>
               </button>
             );
           })}
@@ -631,14 +655,27 @@ export default function ReviewManagement() {
                       </p>
                     </td>
                     <td className="p-4 max-w-md">
-                      <div className="flex items-center gap-1 mb-1 text-amber-400">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} size={12} fill={i < rRating ? "currentColor" : "none"} className={i < rRating ? "" : "text-slate-700"} />
-                        ))}
-                        <span className="ml-1 text-[10px] font-bold text-white">{rRating}/5</span>
-                      </div>
-                      <p className="text-xs font-bold text-white">{review.title}</p>
-                      <p className="text-xs text-slate-300 line-clamp-2 mt-0.5">{review.body || review.comment}</p>
+                      {(() => {
+                        const reviewText = review.body || review.comment || '';
+                        const wordCount = reviewText.trim() ? reviewText.trim().split(/\s+/).length : 0;
+                        return (
+                          <>
+                            <div className="flex items-center justify-between gap-2 mb-1">
+                              <div className="flex items-center gap-1 text-amber-400">
+                                {[...Array(5)].map((_, i) => (
+                                  <Star key={i} size={12} fill={i < rRating ? "currentColor" : "none"} className={i < rRating ? "" : "text-slate-700"} />
+                                ))}
+                                <span className="ml-1 text-[10px] font-bold text-white">{rRating}/5</span>
+                              </div>
+                              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/70 border border-emerald-500/30 text-emerald-300 font-bold">
+                                {wordCount} {wordCount === 1 ? 'word' : 'words'} · {reviewText.length} chars
+                              </span>
+                            </div>
+                            {review.title && <p className="text-xs font-bold text-white">{review.title}</p>}
+                            <p className="text-xs text-slate-300 line-clamp-3 mt-0.5 whitespace-pre-wrap">{reviewText}</p>
+                          </>
+                        );
+                      })()}
                     </td>
                     <td className="p-4">
                       <div className="flex items-center gap-2">
@@ -664,13 +701,24 @@ export default function ReviewManagement() {
                       </div>
                     </td>
                     <td className="p-4 text-right">
-                      <button 
-                        type="button"
-                        onClick={() => handleInspect(review)}
-                        className="px-3.5 py-2 bg-[#081b15] border border-[#d4af37]/40 rounded-xl text-[#fce096] hover:bg-[#d4af37] hover:text-slate-950 transition-all text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-1.5"
-                      >
-                        <Edit3 size={13} /> Edit / Media / Date
-                      </button>
+                      <div className="inline-flex items-center gap-2">
+                        <button 
+                          type="button"
+                          onClick={() => handleInspect(review)}
+                          className="px-3 py-1.5 bg-[#081b15] border border-[#d4af37]/40 rounded-xl text-[#fce096] hover:bg-[#d4af37] hover:text-slate-950 transition-all text-[10px] font-black uppercase tracking-widest inline-flex items-center gap-1.5 shadow"
+                          title="View / Edit review details & media"
+                        >
+                          <Edit3 size={13} /> View / Edit
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteReview(review.id || review._id, true)}
+                          className="p-2 bg-rose-950/60 border border-rose-500/30 rounded-xl text-rose-300 hover:bg-rose-600 hover:text-white transition-all text-[10px]"
+                          title="Permanently delete review from database"
+                        >
+                          <Trash2 size={13} />
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 );
@@ -841,13 +889,19 @@ export default function ReviewManagement() {
                 </label>
 
                 <label className="block text-xs font-bold uppercase text-slate-300">
-                  Customer Review Text
+                  <div className="flex items-center justify-between mb-1">
+                    <span>Customer Review Text</span>
+                    <span className="text-[10px] font-mono text-emerald-400 font-bold normal-case">
+                      {((reviewDraft.body || '').trim().split(/\s+/).filter(Boolean).length)} words · {(reviewDraft.body || '').length} characters
+                    </span>
+                  </div>
                   <textarea
                     maxLength={5000}
-                    rows={4}
+                    rows={6}
                     value={reviewDraft.body}
                     onChange={e => setReviewDraft(cur => ({ ...cur, body: e.target.value }))}
-                    className="mt-1.5 w-full resize-y rounded-xl border border-slate-700 bg-[#081b15] p-3 text-sm text-white leading-relaxed"
+                    className="w-full resize-y rounded-xl border border-slate-700 bg-[#081b15] p-3 text-sm text-white leading-relaxed focus:border-amber-400 outline-none"
+                    placeholder="Enter customer review text..."
                   />
                 </label>
               </div>
@@ -1004,13 +1058,24 @@ export default function ReviewManagement() {
 
                 <div className="flex items-center gap-3">
                   {!isCreatingNew && (
-                    <button
-                      type="button"
-                      onClick={() => handleArchive(selectedReview.id)}
-                      className="px-4 py-3 bg-rose-950/50 border border-rose-500/30 text-rose-300 font-bold uppercase text-xs rounded-xl hover:bg-rose-600 hover:text-white flex items-center gap-1.5"
-                    >
-                      <Archive size={14} /> Archive
-                    </button>
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteReview(selectedReview.id, false)}
+                        className="px-3.5 py-2.5 bg-amber-950/40 border border-amber-500/30 text-amber-300 font-bold uppercase text-xs rounded-xl hover:bg-amber-600 hover:text-white flex items-center gap-1.5 transition-all"
+                        title="Hide review without removing from database"
+                      >
+                        <Archive size={14} /> Unpublish
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteReview(selectedReview.id, true)}
+                        className="px-3.5 py-2.5 bg-rose-950/60 border border-rose-500/40 text-rose-300 font-bold uppercase text-xs rounded-xl hover:bg-rose-600 hover:text-white flex items-center gap-1.5 transition-all"
+                        title="Permanently delete review from database"
+                      >
+                        <Trash2 size={14} /> Delete Review
+                      </button>
+                    </div>
                   )}
                   <button
                     type="button"
