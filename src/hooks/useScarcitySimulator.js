@@ -39,7 +39,11 @@ export default function useScarcitySimulator(productIds = []) {
       }
     };
     load();
-    timer = window.setInterval(load, 30_000);
+    // Do not poll constantly; only refresh every 5 minutes and only if tab is visible
+    timer = window.setInterval(() => {
+      if (typeof document !== 'undefined' && document.visibilityState === 'hidden') return;
+      load();
+    }, 300_000);
     return () => {
       active = false;
       window.clearInterval(timer);
