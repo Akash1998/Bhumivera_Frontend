@@ -26,13 +26,16 @@ import {
   MAISON_REGIMEN_BUNDLES,
 } from '../data/bhumiveraUniqueData';
 
-const ProductCard = ({ product, index, bestsellerUnits, simulation, sampleActivityEnabled }) => {
+const ProductCard = ({ product, index, simulation, sampleActivityEnabled }) => {
   const { addToCart } = useCart() || {};
   const { isWishlisted, toggleWishlist } = useWishlist() || {};
   const prodId = product.id || product._id;
   const wishlisted = typeof isWishlisted === 'function' ? isWishlisted(prodId) : false;
   const rating = Number(product.rating) || 0;
   const reviewCount = Number(product.review_count) || 0;
+  const simulatedUnitsSoldToday = Number(
+    simulation?.simulatedSoldToday ?? simulation?.soldToday
+  ) || 0;
 
   const imgSrc =
     getProductImageUrl(product.image_url || product.images || product.image) ||
@@ -54,6 +57,11 @@ const ProductCard = ({ product, index, bestsellerUnits, simulation, sampleActivi
             event.currentTarget.src = FALLBACK_CATALOG_PRODUCTS[index % FALLBACK_CATALOG_PRODUCTS.length].image_url;
           }}
         />
+        {simulation?.enabled && simulatedUnitsSoldToday > 0 && (
+          <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-emerald-950/90 border border-emerald-300/40 font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-100">
+            Units Sold Today: {simulatedUnitsSoldToday}
+          </div>
+        )}
         <div className="absolute top-4 right-4 flex flex-col gap-2">
           <button
             type="button"
@@ -249,11 +257,6 @@ export default function Shop() {
     return sorted;
   }, [products, searchTerm, selectedCategory, sortBy, popularToday]);
 
-  const unitsOrderedToday = useMemo(
-    () => new Map(popularToday.map(item => [String(item.id), Number(item.unitsOrdered) || 0])),
-    [popularToday]
-  );
-
   return (
     <div className="min-h-screen bg-[#14291F] text-[#FAF7F2] pt-28 pb-24 font-sans">
       <SEO
@@ -405,7 +408,6 @@ export default function Shop() {
               key={product.id || product._id || index}
               product={product}
               index={index}
-              bestsellerUnits={unitsOrderedToday.get(String(product.id || product._id))}
               simulation={simulatorEnabled ? simulations[String(product.id || product._id)] : null}
               sampleActivityEnabled={sampleActivityEnabled}
             />

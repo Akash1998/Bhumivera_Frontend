@@ -45,7 +45,7 @@ export default function BestSellersToday() {
     return bestsellers
       .map(item => {
         const product = productsById.get(String(item.id));
-        return product ? { ...product, unitsOrdered: item.unitsOrdered } : null;
+        return product || null;
       })
       .filter(Boolean)
       .slice(0, 4);
@@ -101,6 +101,10 @@ export default function BestSellersToday() {
         <div className="grid grid-cols-2 gap-2 sm:gap-4 lg:grid-cols-4">
           {displayProducts.map((product, index) => {
             const id = product.id || product._id;
+            const simulation = simulations[String(id)];
+            const simulatedUnitsSoldToday = Number(
+              simulation?.simulatedSoldToday ?? simulation?.soldToday
+            ) || 0;
             const image = getProductImageUrl(product.image_url || product.images || product.image) ||
               FALLBACK_CATALOG_PRODUCTS[index % FALLBACK_CATALOG_PRODUCTS.length].image_url;
             const hasKnownStock = product.quantity !== null &&
@@ -123,9 +127,9 @@ export default function BestSellersToday() {
                 </Link>
                 <div className="space-y-2 p-2 sm:space-y-3 sm:p-4">
                   <div className="flex flex-wrap items-center gap-1 sm:gap-2">
-                    {Number.isFinite(Number(product.unitsOrdered)) && (
+                    {simulation?.enabled && simulatedUnitsSoldToday > 0 && (
                       <span className="inline-flex rounded-full border border-emerald-300/30 bg-emerald-950/30 px-1.5 py-0.5 text-[8px] font-bold uppercase tracking-wide text-emerald-200 sm:px-2.5 sm:py-1 sm:text-[10px] sm:tracking-wider">
-                        {product.unitsOrdered} {product.unitsOrdered === 1 ? 'unit ordered' : 'units ordered'} today
+                        Units Sold Today: {simulatedUnitsSoldToday}
                       </span>
                     )}
                     {isLowStock && (
@@ -144,7 +148,7 @@ export default function BestSellersToday() {
                   {simulatorEnabled && (
                     <div className="hidden sm:block">
                       <ScarcitySimulationBadge
-                        snapshot={simulations[String(id)]}
+                        snapshot={simulation}
                         productName={product.name}
                         sampleActivityEnabled={sampleActivityEnabled}
                         compact
