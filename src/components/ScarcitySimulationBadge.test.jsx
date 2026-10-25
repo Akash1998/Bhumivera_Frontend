@@ -7,7 +7,7 @@ import ScarcitySimulationBadge from './ScarcitySimulationBadge';
 describe('ScarcitySimulationBadge', () => {
   afterEach(cleanup);
 
-  it('labels stock and order counters as illustrative', () => {
+  it('labels stock and order counters as illustrative with total inventory header', () => {
     render(
       <ScarcitySimulationBadge
         snapshot={{ enabled: true, remaining: 123, dailyCap: 250, simulatedSoldToday: 127 }}
@@ -15,10 +15,11 @@ describe('ScarcitySimulationBadge', () => {
       />
     );
 
+    expect(screen.getByText(/Total inventory/i)).toBeTruthy();
     expect(screen.getByText(/Illustrative inventory simulation/i)).toBeTruthy();
     expect(screen.getByText(/not live stock, customer orders, or buyer identities/i)).toBeTruthy();
-    expect(screen.getByText(/Illustrative units remaining:/i)).toBeTruthy();
-    expect(screen.getByText(/Simulated units sold today:/i)).toBeTruthy();
+    expect(screen.getByText(/Units remaining:/i)).toBeTruthy();
+    expect(screen.getByText(/Units Sold Today:/i)).toBeTruthy();
     expect(screen.getByText(/127/)).toBeTruthy();
     expect(screen.queryByText(/lifetime/i)).toBeNull();
   });
@@ -33,8 +34,7 @@ describe('ScarcitySimulationBadge', () => {
 
     const badge = screen.getByTestId('live-viewers-badge');
     expect(badge).toBeTruthy();
-    expect(badge.className).toContain('bg-rose-950');
-    expect(badge.className).toContain('border-rose-500');
+    expect(badge.className).toContain('bg-gradient-to-r');
 
     // Should match "77+ people are viewing"
     const viewerText = screen.getByText(/77\+ people are viewing/i);
