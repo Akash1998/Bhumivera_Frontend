@@ -35,6 +35,9 @@ const CATEGORY_MAP = {
   order_status: 'Logistics',
   returns_rma: 'RMA / Returns',
   general: 'General Comms',
+  seller_application: 'Seller Application',
+  partnership: 'Partnership Inquiry',
+  product_inquiry: 'Product Inquiry',
 };
 
 export default function ContactManagement() {
@@ -412,7 +415,11 @@ export default function ContactManagement() {
                         </div>
                       </td>
                       <td className="p-4">
-                        <span className="px-2 py-1 bg-[#081b15]/90 border border-slate-800 text-slate-400 rounded-md text-[9px] font-black uppercase tracking-widest">
+                        <span className={`px-2 py-1 rounded-md text-[9px] font-black uppercase tracking-widest ${
+                          ticket.subject === 'seller_application' || String(ticket.subject || '').includes('seller')
+                            ? 'bg-[#d4af37]/15 border border-[#d4af37]/60 text-[#fce096]'
+                            : 'bg-[#081b15]/90 border border-slate-800 text-slate-400'
+                        }`}>
                           {CATEGORY_MAP[ticket.subject] || ticket.subject}
                         </span>
                         {ticket.order_id && (

@@ -487,7 +487,7 @@ function AppContent() {
         </Suspense>
       </main>
 
-      {!isManagementView && <Footer />}
+      {!isManagementView && location.pathname === '/' && <Footer />}
       {!isManagementView && (hasOpenedCart || isCartOpen) && (
         <Suspense fallback={<WidgetLoader label="Opening your bag" />}>
           <MiniCart />

@@ -4523,7 +4523,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           {/* Compact Luxury Phytoscience Navigation Bar */}
           <div
             className={`px-3.5 py-2 border-b flex items-center justify-between gap-2 text-[11px] shrink-0 transition-colors ${
-              isDark ? 'bg-[#091d16]/45 border-white/10 text-stone-300' : 'bg-[#f5f2e8]/65 border-[#0B2419]/10 text-[#1b2921]'
+              isDark ? 'bg-[#091d16]/90 border-white/10 text-stone-300' : 'bg-[#f5f2e8]/95 border-[#0B2419]/10 text-[#1b2921]'
             }`}
           >
             <div className="flex items-center gap-1.5 shrink-0">
@@ -4587,7 +4587,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           {(ingredientDrawerOpen || ritualDrawerOpen || diagnosticDrawerOpen) && (
             <div
               className={`px-4 py-1.5 border-b flex items-center justify-between text-xs shrink-0 transition-colors ${
-                isDark ? 'bg-[#0f241d]/45 border-[#D4AF37]/30 text-stone-200' : 'bg-[#e8e2d4]/65 border-[#0B2419]/15 text-[#0B2419]'
+                isDark ? 'bg-[#0f241d]/90 border-[#D4AF37]/30 text-stone-200' : 'bg-[#e8e2d4]/95 border-[#0B2419]/15 text-[#0B2419]'
               }`}
             >
               <button
@@ -4769,7 +4769,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
           {/* Instant Spotlight Live Finder Bar (Writing Access, NO Send Button!) */}
           <div
             className={`p-3.5 border-t flex items-center gap-2 shrink-0 transition-colors ${
-              isDark ? 'bg-[#071610]/45 border-white/10' : 'bg-white/65 border-[#0B2419]/10'
+              isDark ? 'bg-[#071610]/90 border-white/10' : 'bg-white/95 border-[#0B2419]/10'
             }`}
           >
             <div className="relative flex-1 flex items-center">

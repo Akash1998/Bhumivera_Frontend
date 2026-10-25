@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   Droplets,
   ThermometerSnowflake,
-  Building2,
   Search,
   Layers,
   Award,
@@ -23,7 +22,6 @@ import BestSellersToday from '../components/BestSellersToday';
 import { useToast } from '../context/ToastContext';
 import {
   HOME_VISUAL_ASSETS,
-  BHUMIVERA_6_PRODUCTS,
   MAISON_REGIMEN_BUNDLES,
   SAMPLE_BATCH_COAS,
 } from '../data/bhumiveraUniqueData';
@@ -408,77 +406,6 @@ export default function PremiumHome() {
           </div>
         </div>
 
-        {/* 6-PRODUCT FLAGSHIP COLLECTION SHOWCASE */}
-        <div className="mt-16">
-          <p className="font-sub-gold inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.26em]">
-            <Sparkles size={14} className="text-[#D4AF37]" /> Official 6-Product Flagship Collection
-          </p>
-          <h2 className="mt-2 font-serif text-2xl font-bold sm:text-4xl">
-            <span className="font-headline-gold">100% Label-Disclosed</span>{' '}
-            <span className="font-headline-silver">Botanical &amp; Active Formulations</span>
-          </h2>
-          <div className="gold-hairline my-3 w-24" />
-          <p className="max-w-3xl text-xs sm:text-sm text-[#DFD7C4] leading-relaxed mb-6">
-            Every Bhumivera creation prints its exact active percentages and milligram weights on the front label—uniting 5 topical pH-calibrated skin and hair rituals with our internal 7-Tulsi skin-clearing &amp; cortisol adaptogen.
-          </p>
-
-          <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {(BHUMIVERA_6_PRODUCTS || []).map((prod) => (
-              <article
-                key={prod.slug}
-                className="flex flex-col justify-between rounded-2xl border border-[#D4AF37]/30 bg-[#102219] p-5 transition hover:border-[#D4AF37]/70 shadow-lg"
-              >
-                <div>
-                  <Link to={`/products/${prod.slug}`} className="relative block aspect-square overflow-hidden rounded-xl bg-[#070a0e] mb-4 p-4">
-                    <img
-                      src={prod.image_url}
-                      alt={`${prod.name} - ${prod.subtitle}`}
-                      loading="lazy"
-                      onError={(e) => {
-                        e.currentTarget.onerror = null;
-                        e.currentTarget.src = '/logo.webp';
-                      }}
-                      className="h-full w-full object-contain transition-transform duration-500 hover:scale-105"
-                    />
-                    <span className="absolute top-3 left-3 rounded-full border border-[#D4AF37]/40 bg-[#102219]/90 px-2.5 py-1 font-mono text-[9px] font-bold uppercase tracking-wider text-[#FCE096]">
-                      {prod.id === 6 ? 'Inside-Out Skin & Cortisol Adaptogen' : 'Botanical formulation'}
-                    </span>
-                  </Link>
-                  <div className="flex items-center justify-between gap-2 text-[10px] font-mono uppercase tracking-wider text-[#FCE096] mb-1.5">
-                    <span>{prod.category}</span>
-                    <span>★ {prod.rating || 4.61} ({prod.reviews || 210} reviews) · {prod.net_volume}</span>
-                  </div>
-                  <Link to={`/products/${prod.slug}`}>
-                    <h3 className="font-serif text-lg font-bold text-white hover:text-[#FCE096] transition-colors">
-                      {prod.name}
-                    </h3>
-                  </Link>
-                  <p className="mt-1 font-mono text-[11px] text-emerald-300">
-                    {prod.subtitle}
-                  </p>
-                  <p className="mt-2 text-xs text-[#9BB0A5] leading-relaxed line-clamp-3">
-                    {prod.short_description}
-                  </p>
-                </div>
-                <div className="mt-4 pt-3 border-t border-[#244A38] flex items-center justify-between">
-                  <div>
-                    <span className="font-serif text-lg font-bold text-[#FCE096]">₹{prod.price}</span>
-                    {prod.mrp && (
-                      <span className="ml-2 text-xs text-[#9BB0A5] line-through">₹{prod.mrp}</span>
-                    )}
-                  </div>
-                  <Link
-                    to={`/products/${prod.slug}`}
-                    className="btn-gold-luxury inline-flex items-center gap-1.5 rounded-xl px-4 py-2 text-[10px] font-bold uppercase tracking-wider"
-                  >
-                    Inspect Formula <ArrowRight size={12} />
-                  </Link>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-
         {/* STRATEGIC PLAY 3: REFRAME THE INGESTIBLE 7-TULSI SKU AS AN INSIDE-OUT SKIN-CLEARING & CORTISOL ADAPTOGEN */}
         <div className="mt-16 rounded-3xl border border-[#D4AF37]/40 bg-gradient-to-br from-[#102219] via-[#14291F] to-[#0D1C14] p-6 sm:p-10 shadow-2xl">
           <div className="grid gap-8 lg:grid-cols-12 items-center">
@@ -624,38 +551,6 @@ export default function PremiumHome() {
                 ))}
               </tbody>
             </table>
-          </div>
-        </div>
-
-        {/* STRATEGIC PLAY 5: INSTITUTIONAL & BOUTIQUE HOSPITALITY DISTRIBUTION */}
-        <div className="mt-16 rounded-3xl border border-[#D4AF37]/35 bg-[#102219] p-6 sm:p-10">
-          <div className="flex flex-col justify-between gap-6 lg:flex-row lg:items-center">
-            <div className="max-w-2xl">
-              <span className="inline-flex items-center gap-2 font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-[#FCE096]">
-                <Building2 size={14} className="text-[#D4AF37]" /> Institutional &amp; Boutique Hospitality Backbar Division
-              </span>
-              <h2 className="mt-2 font-serif text-2xl font-bold sm:text-4xl">
-                <span className="font-headline-gold">250 ml UV-Amber Apothecary Pumps</span>{' '}
-                <span className="font-headline-silver">for Luxury Spas &amp; Heritage Stays</span>
-              </h2>
-              <p className="mt-3 text-xs sm:text-sm leading-relaxed text-[#DFD7C4]">
-                Experience Bhumivera across curated wellness spas, mountain homestays, and tea-estate bungalows in <strong className="text-white">Himachal Pradesh, Uttarakhand, and West Bengal</strong>. Every 250 ml refillable apothecary dispenser carries a serialized QR code so sanctuary guests can verify the batch assay and subscribe directly for home replenishment.
-              </p>
-            </div>
-            <div className="flex flex-wrap gap-3">
-              <Link
-                to="/sell-on-bhumivera"
-                className="btn-gold-luxury inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-xs font-bold uppercase tracking-wider"
-              >
-                Request Hospitality Backbar Allocation <ArrowRight size={14} />
-              </Link>
-              <Link
-                to="/contact?topic=sell"
-                className="btn-silver-luxury inline-flex items-center gap-2 rounded-full px-6 py-3.5 text-xs font-semibold uppercase tracking-wider"
-              >
-                Concierge Trade Desk
-              </Link>
-            </div>
           </div>
         </div>
 
