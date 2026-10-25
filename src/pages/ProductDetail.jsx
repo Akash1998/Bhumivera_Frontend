@@ -7,7 +7,7 @@ import ProductDeliveryPromise from '../components/ProductDeliveryPromise';
 import ScarcitySimulationBadge from '../components/ScarcitySimulationBadge';
 import React, { useRef, useState, useEffect } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
-import { motion, AnimatePresence, useInView } from 'framer-motion';
+import { motion as Motion, AnimatePresence, useInView } from 'framer-motion';
 import { 
   Star, Leaf, Heart, Shield, ChevronRight, ChevronLeft,
   Minus, Plus, CheckCircle2, AlertCircle, Microscope, Package, Tag,
@@ -92,7 +92,6 @@ export default function ProductDetail() {
   
   const [product, setProduct] = useState(null);
   const [unitsOrderedToday, setUnitsOrderedToday] = useState(null);
-  const [productIsFallback, setProductIsFallback] = useState(false);
   const [reviewsData, setReviewsData] = useState([]);
   const [reviewSummary, setReviewSummary] = useState(null);
   const [reviewLoadError, setReviewLoadError] = useState('');
@@ -164,7 +163,6 @@ export default function ProductDetail() {
       try {
         setLoading(true);
         let fetchedProduct = null;
-        let loadedFromFallback = false;
         const fallbackProduct = FALLBACK_CATALOG_PRODUCTS.find(
           product => String(product.id) === String(id) || product.slug === String(id)
         ) || (BHUMIVERA_6_PRODUCTS || []).find(
@@ -175,7 +173,7 @@ export default function ProductDetail() {
             ? await productsApi.getBySlug(fallbackProduct.slug)
             : await productsApi.getById(id);
           fetchedProduct = prodRes.data?.data || prodRes.data;
-        } catch (err) {
+        } catch {
           try {
             const slugRes = await productsApi.getBySlug(fallbackProduct?.slug || id);
             fetchedProduct = slugRes.data?.data || slugRes.data;
@@ -189,7 +187,6 @@ export default function ProductDetail() {
                   (normId.includes('charcoal') && p.slug?.includes('charcoal')) ||
                   ((normId.includes('shampoo') || normId.includes('2-in-1')) && p.slug?.includes('shampoo'))
               ) || FALLBACK_CATALOG_PRODUCTS[0];
-            loadedFromFallback = true;
           }
         }
         
@@ -280,7 +277,11 @@ export default function ProductDetail() {
            }
            let safeImages = [];
            if (typeof fetchedProduct.images === 'string') {
-             try { safeImages = JSON.parse(fetchedProduct.images); } catch(e) {}
+             try {
+               safeImages = JSON.parse(fetchedProduct.images);
+             } catch {
+               safeImages = [];
+             }
            } else if (Array.isArray(fetchedProduct.images)) {
              safeImages = fetchedProduct.images;
            }
@@ -290,7 +291,6 @@ export default function ProductDetail() {
         }
 
         setProduct(fetchedProduct);
-        setProductIsFallback(loadedFromFallback);
         if (fetchedProduct?.images?.length > 0) {
           setActiveMedia(fetchedProduct.images[0]);
         }
@@ -431,7 +431,7 @@ export default function ProductDetail() {
     ? Number(reviewSummary.average || 0)
     : 0;
   const reviewCount = Number(reviewSummary?.total ?? 0);
-  const videoEmbeds = [] && splitUrls(product?.video_urls)
+  const videoEmbeds = splitUrls(product?.video_urls)
     .map(url => ({ source: url, embed: toVideoEmbedUrl(url) }))
     .filter(video => video.embed);
   const reviewPhotos = reviewsData.flatMap(review => (Array.isArray(review.images) ? review.images : [])
@@ -532,7 +532,7 @@ export default function ProductDetail() {
 
           <div className="group relative aspect-[0.94] w-full overflow-hidden rounded-2xl border border-[#d4af37]/20 bg-[#171813] shadow-2xl sm:aspect-square sm:rounded-2xl md:sticky md:top-28 md:aspect-auto md:h-[min(72vh,680px)] md:min-h-[500px] md:self-start lg:top-32">
             <AnimatePresence mode="wait">
-              <motion.div
+              <Motion.div
                 key={getImageUrl(activeMedia)}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
@@ -541,7 +541,7 @@ export default function ProductDetail() {
                 className="h-full w-full p-5 sm:p-8 md:p-10 lg:p-12"
               >
                 <img src={getImageUrl(activeMedia)} width="800" height="800" fetchpriority="high" alt={`${product.luxuryName || product.name} - ${product.active_ingredients || product.primaryBotanicals || "Bhumivera Luxury Botanical Formula"}`} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-[1.025]" />
-              </motion.div>
+              </Motion.div>
             </AnimatePresence>
 
             {product.images?.length > 1 && (
@@ -749,7 +749,7 @@ export default function ProductDetail() {
             >
               {tab === 'reviews' ? `Reviews (${reviewCount})` : tab === 'formulation' ? 'Formulation & Actives' : tab}
               {activeTab === tab && (
-                <motion.div layoutId="activeTabIndicator" className="absolute bottom-0 left-0 w-full h-0.5 bg-[#d4af37]" />
+                <Motion.div layoutId="activeTabIndicator" className="absolute bottom-0 left-0 w-full h-0.5 bg-[#d4af37]" />
               )}
             </button>
           ))}
@@ -758,13 +758,13 @@ export default function ProductDetail() {
         <div className="min-h-[400px]">
           <AnimatePresence mode="wait">
             {activeTab === 'details' && (
-              <motion.div key="details" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="text-[#cbd5e1] leading-loose text-base max-w-4xl whitespace-pre-wrap">
+              <Motion.div key="details" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="text-[#cbd5e1] leading-loose text-base max-w-4xl whitespace-pre-wrap">
                 {product.description}
-              </motion.div>
+              </Motion.div>
             )}
 
             {activeTab === 'formulation' && (
-              <motion.div key="formulation" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-4xl space-y-6">
+              <Motion.div key="formulation" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-4xl space-y-6">
                 {/* Physical Packaging Formulation Card with Gold/Silver Plate */}
                 <div className="rounded-3xl two-tone-card p-6 md:p-8 border border-[#d4af37]/40 shadow-xl relative overflow-hidden">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#d4af37]/30 pb-4 mb-6">
@@ -885,11 +885,11 @@ export default function ProductDetail() {
                     </Link>
                   </div>
                 </div>
-              </motion.div>
+              </Motion.div>
             )}
             
             {activeTab === 'specifications' && (
-              <motion.div key="specs" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-4xl rounded-3xl two-tone-card border border-[#d4af37]/30 p-6 md:p-8">
+              <Motion.div key="specs" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-4xl rounded-3xl two-tone-card border border-[#d4af37]/30 p-6 md:p-8">
                 <h3 className="mb-6 border-b border-[#d4af37]/20 pb-4 font-serif text-2xl text-white">Product specifications</h3>
                 {specificationEntries.length > 0 ? <div className="grid grid-cols-1 gap-x-12 md:grid-cols-2">
                   {specificationEntries.map(([label, value]) => (
@@ -899,11 +899,11 @@ export default function ProductDetail() {
                     </div>
                   ))}
                 </div> : <p className="text-sm leading-6 text-[#cbd5e1]">Detailed specifications have not been published for this product yet. Contact us for product-specific questions.</p>}
-              </motion.div>
+              </Motion.div>
             )}
 
             {activeTab === 'reviews' && (
-              <motion.div id="product-reviews" key="reviews" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-4xl scroll-mt-28">
+              <Motion.div id="product-reviews" key="reviews" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-4xl scroll-mt-28">
                 <div className="mb-8 grid gap-6 rounded-3xl two-tone-panel-gold border border-[#d4af37]/40 p-6 md:grid-cols-[auto_1fr] md:items-center md:p-8 shadow-xl">
                   <div className="text-center md:min-w-32">
                     <div className="font-serif text-5xl font-bold text-[#fce096]">{reviewCount ? productRating.toFixed(1) : '—'}</div>
@@ -987,7 +987,7 @@ export default function ProductDetail() {
                     <h3 className="text-sm font-mono text-[#94a3b8] uppercase tracking-widest">{reviewLoadError || (reviewsData.length ? 'No reviews match this filter' : 'No approved reviews yet')}</h3>
                   </div>
                 )}
-              </motion.div>
+              </Motion.div>
             )}
           </AnimatePresence>
         </div>
@@ -1186,8 +1186,8 @@ export default function ProductDetail() {
       )}
 
       <AnimatePresence>
-        {activeVideo && <motion.div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md" role="presentation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={event => { if (event.target === event.currentTarget) setActiveVideo(null); }}>
-          <motion.section role="dialog" aria-modal="true" aria-labelledby="product-video-title" initial={{ opacity: 0, y: 20, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }} className="relative grid max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-3xl two-tone-card border border-[#d4af37]/40 bg-[#070a0e] shadow-2xl md:grid-cols-[0.9fr_1.1fr]">
+        {activeVideo && <Motion.div className="fixed inset-0 z-[160] flex items-center justify-center bg-black/85 p-4 backdrop-blur-md" role="presentation" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onMouseDown={event => { if (event.target === event.currentTarget) setActiveVideo(null); }}>
+          <Motion.section role="dialog" aria-modal="true" aria-labelledby="product-video-title" initial={{ opacity: 0, y: 20, scale: 0.98 }} animate={{ opacity: 1, y: 0, scale: 1 }} exit={{ opacity: 0, y: 20 }} className="relative grid max-h-[90vh] w-full max-w-4xl overflow-y-auto rounded-3xl two-tone-card border border-[#d4af37]/40 bg-[#070a0e] shadow-2xl md:grid-cols-[0.9fr_1.1fr]">
             <button type="button" aria-label="Close video" onClick={() => setActiveVideo(null)} className="absolute right-3 top-3 z-10 rounded-full bg-[#0d1520] border border-[#d4af37]/30 p-2 text-[#fce096] shadow"><X size={18}/></button>
             <div className="aspect-[9/12] max-h-[72vh] bg-black md:aspect-auto">
               <iframe src={activeVideo.embed} title={`${product.name} product video`} className="h-full w-full" referrerPolicy="strict-origin-when-cross-origin" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowFullScreen/>
@@ -1198,13 +1198,13 @@ export default function ProductDetail() {
               <p className="mt-3 text-xl font-serif font-bold text-[#fce096]">₹{product.discount_price || product.price}</p>
               <div className="mt-4 flex items-center gap-2 text-xs text-[#cbd5e1]"><Shield size={15} className="text-[#d4af37]"/>Secure checkout · Bhumivera support</div>
             </div>
-          </motion.section>
-        </motion.div>}
+          </Motion.section>
+        </Motion.div>}
       </AnimatePresence>
 
       <AnimatePresence>
         {!isAddToBagButtonVisible && !activeVideo && (
-          <motion.div
+          <Motion.div
             initial={{ opacity: 0, y: 24 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 24 }}
@@ -1228,7 +1228,7 @@ export default function ProductDetail() {
                 {isAdding ? (isAdded ? 'Added to Bag' : 'Adding...') : <><Leaf size={15} /> Add to Bag</>}
               </button>
             </div>
-          </motion.div>
+          </Motion.div>
         )}
       </AnimatePresence>
     </div>
