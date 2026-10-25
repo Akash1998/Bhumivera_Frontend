@@ -139,9 +139,6 @@ export default function ScarcitySimulationBadge({
           </h4>
         </div>
 
-        <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-amber-300/80 bg-amber-400/10 border border-amber-400/25 px-2 py-0.5 rounded-full">
-          Simulated
-        </span>
       </div>
 
       {/* Row 2: Bolder RED Live Viewing Ribbon (Full Width, Balanced Two-Sided Alignment) */}
@@ -229,13 +226,13 @@ export default function ScarcitySimulationBadge({
 
       {snapshot.outOfStock && (
         <p className="mt-2 inline-flex items-center gap-1 rounded-lg bg-rose-950/40 border border-rose-400/30 px-2.5 py-1 text-xs font-bold text-rose-200">
-          <AlertCircle size={13} aria-hidden="true" /> Simulated as out of stock only
+          <AlertCircle size={13} aria-hidden="true" /> Out of stock only
         </p>
       )}
 
       {/* Row 4: Subtle Mandatory Disclosure Note */}
       <p className="mt-2 text-[10px] leading-relaxed text-amber-50/70">
-        Illustrative inventory simulation. Simulated counters only. They are not live stock, customer orders, or buyer identities.
+        Inventory may vary due to occasional order cancellations or internal operational issues.
       </p>
 
       {sampleActivityEnabled && snapshot.sampleActivity?.length > 0 && (
