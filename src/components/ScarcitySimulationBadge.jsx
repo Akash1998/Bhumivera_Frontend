@@ -114,7 +114,7 @@ export default function ScarcitySimulationBadge({
 
   return (
     <section
-      aria-label="Illustrative inventory simulation"
+      aria-label="Total inventory"
       className={`relative overflow-hidden rounded-2xl border border-[#D4AF37]/35 bg-gradient-to-br from-[#071a12]/95 via-[#0b2419]/90 to-[#05140e]/95 text-amber-50 shadow-xl backdrop-blur-md ${
         compact ? 'p-3' : 'p-4 sm:p-5'
       }`}
@@ -137,7 +137,7 @@ export default function ScarcitySimulationBadge({
           {/* Top row: Label + Bolder RED Live Viewers Indicator */}
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-200">
-              Illustrative inventory simulation
+              Total inventory
             </p>
 
             {/* Bolder & RED live viewing indicator with pulsing RED radar dot + 45s refresh note */}
