@@ -122,7 +122,6 @@ export default function ScarcitySimulationBadge({
       {/* Ambient background glow */}
       <div className="pointer-events-none absolute -right-12 -top-12 h-36 w-36 rounded-full bg-[#D4AF37]/10 blur-2xl" />
 
-<<<<<<< HEAD
       {/* Row 1: Unified Header Bar (Icon + "Total inventory" + "Simulated" Badge) */}
       <div className="flex items-center justify-between gap-2 border-b border-[#D4AF37]/20 pb-2.5">
         <div className="flex items-center gap-2 min-w-0">
@@ -133,46 +132,6 @@ export default function ScarcitySimulationBadge({
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
               </span>
-=======
-      <div className="flex items-start gap-3">
-        <div className="relative mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#D4AF37]/15 border border-[#D4AF37]/40 text-[#FCE096]">
-          <FlaskConical size={15} aria-hidden="true" />
-          {!snapshot.paused && (
-            <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
-              <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-              <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-500" />
-            </span>
-          )}
-        </div>
-
-        <div className="min-w-0 flex-1">
-          {/* Top row: Label + Bolder RED Live Viewers Indicator */}
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-200">
-              Total inventory
-            </p>
-
-            {/* Bolder & RED live viewing indicator with pulsing RED radar dot + 45s refresh note */}
-            {!snapshot.paused && !snapshot.outOfStock && (
-              <div className="flex flex-col items-end gap-0.5">
-                <span
-                  data-testid="live-viewers-badge"
-                  className="inline-flex items-center gap-1.5 rounded-full bg-rose-950/80 border border-rose-500/70 px-3 py-1 text-[11px] font-black text-rose-100 shadow-[0_0_14px_rgba(244,63,94,0.45)]"
-                >
-                  <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-500 opacity-90" />
-                    <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rose-600 shadow-[0_0_8px_rgba(244,63,94,0.9)]" />
-                  </span>
-                  <Eye size={12} className="text-rose-300 stroke-[2.5]" aria-hidden="true" />
-                  <span className="font-black tracking-wide text-rose-100">
-                    {viewerCount}+ people are viewing
-                  </span>
-                </span>
-                <span className="text-[9px] font-medium text-rose-300/80 tracking-wide pr-1">
-                  refreshes every 45 seconds
-                </span>
-              </div>
->>>>>>> 2a4fd3efc7cfdf6c0f7e0919a2278bd5d77b67c7
             )}
           </div>
           <h4 className="text-[11px] font-black uppercase tracking-[0.14em] text-amber-200 truncate">
@@ -180,7 +139,6 @@ export default function ScarcitySimulationBadge({
           </h4>
         </div>
 
-<<<<<<< HEAD
         <span className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-amber-300/80 bg-amber-400/10 border border-amber-400/25 px-2 py-0.5 rounded-full">
           Simulated
         </span>
@@ -224,27 +182,6 @@ export default function ScarcitySimulationBadge({
                   {activeRemaining}
                 </strong>
                 <span className="text-slate-400 font-normal"> / {dailyCap}</span>
-=======
-          {snapshot.paused ? (
-            <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-200">
-              <Activity size={13} aria-hidden="true" /> Simulation paused
-            </p>
-          ) : (
-            <>
-              {/* Units count */}
-              <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs font-semibold">
-                <span className="text-white">
-                  Units remaining:{' '}
-                  <strong className="text-lg font-black text-[#FCE096] transition-all duration-300">
-                    {activeRemaining}
-                  </strong>{' '}
-                  / <span className="text-slate-400">{dailyCap}</span>
-                </span>
-                <span className="text-slate-300">
-                  Units Sold Today:{' '}
-                  <strong className="text-[#FCE096]">{activeSoldToday}</strong>
-                </span>
->>>>>>> 2a4fd3efc7cfdf6c0f7e0919a2278bd5d77b67c7
               </div>
 
               <div className="text-right text-slate-300 font-medium shrink-0">
