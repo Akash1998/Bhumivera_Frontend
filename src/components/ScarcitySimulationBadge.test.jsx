@@ -16,7 +16,10 @@ describe('ScarcitySimulationBadge', () => {
     );
 
     expect(screen.getByText(/Total inventory/i)).toBeTruthy();
+<<<<<<< HEAD
     expect(screen.getByText(/Illustrative inventory simulation/i)).toBeTruthy();
+=======
+>>>>>>> 2a4fd3efc7cfdf6c0f7e0919a2278bd5d77b67c7
     expect(screen.getByText(/not live stock, customer orders, or buyer identities/i)).toBeTruthy();
     expect(screen.getByText(/Units remaining:/i)).toBeTruthy();
     expect(screen.getByText(/Units Sold Today:/i)).toBeTruthy();
