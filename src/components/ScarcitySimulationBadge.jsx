@@ -164,7 +164,7 @@ export default function ScarcitySimulationBadge({
           </div>
 
           <p className="mt-1 text-xs leading-relaxed text-amber-50/90">
-            Simulated counters only. They are not live stock, customer orders, or buyer identities.
+            ***LIVE NOW ***.
           </p>
 
           {snapshot.paused ? (
