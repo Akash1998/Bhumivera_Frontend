@@ -77,6 +77,11 @@ const REVIEW_MEDIA_PLACEHOLDER = '/images/review-placeholder.svg';
 export default function ProductDetail() {
   const { id } = useParams();
   const location = useLocation();
+  const loadingProduct = FALLBACK_CATALOG_PRODUCTS.find(
+    product => String(product.id) === String(id) || product.slug === String(id)
+  ) || (BHUMIVERA_6_PRODUCTS || []).find(
+    product => String(product.id) === String(id) || product.slug === String(id)
+  );
   const { addToCart } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { user } = useAuth();
@@ -457,7 +462,7 @@ export default function ProductDetail() {
     setActiveMedia(gallery[nextIndex]);
   };
   
-  if (loading) return <SkeletonPDP />;
+  if (loading) return <SkeletonPDP productName={loadingProduct?.name} />;
 
   if (!product) {
     return (
@@ -1235,20 +1240,66 @@ export default function ProductDetail() {
   );
 }
 
-const SkeletonPDP = () => (
-  <div className="bg-[#14291F] min-h-screen pt-24 pb-32 px-6">
-    <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 animate-pulse opacity-50">
-      <div className="lg:col-span-7 flex flex-col md:flex-row gap-6">
-        <div className="flex md:flex-col gap-4 w-full md:w-24">
-          {[1,2,3,4].map(i => <div key={i} className="w-20 h-20 md:w-24 md:h-24 bg-[#171813] border border-white/10 rounded-xl shrink-0"></div>)}
+const SkeletonPDP = ({ productName }) => (
+  <div
+    className="product-experience-loader min-h-screen px-6 pb-32 pt-28 text-[#FAF7F2]"
+    role="status"
+    aria-live="polite"
+    aria-label={`Preparing ${productName || 'your botanical product'}`}
+  >
+    <div className="mx-auto max-w-7xl">
+      <div className="mb-10 flex flex-col items-center gap-3 text-center">
+        <div className="premium-loader-mark" aria-hidden="true">
+          <span className="premium-loader-orbit" />
+          <span className="premium-loader-core">B</span>
         </div>
-        <div className="w-full h-[500px] md:h-[700px] bg-[#171813] border border-[#d4af37]/20 rounded-2xl"></div>
+        <span className="premium-loader-wordmark">BHUMIVERA</span>
+        <p className="max-w-sm text-sm leading-relaxed text-[#DFD7C4]">
+          A moment for the botanicals. We’re preparing your product experience.
+        </p>
       </div>
-      <div className="lg:col-span-5 flex flex-col gap-8 pt-8">
-        <div className="h-12 bg-[#171813] border border-white/10 rounded-xl w-3/4"></div>
-        <div className="h-6 bg-[#171813] border border-white/10 rounded-xl w-1/3"></div>
-        <div className="h-24 bg-[#171813] border border-white/10 rounded-xl w-full"></div>
-        <div className="h-32 bg-[#171813] border border-white/10 rounded-xl w-full mt-10"></div>
+
+      <div className="mx-auto mb-10 h-px w-full max-w-xs overflow-hidden bg-[#D4AF37]/20">
+        <div className="product-loader-progress h-full w-1/3 bg-gradient-to-r from-[#D4AF37] to-[#FCE096]" />
+      </div>
+
+      <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12" aria-hidden="true">
+        <div className="lg:col-span-7">
+          <div className="product-loader-gallery flex aspect-[4/3] min-h-72 items-center justify-center overflow-hidden rounded-3xl border border-[#D4AF37]/20">
+            <div className="premium-loader-mark scale-150 opacity-60">
+              <span className="premium-loader-orbit" />
+              <span className="premium-loader-core"><Leaf size={25} /></span>
+            </div>
+          </div>
+          <div className="mt-4 flex gap-3">
+            {[0, 1, 2, 3].map(item => (
+              <div key={item} className="h-16 w-16 animate-pulse rounded-xl border border-[#D4AF37]/10 bg-[#FAF7F2]/5" />
+            ))}
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-6 lg:col-span-5 lg:pt-4">
+          <div>
+            <div className="mb-4 h-3 w-36 animate-pulse rounded bg-[#D4AF37]/20" />
+            {productName ? (
+              <h1 className="font-serif text-3xl font-semibold leading-tight text-[#FCE096] sm:text-4xl">
+                {productName}
+              </h1>
+            ) : (
+              <div className="h-10 w-4/5 animate-pulse rounded bg-[#FAF7F2]/10" />
+            )}
+          </div>
+          <div className="h-5 w-32 animate-pulse rounded bg-[#FAF7F2]/10" />
+          <div className="space-y-3">
+            <div className="h-3 w-full animate-pulse rounded bg-[#FAF7F2]/10" />
+            <div className="h-3 w-11/12 animate-pulse rounded bg-[#FAF7F2]/10" />
+            <div className="h-3 w-3/4 animate-pulse rounded bg-[#FAF7F2]/10" />
+          </div>
+          <div className="mt-4 h-14 w-full animate-pulse rounded-2xl border border-[#D4AF37]/20 bg-[#FAF7F2]/5" />
+          <p className="text-xs leading-relaxed text-[#9BB0A5]">
+            Gathering formulation details and availability.
+          </p>
+        </div>
       </div>
     </div>
   </div>

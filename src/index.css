@@ -50,6 +50,22 @@ body {
   color: #fce096;
 }
 
+.product-experience-loader {
+  background:
+    radial-gradient(ellipse at 50% 12%, rgba(212, 175, 55, 0.1), transparent 38%),
+    linear-gradient(145deg, #10120f, #18251b 52%, #10120f);
+}
+
+.product-loader-gallery {
+  background:
+    radial-gradient(ellipse at 50% 45%, rgba(212, 175, 55, 0.12), transparent 40%),
+    linear-gradient(145deg, rgba(23, 24, 19, 0.8), rgba(20, 41, 31, 0.8));
+}
+
+.product-loader-progress {
+  animation: product-loader-travel 1.8s ease-in-out infinite;
+}
+
 .premium-loader-mark {
   position: relative;
   display: grid;
@@ -106,10 +122,21 @@ body {
   to { box-shadow: 0 0 20px rgba(212, 175, 55, 0.42); }
 }
 
+@keyframes product-loader-travel {
+  from { transform: translateX(-110%); }
+  to { transform: translateX(310%); }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .premium-page-loader *,
   .premium-page-loader *::before,
   .premium-page-loader *::after {
+    animation: none !important;
+  }
+
+  .product-experience-loader *,
+  .product-experience-loader *::before,
+  .product-experience-loader *::after {
     animation: none !important;
   }
 }
