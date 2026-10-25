@@ -31,7 +31,7 @@ const WalletManagement = lazy(() => import('./admin/WalletManagement.jsx'));
 const ReferralEngine = lazy(() => import('./admin/AffiliateManagement.jsx'));
 const SupportManagement = lazy(() => import('./admin/SupportManagement.jsx'));
 const ContactManagement = lazy(() => import('./admin/ContactManagement.jsx'));
-const EWarrantyManagement = lazy(() => import('./admin/EWarrantyManagement.jsx'));
+const AuthenticityBatchManagement = lazy(() => import('./admin/AuthenticityBatchManagement.jsx'));
 const SupportAgentManagement = lazy(() => import('./admin/SupportAgentManagement.jsx'));
 const LoyaltyTierForge = lazy(() => import('./admin/LoyaltyTierForge.jsx'));
 const LoyaltyMembers = lazy(() => import('./admin/LoyaltyMembers.jsx'));
@@ -110,7 +110,7 @@ const TAB_COMPONENTS = {
   impact: ImpactManagement,
   support: SupportManagement,
   contacts: ContactManagement,
-  ewarranty: EWarrantyManagement,
+  ewarranty: AuthenticityBatchManagement,
   'support-agents': SupportAgentManagement,
 };
 
@@ -209,7 +209,7 @@ export default function AdminDashboard() {
         { id: 'returns', label: 'Returns' },
         { id: 'support', label: 'Bhumivera Client Concierge' },
         { id: 'contacts', label: 'Contact & Inquiries' },
-        { id: 'ewarranty', label: 'E-Warranty Registry' },
+        { id: 'ewarranty', label: 'Authenticity & Batch Registry' },
         { id: 'support-agents', label: 'Support Staff Roster' },
       ],
     },

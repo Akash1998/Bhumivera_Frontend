@@ -56,7 +56,6 @@ export default function Compare() {
     { label: 'Cleansing / Carrier Matrix', key: 'surfactantSystem', render: (p) => p.surfactantSystem || 'Sulfate-Free Plant Glucoside' },
     { label: 'Recommended AM / PM Ritual', key: 'ritualTiming', render: (p) => p.ritualTiming || 'AM & PM Daily Ritual' },
     { label: 'Apothecary Vessel & Volume', key: 'volume', render: (p) => p.volume || '100 ml UV-Protected Vessel' },
-    { label: 'Reference Batch & QC Code', key: 'batchCode', render: (p) => p.batchCode || 'BV-QC-2026' },
   ];
 
   return (

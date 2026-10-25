@@ -209,7 +209,6 @@ export const FALLBACK_CATALOG_PRODUCTS = [
     surfactantSystem: 'Decyl Glucoside & Coco-Glucoside (100% Sulfate-Free)',
     ritualTiming: 'Twice Daily (AM Antioxidant Shield & PM Barrier Reset · 30–45s Massage)',
     volume: '100 ml / 3.38 fl. oz. Amber Glass Pump',
-    batchCode: 'BV-SB26-1042',
     directions: 'Moisten face and neck, apply a small amount of this facewash, and gently work up a lather using a circular motion. Wash off and pat dry. Use twice daily.',
     caution: 'Product contains natural ingredients & may change colour and fragrance, without losing effectiveness. Patch test recommended. Store in a cool and dry place, away from direct sunlight. For external use only.',
   },
@@ -243,7 +242,6 @@ export const FALLBACK_CATALOG_PRODUCTS = [
     surfactantSystem: 'Mild Plant-Derived Glucoside & Betaine Matrix',
     ritualTiming: 'Twice Daily (AM Clarifying & PM Deep Reset · 30–45s Circular Massage)',
     volume: '100 ml / 3.38 fl. oz. UV-Protected Gold-Trim Bottle',
-    batchCode: 'BV-CH26-8841',
     directions: 'Moisten Face and neck, apply a small amount of this facewash, and gently work up a lather using a circular motion. Wash off and pat dry. Use twice daily.',
     caution: 'Product contains natural ingredients & may change colour and fragrance, without losing effectiveness. Patch test recommended. Store in a cool and dry place, away from direct sunlight. For external use only.',
   },
@@ -277,7 +275,6 @@ export const FALLBACK_CATALOG_PRODUCTS = [
     surfactantSystem: 'None (Leave-On Overnight Botanical Oil Elixir)',
     ritualTiming: 'Nightly PM Ritual (Warm 2–3 drops between palms & press onto damp skin)',
     volume: '30 ml / 1.0 fl. oz. Amber Glass Pipette Dropper',
-    batchCode: 'BV-KK26-3019',
     directions: 'Apply 2 to 3 drops onto clean, damp skin after cleansing. Gently press into face and neck using upward strokes. Allow overnight absorption.',
     caution: 'Product contains natural cold-pressed botanicals & pure saffron stigmas. Store in a cool and dry place, away from direct sunlight. For external use only.',
   },
@@ -311,7 +308,6 @@ export const FALLBACK_CATALOG_PRODUCTS = [
     surfactantSystem: 'Natural Sapindus mukorossi (Reetha) Saponins + Mild Botanical Cleanser Base',
     ritualTiming: '2–3 Times Weekly (Apply on wet hair, gently massage scalp & rinse off)',
     volume: '200 ml / 6.76 fl. oz. Apothecary Dispenser',
-    batchCode: 'BV-SH26-4409',
     directions: 'Apply shampoo on wet hair, gently massage & rinse off. Repeat if required.',
     caution: 'Product contains natural ingredients & may change colour and fragrance, without losing effectiveness. Patch test recommended. Store in a cool and dry place, away from direct sunlight. For external use only.',
   },
@@ -345,7 +341,6 @@ export const FALLBACK_CATALOG_PRODUCTS = [
     surfactantSystem: 'None (Leave-On 60-Second Damp-Skin Moisture Lock)',
     ritualTiming: 'Twice Daily Within 60 Seconds of Cleansing on Dewy Skin',
     volume: '50 g / 1.76 oz. Frosted Apothecary Jar',
-    batchCode: 'BV-GK26-055',
   },
   {
     id: 106,
@@ -377,7 +372,6 @@ export const FALLBACK_CATALOG_PRODUCTS = [
     surfactantSystem: 'None (Alcohol-Free Steam Distillate Mist)',
     ritualTiming: 'AM/PM Immediately After Rinsing Face Wash (0–60s Window)',
     volume: '100 ml / 3.38 fl. oz. Fine Atomizer Amber Spray',
-    batchCode: 'BV-RS26-093',
   },
 ];
 

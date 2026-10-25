@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import axios from 'axios';
-import * as XLSX from 'xlsx';
+import { useNavigate } from 'react-router-dom';
 import { 
   Box, Plus, Edit2, Trash2, Search, RefreshCw, AlertTriangle, 
   CheckCircle, XCircle, ChevronLeft, ChevronRight, Image as ImageIcon, 
-  Video, BoxSelect, ShieldCheck, Tag, Activity, Cpu, QrCode, List, Database, UploadCloud, Globe, Eye
+  Video, BoxSelect, Tag, Activity, Cpu, QrCode, List, Database, UploadCloud, Globe, Eye
 } from 'lucide-react';
 import api, { products as productsApi, categories as categoriesApi, serials as serialsApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
@@ -13,12 +13,8 @@ import compressImageForUpload from '../../utils/compressImageForUpload';
 
 const INITIAL_PRODUCT_STATE = {
   name: '', slug: '', description: '', price: '', discount_price: '', quantity: '', category_id: '', 
-  video_urls: '', product_links: '', model_3d_url: '', warranty_period: '', status: 'active',
+  video_urls: '', product_links: '', model_3d_url: '', status: 'active',
   meta_title: '', meta_description: '', tags: '', sku: '', brand: 'Bhumivera'
-};
-
-const INITIAL_SERIAL_STATE = {
-  count: 10, prefix: 'BHU', format: 'advanced', base_warranty_months: ''
 };
 
 const formatUrlLines = value => {
@@ -34,6 +30,7 @@ const formatUrlLines = value => {
 };
 
 export default function ProductManagement() {
+  const navigate = useNavigate();
   // --- Global State ---
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -46,7 +43,6 @@ export default function ProductManagement() {
   const [isProductModalOpen, setProductModalOpen] = useState(false);
   const [isSerialModalOpen, setSerialModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('basic'); 
-  const [serialTab, setSerialTab] = useState('generate');
   
   // --- Entity State ---
   const [currentProduct, setCurrentProduct] = useState(null);
@@ -71,7 +67,6 @@ export default function ProductManagement() {
   const [imagePreviews, setImagePreviews] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
   const [specs, setSpecs] = useState([{ key: '', value: '' }]);
-  const [serialForm, setSerialForm] = useState(INITIAL_SERIAL_STATE);
 
   // --- Lifecycle & Data Fetching ---
   useEffect(() => { 
@@ -175,7 +170,7 @@ export default function ProductManagement() {
         name: product.name || '', slug: product.slug || '', description: product.description || '', price: product.price || '', discount_price: product.discount_price || '',
         quantity: product.quantity || product.stock || '', category_id: product.category_id || '',
         video_urls: formatUrlLines(product.video_urls), product_links: formatUrlLines(product.product_links), model_3d_url: product.model_3d_url || '',
-        warranty_period: product.warranty_period ?? '', status: product.status || 'active',
+        status: product.status || 'active',
         meta_title: product.meta_title || '', meta_description: product.meta_description || '', tags: product.tags || '', sku: product.sku || '', brand: product.brand || 'Bhumivera'
       });
       
@@ -340,13 +335,6 @@ export default function ProductManagement() {
   // --- Handlers: Serial Numbers ---
   const openSerialModal = (product) => {
     setCurrentProduct(product); 
-    setSerialTab('generate');
-    setSerialForm({ 
-      count: 10, 
-      prefix: String(product.name || 'BHU').substring(0, 3).toUpperCase(), 
-      format: 'advanced', 
-      base_warranty_months: product.warranty_period || ''
-    });
     setSerialModalOpen(true);
   };
 
@@ -365,38 +353,9 @@ export default function ProductManagement() {
     }
   };
 
-  useEffect(() => { 
-    if (isSerialModalOpen && serialTab === 'view') loadProductSerials(); 
-  }, [serialTab, isSerialModalOpen]);
-
-  const handleGenerateSerials = async (e) => {
-    e.preventDefault();
-    try {
-      const payload = { productId: currentProduct._id || currentProduct.id, ...serialForm };
-      await serialsApi.generate(payload);
-      showToast?.(`Generated ${serialForm.count} serial numbers.`, 'success');
-      
-      const updatedRes = await serialsApi.getByProduct(payload.productId);
-      const sData = updatedRes.data?.serials || updatedRes.data?.data || updatedRes.data;
-      const fullList = Array.isArray(sData) ? sData : [];
-      
-      const worksheetData = fullList.map(s => ({ 
-        'Product': currentProduct.name, 
-        'Serial Number': s.serial_number || s.serial, 
-        'Status': s.status, 
-        'Generated Date': new Date(s.created_at).toLocaleString() 
-      }));
-      
-      const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Serial Numbers");
-      XLSX.writeFile(workbook, `${currentProduct.name.replace(/\s+/g, '_')}_Serials.xlsx`);
-      
-      setSerialTab('view'); 
-    } catch (err) { 
-      showToast?.('Generation failed.', 'error'); 
-    }
-  };
+  useEffect(() => {
+    if (isSerialModalOpen) loadProductSerials();
+  }, [isSerialModalOpen]);
 
   const handleDeleteSerial = async (serialId) => {
     if (!window.confirm('Delete this serial number?')) return;
@@ -579,8 +538,7 @@ export default function ProductManagement() {
                   {id:'basic', l:'Basic Info', i:BoxSelect}, 
                   {id:'seo', l:'SEO & Meta', i:Globe}, 
                   {id:'specs', l:'Specifications', i:List}, 
-                  {id:'media', l:'Images & Docs', i:Database}, 
-                  {id:'warranty', l:'Warranty (Optional)', i:ShieldCheck}
+                  {id:'media', l:'Images & Docs', i:Database}
                 ].map(t => (
                   <button 
                     key={t.id} type="button" onClick={() => setActiveTab(t.id)} 
@@ -730,22 +688,6 @@ export default function ProductManagement() {
                         </div>
                       )}
 
-                      {activeTab === 'warranty' && (
-                        <div className="p-6 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 rounded-2xl">
-                          <div className="flex items-start gap-4">
-                            <div className="p-3 bg-slate-800 rounded-xl text-slate-400">
-                              <ShieldCheck size={24} />
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="text-sm font-bold text-white mb-2">Product warranty (optional)</h4>
-                              <p className="text-xs text-slate-400 mb-4">Leave blank when no warranty applies, including personal-care products. Enter a period only when coverage is confirmed for this specific product.</p>
-                              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Warranty duration (months)</label>
-                              <input type="number" min="1" value={form.warranty_period} onChange={e=>setForm({...form, warranty_period:e.target.value})} className="w-full md:w-1/2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-white outline-none transition-colors" placeholder="Leave blank if not applicable" />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
                       {/* Section B: Staged Client Previews */}
                       {images.length > 0 && (
                         <div className="space-y-2">
@@ -808,63 +750,27 @@ https://www.instagram.com/reel/...`} value={form.video_urls} onChange={e=>setFor
         </div>
       )}
 
-      {/* --- SERIAL GENERATION MODAL --- */}
+      {/* --- PRODUCT SERIAL REGISTRY --- */}
       {isSerialModalOpen && currentProduct && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#081b15]/90 backdrop-blur-xl/90 backdrop-blur-md">
           <div className="bg-[#10241f]/90 backdrop-blur-xl border border-slate-800 w-full max-w-3xl rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
             <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-amber-500/10">
               <div>
                 <h2 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-3">
-                  <QrCode size={24} className="text-amber-500"/> Serial Number Generator
+                  <QrCode size={24} className="text-amber-500"/> Product Serial Registry
                 </h2>
                 <p className="text-[10px] font-mono text-slate-400 mt-1 uppercase tracking-widest">Product: {currentProduct.name}</p>
               </div>
               <button onClick={() => setSerialModalOpen(false)} className="text-slate-500 hover:text-white bg-[#10241f]/85 backdrop-blur-xl p-2 rounded-full transition-colors"><XCircle size={20} /></button>
             </div>
             
-            <div className="flex border-b border-slate-800 px-6 bg-[#10241f]/45 backdrop-blur-xl">
-              <button onClick={() => setSerialTab('generate')} className={`flex items-center gap-2 px-6 py-4 text-[10px] font-black uppercase tracking-widest border-b-2 transition-colors ${serialTab === 'generate' ? 'border-amber-500 text-amber-400 bg-amber-500/5' : 'border-transparent text-slate-500 hover:text-slate-300'}`}>
-                <Plus size={16} /> Generate New
-              </button>
-              <button onClick={() => setSerialTab('view')} className={`flex items-center gap-2 px-6 py-4 text-[10px] font-black uppercase tracking-widest border-b-2 transition-colors ${serialTab === 'view' ? 'border-amber-500 text-amber-400 bg-amber-500/5' : 'border-transparent text-slate-500 hover:text-slate-300'}`}>
-                <List size={16} /> View Saved Numbers
-              </button>
-            </div>
-            
             <div className="flex-1 overflow-y-auto custom-scrollbar">
-              {serialTab === 'generate' && (
-                <form onSubmit={handleGenerateSerials} className="p-8 space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-                    <div className="bg-[#10241f]/55 backdrop-blur-xl p-4 rounded-xl border border-slate-800">
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Quantity to Generate</label>
-                      <input type="number" required min="1" max="1000" value={serialForm.count} onChange={e=>setSerialForm({...serialForm, count: parseInt(e.target.value)})} className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-white font-mono outline-none" />
-                    </div>
-                    <div className="bg-[#10241f]/55 backdrop-blur-xl p-4 rounded-xl border border-slate-800">
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Code Prefix</label>
-                      <input type="text" required value={serialForm.prefix} onChange={e=>setSerialForm({...serialForm, prefix: e.target.value.toUpperCase()})} className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-amber-500 font-mono outline-none tracking-widest" />
-                    </div>
-                    <div className="bg-[#10241f]/55 backdrop-blur-xl p-4 rounded-xl border border-slate-800">
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Warranty (Optional)</label>
-                      <select value={serialForm.base_warranty_months} onChange={e=>setSerialForm({...serialForm, base_warranty_months: e.target.value ? parseInt(e.target.value) : ''})} className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-white font-mono outline-none appearance-none">
-                        <option value="">No warranty</option>
-                        <option value={6}>6 Months</option>
-                        <option value={12}>12 Months</option>
-                        <option value={18}>18 Months</option>
-                        <option value={24}>24 Months</option>
-                        <option value={36}>36 Months</option>
-                      </select>
-                    </div>
-                  </div>
-                  
-                  <div className="pt-4 border-t border-slate-800">
-                    <button type="submit" className="w-full py-4 bg-amber-500 text-slate-950 font-black uppercase tracking-widest text-sm rounded-xl hover:bg-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all flex justify-center items-center gap-3">
-                      <QrCode size={18} /> Generate & Download Excel
-                    </button>
-                  </div>
-                </form>
-              )}
-              
-              {serialTab === 'view' && (
+              <div className="border-b border-slate-800 bg-[#081b15]/70 p-5">
+                <p className="text-xs leading-relaxed text-slate-300">New product codes must be created as production batches so each printed QR opens a real batch record with its expiry date.</p>
+                <button type="button" onClick={() => { setSerialModalOpen(false); navigate('/admin/dashboard/ewarranty'); }} className="mt-3 inline-flex items-center gap-2 rounded-lg border border-[#D4AF37]/30 px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-[#FCE096] hover:bg-[#D4AF37]/10">
+                  <QrCode size={14} /> Open authenticity &amp; batch registry
+                </button>
+              </div>
                 <div className="p-6">
                   {loadingSerials ? (
                     <div className="flex flex-col items-center justify-center py-20 space-y-4">
@@ -906,7 +812,6 @@ https://www.instagram.com/reel/...`} value={form.video_urls} onChange={e=>setFor
                     </div>
                   )}
                 </div>
-              )}
             </div>
           </div>
         </div>

@@ -83,7 +83,7 @@ export default function ProvenanceEngine() {
               <p className="mt-1 text-[#cbd5e1] font-mono text-[11px]">QC Protocol: {matchedRegion.verificationMethod}</p>
               <div className="mt-4 pt-3 border-t border-white/10 flex justify-end">
                 <Link
-                  to={`/verify?serial=${matchedRegion.batchPrefix === 'BV-CH26' ? 'BV-CH26-8841' : matchedRegion.batchPrefix === 'BV-SH26' ? 'BV-SH26-4409' : matchedRegion.batchPrefix === 'BV-KM26' ? 'BV-KK26-3019' : 'BV-SB26-1042'}`}
+                  to="/verify"
                   className="btn-gold-luxury inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-mono text-[10px] font-bold uppercase tracking-wider text-white"
                 >
                   <ShieldCheck size={13} /> Inspect Lab Genuinity Report <ArrowRight size={11} />
@@ -150,7 +150,7 @@ export default function ProvenanceEngine() {
                 <div className="mt-6 pt-4 border-t border-white/10 flex items-center justify-between">
                   <span className="font-mono text-[10px] text-[#94a3b8] uppercase tracking-widest">Small-Batch Run</span>
                   <Link
-                    to={`/verify?serial=${region.batchPrefix === 'BV-CH26' ? 'BV-CH26-8841' : region.batchPrefix === 'BV-SH26' ? 'BV-SH26-4409' : region.batchPrefix === 'BV-KM26' ? 'BV-KK26-3019' : 'BV-SB26-1042'}`}
+                    to="/verify"
                     className="inline-flex items-center gap-1 text-xs font-bold text-[#fce096] hover:text-white transition"
                   >
                     View Batch Certificate <ArrowRight size={12} />

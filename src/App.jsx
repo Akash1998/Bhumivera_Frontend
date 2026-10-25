@@ -421,9 +421,9 @@ function AppContent() {
             {/* Product verification */}
             <Route path="/verify" element={<ProductVerification />} />
             <Route path="/genuinity" element={<ProductVerification />} />
-            <Route path="/ewarranty" element={<ProductVerification />} />
+            <Route path="/ewarranty" element={<Navigate to="/verify" replace />} />
             <Route path="/verify-product" element={<ProductVerification />} />
-            <Route path="/warranty" element={<ProductVerification />} />
+            <Route path="/warranty" element={<Navigate to="/verify" replace />} />
 
             {/* Tools & Tracking */}
             <Route path="/order-tracking" element={<OrderTracking />} />

@@ -200,7 +200,7 @@ export default function ProductDetail() {
              p => String(p.id) === String(fetchedProduct?.id) || p.slug === fetchedProduct?.slug || (fetchedProduct?.name && p.name?.toLowerCase().includes(fetchedProduct.name.toLowerCase()))
            );
            if (fallbackMatch) {
-             fetchedProduct = { ...fallbackMatch, ...fetchedProduct, batchCode: fallbackMatch.batchCode || fetchedProduct.batchCode, directions: fallbackMatch.directions || fetchedProduct.directions, caution: fallbackMatch.caution || fetchedProduct.caution, phLevel: fallbackMatch.phLevel || fetchedProduct.phLevel, primaryBotanicals: fallbackMatch.primaryBotanicals || fetchedProduct.primaryBotanicals, clinicalActives: fallbackMatch.clinicalActives || fetchedProduct.clinicalActives };
+             fetchedProduct = { ...fallbackMatch, ...fetchedProduct, directions: fallbackMatch.directions || fetchedProduct.directions, caution: fallbackMatch.caution || fetchedProduct.caution, phLevel: fallbackMatch.phLevel || fetchedProduct.phLevel, primaryBotanicals: fallbackMatch.primaryBotanicals || fetchedProduct.primaryBotanicals, clinicalActives: fallbackMatch.clinicalActives || fetchedProduct.clinicalActives };
            }
            const lowerIdOrName = `${id} ${fetchedProduct?.slug || ''} ${fetchedProduct?.name || ''}`.toLowerCase();
            const sixMatch = (BHUMIVERA_6_PRODUCTS || []).find(p =>
@@ -710,7 +710,7 @@ export default function ProductDetail() {
 
               <div className="flex flex-col sm:flex-row items-center gap-2">
                 <Link
-                  to={`/verify?serial=${encodeURIComponent(product.batchCode || 'BV-CH26-8841')}`}
+                  to="/verify"
                   className="btn-gold-luxury w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider shadow-md transition-all"
                 >
                   <QrCode size={14} /> Scan / Verify Genuinity Test
@@ -883,7 +883,7 @@ export default function ProductDetail() {
                       <span>100% Sealed Sanitary Custody: Artisanal Personal Care Purity Standard</span>
                     </div>
                     <Link
-                      to={`/verify?serial=${encodeURIComponent(product.batchCode || 'BV-CH26-8841')}`}
+                      to="/verify"
                       className="btn-gold-luxury inline-flex items-center gap-2 rounded-xl text-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider shadow-sm transition-all"
                     >
                       <QrCode size={14} /> Open Full Lab Assay Report

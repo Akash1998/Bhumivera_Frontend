@@ -240,7 +240,6 @@ export default function Profile() {
   const [coupons, setCoupons] = useState([]);
   const [selectedCoupon, setSelectedCoupon] = useState(null);
   const [myReviews, setMyReviews] = useState([]);
-  const [warranties, setWarranties] = useState([]);
 
   const [passwords, setPasswords] = useState({ current: '', new: '', confirm: '' });
   const [secQuestion, setSecQuestion] = useState({ question: SECURITY_QUESTIONS[0], answer: '' });
@@ -283,6 +282,7 @@ export default function Profile() {
   const [supportTicket, setSupportTicket] = useState({ subject: '', message: '', order_id: '', product_id: '' });
 
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const [warranties, setWarranties] = useState([]);
   const [cancellingOrderId, setCancellingOrderId] = useState(null);
   const [addressModal, setAddressModal] = useState({ open:false, editId:null, form:{ label:'Home', full_name:'', phone:'', line1:'', line2:'', city:'', state:'', postal_code:'', country:'India', is_default:false, latitude:null, longitude:null, google_maps_url:'' }});
   const [locatingAddress, setLocatingAddress] = useState(false);
@@ -326,8 +326,6 @@ export default function Profile() {
       const needsNotifications = ['notifications'];
       const needsCoupons = ['overview','coupons'];
       const needsReviews = ['orders','reviews'];
-      const needsWarranties = ['warranty'];
-
       const jobs = [];
       if (needsProfile.includes(tab)) jobs.push(loadProfile());
       if (needsOrders.includes(tab)) jobs.push(loadOrders());
@@ -337,7 +335,6 @@ export default function Profile() {
       if (needsNotifications.includes(tab)) jobs.push(loadNotifications());
       if (needsCoupons.includes(tab)) jobs.push(loadCoupons());
       if (needsReviews.includes(tab)) jobs.push(loadReviews());
-      if (needsWarranties.includes(tab)) jobs.push(loadWarranties());
       await Promise.all(jobs);
     } finally { setLoading(false); }
   };
@@ -504,7 +501,6 @@ export default function Profile() {
       setWarranties(safeArr(safeExtract(res, 'warranties')) || safeArr(safeExtract(res, 'data')) || safeArr(res?.data));
     } catch (_) {}
   };
-
   // ======== Actions ========
   const handleUpdateProfile = async (e) => {
     e.preventDefault();
@@ -806,18 +802,23 @@ export default function Profile() {
       const res = await serialsApi.validate(warrantyInput.serial.trim());
       setWarrantyCheck({ ok: true, data: res.data?.data || res.data || {} });
     } catch (err) {
-      setWarrantyCheck({ ok:false, msg: err.response?.data?.message || 'Invalid or not found' });
+      setWarrantyCheck({ ok: false, msg: err.response?.data?.message || 'Invalid or not found' });
     }
   };
   const handleWarrantyRegister = async () => {
     if (!warrantyCheck?.ok) return;
-    const s = warrantyInput.serial.trim();
     try {
-      await warrantyApi.register({ serial: s, product_id: warrantyCheck.data?.productId || warrantyCheck.data?.product_id || null });
+      await warrantyApi.register({
+        serial: warrantyInput.serial.trim(),
+        product_id: warrantyCheck.data?.productId || warrantyCheck.data?.product_id || null,
+      });
       toast.success('Warranty registered');
-      setWarrantyInput({ serial:'' }); setWarrantyCheck(null);
+      setWarrantyInput({ serial: '' });
+      setWarrantyCheck(null);
       await loadWarranties();
-    } catch (err) { toast.error(err.response?.data?.message || 'Failed to register'); }
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to register');
+    }
   };
   const handleSupportSubmit = async (e) => {
     e.preventDefault();
@@ -1623,114 +1624,21 @@ export default function Profile() {
 
             {/* ======== ARTISANAL SERIAL & GENUINITY VERIFICATION ======== */}
             {activeTab === 'verify' && (
-              <div className="space-y-6">
-                <section className="two-tone-panel-gold rounded-3xl p-6 sm:p-9 border border-[#d4af37]/40 shadow-2xl relative overflow-hidden">
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[#d4af37]/25 pb-6">
-                    <div>
-                      <div className="inline-flex items-center gap-2 rounded-full border border-[#d4af37]/40 bg-[#d4af37]/15 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.22em] text-[#fce096]">
-                        <CheckCircle2 size={13} className="text-[#d4af37]" />
-                        100% Genuine Artisanal Small-Batch Formulation
-                      </div>
-                      <h2 className="mt-3 font-serif text-2xl sm:text-3xl font-bold text-white tracking-tight">
-                        <span className="font-headline-gold">Artisanal Serial</span>{' '}
-                        <span className="font-headline-silver">&amp; Purity Assay Verification</span>
-                      </h2>
-                      <div className="gold-hairline w-24 my-3" />
-                      <p className="text-xs text-[#cbd5e1] mt-1 max-w-xl leading-relaxed font-light">
-                        Every bottle is compounded in micro-batches of 250 units, hand-inspected, and sealed with tamper-evident virgin security. Verify your bottle's lab analysis, pH calibration, and harvest origin.
-                      </p>
-                    </div>
-                    <div className="two-tone-card rounded-2xl p-4 border border-[#d4af37]/35 text-center shrink-0">
-                      <p className="font-mono text-[9px] uppercase tracking-widest text-[#fce096]">Cleanroom Standard</p>
-                      <p className="font-serif text-lg font-bold text-white">Run of 250 Units</p>
-                      <p className="text-[10px] text-[#cbd5e1] font-medium mt-0.5">Spectro Purity 99.8%</p>
-                    </div>
-                  </div>
-
-                  {/* Serial Lookup Box */}
-                  <div className="mt-6">
-                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[#fce096] block mb-2 font-mono">
-                      Enter Bottle Serial Number (from back label / box QR)
-                    </label>
-                    <div className="flex flex-col sm:flex-row gap-3">
-                      <input
-                        type="text"
-                        placeholder="e.g. BV-CH26-8841, BV-SH26-4409"
-                        value={warrantyInput.serial}
-                        onChange={(e) => setWarrantyInput({ serial: e.target.value.toUpperCase() })}
-                        className="flex-1 rounded-xl border border-[#d4af37]/30 bg-[#070a0e] px-4 py-3 text-sm text-white placeholder-[#94a3b8] outline-none focus:border-[#d4af37] font-mono tracking-wider"
-                      />
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const s = warrantyInput.serial.trim() || 'BV-CH26-8841';
-                          navigate(`/verify?serial=${encodeURIComponent(s)}`);
-                        }}
-                        className="btn-gold-luxury inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-xs font-semibold uppercase tracking-wider shadow-md"
-                      >
-                        <QrCode size={16} /> Open Full Genuinity Assay
-                      </button>
-                    </div>
-
-                    <div className="mt-4 flex flex-wrap items-center gap-2 text-xs text-[#94a3b8]">
-                      <span className="text-[10px] uppercase tracking-wider text-[#fce096]">Sample Artisanal Serials:</span>
-                      {['BV-CH26-8841 (Charcoal 3%)', 'BV-SH26-4409 (Botanical Shampoo)', 'BV-SB26-1042 (Sea Buckthorn)'].map((sample) => {
-                        const code = sample.split(' ')[0];
-                        return (
-                          <button
-                            key={code}
-                            type="button"
-                            onClick={() => {
-                              setWarrantyInput({ serial: code });
-                              navigate(`/verify?serial=${encodeURIComponent(code)}`);
-                            }}
-                            className="rounded-lg border border-[#d4af37]/20 bg-[#070a0e] px-2.5 py-1 text-[11px] font-mono text-[#cbd5e1] hover:text-[#fce096] hover:border-[#d4af37]/50 transition"
-                          >
-                            {sample}
-                          </button>
-                        );
-                      })}
-                    </div>
-                  </div>
-
-                  {/* 4 Core Artisanal Metrics */}
-                  <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-4 pt-6 border-t border-[#d4af37]/20">
-                    <div className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e]/70 p-3.5">
-                      <p className="font-mono text-[9px] uppercase tracking-widest text-[#fce096]">Calibrated pH</p>
-                      <p className="font-serif text-base font-bold text-white mt-0.5">5.51 pH</p>
-                      <p className="text-[10px] text-[#cbd5e1] font-light">Skin-Identical Mantle</p>
-                    </div>
-                    <div className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e]/70 p-3.5">
-                      <p className="font-mono text-[9px] uppercase tracking-widest text-[#fce096]">Bioactive Assay</p>
-                      <p className="font-serif text-base font-bold text-white mt-0.5">99.8% Retention</p>
-                      <p className="text-[10px] text-[#cbd5e1] font-light">Spectrophotometric QA</p>
-                    </div>
-                    <div className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e]/70 p-3.5">
-                      <p className="font-mono text-[9px] uppercase tracking-widest text-[#fce096]">Heavy Metals</p>
-                      <p className="font-serif text-base font-bold text-white mt-0.5">Not Detected</p>
-                      <p className="text-[10px] text-[#cbd5e1] font-light">0.0 ppm Cleanroom</p>
-                    </div>
-                    <div className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e]/70 p-3.5">
-                      <p className="font-mono text-[9px] uppercase tracking-widest text-[#fce096]">Sanitary Custody</p>
-                      <p className="font-serif text-base font-bold text-white mt-0.5">100% Virgin Seal</p>
-                      <p className="text-[10px] text-[#cbd5e1] font-light">Zero Re-Entry Standard</p>
-                    </div>
-                  </div>
-                </section>
-
-                {/* Direct Concierge Link */}
-                <div className="two-tone-panel rounded-2xl border border-[#d4af37]/25 p-6 shadow-sm flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                  <div>
-                    <h3 className="font-serif font-bold text-white text-base">Concierge Assistance for Orders &amp; Formulations</h3>
-                    <p className="text-xs text-[#cbd5e1] mt-1 max-w-xl font-light">
-                      Have questions regarding bottle application ritual, storage, or unboxing verification? Our executive concierge team is available for verified patrons.
-                    </p>
-                  </div>
+              <div className="two-tone-panel-gold relative overflow-hidden rounded-3xl border border-[#d4af37]/35 p-7 shadow-xl sm:p-10">
+                <div className="relative max-w-2xl">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-[#d4af37]/35 bg-[#d4af37]/10 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#fce096]">
+                    <Shield className="h-3.5 w-3.5" /> Batch-backed product checks
+                  </span>
+                  <h2 className="mt-4 font-serif text-2xl font-bold text-white sm:text-3xl">Verify product authenticity</h2>
+                  <p className="mt-3 max-w-xl text-sm leading-relaxed text-[#cbd5e1]">
+                    Scan the QR label or enter its unique code to check the official production batch, recorded expiry date, and any batch details shared by Bhumivera.
+                  </p>
                   <button
-                    onClick={() => setActiveTab('support')}
-                    className="btn-gold-luxury inline-flex items-center gap-2 px-5 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider shrink-0"
+                    type="button"
+                    onClick={() => navigate('/verify')}
+                    className="btn-gold-luxury mt-6 inline-flex min-h-11 items-center gap-2 rounded-xl px-5 text-xs font-bold uppercase tracking-wider"
                   >
-                    <LifeBuoy size={14} /> Open Concierge Ticket
+                    <QrCode size={16} /> Open authenticity checker
                   </button>
                 </div>
               </div>

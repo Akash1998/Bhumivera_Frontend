@@ -11,7 +11,6 @@ import {
   CheckCircle2,
   Droplets,
   ThermometerSnowflake,
-  Search,
   Layers,
   Award,
   Lock,
@@ -19,11 +18,9 @@ import {
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import BestSellersToday from '../components/BestSellersToday';
-import { useToast } from '../context/ToastContext';
 import {
   HOME_VISUAL_ASSETS,
   MAISON_REGIMEN_BUNDLES,
-  SAMPLE_BATCH_COAS,
 } from '../data/bhumiveraUniqueData';
 
 const tiles = [
@@ -125,28 +122,12 @@ const HOME_CONSCIOUS_FAQS = [
   },
   {
     q: 'How do I verify a bottle serial number?',
-    a: 'Use the product verification portal to check a serial against available records. The certificate fixtures on this homepage are sample data only and do not verify a real bottle or provide a live laboratory report.',
+    a: 'Scan the QR code on the product label or enter its serial number in the product verification portal. Only registered batches are shown as genuine.',
   },
 ];
 
 export default function PremiumHome() {
-  const { showToast } = useToast() || {};
-  const [serialInput, setSerialInput] = useState('BHMV-2610-SB083');
-  const [selectedCoa, setSelectedCoa] = useState(SAMPLE_BATCH_COAS['BHMV-2610-SB083']);
   const [selectedPhSample, setSelectedPhSample] = useState(PH_STRIP_SAMPLES[0]);
-
-  const handleVerifySerial = (e) => {
-    if (e) e.preventDefault();
-    const code = serialInput.trim().toUpperCase();
-    if (!code) return;
-    if (SAMPLE_BATCH_COAS[code]) {
-      setSelectedCoa(SAMPLE_BATCH_COAS[code]);
-      showToast?.(`Loaded sample certificate data for ${code}; this is not a live lab verification.`, 'success');
-      return;
-    }
-    setSelectedCoa(null);
-    showToast?.(`No sample certificate is available for ${code}.`, 'error');
-  };
 
   return (
     <main className="min-h-screen bg-[#14291F] text-[#FAF7F2] font-sans">
@@ -219,117 +200,24 @@ export default function PremiumHome() {
           ))}
         </div>
 
-        {/* STRATEGIC PLAY 2: INTERACTIVE HOMEPAGE MICRO-BATCH SERIAL & LAB COA VERIFIER */}
+        {/* Product authenticity is checked against the live batch registry. */}
         <div id="live-batch-coa" className="mt-12 rounded-3xl border border-[#D4AF37]/45 bg-[#102219] p-6 sm:p-9 shadow-2xl">
-          <div className="grid gap-8 lg:grid-cols-[1fr_1.15fr] items-start">
+          <div className="flex flex-col items-start justify-between gap-6 md:flex-row md:items-center">
             <div>
               <span className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/40 bg-[#14291F] px-3.5 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-[#FCE096]">
-                <QrCode size={13} className="text-[#D4AF37]" /> Sample Certificate Preview
+                <QrCode size={13} className="text-[#D4AF37]" /> Product Authenticity
               </span>
               <h2 className="mt-4 font-serif text-2xl font-bold sm:text-4xl">
-                <span className="font-headline-gold">Interactive Bottle Serial</span>{' '}
-                <span className="font-headline-silver">&amp; Lab COA Lookup</span>
+                <span className="font-headline-gold">Verify a product</span>{' '}
+                <span className="font-headline-silver">against its registered batch</span>
               </h2>
-              <p className="mt-3 text-xs sm:text-sm leading-relaxed text-[#DFD7C4]">
-                This section contains sample certificate fixtures for interface preview only. It does not verify a real bottle or retrieve a live laboratory report. Enter one of the listed sample serials to preview the sample fields.
+              <p className="mt-3 max-w-2xl text-xs leading-relaxed text-[#DFD7C4] sm:text-sm">
+                Scan the QR on your product or enter its unique code to view registered batch details and expiry information.
               </p>
-
-              <form onSubmit={handleVerifySerial} className="mt-5 flex flex-col sm:flex-row gap-3">
-                <input
-                  type="text"
-                  value={serialInput}
-                  onChange={(e) => setSerialInput(e.target.value)}
-                  aria-label="Bottle Serial Number"
-                  placeholder="e.g. BHMV-2610-SB083"
-                  className="flex-1 rounded-xl border border-[#D4AF37]/45 bg-[#070a0e] px-4 py-3 font-mono text-sm uppercase tracking-wider text-[#FCE096] outline-none focus:border-[#D4AF37]"
-                />
-                <button
-                  type="submit"
-                  className="btn-gold-luxury inline-flex items-center justify-center gap-2 rounded-xl px-6 py-3 text-xs font-bold uppercase tracking-wider"
-                >
-                  <Search size={15} /> Pull Lab Certificate
-                </button>
-              </form>
-
-              <div className="mt-4">
-                <p className="text-[11px] font-mono uppercase tracking-wider text-[#9BB0A5] mb-2">
-                  Preview Sample Certificate Fixtures:
-                </p>
-                <div className="flex flex-wrap gap-2">
-                  {Object.keys(SAMPLE_BATCH_COAS).map((code) => (
-                    <button
-                      key={code}
-                      type="button"
-                      onClick={() => {
-                        setSerialInput(code);
-                        setSelectedCoa(SAMPLE_BATCH_COAS[code]);
-                      }}
-                      className={`rounded-lg border px-3 py-1.5 font-mono text-[11px] transition ${
-                        selectedCoa?.serial === code
-                          ? 'border-[#D4AF37] bg-[#D4AF37] text-[#102219] font-bold'
-                          : 'border-[#244A38] bg-[#14291F] text-[#FCE096] hover:border-[#D4AF37]/60'
-                      }`}
-                    >
-                      {code}
-                    </button>
-                  ))}
-                </div>
-              </div>
             </div>
-
-            {/* Sample certificate fields are illustrative and are not live laboratory records. */}
-            {selectedCoa && (
-              <div className="rounded-2xl border border-[#D4AF37]/45 bg-[#070a0e] p-5 sm:p-6 shadow-inner">
-                <p className="mb-4 rounded-lg border border-amber-300/40 bg-amber-950/40 px-3 py-2 text-xs font-bold text-amber-100">
-                  SAMPLE DATA ONLY — NOT A VERIFIED LAB CERTIFICATE OR LIVE INVENTORY RECORD
-                </p>
-                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-[#244A38] pb-4">
-                  <div>
-                    <span className="inline-flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-emerald-400">
-                      <CheckCircle2 size={14} /> Sample Certificate Fixture
-                    </span>
-                    <h3 className="mt-1 font-serif text-lg font-bold text-white">{selectedCoa.productName}</h3>
-                  </div>
-                  <span className="rounded-lg border border-[#D4AF37]/40 bg-[#102219] px-3 py-1 font-mono text-xs font-bold text-[#FCE096]">
-                    {selectedCoa.bottleSequence}
-                  </span>
-                </div>
-
-                <div className="mt-4 grid grid-cols-2 gap-3 text-xs sm:grid-cols-3">
-                  <div className="rounded-xl border border-[#244A38] bg-[#102219]/70 p-3">
-                    <span className="block font-mono text-[10px] uppercase text-[#9BB0A5]">Serial &amp; Batch</span>
-                    <strong className="mt-0.5 block font-mono text-[#FCE096]">{selectedCoa.serial}</strong>
-                    <span className="text-[10px] text-[#DFD7C4]">{selectedCoa.batchCode}</span>
-                  </div>
-                  <div className="rounded-xl border border-[#244A38] bg-[#102219]/70 p-3">
-                    <span className="block font-mono text-[10px] uppercase text-[#9BB0A5]">Calibrated pH Assay</span>
-                    <strong className="mt-0.5 block text-emerald-400">{selectedCoa.calibratedPh}</strong>
-                  </div>
-                  <div className="rounded-xl border border-[#244A38] bg-[#102219]/70 p-3">
-                    <span className="block font-mono text-[10px] uppercase text-[#9BB0A5]">Extraction Temp</span>
-                    <strong className="mt-0.5 block text-white">{selectedCoa.extractionTemp}</strong>
-                  </div>
-                  <div className="rounded-xl border border-[#244A38] bg-[#102219]/70 p-3">
-                    <span className="block font-mono text-[10px] uppercase text-[#9BB0A5]">Microbiological Assay</span>
-                    <strong className="mt-0.5 block text-white">{selectedCoa.microbiologicalAssay}</strong>
-                  </div>
-                  <div className="rounded-xl border border-[#244A38] bg-[#102219]/70 p-3">
-                    <span className="block font-mono text-[10px] uppercase text-[#9BB0A5]">Heavy Metal Screen</span>
-                    <strong className="mt-0.5 block text-white">{selectedCoa.heavyMetals}</strong>
-                  </div>
-                  <div className="rounded-xl border border-[#244A38] bg-[#102219]/70 p-3">
-                    <span className="block font-mono text-[10px] uppercase text-[#9BB0A5]">Stock status</span>
-                    <strong className="mt-0.5 block text-[#FCE096]">No live stock count</strong>
-                    <span className="text-[10px] text-[#DFD7C4]">This fixture is illustrative only.</span>
-                  </div>
-                </div>
-
-                <div className="mt-3 rounded-xl border border-[#D4AF37]/25 bg-[#102219]/90 p-3 text-xs text-[#DFD7C4]">
-                  <p><strong className="text-[#FCE096]">100% Disclosed Actives:</strong> {selectedCoa.disclosedActives}</p>
-                  <p className="mt-1 text-[11px] text-[#9BB0A5]"><strong className="text-white">White-Glove Custody:</strong> {selectedCoa.tamperCustody} · {selectedCoa.originLot}</p>
-                </div>
-              </div>
-            )}
+            <Link to="/verify" className="btn-gold-luxury inline-flex shrink-0 items-center justify-center gap-2 rounded-xl px-6 py-3 text-xs font-bold uppercase tracking-wider">
+              <ShieldCheck size={16} /> Verify product
+            </Link>
           </div>
         </div>
 
