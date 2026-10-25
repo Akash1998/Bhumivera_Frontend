@@ -609,7 +609,7 @@ export default function ProductDetail() {
                   Going fast today
                 </p>
                 <p className="mt-1 text-sm text-[#DFD7C4]">
-                  {unitsOrderedToday} {unitsOrderedToday === 1 ? 'unit ordered' : 'units ordered'} today. Shop now while your pick is still in stock.
+                  Units Sold Today: {unitsOrderedToday}. Shop now while your pick is still in stock.
                 </p>
               </div>
             )}
