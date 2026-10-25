@@ -163,10 +163,6 @@ export default function ScarcitySimulationBadge({
             )}
           </div>
 
-          <p className="mt-1 text-xs leading-relaxed text-amber-50/90">
-            ***LIVE NOW ***.
-          </p>
-
           {snapshot.paused ? (
             <p className="mt-2 inline-flex items-center gap-1.5 text-xs font-semibold text-amber-200">
               <Activity size={13} aria-hidden="true" /> Simulation paused
