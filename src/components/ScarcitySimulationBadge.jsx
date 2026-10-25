@@ -65,19 +65,50 @@ export default function ScarcitySimulationBadge({
     hasMountedRef.current = true;
   }, [baseSoldToday, baseRemaining]);
 
-  // Genuine dynamic live viewers math: ~96 to 118 people currently viewing
+  // Dynamic live viewers: 5 to 200 range with realistic momentum drift every 5s (e.g. 100+ -> 110+ -> 90+ -> 87+ -> 110+)
   const [viewerCount, setViewerCount] = useState(() => {
-    const seed = (String(productName || '').length * 17) % 19;
-    return 100 + seed; // e.g. 100 - 118
+    const seed = String(productName || 'Bhumivera')
+      .split('')
+      .reduce((acc, c) => acc + c.charCodeAt(0), 0) % 25;
+    return 98 + seed; // starts around 98 - 122
+  });
+
+  const driftStateRef = useRef({
+    direction: Math.random() > 0.5 ? 1 : -1,
+    ticksRemainingInTrend: 2 + Math.floor(Math.random() * 2), // 2-3 ticks before direction change
   });
 
   useEffect(() => {
     const interval = setInterval(() => {
       setViewerCount(prev => {
-        const delta = Math.floor(Math.random() * 5) - 2; // -2 to +2
-        return Math.max(88, Math.min(124, prev + delta));
+        const state = driftStateRef.current;
+        state.ticksRemainingInTrend -= 1;
+
+        // When trend expires, reverse direction with new random trend length
+        if (state.ticksRemainingInTrend <= 0) {
+          state.direction = -state.direction;
+          state.ticksRemainingInTrend = 1 + Math.floor(Math.random() * 3); // 1-3 ticks in new direction
+        }
+
+        // Varied step between 5 and 22 for natural waves (e.g. 100 -> 110 -> 90 -> 87 -> 110)
+        const step = Math.floor(Math.random() * 18) + 5;
+        let next = prev + state.direction * step;
+
+        // Keep strictly within 5 to 200 bounds with smooth turnaround
+        if (next >= 195) {
+          next = 188 - Math.floor(Math.random() * 12);
+          state.direction = -1;
+          state.ticksRemainingInTrend = 2 + Math.floor(Math.random() * 2);
+        } else if (next <= 12) {
+          next = 15 + Math.floor(Math.random() * 10);
+          state.direction = 1;
+          state.ticksRemainingInTrend = 2 + Math.floor(Math.random() * 2);
+        }
+
+        return Math.min(200, Math.max(5, next));
       });
-    }, 12000);
+    }, 5000);
+
     return () => clearInterval(interval);
   }, []);
 
@@ -108,21 +139,26 @@ export default function ScarcitySimulationBadge({
         </div>
 
         <div className="min-w-0 flex-1">
-          {/* Top row: Label + Live Viewers */}
+          {/* Top row: Label + Bolder RED Live Viewers Indicator */}
           <div className="flex flex-wrap items-center justify-between gap-2">
             <p className="text-[10px] font-black uppercase tracking-[0.14em] text-amber-200">
               Illustrative inventory simulation
             </p>
 
-            {/* "100 people currently viewing" genuine live social proof */}
+            {/* Bolder & RED live viewing indicator with pulsing RED radar dot */}
             {!snapshot.paused && !snapshot.outOfStock && (
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/15 border border-emerald-400/30 px-2.5 py-0.5 text-[10px] font-bold text-emerald-300">
-                <span className="relative flex h-2 w-2">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-emerald-400 opacity-75" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-emerald-400" />
+              <span
+                data-testid="live-viewers-badge"
+                className="inline-flex items-center gap-1.5 rounded-full bg-rose-950/80 border border-rose-500/70 px-3 py-1 text-[11px] font-black text-rose-100 shadow-[0_0_14px_rgba(244,63,94,0.45)]"
+              >
+                <span className="relative flex h-2.5 w-2.5" aria-hidden="true">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-500 opacity-90" />
+                  <span className="relative inline-flex h-2.5 w-2.5 rounded-full bg-rose-600 shadow-[0_0_8px_rgba(244,63,94,0.9)]" />
                 </span>
-                <Eye size={11} className="text-emerald-400" />
-                <span>{viewerCount} people currently viewing</span>
+                <Eye size={12} className="text-rose-300 stroke-[2.5]" aria-hidden="true" />
+                <span className="font-black tracking-wide text-rose-100">
+                  {viewerCount}+ people are viewing
+                </span>
               </span>
             )}
           </div>

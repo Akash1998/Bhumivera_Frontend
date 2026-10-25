@@ -23,6 +23,27 @@ describe('ScarcitySimulationBadge', () => {
     expect(screen.queryByText(/lifetime/i)).toBeNull();
   });
 
+  it('renders bold red live viewing indicator within 5 to 200 range', () => {
+    render(
+      <ScarcitySimulationBadge
+        snapshot={{ enabled: true, remaining: 123, dailyCap: 250, simulatedSoldToday: 127 }}
+        productName="Sea Buckthorn Face Wash"
+      />
+    );
+
+    const badge = screen.getByTestId('live-viewers-badge');
+    expect(badge).toBeTruthy();
+    expect(badge.className).toContain('bg-rose-950');
+    expect(badge.className).toContain('border-rose-500');
+
+    // Should match e.g. "100+ people are viewing" with count between 5 and 200
+    const viewerText = screen.getByText(/\d+\+ people are viewing/i);
+    expect(viewerText).toBeTruthy();
+    const count = parseInt(viewerText.textContent, 10);
+    expect(count).toBeGreaterThanOrEqual(5);
+    expect(count).toBeLessThanOrEqual(200);
+  });
+
   it('labels sample buyers as fictional, not real orders', () => {
     render(
       <ScarcitySimulationBadge
