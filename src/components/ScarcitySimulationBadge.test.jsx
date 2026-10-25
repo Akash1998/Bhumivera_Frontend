@@ -23,7 +23,7 @@ describe('ScarcitySimulationBadge', () => {
     expect(screen.queryByText(/lifetime/i)).toBeNull();
   });
 
-  it('renders bold red live viewing indicator within 5 to 200 range', () => {
+  it('renders bold red live viewing indicator starting at 77+ with 45s refresh note', () => {
     render(
       <ScarcitySimulationBadge
         snapshot={{ enabled: true, remaining: 123, dailyCap: 250, simulatedSoldToday: 127 }}
@@ -36,12 +36,12 @@ describe('ScarcitySimulationBadge', () => {
     expect(badge.className).toContain('bg-rose-950');
     expect(badge.className).toContain('border-rose-500');
 
-    // Should match e.g. "100+ people are viewing" with count between 5 and 200
-    const viewerText = screen.getByText(/\d+\+ people are viewing/i);
+    // Should match "77+ people are viewing"
+    const viewerText = screen.getByText(/77\+ people are viewing/i);
     expect(viewerText).toBeTruthy();
-    const count = parseInt(viewerText.textContent, 10);
-    expect(count).toBeGreaterThanOrEqual(5);
-    expect(count).toBeLessThanOrEqual(200);
+
+    // Verify small note "refreshes every 45 seconds"
+    expect(screen.getByText(/refreshes every 45 seconds/i)).toBeTruthy();
   });
 
   it('labels sample buyers as fictional, not real orders', () => {
