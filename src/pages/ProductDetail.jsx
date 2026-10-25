@@ -114,6 +114,10 @@ export default function ProductDetail() {
     error: simulatorError,
   } =
     useScarcitySimulator(product?.id != null ? [product.id] : []);
+  const productSimulation = simulatorProducts[String(product?.id)];
+  const unitsSoldToday = Number(
+    productSimulation?.simulatedSoldToday ?? productSimulation?.soldToday
+  ) || 0;
   const addToBagButtonRef = useRef(null);
   const isAddToBagButtonVisible = useInView(addToBagButtonRef, { amount: 0.01, initial: true });
 
@@ -609,7 +613,7 @@ export default function ProductDetail() {
                   Going fast today
                 </p>
                 <p className="mt-1 text-sm text-[#DFD7C4]">
-                  Units Sold Today: {unitsOrderedToday}. Shop now while your pick is still in stock.
+                  Units Sold Today: {unitsSoldToday}. Shop now while your pick is still in stock.
                 </p>
               </div>
             )}
@@ -617,7 +621,7 @@ export default function ProductDetail() {
             {simulatorEnabled && (
               <div className="mb-4">
                 <ScarcitySimulationBadge
-                  snapshot={simulatorProducts[String(product.id)]}
+                  snapshot={productSimulation}
                   productName={product.name}
                   sampleActivityEnabled={sampleActivityEnabled}
                 />
