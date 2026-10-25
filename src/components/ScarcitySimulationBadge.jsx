@@ -172,14 +172,14 @@ export default function ScarcitySimulationBadge({
               {/* Units count */}
               <div className="mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1 text-xs font-semibold">
                 <span className="text-white">
-                  Illustrative units remaining:{' '}
+                  Units remaining:{' '}
                   <strong className="text-lg font-black text-[#FCE096] transition-all duration-300">
                     {activeRemaining}
                   </strong>{' '}
                   / <span className="text-slate-400">{dailyCap}</span>
                 </span>
                 <span className="text-slate-300">
-                  Simulated units sold today:{' '}
+                  Units Sold Today:{' '}
                   <strong className="text-[#FCE096]">{activeSoldToday}</strong>
                 </span>
               </div>
