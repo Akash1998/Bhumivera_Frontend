@@ -5,7 +5,6 @@ import SEO from '../components/SEO';
 import SEOStructuredData from '../components/SEOStructuredData';
 import ProductDeliveryPromise from '../components/ProductDeliveryPromise';
 import ScarcitySimulationBadge from '../components/ScarcitySimulationBadge';
-import SimulatedLivePurchaseToast from '../components/SimulatedLivePurchaseToast';
 import React, { useRef, useState, useEffect } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { motion, AnimatePresence, useInView } from 'framer-motion';
@@ -108,7 +107,6 @@ export default function ProductDetail() {
   const [activeVideo, setActiveVideo] = useState(null);
   const [reviewRatingFilter, setReviewRatingFilter] = useState('all');
   const [reviewSort, setReviewSort] = useState('newest');
-  const [liveSimulatedDecrement, setLiveSimulatedDecrement] = useState(0);
   const {
     products: simulatorProducts,
     enabled: simulatorEnabled,
@@ -617,17 +615,11 @@ export default function ProductDetail() {
             )}
 
             {simulatorEnabled && (
-              <div className="mb-4 space-y-3">
+              <div className="mb-4">
                 <ScarcitySimulationBadge
                   snapshot={simulatorProducts[String(product.id)]}
                   productName={product.name}
                   sampleActivityEnabled={sampleActivityEnabled}
-                  liveDecrement={liveSimulatedDecrement}
-                />
-                <SimulatedLivePurchaseToast
-                  productName={product.name}
-                  enabled={simulatorEnabled && (simulatorProducts[String(product.id)]?.enabled !== false)}
-                  onSimulatedPurchase={() => setLiveSimulatedDecrement(prev => prev + 1)}
                 />
               </div>
             )}
