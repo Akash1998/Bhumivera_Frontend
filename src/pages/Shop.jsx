@@ -54,11 +54,6 @@ const ProductCard = ({ product, index, bestsellerUnits, simulation, sampleActivi
             event.currentTarget.src = FALLBACK_CATALOG_PRODUCTS[index % FALLBACK_CATALOG_PRODUCTS.length].image_url;
           }}
         />
-        {Number(bestsellerUnits) > 0 && (
-          <div className="absolute top-4 left-4 px-3 py-1 rounded-full bg-emerald-950/90 border border-emerald-300/40 font-mono text-[10px] font-bold uppercase tracking-wider text-emerald-100">
-            {bestsellerUnits} ordered today
-          </div>
-        )}
         <div className="absolute top-4 right-4 flex flex-col gap-2">
           <button
             type="button"
