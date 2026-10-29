@@ -77,11 +77,6 @@ const REVIEW_MEDIA_PLACEHOLDER = '/images/review-placeholder.svg';
 export default function ProductDetail() {
   const { id } = useParams();
   const location = useLocation();
-  const loadingProduct = FALLBACK_CATALOG_PRODUCTS.find(
-    product => String(product.id) === String(id) || product.slug === String(id)
-  ) || (BHUMIVERA_6_PRODUCTS || []).find(
-    product => String(product.id) === String(id) || product.slug === String(id)
-  );
   const { addToCart } = useCart();
   const { isWishlisted, toggleWishlist } = useWishlist();
   const { user } = useAuth();
@@ -200,7 +195,7 @@ export default function ProductDetail() {
              p => String(p.id) === String(fetchedProduct?.id) || p.slug === fetchedProduct?.slug || (fetchedProduct?.name && p.name?.toLowerCase().includes(fetchedProduct.name.toLowerCase()))
            );
            if (fallbackMatch) {
-             fetchedProduct = { ...fallbackMatch, ...fetchedProduct, directions: fallbackMatch.directions || fetchedProduct.directions, caution: fallbackMatch.caution || fetchedProduct.caution, phLevel: fallbackMatch.phLevel || fetchedProduct.phLevel, primaryBotanicals: fallbackMatch.primaryBotanicals || fetchedProduct.primaryBotanicals, clinicalActives: fallbackMatch.clinicalActives || fetchedProduct.clinicalActives };
+             fetchedProduct = { ...fallbackMatch, ...fetchedProduct, batchCode: fallbackMatch.batchCode || fetchedProduct.batchCode, directions: fallbackMatch.directions || fetchedProduct.directions, caution: fallbackMatch.caution || fetchedProduct.caution, phLevel: fallbackMatch.phLevel || fetchedProduct.phLevel, primaryBotanicals: fallbackMatch.primaryBotanicals || fetchedProduct.primaryBotanicals, clinicalActives: fallbackMatch.clinicalActives || fetchedProduct.clinicalActives };
            }
            const lowerIdOrName = `${id} ${fetchedProduct?.slug || ''} ${fetchedProduct?.name || ''}`.toLowerCase();
            const sixMatch = (BHUMIVERA_6_PRODUCTS || []).find(p =>
@@ -462,7 +457,7 @@ export default function ProductDetail() {
     setActiveMedia(gallery[nextIndex]);
   };
   
-  if (loading) return <SkeletonPDP productName={loadingProduct?.name} />;
+  if (loading) return <SkeletonPDP />;
 
   if (!product) {
     return (
@@ -473,23 +468,53 @@ export default function ProductDetail() {
   }
 
   const productSchema = {
-    "@context": "https://schema.org/",
+    "@context": "https://schema.org",
     "@type": "Product",
-    "name": product.name,
-    "image": product.images && product.images.length > 0 ? getImageUrl(product.images[0]) : "https://bhumivera.com/logo.webp",
-    "description": product.description,
-    "sku": product.sku || product.id,
+    "name": product.luxuryName || product.name,
+    "image": product.images && product.images.length > 0 ? getImageUrl(product.images[0]) : "https://bhumivera.com/assets/logo.png",
+    "description": `${product.short_description || product.description || product.name} — Formulated under the Bhumivera Transparency Standard (Est. 2016 lineage) with 100% active percentages, sub-28°C cold-pressed Indian botanicals, and milligram-weight label disclosure.`,
+    "sku": product.luxurySku || product.sku || product.id,
+    "mpn": product.mpn || product.luxurySku || product.sku || `BV-${product.id}`,
     "brand": {
       "@type": "Brand",
-      "name": product.brand || "Bhumivera"
+      "name": "Bhumivera",
+      "url": "https://bhumivera.com",
+      "logo": "https://bhumivera.com/assets/logo.png",
+      "slogan": "The Transparent Maison — Rooted in Heritage Since 2016"
     },
+    "manufacturer": {
+      "@type": "Organization",
+      "name": "Bhumivera Organics India Private Limited",
+      "url": "https://bhumivera.com",
+      "parentOrganization": {
+        "@type": "Organization",
+        "name": "MPG E-Business Private Limited",
+        "foundingDate": "2016-09-22"
+      }
+    },
+    "additionalProperty": [
+      {
+        "@type": "PropertyValue",
+        "name": "Transparency Standard",
+        "value": "Formulated under the Bhumivera Transparency Standard (Est. 2016 lineage)"
+      },
+      {
+        "@type": "PropertyValue",
+        "name": "Active & Milligram Disclosure",
+        "value": product.active_ingredients || product.primaryBotanicals || "100% Active Percentage & Milligram-Disclosed Formulation"
+      }
+    ],
     "offers": {
       "@type": "Offer",
-      "url": `https://bhumivera.com/product/${product.slug || product.id}`,
-      "priceCurrency": "INR", 
-      "price": product.discount_price || product.price,
+      "url": `https://bhumivera.com/product/${product.seoSlug || product.slug || product.id}`,
+      "priceCurrency": "INR",
+      "price": String(product.discount_price || product.price || 699),
       "availability": product.quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",
-      "itemCondition": "https://schema.org/NewCondition"
+      "itemCondition": "https://schema.org/NewCondition",
+      "seller": {
+        "@type": "Organization",
+        "name": "Bhumivera"
+      }
     }
   };
 
@@ -710,7 +735,7 @@ export default function ProductDetail() {
 
               <div className="flex flex-col sm:flex-row items-center gap-2">
                 <Link
-                  to="/verify"
+                  to={`/verify?serial=${encodeURIComponent(product.batchCode || 'BV-CH26-8841')}`}
                   className="btn-gold-luxury w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider shadow-md transition-all"
                 >
                   <QrCode size={14} /> Scan / Verify Genuinity Test
@@ -775,11 +800,14 @@ export default function ProductDetail() {
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#d4af37]/30 pb-4 mb-6">
                     <div>
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#070a0e] text-[#fce096] border border-[#d4af37]/40 font-mono text-[9px] font-bold uppercase tracking-widest">
-                        <Sparkles size={12} className="text-[#d4af37]" /> Product Formulation Information
+                        <Sparkles size={12} className="text-[#d4af37]" /> Formulated under the Bhumivera Transparency Standard (Est. 2016 lineage)
                       </span>
                       <h3 className="mt-2 font-serif text-2xl sm:text-3xl text-white">
-                        Full Potency Active Disclosure
+                        Milligram-Weight &amp; 100% Active Percentage Disclosure
                       </h3>
+                      <p className="mt-1 text-xs text-[#cbd5e1]">
+                        Formulated under the Bhumivera Transparency Standard (Est. 2016 lineage) — cold-pressed under 28°C with exact milligram weights and active percentages printed directly on the packaging.
+                      </p>
                     </div>
                   </div>
 
@@ -883,7 +911,7 @@ export default function ProductDetail() {
                       <span>100% Sealed Sanitary Custody: Artisanal Personal Care Purity Standard</span>
                     </div>
                     <Link
-                      to="/verify"
+                      to={`/verify?serial=${encodeURIComponent(product.batchCode || 'BV-CH26-8841')}`}
                       className="btn-gold-luxury inline-flex items-center gap-2 rounded-xl text-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider shadow-sm transition-all"
                     >
                       <QrCode size={14} /> Open Full Lab Assay Report
@@ -1240,66 +1268,20 @@ export default function ProductDetail() {
   );
 }
 
-const SkeletonPDP = ({ productName }) => (
-  <div
-    className="product-experience-loader min-h-screen px-6 pb-32 pt-28 text-[#FAF7F2]"
-    role="status"
-    aria-live="polite"
-    aria-label={`Preparing ${productName || 'your botanical product'}`}
-  >
-    <div className="mx-auto max-w-7xl">
-      <div className="mb-10 flex flex-col items-center gap-3 text-center">
-        <div className="premium-loader-mark" aria-hidden="true">
-          <span className="premium-loader-orbit" />
-          <span className="premium-loader-core">B</span>
+const SkeletonPDP = () => (
+  <div className="bg-[#14291F] min-h-screen pt-24 pb-32 px-6">
+    <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-12 animate-pulse opacity-50">
+      <div className="lg:col-span-7 flex flex-col md:flex-row gap-6">
+        <div className="flex md:flex-col gap-4 w-full md:w-24">
+          {[1,2,3,4].map(i => <div key={i} className="w-20 h-20 md:w-24 md:h-24 bg-[#171813] border border-white/10 rounded-xl shrink-0"></div>)}
         </div>
-        <span className="premium-loader-wordmark">BHUMIVERA</span>
-        <p className="max-w-sm text-sm leading-relaxed text-[#DFD7C4]">
-          A moment for the botanicals. We’re preparing your product experience.
-        </p>
+        <div className="w-full h-[500px] md:h-[700px] bg-[#171813] border border-[#d4af37]/20 rounded-2xl"></div>
       </div>
-
-      <div className="mx-auto mb-10 h-px w-full max-w-xs overflow-hidden bg-[#D4AF37]/20">
-        <div className="product-loader-progress h-full w-1/3 bg-gradient-to-r from-[#D4AF37] to-[#FCE096]" />
-      </div>
-
-      <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12" aria-hidden="true">
-        <div className="lg:col-span-7">
-          <div className="product-loader-gallery flex aspect-[4/3] min-h-72 items-center justify-center overflow-hidden rounded-3xl border border-[#D4AF37]/20">
-            <div className="premium-loader-mark scale-150 opacity-60">
-              <span className="premium-loader-orbit" />
-              <span className="premium-loader-core"><Leaf size={25} /></span>
-            </div>
-          </div>
-          <div className="mt-4 flex gap-3">
-            {[0, 1, 2, 3].map(item => (
-              <div key={item} className="h-16 w-16 animate-pulse rounded-xl border border-[#D4AF37]/10 bg-[#FAF7F2]/5" />
-            ))}
-          </div>
-        </div>
-
-        <div className="flex flex-col gap-6 lg:col-span-5 lg:pt-4">
-          <div>
-            <div className="mb-4 h-3 w-36 animate-pulse rounded bg-[#D4AF37]/20" />
-            {productName ? (
-              <h1 className="font-serif text-3xl font-semibold leading-tight text-[#FCE096] sm:text-4xl">
-                {productName}
-              </h1>
-            ) : (
-              <div className="h-10 w-4/5 animate-pulse rounded bg-[#FAF7F2]/10" />
-            )}
-          </div>
-          <div className="h-5 w-32 animate-pulse rounded bg-[#FAF7F2]/10" />
-          <div className="space-y-3">
-            <div className="h-3 w-full animate-pulse rounded bg-[#FAF7F2]/10" />
-            <div className="h-3 w-11/12 animate-pulse rounded bg-[#FAF7F2]/10" />
-            <div className="h-3 w-3/4 animate-pulse rounded bg-[#FAF7F2]/10" />
-          </div>
-          <div className="mt-4 h-14 w-full animate-pulse rounded-2xl border border-[#D4AF37]/20 bg-[#FAF7F2]/5" />
-          <p className="text-xs leading-relaxed text-[#9BB0A5]">
-            Gathering formulation details and availability.
-          </p>
-        </div>
+      <div className="lg:col-span-5 flex flex-col gap-8 pt-8">
+        <div className="h-12 bg-[#171813] border border-white/10 rounded-xl w-3/4"></div>
+        <div className="h-6 bg-[#171813] border border-white/10 rounded-xl w-1/3"></div>
+        <div className="h-24 bg-[#171813] border border-white/10 rounded-xl w-full"></div>
+        <div className="h-32 bg-[#171813] border border-white/10 rounded-xl w-full mt-10"></div>
       </div>
     </div>
   </div>

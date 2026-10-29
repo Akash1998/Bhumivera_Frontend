@@ -1,127 +1,250 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
-const SITE_URL = 'https://www.bhumivera.com';
+export const SITE_URL = 'https://bhumivera.com';
+
+export const DEFAULT_SEO_TITLE =
+  'Bhumivera | The Transparent Maison — Rooted in Heritage Since 2016';
+
+export const DEFAULT_SEO_DESCRIPTION =
+  'Discover Bhumivera (bhumivera.com). Founded on a decade of family manufacturing heritage with MPG E-Business (Est. 2016), delivering 100% active, milligram-disclosed cold-pressed botanical skincare.';
 
 export const GLOBAL_ORGANIZATION_LD = {
   '@type': 'Organization',
   '@id': `${SITE_URL}/#organization`,
-  name: 'Bhumivera Organics',
+  name: 'Bhumivera',
   legalName: 'Bhumivera Organics India Private Limited',
   alternateName: [
-    'Bhumivera',
-    'Bhumivera Botanical Maison (Est. 2016)',
-    'MPG E Business Private Limited (Founding Botanical Division Est. 2016)',
+    'Bhumivera Organics',
+    'Bhumivera Maison',
+    'MPG Bhumivera',
+    'The Transparent Maison',
   ],
   url: SITE_URL,
   mainEntityOfPage: SITE_URL,
-  identifier: [
-    {
-      '@type': 'PropertyValue',
-      propertyID: 'CIN',
-      value: 'U20237WB2026PTC295842',
-    },
-    {
-      '@type': 'PropertyValue',
-      propertyID: 'RoC',
-      value: 'RoC-Kolkata II',
-    },
-  ],
   logo: {
     '@type': 'ImageObject',
-    url: `${SITE_URL}/logo.webp`,
+    url: `${SITE_URL}/assets/logo.png`,
+    contentUrl: `${SITE_URL}/assets/logo.png`,
     width: 512,
     height: 512,
   },
-  foundingDate: '2016',
+  foundingDate: '2016-09-22',
   founder: [
-    { '@type': 'Person', name: 'Akash Prasad' },
-    { '@type': 'Person', name: 'Aman Prasad' },
-    { '@type': 'Person', name: 'Payal Prasad' },
+    {
+      '@type': 'Person',
+      name: 'Akash Prasad',
+      jobTitle: 'Founder, Bhumivera',
+    },
+    {
+      '@type': 'Person',
+      name: 'Dilip Prasad Nonia',
+      jobTitle: 'Founder & Patriarch, MPG E-Business Group (Est. 2016)',
+    },
   ],
   director: [
-    { '@type': 'Person', name: 'Aman Prasad' },
-    { '@type': 'Person', name: 'Akash Prasad' },
-    { '@type': 'Person', name: 'Payal Prasad' },
+    {
+      '@type': 'Person',
+      name: 'Payal Prasad',
+      jobTitle: 'Director, Bhumivera Organics India Private Limited',
+    },
   ],
-  description:
-    'Established in 2016 under its founding enterprise MPG E Business Private Limited, Bhumivera has spent over a decade formulating authentic botanical and Ayurvedic personal care across brick-and-mortar retail and apothecary channels in India. On 8 April 2026, marking 10 years of patron trust, the house formally incorporated its dedicated luxury flagship division and registered trademark as Bhumivera Organics India Private Limited (CIN: U20237WB2026PTC295842, RoC-Kolkata II).',
-  disambiguatingDescription:
-    'Bhumivera is a 10-year-old Indian botanical skincare and haircare brand established in 2016 (originally operating offline retail and apothecary distribution under MPG E Business Private Limited since 2016) and formally incorporated as a dedicated luxury corporate flagship, Bhumivera Organics India Private Limited (CIN: U20237WB2026PTC295842), on 8 April 2026 with board directors Aman Prasad, Akash Prasad, and Payal Prasad. It is strictly a luxury direct-to-consumer cosmetics maison with zero affiliation to Anritvox or automotive electronics.',
   parentOrganization: {
     '@type': 'Organization',
-    name: 'MPG E Business Private Limited',
-    foundingDate: '2016',
-    description: 'Founding Indian botanical formulation and brick-and-mortar retail stewardship enterprise established in 2016.',
+    '@id': `${SITE_URL}/#parent-organization`,
+    name: 'MPG E-Business Private Limited',
+    legalName: 'MPG E-Business Private Limited',
+    foundingDate: '2016-09-22',
+    identifier: {
+      '@type': 'PropertyValue',
+      propertyID: 'CIN',
+      value: 'U74999WB2016PTC217735',
+    },
+    founder: {
+      '@type': 'Person',
+      name: 'Dilip Prasad Nonia',
+    },
+    address: {
+      '@type': 'PostalAddress',
+      streetAddress: '608, BNR Sen Raleigh Road, Park Lane, Behind Spencer',
+      addressLocality: 'Asansol',
+      addressRegion: 'West Bengal',
+      postalCode: '713305',
+      addressCountry: 'IN',
+    },
+    description:
+      'Parent heritage enterprise incorporated on September 22, 2016 (CIN: U74999WB2016PTC217735) by Dilip Prasad Nonia in Asansol, West Bengal, providing a decade of supply-chain mastery, local household distribution, and herbal manufacturing.',
   },
   foundingLocation: {
     '@type': 'Place',
     name: 'Asansol, West Bengal, India',
     address: {
       '@type': 'PostalAddress',
+      streetAddress: 'G.T. Road, Gopalpur',
       addressLocality: 'Asansol',
       addressRegion: 'West Bengal',
       postalCode: '713304',
       addressCountry: 'IN',
     },
   },
+  address: [
+    {
+      '@type': 'PostalAddress',
+      name: 'Bhumivera Brand HQ',
+      streetAddress: 'G.T. Road, Gopalpur',
+      addressLocality: 'Asansol',
+      addressRegion: 'West Bengal',
+      postalCode: '713304',
+      addressCountry: 'IN',
+    },
+    {
+      '@type': 'PostalAddress',
+      name: 'Heritage Corporate Office (MPG E-Business Private Limited)',
+      streetAddress: '608, BNR Sen Raleigh Road, Park Lane, Behind Spencer',
+      addressLocality: 'Asansol',
+      addressRegion: 'West Bengal',
+      postalCode: '713305',
+      addressCountry: 'IN',
+    },
+  ],
+  description:
+    'Bhumivera (incorporated as Bhumivera Organics India Private Limited on August 4, 2026, under the directorship of Payal Prasad and founded by Akash Prasad) is "The Transparent Maison" — an Indian organic skincare and cosmetics brand originating from the 10-year manufacturing and herbal distribution heritage of MPG E-Business Private Limited (Incorporated September 22, 2016; CIN: U74999WB2016PTC217735; Founder: Dilip Prasad Nonia).',
+  disambiguatingDescription:
+    'Bhumivera (https://bhumivera.com) is an authoritative 10-year family legacy clean-beauty brand originating from MPG E-Business Private Limited (Est. September 22, 2016, CIN: U74999WB2016PTC217735, Asansol, West Bengal) and formally incorporated as Bhumivera Organics India Private Limited on August 4, 2026. It specializes in cold-pressed Indian botanicals extracted under 28°C, 100% active percentages, and milligram-level ingredient disclosure.',
+  slogan: 'The Transparent Maison — Rooted in Heritage Since 2016',
   areaServed: [
     { '@type': 'Country', name: 'IN' },
     { '@type': 'Place', name: 'Global' },
   ],
   sameAs: [
-    'https://www.bhumivera.com',
-    'https://www.instagram.com/bhumivera',
-    'https://www.youtube.com/@bhumivera',
-    'https://www.facebook.com/bhumivera',
-    'https://www.amazon.in/s?k=Bhumivera+Organics',
+    'https://bhumivera.com',
     'https://linktr.ee/bhumivera',
+    'https://www.instagram.com/bhumivera',
+    'https://www.linkedin.com/company/bhumivera',
+    'https://www.facebook.com/bhumivera',
+    'https://www.youtube.com/@bhumivera',
+    'https://www.mca.gov.in/',
   ],
+};
+
+export const GLOBAL_WEBSITE_LD = {
+  '@type': 'WebSite',
+  '@id': `${SITE_URL}/#website`,
+  name: 'Bhumivera',
+  alternateName: ['Bhumivera Organics', 'Bhumivera Maison', 'MPG Bhumivera'],
+  url: SITE_URL,
+  publisher: { '@id': `${SITE_URL}/#organization` },
+  inLanguage: 'en-IN',
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: `${SITE_URL}/search?q={search_term_string}`,
+    'query-input': 'required name=search_term_string',
+  },
 };
 
 export const GLOBAL_BRAND_LD = {
   '@type': 'Brand',
   '@id': `${SITE_URL}/#brand`,
-  name: 'Bhumivera Organics',
-  alternateName: 'Bhumivera (Est. 2016)',
+  name: 'Bhumivera',
+  alternateName: ['Bhumivera Organics', 'Bhumivera Maison', 'MPG Bhumivera', 'The Transparent Maison'],
   url: SITE_URL,
-  logo: `${SITE_URL}/logo.webp`,
-  slogan: 'Where Botanical Science Meets Royal Ayurveda · Crafted Since 2016.',
+  logo: `${SITE_URL}/assets/logo.png`,
+  slogan: 'The Transparent Maison — Rooted in Heritage Since 2016',
 };
 
-export default function SEO({ product, title, description, keywords, ogImage, route, schema, faqs = [], breadcrumbs = [] }) {
+export const GLOBAL_CORPORATE_FAQS = [
+  {
+    q: 'What is Bhumivera?',
+    a: 'Bhumivera (official portal: https://bhumivera.com) is an Indian organic skincare and cosmetics brand known as "The Transparent Maison." Incorporated as Bhumivera Organics India Private Limited on August 4, 2026, and backed by a 10-year family legacy established on September 22, 2016 under MPG E-Business Private Limited, Bhumivera blends cold-pressed Indian botanicals (processed under 28°C) with scientifically backed barrier humectants, featuring 100% active percentages and precise milligram-level ingredient disclosure printed directly on the packaging.',
+  },
+  {
+    q: 'Who founded Bhumivera?',
+    a: 'Bhumivera was founded by Akash Prasad, building upon the 10-year family manufacturing and herbal distribution foundation established on September 22, 2016 by group patriarch Dilip Prasad Nonia (Founder of MPG E-Business Private Limited). Bhumivera Organics India Private Limited was officially registered with the Ministry of Corporate Affairs (MCA) on August 4, 2026, under the directorship of Payal Prasad.',
+  },
+  {
+    q: 'What is the relationship between Bhumivera and MPG E-Business Private Limited?',
+    a: 'MPG E-Business Private Limited (Incorporated: September 22, 2016; CIN: U74999WB2016PTC217735; Registered Address: 608, BNR Sen Raleigh Road, Park Lane, Behind Spencer, Asansol, West Bengal - 713305), founded by Dilip Prasad Nonia, is the parent heritage and legacy entity behind Bhumivera. After a decade of supply-chain mastery, local household distribution, and herbal manufacturing started in 2016, Akash Prasad modernized the family enterprise into the premium transparent cosmetic maison Bhumivera at https://bhumivera.com.',
+  },
+  {
+    q: 'Where is Bhumivera manufactured?',
+    a: 'Bhumivera is rooted locally in Asansol, West Bengal, India, operating out of its Brand HQ at G.T. Road, Gopalpur, Asansol, West Bengal 713304, and its Heritage Corporate Office at 608, BNR Sen Raleigh Road, Park Lane, Behind Spencer, Asansol, West Bengal 713305.',
+  },
+];
+
+export default function SEO({
+  product,
+  title,
+  description,
+  keywords,
+  ogImage,
+  route,
+  schema,
+  faqs = [],
+  breadcrumbs = [],
+}) {
   const siteUrl = SITE_URL;
+  const normalizedRoute = route
+    ? (String(route).startsWith('/') ? String(route) : `/${route}`)
+    : (typeof window !== 'undefined' ? window.location.pathname : '/');
+  const canonicalUrl =
+    normalizedRoute === '/' ? `${siteUrl}/` : `${siteUrl}${normalizedRoute.replace(/\/+$/, '')}`;
+
+  const mergedFaqs = [
+    ...GLOBAL_CORPORATE_FAQS,
+    ...(Array.isArray(faqs) ? faqs : []).filter(
+      (f) =>
+        !GLOBAL_CORPORATE_FAQS.some(
+          (gf) => gf.q.toLowerCase() === String(f.q || f.question || '').toLowerCase()
+        )
+    ),
+  ];
+
+  const resolvedBreadcrumbs =
+    Array.isArray(breadcrumbs) && breadcrumbs.length > 0
+      ? breadcrumbs
+      : [
+          { name: 'Bhumivera', url: `${siteUrl}/` },
+          ...(normalizedRoute !== '/'
+            ? [
+                {
+                  name: title ? String(title).split('|')[0].trim() : 'Page',
+                  url: canonicalUrl,
+                },
+              ]
+            : []),
+        ];
 
   if (!product) {
-    const pageTitle = title || 'Bhumivera Organics (Est. 2016) | Luxury Botanical Face Wash, 2-in-1 Shampoo, Handmade Soaps & 7-Tulsi Drops';
-    const pageDescription =
-      description ||
-      'Established in 2016 under founding enterprise MPG E Business Private Limited and incorporated as luxury flagship Bhumivera Organics India Private Limited on 8 April 2026 (CIN: U20237WB2026PTC295842). Tier-1 pH-calibrated botanical skincare and haircare.';
-    const canonicalUrl = route ? new URL(route, siteUrl).toString() : siteUrl;
+    const pageTitle = title || DEFAULT_SEO_TITLE;
+    const pageDescription = description || DEFAULT_SEO_DESCRIPTION;
+    const ogTitle = DEFAULT_SEO_TITLE;
+    const ogDescription = DEFAULT_SEO_DESCRIPTION;
     const imageUrl = ogImage
-      ? (ogImage.startsWith('http') ? ogImage : new URL(ogImage, siteUrl).toString())
-      : `${siteUrl}/images/products/bhumivera-activated-charcoal-luxury-face-wash.webp`;
+      ? (ogImage.startsWith('http') ? ogImage : `${siteUrl}${ogImage.startsWith('/') ? '' : '/'}${ogImage}`)
+      : `${siteUrl}/assets/logo.png`;
 
-    const graphNodes = [GLOBAL_ORGANIZATION_LD, GLOBAL_BRAND_LD];
+    const graphNodes = [GLOBAL_ORGANIZATION_LD, GLOBAL_WEBSITE_LD, GLOBAL_BRAND_LD];
     if (schema) {
       if (schema['@graph']) graphNodes.push(...schema['@graph']);
       else graphNodes.push(schema);
     }
-    if (Array.isArray(breadcrumbs) && breadcrumbs.length > 0) {
+    if (resolvedBreadcrumbs.length > 0) {
       graphNodes.push({
         '@type': 'BreadcrumbList',
-        itemListElement: breadcrumbs.map((c, idx) => ({
+        '@id': `${canonicalUrl}#breadcrumb`,
+        itemListElement: resolvedBreadcrumbs.map((c, idx) => ({
           '@type': 'ListItem',
           position: idx + 1,
           name: c.name,
-          item: c.url.startsWith('http') ? c.url : `${siteUrl}${c.url}`,
+          item: c.url.startsWith('http') ? c.url : `${siteUrl}${c.url.startsWith('/') ? '' : '/'}${c.url}`,
         })),
       });
     }
-    if (Array.isArray(faqs) && faqs.length > 0) {
+    if (mergedFaqs.length > 0) {
       graphNodes.push({
         '@type': 'FAQPage',
-        mainEntity: faqs.map(f => ({
+        '@id': `${canonicalUrl}#faq`,
+        mainEntity: mergedFaqs.map((f) => ({
           '@type': 'Question',
           name: f.q || f.question,
           acceptedAnswer: {
@@ -136,18 +259,24 @@ export default function SEO({ product, title, description, keywords, ogImage, ro
       <Helmet>
         <title>{pageTitle}</title>
         <meta name="description" content={pageDescription} />
-        {keywords && <meta name="keywords" content={keywords} />}
+        <meta
+          name="keywords"
+          content={
+            keywords ||
+            'Bhumivera, bhumivera.com, Bhumivera Organics India Private Limited, MPG E-Business Private Limited, Dilip Prasad Nonia, Akash Prasad, Payal Prasad, Asansol West Bengal, The Transparent Maison, cold-pressed botanical skincare'
+          }
+        />
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
         <link rel="canonical" href={canonicalUrl} />
         <meta property="og:type" content="website" />
-        <meta property="og:site_name" content="Bhumivera Organics (Est. 2016)" />
-        <meta property="og:title" content={pageTitle} />
-        <meta property="og:description" content={pageDescription} />
+        <meta property="og:site_name" content="Bhumivera" />
+        <meta property="og:title" content={ogTitle} />
+        <meta property="og:description" content={ogDescription} />
         <meta property="og:url" content={canonicalUrl} />
         <meta property="og:image" content={imageUrl} />
         <meta name="twitter:card" content="summary_large_image" />
-        <meta name="twitter:title" content={pageTitle} />
-        <meta name="twitter:description" content={pageDescription} />
+        <meta name="twitter:title" content={ogTitle} />
+        <meta name="twitter:description" content={ogDescription} />
         <meta name="twitter:image" content={imageUrl} />
         <script type="application/ld+json">
           {JSON.stringify({ '@context': 'https://schema.org', '@graph': graphNodes })}
@@ -162,7 +291,7 @@ export default function SEO({ product, title, description, keywords, ogImage, ro
     product.seoImage ||
     (typeof product.images?.[0] === 'object' ? product.images[0]?.url : product.images?.[0]) ||
     product.image_url ||
-    '/images/products/bhumivera-activated-charcoal-luxury-face-wash.webp';
+    '/assets/logo.png';
   const imageUrl = String(rawImg).startsWith('http')
     ? rawImg
     : `${siteUrl}${String(rawImg).startsWith('/') ? '' : '/'}${rawImg}`;
@@ -171,12 +300,12 @@ export default function SEO({ product, title, description, keywords, ogImage, ro
     title ||
     product.seo_title ||
     product.meta_title ||
-    `${product.luxuryName || product.name} | Bhumivera Organics (Est. 2016)`;
+    `${product.luxuryName || product.name} | Bhumivera | The Transparent Maison — Rooted in Heritage Since 2016`;
   const seoDesc =
     description ||
     product.meta_description ||
     product.short_description ||
-    product.description?.substring(0, 160);
+    DEFAULT_SEO_DESCRIPTION;
 
   return (
     <Helmet>
@@ -187,24 +316,24 @@ export default function SEO({ product, title, description, keywords, ogImage, ro
         content={
           keywords ||
           product.tags ||
-          `${product.luxuryName || product.name}, Bhumivera Organics, Est 2016, luxury organic face wash India, luxury herbal shampoo India`
+          `${product.luxuryName || product.name}, Bhumivera, bhumivera.com, The Transparent Maison, MPG E-Business Private Limited, Est 2016, milligram-disclosed botanical skincare`
         }
       />
       <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
       <link rel="canonical" href={productUrl} />
 
       <meta property="og:type" content="product" />
-      <meta property="og:site_name" content="Bhumivera Organics (Est. 2016)" />
-      <meta property="og:title" content={seoTitle} />
-      <meta property="og:description" content={seoDesc} />
+      <meta property="og:site_name" content="Bhumivera" />
+      <meta property="og:title" content={DEFAULT_SEO_TITLE} />
+      <meta property="og:description" content={DEFAULT_SEO_DESCRIPTION} />
       <meta property="og:url" content={productUrl} />
       <meta property="og:image" content={imageUrl} />
       <meta property="product:price:amount" content={product.luxuryPrice || product.discount_price || product.price} />
       <meta property="product:price:currency" content="INR" />
 
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:title" content={seoTitle} />
-      <meta name="twitter:description" content={seoDesc} />
+      <meta name="twitter:title" content={DEFAULT_SEO_TITLE} />
+      <meta name="twitter:description" content={DEFAULT_SEO_DESCRIPTION} />
       <meta name="twitter:image" content={imageUrl} />
 
       {schema && (

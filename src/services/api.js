@@ -597,21 +597,7 @@ export const impact = {
   getAdminUpdates: () => api.get('/impact/admin/updates', { adminAuth: true }),
   createUpdate: data => api.post('/impact/admin/updates', data, { adminAuth: true }),
 };
-export const serials = {
-  validate: serial => api.post("/serials/validate", { serial }),
-  verify: serial => api.get(`/serials/verify/${encodeURIComponent(serial)}`),
-  getAllAdmin: () => api.get("/serials/admin/all"),
-  getByProduct: productId => api.get(`/serials/${productId}`),
-  getStats: productId => api.get(`/serials/${productId}/stats`),
-  getBatches: () => api.get("/serials/admin/batches"),
-  getBatch: batchId => api.get(`/serials/admin/batches/${batchId}`),
-  createBatch: data => api.post("/serials/admin/batches", data),
-  updateBatchDetails: (batchId, details) =>
-    api.patch(`/serials/admin/batches/${batchId}/details`, { details }),
-  addManual: (productId, data) => api.post(`/serials/${productId}/add`, data),
-  update: (productId, serialId, data) => api.patch(`/serials/${productId}/${serialId}`, data),
-  delete: (productId, serialId) => api.delete(`/serials/${productId}/${serialId}`),
-};
+export const serials = { validate: s => api.post("/serials/validate", { serial: s }), getAllAdmin: () => api.get("/serials/admin/all"), getByProduct: p => api.get(`/serials/${p}`), getStats: p => api.get(`/serials/${p}/stats`), generate: d => api.post("/serials/generate", d), addManual: (p, d) => api.post(`/serials/${p}/add`, d), update: (p, s, d) => api.patch(`/serials/${p}/${s}`, d), delete: (p, s) => api.delete(`/serials/${p}/${s}`) };
 export const contact = {
   submit: d => api.post("/contact", d),
   getMine: () => api.get("/contact/my"),

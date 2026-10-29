@@ -8,6 +8,12 @@ Allow: /
 User-agent: Bingbot
 Allow: /
 
+User-agent: Google-Extended
+Allow: /
+
+User-agent: GPTBot
+Allow: /
+
 User-agent: PerplexityBot
 Allow: /
 
@@ -17,16 +23,10 @@ Allow: /
 User-agent: anthropic-ai
 Allow: /
 
-User-agent: GPTBot
-Allow: /
-
 User-agent: OAI-SearchBot
 Allow: /
 
 User-agent: ChatGPT-User
 Allow: /
 
-User-agent: Google-Extended
-Allow: /
-
-Sitemap: https://www.bhumivera.com/sitemap.xml
+Sitemap: https://bhumivera.com/sitemap.xml

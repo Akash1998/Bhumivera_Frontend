@@ -44,7 +44,7 @@ function ModuleLoadError({ error }) {
 
   return (
     <section className="flex min-h-[60vh] flex-col items-center justify-center bg-[#070a0e] px-6 text-center text-[#e2e8f0]">
-      <p className="font-sub-gold uppercase tracking-[0.26em] text-xs font-bold">Bhumivera Luxury Botanical</p>
+      <p className="font-sub-gold uppercase tracking-[0.26em] text-xs font-bold">Bhumivera · The Transparent Maison</p>
       <h1 className="mt-4 max-w-xl font-serif text-3xl md:text-4xl font-bold">
         <span className="font-headline-gold">A Fresh Connection</span>{' '}
         <span className="font-headline-silver">Is Required</span>
@@ -125,7 +125,6 @@ const MPGEBusinessLanding = lazyWithRetry(() => import("./pages/MPGEBusinessLand
 const FlashSales = lazyWithRetry(() => import("./pages/FlashSales.jsx"));
 const SomaticRegistry = lazyWithRetry(() => import("./pages/SomaticRegistry.jsx"));
 const ProvenanceEngine = lazyWithRetry(() => import("./pages/ProvenanceEngine.jsx"));
-const SpinRegistration = lazyWithRetry(() => import("./pages/SpinRegistration.jsx"));
 const ForgotPassword = lazyWithRetry(() => import("./pages/ForgotPassword.jsx"));
 const ResetPassword = lazyWithRetry(() => import("./pages/ResetPassword.jsx"));
 const SupportPortal = lazyWithRetry(() => import("./pages/SupportPortal.jsx"));
@@ -388,6 +387,7 @@ function AppContent() {
             {/* Public Storefront & Collection Routes */}
             <Route path="/" element={<Home />} />
             <Route path="/shop" element={<Shop />} />
+            <Route path="/search" element={<Shop />} />
             <Route path="/products" element={<Shop />} />
             <Route path="/collections" element={<Shop />} />
             <Route path="/category/:slug" element={<Shop />} />
@@ -414,16 +414,16 @@ function AppContent() {
             <Route path="/returns" element={<Navigate to="/verify" replace />} />
             <Route path="/sell-on-bhumivera" element={<SellOnBhumivera />} />
 
-            {/* Campaign Inbound Routes (Clean Redirects for Obsolete Links) */}
+            {/* Campaign Inbound Routes */}
             <Route path="/earn-from-home" element={<Navigate to="/contact" replace />} />
-            <Route path="/mpgebusiness" element={<Navigate to="/contact" replace />} />
+            <Route path="/mpgebusiness" element={<MPGEBusinessLanding />} />
 
             {/* Product verification */}
             <Route path="/verify" element={<ProductVerification />} />
             <Route path="/genuinity" element={<ProductVerification />} />
-            <Route path="/ewarranty" element={<Navigate to="/verify" replace />} />
+            <Route path="/ewarranty" element={<ProductVerification />} />
             <Route path="/verify-product" element={<ProductVerification />} />
-            <Route path="/warranty" element={<Navigate to="/verify" replace />} />
+            <Route path="/warranty" element={<ProductVerification />} />
 
             {/* Tools & Tracking */}
             <Route path="/order-tracking" element={<OrderTracking />} />
@@ -453,7 +453,7 @@ function AppContent() {
             <Route path="/superadmin/controlcentre/*" element={<Navigate to="/" replace />} />
             <Route path="/superadmin/controlcentre" element={<Navigate to="/" replace />} />
 
-            {/* User & Storefront Interactive Routes (No forced /login redirect on browse!) */}
+            {/* User & Storefront Interactive Routes */}
             <Route path="/profile" element={<Profile />} />
             <Route path="/cart" element={<Navigate to="/?openCart=1" replace />} />
             <Route path="/checkout" element={<OnlineCheckout><CheckoutPage /></OnlineCheckout>} />
@@ -483,11 +483,11 @@ function AppContent() {
             {/* Global Redirect */}
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
-            <MobileBottomNav />
+          <MobileBottomNav />
         </Suspense>
       </main>
 
-      {!isManagementView && location.pathname === '/' && <Footer />}
+      {!isManagementView && <Footer />}
       {!isManagementView && (hasOpenedCart || isCartOpen) && (
         <Suspense fallback={<WidgetLoader label="Opening your bag" />}>
           <MiniCart />

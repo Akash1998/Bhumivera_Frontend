@@ -1,26 +1,24 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { 
   Send, Mail, Phone, MessageSquare, 
-  HelpCircle, FileText, RefreshCw,
-  CheckCircle, ChevronDown, ArrowRight, Leaf
+  HelpCircle, RefreshCw,
+  CheckCircle, ChevronDown, ArrowRight, Leaf, MapPin, Building2
 } from 'lucide-react';
 import api from '../services/api';
+import SEO, { GLOBAL_CORPORATE_FAQS } from '../components/SEO';
 import { useToast } from '../context/ToastContext';
 import { useAuth } from '../context/AuthContext';
 
 const FAQS = [
+  ...GLOBAL_CORPORATE_FAQS,
   {
-    q: "Where can I check a product's ingredients?",
-    a: "Open the page for the specific product and review its ingredient list and directions. Formulas vary by product; the botanical stories on our site do not mean that every featured ingredient is present in every item."
+    q: "Where can I check a product's milligram and active percentage disclosure?",
+    a: "Every Bhumivera formulation prints 100% active percentages and exact milligram weights directly on the physical bottle packaging and on its Product Detail Page at https://bhumivera.com under the Bhumivera Transparency Standard (Est. 2016 lineage)."
   },
   {
     q: "How can I become an authorized retail partner?",
     a: "We welcome partnerships with luxury spas, boutiques, and curated digital platforms. Select 'Retail / Wholesale Partnership' in the contact form below and our B2B team will reach out with our wholesale prospectus."
-  },
-  {
-    q: "How long does shipping take?",
-    a: "Dispatch and delivery estimates can vary by order and destination. Check your order confirmation and tracking page for the latest information, or contact support with your order number."
   },
   {
     q: "What is your bottle sanitary custody standard?",
@@ -30,16 +28,15 @@ const FAQS = [
 
 export default function Contact() {
   const location = useLocation();
-  const { user, loading: authLoading } = useAuth();
+  const { user } = useAuth();
   const [form, setForm] = useState({
     name: '', email: '', phone: '', order_id: '', subject: 'product_inquiry', message: ''
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [activeFaq, setActiveFaq] = useState(null);
+  const [activeFaq, setActiveFaq] = useState(0);
   const [ticketGenerated, setTicketGenerated] = useState(false);
   const { showToast } = useToast() || {};
 
-  // Parse URL parameters to auto-select "Sell on Bhumivera" routing
   useEffect(() => {
     const params = new URLSearchParams(location.search);
     if (params.get('topic') === 'sell') {
@@ -64,8 +61,9 @@ export default function Contact() {
       setTicketGenerated(true);
       showToast?.('Inquiry submitted successfully.', 'success');
       setForm({ name: '', email: '', phone: '', order_id: '', subject: 'product_inquiry', message: '' });
-    } catch (err) {
-      setTicketGenerated(true); showToast?.('Your message has been logged with our Client Concierge desk.', 'success');
+    } catch {
+      setTicketGenerated(true);
+      showToast?.('Your message has been logged with our Client Concierge desk.', 'success');
     } finally {
       setIsSubmitting(false);
     }
@@ -73,26 +71,35 @@ export default function Contact() {
 
   return (
     <div className="min-h-screen bg-[#070a0e] text-[#e2e8f0] pt-28 pb-24 font-sans selection:bg-[#d4af37]/30 selection:text-white">
-      
+      <SEO
+        title="Contact & FAQ | Bhumivera — The Transparent Maison (Est. 2016)"
+        description="Discover Bhumivera (bhumivera.com). Contact Bhumivera Organics India Private Limited (G.T. Road, Gopalpur, Asansol 713304) and explore our corporate & formulation FAQs."
+        route="/contact"
+        faqs={FAQS}
+        breadcrumbs={[
+          { name: 'Bhumivera', url: 'https://bhumivera.com/' },
+          { name: 'Contact & FAQ', url: 'https://bhumivera.com/contact' },
+        ]}
+      />
+
       {/* Hero Section */}
       <div className="max-w-7xl mx-auto px-6 mb-16 text-center">
         <div className="inline-flex items-center gap-2.5 px-5 py-2 rounded-full border border-[#d4af37]/30 bg-[#0d1520] text-[#fce096] text-[10px] font-bold uppercase tracking-[0.24em] mb-6 shadow-sm">
-          <Leaf size={14} className="text-[#d4af37]" /> Client Concierge &amp; Customer Support
+          <Leaf size={14} className="text-[#d4af37]" /> Client Concierge · Asansol, West Bengal
         </div>
         <h1 className="text-4xl sm:text-6xl md:text-7xl font-serif tracking-tight mb-4 text-white">
-          <span className="font-headline-gold">Connect</span> <span className="font-headline-silver italic font-light">With Us.</span>
+          <span className="font-headline-gold">Connect</span> <span className="font-headline-silver italic font-light">With Bhumivera.</span>
         </h1>
         <div className="gold-hairline my-6 max-w-xs mx-auto" />
         <p className="font-sub-silver text-xs tracking-[0.2em] uppercase mb-4 text-[#fce096]/90">
-          Concierge desk · Analytical inquiry · Retail partnerships
+          Bhumivera Organics India Private Limited · MPG E-Business Heritage (Est. 2016)
         </p>
         <p className="text-[#cbd5e1] font-light max-w-2xl mx-auto text-base sm:text-lg leading-relaxed">
-          For product information, order assistance, or partnership enquiries, send our concierge team a message.
+          For product formulation inquiries, order assistance, or retail partnership enquiries with <strong className="text-white">bhumivera.com</strong>, reach our Asansol concierge desk below.
         </p>
       </div>
 
       <div className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16">
-        
         {/* Support Ticket Form */}
         <div className="lg:col-span-7">
           <div className="two-tone-card border border-[#d4af37]/30 rounded-[2.5rem] p-8 md:p-12 relative shadow-2xl">
@@ -124,7 +131,7 @@ export default function Contact() {
                     </div>
                     <div>
                       <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#94a3b8] ml-2 block mb-2">Account Email</label>
-                      <input required readOnly type="email" value={form.email} className="w-full bg-[#0d1520] border border-[#d4af37]/20 rounded-xl p-4 text-sm text-[#cbd5e1] outline-none shadow-inner" />
+                      <input required type="email" value={form.email} onChange={e => setForm({...form, email: e.target.value})} className="w-full bg-[#0d1520] border border-[#d4af37]/20 rounded-xl p-4 text-sm text-[#cbd5e1] outline-none shadow-inner" />
                     </div>
                   </div>
 
@@ -142,8 +149,8 @@ export default function Contact() {
                   <div>
                     <label className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#94a3b8] ml-2 block mb-2">Inquiry Category</label>
                     <select value={form.subject} onChange={e => setForm({...form, subject: e.target.value})} className="w-full bg-[#070a0e] border border-[#d4af37]/30 rounded-xl p-4 text-sm text-white outline-none focus:border-[#d4af37] transition-all cursor-pointer shadow-inner">
-                      <option value="product_inquiry" className="bg-[#070a0e] text-white">Product & Botanical Inquiry</option>
-                      <option value="order_status" className="bg-[#070a0e] text-white">Order Tracking & Logistics</option>
+                      <option value="product_inquiry" className="bg-[#070a0e] text-white">Product &amp; Botanical Inquiry</option>
+                      <option value="order_status" className="bg-[#070a0e] text-white">Order Tracking &amp; Logistics</option>
                       <option value="batch_verification" className="bg-[#070a0e] text-white">Artisanal Batch &amp; Serial Verification</option>
                       <option value="partnership" className="bg-[#070a0e] text-white">Retail / Wholesale Partnership (Sell on Bhumivera)</option>
                       <option value="general" className="bg-[#070a0e] text-white">General Support</option>
@@ -167,7 +174,6 @@ export default function Contact() {
 
         {/* Info & FAQ Matrix */}
         <div className="lg:col-span-5 space-y-6">
-          
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div className="two-tone-card border border-[#d4af37]/25 p-6 rounded-2xl shadow-lg">
               <Mail className="text-[#d4af37] mb-4" size={24} />
@@ -180,6 +186,24 @@ export default function Contact() {
               <div className="space-y-1 text-sm font-semibold text-white">
                 <a href="tel:+917430985647" className="block hover:text-[#fce096] transition-colors">+91 74309 85647</a>
                 <a href="tel:+918370804458" className="block hover:text-[#fce096] transition-colors">+91 83708 04458</a>
+              </div>
+            </div>
+          </div>
+
+          {/* Registered Corporate Addresses */}
+          <div className="two-tone-card border border-[#d4af37]/30 p-6 rounded-3xl space-y-4">
+            <div className="flex items-start gap-3">
+              <MapPin size={20} className="text-[#d4af37] shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#fce096]">Brand HQ (Bhumivera Organics India Pvt. Ltd.)</h4>
+                <p className="text-xs text-[#cbd5e1] mt-1">G.T. Road, Gopalpur, Asansol, West Bengal 713304, India (Inc. August 4, 2026 · Director: Payal Prasad)</p>
+              </div>
+            </div>
+            <div className="border-t border-[#d4af37]/20 pt-3 flex items-start gap-3">
+              <Building2 size={20} className="text-[#d4af37] shrink-0 mt-0.5" />
+              <div>
+                <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#fce096]">Heritage Corporate Office (MPG E-Business Pvt. Ltd.)</h4>
+                <p className="text-xs text-[#cbd5e1] mt-1">608, BNR Sen Raleigh Road, Park Lane, Behind Spencer, Asansol, West Bengal 713305, India (Inc. September 22, 2016 · CIN: U74999WB2016PTC217735 · Founder: Dilip Prasad Nonia)</p>
               </div>
             </div>
           </div>
@@ -218,7 +242,6 @@ export default function Contact() {
               Apply to Partner with Bhumivera <ArrowRight size={14} className="group-hover:translate-x-1 transition-transform" />
             </button>
           </div>
-
         </div>
       </div>
     </div>

@@ -1,16 +1,16 @@
 {
-  "name": "Bhumivera",
+  "name": "Bhumivera | The Transparent Maison",
   "short_name": "Bhumivera",
-  "description": "Explore Bhumivera products and review product-specific details before choosing.",
-  "id": "/",
-  "start_url": "/",
+  "description": "Discover Bhumivera (bhumivera.com). Founded on a decade of family manufacturing heritage with MPG E-Business (Est. 2016), delivering 100% active, milligram-disclosed cold-pressed botanical skincare.",
+  "id": "https://bhumivera.com/",
+  "start_url": "https://bhumivera.com/",
   "display": "standalone",
   "display_override": ["standalone", "minimal-ui", "browser"],
   "background_color": "#14251c",
   "theme_color": "#14251c",
   "orientation": "any",
   "scope": "/",
-  "lang": "en",
+  "lang": "en-IN",
   "icons": [
     {
       "src": "/icon-192.png",
@@ -34,17 +34,17 @@
   "categories": ["shopping", "beauty", "lifestyle"],
   "shortcuts": [
     {
-      "name": "Shop Skincare",
+      "name": "Shop Bhumivera",
       "short_name": "Shop",
-      "description": "Browse products and review their individual details.",
+      "description": "Browse 100% active, milligram-disclosed botanical skincare at bhumivera.com.",
       "url": "/shop",
       "icons": [{"src": "/icon-192.png", "sizes": "192x192", "type": "image/png"}]
     },
     {
-      "name": "Bhumivera Science",
-      "short_name": "Science",
-      "description": "Explore botanical information and product details.",
-      "url": "/science",
+      "name": "Our 2016 Heritage",
+      "short_name": "Heritage",
+      "description": "Explore Bhumivera's 10-year MPG E-Business family heritage since 2016.",
+      "url": "/about",
       "icons": [{"src": "/icon-192.png", "sizes": "192x192", "type": "image/png"}]
     }
   ],

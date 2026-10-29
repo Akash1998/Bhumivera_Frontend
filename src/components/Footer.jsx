@@ -12,6 +12,9 @@ import {
   Send,
   ExternalLink,
   CheckCircle2,
+  MapPin,
+  Building2,
+  Globe,
 } from 'lucide-react';
 import { triggerAiCopilotAssist } from '../utils/aiCopilotBus';
 
@@ -33,7 +36,6 @@ export default function Footer() {
     <footer className="mt-auto border-t border-[#244A38]/50 bg-[#14291F] font-sans text-[#FAF7F2] antialiased">
       {/* 1. ARCHITECTURAL BRAND SHOWCASE & CLIENT CONCIERGE HERO */}
       <div className="relative isolate overflow-hidden border-b border-[#244A38]/60 bg-gradient-to-b from-[#102219] via-[#14291F] to-[#102219]">
-        {/* Subtle Ambient Sage / Brass Glows */}
         <div className="pointer-events-none absolute -left-32 -top-32 h-96 w-96 rounded-full bg-[#D4AF37]/5 blur-[120px]" />
         <div className="pointer-events-none absolute -right-32 -bottom-32 h-96 w-96 rounded-full bg-[#244A38]/30 blur-[130px]" />
 
@@ -53,22 +55,25 @@ export default function Footer() {
                   />
                 </div>
                 <div>
-                  <span className="font-serif text-2xl font-bold tracking-[0.22em] text-[#D4AF37] sm:text-3xl">
+                  <a
+                    href="https://bhumivera.com"
+                    className="font-serif text-2xl font-bold tracking-[0.22em] text-[#D4AF37] sm:text-3xl hover:text-[#FCE096] transition-colors"
+                  >
                     BHUMIVERA
-                  </span>
+                  </a>
                   <span className="block text-[9px] font-semibold uppercase tracking-[0.28em] text-[#9BB0A5]">
-                    Botanical Maison · Est. 2016 · India
+                    The Transparent Maison · Est. 2016 Lineage · bhumivera.com
                   </span>
                 </div>
               </div>
 
               <h2 className="mt-5 font-serif text-2xl leading-snug text-[#FAF7F2] sm:text-3xl lg:text-4xl font-bold">
-                <span className="font-headline-gold">Pure Care,</span>{' '}
-                <span className="font-headline-silver">Rooted In Its Source.</span>
+                <span className="font-headline-gold">100% Active Botanicals,</span>{' '}
+                <span className="font-headline-silver">Milligram Disclosed.</span>
               </h2>
               <div className="gold-hairline w-24 my-3" />
               <p className="mt-2 text-xs leading-relaxed text-[#DFD7C4] sm:text-sm max-w-xl font-light">
-                Established in 2016 (MPG E Business Pvt. Ltd.) with a decade of proven offline botanical apothecary heritage, and formally incorporated as luxury flagship Bhumivera Organics India Private Limited on 8 April 2026 (CIN: U20237WB2026PTC295842). Formulated with pH 5.0–5.5 clinical-Ayurvedic actives in serialized 250-bottle micro-runs.
+                Bhumivera™ is a brand of <strong className="text-white">Bhumivera Organics India Private Limited</strong> (Inc. August 4, 2026; Founder: Akash Prasad; Director: Payal Prasad). Backed by the 10-year manufacturing and consumer trust legacy of <strong className="text-white">MPG E-Business Private Limited</strong> (Est. September 22, 2016, Asansol · CIN: U74999WB2016PTC217735 · Founder: Dilip Prasad Nonia).
               </p>
             </div>
 
@@ -95,12 +100,12 @@ export default function Footer() {
                 <ShieldCheck size={16} className="text-[#D4AF37]" /> Product Verification
               </Link>
 
-              <Link
-                to="/science"
+              <a
+                href="https://bhumivera.com"
                 className="two-tone-card inline-flex min-h-12 items-center gap-2 rounded-full border border-[#D4AF37]/30 px-5 py-3 text-xs font-semibold uppercase tracking-wider text-[#FAF7F2] hover:text-[#FCE096] transition-colors"
               >
-                Lab Science <ArrowRight size={14} />
-              </Link>
+                <Globe size={14} className="text-[#D4AF37]" /> bhumivera.com <ArrowRight size={14} />
+              </a>
             </div>
           </div>
         </div>
@@ -109,7 +114,6 @@ export default function Footer() {
       {/* 2. UNIFIED LUXURY DIRECTORY (4 STREAMLINED EDITORIAL COLUMNS) */}
       <div className="mx-auto w-full max-w-7xl px-5 py-12 sm:px-8 sm:py-16 lg:px-12">
         <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-8">
-          
           {/* Column 1: The Maison */}
           <div>
             <div className="mb-5 flex items-center gap-2 border-b border-[#244A38] pb-3">
@@ -120,6 +124,15 @@ export default function Footer() {
             </div>
             <ul className="space-y-3 text-xs sm:text-[13px] text-[#DFD7C4]">
               <li>
+                <a
+                  href="https://bhumivera.com"
+                  className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group font-semibold text-[#FCE096]"
+                >
+                  <span>Official Portal: bhumivera.com</span>
+                  <span className="text-[10px] text-[#D4AF37] font-mono">Home</span>
+                </a>
+              </li>
+              <li>
                 <Link to="/shop" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
                   <span>Shop Collections</span>
                   <span className="text-[10px] text-[#9BB0A5] opacity-0 transition-opacity group-hover:opacity-100">Catalog</span>
@@ -127,12 +140,12 @@ export default function Footer() {
               </li>
               <li>
                 <Link to="/about" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
-                  <span>Our Heritage &amp; Ethos</span>
+                  <span>Our 10-Year Heritage (Est. 2016)</span>
                 </Link>
               </li>
               <li>
                 <Link to="/science" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
-                  <span>Botanical Science &amp; pH 5.5</span>
+                  <span>Sub-28°C Science &amp; pH 5.5</span>
                 </Link>
               </li>
               <li>
@@ -156,20 +169,52 @@ export default function Footer() {
                   <span className="text-[10px] text-[#D4AF37] font-bold font-mono">Join Free</span>
                 </Link>
               </li>
-              <li>
-                <Link to="/wishlist" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
-                  <span>Saved Rituals &amp; Wishlist</span>
-                </Link>
-              </li>
             </ul>
           </div>
 
-          {/* Column 2: Client Care */}
+          {/* Column 2: Corporate Footprint & Registered Offices */}
           <div>
             <div className="mb-5 flex items-center gap-2 border-b border-[#244A38] pb-3">
               <span className="h-1.5 w-1.5 rounded-full bg-[#D4AF37]" />
               <h3 className="font-serif text-sm font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
-                Client Care
+                Registered Addresses
+              </h3>
+            </div>
+            <div className="space-y-4 text-xs text-[#DFD7C4]">
+              <div className="rounded-xl border border-[#244A38] bg-[#102219]/80 p-3.5">
+                <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#FCE096] flex items-center gap-1.5">
+                  <MapPin size={12} className="text-[#D4AF37]" /> Brand HQ (Bhumivera Organics)
+                </p>
+                <p className="mt-1 text-white font-semibold">Bhumivera Organics India Private Limited</p>
+                <p className="mt-0.5 text-[#DFD7C4] leading-relaxed">
+                  G.T. Road, Gopalpur, Asansol, WB 713304
+                </p>
+                <p className="mt-1 font-mono text-[10px] text-[#9BB0A5]">
+                  Inc. August 4, 2026 · Director: Payal Prasad
+                </p>
+              </div>
+
+              <div className="rounded-xl border border-[#244A38] bg-[#102219]/80 p-3.5">
+                <p className="font-mono text-[10px] font-bold uppercase tracking-wider text-[#FCE096] flex items-center gap-1.5">
+                  <Building2 size={12} className="text-[#D4AF37]" /> Heritage Corporate Office
+                </p>
+                <p className="mt-1 text-white font-semibold">MPG E-Business Private Limited</p>
+                <p className="mt-0.5 text-[#DFD7C4] leading-relaxed">
+                  608 BNR Sen Raleigh Road, Park Lane, Behind Spencer, Asansol, WB 713305
+                </p>
+                <p className="mt-1 font-mono text-[10px] text-[#9BB0A5]">
+                  Est. Sept 22, 2016 · CIN: U74999WB2016PTC217735 · Founder: Dilip Prasad Nonia
+                </p>
+              </div>
+            </div>
+          </div>
+
+          {/* Column 3: Client Care & Legal */}
+          <div>
+            <div className="mb-5 flex items-center gap-2 border-b border-[#244A38] pb-3">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#D4AF37]" />
+              <h3 className="font-serif text-sm font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
+                Client Care &amp; Legal
               </h3>
             </div>
             <ul className="space-y-3 text-xs sm:text-[13px] text-[#DFD7C4]">
@@ -188,6 +233,16 @@ export default function Footer() {
               <li>
                 <Link to="/contact" className="transition-colors hover:text-[#D4AF37]">
                   Boutique Concierge &amp; FAQ
+                </Link>
+              </li>
+              <li>
+                <Link to="/legal/conditions-of-use" className="transition-colors hover:text-[#D4AF37]">
+                  Conditions of Sale &amp; Terms
+                </Link>
+              </li>
+              <li>
+                <Link to="/legal/privacy-dpdp" className="transition-colors hover:text-[#D4AF37]">
+                  DPDP Act 2023 &amp; Privacy Shield
                 </Link>
               </li>
               <li className="pt-2">
@@ -211,38 +266,6 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Column 3: Transparency & Legal */}
-          <div>
-            <div className="mb-5 flex items-center gap-2 border-b border-[#244A38] pb-3">
-              <span className="h-1.5 w-1.5 rounded-full bg-[#D4AF37]" />
-              <h3 className="font-serif text-sm font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
-                Transparency &amp; Legal
-              </h3>
-            </div>
-            <ul className="space-y-3 text-xs sm:text-[13px] text-[#DFD7C4]">
-              <li>
-                <Link to="/legal/conditions-of-use" className="transition-colors hover:text-[#D4AF37]">
-                  Conditions of Sale &amp; Terms
-                </Link>
-              </li>
-              <li>
-                <Link to="/legal/privacy-dpdp" className="transition-colors hover:text-[#D4AF37]">
-                  DPDP Act 2023 &amp; Privacy Shield
-                </Link>
-              </li>
-              <li>
-                <Link to="/legal/shipping-hygiene" className="transition-colors hover:text-[#D4AF37]">
-                  Sanitary Sealed Custody Standard
-                </Link>
-              </li>
-              <li>
-                <Link to="/legal/arbitration-grievance" className="transition-colors hover:text-[#D4AF37]">
-                  Statutory Grievance &amp; Redressal
-                </Link>
-              </li>
-            </ul>
-          </div>
-
           {/* Column 4: The Gazette & Direct Channels */}
           <div>
             <div className="mb-5 flex items-center gap-2 border-b border-[#244A38] pb-3">
@@ -252,7 +275,7 @@ export default function Footer() {
               </h3>
             </div>
             <p className="text-xs text-[#DFD7C4] leading-relaxed mb-3 font-light">
-              Receive private micro-batch release schedules, botanical harvest essays, and client privilege invitations.
+              Receive private micro-batch release schedules, botanical harvest essays, and client privilege invitations from <a href="https://bhumivera.com" className="text-[#FCE096] underline">bhumivera.com</a>.
             </p>
             <form onSubmit={handleNewsletterSubmit} className="space-y-2">
               <div className="relative">
@@ -280,6 +303,24 @@ export default function Footer() {
             </form>
             <div className="mt-4 flex flex-wrap gap-2 pt-2 border-t border-[#244A38]/60">
               <a
+                href="https://linktr.ee/bhumivera"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[#D4AF37]/40 bg-[#102219] px-3 py-1 text-[11px] font-semibold text-[#DFD7C4] transition hover:border-[#D4AF37] hover:text-[#D4AF37]"
+              >
+                <span>Bhumivera Linktree</span>
+                <ExternalLink size={10} className="opacity-70" />
+              </a>
+              <a
+                href="https://www.instagram.com/bhumivera"
+                target="_blank"
+                rel="noreferrer"
+                className="inline-flex items-center gap-1.5 rounded-full border border-[#D4AF37]/40 bg-[#102219] px-3 py-1 text-[11px] font-semibold text-[#DFD7C4] transition hover:border-[#D4AF37] hover:text-[#D4AF37]"
+              >
+                <span>Instagram</span>
+                <ExternalLink size={10} className="opacity-70" />
+              </a>
+              <a
                 href="https://wa.me/917430985647"
                 target="_blank"
                 rel="noreferrer"
@@ -288,112 +329,76 @@ export default function Footer() {
                 <span>WhatsApp VIP</span>
                 <ExternalLink size={10} className="opacity-70" />
               </a>
-              <a
-                href="https://www.instagram.com/the_rsenterprises"
-                target="_blank"
-                rel="noreferrer"
-                className="inline-flex items-center gap-1.5 rounded-full border border-[#D4AF37]/40 bg-[#102219] px-3 py-1 text-[11px] font-semibold text-[#DFD7C4] transition hover:border-[#D4AF37] hover:text-[#D4AF37]"
-              >
-                <span>Instagram</span>
-                <ExternalLink size={10} className="opacity-70" />
-              </a>
             </div>
           </div>
-
         </div>
       </div>
 
-      {/* 3. STATUTORY COMPLIANCE & CONSUMER PROTECTION PILLARS */}
+      {/* 3. CORPORATE LINEAGE & REGISTERED OFFICE NOTICE BAR */}
       <div className="border-t border-[#244A38]/50 bg-[#102219]">
-        <div className="mx-auto w-full max-w-7xl px-5 py-8 sm:px-8 sm:py-10 lg:px-12">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            
-            <div className="two-tone-panel flex items-start gap-3 rounded-2xl border border-[#244A38] p-4 shadow-sm">
-              <ShieldCheck size={20} className="mt-0.5 shrink-0 text-[#D4AF37]" />
+        <div className="mx-auto w-full max-w-7xl px-5 py-6 sm:px-8 lg:px-12">
+          <div className="rounded-2xl border border-[#D4AF37]/35 bg-[#070a0e]/80 p-5 text-xs leading-relaxed text-[#DFD7C4]">
+            <p className="font-serif text-sm font-bold text-[#FCE096]">
+              Bhumivera™ is a brand of Bhumivera Organics India Private Limited. Backed by the 10-year manufacturing and consumer trust legacy of MPG E-Business Private Limited (Est. 2016, Asansol).
+            </p>
+            <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-3 text-[11px] text-[#9BB0A5]">
               <div>
-                <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#FCE096]">
-                  100% Sealed Sanitary Custody
-                </h4>
-                <p className="mt-1 text-[11px] leading-relaxed text-[#DFD7C4] font-light">
-                  Artisanal micro-batch personal care bottled with tamper-evident seals to safeguard uncompromised potency and pure hygiene.
-                </p>
+                <strong className="text-white">Brand HQ:</strong> G.T. Road, Gopalpur, Asansol, WB 713304.
+              </div>
+              <div>
+                <strong className="text-white">Heritage Corporate Office:</strong> 608 BNR Sen Raleigh Road, Park Lane, Asansol, WB 713305.
+              </div>
+              <div>
+                <strong className="text-white">Official Digital Platform:</strong>{' '}
+                <a href="https://bhumivera.com" className="text-[#D4AF37] underline hover:text-[#FCE096]">
+                  bhumivera.com
+                </a>
               </div>
             </div>
-
-            <div className="two-tone-panel flex items-start gap-3 rounded-2xl border border-[#244A38] p-4 shadow-sm">
-              <FileCheck2 size={20} className="mt-0.5 shrink-0 text-[#D4AF37]" />
-              <div>
-                <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#FCE096]">
-                  Artisanal Wax-Sealed Tamper Custody
-                </h4>
-                <p className="mt-1 text-[11px] leading-relaxed text-[#DFD7C4] font-light">
-                  Every bottle is hand-sealed with a virgin gold-foil security collar and backed by our 48-hour White-Glove Concierge Replacement Promise.
-                </p>
-              </div>
-            </div>
-
-            <div className="two-tone-panel flex items-start gap-3 rounded-2xl border border-[#244A38] p-4 shadow-sm">
-              <Lock size={20} className="mt-0.5 shrink-0 text-[#D4AF37]" />
-              <div>
-                <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#FCE096]">
-                  Atelier Gravimetric Calibration
-                </h4>
-                <p className="mt-1 text-[11px] leading-relaxed text-[#DFD7C4] font-light">
-                  Each micro-batch parcel is gravimetrically calibrated to ±0.5g at our cleanroom dispatch desk with a signed weight certificate.
-                </p>
-              </div>
-            </div>
-
-            <div className="two-tone-panel flex items-start gap-3 rounded-2xl border border-[#244A38] p-4 shadow-sm">
-              <Scale size={20} className="mt-0.5 shrink-0 text-[#D4AF37]" />
-              <div>
-                <h4 className="font-serif text-xs font-bold uppercase tracking-wider text-[#FCE096]">
-                  Maison Provenance & Patron Charter
-                </h4>
-                <p className="mt-1 text-[11px] leading-relaxed text-[#DFD7C4] font-light">
-                  100% active percentage label honesty, receipt-backed impact stewardship, and full patron privacy protection under DPDP Act 2023.
-                </p>
-              </div>
-            </div>
-
           </div>
         </div>
       </div>
 
-      {/* 4. BOTTOM TRADEMARK & PROMINENT DEVELOPER BRANDING BAR */}
+      {/* 4. BOTTOM TRADEMARK & PROMINENT FOUNDER BRANDING BAR */}
       <div className="border-t border-[#244A38]/50 bg-[#0D1C14] pb-28 sm:pb-8 pt-8">
         <div className="mx-auto flex w-full max-w-7xl flex-col items-center justify-between gap-6 px-5 sm:px-8 lg:flex-row lg:px-12">
-          
           {/* Copyright & Trademark */}
           <div className="flex items-center gap-3 text-center sm:text-left">
             <p className="text-xs tracking-wider text-[#9BB0A5] font-light">
-              © {currentYear} <span className="font-serif font-bold text-[#D4AF37]">BHUMIVERA</span> · Botanical Maison · All Rights Reserved
+              © {currentYear}{' '}
+              <a href="https://bhumivera.com" className="font-serif font-bold text-[#D4AF37] hover:underline">
+                bhumivera.com
+              </a>{' '}
+              · Bhumivera Organics India Private Limited · All Rights Reserved
             </p>
           </div>
 
-          {/* PROMINENT DEVELOPER BRANDING: AKASH PRASAD */}
+          {/* PROMINENT FOUNDER & ARCHITECT BRANDING: AKASH PRASAD */}
           <div className="flex flex-col sm:flex-row items-center gap-3">
             <span className="text-[10px] uppercase tracking-[0.25em] text-[#9BB0A5] font-light">
-              Architectural Engineering &amp; Design
+              MPG Group Patriarch: Dilip Prasad Nonia (Est. 2016)
             </span>
             <span className="hidden sm:inline text-[#D4AF37]/50">•</span>
             <div className="group inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/60 bg-[#D4AF37]/15 px-4 py-1.5 shadow-[0_0_20px_rgba(212,175,55,0.25)] transition-all hover:bg-[#D4AF37] hover:scale-105">
               <Sparkles size={13} className="text-[#D4AF37] group-hover:text-[#102219] transition-colors" />
               <span className="font-serif text-xs font-bold uppercase tracking-[0.2em] text-[#D4AF37] group-hover:text-[#102219] transition-colors">
-                Developed By Akash Prasad
+                Founded &amp; Engineered By Akash Prasad
               </span>
             </div>
           </div>
 
           {/* Quick Legal Links */}
           <div className="flex flex-wrap items-center justify-center gap-4 text-[11px] text-[#DFD7C4] font-light">
+            <a href="https://bhumivera.com" className="transition-colors hover:text-[#D4AF37] font-semibold text-[#FCE096]">
+              bhumivera.com
+            </a>
+            <span>·</span>
             <Link to="/legal/privacy-dpdp" className="transition-colors hover:text-[#D4AF37]">Privacy Policy</Link>
             <span>·</span>
             <Link to="/legal/conditions-of-use" className="transition-colors hover:text-[#D4AF37]">Terms of Sale</Link>
             <span>·</span>
             <Link to="/legal/arbitration-grievance" className="transition-colors hover:text-[#D4AF37]">Grievance Officer</Link>
           </div>
-
         </div>
       </div>
     </footer>
