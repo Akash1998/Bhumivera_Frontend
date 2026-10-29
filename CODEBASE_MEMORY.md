@@ -1,7 +1,7 @@
 # Bhumivera Organics — Complete Codebase Architecture & 1,500+ Authentic Customer Reviews Memory
 
 ## 1. Corporate & Heritage Profile
-- **Brand & Corporate Entity**: Bhumivera Organics India Private Limited (CIN: `U20237WB2026PTC295842`, RoC-Kolkata II, headquartered in Asansol / Purba Bardhaman, West Bengal, India; Directors: Aman Prasad, Akash Prasad, Payal Prasad; founded 2016 under MPG E Business Private Limited).
+- **Brand & Corporate Entity**: Bhumivera Organics India Private Limited (CIN: `U20237WB2026PTC295842`, RoC-Kolkata II, headquartered in Asansol / Purba Bardhaman, West Bengal, India; Directors: Aman Prasad, Akash Prasad, Akash Prasad, Payal Prasad & Aman Prasad; founded 2016 under MPG E Business Private Limited).
 - **Positioning**: "The Transparent Maison" — 100% active percentage and milligram disclosure printed openly on the front label, sub-28°C cold-pressed botanical extraction, pH 5.0–5.5 skin-identical calibration, zero SLS/SLES sulfates or parabens, and serialized 250-bottle micro-batches.
 
 ## 2. Full-Stack Codebase Architecture

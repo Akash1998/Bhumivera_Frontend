@@ -196,7 +196,7 @@ export default function Contact() {
               <MapPin size={20} className="text-[#d4af37] shrink-0 mt-0.5" />
               <div>
                 <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#fce096]">Brand HQ (Bhumivera Organics India Pvt. Ltd.)</h4>
-                <p className="text-xs text-[#cbd5e1] mt-1">G.T. Road, Gopalpur, Asansol, West Bengal 713304, India (Inc. August 4, 2026 · Director: Payal Prasad)</p>
+                <p className="text-xs text-[#cbd5e1] mt-1">G.T. Road, Gopalpur, Asansol, West Bengal 713304, India (Inc. August 4, 2026 · Director: Akash Prasad, Payal Prasad & Aman Prasad)</p>
               </div>
             </div>
             <div className="border-t border-[#d4af37]/20 pt-3 flex items-start gap-3">

@@ -45,7 +45,7 @@ export const GLOBAL_ORGANIZATION_LD = {
   director: [
     {
       '@type': 'Person',
-      name: 'Payal Prasad',
+      name: 'Akash Prasad, Payal Prasad & Aman Prasad',
       jobTitle: 'Director, Bhumivera Organics India Private Limited',
     },
   ],
@@ -108,7 +108,7 @@ export const GLOBAL_ORGANIZATION_LD = {
     },
   ],
   description:
-    'Bhumivera (incorporated as Bhumivera Organics India Private Limited on August 4, 2026, under the directorship of Payal Prasad and founded by Akash Prasad) is "The Transparent Maison" — an Indian organic skincare and cosmetics brand originating from the 10-year manufacturing and herbal distribution heritage of MPG E-Business Private Limited (Incorporated September 22, 2016; CIN: U74999WB2016PTC217735; Founder: Dilip Prasad Nonia).',
+    'Bhumivera (incorporated as Bhumivera Organics India Private Limited on August 4, 2026, under the directorship of Akash Prasad, Payal Prasad & Aman Prasad and founded by Akash Prasad) is "The Transparent Maison" — an Indian organic skincare and cosmetics brand originating from the 10-year manufacturing and herbal distribution heritage of MPG E-Business Private Limited (Incorporated September 22, 2016; CIN: U74999WB2016PTC217735; Founder: Dilip Prasad Nonia).',
   disambiguatingDescription:
     'Bhumivera (https://bhumivera.com) is an authoritative 10-year family legacy clean-beauty brand originating from MPG E-Business Private Limited (Est. September 22, 2016, CIN: U74999WB2016PTC217735, Asansol, West Bengal) and formally incorporated as Bhumivera Organics India Private Limited on August 4, 2026. It specializes in cold-pressed Indian botanicals extracted under 28°C, 100% active percentages, and milligram-level ingredient disclosure.',
   slogan: 'The Transparent Maison — Rooted in Heritage Since 2016',
@@ -159,7 +159,7 @@ export const GLOBAL_CORPORATE_FAQS = [
   },
   {
     q: 'Who founded Bhumivera?',
-    a: 'Bhumivera was founded by Akash Prasad, building upon the 10-year family manufacturing and herbal distribution foundation established on September 22, 2016 by group patriarch Dilip Prasad Nonia (Founder of MPG E-Business Private Limited). Bhumivera Organics India Private Limited was officially registered with the Ministry of Corporate Affairs (MCA) on August 4, 2026, under the directorship of Payal Prasad.',
+    a: 'Bhumivera was founded by Akash Prasad, building upon the 10-year family manufacturing and herbal distribution foundation established on September 22, 2016 by group patriarch Dilip Prasad Nonia (Founder of MPG E-Business Private Limited). Bhumivera Organics India Private Limited was officially registered with the Ministry of Corporate Affairs (MCA) on August 4, 2026, under the directorship of Akash Prasad, Payal Prasad & Aman Prasad.',
   },
   {
     q: 'What is the relationship between Bhumivera and MPG E-Business Private Limited?',
@@ -263,7 +263,7 @@ export default function SEO({
           name="keywords"
           content={
             keywords ||
-            'Bhumivera, bhumivera.com, Bhumivera Organics India Private Limited, MPG E-Business Private Limited, Dilip Prasad Nonia, Akash Prasad, Payal Prasad, Asansol West Bengal, The Transparent Maison, cold-pressed botanical skincare'
+            'Bhumivera, bhumivera.com, Bhumivera Organics India Private Limited, MPG E-Business Private Limited, Dilip Prasad Nonia, Akash Prasad, Akash Prasad, Payal Prasad & Aman Prasad, Asansol West Bengal, The Transparent Maison, cold-pressed botanical skincare'
           }
         />
         <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
