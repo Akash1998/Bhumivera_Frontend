@@ -8,20 +8,16 @@ import {
   ShoppingBag,
   Sprout,
   CheckCircle2,
-  Droplets,
   ThermometerSnowflake,
   Search,
-  Layers,
   Award,
   Lock,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO, { GLOBAL_CORPORATE_FAQS } from '../components/SEO';
-import BestSellersToday from '../components/BestSellersToday';
 import { useToast } from '../context/ToastContext';
 import {
   HOME_VISUAL_ASSETS,
-  MAISON_REGIMEN_BUNDLES,
   SAMPLE_BATCH_COAS,
 } from '../data/bhumiveraUniqueData';
 
@@ -170,20 +166,21 @@ export default function PremiumHome() {
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#14291F] via-[#14291F]/88 to-[#14291F]/45" />
 
         <div className="mx-auto flex min-h-[80svh] max-w-7xl flex-col justify-center px-6 pb-14 pt-24 sm:px-10 lg:pb-20">
-          <div className="inline-flex w-fit items-center gap-2 rounded-full border border-[#D4AF37]/45 bg-[#102219]/90 px-4 py-1.5 text-[11px] font-bold uppercase tracking-[0.22em] text-[#FCE096]">
-            <Leaf size={14} className="text-[#D4AF37]" /> Bhumivera · The Transparent Maison — Rooted in Heritage Since 2016
-          </div>
-
-          {/* HOMEPAGE BRAND TRUST BAR / MILESTONE INDICATOR */}
           <div
             role="region"
-            aria-label="Bhumivera Heritage & Formulation Trust Bar"
-            className="mt-4 inline-flex w-fit flex-wrap items-center gap-2 rounded-2xl border border-[#D4AF37]/60 bg-[#070a0e]/90 px-4 py-2.5 font-mono text-xs font-bold tracking-wider text-[#FCE096] shadow-lg"
+            aria-label="Bhumivera brand and formulation standards"
+            className="mb-1 w-fit max-w-3xl rounded-2xl border border-white/15 bg-[#102219]/45 px-4 py-3 shadow-lg backdrop-blur-md sm:px-5"
           >
-            <Award size={15} className="text-[#D4AF37] shrink-0" />
-            <span>
-              10 Years of Group Heritage | 100% Active Ingredients | Cold-Pressed Under 28°C | Asansol, West Bengal
-            </span>
+            <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FCE096] sm:text-xs">
+              <Leaf size={14} className="shrink-0 text-[#D4AF37]" />
+              Bhumivera · The Transparent Maison
+            </p>
+            <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-medium text-[#DFD7C4] sm:text-xs">
+              <span>Rooted in 2016 heritage</span><span aria-hidden="true" className="text-[#D4AF37]">·</span>
+              <span>Fully disclosed actives</span><span aria-hidden="true" className="text-[#D4AF37]">·</span>
+              <span>Cold-pressed below 28°C</span><span aria-hidden="true" className="text-[#D4AF37]">·</span>
+              <span>Made in Asansol, India</span>
+            </p>
           </div>
 
           <h1 className="mt-5 max-w-4xl font-serif text-4xl font-bold leading-[1.08] tracking-tight sm:text-6xl lg:text-7xl">
@@ -192,23 +189,18 @@ export default function PremiumHome() {
           </h1>
           <div className="gold-hairline my-5 max-w-xs" />
           <p className="max-w-2xl text-sm font-light leading-relaxed text-[#DFD7C4] sm:text-base">
-            Backed by a decade of family herbal manufacturing and distribution under <strong className="text-white">MPG E-Business Private Limited</strong> (Est. September 22, 2016 · CIN: U74999WB2016PTC217735 · Founder: Dilip Prasad Nonia) and modernized by <strong className="text-white">Akash Prasad</strong> as <strong className="text-white">Bhumivera Organics India Private Limited</strong> (Inc. August 4, 2026 · Director: Akash Prasad, Payal Prasad & Aman Prasad), <strong className="text-[#FCE096]">Bhumivera</strong> (<a href="https://bhumivera.com" className="underline text-[#FCE096]">bhumivera.com</a>) delivers <strong className="text-[#FCE096]">100% active percentages</strong> and <strong className="text-[#FCE096]">milligram-level disclosure</strong> in sub-28°C cold-pressed botanical formulas calibrated to <strong className="text-[#FCE096]">pH 5.0–5.5</strong>.
+            Rooted in a family herbal tradition established in 2016, Bhumivera pairs cold-pressed Indian botanicals with modern actives—fully disclosed, milligram by milligram, and calibrated for thoughtful daily care.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
-            <a href="#regimen-bundles" className="btn-gold-luxury inline-flex min-h-12 items-center gap-2.5 rounded-full px-8 py-3.5 text-xs font-bold uppercase tracking-[0.16em]">
-              Shop Complete Daily Regimen (₹1,499) <ArrowRight size={15} />
-            </a>
-            <Link to="/about" className="btn-silver-luxury inline-flex min-h-12 items-center gap-2.5 rounded-full px-6 py-3.5 text-xs font-semibold uppercase tracking-wider">
-              <Award size={16} className="text-[#D4AF37]" /> Explore 2016–2026 Heritage
+            <Link to="/shop" className="btn-gold-luxury inline-flex min-h-12 items-center gap-2.5 rounded-full px-8 py-3.5 text-xs font-bold uppercase tracking-[0.16em]">
+              Explore the Collection <ArrowRight size={15} />
             </Link>
-            <Link to="/shop" className="inline-flex min-h-12 items-center gap-2 px-4 py-3 text-xs font-bold uppercase tracking-widest text-[#FCE096] hover:text-white">
-              Explore All 6 SKUs <ArrowRight size={14} />
+            <Link to="/about" className="btn-silver-luxury inline-flex min-h-12 items-center gap-2.5 rounded-full px-6 py-3.5 text-xs font-semibold uppercase tracking-wider">
+              <Award size={16} className="text-[#D4AF37]" /> Our Heritage
             </Link>
           </div>
         </div>
       </section>
-
-      <BestSellersToday />
 
       <section className="mx-auto max-w-7xl px-5 py-12 sm:px-10">
         {/* 4 PILLAR TILES */}
@@ -338,140 +330,6 @@ export default function PremiumHome() {
                 </div>
               </div>
             )}
-          </div>
-        </div>
-
-        {/* STRATEGIC PLAY 1: PRICING & UNIT ECONOMICS FUNNEL — CURATED REGIMEN BUNDLES */}
-        <div id="regimen-bundles" className="mt-14">
-          <div className="flex flex-col justify-between gap-4 md:flex-row md:items-end">
-            <div>
-              <p className="font-sub-gold inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.26em]">
-                <Layers size={14} className="text-[#D4AF37]" /> Complete Botanical Regimens · Architectural Value
-              </p>
-              <h2 className="mt-2 font-serif text-2xl font-bold sm:text-4xl">
-                <span className="font-headline-gold">Curated Daily Rituals</span>{' '}
-                <span className="font-headline-silver">&amp; Inside-Out Systems</span>
-              </h2>
-              <div className="gold-hairline my-3 w-24" />
-            </div>
-            <p className="max-w-md text-xs text-[#DFD7C4] leading-relaxed">
-              True skin and scalp transformation requires a cohesive pH-calibrated system rather than isolated single bottles. Save up to ₹845 with our curated Regimen Sets.
-            </p>
-          </div>
-
-          <div className="mt-6 grid gap-6 lg:grid-cols-3">
-            {(MAISON_REGIMEN_BUNDLES || []).map((bundle) => (
-              <article
-                key={bundle.id}
-                className="flex flex-col justify-between rounded-3xl border border-[#D4AF37]/40 bg-[#102219] p-6 shadow-xl transition hover:border-[#D4AF37]"
-              >
-                <div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="rounded-full border border-[#D4AF37]/50 bg-[#D4AF37]/15 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-[#FCE096]">
-                      {bundle.badge}
-                    </span>
-                    <span className="font-mono text-[10px] text-emerald-400">{bundle.batchAllocation}</span>
-                  </div>
-                  <div className="mt-4 flex items-center justify-between gap-2"><Link to={`/combo/${bundle.id}`} className="font-serif text-xl font-bold text-white hover:text-[#FCE096]">{bundle.name}</Link><span className="shrink-0 rounded-full border border-[#D4AF37]/50 bg-[#070a0e] px-2.5 py-1 font-mono text-xs font-bold text-[#FCE096]">★ {bundle.rating || 4.92} ({bundle.reviews || 378})</span></div>
-                  <p className="mt-1 text-xs text-[#DFD7C4] leading-relaxed">{bundle.tagline}</p>
-
-                  <ul className="mt-4 space-y-2.5 border-t border-[#244A38] pt-4 text-xs">
-                    {bundle.items.map((item) => (
-                      <li key={item.id} className="flex items-start gap-2.5">
-                        <CheckCircle2 size={15} className="mt-0.5 shrink-0 text-[#D4AF37]" />
-                        <div>
-                          <span className="font-semibold text-white">{item.name}</span>
-                          <span className="ml-1.5 font-mono text-[10px] text-[#FCE096]">(₹{item.price})</span>
-                          <p className="text-[11px] text-[#9BB0A5]">{item.active}</p>
-                        </div>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-
-                <div className="mt-6 border-t border-[#244A38] pt-4">
-                  <Link to={`/combo/${bundle.id}`} className="inline-flex text-xs font-bold uppercase tracking-wider text-[#FCE096] hover:text-white">
-                    View regimen details <ArrowRight size={14} className="ml-1" />
-                  </Link>
-                  <div className="flex items-baseline justify-between">
-                    <div>
-                      <span className="font-serif text-2xl font-bold text-[#FCE096]">₹{bundle.bundlePrice}</span>
-                      <span className="ml-2 text-xs text-[#9BB0A5] line-through">MRP ₹{bundle.mrpTotal}</span>
-                      <span className="ml-2 rounded bg-emerald-950/80 border border-emerald-500/30 px-2 py-0.5 font-mono text-[10px] font-bold text-emerald-300">
-                        Save ₹{bundle.savings}
-                      </span>
-                    </div>
-                  </div>
-                  <Link
-                    to={`/combo/${bundle.id}`}
-                    className="btn-gold-luxury mt-4 flex w-full items-center justify-center gap-2 rounded-xl py-3.5 text-xs font-bold uppercase tracking-widest"
-                  >
-                    <ShoppingBag size={15} /> View regimen &amp; add to bag
-                  </Link>
-                </div>
-              </article>
-            ))}
-          </div>
-        </div>
-
-        {/* STRATEGIC PLAY 3: REFRAME THE INGESTIBLE 7-TULSI SKU */}
-        <div className="mt-16 rounded-3xl border border-[#D4AF37]/40 bg-gradient-to-br from-[#102219] via-[#14291F] to-[#0D1C14] p-6 sm:p-10 shadow-2xl">
-          <div className="grid gap-8 lg:grid-cols-12 items-center">
-            <div className="lg:col-span-7">
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/40 bg-[#070a0e] px-3.5 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-[#FCE096]">
-                <Droplets size={13} className="text-[#D4AF37]" /> Unified Inside-Out Botanical Ritual
-              </span>
-              <h2 className="mt-4 font-serif text-2xl font-bold sm:text-4xl">
-                <span className="font-headline-gold">Why Clear Skin Starts</span>{' '}
-                <span className="font-headline-silver">With Your Cortisol &amp; Gut Axis</span>
-              </h2>
-              <p className="mt-3 text-xs sm:text-sm leading-relaxed text-[#DFD7C4]">
-                Topical cleansers alone cannot stop stress-induced sebum spikes or systemic oxidative dullness. That is why <strong className="text-white">Kalpvriksh Satva Tulsi (30 ml | ₹499)</strong> is formulated at a <strong className="text-[#FCE096]">90% active concentration (9.0 ml extract per 10 ml)</strong> across 7 rare Tulsi cultivars (Van, Sweet, Marua, Bisva, Kala, Rama &amp; Lemon Tulsi).
-              </p>
-              <div className="mt-5 grid gap-3 sm:grid-cols-2">
-                <div className="rounded-2xl border border-[#244A38] bg-[#070a0e]/70 p-4">
-                  <p className="font-mono text-[10px] font-bold uppercase text-[#FCE096]">Step 01 · External Acid-Mantle Care</p>
-                  <p className="mt-1 text-xs text-[#DFD7C4]">
-                    3% Activated Charcoal or 4% Himalayan Sea Buckthorn Face Wash clears PM2.5 pore congestion and replenishes Omega-7 lipids at pH 5.4.
-                  </p>
-                </div>
-                <div className="rounded-2xl border border-[#244A38] bg-[#070a0e]/70 p-4">
-                  <p className="font-mono text-[10px] font-bold uppercase text-emerald-400">Step 02 · Internal Cortisol Adaptogen</p>
-                  <p className="mt-1 text-xs text-[#DFD7C4]">
-                    3–4 drops of 7-Tulsi Elixir in warm water twice daily deliver Eugenol, Ursolic Acid &amp; Rosmarinic Acid to calm cortisol spikes from within.
-                  </p>
-                </div>
-              </div>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <Link
-                  to="/products/kalpvriksh-satva-tulsi-7-tulsi-extract"
-                  className="btn-gold-luxury inline-flex items-center gap-2 rounded-full px-6 py-3 text-xs font-bold uppercase tracking-wider"
-                >
-                  Inspect 7-Tulsi Cellular Drops <ArrowRight size={14} />
-                </Link>
-                <a
-                  href="#regimen-bundles"
-                  className="btn-silver-luxury inline-flex items-center gap-2 rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-wider"
-                >
-                  Bundle Inside-Out Ritual (₹1,299)
-                </a>
-              </div>
-            </div>
-            <div className="lg:col-span-5">
-              <div className="rounded-2xl border border-[#D4AF37]/35 bg-[#070a0e] p-5 text-center">
-                <img
-                  src="/images/products/bhumivera-kalpvriksh-satva-tulsi-drops.webp"
-                  alt="Kalpvriksh Satva 7-Tulsi Ingestible Skin-Clearing & Cortisol Adaptogen"
-                  className="mx-auto h-56 w-auto object-contain"
-                />
-                <p className="mt-3 font-mono text-xs font-bold text-[#FCE096]">
-                  9.0 ml Active Seven-Tulsi Extract per 10 ml (90% Potency)
-                </p>
-                <p className="mt-1 text-[11px] text-[#9BB0A5]">
-                  Van · Sweet · Marua · Bisva · Kala · Rama · Lemon Tulsi
-                </p>
-              </div>
-            </div>
           </div>
         </div>
 

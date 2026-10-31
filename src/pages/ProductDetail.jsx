@@ -663,7 +663,7 @@ export default function ProductDetail() {
             </p>
           </div>
 
-          <div className="relative mb-6 rounded-2xl two-tone-panel-gold p-4 shadow-2xl sm:p-6 md:mb-8 md:rounded-3xl md:p-7">
+          <div className="product-detail-translucent relative mb-6 rounded-2xl two-tone-panel-gold p-4 shadow-2xl sm:p-6 md:mb-8 md:rounded-3xl md:p-7">
             <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
               <span className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 py-1.5 text-[9px] font-mono uppercase tracking-[0.12em] sm:text-[10px] sm:tracking-widest ${isOutOfStock || isLowStock ? 'bg-red-950/60 border border-red-500/40 text-red-300' : 'bg-[#171813] border border-[#D4AF37]/40 text-[#FCE096]'}`}>
                 {isLowStock && (
@@ -932,7 +932,7 @@ export default function ProductDetail() {
 
             {activeTab === 'reviews' && (
               <Motion.div id="product-reviews" key="reviews" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-4xl scroll-mt-28">
-                <div className="mb-8 grid gap-6 rounded-3xl two-tone-panel-gold border border-[#d4af37]/40 p-6 md:grid-cols-[auto_1fr] md:items-center md:p-8 shadow-xl">
+                <div className="product-detail-translucent mb-8 grid gap-6 rounded-3xl two-tone-panel-gold border border-[#d4af37]/40 p-6 md:grid-cols-[auto_1fr] md:items-center md:p-8 shadow-xl">
                   <div className="text-center md:min-w-32">
                     <div className="font-serif text-5xl font-bold text-[#fce096]">{reviewCount ? productRating.toFixed(1) : '—'}</div>
                     <div className="mt-2 flex justify-center text-[#d4af37]" aria-label={`${productRating.toFixed(1)} out of 5 stars`}>
@@ -950,7 +950,7 @@ export default function ProductDetail() {
                     </div>
                   </div>
                 </div>
-                {reviewPhotos.length > 0 && <section className="mb-8 rounded-2xl two-tone-card border border-[#d4af37]/25 p-5 md:p-6">
+                {reviewPhotos.length > 0 && <section className="product-detail-translucent mb-8 rounded-2xl two-tone-card border border-[#d4af37]/25 p-5 md:p-6">
                   <div className="mb-4 flex items-end justify-between gap-3"><div><p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#d4af37]">From our customers</p><h3 className="mt-1 font-serif text-2xl text-white">Real photos, real reviews</h3></div><span className="text-xs text-[#94a3b8]">{reviewPhotos.length} customer {reviewPhotos.length === 1 ? 'photo' : 'photos'}</span></div>
                   <div className="flex gap-3 overflow-x-auto pb-2">
                     {reviewPhotos.map(({ image, review }, index) => <a key={`${review.id || index}-${index}`} href={getImageUrl(image)} target="_blank" rel="noreferrer" aria-label={`View customer photo from ${review.user_name || 'a customer'}'s review`} className="group relative h-36 w-32 shrink-0 overflow-hidden rounded-xl border border-[#d4af37]/30 bg-[#070a0e] sm:h-44 sm:w-40">
@@ -974,7 +974,7 @@ export default function ProductDetail() {
                 </div>}
                 {visibleReviews.length > 0 ? (
                   visibleReviews.map((review, i) => (
-                    <article key={review.id || i} className="mb-4 rounded-2xl two-tone-card border border-[#d4af37]/25 p-5 sm:p-7">
+                    <article key={review.id || i} className="product-detail-translucent mb-4 rounded-2xl two-tone-card border border-[#d4af37]/25 p-5 sm:p-7">
                       <div className="mb-3 flex flex-wrap items-center justify-between gap-3">
                         <div className="flex items-center gap-2">
                           <div className="flex items-center gap-1 text-[#d4af37]" aria-label={`${review.rating} out of 5 stars`}>

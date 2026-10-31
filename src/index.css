@@ -1285,6 +1285,13 @@ html.native-app .site-shell > footer {
   color: rgba(223, 215, 196, 0.58);
 }
 
+.site-shell main :is(div, section, article)[class~="product-detail-translucent"][class*="rounded-"][class*="border"]:not([class*="bg-emerald"]):not([class*="bg-green"]):not([class*="bg-red"]):not([class*="bg-yellow"]):not([class*="bg-amber"]):not([class*="bg-blue"]) {
+  background-color: rgba(5, 13, 8, 0.068);
+  background-image:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.0175), rgba(4, 10, 6, 0.048) 62%),
+    radial-gradient(ellipse at 10% 0%, rgba(212, 175, 55, 0.0175), transparent 58%);
+}
+
 .site-shell main :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select):focus,
 .management-shell main :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select):focus {
   border-color: rgba(232, 201, 130, 0.66);
