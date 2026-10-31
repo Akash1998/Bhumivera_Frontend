@@ -89,6 +89,8 @@ export default function ReviewManagement() {
   const [mediaFilter, setMediaFilter] = useState('all'); // all | photos | videos
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
+  const [selectedReviewIds, setSelectedReviewIds] = useState([]);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   // Inspector / Editor Modal State
   const [selectedReview, setSelectedReview] = useState(null);
@@ -412,12 +414,72 @@ export default function ReviewManagement() {
       await api.delete(`/reviews/admin/${reviewId}?permanent=${isPermanent}`, { adminAuth: true });
     } catch (error) {
       console.error('[ADMIN_REVIEW_DELETE]', error);
+      showToast?.(error.normalized?.message || error.response?.data?.message || 'Review deletion failed.', 'error');
+      return;
     }
     setReviews(current => current.filter(review => String(review.id) !== String(reviewId)));
+    setSelectedReviewIds(current => current.filter(id => id !== String(reviewId)));
     showToast?.(`Review #${reviewId} deleted successfully.`, 'success');
     if (selectedReview && String(selectedReview.id) === String(reviewId)) {
       setSelectedReview(null);
       setReviewDraft(null);
+    }
+  };
+
+  const toggleReviewSelection = reviewId => {
+    const id = String(reviewId);
+    setSelectedReviewIds(current =>
+      current.includes(id) ? current.filter(selectedId => selectedId !== id) : [...current, id]
+    );
+  };
+
+  const filteredReviewIds = filteredReviews.map(review => String(review.id || review._id));
+  const areAllFilteredReviewsSelected = filteredReviewIds.length > 0 &&
+    filteredReviewIds.every(id => selectedReviewIds.includes(id));
+
+  const toggleAllFilteredReviews = () => {
+    setSelectedReviewIds(current => {
+      if (areAllFilteredReviewsSelected) {
+        return current.filter(id => !filteredReviewIds.includes(id));
+      }
+      return [...new Set([...current, ...filteredReviewIds])];
+    });
+  };
+
+  const handleBulkDeleteReviews = async () => {
+    if (!selectedReviewIds.length) return;
+    if (!window.confirm(`Permanently delete ${selectedReviewIds.length} selected review(s)? This cannot be undone.`)) return;
+
+    setIsBulkDeleting(true);
+    try {
+      const results = await Promise.allSettled(
+        selectedReviewIds.map(id =>
+          api.delete(`/reviews/admin/${id}?permanent=true`, { adminAuth: true })
+        )
+      );
+      const deletedIds = selectedReviewIds.filter((_, index) => results[index].status === 'fulfilled');
+      const failedIds = selectedReviewIds.filter((_, index) => results[index].status === 'rejected');
+
+      if (deletedIds.length) {
+        setReviews(current => current.filter(review => !deletedIds.includes(String(review.id || review._id))));
+        window.dispatchEvent(new Event('bhumivera:reviews-updated'));
+        if (selectedReview && deletedIds.includes(String(selectedReview.id || selectedReview._id))) {
+          setSelectedReview(null);
+          setReviewDraft(null);
+        }
+      }
+      setSelectedReviewIds(failedIds);
+
+      if (failedIds.length) {
+        showToast?.(
+          `Deleted ${deletedIds.length} review(s); ${failedIds.length} could not be deleted and remain selected.`,
+          'error'
+        );
+      } else {
+        showToast?.(`Permanently deleted ${deletedIds.length} review(s).`, 'success');
+      }
+    } finally {
+      setIsBulkDeleting(false);
     }
   };
 
@@ -528,6 +590,17 @@ export default function ReviewManagement() {
           >
             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
           </button>
+          {selectedReviewIds.length > 0 && (
+            <button
+              type="button"
+              onClick={handleBulkDeleteReviews}
+              disabled={isBulkDeleting}
+              className="inline-flex items-center gap-2 rounded-xl border border-rose-500/40 bg-rose-500/20 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-rose-200 transition-all hover:bg-rose-500/30 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Trash2 size={15} />
+              {isBulkDeleting ? 'Deleting…' : `Bulk Delete (${selectedReviewIds.length})`}
+            </button>
+          )}
         </div>
       </div>
       {reviewLoadError && <p role="alert" className="rounded-xl border border-rose-500/40 bg-rose-950/40 p-4 text-sm text-rose-200">{reviewLoadError}</p>}
@@ -734,6 +807,16 @@ export default function ReviewManagement() {
           <table className="w-full text-left border-collapse">
             <thead>
               <tr className="bg-[#081b15]/80 border-b border-slate-800">
+                <th className="p-4">
+                  <input
+                    type="checkbox"
+                    checked={areAllFilteredReviewsSelected}
+                    onChange={toggleAllFilteredReviews}
+                    aria-label={`Select all ${filteredReviewIds.length} filtered reviews`}
+                    title={`Select all ${filteredReviewIds.length} filtered reviews`}
+                    className="h-4 w-4 cursor-pointer accent-amber-400"
+                  />
+                </th>
                 <th className="p-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">Product &amp; Combo</th>
                 <th className="p-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">Patron, City &amp; Date</th>
                 <th className="p-4 text-[10px] font-black uppercase text-slate-400 tracking-widest">Rating &amp; Review</th>
@@ -744,7 +827,7 @@ export default function ReviewManagement() {
             <tbody className="divide-y divide-slate-800/50">
               {paginatedReviews.length === 0 && (
                 <tr>
-                  <td colSpan={5} className="p-10 text-center text-sm text-slate-400">
+                  <td colSpan={6} className="p-10 text-center text-sm text-slate-400">
                     {loading ? 'Loading reviews from the database…' : reviewLoadError || 'No database reviews match these filters.'}
                   </td>
                 </tr>
@@ -753,6 +836,15 @@ export default function ReviewManagement() {
                 const rRating = parseInt(review.rating, 10) || 5;
                 return (
                   <tr key={review.id || review._id} className="hover:bg-amber-500/[0.03] transition-colors">
+                    <td className="p-4">
+                      <input
+                        type="checkbox"
+                        checked={selectedReviewIds.includes(String(review.id || review._id))}
+                        onChange={() => toggleReviewSelection(review.id || review._id)}
+                        aria-label={`Select review ${review.id || review._id}`}
+                        className="h-4 w-4 cursor-pointer accent-amber-400"
+                      />
+                    </td>
                     <td className="p-4">
                       <div className="max-w-[210px]">
                         <p className="text-xs font-bold text-white line-clamp-1">{review.product_name}</p>
