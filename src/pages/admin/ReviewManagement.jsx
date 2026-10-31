@@ -90,6 +90,7 @@ export default function ReviewManagement() {
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [selectedReviewIds, setSelectedReviewIds] = useState([]);
+  const [bulkAction, setBulkAction] = useState('');
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   // Inspector / Editor Modal State
@@ -433,24 +434,47 @@ export default function ReviewManagement() {
     );
   };
 
-  const handleBulkDeleteReviews = async () => {
+  const handleBulkReviewAction = async () => {
     if (!selectedReviewIds.length) return;
-    if (!window.confirm(`Permanently delete ${selectedReviewIds.length} selected review(s)? This cannot be undone.`)) return;
+    if (!bulkAction) {
+      showToast?.('Choose a bulk action first.', 'error');
+      return;
+    }
+
+    const actionLabels = {
+      approve: 'approve and publish',
+      archive: 'hide and archive',
+      delete: 'permanently delete',
+    };
+    const actionLabel = actionLabels[bulkAction];
+    const warning = bulkAction === 'delete' ? ' This cannot be undone.' : '';
+    if (!window.confirm(`Are you sure you want to ${actionLabel} ${selectedReviewIds.length} selected review(s)?${warning}`)) return;
 
     setIsBulkDeleting(true);
     try {
       const results = await Promise.allSettled(
-        selectedReviewIds.map(id =>
-          api.delete(`/reviews/admin/${id}?permanent=true`, { adminAuth: true })
-        )
+        selectedReviewIds.map(id => {
+          if (bulkAction === 'approve') {
+            return api.put(`/reviews/${id}/approve`, {}, { adminAuth: true });
+          }
+          return api.delete(`/reviews/admin/${id}?permanent=${bulkAction === 'delete'}`, { adminAuth: true });
+        })
       );
-      const deletedIds = selectedReviewIds.filter((_, index) => results[index].status === 'fulfilled');
+      const succeededIds = selectedReviewIds.filter((_, index) => results[index].status === 'fulfilled');
       const failedIds = selectedReviewIds.filter((_, index) => results[index].status === 'rejected');
 
-      if (deletedIds.length) {
-        setReviews(current => current.filter(review => !deletedIds.includes(String(review.id || review._id))));
+      if (succeededIds.length) {
+        if (bulkAction === 'approve') {
+          setReviews(current => current.map(review =>
+            succeededIds.includes(String(review.id || review._id))
+              ? { ...review, is_approved: 1, status: 'approved' }
+              : review
+          ));
+        } else {
+          setReviews(current => current.filter(review => !succeededIds.includes(String(review.id || review._id))));
+        }
         window.dispatchEvent(new Event('bhumivera:reviews-updated'));
-        if (selectedReview && deletedIds.includes(String(selectedReview.id || selectedReview._id))) {
+        if (bulkAction !== 'approve' && selectedReview && succeededIds.includes(String(selectedReview.id || selectedReview._id))) {
           setSelectedReview(null);
           setReviewDraft(null);
         }
@@ -459,12 +483,13 @@ export default function ReviewManagement() {
 
       if (failedIds.length) {
         showToast?.(
-          `Deleted ${deletedIds.length} review(s); ${failedIds.length} could not be deleted and remain selected.`,
+          `${actionLabel[0].toUpperCase()}${actionLabel.slice(1)} ${succeededIds.length} review(s); ${failedIds.length} failed and remain selected.`,
           'error'
         );
       } else {
-        showToast?.(`Permanently deleted ${deletedIds.length} review(s).`, 'success');
+        showToast?.(`Successfully ${bulkAction === 'approve' ? 'approved' : bulkAction === 'archive' ? 'archived' : 'deleted'} ${succeededIds.length} review(s).`, 'success');
       }
+      if (!failedIds.length) setBulkAction('');
     } finally {
       setIsBulkDeleting(false);
     }
@@ -590,17 +615,6 @@ export default function ReviewManagement() {
           >
             <RefreshCw size={18} className={loading ? 'animate-spin' : ''} />
           </button>
-          {selectedReviewIds.length > 0 && (
-            <button
-              type="button"
-              onClick={handleBulkDeleteReviews}
-              disabled={isBulkDeleting}
-              className="inline-flex items-center gap-2 rounded-xl border border-rose-500/40 bg-rose-500/20 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-rose-200 transition-all hover:bg-rose-500/30 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <Trash2 size={15} />
-              {isBulkDeleting ? 'Deleting…' : `Bulk Delete (${selectedReviewIds.length})`}
-            </button>
-          )}
         </div>
       </div>
       {reviewLoadError && <p role="alert" className="rounded-xl border border-rose-500/40 bg-rose-950/40 p-4 text-sm text-rose-200">{reviewLoadError}</p>}
@@ -803,6 +817,58 @@ export default function ReviewManagement() {
 
       {/* MODERATION FEED TABLE */}
       <div className="bg-[#10241f]/35 border border-slate-800/80 rounded-3xl overflow-hidden shadow-2xl">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-800 bg-[#081b15]/75 px-5 py-4">
+          <div className="flex flex-wrap items-center gap-3">
+            <button
+              type="button"
+              onClick={toggleAllFilteredReviews}
+              disabled={filteredReviewIds.length === 0 || isBulkDeleting}
+              className="rounded-lg border border-amber-400/40 bg-amber-400/10 px-3 py-2 text-xs font-bold text-amber-200 hover:bg-amber-400/20 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {areAllFilteredReviewsSelected ? 'Deselect all filtered' : `Select all filtered (${filteredReviewIds.length})`}
+            </button>
+            <span className="text-xs font-semibold text-slate-300" aria-live="polite">
+              {selectedReviewIds.length} selected
+            </span>
+            {selectedReviewIds.length > 0 && (
+              <>
+                <select
+                  value={bulkAction}
+                  onChange={event => setBulkAction(event.target.value)}
+                  aria-label="Bulk action for selected reviews"
+                  disabled={isBulkDeleting}
+                  className="rounded-lg border border-slate-700 bg-[#10241f] px-3 py-2 text-xs font-semibold text-white outline-none focus:border-amber-400"
+                >
+                  <option value="">Choose bulk action…</option>
+                  <option value="approve">Approve / Publish</option>
+                  <option value="archive">Archive / Hide</option>
+                  <option value="delete">Permanently Delete</option>
+                </select>
+                <button
+                  type="button"
+                  onClick={handleBulkReviewAction}
+                  disabled={!bulkAction || isBulkDeleting}
+                  className={`rounded-lg border px-3 py-2 text-xs font-black transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
+                    bulkAction === 'delete'
+                      ? 'border-rose-500/40 bg-rose-500/15 text-rose-200 hover:bg-rose-500/25'
+                      : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20'
+                  }`}
+                >
+                  {isBulkDeleting ? 'Applying…' : 'Apply to selected'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => { setSelectedReviewIds([]); setBulkAction(''); }}
+                  disabled={isBulkDeleting}
+                  className="rounded-lg px-2 py-2 text-xs font-semibold text-slate-400 hover:text-white disabled:opacity-50"
+                >
+                  Clear selection
+                </button>
+              </>
+            )}
+          </div>
+          <p className="text-[11px] text-slate-500">Choose reviews with the checkboxes, then choose a bulk action.</p>
+        </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
             <thead>

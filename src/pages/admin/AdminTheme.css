@@ -1,0 +1,91 @@
+.admin-theme {
+  color-scheme: dark;
+  --admin-forest: #071a12;
+  --admin-panel: #0b2419;
+  --admin-panel-raised: #103323;
+  --admin-border: rgba(144, 190, 157, 0.22);
+  --admin-text: #f2f7f2;
+  --admin-text-muted: #c0cec3;
+  --admin-green: #70d49a;
+}
+
+.admin-theme [class~="text-slate-400"],
+.admin-theme [class~="text-gray-400"],
+.admin-theme [class~="text-zinc-400"] {
+  color: var(--admin-text-muted) !important;
+}
+
+.admin-theme [class~="text-slate-500"],
+.admin-theme [class~="text-gray-500"],
+.admin-theme [class~="text-zinc-500"] {
+  color: #a9bcae !important;
+}
+
+.admin-theme [class~="text-slate-600"],
+.admin-theme [class~="text-gray-600"],
+.admin-theme [class~="text-zinc-600"] {
+  color: #91a99a !important;
+}
+
+.admin-theme [class~="border-slate-800"],
+.admin-theme [class~="border-slate-700"],
+.admin-theme [class~="border-gray-800"],
+.admin-theme [class~="border-gray-700"],
+.admin-theme [class~="border-zinc-800"],
+.admin-theme [class~="border-zinc-700"] {
+  border-color: var(--admin-border) !important;
+}
+
+.admin-theme input:not([type="checkbox"]):not([type="radio"]),
+.admin-theme select,
+.admin-theme textarea {
+  color-scheme: dark;
+  color: var(--admin-text);
+  background-color: rgba(7, 26, 18, 0.92);
+  border-color: var(--admin-border);
+}
+
+.admin-theme input::placeholder,
+.admin-theme textarea::placeholder {
+  color: #a9bcae;
+  opacity: 1;
+}
+
+.admin-theme select option,
+.admin-theme select optgroup {
+  color: var(--admin-text);
+  background-color: #0b2419;
+}
+
+.admin-theme input:focus-visible,
+.admin-theme select:focus-visible,
+.admin-theme textarea:focus-visible,
+.admin-theme button:focus-visible,
+.admin-theme a:focus-visible {
+  outline: 2px solid var(--admin-green);
+  outline-offset: 2px;
+}
+
+.admin-theme ::selection {
+  color: #071a12;
+  background: #70d49a;
+}
+
+.admin-theme ::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+.admin-theme ::-webkit-scrollbar-track {
+  background: #071a12;
+}
+
+.admin-theme ::-webkit-scrollbar-thumb {
+  border: 2px solid #071a12;
+  border-radius: 999px;
+  background: #347653;
+}
+
+.admin-theme ::-webkit-scrollbar-thumb:hover {
+  background: #4b9b6d;
+}

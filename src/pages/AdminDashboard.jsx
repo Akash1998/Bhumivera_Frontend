@@ -7,6 +7,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { COMPLETE_SITE_NAVIGATION_DIRECTORY } from '../utils/aiCopilotBus';
+import './admin/AdminTheme.css';
 
 // DYNAMIC LAZY IMPORTS to isolate rendering logic
 const DashboardOverview = lazy(() => import('./admin/DashboardOverview'));
@@ -334,7 +335,7 @@ export default function AdminDashboard() {
         }
       `}</style>
 
-      <div className="admin-shell flex h-screen overflow-hidden text-[#f7f5ee] selection:bg-amber-500/30">
+      <div className="admin-theme admin-shell flex h-screen overflow-hidden text-[#f7f5ee] selection:bg-amber-500/30">
         <div
           className={`${
             isSidebarOpen ? 'w-64' : 'w-[4.5rem]'
@@ -649,7 +650,7 @@ export default function AdminDashboard() {
 
       {/* Complete Site & Admin Links Modal */}
       {showSiteLinksModal && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="admin-theme fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="w-full max-w-4xl rounded-3xl border border-[#d4af37]/35 bg-[#071a12] p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
               <div>
