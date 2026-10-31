@@ -29,7 +29,6 @@ export default function BestSellersToday() {
         setBestsellers(data);
       })
       .catch(loadError => {
-        console.error('[HOME_TODAYS_BESTSELLERS]', loadError);
         if (active) setError('Today’s verified order highlights are temporarily unavailable.');
       })
       .finally(() => {
@@ -78,7 +77,7 @@ export default function BestSellersToday() {
               ? 'Today’s most-ordered favourites. Shop now while your pick is still in stock.'
               : error || (loading
                 ? 'Loading today’s verified order highlights.'
-                : 'No eligible orders have been recorded today yet. Browse the collection without invented popularity claims.')}
+                : 'Explore our small-batch cold-pressed botanical formulations crafted for daily skin and hair rituals.')}
           </p>
         </div>
         <Link to="/shop" className="inline-flex min-h-8 items-center gap-1.5 self-start text-[10px] font-bold uppercase tracking-widest text-[#FCE096] hover:text-white sm:min-h-10 sm:gap-2 sm:text-xs sm:self-auto">
@@ -89,11 +88,6 @@ export default function BestSellersToday() {
       {error && !loading && (
         <p role="status" className="mb-4 rounded-lg border border-amber-300/25 bg-amber-950/20 px-4 py-3 text-xs text-amber-100">
           {error}
-        </p>
-      )}
-      {simulatorError && (
-        <p role="status" className="mb-4 rounded-lg border border-amber-300/25 bg-amber-950/20 px-4 py-3 text-xs text-amber-100">
-          {simulatorError} Actual availability is still checked by the store.
         </p>
       )}
 

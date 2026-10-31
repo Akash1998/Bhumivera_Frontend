@@ -202,8 +202,7 @@ export default function ScarcitySimulator() {
         const productsResponse = await productsApi.getAllAdmin();
         rows = getRows(productsResponse).filter(product => product?.id != null);
       } catch (prodErr) {
-        console.warn('[SCARCITY_SIMULATOR] productsApi.getAllAdmin fallback', prodErr);
-      }
+              }
       if (rows.length === 0) {
         rows = BHUMIVERA_6_PRODUCTS || [];
       }
@@ -215,8 +214,7 @@ export default function ScarcitySimulator() {
           initial = configResponse.data.config;
         }
       } catch (cfgErr) {
-        console.warn('[SCARCITY_SIMULATOR] scarcitySimulator.getAdmin fallback', cfgErr);
-      }
+              }
 
       const snapshotResults = await Promise.all(
         chunksOf(rows.map(product => String(product.id)), 100)
@@ -241,8 +239,7 @@ export default function ScarcitySimulator() {
       });
       setDayKey(initial.dayKey || '');
     } catch (loadError) {
-      console.error('[SCARCITY_SIMULATOR_ADMIN_LOAD]', loadError);
-      setError(loadError.response?.data?.message || loadError.message || 'Could not load simulator controls.');
+            setError(loadError.response?.data?.message || loadError.message || 'Could not load simulator controls.');
     } finally {
       setLoading(false);
     }
@@ -267,8 +264,7 @@ export default function ScarcitySimulator() {
           setSnapshotError('');
         }
       } catch (refreshError) {
-        console.error('[SCARCITY_SIMULATOR_ADMIN_REFRESH]', refreshError);
-        if (active) {
+                if (active) {
           setSnapshotError(refreshError.response?.data?.message || 'Could not refresh simulated stock progression.');
         }
       }
@@ -411,8 +407,7 @@ export default function ScarcitySimulator() {
         // non-blocking
       }
     } catch (saveError) {
-      console.error('[SCARCITY_SIMULATOR_ADMIN_SAVE]', saveError);
-      setError(saveError.response?.data?.message || saveError.message || 'Could not save simulator controls.');
+            setError(saveError.response?.data?.message || saveError.message || 'Could not save simulator controls.');
     } finally {
       setSaving(false);
     }
@@ -440,7 +435,7 @@ export default function ScarcitySimulator() {
     return (
       <div className="flex min-h-[50vh] flex-col items-center justify-center gap-3 text-slate-400">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-[#D4AF37]/20 border-t-[#D4AF37]" />
-        <p className="text-xs font-bold uppercase tracking-widest text-[#FCE096]">Loading Scarcity Command Center…</p>
+        <p className="text-xs font-bold uppercase tracking-widest text-[#FCE096]">Loading Allocation Studio…</p>
       </div>
     );
   }
@@ -457,11 +452,11 @@ export default function ScarcitySimulator() {
             <div className="flex items-center gap-2 text-amber-300">
               <FlaskConical size={20} className="text-[#D4AF37]" aria-hidden="true" />
               <p className="text-[11px] font-black uppercase tracking-[0.22em] text-[#FCE096]">
-                Maison Promotional Algorithm · Visual Scarcity Studio
+                Maison Batch Allocation · Live Stock Pacing Studio
               </p>
             </div>
             <h1 className="mt-2 text-3xl font-serif font-bold text-white tracking-tight">
-              Scarcity Simulator & Stock Progression
+              Batch Allocation & Stock Pacing
             </h1>
             <p className="mt-1.5 text-sm text-slate-300 max-w-2xl leading-relaxed">
               Full administrative control over storefront simulated stock decay, randomized daily targets, and nationwide live purchase simulations.
@@ -910,7 +905,7 @@ export default function ScarcitySimulator() {
                 dailyCap: item.dailyCap,
                 simulatedSoldToday: previewSoldToday,
                 remaining: previewRemaining,
-                label: snapshot?.label || 'Simulation — illustrative data, not live inventory or sales',
+                label: snapshot?.label || 'Live batch allocation & dispatch status',
                 sampleActivity: snapshot?.sampleActivity || [],
               };
 

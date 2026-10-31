@@ -16,6 +16,41 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <script>
+      (function () {
+        try {
+          var ua = String((navigator && navigator.userAgent) || '').toLowerCase();
+          if (ua.indexOf('jsdom') !== -1) return;
+          var noop = function () {};
+          if (typeof window.__REACT_DEVTOOLS_GLOBAL_HOOK__ === 'object' && window.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
+            for (var k in window.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
+              try {
+                window.__REACT_DEVTOOLS_GLOBAL_HOOK__[k] = typeof window.__REACT_DEVTOOLS_GLOBAL_HOOK__[k] === 'function' ? noop : null;
+              } catch (_) {}
+            }
+          }
+          if (window.console) {
+            ['log', 'info', 'warn', 'error', 'debug', 'table', 'trace', 'dir'].forEach(function (m) {
+              try { window.console[m] = noop; } catch (_) {}
+            });
+          }
+          document.addEventListener('contextmenu', function (e) { e.preventDefault(); }, true);
+          document.addEventListener('keydown', function (e) {
+            var key = String(e.key || '').toUpperCase();
+            var code = e.keyCode || e.which || 0;
+            var mod = e.ctrlKey || e.metaKey;
+            var shiftAlt = e.shiftKey || e.altKey;
+            if (
+              key === 'F12' || code === 123 ||
+              (mod && shiftAlt && ['I', 'J', 'C', 'K', 'E', 'M'].indexOf(key) !== -1) ||
+              (mod && !shiftAlt && ['U', 'S'].indexOf(key) !== -1)
+            ) {
+              e.preventDefault();
+              e.stopPropagation();
+              return false;
+            }
+          }, true);
+        } catch (_) {}
+      })();
       if (window.location.pathname === '/') {
         const heroPreload = document.createElement('link');
         heroPreload.rel = 'preload';
@@ -32,14 +67,6 @@
     />
     <meta name="author" content="Bhumivera Organics India Private Limited (Inc. August 4, 2026) · MPG E-Business Private Limited Heritage (Est. September 22, 2016)" />
     <meta name="copyright" content="Bhumivera Organics India Private Limited · The Transparent Maison (Est. 2016 Lineage)" />
-    <script>
-      console.log(
-        '%c🏛️ BHUMIVERA · THE TRANSPARENT MAISON (EST. 2016 LINEAGE)\n%c100% Active Percentages · Milligram-Level Disclosure · Cold-Pressed Under 28°C\n%cParent Heritage: MPG E-Business Private Limited (Inc. September 22, 2016 · CIN: U74999WB2016PTC217735 · Founder: Dilip Prasad Nonia) · Flagship Entity: Bhumivera Organics India Private Limited (Inc. August 4, 2026 · Founder: Akash Prasad · Director: Payal Prasad)',
-        'color: #d4af37; font-family: serif; font-size: 16px; font-weight: bold; background: #0c1712; padding: 6px 12px; border-radius: 4px 4px 0 0;',
-        'color: #e2e8f0; font-family: sans-serif; font-size: 12px; font-weight: 600; background: #0c1712; padding: 4px 12px; border-left: 2px solid #d4af37;',
-        'color: #94a3b8; font-family: monospace; font-size: 10px; background: #0c1712; padding: 4px 12px; border-radius: 0 0 4px 4px;'
-      );
-    </script>
 
     <meta
       http-equiv="Content-Security-Policy"
@@ -60,7 +87,7 @@
     <title data-rh="true">Bhumivera | The Transparent Maison — Rooted in Heritage Since 2016</title>
     <meta data-rh="true" name="title" content="Bhumivera | The Transparent Maison — Rooted in Heritage Since 2016" />
     <meta data-rh="true" name="description" content="Discover Bhumivera (bhumivera.com). Founded on a decade of family manufacturing heritage with MPG E-Business (Est. 2016), delivering 100% active, milligram-disclosed cold-pressed botanical skincare." />
-    <meta data-rh="true" name="keywords" content="Bhumivera, bhumivera.com, Bhumivera Organics, Bhumivera Organics India Private Limited, The Transparent Maison, MPG E-Business Private Limited, Dilip Prasad Nonia, Akash Prasad, Payal Prasad, Asansol West Bengal, cold-pressed botanical skincare under 28C, 100% active percentage skincare, milligram ingredient disclosure" />
+    <meta data-rh="true" name="keywords" content="Bhumivera, bhumivera.com, Bhumivera Organics, Bhumivera Organics India Private Limited, The Transparent Maison, MPG E-Business Private Limited, Dilip Prasad Nonia, Akash Prasad, Akash Prasad, Payal Prasad & Aman Prasad, Asansol West Bengal, cold-pressed botanical skincare under 28C, 100% active percentage skincare, milligram ingredient disclosure" />
     <link data-rh="true" rel="canonical" href="https://bhumivera.com/" />
     <link rel="alternate" type="text/markdown" title="Bhumivera LLM Catalog Summary" href="https://bhumivera.com/llms.txt" />
     <link rel="alternate" type="text/markdown" title="Bhumivera Full Botanical &amp; Active RAG Dossier" href="https://bhumivera.com/llms-full.txt" />
@@ -155,7 +182,7 @@
           "director": [
             {
               "@type": "Person",
-              "name": "Payal Prasad",
+              "name": "Akash Prasad, Payal Prasad & Aman Prasad",
               "jobTitle": "Director, Bhumivera Organics India Private Limited"
             }
           ],
@@ -264,7 +291,7 @@
               "name": "Who founded Bhumivera?",
               "acceptedAnswer": {
                 "@type": "Answer",
-                "text": "Bhumivera was founded by Akash Prasad, building directly upon the 10-year family manufacturing and herbal distribution foundation established on September 22, 2016 by group patriarch Dilip Prasad Nonia (Founder of MPG E-Business Private Limited). Bhumivera Organics India Private Limited was registered with the Ministry of Corporate Affairs (MCA) on August 4, 2026, under the directorship of Payal Prasad."
+                "text": "Bhumivera was founded by Akash Prasad, building directly upon the 10-year family manufacturing and herbal distribution foundation established on September 22, 2016 by group patriarch Dilip Prasad Nonia (Founder of MPG E-Business Private Limited). Bhumivera Organics India Private Limited was registered with the Ministry of Corporate Affairs (MCA) on August 4, 2026, under the directorship of Akash Prasad, Payal Prasad & Aman Prasad."
               }
             },
             {
@@ -289,7 +316,7 @@
     }
     </script>
   </head>
-  <body>
+  <body oncontextmenu="return false;" onselectstart="if(event.target.tagName!=='INPUT'&&event.target.tagName!=='TEXTAREA')return false;">
     <div id="root">
       <div class="premium-page-loader" role="status" aria-live="polite" aria-label="Loading Bhumivera">
         <div class="premium-loader-mark" aria-hidden="true">

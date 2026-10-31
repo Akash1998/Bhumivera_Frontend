@@ -73,7 +73,7 @@ export default function Footer() {
               </h2>
               <div className="gold-hairline w-24 my-3" />
               <p className="mt-2 text-xs leading-relaxed text-[#DFD7C4] sm:text-sm max-w-xl font-light">
-                Bhumivera™ is a brand of <strong className="text-white">Bhumivera Organics India Private Limited</strong> (Inc. August 4, 2026; Founder: Akash Prasad; Director: Payal Prasad). Backed by the 10-year manufacturing and consumer trust legacy of <strong className="text-white">MPG E-Business Private Limited</strong> (Est. September 22, 2016, Asansol · CIN: U74999WB2016PTC217735 · Founder: Dilip Prasad Nonia).
+                Bhumivera™ is a brand of <strong className="text-white">Bhumivera Organics India Private Limited</strong> (Inc. August 4, 2026; Founder: Akash Prasad; Director: Akash Prasad, Payal Prasad & Aman Prasad). Backed by the 10-year manufacturing and consumer trust legacy of <strong className="text-white">MPG E-Business Private Limited</strong> (Est. September 22, 2016, Asansol · CIN: U74999WB2016PTC217735 · Founder: Dilip Prasad Nonia).
               </p>
             </div>
 
@@ -190,7 +190,7 @@ export default function Footer() {
                   G.T. Road, Gopalpur, Asansol, WB 713304
                 </p>
                 <p className="mt-1 font-mono text-[10px] text-[#9BB0A5]">
-                  Inc. August 4, 2026 · Director: Payal Prasad
+                  Inc. August 4, 2026 · Director: Akash Prasad, Payal Prasad & Aman Prasad
                 </p>
               </div>
 

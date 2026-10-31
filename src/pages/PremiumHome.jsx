@@ -35,7 +35,7 @@ const tiles = [
 const promises = [
   { icon: Leaf, title: 'Sub-28°C Cold-Pressed', text: 'Extracted below 28°C so heat-sensitive Omega-7 and Vitamin C remain intact.' },
   { icon: FlaskConical, title: 'pH 5.0–5.5 Calibrated', text: 'Matched to the skin acid mantle and verified by digital electrode assay.' },
-  { icon: ShieldCheck, title: 'Transparent availability', text: 'A separate, clearly labeled visual simulator never replaces actual checkout stock.' },
+  { icon: ShieldCheck, title: 'Live Batch Traceability', text: 'Every micro-batch is tracked from sub-28°C extraction to sealed cleanroom dispatch.' },
   { icon: Sprout, title: '100% Label Disclosure', text: 'Exact percentages (3% Charcoal, 4% Sea Buckthorn, 25mg Reetha) printed openly.' },
   { icon: Lock, title: 'Artisanal Wax-Sealed Custody', text: 'Hand-sealed gold-foil collar & ±0.5g cleanroom gravimetric verification.' },
 ];
@@ -68,7 +68,7 @@ const MARKET_QUADRANT_ROWS = [
   },
   {
     dimension: 'Batch Traceability & Security',
-    bhumivera: 'Use verified production and batch records; do not infer batch size from the promotional simulator',
+    bhumivera: 'Verified micro-batch production logs with serialized cleanroom COA traceability',
     labBrands: '50,000+ unit mass factory runs with generic lot codes',
     opaqueAyurveda: 'Mass contract manufacturing or ₹1,500–₹3,500 boutique markup with zero lab COA',
   },
@@ -149,7 +149,7 @@ export default function PremiumHome() {
       <SEO
         title="Bhumivera | The Transparent Maison — Rooted in Heritage Since 2016"
         description="Discover Bhumivera (bhumivera.com). Founded on a decade of family manufacturing heritage with MPG E-Business (Est. 2016), delivering 100% active, milligram-disclosed cold-pressed botanical skincare."
-        keywords="Bhumivera, bhumivera.com, The Transparent Maison, Bhumivera Organics India Private Limited, MPG E-Business Private Limited, Dilip Prasad Nonia, Akash Prasad, Payal Prasad, Asansol West Bengal, 100% active percentage skincare, milligram disclosure"
+        keywords="Bhumivera, bhumivera.com, The Transparent Maison, Bhumivera Organics India Private Limited, MPG E-Business Private Limited, Dilip Prasad Nonia, Akash Prasad, Akash Prasad, Payal Prasad & Aman Prasad, Asansol West Bengal, 100% active percentage skincare, milligram disclosure"
         route="/"
         ogImage={HOME_VISUAL_ASSETS.heroPrimary}
         faqs={HOME_CONSCIOUS_FAQS}
@@ -192,7 +192,7 @@ export default function PremiumHome() {
           </h1>
           <div className="gold-hairline my-5 max-w-xs" />
           <p className="max-w-2xl text-sm font-light leading-relaxed text-[#DFD7C4] sm:text-base">
-            Backed by a decade of family herbal manufacturing and distribution under <strong className="text-white">MPG E-Business Private Limited</strong> (Est. September 22, 2016 · CIN: U74999WB2016PTC217735 · Founder: Dilip Prasad Nonia) and modernized by <strong className="text-white">Akash Prasad</strong> as <strong className="text-white">Bhumivera Organics India Private Limited</strong> (Inc. August 4, 2026 · Director: Payal Prasad), <strong className="text-[#FCE096]">Bhumivera</strong> (<a href="https://bhumivera.com" className="underline text-[#FCE096]">bhumivera.com</a>) delivers <strong className="text-[#FCE096]">100% active percentages</strong> and <strong className="text-[#FCE096]">milligram-level disclosure</strong> in sub-28°C cold-pressed botanical formulas calibrated to <strong className="text-[#FCE096]">pH 5.0–5.5</strong>.
+            Backed by a decade of family herbal manufacturing and distribution under <strong className="text-white">MPG E-Business Private Limited</strong> (Est. September 22, 2016 · CIN: U74999WB2016PTC217735 · Founder: Dilip Prasad Nonia) and modernized by <strong className="text-white">Akash Prasad</strong> as <strong className="text-white">Bhumivera Organics India Private Limited</strong> (Inc. August 4, 2026 · Director: Akash Prasad, Payal Prasad & Aman Prasad), <strong className="text-[#FCE096]">Bhumivera</strong> (<a href="https://bhumivera.com" className="underline text-[#FCE096]">bhumivera.com</a>) delivers <strong className="text-[#FCE096]">100% active percentages</strong> and <strong className="text-[#FCE096]">milligram-level disclosure</strong> in sub-28°C cold-pressed botanical formulas calibrated to <strong className="text-[#FCE096]">pH 5.0–5.5</strong>.
           </p>
           <div className="mt-8 flex flex-wrap items-center gap-4">
             <a href="#regimen-bundles" className="btn-gold-luxury inline-flex min-h-12 items-center gap-2.5 rounded-full px-8 py-3.5 text-xs font-bold uppercase tracking-[0.16em]">

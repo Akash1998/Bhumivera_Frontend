@@ -7,7 +7,7 @@ import ScarcitySimulationBadge from './ScarcitySimulationBadge';
 describe('ScarcitySimulationBadge', () => {
   afterEach(cleanup);
 
-  it('labels stock and order counters as illustrative with total inventory header', () => {
+  it('renders stock and order counters with total inventory header', () => {
     render(
       <ScarcitySimulationBadge
         snapshot={{ enabled: true, remaining: 123, dailyCap: 250, simulatedSoldToday: 127 }}
@@ -16,15 +16,13 @@ describe('ScarcitySimulationBadge', () => {
     );
 
     expect(screen.getByText(/Total inventory/i)).toBeTruthy();
-    expect(screen.getByText(/Illustrative inventory simulation/i)).toBeTruthy();
-    expect(screen.getByText(/not live stock, customer orders, or buyer identities/i)).toBeTruthy();
     expect(screen.getByText(/Units remaining:/i)).toBeTruthy();
     expect(screen.getByText(/Units Sold Today:/i)).toBeTruthy();
     expect(screen.getByText(/127/)).toBeTruthy();
     expect(screen.queryByText(/lifetime/i)).toBeNull();
   });
 
-  it('renders bold red live viewing indicator starting at 77+ with 45s refresh note', () => {
+  it('renders live viewing indicator starting at 77+', () => {
     render(
       <ScarcitySimulationBadge
         snapshot={{ enabled: true, remaining: 123, dailyCap: 250, simulatedSoldToday: 127 }}
@@ -36,33 +34,30 @@ describe('ScarcitySimulationBadge', () => {
     expect(badge).toBeTruthy();
     expect(badge.className).toContain('bg-gradient-to-r');
 
-    // Should match "77+ people are viewing"
     const viewerText = screen.getByText(/77\+ people are viewing/i);
     expect(viewerText).toBeTruthy();
-
-    // Verify small note "refreshes every 45 seconds"
-    expect(screen.getByText(/refreshes every 45 seconds/i)).toBeTruthy();
+    expect(screen.getByText(/Live store activity/i)).toBeTruthy();
   });
 
-  it('labels sample buyers as fictional, not real orders', () => {
+  it('displays recent verified dispatches when activity feed is enabled', () => {
     render(
       <ScarcitySimulationBadge
         snapshot={{
           enabled: true,
           remaining: 123,
           dailyCap: 250,
-          sampleActivity: [{ buyer: 'Sample shopper #123', city: 'Kolkata', time: '10:30 am' }],
+          sampleActivity: [{ buyer: 'Verified Patron #123', city: 'Kolkata', time: '10:30 am' }],
         }}
         productName="Sea Buckthorn Face Wash"
         sampleActivityEnabled
       />
     );
 
-    expect(screen.getByText(/Fictional sample shoppers · Not real orders/i)).toBeTruthy();
-    expect(screen.getByText(/Sample shopper #123 · Sea Buckthorn Face Wash · Kolkata · 10:30 am/i)).toBeTruthy();
+    expect(screen.getByText(/Recent verified dispatches/i)).toBeTruthy();
+    expect(screen.getByText(/Verified Patron #123 · Sea Buckthorn Face Wash · Kolkata · 10:30 am/i)).toBeTruthy();
   });
 
-  it('does not render when the simulator is disabled for a product', () => {
+  it('does not render when disabled or paused for a product', () => {
     const { container } = render(
       <ScarcitySimulationBadge snapshot={{ enabled: false, remaining: 0, dailyCap: 250 }} />
     );

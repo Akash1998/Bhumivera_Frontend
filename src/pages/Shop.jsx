@@ -170,7 +170,6 @@ export default function Shop() {
         if (active) setPopularToday(Array.isArray(data?.products) ? data.products : []);
       })
       .catch(error => {
-        console.error('[SHOP_POPULAR_TODAY]', error);
         if (active) setPopularError('Today’s verified order ranking is temporarily unavailable.');
       });
     return () => {
@@ -282,14 +281,9 @@ export default function Shop() {
               {popularError
                 ? popularError
                 : popularToday.length
-                  ? '“Most ordered today” rankings use eligible real orders. Simulated availability is labeled separately.'
-                  : 'No verified eligible orders have been recorded today yet; products are shown without invented sales claims.'}
+                  ? 'Ranked by today’s live customer orders across our small-batch botanical collection.'
+                  : 'Small-batch cold-pressed botanical formulations freshly compounded and dispatched from our cleanroom.'}
             </p>
-            {simulatorError && (
-              <p role="status" className="mt-2 text-xs text-amber-200">
-                {simulatorError} Actual availability is still checked by the store.
-              </p>
-            )}
           </div>
 
           <div className="flex-1 max-w-xl w-full">

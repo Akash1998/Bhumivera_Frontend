@@ -11,6 +11,7 @@ export default defineConfig(({ mode }) => {
     resolve(cwd(), 'android', 'app', 'google-services.json')
   );
   const nativePushEnabled = env.VITE_FCM_ENABLED !== 'false' && hasAndroidFirebaseConfig;
+  const isTest = mode === 'test';
 
   return {
     define: {
@@ -20,14 +21,23 @@ export default defineConfig(({ mode }) => {
       react(),
       tailwindcss(),
     ],
+    esbuild: {
+      drop: isTest ? [] : ['console', 'debugger'],
+      legalComments: 'none',
+    },
     server: {
       port: 3000,
     },
     build: {
+      sourcemap: false,
+      minify: 'esbuild',
       chunkSizeWarningLimit: 3000,
       rollupOptions: {
         output: {
           manualChunks: undefined,
+          entryFileNames: 'assets/app-[hash].js',
+          chunkFileNames: 'assets/chunk-[hash].js',
+          assetFileNames: 'assets/media-[hash].[ext]',
         },
       },
     },

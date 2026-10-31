@@ -657,11 +657,6 @@ export default function ProductDetail() {
                 />
               </div>
             )}
-            {simulatorError && (
-              <p role="status" className="mb-4 rounded-lg border border-amber-300/30 bg-amber-950/30 px-3 py-2 text-xs text-amber-100">
-                {simulatorError} Actual availability is still checked at checkout.
-              </p>
-            )}
 
             <p className="line-clamp-3 text-sm leading-6 text-[#DFD7C4] md:line-clamp-none md:leading-7">
               {product.description}

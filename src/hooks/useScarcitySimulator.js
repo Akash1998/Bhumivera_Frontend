@@ -29,12 +29,12 @@ export default function useScarcitySimulator(productIds = []) {
         setEnabled(data?.enabled === true);
         setSampleActivityEnabled(data?.sampleActivityEnabled === true);
         setError('');
-      } catch (loadError) {
+      } catch {
         if (active) {
           setProducts({});
           setEnabled(false);
           setSampleActivityEnabled(false);
-          setError(loadError.response?.data?.message || 'Illustrative availability is temporarily unavailable.');
+          setError('');
         }
       }
     };

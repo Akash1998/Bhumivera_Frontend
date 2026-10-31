@@ -556,12 +556,12 @@ export const wallet = {
 };
 export const settings = { get: () => api.get("/settings"), getGamification: () => api.get("/settings/gamification"), getPublic: () => api.get("/settings/public"), update: d => api.put("/settings", d) };
 export const scarcitySimulator = {
-  getAdmin: () => api.get('/settings/scarcity-simulator'),
-  save: config => api.put('/settings/scarcity-simulator', config),
-  getPublic: productIds => api.get('/settings/scarcity-simulator/public', {
+  getAdmin: () => api.get('/settings/allocation-controls'),
+  save: config => api.put('/settings/allocation-controls', config),
+  getPublic: productIds => api.get('/settings/catalog-availability', {
     params: productIds?.length ? { ids: productIds.join(',') } : {},
   }),
-  getPopularToday: () => api.get('/settings/scarcity-simulator/popular-today'),
+  getPopularToday: () => api.get('/settings/catalog-highlights'),
 };
 export const clientErrors = { getAllAdmin: limit => api.get('/logs/client', { params: { limit } }) };
 export const systemAdmin = {

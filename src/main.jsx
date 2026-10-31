@@ -2,14 +2,15 @@ import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { HelmetProvider } from "react-helmet-async";
 import "./index.css";
+import { installRuntimeShield } from "./utils/runtimeShield.js";
 import App from "./App.jsx";
 import { SettingsProvider } from "./context/SettingsContext.jsx";
 import { reportClientError } from "./services/api.js";
 import { initializeNativeApp } from "./utils/nativeApp.js";
 import { Capacitor } from "@capacitor/core";
-// Ensure OAuth popup redirects are handled even when Google returns to the homepage.
 import "@capgo/capacitor-social-login";
 
+installRuntimeShield();
 void initializeNativeApp();
 
 if (
@@ -39,9 +40,7 @@ if (
 
       const checkForUpdate = () => {
         if (navigator.onLine) {
-          registration.update().catch(error => {
-            console.error('[SERVICE_WORKER_UPDATE_CHECK_ERROR]', error);
-          });
+          registration.update().catch(() => {});
         }
       };
       window.setInterval(checkForUpdate, 5 * 60 * 1000);
@@ -61,9 +60,7 @@ if (
         event.detail.worker.postMessage({ type: 'SKIP_WAITING' });
         window.__bhumiveraWaitingWorker = null;
       });
-    }).catch(error => {
-      console.error('[SERVICE_WORKER_REGISTRATION_ERROR]', error);
-    });
+    }).catch(() => {});
   }, { once: true });
 }
 

@@ -220,7 +220,7 @@ export default function AdminDashboard() {
         { id: 'products', label: 'Products' },
         { id: 'categories', label: 'Categories' },
         { id: 'inventory', label: 'Inventory' },
-        { id: 'scarcity-simulator', label: 'Scarcity Simulator' },
+        { id: 'scarcity-simulator', label: 'Stock Pacing Studio' },
         { id: 'warehouse', label: 'Warehouse' },
         { id: 'shipping', label: 'Shipping' },
         { id: 'tax', label: 'Taxes' },

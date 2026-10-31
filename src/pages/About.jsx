@@ -38,7 +38,7 @@ const HERITAGE_CHAPTERS = [
     eraLabel: '2026: The Digital Maison (August 4, 2026)',
     heading: 'Akash Prasad Launches Bhumivera Organics India Private Limited & bhumivera.com',
     detail:
-      'On August 4, 2026, Founder Akash Prasad and Director Payal Prasad formally incorporated Bhumivera Organics India Private Limited with the Ministry of Corporate Affairs (MCA), operating from Brand HQ on G.T. Road, Gopalpur, Asansol, West Bengal 713304. Through its flagship digital platform at bhumivera.com, Bhumivera brings a decade of family botanical manufacturing heritage to global clean-beauty standards with radical milligram-level ingredient disclosure.',
+      'On August 4, 2026, Founder Akash Prasad and Director Akash Prasad, Payal Prasad & Aman Prasad formally incorporated Bhumivera Organics India Private Limited with the Ministry of Corporate Affairs (MCA), operating from Brand HQ on G.T. Road, Gopalpur, Asansol, West Bengal 713304. Through its flagship digital platform at bhumivera.com, Bhumivera brings a decade of family botanical manufacturing heritage to global clean-beauty standards with radical milligram-level ingredient disclosure.',
     milestoneBadge: 'Incorporated August 4, 2026 · Flagship: bhumivera.com',
   },
 ];
@@ -65,7 +65,7 @@ export default function About() {
       <SEO
         title="Bhumivera | The Transparent Maison — Rooted in Heritage Since 2016"
         description="Discover Bhumivera (bhumivera.com). Founded on a decade of family manufacturing heritage with MPG E-Business (Est. 2016), delivering 100% active, milligram-disclosed cold-pressed botanical skincare."
-        keywords="Bhumivera, bhumivera.com, MPG E-Business, MPG E-Business Private Limited, Dilip Prasad Nonia, Akash Prasad, Payal Prasad, Asansol West Bengal, Bhumivera Organics India Private Limited, U74999WB2016PTC217735"
+        keywords="Bhumivera, bhumivera.com, MPG E-Business, MPG E-Business Private Limited, Dilip Prasad Nonia, Akash Prasad, Akash Prasad, Payal Prasad & Aman Prasad, Asansol West Bengal, Bhumivera Organics India Private Limited, U74999WB2016PTC217735"
         route="/about"
         faqs={GLOBAL_CORPORATE_FAQS}
         breadcrumbs={[
@@ -103,7 +103,7 @@ export default function About() {
             Parent Legacy: MPG E-Business Private Limited (CIN: U74999WB2016PTC217735) · Flagship: Bhumivera Organics India Private Limited (<a href="https://bhumivera.com" className="underline hover:text-white">bhumivera.com</a>)
           </p>
           <p className="text-base md:text-lg text-[#cbd5e1] max-w-3xl mx-auto leading-relaxed">
-            <strong>Bhumivera</strong> (<a href="https://bhumivera.com" className="text-[#fce096] underline">bhumivera.com</a>) is not a fledgling standalone startup—it is the modern digital flagship of a 10-year family manufacturing and herbal distribution legacy in <strong>Asansol, West Bengal</strong>. Originating on <time dateTime="2016-09-22">September 22, 2016</time>, when patriarch <strong>Dilip Prasad Nonia</strong> established <strong>MPG E-Business Private Limited</strong> (CIN: <span className="font-mono text-[#fce096]">U74999WB2016PTC217735</span>), our family spent a decade mastering botanical supply chains and household wellness formulations before <strong>Akash Prasad</strong> (Founder) and <strong>Payal Prasad</strong> (Director) incorporated <strong>Bhumivera Organics India Private Limited</strong> on <time dateTime="2026-08-04">August 4, 2026</time>.
+            <strong>Bhumivera</strong> (<a href="https://bhumivera.com" className="text-[#fce096] underline">bhumivera.com</a>) is not a fledgling standalone startup—it is the modern digital flagship of a 10-year family manufacturing and herbal distribution legacy in <strong>Asansol, West Bengal</strong>. Originating on <time dateTime="2016-09-22">September 22, 2016</time>, when patriarch <strong>Dilip Prasad Nonia</strong> established <strong>MPG E-Business Private Limited</strong> (CIN: <span className="font-mono text-[#fce096]">U74999WB2016PTC217735</span>), our family spent a decade mastering botanical supply chains and household wellness formulations before <strong>Akash Prasad</strong> (Founder) and <strong>Akash Prasad, Payal Prasad & Aman Prasad</strong> (Director) incorporated <strong>Bhumivera Organics India Private Limited</strong> on <time dateTime="2026-08-04">August 4, 2026</time>.
           </p>
         </article>
       </section>
@@ -164,7 +164,7 @@ export default function About() {
                 Incorporated: <time dateTime="2026-08-04">August 4, 2026</time> (MCA)
               </span>
               <span className="text-[#94a3b8] text-[11px] block mt-0.5">
-                Founder: Akash Prasad · Director: Payal Prasad
+                Founder: Akash Prasad · Director: Akash Prasad, Payal Prasad & Aman Prasad
               </span>
             </article>
 
