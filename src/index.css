@@ -151,6 +151,24 @@ html, body, button, input, textarea, select {
   max-width: 100%;
 }
 
+.site-shell select {
+  color-scheme: dark;
+  color: #f2f7f2;
+  background-color: #0b2419;
+  border-color: rgba(144, 190, 157, 0.35);
+}
+
+.site-shell select option,
+.site-shell select optgroup {
+  color: #f2f7f2;
+  background-color: #0b2419;
+}
+
+.site-shell select:focus-visible {
+  outline-color: #70d49a;
+  border-color: #70d49a;
+}
+
 .site-shell nav a,
 .site-shell nav button {
   -webkit-tap-highlight-color: transparent;
