@@ -16,41 +16,6 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <script>
-      (function () {
-        try {
-          var ua = String((navigator && navigator.userAgent) || '').toLowerCase();
-          if (ua.indexOf('jsdom') !== -1) return;
-          var noop = function () {};
-          if (typeof window.__REACT_DEVTOOLS_GLOBAL_HOOK__ === 'object' && window.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
-            for (var k in window.__REACT_DEVTOOLS_GLOBAL_HOOK__) {
-              try {
-                window.__REACT_DEVTOOLS_GLOBAL_HOOK__[k] = typeof window.__REACT_DEVTOOLS_GLOBAL_HOOK__[k] === 'function' ? noop : null;
-              } catch (_) {}
-            }
-          }
-          if (window.console) {
-            ['log', 'info', 'warn', 'error', 'debug', 'table', 'trace', 'dir'].forEach(function (m) {
-              try { window.console[m] = noop; } catch (_) {}
-            });
-          }
-          document.addEventListener('contextmenu', function (e) { e.preventDefault(); }, true);
-          document.addEventListener('keydown', function (e) {
-            var key = String(e.key || '').toUpperCase();
-            var code = e.keyCode || e.which || 0;
-            var mod = e.ctrlKey || e.metaKey;
-            var shiftAlt = e.shiftKey || e.altKey;
-            if (
-              key === 'F12' || code === 123 ||
-              (mod && shiftAlt && ['I', 'J', 'C', 'K', 'E', 'M'].indexOf(key) !== -1) ||
-              (mod && !shiftAlt && ['U', 'S'].indexOf(key) !== -1)
-            ) {
-              e.preventDefault();
-              e.stopPropagation();
-              return false;
-            }
-          }, true);
-        } catch (_) {}
-      })();
       if (window.location.pathname === '/') {
         const heroPreload = document.createElement('link');
         heroPreload.rel = 'preload';
