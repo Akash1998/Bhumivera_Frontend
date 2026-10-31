@@ -36,9 +36,9 @@ describe('ImpactProjectDetail component', () => {
     delete window.Razorpay;
   });
 
-  it('resolves and renders the immediate December 2026 hunger relief project', () => {
+  it('resolves and renders the immediate December 2026 CEASAR memorial animal care project', () => {
     render(
-      <MemoryRouter initialEntries={['/impact/hungry-feeding']}>
+      <MemoryRouter initialEntries={['/impact/stray-animal-care']}>
         <Routes>
           <Route path="/impact/:imageId" element={<ImpactProjectDetail />} />
         </Routes>
@@ -47,12 +47,12 @@ describe('ImpactProjectDetail component', () => {
 
     // Title & tagline
     expect(
-      screen.getByText(/Warm Meal Annadaan & Hunger Relief Kitchen/i)
+      screen.getByText(/The CEASAR Memorial · Stray Dog & Cat Rescue, Feeding & Compassion Initiative/i)
     ).toBeTruthy();
 
     // Problem dossier
     expect(
-      screen.getByText(/The Reality: Hunger on the Streets of Our Own Towns/i)
+      screen.getByText(/The Plight of Street Animals — Why CEASAR's Memory Demands We Act/i)
     ).toBeTruthy();
 
     // Legal charter section
@@ -89,11 +89,11 @@ describe('ImpactProjectDetail component', () => {
           success: true,
           certificateSent: true,
           certificate: {
-            code: 'BV-HUNG-TEST-01',
+            code: 'BV-STRA-TEST-01',
             name: 'Meera Iyer',
             email: 'meera@example.com',
             amount: 100,
-            projectTitle: 'Warm Meal Annadaan & Hunger Relief Kitchen',
+            projectTitle: 'The CEASAR Memorial · Stray Dog & Cat Rescue, Feeding & Compassion Initiative',
             dedication: null,
             issuedAt: '2026-10-18T12:00:00.000Z',
           },
@@ -114,7 +114,7 @@ describe('ImpactProjectDetail component', () => {
     };
 
     render(
-      <MemoryRouter initialEntries={['/impact/hungry-feeding']}>
+      <MemoryRouter initialEntries={['/impact/stray-animal-care']}>
         <Routes>
           <Route path="/impact/:imageId" element={<ImpactProjectDetail />} />
         </Routes>
@@ -136,7 +136,7 @@ describe('ImpactProjectDetail component', () => {
     expect(api.post).toHaveBeenNthCalledWith(
       1,
       '/impact/donations/create-order',
-      { amount: 100, projectKey: 'hungry-feeding', dedication: '' },
+      { amount: 100, projectKey: 'stray-animal-care', dedication: '' },
       { notify: false },
     );
     expect(api.post).toHaveBeenNthCalledWith(2, '/impact/donations/verify-payment', {

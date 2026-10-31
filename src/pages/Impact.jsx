@@ -39,11 +39,11 @@ const impactQuestions = [
   ],
   [
     'What projects are starting right now in December 2026?',
-    'Starting December 2026, we are directly addressing immediate human and animal suffering in our home district of Paschim Bardhaman (West Bengal): 1) Warm Meal Annadaan for hungry daily-wage workers and children, 2) Feeding and winter straw beds for street dogs and cats, and 3) Delivering monthly grain and warm blanket kits to abandoned elderly widows and disabled citizens.',
+    'Starting December 2026, we are directly addressing immediate animal and human suffering in our home district of Paschim Bardhaman (West Bengal): 1) The CEASAR Memorial — Stray Dog & Cat Rescue, Feeding & Compassion Initiative, dedicated to our beloved German Shepherd CEASAR who passed away, and 2) The SHANTI Memorial — Food & Ration Kits for Elderly & Disabled Citizens, honouring our mother SHANTI. All six ecological restoration corridors are upcoming projects starting from 2028 onwards.',
   ],
   [
-    'Why are the ecological restoration projects scheduled for 2027 End - 2028?',
-    'Restoring natural ecosystems—like planting living vetiver grass along the Damodar riverbank, raising 2,000 native saplings in biodegradable jute sacks, and desilting village ponds—requires careful seasonal baseline preparation, soil tests, and community training. We focus on low-cost, realistically achievable West Bengal projects rather than over-hyped corporate promises.',
+    'Why are the ecological restoration projects scheduled for 2028 onwards?',
+    'All six ecological corridors are upcoming projects starting from 2028 onwards. Restoring natural ecosystems—like planting living vetiver grass along the Damodar riverbank, raising 2,000 native saplings in biodegradable jute sacks, and desilting village ponds—requires careful seasonal baseline preparation, soil tests, and community training. We focus on low-cost, realistically achievable West Bengal projects rather than over-hyped corporate promises.',
   ],
   [
     'How can I volunteer and participate in on-ground drives?',
@@ -68,9 +68,9 @@ const DEFAULT_COMMUNITY_POSTS = [
     id: 2,
     name: 'Priyanka Das',
     location: 'Asansol, West Bengal',
-    action: 'Pledged to volunteer for Weekend Annadaan',
+    action: 'Pledged to volunteer for SHANTI Memorial Ration Kits',
     time: 'Yesterday',
-    message: 'Proud to see a local brand tackling real hunger in our own towns. Ready to join the food distribution team starting this December.',
+    message: 'Proud to see a local brand tackling real hunger and cold in our own towns. Ready to deliver food and ration kits to elders starting this December in memory of SHANTI-di.',
   },
   {
     id: 3,
@@ -91,7 +91,7 @@ export default function Impact() {
   const [volunteerName, setVolunteerName] = useState('');
   const [volunteerPhone, setVolunteerPhone] = useState('');
   const [volunteerTown, setVolunteerTown] = useState('Asansol');
-  const [volunteerFocus, setVolunteerFocus] = useState('Hunger Relief & Annadaan Kitchen');
+  const [volunteerFocus, setVolunteerFocus] = useState('Stray Dog & Cat Care (CEASAR Memorial)');
   const [volunteerRegistered, setVolunteerRegistered] = useState(false);
 
   // Community work sharing wall state
@@ -195,7 +195,7 @@ export default function Impact() {
     <main className="min-h-screen bg-[#070a0e] text-[#e2e8f0] pb-24 font-sans selection:bg-[#d4af37]/30 selection:text-white">
       <SEO
         title="Public Stewardship & Grassroots Action | Bhumivera"
-        description="Bhumivera grassroots community stewardship: Immediate December 2026 hunger relief, street animal care & elderly rations in West Bengal, plus realistic 2027-2028 ecological restoration."
+        description="Bhumivera grassroots community action: Stray dog & cat rescue honoring CEASAR, food and ration kits honoring SHANTI in West Bengal, and six upcoming ecological corridors starting from 2028 onwards."
         route="/impact"
       />
 
@@ -203,7 +203,7 @@ export default function Impact() {
       <section className="relative isolate min-h-[75svh] overflow-hidden border-b border-[#d4af37]/20 bg-[#070a0e]">
         <div className="absolute inset-0 -z-20 h-full w-full">
           <Link
-            to="/impact/hungry-feeding"
+            to="/impact/stray-animal-care"
             aria-label="Open details for grassroots stewardship"
             className="block h-full w-full"
           >
@@ -223,7 +223,7 @@ export default function Impact() {
               <Leaf size={12} className="text-emerald-400" /> Rooted in West Bengal · Starting From Our Own Towns
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-[10px] font-mono tracking-wider uppercase text-amber-300">
-              Starts December 2026: Feeding &amp; Animal Care
+              ✦ CEASAR Memorial · ✦ SHANTI Memorial
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/40 bg-[#070a0e] px-3 py-1 text-[10px] font-mono tracking-wider uppercase text-[#fce096]">
               {impactLedger
@@ -242,7 +242,7 @@ export default function Impact() {
           <div className="gold-hairline my-5 max-w-xs" />
 
           <p className="mt-2 max-w-2xl text-base leading-7 text-[#cbd5e1] md:text-lg">
-            We are solving our own local problems first. Starting in <strong>December 2026</strong>, we are feeding hungry people nearby, sheltering and nourishing stray dogs and cats, and delivering food and warm rations to disabled seniors. Followed by low-budget, volunteer-powered West Bengal ecological restoration in <strong>2027 End - 2028</strong>.
+            We are solving our own local problems first. In loving memory of <strong>CEASAR</strong>, our beloved German Shepherd, we are sheltering and nourishing stray dogs and cats. In eternal honour of <strong>SHANTI</strong>, our mother, we are delivering food and ration kits to disabled seniors and abandoned elders. Followed by six achievable, volunteer-powered West Bengal ecological corridors — all <strong>upcoming projects starting from 2028 onwards</strong>.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -322,8 +322,8 @@ export default function Impact() {
 
             <div className="rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/50 p-5">
               <p className="font-mono text-[10px] uppercase tracking-widest text-[#94a3b8]">Active Projects</p>
-              <p className="mt-1 font-serif text-3xl sm:text-4xl font-bold text-[#fce096]">3 Dec 2026</p>
-              <p className="mt-2 text-[10px] font-mono text-[#cbd5e1]">+ 6 Projects (2027-2028)</p>
+              <p className="mt-1 font-serif text-3xl sm:text-4xl font-bold text-[#fce096]">2 Active</p>
+              <p className="mt-2 text-[10px] font-mono text-[#cbd5e1]">+ 6 Upcoming (2028 Onwards)</p>
             </div>
 
             <div className="rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/50 p-5">
@@ -346,15 +346,15 @@ export default function Impact() {
               </span>
             </div>
             <h2 className="font-serif text-3xl sm:text-4xl text-white">
-              Compassion on Our Own Streets (West Bengal)
+              In Memory of CEASAR & SHANTI — Compassion on Our Streets
             </h2>
           </div>
           <p className="text-xs sm:text-sm text-[#94a3b8] max-w-md">
-            Direct, practical, human &amp; animal care starting this winter in our local neighborhood. Anyone can volunteer to cook, pack, feed, or distribute.
+            Honouring CEASAR through stray animal rescue &amp; feeding. Honouring SHANTI through food &amp; ration kits for abandoned elders. Two deeply personal missions born from love and loss.
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {immediateProjects.map((proj, idx) => (
             <article
               key={proj.id}
@@ -374,13 +374,22 @@ export default function Impact() {
                     {proj.location.split(',')[0]}
                   </span>
                   <span className="absolute top-3 right-3 rounded-full border border-amber-500/40 bg-amber-500/20 px-2.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-amber-300">
-                    Launch Dec 2026
+                    {proj.memorialDedication ? `✦ ${proj.memorialDedication.name} Memorial` : 'Launch Dec 2026'}
                   </span>
                 </Link>
 
                 <div className="p-6 space-y-3">
-                  <h3 className="font-serif text-xl font-bold text-white hover:text-[#fce096] transition-colors">
-                    <Link to={`/impact/${proj.slug}`}>{proj.title}</Link>
+                  {proj.memorialDedication && (
+                    <div className="flex items-center gap-1.5 text-[10px] font-mono text-[#fce096] uppercase tracking-wider">
+                      <Heart size={12} className="text-rose-400" />
+                      <span>Dedicated in memory of {proj.memorialDedication.name} ({proj.memorialDedication.breed || proj.memorialDedication.relation})</span>
+                    </div>
+                  )}
+                  <h3 className="font-serif text-2xl font-bold text-white hover:text-[#fce096] transition-colors">
+                    <Link to={`/impact/${proj.slug}`} className="flex items-center justify-between gap-2">
+                      <span>{proj.title}</span>
+                      <ArrowRight size={18} className="text-[#d4af37] shrink-0" />
+                    </Link>
                   </h3>
                   <p className="text-xs text-[#cbd5e1] leading-5">
                     {proj.tagline}
@@ -401,15 +410,17 @@ export default function Impact() {
               <div className="p-6 pt-0 border-t border-[#d4af37]/15 mt-3 grid grid-cols-2 gap-2">
                 <Link
                   to={`/impact/${proj.slug}`}
-                  className="btn-gold-luxury text-center rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider text-white"
+                  className="btn-gold-luxury text-center rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider text-white flex items-center justify-center gap-1"
                 >
-                  Volunteer / Co-Sponsor
+                  <span>Volunteer / Support</span>
+                  <ArrowRight size={13} />
                 </Link>
                 <Link
                   to={`/impact/${proj.slug}`}
-                  className="btn-silver-luxury text-center rounded-xl py-2.5 text-xs font-semibold uppercase tracking-wider text-[#cbd5e1] hover:text-white"
+                  className="btn-silver-luxury text-center rounded-xl py-2.5 text-xs font-semibold uppercase tracking-wider text-[#cbd5e1] hover:text-white flex items-center justify-center gap-1"
                 >
-                  Full Dossier
+                  <span>Read Story &amp; Dossier</span>
+                  <ArrowRight size={13} />
                 </Link>
               </div>
             </article>
@@ -421,14 +432,14 @@ export default function Impact() {
       <section id="ecological-roadmap" className="mx-auto max-w-7xl px-6 py-14">
         <div className="text-center max-w-3xl mx-auto mb-12">
           <span className="font-sub-gold text-[10px] tracking-[0.25em] block uppercase text-[#fce096] mb-2">
-            Phase II Practical Environmental Action · 2027 End - 2028
+            Phase II · All Upcoming Projects · Starting 2028 Onwards
           </span>
           <h2 className="font-serif text-3xl sm:text-5xl text-white">
             <span className="font-headline-gold">Six Achievable</span>{' '}
             <span className="font-headline-silver">West Bengal Corridors</span>
           </h2>
           <p className="mt-3 text-xs sm:text-sm text-[#94a3b8] leading-6">
-            Grounded, low-budget initiatives designed for an earnest grassroots team and passionate local volunteers. No over-hyped multi-crore promises. Just real work on riverbanks, village ponds, and native seeds.
+            All six ecological corridors below are <strong className="text-amber-300">upcoming projects starting from 2028 onwards</strong>. Grounded, low-budget initiatives designed for an earnest grassroots team and passionate local volunteers. No over-hyped multi-crore promises. Just real work on riverbanks, village ponds, and native seeds — all scheduled for future execution.
           </p>
         </div>
 
@@ -451,13 +462,19 @@ export default function Impact() {
                     Corridor #0{idx + 1}
                   </span>
                   <span className="absolute top-3 right-3 rounded-full border border-emerald-500/30 bg-emerald-500/20 px-2.5 py-0.5 text-[9px] font-mono uppercase tracking-wider text-emerald-400">
-                    2027 End - 2028
+                    Upcoming · 2028 Onwards
                   </span>
                 </Link>
 
                 <div className="p-6 space-y-3">
+                  <div className="flex items-center gap-1 text-[10px] font-mono text-emerald-400 font-bold uppercase tracking-widest">
+                    <span>Upcoming Project · Starts 2028 Onwards</span>
+                  </div>
                   <h3 className="font-serif text-xl font-bold text-white hover:text-[#fce096] transition-colors">
-                    <Link to={`/impact/${proj.slug}`}>{proj.title}</Link>
+                    <Link to={`/impact/${proj.slug}`} className="flex items-center justify-between gap-2">
+                      <span>{proj.title}</span>
+                      <ArrowRight size={16} className="text-[#d4af37] shrink-0" />
+                    </Link>
                   </h3>
                   <p className="text-xs text-[#cbd5e1] leading-5 line-clamp-3">
                     {proj.tagline}
@@ -478,9 +495,10 @@ export default function Impact() {
               <div className="p-6 pt-0 border-t border-[#d4af37]/15 mt-3 flex items-center justify-between gap-2">
                 <Link
                   to={`/impact/${proj.slug}`}
-                  className="btn-silver-luxury w-full text-center rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider text-[#cbd5e1] hover:text-white"
+                  className="btn-silver-luxury w-full text-center rounded-xl py-2.5 text-xs font-bold uppercase tracking-wider text-[#cbd5e1] hover:text-white flex items-center justify-center gap-1.5"
                 >
-                  Inspect Research &amp; Plan <ArrowRight size={13} className="inline ml-1" />
+                  <span>Inspect Upcoming 2028 Blueprint</span>
+                  <ArrowRight size={14} className="text-[#d4af37]" />
                 </Link>
               </div>
             </article>
@@ -556,10 +574,9 @@ export default function Impact() {
                         onChange={e => setVolunteerFocus(e.target.value)}
                         className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
                       >
-                        <option value="Hunger Relief & Annadaan Kitchen">Hunger Relief Meals</option>
-                        <option value="Stray Dog & Cat Care / Feeding">Street Animal Care</option>
-                        <option value="Elderly & Disabled Ration Delivery">Elderly Rations</option>
-                        <option value="River Cleanup & Vetiver Planting">River &amp; Trees</option>
+                        <option value="Stray Dog & Cat Care (CEASAR Memorial)">Stray Animal Care (CEASAR Memorial)</option>
+                        <option value="Food & Ration Delivery (SHANTI Memorial)">Food &amp; Ration Kits (SHANTI Memorial)</option>
+                        <option value="River Cleanup & Vetiver Planting">River &amp; Trees (2028 Onwards)</option>
                       </select>
                     </div>
                   </div>
@@ -777,7 +794,7 @@ export default function Impact() {
               </p>
             </div>
             <Link
-              to="/impact/hungry-feeding"
+              to="/impact/stray-animal-care"
               className="btn-gold-luxury rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white shrink-0 text-center"
             >
               Inspect Grassroots Dossier
@@ -843,7 +860,7 @@ export default function Impact() {
               Every Action Has A Record. Every Rupee Has A Face.
             </h2>
             <p className="text-xs sm:text-sm leading-6 text-[#cbd5e1] max-w-xl mx-auto">
-              Join us this December 2026. Whether you donate ₹50 for animal food or come join us on a Sunday to serve hot meals, your presence transforms our community.
+              Join us this December 2026. In CEASAR's memory, feed a stray. In SHANTI's honour, deliver rations to an elder. Whether you donate ₹50 or come join us on a Sunday, your presence transforms our community.
             </p>
             <div className="pt-4 flex flex-wrap justify-center gap-4">
               <a

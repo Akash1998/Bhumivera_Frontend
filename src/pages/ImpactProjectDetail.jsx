@@ -35,7 +35,7 @@ const formatInr = num => `₹${Number(num || 0).toLocaleString('en-IN')}`;
 export default function ImpactProjectDetail() {
   const { imageId, projectId } = useParams();
   const { user, isAuthenticated } = useAuth() || {};
-  const currentId = projectId || imageId || 'hungry-feeding';
+  const currentId = projectId || imageId || 'stray-animal-care';
   const project = findProjectById(currentId);
 
   // Pledge / Volunteer modal & Certificate state
@@ -405,6 +405,149 @@ export default function ImpactProjectDetail() {
           </div>
         </div>
       </section>
+
+      {/* MEMORIAL DEDICATION SECTION — Honors CEASAR or SHANTI */}
+      {project.memorialDedication && (
+        <section className="mx-auto max-w-7xl px-6 pt-10">
+          <div className="rounded-3xl border-2 border-[#d4af37]/60 bg-gradient-to-b from-[#0f0c08] via-[#070a0e] to-[#0a0d12] p-8 sm:p-12 shadow-2xl relative overflow-hidden">
+            {/* Radial glow */}
+            <div className="pointer-events-none absolute top-0 left-1/2 -translate-x-1/2 -mt-20 h-80 w-80 rounded-full bg-[#d4af37]/10 blur-3xl" />
+            <div className="pointer-events-none absolute bottom-0 right-0 -mb-20 -mr-20 h-64 w-64 rounded-full bg-rose-500/10 blur-3xl" />
+
+            <div className="relative text-center max-w-3xl mx-auto space-y-6">
+              {/* Memorial Icon */}
+              <div className="inline-flex h-16 w-16 items-center justify-center rounded-full bg-[#d4af37]/20 border-2 border-[#d4af37]/50 mx-auto">
+                <Heart size={28} className="text-[#d4af37]" />
+              </div>
+
+              {/* Dedication Badge */}
+              <div className="flex flex-wrap justify-center gap-2">
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/50 bg-[#d4af37]/10 px-4 py-1.5 text-[11px] font-mono tracking-widest uppercase text-[#fce096]">
+                  ✦ In Loving Memory ✦
+                </span>
+                {project.memorialDedication.relation && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-rose-500/40 bg-rose-500/10 px-3 py-1 text-[10px] font-mono tracking-wider uppercase text-rose-300">
+                    {project.memorialDedication.relation}
+                  </span>
+                )}
+                {project.memorialDedication.breed && (
+                  <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-[10px] font-mono tracking-wider uppercase text-amber-300">
+                    {project.memorialDedication.breed}
+                  </span>
+                )}
+              </div>
+
+              {/* Name */}
+              <h2 className="font-serif text-4xl sm:text-6xl font-bold text-[#fce096] tracking-tight">
+                {project.memorialDedication.name}
+              </h2>
+
+              {/* Tribute Message */}
+              <p className="text-sm sm:text-base leading-8 text-[#e2e8f0] font-serif italic max-w-2xl mx-auto">
+                "{project.memorialDedication.tributeMessage}"
+              </p>
+
+              {/* Spirit Quote */}
+              {project.memorialDedication.spiritQuote && (
+                <div className="rounded-2xl border border-[#d4af37]/30 bg-[#070a0e]/80 p-5 max-w-xl mx-auto">
+                  <p className="text-xs sm:text-sm text-[#fce096] font-serif italic leading-6">
+                    "{project.memorialDedication.spiritQuote}"
+                  </p>
+                </div>
+              )}
+
+              {/* Legacy */}
+              <p className="text-xs sm:text-sm text-[#cbd5e1] leading-7 max-w-2xl mx-auto">
+                {project.memorialDedication.legacy}
+              </p>
+
+              {/* Mother Story (for SHANTI) */}
+              {project.memorialDedication.motherStory && (
+                <div className="rounded-2xl border border-rose-500/20 bg-rose-950/10 p-5 text-left">
+                  <p className="text-xs sm:text-sm text-[#e2e8f0] leading-7 font-serif italic">
+                    {project.memorialDedication.motherStory}
+                  </p>
+                </div>
+              )}
+
+              {/* Decorative divider */}
+              <div className="flex items-center gap-4 justify-center pt-2">
+                <div className="h-px w-16 bg-[#d4af37]/40" />
+                <Sparkles size={14} className="text-[#d4af37]" />
+                <div className="h-px w-16 bg-[#d4af37]/40" />
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {/* CEASAR'S FULL STORY — Rendered when project has ceasarStory */}
+      {project.ceasarStory && (
+        <section className="mx-auto max-w-7xl px-6 pt-10">
+          <div className="rounded-3xl border border-amber-500/30 bg-gradient-to-br from-[#120e08] via-[#070a0e] to-[#0a0d12] p-8 sm:p-12 shadow-2xl space-y-6">
+            <div className="flex items-center gap-2 mb-2">
+              <Heart size={18} className="text-amber-400" />
+              <span className="font-sub-gold text-[10px] tracking-[0.25em] uppercase text-amber-300">
+                The Story of CEASAR · A Tribute That Lives Forever
+              </span>
+            </div>
+
+            <h2 className="font-serif text-2xl sm:text-4xl text-white leading-tight">
+              CEASAR — More Than a Dog. A Soul. A Family.
+            </h2>
+
+            <div className="space-y-5 max-w-3xl">
+              {project.ceasarStory.paragraphs.map((para, idx) => (
+                <p key={idx} className="text-xs sm:text-sm text-[#e2e8f0] leading-7 font-serif">
+                  {para}
+                </p>
+              ))}
+            </div>
+
+            {project.ceasarStory.closingPromise && (
+              <div className="rounded-2xl border-2 border-[#d4af37]/50 bg-[#d4af37]/5 p-6 sm:p-8 mt-4">
+                <p className="text-sm sm:text-base text-[#fce096] leading-8 font-serif italic text-center">
+                  "{project.ceasarStory.closingPromise}"
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* SHANTI'S FULL STORY — Rendered when project has shantiStory */}
+      {project.shantiStory && (
+        <section className="mx-auto max-w-7xl px-6 pt-10">
+          <div className="rounded-3xl border border-rose-500/30 bg-gradient-to-br from-[#120a0b] via-[#070a0e] to-[#0a0d12] p-8 sm:p-12 shadow-2xl space-y-6">
+            <div className="flex items-center gap-2 mb-2">
+              <Heart size={18} className="text-rose-400" />
+              <span className="font-sub-gold text-[10px] tracking-[0.25em] uppercase text-rose-300">
+                The Story of SHANTI · A Mother's Love That Echoes Eternally
+              </span>
+            </div>
+
+            <h2 className="font-serif text-2xl sm:text-4xl text-white leading-tight">
+              SHANTI — The Woman Who Fed Everyone Before Herself
+            </h2>
+
+            <div className="space-y-5 max-w-3xl">
+              {project.shantiStory.paragraphs.map((para, idx) => (
+                <p key={idx} className="text-xs sm:text-sm text-[#e2e8f0] leading-7 font-serif">
+                  {para}
+                </p>
+              ))}
+            </div>
+
+            {project.shantiStory.closingPromise && (
+              <div className="rounded-2xl border-2 border-rose-500/40 bg-rose-500/5 p-6 sm:p-8 mt-4">
+                <p className="text-sm sm:text-base text-rose-200 leading-8 font-serif italic text-center">
+                  "{project.shantiStory.closingPromise}"
+                </p>
+              </div>
+            )}
+          </div>
+        </section>
+      )}
 
       {/* 2. REAL-TIME PUBLIC CONTRIBUTION LEDGER */}
       <section className="mx-auto max-w-7xl px-6 -mt-8 relative z-20">
@@ -906,11 +1049,11 @@ export default function ImpactProjectDetail() {
                         onChange={e => setVolunteerRole(e.target.value)}
                         className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
                       >
-                        <option value="Ground Volunteer (Food Preparation / Distribution)">
-                          Ground Volunteer: Food Preparation, Packing &amp; Serving
+                        <option value="Ration Kit Volunteer (Packing & Doorstep Delivery)">
+                          SHANTI Memorial: Food &amp; Ration Kits Packing &amp; Doorstep Delivery
                         </option>
                         <option value="Animal Rescuer (Feeding Rounds & Stray Bed Setup)">
-                          Animal Care: Stray Dog/Cat Feeding Rounds &amp; Bed Setup
+                          CEASAR Memorial: Stray Dog/Cat Feeding &amp; Winter Bed Setup
                         </option>
                         <option value="Tree Planter (Riverbank Vetiver & Sapling Care)">
                           Ecological Volunteer: Tree Planting &amp; Riverbank Cleanups

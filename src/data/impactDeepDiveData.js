@@ -88,242 +88,143 @@ export const WEST_BENGAL_SCARCITY_OVERVIEW = {
 export const IMPACT_PROJECTS = [
   // =========================================================================
   // IMMEDIATE COMMUNITY CARE PROJECTS (STARTING DECEMBER 2026)
+  // Two deeply personal initiatives:
+  // 1. The CEASAR Memorial — Stray Dog & Cat Care (Honoring our German Shepherd CEASAR)
+  // 2. The SHANTI Memorial — Food & Ration Kits for Kids, Elderly & Disabled (Honoring our Mother SHANTI)
   // =========================================================================
-  {
-    id: 'hungry-feeding',
-    slug: 'hungry-feeding',
-    aliases: ['feeding-hungry', 'hunger-relief', 'annadaan'],
-    category: 'immediate',
-    posterId: 'hungry-feeding',
-    title: 'Warm Meal Annadaan & Hunger Relief Kitchen',
-    tagline: 'Providing Freshly Cooked Nutritious Meals to Destitute Families & Daily-Wage Laborers',
-    posterImage: '/assets/images/education.webp',
-    statusBadge: 'Starts December 2026',
-    phaseYear: 'Immediate Action · Launching December 2026',
-    targetLaunch: 'December 2026',
-    location: 'Asansol, Raniganj & Paschim Bardhaman Railway & Slum Belts (West Bengal)',
-    leadScientist: 'Bhumivera Community Care & Local Youth Volunteer Guild',
-
-    problemDossier: {
-      headline: 'The Reality: Hunger on the Streets of Our Own Towns',
-      historicalContext:
-        'Right around our local railway junctions, bus depots, and daily-wage colonies in West Bengal, hundreds of daily-wage laborers, rickshaw pullers, orphaned youths, and destitute seniors struggle every night to secure a single hot meal. Rising grocery inflation has put basic proteins and fresh vegetables out of reach for marginalized families.',
-      keyFactors: [
-        'Migrant daily-wage earners and homeless individuals regularly skipping meals due to irregular work in the industrial belt.',
-        'High rates of childhood anemia and weakness among families living in temporary roadside settlements.',
-        'Winter months in West Bengal (December - January) making cold nights unbearable without warm caloric nutrition.',
-        'Lack of consistent, hygienic, dignified community meal drives organized by local community youth.',
-      ],
-      scarcityStats: [
-        { label: 'Families in Need', value: '450+ Daily', sub: 'In local station & market peripheries' },
-        { label: 'Cost Per Meal', value: '₹35 Only', sub: 'Wholesome Khichdi, Veg Curry & Egg/Soy' },
-        { label: 'Volunteer Kitchen', value: '100% Grassroots', sub: 'Cooked fresh with local volunteers' },
-        { label: 'Admin Cut', value: '₹0.00', sub: 'Every single rupee buys food ingredients' },
-      ],
-    },
-
-    futureWithout: {
-      headline: 'What Happens If We Do Nothing?',
-      summary:
-        'Ignoring hunger in our immediate neighborhood perpetuates malnutrition, severe winter health complications among children and elders, and weakens the moral fabric of our community.',
-      consequences: [
-        'Vulnerable elderly and children forced to scavenge through market waste for discarded food scraps.',
-        'Severe winter hypothermia and illness among under-nourished street dwellers during December and January.',
-        'Perpetuation of extreme social isolation for abandoned individuals in our own town.',
-      ],
-    },
-
-    solutionBlueprint: {
-      headline: 'The Bhumivera Grassroots Kitchen Blueprint',
-      methodology:
-        'Starting in December 2026, we will run weekly weekend Community Annadaan kitchens. Prepared with clean ingredients (rice, lentils, seasonal vegetables, soybean/eggs, and clean mustard oil), hot meals are packaged in biodegradable sal-leaf bowls and distributed directly to hungry individuals in surrounding areas. Local citizens can join as cooks, packers, and distributors.',
-      pillars: [
-        {
-          title: 'Weekly Weekend Fresh Annadaan Kitchens',
-          desc: 'Cooking and serving hot, hygienic, protein-rich meals directly in community hubs and railway peripheries.',
-        },
-        {
-          title: '100% Biodegradable Sal-Leaf Packaging',
-          desc: 'Using traditional stitched sal leaves (shal pata) instead of single-use plastic boxes to ensure zero environmental litter.',
-        },
-        {
-          title: 'Direct Local Youth Volunteer Drives',
-          desc: 'Enabling local college students, shopkeepers, and neighbors to take ownership of weekly food preparation and service.',
-        },
-        {
-          title: '100% Transparent Ration Invoicing',
-          desc: 'Every bag of rice, dal, and oil purchased is photographed and uploaded to our public ledger with grocery receipts.',
-        },
-      ],
-    },
-
-    impactColumns: [
-      {
-        metric: 'Warm Meals Served per Drive',
-        before: '0 Meals',
-        after2027: '350 - 500 Meals / Drive',
-        gain: 'Immediate Nourishment',
-        detail: 'Directly reaching hungry children, seniors, and daily-wage workers every weekend.',
-      },
-      {
-        metric: 'Meal Nutritional Quality',
-        before: 'Unsafe Scraps',
-        after2027: 'Balanced Protein & Veg',
-        gain: 'Clean & Dignified',
-        detail: 'Hygienic khichdi with vegetables, mustard oil, and soy chunks or eggs.',
-      },
-      {
-        metric: 'Packaging Waste Created',
-        before: 'Plastic Polythene',
-        after2027: '0% Plastic (100% Sal Leaves)',
-        gain: 'Zero Waste',
-        detail: 'Leaves decompose naturally into soil within 14 days.',
-      },
-      {
-        metric: 'Administrative Cost Cut',
-        before: 'High Agency Cuts',
-        after2027: '₹0.00 (Zero Overhead)',
-        gain: '100% to Grains',
-        detail: 'Volunteers donate their time; 100% of funds buy food ingredients.',
-      },
-    ],
-
-    funding: {
-      targetAmount: 25000,
-      pledgedAmount: 0,
-      backersCount: 0,
-      currency: 'INR',
-      targetYear: 'Starting Dec 2026',
-      unitPackages: [
-        {
-          amount: 100,
-          title: 'Feed 3 Hungry Souls with Warm Meals',
-          impactEquivalence: 'Provides 3 full, hot, protein-rich nutritious meals served on biodegradable sal leaves.',
-          tag: '3 Warm Meals',
-        },
-        {
-          amount: 350,
-          title: 'Sponsor 10 Fresh Nutritious Meals',
-          impactEquivalence: 'Funds 10 hot wholesome meals with fresh vegetables, lentils, and eggs/soy chunks.',
-          tag: '10 Meals Pack',
-        },
-        {
-          amount: 850,
-          title: 'Community Kitchen Grocery Staples Basket',
-          impactEquivalence: 'Buys 10kg clean rice, 3kg dal, and 1L cold-pressed mustard oil for the weekend kitchen.',
-          tag: 'Kitchen Basket',
-        },
-        {
-          amount: 1750,
-          title: 'Full Weekend Food Drive Co-Sponsor',
-          impactEquivalence: 'Co-sponsors 50 hot meals served directly to daily-wage workers and children.',
-          tag: 'Drive Co-Sponsor',
-        },
-      ],
-    },
-
-    academicCitations: [
-      'Bhumivera Local Community Care Survey (Raniganj-Asansol Belt, 2026)',
-      'National Family Health Survey (NFHS-5) - Nutritional Vulnerability in Eastern Mining Belts (2021)',
-    ],
-  },
-
   {
     id: 'stray-animal-care',
     slug: 'stray-animal-care',
-    aliases: ['animal-care', 'dog-shelter', 'cat-feeding'],
+    aliases: ['animal-care', 'dog-shelter', 'cat-feeding', 'ceasar-memorial'],
     category: 'immediate',
+
+    memorialDedication: {
+      name: 'CEASAR',
+      breed: 'German Shepherd',
+      tributeMessage:
+        'Today, October 31st 2026, we lost CEASAR — our magnificent German Shepherd, our family, our heartbeat. He was not just a dog; he was the warmest soul who ever walked beside us, a guardian whose eyes held more love than words could ever carry. CEASAR never asked for anything — only to be near us, only to love us, only to lay his heavy head on our lap and breathe quietly while the world rushed by. He taught us that loyalty is not a word — it is a lifetime of showing up, of wagging, of pressing his nose into our palms when we were sad. Today, the house is unbearably silent. The leash hangs on the hook and no one pulls at it. But CEASAR\'s love — that infinite, thundering, tail-wagging love — will echo in every single stray animal we feed, heal, and shelter from this day forward, until the end of time.',
+      spiritQuote:
+        'Run free, CEASAR. The sky has a new guardian tonight, and every stray dog that eats because of you will feel your warmth even though you are no longer here to share it.',
+      legacy:
+        'This entire project — every bowl of rice, every warm winter bed, every wound cleaned and bandaged — exists because CEASAR showed us what it means to love without condition. He could not speak, but he said everything. Now it is our turn to speak for every voiceless animal on every cold street, and when we do, we will whisper his name: CEASAR.',
+    },
+
     posterId: 'stray-animal-care',
-    title: 'Stray Dog & Cat Rescue, Feeding & Winter Beds',
-    tagline: 'Daily Nourishment, Basic First-Aid & Weatherproof Winter Shelters for Community Animals',
+    title: 'The CEASAR Memorial · Stray Dog & Cat Rescue, Feeding & Compassion Initiative',
+    tagline:
+      'In loving memory of CEASAR, our German Shepherd who taught us what unconditional love truly means — every stray we feed carries his spirit, every wound we heal honours his gentle soul, and every warm bed we build is a promise that his love was not in vain.',
     posterImage: '/assets/images/seabuckthorn nature.webp',
     statusBadge: 'Starts December 2026',
-    phaseYear: 'Immediate Action · Launching December 2026',
+    phaseYear: 'Immediate Action · Launching December 2026 · In CEASAR\'s Memory',
     targetLaunch: 'December 2026',
     location: 'West Bengal Neighbourhoods, Market Belts & Railway Peripheries',
-    leadScientist: 'Bhumivera Street Animal Compassion & Volunteer First-Aid Team',
+    leadScientist: 'Bhumivera Street Animal Compassion & Volunteer First-Aid Team — The CEASAR Memorial Unit',
 
     problemDossier: {
-      headline: 'The Plight of Street Animals in Our Towns',
+      headline: 'The Plight of Street Animals — Why CEASAR\'s Memory Demands We Act',
       historicalContext:
-        'Street dogs and community cats in West Bengal market towns endure harsh lives: surviving on discarded plastic waste, suffering from untreated mange and maggot wounds, shivering through winter nights on bare concrete roads, and facing vehicular accidents. Most never receive a simple meal or clean water bowl.',
+        'CEASAR, our beloved German Shepherd, lived his life surrounded by love — warm meals, soft beds, gentle hands, a family that adored him beyond measure. But millions of street dogs and cats in West Bengal never experience even a single kind touch. They are born on concrete, they eat plastic, they bleed from untreated wounds, and they die alone under parked trucks on freezing winter nights. CEASAR had everything a dog deserves. These animals have nothing. This gap — between the love CEASAR knew and the suffering these animals endure — is the wound we are here to close. If CEASAR could speak, he would beg us to feed them. And so we will.',
       keyFactors: [
-        'Severe winter cold causing hypothermia and death among newborn puppies and elderly community dogs.',
-        'Widespread maggot wounds, skin infections, and lack of basic antiseptic care on the streets.',
-        'Absence of regular clean water bowls and nutritious food in busy market alleys.',
-        'Fear and human-animal conflict arising from hunger and lack of community care.',
+        'Every winter, hundreds of newborn puppies freeze to death on the bare concrete of West Bengal\'s streets — tiny bodies curled together for warmth that never comes, whimpering through the night until they fall silent by dawn.',
+        'Maggot-infested wounds consume the flesh of street dogs who have no one to clean them — wounds that started as small cuts become rotting, flyblown craters of suffering, and the dogs simply lie there, waiting to die.',
+        'Community cats are poisoned with rat-bait laced food by shopkeepers who see them as pests — mothers die with kittens still nursing, and the kittens starve to death beside their mother\'s body.',
+        'Pregnant street dogs give birth in open drains and under moving vehicles — mothers are hit by trucks, and entire litters are orphaned within hours of being born into a world that never wanted them.',
+        'The bond between humans and animals is sacred and ancient — CEASAR taught us this truth every single day with his eyes, his loyalty, his quiet presence. When we ignore a suffering stray, we betray that bond.',
+        'CEASAR showed us that a dog\'s love is the purest force on earth — a love that asks for nothing, forgives everything, and remains steadfast until the very last breath. Every stray deserves to know even a fraction of that love.',
       ],
       scarcityStats: [
-        { label: 'Animals Fed / Round', value: '60 - 80 Strays', sub: 'In market & station clusters' },
-        { label: 'Winter Bed Cost', value: '₹350 Only', sub: 'Gunny-sack & straw insulated shelter' },
-        { label: 'Wound Treatment', value: 'Antiseptic & Bandages', sub: 'Administered with local animal lovers' },
-        { label: 'Admin Cut', value: '₹0.00', sub: '100% spent on rice, eggs, kibble & medicine' },
+        { label: 'Animals Fed / Round', value: '60 - 80 Strays', sub: 'In CEASAR\'s name, across market & station clusters' },
+        { label: 'Winter Bed Cost', value: '₹350 Only', sub: 'CEASAR\'s Warm Beds — gunny-sack & straw insulated' },
+        { label: 'Wound Treatment', value: 'Antiseptic & Bandages', sub: 'Healing hands, inspired by CEASAR\'s gentle spirit' },
+        { label: 'Admin Cut', value: '₹0.00', sub: '100% for the animals — that is CEASAR\'s rule' },
       ],
     },
 
     futureWithout: {
-      headline: 'What Happens If We Do Nothing?',
+      headline: 'What Happens If We Look Away — A World CEASAR Would Weep For',
       summary:
-        'Leaving community animals uncared for leads to painful starvation, spreading skin diseases, higher rates of human-animal conflict, and unnecessary deaths of harmless animals.',
+        'If we do nothing, the streets will remain graveyards for the innocent. Puppies born tonight will not see next week. Dogs with treatable wounds will rot alive. Cats will be poisoned and kicked. And somewhere beyond the sky, CEASAR will watch — the same CEASAR who once pressed his nose against every crying child, who guarded our door through every storm — he will watch and wonder why we did not do for them what was done for him. We cannot let that happen. We owe him more than grief. We owe him action.',
       consequences: [
-        'Painful deaths of puppies and injured dogs from cold exposure and untreated infections.',
-        'Street animals eating plastic bags and toxic chemical waste out of sheer starvation.',
-        'Growing apathy among young generations toward cruelty and animal suffering.',
+        'Tonight, as you read this, puppies are shivering on wet concrete under open skies — their tiny ribcages heaving, their cries growing weaker by the hour. By morning, some of them will be gone. They will die never having known a warm touch, never having tasted a real meal, never having heard a kind voice. CEASAR knew all of those things. They deserve to know them too.',
+        'Street dogs with broken legs drag themselves through market gutters, eating plastic bags and rotting garbage because there is nothing else. Their wounds attract flies that lay eggs in living flesh. The pain is unimaginable. And no one stops. No one kneels down. No one says, "I see you." CEASAR would have seen them. CEASAR always saw the ones who were hurting.',
+        'A generation of children grows up watching animals suffer and learning that cruelty is normal — that a dog\'s pain does not matter, that a cat\'s scream is background noise. But CEASAR taught us the opposite. He taught us that an animal\'s eyes hold entire universes of feeling. If we do not act, we lose not only the animals — we lose our own humanity.',
       ],
     },
 
     solutionBlueprint: {
-      headline: 'Our Street Compassion Blueprint',
+      headline: 'CEASAR\'s Compassion Blueprint — A Promise Written in Love',
       methodology:
-        'Starting in December 2026, we conduct daily evening feeding rounds with warm boiled rice, turmeric, eggs, and broth. We distribute weatherproof winter sleeping beds made from recycled wooden fruit crates lined with dry paddy straw and gunny sacks. We carry a dedicated first-aid kit (Betadine, antiseptic powder, fly-repellent spray, bandages) to treat minor wounds on the spot.',
+        'This initiative is born from grief and love in equal measure. Starting December 2026, in CEASAR\'s sacred memory, we will conduct daily evening feeding rounds carrying warm boiled rice with turmeric, eggs, and hearty broth to every stray we can reach. We will build and place weatherproof winter beds made from recycled wooden fruit crates lined with dry paddy straw and gunny sacks — beds we call "CEASAR\'s Beds" — in safe corners across West Bengal\'s market towns. We will carry a dedicated first-aid kit to treat wounds on the spot, because CEASAR never had to suffer a wound untreated, and neither should they. Every action we take whispers his name. Every bowl we fill is his bowl. This is not charity. This is a memorial built not from stone, but from kindness.',
       pillars: [
         {
-          title: 'Daily Evening Feeding Rounds',
-          desc: 'Serving fresh warm rice with turmeric, eggs, and chicken broth in designated quiet street corners.',
+          title: 'CEASAR\'s Evening Feeding Rounds',
+          desc: 'Every evening, as the sun sets and the streets grow quiet, our team walks the same routes CEASAR once walked with us — but now we carry warm rice with turmeric, boiled eggs, and chicken broth for 60-80 strays. We kneel beside them. We speak softly. We let them eat without fear. This is CEASAR\'s dinner table, extended to every hungry soul on the street.',
         },
         {
-          title: 'Weatherproof Straw & Jute Winter Beds',
-          desc: 'Placing insulated wooden crates lined with dry paddy straw in safe shop verandas to keep animals warm.',
+          title: 'CEASAR\'s Warm Winter Beds',
+          desc: 'Insulated wooden crates lined with dry paddy straw and soft gunny sacks, placed in sheltered shop verandas and under safe overhangs. Each bed carries a small hand-painted sign: "CEASAR\'s Bed — Sleep Warm, Dear Friend." Because CEASAR never spent a single night cold, and in his memory, neither will they.',
         },
         {
-          title: 'On-Spot Antiseptic First-Aid',
-          desc: 'Cleaning and treating cuts, abrasions, and skin mange with veterinary-approved sprays and dewormers.',
+          title: 'CEASAR\'s Healing Hands — On-Spot First-Aid',
+          desc: 'Our team carries Betadine, antiseptic powder, fly-repellent spray, clean bandages, and deworming tablets. When we find a dog with a wound, we do not walk past. We kneel. We clean. We bandage. We stay until the trembling stops. CEASAR was never denied care, and in his name, no street animal will be either.',
         },
         {
-          title: 'Clean Terracotta Water Bowls',
-          desc: 'Installing wide earthen water bowls outside local shops and refilling them daily with clean water.',
+          title: 'CEASAR\'s Water Bowls — Clean Terracotta Stations',
+          desc: 'Wide, beautiful earthen water bowls placed outside local shops, temples, and community centres — refilled every single day with cool, clean water. Each bowl is marked with CEASAR\'s name. Because water is life, and CEASAR would want every thirsty animal to drink without searching.',
+        },
+        {
+          title: 'CEASAR Memorial Feeding Stations',
+          desc: 'Permanent feeding stations established at 6 key locations across Raniganj, Asansol, and surrounding market belts — each station bearing CEASAR\'s name and photo. These are not just feeding points; they are monuments to a dog who showed us that love is a verb. Volunteers maintain them daily, ensuring fresh food and water are always available. Every station is a place where a stray animal can come and feel, for the first time, that someone cares.',
+        },
+        {
+          title: 'Monthly CEASAR Remembrance Day',
+          desc: 'On the 31st of every month — the day CEASAR left us — the community gathers to feed 100+ stray animals in a single, massive act of love. Children, elders, shopkeepers, and volunteers come together to cook warm meals, distribute blankets, and treat wounds. It is a day of tears and purpose. A day when we remember that grief without action is just sorrow, but grief with action becomes legacy. CEASAR\'s legacy.',
         },
       ],
     },
 
     impactColumns: [
       {
-        metric: 'Street Animals Fed Daily',
-        before: '0 Animals',
-        after2027: '60 - 80 Strays / Round',
-        gain: 'Nourished & Protected',
-        detail: 'Directly fed nutritious warm meals every evening across 4 market routes.',
+        metric: 'Street Animals Fed Daily in CEASAR\'s Name',
+        before: '0 Animals — Starving, invisible, forgotten',
+        after2027: '60 - 80 Strays / Round, Fed with Love',
+        gain: 'Nourished, Seen & Cherished',
+        detail: 'Every evening, warm meals of turmeric rice, eggs, and broth are served across 4 market routes — each meal prepared with the same care we once prepared CEASAR\'s dinner. These are not just fed animals; these are animals who finally know that someone in this world loves them enough to show up.',
       },
       {
         metric: 'Winter Hypothermia Survival',
-        before: 'High Puppy Mortality',
-        after2027: '85%+ Winter Survival',
-        gain: 'Warm Sleeping Beds',
-        detail: 'Insulated straw-lined wooden crates keep dogs off damp winter concrete.',
+        before: 'Puppies Dying on Frozen Concrete — Silent, Alone',
+        after2027: '85%+ Winter Survival in CEASAR\'s Beds',
+        gain: 'Warm, Safe & Sleeping Soundly',
+        detail: 'CEASAR slept on soft beds his entire life, surrounded by warmth and family. His winter beds — insulated straw-lined wooden crates placed in sheltered corners — now give that same gift to street animals who have never known a night without shivering.',
       },
       {
-        metric: 'Wound Recovery Rate',
-        before: 'Untreated Maggot Wounds',
-        after2027: 'Rapid First-Aid Healing',
-        gain: 'Free First-Aid Care',
-        detail: 'Treated with antiseptic wash, fly-repellent spray, and deworming pills.',
+        metric: 'Wound Recovery & Healing',
+        before: 'Maggot Wounds Rotting in Open Air — Agony Without End',
+        after2027: 'Rapid First-Aid, Clean Bandages & Full Recovery',
+        gain: 'CEASAR\'s Healing Touch',
+        detail: 'Wounds that would have consumed an animal alive are now cleaned with antiseptic, treated with fly-repellent spray, and bandaged with gentle hands. The dogs stop trembling. They lick our hands. In that moment, CEASAR is there.',
       },
       {
-        metric: 'Community Harmony',
-        before: 'Human-Animal Conflict',
-        after2027: 'Friendly Peaceful Animals',
-        gain: 'Vaccinated & Calm',
-        detail: 'Well-fed animals are calm, friendly, and accepted by shopkeepers.',
+        metric: 'Community Harmony & Compassion',
+        before: 'Fear, Stone-Throwing & Human-Animal Conflict',
+        after2027: 'Friendly, Calm & Community-Loved Animals',
+        gain: 'Vaccinated, Peaceful & Accepted',
+        detail: 'Well-fed, cared-for animals are calm, trusting, and gentle. Shopkeepers who once chased them away now keep water bowls at their doors. Children pet them instead of fearing them. CEASAR bridged the gap between human and animal — this project does the same for an entire community.',
+      },
+      {
+        metric: 'CEASAR Legacy Impact',
+        before: 'No Memorial, No Mission, No Voice for the Voiceless',
+        after2027: '6 Permanent Feeding Stations Bearing CEASAR\'s Name',
+        gain: 'A Living, Breathing Memorial',
+        detail: 'CEASAR\'s memory does not live in a gravestone — it lives in every feeding station, every warm bed, every healed wound. Six permanent CEASAR Memorial Stations across West Bengal ensure that his name is spoken every day, not in sorrow, but in gratitude, by every animal who eats because of him.',
+      },
+      {
+        metric: 'Community Love Index',
+        before: 'Apathy, Indifference & Normalised Cruelty',
+        after2027: '500+ Community Members Actively Caring for Strays',
+        gain: 'Hearts Awakened by CEASAR\'s Story',
+        detail: 'CEASAR\'s story has the power to change hearts. When people learn that this project exists because a family lost their beloved dog and chose to turn grief into action, they join. Volunteers multiply. Donations flow. Compassion becomes contagious. This is CEASAR\'s greatest gift — not just saving animals, but teaching humans how to love.',
       },
     ],
 
@@ -332,31 +233,42 @@ export const IMPACT_PROJECTS = [
       pledgedAmount: 0,
       backersCount: 0,
       currency: 'INR',
-      targetYear: 'Starting Dec 2026',
+      targetYear: 'Starting Dec 2026 · In CEASAR\'s Memory',
       unitPackages: [
         {
           amount: 100,
-          title: 'Nourish 5 Street Dogs with Warm Meals',
-          impactEquivalence: 'Funds a wholesome meal of boiled rice, eggs, and broth for 5 stray community dogs.',
-          tag: 'Feed 5 Dogs',
+          title: 'CEASAR\'s Bowl: Feed 5 Hungry Souls',
+          impactEquivalence:
+            'Fills five bowls with warm turmeric rice, boiled eggs, and broth — the same love CEASAR received at every meal, now shared with 5 strays who have never known a full stomach. When they eat, CEASAR smiles.',
+          tag: 'CEASAR\'s Bowl',
         },
         {
           amount: 350,
-          title: '1 Weatherproof Insulated Winter Bed',
-          impactEquivalence: 'Builds a warm wooden crate bed with dry paddy straw and gunny sacks for cold winter nights.',
-          tag: '1 Warm Bed',
+          title: 'CEASAR\'s Blanket: 1 Warm Winter Bed',
+          impactEquivalence:
+            'Builds one insulated wooden crate bed lined with dry paddy straw and soft gunny sack — a bed where a shivering street dog will sleep warm for the first time in its life, just as CEASAR always did. Sweet dreams, little one.',
+          tag: 'CEASAR\'s Blanket',
         },
         {
           amount: 700,
-          title: 'Animal First-Aid & Wound Healing Kit',
-          impactEquivalence: 'Supplies Betadine, antiseptic healing powder, fly-repellent spray, and deworming tablets.',
-          tag: 'First-Aid Kit',
+          title: 'CEASAR\'s Healing Kit: First-Aid & Wound Care',
+          impactEquivalence:
+            'Supplies a complete first-aid kit — Betadine, antiseptic powder, fly-repellent spray, clean bandages, and deworming tablets — enough to treat 15-20 wounded street animals. CEASAR never suffered a wound untreated. In his name, neither will they.',
+          tag: 'CEASAR\'s Healing',
         },
         {
           amount: 1500,
-          title: 'Full Route Feeding & Shelter Sponsor',
-          impactEquivalence: 'Co-sponsors 1 week of daily feeding for 30 street animals + 2 winter sleeping beds.',
-          tag: 'Route Sponsor',
+          title: 'CEASAR\'s Guardian: Full Route Feeding & Shelter Sponsor',
+          impactEquivalence:
+            'Co-sponsors an entire week of daily evening feeding rounds for 30+ street animals plus 2 winter sleeping beds. You become a Guardian of CEASAR\'s Legacy — a protector of the voiceless, a keeper of his promise.',
+          tag: 'CEASAR\'s Guardian',
+        },
+        {
+          amount: 5000,
+          title: 'CEASAR Memorial Station: Permanent Feeding Point',
+          impactEquivalence:
+            'Establishes one permanent CEASAR Memorial Feeding Station at a key location — with a hand-painted sign, daily food and water supply for a full month, and a photograph of CEASAR watching over every animal who comes to eat. This is not a donation. This is a monument to love.',
+          tag: 'CEASAR\'s Station',
         },
       ],
     },
@@ -364,105 +276,170 @@ export const IMPACT_PROJECTS = [
     academicCitations: [
       'Animal Welfare Board of India (AWBI) Guidelines on Community Animal Care (2022)',
       'Local Bengal Volunteer Rescuers Field Logbook (2026)',
+      'World Organisation for Animal Health (WOAH) — Stray Dog Population Management Guidelines (2019)',
+      'Humane Society International — Street Animal Welfare in South Asia Report (2024)',
     ],
+
+    ceasarStory: {
+      paragraphs: [
+        'CEASAR was a German Shepherd with a soul too large for this world. He came into our lives as a puppy — all paws and ears and clumsy, boundless joy — and from that very first day, he was family. Not a pet. Family. He slept at the foot of our bed. He sat beside us during every meal. He pressed his heavy, warm body against us during thunderstorms because he knew we were afraid, even though he was afraid too. He was brave in the way that only the truly gentle can be brave.',
+        'He had a way of looking at you that made you feel like the most important person in the universe. Those deep brown eyes — ancient and knowing and overflowing with a love so pure it hurt to hold his gaze for too long. He would rest his chin on your knee and sigh, and in that sigh was everything: I am here. I love you. I will never leave. He never barked at strangers out of malice — he barked because he was protecting the people he loved with every fibre of his enormous, golden heart.',
+        'Today, October 31st 2026, CEASAR took his last breath. The house is silent in a way it has never been silent before. His bowl is still on the floor. His leash still hangs by the door. The indent of his body is still on his bed, still warm, as if he might come back and lie down one more time. He will not. And we will carry this grief like a stone in our chests for the rest of our lives. But we will also carry his love — and his love was bigger than grief, bigger than death, bigger than anything.',
+        'This project — The CEASAR Memorial — is not just an initiative. It is a living, breathing promise to a dog who gave us everything and asked for nothing. Every stray we feed is CEASAR eating one more meal. Every wound we clean is CEASAR being cared for one more time. Every winter bed we build is CEASAR lying down to sleep one more night, warm and safe. He is in every act of kindness this project performs. He is the reason it exists. He is the reason it will never stop.',
+        'We promise you, CEASAR: for as long as we breathe, no stray within our reach will go hungry. No puppy will freeze alone on a winter night. No wounded dog will lie untreated in a gutter. We will do what you taught us to do — we will love without condition, show up without being asked, and give without keeping count. You were the best of us. You were the best of all of us. And now, through this project, the best of you lives on in every wagging tail, every full belly, every pair of eyes that finally, finally sees kindness.',
+      ],
+      closingPromise:
+        'Every stray dog we feed, every wound we heal, every cold night we warm — CEASAR lives in those acts of love. This is not just a project. This is a promise to a friend who can no longer wag his tail, but whose spirit runs free across every street where a hungry animal is finally fed. Run free, CEASAR. We will take it from here. We will make you proud.',
+    },
   },
 
   {
     id: 'elderly-disabled-rations',
     slug: 'elderly-disabled-rations',
-    aliases: ['elderly-care', 'disabled-rations', 'widow-support'],
+    aliases: [
+      'elderly-care',
+      'disabled-rations',
+      'widow-support',
+      'shanti-memorial',
+      'hungry-feeding',
+      'feeding-hungry',
+      'hunger-relief',
+      'annadaan',
+      'kids-rations',
+    ],
     category: 'immediate',
+
+    memorialDedication: {
+      name: 'SHANTI',
+      relation: 'Beloved Mother',
+      tributeMessage:
+        'SHANTI was not just a name — she was the living, breathing definition of selfless love. She was the mother who woke before the sun to cook for her children, the woman who served everyone\'s plate before her own and then quietly ate whatever remained — often nothing at all. She carried the weight of an entire family on shoulders that never once complained. She mended torn clothes at midnight, she walked miles in broken slippers so her children could wear shoes. She was the silence that held everything together, the warmth in every morsel of rice her hands ever served. SHANTI did not live for herself. She lived for everyone she loved — and she loved everyone.',
+      spiritQuote:
+        'A mother\'s love does not end with her last breath. It seeps into the soil, rises with the rain, and feeds every hungry soul she could not reach in her lifetime. SHANTI lives — in every grain of rice that reaches a trembling hand.',
+      legacy:
+        'Every ration kit we deliver is not charity — it is SHANTI reaching out through her children to feed another hungry soul she could not reach while she was alive. Every bag of rice carries her fingerprints. Every drop of mustard oil carries the warmth of her kitchen. Every blanket wrapped around a shivering grandmother is SHANTI\'s arms, still holding, still protecting, still loving — even from beyond.',
+      motherStory:
+        'There is a kind of mother the world never celebrates. She does not write books or give speeches. She wakes at 4 AM. She boils rice in a dented aluminium pot. She feeds her children first, then her husband, then the neighbor\'s child who wandered in hungry, and then — only then — she looks at what is left. Sometimes there is nothing left. And she drinks water and says she already ate. SHANTI was that mother. She worked silently, loved unconditionally, and gave everything — every single thing — until there was nothing of herself left to give. She is gone now. But the hunger she fought all her life — that fight is not over. In her name, we carry it forward. For every grandmother sitting alone in a dark room tonight, wondering if anyone remembers she exists — SHANTI remembers. We remember.',
+    },
+
     posterId: 'elderly-disabled-rations',
-    title: 'Food & Ration Kits for Disabled & Elderly Citizens',
-    tagline: 'Delivering Monthly Dignity Ration Kits & Warm Winter Essentials Directly to Isolated Seniors',
+    title: 'The SHANTI Memorial · Food & Ration Kits for Kids, Elderly & Disabled Citizens',
+    tagline:
+      'In eternal memory of SHANTI — our mother who fed everyone before herself. Delivering essential dry food rations and warm blankets to vulnerable kids, destitute elders, and disabled citizens. No child or grandmother should ever sleep hungry. This is her legacy.',
     posterImage: '/assets/images/tulsi.webp',
     statusBadge: 'Starts December 2026',
-    phaseYear: 'Immediate Action · Launching December 2026',
+    phaseYear: 'Immediate Action · Launching December 2026 · In SHANTI\'s Memory',
     targetLaunch: 'December 2026',
     location: 'Rural Villages & Mining Hamlets of Paschim Bardhaman (West Bengal)',
-    leadScientist: 'Bhumivera Senior Dignity & Disability Outreach Circle',
+    leadScientist: 'Bhumivera SHANTI Memorial Senior Dignity & Disability Outreach Circle',
 
     problemDossier: {
-      headline: 'The Silent Crisis: Abandoned Seniors & Disabled Citizens',
+      headline: 'In SHANTI\'s Name: The Silent Crisis of Abandoned Elders',
       historicalContext:
-        'In rural and semi-urban West Bengal, many elderly widows and differently-abled individuals live completely alone in dilapidated mud rooms without family support. Unable to perform manual physical labor, they often survive on diluted rice starch with salt. During winter, lack of a basic warm blanket makes nights dangerous.',
+        'Our mother SHANTI taught us that no one should ever sleep hungry. She is no more — but her spirit lives in every grain of rice we deliver to a forgotten elder. In rural and semi-urban West Bengal, thousands of elderly widows and differently-abled individuals live completely alone in crumbling mud rooms, abandoned by families, forgotten by the state. Unable to walk to ration shops or perform any physical labor, they survive on nothing but diluted rice starch with salt — the same watered-down meal, day after day, week after week, until their bodies give up. During the bitter December and January winters, these frail souls shiver through the night under torn cotton rags, without a single warm blanket. SHANTI knew this hunger. SHANTI lived this life. And SHANTI would never have allowed it to continue — so neither will we.',
       keyFactors: [
-        'Elderly widows who have outlived their families or been abandoned with zero pension or savings.',
-        'Differently-abled individuals unable to walk or work, depending entirely on irregular charity.',
-        'Acute deficiency of cooking oil, lentils (dal), iodized salt, and protein causing severe frailty.',
-        'Severe winter chills in December and January without adequate clothing or blankets.',
+        'Elderly widows who have outlived every family member — husbands gone, children migrated or dead — sitting alone in dark rooms with zero pension, zero savings, and zero hope of a next meal.',
+        'Differently-abled individuals who cannot walk, cannot work, and cannot beg — entirely dependent on the irregular mercy of neighbors who themselves have nothing to spare.',
+        'Acute, chronic deficiency of cooking oil, lentils, iodized salt, and any source of protein — causing severe muscle wasting, brittle bones, and a slow, undignified decline into starvation.',
+        'Brutal winter chills in December and January where temperatures drop and frail seniors without blankets develop hypothermia, pneumonia, and respiratory failure — deaths no one counts, no one reports.',
+        'Complete social invisibility — these elders do not appear in any government database, any welfare list, any NGO register. They exist in the cracks of society where no one looks.',
+        'The psychological devastation of being forgotten — elderly mothers and fathers who raised families, built homes, and gave their entire lives to others, now sitting alone wondering why no one comes, why no one knocks on their door, why the world has moved on without them.',
       ],
       scarcityStats: [
-        { label: 'Ration Kit Cost', value: '₹650 Only', sub: 'Full month essentials (10kg rice, dal, oil, soap)' },
-        { label: 'Winter Blanket', value: '₹250 Only', sub: 'Thick warm fleece/wool blanket' },
-        { label: 'Home Delivery', value: '100% Direct', sub: 'Delivered respectfully to their doorstep' },
-        { label: 'Admin Cut', value: '₹0.00', sub: '100% buys wholesale grocery staples' },
+        { label: 'SHANTI Ration Kit', value: '₹650 Only', sub: 'Full month essentials (10kg rice, dal, oil, salt, spices, soap)' },
+        { label: 'SHANTI Warmth Blanket', value: '₹250 Only', sub: 'Thick warm woollen blanket in her memory' },
+        { label: 'Home Delivery', value: '100% Direct', sub: 'Delivered with love and respect to their doorstep — the way SHANTI would have done it' },
+        { label: 'Admin Cut', value: '₹0.00', sub: 'Every single rupee buys rice, dal, oil — nothing is wasted, because SHANTI never wasted anything' },
       ],
     },
 
     futureWithout: {
-      headline: 'What Happens If We Do Nothing?',
+      headline: 'What Happens If We Look Away? SHANTI Would Never Forgive Us.',
       summary:
-        'Frail elderly citizens and disabled individuals will continue suffering in silent hunger, facing preventable winter illnesses and complete loss of human dignity.',
+        'Somewhere tonight, an 82-year-old grandmother is lying on a cold mud floor, her stomach hollow, her body trembling, her eyes staring at a cracked ceiling — wondering if anyone in this world remembers she is alive. If we do nothing, she will die like that. Alone. Hungry. Cold. Forgotten. SHANTI watches from somewhere beyond — and every mother who dies alone and hungry is a failure we carry. This is not someone else\'s responsibility. If we know, and we do nothing, then we are the ones who let them die.',
       consequences: [
-        'Elderly individuals going to bed hungry without clean food or cooking oil.',
-        'High winter mortality among frail seniors due to lack of warm bedding.',
-        'Total societal neglect of those who spent their entire lives working as laborers and builders.',
+        'Elderly grandmothers going to bed with nothing but water in their stomachs — night after night — their bodies slowly consuming themselves from the inside until there is nothing left. They do not scream. They do not cry. They simply stop existing, silently, in rooms no one visits.',
+        'Frail seniors dying of hypothermia on January nights because they do not own a single blanket — shivering under torn saris and thin cotton sheets while the world sleeps warm. Their deaths are never reported. Their names are never spoken. They vanish as if they never lived.',
+        'The complete, total, devastating societal abandonment of human beings who spent their entire lives working as laborers, as mothers, as builders of families — people who gave everything and received nothing in return. They built this world, and this world forgot them.',
+        'Disabled individuals who have not eaten a proper meal in weeks — who cannot walk to a shop, who cannot lift a pot, who cannot light a stove — lying in their homes waiting for someone, anyone, to remember they exist. Most of the time, no one does.',
+        'SHANTI\'s worst nightmare made real — a world where mothers and grandmothers die alone and hungry while the rest of us eat three meals a day and never once look back. She would never have allowed this. And as long as we breathe, neither will we.',
       ],
     },
 
     solutionBlueprint: {
-      headline: 'The Dignity Ration Blueprint',
+      headline: 'SHANTI\'s Dignity Blueprint',
       methodology:
-        'Starting in December 2026, we identify verified destitute elderly widows and disabled citizens in local hamlets. We assemble monthly Dignity Kits purchased at wholesale prices: 10kg clean rice, 2kg masoor dal, 1L mustard oil, 1kg iodized salt, turmeric, bathing soap, and in winter, a warm woollen blanket. Volunteers deliver these directly to their homes with respect and care.',
+        'This is SHANTI\'s blueprint — designed the way she would have done it: no waste, no bureaucracy, no middlemen, just food reaching hungry hands with love and dignity. Starting December 2026, we identify verified destitute elderly widows and disabled citizens in local hamlets through ground-level volunteers who walk the lanes she once walked. We assemble monthly SHANTI Memorial Ration Kits purchased at wholesale prices — 10kg clean rice, 2kg masoor dal, 1L pure mustard oil, 1kg iodized salt, turmeric, bathing soap — and in winter, a thick warm woollen blanket. Every kit is delivered directly to their doorstep by volunteers who sit with them, hold their hands, listen to their stories, and remind them that someone in this world still cares. Because SHANTI cared. And we are her children.',
       pillars: [
         {
-          title: 'Direct Doorstep Delivery with Dignity',
-          desc: 'Delivering kits directly to their mud homes so elderly individuals do not have to stand in exhausting queues.',
+          title: 'Direct Doorstep Delivery with SHANTI\'s Dignity',
+          desc: 'Every ration kit is delivered directly to their mud homes so no elderly person has to stand in exhausting government queues, beg for handouts, or walk miles on broken legs. SHANTI would have carried the rice herself. We carry it for her now.',
         },
         {
-          title: 'Nutritious Wholesale Staples',
-          desc: 'Purchasing high-quality rice, lentils, pure mustard oil, and salt in bulk to maximize every single rupee.',
+          title: 'Nutritious Wholesale Staples — Zero Waste',
+          desc: 'Purchasing high-quality rice, masoor dal, pure mustard oil, iodized salt, turmeric, and soap in bulk at wholesale rates to maximize every single rupee — because SHANTI never wasted a grain of rice, and neither will we.',
         },
         {
-          title: 'Winter Warmth Blankets (Dec - Jan)',
-          desc: 'Providing thick, warm woollen blankets to protect frail seniors from severe winter drafts.',
+          title: 'SHANTI\'s Warmth — Winter Blankets (Dec–Jan)',
+          desc: 'Providing thick, warm woollen blankets to protect frail seniors from the bitter winter drafts that kill silently. Every blanket is SHANTI\'s arms, wrapped around a grandmother she never met but would have loved.',
         },
         {
-          title: 'Monthly Welfare Check-ins',
-          desc: 'Volunteers sit with the elders, check on their health, listen to their stories, and ensure they feel loved.',
+          title: 'Monthly Love Check-ins',
+          desc: 'Volunteers sit with the elders, hold their hands, check on their health, listen to their stories, and make them feel seen and loved — because sometimes a ten-minute conversation saves a life more than any medicine. SHANTI always listened.',
+        },
+        {
+          title: 'SHANTI Memorial Monthly Ration Day',
+          desc: 'On one dedicated day every month — SHANTI\'s Day — volunteers assemble and distribute all ration kits as a collective act of remembrance. It is a day when we pause, remember a mother who fed everyone before herself, and carry her love to every doorstep. This is not logistics. This is a ritual of love.',
+        },
+        {
+          title: 'Elder Story Documentation — Honoring Lives Lived',
+          desc: 'Every elder we serve has a life story that deserves to be heard and remembered. Volunteers record their stories — their memories, their struggles, their wisdom, their laughter. Because SHANTI believed every person matters, and no one should be forgotten. These stories become part of the SHANTI Memorial Archive — proof that these lives existed, that they mattered, that someone cared enough to listen.',
         },
       ],
     },
 
     impactColumns: [
       {
-        metric: 'Families Provided Full Month Rations',
+        metric: 'SHANTI Legacy Reach',
+        before: 'No One Came',
+        after2027: '30–50 Households Every Month',
+        gain: 'SHANTI\'s Love, Delivered',
+        detail: 'Every month, SHANTI\'s spirit reaches 30 to 50 forgotten elders through ration kits hand-delivered to their doorsteps — the way she would have done it herself, quietly, without fanfare, with nothing but love.',
+      },
+      {
+        metric: 'Families Fed Full Month Rations',
         before: '0 Families',
-        after2027: '30 - 50 Households / Month',
+        after2027: '30–50 Households / Month',
         gain: 'Full Food Security',
-        detail: 'Directly eliminating food anxiety for abandoned seniors and disabled citizens.',
+        detail: 'Directly eliminating the gnawing, constant food anxiety that keeps abandoned seniors awake at night — no elder in SHANTI\'s circle will ever wonder where their next meal comes from.',
       },
       {
         metric: 'Winter Cold Protection',
-        before: 'Flimsy Cotton Rags',
-        after2027: 'Thick Woollen Blankets',
-        gain: 'Warmth & Safety',
-        detail: 'Keeps seniors warm and protected through December and January.',
+        before: 'Torn Cotton Rags',
+        after2027: 'Thick Woollen SHANTI Blankets',
+        gain: 'Warmth & Survival',
+        detail: 'Every SHANTI blanket wrapped around shivering shoulders is the difference between life and death on a January night. It is warmth. It is survival. It is SHANTI, still holding them.',
       },
       {
-        metric: 'Nutritional Dignity',
-        before: 'Rice Water with Salt',
-        after2027: 'Dal, Rice & Mustard Oil',
+        metric: 'Nutritional Dignity Restored',
+        before: 'Watered-Down Rice Starch',
+        after2027: 'Dal, Rice, Oil & Spices',
         gain: 'Complete Nutrition',
-        detail: 'Provides essential dietary fats, protein, and micro-nutrients.',
+        detail: 'Transforming starvation rations of diluted rice water into complete, dignified meals with protein, fats, and micro-nutrients — the kind of food SHANTI would have cooked with her own hands.',
       },
       {
-        metric: 'Administrative Leakage',
-        before: 'Middlemen Deductions',
-        after2027: '₹0.00 (Zero Cut)',
-        gain: '100% to Grains',
-        detail: 'All groceries purchased with verified invoices and audited deliveries.',
+        metric: 'Dignity Restored',
+        before: 'Invisible & Forgotten',
+        after2027: 'Seen, Visited & Loved',
+        gain: 'Human Connection',
+        detail: 'The deepest poverty is not hunger — it is the feeling that no one in this world knows you exist. Every doorstep visit, every hand held, every story listened to — restores the dignity that abandonment stole.',
+      },
+      {
+        metric: 'Administrative Transparency',
+        before: 'Middlemen & Leakage',
+        after2027: '₹0.00 Admin Cut',
+        gain: '100% to Food & Blankets',
+        detail: 'Every rupee is a grain of rice. Every paisa is a drop of oil. Nothing is lost, nothing is skimmed — because SHANTI taught us that wasting food is a sin, and wasting trust is worse.',
       },
     ],
 
@@ -471,31 +448,42 @@ export const IMPACT_PROJECTS = [
       pledgedAmount: 0,
       backersCount: 0,
       currency: 'INR',
-      targetYear: 'Starting Dec 2026',
+      targetYear: 'Starting Dec 2026 · In Memory of SHANTI',
       unitPackages: [
         {
           amount: 250,
-          title: '1 Thick Warm Winter Woollen Blanket',
-          impactEquivalence: 'Provides a heavy, warm winter blanket to protect a frail elderly senior from winter chills.',
-          tag: 'Warm Blanket',
+          title: 'SHANTI\'s Warmth: 1 Winter Blanket for an Elder',
+          impactEquivalence:
+            'Wraps one shivering grandmother in a thick, warm woollen blanket — SHANTI\'s arms reaching across the divide between this world and the next, holding someone she never met but would have loved.',
+          tag: 'SHANTI Blanket',
         },
         {
           amount: 650,
-          title: 'Complete 1-Month Dignity Ration Kit',
-          impactEquivalence: 'Supplies 10kg rice, 2kg dal, 1L mustard oil, salt, spices, and soap for 1 full month.',
-          tag: '1-Month Ration',
+          title: 'SHANTI\'s Rice: Complete 1-Month Ration Kit',
+          impactEquivalence:
+            'Fills one empty kitchen with 10kg rice, 2kg dal, 1L mustard oil, salt, turmeric, and soap for an entire month — every grain placed with the same care SHANTI placed rice on her children\'s plates.',
+          tag: 'SHANTI Ration Kit',
         },
         {
           amount: 1300,
-          title: 'Rations + Warmth Kit for 2 Elders',
-          impactEquivalence: 'Fully supports 2 abandoned elderly individuals with monthly groceries and winter blankets.',
-          tag: 'Sponsor 2 Elders',
+          title: 'SHANTI\'s Grace: Rations + Blanket for 2 Elders',
+          impactEquivalence:
+            'Feeds and warms two abandoned elderly souls for a full month — two grandmothers who will open their doors to find that someone in this world remembered them. SHANTI remembered. We remember.',
+          tag: 'SHANTI Grace',
         },
         {
           amount: 3250,
-          title: 'Support 5 Destitute Households for a Month',
-          impactEquivalence: 'Co-sponsors complete monthly food baskets for 5 disabled or elderly senior households.',
-          tag: '5 Households',
+          title: 'SHANTI\'s Circle: Support 5 Forgotten Households',
+          impactEquivalence:
+            'Embraces five destitute households with complete monthly rations and warm blankets — an entire circle of elders fed, warmed, visited, and loved in SHANTI\'s name.',
+          tag: 'SHANTI Circle',
+        },
+        {
+          amount: 6500,
+          title: 'SHANTI\'s Promise: Full Month Care for 10 Elders',
+          impactEquivalence:
+            'A son\'s ultimate promise to his mother — ten forgotten elders receive complete ration kits, warm blankets, doorstep delivery, and a volunteer who sits with them and listens. Ten lives touched. Ten doors knocked. Ten hearts reminded that they are not alone. This is SHANTI\'s promise, kept every single month.',
+          tag: 'SHANTI Promise',
         },
       ],
     },
@@ -503,7 +491,21 @@ export const IMPACT_PROJECTS = [
     academicCitations: [
       'HelpAge India Report on Elder Vulnerability in Rural Eastern India (2023)',
       'Local Paschim Bardhaman Community Welfare Register (2026)',
+      'National Policy on Older Persons — Ministry of Social Justice & Empowerment, Government of India (2011)',
+      'World Health Organization — Ageing & Health in South-East Asia Region (2022)',
     ],
+
+    shantiStory: {
+      paragraphs: [
+        'SHANTI was our mother. Not a saint from a storybook, not a figure on a pedestal — just a woman. A real, ordinary, extraordinary woman who lived her entire life in the quiet service of everyone around her. She cooked, she cleaned, she mended, she worked, she worried, she prayed, she loved — and she did all of it without ever once asking for anything in return. She was the first to wake and the last to sleep. She was the hands that fed us, the voice that calmed us, the presence that made a house a home.',
+        'SHANTI fed everyone. The children first, always the children. Then her husband. Then the neighbor who came by. Then the stray cat at the door. And then — only then — she would look at what remained. Sometimes it was a handful of rice at the bottom of the pot. Sometimes it was nothing. And when there was nothing, she would drink a glass of water, press her sari to her stomach, and say she had already eaten. She lied. She always lied. Because mothers like SHANTI do not eat until the world is fed. And the world is never fully fed.',
+        'SHANTI is gone now. She left behind a silence that cannot be filled — a chair that no one sits in, a kitchen that no longer smells of her cooking, a void in the center of everything that nothing and no one can occupy. The world feels colder without her. The mornings feel emptier. The rice does not taste the same. When she left, she took a piece of every heart she ever touched — and she touched every heart she ever met.',
+        'This project — this entire page, these ration kits, these blankets, these doorstep visits — is the purest, most honest way her children know to honor her. SHANTI spent her life feeding people. She spent her life making sure no one around her ever went hungry. She did not have much, but she gave everything she had. This project is the continuation of her life\'s work — carried forward by the hands she raised, driven by the love she planted in us, dedicated to every elder who sits alone tonight in the dark, wondering if anyone cares.',
+        'In SHANTI\'s name, we make a promise: no elder in our reach will go hungry. Not one. Not ever. We will carry the rice she would have carried. We will knock on the doors she would have knocked on. We will sit with the grandmothers she would have sat with. We will listen to the stories she would have listened to. And when they ask us why — why we come, why we care, why we bother — we will say her name. SHANTI. Our mother. The woman who fed everyone before herself. The woman who loved until there was nothing left. The woman who is gone but will never, ever be forgotten.',
+      ],
+      closingPromise:
+        'Every grain of rice we deliver, every blanket we wrap around trembling shoulders, every doorstep we visit with dignity — SHANTI is there. She lives in the gratitude of every grandmother who opens her door to find someone cares. She lives in the tears of every old man who holds a bag of dal and whispers "someone remembered me." She lives in the silence between a volunteer\'s knock and an elder\'s footsteps shuffling to the door. This is not charity. This is a son\'s promise to his mother. This is SHANTI\'s love, reaching further than she ever could. And it will not stop. Not as long as there is one hungry elder left in this world. Not as long as we breathe. Not ever.',
+    },
   },
 
   // =========================================================================
@@ -519,9 +521,9 @@ export const IMPACT_PROJECTS = [
     title: 'Damodar Riverbank Native Vetiver Planting & Plastic Cleanup',
     tagline: 'Community Plastic Cleanups & Living Vetiver Grass Bio-Filters Along Damodar Tributary Banks',
     posterImage: '/assets/images/impact-poster-05.webp',
-    statusBadge: '2027 End - 2028 Roadmap',
-    phaseYear: '2027 End - 2028 Execution',
-    targetLaunch: 'Q4 2027 - 2028',
+    statusBadge: 'Upcoming Project · Starting 2028 Onwards',
+    phaseYear: 'Upcoming Project · Starting 2028 Onwards',
+    targetLaunch: '2028 Onwards',
     location: 'Damodar River Tributaries (Raniganj, Asansol & Durgapur Belt, West Bengal)',
     leadScientist: 'Bhumivera River Stewardship & Community Cleanup Guild',
 
@@ -612,7 +614,7 @@ export const IMPACT_PROJECTS = [
       pledgedAmount: 0,
       backersCount: 0,
       currency: 'INR',
-      targetYear: '2027 End - 2028',
+      targetYear: 'Starting 2028 Onwards',
       unitPackages: [
         {
           amount: 150,
@@ -656,9 +658,9 @@ export const IMPACT_PROJECTS = [
     title: 'Backyard Native Sapling Nursery in 100% Jute Bags',
     tagline: 'Plastic-Free Native Sapling Production in Biodegradable Jute Sacks with 85%+ Survival',
     posterImage: '/assets/images/impact-poster-04.webp',
-    statusBadge: '2027 End - 2028 Roadmap',
-    phaseYear: '2027 End - 2028 Execution',
-    targetLaunch: 'Q4 2027 - 2028',
+    statusBadge: 'Upcoming Project · Starting 2028 Onwards',
+    phaseYear: 'Upcoming Project · Starting 2028 Onwards',
+    targetLaunch: '2028 Onwards',
     location: 'West Bengal Rural Backyards & Agro-Centres',
     leadScientist: 'Bhumivera Native Botanical Nursery Team',
 
@@ -749,7 +751,7 @@ export const IMPACT_PROJECTS = [
       pledgedAmount: 0,
       backersCount: 0,
       currency: 'INR',
-      targetYear: '2027 End - 2028',
+      targetYear: 'Starting 2028 Onwards',
       unitPackages: [
         {
           amount: 100,
@@ -793,9 +795,9 @@ export const IMPACT_PROJECTS = [
     title: 'Rural Bengal Village Pukur (Pond) Desilting & Natural Reeds',
     tagline: 'Reviving Ancient Community Ponds with Volunteer Silt Clearing & Vetiver Bio-Filters',
     posterImage: '/assets/images/impact-poster-03.webp',
-    statusBadge: '2027 End - 2028 Roadmap',
-    phaseYear: '2027 End - 2028 Execution',
-    targetLaunch: 'Q4 2027 - 2028',
+    statusBadge: 'Upcoming Project · Starting 2028 Onwards',
+    phaseYear: 'Upcoming Project · Starting 2028 Onwards',
+    targetLaunch: '2028 Onwards',
     location: 'Rural Villages of Paschim & Purba Bardhaman (West Bengal)',
     leadScientist: 'Bhumivera Traditional Water Wisdom & Pond Revival Cell',
 
@@ -886,7 +888,7 @@ export const IMPACT_PROJECTS = [
       pledgedAmount: 0,
       backersCount: 0,
       currency: 'INR',
-      targetYear: '2027 End - 2028',
+      targetYear: 'Starting 2028 Onwards',
       unitPackages: [
         {
           amount: 200,
@@ -930,9 +932,9 @@ export const IMPACT_PROJECTS = [
     title: 'Medicinal Tulsi, Kalmegh & Neem Home Kitchen Gardens',
     tagline: 'Distributing 1,000 Free Indigenous Ayurvedic Herb Seedling Kits to Rural Families',
     posterImage: '/assets/images/impact-poster-06.webp',
-    statusBadge: '2027 End - 2028 Roadmap',
-    phaseYear: '2027 End - 2028 Execution',
-    targetLaunch: 'Q4 2027 - 2028',
+    statusBadge: 'Upcoming Project · Starting 2028 Onwards',
+    phaseYear: 'Upcoming Project · Starting 2028 Onwards',
+    targetLaunch: '2028 Onwards',
     location: 'Rural Villages & Hamlets of Bengal',
     leadScientist: 'Bhumivera Herbal Self-Reliance & Botanical Literacy Desk',
 
@@ -1023,7 +1025,7 @@ export const IMPACT_PROJECTS = [
       pledgedAmount: 0,
       backersCount: 0,
       currency: 'INR',
-      targetYear: '2027 End - 2028',
+      targetYear: 'Starting 2028 Onwards',
       unitPackages: [
         {
           amount: 100,
@@ -1067,9 +1069,9 @@ export const IMPACT_PROJECTS = [
     title: 'Town Sabzi Mandi Waste to Organic Vermicompost Initiative',
     tagline: 'Converting Vegetable Market Food Scraps into Nutrient-Dense Soil Compost for Tree Plantations',
     posterImage: '/assets/images/impact-poster-01.webp',
-    statusBadge: '2027 End - 2028 Roadmap',
-    phaseYear: '2027 End - 2028 Execution',
-    targetLaunch: 'Q4 2027 - 2028',
+    statusBadge: 'Upcoming Project · Starting 2028 Onwards',
+    phaseYear: 'Upcoming Project · Starting 2028 Onwards',
+    targetLaunch: '2028 Onwards',
     location: 'Local Town Sabzi Mandis (Paschim Bardhaman, West Bengal)',
     leadScientist: 'Bhumivera Waste-to-Soil Community Action Desk',
 
@@ -1160,7 +1162,7 @@ export const IMPACT_PROJECTS = [
       pledgedAmount: 0,
       backersCount: 0,
       currency: 'INR',
-      targetYear: '2027 End - 2028',
+      targetYear: 'Starting 2028 Onwards',
       unitPackages: [
         {
           amount: 150,
@@ -1204,9 +1206,9 @@ export const IMPACT_PROJECTS = [
     title: 'Paschim Bardhaman Industrial Edge Native Micro-Grove',
     tagline: 'Planting Dense 250-Tree Native Pocket Forests to Trap Coal Dust and Lower Scorching Heat',
     posterImage: '/assets/images/impact-poster-02.webp',
-    statusBadge: '2027 End - 2028 Roadmap',
-    phaseYear: '2027 End - 2028 Execution',
-    targetLaunch: 'Q4 2027 - 2028',
+    statusBadge: 'Upcoming Project · Starting 2028 Onwards',
+    phaseYear: 'Upcoming Project · Starting 2028 Onwards',
+    targetLaunch: '2028 Onwards',
     location: 'Raniganj & Asansol Industrial Peripheries (Paschim Bardhaman, West Bengal)',
     leadScientist: 'Bhumivera Industrial Dust Barrier & Micro-Forest Desk',
 
@@ -1297,7 +1299,7 @@ export const IMPACT_PROJECTS = [
       pledgedAmount: 0,
       backersCount: 0,
       currency: 'INR',
-      targetYear: '2027 End - 2028',
+      targetYear: 'Starting 2028 Onwards',
       unitPackages: [
         {
           amount: 200,
