@@ -63,4 +63,17 @@ describe('ScarcitySimulationBadge', () => {
     );
     expect(container.firstChild).toBeNull();
   });
+
+  it('keeps hook order stable when simulator data changes from disabled to enabled', () => {
+    const { container, rerender } = render(
+      <ScarcitySimulationBadge snapshot={{ enabled: false, remaining: 0, dailyCap: 250 }} />
+    );
+
+    rerender(
+      <ScarcitySimulationBadge snapshot={{ enabled: true, remaining: 123, dailyCap: 250, simulatedSoldToday: 127 }} />
+    );
+
+    expect(container.firstChild).not.toBeNull();
+    expect(screen.getByText(/Units remaining:/i)).toBeTruthy();
+  });
 });

@@ -239,11 +239,9 @@ export default function ScarcitySimulationBadge({
     return () => window.removeEventListener('bhumivera:inspector-state', handleInspectorChange);
   }, []);
 
-  if (!snapshot?.enabled || snapshot?.paused || inspectorOpen) return null;
-
-  const baseRemaining = snapshot.outOfStock ? 0 : snapshot.remaining;
-  const baseSoldToday = Number(snapshot.simulatedSoldToday ?? snapshot.soldToday) || 0;
-  const dailyCap = snapshot.dailyCap || 250;
+  const baseRemaining = snapshot?.outOfStock ? 0 : snapshot?.remaining || 0;
+  const baseSoldToday = Number(snapshot?.simulatedSoldToday ?? snapshot?.soldToday) || 0;
+  const dailyCap = snapshot?.dailyCap || 250;
 
   const [activeRemaining, setActiveRemaining] = useState(baseRemaining);
   const [activeSoldToday, setActiveSoldToday] = useState(baseSoldToday);
@@ -313,6 +311,8 @@ export default function ScarcitySimulationBadge({
 
     return () => clearInterval(interval);
   }, []);
+
+  if (!snapshot?.enabled || snapshot?.paused || inspectorOpen) return null;
 
   const percentageSold = Math.min(
     100,
