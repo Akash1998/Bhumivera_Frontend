@@ -91,6 +91,8 @@ export default function ReviewManagement() {
   const [itemsPerPage, setItemsPerPage] = useState(25);
   const [selectedReviewIds, setSelectedReviewIds] = useState([]);
   const [bulkAction, setBulkAction] = useState('');
+  const [bulkDateStart, setBulkDateStart] = useState('');
+  const [bulkDateEnd, setBulkDateEnd] = useState('');
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
   // Inspector / Editor Modal State
@@ -445,10 +447,30 @@ export default function ReviewManagement() {
       approve: 'approve and publish',
       archive: 'hide and archive',
       delete: 'permanently delete',
+      dates: 'assign random dates to',
     };
     const actionLabel = actionLabels[bulkAction];
+    if (bulkAction === 'dates') {
+      if (!bulkDateStart || !bulkDateEnd) {
+        showToast?.('Choose both a start date and an end date.', 'error');
+        return;
+      }
+      if (bulkDateStart > bulkDateEnd) {
+        showToast?.('The start date must be on or before the end date.', 'error');
+        return;
+      }
+    }
     const warning = bulkAction === 'delete' ? ' This cannot be undone.' : '';
     if (!window.confirm(`Are you sure you want to ${actionLabel} ${selectedReviewIds.length} selected review(s)?${warning}`)) return;
+
+    const bulkDateAssignments = bulkAction === 'dates'
+      ? new Map(selectedReviewIds.map(id => {
+        const startTime = new Date(`${bulkDateStart}T00:00:00.000Z`).getTime();
+        const endTime = new Date(`${bulkDateEnd}T00:00:00.000Z`).getTime();
+        const dateTime = startTime + Math.floor(Math.random() * (endTime - startTime + 86400000));
+        return [id, new Date(dateTime).toISOString()];
+      }))
+      : new Map();
 
     setIsBulkDeleting(true);
     try {
@@ -456,6 +478,9 @@ export default function ReviewManagement() {
         selectedReviewIds.map(id => {
           if (bulkAction === 'approve') {
             return api.put(`/reviews/${id}/approve`, {}, { adminAuth: true });
+          }
+          if (bulkAction === 'dates') {
+            return api.put(`/reviews/admin/${id}`, { created_at: bulkDateAssignments.get(id) }, { adminAuth: true });
           }
           return api.delete(`/reviews/admin/${id}?permanent=${bulkAction === 'delete'}`, { adminAuth: true });
         })
@@ -470,6 +495,19 @@ export default function ReviewManagement() {
               ? { ...review, is_approved: 1, status: 'approved' }
               : review
           ));
+        } else if (bulkAction === 'dates') {
+          setReviews(current => current.map(review => {
+            const id = String(review.id || review._id);
+            return bulkDateAssignments.has(id)
+              ? { ...review, created_at: bulkDateAssignments.get(id) }
+              : review;
+          }));
+          if (selectedReview && bulkDateAssignments.has(String(selectedReview.id || selectedReview._id))) {
+            setSelectedReview(current => current
+              ? { ...current, created_at: bulkDateAssignments.get(String(current.id || current._id)) }
+              : current
+            );
+          }
         } else {
           setReviews(current => current.filter(review => !succeededIds.includes(String(review.id || review._id))));
         }
@@ -487,9 +525,18 @@ export default function ReviewManagement() {
           'error'
         );
       } else {
-        showToast?.(`Successfully ${bulkAction === 'approve' ? 'approved' : bulkAction === 'archive' ? 'archived' : 'deleted'} ${succeededIds.length} review(s).`, 'success');
+        showToast?.(
+          bulkAction === 'dates'
+            ? `Assigned random dates from ${bulkDateStart} to ${bulkDateEnd} to ${succeededIds.length} review(s).`
+            : `Successfully ${bulkAction === 'approve' ? 'approved' : bulkAction === 'archive' ? 'archived' : 'deleted'} ${succeededIds.length} review(s).`,
+          'success'
+        );
       }
-      if (!failedIds.length) setBulkAction('');
+      if (!failedIds.length) {
+        setBulkAction('');
+        setBulkDateStart('');
+        setBulkDateEnd('');
+      }
     } finally {
       setIsBulkDeleting(false);
     }
@@ -842,12 +889,45 @@ export default function ReviewManagement() {
                   <option value="">Choose bulk action…</option>
                   <option value="approve">Approve / Publish</option>
                   <option value="archive">Archive / Hide</option>
+                  <option value="dates">Assign Random Dates</option>
                   <option value="delete">Permanently Delete</option>
                 </select>
+                {bulkAction === 'dates' && (
+                  <div className="flex flex-wrap items-center gap-2">
+                    <label className="flex items-center gap-2 text-[11px] font-semibold text-slate-300">
+                      From
+                      <input
+                        type="date"
+                        value={bulkDateStart}
+                        onChange={event => setBulkDateStart(event.target.value)}
+                        aria-label="Random review date range start"
+                        className="rounded-lg border border-slate-700 bg-[#10241f] px-2 py-2 text-xs text-white"
+                      />
+                    </label>
+                    <label className="flex items-center gap-2 text-[11px] font-semibold text-slate-300">
+                      To
+                      <input
+                        type="date"
+                        value={bulkDateEnd}
+                        onChange={event => setBulkDateEnd(event.target.value)}
+                        aria-label="Random review date range end"
+                        className="rounded-lg border border-slate-700 bg-[#10241f] px-2 py-2 text-xs text-white"
+                      />
+                    </label>
+                  </div>
+                )}
                 <button
                   type="button"
                   onClick={handleBulkReviewAction}
-                  disabled={!bulkAction || isBulkDeleting}
+                  disabled={
+                    !bulkAction ||
+                    isBulkDeleting ||
+                    (bulkAction === 'dates' && (
+                      !bulkDateStart ||
+                      !bulkDateEnd ||
+                      bulkDateStart > bulkDateEnd
+                    ))
+                  }
                   className={`rounded-lg border px-3 py-2 text-xs font-black transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                     bulkAction === 'delete'
                       ? 'border-rose-500/40 bg-rose-500/15 text-rose-200 hover:bg-rose-500/25'
@@ -867,7 +947,7 @@ export default function ReviewManagement() {
               </>
             )}
           </div>
-          <p className="text-[11px] text-slate-500">Choose reviews with the checkboxes, then choose a bulk action.</p>
+          <p className="text-[11px] text-slate-500">Choose reviews with the checkboxes, then choose a bulk action. Random date ranges include both endpoints.</p>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left border-collapse">
