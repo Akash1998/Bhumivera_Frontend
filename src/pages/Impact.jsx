@@ -39,7 +39,7 @@ const impactQuestions = [
   ],
   [
     'What projects are starting right now in December 2026?',
-    'Starting December 2026, we are directly addressing immediate animal and human suffering in our home district of Paschim Bardhaman (West Bengal): 1) The CEASAR Memorial — Stray Dog & Cat Rescue, Feeding & Compassion Initiative, dedicated to our beloved German Shepherd CEASAR who passed away, and 2) The SHANTI Memorial — Food & Ration Kits for Elderly & Disabled Citizens, honouring our mother SHANTI. All six ecological restoration corridors are upcoming projects starting from 2028 onwards.',
+    'Starting December 2026, we are directly addressing immediate animal and human suffering in our home district of Paschim Bardhaman (West Bengal): 1) The Ceaser Memorial — Stray Dog & Cat Rescue, Feeding & Compassion Initiative, dedicated to our beloved German Shepherd Ceaser who passed away, and 2) The Smt. Shanti Memorial — Food & Ration Kits for Elderly & Disabled Citizens, honouring our mother Smt. Shanti. All six ecological restoration corridors are upcoming projects starting from 2028 onwards.',
   ],
   [
     'Why are the ecological restoration projects scheduled for 2028 onwards?',
@@ -68,9 +68,9 @@ const DEFAULT_COMMUNITY_POSTS = [
     id: 2,
     name: 'Priyanka Das',
     location: 'Asansol, West Bengal',
-    action: 'Pledged to volunteer for SHANTI Memorial Ration Kits',
+    action: 'Pledged to volunteer for Smt. Shanti Memorial Ration Kits',
     time: 'Yesterday',
-    message: 'Proud to see a local brand tackling real hunger and cold in our own towns. Ready to deliver food and ration kits to elders starting this December in memory of SHANTI-di.',
+    message: 'Proud to see a local brand tackling real hunger and cold in our own towns. Ready to deliver food and ration kits to elders starting this December in memory of Smt. Shanti-di.',
   },
   {
     id: 3,
@@ -91,7 +91,7 @@ export default function Impact() {
   const [volunteerName, setVolunteerName] = useState('');
   const [volunteerPhone, setVolunteerPhone] = useState('');
   const [volunteerTown, setVolunteerTown] = useState('Asansol');
-  const [volunteerFocus, setVolunteerFocus] = useState('Stray Dog & Cat Care (CEASAR Memorial)');
+  const [volunteerFocus, setVolunteerFocus] = useState('Stray Dog & Cat Care (Ceaser Memorial)');
   const [volunteerRegistered, setVolunteerRegistered] = useState(false);
 
   // Community work sharing wall state
@@ -195,7 +195,7 @@ export default function Impact() {
     <main className="min-h-screen bg-[#070a0e] text-[#e2e8f0] pb-24 font-sans selection:bg-[#d4af37]/30 selection:text-white">
       <SEO
         title="Public Stewardship & Grassroots Action | Bhumivera"
-        description="Bhumivera grassroots community action: Stray dog & cat rescue honoring CEASAR, food and ration kits honoring SHANTI in West Bengal, and six upcoming ecological corridors starting from 2028 onwards."
+        description="Bhumivera grassroots community action: Stray dog & cat rescue honoring Ceaser, food and ration kits honoring Smt. Shanti in West Bengal, and six upcoming ecological corridors starting from 2028 onwards."
         route="/impact"
       />
 
@@ -223,7 +223,7 @@ export default function Impact() {
               <Leaf size={12} className="text-emerald-400" /> Rooted in West Bengal · Starting From Our Own Towns
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/40 bg-amber-500/10 px-3 py-1 text-[10px] font-mono tracking-wider uppercase text-amber-300">
-              ✦ CEASAR Memorial · ✦ SHANTI Memorial
+              ✦ Ceaser Memorial · ✦ Smt. Shanti Memorial
             </span>
             <span className="inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/40 bg-[#070a0e] px-3 py-1 text-[10px] font-mono tracking-wider uppercase text-[#fce096]">
               {impactLedger
@@ -242,7 +242,7 @@ export default function Impact() {
           <div className="gold-hairline my-5 max-w-xs" />
 
           <p className="mt-2 max-w-2xl text-base leading-7 text-[#cbd5e1] md:text-lg">
-            We are solving our own local problems first. In loving memory of <strong>CEASAR</strong>, our beloved German Shepherd, we are sheltering and nourishing stray dogs and cats. In eternal honour of <strong>SHANTI</strong>, our mother, we are delivering food and ration kits to disabled seniors and abandoned elders. Followed by six achievable, volunteer-powered West Bengal ecological corridors — all <strong>upcoming projects starting from 2028 onwards</strong>.
+            We are solving our own local problems first. In loving memory of <strong>Ceaser</strong>, our beloved German Shepherd, we are sheltering and nourishing stray dogs and cats. In eternal honour of <strong>Smt. Shanti</strong>, our mother, we are delivering food and ration kits to disabled seniors and abandoned elders. Followed by six achievable, volunteer-powered West Bengal ecological corridors — all <strong>upcoming projects starting from 2028 onwards</strong>.
           </p>
 
           <div className="mt-8 flex flex-wrap items-center gap-4">
@@ -346,11 +346,11 @@ export default function Impact() {
               </span>
             </div>
             <h2 className="font-serif text-3xl sm:text-4xl text-white">
-              In Memory of CEASAR & SHANTI — Compassion on Our Streets
+              In Memory of Ceaser & Smt. Shanti — Compassion on Our Streets
             </h2>
           </div>
           <p className="text-xs sm:text-sm text-[#94a3b8] max-w-md">
-            Honouring CEASAR through stray animal rescue &amp; feeding. Honouring SHANTI through food &amp; ration kits for abandoned elders. Two deeply personal missions born from love and loss.
+            Honouring Ceaser through stray animal rescue &amp; feeding. Honouring Smt. Shanti through food &amp; ration kits for abandoned elders. Two deeply personal missions born from love and loss.
           </p>
         </div>
 
@@ -574,8 +574,8 @@ export default function Impact() {
                         onChange={e => setVolunteerFocus(e.target.value)}
                         className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
                       >
-                        <option value="Stray Dog & Cat Care (CEASAR Memorial)">Stray Animal Care (CEASAR Memorial)</option>
-                        <option value="Food & Ration Delivery (SHANTI Memorial)">Food &amp; Ration Kits (SHANTI Memorial)</option>
+                        <option value="Stray Dog & Cat Care (Ceaser Memorial)">Stray Animal Care (Ceaser Memorial)</option>
+                        <option value="Food & Ration Delivery (Smt. Shanti Memorial)">Food &amp; Ration Kits (Smt. Shanti Memorial)</option>
                         <option value="River Cleanup & Vetiver Planting">River &amp; Trees (2028 Onwards)</option>
                       </select>
                     </div>
@@ -860,7 +860,7 @@ export default function Impact() {
               Every Action Has A Record. Every Rupee Has A Face.
             </h2>
             <p className="text-xs sm:text-sm leading-6 text-[#cbd5e1] max-w-xl mx-auto">
-              Join us this December 2026. In CEASAR's memory, feed a stray. In SHANTI's honour, deliver rations to an elder. Whether you donate ₹50 or come join us on a Sunday, your presence transforms our community.
+              Join us this December 2026. In Ceaser's memory, feed a stray. In Smt. Shanti's honour, deliver rations to an elder. Whether you donate ₹50 or come join us on a Sunday, your presence transforms our community.
             </p>
             <div className="pt-4 flex flex-wrap justify-center gap-4">
               <a

@@ -36,8 +36,8 @@ const INITIAL_COMMUNITY_POSTS = [
     id: 102,
     author: 'Priyanka Das',
     location: 'Asansol Rail Colony',
-    role: 'SHANTI Ration Kits Lead',
-    action: 'Pledged for SHANTI Food & Ration Kits',
+    role: 'Smt. Shanti Ration Kits Lead',
+    action: 'Pledged for Smt. Shanti Food & Ration Kits',
     timestamp: 'Yesterday',
     likes: 24,
     text: 'Proud to see a local brand tackling real hunger right here on our own streets. Count me in for packing and distributing dry food and ration kits for kids and elders starting December 2026.',
@@ -77,13 +77,13 @@ const UPCOMING_DRIVES = [
   },
   {
     id: 'drive-2',
-    title: 'SHANTI Memorial Food & Ration Kit Assembly & Distribution',
+    title: 'Smt. Shanti Memorial Food & Ration Kit Assembly & Distribution',
     date: 'Sunday, December 13, 2026',
     time: '11:00 AM - 3:00 PM',
     location: 'Asansol Daily-Wage Colony & Station Periphery',
     focus: 'Food & Ration Kits',
     desc: 'Assembling and distributing monthly food ration kits (10kg rice, 2kg dal, mustard oil, salt) and warm essentials for kids, disabled individuals, and destitute elders.',
-    lead: 'SHANTI Memorial Outreach Volunteers',
+    lead: 'Smt. Shanti Memorial Outreach Volunteers',
   },
   {
     id: 'drive-3',
@@ -113,7 +113,7 @@ export default function Community() {
   const [volPhone, setVolPhone] = useState('');
   const [volEmail, setVolEmail] = useState('');
   const [volTown, setVolTown] = useState('Asansol');
-  const [volFocus, setVolFocus] = useState('Street Dog & Cat Rescue (CEASAR Memorial)');
+  const [volFocus, setVolFocus] = useState('Street Dog & Cat Rescue (Ceaser Memorial)');
   const [volunteerPass, setVolunteerPass] = useState(null);
 
   // Discussion forum state
@@ -212,7 +212,7 @@ export default function Community() {
     <main className="min-h-screen bg-[#070a0e] text-[#e2e8f0] pb-24 font-sans selection:bg-[#d4af37]/30 selection:text-white">
       <SEO
         title="Bhumivera Grassroots Community Hub | 100+ Volunteers Across West Bengal"
-        description="Join the Bhumivera Grassroots Community: 100+ volunteer network in West Bengal for CEASAR Memorial stray animal rescue, SHANTI Memorial food & ration kits, and 2028 ecological corridors."
+        description="Join the Bhumivera Grassroots Community: 100+ volunteer network in West Bengal for Ceaser Memorial stray animal rescue, Smt. Shanti Memorial food & ration kits, and 2028 ecological corridors."
         route="/community"
       />
 
@@ -273,7 +273,7 @@ export default function Community() {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="rounded-2xl border border-rose-500/30 bg-[#070a0e] p-5 space-y-2 shadow-xl hover:border-rose-400 transition-colors">
             <span className="text-[10px] font-mono uppercase tracking-wider text-rose-300 block">Immediate Action · Dec 2026</span>
-            <h3 className="font-serif text-lg font-bold text-white">SHANTI Food &amp; Ration Kits</h3>
+            <h3 className="font-serif text-lg font-bold text-white">Smt. Shanti Food &amp; Ration Kits</h3>
             <p className="text-xs text-[#cbd5e1] leading-5">Delivering essential dry rations (10kg rice, dal, oil, salt) and warm blankets for impoverished kids, disabled, and destitute elders.</p>
           </div>
 
@@ -389,8 +389,8 @@ export default function Community() {
                       onChange={e => setVolFocus(e.target.value)}
                       className="w-full rounded-xl border border-[#d4af37]/30 bg-[#070a0e] p-2.5 text-xs text-white focus:border-[#d4af37] focus:outline-none"
                     >
-                      <option value="Food & Ration Kits (SHANTI Memorial)">SHANTI Memorial: Food &amp; Ration Kits for Kids, Elderly &amp; Disabled</option>
-                      <option value="Street Dog & Cat Rescue (CEASAR Memorial)">CEASAR Memorial: Stray Dog &amp; Cat Rescue &amp; Winter Beds</option>
+                      <option value="Food & Ration Kits (Smt. Shanti Memorial)">Smt. Shanti Memorial: Food &amp; Ration Kits for Kids, Elderly &amp; Disabled</option>
+                      <option value="Street Dog & Cat Rescue (Ceaser Memorial)">Ceaser Memorial: Stray Dog &amp; Cat Rescue &amp; Winter Beds</option>
                       <option value="Disabled & Elderly Ration Delivery">Elderly Outreach: Delivering Grain Bags &amp; Warm Blankets</option>
                       <option value="River Cleanups & Vetiver Planting">River &amp; Trees: Damodar Cleanup &amp; Jute Sapling Care</option>
                     </select>

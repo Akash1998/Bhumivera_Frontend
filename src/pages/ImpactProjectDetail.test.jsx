@@ -36,7 +36,7 @@ describe('ImpactProjectDetail component', () => {
     delete window.Razorpay;
   });
 
-  it('resolves and renders the immediate December 2026 CEASAR memorial animal care project', () => {
+  it('resolves and renders the immediate December 2026 Ceaser memorial animal care project', () => {
     render(
       <MemoryRouter initialEntries={['/impact/stray-animal-care']}>
         <Routes>
@@ -47,12 +47,12 @@ describe('ImpactProjectDetail component', () => {
 
     // Title & tagline
     expect(
-      screen.getByText(/The CEASAR Memorial · Stray Dog & Cat Rescue, Feeding & Compassion Initiative/i)
+      screen.getByText(/The Ceaser Memorial · Stray Dog & Cat Rescue, Feeding & Compassion Initiative/i)
     ).toBeTruthy();
 
     // Problem dossier
     expect(
-      screen.getByText(/The Plight of Street Animals — Why CEASAR's Memory Demands We Act/i)
+      screen.getByText(/The Plight of Street Animals — Why Ceaser's Memory Demands We Act/i)
     ).toBeTruthy();
 
     // Legal charter section
@@ -93,7 +93,7 @@ describe('ImpactProjectDetail component', () => {
             name: 'Meera Iyer',
             email: 'meera@example.com',
             amount: 100,
-            projectTitle: 'The CEASAR Memorial · Stray Dog & Cat Rescue, Feeding & Compassion Initiative',
+            projectTitle: 'The Ceaser Memorial · Stray Dog & Cat Rescue, Feeding & Compassion Initiative',
             dedication: null,
             issuedAt: '2026-10-18T12:00:00.000Z',
           },
