@@ -433,19 +433,6 @@ export default function ReviewManagement() {
     );
   };
 
-  const filteredReviewIds = filteredReviews.map(review => String(review.id || review._id));
-  const areAllFilteredReviewsSelected = filteredReviewIds.length > 0 &&
-    filteredReviewIds.every(id => selectedReviewIds.includes(id));
-
-  const toggleAllFilteredReviews = () => {
-    setSelectedReviewIds(current => {
-      if (areAllFilteredReviewsSelected) {
-        return current.filter(id => !filteredReviewIds.includes(id));
-      }
-      return [...new Set([...current, ...filteredReviewIds])];
-    });
-  };
-
   const handleBulkDeleteReviews = async () => {
     if (!selectedReviewIds.length) return;
     if (!window.confirm(`Permanently delete ${selectedReviewIds.length} selected review(s)? This cannot be undone.`)) return;
@@ -543,6 +530,19 @@ export default function ReviewManagement() {
       return true;
     }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
   }, [reviews, searchTerm, productFilter, comboFilter, categoryFilter, yearFilter, ratingFilter, mediaFilter]);
+
+  const filteredReviewIds = filteredReviews.map(review => String(review.id || review._id));
+  const areAllFilteredReviewsSelected = filteredReviewIds.length > 0 &&
+    filteredReviewIds.every(id => selectedReviewIds.includes(id));
+
+  const toggleAllFilteredReviews = () => {
+    setSelectedReviewIds(current => {
+      if (areAllFilteredReviewsSelected) {
+        return current.filter(id => !filteredReviewIds.includes(id));
+      }
+      return [...new Set([...current, ...filteredReviewIds])];
+    });
+  };
 
   const totalPages = Math.max(1, Math.ceil(filteredReviews.length / itemsPerPage));
   const paginatedReviews = filteredReviews.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
