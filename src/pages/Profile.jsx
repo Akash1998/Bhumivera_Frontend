@@ -1487,7 +1487,7 @@ export default function Profile() {
                         One-time delivered-order gift
                       </p>
                       <h3 className="mt-1 font-serif text-lg font-bold text-white">
-                        Claim ₹250 Shopping Credit + 100 Loyalty Points
+                        Claim ₹300 Welcome Bonus Credit + 100 Loyalty Points
                       </h3>
                       <p className="mt-1 text-xs leading-relaxed text-[#cbd5e1]">
                         Sign in with an account that has a delivered order. The shopping credit applies automatically to eligible cart orders.

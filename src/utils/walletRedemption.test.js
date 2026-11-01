@@ -2,22 +2,38 @@ import { describe, expect, it } from 'vitest';
 import { calculateReferralWalletRedemption, calculateTierDiscount } from './walletRedemption';
 
 describe('cart wallet credit calculations', () => {
-  it('caps shopping credit by balance, eligible subtotal, and the matching order tier', () => {
-    const tiers = [
-      { min_order_amount: 799, referral_amount: 100 },
-      { min_order_amount: 1499, referral_amount: 250 },
-    ];
+  it('allows maximum ₹100 welcome bonus for orders from ₹799 to ₹999, and referral is not eligible', () => {
+    // Customer has ₹300 welcome bonus + ₹200 referral balance (total ₹500)
+    const totalBalance = 500;
+    const welcomeBonus = 300;
 
-    expect(calculateReferralWalletRedemption(250, 999, 999, tiers)).toBe(100);
-    expect(calculateReferralWalletRedemption(80, 999, 999, tiers)).toBe(80);
-    expect(calculateReferralWalletRedemption(250, 2000, 1700, tiers)).toBe(250);
-    expect(calculateReferralWalletRedemption(250, 2000, 50, tiers)).toBe(50);
+    // At ₹799: only welcome bonus up to ₹100
+    expect(calculateReferralWalletRedemption(totalBalance, 799, 799, [], welcomeBonus)).toBe(100);
+
+    // At ₹999: only welcome bonus up to ₹100 (referral not eligible below 1000)
+    expect(calculateReferralWalletRedemption(totalBalance, 999, 999, [], welcomeBonus)).toBe(100);
+
+    // If customer has only referral balance (no welcome bonus) at ₹999: gets ₹0
+    expect(calculateReferralWalletRedemption(200, 999, 999, [], 0)).toBe(0);
   });
 
-  it('does not apply shopping credit below the configured order threshold', () => {
-    const tiers = [{ min_order_amount: 799, referral_amount: 100 }];
-    expect(calculateReferralWalletRedemption(250, 798.99, 798.99, tiers)).toBe(0);
-    expect(calculateReferralWalletRedemption(250, 599, 599, tiers)).toBe(0);
+  it('allows ₹100 welcome bonus + ₹100 referral balance (₹200 total) above ₹999', () => {
+    const totalBalance = 500; // ₹300 welcome + ₹200 referral
+    const welcomeBonus = 300;
+
+    // Order of ₹1,200 (above ₹999): ₹100 welcome + ₹100 referral = ₹200
+    expect(calculateReferralWalletRedemption(totalBalance, 1200, 1200, [], welcomeBonus)).toBe(200);
+
+    // Order of ₹1,200 with only referral balance (no welcome bonus): gets ₹100
+    expect(calculateReferralWalletRedemption(200, 1200, 1200, [], 0)).toBe(100);
+
+    // Order of ₹1,200 with only welcome bonus (no referral balance): gets ₹100
+    expect(calculateReferralWalletRedemption(300, 1200, 1200, [], 300)).toBe(100);
+  });
+
+  it('does not apply any shopping / gift credit below ₹799', () => {
+    expect(calculateReferralWalletRedemption(500, 798.99, 798.99, [], 300)).toBe(0);
+    expect(calculateReferralWalletRedemption(500, 599, 599, [], 300)).toBe(0);
   });
 
   it('caps tier discount by both the configured percentage and remaining subtotal', () => {

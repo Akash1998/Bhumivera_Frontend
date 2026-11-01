@@ -485,7 +485,7 @@ export default function ProductVerification() {
                 One-time delivered-order patron gift
               </p>
               <h2 className="mt-1 font-serif text-xl font-bold text-white sm:text-2xl">
-                Claim ₹250 Credit + 100 Privilege Points
+                Claim ₹300 Welcome Bonus Credit + 100 Privilege Points
               </h2>
             </div>
           </div>

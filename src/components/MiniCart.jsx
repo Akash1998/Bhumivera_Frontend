@@ -116,7 +116,8 @@ export default function MiniCart() {
     referralReward?.balance,
     subtotal,
     Math.max(0, subtotal - discount - couponDiscount - tierDiscount),
-    referralReward?.tiers
+    referralReward?.tiers,
+    referralReward?.welcomeBonusBalance
   );
   const pointsRedemption = calculatePointsRedemption(
     loyalty,

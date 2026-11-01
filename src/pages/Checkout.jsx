@@ -80,6 +80,7 @@ export default function Checkout() {
     subtotal,
     Math.max(0, subtotal - totalDiscount - tierDiscount),
     referralReward?.tiers,
+    referralReward?.welcomeBonusBalance,
   );
   const freeShippingFromCoupon =
     appliedCoupon?.rewardType === 'free_shipping' || Boolean(rulePreview?.freeShipping);
