@@ -18,6 +18,7 @@ import {
   warranty as warrantyApi,
   serials as serialsApi,
   auth as authApi,
+  gamification as gamificationApi,
 } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import compressImageForUpload from '../utils/compressImageForUpload';
@@ -85,6 +86,7 @@ const SECURITY_QUESTIONS = [
 ];
 
 const DELIVERED_STATUSES = ['delivered', 'completed'];
+const BOX_GIFT_CODE = 'BHUMIVERA-GIFT-2026';
 const needsRefundSupport = order => (
   ['pending', 'confirmed'].includes((order.status || '').toLowerCase()) &&
   order.payment_mode === 'online' &&
@@ -231,6 +233,10 @@ export default function Profile() {
   const [loyaltyData, setLoyaltyData] = useState({ points: 0, lifetimePoints: 0, tier: null });
   const [walletTopUpAmount, setWalletTopUpAmount] = useState('1000');
   const [walletTopUpBusy, setWalletTopUpBusy] = useState(false);
+  const [boxGiftCode, setBoxGiftCode] = useState(BOX_GIFT_CODE);
+  const [boxGiftSerial, setBoxGiftSerial] = useState('');
+  const [boxGiftStatus, setBoxGiftStatus] = useState(null);
+  const [boxGiftBusy, setBoxGiftBusy] = useState(false);
   const [addresses, setAddresses] = useState([]);
   const [returns, setReturns] = useState([]);
   const [returnEligibility, setReturnEligibility] = useState([]);
@@ -333,6 +339,7 @@ export default function Profile() {
       if (needsOrders.includes(tab)) jobs.push(loadOrders());
       if (needsWishlist.includes(tab)) jobs.push(loadWishlist());
       if (needsWallet.includes(tab)) jobs.push(loadWallet());
+      if (tab === 'wallet') jobs.push(loadBoxGiftStatus());
       if (needsAddresses.includes(tab)) jobs.push(loadAddresses());
       if (needsNotifications.includes(tab)) jobs.push(loadNotifications());
       if (needsCoupons.includes(tab)) jobs.push(loadCoupons());
@@ -404,6 +411,56 @@ export default function Profile() {
     } catch (error) {
       console.error('[PROFILE_WALLET_BALANCE_LOAD]', error);
       toast.error(error.response?.data?.message || 'Could not load your wallet balance. Please try again.');
+    }
+  };
+  const loadBoxGiftStatus = async () => {
+    try {
+      const { data } = await gamificationApi.getBoxGiftStatus({ qr: BOX_GIFT_CODE });
+      setBoxGiftStatus(data);
+    } catch (error) {
+      console.error('[PROFILE_BOX_GIFT_STATUS]', error);
+      setBoxGiftStatus({
+        valid: false,
+        message: error.response?.data?.message || 'Could not load your box gift status. Please try again.',
+      });
+    }
+  };
+  const checkBoxGift = async event => {
+    event.preventDefault();
+    setBoxGiftBusy(true);
+    setBoxGiftStatus(null);
+    try {
+      const { data } = await gamificationApi.getBoxGiftStatus({
+        qr: boxGiftCode.trim(),
+        ...(boxGiftSerial.trim() ? { serial: boxGiftSerial.trim() } : {}),
+      });
+      setBoxGiftStatus(data);
+    } catch (error) {
+      setBoxGiftStatus({
+        valid: false,
+        message: error.response?.data?.message || 'Could not check your gift eligibility. Please try again.',
+      });
+    } finally {
+      setBoxGiftBusy(false);
+    }
+  };
+  const redeemBoxGift = async () => {
+    setBoxGiftBusy(true);
+    try {
+      const { data } = await gamificationApi.redeemBoxGift({
+        qr: boxGiftCode.trim(),
+        ...(boxGiftSerial.trim() ? { serial: boxGiftSerial.trim() } : {}),
+      });
+      setBoxGiftStatus(data);
+      await Promise.all([loadWallet(), loadProfile()]);
+      toast.success('Your patron gift has been added to your wallet and loyalty points.');
+    } catch (error) {
+      setBoxGiftStatus({
+        valid: false,
+        message: error.response?.data?.message || 'Could not redeem your gift. Please try again.',
+      });
+    } finally {
+      setBoxGiftBusy(false);
     }
   };
 
@@ -1421,6 +1478,88 @@ export default function Profile() {
                     </div>
                   </div>
                 </div>
+
+                <section className="rounded-2xl two-tone-panel border border-[#d4af37]/35 p-6 shadow-sm">
+                  <div className="flex items-start gap-3">
+                    <Gift className="mt-1 h-6 w-6 shrink-0 text-[#d4af37]" />
+                    <div>
+                      <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#fce096]">
+                        One-time delivered-order gift
+                      </p>
+                      <h3 className="mt-1 font-serif text-lg font-bold text-white">
+                        Claim ₹250 Shopping Credit + 100 Loyalty Points
+                      </h3>
+                      <p className="mt-1 text-xs leading-relaxed text-[#cbd5e1]">
+                        Sign in with an account that has a delivered order. The shopping credit applies automatically to eligible cart orders.
+                      </p>
+                    </div>
+                  </div>
+                  <form onSubmit={checkBoxGift} className="mt-5 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-[#9BB0A5]">
+                      Box gift code
+                      <input
+                        type="text"
+                        required
+                        value={boxGiftCode}
+                        onChange={event => setBoxGiftCode(event.target.value)}
+                        className="mt-1.5 w-full rounded-xl border border-[#d4af37]/35 bg-[#070a0e] px-4 py-3 font-mono text-sm uppercase text-[#fce096] outline-none focus:border-[#d4af37]"
+                      />
+                    </label>
+                    <label className="text-[10px] font-semibold uppercase tracking-wider text-[#9BB0A5]">
+                      Bottle serial (optional)
+                      <input
+                        type="text"
+                        value={boxGiftSerial}
+                        onChange={event => setBoxGiftSerial(event.target.value)}
+                        placeholder="BV-CH26-8841"
+                        className="mt-1.5 w-full rounded-xl border border-[#244A38] bg-[#070a0e] px-4 py-3 font-mono text-sm uppercase text-white outline-none focus:border-[#d4af37]"
+                      />
+                    </label>
+                    <button
+                      type="submit"
+                      disabled={boxGiftBusy}
+                      className="btn-gold-luxury mt-auto inline-flex min-h-[46px] items-center justify-center gap-2 rounded-xl px-5 py-3 text-xs font-bold uppercase tracking-wider text-white disabled:opacity-50"
+                    >
+                      <Search className="h-4 w-4" />
+                      {boxGiftBusy ? 'Checking…' : 'Check Gift'}
+                    </button>
+                  </form>
+
+                  {boxGiftStatus && (
+                    <div className="mt-4 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] p-4" role="status">
+                      {boxGiftStatus.redeemedNow ? (
+                        <p className="text-sm font-semibold text-emerald-300">
+                          Gift claimed! ₹{boxGiftStatus.creditInr} shopping credit and {boxGiftStatus.loyaltyPoints} points were added to your account.
+                        </p>
+                      ) : boxGiftStatus.canRedeem ? (
+                        <>
+                          <p className="text-sm font-semibold text-emerald-300">
+                            Your delivered order qualifies. Claim this gift once for this account.
+                          </p>
+                          <button
+                            type="button"
+                            onClick={redeemBoxGift}
+                            disabled={boxGiftBusy}
+                            className="btn-gold-luxury mt-3 inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white disabled:opacity-50"
+                          >
+                            <Gift className="h-4 w-4" />
+                            {boxGiftBusy ? 'Adding gift…' : 'Claim My Gift'}
+                          </button>
+                        </>
+                      ) : (
+                        <p className={`text-sm ${boxGiftStatus.alreadyRedeemed ? 'text-[#fce096]' : 'text-rose-200'}`}>
+                          {boxGiftStatus.message || 'This gift is not available for your account.'}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  <Link
+                    to={`/verify?qr=${encodeURIComponent(BOX_GIFT_CODE)}`}
+                    className="mt-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#fce096] underline underline-offset-4 hover:text-white"
+                  >
+                    <Camera className="h-4 w-4" /> Scan box QR with camera
+                  </Link>
+                </section>
 
                 <form onSubmit={purchaseWalletBalance} className="rounded-2xl two-tone-panel border border-[#d4af37]/25 p-6 shadow-sm">
                   <h3 className="font-serif font-bold text-base text-white">Add Spendable Vault Balance</h3>

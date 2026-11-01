@@ -18,6 +18,7 @@ import { useAuth } from '../context/AuthContext';
 import { BASE_URL, orders, addresses, wallet, coupons as couponApi } from '../services/api';
 import { haptics } from '../utils/haptics';
 import { getProductImageUrl } from '../utils/productImageUrl';
+import { calculateReferralWalletRedemption, calculateTierDiscount } from '../utils/walletRedemption';
 
 export default function Checkout() {
   const {
@@ -68,6 +69,18 @@ export default function Checkout() {
   const ruleDiscount = Number(rulePreview?.totalDiscount || 0);
   const couponDiscount = Number(appliedCoupon?.discount || 0);
   const totalDiscount = Math.min(subtotal, ruleDiscount + couponDiscount);
+  const tierDiscount = calculateTierDiscount(
+    subtotal,
+    totalDiscount,
+    loyalty?.currentTier,
+    Boolean(loyalty?.enabled),
+  );
+  const referralWalletAmount = calculateReferralWalletRedemption(
+    referralReward?.balance,
+    subtotal,
+    Math.max(0, subtotal - totalDiscount - tierDiscount),
+    referralReward?.tiers,
+  );
   const freeShippingFromCoupon =
     appliedCoupon?.rewardType === 'free_shipping' || Boolean(rulePreview?.freeShipping);
 
@@ -84,13 +97,13 @@ export default function Checkout() {
   const pointsPerRupee = Math.max(1, Number(loyalty?.redemptionPointsPerRupee || 10));
   const maxRedemptionPct = Number(loyalty?.maxRedemptionPercent || 45);
   const minRedeemPts = Number(loyalty?.minimumRedemptionPoints || 100);
-  const eligibleAfterDiscount = Math.max(0, subtotal - totalDiscount);
+  const eligibleAfterDiscount = Math.max(0, subtotal - totalDiscount - tierDiscount - referralWalletAmount);
   const maxPointsByCap = Math.floor(((eligibleAfterDiscount * maxRedemptionPct) / 100) * pointsPerRupee);
   const redeemablePoints =
     loyalty?.enabled && pointsBalance >= minRedeemPts ? Math.min(pointsBalance, maxPointsByCap) : 0;
   const loyaltyDiscount = redeemLoyalty ? Math.floor(redeemablePoints / pointsPerRupee) : 0;
 
-  const total = Math.max(0, subtotal - totalDiscount - loyaltyDiscount + shippingCost);
+  const total = Math.max(0, subtotal - totalDiscount - tierDiscount - referralWalletAmount - loyaltyDiscount + shippingCost);
 
   useEffect(() => {
     if (cartItems.length === 0) {
@@ -646,10 +659,22 @@ export default function Checkout() {
                     <span>-₹{ruleDiscount.toFixed(2)}</span>
                   </div>
                 )}
+                {tierDiscount > 0 && (
+                  <div className="flex justify-between text-[#D4AF37]">
+                    <span>Loyalty Tier Discount</span>
+                    <span>-₹{tierDiscount.toFixed(2)}</span>
+                  </div>
+                )}
                 {couponDiscount > 0 && (
                   <div className="flex justify-between text-[#D4AF37] font-medium">
                     <span>Coupon ({appliedCoupon?.code})</span>
                     <span>-₹{couponDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+                {referralWalletAmount > 0 && (
+                  <div className="flex justify-between text-[#FCE096] font-medium">
+                    <span>Shopping Wallet Credit</span>
+                    <span>-₹{referralWalletAmount.toFixed(2)}</span>
                   </div>
                 )}
                 {loyaltyDiscount > 0 && (

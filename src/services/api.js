@@ -538,6 +538,8 @@ export const recommendations = {
 export const notifications = { get: () => api.get("/notifications"), getPushStatus: () => api.get("/notifications/push-status", { notify: false }), getAllAdmin: () => api.get("/notifications/admin/all"), markRead: id => api.patch(`/notifications/${id}/read`), markAllRead: () => api.patch("/notifications/read-all"), delete: id => api.delete(`/notifications/${id}`), createBroadcast: data => api.post("/notifications/admin/create", data), send: d => api.post("/notifications/admin/create", d) };
 export const gamification = {
   spin: data => api.post('/gamification/spin', data),
+  getBoxGiftStatus: params => api.get('/gamification/box-qr-status', { params }),
+  redeemBoxGift: data => api.post('/gamification/redeem-box-qr', data),
   getOrderSpin: orderId => api.get(`/gamification/order-spin/${orderId}`),
   claimOrderSpin: orderId => api.post(`/gamification/order-spin/${orderId}`),
 };

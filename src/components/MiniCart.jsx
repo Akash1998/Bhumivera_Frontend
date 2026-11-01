@@ -16,6 +16,7 @@ import {
   SHOPPING_WALLET_REWARD_PERCENT,
 } from '../utils/shoppingWalletReward';
 import { calculateDeliveryCosts, PREMIUM_DELIVERY_SURCHARGE, PREMIUM_DELIVERY_THRESHOLD } from '../utils/shippingOptions';
+import { calculateReferralWalletRedemption, calculateTierDiscount } from '../utils/walletRedemption';
 
 let razorpayScriptPromise;
 const loadRazorpayScript = () => {
@@ -39,22 +40,6 @@ const getImageUrl = image => getProductImageUrl(image) || '/logo.webp';
 
 const formatPrice = value => `₹${(Number(value) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const blankAddress = { label: 'Home', fullName: '', phone: '', addressLine1: '', addressLine2: '', city: '', state: '', pincode: '', country: 'India', isDefault: false };
-const calculateReferralReward = (balance, orderSubtotal, eligibleSubtotal, tiers) => {
-  const toCents = value => Math.round(Math.max(0, Number(value) || 0) * 100);
-  const orderCents = toCents(orderSubtotal);
-  const tier = (Array.isArray(tiers) ? tiers : [])
-    .filter(item => orderCents >= toCents(item.min_order_amount))
-    .sort((first, second) => toCents(second.min_order_amount) - toCents(first.min_order_amount))[0];
-  return tier ? Math.min(toCents(balance), toCents(eligibleSubtotal), toCents(tier.referral_amount)) / 100 : 0;
-};
-const calculateTierDiscount = (subtotal, priorDiscounts, tier, enabled) => {
-  if (!enabled || !tier) return 0;
-  const toCents = value => Math.round(Math.max(0, Number(value) || 0) * 100);
-  const merchandiseCents = toCents(subtotal);
-  const remainingCents = Math.max(0, merchandiseCents - toCents(priorDiscounts));
-  const percent = Math.max(0, Math.min(100, Number(tier.tier_discount_percent) || 0));
-  return Math.min(remainingCents, Math.floor(merchandiseCents * percent / 100)) / 100;
-};
 const calculatePointsRedemption = (loyalty, eligibleSubtotal) => {
   const toCents = value => Math.round(Math.max(0, Number(value) || 0) * 100);
   const balance = Math.floor(Math.max(0, Number(loyalty?.pointsBalance) || 0));
@@ -127,7 +112,7 @@ export default function MiniCart() {
       : 0
     : 0;
   const tierDiscount = calculateTierDiscount(subtotal, discount + couponDiscount, loyalty?.currentTier, loyalty?.enabled);
-  const referralWalletAmount = calculateReferralReward(
+  const referralWalletAmount = calculateReferralWalletRedemption(
     referralReward?.balance,
     subtotal,
     Math.max(0, subtotal - discount - couponDiscount - tierDiscount),
