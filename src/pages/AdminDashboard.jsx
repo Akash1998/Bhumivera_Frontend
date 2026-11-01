@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, Suspense, Component, lazy } from 'r
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   Activity, Award, Bell, Boxes, ChartNoAxesCombined, ChevronDown, Compass, ExternalLink, FileText,
-  Gamepad2, Gift, Headphones, Leaf, LogOut, Mail, MessageSquare, Package, Settings2,
+  Gamepad2, Gift, Headphones, Leaf, LogOut, Mail, MessageSquare, Package, QrCode, Settings2,
   ShieldCheck, ShoppingBag, SlidersHorizontal, Sparkles, Star, Tags, Truck, Users, Wallet, Warehouse, Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -33,6 +33,8 @@ const ReferralEngine = lazy(() => import('./admin/AffiliateManagement.jsx'));
 const SupportManagement = lazy(() => import('./admin/SupportManagement.jsx'));
 const ContactManagement = lazy(() => import('./admin/ContactManagement.jsx'));
 const EWarrantyManagement = lazy(() => import('./admin/EWarrantyManagement.jsx'));
+const AuthenticityBatchManagement = lazy(() => import('./admin/AuthenticityBatchManagement.jsx'));
+const WelcomeCardManagement = lazy(() => import('./admin/WelcomeCardManagement.jsx'));
 const SupportAgentManagement = lazy(() => import('./admin/SupportAgentManagement.jsx'));
 const LoyaltyTierForge = lazy(() => import('./admin/LoyaltyTierForge.jsx'));
 const LoyaltyMembers = lazy(() => import('./admin/LoyaltyMembers.jsx'));
@@ -112,6 +114,8 @@ const TAB_COMPONENTS = {
   support: SupportManagement,
   contacts: ContactManagement,
   ewarranty: EWarrantyManagement,
+  authenticity: AuthenticityBatchManagement,
+  'welcome-cards': WelcomeCardManagement,
   'support-agents': SupportAgentManagement,
 };
 
@@ -150,6 +154,8 @@ const TAB_ICONS = {
   support: Headphones,
   contacts: MessageSquare,
   ewarranty: ShieldCheck,
+  authenticity: QrCode,
+  'welcome-cards': Gift,
   'support-agents': Users,
 };
 
@@ -211,6 +217,8 @@ export default function AdminDashboard() {
         { id: 'support', label: 'Bhumivera Client Concierge' },
         { id: 'contacts', label: 'Contact & Inquiries' },
         { id: 'ewarranty', label: 'E-Warranty Registry' },
+        { id: 'authenticity', label: 'Bottle Serial QR & Batches' },
+        { id: 'welcome-cards', label: 'Welcome Card Gifts' },
         { id: 'support-agents', label: 'Support Staff Roster' },
       ],
     },

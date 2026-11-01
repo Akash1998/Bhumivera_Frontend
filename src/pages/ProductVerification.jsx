@@ -32,6 +32,11 @@ export default function ProductVerification() {
   const [loading, setLoading] = useState(false);
   const [productData, setProductData] = useState(null);
   const [coaData, setCoaData] = useState(null);
+  const [batchData, setBatchData] = useState(null);
+  const urlWelcomeCode = (searchParams.get('gift') || '').toUpperCase();
+  const [welcomeCode, setWelcomeCode] = useState(urlWelcomeCode);
+  const [welcomeStatus, setWelcomeStatus] = useState(null);
+  const [welcomeLoading, setWelcomeLoading] = useState(false);
   const [error, setError] = useState('');
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scannerError, setScannerError] = useState('');
@@ -51,17 +56,24 @@ export default function ProductVerification() {
     setSerial(cleanSerial);
     setProductData(null);
     setCoaData(null);
+    setBatchData(null);
     setError('');
     setLoading(true);
-    const [coaResult, warrantyResult] = await Promise.allSettled([
+    const [coaResult, warrantyResult, registryResult] = await Promise.allSettled([
       api.get(`/serials/batch-coa/${encodeURIComponent(cleanSerial)}`),
       api.get(`/warranty/validate/${encodeURIComponent(cleanSerial)}`),
+      api.get(`/serials/verify/${encodeURIComponent(cleanSerial)}`, { notify: false }),
     ]);
+
+    const registry = registryResult.status === 'fulfilled' && registryResult.value?.data?.verified
+      ? registryResult.value.data
+      : null;
+    setBatchData(registry);
 
     if (coaResult.status === 'fulfilled' && coaResult.value.data?.success &&
         coaResult.value.data?.verified && coaResult.value.data?.coa) {
       setCoaData(coaResult.value.data.coa);
-    } else {
+    } else if (!registry) {
       setError(
         (coaResult.status === 'rejected' && coaResult.reason?.response?.data?.message) ||
         (coaResult.status === 'fulfilled' && coaResult.value.data?.message) ||
@@ -71,7 +83,7 @@ export default function ProductVerification() {
 
     if (warrantyResult.status === 'fulfilled' && warrantyResult.value.data?.success) {
       setProductData(warrantyResult.value.data);
-    } else if (coaResult.status === 'rejected' && warrantyResult.status === 'rejected') {
+    } else if (!registry && coaResult.status === 'rejected' && warrantyResult.status === 'rejected') {
       setError(
         warrantyResult.reason?.response?.data?.message ||
         coaResult.reason?.response?.data?.message ||
@@ -113,6 +125,40 @@ export default function ProductVerification() {
     }
   }, [userId]);
 
+  const checkWelcomeGift = useCallback(async (targetCode) => {
+    const cleanCode = String(targetCode || '').trim().toUpperCase();
+    if (!cleanCode) return;
+    setWelcomeCode(cleanCode);
+    setWelcomeStatus(null);
+    setWelcomeLoading(true);
+    try {
+      const { data } = await api.get(`/welcome-gifts/status/${encodeURIComponent(cleanCode)}`, { notify: false });
+      setWelcomeStatus({ ...data, requiresLogin: Boolean(data.canClaim && !userId) });
+    } catch (statusError) {
+      setWelcomeStatus(statusError.response?.data || {
+        valid: false,
+        message: 'Could not check this welcome card right now. Please try again.',
+      });
+    } finally {
+      setWelcomeLoading(false);
+    }
+  }, [userId]);
+
+  const claimWelcomeGift = async () => {
+    setWelcomeLoading(true);
+    try {
+      const { data } = await api.post('/welcome-gifts/claim', { code: welcomeCode }, { notify: false });
+      setWelcomeStatus({ ...data, valid: true, claimedNow: true });
+    } catch (claimError) {
+      setWelcomeStatus(claimError.response?.data || {
+        valid: false,
+        message: 'Could not claim this welcome card right now. Please try again.',
+      });
+    } finally {
+      setWelcomeLoading(false);
+    }
+  };
+
   const stopCameraScanner = useCallback(() => {
     scannerControlsRef.current?.stop();
     scannerControlsRef.current = null;
@@ -125,6 +171,11 @@ export default function ProductVerification() {
 
     try {
       const scannedUrl = new URL(scannedValue, window.location.origin);
+      const scannedWelcomeCode = scannedUrl.searchParams.get('gift');
+      if (scannedWelcomeCode) {
+        checkWelcomeGift(scannedWelcomeCode);
+        return;
+      }
       const scannedGiftCode = scannedUrl.searchParams.get('qr') || scannedUrl.searchParams.get('code');
       const scannedSerial = scannedUrl.searchParams.get('serial');
       if (scannedGiftCode) {
@@ -141,12 +192,14 @@ export default function ProductVerification() {
       // Non-URL QR values are handled as codes below.
     }
 
-    if (scannedValue.toUpperCase() === UNIVERSAL_GIFT_CODE) {
+    if (/^WC-[A-Z0-9]{10}$/i.test(scannedValue)) {
+      checkWelcomeGift(scannedValue);
+    } else if (scannedValue.toUpperCase() === UNIVERSAL_GIFT_CODE) {
       verifyGift(scannedValue);
     } else {
       verifySerialCode(scannedValue);
     }
-  }, [verifyGift, verifySerialCode]);
+  }, [checkWelcomeGift, verifyGift, verifySerialCode]);
 
   useEffect(() => {
     if (!scannerOpen || !videoRef.current) return undefined;
@@ -197,13 +250,15 @@ export default function ProductVerification() {
     if (searchParams.get('scan') === '1' || searchParams.get('scan') === 'true') {
       setScannerOpen(true);
     }
-    if (urlGiftCode) {
+    if (urlWelcomeCode) {
+      checkWelcomeGift(urlWelcomeCode);
+    } else if (urlGiftCode) {
       setGiftCode(urlGiftCode);
       verifyGift(urlGiftCode, urlGiftSerial);
     } else if (urlSerial) {
       verifySerialCode(urlSerial);
     }
-  }, [searchParams, urlGiftCode, urlGiftSerial, urlSerial, verifyGift, verifySerialCode]);
+  }, [searchParams, urlWelcomeCode, urlGiftCode, urlGiftSerial, urlSerial, checkWelcomeGift, verifyGift, verifySerialCode]);
 
   const handleGiftSubmit = (event) => {
     event.preventDefault();
@@ -417,6 +472,100 @@ export default function ProductVerification() {
             </div>
           )}
         </section>
+
+        {(welcomeStatus || welcomeLoading) && (
+          <section aria-live="polite" className="mt-8 rounded-3xl border border-[#d4af37]/40 bg-[#0d1520] p-6 shadow-xl sm:p-8">
+            <div className="flex items-center gap-3">
+              <Gift size={24} className="text-[#d4af37]" />
+              <div>
+                <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#fce096]">Welcome card gift</p>
+                <h2 className="mt-1 font-serif text-xl font-bold text-white sm:text-2xl">
+                  {welcomeStatus?.terms ? `Claim your ₹${welcomeStatus.terms.totalValue} gift` : 'Checking your welcome card…'}
+                </h2>
+              </div>
+            </div>
+            {welcomeStatus && (
+              <div className="mt-5 rounded-2xl border border-[#d4af37]/30 bg-[#070a0e] p-5" role="status">
+                {welcomeStatus.terms && (
+                  <p className="text-sm text-[#cbd5e1]">
+                    Use ₹{welcomeStatus.terms.perOrderValue} off per order{welcomeStatus.terms.uses > 1 ? ` (${welcomeStatus.terms.uses} orders)` : ''}
+                    {welcomeStatus.terms.minOrderAmount > 0 ? ` on orders of ₹${welcomeStatus.terms.minOrderAmount} or more` : ''}.
+                    Valid for {welcomeStatus.terms.validityDays} days after you claim it.
+                  </p>
+                )}
+                {welcomeStatus.claimedNow || (welcomeStatus.claimedByYou && welcomeStatus.couponCode) ? (
+                  <p className="mt-3 font-semibold text-emerald-300">
+                    {welcomeStatus.claimedNow ? 'Gift claimed!' : 'Already claimed.'} Your coupon code:{' '}
+                    <span className="font-mono text-[#fce096]">{welcomeStatus.couponCode}</span> — apply it at checkout.
+                  </p>
+                ) : welcomeStatus.requiresLogin ? (
+                  <>
+                    <p className="mt-3 flex items-center gap-2 font-semibold text-[#fce096]">
+                      <Lock size={18} /> Sign in to claim this gift
+                    </p>
+                    <Link
+                      to={`/login?redirect=${encodeURIComponent(`/verify?gift=${encodeURIComponent(welcomeCode)}`)}`}
+                      className="btn-gold-luxury mt-4 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-xs font-bold uppercase tracking-wider text-white"
+                    >
+                      Sign In <ArrowRight size={14} />
+                    </Link>
+                  </>
+                ) : welcomeStatus.canClaim ? (
+                  <button
+                    type="button"
+                    onClick={claimWelcomeGift}
+                    disabled={welcomeLoading}
+                    className="btn-gold-luxury mt-4 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-xs font-bold uppercase tracking-wider text-white disabled:opacity-50"
+                  >
+                    <Gift size={15} /> {welcomeLoading ? 'Claiming…' : `Claim ₹${welcomeStatus.terms?.totalValue} Gift`}
+                  </button>
+                ) : (
+                  <p className="mt-3 flex items-center gap-2 text-sm text-rose-200">
+                    <AlertCircle size={17} /> {welcomeStatus.message || 'This welcome card could not be verified.'}
+                  </p>
+                )}
+              </div>
+            )}
+          </section>
+        )}
+
+        {batchData && (
+          <section aria-live="polite" className="mt-8 overflow-hidden rounded-3xl border border-emerald-500/40 bg-[#0d1520] p-6 shadow-xl sm:p-8">
+            <div className="flex flex-wrap items-center gap-3 border-b border-[#d4af37]/20 pb-5">
+              <ShieldCheck size={26} className="text-emerald-400" />
+              <div>
+                <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400">
+                  100% genuine Bhumivera product
+                </p>
+                <h2 className="mt-1 font-serif text-xl font-bold text-white sm:text-2xl">{batchData.productName}</h2>
+              </div>
+            </div>
+            <div className="mt-6 grid gap-6 sm:grid-cols-[minmax(0,1fr)_180px]">
+              <dl className="grid content-start gap-4 sm:grid-cols-2">
+                {[
+                  ['Serial number', batchData.serialNumber],
+                  ['Batch number', batchData.batchNumber],
+                  ['Packing / manufacture date', batchData.manufactureDate],
+                  ['Expiry date', `${batchData.expiryDate}${batchData.expired ? ' (expired)' : ''}`],
+                ].map(([label, value]) => (
+                  <div key={label} className="min-w-0 rounded-xl border border-[#d4af37]/20 bg-[#070a0e]/60 p-4">
+                    <dt className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">{label}</dt>
+                    <dd className="mt-1 break-all font-mono font-semibold text-[#fce096]">{value}</dd>
+                  </div>
+                ))}
+                {(batchData.details || []).map(detail => (
+                  <div key={`${detail.label}-${detail.value}`} className="min-w-0 rounded-xl border border-[#d4af37]/20 bg-[#070a0e]/60 p-4">
+                    <dt className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">{detail.label}</dt>
+                    <dd className="mt-1 break-words font-semibold text-white">{detail.value}</dd>
+                  </div>
+                ))}
+              </dl>
+              {batchData.image && (
+                <img src={batchData.image} alt={batchData.productName} className="h-44 w-full rounded-2xl border border-[#d4af37]/20 object-cover sm:h-48" />
+              )}
+            </div>
+          </section>
+        )}
 
         {coaData && (
           <section aria-live="polite" className="mt-8 overflow-hidden rounded-3xl border border-[#d4af37]/40 bg-[#0d1520] p-6 shadow-xl sm:p-8">

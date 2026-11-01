@@ -543,6 +543,15 @@ export const gamification = {
   getOrderSpin: orderId => api.get(`/gamification/order-spin/${orderId}`),
   claimOrderSpin: orderId => api.post(`/gamification/order-spin/${orderId}`),
 };
+export const welcomeGifts = {
+  getStatus: code => api.get(`/welcome-gifts/status/${encodeURIComponent(code)}`, { notify: false }),
+  claim: code => api.post('/welcome-gifts/claim', { code }, { notify: false }),
+  getCampaigns: () => api.get('/welcome-gifts/admin/campaigns', { adminAuth: true }),
+  getCampaign: id => api.get(`/welcome-gifts/admin/campaigns/${id}`, { adminAuth: true }),
+  createCampaign: data => api.post('/welcome-gifts/admin/campaigns', data, { adminAuth: true }),
+  updateCampaign: (id, data) => api.patch(`/welcome-gifts/admin/campaigns/${id}`, data, { adminAuth: true }),
+  voidCard: id => api.post(`/welcome-gifts/admin/cards/${id}/void`, {}, { adminAuth: true }),
+};
 export const analytics = {
   getDashboard: (period = '30d') => api.get('/analytics/dashboard', { params: { period } }),
   getSales: (period = '30d') => api.get('/analytics/sales', { params: { period } }),
@@ -599,7 +608,7 @@ export const impact = {
   getAdminUpdates: () => api.get('/impact/admin/updates', { adminAuth: true }),
   createUpdate: data => api.post('/impact/admin/updates', data, { adminAuth: true }),
 };
-export const serials = { validate: s => api.post("/serials/validate", { serial: s }), getAllAdmin: () => api.get("/serials/admin/all"), getByProduct: p => api.get(`/serials/${p}`), getStats: p => api.get(`/serials/${p}/stats`), generate: d => api.post("/serials/generate", d), addManual: (p, d) => api.post(`/serials/${p}/add`, d), update: (p, s, d) => api.patch(`/serials/${p}/${s}`, d), delete: (p, s) => api.delete(`/serials/${p}/${s}`) };
+export const serials = { validate: s => api.post("/serials/validate", { serial: s }), verify: s => api.get(`/serials/verify/${encodeURIComponent(s)}`, { notify: false }), getBatches: () => api.get("/serials/batches", { adminAuth: true }), getBatch: id => api.get(`/serials/batches/${id}`, { adminAuth: true }), createBatch: d => api.post("/serials/batches", d, { adminAuth: true }), updateBatchDetails: (id, details) => api.patch(`/serials/batches/${id}/details`, { details }, { adminAuth: true }), getAllAdmin: () => api.get("/serials/admin/all"), getByProduct: p => api.get(`/serials/${p}`), getStats: p => api.get(`/serials/${p}/stats`), generate: d => api.post("/serials/generate", d), addManual: (p, d) => api.post(`/serials/${p}/add`, d), update: (p, s, d) => api.patch(`/serials/${p}/${s}`, d), delete: (p, s) => api.delete(`/serials/${p}/${s}`) };
 export const contact = {
   submit: d => api.post("/contact", d),
   getMine: () => api.get("/contact/my"),
