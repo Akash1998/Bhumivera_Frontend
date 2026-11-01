@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { useAuth } from './AuthContext';
 import { wishlist as wishlistApi } from '../services/api';
 import { useToast } from './ToastContext';
+import { haptics } from '../utils/haptics';
 
 const WishlistContext = createContext(null);
 
@@ -53,16 +54,27 @@ export function WishlistProvider({ children }) {
     }
   }, [isCustomerAuthenticated, user, token, fetchWishlistFromAPI]);
 
-  const isWishlisted = useCallback(productId => {
-    return wishlist.some(item => String(productIdOf(item)) === String(productId));
+  const isWishlisted = useCallback(productOrId => {
+    if (productOrId === undefined || productOrId === null) return false;
+    const targetId = typeof productOrId === 'object' ? productIdOf(productOrId) : productOrId;
+    const targetSlug = typeof productOrId === 'object' ? (productOrId.slug || productOrId.seoSlug) : null;
+    return wishlist.some(item => {
+      const itemId = productIdOf(item);
+      if (targetId && itemId && String(itemId) === String(targetId)) return true;
+      if (targetSlug && (item.slug === targetSlug || item.product?.slug === targetSlug)) return true;
+      if (item.legacyIds?.includes(Number(targetId)) || (typeof productOrId === 'object' && productOrId.legacyIds?.includes(Number(itemId)))) return true;
+      return false;
+    });
   }, [wishlist]);
 
   const removeFromWishlist = useCallback(async (productId, { notify = true } = {}) => {
     if (productId === undefined || productId === null) return false;
+    haptics.impactLight();
     if (isCustomerAuthenticated) {
       setWishlist(current => current.filter(item => String(productIdOf(item)) !== String(productId)));
       try {
-        await wishlistApi.remove(productId, { notify });
+        await wishlistApi.remove(productId, { notify: false });
+        if (notify) toast.success('Product removed from your wishlist.');
         return true;
       } catch (requestError) {
         console.error('[WISHLIST_REMOVE]', requestError);
@@ -90,12 +102,14 @@ export function WishlistProvider({ children }) {
       toast.error('This product cannot be saved right now.');
       return false;
     }
-    if (isWishlisted(productId)) return removeFromWishlist(productId);
+    haptics.impactLight();
+    if (isWishlisted(product)) return removeFromWishlist(productId, { notify });
 
     if (isCustomerAuthenticated) {
       try {
-        await wishlistApi.add(productId, { notify });
+        await wishlistApi.add(productId, { notify: false });
         setWishlist(current => current.some(item => String(productIdOf(item)) === String(productId)) ? current : [...current, product]);
+        if (notify) toast.success('Product added to your wishlist.');
         return true;
       } catch (requestError) {
         console.error('[WISHLIST_ADD]', requestError);

@@ -24,6 +24,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { getProductImageUrl } from '../utils/productImageUrl';
 import useScarcitySimulator from '../hooks/useScarcitySimulator';
+import { haptics } from '../utils/haptics';
 
 const splitUrls = value => {
   if (Array.isArray(value)) return value.filter(item => typeof item === 'string');
@@ -594,8 +595,21 @@ export default function ProductDetail() {
               {product.is_featured === 1 && <span className="rounded-full btn-gold-luxury px-3 py-1.5 font-mono text-[9px] uppercase tracking-widest text-white shadow-sm sm:px-4 sm:text-[10px]">Premium Selection</span>}
             </div>
             
-            <button onClick={() => toggleWishlist(product)} aria-label={isWishlisted(product.id) ? 'Remove from saved products' : 'Save product'} aria-pressed={isWishlisted(product.id)} className={`absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 sm:right-6 sm:top-6 sm:h-12 sm:w-12 ${isWishlisted(product.id) ? 'border-[#D4AF37] bg-[#D4AF37] text-[#14291F]' : 'border-[#D4AF37]/30 bg-[#171813]/80 text-[#DFD7C4] hover:border-[#D4AF37] hover:text-[#FCE096]'}`}>
-              <Heart size={18} fill={isWishlisted(product.id) ? 'currentColor' : 'none'} />
+            <button
+              type="button"
+              onClick={() => {
+                haptics.impactLight();
+                toggleWishlist(product);
+              }}
+              aria-label={isWishlisted(product) ? 'Remove from saved products' : 'Save product'}
+              aria-pressed={isWishlisted(product)}
+              className={`absolute right-3 top-3 z-30 flex h-10 w-10 items-center justify-center rounded-full border transition-all duration-300 active:scale-90 pointer-events-auto sm:right-6 sm:top-6 sm:h-12 sm:w-12 ${
+                isWishlisted(product)
+                  ? 'border-[#D4AF37] bg-[#D4AF37] text-[#14291F] shadow-[0_0_15px_rgba(212,175,55,0.6)]'
+                  : 'border-[#D4AF37]/30 bg-[#171813]/80 text-[#DFD7C4] hover:border-[#D4AF37] hover:text-[#FCE096]'
+              }`}
+            >
+              <Heart size={18} fill={isWishlisted(product) ? 'currentColor' : 'none'} />
             </button>
           </div>
         </div>
@@ -702,6 +716,23 @@ export default function ProductDetail() {
                 <span className={`absolute inset-0 flex items-center justify-center gap-2 bg-[#D4AF37] text-[#14291F] font-bold transition-transform duration-300 ${isAdding ? 'translate-y-0' : 'translate-y-12'}`}>
                   {isAdded ? <><CheckCircle2 size={16} /> Added to Bag</> : 'Adding...'}
                 </span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => {
+                  haptics.impactLight();
+                  toggleWishlist(product);
+                }}
+                aria-label={isWishlisted(product) ? 'Remove from wishlist' : 'Add to wishlist'}
+                className={`flex h-12 w-12 sm:h-14 sm:w-14 items-center justify-center rounded-xl border transition-all active:scale-95 shrink-0 shadow-md ${
+                  isWishlisted(product)
+                    ? 'border-[#D4AF37] bg-[#D4AF37] text-[#14291F] shadow-[0_0_12px_rgba(212,175,55,0.4)]'
+                    : 'border-[#D4AF37]/40 bg-[#171813] text-[#DFD7C4] hover:border-[#D4AF37] hover:text-[#FCE096]'
+                }`}
+                title={isWishlisted(product) ? 'Saved in Wishlist' : 'Add to Wishlist'}
+              >
+                <Heart size={20} fill={isWishlisted(product) ? 'currentColor' : 'none'} className={isWishlisted(product) ? 'text-[#14291F]' : 'text-[#D4AF37]'} />
               </button>
 
             </div>
@@ -1247,14 +1278,31 @@ export default function ProductDetail() {
                 <h4 className="truncate text-xs font-medium text-white sm:text-sm">{product.name}</h4>
                 <p className="text-sm font-serif font-bold text-[#fce096] md:text-base">₹{product.discount_price || product.price}</p>
               </div>
-              <button
-                type="button"
-                onClick={handleAddToCart}
-                disabled={isOutOfStock || isAdding}
-                className="btn-gold-luxury flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-[10px] font-bold uppercase tracking-wider text-white transition disabled:cursor-not-allowed disabled:opacity-50 sm:px-6 sm:text-xs"
-              >
-                {isAdding ? (isAdded ? 'Added to Bag' : 'Adding...') : <><Leaf size={15} /> Add to Bag</>}
-              </button>
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={() => {
+                    haptics.impactLight();
+                    toggleWishlist(product);
+                  }}
+                  aria-label={isWishlisted(product) ? 'Remove from wishlist' : 'Save to wishlist'}
+                  className={`flex h-11 w-11 items-center justify-center rounded-xl border transition-all active:scale-90 ${
+                    isWishlisted(product)
+                      ? 'border-[#D4AF37] bg-[#D4AF37] text-[#14291F] shadow-[0_0_10px_rgba(212,175,55,0.4)]'
+                      : 'border-[#D4AF37]/40 bg-[#171813] text-[#DFD7C4]'
+                  }`}
+                >
+                  <Heart size={18} fill={isWishlisted(product) ? 'currentColor' : 'none'} className={isWishlisted(product) ? 'text-[#14291F]' : 'text-[#D4AF37]'} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleAddToCart}
+                  disabled={isOutOfStock || isAdding}
+                  className="btn-gold-luxury flex min-h-11 shrink-0 items-center justify-center gap-2 rounded-xl px-4 text-[10px] font-bold uppercase tracking-wider text-white transition disabled:cursor-not-allowed disabled:opacity-50 sm:px-6 sm:text-xs"
+                >
+                  {isAdding ? (isAdded ? 'Added to Bag' : 'Adding...') : <><Leaf size={15} /> Add to Bag</>}
+                </button>
+              </div>
             </div>
           </Motion.div>
         )}

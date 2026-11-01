@@ -7,6 +7,7 @@ import SEO from '../components/SEO';
 import { useToast } from '../context/ToastContext';
 import { getProductImageUrl } from '../utils/productImageUrl';
 import { FALLBACK_CATALOG_PRODUCTS } from '../data/bhumiveraUniqueData';
+import { haptics } from '../utils/haptics';
 
 function getImageUrl(product, idx = 0) {
   return (
@@ -17,7 +18,7 @@ function getImageUrl(product, idx = 0) {
 
 export default function Wishlist() {
   const toast = useToast();
-  const { wishlist = [], loading, error, toggleWishlist, removeFromWishlist, clearWishlist, refreshWishlist } = useWishlist() || {};
+  const { wishlist = [], loading, error, isWishlisted, toggleWishlist, removeFromWishlist, clearWishlist, refreshWishlist } = useWishlist() || {};
   const { addToCart } = useCart() || {};
 
   const handleMoveToCart = async (product) => {
@@ -191,10 +192,17 @@ export default function Wishlist() {
                     <div className="flex gap-2">
                       <button
                         type="button"
-                        onClick={() => toggleWishlist?.(prod)}
-                        className="btn-silver-luxury inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider text-[#cbd5e1]"
+                        onClick={() => {
+                          haptics.impactLight();
+                          toggleWishlist?.(prod);
+                        }}
+                        className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all ${
+                          isWishlisted?.(prod)
+                            ? 'bg-[#d4af37] text-[#14291F] font-bold'
+                            : 'btn-silver-luxury text-[#cbd5e1]'
+                        }`}
                       >
-                        <Heart size={13} className="text-[#d4af37]" /> Save
+                        <Heart size={13} fill={isWishlisted?.(prod) ? 'currentColor' : 'none'} className={isWishlisted?.(prod) ? 'text-[#14291F]' : 'text-[#d4af37]'} /> {isWishlisted?.(prod) ? 'Saved' : 'Save'}
                       </button>
                       {prod.inStock ? (
                         <button

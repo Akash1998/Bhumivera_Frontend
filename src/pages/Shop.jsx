@@ -20,6 +20,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { getProductImageUrl } from '../utils/productImageUrl';
 import useScarcitySimulator from '../hooks/useScarcitySimulator';
 import ScarcitySimulationBadge from '../components/ScarcitySimulationBadge';
+import { haptics } from '../utils/haptics';
 import {
   FALLBACK_CATALOG_PRODUCTS,
   BHUMIVERA_6_PRODUCTS,
@@ -30,7 +31,7 @@ const ProductCard = ({ product, index, simulation, sampleActivityEnabled }) => {
   const { addToCart } = useCart() || {};
   const { isWishlisted, toggleWishlist } = useWishlist() || {};
   const prodId = product.id || product._id;
-  const wishlisted = typeof isWishlisted === 'function' ? isWishlisted(prodId) : false;
+  const wishlisted = typeof isWishlisted === 'function' ? isWishlisted(product) : false;
   const rating = Number(product.rating) || 0;
   const reviewCount = Number(product.review_count) || 0;
   const simulatedUnitsSoldToday = Number(
@@ -43,47 +44,50 @@ const ProductCard = ({ product, index, simulation, sampleActivityEnabled }) => {
 
   return (
     <div className="group relative flex flex-col two-tone-card border border-[#D4AF37]/20 rounded-2xl sm:rounded-[2rem] overflow-hidden hover:border-[#D4AF37]/60 hover:shadow-2xl transition-all duration-300">
-      <Link to={`/product/${product.slug || prodId}`} className="relative aspect-square sm:aspect-[4/3] overflow-hidden bg-[#102219]">
-        <img
-          src={imgSrc}
-          width="640"
-          height="480"
-          loading="lazy"
-          decoding="async"
-          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-          alt={`${product.name} - ${product.primaryBotanicals || product.phLevel || 'Bhumivera Organics Luxury Botanical Formula'}`}
-          onError={event => {
-            event.currentTarget.onerror = null;
-            event.currentTarget.src = FALLBACK_CATALOG_PRODUCTS[index % FALLBACK_CATALOG_PRODUCTS.length].image_url;
-          }}
-        />
+      <div className="relative aspect-square sm:aspect-[4/3] overflow-hidden bg-[#102219]">
+        <Link to={`/product/${product.slug || prodId}`} className="block w-full h-full">
+          <img
+            src={imgSrc}
+            width="640"
+            height="480"
+            loading="lazy"
+            decoding="async"
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+            alt={`${product.name} - ${product.primaryBotanicals || product.phLevel || 'Bhumivera Organics Luxury Botanical Formula'}`}
+            onError={event => {
+              event.currentTarget.onerror = null;
+              event.currentTarget.src = FALLBACK_CATALOG_PRODUCTS[index % FALLBACK_CATALOG_PRODUCTS.length].image_url;
+            }}
+          />
+        </Link>
         {simulation?.enabled && simulatedUnitsSoldToday > 0 && (
-          <div className="absolute top-2.5 left-2.5 sm:top-4 sm:left-4 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-emerald-950/90 border border-emerald-300/40 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-emerald-100">
+          <div className="pointer-events-none absolute top-2.5 left-2.5 sm:top-4 sm:left-4 z-10 px-2 sm:px-3 py-0.5 sm:py-1 rounded-full bg-emerald-950/90 border border-emerald-300/40 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-wider text-emerald-100">
             Sold Today: {simulatedUnitsSoldToday}
           </div>
         )}
-        <div className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 flex flex-col gap-2">
+        <div className="absolute top-2.5 right-2.5 sm:top-4 sm:right-4 z-20 pointer-events-auto">
           <button
             type="button"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
+              haptics.impactLight();
               toggleWishlist?.(product);
             }}
             aria-label={wishlisted ? `Remove ${product.name} from wishlist` : `Save ${product.name} to wishlist`}
-            className={`p-2 sm:p-3 backdrop-blur-md border rounded-full transition-all shadow-sm ${
+            className={`w-9 h-9 sm:w-10 sm:h-10 backdrop-blur-md border rounded-full flex items-center justify-center transition-all shadow-md active:scale-90 ${
               wishlisted
-                ? 'bg-[#D4AF37] text-[#14291F] border-[#D4AF37]'
-                : 'bg-[#102219]/80 text-[#DFD7C4] border-[#D4AF37]/30 hover:bg-[#D4AF37] hover:text-[#14291F]'
+                ? 'bg-[#D4AF37] text-[#14291F] border-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.6)]'
+                : 'bg-[#102219]/90 text-[#DFD7C4] border-[#D4AF37]/40 hover:bg-[#D4AF37] hover:text-[#14291F]'
             }`}
           >
-            <Heart className="w-3.5 h-3.5 sm:w-4 sm:h-4" fill={wishlisted ? 'currentColor' : 'none'} />
+            <Heart className="w-4 h-4 sm:w-4.5 sm:h-4.5" fill={wishlisted ? 'currentColor' : 'none'} />
           </button>
         </div>
-        <div className="absolute bottom-2 left-2 sm:bottom-3 sm:left-3 px-2 sm:px-3 py-0.5 sm:py-1 bg-[#102219]/90 border border-[#D4AF37]/40 backdrop-blur-md text-[#FCE096] font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-wider rounded-full">
+        <div className="pointer-events-none absolute bottom-2 left-2 sm:bottom-3 sm:left-3 z-10 px-2 sm:px-3 py-0.5 sm:py-1 bg-[#102219]/90 border border-[#D4AF37]/40 backdrop-blur-md text-[#FCE096] font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-wider rounded-full">
           {product.ph_level || product.phLevel || 'pH 5.5'}
         </div>
-      </Link>
+      </div>
 
       <div className="p-3 sm:p-6 flex flex-col flex-1 text-left">
         <div className="flex items-center justify-between text-[9px] sm:text-[10px] font-mono uppercase tracking-widest text-[#FCE096] mb-1 sm:mb-2">

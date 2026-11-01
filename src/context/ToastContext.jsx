@@ -65,7 +65,7 @@ export function ToastProvider({ children }) {
     <ToastContext.Provider value={toast}>
       {children}
       <Toaster position="bottom-right" toastOptions={{ duration: 3000 }} />
-      <div className="fixed bottom-6 right-6 z-[9999] flex flex-col gap-3 pointer-events-none">
+      <div className="fixed bottom-[calc(72px+env(safe-area-inset-bottom,0px))] md:bottom-6 right-4 sm:right-6 left-4 sm:left-auto z-[9999] flex flex-col gap-3 pointer-events-none items-center sm:items-end">
         {toasts.map(t => (
           <div
             key={t.id}

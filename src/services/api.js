@@ -513,7 +513,7 @@ export const payments = {
   verifyPayment: data => api.post('/verify-payment', data, { notify: false }),
 };
 export const addresses = { getAll: () => api.get("/addresses"), get: () => api.get("/addresses"), create: d => api.post("/addresses", d), update: (id, d) => api.put(`/addresses/${id}`, d), delete: id => api.delete(`/addresses/${id}`), setDefault: id => api.patch(`/addresses/${id}/default`) };
-export const wishlist = { get: () => api.get("/wishlist"), add: (p, options) => api.post("/wishlist", { productId: p }, options), remove: (p, options) => api.delete(`/wishlist/${p}`, options) };
+export const wishlist = { get: () => api.get("/wishlist"), add: (p, options) => api.post("/wishlist", { productId: p, product_id: p }, options), remove: (p, options) => api.delete(`/wishlist/${p}`, options) };
 export const coupons = { getPublicActive: () => api.get("/coupons/public/active"), getMine: () => api.get("/coupons/mine"), validate: (c, orderTotal = 0, extra = {}) => api.post("/coupons/validate", { code: c, orderTotal, ...extra }), getAllAdmin: () => api.get("/coupons"), analytics: () => api.get("/coupons/admin/analytics"), redemptions: id => api.get(`/coupons/${id}/redemptions`), toggleStatus: (id, status) => api.patch(`/coupons/${id}/status`, status ? { status } : {}), bulkGenerate: d => api.post("/coupons/bulk-generate", d), create: d => api.post("/coupons", d), update: (id, d) => api.put(`/coupons/${id}`, d), delete: id => api.delete(`/coupons/${id}`) };
 export const reviews = {
   getByProduct: productId => api.get(`/reviews/product/${productId}`),
