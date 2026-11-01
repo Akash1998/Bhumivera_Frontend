@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Link, useSearchParams } from 'react-router-dom';
 import {
   AlertCircle,
@@ -193,13 +194,16 @@ export default function ProductVerification() {
   }, [handleScannedRawValue, scannerOpen, stopCameraScanner]);
 
   useEffect(() => {
+    if (searchParams.get('scan') === '1' || searchParams.get('scan') === 'true') {
+      setScannerOpen(true);
+    }
     if (urlGiftCode) {
       setGiftCode(urlGiftCode);
       verifyGift(urlGiftCode, urlGiftSerial);
     } else if (urlSerial) {
       verifySerialCode(urlSerial);
     }
-  }, [urlGiftCode, urlGiftSerial, urlSerial, verifyGift, verifySerialCode]);
+  }, [searchParams, urlGiftCode, urlGiftSerial, urlSerial, verifyGift, verifySerialCode]);
 
   const handleGiftSubmit = (event) => {
     event.preventDefault();
@@ -283,15 +287,21 @@ export default function ProductVerification() {
               </button>
             </div>
 
-            {scannerOpen && (
-              <div className="mx-auto mt-5 max-w-lg rounded-2xl border-2 border-[#d4af37] bg-black p-4">
+            {scannerOpen && createPortal(
+              <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black p-4">
+              <div className="w-full max-w-lg rounded-2xl border-2 border-[#d4af37] bg-black p-4">
                 <div className="relative aspect-video overflow-hidden rounded-xl">
                   <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" style={{ filter: 'none', backdropFilter: 'none' }} />
                   <div className="pointer-events-none absolute inset-6 rounded-xl border-2 border-dashed border-[#fce096]" />
                 </div>
                 <p className="mt-3 text-xs text-[#fce096]">Hold the QR code steady inside the frame.</p>
                 {scannerError && <p role="alert" className="mt-2 text-sm text-amber-300">{scannerError}</p>}
+                <button type="button" onClick={stopCameraScanner} className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[#d4af37] px-5 py-2 text-xs font-bold uppercase tracking-widest text-[#fce096]">
+                  <X size={14} /> Close Camera Scanner
+                </button>
               </div>
+              </div>,
+              document.body
             )}
             {scannerError && !scannerOpen && (
               <p role="alert" className="mx-auto mt-4 max-w-xl text-sm text-amber-300">{scannerError}</p>

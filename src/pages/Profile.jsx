@@ -1554,7 +1554,7 @@ export default function Profile() {
                     </div>
                   )}
                   <Link
-                    to={`/verify?qr=${encodeURIComponent(BOX_GIFT_CODE)}`}
+                    to={`/verify?scan=1&qr=${encodeURIComponent(BOX_GIFT_CODE)}`}
                     className="mt-4 inline-flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-[#fce096] underline underline-offset-4 hover:text-white"
                   >
                     <Camera className="h-4 w-4" /> Scan box QR with camera
