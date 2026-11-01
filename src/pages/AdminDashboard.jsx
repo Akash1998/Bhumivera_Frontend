@@ -217,7 +217,7 @@ export default function AdminDashboard() {
         { id: 'support', label: 'Bhumivera Client Concierge' },
         { id: 'contacts', label: 'Contact & Inquiries' },
         { id: 'ewarranty', label: 'E-Warranty Registry' },
-        { id: 'authenticity', label: 'Bottle Serial QR & Batches' },
+        { id: 'authenticity', label: 'QR Codes & Genuinity Panel' },
         { id: 'welcome-cards', label: 'Welcome Card Gifts' },
         { id: 'support-agents', label: 'Support Staff Roster' },
       ],
@@ -263,6 +263,7 @@ export default function AdminDashboard() {
 
   const quickTabs = [
     'overview',
+    'authenticity',
     'orders',
     'gst',
     'products',
