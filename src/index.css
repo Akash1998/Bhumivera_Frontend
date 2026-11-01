@@ -341,42 +341,53 @@ body {
   line-height: 1.4;
 }
 
-html.native-app body {
+html.native-app body,
+html.pwa-standalone body {
   overscroll-behavior-y: none;
 }
 
-html.native-app .site-shell {
+html.native-app .site-shell,
+html.pwa-standalone .site-shell {
   min-height: 100dvh;
 }
 
-html.native-app #main-content {
-  padding-bottom: calc(68px + var(--sab));
+html.native-app #main-content,
+html.pwa-standalone #main-content {
+  padding-bottom: calc(72px + var(--sab));
 }
 
 @media (max-width: 767px) {
   #main-content {
-    padding-bottom: calc(84px + var(--sab));
+    padding-bottom: calc(76px + var(--sab));
   }
 
-  /* Remove expensive GPU blur effects on phones */
-  .backdrop-blur-sm,
-  .backdrop-blur-md,
-  .backdrop-blur,
-  .backdrop-blur-lg,
-  .backdrop-blur-xl {
-    -webkit-backdrop-filter: none !important;
-    backdrop-filter: none !important;
+  /* Hide the lengthy 400-line desktop footer on mobile screens */
+  .site-shell > footer {
+    display: none !important;
+  }
+
+  /* Smooth native-feeling scrolling & tap response */
+  body, #main-content {
+    -webkit-overflow-scrolling: touch;
+    overscroll-behavior-y: contain;
+  }
+
+  button, a {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
   }
 }
 
-html.native-app .mobile-bottom-nav {
+html.native-app .mobile-bottom-nav,
+html.pwa-standalone .mobile-bottom-nav {
   display: flex !important;
-  height: calc(68px + var(--sab));
+  height: calc(64px + var(--sab));
   padding-bottom: var(--sab);
 }
 
-html.native-app .site-shell > footer {
-  display: none;
+html.native-app .site-shell > footer,
+html.pwa-standalone .site-shell > footer {
+  display: none !important;
 }
 
 .mini-cart-overlay {

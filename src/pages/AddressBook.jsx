@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { useToast } from '../context/ToastContext';
 import { addresses as addressesApi } from '../services/api';
 import { getCurrentCoordinates, getLocationErrorMessage, hasCoordinates, reverseGeocodeCoordinates } from '../utils/geolocation';
-import { MapPin, Plus, Edit2, Trash2, Star, Home, Building, Map, X, CheckCircle2, Navigation, ExternalLink, Copy, Check, Sparkles } from 'lucide-react';
+import { MapPin, Plus, Edit2, Trash2, Star, Home, Building, Map, X, CheckCircle2, Navigation, ExternalLink, Copy, Check, Sparkles, ArrowLeft } from 'lucide-react';
 
 const defaultForm = { 
   label: 'Home', 
@@ -36,6 +37,10 @@ const sameAddressId = (first, second) => String(first) === String(second);
 export default function AddressBook() {
   const { user } = useAuth();
   const toast = useToast();
+  const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
+  const fromCheckout = searchParams.get('from') === 'checkout';
+
   const [addresses, setAddresses] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -185,6 +190,10 @@ export default function AddressBook() {
       setShowForm(false);
       setForm(defaultForm);
       setEditId(null);
+      if (fromCheckout) {
+        toast.success('Address saved! Returning to checkout...');
+        setTimeout(() => navigate('/checkout'), 400);
+      }
     } catch (err) {
       console.error('[ADDRESS_SAVE_ERROR]', err);
       const message = err.response?.data?.message || 'Unable to save this address. Please try again.';
@@ -282,8 +291,17 @@ export default function AddressBook() {
   };
 
   return (
-    <div className="min-h-screen bg-[#070a0e] text-[#e2e8f0] py-16 px-4 sm:px-6 md:px-8 font-sans">
+    <div className="min-h-screen bg-[#070a0e] text-[#e2e8f0] py-8 sm:py-16 px-4 sm:px-6 md:px-8 font-sans">
       <div className="max-w-4xl mx-auto">
+        {fromCheckout && (
+          <button
+            type="button"
+            onClick={() => navigate('/checkout')}
+            className="btn-silver-luxury px-4 py-2 rounded-xl text-xs font-bold uppercase tracking-wider inline-flex items-center gap-1.5 mb-5 active:scale-95 transition-transform"
+          >
+            <ArrowLeft className="w-4 h-4 text-[#d4af37]" /> Back to Checkout
+          </button>
+        )}
         <div className="flex flex-col sm:flex-row sm:justify-between sm:items-end mb-8 gap-4 border-b border-[#d4af37]/20 pb-6">
           <div>
             <span className="font-sub-gold text-[10px] uppercase tracking-[0.24em] font-semibold block">

@@ -61,7 +61,7 @@ export default function About() {
   }, [location]);
 
   return (
-    <main className="bg-[#070a0e] text-[#e2e8f0] font-sans pb-28 pt-10 selection:bg-[#d4af37]/30 selection:text-white">
+    <main className="bg-[#070a0e] text-[#e2e8f0] font-sans pb-28 pt-20 sm:pt-24 selection:bg-[#d4af37]/30 selection:text-white">
       <SEO
         title="Bhumivera | The Transparent Maison — Rooted in Heritage Since 2016"
         description="Discover Bhumivera (bhumivera.com). Founded on a decade of family manufacturing heritage with MPG E-Business (Est. 2016), delivering 100% active, milligram-disclosed cold-pressed botanical skincare."
@@ -75,7 +75,7 @@ export default function About() {
       />
 
       {/* 1. HERO SECTION */}
-      <section className="relative min-h-[70vh] flex items-center justify-center overflow-hidden bg-[#070a0e] text-white py-24 px-6">
+      <section className="relative min-h-[60vh] sm:min-h-[70vh] flex items-center justify-center overflow-hidden bg-[#070a0e] text-white py-12 sm:py-24 px-4 sm:px-6">
         <div className="absolute inset-0 z-0 opacity-25">
           <img
             src={ABOUT_PAGE_DATA.heroImage}
@@ -94,7 +94,7 @@ export default function About() {
               MPG E-Business Heritage (<time dateTime="2016-09-22">Est. Sept 22, 2016</time>) · Bhumivera Flagship (<time dateTime="2026-08-04">Inc. Aug 4, 2026</time>)
             </span>
           </div>
-          <h1 className="text-4xl sm:text-6xl md:text-7xl font-serif tracking-tight mb-4 leading-tight">
+          <h1 className="text-2xl sm:text-6xl md:text-7xl font-serif tracking-tight mb-3 sm:mb-4 leading-tight">
             <span className="font-headline-gold">Bhumivera: The Transparent Maison,</span>{' '}
             <span className="font-headline-silver italic font-light">Rooted in Heritage Since 2016.</span>
           </h1>

@@ -35,16 +35,16 @@ export default function LabProtocol() {
   const [openQuestion, setOpenQuestion] = useState('');
 
   return (
-    <main className="min-h-screen bg-[#14291F] pt-24 text-[#FAF7F2] font-sans">
+    <main className="min-h-screen bg-[#14291F] pt-20 sm:pt-24 text-[#FAF7F2] font-sans">
       <SEO
         title="Inside Our Lab & Dispatch Protocol | Bhumivera"
         description="Cold-pressed extraction, patch-test protocol, tamper-evident dispatch and the public impact ledger behind every Bhumivera bottle."
         route="/lab"
       />
 
-      <section className="mx-auto max-w-7xl px-5 py-10 sm:px-10">
-        <p className="font-sub-gold text-xs font-bold uppercase tracking-[0.26em]">Real-Life Quality Benchmarks</p>
-        <h1 className="mt-2 font-serif text-3xl font-bold sm:text-5xl">
+      <section className="mx-auto max-w-7xl px-4 sm:px-10 py-6 sm:py-10">
+        <p className="font-sub-gold text-[10px] sm:text-xs font-bold uppercase tracking-[0.2em] sm:tracking-[0.26em]">Real-Life Quality Benchmarks</p>
+        <h1 className="mt-1 sm:mt-2 font-serif text-2xl font-bold sm:text-5xl">
           <span className="font-headline-gold">Inside Our Lab</span>{' '}
           <span className="font-headline-silver">&amp; Dispatch Protocol</span>
         </h1>

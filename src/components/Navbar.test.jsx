@@ -13,10 +13,6 @@ vi.mock('../context/CartContext', () => ({
   useCart: () => ({ cartItems: [], setIsCartOpen: vi.fn() }),
 }));
 
-vi.mock('../hooks/useVoiceSearch', () => ({
-  useVoiceSearch: () => ({ isListening: false, startListening: vi.fn() }),
-}));
-
 describe('Navbar', () => {
   afterEach(cleanup);
 
@@ -65,7 +61,6 @@ describe('Navbar', () => {
       </MemoryRouter>
     );
 
-    expect(screen.getByRole('button', { name: 'Voice Search' }).className).toContain('h-11 w-11');
     expect(screen.getByRole('button', { name: 'Search' }).className).toContain('min-h-11');
   });
 });

@@ -2,6 +2,7 @@
 import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { MemoryRouter } from 'react-router-dom';
 import AddressBook from './AddressBook';
 
 const mocks = vi.hoisted(() => ({
@@ -35,7 +36,11 @@ describe('AddressBook', () => {
       response: { data: { message: 'Address service unavailable.' } },
     });
 
-    render(<AddressBook />);
+    render(
+      <MemoryRouter>
+        <AddressBook />
+      </MemoryRouter>
+    );
     fireEvent.click(await screen.findByRole('button', { name: /Add your first address/i }));
 
     fireEvent.change(screen.getByLabelText(/Full Name/i), { target: { value: 'Test Customer' } });
@@ -55,7 +60,11 @@ describe('AddressBook', () => {
   it('saves guest addresses locally when no account is signed in', async () => {
     mocks.useAuth.mockReturnValue({ user: null });
 
-    render(<AddressBook />);
+    render(
+      <MemoryRouter>
+        <AddressBook />
+      </MemoryRouter>
+    );
     fireEvent.click(await screen.findByRole('button', { name: /Add your first address/i }));
 
     fireEvent.change(screen.getByLabelText(/Full Name/i), { target: { value: 'Guest Customer' } });

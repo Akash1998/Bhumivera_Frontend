@@ -225,7 +225,7 @@ const Login = () => {
   }
 
   return (
-    <div className="auth-luxury min-h-screen bg-[#FDFBF7] flex items-center justify-center p-4 font-sans relative overflow-hidden">
+    <div className="auth-luxury min-h-screen bg-[#FDFBF7] flex items-center justify-center p-4 pt-20 pb-24 font-sans relative overflow-hidden">
       <div className="absolute top-0 left-0 w-96 h-96 bg-[#0B2419] opacity-5 rounded-full -translate-x-1/2 -translate-y-1/2 blur-3xl"></div>
       <div className="absolute bottom-0 right-0 w-96 h-96 bg-[#D4AF37] opacity-5 rounded-full translate-x-1/3 translate-y-1/3 blur-3xl"></div>
       

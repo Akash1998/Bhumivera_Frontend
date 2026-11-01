@@ -148,17 +148,17 @@ export default function PremiumHome() {
         </div>
         <div className="absolute inset-0 -z-10 bg-gradient-to-r from-[#14291F] via-[#14291F]/88 to-[#14291F]/45" />
 
-        <div className="mx-auto flex min-h-[80svh] max-w-7xl flex-col justify-center px-6 pb-14 pt-24 sm:px-10 lg:pb-20">
+        <div className="mx-auto flex min-h-[75svh] sm:min-h-[80svh] max-w-7xl flex-col justify-center px-4 pb-10 pt-20 sm:px-10 sm:pb-14 sm:pt-24 lg:pb-20">
           <div
             role="region"
             aria-label="Bhumivera brand and formulation standards"
-            className="mb-1 w-fit max-w-3xl rounded-2xl border border-white/15 bg-[#102219]/45 px-4 py-3 shadow-lg backdrop-blur-md sm:px-5"
+            className="mb-1 w-fit max-w-3xl rounded-xl sm:rounded-2xl border border-white/15 bg-[#102219]/60 px-3.5 py-2.5 sm:px-5 sm:py-3 shadow-lg backdrop-blur-md"
           >
-            <p className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FCE096] sm:text-xs">
-              <Leaf size={14} className="shrink-0 text-[#D4AF37]" />
+            <p className="flex items-center gap-1.5 sm:gap-2 text-[9px] font-bold uppercase tracking-[0.18em] sm:tracking-[0.2em] text-[#FCE096] sm:text-xs">
+              <Leaf size={13} className="shrink-0 text-[#D4AF37]" />
               Bhumivera · The Transparent Maison
             </p>
-            <p className="mt-1.5 flex flex-wrap items-center gap-x-2 gap-y-1 text-[10px] font-medium text-[#DFD7C4] sm:text-xs">
+            <p className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[9px] font-medium text-[#DFD7C4] sm:text-xs">
               <span>Rooted in 2016 heritage</span><span aria-hidden="true" className="text-[#D4AF37]">·</span>
               <span>Fully disclosed actives</span><span aria-hidden="true" className="text-[#D4AF37]">·</span>
               <span>Cold-pressed below 28°C</span><span aria-hidden="true" className="text-[#D4AF37]">·</span>
@@ -166,63 +166,63 @@ export default function PremiumHome() {
             </p>
           </div>
 
-          <h1 className="mt-5 max-w-4xl font-serif text-4xl font-bold leading-[1.08] tracking-tight sm:text-6xl lg:text-7xl">
+          <h1 className="mt-3 sm:mt-5 max-w-4xl font-serif text-2xl sm:text-6xl lg:text-7xl font-bold leading-tight sm:leading-[1.08] tracking-tight">
             <span className="font-headline-gold">Ayurveda With Clinical Actives.</span>{' '}
             <span className="font-headline-silver">Every Milligram Disclosed.</span>
           </h1>
-          <div className="gold-hairline my-5 max-w-xs" />
-          <p className="max-w-2xl text-sm font-light leading-relaxed text-[#DFD7C4] sm:text-base">
+          <div className="gold-hairline my-3 sm:my-5 max-w-xs" />
+          <p className="max-w-2xl text-xs sm:text-base font-light leading-relaxed text-[#DFD7C4]">
             Rooted in a family herbal tradition established in 2016, Bhumivera pairs cold-pressed Indian botanicals with modern actives—fully disclosed, milligram by milligram, and calibrated for thoughtful daily care.
           </p>
-          <div className="mt-8 flex flex-wrap items-center gap-4">
-            <Link to="/shop" className="btn-gold-luxury inline-flex min-h-12 items-center gap-2.5 rounded-full px-8 py-3.5 text-xs font-bold uppercase tracking-[0.16em]">
-              Explore the Collection <ArrowRight size={15} />
+          <div className="mt-6 sm:mt-8 flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+            <Link to="/shop" className="btn-gold-luxury inline-flex min-h-11 sm:min-h-12 items-center justify-center gap-2 rounded-full px-6 sm:px-8 py-3 sm:py-3.5 text-xs font-bold uppercase tracking-[0.14em] sm:tracking-[0.16em]">
+              Explore the Collection <ArrowRight size={14} />
             </Link>
-            <Link to="/about" className="btn-silver-luxury inline-flex min-h-12 items-center gap-2.5 rounded-full px-6 py-3.5 text-xs font-semibold uppercase tracking-wider">
-              <Award size={16} className="text-[#D4AF37]" /> Our Heritage
+            <Link to="/about" className="btn-silver-luxury inline-flex min-h-11 sm:min-h-12 items-center justify-center gap-2 rounded-full px-5 sm:px-6 py-3 sm:py-3.5 text-xs font-semibold uppercase tracking-wider">
+              <Award size={15} className="text-[#D4AF37]" /> Our Heritage
             </Link>
           </div>
         </div>
       </section>
 
-      <section className="mx-auto max-w-7xl px-5 py-12 sm:px-10">
+      <section className="mx-auto max-w-7xl px-4 py-8 sm:px-10 sm:py-12">
         {/* 4 PILLAR TILES */}
-        <div className="grid grid-cols-2 gap-3 sm:gap-5 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-2.5 sm:gap-5 lg:grid-cols-4">
           {tiles.map((tile) => (
             <Link
               key={tile.to}
               to={tile.to}
-              className="flex min-h-[112px] flex-col justify-between rounded-2xl border border-[#244A38] bg-[#102219] p-4 transition hover:border-[#D4AF37]/60 active:scale-[0.98]"
+              className="flex min-h-[96px] sm:min-h-[112px] flex-col justify-between rounded-xl sm:rounded-2xl border border-[#244A38] bg-[#102219] p-3 sm:p-4 transition hover:border-[#D4AF37]/60 active:scale-[0.98]"
             >
-              <tile.icon size={22} className="text-[#D4AF37]" />
+              <tile.icon size={20} className="text-[#D4AF37]" />
               <div>
-                <p className="font-serif text-base font-bold">{tile.label}</p>
-                <p className="text-[11px] text-[#9BB0A5]">{tile.note}</p>
+                <p className="font-serif text-xs sm:text-base font-bold leading-tight">{tile.label}</p>
+                <p className="text-[10px] sm:text-[11px] text-[#9BB0A5] line-clamp-1 mt-0.5">{tile.note}</p>
               </div>
             </Link>
           ))}
         </div>
 
         {/* GENUINE BOTTLE SERIAL & QR VERIFICATION CALLOUT */}
-        <div id="live-batch-coa" className="mt-12 rounded-3xl border border-[#D4AF37]/45 bg-gradient-to-br from-[#102219] via-[#0d1c14] to-[#070a0e] p-6 sm:p-9 shadow-2xl">
-          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-6">
+        <div id="live-batch-coa" className="mt-8 sm:mt-12 rounded-2xl sm:rounded-3xl border border-[#D4AF37]/45 bg-gradient-to-br from-[#102219] via-[#0d1c14] to-[#070a0e] p-4 sm:p-9 shadow-2xl">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 sm:gap-6">
             <div className="max-w-2xl">
-              <span className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/40 bg-[#14291F] px-3.5 py-1 font-mono text-[10px] font-bold uppercase tracking-widest text-[#FCE096]">
-                <ShieldCheck size={14} className="text-[#D4AF37]" /> Authentic Genuinity Registry
+              <span className="inline-flex items-center gap-1.5 sm:gap-2 rounded-full border border-[#D4AF37]/40 bg-[#14291F] px-3 py-0.5 sm:px-3.5 sm:py-1 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-[#FCE096]">
+                <ShieldCheck size={13} className="text-[#D4AF37]" /> Authentic Genuinity Registry
               </span>
-              <h2 className="mt-3 font-serif text-2xl font-bold sm:text-3xl text-white">
+              <h2 className="mt-2 sm:mt-3 font-serif text-lg sm:text-3xl font-bold text-white">
                 <span className="font-headline-gold">Verify Bottle Genuinity</span>{' '}
                 <span className="font-headline-silver">&amp; QR Certificate</span>
               </h2>
-              <p className="mt-2 text-xs sm:text-sm leading-relaxed text-[#DFD7C4]">
+              <p className="mt-1.5 sm:mt-2 text-xs sm:text-sm leading-relaxed text-[#DFD7C4]">
                 Received a Bhumivera package? Every genuine bottle features a unique serial number and QR code. Scan the QR code on your product box with your phone or enter your serial number manually to inspect verified lab assay details, calibrated pH, and cold-pressed extraction records.
               </p>
             </div>
             <Link
               to="/verify"
-              className="btn-gold-luxury inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-7 py-4 text-xs font-bold uppercase tracking-wider text-white shadow-xl hover:brightness-110"
+              className="btn-gold-luxury inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-xl px-5 sm:px-7 py-3 sm:py-4 text-xs font-bold uppercase tracking-wider text-white shadow-xl hover:brightness-110 w-full sm:w-auto"
             >
-              <ShieldCheck size={16} /> Open Verification Portal
+              <ShieldCheck size={15} /> Open Verification Portal
             </Link>
           </div>
         </div>

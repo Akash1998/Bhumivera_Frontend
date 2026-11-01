@@ -344,7 +344,7 @@ export default function ProductVerification() {
   const productImage = Array.isArray(productData?.images) ? productData.images[0] : null;
 
   return (
-    <main className="min-h-screen bg-[#070a0e] pb-28 pt-10 font-sans text-[#e2e8f0] selection:bg-[#d4af37]/30 selection:text-white">
+    <main className="min-h-screen bg-[#070a0e] pb-28 pt-20 sm:pt-24 font-sans text-[#e2e8f0] selection:bg-[#d4af37]/30 selection:text-white">
       <SEO
         title="Bottle Serial & Patron Gift Verification | Bhumivera"
         description="Scan a Bhumivera box QR code or enter a bottle serial to verify the batch record and check your one-time delivered-order gift."

@@ -99,7 +99,7 @@ export default function OrderSuccess() {
   const contribution = Number(order?.impact_amount || 0);
 
   return (
-    <main className="min-h-[85svh] bg-[#070a0e] px-4 sm:px-6 lg:px-8 py-16 md:py-24 text-[#e2e8f0] font-sans">
+    <main className="min-h-[85svh] bg-[#070a0e] px-4 sm:px-6 lg:px-8 pt-20 sm:pt-24 pb-16 font-sans text-[#e2e8f0]">
       <div className="mx-auto max-w-4xl">
         <div className="flex items-start gap-5 border-b border-[#d4af37]/20 pb-8">
           <span className="flex h-13 w-13 shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-[#d4af37] via-[#fce096] to-[#b38728] text-[#070a0e] shadow-lg shadow-[#d4af37]/20">

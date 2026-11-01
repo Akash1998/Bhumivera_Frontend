@@ -199,7 +199,7 @@ export default function Impact() {
         <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-t from-[#070a0e] via-[#070a0e]/85 to-[#070a0e]/50" />
         <div className="pointer-events-none absolute inset-0 -z-10 bg-gradient-to-r from-[#070a0e]/95 via-[#070a0e]/80 to-transparent" />
 
-        <div className="mx-auto flex min-h-[75svh] max-w-7xl flex-col justify-end px-6 pb-14 pt-32 md:pb-20">
+        <div className="mx-auto flex min-h-[75svh] max-w-7xl flex-col justify-end px-4 sm:px-6 pb-10 sm:pb-14 pt-20 sm:pt-32 md:pb-20">
           <div className="flex flex-wrap items-center gap-2 mb-5">
             <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-[#102219]/90 backdrop-blur-md px-3.5 py-1 text-[10px] font-mono tracking-widest uppercase text-emerald-300">
               <Leaf size={12} className="text-emerald-400" /> Rooted in West Bengal · Starting From Our Own Towns
@@ -216,7 +216,7 @@ export default function Impact() {
             </span>
           </div>
 
-          <h1 className="max-w-4xl font-serif text-4xl sm:text-6xl md:text-7xl leading-[1.05] text-white">
+          <h1 className="max-w-4xl font-serif text-2xl sm:text-6xl md:text-7xl leading-[1.05] text-white">
             <span className="font-headline-gold">Real Compassion.</span> <br className="hidden sm:inline" />
             <span className="font-headline-silver">Zero Fake Numbers.</span>
           </h1>

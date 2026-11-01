@@ -613,7 +613,7 @@ export default function ProductDetail() {
                )}
             </div>
             
-            <h1 className="mb-3 font-serif font-bold text-[2rem] leading-[1.08] text-white sm:text-4xl md:mb-5 md:text-5xl">
+            <h1 className="mb-2 font-serif font-bold text-2xl sm:text-4xl md:text-5xl leading-tight text-white">
               {product.name}
             </h1>
 
@@ -1237,7 +1237,7 @@ export default function ProductDetail() {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 24 }}
             transition={{ duration: 0.2 }}
-            className="pointer-events-none fixed inset-x-0 bottom-0 z-50 px-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5"
+            className="pointer-events-none fixed inset-x-0 bottom-[calc(4.25rem+env(safe-area-inset-bottom))] md:bottom-0 z-40 px-3 pb-1 md:pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5"
           >
             <div className="pointer-events-auto mx-auto flex max-w-xl items-center gap-3 rounded-2xl two-tone-panel-gold border border-[#d4af37]/40 p-2.5 shadow-[0_10px_40px_rgba(0,0,0,0.8)] backdrop-blur-xl sm:gap-4 sm:p-3 md:max-w-4xl">
               <div className="h-11 w-11 shrink-0 overflow-hidden rounded-xl border border-[#d4af37]/30 bg-[#070a0e] sm:h-12 sm:w-12">

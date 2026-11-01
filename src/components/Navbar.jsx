@@ -4,13 +4,12 @@ import { AnimatePresence, MotionConfig, motion as Motion } from 'framer-motion';
 import { 
   ShoppingCart, User, Search, Menu, X, Sparkles, Heart,
   ChevronDown, Package, Gift, GitCompareArrows, ArrowRight,
-  MapPin, Activity, Droplets, Leaf, Mic, FlaskConical, Compass, Download,
+  MapPin, Activity, Droplets, Leaf, FlaskConical, Compass, Download,
   HeartHandshake, Truck, CircleUserRound, BadgePercent, ShieldCheck, QrCode
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
 import { search } from '../services/api';
-import { useVoiceSearch } from '../hooks/useVoiceSearch';
 import { getProductImageUrl } from '../utils/productImageUrl';
 
 export default function Navbar() {
@@ -20,10 +19,6 @@ export default function Navbar() {
   const cartCount = cartItems.reduce((count, item) => count + (Number(item.quantity) || 1), 0);
   const [isMenuOpen, setMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const { isListening, voiceError, startListening } = useVoiceSearch((text) => {
-    setSearchQuery(text);
-    navigate(`/shop?q=${encodeURIComponent(text)}`);
-  });
   const [suggestions, setSuggestions] = useState([]);
   const [isAiPowered, setIsAiPowered] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
@@ -159,12 +154,6 @@ export default function Navbar() {
     }
   };
 
-  useEffect(() => {
-    if (voiceError) {
-      console.error('[VOICE_SEARCH_ERROR]', voiceError);
-    }
-  }, [voiceError]);
-
   return (
     <>
       <div className="bg-[#102219] text-[#FAF7F2] py-2 px-6 text-[10px] font-mono uppercase tracking-widest hidden md:block border-b border-[#244A38]/40">
@@ -236,19 +225,8 @@ export default function Navbar() {
                 onFocus={() => { if(searchQuery.length > 2) setShowSearchDropdown(true); }}
                 placeholder={t('search_placeholder', 'Discover skincare, hair care, botanical ingredients, and daily rituals...')}
                 aria-label="Search skincare products"
-                className="w-full rounded-full border border-[#D4AF37]/25 bg-[#1C382B]/60 backdrop-blur-md py-3.5 pl-12 pr-44 text-sm text-white shadow-inner outline-none transition-all placeholder:text-[#9BB0A5] focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40"
+                className="w-full rounded-full border border-[#D4AF37]/25 bg-[#1C382B]/60 backdrop-blur-md py-3.5 pl-12 pr-28 text-sm text-white shadow-inner outline-none transition-all placeholder:text-[#9BB0A5] focus:border-[#D4AF37] focus:ring-1 focus:ring-[#D4AF37]/40"
               />
-              <div className="absolute right-32 top-1/2 -translate-y-1/2 flex items-center gap-1.5 text-[#d4af37]">
-                <button
-                  type="button"
-                  onClick={startListening}
-                  title={voiceError || 'Voice Search'}
-                  aria-label={voiceError || 'Voice Search'}
-                  className={`inline-flex h-11 w-11 items-center justify-center rounded-full hover:bg-white/10 transition ${isListening ? 'text-rose-400 animate-pulse' : 'text-[#d4af37]'}`}
-                >
-                  <Mic size={16} />
-                </button>
-              </div>
               <button type="submit" aria-label="Search" className="absolute right-2 top-1/2 -translate-y-1/2 min-h-11 rounded-full btn-gold-luxury px-5 py-2 text-[10px] font-bold uppercase tracking-widest opacity-0 transition-opacity group-focus-within:opacity-100 hover:brightness-110">
                 {t('search_action', 'Discover')}
               </button>
@@ -374,18 +352,6 @@ export default function Navbar() {
               </div>
             )}
           </div>
-          <button
-            type="button"
-            onClick={startListening}
-            title={voiceError || (isListening ? 'Listening...' : 'Search by voice')}
-            aria-label={isListening ? 'Listening for voice search' : 'Search by voice'}
-            aria-pressed={isListening}
-            className={`inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-[#d4af37]/40 bg-[#1C382B] transition ${
-              isListening ? 'animate-pulse text-rose-400' : 'text-[#d4af37] hover:bg-[#244A38]'
-            }`}
-          >
-            <Mic size={17} />
-          </button>
           <button
             type="button"
             onClick={openAiConcierge}

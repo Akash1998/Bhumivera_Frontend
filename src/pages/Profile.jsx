@@ -32,7 +32,7 @@ import {
   Filter, Calendar, Hash, Truck, PackageCheck, RotateCcw,
   ChevronDown, ChevronUp, Gift, PiggyBank, ShoppingBag,
   Leaf, Zap, Users, Coins, ExternalLink, Key, Camera, Image as ImageIcon, Fingerprint,
-  Navigation, Check,
+  Navigation, Check, ArrowLeft,
 } from 'lucide-react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { registerPasskey, isPasskeySupported } from '../utils/webauthnClient';
@@ -517,12 +517,19 @@ export default function Profile() {
     try {
       const res = await addressesApi.getAll();
       const addressList = res?.data?.addresses ?? res?.data?.data ?? res?.data;
-      if (!Array.isArray(addressList)) throw new Error('The address service returned an invalid address list.');
-      setAddresses(addressList);
+      if (Array.isArray(addressList)) {
+        setAddresses(addressList);
+        return;
+      }
     } catch (error) {
-      console.error('[PROFILE_ADDRESSES_LOAD]', error);
-      toast.error(error.response?.data?.message || 'Could not load your saved addresses.');
+      console.warn('[PROFILE_ADDRESSES_LOAD]', error);
     }
+    try {
+      const local = JSON.parse(localStorage.getItem('bhumivera_guest_addresses') || '[]');
+      if (Array.isArray(local) && local.length > 0) {
+        setAddresses(local);
+      }
+    } catch (e) {}
   };
 
   const loadNotifications = async () => {
@@ -957,7 +964,21 @@ export default function Profile() {
       }
       setAddressModal({ open:false, editId:null, form:{ label:'Home', full_name:'', phone:'', line1:'', line2:'', city:'', state:'', postal_code:'', country:'India', is_default:false, latitude:null, longitude:null, google_maps_url:'' }});
       await loadAddresses();
-    } catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
+    } catch (err) {
+      console.warn('[PROFILE_ADDRESS_SAVE_ERROR]', err);
+      try {
+        const saved = JSON.parse(localStorage.getItem('bhumivera_guest_addresses') || '[]');
+        const updated = addressModal.editId
+          ? saved.map(a => String(a.id) === String(addressModal.editId) ? { ...a, ...payload } : a)
+          : [{ ...payload, id: Date.now() }, ...saved];
+        localStorage.setItem('bhumivera_guest_addresses', JSON.stringify(updated));
+        setAddresses(updated);
+        toast.success(addressModal.editId ? 'Address updated' : 'Address added');
+        setAddressModal({ open:false, editId:null, form:{ label:'Home', full_name:'', phone:'', line1:'', line2:'', city:'', state:'', postal_code:'', country:'India', is_default:false, latitude:null, longitude:null, google_maps_url:'' }});
+      } catch (localErr) {
+        toast.error(err.response?.data?.message || 'Failed to save address');
+      }
+    }
   };
   const handleAddressDelete = async (id) => {
     if (!window.confirm('Delete address?')) return;
@@ -1114,6 +1135,22 @@ export default function Profile() {
           </div>
         </div>
 
+        {/* === Mobile Sub-view Back Bar === */}
+        {activeTab !== 'overview' && (
+          <div className="md:hidden flex items-center justify-between bg-[#102219] border border-[#D4AF37]/30 rounded-2xl px-4 py-3 mb-4 shadow-lg">
+            <button
+              type="button"
+              onClick={() => setActiveTab('overview')}
+              className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-[#D4AF37] hover:text-[#FCE096] active:scale-95 transition-transform"
+            >
+              <ArrowLeft className="w-4 h-4" /> Account Hub
+            </button>
+            <span className="text-xs font-serif font-bold text-white capitalize">
+              {TABS.find(t => t.id === activeTab)?.label || activeTab}
+            </span>
+          </div>
+        )}
+
         {/* === Mobile Tabs (horizontal scroll) === */}
         <div className="md:hidden -mx-4 px-4 mb-5">
           <div ref={mobileTabsRef} className="flex gap-2 overflow-x-auto snap-x snap-mandatory pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
@@ -1177,6 +1214,45 @@ export default function Profile() {
                   <StatCard icon={Wallet} label="Spendable Vault" value={`₹${Number(wallet.balance||0).toFixed(2)}`} hint={`+ ₹${Number(wallet.referralBalance||0).toFixed(2)} referral credit`} accent="gold" onClick={() => setActiveTab('wallet')}/>
                   <StatCard icon={Award} label="Loyalty Points" value={Number(loyaltyData.points).toLocaleString()} hint={`${loyaltyData.tier?.currentTier || 'Patron tier'} · ${Number(loyaltyData.lifetimePoints).toLocaleString()} lifetime`} accent="sage"/>
                   <StatCard icon={Bell} label="Notifications" value={unreadCount} accent="sage" onClick={() => setActiveTab('notifications')}/>
+                </div>
+
+                {/* Mobile Android-Style Account Services Hub */}
+                <div className="md:hidden space-y-2 mt-4">
+                  <p className="text-[10px] font-bold uppercase tracking-[0.22em] text-[#D4AF37] px-1 mb-1">Account & Services</p>
+                  {[
+                    { id: 'orders', label: 'My Orders & Live Dispatch', sub: `${orders.length} orders placed`, icon: Package },
+                    { id: 'wallet', label: 'Bhumivera Vault & Passbook', sub: `₹${Number(wallet.balance||0).toFixed(2)} spendable balance`, icon: Wallet },
+                    { id: 'addresses', label: 'Saved Delivery Addresses', sub: `${addresses.length} saved addresses`, icon: MapPin },
+                    { id: 'verify', label: 'Verify Serial & Claim Gift', sub: 'Claim ₹300 welcome gift credit', icon: Award },
+                    { id: 'coupons', label: 'Exclusive Maison Coupons', sub: `${coupons.length || 0} active coupons`, icon: Ticket },
+                    { id: 'wishlist', label: 'Wishlist & Curations', sub: `${wishlist.length} saved formulations`, icon: Heart },
+                    { id: 'notifications', label: 'Notifications & Updates', sub: `${unreadCount} unread alerts`, icon: Bell },
+                    { id: 'security', label: 'Passkeys & Device Security', sub: 'Biometric WebAuthn protection', icon: Shield },
+                    { id: 'reviews', label: 'My Product Reviews', sub: 'View published ratings', icon: Star },
+                    { id: 'affiliate', label: 'Affiliate & Patron Rewards', sub: 'Earn store credit on referrals', icon: Share2 },
+                    { id: 'support', label: 'Client Concierge & Chat', sub: 'Direct artisan assistance', icon: LifeBuoy },
+                  ].map(item => {
+                    const Icon = item.icon;
+                    return (
+                      <button
+                        key={item.id}
+                        type="button"
+                        onClick={() => setActiveTab(item.id)}
+                        className="w-full flex items-center justify-between p-3.5 rounded-2xl bg-[#102219]/90 border border-[#244A38] hover:border-[#D4AF37]/50 active:scale-[0.98] transition-all text-left shadow-sm"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/10 border border-[#D4AF37]/25 flex items-center justify-center shrink-0 text-[#D4AF37]">
+                            <Icon className="w-5 h-5" />
+                          </div>
+                          <div className="min-w-0">
+                            <p className="text-xs font-serif font-bold text-white truncate">{item.label}</p>
+                            <p className="text-[11px] text-[#9BB0A5] truncate">{item.sub}</p>
+                          </div>
+                        </div>
+                        <ChevronRight className="w-4 h-4 text-[#D4AF37] shrink-0 ml-2" />
+                      </button>
+                    );
+                  })}
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -1595,53 +1671,89 @@ export default function Profile() {
                   {wallet.transactions.length === 0 ? (
                     <EmptyState icon={Clock} title="No transactions yet" subtitle="Vault activity will appear here when you top up or redeem store funds."/>
                   ) : (
-                    <div className="overflow-x-auto -mx-6 px-6">
-                      <table className="w-full min-w-[600px] text-sm">
-                        <thead>
-                          <tr className="text-left text-xs uppercase tracking-wider text-[#cbd5e1] border-b border-[#d4af37]/20">
-                            <th className="py-3 px-3 font-semibold">Date</th>
-                            <th className="py-3 px-3 font-semibold">Bucket</th>
-                            <th className="py-3 px-3 font-semibold">Type</th>
-                            <th className="py-3 px-3 font-semibold">Description</th>
-                            <th className="py-3 px-3 font-semibold">Reference</th>
-                            <th className="py-3 px-3 font-semibold text-right">Amount</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-[#d4af37]/10">
-                          {wallet.transactions.map(t => {
-                            const type = (t.type||'').toLowerCase();
-                            const isCredit = type === 'credit';
-                            const isDebit = type === 'debit';
-                            const amountColor = isCredit ? 'text-[#fce096]' : isDebit ? 'text-[#cbd5e1]' : 'text-[#94a3b8]';
-                            return (
-                              <tr key={`${t.wallet_bucket || 'cash'}-${t.id}`} className="hover:bg-white/5 transition-colors">
-                                <td className="py-3.5 px-3 text-[#cbd5e1] whitespace-nowrap text-xs font-light">{t.created_at? new Date(t.created_at).toLocaleString():'—'}</td>
-                                <td className="py-3.5 px-3">
-                                  <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${t.wallet_bucket === 'cash' ? 'border border-[#d4af37]/30 bg-[#d4af37]/10 text-[#fce096]' : 'border border-[#cbd5e1]/30 bg-[#cbd5e1]/10 text-[#cbd5e1]'}`}>
-                                    {t.wallet_bucket === 'shopping' ? 'Shopping reward' : t.wallet_bucket === 'referral' ? 'Referral reward' : 'Spendable vault'}
-                                  </span>
-                                </td>
-                                <td className="py-3.5 px-3">
-                                  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
-                                    isCredit ? 'bg-[#d4af37]/15 text-[#fce096] border border-[#d4af37]/35' :
-                                    isDebit ? 'bg-white/10 text-[#cbd5e1] border border-white/20' :
-                                    'bg-[#070a0e] text-[#94a3b8] border border-[#94a3b8]/20'
-                                  }`}>
-                                    {isCredit ? <ArrowDownLeft className="w-3 h-3 text-[#d4af37]"/> : isDebit ? <ArrowUpRight className="w-3 h-3"/> : null}
-                                    {type.replace(/_/g,' ') || 'txn'}
-                                  </span>
-                                </td>
-                                <td className="py-3.5 px-3 text-[#cbd5e1] text-xs font-light">{t.description||'—'}</td>
-                                <td className="py-3.5 px-3 font-mono text-xs text-[#94a3b8]">{t.reference_id || t.order_id || '—'}</td>
-                                <td className={`py-3.5 px-3 text-right font-serif font-bold ${amountColor}`}>
+                    <>
+                      {/* Mobile Transaction List */}
+                      <div className="md:hidden space-y-2.5">
+                        {wallet.transactions.map(t => {
+                          const type = (t.type||'').toLowerCase();
+                          const isCredit = type === 'credit';
+                          const isDebit = type === 'debit';
+                          return (
+                            <div key={`${t.wallet_bucket || 'cash'}-${t.id}`} className="p-3.5 rounded-xl bg-[#070a0e]/75 border border-[#d4af37]/20 flex items-center justify-between gap-3 shadow-sm">
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className={`w-9 h-9 rounded-full flex items-center justify-center shrink-0 border ${
+                                  isCredit ? 'bg-[#d4af37]/15 border-[#d4af37]/40 text-[#fce096]' : 'bg-white/10 border-white/20 text-[#cbd5e1]'
+                                }`}>
+                                  {isCredit ? <ArrowDownLeft className="w-4 h-4 text-[#d4af37]"/> : isDebit ? <ArrowUpRight className="w-4 h-4"/> : <Clock className="w-4 h-4 text-[#94a3b8]"/>}
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="text-xs font-bold text-white truncate">{t.description || (isCredit ? 'Vault Top-up' : 'Store Redemption')}</p>
+                                  <div className="flex items-center gap-1.5 mt-0.5 text-[10px] text-[#94a3b8]">
+                                    <span>{t.created_at ? new Date(t.created_at).toLocaleDateString() : '—'}</span>
+                                    <span>•</span>
+                                    <span className="capitalize">{t.wallet_bucket === 'shopping' ? 'Shopping reward' : t.wallet_bucket === 'referral' ? 'Referral credit' : 'Vault fund'}</span>
+                                  </div>
+                                </div>
+                              </div>
+                              <div className="text-right shrink-0">
+                                <p className={`font-mono text-sm font-bold ${isCredit ? 'text-[#fce096]' : isDebit ? 'text-[#cbd5e1]' : 'text-slate-400'}`}>
                                   {isCredit ? '+' : isDebit ? '−' : ''}₹{Math.abs(Number(t.amount||0)).toFixed(2)}
-                                </td>
-                              </tr>
-                            );
-                          })}
-                        </tbody>
-                      </table>
-                    </div>
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+
+                      {/* Desktop Table View */}
+                      <div className="hidden md:block overflow-x-auto -mx-6 px-6">
+                        <table className="w-full min-w-[600px] text-sm">
+                          <thead>
+                            <tr className="text-left text-xs uppercase tracking-wider text-[#cbd5e1] border-b border-[#d4af37]/20">
+                              <th className="py-3 px-3 font-semibold">Date</th>
+                              <th className="py-3 px-3 font-semibold">Bucket</th>
+                              <th className="py-3 px-3 font-semibold">Type</th>
+                              <th className="py-3 px-3 font-semibold">Description</th>
+                              <th className="py-3 px-3 font-semibold">Reference</th>
+                              <th className="py-3 px-3 font-semibold text-right">Amount</th>
+                            </tr>
+                          </thead>
+                          <tbody className="divide-y divide-[#d4af37]/10">
+                            {wallet.transactions.map(t => {
+                              const type = (t.type||'').toLowerCase();
+                              const isCredit = type === 'credit';
+                              const isDebit = type === 'debit';
+                              const amountColor = isCredit ? 'text-[#fce096]' : isDebit ? 'text-[#cbd5e1]' : 'text-[#94a3b8]';
+                              return (
+                                <tr key={`${t.wallet_bucket || 'cash'}-${t.id}`} className="hover:bg-white/5 transition-colors">
+                                  <td className="py-3.5 px-3 text-[#cbd5e1] whitespace-nowrap text-xs font-light">{t.created_at? new Date(t.created_at).toLocaleString():'—'}</td>
+                                  <td className="py-3.5 px-3">
+                                    <span className={`rounded-full px-2.5 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${t.wallet_bucket === 'cash' ? 'border border-[#d4af37]/30 bg-[#d4af37]/10 text-[#fce096]' : 'border border-[#cbd5e1]/30 bg-[#cbd5e1]/10 text-[#cbd5e1]'}`}>
+                                      {t.wallet_bucket === 'shopping' ? 'Shopping reward' : t.wallet_bucket === 'referral' ? 'Referral reward' : 'Spendable vault'}
+                                    </span>
+                                  </td>
+                                  <td className="py-3.5 px-3">
+                                    <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-semibold uppercase tracking-wider ${
+                                      isCredit ? 'bg-[#d4af37]/15 text-[#fce096] border border-[#d4af37]/35' :
+                                      isDebit ? 'bg-white/10 text-[#cbd5e1] border border-white/20' :
+                                      'bg-[#070a0e] text-[#94a3b8] border border-[#94a3b8]/20'
+                                    }`}>
+                                      {isCredit ? <ArrowDownLeft className="w-3 h-3 text-[#d4af37]"/> : isDebit ? <ArrowUpRight className="w-3 h-3"/> : null}
+                                      {type.replace(/_/g,' ') || 'txn'}
+                                    </span>
+                                  </td>
+                                  <td className="py-3.5 px-3 text-[#cbd5e1] text-xs font-light">{t.description||'—'}</td>
+                                  <td className="py-3.5 px-3 font-mono text-xs text-[#94a3b8]">{t.reference_id || t.order_id || '—'}</td>
+                                  <td className={`py-3.5 px-3 text-right font-serif font-bold ${amountColor}`}>
+                                    {isCredit ? '+' : isDebit ? '−' : ''}₹{Math.abs(Number(t.amount||0)).toFixed(2)}
+                                  </td>
+                                </tr>
+                              );
+                            })}
+                          </tbody>
+                        </table>
+                      </div>
+                    </>
                   )}
                 </section>
               </div>

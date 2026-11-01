@@ -32,7 +32,7 @@ export default function BhumiveraScience() {
       />
 
       {/* 1. HERO SECTION */}
-      <section className="relative isolate overflow-hidden bg-[#070a0e] text-white py-20 px-6 sm:py-28">
+      <section className="relative isolate overflow-hidden bg-[#070a0e] text-white py-10 sm:py-28 px-4 sm:px-6">
         <div className="absolute inset-0 -z-20 opacity-25">
           <img
             src={SCIENCE_PAGE_DATA.heroImage}
@@ -46,7 +46,7 @@ export default function BhumiveraScience() {
             <p className="inline-flex items-center gap-2 rounded-full border border-[#d4af37]/40 bg-[#0d1520] px-4 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#fce096]">
               <Microscope size={14} className="text-[#d4af37]" /> The Bhumivera Transparency Standard (Est. 2016 Lineage)
             </p>
-            <h1 className="mt-5 font-serif text-4xl leading-tight sm:text-6xl text-white">
+            <h1 className="mt-5 font-serif text-2xl leading-tight sm:text-6xl text-white">
               <span className="font-headline-gold">Cold-Pressed Under 28°C.</span>{' '}
               <span className="font-headline-silver">100% Active &amp; Milligram Disclosed.</span>
             </h1>

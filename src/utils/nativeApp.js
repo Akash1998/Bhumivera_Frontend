@@ -25,6 +25,26 @@ const dispatchInternalRoute = value => {
 };
 
 export const initializeNativeApp = async () => {
+  const isStandalone = typeof window !== 'undefined' && (
+    window.matchMedia?.('(display-mode: standalone)')?.matches ||
+    window.navigator?.standalone === true ||
+    (typeof document !== 'undefined' && document.referrer?.includes('android-app://'))
+  );
+
+  const isMobile = typeof window !== 'undefined' && (
+    window.innerWidth < 768 ||
+    /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+  );
+
+  if (typeof document !== 'undefined') {
+    if (isStandalone || Capacitor.isNativePlatform()) {
+      document.documentElement.classList.add('native-app', 'pwa-standalone');
+    }
+    if (isMobile) {
+      document.documentElement.classList.add('is-mobile-device');
+    }
+  }
+
   if (!Capacitor.isNativePlatform()) return;
 
   document.documentElement.classList.add('native-app');

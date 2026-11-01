@@ -66,7 +66,7 @@ export default function OrderTracking() {
   const statusLabel = displayOrder?.status?.replace(/_/g, ' ');
 
   return (
-    <main className="min-h-screen bg-[#070a0e] text-[#e2e8f0] py-16 px-4 sm:px-8 font-sans">
+    <main className="min-h-screen bg-[#070a0e] text-[#e2e8f0] pt-20 sm:pt-24 pb-16 px-4 sm:px-8 font-sans">
       <SEO
         title="Track Your Order | Bhumivera"
         description="Look up your Bhumivera order status and courier tracking details using your order number and checkout email."
@@ -76,11 +76,11 @@ export default function OrderTracking() {
         {/* Hero & Interactive Lookup */}
         <div className="two-tone-panel-gold rounded-3xl overflow-hidden shadow-2xl mb-10">
           <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
-            <div className="p-8 sm:p-11">
+            <div className="p-4 sm:p-11">
               <span className="font-sub-gold inline-flex items-center gap-2 rounded-full border border-[#d4af37]/40 bg-[#d4af37]/10 px-3.5 py-1 text-[10px] font-semibold uppercase tracking-[0.24em]">
                 <Truck size={13} /> Order Status &amp; Courier Details
               </span>
-              <h1 className="mt-4 font-serif text-3xl sm:text-5xl tracking-tight">
+              <h1 className="mt-4 font-serif text-2xl sm:text-5xl tracking-tight">
                 <span className="font-headline-gold">Track Your</span>{' '}
                 <span className="font-headline-silver">Bhumivera Order</span>
               </h1>

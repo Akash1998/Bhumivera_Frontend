@@ -12,6 +12,8 @@ import {
   Ticket,
   Sparkles,
   X,
+  Plus,
+  Navigation,
 } from 'lucide-react';
 import { useCart } from '../context/CartContext';
 import { useAuth } from '../context/AuthContext';
@@ -19,6 +21,7 @@ import { BASE_URL, orders, addresses, wallet, coupons as couponApi } from '../se
 import { haptics } from '../utils/haptics';
 import { getProductImageUrl } from '../utils/productImageUrl';
 import { calculateReferralWalletRedemption, calculateTierDiscount } from '../utils/walletRedemption';
+import { getCurrentCoordinates, reverseGeocodeCoordinates } from '../utils/geolocation';
 
 export default function Checkout() {
   const {
@@ -44,6 +47,26 @@ export default function Checkout() {
   const [walletBalance, setWalletBalance] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
+
+  // Quick Address Bottom Sheet / Modal State
+  const [showAddressModal, setShowAddressModal] = useState(false);
+  const [savingAddress, setSavingAddress] = useState(false);
+  const [detectingGps, setDetectingGps] = useState(false);
+  const [addressForm, setAddressForm] = useState({
+    label: 'Home',
+    full_name: '',
+    phone: '',
+    line1: '',
+    line2: '',
+    city: '',
+    state: '',
+    postal_code: '',
+    country: 'India',
+    is_default: true,
+    latitude: null,
+    longitude: null,
+    google_maps_url: '',
+  });
 
   // Coupon & Loyalty state on Checkout
   const [promoInput, setPromoInput] = useState(cartCouponCode || '');
@@ -115,15 +138,27 @@ export default function Checkout() {
     const fetchInitialData = async () => {
       try {
         const [addrRes, walletRes, pubCouponsRes, myCouponsRes] = await Promise.all([
-          addresses.get(),
+          addresses.get().catch(() => ({ data: { addresses: [] } })),
           wallet.getBalance().catch(() => ({ data: { balance: 0 } })),
           couponApi.getPublicActive().catch(() => ({ data: { coupons: [] } })),
           couponApi.getMine().catch(() => ({ data: { coupons: [] } })),
         ]);
-        const list = addrRes.data?.addresses || addrRes.data?.data || [];
-        setUserAddresses(list);
-        if (list.length > 0) {
-          const defaultAddr = list.find((a) => a.is_default) || list[0];
+        const serverList = addrRes.data?.addresses || addrRes.data?.data || [];
+        let guestList = [];
+        try {
+          guestList = JSON.parse(localStorage.getItem('bhumivera_guest_addresses') || '[]');
+        } catch (e) {
+          console.warn('[GUEST_ADDRESS_PARSE_WARN]', e);
+        }
+        const mergedAddresses = [...serverList];
+        for (const ga of guestList) {
+          if (!mergedAddresses.some(sa => String(sa.id) === String(ga.id))) {
+            mergedAddresses.push(ga);
+          }
+        }
+        setUserAddresses(mergedAddresses);
+        if (mergedAddresses.length > 0) {
+          const defaultAddr = mergedAddresses.find((a) => a.is_default) || mergedAddresses[0];
           setSelectedAddressId(defaultAddr.id);
         }
         setWalletBalance(Number(walletRes.data?.balance || 0));
@@ -148,6 +183,102 @@ export default function Checkout() {
 
     fetchInitialData();
   }, [cartItems, navigate]);
+
+  const handleDetectAddressGps = async () => {
+    setDetectingGps(true);
+    try {
+      const position = await getCurrentCoordinates();
+      const lat = Number(position.latitude.toFixed(7));
+      const lng = Number(position.longitude.toFixed(7));
+      const mapsUrl = `https://www.google.com/maps?q=${lat},${lng}`;
+      let geocoded = {};
+      try {
+        geocoded = await reverseGeocodeCoordinates(lat, lng);
+      } catch (e) {
+        console.warn('[GEOCODE_WARN]', e);
+      }
+      setAddressForm(prev => ({
+        ...prev,
+        latitude: lat,
+        longitude: lng,
+        google_maps_url: mapsUrl,
+        line1: prev.line1 || geocoded.addressLine1 || '',
+        city: prev.city || geocoded.city || '',
+        state: prev.state || geocoded.state || '',
+        postal_code: prev.postal_code || geocoded.pincode || '',
+      }));
+    } catch (e) {
+      console.warn('[GPS_DETECT_ERROR]', e);
+    } finally {
+      setDetectingGps(false);
+    }
+  };
+
+  const handleQuickSaveAddress = async (e) => {
+    e.preventDefault();
+    if (!addressForm.full_name || !addressForm.phone || !addressForm.line1 || !addressForm.city || !addressForm.state || !addressForm.postal_code) {
+      setError('Please fill in all required address fields.');
+      return;
+    }
+    setSavingAddress(true);
+    setError(null);
+
+    const generatedId = Date.now();
+    const newAddress = {
+      id: generatedId,
+      label: addressForm.label,
+      full_name: addressForm.full_name,
+      name: addressForm.full_name,
+      phone_number: addressForm.phone,
+      phone: addressForm.phone,
+      street_address: addressForm.line1,
+      line1: addressForm.line1,
+      address_line1: addressForm.line1,
+      line2: addressForm.line2,
+      city: addressForm.city,
+      state: addressForm.state,
+      postal_code: addressForm.postal_code,
+      pincode: addressForm.postal_code,
+      country: addressForm.country || 'India',
+      is_default: !!addressForm.is_default,
+      latitude: addressForm.latitude,
+      longitude: addressForm.longitude,
+      google_maps_url: addressForm.google_maps_url,
+    };
+
+    try {
+      if (user) {
+        const res = await addresses.create(newAddress);
+        const serverSaved = res.data?.addresses || res.data?.data;
+        if (Array.isArray(serverSaved) && serverSaved.length > 0) {
+          setUserAddresses(serverSaved);
+          const matched = serverSaved.find(s => s.street_address === newAddress.street_address) || serverSaved[0];
+          setSelectedAddressId(matched.id);
+          setShowAddressModal(false);
+          setSavingAddress(false);
+          haptics.impactLight();
+          return;
+        }
+      }
+    } catch (saveErr) {
+      console.warn('[CHECKOUT_ADDRESS_API_SAVE_WARN]', saveErr);
+    }
+
+    // Always ensure local storage persistence fallback
+    try {
+      const saved = JSON.parse(localStorage.getItem('bhumivera_guest_addresses') || '[]');
+      const updated = [newAddress, ...saved];
+      localStorage.setItem('bhumivera_guest_addresses', JSON.stringify(updated));
+    } catch (e) {
+      console.warn('[GUEST_ADDRESS_SAVE_WARN]', e);
+    }
+
+    setUserAddresses(prev => [newAddress, ...prev]);
+    setSelectedAddressId(newAddress.id);
+    setShowAddressModal(false);
+    setSavingAddress(false);
+    haptics.impactLight();
+  };
 
   const handleApplyCouponCode = async (codeToApply = promoInput) => {
     const clean = String(codeToApply || '').trim().toUpperCase();
@@ -320,45 +451,68 @@ export default function Checkout() {
               {step === 1 ? (
                 <div className="mt-6 space-y-5">
                   {userAddresses.length === 0 ? (
-                    <div className="rounded-2xl border border-[#D4AF37]/20 bg-[#102219]/80 backdrop-blur-md p-6 text-center">
-                      <p className="text-sm text-[#DFD7C4]">No saved addresses found.</p>
+                    <div className="rounded-2xl border border-[#D4AF37]/30 bg-[#102219]/90 backdrop-blur-md p-6 sm:p-8 text-center shadow-xl">
+                      <div className="w-12 h-12 rounded-full bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center mx-auto mb-3 text-[#D4AF37]">
+                        <MapPin className="w-6 h-6" />
+                      </div>
+                      <h3 className="text-base font-serif font-bold text-white mb-1">No Delivery Address Found</h3>
+                      <p className="text-xs text-[#DFD7C4] mb-5 max-w-sm mx-auto">Add your delivery location to unlock 1-click lab dispatch and live stock reservation.</p>
                       <button
                         type="button"
-                        onClick={() => navigate('/address-book')}
-                        className="mt-4 rounded-xl btn-gold-luxury px-5 py-2.5 text-xs font-bold"
+                        onClick={() => {
+                          setAddressForm(f => ({ ...f, full_name: user?.name || '', phone: user?.phone || '' }));
+                          setShowAddressModal(true);
+                        }}
+                        className="btn-gold-luxury px-6 py-3 rounded-xl text-xs font-bold uppercase tracking-wider inline-flex items-center gap-2 shadow-lg active:scale-95 transition-transform"
                       >
-                        Add New Address
+                        <Plus className="w-4 h-4" /> Add Delivery Address
                       </button>
                     </div>
                   ) : (
-                    <div className="grid gap-3 sm:grid-cols-2">
-                      {userAddresses.map((addr) => (
-                        <div
-                          key={addr.id}
-                          onClick={() => setSelectedAddressId(addr.id)}
-                          className={`cursor-pointer rounded-2xl border p-4 transition-all ${
-                            selectedAddressId === addr.id
-                              ? 'border-[#D4AF37] bg-[#14231C]/90 ring-1 ring-[#D4AF37] shadow-[0_0_24px_rgba(200,155,60,0.22)]'
-                              : 'border-[#D4AF37]/20 bg-[#1C382B]/60 backdrop-blur-md hover:border-[#D4AF37]/50'
-                          }`}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between pb-1">
+                        <span className="text-xs font-bold uppercase tracking-wider text-[#DFD7C4]">Deliver to Address:</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setAddressForm(f => ({ ...f, full_name: user?.name || '', phone: user?.phone || '' }));
+                            setShowAddressModal(true);
+                          }}
+                          className="text-xs text-[#D4AF37] hover:text-[#FCE096] font-bold uppercase tracking-wider inline-flex items-center gap-1.5 transition-colors p-1"
                         >
-                          <div className="flex items-center justify-between">
-                            <span className="font-serif font-bold text-sm text-white">{addr.full_name}</span>
-                            {addr.is_default ? (
-                              <span className="rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/50 px-2 py-0.5 text-[9px] font-bold text-[#FCE096] uppercase tracking-wider">Default</span>
+                          <Plus className="w-3.5 h-3.5" /> Add New Address
+                        </button>
+                      </div>
+
+                      <div className="grid gap-3 sm:grid-cols-2">
+                        {userAddresses.map((addr) => (
+                          <div
+                            key={addr.id}
+                            onClick={() => setSelectedAddressId(addr.id)}
+                            className={`cursor-pointer rounded-2xl border p-4 transition-all relative ${
+                              selectedAddressId === addr.id
+                                ? 'border-[#D4AF37] bg-[#14231C]/90 ring-1 ring-[#D4AF37] shadow-[0_0_24px_rgba(200,155,60,0.22)]'
+                                : 'border-[#D4AF37]/20 bg-[#1C382B]/60 backdrop-blur-md hover:border-[#D4AF37]/50'
+                            }`}
+                          >
+                            <div className="flex items-center justify-between">
+                              <span className="font-serif font-bold text-sm text-white">{addr.full_name}</span>
+                              {addr.is_default ? (
+                                <span className="rounded-full bg-[#D4AF37]/20 border border-[#D4AF37]/50 px-2 py-0.5 text-[9px] font-bold text-[#FCE096] uppercase tracking-wider">Default</span>
+                              ) : null}
+                            </div>
+                            <p className="mt-2 text-xs text-[#DFD7C4] leading-relaxed">
+                              {addr.street_address || addr.line1}, {addr.city}, {addr.state} - {addr.postal_code || addr.pincode}
+                            </p>
+                            <p className="mt-1 text-xs text-[#9BB0A5]">Phone: {addr.phone_number || addr.phone}</p>
+                            {(addr.latitude && addr.longitude) || addr.google_maps_url ? (
+                              <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-[#D4AF37]/10 px-2.5 py-0.5 text-[10px] font-semibold text-[#FCE096] border border-[#D4AF37]/30">
+                                <MapPin className="h-3 w-3 text-[#D4AF37]" /> GPS Verified Location
+                              </div>
                             ) : null}
                           </div>
-                          <p className="mt-2 text-xs text-[#DFD7C4] leading-relaxed">
-                            {addr.street_address || addr.line1}, {addr.city}, {addr.state} - {addr.postal_code || addr.pincode}
-                          </p>
-                          <p className="mt-1 text-xs text-[#9BB0A5]">Phone: {addr.phone_number || addr.phone}</p>
-                          {(addr.latitude && addr.longitude) || addr.google_maps_url ? (
-                            <div className="mt-2.5 inline-flex items-center gap-1.5 rounded-full bg-[#D4AF37]/10 px-2.5 py-0.5 text-[10px] font-semibold text-[#FCE096] border border-[#D4AF37]/30">
-                              <MapPin className="h-3 w-3 text-[#D4AF37]" /> GPS Verified Location
-                            </div>
-                          ) : null}
-                        </div>
-                      ))}
+                        ))}
+                      </div>
                     </div>
                   )}
 
@@ -707,6 +861,171 @@ export default function Checkout() {
           </div>
         </div>
       </div>
+
+      {/* QUICK INLINE ADDRESS BOTTOM SHEET / MODAL */}
+      {showAddressModal && (
+        <div 
+          className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm p-0 sm:p-4"
+          onClick={() => setShowAddressModal(false)}
+        >
+          <div 
+            onClick={e => e.stopPropagation()} 
+            className="w-full sm:max-w-xl bg-[#14291F] border border-[#D4AF37]/35 rounded-t-3xl sm:rounded-3xl shadow-2xl flex flex-col max-h-[90dvh] overflow-hidden animate-in slide-in-from-bottom duration-200"
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 py-4 border-b border-[#244A38] bg-[#102219]">
+              <div className="flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-[#D4AF37]" />
+                <h3 className="font-serif font-bold text-base sm:text-lg text-white">Add Delivery Address</h3>
+              </div>
+              <button 
+                type="button" 
+                onClick={() => setShowAddressModal(false)} 
+                className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 flex items-center justify-center text-[#9BB0A5] hover:text-white"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <form onSubmit={handleQuickSaveAddress} className="p-5 overflow-y-auto space-y-4">
+              {/* Type pills */}
+              <div className="flex gap-2">
+                {['Home', 'Work', 'Other'].map(lbl => (
+                  <button
+                    key={lbl}
+                    type="button"
+                    onClick={() => setAddressForm(f => ({ ...f, label: lbl }))}
+                    className={`px-4 py-1.5 rounded-full text-xs font-semibold uppercase tracking-wider border transition-all ${
+                      addressForm.label === lbl
+                        ? 'border-[#D4AF37] bg-[#D4AF37]/20 text-[#FCE096]'
+                        : 'border-[#244A38] bg-[#102219] text-[#9BB0A5]'
+                    }`}
+                  >
+                    {lbl}
+                  </button>
+                ))}
+              </div>
+
+              {/* GPS Auto-detect banner */}
+              <div className="rounded-xl border border-[#D4AF37]/30 bg-[#102219] p-3 flex items-center justify-between gap-3">
+                <div className="min-w-0">
+                  <p className="text-xs font-bold text-white flex items-center gap-1.5">
+                    <Navigation className="w-3.5 h-3.5 text-[#D4AF37]" /> GPS Precise Pinpoint
+                  </p>
+                  <p className="text-[11px] text-[#9BB0A5] truncate mt-0.5">
+                    {addressForm.latitude ? 'GPS Location Attached' : 'Auto-fill current address details via GPS'}
+                  </p>
+                </div>
+                <button
+                  type="button"
+                  disabled={detectingGps}
+                  onClick={handleDetectAddressGps}
+                  className="btn-silver-luxury px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-wider shrink-0"
+                >
+                  {detectingGps ? 'Locating...' : addressForm.latitude ? 'Re-detect' : 'Use GPS'}
+                </button>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-[#9BB0A5] block mb-1">Full Name *</label>
+                  <input
+                    type="text"
+                    required
+                    value={addressForm.full_name}
+                    onChange={e => setAddressForm(f => ({ ...f, full_name: e.target.value }))}
+                    placeholder="Recipient name"
+                    className="w-full rounded-xl border border-[#244A38] bg-[#0E1A14] px-3.5 py-2.5 text-xs text-white placeholder-[#9BB0A5]/60 focus:border-[#D4AF37] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-[#9BB0A5] block mb-1">Phone Number *</label>
+                  <input
+                    type="tel"
+                    required
+                    value={addressForm.phone}
+                    onChange={e => setAddressForm(f => ({ ...f, phone: e.target.value }))}
+                    placeholder="+91 98765 43210"
+                    className="w-full rounded-xl border border-[#244A38] bg-[#0E1A14] px-3.5 py-2.5 text-xs text-white placeholder-[#9BB0A5]/60 focus:border-[#D4AF37] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="text-[10px] uppercase font-bold tracking-wider text-[#9BB0A5] block mb-1">Street Address / House / Flat *</label>
+                <input
+                  type="text"
+                  required
+                  value={addressForm.line1}
+                  onChange={e => setAddressForm(f => ({ ...f, line1: e.target.value }))}
+                  placeholder="Flat No, Wing, Apartment, Street name"
+                  className="w-full rounded-xl border border-[#244A38] bg-[#0E1A14] px-3.5 py-2.5 text-xs text-white placeholder-[#9BB0A5]/60 focus:border-[#D4AF37] focus:outline-none"
+                />
+              </div>
+
+              <div>
+                <label className="text-[10px] uppercase font-bold tracking-wider text-[#9BB0A5] block mb-1">Landmark / Area (Optional)</label>
+                <input
+                  type="text"
+                  value={addressForm.line2}
+                  onChange={e => setAddressForm(f => ({ ...f, line2: e.target.value }))}
+                  placeholder="Near landmark, sector, or colony"
+                  className="w-full rounded-xl border border-[#244A38] bg-[#0E1A14] px-3.5 py-2.5 text-xs text-white placeholder-[#9BB0A5]/60 focus:border-[#D4AF37] focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                <div>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-[#9BB0A5] block mb-1">City *</label>
+                  <input
+                    type="text"
+                    required
+                    value={addressForm.city}
+                    onChange={e => setAddressForm(f => ({ ...f, city: e.target.value }))}
+                    placeholder="City"
+                    className="w-full rounded-xl border border-[#244A38] bg-[#0E1A14] px-3.5 py-2.5 text-xs text-white placeholder-[#9BB0A5]/60 focus:border-[#D4AF37] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-[#9BB0A5] block mb-1">State *</label>
+                  <input
+                    type="text"
+                    required
+                    value={addressForm.state}
+                    onChange={e => setAddressForm(f => ({ ...f, state: e.target.value }))}
+                    placeholder="State"
+                    className="w-full rounded-xl border border-[#244A38] bg-[#0E1A14] px-3.5 py-2.5 text-xs text-white placeholder-[#9BB0A5]/60 focus:border-[#D4AF37] focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="text-[10px] uppercase font-bold tracking-wider text-[#9BB0A5] block mb-1">PIN Code *</label>
+                  <input
+                    type="text"
+                    required
+                    inputMode="numeric"
+                    value={addressForm.postal_code}
+                    onChange={e => setAddressForm(f => ({ ...f, postal_code: e.target.value }))}
+                    placeholder="713301"
+                    className="w-full rounded-xl border border-[#244A38] bg-[#0E1A14] px-3.5 py-2.5 text-xs text-white placeholder-[#9BB0A5]/60 focus:border-[#D4AF37] focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2">
+                <button
+                  type="submit"
+                  disabled={savingAddress}
+                  className="btn-gold-luxury w-full py-3.5 rounded-xl text-xs font-bold uppercase tracking-wider flex items-center justify-center gap-2 shadow-xl disabled:opacity-50 active:scale-95 transition-transform"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  {savingAddress ? 'Saving Delivery Address...' : 'Deliver to this Address'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
