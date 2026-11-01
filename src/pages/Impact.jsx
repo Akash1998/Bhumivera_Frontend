@@ -55,32 +55,7 @@ const impactQuestions = [
   ],
 ];
 
-const DEFAULT_COMMUNITY_POSTS = [
-  {
-    id: 1,
-    name: 'Anirban Mukherjee',
-    location: 'Raniganj, West Bengal',
-    action: 'Fed 14 street dogs near station market',
-    time: '2 hours ago',
-    message: 'Set up two earthen water bowls outside the grocery market and fed 14 stray dogs warm rice with broth. Excited for the December winter bedding drive!',
-  },
-  {
-    id: 2,
-    name: 'Priyanka Das',
-    location: 'Asansol, West Bengal',
-    action: 'Pledged to volunteer for Smt. Shanti Memorial Ration Kits',
-    time: 'Yesterday',
-    message: 'Proud to see a local brand tackling real hunger and cold in our own towns. Ready to deliver food and ration kits to elders starting this December in memory of Smt. Shanti-di.',
-  },
-  {
-    id: 3,
-    name: 'Rohan Sen',
-    location: 'Durgapur, West Bengal',
-    action: 'Damodar riverbank survey',
-    time: '3 days ago',
-    message: 'Inspected the mud erosion near the tributary ghats. Deep-rooting vetiver grass is the perfect affordable solution. Count me in for the planting drives!',
-  },
-];
+const LEGACY_DEMO_POST_IDS = new Set([1, 2, 3]);
 
 const money = amount => `₹${Number(amount || 0).toLocaleString('en-IN', { maximumFractionDigits: 0 })}`;
 
@@ -95,7 +70,7 @@ export default function Impact() {
   const [volunteerRegistered, setVolunteerRegistered] = useState(false);
 
   // Community work sharing wall state
-  const [communityPosts, setCommunityPosts] = useState(DEFAULT_COMMUNITY_POSTS);
+  const [communityPosts, setCommunityPosts] = useState([]);
   const [impactLedger, setImpactLedger] = useState(null);
   const [impactLedgerError, setImpactLedgerError] = useState(false);
   const [postAuthor, setPostAuthor] = useState('');
@@ -111,7 +86,14 @@ export default function Impact() {
     try {
       const savedPosts = localStorage.getItem('bv_community_wall_posts');
       if (savedPosts) {
-        setCommunityPosts(JSON.parse(savedPosts));
+        const parsedPosts = JSON.parse(savedPosts);
+        if (Array.isArray(parsedPosts)) {
+          const realPosts = parsedPosts.filter(post => !LEGACY_DEMO_POST_IDS.has(post.id));
+          setCommunityPosts(realPosts);
+          if (realPosts.length !== parsedPosts.length) {
+            localStorage.setItem('bv_community_wall_posts', JSON.stringify(realPosts));
+          }
+        }
       }
     } catch {
       // ignore
@@ -629,6 +611,11 @@ export default function Impact() {
 
               {/* Feed of Posts */}
               <div className="space-y-3 max-h-[360px] overflow-y-auto pr-2">
+                {communityPosts.length === 0 && (
+                  <p className="rounded-2xl border border-[#d4af37]/20 bg-[#070a0e]/80 p-4 text-xs text-[#94a3b8]">
+                    No community posts yet. Be the first to share a message or action.
+                  </p>
+                )}
                 {communityPosts.map(post => (
                   <div
                     key={post.id}
@@ -699,7 +686,7 @@ export default function Impact() {
                 </div>
                 {postSubmitted && (
                   <p className="text-[11px] font-mono text-emerald-400">
-                    Your post has been pinned to the Community Action Wall! Thank you.
+                    Your post has been added to this browser&apos;s Community Action Wall. Thank you.
                   </p>
                 )}
               </form>

@@ -113,7 +113,7 @@ export const IMPACT_PROJECTS = [
     title: 'The Ceaser Memorial · Stray Dog & Cat Rescue, Feeding & Compassion Initiative',
     tagline:
       'In loving memory of Ceaser, our German Shepherd who taught us what unconditional love truly means — every stray we feed carries his spirit, every wound we heal honours his gentle soul, and every warm bed we build is a promise that his love was not in vain.',
-    posterImage: '/assets/images/seabuckthorn nature.webp',
+    posterImage: '/assets/images/ceaser-memorial.webp',
     statusBadge: 'Starts December 2026',
     phaseYear: 'Immediate Action · Launching December 2026 · In Ceaser\'s Memory',
     targetLaunch: 'December 2026',
@@ -326,7 +326,7 @@ export const IMPACT_PROJECTS = [
     title: 'The Smt. Shanti Memorial · Food & Ration Kits for Kids, Elderly & Disabled Citizens',
     tagline:
       'In eternal memory of Smt. Shanti — our mother who fed everyone before herself. Delivering essential dry food rations and warm blankets to vulnerable kids, destitute elders, and disabled citizens. No child or grandmother should ever sleep hungry. This is her legacy.',
-    posterImage: '/assets/images/tulsi.webp',
+    posterImage: '/assets/images/shanti-memorial.webp',
     statusBadge: 'Starts December 2026',
     phaseYear: 'Immediate Action · Launching December 2026 · In Smt. Shanti\'s Memory',
     targetLaunch: 'December 2026',
