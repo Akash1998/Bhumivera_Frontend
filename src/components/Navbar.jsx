@@ -5,7 +5,7 @@ import {
   ShoppingCart, User, Search, Menu, X, Sparkles, Heart,
   ChevronDown, Package, Gift, GitCompareArrows, ArrowRight,
   MapPin, Activity, Droplets, Leaf, Mic, FlaskConical, Compass, Download,
-  HeartHandshake, Truck, CircleUserRound, BadgePercent, ShieldCheck
+  HeartHandshake, Truck, CircleUserRound, BadgePercent, ShieldCheck, QrCode
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { useCart } from '../context/CartContext';
@@ -302,6 +302,14 @@ export default function Navbar() {
               </div>
             </Link>
 
+            <Link to="/verify" aria-label="Scan Box QR & Claim Gift" className="hidden lg:flex items-center space-x-2.5 rounded-full border border-[#D4AF37]/35 bg-[#1C382B]/60 backdrop-blur-md px-4 py-2.5 shadow-sm transition-all hover:border-[#d4af37] hover:bg-[#244A38] group">
+              <QrCode size={16} className="text-[#d4af37] group-hover:scale-110 transition-transform" />
+              <div className="text-left">
+                <div className="text-[8px] font-bold uppercase tracking-widest leading-none text-[#9BB0A5] group-hover:text-[#d4af37]">Box QR Gift</div>
+                <div className="text-[11px] font-serif font-bold uppercase tracking-widest text-[#fce096] truncate">Scan &amp; Claim ₹300</div>
+              </div>
+            </Link>
+
             {user ? (
               <Link to="/profile" aria-label="Profile" className="flex items-center gap-3 group">
                 <div className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-[#1C382B]/70 backdrop-blur-md shadow-sm group-hover:border-[#d4af37]">
@@ -387,6 +395,15 @@ export default function Navbar() {
             <Sparkles size={16} />
             <span>AI</span>
           </button>
+          <Link
+            to="/verify?scan=1"
+            aria-label="Scan QR with camera"
+            title="Scan Box QR & Claim Gift"
+            className="inline-flex h-11 shrink-0 items-center justify-center gap-1 rounded-full border border-[#d4af37]/50 bg-[#1C382B] px-3 text-xs font-bold text-[#d4af37] shadow-sm transition hover:bg-[#244A38]"
+          >
+            <QrCode size={16} />
+            <span className="text-[10px] uppercase font-bold tracking-wider">Scan</span>
+          </Link>
         </div>
       </nav>
       {/* REAL LUXURY MOBILE SIDEBAR DRAWER (SLIDES IN FROM LEFT) */}
@@ -466,7 +483,7 @@ export default function Navbar() {
                 <div className="space-y-1">
                   {[
                     { to: '/shop', label: 'Shop All Formulations', icon: Compass, badge: 'Catalog' },
-                    { to: '/verify', label: 'Verify Bottle Serial', icon: ShieldCheck, badge: 'Serial Check', highlight: true },
+                    { to: '/verify', label: 'Verify Bottle Serial & QR Gift (₹300)', icon: QrCode, badge: '₹300 Gift', highlight: true },
                     { to: '/community', label: 'Community & Volunteer Hub', icon: HeartHandshake, badge: 'Dec 2026' },
                     { to: '/impact', label: 'Impact Ledger & Pledges', icon: Leaf },
                     { to: '/about', label: 'Our Story & Heritage', icon: Sparkles },

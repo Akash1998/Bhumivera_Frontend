@@ -146,9 +146,19 @@ export default function WelcomeCardManagement() {
             coupon: a fixed discount per order, usable until the total gift value is spent, above the minimum order amount you set.
           </p>
         </div>
-        <button type="button" onClick={load} className="inline-flex items-center gap-2 rounded-xl border border-[#D4AF37]/30 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#fce096]">
-          <RefreshCw size={14} /> Refresh
-        </button>
+        <div className="flex flex-wrap items-center gap-3">
+          <a
+            href="/bhumivera-patron-card-8k.html"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 rounded-xl bg-gradient-to-r from-[#d4af37] via-[#fce096] to-[#b38f2e] px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-black shadow-lg hover:brightness-110"
+          >
+            <Printer size={15} /> Print 8K 2-Page Letter Card
+          </a>
+          <button type="button" onClick={load} className="inline-flex items-center gap-2 rounded-xl border border-[#D4AF37]/30 px-4 py-2 text-xs font-bold uppercase tracking-wider text-[#fce096]">
+            <RefreshCw size={14} /> Refresh
+          </button>
+        </div>
       </header>
 
       {error && <p role="alert" className="rounded-xl border border-rose-500/30 bg-rose-950/40 p-3 text-sm text-rose-300">{error}</p>}
