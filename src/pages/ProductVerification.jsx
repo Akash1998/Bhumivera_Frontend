@@ -154,7 +154,13 @@ export default function ProductVerification() {
     const reader = new BrowserMultiFormatReader();
 
     reader.decodeFromConstraints({
-      video: { facingMode: { ideal: 'environment' } },
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1920 },
+        height: { ideal: 1080 },
+        frameRate: { ideal: 30 },
+        advanced: [{ focusMode: 'continuous' }],
+      },
       audio: false,
     }, videoRef.current, (result) => {
       if (!active || !result || scannedResultRef.current) return;
@@ -164,6 +170,11 @@ export default function ProductVerification() {
     }).then((controls) => {
       if (active) {
         scannerControlsRef.current = controls;
+        const track = videoRef.current?.srcObject?.getVideoTracks?.()[0];
+        const caps = track?.getCapabilities?.() || {};
+        if (caps.focusMode?.includes('continuous')) {
+          track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+        }
       } else {
         controls.stop();
       }
@@ -275,7 +286,7 @@ export default function ProductVerification() {
             {scannerOpen && (
               <div className="mx-auto mt-5 max-w-lg rounded-2xl border-2 border-[#d4af37] bg-black p-4">
                 <div className="relative aspect-video overflow-hidden rounded-xl">
-                  <video ref={videoRef} playsInline muted className="h-full w-full object-cover" />
+                  <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" style={{ filter: 'none', backdropFilter: 'none' }} />
                   <div className="pointer-events-none absolute inset-6 rounded-xl border-2 border-dashed border-[#fce096]" />
                 </div>
                 <p className="mt-3 text-xs text-[#fce096]">Hold the QR code steady inside the frame.</p>
