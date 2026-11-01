@@ -13,12 +13,12 @@ import compressImageForUpload from '../../utils/compressImageForUpload';
 
 const INITIAL_PRODUCT_STATE = {
   name: '', slug: '', description: '', price: '', discount_price: '', quantity: '', category_id: '', 
-  video_urls: '', product_links: '', model_3d_url: '', warranty_period: '', status: 'active',
+  video_urls: '', product_links: '', model_3d_url: '', status: 'active',
   meta_title: '', meta_description: '', tags: '', sku: '', brand: 'Bhumivera'
 };
 
 const INITIAL_SERIAL_STATE = {
-  count: 10, prefix: 'BHU', format: 'advanced', base_warranty_months: ''
+  count: 10, prefix: 'BHU', format: 'advanced'
 };
 
 const formatUrlLines = value => {
@@ -175,7 +175,7 @@ export default function ProductManagement() {
         name: product.name || '', slug: product.slug || '', description: product.description || '', price: product.price || '', discount_price: product.discount_price || '',
         quantity: product.quantity || product.stock || '', category_id: product.category_id || '',
         video_urls: formatUrlLines(product.video_urls), product_links: formatUrlLines(product.product_links), model_3d_url: product.model_3d_url || '',
-        warranty_period: product.warranty_period ?? '', status: product.status || 'active',
+        status: product.status || 'active',
         meta_title: product.meta_title || '', meta_description: product.meta_description || '', tags: product.tags || '', sku: product.sku || '', brand: product.brand || 'Bhumivera'
       });
       
@@ -344,8 +344,7 @@ export default function ProductManagement() {
     setSerialForm({ 
       count: 10, 
       prefix: String(product.name || 'BHU').substring(0, 3).toUpperCase(), 
-      format: 'advanced', 
-      base_warranty_months: product.warranty_period || ''
+      format: 'advanced'
     });
     setSerialModalOpen(true);
   };
@@ -579,8 +578,7 @@ export default function ProductManagement() {
                   {id:'basic', l:'Basic Info', i:BoxSelect}, 
                   {id:'seo', l:'SEO & Meta', i:Globe}, 
                   {id:'specs', l:'Specifications', i:List}, 
-                  {id:'media', l:'Images & Docs', i:Database}, 
-                  {id:'warranty', l:'Warranty (Optional)', i:ShieldCheck}
+                  {id:'media', l:'Images & Docs', i:Database}
                 ].map(t => (
                   <button 
                     key={t.id} type="button" onClick={() => setActiveTab(t.id)} 
@@ -730,22 +728,6 @@ export default function ProductManagement() {
                         </div>
                       )}
 
-                      {activeTab === 'warranty' && (
-                        <div className="p-6 bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 rounded-2xl">
-                          <div className="flex items-start gap-4">
-                            <div className="p-3 bg-slate-800 rounded-xl text-slate-400">
-                              <ShieldCheck size={24} />
-                            </div>
-                            <div className="flex-1">
-                              <h4 className="text-sm font-bold text-white mb-2">Product warranty (optional)</h4>
-                              <p className="text-xs text-slate-400 mb-4">Leave blank when no warranty applies, including personal-care products. Enter a period only when coverage is confirmed for this specific product.</p>
-                              <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2 block">Warranty duration (months)</label>
-                              <input type="number" min="1" value={form.warranty_period} onChange={e=>setForm({...form, warranty_period:e.target.value})} className="w-full md:w-1/2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-white outline-none transition-colors" placeholder="Leave blank if not applicable" />
-                            </div>
-                          </div>
-                        </div>
-                      )}
-
                       {/* Section B: Staged Client Previews */}
                       {images.length > 0 && (
                         <div className="space-y-2">
@@ -834,7 +816,7 @@ https://www.instagram.com/reel/...`} value={form.video_urls} onChange={e=>setFor
             <div className="flex-1 overflow-y-auto custom-scrollbar">
               {serialTab === 'generate' && (
                 <form onSubmit={handleGenerateSerials} className="p-8 space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                     <div className="bg-[#10241f]/55 backdrop-blur-xl p-4 rounded-xl border border-slate-800">
                       <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Quantity to Generate</label>
                       <input type="number" required min="1" max="1000" value={serialForm.count} onChange={e=>setSerialForm({...serialForm, count: parseInt(e.target.value)})} className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-white font-mono outline-none" />
@@ -842,17 +824,6 @@ https://www.instagram.com/reel/...`} value={form.video_urls} onChange={e=>setFor
                     <div className="bg-[#10241f]/55 backdrop-blur-xl p-4 rounded-xl border border-slate-800">
                       <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Code Prefix</label>
                       <input type="text" required value={serialForm.prefix} onChange={e=>setSerialForm({...serialForm, prefix: e.target.value.toUpperCase()})} className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-amber-500 font-mono outline-none tracking-widest" />
-                    </div>
-                    <div className="bg-[#10241f]/55 backdrop-blur-xl p-4 rounded-xl border border-slate-800">
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Warranty (Optional)</label>
-                      <select value={serialForm.base_warranty_months} onChange={e=>setSerialForm({...serialForm, base_warranty_months: e.target.value ? parseInt(e.target.value) : ''})} className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-white font-mono outline-none appearance-none">
-                        <option value="">No warranty</option>
-                        <option value={6}>6 Months</option>
-                        <option value={12}>12 Months</option>
-                        <option value={18}>18 Months</option>
-                        <option value={24}>24 Months</option>
-                        <option value={36}>36 Months</option>
-                      </select>
                     </div>
                   </div>
                   

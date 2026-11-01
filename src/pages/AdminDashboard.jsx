@@ -32,7 +32,6 @@ const WalletManagement = lazy(() => import('./admin/WalletManagement.jsx'));
 const ReferralEngine = lazy(() => import('./admin/AffiliateManagement.jsx'));
 const SupportManagement = lazy(() => import('./admin/SupportManagement.jsx'));
 const ContactManagement = lazy(() => import('./admin/ContactManagement.jsx'));
-const EWarrantyManagement = lazy(() => import('./admin/EWarrantyManagement.jsx'));
 const AuthenticityBatchManagement = lazy(() => import('./admin/AuthenticityBatchManagement.jsx'));
 const WelcomeCardManagement = lazy(() => import('./admin/WelcomeCardManagement.jsx'));
 const SupportAgentManagement = lazy(() => import('./admin/SupportAgentManagement.jsx'));
@@ -113,7 +112,6 @@ const TAB_COMPONENTS = {
   impact: ImpactManagement,
   support: SupportManagement,
   contacts: ContactManagement,
-  ewarranty: EWarrantyManagement,
   authenticity: AuthenticityBatchManagement,
   'welcome-cards': WelcomeCardManagement,
   'support-agents': SupportAgentManagement,
@@ -153,7 +151,6 @@ const TAB_ICONS = {
   users: Users,
   support: Headphones,
   contacts: MessageSquare,
-  ewarranty: ShieldCheck,
   authenticity: QrCode,
   'welcome-cards': Gift,
   'support-agents': Users,
@@ -216,7 +213,6 @@ export default function AdminDashboard() {
         { id: 'returns', label: 'Returns' },
         { id: 'support', label: 'Bhumivera Client Concierge' },
         { id: 'contacts', label: 'Contact & Inquiries' },
-        { id: 'ewarranty', label: 'E-Warranty Registry' },
         { id: 'authenticity', label: 'QR Codes & Genuinity Panel' },
         { id: 'welcome-cards', label: 'Welcome Card Gifts' },
         { id: 'support-agents', label: 'Support Staff Roster' },
