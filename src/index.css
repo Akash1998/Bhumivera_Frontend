@@ -24,6 +24,12 @@
   --two-tone-alabaster: #FAF7F2;
 }
 
+html {
+  overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
 body {
   background-color: var(--two-tone-dark);
   background-image:
@@ -33,6 +39,8 @@ body {
   background-attachment: fixed;
   color: var(--bhumivera-silver);
   overflow-x: hidden;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 .premium-page-loader {
@@ -341,11 +349,6 @@ body {
   line-height: 1.4;
 }
 
-html.native-app body,
-html.pwa-standalone body {
-  overscroll-behavior-y: none;
-}
-
 html.native-app .site-shell,
 html.pwa-standalone .site-shell {
   min-height: 100dvh;
@@ -364,17 +367,6 @@ html.pwa-standalone #main-content {
   /* Hide the lengthy 400-line desktop footer on mobile screens */
   .site-shell > footer {
     display: none !important;
-  }
-
-  /* Smooth native-feeling scrolling & tap response */
-  body, #main-content {
-    -webkit-overflow-scrolling: touch;
-    overscroll-behavior-y: contain;
-  }
-
-  button, a {
-    touch-action: manipulation;
-    -webkit-tap-highlight-color: transparent;
   }
 }
 

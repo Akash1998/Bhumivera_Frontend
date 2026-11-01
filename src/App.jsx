@@ -379,7 +379,7 @@ function AppContent() {
       {!isManagementView && <Navbar />}
       {!isManagementView && <NetworkStatus />}
       
-      <main id="main-content" className="flex-1 w-full flex flex-col overflow-x-hidden">
+      <main id="main-content" className="flex-1 w-full flex flex-col">
         <ScrollToTop /> 
         
         <Suspense fallback={<PageLoader />}>
