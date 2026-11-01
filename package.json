@@ -29,6 +29,8 @@
     "@capgo/capacitor-social-login": "^8.7.2",
     "@marsidev/react-turnstile": "^1.0.2",
     "@simplewebauthn/browser": "^14.0.0",
+    "@zxing/browser": "^0.1.5",
+    "@zxing/library": "^0.21.3",
     "axios": "^1.8.2",
     "browser-image-compression": "^2.0.2",
     "date-fns": "^3.6.0",

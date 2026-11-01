@@ -1,68 +1,125 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import ProductVerification from './ProductVerification';
-import { serials } from '../services/api';
+import api from '../services/api';
 
-vi.mock('../components/SEO', () => ({ default: () => null }));
-vi.mock('../services/api', () => ({
-  serials: { verify: vi.fn() },
+const scannerMock = vi.hoisted(() => ({
+  callback: null,
+  stop: vi.fn(),
 }));
 
-describe('product authenticity verification', () => {
+vi.mock('@zxing/browser', () => ({
+  BrowserMultiFormatReader: class {
+    decodeFromConstraints(_constraints, _video, callback) {
+      scannerMock.callback = callback;
+      return Promise.resolve({ stop: scannerMock.stop });
+    }
+  },
+}));
+vi.mock('../components/SEO', () => ({ default: () => null }));
+vi.mock('../context/AuthContext', () => ({
+  useAuth: () => ({ user: { id: 7 } }),
+}));
+vi.mock('../services/api', () => ({
+  default: { get: vi.fn(), post: vi.fn() },
+}));
+
+const renderVerification = (entry = '/verify') => render(
+  <MemoryRouter initialEntries={[entry]}>
+    <Routes>
+      <Route path="/verify" element={<ProductVerification />} />
+    </Routes>
+  </MemoryRouter>,
+);
+
+describe('product authenticity and box gift verification', () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+    scannerMock.callback = null;
   });
 
-  it('shows recorded expiry and only the public batch information returned by the registry', async () => {
-    serials.verify.mockResolvedValue({
-      data: {
-        verified: true,
-        expired: false,
-        serialNumber: 'BV-2601-UNIQUE',
-        productName: 'Test Product',
-        batchNumber: 'BV-2601-BATCH',
-        manufactureDate: '2026-01-01',
-        expiryDate: '2027-01-01',
-        batchQuantity: 2,
-        details: [{ label: 'Calibrated pH', value: '5.2' }],
-      },
+  it('shows only a certificate returned as verified by the batch registry', async () => {
+    api.get.mockImplementation((path) => {
+      if (path.startsWith('/serials/batch-coa/')) {
+        return Promise.resolve({
+          data: {
+            success: true,
+            verified: true,
+            coa: {
+              productName: 'Test Product',
+              serial: 'BV-2601-UNIQUE',
+              batchCode: 'BV-2601-BATCH',
+              bottleSequence: 'Bottle 1 of 2',
+              calibratedPh: '5.2',
+              extractionTemp: '26°C',
+              microbiologicalAssay: 'Passed',
+              heavyMetals: 'Passed',
+              tamperCustody: 'Intact',
+              disclosedActives: 'Verified',
+              originLot: 'Test lot',
+              pressedDate: '2026-01-01',
+              remainingInBatch: 2,
+            },
+          },
+        });
+      }
+      return Promise.resolve({
+        data: { success: true, product_name: 'Test Product', serial_number: 'BV-2601-UNIQUE' },
+      });
     });
 
-    render(
-      <MemoryRouter initialEntries={['/verify?serial=BV-2601-UNIQUE']}>
-        <Routes>
-          <Route path="/verify" element={<ProductVerification />} />
-        </Routes>
-      </MemoryRouter>,
-    );
+    renderVerification('/verify?serial=BV-2601-UNIQUE');
 
-    await waitFor(() => expect(screen.getByText('Official batch record matched')).toBeTruthy());
-    expect(screen.getByText('Test Product')).toBeTruthy();
-    expect(screen.getByText('BV-2601-UNIQUE')).toBeTruthy();
-    expect(screen.getByText('Calibrated pH')).toBeTruthy();
+    await waitFor(() => expect(screen.getByText('Verified batch certificate of analysis')).toBeTruthy());
+    expect(screen.getAllByText('Test Product')).toHaveLength(2);
     expect(screen.getByText('5.2')).toBeTruthy();
-    expect(serials.verify).toHaveBeenCalledWith('BV-2601-UNIQUE');
+    expect(api.get).toHaveBeenCalledWith('/serials/batch-coa/BV-2601-UNIQUE');
   });
 
-  it('does not claim a code is authentic when the registry lookup fails', async () => {
-    serials.verify.mockRejectedValue({
-      response: { data: { message: 'This code is not in the Bhumivera batch registry.' } },
+  it('does not present an unregistered serial as an authentic certificate', async () => {
+    api.get.mockRejectedValue({
+      response: { data: { message: 'Serial number not found in the registry.' } },
     });
 
-    render(
-      <MemoryRouter initialEntries={['/verify?serial=BV-NOT-REGISTERED']}>
-        <Routes>
-          <Route path="/verify" element={<ProductVerification />} />
-        </Routes>
-      </MemoryRouter>,
-    );
+    renderVerification('/verify?serial=BV-NOT-REGISTERED');
 
     await waitFor(() => expect(screen.getByRole('alert')).toBeTruthy());
-    expect(screen.getByText('This code is not in the Bhumivera batch registry.')).toBeTruthy();
-    expect(screen.queryByText('Official batch record matched')).toBeNull();
+    expect(screen.getByText('Serial number not found in the registry.')).toBeTruthy();
+    expect(screen.queryByText('Verified batch certificate of analysis')).toBeNull();
+  });
+
+  it('reads a box QR with the camera decoder and checks gift eligibility', async () => {
+    api.get.mockResolvedValue({
+      data: { valid: true, canRedeem: true, reward: { creditInr: 250, loyaltyPoints: 100 } },
+    });
+    renderVerification();
+
+    fireEvent.click(screen.getByRole('button', { name: /open live camera qr scanner/i }));
+    await waitFor(() => expect(scannerMock.callback).toBeTruthy());
+    scannerMock.callback({ getText: () => 'https://bhumivera.com/verify?qr=BHUMIVERA-GIFT-2026' });
+
+    await waitFor(() => expect(api.get).toHaveBeenCalledWith(
+      '/gamification/box-qr-status',
+      { params: { qr: 'BHUMIVERA-GIFT-2026' } },
+    ));
+    expect(screen.getByText(/account is eligible/i)).toBeTruthy();
+    expect(scannerMock.stop).toHaveBeenCalled();
+  });
+
+  it('automatically checks a gift code from a direct camera URL', async () => {
+    api.get.mockResolvedValue({
+      data: { valid: false, canRedeem: false, message: 'A delivered order is required.' },
+    });
+    renderVerification('/verify?qr=BHUMIVERA-GIFT-2026');
+
+    await waitFor(() => expect(api.get).toHaveBeenCalledWith(
+      '/gamification/box-qr-status',
+      { params: { qr: 'BHUMIVERA-GIFT-2026' } },
+    ));
+    expect(screen.getByText('A delivered order is required.')).toBeTruthy();
   });
 });

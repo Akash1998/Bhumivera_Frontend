@@ -1,68 +1,217 @@
-import React, { useEffect, useState } from 'react';
-import { useSearchParams } from 'react-router-dom';
-import { AlertCircle, CheckCircle2, QrCode, Search, ShieldCheck, FlaskConical } from 'lucide-react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import {
+  AlertCircle,
+  ArrowRight,
+  Camera,
+  CheckCircle2,
+  FlaskConical,
+  Gift,
+  Lock,
+  QrCode,
+  Search,
+  ShieldCheck,
+  X,
+} from 'lucide-react';
+import { BrowserMultiFormatReader } from '@zxing/browser';
 import SEO from '../components/SEO';
 import api from '../services/api';
-import { SAMPLE_BATCH_COAS } from '../data/bhumiveraUniqueData';
+import { useAuth } from '../context/AuthContext';
+
+const UNIVERSAL_GIFT_CODE = 'BHUMIVERA-GIFT-2026';
 
 export default function ProductVerification() {
   const [searchParams] = useSearchParams();
-  const urlSerial = searchParams.get('serial') || searchParams.get('code') || 'BHMV-2610-SB083';
+  const { user } = useAuth() || {};
+  const userId = user?.id;
+  const urlGiftCode = searchParams.get('qr') || '';
+  const urlSerial = searchParams.get('serial') || searchParams.get('code') || '';
+  const urlGiftSerial = searchParams.get('serial') || '';
   const [serial, setSerial] = useState(urlSerial);
   const [loading, setLoading] = useState(false);
   const [productData, setProductData] = useState(null);
-  const [coaData, setCoaData] = useState(SAMPLE_BATCH_COAS['BHMV-2610-SB083'] || null);
+  const [coaData, setCoaData] = useState(null);
   const [error, setError] = useState('');
+  const [scannerOpen, setScannerOpen] = useState(false);
+  const [scannerError, setScannerError] = useState('');
+  const [giftCode, setGiftCode] = useState(urlGiftCode || UNIVERSAL_GIFT_CODE);
+  const [giftSerial, setGiftSerial] = useState(urlGiftSerial);
+  const [giftStatus, setGiftStatus] = useState(null);
+  const [giftLoading, setGiftLoading] = useState(false);
+  const [redeemingGift, setRedeemingGift] = useState(false);
+  const videoRef = useRef(null);
+  const scannerControlsRef = useRef(null);
+  const scannedResultRef = useRef(false);
 
-  const verifySerialCode = async (targetSerial) => {
-    const cleanSerial = targetSerial.trim().toUpperCase();
+  const verifySerialCode = useCallback(async (targetSerial) => {
+    const cleanSerial = String(targetSerial || '').trim().toUpperCase();
     if (!cleanSerial) return;
 
     setSerial(cleanSerial);
     setProductData(null);
+    setCoaData(null);
     setError('');
-
-    if (SAMPLE_BATCH_COAS && SAMPLE_BATCH_COAS[cleanSerial]) {
-      setCoaData(SAMPLE_BATCH_COAS[cleanSerial]);
-    }
-
     setLoading(true);
-    try {
-      const coaRes = await api.get(`/serials/batch-coa/${encodeURIComponent(cleanSerial)}`).catch(() => null);
-      if (coaRes?.data?.coa) {
-        setCoaData(coaRes.data.coa);
-      }
-      const response = await api.get(`/warranty/validate/${encodeURIComponent(cleanSerial)}`);
-      if (response.data?.success) {
-        setProductData(response.data);
-      }
-    } catch (verificationError) {
-      if (!SAMPLE_BATCH_COAS?.[cleanSerial]) {
-        const bottleNum = String((cleanSerial.split('').reduce((acc, c) => acc + c.charCodeAt(0), 0) % 250) + 1).padStart(3, '0');
-        setCoaData({
-          serial: cleanSerial,
-          batchCode: 'BATCH-04/26-BV',
-          productName: 'Bhumivera 250-Bottle Micro-Batch Formulation',
-          bottleSequence: `Bottle #${bottleNum} of 250`,
-          remainingInBatch: 83,
-          pressedDate: 'Oct 18, 2026',
-          extractionTemp: '26.4°C (Sub-28°C Cold-Pressed Verified)',
-          calibratedPh: '5.44 pH (at 25.0°C Digital Electrode)',
-          microbiologicalAssay: 'Total Aerobic Count < 10 CFU/ml · Sterile Fill',
-          heavyMetals: 'Pb <0.05 ppm · As <0.02 ppm · Hg ND (ICP-MS)',
-          disclosedActives: '100% Label-Disclosed Active Percentages Verified on Bottle',
-          tamperCustody: 'Artisanal Wax-Sealed & Gold-Foil Neck Collar Intact',
-          originLot: 'Bhumivera Cleanroom Compounding Registry #BV-2026-Q4',
-        });
-      }
-    } finally {
-      setLoading(false);
+    const [coaResult, warrantyResult] = await Promise.allSettled([
+      api.get(`/serials/batch-coa/${encodeURIComponent(cleanSerial)}`),
+      api.get(`/warranty/validate/${encodeURIComponent(cleanSerial)}`),
+    ]);
+
+    if (coaResult.status === 'fulfilled' && coaResult.value.data?.success &&
+        coaResult.value.data?.verified && coaResult.value.data?.coa) {
+      setCoaData(coaResult.value.data.coa);
+    } else {
+      setError(
+        (coaResult.status === 'rejected' && coaResult.reason?.response?.data?.message) ||
+        (coaResult.status === 'fulfilled' && coaResult.value.data?.message) ||
+        'This serial does not have a verified batch certificate.'
+      );
     }
-  };
+
+    if (warrantyResult.status === 'fulfilled' && warrantyResult.value.data?.success) {
+      setProductData(warrantyResult.value.data);
+    } else if (coaResult.status === 'rejected' && warrantyResult.status === 'rejected') {
+      setError(
+        warrantyResult.reason?.response?.data?.message ||
+        coaResult.reason?.response?.data?.message ||
+        'Could not verify this serial right now. Please try again.'
+      );
+    }
+    setLoading(false);
+  }, []);
+
+  const verifyGift = useCallback(async (targetCode, targetSerial = '') => {
+    const cleanCode = String(targetCode || '').trim().toUpperCase();
+    const cleanSerial = String(targetSerial || '').trim().toUpperCase();
+    if (!cleanCode) return;
+
+    setGiftCode(cleanCode);
+    setGiftSerial(cleanSerial);
+    setGiftStatus(null);
+    if (!userId) {
+      setGiftStatus({
+        requiresLogin: true,
+        message: 'Sign in so we can securely check your delivered orders and gift history.',
+      });
+      return;
+    }
+
+    setGiftLoading(true);
+    try {
+      const { data } = await api.get('/gamification/box-qr-status', {
+        params: { qr: cleanCode, ...(cleanSerial ? { serial: cleanSerial } : {}) },
+      });
+      setGiftStatus(data);
+    } catch (verificationError) {
+      setGiftStatus(verificationError.response?.data || {
+        valid: false,
+        message: 'Could not check your gift eligibility right now. Please try again.',
+      });
+    } finally {
+      setGiftLoading(false);
+    }
+  }, [userId]);
+
+  const stopCameraScanner = useCallback(() => {
+    scannerControlsRef.current?.stop();
+    scannerControlsRef.current = null;
+    setScannerOpen(false);
+  }, []);
+
+  const handleScannedRawValue = useCallback((rawValue) => {
+    const scannedValue = String(rawValue || '').trim();
+    if (!scannedValue) return;
+
+    try {
+      const scannedUrl = new URL(scannedValue, window.location.origin);
+      const scannedGiftCode = scannedUrl.searchParams.get('qr') || scannedUrl.searchParams.get('code');
+      const scannedSerial = scannedUrl.searchParams.get('serial');
+      if (scannedGiftCode) {
+        setGiftCode(scannedGiftCode);
+        setGiftSerial(scannedSerial || '');
+        verifyGift(scannedGiftCode, scannedSerial || '');
+        return;
+      }
+      if (scannedSerial) {
+        verifySerialCode(scannedSerial);
+        return;
+      }
+    } catch {
+      // Non-URL QR values are handled as codes below.
+    }
+
+    if (scannedValue.toUpperCase() === UNIVERSAL_GIFT_CODE) {
+      verifyGift(scannedValue);
+    } else {
+      verifySerialCode(scannedValue);
+    }
+  }, [verifyGift, verifySerialCode]);
 
   useEffect(() => {
-    if (urlSerial) verifySerialCode(urlSerial);
-  }, [urlSerial]);
+    if (!scannerOpen || !videoRef.current) return undefined;
+    let active = true;
+    scannedResultRef.current = false;
+    const reader = new BrowserMultiFormatReader();
+
+    reader.decodeFromConstraints({
+      video: { facingMode: { ideal: 'environment' } },
+      audio: false,
+    }, videoRef.current, (result) => {
+      if (!active || !result || scannedResultRef.current) return;
+      scannedResultRef.current = true;
+      stopCameraScanner();
+      handleScannedRawValue(result.getText());
+    }).then((controls) => {
+      if (active) {
+        scannerControlsRef.current = controls;
+      } else {
+        controls.stop();
+      }
+    }).catch((cameraFailure) => {
+      if (active) {
+        setScannerError(cameraFailure?.message || 'Unable to start the camera. Check camera permission and try again.');
+        setScannerOpen(false);
+      }
+    });
+
+    return () => {
+      active = false;
+      scannerControlsRef.current?.stop();
+      scannerControlsRef.current = null;
+    };
+  }, [handleScannedRawValue, scannerOpen, stopCameraScanner]);
+
+  useEffect(() => {
+    if (urlGiftCode) {
+      setGiftCode(urlGiftCode);
+      verifyGift(urlGiftCode, urlGiftSerial);
+    } else if (urlSerial) {
+      verifySerialCode(urlSerial);
+    }
+  }, [urlGiftCode, urlGiftSerial, urlSerial, verifyGift, verifySerialCode]);
+
+  const handleGiftSubmit = (event) => {
+    event.preventDefault();
+    verifyGift(giftCode, giftSerial);
+  };
+
+  const handleRedeemGift = async () => {
+    setRedeemingGift(true);
+    try {
+      const { data } = await api.post('/gamification/redeem-box-qr', {
+        qr: giftCode,
+        ...(giftSerial ? { serial: giftSerial } : {}),
+      });
+      setGiftStatus(data);
+    } catch (redeemError) {
+      setGiftStatus(redeemError.response?.data || {
+        valid: false,
+        message: 'Could not redeem your gift right now. Please try again.',
+      });
+    } finally {
+      setRedeemingGift(false);
+    }
+  };
 
   const handleSearchSubmit = (event) => {
     event.preventDefault();
@@ -74,8 +223,8 @@ export default function ProductVerification() {
   return (
     <main className="min-h-screen bg-[#070a0e] pb-28 pt-10 font-sans text-[#e2e8f0] selection:bg-[#d4af37]/30 selection:text-white">
       <SEO
-        title="250-Bottle Micro-Batch Serial & Lab COA Verification | Bhumivera"
-        description="Enter your Bhumivera bottle serial number to inspect the real laboratory Certificate of Analysis (COA), calibrated pH level, sub-28°C extraction temperature, and microbiological assay."
+        title="Bottle Serial & Patron Gift Verification | Bhumivera"
+        description="Scan a Bhumivera box QR code or enter a bottle serial to verify the batch record and check your one-time delivered-order gift."
         route="/verify"
       />
 
@@ -86,10 +235,10 @@ export default function ProductVerification() {
           </span>
           <div>
             <p className="font-sub-gold text-[10px] uppercase tracking-[0.25em]">
-              250-Bottle Micro-Batch Traceability Moat
+              Product authenticity &amp; box gift portal
             </p>
             <h1 className="mt-1 font-serif text-2xl font-bold tracking-tight text-white sm:text-3xl">
-              <span className="font-headline-gold">Bottle Serial &amp; Lab COA</span>{' '}
+              <span className="font-headline-gold">Bottle Serial &amp; QR</span>{' '}
               <span className="font-headline-silver">Verification</span>
             </h1>
           </div>
@@ -100,14 +249,42 @@ export default function ProductVerification() {
           <div className="relative mx-auto max-w-2xl text-center">
             <div className="inline-flex items-center gap-2 rounded-full border border-[#d4af37]/40 bg-[#070a0e] px-4 py-1.5 font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#fce096]">
               <QrCode size={14} className="text-[#d4af37]" />
-              Batch 04/26 Laboratory Assay Lookup
+              Verify a bottle or scan your box QR
             </div>
             <h2 className="mt-5 font-serif text-2xl text-white sm:text-4xl">
-              Inspect Your Bottle&apos;s Laboratory Certificate
+              Inspect Your Bottle&apos;s Batch Record
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-sm leading-relaxed text-[#cbd5e1]">
-              Enter the serialized code printed on your bottle&apos;s artisanal wax-sealed collar to view its digital electrode pH reading, sub-28°C cold-press temperature log, and microbiological assay.
+              Scan the QR code printed on your box card, or enter the serial printed on your bottle. Only registry-backed records are shown as verified.
             </p>
+
+            <div className="mt-7">
+              <button
+                type="button"
+                onClick={() => {
+                  setScannerError('');
+                  setScannerOpen((open) => !open);
+                }}
+                className="btn-gold-luxury inline-flex items-center justify-center gap-2 rounded-2xl px-7 py-4 text-xs font-bold uppercase tracking-widest text-white shadow-xl"
+              >
+                {scannerOpen ? <X size={16} /> : <Camera size={16} />}
+                {scannerOpen ? 'Close Camera Scanner' : 'Open Live Camera QR Scanner'}
+              </button>
+            </div>
+
+            {scannerOpen && (
+              <div className="mx-auto mt-5 max-w-lg rounded-2xl border-2 border-[#d4af37] bg-black p-4">
+                <div className="relative aspect-video overflow-hidden rounded-xl">
+                  <video ref={videoRef} playsInline muted className="h-full w-full object-cover" />
+                  <div className="pointer-events-none absolute inset-6 rounded-xl border-2 border-dashed border-[#fce096]" />
+                </div>
+                <p className="mt-3 text-xs text-[#fce096]">Hold the QR code steady inside the frame.</p>
+                {scannerError && <p role="alert" className="mt-2 text-sm text-amber-300">{scannerError}</p>}
+              </div>
+            )}
+            {scannerError && !scannerOpen && (
+              <p role="alert" className="mx-auto mt-4 max-w-xl text-sm text-amber-300">{scannerError}</p>
+            )}
 
             <form onSubmit={handleSearchSubmit} className="mx-auto mt-7 flex max-w-xl flex-col gap-3 sm:flex-row">
               <input
@@ -116,7 +293,7 @@ export default function ProductVerification() {
                 value={serial}
                 onChange={(event) => setSerial(event.target.value)}
                 aria-label="Product serial number"
-                placeholder="Enter bottle serial (e.g. BHMV-2610-SB083)"
+                placeholder="Enter bottle serial (e.g. BV-CH26-8841)"
                 className="min-w-0 flex-1 rounded-2xl border border-[#d4af37]/40 bg-[#070a0e] px-5 py-4 font-mono text-base uppercase tracking-wider text-[#fce096] outline-none placeholder:normal-case placeholder:tracking-normal placeholder:text-stone-600 focus:border-[#d4af37]"
               />
               <button
@@ -125,23 +302,9 @@ export default function ProductVerification() {
                 className="btn-gold-luxury inline-flex items-center justify-center gap-2 rounded-2xl px-7 py-4 text-xs font-bold uppercase tracking-widest text-white shadow-xl transition disabled:cursor-wait disabled:opacity-50"
               >
                 <Search size={16} />
-                {loading ? 'Checking…' : 'Verify & Pull COA'}
+                {loading ? 'Checking…' : 'Verify Bottle Serial'}
               </button>
             </form>
-
-            <div className="mt-4 flex flex-wrap items-center justify-center gap-2">
-              <span className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">Sample Batch 04/26 Serials:</span>
-              {Object.keys(SAMPLE_BATCH_COAS || {}).map((code) => (
-                <button
-                  key={code}
-                  type="button"
-                  onClick={() => verifySerialCode(code)}
-                  className="rounded-lg border border-[#d4af37]/35 bg-[#070a0e] px-2.5 py-1 font-mono text-[11px] text-[#fce096] hover:border-[#d4af37]"
-                >
-                  {code}
-                </button>
-              ))}
-            </div>
 
             {error && (
               <p role="alert" className="mt-5 inline-flex items-center gap-2 rounded-xl border border-rose-500/30 bg-rose-950/40 p-3 text-left text-sm text-rose-300">
@@ -152,6 +315,88 @@ export default function ProductVerification() {
           </div>
         </section>
 
+        <section className="mt-8 rounded-3xl border border-[#d4af37]/40 bg-[#0d1520] p-6 shadow-xl sm:p-8">
+          <div className="flex items-center gap-3">
+            <Gift size={24} className="text-[#d4af37]" />
+            <div>
+              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#fce096]">
+                One-time delivered-order patron gift
+              </p>
+              <h2 className="mt-1 font-serif text-xl font-bold text-white sm:text-2xl">
+                Claim ₹250 Credit + 100 Privilege Points
+              </h2>
+            </div>
+          </div>
+          <form onSubmit={handleGiftSubmit} className="mt-5 grid gap-3 sm:grid-cols-[1fr_1fr_auto]">
+            <input
+              type="text"
+              value={giftCode}
+              onChange={(event) => setGiftCode(event.target.value)}
+              aria-label="Box gift code"
+              placeholder="Box gift code"
+              className="min-w-0 rounded-xl border border-[#d4af37]/35 bg-[#070a0e] px-4 py-3 font-mono text-sm uppercase text-[#fce096] outline-none focus:border-[#d4af37]"
+            />
+            <input
+              type="text"
+              value={giftSerial}
+              onChange={(event) => setGiftSerial(event.target.value)}
+              aria-label="Optional bottle serial number"
+              placeholder="Bottle serial (optional)"
+              className="min-w-0 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] px-4 py-3 font-mono text-sm uppercase text-white outline-none focus:border-[#d4af37]"
+            />
+            <button
+              type="submit"
+              disabled={giftLoading}
+              className="btn-gold-luxury inline-flex items-center justify-center gap-2 rounded-xl px-5 py-3 text-xs font-bold uppercase tracking-wider text-white disabled:opacity-50"
+            >
+              <Search size={15} /> {giftLoading ? 'Checking…' : 'Check Gift'}
+            </button>
+          </form>
+
+          {giftStatus && (
+            <div className="mt-5 rounded-2xl border border-[#d4af37]/30 bg-[#070a0e] p-5" role="status">
+              {giftStatus.requiresLogin ? (
+                <>
+                  <p className="flex items-center gap-2 font-semibold text-[#fce096]">
+                    <Lock size={18} /> Sign in to check gift eligibility
+                  </p>
+                  <p className="mt-2 text-sm text-[#cbd5e1]">{giftStatus.message}</p>
+                  <Link
+                    to={`/login?redirect=${encodeURIComponent(`/verify?qr=${encodeURIComponent(giftCode)}${giftSerial ? `&serial=${encodeURIComponent(giftSerial)}` : ''}`)}`}
+                    className="btn-gold-luxury mt-4 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-xs font-bold uppercase tracking-wider text-white"
+                  >
+                    Sign In <ArrowRight size={14} />
+                  </Link>
+                </>
+              ) : giftStatus.redeemedNow ? (
+                <p className="font-semibold text-emerald-300">
+                  Gift claimed: ₹{giftStatus.creditInr} credit and {giftStatus.loyaltyPoints} points added to your account.
+                </p>
+              ) : giftStatus.canRedeem ? (
+                <>
+                  <p className="font-semibold text-emerald-300">
+                    Delivered order verified{giftStatus.qualifyingOrder?.order_number
+                      ? `: #${giftStatus.qualifyingOrder.order_number}`
+                      : ''}. Your account is eligible.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={handleRedeemGift}
+                    disabled={redeemingGift}
+                    className="btn-gold-luxury mt-4 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-xs font-bold uppercase tracking-wider text-white disabled:opacity-50"
+                  >
+                    <Gift size={15} /> {redeemingGift ? 'Crediting account…' : 'Claim My One-Time Gift'}
+                  </button>
+                </>
+              ) : (
+                <p className="flex items-center gap-2 text-sm text-rose-200">
+                  <AlertCircle size={17} /> {giftStatus.message || 'This gift code could not be verified.'}
+                </p>
+              )}
+            </div>
+          )}
+        </section>
+
         {coaData && (
           <section aria-live="polite" className="mt-8 overflow-hidden rounded-3xl border border-[#d4af37]/40 bg-[#0d1520] p-6 shadow-xl sm:p-8">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#d4af37]/20 pb-5">
@@ -159,7 +404,7 @@ export default function ProductVerification() {
                 <FlaskConical size={24} className="text-[#d4af37]" />
                 <div>
                   <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-emerald-400">
-                    Authenticated Micro-Batch Certificate of Analysis (COA)
+                    Verified batch certificate of analysis
                   </p>
                   <h2 className="mt-1 font-serif text-xl font-bold text-white sm:text-2xl">
                     {coaData.productName}
@@ -199,8 +444,8 @@ export default function ProductVerification() {
             </div>
 
             <div className="mt-4 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] p-4 text-xs text-[#cbd5e1]">
-              <p><strong className="text-[#fce096]">100% Label-Disclosed Active Profile:</strong> {coaData.disclosedActives}</p>
-              <p className="mt-1 text-[#94a3b8]"><strong className="text-white">Origin &amp; Press Date:</strong> {coaData.originLot} · Pressed {coaData.pressedDate} ({coaData.remainingInBatch} of 250 units remaining)</p>
+              <p><strong className="text-[#fce096]">Label-disclosed active profile:</strong> {coaData.disclosedActives}</p>
+              <p className="mt-1 text-[#94a3b8]"><strong className="text-white">Origin &amp; press date:</strong> {coaData.originLot} · Pressed {coaData.pressedDate} ({coaData.remainingInBatch} of 250 units remaining)</p>
             </div>
           </section>
         )}
@@ -211,7 +456,7 @@ export default function ProductVerification() {
               <CheckCircle2 size={22} className="text-[#d4af37]" />
               <div>
                 <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#fce096]">
-                  Database Serial Matched
+                  Database serial matched
                 </p>
                 <h2 className="mt-1 font-serif text-xl font-bold text-white sm:text-2xl">
                   Product record found
