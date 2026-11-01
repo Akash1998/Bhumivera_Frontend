@@ -618,6 +618,7 @@ export const serials = {
   createGenuinityQR: d => api.post("/serials/genuinity/create", d, { adminAuth: true }),
   getGenuinityList: () => api.get("/serials/genuinity/list", { adminAuth: true }),
   deleteGenuinitySerial: id => api.delete(`/serials/genuinity/${id}`, { adminAuth: true }),
+  bulkDeleteGenuinitySerials: d => api.post("/serials/genuinity/bulk-delete", d, { adminAuth: true }),
   getAllAdmin: () => api.get("/serials/admin/all"),
   getByProduct: p => api.get(`/serials/${p}`),
   getStats: p => api.get(`/serials/${p}/stats`),
