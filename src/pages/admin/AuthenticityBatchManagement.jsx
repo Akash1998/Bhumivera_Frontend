@@ -311,12 +311,14 @@ export default function AuthenticityBatchManagement() {
         const item = serialsToPrint[i];
         const serialCode = typeof item === 'string' ? item : (item.serialNumber || item.serial || String(item));
         const verifyUrl = `${origin}/verify?code=${encodeURIComponent(serialCode)}`;
-        const dataUrl = await QRCode.toDataURL(verifyUrl, {
+        // Vector SVG scales exactly to the print size, avoiding blurry/shifted modules
+        const svg = await QRCode.toString(verifyUrl, {
+          type: 'svg',
           errorCorrectionLevel: 'M',
           margin: 0,
-          width: 140,
           color: { dark: '#000000', light: '#ffffff' },
         });
+        const dataUrl = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
         qrItems.push({
           serial: serialCode,
           qrUrl: dataUrl,
@@ -410,9 +412,10 @@ export default function AuthenticityBatchManagement() {
                 align-items: center;
                 justify-content: center;
                 text-align: center;
-                padding: 0.6mm 0.4mm;
+                padding: 0 0.4mm;
                 overflow: hidden;
-                border: 0.35px dashed rgba(0, 0, 0, 0.28);
+                outline: 0.35px dashed rgba(0, 0, 0, 0.28);
+                outline-offset: -0.35px;
               }
               .sticker-brand {
                 font-size: 4pt;
@@ -427,8 +430,8 @@ export default function AuthenticityBatchManagement() {
                 width: 14.5mm;
                 height: 14.5mm;
                 display: block;
-                image-rendering: pixelated;
-                image-rendering: crisp-edges;
+                flex: none;
+                margin: 0 auto;
               }
               .sticker-serial {
                 font-family: "Courier New", Courier, monospace;
