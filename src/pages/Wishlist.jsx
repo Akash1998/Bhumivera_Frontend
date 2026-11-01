@@ -80,48 +80,56 @@ export default function Wishlist() {
           )}
         </div>
 
-        {/* Saved Items Grid */}
+        {/* Saved Items List - Compact Application Cards */}
         {wishlist.length > 0 ? (
-          <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 mb-16">
+          <div className="space-y-3 mb-16">
             {wishlist.map((product, idx) => {
               const pid = product.product_id || product.id || product._id;
               return (
                 <article
                   key={pid || idx}
-                  className="two-tone-card rounded-2xl overflow-hidden flex flex-col group hover:border-[#d4af37]/50 transition-all duration-300"
+                  className="flex items-center justify-between gap-3 p-3 sm:p-4 rounded-2xl bg-[#102219]/90 border border-[#244A38] hover:border-[#D4AF37]/50 shadow-sm transition-all group"
                 >
-                  <div className="aspect-[4/3] w-full overflow-hidden bg-[#070a0e] relative">
-                    <img
-                      src={getImageUrl(product, idx)}
-                      alt={product.name}
-                      className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0d1520] via-transparent to-transparent opacity-60" />
-                  </div>
-                  <div className="p-6 flex-1 flex flex-col justify-between">
-                    <div>
-                      <h2 className="font-serif text-xl font-semibold text-white tracking-wide">{product.name}</h2>
-                      <p className="mt-2 text-lg font-serif font-bold text-[#d4af37]">
+                  <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                    <Link
+                      to={`/product/${product.slug || pid}`}
+                      className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-[#070a0e] border border-[#d4af37]/25 overflow-hidden shrink-0 flex items-center justify-center group-hover:border-[#d4af37]/60 transition-colors"
+                    >
+                      <img
+                        src={getImageUrl(product, idx)}
+                        alt={product.name}
+                        className="h-full w-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                    </Link>
+                    <div className="min-w-0">
+                      <Link
+                        to={`/product/${product.slug || pid}`}
+                        className="font-serif text-xs sm:text-base font-semibold text-white tracking-wide truncate block hover:text-[#fce096] transition-colors"
+                      >
+                        {product.name}
+                      </Link>
+                      <p className="mt-0.5 text-xs sm:text-sm font-serif font-bold text-[#d4af37]">
                         ₹{product.discount_price || product.price}
                       </p>
                     </div>
-                    <div className="mt-6 flex gap-2">
-                      <button
-                        type="button"
-                        onClick={() => handleMoveToCart(product)}
-                        className="flex-1 btn-gold-luxury py-2.5 px-4 rounded-xl text-xs font-semibold uppercase tracking-wider inline-flex items-center justify-center gap-2"
-                      >
-                        <ShoppingCart size={14} /> Move to Bag
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => removeFromWishlist(pid)}
-                        className="btn-silver-luxury p-2.5 rounded-xl text-[#cbd5e1] hover:text-rose-400"
-                        aria-label="Remove from wishlist"
-                      >
-                        <Trash2 size={16} />
-                      </button>
-                    </div>
+                  </div>
+                  <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => handleMoveToCart(product)}
+                      className="btn-gold-luxury py-2 px-3 sm:px-4 rounded-xl text-xs font-semibold uppercase tracking-wider inline-flex items-center justify-center gap-1.5 active:scale-95 transition-transform"
+                    >
+                      <ShoppingCart size={14} />
+                      <span className="hidden xs:inline">Move to Bag</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => removeFromWishlist(pid)}
+                      className="p-2 rounded-xl bg-[#070a0e] border border-[#d4af37]/20 text-[#cbd5e1] hover:text-rose-400 hover:border-rose-400/40 transition-colors"
+                      aria-label="Remove from wishlist"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </div>
                 </article>
               );

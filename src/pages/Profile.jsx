@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import QRCode from 'qrcode';
 import { useAuth } from '../context/AuthContext';
 import { formatOrderNumber } from '../utils/formatOrderNumber';
 import { useCart } from '../context/CartContext';
@@ -32,7 +31,7 @@ import {
   Filter, Calendar, Hash, Truck, PackageCheck, RotateCcw,
   ChevronDown, ChevronUp, Gift, PiggyBank, ShoppingBag,
   Leaf, Zap, Users, Coins, ExternalLink, Key, Camera, Image as ImageIcon, Fingerprint,
-  Navigation, Check, ArrowLeft,
+  Navigation, Check, ArrowLeft, Sparkles,
 } from 'lucide-react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
 import { registerPasskey, isPasskeySupported } from '../utils/webauthnClient';
@@ -307,7 +306,6 @@ export default function Profile() {
   const [couponValidate, setCouponValidate] = useState({ code:'', result:null });
   const [affiliateCopied, setAffiliateCopied] = useState(false);
   const [referralData, setReferralData] = useState(null);
-  const [referralQr, setReferralQr] = useState('');
 
   const unreadCount = notifications.filter(n => !n.is_read && !n.read_at && n.status !== 'read').length;
 
@@ -1015,20 +1013,6 @@ export default function Profile() {
     };
   }, [activeTab, toast]);
   const referralUrl = referralData?.referralUrl || '';
-  useEffect(() => {
-    let active = true;
-    if (!referralUrl) {
-      setReferralQr('');
-      return () => { active = false; };
-    }
-    QRCode.toDataURL(referralUrl, { errorCorrectionLevel: 'H', margin: 2, width: 280 })
-      .then(dataUrl => { if (active) setReferralQr(dataUrl); })
-      .catch(error => {
-        console.error('[PROFILE_REFERRAL_QR]', error);
-        if (active) setReferralQr('');
-      });
-    return () => { active = false; };
-  }, [referralUrl]);
   const handleCopyRef = async () => {
     if (!referralUrl) { toast.error('Your referral link is still loading.'); return; }
     try { await navigator.clipboard.writeText(referralUrl); setAffiliateCopied(true); toast.success('Referral link copied'); setTimeout(() => setAffiliateCopied(false),2000); }
@@ -1207,13 +1191,149 @@ export default function Profile() {
             {/* ======== OVERVIEW ======== */}
             {activeTab === 'overview' && (
               <div className="space-y-7">
-                {/* Stats */}
-                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-                  <StatCard icon={Package} label="Total Orders" value={orders.length} accent="earth" onClick={() => setActiveTab('orders')}/>
-                  <StatCard icon={Heart} label="Wishlist Items" value={wishlist.length} accent="sage" onClick={() => setActiveTab('wishlist')}/>
-                  <StatCard icon={Wallet} label="Spendable Vault" value={`₹${Number(wallet.balance||0).toFixed(2)}`} hint={`+ ₹${Number(wallet.referralBalance||0).toFixed(2)} referral credit`} accent="gold" onClick={() => setActiveTab('wallet')}/>
-                  <StatCard icon={Award} label="Loyalty Points" value={Number(loyaltyData.points).toLocaleString()} hint={`${loyaltyData.tier?.currentTier || 'Patron tier'} · ${Number(loyaltyData.lifetimePoints).toLocaleString()} lifetime`} accent="sage"/>
-                  <StatCard icon={Bell} label="Notifications" value={unreadCount} accent="sage" onClick={() => setActiveTab('notifications')}/>
+                {/* Featured Prominent Cards: Spendable Vault (Wallet) & Priority Notifications */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 sm:gap-4">
+                  {/* Spendable Vault (Wallet) - Big Feature Card */}
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setActiveTab('wallet')}
+                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setActiveTab('wallet')}
+                    className="relative overflow-hidden rounded-2xl two-tone-panel-gold border border-[#D4AF37]/40 p-4 sm:p-5 shadow-lg hover:border-[#D4AF37]/70 active:scale-[0.99] transition-all cursor-pointer group flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-[#FCE096] shadow-inner shrink-0">
+                            <Wallet className="w-5 h-5" />
+                          </div>
+                          <div>
+                            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#D4AF37] block">Bhumivera Vault</span>
+                            <span className="text-xs text-[#cbd5e1] font-light">Spendable Account Balance</span>
+                          </div>
+                        </div>
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#FCE096] uppercase tracking-wider group-hover:translate-x-0.5 transition-transform">
+                          Passbook <ChevronRight className="w-3.5 h-3.5" />
+                        </span>
+                      </div>
+                      <div className="text-3xl sm:text-4xl font-serif font-bold text-white tracking-tight my-2">
+                        <span className="text-[#D4AF37]">₹</span>{Number(wallet.balance||0).toFixed(2)}
+                      </div>
+                    </div>
+                    <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#070a0e]/75 border border-[#D4AF37]/25 text-xs text-[#cbd5e1] font-light">
+                      <Sparkles className="w-3.5 h-3.5 text-[#FCE096] shrink-0" />
+                      <span>Shopping rewards: <strong className="text-[#FCE096] font-semibold">+₹{Number(wallet.referralBalance||0).toFixed(2)}</strong></span>
+                    </div>
+                  </div>
+
+                  {/* Priority Notifications - Big Feature Card */}
+                  <div
+                    role="button"
+                    tabIndex={0}
+                    onClick={() => setActiveTab('notifications')}
+                    onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setActiveTab('notifications')}
+                    className="relative overflow-hidden rounded-2xl two-tone-panel border border-[#D4AF37]/30 p-4 sm:p-5 shadow-lg hover:border-[#D4AF37]/60 active:scale-[0.99] transition-all cursor-pointer group flex flex-col justify-between"
+                  >
+                    <div>
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-10 h-10 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/30 flex items-center justify-center text-[#FCE096] relative shadow-inner shrink-0">
+                            <Bell className="w-5 h-5" />
+                            {unreadCount > 0 && (
+                              <span className="absolute -top-1 -right-1 w-3 h-3 rounded-full bg-rose-500 border-2 border-[#102219] animate-pulse" />
+                            )}
+                          </div>
+                          <div>
+                            <span className="text-[10px] uppercase font-bold tracking-[0.2em] text-[#D4AF37] block">Alerts & Dispatch</span>
+                            <span className="text-xs text-[#cbd5e1] font-light">Live Notifications & Updates</span>
+                          </div>
+                        </div>
+                        <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-[#FCE096] uppercase tracking-wider group-hover:translate-x-0.5 transition-transform">
+                          View <ChevronRight className="w-3.5 h-3.5" />
+                        </span>
+                      </div>
+                      <div className="text-2xl sm:text-3xl font-serif font-bold tracking-tight my-2">
+                        {unreadCount > 0 ? (
+                          <span className="text-[#FCE096]">{unreadCount} <span className="text-base font-sans font-semibold text-white">Unread Alerts</span></span>
+                        ) : (
+                          <span className="text-white">All Caught Up</span>
+                        )}
+                      </div>
+                    </div>
+                    <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#070a0e]/75 border border-[#D4AF37]/25 text-xs text-[#cbd5e1] font-light">
+                      <span className={`w-2 h-2 rounded-full ${unreadCount > 0 ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'} shrink-0`} />
+                      <span className="truncate">{unreadCount > 0 ? `${unreadCount} new updates ready for review` : 'Orders, assays, & vault ledger active'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Compact Application Mini Cards: Wishlist, Loyalty, Orders */}
+                <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                  {/* Wishlist - Compact Card */}
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('wishlist')}
+                    className="p-3 sm:p-3.5 rounded-2xl bg-[#102219]/90 border border-[#244A38] hover:border-[#D4AF37]/50 active:scale-[0.98] transition-all text-left flex flex-col justify-between shadow-sm group cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/25 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37]/20 transition-colors">
+                        <Heart className="w-4 h-4" />
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-[#94a3b8] group-hover:text-[#D4AF37] transition-colors" />
+                    </div>
+                    <div>
+                      <div className="text-base sm:text-lg font-serif font-bold text-white leading-tight">
+                        {wishlist.length}
+                      </div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-[#9BB0A5] truncate mt-0.5">
+                        Wishlist
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Loyalty Points - Compact Card */}
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('verify')}
+                    className="p-3 sm:p-3.5 rounded-2xl bg-[#102219]/90 border border-[#244A38] hover:border-[#D4AF37]/50 active:scale-[0.98] transition-all text-left flex flex-col justify-between shadow-sm group cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/25 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37]/20 transition-colors">
+                        <Award className="w-4 h-4" />
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-[#94a3b8] group-hover:text-[#D4AF37] transition-colors" />
+                    </div>
+                    <div>
+                      <div className="text-base sm:text-lg font-serif font-bold text-[#FCE096] leading-tight truncate">
+                        {Number(loyaltyData.points).toLocaleString()}
+                      </div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-[#9BB0A5] truncate mt-0.5">
+                        {loyaltyData.tier?.currentTier || 'Loyalty'} Pts
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Orders - Compact Card */}
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab('orders')}
+                    className="p-3 sm:p-3.5 rounded-2xl bg-[#102219]/90 border border-[#244A38] hover:border-[#D4AF37]/50 active:scale-[0.98] transition-all text-left flex flex-col justify-between shadow-sm group cursor-pointer"
+                  >
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="w-8 h-8 rounded-lg bg-[#D4AF37]/10 border border-[#D4AF37]/25 flex items-center justify-center text-[#D4AF37] group-hover:bg-[#D4AF37]/20 transition-colors">
+                        <Package className="w-4 h-4" />
+                      </div>
+                      <ChevronRight className="w-3.5 h-3.5 text-[#94a3b8] group-hover:text-[#D4AF37] transition-colors" />
+                    </div>
+                    <div>
+                      <div className="text-base sm:text-lg font-serif font-bold text-white leading-tight">
+                        {orders.length}
+                      </div>
+                      <div className="text-[10px] font-semibold uppercase tracking-wider text-[#9BB0A5] truncate mt-0.5">
+                        Orders
+                      </div>
+                    </div>
+                  </button>
                 </div>
 
                 {/* Mobile Android-Style Account Services Hub */}
@@ -1350,19 +1470,23 @@ export default function Profile() {
                       )}
                     </div>
 
-                    <div className="rounded-2xl two-tone-card border border-[#d4af37]/20 p-5 flex flex-col items-center gap-4 text-center sm:flex-row sm:text-left">
-                      {referralQr ? (
-                        <img src={referralQr} alt="QR code for your Bhumivera referral link" className="h-32 w-32 rounded-xl bg-white p-2 border border-[#d4af37]/40"/>
-                      ) : (
-                        <div role="status" className="grid h-32 w-32 place-items-center rounded-xl bg-[#070a0e] border border-[#d4af37]/25 text-xs text-[#94a3b8]">
-                          {referralUrl ? 'Creating QR…' : 'Loading link…'}
+                    <div className="rounded-2xl two-tone-card border border-[#d4af37]/20 p-5 flex flex-col sm:flex-row items-center justify-between gap-4">
+                      <div className="min-w-0">
+                        <div className="flex items-center gap-2 mb-1">
+                          <Share2 className="w-4 h-4 text-[#d4af37]" />
+                          <h3 className="font-serif font-bold text-sm text-white">Patron Referral Program</h3>
                         </div>
-                      )}
-                      <div>
-                        <h3 className="font-serif font-bold text-sm text-white">Share Your QR Pass</h3>
-                        <p className="mt-1 text-xs leading-relaxed text-[#cbd5e1] font-light">Friends can scan this code to link directly with your patronage reward benefits.</p>
-                        {referralQr && <a href={referralQr} download="bhumivera-referral-qr.png" className="btn-silver-luxury mt-3 inline-flex items-center px-4 py-1.5 text-xs font-semibold uppercase tracking-wider rounded-lg">Download QR</a>}
+                        <p className="text-xs text-[#cbd5e1] font-light leading-relaxed">
+                          Share your private invitation link with fellow connoisseurs and earn store vault credit on every order.
+                        </p>
                       </div>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('affiliate')}
+                        className="btn-gold-luxury px-4 py-2.5 rounded-xl text-xs font-semibold uppercase tracking-wider whitespace-nowrap shrink-0 inline-flex items-center gap-1.5"
+                      >
+                        Invite Friends <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
                     </div>
                   </section>
                 </div>
@@ -1485,7 +1609,7 @@ export default function Profile() {
                     <EmptyState icon={Heart} title="Your wishlist is empty" subtitle="Save formulations you love for later. Tap the heart on any product to curate your apothecary here." actionLabel="Discover Products" onAction={() => navigate('/shop')}/>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+                  <div className="space-y-3">
                     {wishlist.map(w => {
                       const pid = w.product_id || w.id || w._id;
                       const p = w.product || w;
@@ -1494,29 +1618,59 @@ export default function Profile() {
                       const firstImage = p.images?.[0];
                       const img = p.image_url || p.image || p.thumbnail || (typeof firstImage === 'object' ? firstImage.url || firstImage.file_path : firstImage);
                       return (
-                        <div key={w.id || pid} className="two-tone-card group rounded-2xl border border-[#d4af37]/20 overflow-hidden shadow-sm hover:border-[#d4af37]/50 transition-all flex flex-col justify-between">
-                          <div>
-                            <div className="aspect-[4/3] bg-[#070a0e] relative overflow-hidden flex items-center justify-center">
+                        <div
+                          key={w.id || pid}
+                          className="flex items-center justify-between gap-3 p-3 sm:p-4 rounded-2xl bg-[#102219]/90 border border-[#244A38] hover:border-[#D4AF37]/50 transition-all shadow-sm group"
+                        >
+                          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+                            <div
+                              onClick={() => navigate(`/product/${p.slug || pid}`)}
+                              className="w-14 h-14 sm:w-16 sm:h-16 rounded-xl bg-[#070a0e] border border-[#d4af37]/25 overflow-hidden shrink-0 flex items-center justify-center cursor-pointer group-hover:border-[#d4af37]/60 transition-colors"
+                            >
                               {img ? (
-                                <img src={getProfileImageUrl(img)} alt={name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"/>
+                                <img
+                                  src={getProfileImageUrl(img)}
+                                  alt={name}
+                                  onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                />
                               ) : (
-                                <div className="text-5xl text-[#d4af37]/20"><Leaf/></div>
+                                <Leaf className="w-5 h-5 text-[#d4af37]/30" />
                               )}
-                              <button onClick={() => handleRemoveWishlist(pid)} className="absolute top-3 right-3 w-9 h-9 rounded-full bg-[#070a0e]/80 backdrop-blur text-[#cbd5e1] hover:text-rose-400 flex items-center justify-center border border-[#d4af37]/25">
-                                <Trash2 className="w-4 h-4"/>
-                              </button>
                             </div>
-                            <div className="p-5">
-                              <h3 className="font-serif font-bold text-white text-base line-clamp-2 min-h-[2.5rem]">{name}</h3>
-                              <div className="mt-2 text-xl font-serif font-bold text-[#d4af37]">₹{price.toFixed(2)}</div>
+                            <div className="min-w-0">
+                              <h3
+                                onClick={() => navigate(`/product/${p.slug || pid}`)}
+                                className="font-serif font-bold text-xs sm:text-sm text-white truncate cursor-pointer hover:text-[#fce096] transition-colors"
+                              >
+                                {name}
+                              </h3>
+                              <div className="text-xs sm:text-sm font-serif font-bold text-[#d4af37] mt-0.5">
+                                ₹{price.toFixed(2)}
+                              </div>
                             </div>
                           </div>
-                          <div className="p-5 pt-0 flex gap-2">
-                            <button onClick={() => navigate(`/product/${p.slug || pid}`)} className="btn-silver-luxury flex-1 py-2 px-3 rounded-lg text-xs font-semibold uppercase tracking-wider inline-flex items-center justify-center gap-1">
-                              View <ExternalLink className="w-3 h-3"/>
+                          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
+                            <button
+                              onClick={() => navigate(`/product/${p.slug || pid}`)}
+                              title="View details"
+                              className="hidden sm:inline-flex p-2 rounded-xl bg-[#070a0e] border border-[#d4af37]/20 text-[#cbd5e1] hover:text-white hover:border-[#d4af37]/50 transition-colors"
+                            >
+                              <ExternalLink className="w-4 h-4" />
                             </button>
-                            <button onClick={() => handleWishlistAddToCart(p)} className="btn-gold-luxury flex-1 py-2 px-3 rounded-lg text-xs font-semibold uppercase tracking-wider inline-flex items-center justify-center gap-1">
-                              <ShoppingCart className="w-3 h-3"/> + Bag
+                            <button
+                              onClick={() => handleWishlistAddToCart(p)}
+                              className="btn-gold-luxury px-3 py-2 rounded-xl text-xs font-semibold uppercase tracking-wider inline-flex items-center gap-1.5 shadow-sm active:scale-95 transition-transform"
+                            >
+                              <ShoppingCart className="w-3.5 h-3.5" />
+                              <span className="hidden xs:inline">+ Bag</span>
+                            </button>
+                            <button
+                              onClick={() => handleRemoveWishlist(pid)}
+                              aria-label="Remove item"
+                              className="p-2 rounded-xl bg-[#070a0e] border border-[#d4af37]/20 text-[#cbd5e1] hover:text-rose-400 hover:border-rose-400/40 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4" />
                             </button>
                           </div>
                         </div>
@@ -2679,17 +2833,6 @@ export default function Profile() {
                     <button onClick={handleCopyRef} className={`btn-gold-luxury px-6 py-3 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all inline-flex items-center justify-center gap-2`}>
                       {affiliateCopied ? <><CheckCircle2 className="w-4 h-4"/> Copied!</> : <><Copy className="w-4 h-4"/> Copy Link</>}
                     </button>
-                  </div>
-                  <div className="mt-5 flex flex-col items-center gap-4 rounded-2xl border border-[#d4af37]/25 bg-[#070a0e]/60 p-5 text-center sm:flex-row sm:text-left">
-                    {referralQr
-                      ? <img src={referralQr} alt="QR code for your Bhumivera referral link" className="h-40 w-40 rounded-lg bg-white p-2 shadow-md"/>
-                      : <div role="status" className="grid h-40 w-40 shrink-0 place-items-center rounded-lg bg-[#070a0e] text-xs text-[#94a3b8] border border-[#d4af37]/20">{referralUrl ? 'Creating QR code…' : 'Loading referral link…'}</div>}
-                    <div>
-                      <h3 className="font-serif font-bold text-white">Share your QR code</h3>
-                      <p className="mt-1 max-w-md text-xs leading-5 text-[#cbd5e1] font-light">Friends can scan this code to open your sign-up link. This link expires after 90 days; your referral code remains available for manual entry.</p>
-                      {referralData?.referralExpiresAt && <p className="mt-2 text-xs text-[#94a3b8] font-light">Link expires {new Date(referralData.referralExpiresAt).toLocaleDateString()}.</p>}
-                      {referralQr && <a href={referralQr} download="bhumivera-referral-qr.png" className="btn-gold-luxury mt-3 inline-flex min-h-10 items-center rounded-xl px-5 py-2 text-xs font-semibold uppercase tracking-wider text-white">Download QR code</a>}
-                    </div>
                   </div>
                   <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mt-5">
                     <button onClick={() => shareVia('email')} className="two-tone-card flex items-center justify-center gap-2 px-4 py-3 rounded-xl border border-[#d4af37]/25 hover:border-[#d4af37] text-xs font-semibold uppercase tracking-wider text-[#cbd5e1] hover:text-[#fce096] transition-colors">
