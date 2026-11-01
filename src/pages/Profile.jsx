@@ -86,7 +86,7 @@ const SECURITY_QUESTIONS = [
 ];
 
 const DELIVERED_STATUSES = ['delivered', 'completed'];
-const BOX_GIFT_CODE = 'BHUMIVERA-GIFT-2026';
+const BOX_GIFT_CODE = '8492-7105-3824';
 const needsRefundSupport = order => (
   ['pending', 'confirmed'].includes((order.status || '').toLowerCase()) &&
   order.payment_mode === 'online' &&

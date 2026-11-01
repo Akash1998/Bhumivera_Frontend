@@ -483,6 +483,7 @@ export default function Navbar() {
                 <div className="space-y-1">
                   {[
                     { to: '/shop', label: 'Shop All Formulations', icon: Compass, badge: 'Catalog' },
+                    { to: '/verify?scan=1', label: 'Scan QR Code', icon: QrCode },
                     { to: '/verify', label: 'Verify Bottle Serial & QR Gift (₹300)', icon: QrCode, badge: '₹300 Gift', highlight: true },
                     { to: '/community', label: 'Community & Volunteer Hub', icon: HeartHandshake, badge: 'Dec 2026' },
                     { to: '/impact', label: 'Impact Ledger & Pledges', icon: Leaf },

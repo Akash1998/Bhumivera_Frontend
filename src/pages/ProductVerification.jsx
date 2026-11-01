@@ -30,7 +30,8 @@ import SEO from '../components/SEO';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 
-const UNIVERSAL_GIFT_CODE = 'BHUMIVERA-GIFT-2026';
+const UNIVERSAL_GIFT_CODE = '8492-7105-3824';
+const LEGACY_GIFT_CODE = 'BHUMIVERA-GIFT-2026';
 
 export default function ProductVerification() {
   const [searchParams] = useSearchParams();
@@ -224,7 +225,11 @@ export default function ProductVerification() {
 
     if (/^WC-[A-Z0-9]{10}$/i.test(scannedValue)) {
       checkWelcomeGift(scannedValue);
-    } else if (scannedValue.toUpperCase() === UNIVERSAL_GIFT_CODE) {
+    } else if (
+      scannedValue.toUpperCase() === UNIVERSAL_GIFT_CODE ||
+      scannedValue.replace(/[\s-]/g, '') === '849271053824' ||
+      scannedValue.toUpperCase() === LEGACY_GIFT_CODE
+    ) {
       verifyGift(scannedValue);
     } else {
       verifySerialCode(scannedValue);

@@ -37,6 +37,7 @@ describe('Navbar', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Open menu' }));
 
     expect(screen.getByRole('dialog', { name: 'Main navigation' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Scan QR Code' }).getAttribute('href')).toBe('/verify?scan=1');
     expect(screen.getByRole('link', { name: /Verify Bottle Serial/i })).toBeTruthy();
     expect(screen.queryByText(/select language/i)).toBeNull();
   });
