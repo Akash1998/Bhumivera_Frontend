@@ -21,49 +21,6 @@ import {
 } from 'lucide-react';
 import SEO from '../components/SEO';
 
-const INITIAL_COMMUNITY_POSTS = [
-  {
-    id: 101,
-    author: 'Anirban Mukherjee',
-    location: 'Raniganj Station Road',
-    role: 'Animal Care Volunteer',
-    action: 'Fed 14 street dogs & installed 2 water bowls',
-    timestamp: '2 hours ago',
-    likes: 18,
-    text: 'Set up two heavy terracotta water bowls outside the vegetable market and fed 14 stray community dogs warm boiled rice with broth. Excited for the December winter bedding drive!',
-  },
-  {
-    id: 102,
-    author: 'Priyanka Das',
-    location: 'Asansol Rail Colony',
-    role: 'Smt. Shanti Ration Kits Lead',
-    action: 'Pledged for Smt. Shanti Food & Ration Kits',
-    timestamp: 'Yesterday',
-    likes: 24,
-    text: 'Proud to see a local brand tackling real hunger right here on our own streets. Count me in for packing and distributing dry food and ration kits for kids and elders starting December 2026.',
-  },
-  {
-    id: 103,
-    author: 'Rohan Sen',
-    location: 'Durgapur River Ghat',
-    role: 'River & Earth Guardian',
-    action: 'Surveyed Damodar riverbank silt',
-    timestamp: '3 days ago',
-    likes: 15,
-    text: 'Inspected the mud erosion near the tributary crossing. Deep-rooting vetiver grass is the perfect low-cost, natural solution. Can’t wait for our first plantation drive!',
-  },
-  {
-    id: 104,
-    author: 'Sunita Chatterjee',
-    location: 'Bardhaman',
-    role: 'Elder Care Volunteer',
-    action: 'Identified 8 isolated elderly widows',
-    timestamp: '4 days ago',
-    likes: 31,
-    text: 'Identified 8 elderly widows living alone in the outskirts who urgently need winter woollen blankets and dry ration grains. Let us make sure no senior shivers this winter.',
-  },
-];
-
 const UPCOMING_DRIVES = [
   {
     id: 'drive-1',
@@ -117,7 +74,7 @@ export default function Community() {
   const [volunteerPass, setVolunteerPass] = useState(null);
 
   // Discussion forum state
-  const [posts, setPosts] = useState(INITIAL_COMMUNITY_POSTS);
+  const [posts, setPosts] = useState([]);
   const [newAuthor, setNewAuthor] = useState('');
   const [newLocation, setNewLocation] = useState('');
   const [newRole, setNewRole] = useState('Community Member');
@@ -130,7 +87,12 @@ export default function Community() {
     window.scrollTo({ top: 0, behavior: 'smooth' });
     try {
       const storedPosts = localStorage.getItem('bv_community_feed');
-      if (storedPosts) setPosts(JSON.parse(storedPosts));
+      if (storedPosts) {
+        const parsedPosts = JSON.parse(storedPosts);
+        if (Array.isArray(parsedPosts)) {
+          setPosts(parsedPosts.filter(post => ![101, 102, 103, 104].includes(post.id)));
+        }
+      }
     } catch {
       // ignore
     }
@@ -173,7 +135,7 @@ export default function Community() {
       role: newRole.trim() || 'Community Steward',
       action: newAction.trim() || 'Community Stewardship Action',
       timestamp: 'Just now',
-      likes: 1,
+      likes: 0,
       text: newText.trim(),
     };
 
@@ -542,6 +504,11 @@ export default function Community() {
 
           {/* Feed of Posts */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredPosts.length === 0 && (
+              <p className="md:col-span-2 rounded-2xl border border-[#d4af37]/20 bg-[#102219]/30 p-5 text-xs text-[#94a3b8]">
+                No community updates have been shared yet.
+              </p>
+            )}
             {filteredPosts.map(post => (
               <div
                 key={post.id}
@@ -576,7 +543,7 @@ export default function Community() {
                   >
                     <ThumbsUp size={13} /> {post.likes} Applauds
                   </button>
-                  <span className="text-[10px] font-mono text-emerald-400">Verified Citizen Steward</span>
+                  <span className="text-[10px] font-mono text-[#94a3b8]">Community post</span>
                 </div>
               </div>
             ))}
