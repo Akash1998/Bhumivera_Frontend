@@ -89,13 +89,13 @@ export default function Checkout() {
       ? subtotal >= 799
         ? 150
         : 250
-      : freeShippingFromCoupon || subtotal >= 500
+      : freeShippingFromCoupon || subtotal >= 599
       ? 0
       : 50;
 
   const pointsBalance = Number(loyalty?.pointsBalance || 0);
   const pointsPerRupee = Math.max(1, Number(loyalty?.redemptionPointsPerRupee || 10));
-  const maxRedemptionPct = Number(loyalty?.maxRedemptionPercent || 45);
+  const maxRedemptionPct = Number(loyalty?.maxRedemptionPercent || 10);
   const minRedeemPts = Number(loyalty?.minimumRedemptionPoints || 100);
   const eligibleAfterDiscount = Math.max(0, subtotal - totalDiscount - tierDiscount - referralWalletAmount);
   const maxPointsByCap = Math.floor(((eligibleAfterDiscount * maxRedemptionPct) / 100) * pointsPerRupee);
@@ -377,10 +377,10 @@ export default function Checkout() {
                         <div className="flex justify-between items-center text-xs font-bold">
                           <span className="text-white">Standard Botanical Dispatch</span>
                           <span className="text-[#FCE096] font-serif">
-                            {freeShippingFromCoupon || subtotal >= 500 ? 'FREE' : '₹50'}
+                            {freeShippingFromCoupon || subtotal >= 599 ? 'FREE' : '₹50'}
                           </span>
                         </div>
-                        <p className="text-[11px] text-[#9BB0A5] mt-1.5 leading-relaxed">4–6 business days (Complimentary on ₹500+)</p>
+                        <p className="text-[11px] text-[#9BB0A5] mt-1.5 leading-relaxed">4–6 business days (Complimentary on ₹599+)</p>
                       </button>
 
                       <button

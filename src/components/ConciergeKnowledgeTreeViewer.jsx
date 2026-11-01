@@ -648,7 +648,7 @@ export default function ConciergeKnowledgeTreeViewer({
         <div className="flex items-center gap-2">
           <Truck className="w-4 h-4 text-emerald-400 shrink-0" />
           <span className="text-[11px] text-stone-200">
-            Orders ₹500+ unlock <strong className="text-emerald-400">100% Free Standard Delivery</strong>
+            Orders ₹599+ unlock <strong className="text-emerald-400">100% Free Standard Delivery</strong>
           </span>
         </div>
         <button

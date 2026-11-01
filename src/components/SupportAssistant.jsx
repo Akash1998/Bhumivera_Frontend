@@ -4126,7 +4126,7 @@ export function SupportAssistantInner({ lingerThresholdMs = LINGER_THRESHOLD_MS 
 
     const timer = window.setTimeout(async () => {
       sessionStorage.setItem(`${PROACTIVE_TRIGGERED_KEY}:${path}`, '1');
-      let nudge = 'Need a hand with checkout? Free standard shipping on orders ₹500+.';
+      let nudge = 'Need a hand with checkout? Free standard shipping on orders ₹599+.';
       try {
         if (typeof aiSupportApi.updateContext === 'function') {
           const ctxRes = await aiSupportApi.updateContext({
