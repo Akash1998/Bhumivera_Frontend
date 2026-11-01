@@ -1,11 +1,18 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import QRCode from 'qrcode';
-import { Gift, Printer, RefreshCw, Save, Ban } from 'lucide-react';
+import { Gift, Printer, RefreshCw, Save, Ban, Trash2 } from 'lucide-react';
 import { welcomeGifts } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 
 const inputClass = 'w-full rounded-xl border border-[#D4AF37]/25 bg-[#0b0e12] px-3 py-2.5 text-sm text-white outline-none focus:border-[#D4AF37]';
 const labelClass = 'mb-1 block font-mono text-[10px] uppercase tracking-wider text-slate-400';
+const escapeHtml = value => String(value).replace(/[&<>"']/g, character => ({
+  '&': '&amp;',
+  '<': '&lt;',
+  '>': '&gt;',
+  '"': '&quot;',
+  "'": '&#39;',
+}[character]));
 
 const giftUrl = code => {
   const url = new URL('/verify', window.location.origin);
@@ -20,6 +27,8 @@ export default function WelcomeCardManagement() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [selected, setSelected] = useState(null);
+  const [selectedCardIds, setSelectedCardIds] = useState([]);
+  const [bulkDeleting, setBulkDeleting] = useState(false);
   const [minDraft, setMinDraft] = useState('');
   const [form, setForm] = useState({
     label: 'Welcome card gift',
@@ -58,10 +67,10 @@ export default function WelcomeCardManagement() {
         dataUrl: await QRCode.toDataURL(giftUrl(code), { errorCorrectionLevel: 'Q', margin: 2, width: 240 }),
       })));
       const cells = images.map(({ code, dataUrl }) => (
-        `<div class="cell"><img src="${dataUrl}" alt=""><span>${code}</span></div>`
+        `<div class="cell"><img src="${dataUrl}" alt=""><span>${escapeHtml(code)}</span></div>`
       )).join('');
       printWindow.document.open();
-      printWindow.document.write(`<!doctype html><html><head><title>${title}</title><style>
+      printWindow.document.write(`<!doctype html><html><head><title>${escapeHtml(title)}</title><style>
         body{margin:0;padding:8mm;font-family:monospace}
         .grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6mm}
         .cell{text-align:center;break-inside:avoid;border:1px dashed #999;padding:3mm}
@@ -71,7 +80,7 @@ export default function WelcomeCardManagement() {
       printWindow.document.close();
       printWindow.focus();
       window.setTimeout(() => printWindow.print(), 300);
-    } catch (printError) {
+    } catch {
       printWindow.close();
       showToast?.('Could not generate the QR sheet.', 'error');
     }
@@ -103,6 +112,7 @@ export default function WelcomeCardManagement() {
     try {
       const { data } = await welcomeGifts.getCampaign(id);
       setSelected(data.campaign);
+      setSelectedCardIds([]);
       setMinDraft(String(data.campaign.min_order_amount));
     } catch (openError) {
       setError(openError.response?.data?.message || 'Could not load this campaign.');
@@ -124,10 +134,46 @@ export default function WelcomeCardManagement() {
   const voidCard = async cardId => {
     try {
       await welcomeGifts.voidCard(cardId);
+      setSelectedCardIds(current => current.filter(id => id !== Number(cardId)));
       await load();
       await openCampaign(selected.id);
     } catch (voidError) {
       showToast?.(voidError.response?.data?.message || 'Could not void this card.', 'error');
+    }
+  };
+
+  const unclaimedCardIds = selected?.cards
+    .filter(card => card.status === 'unclaimed')
+    .map(card => Number(card.id)) || [];
+  const allUnclaimedSelected = unclaimedCardIds.length > 0 &&
+    unclaimedCardIds.every(id => selectedCardIds.includes(id));
+
+  const toggleAllUnclaimed = () => {
+    setSelectedCardIds(allUnclaimedSelected ? [] : unclaimedCardIds);
+  };
+
+  const toggleCardSelection = cardId => {
+    setSelectedCardIds(current => current.includes(cardId)
+      ? current.filter(id => id !== cardId)
+      : [...current, cardId]);
+  };
+
+  const deleteSelectedCards = async () => {
+    if (!selected || selectedCardIds.length === 0) return;
+    if (!window.confirm(`Permanently delete ${selectedCardIds.length} selected unclaimed card${selectedCardIds.length === 1 ? '' : 's'}? This cannot be undone.`)) {
+      return;
+    }
+    setBulkDeleting(true);
+    try {
+      const { data } = await welcomeGifts.deleteCards(selected.id, selectedCardIds);
+      showToast?.(`Deleted ${data.count} unclaimed welcome card${data.count === 1 ? '' : 's'}.`, 'success');
+      setSelectedCardIds([]);
+      await load();
+      await openCampaign(selected.id);
+    } catch (deleteError) {
+      showToast?.(deleteError.response?.data?.message || 'Could not delete the selected welcome cards.', 'error');
+    } finally {
+      setBulkDeleting(false);
     }
   };
 
@@ -249,14 +295,55 @@ export default function WelcomeCardManagement() {
               </button>
             </div>
           </div>
+          <div className="flex flex-wrap items-center gap-2 border-y border-white/5 py-3">
+            <p className="mr-auto text-xs text-slate-400">
+              {selectedCardIds.length} selected · {unclaimedCardIds.length} unclaimed
+            </p>
+            <button type="button" onClick={toggleAllUnclaimed} disabled={!unclaimedCardIds.length || bulkDeleting} className="rounded-lg border border-white/15 px-3 py-2 text-xs font-semibold text-slate-200 disabled:opacity-50">
+              {allUnclaimedSelected ? 'Clear selection' : 'Select all unclaimed'}
+            </button>
+            <button
+              type="button"
+              onClick={() => printCodes(
+                selected.cards.filter(card => selectedCardIds.includes(Number(card.id))).map(card => card.code),
+                `${selected.label} — selected cards`
+              )}
+              disabled={!selectedCardIds.length || bulkDeleting}
+              className="inline-flex items-center gap-2 rounded-lg border border-[#D4AF37]/30 px-3 py-2 text-xs font-bold text-[#fce096] disabled:opacity-50"
+            >
+              <Printer size={13} /> Print selected ({selectedCardIds.length})
+            </button>
+            <button
+              type="button"
+              onClick={deleteSelectedCards}
+              disabled={!selectedCardIds.length || bulkDeleting}
+              className="inline-flex items-center gap-2 rounded-lg border border-rose-400/30 px-3 py-2 text-xs font-bold text-rose-300 disabled:opacity-50"
+            >
+              <Trash2 size={13} /> {bulkDeleting ? 'Deleting…' : `Delete selected (${selectedCardIds.length})`}
+            </button>
+          </div>
           <div className="max-h-96 overflow-auto">
             <table className="w-full min-w-[560px] text-left text-sm">
               <thead className="font-mono text-[10px] uppercase tracking-wider text-slate-400">
-                <tr><th className="py-2">Code</th><th>Status</th><th>Claimed by</th><th>Coupon</th><th /></tr>
+                <tr>
+                  <th className="py-2">
+                    <input type="checkbox" aria-label="Select all unclaimed cards" checked={allUnclaimedSelected} onChange={toggleAllUnclaimed} disabled={!unclaimedCardIds.length || bulkDeleting} />
+                  </th>
+                  <th>Code</th><th>Status</th><th>Claimed by</th><th>Coupon</th><th />
+                </tr>
               </thead>
               <tbody>
                 {selected.cards.map(card => (
                   <tr key={card.id} className="border-t border-white/5">
+                    <td className="py-2">
+                      <input
+                        type="checkbox"
+                        aria-label={`Select card ${card.code}`}
+                        checked={selectedCardIds.includes(Number(card.id))}
+                        onChange={() => toggleCardSelection(Number(card.id))}
+                        disabled={card.status !== 'unclaimed' || bulkDeleting}
+                      />
+                    </td>
                     <td className="py-2 font-mono text-[#fce096]">{card.code}</td>
                     <td className="capitalize">{card.status}</td>
                     <td>{card.claimed_by_name || card.claimed_by_email || '—'}</td>

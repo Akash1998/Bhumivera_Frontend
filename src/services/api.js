@@ -551,6 +551,7 @@ export const welcomeGifts = {
   createCampaign: data => api.post('/welcome-gifts/admin/campaigns', data, { adminAuth: true }),
   updateCampaign: (id, data) => api.patch(`/welcome-gifts/admin/campaigns/${id}`, data, { adminAuth: true }),
   voidCard: id => api.post(`/welcome-gifts/admin/cards/${id}/void`, {}, { adminAuth: true }),
+  deleteCards: (campaignId, cardIds) => api.delete(`/welcome-gifts/admin/campaigns/${campaignId}/cards`, { data: { cardIds }, adminAuth: true }),
 };
 export const analytics = {
   getDashboard: (period = '30d') => api.get('/analytics/dashboard', { params: { period } }),

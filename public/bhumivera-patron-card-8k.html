@@ -1,0 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bhumivera Organics — 8K Luxury Patron Keepsake Card & Welcome Gift Vault (Letter Size 2-Pager)</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;600;700;800;900&family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,400;1,600&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+  <style>
+    /* -------------------------------------------------------------
+       BHUMIVERA ORGANICS — 8K ARCHIVAL PRINT STYLESHEET
+       Exact US Letter Specifications: 8.5in x 11.0in (215.9mm x 279.4mm)
+       Calibrated for 300+ DPI double-sided single-sheet physical printing.
+       ------------------------------------------------------------- */
+    :root {
+      --bg-dark: #070a0e;
+      --bg-card: #0d1520;
+      --bg-surface: #101a26;
+      --gold-primary: #d4af37;
+      --gold-light: #fce096;
+      --gold-bright: #fff2b8;
+      --gold-dark: #997819;
+      --emerald-accent: #10b981;
+      --emerald-dark: #064e3b;
+      --text-gold: #fce096;
+      --text-light: #f8fafc;
+      --text-muted: #94a3b8;
+      --text-dim: #64748b;
+      --border-gold: rgba(212, 175, 55, 0.45);
+      --border-gold-subtle: rgba(212, 175, 55, 0.22);
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      -webkit-print-color-adjust: exact !important;
+      print-color-adjust: exact !important;
+    }
+
+    body {
+      background-color: #030507;
+      color: var(--text-light);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 24px 0 60px;
+    }
+
+    /* Interactive Top Action Bar (hidden when printing) */
+    .screen-controls {
+      position: sticky;
+      top: 16px;
+      z-index: 9999;
+      background: rgba(13, 21, 32, 0.95);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-gold);
+      border-radius: 9999px;
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 20px rgba(212, 175, 55, 0.2);
+      margin-bottom: 28px;
+    }
+
+    .btn-print {
+      background: linear-gradient(135deg, #d4af37 0%, #fce096 50%, #b38f2e 100%);
+      color: #070a0e;
+      border: none;
+      border-radius: 9999px;
+      padding: 10px 22px;
+      font-family: 'Cinzel', serif;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+      cursor: pointer;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.25s ease;
+      box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35);
+    }
+
+    .btn-print:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(252, 224, 150, 0.5);
+      filter: brightness(1.08);
+    }
+
+    .print-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+      letter-spacing: 0.05em;
+    }
+    .print-hint strong {
+      color: var(--gold-light);
+    }
+
+    /* Print Page Container: EXACT LETTER (8.5in x 11.0in) */
+    .page-sheet {
+      width: 8.5in;
+      height: 11.0in;
+      position: relative;
+      background: radial-gradient(ellipse at 50% 15%, #121c2a 0%, #080d14 55%, #05080c 100%);
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8), 0 0 1px rgba(212, 175, 55, 0.4);
+      margin-bottom: 36px;
+      overflow: hidden;
+      page-break-after: always;
+      break-after: page;
+      display: flex;
+      flex-direction: column;
+      padding: 0.38in; /* Safe inner margin */
+    }
+
+    /* Gold Guilloche Luxury Outer Border */
+    .guilloche-frame {
+      position: absolute;
+      inset: 0.22in;
+      border: 1.5px solid var(--gold-primary);
+      pointer-events: none;
+      z-index: 10;
+    }
+    .guilloche-inner {
+      position: absolute;
+      inset: 4px;
+      border: 0.75px solid rgba(212, 175, 55, 0.4);
+    }
+    /* Corner Floral Filigrees */
+    .corner-floret {
+      position: absolute;
+      width: 22px;
+      height: 22px;
+      border-color: var(--gold-light);
+    }
+    .top-left { top: -1px; left: -1px; border-top: 3px solid var(--gold-primary); border-left: 3px solid var(--gold-primary); }
+    .top-right { top: -1px; right: -1px; border-top: 3px solid var(--gold-primary); border-right: 3px solid var(--gold-primary); }
+    .bottom-left { bottom: -1px; left: -1px; border-bottom: 3px solid var(--gold-primary); border-left: 3px solid var(--gold-primary); }
+    .bottom-right { bottom: -1px; right: -1px; border-bottom: 3px solid var(--gold-primary); border-right: 3px solid var(--gold-primary); }
+
+    /* Botanical Watermark Background */
+    .botanical-watermark {
+      position: absolute;
+      inset: 0;
+      opacity: 0.035;
+      background-image: radial-gradient(#d4af37 1px, transparent 1px);
+      background-size: 16px 16px;
+      pointer-events: none;
+    }
+
+    /* Page Content Structure */
+    .content-flow {
+      position: relative;
+      z-index: 20;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    /* Header Block */
+    .maison-header {
+      text-align: center;
+      padding-bottom: 8px;
+      border-bottom: 1px solid var(--border-gold-subtle);
+    }
+    .brand-crest {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1.2px solid var(--gold-primary);
+      background: radial-gradient(circle, #1a2736 0%, #0a111a 100%);
+      box-shadow: 0 0 14px rgba(212, 175, 55, 0.25);
+      margin-bottom: 5px;
+    }
+    .brand-title {
+      font-family: 'Cinzel', serif;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 0.22em;
+      color: #ffffff;
+      text-transform: uppercase;
+      line-height: 1.15;
+    }
+    .brand-title span {
+      background: linear-gradient(135deg, #fff2b8 0%, #d4af37 50%, #fce096 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .maison-tagline {
+      font-size: 8.5px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      color: var(--gold-light);
+      margin-top: 3px;
+    }
+    .maison-reg {
+      font-family: 'Space Mono', monospace;
+      font-size: 7px;
+      color: var(--text-dim);
+      letter-spacing: 0.1em;
+      margin-top: 2px;
+    }
+
+    /* Thank You Banner */
+    .thank-you-ribbon {
+      margin: 8px 0;
+      text-align: center;
+      background: linear-gradient(90deg, rgba(212, 175, 55, 0) 0%, rgba(212, 175, 55, 0.14) 25%, rgba(212, 175, 55, 0.22) 50%, rgba(212, 175, 55, 0.14) 75%, rgba(212, 175, 55, 0) 100%);
+      padding: 6px 12px;
+      border-top: 1px solid rgba(212, 175, 55, 0.35);
+      border-bottom: 1px solid rgba(212, 175, 55, 0.35);
+    }
+    .thank-you-title {
+      font-family: 'Cinzel', serif;
+      font-size: 13.5px;
+      font-weight: 900;
+      letter-spacing: 0.28em;
+      color: var(--gold-bright);
+      text-transform: uppercase;
+    }
+    .thank-you-subtitle {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 10px;
+      color: #e2e8f0;
+      margin-top: 2px;
+    }
+
+    /* The 4 Radical Standards Grid */
+    .standards-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 7px;
+      margin: 8px 0;
+    }
+    .standard-pill {
+      background: rgba(16, 26, 38, 0.7);
+      border: 1px solid rgba(212, 175, 55, 0.25);
+      border-radius: 8px;
+      padding: 7px 6px;
+      text-align: center;
+    }
+    .std-num {
+      font-family: 'Space Mono', monospace;
+      font-size: 7.5px;
+      color: var(--gold-primary);
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+    }
+    .std-headline {
+      font-family: 'Cinzel', serif;
+      font-size: 8.5px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-top: 2px;
+      line-height: 1.2;
+    }
+    .std-desc {
+      font-size: 7px;
+      color: #94a3b8;
+      margin-top: 2px;
+      line-height: 1.25;
+    }
+
+    /* Centerpiece: The Golden QR Vault & Delivered-Order Engine */
+    .vault-hero {
+      background: radial-gradient(ellipse at 50% 50%, #111b27 0%, #0b121b 100%);
+      border: 1.5px solid var(--gold-primary);
+      border-radius: 14px;
+      padding: 12px 14px;
+      position: relative;
+      box-shadow: 0 0 24px rgba(212, 175, 55, 0.12), inset 0 0 20px rgba(0, 0, 0, 0.5);
+    }
+    .vault-hero-badge {
+      position: absolute;
+      top: -9px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: linear-gradient(135deg, #b38f2e 0%, #d4af37 50%, #b38f2e 100%);
+      color: #070a0e;
+      font-family: 'Cinzel', serif;
+      font-size: 8px;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      padding: 2.5px 14px;
+      border-radius: 9999px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.6);
+      white-space: nowrap;
+    }
+    .vault-layout {
+      display: grid;
+      grid-template-columns: 155px 1fr;
+      gap: 14px;
+      align-items: center;
+      margin-top: 4px;
+    }
+
+    /* High-Precision Scannable QR Frame */
+    .qr-chassis {
+      background: #ffffff;
+      padding: 7px;
+      border-radius: 10px;
+      border: 2px solid var(--gold-primary);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.8), 0 0 10px rgba(212, 175, 55, 0.3);
+      text-align: center;
+    }
+    .qr-svg-holder {
+      width: 141px;
+      height: 141px;
+      display: block;
+      margin: 0 auto;
+    }
+    .qr-svg-holder svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      shape-rendering: crispEdges;
+    }
+    .qr-caption {
+      font-family: 'Space Mono', monospace;
+      font-size: 7px;
+      font-weight: 700;
+      color: #070a0e;
+      margin-top: 4px;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    /* Vault Perks & Logic Breakdown */
+    .vault-intel {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+    }
+    .vault-grant-title {
+      font-family: 'Cinzel', serif;
+      font-size: 14px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.15;
+    }
+    .vault-grant-title span {
+      color: var(--gold-light);
+    }
+    .vault-grant-pills {
+      display: flex;
+      gap: 6px;
+      margin-top: 2px;
+    }
+    .grant-pill {
+      background: rgba(212, 175, 55, 0.15);
+      border: 1px solid var(--gold-primary);
+      border-radius: 6px;
+      padding: 3px 8px;
+      font-size: 8.5px;
+      font-weight: 700;
+      color: var(--gold-bright);
+    }
+
+    /* Engine Verification Rule Callout */
+    .engine-shield-box {
+      background: rgba(6, 78, 59, 0.25);
+      border-left: 3px solid var(--emerald-accent);
+      border-radius: 0 6px 6px 0;
+      padding: 5px 8px;
+      margin-top: 2px;
+    }
+    .engine-shield-header {
+      font-size: 8px;
+      font-weight: 800;
+      color: #6ee7b7;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .engine-shield-text {
+      font-size: 7.2px;
+      color: #cbd5e1;
+      line-height: 1.3;
+      margin-top: 2px;
+    }
+    .engine-shield-text strong {
+      color: #ffffff;
+    }
+
+    /* Rules Matrix */
+    .rules-matrix {
+      background: rgba(16, 26, 38, 0.6);
+      border: 1px solid rgba(212, 175, 55, 0.2);
+      border-radius: 6px;
+      padding: 5px 8px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    .rule-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 4px;
+      font-size: 7.2px;
+      line-height: 1.25;
+      color: #e2e8f0;
+    }
+    .rule-bullet {
+      color: var(--gold-primary);
+      font-size: 9px;
+      line-height: 1;
+    }
+
+    /* 3 Easy Steps Bar */
+    .how-to-steps {
+      margin: 8px 0;
+      background: rgba(13, 21, 32, 0.6);
+      border: 1px solid var(--border-gold-subtle);
+      border-radius: 8px;
+      padding: 7px 10px;
+    }
+    .steps-heading {
+      font-family: 'Cinzel', serif;
+      font-size: 8.5px;
+      font-weight: 700;
+      color: var(--gold-light);
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+      margin-bottom: 5px;
+      text-align: center;
+    }
+    .steps-row {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 8px;
+    }
+    .step-box {
+      display: flex;
+      gap: 6px;
+      align-items: flex-start;
+    }
+    .step-badge {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--gold-primary);
+      color: #070a0e;
+      font-family: 'Space Mono', monospace;
+      font-size: 8px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    .step-text {
+      font-size: 7.2px;
+      color: #94a3b8;
+      line-height: 1.25;
+    }
+    .step-text strong {
+      color: #ffffff;
+      display: block;
+      font-size: 7.8px;
+    }
+
+    /* Bottle Serial Check Box */
+    .serial-inspection-bar {
+      background: rgba(16, 26, 38, 0.8);
+      border: 1px dashed rgba(212, 175, 55, 0.4);
+      border-radius: 8px;
+      padding: 6px 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .serial-left {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .serial-icon {
+      color: var(--gold-primary);
+      font-size: 14px;
+    }
+    .serial-desc {
+      font-size: 7.3px;
+      color: #cbd5e1;
+      line-height: 1.25;
+    }
+    .serial-desc strong {
+      color: var(--gold-light);
+    }
+    .serial-link-pill {
+      font-family: 'Space Mono', monospace;
+      font-size: 7.5px;
+      font-weight: 700;
+      color: var(--gold-bright);
+      background: rgba(212, 175, 55, 0.15);
+      border: 1px solid var(--gold-primary);
+      border-radius: 4px;
+      padding: 3px 8px;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* Bottom Certified Microcopy */
+    .page-footer-strip {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding-top: 6px;
+      border-top: 1px solid var(--border-gold-subtle);
+      font-size: 6.8px;
+      color: var(--text-dim);
+      font-family: 'Space Mono', monospace;
+      letter-spacing: 0.05em;
+    }
+
+    /* =========================================================================
+       PAGE 2: THE KEEPSAKE BOX, RITUAL APOTHECARY & SACRED IMPACT LEDGER
+       ========================================================================= */
+    .page-2-header {
+      text-align: center;
+      padding-bottom: 7px;
+      border-bottom: 1px solid var(--border-gold-subtle);
+    }
+    .page-2-tagline {
+      font-family: 'Cinzel', serif;
+      font-size: 15px;
+      font-weight: 800;
+      letter-spacing: 0.22em;
+      color: #ffffff;
+      text-transform: uppercase;
+    }
+    .page-2-tagline span {
+      color: var(--gold-light);
+    }
+    .page-2-sub {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 9.5px;
+      color: #cbd5e1;
+      margin-top: 2px;
+    }
+
+    /* Section 1: The Keepsake Box ("Keepsafe Box") */
+    .keepsake-section {
+      background: radial-gradient(ellipse at 50% 50%, #101c29 0%, #0a111a 100%);
+      border: 1px solid rgba(212, 175, 55, 0.35);
+      border-radius: 10px;
+      padding: 9px 12px;
+      margin: 6px 0;
+    }
+    .section-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+      padding-bottom: 4px;
+      margin-bottom: 6px;
+    }
+    .section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      color: var(--gold-light);
+      text-transform: uppercase;
+    }
+    .section-eco-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 6.8px;
+      color: #6ee7b7;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+    }
+    .keepsake-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+    }
+    .keepsake-idea {
+      background: rgba(7, 10, 14, 0.6);
+      border: 1px solid rgba(212, 175, 55, 0.18);
+      border-radius: 6px;
+      padding: 6px 7px;
+    }
+    .idea-title {
+      font-family: 'Cinzel', serif;
+      font-size: 8px;
+      font-weight: 700;
+      color: #ffffff;
+      line-height: 1.2;
+    }
+    .idea-desc {
+      font-size: 6.8px;
+      color: #94a3b8;
+      line-height: 1.3;
+      margin-top: 2px;
+    }
+
+    /* Section 2: Why Only Ordering The Ritual Matters */
+    .ritual-section {
+      background: rgba(13, 21, 32, 0.7);
+      border: 1px solid rgba(212, 175, 55, 0.28);
+      border-radius: 10px;
+      padding: 9px 12px;
+      margin: 6px 0;
+    }
+    .ritual-hero-text {
+      font-size: 7.5px;
+      color: #cbd5e1;
+      line-height: 1.35;
+      margin-bottom: 6px;
+    }
+    .ritual-hero-text strong {
+      color: var(--gold-bright);
+    }
+    .ritual-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+    }
+    .ritual-card {
+      background: rgba(7, 10, 14, 0.75);
+      border: 1px solid rgba(212, 175, 55, 0.22);
+      border-radius: 6px;
+      padding: 6px 7px;
+    }
+    .ritual-tag {
+      font-family: 'Space Mono', monospace;
+      font-size: 6.5px;
+      color: var(--gold-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    .ritual-name {
+      font-family: 'Cinzel', serif;
+      font-size: 8.2px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-top: 1px;
+      line-height: 1.2;
+    }
+    .ritual-actives {
+      font-size: 6.8px;
+      color: #94a3b8;
+      line-height: 1.3;
+      margin-top: 2px;
+    }
+
+    /* Section 3: The Radical Impact Ledger (Ground Truth in West Bengal) */
+    .impact-section {
+      background: radial-gradient(ellipse at 50% 50%, #0c2017 0%, #07130e 100%);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      border-radius: 10px;
+      padding: 9px 12px;
+      margin: 6px 0;
+    }
+    .impact-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(16, 185, 129, 0.25);
+      padding-bottom: 4px;
+      margin-bottom: 6px;
+    }
+    .impact-title {
+      font-family: 'Cinzel', serif;
+      font-size: 10.5px;
+      font-weight: 800;
+      letter-spacing: 0.16em;
+      color: #6ee7b7;
+      text-transform: uppercase;
+    }
+    .impact-zero-pill {
+      font-family: 'Space Mono', monospace;
+      font-size: 6.8px;
+      color: #fce096;
+      background: rgba(212, 175, 55, 0.15);
+      border: 1px solid rgba(212, 175, 55, 0.4);
+      padding: 2px 6px;
+      border-radius: 4px;
+      text-transform: uppercase;
+    }
+    .impact-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 7px;
+    }
+    .impact-card {
+      background: rgba(5, 15, 11, 0.7);
+      border: 1px solid rgba(16, 185, 129, 0.22);
+      border-radius: 6px;
+      padding: 6px 7px;
+    }
+    .impact-memorial {
+      font-family: 'Space Mono', monospace;
+      font-size: 6.8px;
+      color: #6ee7b7;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+    .impact-project-name {
+      font-family: 'Cinzel', serif;
+      font-size: 8px;
+      font-weight: 700;
+      color: #ffffff;
+      margin-top: 1px;
+      line-height: 1.2;
+    }
+    .impact-detail {
+      font-size: 6.8px;
+      color: #94a3b8;
+      line-height: 1.3;
+      margin-top: 2px;
+    }
+
+    /* Founder Pledge & Signoff */
+    .founder-pledge-strip {
+      background: rgba(13, 21, 32, 0.8);
+      border: 1px solid var(--border-gold-subtle);
+      border-radius: 8px;
+      padding: 7px 12px;
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 12px;
+      align-items: center;
+      margin-top: 4px;
+    }
+    .pledge-quote {
+      font-family: 'Playfair Display', serif;
+      font-style: italic;
+      font-size: 8.5px;
+      color: #e2e8f0;
+      line-height: 1.35;
+    }
+    .pledge-author {
+      font-family: 'Cinzel', serif;
+      font-size: 7.8px;
+      font-weight: 700;
+      color: var(--gold-light);
+      margin-top: 2px;
+      letter-spacing: 0.12em;
+    }
+    .founder-signatures {
+      text-align: right;
+      border-left: 1px solid rgba(212, 175, 55, 0.25);
+      padding-left: 12px;
+    }
+    .sig-seal {
+      font-family: 'Cinzel', serif;
+      font-size: 7.5px;
+      font-weight: 800;
+      color: #ffffff;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+    .sig-contact {
+      font-family: 'Space Mono', monospace;
+      font-size: 6.8px;
+      color: var(--text-dim);
+      margin-top: 2px;
+      line-height: 1.3;
+    }
+    .sig-contact strong {
+      color: var(--gold-light);
+    }
+
+    /* PRINT SPECIFIC STYLING (Strict US Letter Margins & Zero Header/Footer Clutter) */
+    @media print {
+      body {
+        background: transparent !important;
+        padding: 0 !important;
+        margin: 0 !important;
+      }
+      .screen-controls {
+        display: none !important;
+      }
+      .page-sheet {
+        margin: 0 !important;
+        box-shadow: none !important;
+        width: 8.5in !important;
+        height: 11.0in !important;
+        page-break-after: always !important;
+        break-after: page !important;
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+      @page {
+        size: letter portrait;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Screen Navigation & Print Controller (Hidden in physical print) -->
+  <div class="screen-controls">
+    <button class="btn-print" onclick="window.print()">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 6 2 18 2 18 9"></polyline><path d="M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"></path><rect x="6" y="14" width="12" height="8"></rect></svg>
+      Print Card / Save PDF (Letter 8.5&quot; × 11&quot;)
+    </button>
+    <div class="print-hint">
+      <strong>Single-Print 2-Pager:</strong> Double-sided US Letter. Calibrated for 300+ DPI. Vector QR code guaranteed scannable by live cameras.
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       PAGE 1: THE FRONT — THE PATRON WELCOME, RADICAL STANDARDS & THE GIFT VAULT
+       ========================================================================= -->
+  <div class="page-sheet" id="page-1">
+    <div class="guilloche-frame">
+      <div class="guilloche-inner"></div>
+      <div class="corner-floret top-left"></div>
+      <div class="corner-floret top-right"></div>
+      <div class="corner-floret bottom-left"></div>
+      <div class="corner-floret bottom-right"></div>
+    </div>
+    <div class="botanical-watermark"></div>
+
+    <div class="content-flow">
+      <!-- 1. Header & Heritage -->
+      <header class="maison-header">
+        <div class="brand-crest" style="width: 58px; height: 58px; border-radius: 50%; overflow: hidden; border: 2px solid var(--gold-primary); box-shadow: 0 0 22px rgba(212, 175, 55, 0.45); margin-bottom: 6px;">
+          <img src="bhumivera-official-logo.jpg" alt="Bhumivera Tree of Life Logo" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+        </div>
+        <h1 class="brand-title">BHUMIVERA <span>ORGANICS</span></h1>
+        <p class="maison-tagline">The Transparent Maison &bull; Pure Cold-Pressed Indian Botanicals &bull; Est. 2016</p>
+        <p class="maison-reg">BHUMIVERA ORGANICS INDIA PRIVATE LIMITED &bull; CIN: U20237WB2026PTC295842 &bull; ROC-KOLKATA II</p>
+      </header>
+
+      <!-- 2. Patron Gratitude Ribbon -->
+      <div class="thank-you-ribbon">
+        <h2 class="thank-you-title">Thank You For Purchasing From Bhumivera</h2>
+        <p class="thank-you-subtitle">You have invested in pure botanical potency, open formulation honesty, and living ecological restoration.</p>
+      </div>
+
+      <!-- 3. The 4 Radical Transparency Standards -->
+      <section class="standards-grid">
+        <div class="standard-pill">
+          <div class="std-num">Standard I</div>
+          <div class="std-headline">100% Disclosed</div>
+          <p class="std-desc">Every active percentage and milligram potency printed openly on the front label. Zero hidden bases.</p>
+        </div>
+        <div class="standard-pill">
+          <div class="std-num">Standard II</div>
+          <div class="std-headline">Sub-28&deg;C Cold-Pressed</div>
+          <p class="std-desc">Botanicals gently pressed beneath 28&deg;C preserving delicate polyphenols, enzymes, and alive bioflavonoids.</p>
+        </div>
+        <div class="standard-pill">
+          <div class="std-num">Standard III</div>
+          <div class="std-headline">pH 5.0&ndash;5.5 Calibration</div>
+          <p class="std-desc">Precision-balanced to match the skin&apos;s natural acid mantle, guarding against moisture loss and inflammation.</p>
+        </div>
+        <div class="standard-pill">
+          <div class="std-num">Standard IV</div>
+          <div class="std-headline">250-Bottle Batches</div>
+          <p class="std-desc">Produced in serialized micro-batches. Laser-engraved serials, artisanal wax custody, and verified CoA.</p>
+        </div>
+      </section>
+
+      <!-- 4. The Golden QR Gift Vault & Delivered-Order Engine (The Core Feature) -->
+      <section class="vault-hero">
+        <div class="vault-hero-badge">Patron Welcome Gift &bull; Delivered Order Privileges</div>
+        <div class="vault-layout">
+          <!-- Vector Scannable QR Chassis -->
+          <div class="qr-chassis">
+            <div class="qr-svg-holder">
+              <!-- High-Contrast Vector SVG QR Code with Error Correction Level H -->
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 43 43" shape-rendering="crispEdges">
+                <path fill="#ffffff" d="M0 0h43v43H0z"/>
+                <path stroke="#070a0e" d="M1 1.5h7m1 0h10m6 0h3m3 0h1m1 0h1m1 0h7M1 2.5h1m5 0h1m1 0h2m1 0h1m1 0h3m1 0h1m3 0h1m1 0h5m2 0h1m1 0h1m1 0h1m5 0h1M1 3.5h1m1 0h3m1 0h1m1 0h2m1 0h2m1 0h2m4 0h1m2 0h3m1 0h1m4 0h1m1 0h1m1 0h3m1 0h1M1 4.5h1m1 0h3m1 0h1m2 0h1m1 0h1m1 0h3m4 0h1m3 0h1m1 0h3m1 0h1m3 0h1m1 0h3m1 0h1M1 5.5h1m1 0h3m1 0h1m3 0h1m1 0h1m2 0h2m1 0h1m1 0h1m1 0h3m6 0h2m1 0h1m1 0h3m1 0h1M1 6.5h1m5 0h1m1 0h3m4 0h1m2 0h1m2 0h1m1 0h3m1 0h4m3 0h1m5 0h1M1 7.5h7m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h1m1 0h7M9 8.5h1m1 0h1m1 0h1m1 0h1m1 0h2m1 0h2m1 0h1m1 0h4m2 0h3M3 9.5h3m1 0h1m1 0h2m1 0h1m2 0h1m1 0h1m1 0h2m1 0h2m1 0h2m2 0h2m3 0h3m2 0h3M2 10.5h1m1 0h1m3 0h3m1 0h1m1 0h1m3 0h10m1 0h1m1 0h4m2 0h1m1 0h2M5 11.5h7m3 0h2m5 0h1m5 0h2m3 0h2m5 0h1M1 12.5h2m2 0h2m1 0h2m1 0h3m2 0h1m4 0h1m1 0h2m3 0h1m3 0h2m4 0h1m1 0h1M3 13.5h1m1 0h4m4 0h3m1 0h5m2 0h3m2 0h2m1 0h1m1 0h1m3 0h4M1 14.5h3m6 0h1m1 0h1m3 0h2m1 0h1m2 0h1m1 0h1m2 0h2m1 0h1m2 0h1m2 0h2m3 0h1M1 15.5h2m2 0h1m1 0h7m1 0h1m4 0h1m2 0h2m2 0h3m1 0h2m1 0h1m1 0h1m2 0h1M5 16.5h1m3 0h1m1 0h1m2 0h1m1 0h1m2 0h2m4 0h4m1 0h4m1 0h1m1 0h2M1 17.5h2m3 0h2m1 0h1m3 0h1m3 0h1m1 0h2m1 0h3m3 0h2m1 0h2m1 0h1m1 0h1m2 0h2M2 18.5h1m1 0h1m3 0h1m1 0h1m2 0h5m3 0h3m3 0h1m2 0h1m1 0h1m2 0h3m3 0h1M2 19.5h3m2 0h1m1 0h1m1 0h2m1 0h1m1 0h1m2 0h1m1 0h3m1 0h3m2 0h1m2 0h1m1 0h1m1 0h1m1 0h1M1 20.5h1m2 0h1m1 0h1m1 0h1m5 0h2m1 0h1m1 0h4m1 0h1m1 0h6m1 0h1m1 0h1m1 0h1M1 21.5h2m2 0h1m1 0h1m1 0h2m1 0h5m1 0h1m4 0h1m2 0h4m2 0h2m3 0h3M1 22.5h1m6 0h2m1 0h2m2 0h1m1 0h3m1 0h1m2 0h1m4 0h8m3 0h2M2 23.5h1m1 0h1m1 0h2m1 0h1m1 0h1m2 0h2m3 0h2m3 0h1m1 0h3m2 0h1m1 0h2m4 0h1M1 24.5h3m1 0h2m1 0h1m5 0h2m3 0h1m4 0h1m2 0h1m1 0h1m1 0h4m1 0h1m3 0h1M2 25.5h3m2 0h2m1 0h1m5 0h1m2 0h5m1 0h4m1 0h1m1 0h1m1 0h5m1 0h1M1 26.5h1m3 0h1m2 0h1m1 0h2m1 0h2m8 0h1m1 0h1m1 0h1m1 0h1m2 0h1m1 0h2m2 0h1m2 0h1M3 27.5h3m1 0h2m1 0h7m2 0h1m2 0h1m4 0h5m1 0h1m1 0h1m1 0h1m2 0h2M8 28.5h1m3 0h3m3 0h2m1 0h3m4 0h2m1 0h5m1 0h2M1 29.5h1m3 0h3m1 0h1m2 0h2m4 0h1m2 0h1m1 0h1m1 0h1m1 0h1m2 0h1m1 0h2m1 0h1m2 0h4M1 30.5h1m1 0h4m1 0h2m5 0h1m2 0h1m1 0h2m1 0h3m1 0h5m2 0h1m1 0h2m3 0h1M1 31.5h1m1 0h2m1 0h2m3 0h1m1 0h2m1 0h2m2 0h1m4 0h2m3 0h1m2 0h3m2 0h1M1 32.5h1m1 0h1m2 0h1m10 0h1m3 0h1m3 0h3m1 0h3m2 0h3m4 0h1M1 33.5h1m4 0h2m1 0h3m1 0h2m3 0h3m1 0h4m1 0h1m2 0h2m1 0h5m1 0h1m1 0h1M9 34.5h1m2 0h2m1 0h1m2 0h2m1 0h1m1 0h1m1 0h1m2 0h2m3 0h1m3 0h5M1 35.5h7m4 0h3m1 0h1m1 0h1m1 0h1m1 0h1m1 0h3m2 0h1m1 0h1m1 0h1m1 0h1m1 0h2M1 36.5h1m5 0h1m3 0h1m1 0h1m3 0h3m2 0h1m1 0h1m3 0h2m3 0h1m3 0h1m2 0h2M1 37.5h1m1 0h3m1 0h1m1 0h1m1 0h1m2 0h2m1 0h1m4 0h4m1 0h2m2 0h7m1 0h1M1 38.5h1m1 0h3m1 0h1m1 0h2m1 0h1m2 0h1m2 0h2m2 0h1m1 0h4m1 0h1m2 0h3m1 0h1m2 0h3M1 39.5h1m1 0h3m1 0h1m1 0h2m2 0h2m2 0h1m3 0h3m2 0h4m3 0h5m2 0h1M1 40.5h1m5 0h1m2 0h1m2 0h1m4 0h4m3 0h2m1 0h1m4 0h1m1 0h1m1 0h1m2 0h1M1 41.5h7m2 0h1m1 0h2m1 0h2m4 0h1m1 0h2m2 0h1m2 0h1m5 0h2"/>
+              </svg>
+            </div>
+            <div class="qr-caption">Scan With Any Phone Camera</div>
+          </div>
+
+          <!-- Vault Privileges & Rules -->
+          <div class="vault-intel">
+            <h3 class="vault-grant-title">Claim <span>&inr;300</span> Welcome Bonus + <span>100</span> Privilege Points</h3>
+            <div class="vault-grant-pills">
+              <span class="grant-pill">&inr;300 Account Wallet Credit</span>
+              <span class="grant-pill">100 Somatic Loyalty Points</span>
+              <span class="grant-pill">1 Claim Per Account</span>
+            </div>
+
+            <!-- Intelligent Delivered-Order Safeguard Engine -->
+            <div class="engine-shield-box">
+              <div class="engine-shield-header">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                Delivered-Order Security Engine
+              </div>
+              <p class="engine-shield-text">
+                One universal QR code printed across all boxes &mdash; our engine verifies that your account has a <strong>successfully delivered Bhumivera order</strong> before unlocking the gift. If no delivered order is found, the code remains securely locked.
+              </p>
+            </div>
+
+            <!-- Exact Usage Rules Matrix -->
+            <div class="rules-matrix">
+              <div class="rule-item">
+                <span class="rule-bullet">&bull;</span>
+                <span><strong>Orders &inr;799+:</strong> Use <strong>&inr;100</strong> bonus credit per order.</span>
+              </div>
+              <div class="rule-item">
+                <span class="rule-bullet">&bull;</span>
+                <span><strong>Orders &inr;999+:</strong> Use up to <strong>&inr;150</strong> maximum per order.</span>
+              </div>
+              <div class="rule-item">
+                <span class="rule-bullet">&bull;</span>
+                <span><strong>Above All Coupons:</strong> Fully stackable on top of any active promo coupon!</span>
+              </div>
+              <div class="rule-item">
+                <span class="rule-bullet">&bull;</span>
+                <span><strong>Manual Fallback Code:</strong> Enter <strong>BHUMIVERA-GIFT-2026</strong> on web or app.</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. 3 Effortless Steps To Claim -->
+      <section class="how-to-steps">
+        <div class="steps-heading">How To Claim Your Gift In 3 Simple Steps</div>
+        <div class="steps-row">
+          <div class="step-box">
+            <span class="step-badge">1</span>
+            <div class="step-text">
+              <strong>Scan Physical QR</strong>
+              Open your iPhone or Android camera &amp; point at this card, or visit <strong>bhumivera.com/verify</strong>.
+            </div>
+          </div>
+          <div class="step-box">
+            <span class="step-badge">2</span>
+            <div class="step-text">
+              <strong>Sign In To Your Account</strong>
+              Log in with the mobile/email associated with your delivered Bhumivera box order.
+            </div>
+          </div>
+          <div class="step-box">
+            <span class="step-badge">3</span>
+            <div class="step-text">
+              <strong>Unlock Instant &inr;300</strong>
+              Tap &ldquo;Claim Gift&rdquo; &mdash; your &inr;300 welcome credit is instantly available at checkout!
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Bottle Serial & Laboratory CoA Inspection -->
+      <section class="serial-inspection-bar">
+        <div class="serial-left">
+          <span class="serial-icon">&#10004;</span>
+          <div class="serial-desc">
+            <strong>Inspect Your Bottle&apos;s Genuinity Record:</strong> Enter the laser-engraved serial code on your bottle neck at <strong>bhumivera.com/verify</strong> to view batch CoA, extraction temp (&lt;28&deg;C), calibrated pH, and heavy-metal assays.
+          </div>
+        </div>
+        <div class="serial-link-pill">bhumivera.com/verify</div>
+      </section>
+
+      <!-- 7. Archival Stamp & Footer -->
+      <footer class="page-footer-strip">
+        <span>MAISON SERIAL ARCHIVE &bull; WEST BENGAL &bull; ASANSOL &bull; ZERO PLASTIC PRINTING</span>
+        <span>PATRON COMPLIMENTARY INSERT &bull; KEEP THIS ARCHIVE IN YOUR KEEPSAKE BOX</span>
+      </footer>
+    </div>
+  </div>
+
+  <!-- =========================================================================
+       PAGE 2: THE BACK — THE KEEPSAKE BOX, MAISON RITUALS & SACRED IMPACT LEDGER
+       ========================================================================= -->
+  <div class="page-sheet" id="page-2">
+    <div class="guilloche-frame">
+      <div class="guilloche-inner"></div>
+      <div class="corner-floret top-left"></div>
+      <div class="corner-floret top-right"></div>
+      <div class="corner-floret bottom-left"></div>
+      <div class="corner-floret bottom-right"></div>
+    </div>
+    <div class="botanical-watermark"></div>
+
+    <div class="content-flow">
+      <!-- 1. Page 2 Header -->
+      <header class="page-2-header">
+        <h2 class="page-2-tagline">The Keepsake Box &bull; <span>Maison Rituals</span> &bull; Impact Ledger</h2>
+        <p class="page-2-sub">A box crafted never to enter a landfill, rituals engineered to heal the whole organism, and radical ground stewardship.</p>
+      </header>
+
+      <!-- 2. The Reusable Keepsake Box ("Keepsafe Box") -->
+      <section class="keepsake-section">
+        <div class="section-head">
+          <span class="section-title">The Reusable Keepsake Box &mdash; Zero Waste, Infinite Life</span>
+          <span class="section-eco-badge">100% Biodegradable FSC Rigid Board &bull; Soy Ink</span>
+        </div>
+        <div class="keepsake-grid">
+          <div class="keepsake-idea">
+            <div class="idea-title">Sacred Herbal Sanctuary</div>
+            <p class="idea-desc">Store your dried sacred Tulsi leaves, camphor tablets, natural sandalwood sticks, and incense in a dry, dark, aromatic microclimate.</p>
+          </div>
+          <div class="keepsake-idea">
+            <div class="idea-title">Heirloom Jewelry Vault</div>
+            <p class="idea-desc">Line this rigid artisan chest with cotton or velvet to protect silver rings, precious stones, sacred rudraksha, or heirloom jewelry.</p>
+          </div>
+          <div class="keepsake-idea">
+            <div class="idea-title">Desk &amp; Apothecary Chest</div>
+            <p class="idea-desc">Organize fine fountain pens, wax seal stamps, essential oil droppers, or personal handwritten letters. Keep forever on your altar or desk.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3. Why Only Ordering The Ritual Heals The Whole Self -->
+      <section class="ritual-section">
+        <div class="section-head">
+          <span class="section-title">Why Only Ordering The Ritual Restores Purity</span>
+          <span class="section-eco-badge">Inside-Out Cellular Apothecary</span>
+        </div>
+        <p class="ritual-hero-text">
+          Topical application alone addresses only 20% of your skin&apos;s barrier. True somatic radiance demands <strong>simultaneous internal cortisol reduction and cellular micro-nourishment</strong>. Our 3 architectural rituals are formulated to work as an unbroken physiological ecosystem:
+        </p>
+        <div class="ritual-cards-grid">
+          <div class="ritual-card">
+            <div class="ritual-tag">Ritual I &bull; Inside-Out</div>
+            <div class="ritual-name">Skin-Clearing &amp; Cortisol</div>
+            <p class="ritual-actives"><strong>Charcoal Face Wash + Kalpvriksh 7-Tulsi Drops + Charcoal Soap Bar</strong>. Draws micro-pollutants externally while 7 Tulsi adaptogens lower systemic oxidative stress internally.</p>
+          </div>
+          <div class="ritual-card">
+            <div class="ritual-tag">Ritual II &bull; Daily Regimen</div>
+            <div class="ritual-name">Complete Botanical Care</div>
+            <p class="ritual-actives"><strong>Himalayan Sea Buckthorn Face Wash + Royal 2-in-1 Shampoo + Soothing Aloe-Neem-Tulsi Bar</strong>. Sub-28&deg;C cellular Omega-7 nourishment and scalp pH 5.0&ndash;5.5 restoration.</p>
+          </div>
+          <div class="ritual-card">
+            <div class="ritual-tag">Ritual III &bull; Grand Vault</div>
+            <div class="ritual-name">The Grand Maison Vault</div>
+            <p class="ritual-actives"><strong>All 6 Flagship Master Formulations</strong> in an archival collector&apos;s keepsake chest. Complete physiological harmony for hair, facial acid mantle, skin, and mucosal vitality.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 4. The Radical Impact Ledger (West Bengal Field Truth) -->
+      <section class="impact-section">
+        <div class="impact-head">
+          <span class="impact-title">Radical Ground Truth &bull; Real Bengal Community Stewardship</span>
+          <span class="impact-zero-pill">Zero Administrative Overhead &bull; Zero Fake Data</span>
+        </div>
+        <div class="impact-grid">
+          <div class="impact-card">
+            <div class="impact-memorial">The Ceaser Memorial</div>
+            <div class="impact-project-name">Stray Dog &amp; Cat Rescue</div>
+            <p class="impact-detail">Honoring our German Shepherd Ceaser. 100% of voluntary funds go directly to daily nutritious food, emergency wound dressing, and rabies immunization for street animals across Asansol.</p>
+          </div>
+          <div class="impact-card">
+            <div class="impact-memorial">The Smt. Shanti Memorial</div>
+            <div class="impact-project-name">Elders &amp; Destitute Relief</div>
+            <p class="impact-detail">Honoring Mother Smt. Shanti Devi. Supplying emergency grain kits (unpolished rice, lentils, pure mustard oil) and winter blankets to destitute widows, elderly citizens, and disabled daily-wage dependents.</p>
+          </div>
+          <div class="impact-card">
+            <div class="impact-memorial">Ecological Restoration</div>
+            <div class="impact-project-name">Damodar Basin &amp; Pukurs</div>
+            <p class="impact-detail">Installing natural coir bio-filtration logs, clearing toxic plastic debris, and planting native vetiver grass buffer rows to revive choked village ponds (pukurs) and Damodar riverbanks.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- 5. Founder's Personal Pledge & Custody Sign-off -->
+      <section class="founder-pledge-strip">
+        <div>
+          <p class="pledge-quote">
+            &ldquo;We founded Bhumivera on an uncompromising oath: that no customer should ever be lied to about active ingredient potencies, and that every product we send into an Indian home should leave our earth cleaner than we found it.&rdquo;
+          </p>
+          <div class="pledge-author">&mdash; Aman Prasad &amp; Akash Prasad, Founders &amp; Stewards &bull; Bhumivera Organics India Private Limited</div>
+        </div>
+        <div class="founder-signatures" style="display: flex; align-items: center; gap: 12px; border-left: 1px solid rgba(212, 175, 55, 0.25); padding-left: 14px;">
+          <div style="width: 44px; height: 44px; border-radius: 50%; overflow: hidden; border: 1.5px solid var(--gold-primary); box-shadow: 0 0 12px rgba(212, 175, 55, 0.35); flex-shrink: 0;">
+            <img src="bhumivera-official-logo.jpg" alt="Official Bhumivera Seal" style="width: 100%; height: 100%; object-fit: cover; display: block;" />
+          </div>
+          <div>
+            <div class="sig-seal">Hand-Crafted in Bengal</div>
+            <div class="sig-contact">
+              Concierge: <strong>care@bhumivera.com</strong><br>
+              Direct: <strong>+91 93322 00000</strong><br>
+              Registry: <strong>bhumivera.com</strong>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- 6. Archival Stamp & Footer -->
+      <footer class="page-footer-strip">
+        <span>ASANSOL &bull; PURBA BARDHAMAN &bull; WEST BENGAL &bull; INDIA</span>
+        <span>RADICAL HONESTY &bull; 100% REVERSIBLE PACKAGING &bull; PRINTED ON FSC-CERTIFIED SUSTAINABLE CRAFT</span>
+      </footer>
+    </div>
+  </div>
+
+</body>
+</html>
