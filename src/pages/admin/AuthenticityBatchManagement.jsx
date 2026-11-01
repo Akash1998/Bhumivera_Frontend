@@ -368,7 +368,7 @@ export default function AuthenticityBatchManagement() {
             <style>
               @page {
                 size: A4 portrait;
-                margin: 0.5cm; /* 0.5 cm border on all sides */
+                margin: 0; /* border is applied by the sheet padding so it is identical for any browser margin setting */
               }
               * {
                 box-sizing: border-box;
@@ -386,9 +386,9 @@ export default function AuthenticityBatchManagement() {
                 font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
               }
               .a4-sheet {
-                width: 200mm; /* 210mm - 2*5mm */
-                min-height: 287mm; /* 297mm - 2*5mm */
-                max-height: 287mm;
+                width: 210mm;
+                height: 296.5mm;
+                padding: 5mm;
                 display: block;
                 overflow: hidden;
               }
@@ -455,6 +455,9 @@ export default function AuthenticityBatchManagement() {
                 margin-top: 0.4mm;
                 text-transform: uppercase;
               }
+              @media print {
+                .screen-header { display: none !important; }
+              }
               @media screen {
                 body {
                   background: #0f172a;
@@ -487,7 +490,6 @@ export default function AuthenticityBatchManagement() {
                   background: #fff;
                   margin: 0 auto 25px auto;
                   box-shadow: 0 10px 25px rgba(0,0,0,0.5);
-                  padding: 0;
                 }
               }
             </style>
