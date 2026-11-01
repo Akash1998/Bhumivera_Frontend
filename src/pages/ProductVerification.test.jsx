@@ -11,12 +11,16 @@ const scannerMock = vi.hoisted(() => ({
   stop: vi.fn(),
 }));
 
-vi.mock('@zxing/browser', () => ({
-  BrowserMultiFormatReader: class {
-    decodeFromConstraints(_constraints, _video, callback) {
-      scannerMock.callback = callback;
-      return Promise.resolve({ stop: scannerMock.stop });
-    }
+vi.mock('../utils/qrScanEngine', () => ({
+  startCamera: vi.fn(() => Promise.resolve()),
+  stopCamera: scannerMock.stop,
+  getCameraCapabilities: () => ({ zoom: null, torch: false, focus: [] }),
+  setZoom: vi.fn(),
+  setTorch: vi.fn(),
+  focusAt: vi.fn(),
+  startScanLoop: (_video, { onResult }) => {
+    scannerMock.callback = text => onResult(text);
+    return () => {};
   },
 }));
 vi.mock('../components/SEO', () => ({ default: () => null }));
@@ -100,7 +104,7 @@ describe('product authenticity and box gift verification', () => {
 
     fireEvent.click(screen.getByRole('button', { name: /open live camera qr scanner/i }));
     await waitFor(() => expect(scannerMock.callback).toBeTruthy());
-    scannerMock.callback({ getText: () => 'https://bhumivera.com/verify?qr=BHUMIVERA-GIFT-2026' });
+    scannerMock.callback('https://bhumivera.com/verify?qr=BHUMIVERA-GIFT-2026');
 
     await waitFor(() => expect(api.get).toHaveBeenCalledWith(
       '/gamification/box-qr-status',

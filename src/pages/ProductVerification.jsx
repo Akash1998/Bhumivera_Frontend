@@ -13,8 +13,19 @@ import {
   Search,
   ShieldCheck,
   X,
+  Zap,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react';
-import { BrowserMultiFormatReader } from '@zxing/browser';
+import {
+  focusAt,
+  getCameraCapabilities,
+  setTorch,
+  setZoom,
+  startCamera,
+  startScanLoop,
+  stopCamera,
+} from '../utils/qrScanEngine';
 import SEO from '../components/SEO';
 import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
@@ -46,8 +57,12 @@ export default function ProductVerification() {
   const [giftLoading, setGiftLoading] = useState(false);
   const [redeemingGift, setRedeemingGift] = useState(false);
   const videoRef = useRef(null);
-  const scannerControlsRef = useRef(null);
+  const digitalZoomRef = useRef(1);
   const scannedResultRef = useRef(false);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const [torchOn, setTorchOn] = useState(false);
+  const [cameraCaps, setCameraCaps] = useState({ zoom: null, torch: false, focus: [] });
+  const [focusPoint, setFocusPoint] = useState(null);
 
   const verifySerialCode = useCallback(async (targetSerial) => {
     const cleanSerial = String(targetSerial || '').trim().toUpperCase();
@@ -160,8 +175,6 @@ export default function ProductVerification() {
   };
 
   const stopCameraScanner = useCallback(() => {
-    scannerControlsRef.current?.stop();
-    scannerControlsRef.current = null;
     setScannerOpen(false);
   }, []);
 
@@ -203,35 +216,33 @@ export default function ProductVerification() {
 
   useEffect(() => {
     if (!scannerOpen || !videoRef.current) return undefined;
+    const video = videoRef.current;
     let active = true;
+    let stopLoop = () => {};
     scannedResultRef.current = false;
-    const reader = new BrowserMultiFormatReader();
+    digitalZoomRef.current = 1;
+    setZoomLevel(1);
+    setTorchOn(false);
+    setCameraCaps({ zoom: null, torch: false, focus: [] });
 
-    reader.decodeFromConstraints({
-      video: {
-        facingMode: { ideal: 'environment' },
-        width: { ideal: 1920 },
-        height: { ideal: 1080 },
-        frameRate: { ideal: 30 },
-        advanced: [{ focusMode: 'continuous' }],
-      },
-      audio: false,
-    }, videoRef.current, (result) => {
-      if (!active || !result || scannedResultRef.current) return;
-      scannedResultRef.current = true;
-      stopCameraScanner();
-      handleScannedRawValue(result.getText());
-    }).then((controls) => {
-      if (active) {
-        scannerControlsRef.current = controls;
-        const track = videoRef.current?.srcObject?.getVideoTracks?.()[0];
-        const caps = track?.getCapabilities?.() || {};
-        if (caps.focusMode?.includes('continuous')) {
-          track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
-        }
-      } else {
-        controls.stop();
+    startCamera(video).then(() => {
+      if (!active) {
+        stopCamera(video);
+        return;
       }
+      const caps = getCameraCapabilities(video);
+      setCameraCaps(caps);
+      if (caps.zoom) setZoomLevel(caps.zoom.min);
+      stopLoop = startScanLoop(video, {
+        getDigitalZoom: () => digitalZoomRef.current,
+        onResult: (text) => {
+          if (!active || scannedResultRef.current) return;
+          scannedResultRef.current = true;
+          if (navigator.vibrate) navigator.vibrate(60);
+          stopCameraScanner();
+          handleScannedRawValue(text);
+        },
+      });
     }).catch((cameraFailure) => {
       if (active) {
         setScannerError(cameraFailure?.message || 'Unable to start the camera. Check camera permission and try again.');
@@ -241,10 +252,30 @@ export default function ProductVerification() {
 
     return () => {
       active = false;
-      scannerControlsRef.current?.stop();
-      scannerControlsRef.current = null;
+      stopLoop();
+      stopCamera(video);
     };
   }, [handleScannedRawValue, scannerOpen, stopCameraScanner]);
+
+  const handleZoomChange = async (value) => {
+    setZoomLevel(value);
+    const mode = await setZoom(videoRef.current, value, (digital) => { digitalZoomRef.current = digital; });
+    if (mode === 'hardware') digitalZoomRef.current = 1;
+  };
+
+  const handleTorchToggle = async () => {
+    const next = !torchOn;
+    if (await setTorch(videoRef.current, next)) setTorchOn(next);
+  };
+
+  const handleTapFocus = async (event) => {
+    const rect = event.currentTarget.getBoundingClientRect();
+    const x = (event.clientX - rect.left) / rect.width;
+    const y = (event.clientY - rect.top) / rect.height;
+    setFocusPoint({ x: x * 100, y: y * 100, key: Date.now() });
+    window.setTimeout(() => setFocusPoint(null), 900);
+    await focusAt(videoRef.current, x, y);
+  };
 
   useEffect(() => {
     if (searchParams.get('scan') === '1' || searchParams.get('scan') === 'true') {
@@ -343,18 +374,73 @@ export default function ProductVerification() {
             </div>
 
             {scannerOpen && createPortal(
-              <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black p-4">
-              <div className="w-full max-w-lg rounded-2xl border-2 border-[#d4af37] bg-black p-4">
-                <div className="relative aspect-video overflow-hidden rounded-xl">
-                  <video ref={videoRef} autoPlay playsInline muted className="h-full w-full object-cover" style={{ filter: 'none', backdropFilter: 'none' }} />
-                  <div className="pointer-events-none absolute inset-6 rounded-xl border-2 border-dashed border-[#fce096]" />
+              <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center gap-4 bg-black p-4">
+                <p className="font-mono text-[11px] font-bold uppercase tracking-[0.25em] text-[#fce096]">Scan QR code</p>
+                <div
+                  className="relative aspect-square w-full max-w-[min(92vw,70vh)] cursor-crosshair overflow-hidden rounded-[2rem] border-2 border-[#d4af37] bg-black shadow-[0_0_60px_rgba(212,175,55,0.25)]"
+                  onClick={handleTapFocus}
+                >
+                  <video
+                    ref={videoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className="h-full w-full object-cover"
+                    style={{
+                      filter: 'none',
+                      backdropFilter: 'none',
+                      transform: cameraCaps.zoom ? 'none' : `scale(${zoomLevel})`,
+                    }}
+                  />
+                  <div className="pointer-events-none absolute inset-[14%]">
+                    <span className="absolute left-0 top-0 h-10 w-10 rounded-tl-3xl border-l-4 border-t-4 border-[#fce096]" />
+                    <span className="absolute right-0 top-0 h-10 w-10 rounded-tr-3xl border-r-4 border-t-4 border-[#fce096]" />
+                    <span className="absolute bottom-0 left-0 h-10 w-10 rounded-bl-3xl border-b-4 border-l-4 border-[#fce096]" />
+                    <span className="absolute bottom-0 right-0 h-10 w-10 rounded-br-3xl border-b-4 border-r-4 border-[#fce096]" />
+                    <span className="absolute left-3 right-3 top-1/2 h-0.5 -translate-y-1/2 animate-pulse bg-gradient-to-r from-transparent via-[#fce096] to-transparent" />
+                  </div>
+                  {focusPoint && (
+                    <span
+                      key={focusPoint.key}
+                      className="pointer-events-none absolute h-16 w-16 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white/90"
+                      style={{ left: `${focusPoint.x}%`, top: `${focusPoint.y}%` }}
+                    />
+                  )}
                 </div>
-                <p className="mt-3 text-xs text-[#fce096]">Hold the QR code steady inside the frame.</p>
-                {scannerError && <p role="alert" className="mt-2 text-sm text-amber-300">{scannerError}</p>}
-                <button type="button" onClick={stopCameraScanner} className="mt-4 inline-flex items-center gap-2 rounded-xl border border-[#d4af37] px-5 py-2 text-xs font-bold uppercase tracking-widest text-[#fce096]">
-                  <X size={14} /> Close Camera Scanner
-                </button>
-              </div>
+
+                <div className="flex w-full max-w-[min(92vw,70vh)] items-center gap-3 rounded-2xl border border-[#d4af37]/40 bg-[#0d1520] px-4 py-3">
+                  <ZoomOut size={18} className="shrink-0 text-[#fce096]" />
+                  <input
+                    type="range"
+                    aria-label="Camera zoom"
+                    min={cameraCaps.zoom ? cameraCaps.zoom.min : 1}
+                    max={cameraCaps.zoom ? Math.min(cameraCaps.zoom.max, 10) : 5}
+                    step={cameraCaps.zoom ? cameraCaps.zoom.step : 0.1}
+                    value={zoomLevel}
+                    onChange={(event) => handleZoomChange(Number(event.target.value))}
+                    className="h-2 w-full flex-1 accent-[#d4af37]"
+                  />
+                  <ZoomIn size={18} className="shrink-0 text-[#fce096]" />
+                  <span className="w-12 shrink-0 text-right font-mono text-xs text-[#fce096]">{Number(zoomLevel).toFixed(1)}x</span>
+                </div>
+
+                <div className="flex flex-wrap items-center justify-center gap-3">
+                  {cameraCaps.torch && (
+                    <button
+                      type="button"
+                      onClick={handleTorchToggle}
+                      aria-pressed={torchOn}
+                      className={`inline-flex items-center gap-2 rounded-xl border px-5 py-2.5 text-xs font-bold uppercase tracking-widest ${torchOn ? 'border-[#fce096] bg-[#d4af37] text-black' : 'border-[#d4af37] text-[#fce096]'}`}
+                    >
+                      <Zap size={14} /> Flash {torchOn ? 'On' : 'Off'}
+                    </button>
+                  )}
+                  <button type="button" onClick={stopCameraScanner} className="inline-flex items-center gap-2 rounded-xl border border-[#d4af37] px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-[#fce096]">
+                    <X size={14} /> Close
+                  </button>
+                </div>
+                <p className="text-center text-xs text-[#94a3b8]">Tap the screen to focus. Use zoom for small codes.</p>
+                {scannerError && <p role="alert" className="text-sm text-amber-300">{scannerError}</p>}
               </div>,
               document.body
             )}
