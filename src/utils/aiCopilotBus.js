@@ -190,11 +190,19 @@ export const COMPLETE_SITE_NAVIGATION_DIRECTORY = [
     badge: 'Staff Portal',
   },
   {
+    id: 'inventory-software',
+    category: 'Staff & Admin Portals',
+    title: '10X Super Inventory, Storage Keeper & POS Suite (/inventorysoftware)',
+    path: '/inventorysoftware',
+    description: 'Real-time website stock sync, multi-bin storage keeper, offline shop POS billing, and Khata ledger.',
+    badge: '10X Suite',
+  },
+  {
     id: 'superadmin-support',
     category: 'Staff & Admin Portals',
-    title: 'SuperAdmin Support Command Center (/superadminsupport)',
+    title: 'SuperAdmin Support & Warehouse IAM Center (/superadminsupport)',
     path: '/superadminsupport',
-    description: 'Omnichannel chats, ticket deletion, staff RBAC permissions, and cryptographic audit logs.',
+    description: 'Omnichannel chats, warehouse/inventory user ID creation, all-access permissions, and cryptographic audit logs.',
     badge: 'SuperAdmin',
   },
   {

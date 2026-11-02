@@ -128,7 +128,7 @@ api.interceptors.request.use(c => {
     url.startsWith("/tax") && c.method !== "get" ||
     url.startsWith("/flash-sales") && (c.method === "post" || c.method === "put" || c.method === "patch" || c.method === "delete");
 
-  const isWarehouseCall = url.startsWith("/warehouse/") && !url.startsWith("/warehouse/login");
+  const isWarehouseCall = (url.startsWith("/warehouse/") && !url.startsWith("/warehouse/login")) || (url.startsWith("/inventory-software/") && !url.startsWith("/inventory-software/auth/login"));
   const isSupportStaffCall = (url === "/support" || url.startsWith("/support/")) &&
     !url.startsWith("/support/chat") &&
     !url.startsWith("/support/login");
@@ -142,7 +142,7 @@ api.interceptors.request.use(c => {
     } else if (isAdminCall) {
       token = localStorage.getItem("adminToken") || localStorage.getItem("supportToken");
     } else if (isWarehouseCall) {
-      token = localStorage.getItem("warehouseToken") || localStorage.getItem("adminToken") || localStorage.getItem("token");
+      token = localStorage.getItem("BV_INV_SOFTWARE_TOKEN") || localStorage.getItem("warehouseToken") || localStorage.getItem("adminToken") || localStorage.getItem("supportToken") || localStorage.getItem("token");
     } else {
       token = localStorage.getItem("token") || localStorage.getItem("ms_token");
     }
@@ -177,7 +177,7 @@ const _resolveTokenKind = (url = '', method = '', adminAuth = false) => {
     url.startsWith("/settings") ||
     url.startsWith("/notifications/admin/") ||
     url.startsWith("/returns/admin/");
-  const isWarehouseUrl = url.startsWith("/warehouse/");
+  const isWarehouseUrl = url.startsWith("/warehouse/") || url.startsWith("/inventory-software/");
   const isAuthUrl = url.includes("/auth/");
   if (isAdminUrl || (isAuthUrl && (url.includes("/admin/") || url.includes("/warehouse/")))) return 'admin';
   if (isWarehouseUrl) return 'warehouse';

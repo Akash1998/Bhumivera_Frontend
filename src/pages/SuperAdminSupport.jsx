@@ -116,6 +116,27 @@ const PERMISSION_LABELS = {
   can_view_analytics: { label: 'View Reports, Reviews & Audit Logs', desc: 'View customer satisfaction reviews, audit trail, and CSV exports.' },
 };
 
+
+const WAREHOUSE_INVENTORY_PERMISSIONS = {
+  full_all_access: { label: 'Grant All Access (100% Super Inventory & POS Authority)', desc: 'Unrestricted access to all 10X Inventory, Storage Keeper, Offline POS, Website Stock Sync, Khata & Settings modules.' },
+  can_access_dashboard: { label: 'Executive Omnichannel Dashboard', desc: 'View live website sync status, revenue metrics, stock valuation, and alerts.' },
+  can_manage_inventory: { label: 'Master Inventory & Website Stock Sync', desc: 'Add/edit products, prices, SKUs, barcodes, and sync quantities directly to bhumivera.com.' },
+  can_adjust_stock: { label: 'Stock Adjustments & Damage Write-Offs', desc: 'Perform quick stock +/- adjustments and record internal write-offs or damaged stock.' },
+  can_manage_storage_keeper: { label: 'Storage Keeper (Zones, Racks, Bins & Batches)', desc: 'Manage warehouse zones, rack/shelf/bin coordinates, cold-storage logs, and bin transfers.' },
+  can_use_pos_billing: { label: 'Offline Shop POS Billing Terminal', desc: 'Create walk-in & registered customer POS bills that atomically deduct stock from bhumivera.com.' },
+  can_give_discounts: { label: 'Apply Custom POS Discounts', desc: 'Apply item-level or invoice-level discounts at POS checkout.' },
+  can_void_invoices: { label: 'Void / Cancel POS Invoices & Restock', desc: 'Cancel completed POS invoices and automatically restore stock to bhumivera.com.' },
+  can_manage_khata: { label: 'Customer Khata & Credit Ledger', desc: 'Manage customer profiles, credit limits, debt collection, and WhatsApp reminders.' },
+  can_process_returns: { label: 'Customer Returns & Quarantine', desc: 'Process returned items into Restock (Good) or Quarantine/Scrap (Damaged).' },
+  can_manage_online_dispatch: { label: 'Live Online Website Orders & Dispatch', desc: 'Inspect live bhumivera.com online orders and mark orders Packed, Shipped, or Delivered.' },
+  can_manage_suppliers_grn: { label: 'Suppliers & GRN Batch Inwarding', desc: 'Manage vendors and post Goods Receipt Notes (GRN) to inward new batches into website stock.' },
+  can_run_stock_audit: { label: 'Physical Stock Audit & Reconciliation', desc: 'Conduct physical bin stock counts, compute variance, and reconcile live website inventory.' },
+  can_view_reports: { label: 'Time-Machine Financial Reports & Gallery', desc: 'Access daily revenue reports, margin analytics, and payment proof gallery.' },
+  can_export_data: { label: 'Excel Exports & Encrypted Backups (.avbak)', desc: 'Export inventory/sales/logs to Excel (.xlsx) and create daily snapshots.' },
+  can_view_audit_logs: { label: 'Cryptographic Audit Trail & Stock Ledger', desc: 'View immutable 512-bit signed audit logs and before/after stock movement history.' },
+  can_manage_store_settings: { label: 'Store & Billing Configuration', desc: 'Configure store name, address, GSTIN, UPI ID for dynamic QR codes, and invoice branding.' },
+};
+
 const HELP_DICTIONARY = [
   { no: 1, term: 'Dashboard Overview', category: 'Overview', desc: 'Shows live counts of Active, Pending, Waiting for Review, Escalated, Resolved, and Closed chats, plus staff workload and customer satisfaction ratings.' },
   { no: 2, term: 'Order, Tracking, Email & Phone Search', category: 'Verification', desc: 'Searches across all orders by Order ID (#20), 9-digit Order Number, Courier Tracking ID (BHVM...), Email, or Phone Number, and displays the Customer Verification Checklist.' },
@@ -187,6 +208,24 @@ export default function SuperAdminSupport() {
   const [resetAgentPassword, setResetAgentPassword] = useState('');
   const [newMacro, setNewMacro] = useState({ title: '', category: 'orders', content: '' });
 
+  // Warehouse & Inventory Software (/inventorysoftware) Staff IAM State
+  const [warehouseStaff, setWarehouseStaff] = useState([]);
+  const [warehouseStaffSearch, setWarehouseStaffSearch] = useState('');
+  const [editingWarehouseUser, setEditingWarehouseUser] = useState(null);
+  const [createdWarehouseCreds, setCreatedWarehouseCreds] = useState(null);
+  const [newWarehouseUser, setNewWarehouseUser] = useState({
+    username: '',
+    password: '',
+    fullName: '',
+    phone: '',
+    email: '',
+    role: 'admin',
+    assignedHub: 'Bhumivera Flagship Hub — Asansol',
+    fullAllAccess: true,
+    requireOnboarding: true,
+    permissions: Object.fromEntries(Object.keys(WAREHOUSE_INVENTORY_PERMISSIONS).map(k => [k, true])),
+  });
+
   const requestConfig = useMemo(
     () => ({
       headers: authToken ? { Authorization: `Bearer ${authToken}` } : {},
@@ -206,7 +245,7 @@ export default function SuperAdminSupport() {
     if (!authToken) return;
     setLoading(true);
     try {
-      const [overviewRes, sessionsRes, agentsRes, featuresRes, ticketsRes, auditRes] = await Promise.all([
+      const [overviewRes, sessionsRes, agentsRes, featuresRes, ticketsRes, auditRes, warehouseIamRes] = await Promise.all([
         api.get('/support/superadmin/overview', requestConfig),
         api.get(
           `/support/sessions?status=${statusFilter}&priority=${priorityFilter}&search=${encodeURIComponent(searchQuery)}&limit=100`,
@@ -216,6 +255,7 @@ export default function SuperAdminSupport() {
         api.get('/support/superadmin/features', requestConfig),
         api.get('/support/tickets', requestConfig).catch(() => ({ data: { tickets: [] } })),
         api.get('/support/superadmin/audit-logs?limit=60', requestConfig).catch(() => ({ data: { logs: [] } })),
+        api.get('/inventory-software/iam/users', requestConfig).catch(() => ({ data: { users: [] } })),
       ]);
 
       setOverview(overviewRes.data);
@@ -224,6 +264,7 @@ export default function SuperAdminSupport() {
       setFeatures(featuresRes.data?.featureConfig || overviewRes.data?.featureConfig || null);
       setTickets(ticketsRes.data?.tickets || []);
       setAuditLogs(auditRes.data?.logs || overviewRes.data?.auditLogs || []);
+      setWarehouseStaff(warehouseIamRes.data?.users || []);
     } catch (err) {
       if (err.response?.status === 401 || err.response?.status === 403) {
         setLoginError(
@@ -414,6 +455,112 @@ export default function SuperAdminSupport() {
       showNotice('error', err.response?.data?.message || 'Could not update staff role/permissions.');
     }
   };
+
+  const generateWarehouseTempPassword = () => {
+    const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789@#$';
+    let pass = '';
+    for (let i = 0; i < 10; i++) {
+      pass += chars.charAt(Math.floor(Math.random() * chars.length));
+    }
+    setNewWarehouseUser(prev => ({ ...prev, password: pass }));
+  };
+
+  const handleCreateWarehouseUser = async e => {
+    e.preventDefault();
+    try {
+      const res = await api.post('/inventory-software/iam/users', newWarehouseUser, requestConfig);
+      if (res.data?.user) {
+        setWarehouseStaff(prev => [res.data.user, ...prev]);
+        setCreatedWarehouseCreds({
+          username: res.data.user.username,
+          password: newWarehouseUser.password,
+          fullName: res.data.user.fullName,
+          phone: res.data.user.phone,
+          role: res.data.user.role,
+          assignedHub: res.data.user.assignedHub,
+          fullAllAccess: res.data.user.fullAllAccess,
+        });
+        setNewWarehouseUser({
+          username: '',
+          password: '',
+          fullName: '',
+          phone: '',
+          email: '',
+          role: 'admin',
+          assignedHub: 'Bhumivera Flagship Hub — Asansol',
+          fullAllAccess: true,
+          requireOnboarding: true,
+          permissions: Object.fromEntries(Object.keys(WAREHOUSE_INVENTORY_PERMISSIONS).map(k => [k, true])),
+        });
+        showNotice('success', res.data.message || `Created Warehouse & Inventory ID '@${res.data.user.username}'.`);
+      }
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Could not create Warehouse/Inventory account.');
+    }
+  };
+
+  const handleUpdateWarehouseUser = async (userId, patch) => {
+    try {
+      const res = await api.patch(`/inventory-software/iam/users/${userId}`, patch, requestConfig);
+      if (res.data?.user) {
+        setWarehouseStaff(prev => prev.map(u => (u.id === userId ? res.data.user : u)));
+        if (editingWarehouseUser?.id === userId) {
+          setEditingWarehouseUser(res.data.user);
+        }
+        showNotice('success', res.data.message || 'Updated warehouse account permissions.');
+      }
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Failed to update warehouse account.');
+    }
+  };
+
+  const handleResetWarehouseUserPassword = async user => {
+    const newPassword = window.prompt(
+      `Enter new password for Warehouse/Inventory Account "@${user.username}":`,
+      'TempPass@123'
+    );
+    if (!newPassword) return;
+    try {
+      const res = await api.post(
+        `/inventory-software/iam/users/${user.id}/reset-password`,
+        { newPassword },
+        requestConfig
+      );
+      showNotice('success', `${res.data?.message || 'Password updated'} New Pass: ${newPassword}`);
+      fetchCommandCenterData();
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Could not reset password.');
+    }
+  };
+
+  const handleResetWarehouseUserSecurity = async user => {
+    if (
+      !window.confirm(
+        `Reset 2FA Authenticator & Biometric Passkey locks for @${user.username}? They will be prompted to re-enroll on their next login at /inventorysoftware.`
+      )
+    ) {
+      return;
+    }
+    try {
+      const res = await api.post(`/inventory-software/iam/users/${user.id}/reset-security`, {}, requestConfig);
+      showNotice('success', res.data?.message || 'Cleared 2FA & Passkey locks.');
+      fetchCommandCenterData();
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Could not reset security settings.');
+    }
+  };
+
+  const handleDeleteWarehouseUser = async user => {
+    if (!window.confirm(`Permanently delete Warehouse/Inventory account "@${user.username}"?`)) return;
+    try {
+      const res = await api.delete(`/inventory-software/iam/users/${user.id}`, requestConfig);
+      setWarehouseStaff(prev => prev.filter(u => u.id !== user.id));
+      showNotice('success', res.data?.message || 'Account deleted.');
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Could not delete account.');
+    }
+  };
+
 
   const handleSendSessionReply = async e => {
     e.preventDefault();
@@ -826,6 +973,15 @@ export default function SuperAdminSupport() {
             </button>
 
             <Link
+              to="/inventorysoftware"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-500/20 hover:bg-emerald-500/30 border border-emerald-400/40 text-xs text-emerald-200 font-bold"
+            >
+              <Package className="w-3.5 h-3.5 text-[#D4AF37]" />
+              10X Inventory &amp; POS (/inventorysoftware)
+              <ExternalLink className="w-3 h-3 opacity-60" />
+            </Link>
+
+            <Link
               to="/support"
               className="flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/5 hover:bg-white/10 border border-white/10 text-xs text-emerald-100"
             >
@@ -939,9 +1095,15 @@ export default function SuperAdminSupport() {
             },
             {
               id: 'rbac',
-              label: `5. Staff Logins & Role Limits (${agents.length})`,
+              label: `5. Support Staff Logins (${agents.length})`,
               icon: Users,
               explain: 'Create login IDs for /support, assign Executive (L1), Supervisor (L2), or Manager (L3) roles, and set permissions.',
+            },
+            {
+              id: 'warehouse_iam',
+              label: `6. Warehouse & Inventory Staff (${warehouseStaff.length})`,
+              icon: Package,
+              explain: 'Create User IDs for www.bhumivera.com/inventorysoftware, grant 100% All Access or custom permissions, and manage Passkeys & 2FA.',
             },
             {
               id: 'features',
@@ -1878,6 +2040,22 @@ export default function SuperAdminSupport() {
             TAB 5: STAFF LOGINS & ROLE PERMISSIONS MATRIX
            =================================================================== */}
         {activeTab === 'rbac' && (
+          <div className="space-y-4">
+            <div className="p-4 rounded-2xl bg-[#0B2419] border border-[#D4AF37]/40 flex flex-wrap items-center justify-between gap-3 text-xs">
+              <div>
+                <strong className="text-[#D4AF37]">Looking for Warehouse &amp; Inventory Software User Management?</strong>{' '}
+                <span className="text-emerald-100/80">
+                  Create User IDs and grant 100% All Access for <code className="text-white">bhumivera.com/inventorysoftware</code> in the dedicated Warehouse &amp; Inventory Staff tab.
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveTab('warehouse_iam')}
+                className="px-4 py-2 rounded-xl bg-[#D4AF37] text-[#071510] font-bold"
+              >
+                → Open Warehouse &amp; Inventory Staff IDs
+              </button>
+            </div>
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <div className="lg:col-span-5 bg-[#0B2419] border border-white/10 rounded-2xl p-5 space-y-4">
               <h3 className="text-base font-bold text-white">
@@ -2018,6 +2196,515 @@ export default function SuperAdminSupport() {
                     </div>
                   );
                 })}
+              </div>
+            </div>
+          </div>
+          </div>
+        )}
+
+        {/* ===================================================================
+            TAB 6: WAREHOUSE & INVENTORY SOFTWARE USER MANAGEMENT (/inventorysoftware)
+           =================================================================== */}
+        {activeTab === 'warehouse_iam' && (
+          <div className="space-y-6">
+            {/* Top Banner */}
+            <div className="p-5 rounded-2xl bg-gradient-to-r from-[#0B2419] via-[#103324] to-[#0B2419] border border-[#D4AF37]/40 flex flex-wrap items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-12 h-12 rounded-2xl bg-[#D4AF37]/20 border border-[#D4AF37]/40 flex items-center justify-center text-[#D4AF37]">
+                  <Package className="w-6 h-6" />
+                </div>
+                <div>
+                  <span className="text-[10px] uppercase tracking-widest text-[#D4AF37] font-bold">
+                    Warehouse, Storage Keeper &amp; POS Identity Center
+                  </span>
+                  <h2 className="text-lg font-serif font-bold text-white">
+                    Manage User IDs &amp; All-Access Permissions for bhumivera.com/inventorysoftware
+                  </h2>
+                  <p className="text-xs text-emerald-100/75">
+                    Create staff login IDs below, grant <strong>100% All Access</strong> (or customize module permissions),
+                    and share credentials via WhatsApp.
+                  </p>
+                </div>
+              </div>
+              <Link
+                to="/inventorysoftware"
+                className="px-4 py-2.5 rounded-xl bg-[#D4AF37] hover:bg-[#c49f2f] text-[#071510] font-bold text-xs flex items-center gap-2 shadow-lg"
+              >
+                <ExternalLink className="w-4 h-4" /> Open Inventory &amp; POS Suite (/inventorysoftware)
+              </Link>
+            </div>
+
+            {/* 4 Metric Cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="p-4 rounded-2xl bg-[#0B2419] border border-white/10">
+                <div className="text-[11px] uppercase tracking-wider text-emerald-100/60 font-bold">
+                  Total Warehouse &amp; POS IDs
+                </div>
+                <div className="text-2xl font-bold text-white mt-1">{warehouseStaff.length}</div>
+                <div className="text-[11px] text-emerald-300 mt-0.5">Active Terminal Credentials</div>
+              </div>
+              <div className="p-4 rounded-2xl bg-[#0B2419] border border-white/10">
+                <div className="text-[11px] uppercase tracking-wider text-emerald-100/60 font-bold">
+                  All-Access (100% Control) IDs
+                </div>
+                <div className="text-2xl font-bold text-[#D4AF37] mt-1">
+                  {warehouseStaff.filter(u => u.fullAllAccess || u.role === 'admin').length}
+                </div>
+                <div className="text-[11px] text-[#D4AF37]/80 mt-0.5">Unrestricted Suite Authority</div>
+              </div>
+              <div className="p-4 rounded-2xl bg-[#0B2419] border border-white/10">
+                <div className="text-[11px] uppercase tracking-wider text-emerald-100/60 font-bold">
+                  2FA (TOTP) Enrolled
+                </div>
+                <div className="text-2xl font-bold text-sky-300 mt-1">
+                  {warehouseStaff.filter(u => u.totpEnabled).length}
+                </div>
+                <div className="text-[11px] text-sky-300/80 mt-0.5">Authenticator App Protected</div>
+              </div>
+              <div className="p-4 rounded-2xl bg-[#0B2419] border border-white/10">
+                <div className="text-[11px] uppercase tracking-wider text-emerald-100/60 font-bold">
+                  Biometric Passkeys Enrolled
+                </div>
+                <div className="text-2xl font-bold text-purple-300 mt-1">
+                  {warehouseStaff.reduce((acc, u) => acc + (u.passkeysCount || 0), 0)}
+                </div>
+                <div className="text-[11px] text-purple-300/80 mt-0.5">FIDO2 / WebAuthn Devices</div>
+              </div>
+            </div>
+
+            {/* Newly Created Credentials Share Banner */}
+            {createdWarehouseCreds && (
+              <div className="p-5 rounded-2xl bg-emerald-950/90 border-2 border-[#D4AF37] space-y-3">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-sm font-bold text-[#D4AF37] flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5" />
+                    Warehouse &amp; Inventory Account ID Created Successfully!
+                  </h3>
+                  <button
+                    type="button"
+                    onClick={() => setCreatedWarehouseCreds(null)}
+                    className="text-xs text-white/70 hover:text-white"
+                  >
+                    ✕ Close
+                  </button>
+                </div>
+                <div className="p-3.5 rounded-xl bg-black/40 border border-white/15 font-mono text-xs space-y-1 text-emerald-100">
+                  <div>
+                    Portal URL: <strong className="text-[#D4AF37]">https://www.bhumivera.com/inventorysoftware</strong>
+                  </div>
+                  <div>
+                    Account ID / Username: <strong className="text-white">{createdWarehouseCreds.username}</strong>
+                  </div>
+                  <div>
+                    Temporary Password: <strong className="text-amber-300">{createdWarehouseCreds.password}</strong>
+                  </div>
+                  <div>
+                    Role &amp; Hub: <strong>{createdWarehouseCreds.role.toUpperCase()}</strong> ({createdWarehouseCreds.assignedHub}) •{' '}
+                    <strong className="text-emerald-300">
+                      {createdWarehouseCreds.fullAllAccess ? '100% ALL ACCESS GRANTED' : 'Custom Permissions'}
+                    </strong>
+                  </div>
+                </div>
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const txt = `BhumiVera 10X Inventory & POS Login Credentials\nPortal: https://www.bhumivera.com/inventorysoftware\nAccount ID: ${createdWarehouseCreds.username}\nPassword: ${createdWarehouseCreds.password}\nRole: ${createdWarehouseCreds.role.toUpperCase()} (${createdWarehouseCreds.fullAllAccess ? 'All Access' : 'Custom'})`;
+                      navigator.clipboard.writeText(txt);
+                      showNotice('success', 'Copied login credentials to clipboard!');
+                    }}
+                    className="px-4 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold text-white"
+                  >
+                    Copy Credentials
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const txt = `Hello ${createdWarehouseCreds.fullName || createdWarehouseCreds.username} 🙏\n\nHere are your login credentials for *BhumiVera 10X Inventory, Storage Keeper & POS*: \n\n*Portal:* https://www.bhumivera.com/inventorysoftware\n*Account ID:* ${createdWarehouseCreds.username}\n*Password:* ${createdWarehouseCreds.password}\n*Access Level:* ${createdWarehouseCreds.fullAllAccess ? '100% Full All-Access' : createdWarehouseCreds.role.toUpperCase()}\n\nPlease sign in and complete your Passkey & 2FA setup.`;
+                      const ph = (createdWarehouseCreds.phone || '').replace(/[^0-9]/g, '');
+                      window.open(`https://api.whatsapp.com/send?phone=${ph}&text=${encodeURIComponent(txt)}`, '_blank');
+                    }}
+                    className="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-[#071510] text-xs font-bold"
+                  >
+                    Send Credentials via WhatsApp
+                  </button>
+                </div>
+              </div>
+            )}
+
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+              {/* Left 5 Cols: Create Account ID Form */}
+              <div className="lg:col-span-5 bg-[#0B2419] border border-white/10 rounded-2xl p-5 space-y-4">
+                <h3 className="text-base font-bold text-white flex items-center gap-2">
+                  <Plus className="w-4 h-4 text-[#D4AF37]" />
+                  Create Warehouse &amp; Inventory User ID
+                </h3>
+
+                <form onSubmit={handleCreateWarehouseUser} className="space-y-3.5 text-xs">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-emerald-100/80 mb-1">Account ID / Username *</label>
+                      <input
+                        type="text"
+                        required
+                        value={newWarehouseUser.username}
+                        onChange={e => setNewWarehouseUser(prev => ({ ...prev, username: e.target.value }))}
+                        placeholder="e.g. keeper_rahul, pos1"
+                        className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-emerald-100/80 mb-1">Role Preset *</label>
+                      <select
+                        value={newWarehouseUser.role}
+                        onChange={e => {
+                          const r = e.target.value;
+                          const isAll = r === 'admin';
+                          setNewWarehouseUser(prev => ({
+                            ...prev,
+                            role: r,
+                            fullAllAccess: isAll ? true : prev.fullAllAccess,
+                          }));
+                        }}
+                        className="w-full px-3 py-2 rounded-xl bg-black/40 border border-[#D4AF37]/40 text-white font-bold"
+                      >
+                        <option value="admin">Master Inventory Admin (100% All Access)</option>
+                        <option value="manager">Store &amp; Warehouse Manager</option>
+                        <option value="keeper">Storage Keeper &amp; Dispatch</option>
+                        <option value="cashier">Retail Shop POS Cashier</option>
+                        <option value="auditor">Stock &amp; Financial Auditor</option>
+                      </select>
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-emerald-100/80 mb-1">Temporary / Initial Password *</label>
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        required
+                        minLength={6}
+                        value={newWarehouseUser.password}
+                        onChange={e => setNewWarehouseUser(prev => ({ ...prev, password: e.target.value }))}
+                        placeholder="Enter or generate password"
+                        className="flex-1 px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={generateWarehouseTempPassword}
+                        className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-[#D4AF37] font-bold"
+                      >
+                        Generate
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-emerald-100/80 mb-1">Staff Full Name *</label>
+                      <input
+                        type="text"
+                        required
+                        value={newWarehouseUser.fullName}
+                        onChange={e => setNewWarehouseUser(prev => ({ ...prev, fullName: e.target.value }))}
+                        placeholder="e.g. Rahul Sharma"
+                        className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-emerald-100/80 mb-1">Phone / WhatsApp</label>
+                      <input
+                        type="text"
+                        value={newWarehouseUser.phone}
+                        onChange={e => setNewWarehouseUser(prev => ({ ...prev, phone: e.target.value }))}
+                        placeholder="+91 98320 00000"
+                        className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white font-mono"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-emerald-100/80 mb-1">Email Address</label>
+                      <input
+                        type="email"
+                        value={newWarehouseUser.email}
+                        onChange={e => setNewWarehouseUser(prev => ({ ...prev, email: e.target.value }))}
+                        placeholder="staff@bhumivera.com"
+                        className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-emerald-100/80 mb-1">Assigned Warehouse / Shop Hub</label>
+                      <input
+                        type="text"
+                        value={newWarehouseUser.assignedHub}
+                        onChange={e => setNewWarehouseUser(prev => ({ ...prev, assignedHub: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-xl bg-black/40 border border-white/15 text-white"
+                      />
+                    </div>
+                  </div>
+
+                  {/* 1-Click Give All Access Toggle */}
+                  <div className="p-3.5 rounded-xl bg-[#D4AF37]/15 border border-[#D4AF37]/50 space-y-2">
+                    <label className="flex items-start gap-2.5 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={newWarehouseUser.fullAllAccess}
+                        onChange={e => {
+                          const checked = e.target.checked;
+                          setNewWarehouseUser(prev => ({
+                            ...prev,
+                            fullAllAccess: checked,
+                            permissions: Object.fromEntries(
+                              Object.keys(WAREHOUSE_INVENTORY_PERMISSIONS).map(k => [k, checked ? true : prev.permissions[k]])
+                            ),
+                          }));
+                        }}
+                        className="mt-0.5 rounded border-[#D4AF37]"
+                      />
+                      <div>
+                        <span className="font-bold text-[#D4AF37] block">
+                          ✓ Give All Access (100% Super Inventory, Storage Keeper &amp; POS Control)
+                        </span>
+                        <span className="text-[11px] text-emerald-100/80">
+                          Grants full access to Master Inventory, Website Stock Sync, Offline POS Billing, Storage
+                          Keeper Bins, Khata Ledger, GRN Inwarding, Reports &amp; Settings.
+                        </span>
+                      </div>
+                    </label>
+                  </div>
+
+                  {!newWarehouseUser.fullAllAccess && (
+                    <div className="p-3 rounded-xl bg-black/30 border border-white/10 space-y-2 max-h-48 overflow-y-auto">
+                      <div className="text-[10px] font-bold uppercase text-[#D4AF37]">
+                        Select Individual Module Permissions
+                      </div>
+                      {Object.entries(WAREHOUSE_INVENTORY_PERMISSIONS)
+                        .filter(([k]) => k !== 'full_all_access')
+                        .map(([permKey, meta]) => (
+                          <label key={permKey} className="flex items-center justify-between gap-2 py-1 cursor-pointer">
+                            <span className="text-[11px] text-white">{meta.label}</span>
+                            <input
+                              type="checkbox"
+                              checked={Boolean(newWarehouseUser.permissions?.[permKey])}
+                              onChange={e =>
+                                setNewWarehouseUser(prev => ({
+                                  ...prev,
+                                  permissions: { ...prev.permissions, [permKey]: e.target.checked },
+                                }))
+                              }
+                            />
+                          </label>
+                        ))}
+                    </div>
+                  )}
+
+                  <label className="flex items-center gap-2 text-[11px] text-emerald-100/80 cursor-pointer">
+                    <input
+                      type="checkbox"
+                      checked={newWarehouseUser.requireOnboarding}
+                      onChange={e => setNewWarehouseUser(prev => ({ ...prev, requireOnboarding: e.target.checked }))}
+                    />
+                    Prompt staff member to enroll Biometric Passkey &amp; 2FA Authenticator on first login
+                  </label>
+
+                  <button
+                    type="submit"
+                    className="w-full py-3 rounded-xl bg-[#D4AF37] hover:bg-[#c49f2f] text-[#071510] font-bold text-xs flex items-center justify-center gap-2 shadow-lg"
+                  >
+                    <Plus className="w-4 h-4" /> Create Account ID &amp; Grant Access
+                  </button>
+                </form>
+              </div>
+
+              {/* Right 7 Cols: Managed Warehouse & Inventory Accounts Directory */}
+              <div className="lg:col-span-7 bg-[#0B2419] border border-white/10 rounded-2xl p-5 space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3">
+                  <div>
+                    <h3 className="text-base font-bold text-white">
+                      Managed Warehouse &amp; Inventory Accounts ({warehouseStaff.length})
+                    </h3>
+                    <p className="text-xs text-emerald-100/65">
+                      Control login access, toggle 100% All Access, or reset lost Passkeys/2FA for{' '}
+                      <code className="text-[#D4AF37]">/inventorysoftware</code>.
+                    </p>
+                  </div>
+                  <input
+                    type="text"
+                    value={warehouseStaffSearch}
+                    onChange={e => setWarehouseStaffSearch(e.target.value)}
+                    placeholder="Search account ID, name, or hub…"
+                    className="px-3 py-1.5 rounded-xl bg-black/40 border border-white/15 text-xs text-white w-56"
+                  />
+                </div>
+
+                <div className="space-y-3 max-h-[640px] overflow-y-auto pr-1">
+                  {warehouseStaff
+                    .filter(u => {
+                      const q = warehouseStaffSearch.trim().toLowerCase();
+                      if (!q) return true;
+                      return (
+                        u.username?.toLowerCase().includes(q) ||
+                        u.fullName?.toLowerCase().includes(q) ||
+                        u.assignedHub?.toLowerCase().includes(q) ||
+                        u.role?.toLowerCase().includes(q)
+                      );
+                    })
+                    .map(user => {
+                      const isEditing = editingWarehouseUser?.id === user.id;
+                      return (
+                        <div key={user.id} className="p-4 rounded-xl bg-black/35 border border-white/10 space-y-3 text-xs">
+                          <div className="flex flex-wrap items-center justify-between gap-2">
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <span className="text-sm font-bold text-white">{user.fullName}</span>
+                                <code className="text-xs text-[#D4AF37] font-mono">@{user.username}</code>
+                                <span className="px-2 py-0.5 rounded bg-white/10 text-emerald-300 font-bold uppercase text-[10px]">
+                                  {user.role}
+                                </span>
+                                {user.fullAllAccess && (
+                                  <span className="px-2 py-0.5 rounded bg-[#D4AF37]/25 text-[#D4AF37] border border-[#D4AF37]/40 font-bold text-[10px]">
+                                    ★ 100% ALL ACCESS
+                                  </span>
+                                )}
+                                <span
+                                  className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase ${
+                                    user.status === 'active'
+                                      ? 'bg-emerald-500/20 text-emerald-300'
+                                      : 'bg-rose-500/20 text-rose-300'
+                                  }`}
+                                >
+                                  {user.status}
+                                </span>
+                              </div>
+                              <div className="text-[11px] text-emerald-100/65 mt-1">
+                                Hub: <strong>{user.assignedHub}</strong> • Phone: {user.phone || '-'} • Passkeys:{' '}
+                                <strong>{user.passkeysCount || 0}</strong> • 2FA:{' '}
+                                <strong>{user.totpEnabled ? 'Active' : 'Off'}</strong> • POS Bills:{' '}
+                                <strong>{user.totalPosBills || 0}</strong>
+                              </div>
+                            </div>
+
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  handleUpdateWarehouseUser(user.id, {
+                                    fullAllAccess: !user.fullAllAccess,
+                                    role: !user.fullAllAccess ? 'admin' : 'manager',
+                                  })
+                                }
+                                className={`px-2.5 py-1 rounded-lg font-bold text-[11px] border ${
+                                  user.fullAllAccess
+                                    ? 'bg-[#D4AF37] text-[#071510] border-[#D4AF37]'
+                                    : 'bg-white/5 text-[#D4AF37] border-[#D4AF37]/40 hover:bg-[#D4AF37]/20'
+                                }`}
+                              >
+                                {user.fullAllAccess ? '✓ All Access Active' : 'Grant All Access'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => setEditingWarehouseUser(isEditing ? null : user)}
+                                className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white text-[11px]"
+                              >
+                                {isEditing ? 'Hide Matrix' : 'Permissions'}
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleResetWarehouseUserPassword(user)}
+                                className="px-2.5 py-1 rounded-lg bg-amber-500/15 hover:bg-amber-500/25 text-amber-200 text-[11px]"
+                                title="Reset Password"
+                              >
+                                Reset Pass
+                              </button>
+                              <button
+                                type="button"
+                                onClick={() => handleResetWarehouseUserSecurity(user)}
+                                className="px-2.5 py-1 rounded-lg bg-sky-500/15 hover:bg-sky-500/25 text-sky-200 text-[11px]"
+                                title="Clear 2FA & Passkey Locks"
+                              >
+                                Reset 2FA/Key
+                              </button>
+                              {user.username !== 'admin' && (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      handleUpdateWarehouseUser(user.id, {
+                                        status: user.status === 'active' ? 'suspended' : 'active',
+                                      })
+                                    }
+                                    className="px-2.5 py-1 rounded-lg bg-rose-500/15 hover:bg-rose-500/25 text-rose-200 text-[11px]"
+                                  >
+                                    {user.status === 'active' ? 'Suspend' : 'Activate'}
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleDeleteWarehouseUser(user)}
+                                    className="p-1.5 rounded-lg bg-rose-500/20 hover:bg-rose-500/35 text-rose-300"
+                                    title="Delete Account"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </>
+                              )}
+                            </div>
+                          </div>
+
+                          {isEditing && (
+                            <div className="pt-3 border-t border-white/10 space-y-2.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[11px] font-bold text-[#D4AF37] uppercase">
+                                  Granular 10X Inventory &amp; POS Permission Matrix for @{user.username}
+                                </span>
+                                <select
+                                  value={user.role}
+                                  onChange={e => handleUpdateWarehouseUser(user.id, { role: e.target.value })}
+                                  className="px-2.5 py-1 rounded bg-black/50 border border-white/15 text-xs text-white"
+                                >
+                                  <option value="admin">Role: Master Inventory Admin</option>
+                                  <option value="manager">Role: Store &amp; Warehouse Manager</option>
+                                  <option value="keeper">Role: Storage Keeper &amp; Dispatch</option>
+                                  <option value="cashier">Role: Retail POS Cashier</option>
+                                  <option value="auditor">Role: Stock Auditor</option>
+                                </select>
+                              </div>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {Object.entries(WAREHOUSE_INVENTORY_PERMISSIONS).map(([permKey, meta]) => {
+                                  const enabled = Boolean(user.permissions?.[permKey]);
+                                  return (
+                                    <button
+                                      key={permKey}
+                                      type="button"
+                                      onClick={() =>
+                                        handleUpdateWarehouseUser(user.id, {
+                                          fullAllAccess:
+                                            permKey === 'full_all_access' ? !enabled : user.fullAllAccess,
+                                          permissions: { ...(user.permissions || {}), [permKey]: !enabled },
+                                        })
+                                      }
+                                      className={`p-2.5 rounded-lg border text-left flex justify-between gap-2 ${
+                                        enabled
+                                          ? 'bg-emerald-500/15 border-emerald-500/40 text-white'
+                                          : 'bg-black/20 border-white/5 text-white/50'
+                                      }`}
+                                    >
+                                      <div>
+                                        <div className="text-xs font-semibold">{meta.label}</div>
+                                        <div className="text-[10px] opacity-75">{meta.desc}</div>
+                                      </div>
+                                      <span className="text-[10px] font-bold">{enabled ? 'ON' : 'OFF'}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                </div>
               </div>
             </div>
           </div>

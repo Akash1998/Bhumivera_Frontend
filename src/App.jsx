@@ -94,10 +94,7 @@ const VisualGuideModal = lazyWithRetry(() => import("./components/VisualGuideMod
 // Storefront & Portal Pages
 const Home = lazyWithRetry(() => import("./pages/PremiumHome.jsx"));
 const LabProtocol = lazyWithRetry(() => import("./pages/LabProtocol.jsx"));
-const Warehouse = lazyWithRetry(() => import("./pages/Warehouse.jsx"));
-const WarehouseAdmin = lazyWithRetry(() => import("./pages/admin/WarehouseAdmin.jsx"));
-const WarehouseManagement = lazyWithRetry(() => import("./pages/admin/WarehouseManagement.jsx"));
-const WarehouseAdminLogin = lazyWithRetry(() => import("./pages/WarehouseAdminLogin.jsx"));
+const InventorySoftware = lazyWithRetry(() => import("./pages/InventorySoftware.jsx"));
 const Shop = lazyWithRetry(() => import("./pages/Shop.jsx"));
 const ProductDetail = lazyWithRetry(() => import("./pages/ProductDetail.jsx"));
 const BundleDetail = lazyWithRetry(() => import("./pages/BundleDetail.jsx"));
@@ -353,6 +350,8 @@ function AppContent() {
     return (
       path.startsWith("/admin") || 
       path.startsWith("/warehouse") || 
+      path.startsWith("/inventorysoftware") ||
+      path.startsWith("/inventorymanagement") ||
       path.startsWith("/support") ||
       path.startsWith("/superadminsupport") ||
       path === "/warehouseadmin"
@@ -462,16 +461,21 @@ function AppContent() {
             <Route path="/address-book" element={<AddressBook />} />
             <Route path="/affiliate" element={<Affiliate />} />
 
-            {/* Warehouse System */}
-            <Route path="/warehouse" element={<WebOnlyManagement><WarehouseRoute><Warehouse /></WarehouseRoute></WebOnlyManagement>} />
-            <Route path="/warehouse/admin" element={<WebOnlyManagement><WarehouseRoute><WarehouseAdmin /></WarehouseRoute></WebOnlyManagement>} />
-            <Route path="/warehouse/management" element={<WebOnlyManagement><WarehouseRoute><WarehouseManagement /></WarehouseRoute></WebOnlyManagement>} />
-            <Route path="/warehouseadmin" element={<WebOnlyManagement><WarehouseAdminLogin /></WebOnlyManagement>} />
+            {/* 10X Super Inventory, Storage Keeper & POS Software (www.bhumivera.com/inventorysoftware) */}
+            <Route path="/inventorysoftware" element={<WebOnlyManagement><InventorySoftware /></WebOnlyManagement>} />
+            <Route path="/inventorysoftware/*" element={<WebOnlyManagement><InventorySoftware /></WebOnlyManagement>} />
+            <Route path="/inventorymanagement" element={<Navigate to="/inventorysoftware" replace />} />
+            <Route path="/inventorymanagement/*" element={<Navigate to="/inventorysoftware" replace />} />
+            <Route path="/warehouse" element={<Navigate to="/inventorysoftware" replace />} />
+            <Route path="/warehouse/*" element={<Navigate to="/inventorysoftware" replace />} />
+            <Route path="/warehouseadmin" element={<Navigate to="/inventorysoftware" replace />} />
             
-            {/* Executive Admin System */}
+            {/* Executive Admin System (Warehouse & Inventory removed from Admin Panel) */}
             <Route path="/admin/login" element={<WebOnlyManagement><AdminLogin /></WebOnlyManagement>} />
             <Route path="/admin" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />
             <Route path="/admin/dashboard" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />
+            <Route path="/admin/dashboard/warehouse" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="/admin/dashboard/inventory" element={<Navigate to="/admin/dashboard" replace />} />
             <Route path="/admin/dashboard/support" element={<Navigate to="/support" replace />} />
             <Route path="/admin/dashboard/contact" element={<Navigate to="/support" replace />} />
             <Route path="/admin/dashboard/:tab" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />

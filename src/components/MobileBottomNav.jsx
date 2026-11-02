@@ -16,6 +16,8 @@ export default function MobileBottomNav() {
   if (
     location.pathname.startsWith('/admin') ||
     location.pathname.startsWith('/warehouse') ||
+    location.pathname.startsWith('/inventorysoftware') ||
+    location.pathname.startsWith('/inventorymanagement') ||
     location.pathname.startsWith('/support') ||
     location.pathname.startsWith('/superadminsupport') ||
     location.pathname === '/warehouseadmin'

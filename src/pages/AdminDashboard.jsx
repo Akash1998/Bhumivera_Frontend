@@ -16,14 +16,12 @@ const CategoryManagement = lazy(() => import('./admin/CategoryManagement'));
 const OrderManagement = lazy(() => import('./admin/OrderManagement'));
 const UserManagement = lazy(() => import('./admin/UserManagement'));
 const AnalyticsManagement = lazy(() => import('./admin/AnalyticsManagement'));
-const InventoryManagement = lazy(() => import('./admin/InventoryManagement'));
 const ScarcitySimulator = lazy(() => import('./admin/ScarcitySimulator'));
 const ReviewManagement = lazy(() => import('./admin/ReviewManagement'));
 const ReturnManagement = lazy(() => import('./admin/ReturnManagement'));
 const NotificationManagement = lazy(() => import('./admin/NotificationManagement'));
 const TaxManagement = lazy(() => import('./admin/TaxManagement'));
 const GSTAccounting = lazy(() => import('./admin/GSTAccounting'));
-const WarehouseManagement = lazy(() => import('./admin/WarehouseManagement'));
 const ShippingManagement = lazy(() => import('./admin/ShippingManagement'));
 const AdminSettings = lazy(() => import('./admin/AdminSettings.jsx'));
 const ImpactManagement = lazy(() => import('./admin/ImpactManagement.jsx'));
@@ -86,7 +84,6 @@ const TAB_COMPONENTS = {
   overview: DashboardOverview,
   products: ProductManagement,
   categories: CategoryManagement,
-  inventory: InventoryManagement,
   'scarcity-simulator': ScarcitySimulator,
   orders: OrderManagement,
   returns: ReturnManagement,
@@ -97,7 +94,6 @@ const TAB_COMPONENTS = {
   tax: TaxManagement,
   gst: GSTAccounting,
   shipping: ShippingManagement,
-  warehouse: WarehouseManagement,
   settings: AdminSettings,
   ...Object.fromEntries(GROWTH_TABS.map(id => [id, GrowthOffersHub])),
   'loyalty-tiers': LoyaltyTierForge,
@@ -124,9 +120,7 @@ const TAB_ICONS = {
   impact: Leaf,
   products: Package,
   categories: Boxes,
-  inventory: Tags,
   'scarcity-simulator': Activity,
-  warehouse: Warehouse,
   loyalty: Award,
   affiliate: Users,
   coupons: Gift,
@@ -220,9 +214,7 @@ export default function AdminDashboard() {
         { id: 'orders', label: 'Orders' },
         { id: 'products', label: 'Products' },
         { id: 'categories', label: 'Categories' },
-        { id: 'inventory', label: 'Inventory' },
         { id: 'scarcity-simulator', label: 'Stock Pacing Studio' },
-        { id: 'warehouse', label: 'Warehouse' },
         { id: 'shipping', label: 'Shipping' },
         { id: 'tax', label: 'Taxes' },
         { id: 'gst', label: 'Financial Ledger & GST Compliance' },
@@ -429,6 +421,13 @@ export default function AdminDashboard() {
               <p className="px-2 pb-1 text-[9px] font-bold text-[#d4af37] uppercase tracking-widest">
                 Maison Portals
               </p>
+              <Link
+                to="/inventorysoftware"
+                className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-emerald-300 font-semibold hover:bg-emerald-500/15"
+              >
+                <span>10X Inventory &amp; POS Suite</span>
+                <ExternalLink size={12} />
+              </Link>
               <Link
                 to="/superadminsupport"
                 className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-purple-200 hover:bg-purple-500/15"
