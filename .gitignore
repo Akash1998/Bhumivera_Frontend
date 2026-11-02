@@ -39,5 +39,9 @@ android/local.properties
 android/build/
 android/app/build/
 android/captures/
+android-native/.gradle/
+android-native/local.properties
+android-native/build/
+android-native/app/build/
 .vercel
 .env*

@@ -43,6 +43,19 @@ The Android app supports Android API 24+ (Android 7+) and targets API 36. Respon
 
 To produce an installable debug APK after syncing, run `android\\gradlew.bat assembleDebug` from this directory. The APK is written to `android\\app\\build\\outputs\\apk\\debug\\app-debug.apk`. A Play Store release requires a separately configured signing key and release build. Android APKs cannot be installed on iPad; iPad's browser-installable PWA is available from Safari, while a native iPad app requires a separate iOS target and a macOS/Xcode build.
 
+## Native Android migration (in progress)
+
+The existing `android/` app remains the Capacitor build while the customer app is being migrated. A separate `android-native/` project is a true Kotlin/Jetpack Compose app: its current native slice includes customer sign-in (including authenticator 2FA), product search/catalog, product details, and an authenticated cart. It calls the existing HTTPS API directly, stores the session in encrypted Android preferences, and does not render the website in a WebView. The admin dashboard remains web-only.
+
+Build the native debug APK from this directory with Android SDK Platform 36 and Java 17 or newer:
+
+```powershell
+$env:ANDROID_SDK_ROOT = "$env:LOCALAPPDATA\Android\Sdk"
+android\\gradlew.bat -p android-native :app:assembleDebug
+```
+
+The output is `android-native\\app\\build\\outputs\\apk\\debug\\app-debug.apk`. The native project uses the existing `com.bhumivera.app` application ID and version code 2 so it can replace the prior app when the migration is ready. This is an initial native customer-app milestone, not full website feature parity: account registration, checkout/payment, address management, order history/tracking, and the remaining storefront features still need native implementations and device testing before the Capacitor app should be retired.
+
 ## Release checklist
 
 - Set up a Google Play Console application for `com.bhumivera.app`.
