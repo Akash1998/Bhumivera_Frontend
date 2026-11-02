@@ -33,7 +33,6 @@ const ReferralEngine = lazy(() => import('./admin/AffiliateManagement.jsx'));
 const SupportManagement = lazy(() => import('./admin/SupportManagement.jsx'));
 const ContactManagement = lazy(() => import('./admin/ContactManagement.jsx'));
 const AuthenticityBatchManagement = lazy(() => import('./admin/AuthenticityBatchManagement.jsx'));
-const WelcomeCardManagement = lazy(() => import('./admin/WelcomeCardManagement.jsx'));
 const SupportAgentManagement = lazy(() => import('./admin/SupportAgentManagement.jsx'));
 const LoyaltyTierForge = lazy(() => import('./admin/LoyaltyTierForge.jsx'));
 const LoyaltyMembers = lazy(() => import('./admin/LoyaltyMembers.jsx'));
@@ -113,7 +112,6 @@ const TAB_COMPONENTS = {
   support: SupportManagement,
   contacts: ContactManagement,
   authenticity: AuthenticityBatchManagement,
-  'welcome-cards': WelcomeCardManagement,
   'support-agents': SupportAgentManagement,
 };
 
@@ -152,7 +150,6 @@ const TAB_ICONS = {
   support: Headphones,
   contacts: MessageSquare,
   authenticity: QrCode,
-  'welcome-cards': Gift,
   'support-agents': Users,
 };
 
@@ -214,7 +211,6 @@ export default function AdminDashboard() {
         { id: 'support', label: 'Bhumivera Client Concierge' },
         { id: 'contacts', label: 'Contact & Inquiries' },
         { id: 'authenticity', label: 'QR Codes & Genuinity Panel' },
-        { id: 'welcome-cards', label: 'Welcome Card Gifts' },
         { id: 'support-agents', label: 'Support Staff Roster' },
       ],
     },

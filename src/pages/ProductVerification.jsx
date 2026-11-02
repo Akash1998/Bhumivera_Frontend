@@ -37,22 +37,18 @@ export default function ProductVerification() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth() || {};
   const userId = user?.id;
-  const urlGiftCode = searchParams.get('qr') || '';
-  const urlSerial = searchParams.get('serial') || searchParams.get('code') || '';
+  const urlGiftCode = (searchParams.get('qr') || searchParams.get('gift') || searchParams.get('code') || '').toUpperCase();
+  const urlSerial = searchParams.get('serial') || '';
   const urlGiftSerial = searchParams.get('serial') || '';
   const [serial, setSerial] = useState(urlSerial);
   const [loading, setLoading] = useState(false);
   const [productData, setProductData] = useState(null);
   const [coaData, setCoaData] = useState(null);
   const [batchData, setBatchData] = useState(null);
-  const urlWelcomeCode = (searchParams.get('gift') || '').toUpperCase();
-  const [welcomeCode, setWelcomeCode] = useState(urlWelcomeCode);
-  const [welcomeStatus, setWelcomeStatus] = useState(null);
-  const [welcomeLoading, setWelcomeLoading] = useState(false);
   const [error, setError] = useState('');
   const [scannerOpen, setScannerOpen] = useState(false);
   const [scannerError, setScannerError] = useState('');
-  const [giftCode, setGiftCode] = useState(urlGiftCode || UNIVERSAL_GIFT_CODE);
+  const [giftCode, setGiftCode] = useState(urlGiftCode || LEGACY_GIFT_CODE);
   const [giftSerial, setGiftSerial] = useState(urlGiftSerial);
   const [giftStatus, setGiftStatus] = useState(null);
   const [giftLoading, setGiftLoading] = useState(false);
@@ -158,40 +154,6 @@ export default function ProductVerification() {
     }
   }, [userId]);
 
-  const checkWelcomeGift = useCallback(async (targetCode) => {
-    const cleanCode = String(targetCode || '').trim().toUpperCase();
-    if (!cleanCode) return;
-    setWelcomeCode(cleanCode);
-    setWelcomeStatus(null);
-    setWelcomeLoading(true);
-    try {
-      const { data } = await api.get(`/welcome-gifts/status/${encodeURIComponent(cleanCode)}`, { notify: false });
-      setWelcomeStatus({ ...data, requiresLogin: Boolean(data.canClaim && !userId) });
-    } catch (statusError) {
-      setWelcomeStatus(statusError.response?.data || {
-        valid: false,
-        message: 'Could not check this welcome card right now. Please try again.',
-      });
-    } finally {
-      setWelcomeLoading(false);
-    }
-  }, [userId]);
-
-  const claimWelcomeGift = async () => {
-    setWelcomeLoading(true);
-    try {
-      const { data } = await api.post('/welcome-gifts/claim', { code: welcomeCode }, { notify: false });
-      setWelcomeStatus({ ...data, valid: true, claimedNow: true });
-    } catch (claimError) {
-      setWelcomeStatus(claimError.response?.data || {
-        valid: false,
-        message: 'Could not claim this welcome card right now. Please try again.',
-      });
-    } finally {
-      setWelcomeLoading(false);
-    }
-  };
-
   const stopCameraScanner = useCallback(() => {
     setScannerOpen(false);
   }, []);
@@ -202,12 +164,7 @@ export default function ProductVerification() {
 
     try {
       const scannedUrl = new URL(scannedValue, window.location.origin);
-      const scannedWelcomeCode = scannedUrl.searchParams.get('gift');
-      if (scannedWelcomeCode) {
-        checkWelcomeGift(scannedWelcomeCode);
-        return;
-      }
-      const scannedGiftCode = scannedUrl.searchParams.get('qr') || scannedUrl.searchParams.get('code');
+      const scannedGiftCode = scannedUrl.searchParams.get('qr') || scannedUrl.searchParams.get('gift') || scannedUrl.searchParams.get('code');
       const scannedSerial = scannedUrl.searchParams.get('serial');
       if (scannedGiftCode) {
         setGiftCode(scannedGiftCode);
@@ -223,18 +180,17 @@ export default function ProductVerification() {
       // Non-URL QR values are handled as codes below.
     }
 
-    if (/^WC-[A-Z0-9]{10}$/i.test(scannedValue)) {
-      checkWelcomeGift(scannedValue);
-    } else if (
+    if (
       scannedValue.toUpperCase() === UNIVERSAL_GIFT_CODE ||
       scannedValue.replace(/[\s-]/g, '') === '849271053824' ||
-      scannedValue.toUpperCase() === LEGACY_GIFT_CODE
+      scannedValue.toUpperCase() === LEGACY_GIFT_CODE ||
+      scannedValue.toUpperCase() === 'BHUMIVERAGIFT2026'
     ) {
       verifyGift(scannedValue);
     } else {
       verifySerialCode(scannedValue);
     }
-  }, [checkWelcomeGift, verifyGift, verifySerialCode]);
+  }, [verifyGift, verifySerialCode]);
 
   useEffect(() => {
     if (!scannerOpen || !videoRef.current) return undefined;
@@ -303,15 +259,13 @@ export default function ProductVerification() {
     if (searchParams.get('scan') === '1' || searchParams.get('scan') === 'true') {
       setScannerOpen(true);
     }
-    if (urlWelcomeCode) {
-      checkWelcomeGift(urlWelcomeCode);
-    } else if (urlGiftCode) {
+    if (urlGiftCode) {
       setGiftCode(urlGiftCode);
       verifyGift(urlGiftCode, urlGiftSerial);
     } else if (urlSerial) {
       verifySerialCode(urlSerial);
     }
-  }, [searchParams, urlWelcomeCode, urlGiftCode, urlGiftSerial, urlSerial, checkWelcomeGift, verifyGift, verifySerialCode]);
+  }, [searchParams, urlGiftCode, urlGiftSerial, urlSerial, verifyGift, verifySerialCode]);
 
   const handleGiftSubmit = (event) => {
     event.preventDefault();
@@ -560,9 +514,22 @@ export default function ProductVerification() {
                   </Link>
                 </>
               ) : giftStatus.redeemedNow ? (
-                <p className="font-semibold text-emerald-300">
-                  Gift claimed: ₹{giftStatus.creditInr} credit and {giftStatus.loyaltyPoints} points added to your account.
-                </p>
+                <div className="space-y-3">
+                  <p className="flex items-center gap-2 font-semibold text-emerald-300">
+                    <CheckCircle2 size={18} /> Gift claimed: ₹{giftStatus.creditInr} credit and {giftStatus.loyaltyPoints} points added to your account.
+                  </p>
+                  <p className="text-xs text-slate-300">
+                    Your ₹{giftStatus.creditInr} welcome bonus is active in your account wallet and ready to apply at checkout.
+                  </p>
+                  <div className="flex flex-wrap gap-3 pt-1">
+                    <Link to="/shop" className="btn-gold-luxury inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-xs font-bold uppercase tracking-wider text-white">
+                      Shop Now <ArrowRight size={14} />
+                    </Link>
+                    <Link to="/profile" className="inline-flex items-center gap-2 rounded-xl border border-white/20 bg-white/5 px-5 py-2.5 text-xs font-semibold text-slate-200 hover:bg-white/10">
+                      View Wallet
+                    </Link>
+                  </div>
+                </div>
               ) : giftStatus.canRedeem ? (
                 <>
                   <p className="font-semibold text-emerald-300">
@@ -576,7 +543,7 @@ export default function ProductVerification() {
                     disabled={redeemingGift}
                     className="btn-gold-luxury mt-4 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-xs font-bold uppercase tracking-wider text-white disabled:opacity-50"
                   >
-                    <Gift size={15} /> {redeemingGift ? 'Crediting account…' : 'Claim My One-Time Gift'}
+                    <Gift size={15} /> {redeemingGift ? 'Crediting account…' : 'Claim My ₹300 Welcome Gift'}
                   </button>
                 </>
               ) : (
@@ -587,62 +554,6 @@ export default function ProductVerification() {
             </div>
           )}
         </section>
-
-        {(welcomeStatus || welcomeLoading) && (
-          <section aria-live="polite" className="mt-8 rounded-3xl border border-[#d4af37]/40 bg-[#0d1520] p-6 shadow-xl sm:p-8">
-            <div className="flex items-center gap-3">
-              <Gift size={24} className="text-[#d4af37]" />
-              <div>
-                <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#fce096]">Welcome card gift</p>
-                <h2 className="mt-1 font-serif text-xl font-bold text-white sm:text-2xl">
-                  {welcomeStatus?.terms ? `Claim your ₹${welcomeStatus.terms.totalValue} gift` : 'Checking your welcome card…'}
-                </h2>
-              </div>
-            </div>
-            {welcomeStatus && (
-              <div className="mt-5 rounded-2xl border border-[#d4af37]/30 bg-[#070a0e] p-5" role="status">
-                {welcomeStatus.terms && (
-                  <p className="text-sm text-[#cbd5e1]">
-                    Use ₹{welcomeStatus.terms.perOrderValue} off per order{welcomeStatus.terms.uses > 1 ? ` (${welcomeStatus.terms.uses} orders)` : ''}
-                    {welcomeStatus.terms.minOrderAmount > 0 ? ` on orders of ₹${welcomeStatus.terms.minOrderAmount} or more` : ''}.
-                    Valid for {welcomeStatus.terms.validityDays} days after you claim it.
-                  </p>
-                )}
-                {welcomeStatus.claimedNow || (welcomeStatus.claimedByYou && welcomeStatus.couponCode) ? (
-                  <p className="mt-3 font-semibold text-emerald-300">
-                    {welcomeStatus.claimedNow ? 'Gift claimed!' : 'Already claimed.'} Your coupon code:{' '}
-                    <span className="font-mono text-[#fce096]">{welcomeStatus.couponCode}</span> — apply it at checkout.
-                  </p>
-                ) : welcomeStatus.requiresLogin ? (
-                  <>
-                    <p className="mt-3 flex items-center gap-2 font-semibold text-[#fce096]">
-                      <Lock size={18} /> Sign in to claim this gift
-                    </p>
-                    <Link
-                      to={`/login?redirect=${encodeURIComponent(`/verify?gift=${encodeURIComponent(welcomeCode)}`)}`}
-                      className="btn-gold-luxury mt-4 inline-flex items-center gap-2 rounded-xl px-5 py-3 text-xs font-bold uppercase tracking-wider text-white"
-                    >
-                      Sign In <ArrowRight size={14} />
-                    </Link>
-                  </>
-                ) : welcomeStatus.canClaim ? (
-                  <button
-                    type="button"
-                    onClick={claimWelcomeGift}
-                    disabled={welcomeLoading}
-                    className="btn-gold-luxury mt-4 inline-flex items-center gap-2 rounded-xl px-6 py-3 text-xs font-bold uppercase tracking-wider text-white disabled:opacity-50"
-                  >
-                    <Gift size={15} /> {welcomeLoading ? 'Claiming…' : `Claim ₹${welcomeStatus.terms?.totalValue} Gift`}
-                  </button>
-                ) : (
-                  <p className="mt-3 flex items-center gap-2 text-sm text-rose-200">
-                    <AlertCircle size={17} /> {welcomeStatus.message || 'This welcome card could not be verified.'}
-                  </p>
-                )}
-              </div>
-            )}
-          </section>
-        )}
 
         {batchData && (
           <section aria-live="polite" className="mt-8 overflow-hidden rounded-3xl border border-emerald-500/40 bg-[#0d1520] p-6 shadow-xl sm:p-8">
