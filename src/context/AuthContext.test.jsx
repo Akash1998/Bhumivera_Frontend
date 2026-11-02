@@ -29,7 +29,7 @@ const createToken = role => {
 };
 
 function AuthState() {
-  const { user, token, loading, completeLogin, googleLogin } = useAuth();
+  const { user, token, loading, completeLogin, googleLogin, logout } = useAuth();
   return (
     <>
       <output data-testid="auth-state">{JSON.stringify({ user, token, loading })}</output>
@@ -38,6 +38,7 @@ function AuthState() {
         user: { id: 28, email: 'customer@example.com', role: 'customer' },
       })}>Complete customer login</button>
       <button type="button" onClick={() => googleLogin('google-id-token', true)}>Google sign-in</button>
+      <button type="button" onClick={() => logout('customer')}>Logout customer</button>
     </>
   );
 }
@@ -145,5 +146,46 @@ describe('AuthProvider session restoration', () => {
 
     expect(readState().token).toBeNull();
     expect(localStorage.getItem('token')).toBeNull();
+  });
+  it('treats storefront visitors as guest even if adminToken is present in localStorage', async () => {
+    window.history.replaceState({}, '', '/shop');
+    const adminToken = createToken('admin');
+    localStorage.setItem('adminToken', adminToken);
+    localStorage.setItem('adminUser', JSON.stringify({
+      id: 1,
+      email: 'adminbhumivera27@gmail.com',
+      role: 'superadmin',
+    }));
+
+    render(<AuthProvider><AuthState /></AuthProvider>);
+    await waitFor(() => expect(readState().loading).toBe(false));
+
+    expect(readState().user).toBeNull();
+    expect(readState().token).toBeNull();
+    expect(localStorage.getItem('token')).toBeNull();
+  });
+
+  it('clears storefront user and does not leak admin email when logging out from customer side', async () => {
+    window.history.replaceState({}, '', '/profile');
+    const adminToken = createToken('admin');
+    localStorage.setItem('adminToken', adminToken);
+    localStorage.setItem('adminUser', JSON.stringify({
+      id: 1,
+      email: 'adminbhumivera27@gmail.com',
+      role: 'superadmin',
+    }));
+    localStorage.setItem('token', createToken('customer'));
+    localStorage.setItem('user', JSON.stringify({ id: 28, email: 'customer@example.com', role: 'customer' }));
+
+    render(<AuthProvider><AuthState /></AuthProvider>);
+    await waitFor(() => expect(readState().loading).toBe(false));
+    expect(readState().user).toMatchObject({ email: 'customer@example.com' });
+
+    await act(async () => screen.getByRole('button', { name: 'Logout customer' }).click());
+
+    expect(readState().user).toBeNull();
+    expect(readState().token).toBeNull();
+    expect(localStorage.getItem('user')).toBeNull();
+    expect(localStorage.getItem('adminToken')).toBe(adminToken);
   });
 });

@@ -16,23 +16,63 @@ const getStoredUser = (key = 'user') => {
 const getStoredAdminUser = () => {
   const adminUser = getStoredUser('adminUser');
   if (adminUser) return adminUser;
-  const storedUser = getStoredUser();
-  if (['admin', 'superadmin'].includes(storedUser?.role)) return storedUser;
   const claims = decodeJWT(localStorage.getItem('adminToken'));
   return ['admin', 'superadmin'].includes(claims?.role) ? claims : null;
 };
+const getStoredCustomerUser = () => {
+  const storedUser = getStoredUser('user');
+  if (['admin', 'superadmin', 'warehouse_admin'].includes(storedUser?.role)) {
+    // Purge corrupted admin user from customer storage so it never leaks to storefront
+    localStorage.removeItem('user');
+    return null;
+  }
+  return storedUser;
+};
 const storeAdminUser = user => {
   localStorage.setItem('adminUser', JSON.stringify(user));
-  localStorage.setItem('user', JSON.stringify(user));
+  // Only write to 'user' key if currently on an admin path
+  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+    localStorage.setItem('user', JSON.stringify(user));
+  }
 };
 
 export const AuthProvider = ({ children }) => {
-  const [user, setUser] = useState(() => (
-    localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('warehouseToken')
-      ? getStoredUser()
-      : null
-  ));
-  const [token, setToken] = useState(localStorage.getItem('token') || localStorage.getItem('adminToken') || localStorage.getItem('warehouseToken') || null);
+  const [user, setUser] = useState(() => {
+    const isAdminPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+    const isWarehousePath = typeof window !== 'undefined' && window.location.pathname.startsWith('/warehouse');
+    if (isAdminPath) {
+      return getStoredAdminUser();
+    }
+    if (isWarehousePath) {
+      return getStoredUser('warehouseUser') || getStoredUser('user');
+    }
+    const customerToken = localStorage.getItem('token') || localStorage.getItem('ms_token');
+    if (!customerToken) return null;
+    const claims = decodeJWT(customerToken);
+    if (claims && ['admin', 'superadmin', 'warehouse_admin'].includes(claims.role)) {
+      return null;
+    }
+    return getStoredCustomerUser();
+  });
+
+  const [token, setToken] = useState(() => {
+    const isAdminPath = typeof window !== 'undefined' && window.location.pathname.startsWith('/admin');
+    const isWarehousePath = typeof window !== 'undefined' && window.location.pathname.startsWith('/warehouse');
+    if (isAdminPath) {
+      return localStorage.getItem('adminToken');
+    }
+    if (isWarehousePath) {
+      return localStorage.getItem('warehouseToken') || localStorage.getItem('token');
+    }
+    const customerToken = localStorage.getItem('token') || localStorage.getItem('ms_token');
+    if (!customerToken) return null;
+    const claims = decodeJWT(customerToken);
+    if (claims && ['admin', 'superadmin', 'warehouse_admin'].includes(claims.role)) {
+      return null;
+    }
+    return customerToken;
+  });
+
   const [loading, setLoading] = useState(true);
   const authExpiryHandled = useRef(false);
 
@@ -43,68 +83,81 @@ export const AuthProvider = ({ children }) => {
       const warehouseToken = localStorage.getItem('warehouseToken');
       const wp = window.location.pathname.startsWith('/warehouse');
       const adminPath = window.location.pathname.startsWith('/admin');
-      if (wp) {
-        const t = warehouseToken || customerToken;
-        if (t) { setToken(t); setUser(getStoredUser() || { role: 'warehouse_admin' }); }
-        else { setToken(null); setUser(null); }
-        setLoading(false); return;
-      }
-      const customerRole = decodeJWT(customerToken)?.role;
-      const anyT = adminPath
-        ? adminToken || (['admin', 'superadmin'].includes(customerRole) ? customerToken : null)
-        : customerToken || warehouseToken;
-      if (anyT) {
-        let role = 'user';
-        let storedUser = {};
-        try {
-          const d = decodeJWT(anyT); role = d?.role || storedUser?.role || 'user';
-          storedUser = (role === 'admin' || role === 'superadmin' ? getStoredAdminUser() : getStoredUser()) || {};
-          let fu = storedUser;
-          if (role === 'admin' || role === 'superadmin') {
-            fu = (await authApi.getAdminProfile()).data;
-          } else if (role !== 'warehouse_admin') {
+
+      if (adminPath) {
+        if (adminToken) {
+          const claims = decodeJWT(adminToken);
+          if (['admin', 'superadmin'].includes(claims?.role)) {
+            let adminProfile = getStoredAdminUser() || claims;
             try {
-              const profile = await usersApi.getProfile();
-              fu = profile.data?.user || profile.data;
-            } catch (error) {
-              if (error.response?.status === 401) throw error;
-              console.error('[AUTH_PROFILE_RESTORE]', error);
-              fu = storedUser;
+              const res = await authApi.getAdminProfile();
+              if (res.data) adminProfile = { ...res.data, role: claims.role };
+            } catch (err) {
+              if ([401, 403].includes(err.response?.status)) {
+                await logout('admin');
+                setLoading(false);
+                return;
+              }
             }
-          }
-          const f = { ...fu, role };
-          setUser(f);
-          if (role === 'admin' || role === 'superadmin') {
-            const currentAdminToken = localStorage.getItem('adminToken') || anyT;
-            localStorage.setItem('adminToken', currentAdminToken);
-            storeAdminUser(f);
-            setToken(currentAdminToken);
-          } else {
-            setToken(anyT);
-          }
-          localStorage.setItem('user', JSON.stringify(f));
-        } catch (error) {
-          if (role === 'admin' || role === 'superadmin') {
-            if ([401, 403].includes(error.response?.status)) {
-              void logout('admin');
-            } else {
-              console.error('[ADMIN_PROFILE_RESTORE]', error);
-              const claims = decodeJWT(localStorage.getItem('adminToken') || anyT) || {};
-              const adminUser = getStoredAdminUser();
-              const restoredUser = adminUser && Object.keys(adminUser).length
-                ? { ...adminUser, role }
-                : { id: claims.id, email: claims.email, role };
-              const currentAdminToken = localStorage.getItem('adminToken') || anyT;
-              localStorage.setItem('adminToken', currentAdminToken);
-              storeAdminUser(restoredUser);
-              setUser(restoredUser);
-              setToken(currentAdminToken);
-            }
-          } else {
-            void logout('customer');
+            storeAdminUser(adminProfile);
+            setToken(adminToken);
+            setUser(adminProfile);
+            setLoading(false);
+            return;
           }
         }
+        setToken(null);
+        setUser(null);
+        setLoading(false);
+        return;
       }
+
+      if (wp) {
+        const t = warehouseToken || customerToken;
+        if (t) {
+          setToken(t);
+          setUser(getStoredUser('warehouseUser') || getStoredUser('user') || { role: 'warehouse_admin' });
+        } else {
+          setToken(null);
+          setUser(null);
+        }
+        setLoading(false);
+        return;
+      }
+
+      // Customer storefront
+      if (customerToken) {
+        const claims = decodeJWT(customerToken);
+        if (claims && !['admin', 'superadmin', 'warehouse_admin'].includes(claims.role)) {
+          let customerUser = getStoredCustomerUser() || claims;
+          try {
+            const profile = await usersApi.getProfile();
+            const liveUser = profile.data?.user || profile.data;
+            if (liveUser && typeof liveUser === 'object') {
+              customerUser = { ...liveUser, role: claims.role || 'customer' };
+              localStorage.setItem('user', JSON.stringify(customerUser));
+            }
+          } catch (error) {
+            if (error.response?.status === 401) {
+              await logout('customer');
+              setLoading(false);
+              return;
+            }
+          }
+          setToken(customerToken);
+          setUser(customerUser);
+          setLoading(false);
+          return;
+        } else {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+        }
+      }
+
+      // Guest visitor on storefront: clean any residual admin user in 'user'
+      getStoredCustomerUser();
+      setToken(null);
+      setUser(null);
       setLoading(false);
     };
     initAuth();
@@ -166,7 +219,11 @@ export const AuthProvider = ({ children }) => {
     setUser(current => {
       if (!current) return current;
       const updated = { ...current, ...updates };
-      localStorage.setItem('user', JSON.stringify(updated));
+      if (!['admin', 'superadmin', 'warehouse_admin'].includes(updated.role)) {
+        localStorage.setItem('user', JSON.stringify(updated));
+      } else {
+        localStorage.setItem('adminUser', JSON.stringify(updated));
+      }
       return updated;
     });
   };
@@ -189,16 +246,16 @@ export const AuthProvider = ({ children }) => {
     }
     localStorage.removeItem('token');
     localStorage.removeItem('ms_token');
+    localStorage.removeItem('user');
     const adminToken = localStorage.getItem('adminToken');
     const adminClaims = decodeJWT(adminToken);
-    if (adminToken && ['admin', 'superadmin'].includes(adminClaims?.role)) {
+    if (isAdminPath && adminToken && ['admin', 'superadmin'].includes(adminClaims?.role)) {
       const adminUser = getStoredAdminUser() || adminClaims;
       storeAdminUser(adminUser);
       setToken(adminToken);
       setUser(adminUser);
       return;
     }
-    localStorage.removeItem('user');
     setToken(null); setUser(null);
   };
 

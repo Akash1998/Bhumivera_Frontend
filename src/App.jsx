@@ -454,7 +454,7 @@ function AppContent() {
             <Route path="/superadmin/controlcentre" element={<Navigate to="/" replace />} />
 
             {/* User & Storefront Interactive Routes */}
-            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
             <Route path="/cart" element={<Navigate to="/?openCart=1" replace />} />
             <Route path="/checkout" element={<OnlineCheckout><CheckoutPage /></OnlineCheckout>} />
             <Route path="/order-success/:orderId?" element={<ProtectedRoute><OrderSuccess /></ProtectedRoute>} />

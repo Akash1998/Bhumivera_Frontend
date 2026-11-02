@@ -14,6 +14,8 @@ import { getProductImageUrl } from '../utils/productImageUrl';
 
 export default function Navbar() {
   const { user } = useAuth();
+  const isCustomerUser = Boolean(user && !['admin', 'superadmin', 'warehouse_admin'].includes(user.role));
+  const hasAdminSession = Boolean(user?.role === 'admin' || user?.role === 'superadmin' || (typeof window !== 'undefined' && localStorage.getItem('adminToken')));
   const t = (_key, fallback = '') => fallback;
   const { cartItems, setIsCartOpen } = useCart();
   const cartCount = cartItems.reduce((count, item) => count + (Number(item.quantity) || 1), 0);
@@ -179,7 +181,7 @@ export default function Navbar() {
             <Link to="/contact" className="hover:text-[#d4af37] transition-colors text-[#FAF7F2]/80">
               {t('nav_support', 'Client Concierge')}
             </Link>
-            {user?.role === 'admin' && (
+            {hasAdminSession && (
               <Link to="/admin" className="text-[#d4af37] flex items-center gap-1.5 font-bold"><Activity size={13}/> Admin Terminal</Link>
             )}
           </div>
@@ -288,7 +290,7 @@ export default function Navbar() {
               </div>
             </Link>
 
-            {user ? (
+            {isCustomerUser ? (
               <Link to="/profile" aria-label="Profile" className="flex items-center gap-3 group">
                 <div className="relative flex h-10 w-10 items-center justify-center rounded-full border border-[#D4AF37]/30 bg-[#1C382B]/70 backdrop-blur-md shadow-sm group-hover:border-[#d4af37]">
                    <User size={18} className="text-[#d4af37]" />
@@ -488,13 +490,13 @@ export default function Navbar() {
                 {/* Account / Authentication */}
                 <div className="border-t border-white/10 pt-3">
                   <Link
-                    to={user ? "/profile" : "/login"}
+                    to={isCustomerUser ? "/profile" : "/login"}
                     onClick={() => setMenuOpen(false)}
                     className="flex items-center gap-3 p-3 rounded-xl bg-white/5 border border-white/10 text-xs font-semibold text-white hover:bg-white/10 transition-colors"
                   >
                     <CircleUserRound size={17} className="text-[#d4af37]" />
                     <span className="truncate">
-                      {user ? `My Account (${user.name || user.email?.split('@')[0]})` : 'Sign In / Register'}
+                      {isCustomerUser ? `My Account (${user.name || user.email?.split('@')[0] || 'Customer'})` : 'Sign In / Register'}
                     </span>
                   </Link>
                 </div>

@@ -75,49 +75,50 @@ export const CartProvider = ({ children }) => {
           localStorage.removeItem(PENDING_CART_ADD_KEY);
         }
 
-        let remainingGuestItems = [...guestItems];
-        for (const item of guestItems) {
-          let productId = getCartProductId(item);
-          const quantity = Number(item.quantity);
-          if (productId == null || !Number.isInteger(quantity) || quantity < 1) {
-            console.error("Skipping invalid saved guest cart item:", item);
-            continue;
-          }
-          try {
-            const savedProduct = item.product && typeof item.product === 'object' ? item.product : item;
-            if (savedProduct.slug) {
-              try {
-                const response = await productsApi.getBySlug(savedProduct.slug);
-                const liveProduct = response.data?.data || response.data;
-                const liveProductId = getCartProductId(liveProduct);
-                if (liveProductId !== undefined && liveProductId !== null) {
-                  productId = liveProductId;
+        if (guestItems.length > 0) {
+          let remainingGuestItems = [...guestItems];
+          for (const item of guestItems) {
+            let productId = getCartProductId(item);
+            const quantity = Number(item.quantity);
+            if (productId == null || !Number.isInteger(quantity) || quantity < 1) {
+              console.error("Skipping invalid saved guest cart item:", item);
+              remainingGuestItems = remainingGuestItems.filter(candidate => candidate !== item);
+              continue;
+            }
+            try {
+              const savedProduct = item.product && typeof item.product === 'object' ? item.product : item;
+              if ((productId === undefined || productId === null || !Number.isInteger(Number(productId))) && savedProduct.slug) {
+                try {
+                  const response = await productsApi.getBySlug(savedProduct.slug);
+                  const liveProduct = response.data?.data || response.data;
+                  const liveProductId = getCartProductId(liveProduct);
+                  if (liveProductId !== undefined && liveProductId !== null) {
+                    productId = liveProductId;
+                  }
+                } catch (error) {
+                  if (error.response?.status !== 404) throw error;
                 }
-              } catch (error) {
-                if (error.response?.status !== 404) throw error;
               }
+              await cartApi.add({ productId, quantity });
+              remainingGuestItems = remainingGuestItems.filter(candidate => candidate !== item);
+              if (remainingGuestItems.length) {
+                localStorage.setItem(GUEST_CART_KEY, JSON.stringify(remainingGuestItems));
+              } else {
+                localStorage.removeItem(GUEST_CART_KEY);
+              }
+            } catch (error) {
+              console.error("Guest bag item could not be merged after sign-in:", error);
             }
-            await cartApi.add({ productId, quantity });
-            remainingGuestItems = remainingGuestItems.filter(candidate => candidate !== item);
-            if (remainingGuestItems.length) {
-              localStorage.setItem(GUEST_CART_KEY, JSON.stringify(remainingGuestItems));
-            } else {
-              localStorage.removeItem(GUEST_CART_KEY);
-            }
-          } catch (error) {
-            console.error("Guest bag item could not be merged after sign-in:", error);
-            toast.error(error.response?.data?.message || 'Some items from your saved bag could not be moved to your account.');
-            break;
+          }
+          if (remainingGuestItems.length === 0) {
+            localStorage.removeItem(GUEST_CART_KEY);
           }
         }
 
         const res = await cartApi.get();
         const fetchedData = res.data?.items || res.data;
         const serverItems = Array.isArray(fetchedData) ? fetchedData : [];
-        const unmergedItems = remainingGuestItems.filter(item =>
-          !serverItems.some(serverItem => String(getCartProductId(serverItem)) === String(getCartProductId(item)))
-        );
-        setCart([...serverItems, ...unmergedItems]);
+        setCart(serverItems);
         setRulePreview(res.data?.rulePreview || null);
         setReferralReward(res.data?.referralReward || { balance: 0, estimatedAmount: 0, tiers: [] });
         setLoyalty(res.data?.loyalty || null);

@@ -187,7 +187,7 @@ const StarsInput = ({ value, onChange, size='md', readonly=false }) => {
 
 export default function Profile() {
   const toast = useToast();
-  const { user, logout, updateUser } = useAuth();
+  const { user, logout, updateUser, isAuthenticated } = useAuth();
   const { addToCart } = useCart();
   const navigate = useNavigate();
   const location = useLocation();
@@ -199,6 +199,13 @@ export default function Profile() {
   const profileImageInputRef = useRef(null);
   const [profileImageUploading, setProfileImageUploading] = useState(false);
   const [profileSaving, setProfileSaving] = useState(false);
+
+  useEffect(() => {
+    const isCustomer = user && !['admin', 'superadmin', 'warehouse_admin'].includes(user?.role);
+    if (!isAuthenticated || !isCustomer) {
+      navigate('/login', { state: { from: location.pathname }, replace: true });
+    }
+  }, [isAuthenticated, user, navigate, location.pathname]);
 
   useEffect(() => {
     const requestedTab = new URLSearchParams(location.search).get('tab');
