@@ -15,7 +15,6 @@
     "android:run": "npm run android:assets && npm run build && cap sync android && cap run android"
   },
   "dependencies": {
-    "@capacitor-community/speech-recognition": "7.0.1",
     "@capacitor/android": "8.5.3",
     "@capacitor/app": "8.1.2",
     "@capacitor/camera": "8.2.6",

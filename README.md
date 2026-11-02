@@ -45,7 +45,7 @@ To produce an installable debug APK after syncing, run `android\\gradlew.bat ass
 
 ## Native Android migration (in progress)
 
-The existing `android/` app remains the Capacitor build while the customer app is being migrated. A separate `android-native/` project is a true Kotlin/Jetpack Compose app: its current native slice includes customer sign-in (including authenticator 2FA), product search/catalog, product details, and an authenticated cart. It calls the existing HTTPS API directly, stores the session in encrypted Android preferences, and does not render the website in a WebView. The admin dashboard remains web-only.
+The existing `android/` app remains the Capacitor build while the customer app is being migrated. A separate `android-native/` project is a true Kotlin/Jetpack Compose app: its current native slice includes Google sign-in (using Android Credential Manager), email/password sign-in, authenticator 2FA, product search/catalog, product details, and an authenticated cart. It calls the existing HTTPS API directly, stores the session in encrypted Android preferences, and does not render the website in a WebView. The admin dashboard remains web-only.
 
 Build the native debug APK from this directory with Android SDK Platform 36 and Java 17 or newer:
 
@@ -54,7 +54,7 @@ $env:ANDROID_SDK_ROOT = "$env:LOCALAPPDATA\Android\Sdk"
 android\\gradlew.bat -p android-native :app:assembleDebug
 ```
 
-The output is `android-native\\app\\build\\outputs\\apk\\debug\\app-debug.apk`. The native project uses the existing `com.bhumivera.app` application ID and version code 2 so it can replace the prior app when the migration is ready. This is an initial native customer-app milestone, not full website feature parity: account registration, checkout/payment, address management, order history/tracking, and the remaining storefront features still need native implementations and device testing before the Capacitor app should be retired.
+The output is `android-native\\app\\build\\outputs\\apk\\debug\\app-debug.apk`. The native project uses the existing `com.bhumivera.app` application ID with a higher version code so it can replace the prior app when the migration is ready. Google sign-in uses the same public Web OAuth client ID as the existing frontend and backend; set the matching Android OAuth client package/SHA-1 in Google Cloud for the native signing key. Override the public Web client ID with the `GOOGLE_WEB_CLIENT_ID` Gradle property or environment variable if it changes. This is an initial native customer-app milestone, not full website feature parity: account registration, checkout/payment, address management, order history/tracking, and the remaining storefront features still need native implementations and device testing before the Capacitor app should be retired.
 
 ## Release checklist
 

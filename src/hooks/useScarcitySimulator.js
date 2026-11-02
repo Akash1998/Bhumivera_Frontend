@@ -39,10 +39,13 @@ export default function useScarcitySimulator(productIds = []) {
       }
     };
     load();
-    timer = window.setInterval(load, 30_000);
+    const handleFocus = () => {
+      if (!document.hidden) load();
+    };
+    window.addEventListener('focus', handleFocus);
     return () => {
       active = false;
-      window.clearInterval(timer);
+      window.removeEventListener('focus', handleFocus);
     };
   }, [idsKey]);
 

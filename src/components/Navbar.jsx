@@ -202,17 +202,10 @@ export default function Navbar() {
             {isMenuOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
 
-          <Link to="/" className="flex items-center space-x-3 group shrink-0" aria-label="Bhumivera Home">
-            <img
-              src="/logo.webp"
-              alt=""
-              width="44"
-              height="44"
-              fetchpriority="high"
-              decoding="async"
-              className="h-11 w-11 object-contain transition-transform group-hover:scale-105"
-            />
-            <span className="hidden font-serif text-2xl uppercase tracking-[0.2em] font-headline-gold sm:block">Bhumivera</span>
+          <Link to="/" className="flex items-center group shrink-0" aria-label="Bhumivera Home">
+            <span className="font-serif text-xl sm:text-2xl uppercase tracking-[0.22em] font-headline-gold font-bold transition-all duration-300 group-hover:text-[#FCE096]">
+              BHUMIVERA
+            </span>
           </Link>
 
           <div className="hidden md:flex min-w-0 flex-1 items-center gap-4 relative" ref={searchDropdownRef}>
@@ -404,12 +397,12 @@ export default function Navbar() {
               {/* 1. Sidebar Header */}
               <div className="flex items-center justify-between border-b border-[#244A38]/40 bg-[#102219] p-4">
                 <div className="flex items-center gap-3">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#d4af37]/50 bg-[#1C382B]">
-                    <img src="/logo.webp" alt="Bhumivera" className="h-8 w-8 object-contain" />
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full border border-[#D4AF37]/50 bg-gradient-to-br from-[#1C382B] to-[#102219] shadow-[0_0_15px_rgba(212,175,55,0.2)]">
+                    <span className="font-serif font-bold text-[#FCE096] text-sm">BV</span>
                   </div>
                   <div>
-                    <span className="block font-bold tracking-[0.16em] text-[#d4af37] text-base">BHUMIVERA</span>
-                    <span className="block text-[9px] uppercase tracking-[0.2em] text-[#9BB0A5]">Botanical Maison</span>
+                    <span className="block font-serif font-bold tracking-[0.2em] text-[#D4AF37] text-base">BHUMIVERA</span>
+                    <span className="block text-[9px] uppercase tracking-[0.2em] text-[#9BB0A5]">The Transparent Maison</span>
                   </div>
                 </div>
                 <button

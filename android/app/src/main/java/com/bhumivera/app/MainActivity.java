@@ -13,6 +13,21 @@ import ee.forgr.capacitor.social.login.SocialLoginPlugin;
 
 public class MainActivity extends BridgeActivity implements ModifiedMainActivityForSocialLoginPlugin {
     @Override
+    public void onCreate(android.os.Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        try {
+            if (getBridge() != null && getBridge().getWebView() != null) {
+                android.webkit.WebView webView = getBridge().getWebView();
+                webView.getSettings().setCacheMode(android.webkit.WebSettings.LOAD_DEFAULT);
+                webView.getSettings().setDomStorageEnabled(true);
+                webView.getSettings().setDatabaseEnabled(true);
+                webView.setScrollBarStyle(android.view.View.SCROLLBARS_INSIDE_OVERLAY);
+                webView.setOverScrollMode(android.view.View.OVER_SCROLL_NEVER);
+            }
+        } catch (Exception ignored) {}
+    }
+
+    @Override
     public void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if (requestCode < GoogleProvider.REQUEST_AUTHORIZE_GOOGLE_MIN ||

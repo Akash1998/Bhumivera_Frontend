@@ -281,11 +281,9 @@ export const AuthProvider = ({ children }) => {
     };
     window.addEventListener('focus', sync);
     document.addEventListener('visibilitychange', sync);
-    const timer = setInterval(sync, 60000);
     return () => {
       window.removeEventListener('focus', sync);
       document.removeEventListener('visibilitychange', sync);
-      clearInterval(timer);
     };
   }, [token, user?.id, user?.role]);
 

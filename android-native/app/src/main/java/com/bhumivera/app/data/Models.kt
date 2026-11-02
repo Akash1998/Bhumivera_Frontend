@@ -39,12 +39,18 @@ data class CustomerUser(
 
 data class LoginRequest(val email: String, val password: String)
 
+data class GoogleLoginRequest(
+    val idToken: String,
+    val termsAccepted: Boolean,
+)
+
 data class TwoFactorRequest(val email: String, val otp: String)
 
 data class LoginResponse(
     val token: String? = null,
     val user: CustomerUser? = null,
     val requires2FA: Boolean = false,
+    val email: String? = null,
     val message: String? = null,
 )
 

@@ -1,10 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Capacitor } from '@capacitor/core';
-import { Bell, Check, MapPin, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
-import { enablePushNotifications, nativePushConfigured } from '../utils/pushNotifications';
 
-const SETUP_KEY = 'bhumivera-native-permissions-v1';
+const SETUP_KEY = 'bhumivera-native-permissions-v2';
 
 const hasCompletedSetup = () => {
   try {
@@ -18,10 +16,6 @@ const hasCompletedSetup = () => {
 export default function NativePermissionSetup({ children }) {
   const { token } = useAuth();
   const [completed, setCompleted] = useState(hasCompletedSetup);
-  const [requesting, setRequesting] = useState(false);
-  const [permissionResults, setPermissionResults] = useState(null);
-
-  if (!Capacitor.isNativePlatform() || completed) return children;
 
   const finishSetup = () => {
     try {
@@ -32,103 +26,88 @@ export default function NativePermissionSetup({ children }) {
     setCompleted(true);
   };
 
-  const requestPermissions = async () => {
-    setRequesting(true);
-    const results = {};
-    try {
-      const { Geolocation } = await import('@capacitor/geolocation');
-      const current = await Geolocation.checkPermissions();
-      const location = current.location === 'granted'
-        ? current
-        : await Geolocation.requestPermissions({ permissions: ['location'] });
-      results.location = location.location === 'granted' ? 'Allowed' : 'Not allowed';
-    } catch (error) {
-      console.error('[NATIVE_LOCATION_PERMISSION_REQUEST]', error);
-      results.location = 'Could not be requested. Check Android Settings and device location services.';
-    }
+  useEffect(() => {
+    if (!Capacitor.isNativePlatform() || completed) return;
 
-    if (nativePushConfigured) {
+    let isMounted = true;
+
+    const requestAllNativePermissions = async () => {
+      // 1. Notification Permission (Push Notifications)
       try {
-        results.notifications = await enablePushNotifications(token) ? 'Allowed' : 'Not allowed';
-      } catch (error) {
-        console.error('[NATIVE_NOTIFICATION_PERMISSION_REQUEST]', error);
-        results.notifications = 'Could not be requested. Check Android Settings.';
+        const { PushNotifications } = await import('@capacitor/push-notifications');
+        const notifState = await PushNotifications.checkPermissions();
+        if (notifState.receive !== 'granted') {
+          await PushNotifications.requestPermissions();
+        }
+      } catch (err) {
+        console.warn('[NATIVE_PUSH_PERMISSION_ERROR]', err);
       }
-    } else {
-      console.warn('[NATIVE_NOTIFICATIONS_UNAVAILABLE] Firebase configuration is missing from this Android build.');
-      results.notifications = 'Unavailable in this build (Firebase is not configured).';
-    }
 
-    setRequesting(false);
-    setPermissionResults(results);
-  };
+      // Small pause between system dialogs for smooth OS transition
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      // 2. Camera Permission (Verification QR Scan & Review Media)
+      try {
+        const { Camera } = await import('@capacitor/camera');
+        const cameraState = await Camera.checkPermissions();
+        if (cameraState.camera !== 'granted') {
+          await Camera.requestPermissions({ permissions: ['camera'] });
+        }
+      } catch (err) {
+        console.warn('[NATIVE_CAMERA_PERMISSION_ERROR]', err);
+      }
+
+      // Small pause between system dialogs
+      await new Promise((resolve) => setTimeout(resolve, 250));
+
+      // 3. Precise Location Permission (Delivery & Checkout Coordinates)
+      try {
+        const { Geolocation } = await import('@capacitor/geolocation');
+        const geoState = await Geolocation.checkPermissions();
+        if (geoState.location !== 'granted') {
+          await Geolocation.requestPermissions({ permissions: ['location'] });
+        }
+      } catch (err) {
+        console.warn('[NATIVE_LOCATION_PERMISSION_ERROR]', err);
+      }
+
+      // Automatically open the app without requiring any extra user button clicks
+      if (isMounted) {
+        finishSetup();
+      }
+    };
+
+    requestAllNativePermissions();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [completed, token]);
+
+  if (!Capacitor.isNativePlatform() || completed) return children;
 
   return (
-    <main className="flex min-h-[100dvh] items-center justify-center bg-[#11120F] px-4 py-8 text-[#F4EFE6]">
-      <section className="w-full max-w-lg rounded-3xl border border-[#D4AF37]/30 bg-[#1B1C18] p-6 shadow-2xl sm:p-9">
-        <div className="mb-5 flex h-14 w-14 items-center justify-center rounded-2xl border border-[#D4AF37]/35 bg-[#D4AF37]/10 text-[#FCE096]">
-          <ShieldCheck size={28} />
+    <main className="flex min-h-[100dvh] flex-col items-center justify-center bg-[#10120F] px-6 text-[#F4EFE6] select-none">
+      <div className="relative flex flex-col items-center text-center">
+        {/* Luxury Gold Orbit & Brand Crest */}
+        <div className="relative mb-6 flex h-20 w-20 items-center justify-center">
+          <div className="absolute inset-0 rounded-full border-2 border-[#D4AF37]/20 border-t-[#D4AF37] border-r-[#FCE096] animate-spin" style={{ animationDuration: '1.4s' }} />
+          <div className="flex h-14 w-14 items-center justify-center rounded-full border border-[#D4AF37]/40 bg-gradient-to-br from-[#1C382B] to-[#102219] shadow-[0_0_25px_rgba(212,175,55,0.25)]">
+            <span className="font-serif text-2xl font-bold text-[#FCE096]">BV</span>
+          </div>
         </div>
-        <p className="text-xs font-bold uppercase tracking-[0.22em] text-[#D4AF37]">A few choices before you begin</p>
-        <h1 className="mt-3 font-serif text-3xl font-semibold text-white">Your app, your permissions</h1>
-        <p className="mt-3 text-sm leading-6 text-[#D4D0C5]">
-          Choose whether to allow location and notifications. You can continue without either permission and change your choices later in Android Settings.
+
+        <p className="font-mono text-[10px] font-bold uppercase tracking-[0.32em] text-[#D4AF37]">
+          The Transparent Maison
         </p>
-
-        <div className="mt-6 space-y-3">
-          <div className="flex gap-3 rounded-2xl border border-white/10 bg-black/15 p-4">
-            <MapPin className="mt-0.5 h-5 w-5 shrink-0 text-[#D4AF37]" />
-            <div>
-              <h2 className="text-sm font-semibold text-white">Precise location</h2>
-              <p className="mt-1 text-xs leading-5 text-[#B8B5AA]">
-                Used when you choose address or delivery-location features. Select “Precise” in Android’s prompt for accurate coordinates; Android may also offer Approximate.
-              </p>
-            </div>
-          </div>
-          <div className="flex gap-3 rounded-2xl border border-white/10 bg-black/15 p-4">
-            <Bell className="mt-0.5 h-5 w-5 shrink-0 text-[#D4AF37]" />
-            <div>
-              <h2 className="text-sm font-semibold text-white">Notifications</h2>
-              <p className="mt-1 text-xs leading-5 text-[#B8B5AA]">
-                {nativePushConfigured
-                  ? 'Allow notifications for relevant order updates, or deny the Android permission prompt.'
-                  : 'Push delivery is not configured in this build, so no notification permission will be requested.'}
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {permissionResults && (
-          <div className="mt-4 space-y-1 text-xs leading-5 text-[#B8B5AA]" role="status" aria-live="polite">
-            {Object.entries(permissionResults).map(([permission, result]) => (
-              <p key={permission}>{permission === 'location' ? 'Location' : 'Notifications'}: {result}</p>
-            ))}
-          </div>
-        )}
-
-        <div className="mt-7 grid gap-3">
-          <button
-            type="button"
-            onClick={permissionResults ? finishSetup : requestPermissions}
-            disabled={requesting}
-            className="btn-gold-luxury inline-flex min-h-12 items-center justify-center gap-2 rounded-xl px-4 py-3 text-xs font-bold uppercase tracking-wider text-[#14291F] disabled:cursor-wait disabled:opacity-60"
-          >
-            {requesting
-              ? 'Waiting for your choices…'
-              : permissionResults
-                ? <><Check size={16} /> Continue to the app</>
-                : <><Check size={16} /> Continue &amp; choose permissions</>}
-          </button>
-          <button
-            type="button"
-            onClick={finishSetup}
-            disabled={requesting}
-            className="min-h-11 rounded-xl border border-white/15 px-4 py-2.5 text-xs font-semibold text-[#D4D0C5] transition hover:border-[#D4AF37]/50 hover:text-white disabled:opacity-60"
-          >
-            Not now — continue without permissions
-          </button>
-        </div>
-      </section>
+        <h1 className="mt-2 font-serif text-2xl sm:text-3xl font-bold tracking-[0.2em] text-white">
+          BHUMIVERA
+        </h1>
+        <div className="gold-hairline my-4 w-16" />
+        <p className="max-w-xs text-xs font-light text-[#B8B5AA] leading-relaxed">
+          Calibrating device permissions for botanical verification, secure orders, and updates…
+        </p>
+      </div>
     </main>
   );
 }

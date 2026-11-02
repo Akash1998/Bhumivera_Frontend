@@ -1,5 +1,8 @@
 package com.bhumivera.app.ui
 
+import android.app.Activity
+import android.content.Context
+import android.content.ContextWrapper
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -14,7 +17,9 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Checkbox
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -34,6 +39,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
@@ -45,11 +52,19 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.navArgument
+import androidx.credentials.CredentialManager
+import androidx.credentials.CustomCredential
+import androidx.credentials.GetCredentialRequest
+import androidx.credentials.exceptions.NoCredentialException
+import com.google.android.libraries.identity.googleid.GetGoogleIdOption
+import com.google.android.libraries.identity.googleid.GoogleIdTokenCredential
+import com.google.android.libraries.identity.googleid.GoogleIdTokenParsingException
 import coil3.compose.AsyncImage
 import com.bhumivera.app.data.AddCartRequest
 import com.bhumivera.app.data.BhumiveraService
 import com.bhumivera.app.data.CartItem
 import com.bhumivera.app.data.CustomerUser
+import com.bhumivera.app.data.GoogleLoginRequest
 import com.bhumivera.app.data.LoginRequest
 import com.bhumivera.app.data.Product
 import com.bhumivera.app.data.SessionStore
@@ -203,10 +218,13 @@ private fun LoginScreen(
     service: BhumiveraService,
     onSignedIn: (com.bhumivera.app.data.LoginResponse) -> Unit,
 ) {
+    val context = LocalContext.current
+    val uriHandler = LocalUriHandler.current
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     var otp by remember { mutableStateOf("") }
     var twoFactorRequired by remember { mutableStateOf(false) }
+    var termsAccepted by remember { mutableStateOf(false) }
     var loading by remember { mutableStateOf(false) }
     var error by remember { mutableStateOf<String?>(null) }
     val scope = rememberCoroutineScope()
@@ -218,6 +236,69 @@ private fun LoginScreen(
         Text("BHUMIVERA", style = androidx.compose.material3.MaterialTheme.typography.headlineMedium)
         Text("The Transparent Maison", color = androidx.compose.material3.MaterialTheme.colorScheme.secondary)
         Spacer(Modifier.height(28.dp))
+        Button(
+            onClick = {
+                scope.launch {
+                    loading = true
+                    error = null
+                    try {
+                        val activity = context.findActivity()
+                            ?: throw IllegalStateException("Google sign-in requires an Android activity.")
+                        val idToken = requestGoogleIdToken(activity)
+                        val response = service.googleLogin(
+                            GoogleLoginRequest(idToken = idToken, termsAccepted = termsAccepted),
+                        )
+                        if (response.requires2FA) {
+                            email = response.email.orEmpty()
+                            twoFactorRequired = true
+                        } else if (response.token.isNullOrBlank()) {
+                            error = response.message ?: "Google sign-in did not return a valid session."
+                        } else {
+                            onSignedIn(response)
+                        }
+                    } catch (exception: Exception) {
+                        error = exception.userMessage()
+                    } finally {
+                        loading = false
+                    }
+                }
+            },
+            enabled = !loading && !twoFactorRequired && termsAccepted,
+            modifier = Modifier.fillMaxWidth(),
+        ) {
+            if (loading) CircularProgressIndicator(Modifier.size(20.dp), strokeWidth = 2.dp)
+            else Text("Continue with Google")
+        }
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Checkbox(
+                checked = termsAccepted,
+                onCheckedChange = { termsAccepted = it },
+                enabled = !loading && !twoFactorRequired,
+            )
+            Text(
+                "I agree to the Conditions of Use & Sale and acknowledge the Privacy Notice.",
+                style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
+            )
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.Center,
+        ) {
+            TextButton(onClick = { uriHandler.openUri("https://bhumivera.com/legal?section=terms") }) {
+                Text("Conditions of Use")
+            }
+            TextButton(onClick = { uriHandler.openUri("https://bhumivera.com/legal?section=privacy") }) {
+                Text("Privacy Notice")
+            }
+        }
+        Row(
+            modifier = Modifier.fillMaxWidth().padding(vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            HorizontalDivider(Modifier.weight(1f))
+            Text("  or use email  ", color = androidx.compose.material3.MaterialTheme.colorScheme.secondary)
+            HorizontalDivider(Modifier.weight(1f))
+        }
         OutlinedTextField(
             value = email,
             onValueChange = { email = it; error = null },
@@ -278,6 +359,39 @@ private fun LoginScreen(
             else Text(if (twoFactorRequired) "Verify and sign in" else "Sign in")
         }
     }
+}
+
+private suspend fun requestGoogleIdToken(activity: Activity): String {
+    val option = GetGoogleIdOption.Builder()
+        .setFilterByAuthorizedAccounts(false)
+        .setServerClientId(com.bhumivera.app.BuildConfig.GOOGLE_WEB_CLIENT_ID)
+        .setAutoSelectEnabled(false)
+        .build()
+    val request = GetCredentialRequest.Builder()
+        .addCredentialOption(option)
+        .build()
+    val response = CredentialManager.create(activity).getCredential(
+        context = activity,
+        request = request,
+    )
+    val credential = response.credential
+    if (credential !is CustomCredential ||
+        credential.type != GoogleIdTokenCredential.TYPE_GOOGLE_ID_TOKEN_CREDENTIAL
+    ) {
+        throw IllegalStateException("Google did not return a valid sign-in credential.")
+    }
+
+    return try {
+        GoogleIdTokenCredential.createFrom(credential.data).idToken
+    } catch (exception: GoogleIdTokenParsingException) {
+        throw IllegalStateException("Google returned an invalid sign-in credential.", exception)
+    }
+}
+
+private tailrec fun Context.findActivity(): Activity? = when (this) {
+    is Activity -> this
+    is ContextWrapper -> baseContext.findActivity()
+    else -> null
 }
 
 @Composable
@@ -624,6 +738,8 @@ private fun resolveImageUrl(image: String?): String? {
 }
 
 private fun Exception.userMessage(): String = when (this) {
+    is NoCredentialException ->
+        "No Google account is available on this device. Add a Google account in Android Settings and try again."
     is HttpException -> {
         val serverMessage = response()?.errorBody()?.string()
             ?.let { body ->

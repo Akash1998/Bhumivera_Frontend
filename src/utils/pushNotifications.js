@@ -59,12 +59,19 @@ export const registerPushNotifications = async ({
   registrationPromise = (async () => {
     await addPushListeners(PushNotifications);
     let permission = await PushNotifications.checkPermissions();
-    if (permission.receive === 'prompt' && requestPermission) {
+    if (permission.receive !== 'granted' && requestPermission) {
       permission = await PushNotifications.requestPermissions();
     }
     if (permission.receive !== 'granted') return false;
 
-    await PushNotifications.register();
+    // Only register with Firebase if Firebase configuration is present
+    if (nativePushConfigured) {
+      try {
+        await PushNotifications.register();
+      } catch (regError) {
+        console.warn('[PUSH_REGISTRATION_OPTIONAL]', regError);
+      }
+    }
     return true;
   })();
   try {
@@ -76,10 +83,6 @@ export const registerPushNotifications = async ({
 
 const runNativePushSetup = async (userToken, requestPermission) => {
   if (typeof window === 'undefined' || !window.Capacitor?.isNativePlatform?.()) {
-    return false;
-  }
-  if (!nativePushConfigured) {
-    console.info('[PUSH_NOTIFICATIONS] Skipped: Firebase Cloud Messaging is not configured for this build.');
     return false;
   }
 

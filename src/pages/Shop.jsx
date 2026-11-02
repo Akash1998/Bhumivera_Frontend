@@ -316,8 +316,8 @@ export default function Shop() {
         </div>
 
         {/* Curated Regimen Bundles Banner */}
-        <div className="mb-6 sm:mb-12 rounded-2xl sm:rounded-3xl border border-[#D4AF37]/40 bg-[#102219] p-4 sm:p-8 shadow-xl">
-          <div className="flex flex-wrap items-center justify-between gap-3 mb-4 sm:mb-6">
+        <div className="mb-6 sm:mb-12 rounded-2xl sm:rounded-3xl border border-[#D4AF37]/40 bg-gradient-to-b from-[#102219] to-[#0a1711] p-4 sm:p-7 shadow-xl w-full max-w-full overflow-hidden box-border">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4 mb-4 sm:mb-6">
             <div>
               <span className="inline-flex items-center gap-1.5 font-mono text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-[#FCE096]">
                 <Layers size={13} className="text-[#D4AF37]" /> Complete Regimens · Save Up To ₹845
@@ -326,34 +326,45 @@ export default function Shop() {
                 Architectural Regimen Bundles
               </h2>
             </div>
-            <Link to="/verify" className="text-[11px] sm:text-xs font-mono uppercase tracking-wider text-[#D4AF37] hover:text-[#FCE096]">
+            <Link to="/verify" className="inline-flex items-center gap-1 text-[11px] sm:text-xs font-mono uppercase tracking-wider text-[#D4AF37] hover:text-[#FCE096] transition-colors">
               Verify authenticity →
             </Link>
           </div>
-          <div className="grid gap-3 sm:gap-5 sm:grid-cols-2 lg:grid-cols-3">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3.5 sm:gap-5 w-full min-w-0">
             {(MAISON_REGIMEN_BUNDLES || []).map((bundle) => (
-              <div key={bundle.id} className="flex flex-col justify-between rounded-xl sm:rounded-2xl border border-[#244A38] bg-[#070a0e]/80 p-3.5 sm:p-5">
-                <div>
-                  <span className="inline-block rounded-full border border-[#D4AF37]/40 bg-[#102219] px-2 py-0.5 font-mono text-[9px] sm:text-[10px] font-bold text-[#FCE096]">
+              <div 
+                key={bundle.id} 
+                className="group flex flex-col justify-between rounded-xl sm:rounded-2xl border border-[#244A38] bg-[#070a0e]/85 hover:border-[#D4AF37]/50 p-4 sm:p-5 transition-all duration-300 min-w-0 w-full overflow-hidden box-border shadow-sm hover:shadow-lg"
+              >
+                <div className="min-w-0 w-full">
+                  <span className="inline-block rounded-full border border-[#D4AF37]/40 bg-[#102219] px-2.5 py-0.5 font-mono text-[9px] sm:text-[10px] font-bold text-[#FCE096]">
                     {bundle.badge}
                   </span>
-                  <Link to={`/combo/${bundle.id}`} className="mt-2 block font-serif text-sm sm:text-lg font-bold text-white hover:text-[#FCE096]">{bundle.name}</Link>
+                  <Link 
+                    to={`/combo/${bundle.id}`} 
+                    className="mt-2 block font-serif text-base sm:text-lg font-bold text-white hover:text-[#FCE096] transition-colors truncate"
+                  >
+                    {bundle.name}
+                  </Link>
                   <p className="mt-1 text-[11px] sm:text-xs text-[#9BB0A5] line-clamp-1">{bundle.tagline}</p>
-                  <ul className="mt-2 space-y-1 text-[10px] sm:text-xs text-[#DFD7C4]">
+                  <ul className="mt-3 space-y-1.5 text-[10px] sm:text-xs text-[#DFD7C4] min-w-0 w-full">
                     {bundle.items.map((it) => (
-                      <li key={it.id} className="flex items-start gap-1.5">
-                        <CheckCircle2 size={12} className="mt-0.5 shrink-0 text-[#D4AF37]" />
-                        <span className="truncate">{it.name}</span>
+                      <li key={it.id} className="flex items-center gap-2 min-w-0 w-full">
+                        <CheckCircle2 size={12} className="shrink-0 text-[#D4AF37]" />
+                        <span className="truncate min-w-0 flex-1">{it.name}</span>
                       </li>
                     ))}
                   </ul>
                 </div>
-                <div className="mt-3 pt-2.5 border-t border-[#244A38] flex items-center justify-between">
-                  <div>
+                <div className="mt-4 pt-3 border-t border-[#244A38] flex items-center justify-between gap-3 min-w-0">
+                  <div className="min-w-0">
                     <span className="font-serif text-base sm:text-xl font-bold text-[#FCE096]">₹{bundle.bundlePrice}</span>
                     <span className="ml-1.5 text-[10px] sm:text-xs text-[#9BB0A5] line-through">₹{bundle.mrpTotal}</span>
                   </div>
-                  <Link to={`/combo/${bundle.id}`} className="btn-gold-luxury rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider">
+                  <Link 
+                    to={`/combo/${bundle.id}`} 
+                    className="btn-gold-luxury shrink-0 rounded-lg sm:rounded-xl px-3 sm:px-4 py-1.5 sm:py-2.5 text-[9px] sm:text-[10px] font-bold uppercase tracking-wider"
+                  >
                     View
                   </Link>
                 </div>

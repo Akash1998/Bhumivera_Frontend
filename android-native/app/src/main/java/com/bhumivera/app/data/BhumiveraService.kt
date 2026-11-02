@@ -27,6 +27,9 @@ interface BhumiveraService {
     @POST("auth/login")
     suspend fun login(@Body request: LoginRequest): LoginResponse
 
+    @POST("auth/google")
+    suspend fun googleLogin(@Body request: GoogleLoginRequest): LoginResponse
+
     @POST("auth/2fa/verify")
     suspend fun verifyTwoFactor(@Body request: TwoFactorRequest): LoginResponse
 
