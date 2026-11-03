@@ -69,333 +69,9 @@ import {
 } from 'lucide-react';
 import { notifyOperation } from '../utils/operationFeedback';
 
-const LOCAL_DB_KEY = 'BV_INVENTORY_DB_V10X';
+const LEGACY_LOCAL_DB_KEY = 'BV_INVENTORY_DB_V10X';
 const LOCAL_TOKEN_KEY = 'BV_INV_SOFTWARE_TOKEN';
 const LOCAL_USER_KEY = 'BV_INV_SOFTWARE_USER';
-
-const FALLBACK_CATALOG_ITEMS = [
-  {
-    id: 1,
-    productId: 10,
-    sku: 'BV-LUX-CFW-01',
-    barcode: '8908020260015',
-    name: 'Bhumivera Activated Charcoal Purifying Luxury Face Wash',
-    cat: 'Luxury Facial Cleansers',
-    uom: '100 ML',
-    qty: 249,
-    physicalStock: 249,
-    shopDisplayStock: 49,
-    warehouseVaultStock: 200,
-    safetyBufferStock: 0,
-    damagedQuarantineStock: 0,
-    onlineReservedQty: 0,
-    costPrice: 115,
-    mrp: 699,
-    price: 299,
-    gstHsnCode: '33049990',
-    gstRate: 18,
-    minStock: 20,
-    reorderQty: 100,
-    binCode: 'ASN-SHOP-R1-B01',
-    rackLocation: 'Zone A • Rack 01 • Shelf A • Bin 01',
-    batchNo: 'BV-BATCH-2026-CFW01',
-    mfgDate: '2026-08-01',
-    expiryDate: '2028-07-31',
-    soldQty: 42,
-    soldOfflineQty: 18,
-    soldOnlineQty: 24,
-    syncToWebsite: true,
-  },
-  {
-    id: 2,
-    productId: 11,
-    sku: 'BV-LUX-SBFW-02',
-    barcode: '8908020260022',
-    name: 'Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash',
-    cat: 'Luxury Facial Cleansers',
-    uom: '100 ML',
-    qty: 249,
-    physicalStock: 249,
-    shopDisplayStock: 49,
-    warehouseVaultStock: 200,
-    safetyBufferStock: 0,
-    damagedQuarantineStock: 0,
-    onlineReservedQty: 0,
-    costPrice: 145,
-    mrp: 799,
-    price: 399,
-    gstHsnCode: '33049990',
-    gstRate: 18,
-    minStock: 20,
-    reorderQty: 100,
-    binCode: 'ASN-SHOP-R1-B01',
-    rackLocation: 'Zone A • Rack 01 • Shelf A • Bin 02',
-    batchNo: 'BV-BATCH-2026-SBFW02',
-    mfgDate: '2026-08-01',
-    expiryDate: '2028-07-31',
-    soldQty: 51,
-    soldOfflineQty: 21,
-    soldOnlineQty: 30,
-    syncToWebsite: true,
-  },
-  {
-    id: 3,
-    productId: 12,
-    sku: 'BV-LUX-SH2IN1-03',
-    barcode: '8908020260039',
-    name: 'Bhumivera Royal Botanical 2-in-1 Luxury Shampoo with Conditioner',
-    cat: 'Luxury Hair Care',
-    uom: '200 ML',
-    qty: 199,
-    physicalStock: 199,
-    shopDisplayStock: 39,
-    warehouseVaultStock: 160,
-    safetyBufferStock: 0,
-    damagedQuarantineStock: 0,
-    onlineReservedQty: 0,
-    costPrice: 165,
-    mrp: 899,
-    price: 449,
-    gstHsnCode: '33051090',
-    gstRate: 18,
-    minStock: 15,
-    reorderQty: 100,
-    binCode: 'ASN-SHOP-R1-B02',
-    rackLocation: 'Zone A • Rack 01 • Shelf B • Bin 01',
-    batchNo: 'BV-BATCH-2026-SH03',
-    mfgDate: '2026-08-05',
-    expiryDate: '2028-08-04',
-    soldQty: 64,
-    soldOfflineQty: 29,
-    soldOnlineQty: 35,
-    syncToWebsite: true,
-  },
-  {
-    id: 4,
-    productId: 13,
-    sku: 'BV-LUX-CSOAP-04',
-    barcode: '8908020260046',
-    name: 'Bhumivera Charcoal Deep Cleansing Bar (Handmade Ayurvedic Luxury Soap)',
-    cat: 'Artisanal Ayurvedic Cleansing Bars',
-    uom: '100 GM',
-    qty: 299,
-    physicalStock: 299,
-    shopDisplayStock: 59,
-    warehouseVaultStock: 240,
-    safetyBufferStock: 0,
-    damagedQuarantineStock: 0,
-    onlineReservedQty: 0,
-    costPrice: 68,
-    mrp: 399,
-    price: 199,
-    gstHsnCode: '34011190',
-    gstRate: 18,
-    minStock: 25,
-    reorderQty: 150,
-    binCode: 'ASN-SHOP-R2-B01',
-    rackLocation: 'Zone A • Rack 02 • Shelf A • Bin 01',
-    batchNo: 'BV-BATCH-2026-CS04',
-    mfgDate: '2026-08-10',
-    expiryDate: '2028-08-09',
-    soldQty: 78,
-    soldOfflineQty: 38,
-    soldOnlineQty: 40,
-    syncToWebsite: true,
-  },
-  {
-    id: 5,
-    productId: 14,
-    sku: 'BV-LUX-ASOAP-05',
-    barcode: '8908020260053',
-    name: 'Bhumivera Soothing Bar (Aloe Vera, Neem & Tulsi Handmade Ayurvedic Soap)',
-    cat: 'Artisanal Ayurvedic Cleansing Bars',
-    uom: '100 GM',
-    qty: 299,
-    physicalStock: 299,
-    shopDisplayStock: 59,
-    warehouseVaultStock: 240,
-    safetyBufferStock: 0,
-    damagedQuarantineStock: 0,
-    onlineReservedQty: 0,
-    costPrice: 65,
-    mrp: 349,
-    price: 199,
-    gstHsnCode: '34011190',
-    gstRate: 18,
-    minStock: 25,
-    reorderQty: 150,
-    binCode: 'ASN-SHOP-R2-B01',
-    rackLocation: 'Zone A • Rack 02 • Shelf A • Bin 02',
-    batchNo: 'BV-BATCH-2026-AS05',
-    mfgDate: '2026-08-10',
-    expiryDate: '2028-08-09',
-    soldQty: 71,
-    soldOfflineQty: 31,
-    soldOnlineQty: 40,
-    syncToWebsite: true,
-  },
-  {
-    id: 6,
-    productId: 15,
-    sku: 'BV-LUX-TULSI-06',
-    barcode: '8908020260060',
-    name: 'Bhumivera Kalpvriksh Satva Tulsi (Liquid Extract of 7 Types of Tulsi)',
-    cat: 'Luxury Ayurvedic Wellness & Immunity Drops',
-    uom: '30 ML',
-    qty: 299,
-    physicalStock: 299,
-    shopDisplayStock: 59,
-    warehouseVaultStock: 240,
-    safetyBufferStock: 0,
-    damagedQuarantineStock: 0,
-    onlineReservedQty: 0,
-    costPrice: 95,
-    mrp: 499,
-    price: 299,
-    gstHsnCode: '30049011',
-    gstRate: 12,
-    minStock: 20,
-    reorderQty: 120,
-    binCode: 'ASN-SHOP-R2-B01',
-    rackLocation: 'Zone A • Rack 02 • Shelf A • Bin 03',
-    batchNo: 'BV-BATCH-2026-TL06',
-    mfgDate: '2026-08-12',
-    expiryDate: '2028-08-11',
-    soldQty: 89,
-    soldOfflineQty: 44,
-    soldOnlineQty: 45,
-    syncToWebsite: true,
-  },
-];
-
-const FALLBACK_BINS = [
-  {
-    id: 1,
-    bin_code: 'ASN-SHOP-R1-B01',
-    hub_name: 'Bhumivera Flagship Hub — Asansol',
-    zone_name: 'Zone A: Retail Shop Front Counter',
-    rack_no: 'Rack-01',
-    shelf_level: 'Shelf-A',
-    bin_label: 'Facial Cleansers Display Bay',
-    temperature_target: '22°C - 25°C',
-    capacity_units: 400,
-    occupied_units: 98,
-    keeper_name: 'Rahul Sharma',
-    status: 'active',
-  },
-  {
-    id: 2,
-    bin_code: 'ASN-SHOP-R1-B02',
-    hub_name: 'Bhumivera Flagship Hub — Asansol',
-    zone_name: 'Zone A: Retail Shop Front Counter',
-    rack_no: 'Rack-01',
-    shelf_level: 'Shelf-B',
-    bin_label: 'Royal Hair Care & Shampoo Counter',
-    temperature_target: '22°C - 25°C',
-    capacity_units: 350,
-    occupied_units: 39,
-    keeper_name: 'Rahul Sharma',
-    status: 'active',
-  },
-  {
-    id: 3,
-    bin_code: 'ASN-SHOP-R2-B01',
-    hub_name: 'Bhumivera Flagship Hub — Asansol',
-    zone_name: 'Zone A: Retail Shop Front Counter',
-    rack_no: 'Rack-02',
-    shelf_level: 'Shelf-A',
-    bin_label: 'Artisanal Cleansing Bars & Tulsi Drops',
-    temperature_target: '22°C - 25°C',
-    capacity_units: 600,
-    occupied_units: 177,
-    keeper_name: 'Rahul Sharma',
-    status: 'active',
-  },
-  {
-    id: 4,
-    bin_code: 'ASN-COLD-R1-B01',
-    hub_name: 'Bhumivera Flagship Hub — Asansol',
-    zone_name: 'Zone B: Cold-Pressed Botanical Vault (<28°C)',
-    rack_no: 'Rack-C1',
-    shelf_level: 'Shelf-01',
-    bin_label: 'Climate-Controlled Master Reserve Vault',
-    temperature_target: '18°C - 24°C',
-    capacity_units: 1500,
-    occupied_units: 1280,
-    keeper_name: 'Vikram Rathore',
-    status: 'active',
-  },
-  {
-    id: 5,
-    bin_code: 'ASN-DISPATCH-R1-B01',
-    hub_name: 'Bhumivera Flagship Hub — Asansol',
-    zone_name: 'Zone C: Online Order Dispatch & CCTV Weighing Bay',
-    rack_no: 'Rack-D1',
-    shelf_level: 'Shelf-01',
-    bin_label: 'E-Commerce Pick, Pack & Scale #02 Bay',
-    temperature_target: '22°C - 26°C',
-    capacity_units: 500,
-    occupied_units: 150,
-    keeper_name: 'Vikram Rathore',
-    status: 'active',
-  },
-  {
-    id: 6,
-    bin_code: 'ASN-QUAR-R1-B01',
-    hub_name: 'Bhumivera Flagship Hub — Asansol',
-    zone_name: 'Zone Q: Quarantine & Damaged Stock Bay',
-    rack_no: 'Rack-Q1',
-    shelf_level: 'Shelf-01',
-    bin_label: 'RMA / Transit Damage Quarantine',
-    temperature_target: 'Ambient',
-    capacity_units: 200,
-    occupied_units: 0,
-    keeper_name: 'Nisha Gupta',
-    status: 'quarantine',
-  },
-];
-
-const FALLBACK_CUSTOMERS = [
-  {
-    id: 1,
-    name: 'Walk-in Retail Shopper',
-    phone: '+91 90000 00000',
-    email: 'walkin@bhumivera.com',
-    gstin: '',
-    loc: 'Asansol Flagship Counter',
-    type: 'Walk-in',
-    wallet: 0,
-    creditLimit: 25000,
-    totalPurchases: 0,
-    visitCount: 1,
-  },
-  {
-    id: 2,
-    name: 'Aura Luxury Salon & Wellness Spa',
-    phone: '+91 98321 55667',
-    email: 'procurement@auraspa.in',
-    gstin: '19AABCA1122K1Z1',
-    loc: 'City Centre, Durgapur, WB',
-    type: 'Salon / Spa Partner',
-    wallet: -4500,
-    creditLimit: 100000,
-    totalPurchases: 28500,
-    visitCount: 6,
-  },
-  {
-    id: 3,
-    name: 'Royal Ayurveda & Organic Boutique',
-    phone: '+91 98305 88990',
-    email: 'orders@royalayurveda.in',
-    gstin: '19AABCR3344M1Z8',
-    loc: 'Park Street, Kolkata, WB',
-    type: 'Retail Shop',
-    wallet: 0,
-    creditLimit: 75000,
-    totalPurchases: 42000,
-    visitCount: 9,
-  },
-];
 
 export default function InventorySoftware() {
   // Authentication & Session State
@@ -434,7 +110,9 @@ export default function InventorySoftware() {
       const allowed = ['dash', 'online', 'labels', 'ret', 'inv', 'sale', 'scanner', 'backup', 'keeper', 'audit', 'grn', 'trans', 'rep', 'logs'];
       if (requested && allowed.includes(requested)) return requested;
       if (requested === 'shipping') return 'labels';
-    } catch {}
+    } catch {
+      // Ignore malformed query strings and use the default view.
+    }
     return 'dash';
   });
   const [loading, setLoading] = useState(false);
@@ -445,11 +123,10 @@ export default function InventorySoftware() {
   const bootstrapRequestRef = useRef(null);
 
   // Core Data Collections (Single Main Inventory synced across Online & Offline)
-  const [items, setItems] = useState(FALLBACK_CATALOG_ITEMS);
-  const [bins, setBins] = useState(FALLBACK_BINS);
-  const [customers, setCustomers] = useState(FALLBACK_CUSTOMERS);
+  const [items, setItems] = useState([]);
+  const [bins, setBins] = useState([]);
+  const [customers, setCustomers] = useState([]);
   const [sales, setSales] = useState([]);
-  const [proofs, setProofs] = useState([]);
   const [suppliers, setSuppliers] = useState([]);
   const [grnEntries, setGrnEntries] = useState([]);
   const [movements, setMovements] = useState([]);
@@ -457,8 +134,6 @@ export default function InventorySoftware() {
   const [onlineOrders, setOnlineOrders] = useState([]);
   const [scannerQueue, setScannerQueue] = useState([]);
   const [dailyBackups, setDailyBackups] = useState([]);
-  const [shippingZones, setShippingZones] = useState([]);
-  const [carriers, setCarriers] = useState([]);
 
   // Order Lifecycle, Shipping Labels, RTO Returns, QR Scanner & Daily Backup State
   const [orderSearch, setOrderSearch] = useState('');
@@ -514,8 +189,7 @@ export default function InventorySoftware() {
   const [invBinFilter, setInvBinFilter] = useState('ALL');
 
   // POS Billing State
-  const [posCustomerSearch, setPosCustomerSearch] = useState('');
-  const [selectedPosCustomer, setSelectedPosCustomer] = useState(FALLBACK_CUSTOMERS[0]);
+  const [selectedPosCustomer, setSelectedPosCustomer] = useState(null);
   const [posItemSearch, setPosItemSearch] = useState('');
   const [selectedPosItemId, setSelectedPosItemId] = useState('');
   const [posItemQty, setPosItemQty] = useState(1);
@@ -556,15 +230,15 @@ export default function InventorySoftware() {
   });
   const [grnForm, setGrnForm] = useState({
     supplierId: '',
-    supplierName: 'Himalayan Phyto-Actives & Cold-Press Labs',
+    supplierName: '',
     metaId: '',
     batchNo: `BV-BATCH-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
     mfgDate: new Date().toISOString().split('T')[0],
     expiryDate: '2028-10-31',
     receivedQty: 50,
     rejectedQty: 0,
-    unitCost: 115,
-    binCode: 'ASN-COLD-R1-B01',
+    unitCost: '',
+    binCode: '',
     invoiceRef: '',
     notes: '',
   });
@@ -600,9 +274,7 @@ export default function InventorySoftware() {
   const [auditNote, setAuditNote] = useState('Monthly Physical Bin Stock Verification');
   const [reportDate, setReportDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [reportSearchInv, setReportSearchInv] = useState('');
-  const [showProofGallery, setShowProofGallery] = useState(false);
   const [viewingSale, setViewingSale] = useState(null);
-  const [viewingImageSrc, setViewingImageSrc] = useState('');
   const [labelItem, setLabelItem] = useState(null);
   const [labelQrUrl, setLabelQrUrl] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
@@ -679,14 +351,13 @@ export default function InventorySoftware() {
                 setShowOnboardingModal(true);
               }
             }
-            if (Array.isArray(d.items) && d.items.length > 0) setItems(d.items);
-            if (Array.isArray(d.bins) && d.bins.length > 0) setBins(d.bins);
-            if (Array.isArray(d.customers) && d.customers.length > 0) {
+            if (Array.isArray(d.items)) setItems(d.items);
+            if (Array.isArray(d.bins)) setBins(d.bins);
+            if (Array.isArray(d.customers)) {
               setCustomers(d.customers);
-              setSelectedPosCustomer(prev => d.customers.find(c => c.id === prev?.id) || d.customers[0]);
+              setSelectedPosCustomer(prev => d.customers.find(c => c.id === prev?.id) || d.customers[0] || null);
             }
             if (Array.isArray(d.sales)) setSales(d.sales);
-            if (Array.isArray(d.proofs)) setProofs(d.proofs);
             if (Array.isArray(d.suppliers)) setSuppliers(d.suppliers);
             if (Array.isArray(d.grnEntries)) setGrnEntries(d.grnEntries);
             if (Array.isArray(d.movements)) setMovements(d.movements);
@@ -694,27 +365,9 @@ export default function InventorySoftware() {
             if (Array.isArray(d.onlineOrders)) setOnlineOrders(d.onlineOrders);
             if (Array.isArray(d.scannerQueue)) setScannerQueue(d.scannerQueue);
             if (Array.isArray(d.dailyBackups)) setDailyBackups(d.dailyBackups);
-            if (Array.isArray(d.shippingZones)) setShippingZones(d.shippingZones);
-            if (Array.isArray(d.carriers)) setCarriers(d.carriers);
             if (d.cfg) setCfg(prev => ({ ...prev, ...d.cfg }));
             setLastSyncedAt(d.syncedAt || new Date().toISOString());
-
-            localStorage.setItem(
-              LOCAL_DB_KEY,
-              JSON.stringify({
-                items: d.items,
-                bins: d.bins,
-                customers: d.customers,
-                sales: d.sales,
-                proofs: d.proofs,
-                suppliers: d.suppliers,
-                grnEntries: d.grnEntries,
-                movements: d.movements,
-                logs: d.logs,
-                cfg: d.cfg,
-                syncedAt: new Date().toISOString(),
-              })
-            );
+            localStorage.removeItem(LEGACY_LOCAL_DB_KEY);
           }
         } catch (err) {
           if (err.response?.status === 401 || err.response?.status === 403) {
@@ -722,27 +375,7 @@ export default function InventorySoftware() {
             localStorage.removeItem(LOCAL_TOKEN_KEY);
             setLoginError(err.response?.data?.message || 'Session expired. Please sign in.');
           } else {
-            let loadedLocalCache = false;
-            try {
-              const cached = JSON.parse(localStorage.getItem(LOCAL_DB_KEY) || 'null');
-              if (cached?.items) {
-                loadedLocalCache = true;
-                setItems(cached.items);
-                if (cached.bins) setBins(cached.bins);
-                if (cached.customers) setCustomers(cached.customers);
-                if (cached.sales) setSales(cached.sales);
-                if (cached.proofs) setProofs(cached.proofs);
-                if (cached.suppliers) setSuppliers(cached.suppliers);
-                if (cached.movements) setMovements(cached.movements);
-                if (cached.logs) setLogs(cached.logs);
-              }
-            } catch {}
-            showNotice(
-              'error',
-              loadedLocalCache
-                ? 'Could not reach the server. Showing saved inventory data; changes may be out of date.'
-                : 'Could not reach the server. The displayed inventory data may be out of date.'
-            );
+            showNotice('error', 'Could not reach the server. Inventory data is loaded only from the database; please retry.');
           }
         } finally {
           setLoading(false);
@@ -1802,7 +1435,9 @@ export default function InventorySoftware() {
         reqConfig
       );
       await fetchBootstrapData(true);
-    } catch {}
+    } catch {
+      // Marking labels as printed is best-effort; printing already happened.
+    }
   };
 
   const handlePrintOnlineOrderGstInvoice = ord => {
@@ -1961,7 +1596,9 @@ export default function InventorySoftware() {
       if (res.data?.snapshotObj) {
         try {
           localStorage.setItem('BV_DAILY_EMERGENCY_SQL_BACKUP', JSON.stringify(res.data.snapshotObj));
-        } catch {}
+        } catch {
+          // Browser storage may be full or blocked; the backup itself already succeeded.
+        }
       }
       if (downloadFormat === 'sql' && res.data?.sqlDump) {
         const blob = new Blob([res.data.sqlDump], { type: 'application/sql;charset=utf-8' });
@@ -2008,7 +1645,7 @@ export default function InventorySoftware() {
       a.click();
       a.remove();
       URL.revokeObjectURL(url);
-    } catch (err) {
+    } catch {
       showNotice('error', 'Could not download backup file.');
     }
   };
@@ -2148,7 +1785,7 @@ export default function InventorySoftware() {
               costPrice: Number(row['Cost Price (INR)'] ?? row['Cost Price'] ?? 0),
               mrp: Number(row['MRP (INR)'] ?? row.MRP ?? 0),
               price: Number(row['Selling Price (INR)'] ?? row['Unit Price'] ?? row.Price ?? 0),
-              binCode: row['Bin Code'] || 'ASN-SHOP-R1-B01',
+              binCode: row['Bin Code'] || bins[0]?.bin_code || '',
               syncToWebsite: true,
             },
             reqConfig
@@ -2162,29 +1799,6 @@ export default function InventorySoftware() {
       }
     };
     reader.readAsArrayBuffer(file);
-  };
-
-  const handleSaveSnapshotBackup = () => {
-    const payload = {
-      version: '10X-OMNICHANNEL-2.0',
-      exportedAt: new Date().toISOString(),
-      store: cfg,
-      items,
-      bins,
-      customers,
-      sales,
-      movements,
-    };
-    const blob = new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `BhumiVera_InventorySnapshot_${new Date().toISOString().slice(0, 10)}.avbak.json`;
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    URL.revokeObjectURL(url);
-    showNotice('success', 'Saved encrypted daily snapshot (.avbak.json).');
   };
 
   const handleOpenLabelGenerator = async item => {
@@ -2828,8 +2442,8 @@ export default function InventorySoftware() {
                         gstRate: 18,
                         minStock: 15,
                         reorderQty: 50,
-                        binCode: bins[0]?.bin_code || 'ASN-SHOP-R1-B01',
-                        rackLocation: 'Zone A • Rack 01 • Shelf A',
+                        binCode: bins[0]?.bin_code || '',
+                        rackLocation: '',
                         batchNo: `BV-BATCH-${new Date().getFullYear()}-01`,
                         mfgDate: new Date().toISOString().split('T')[0],
                         expiryDate: '2028-08-31',
@@ -3527,7 +3141,7 @@ export default function InventorySoftware() {
                         metaId: items[0]?.id || '',
                         direction: 'VAULT_TO_SHOP',
                         quantity: 10,
-                        newBinCode: bins[0]?.bin_code || 'ASN-SHOP-R1-B01',
+                        newBinCode: bins[0]?.bin_code || '',
                         notes: 'Replenishing retail shop counter from cold vault',
                       });
                       setActiveModal('transfer');
@@ -4200,7 +3814,8 @@ export default function InventorySoftware() {
                       setGrnForm(prev => ({
                         ...prev,
                         metaId: items[0]?.id || '',
-                        supplierName: suppliers[0]?.name || 'Himalayan Phyto-Actives & Cold-Press Labs',
+                        supplierName: suppliers[0]?.name || '',
+                        binCode: prev.binCode || bins[0]?.bin_code || '',
                       }));
                       setActiveModal('grn');
                     }}
@@ -6480,18 +6095,6 @@ export default function InventorySoftware() {
               </button>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* =====================================================================
-          MODAL: IMAGE LIGHTBOX VIEWER
-         ===================================================================== */}
-      {activeModal === 'img-viewer' && viewingImageSrc && (
-        <div
-          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4"
-          onClick={() => setActiveModal(null)}
-        >
-          <img src={viewingImageSrc} alt="Payment Proof" className="max-w-[90%] max-h-[88vh] rounded-2xl border-4 border-white shadow-2xl" />
         </div>
       )}
 
