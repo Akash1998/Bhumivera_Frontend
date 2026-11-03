@@ -263,9 +263,12 @@ export const AuthProvider = ({ children }) => {
     // Re-pull the profile from the server so edits made on another device appear here.
     if (!token || !user || user.role !== 'customer') return undefined;
     let busy = false;
+    let lastSyncAt = Date.now();
     const sync = async () => {
-      if (busy || document.visibilityState === 'hidden') return;
+      // Tab switches fire focus + visibilitychange; each one used to hit the DB, so refresh at most every 5 minutes.
+      if (busy || document.visibilityState === 'hidden' || Date.now() - lastSyncAt < 5 * 60 * 1000) return;
       busy = true;
+      lastSyncAt = Date.now();
       try {
         const res = await usersApi.getProfile();
         const fresh = res.data?.user || res.data;
