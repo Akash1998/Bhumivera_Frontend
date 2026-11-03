@@ -63,6 +63,30 @@
   color: var(--admin-text-muted) !important;
 }
 
+.inventory-shell .pos-invoice-panel {
+  color: var(--admin-text);
+}
+
+.inventory-shell .pos-invoice-panel [class~="text-slate-900"],
+.inventory-shell .pos-invoice-panel [class~="text-slate-800"],
+.inventory-shell .pos-invoice-panel [class~="text-slate-700"],
+.inventory-shell .pos-invoice-panel [class~="text-slate-600"],
+.inventory-shell .pos-invoice-panel [class~="text-slate-500"],
+.inventory-shell .pos-invoice-panel [class~="text-slate-400"],
+.inventory-shell .pos-invoice-panel [class~="text-slate-300"],
+.inventory-shell .pos-invoice-panel [class~="text-gray-900"],
+.inventory-shell .pos-invoice-panel [class~="text-gray-800"],
+.inventory-shell .pos-invoice-panel [class~="text-gray-700"],
+.inventory-shell .pos-invoice-panel [class~="text-gray-600"],
+.inventory-shell .pos-invoice-panel [class~="text-gray-500"],
+.inventory-shell .pos-invoice-panel [class~="text-gray-400"] {
+  color: var(--admin-text-muted) !important;
+}
+
+.inventory-shell .pos-invoice-panel tbody td {
+  color: var(--admin-text);
+}
+
 .inventory-shell [class~="border-slate-100"],
 .inventory-shell [class~="border-slate-200"],
 .inventory-shell [class~="border-slate-300"],

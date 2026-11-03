@@ -489,7 +489,7 @@ export default function InventorySoftware() {
     website: 'www.bhumivera.com',
     gstin: '19AAKCB2026A1Z5',
     upiId: 'bhumivera@okhdfcbank',
-    taxRate: 18,
+    taxRate: 0,
     autoSyncWebsite: true,
     posHoldReservation: true,
     cats: [
@@ -522,7 +522,7 @@ export default function InventorySoftware() {
   const [extraName, setExtraName] = useState('');
   const [extraAmt, setExtraAmt] = useState('');
   const [posDiscount, setPosDiscount] = useState(0);
-  const [posTaxRate, setPosTaxRate] = useState(18);
+  const [posTaxRate, setPosTaxRate] = useState(0);
   const [posPaymentMode, setPosPaymentMode] = useState('Cash');
   const [posPaidAmount, setPosPaidAmount] = useState('');
   const [posUpiRef, setPosUpiRef] = useState('');
@@ -1167,6 +1167,21 @@ export default function InventorySoftware() {
       ]);
     }
 
+    // Real-time 2-way sync with mobile scanner queue
+    api.post(
+      '/inventory-software/scanner/queue/item',
+      {
+        sessionCode: 'DEFAULT-POS-TERMINAL',
+        sku: item.sku,
+        metaId: item.id,
+        quantity: totalRequested,
+        price: p,
+        name: item.name,
+        availableStock: item.qty,
+      },
+      reqConfig
+    ).catch(() => {});
+
     setPosItemSearch('');
     setSelectedPosItemId('');
     setPosItemQty(1);
@@ -1174,19 +1189,52 @@ export default function InventorySoftware() {
   };
 
   const handlePosCartQtyMod = (id, delta) => {
+    const item = posCart.find(c => c.id === id);
+    if (!item) return;
+    const nextQ = item.q + delta;
+    if (nextQ > item.max) {
+      showNotice('error', `Max available stock is ${item.max} units.`);
+      return;
+    }
+
     setPosCart(prev =>
       prev
         .map(c => {
           if (c.id !== id) return c;
-          const nextQ = c.q + delta;
-          if (nextQ > c.max) {
-            showNotice('error', `Max available stock is ${c.max} units.`);
-            return c;
-          }
           return nextQ > 0 ? { ...c, q: nextQ } : null;
         })
         .filter(Boolean)
     );
+
+    // Real-time 2-way sync with mobile scanner queue
+    api.post(
+      '/inventory-software/scanner/queue/item',
+      { sessionCode: 'DEFAULT-POS-TERMINAL', sku: item.sku, metaId: id, delta },
+      reqConfig
+    ).catch(() => {});
+  };
+
+  const handlePosCartRemoveItem = id => {
+    const item = posCart.find(c => c.id === id);
+    setPosCart(prev => prev.filter(c => c.id !== id));
+    if (item) {
+      api.post(
+        '/inventory-software/scanner/queue/remove',
+        { sessionCode: 'DEFAULT-POS-TERMINAL', sku: item.sku, metaId: id },
+        reqConfig
+      ).catch(() => {});
+    }
+  };
+
+  const handlePosCartClear = () => {
+    setPosCart([]);
+    setPosExtraCharges([]);
+    setPosDiscount(0);
+    api.post(
+      '/inventory-software/scanner/queue/clear',
+      { sessionCode: 'DEFAULT-POS-TERMINAL' },
+      reqConfig
+    ).catch(() => {});
   };
 
   const handlePosCheckout = async () => {
@@ -4888,10 +4936,10 @@ export default function InventorySoftware() {
                 </div>
               </div>
 
-              <div className="lg:col-span-8 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+              <div className="pos-invoice-panel lg:col-span-8 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
                 <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                  <table className="w-full text-xs">
-                    <thead className="bg-slate-900 text-white uppercase text-[10px]">
+                  <table className="w-full text-sm">
+                    <thead className="bg-slate-900 text-white uppercase text-xs">
                       <tr>
                         <th className="py-3 px-4 text-left">Invoice # &amp; Time</th>
                         <th className="py-3 px-4 text-left">Customer</th>
@@ -4913,10 +4961,10 @@ export default function InventorySoftware() {
                           <tr key={s.id} className="hover:bg-slate-50">
                             <td className="py-3 px-4 font-mono">
                               <div className="font-bold text-slate-900">{s.invoiceNo}</div>
-                              <div className="text-[10px] text-slate-500">{new Date(s.date).toLocaleString()}</div>
+                              <div className="text-xs text-slate-300">{new Date(s.date).toLocaleString()}</div>
                             </td>
                             <td className="py-3 px-4 font-bold">{s.cust?.name}</td>
-                            <td className="py-3 px-4 text-[11px] text-slate-600">
+                            <td className="py-3 px-4 text-xs text-slate-300">
                               {(s.items || []).map(i => `${i.name} (x${i.q})`).join(', ')}
                             </td>
                             <td className="py-3 px-4 text-right font-mono font-bold">₹{s.billTotal}</td>
@@ -4939,7 +4987,7 @@ export default function InventorySoftware() {
                                     setViewingSale(s);
                                     setActiveModal('view-sale');
                                   }}
-                                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold"
+                                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-100 border border-slate-500 font-bold"
                                 >
                                   Inspect / Print
                                 </button>
