@@ -425,14 +425,23 @@ export default function InventorySoftware() {
   const [totpQrDataUrl, setTotpQrDataUrl] = useState('');
   const [totpVerifyCode, setTotpVerifyCode] = useState('');
 
-  // Navigation & UI State
-  const [activeView, setActiveView] = useState('dash');
+  // Navigation & UI State (supports ?view=online | labels | ret | inv | sale | scanner | backup | keeper | audit | grn)
+  const [activeView, setActiveView] = useState(() => {
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const requested = params.get('view');
+      const allowed = ['dash', 'online', 'labels', 'ret', 'inv', 'sale', 'scanner', 'backup', 'keeper', 'audit', 'grn', 'trans', 'rep', 'logs'];
+      if (requested && allowed.includes(requested)) return requested;
+      if (requested === 'shipping') return 'labels';
+    } catch {}
+    return 'dash';
+  });
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState(null);
   const [banner, setBanner] = useState(null);
 
-  // Core Data Collections
+  // Core Data Collections (Single Main Inventory synced across Online & Offline)
   const [items, setItems] = useState(FALLBACK_CATALOG_ITEMS);
   const [bins, setBins] = useState(FALLBACK_BINS);
   const [customers, setCustomers] = useState(FALLBACK_CUSTOMERS);
@@ -443,6 +452,34 @@ export default function InventorySoftware() {
   const [movements, setMovements] = useState([]);
   const [logs, setLogs] = useState([]);
   const [onlineOrders, setOnlineOrders] = useState([]);
+  const [scannerQueue, setScannerQueue] = useState([]);
+  const [dailyBackups, setDailyBackups] = useState([]);
+  const [shippingZones, setShippingZones] = useState([]);
+  const [carriers, setCarriers] = useState([]);
+
+  // Order Lifecycle, Shipping Labels, RTO Returns, QR Scanner & Daily Backup State
+  const [orderSearch, setOrderSearch] = useState('');
+  const [orderStatusFilter, setOrderStatusFilter] = useState('ALL');
+  const [editingOrder, setEditingOrder] = useState(null);
+  const [selectedLabelOrderIds, setSelectedLabelOrderIds] = useState([]);
+  const [carrierBookForm, setCarrierBookForm] = useState({
+    provider: 'shiprocket',
+    weight: '0.5',
+    length: '20',
+    width: '15',
+    height: '10',
+  });
+  const [rtoSearch, setRtoSearch] = useState('');
+  const [rtoReason, setRtoReason] = useState('Customer Unavailable / Door Locked — Courier Return to Origin (RTO)');
+  const [scannerInput, setScannerInput] = useState('');
+  const [scannerQty, setScannerQty] = useState(1);
+  const [pairingQrUrl, setPairingQrUrl] = useState('');
+  const [backupBusy, setBackupBusy] = useState(false);
+  const [posCustomerForm, setPosCustomerForm] = useState({
+    name: 'Walk-in Retail Shopper',
+    phone: '',
+    gstin: '',
+  });
   const [cfg, setCfg] = useState({
     storeName: 'Bhumivera Organics India Private Limited',
     tagline: 'The Transparent Maison — 100% Label-Disclosed Botanical Formulations',
@@ -614,6 +651,10 @@ export default function InventorySoftware() {
           if (Array.isArray(d.movements)) setMovements(d.movements);
           if (Array.isArray(d.logs)) setLogs(d.logs);
           if (Array.isArray(d.onlineOrders)) setOnlineOrders(d.onlineOrders);
+          if (Array.isArray(d.scannerQueue)) setScannerQueue(d.scannerQueue);
+          if (Array.isArray(d.dailyBackups)) setDailyBackups(d.dailyBackups);
+          if (Array.isArray(d.shippingZones)) setShippingZones(d.shippingZones);
+          if (Array.isArray(d.carriers)) setCarriers(d.carriers);
           if (d.cfg) setCfg(prev => ({ ...prev, ...d.cfg }));
           setLastSyncedAt(d.syncedAt || new Date().toISOString());
 
@@ -771,6 +812,56 @@ export default function InventorySoftware() {
       return dStr === reportDate;
     });
   }, [sales, reportDate, reportSearchInv]);
+
+  // Filtered Online Orders for Full Order Lifecycle & Shipping Labels
+  const filteredOnlineOrders = useMemo(() => {
+    const q = orderSearch.trim().toLowerCase();
+    return onlineOrders.filter(o => {
+      const matchStatus = orderStatusFilter === 'ALL' || o.status === orderStatusFilter;
+      const matchQuery =
+        !q ||
+        String(o.orderNumber || '').toLowerCase().includes(q) ||
+        String(o.id).includes(q) ||
+        o.customerName?.toLowerCase().includes(q) ||
+        o.customerPhone?.toLowerCase().includes(q) ||
+        o.city?.toLowerCase().includes(q) ||
+        o.state?.toLowerCase().includes(q) ||
+        o.pincode?.toLowerCase().includes(q) ||
+        o.trackingNumber?.toLowerCase().includes(q) ||
+        o.courier?.toLowerCase().includes(q);
+      return matchStatus && matchQuery;
+    });
+  }, [onlineOrders, orderSearch, orderStatusFilter]);
+
+  // Filtered Undelivered / RTO Eligible Orders
+  const rtoCandidateOrders = useMemo(() => {
+    const q = rtoSearch.trim().toLowerCase();
+    return onlineOrders.filter(o => {
+      const isCandidate = ['shipped', 'packed', 'confirmed', 'returned'].includes(o.status);
+      if (!isCandidate) return false;
+      if (!q) return true;
+      return (
+        String(o.orderNumber || '').toLowerCase().includes(q) ||
+        String(o.id).includes(q) ||
+        o.trackingNumber?.toLowerCase().includes(q) ||
+        o.customerName?.toLowerCase().includes(q) ||
+        o.city?.toLowerCase().includes(q)
+      );
+    });
+  }, [onlineOrders, rtoSearch]);
+
+  useEffect(() => {
+    const payload = JSON.stringify({
+      app: 'BHUMIVERA_ANDROID_QR_SCANNER',
+      endpoint: 'https://service.bhumivera.com/api/inventory-software/scanner/scan',
+      queueEndpoint: 'https://service.bhumivera.com/api/inventory-software/scanner/queue',
+      scannerApiKey: cfg.scannerApiKey || 'BV-SCAN-DEFAULT',
+      sessionCode: 'DEFAULT-POS-TERMINAL',
+    });
+    QRCode.toDataURL(payload, { width: 200, margin: 1 })
+      .then(url => setPairingQrUrl(url))
+      .catch(() => setPairingQrUrl(''));
+  }, [cfg.scannerApiKey]);
 
   // ==========================================================================
   // HANDLERS: AUTHENTICATION & SECURITY ONBOARDING
@@ -1082,7 +1173,11 @@ export default function InventorySoftware() {
     }
     try {
       const payload = {
-        customer: selectedPosCustomer || customers[0],
+        customer: {
+          name: posCustomerForm.name?.trim() || 'Walk-in Retail Shopper',
+          phone: posCustomerForm.phone?.trim() || '-',
+          gstin: posCustomerForm.gstin?.trim() || '',
+        },
         items: posCart,
         extraCharges: posExtraCharges,
         discount: posCalculations.disc,
@@ -1090,6 +1185,7 @@ export default function InventorySoftware() {
         paidAmount: posCalculations.paid,
         paymentMode: posPaymentMode,
         upiReference: posUpiRef,
+        scannerQueueIds: scannerQueue.map(q => q.id),
       };
       const res = await api.post('/inventory-software/pos/checkout', payload, reqConfig);
       if (res.data?.success) {
@@ -1422,15 +1518,23 @@ export default function InventorySoftware() {
     }
   };
 
-  const handleUpdateOnlineOrderStatus = async (orderId, status) => {
-    const trackingNumber =
-      status === 'shipped'
-        ? window.prompt('Enter Courier Tracking / AWB Number (optional):', `BHVM${Date.now().toString().slice(-8)}`)
-        : undefined;
+  const handleUpdateOnlineOrderStatus = async (orderId, status, extra = {}) => {
+    let trackingNumber = extra.trackingNumber;
+    let courier = extra.courier;
+    if (status === 'shipped' && !trackingNumber) {
+      trackingNumber = window.prompt('Enter Courier Tracking / AWB Number:', `BHVM${Date.now().toString().slice(-8)}`) || undefined;
+      courier = window.prompt('Enter Courier Partner Name (e.g. Delhivery, Shiprocket, BlueDart):', courier || 'Delhivery Surface Express') || 'Bhumivera Priority Express';
+    }
     try {
       const res = await api.put(
         `/inventory-software/online-orders/${orderId}/dispatch-status`,
-        { status, trackingNumber: trackingNumber || undefined, courier: 'Bhumivera Priority Express' },
+        {
+          status,
+          trackingNumber,
+          courier: courier || undefined,
+          estimatedDeliveryDate: extra.estimatedDeliveryDate,
+          currentLocationCheckpoint: extra.currentLocationCheckpoint,
+        },
         reqConfig
       );
       showNotice('success', res.data?.message || `Order #${orderId} marked ${status.toUpperCase()}.`);
@@ -1438,6 +1542,455 @@ export default function InventorySoftware() {
     } catch (err) {
       showNotice('error', err.response?.data?.message || 'Could not update online order status.');
     }
+  };
+
+  const handleSaveOrderDetailsModal = async e => {
+    e.preventDefault();
+    if (!editingOrder) return;
+    try {
+      const res = await api.put(
+        `/inventory-software/online-orders/${editingOrder.id}/edit`,
+        {
+          status: editingOrder.status,
+          courier: editingOrder.courier,
+          trackingNumber: editingOrder.trackingNumber,
+          estimatedDeliveryDate: editingOrder.estimatedDeliveryDate,
+          currentLocationCheckpoint: editingOrder.currentLocationCheckpoint,
+          notes: editingOrder.notes,
+          recipientName: editingOrder.customerName,
+          recipientPhone: editingOrder.customerPhone,
+          recipientAltPhone: editingOrder.customerAltPhone,
+          line1: editingOrder.line1,
+          line2: editingOrder.line2,
+          landmark: editingOrder.landmark,
+          city: editingOrder.city,
+          state: editingOrder.state,
+          pincode: editingOrder.pincode,
+        },
+        reqConfig
+      );
+      showNotice('success', res.data?.message || 'Order lifecycle & shipping label details updated!');
+      setActiveModal(null);
+      setEditingOrder(null);
+      await fetchBootstrapData(true);
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Failed to update order details.');
+    }
+  };
+
+  const handleBookCarrierLabel = async orderId => {
+    try {
+      const res = await api.post(
+        `/inventory-software/online-orders/${orderId}/book-carrier-label`,
+        carrierBookForm,
+        reqConfig
+      );
+      showNotice('success', res.data?.message || 'Carrier shipment booked and AWB assigned!');
+      await fetchBootstrapData(true);
+      if (editingOrder && editingOrder.id === orderId && res.data?.label) {
+        setEditingOrder(prev => ({
+          ...prev,
+          trackingNumber: res.data.label.tracking_number || prev.trackingNumber,
+          courier: res.data.label.service_name || prev.courier,
+        }));
+      }
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Could not book carrier label.');
+    }
+  };
+
+  const handlePrintShippingLabels = async ordersToPrint => {
+    const list = Array.isArray(ordersToPrint) ? ordersToPrint : [ordersToPrint];
+    if (list.length === 0) {
+      showNotice('error', 'Select at least one order to print shipping labels.');
+      return;
+    }
+    const w = window.open('', '_blank', 'width=850,height=900');
+    if (!w) return;
+
+    const cardsHtml = list
+      .map(ord => {
+        const isCod = String(ord.paymentMode || '').toUpperCase() === 'COD' && ord.paymentStatus !== 'paid';
+        const itemsText = (ord.items || []).map(i => `${i.name} (SKU: ${i.sku || '-'}) × ${i.quantity}`).join('<br/>');
+        const awb = ord.trackingNumber || `ORD-${ord.orderNumber}`;
+        return `
+          <div class="label-card">
+            <div class="top-bar">
+              <div>
+                <div class="brand">BHUMIVERA ORGANICS INDIA PVT. LTD.</div>
+                <div class="sub">CIN: U20237WB2026PTC295842 • GSTIN: ${cfg.gstin}</div>
+              </div>
+              <div class="pay-badge ${isCod ? 'cod' : 'prepaid'}">
+                ${isCod ? `CASH ON DELIVERY (COLLECT ₹${ord.total})` : `PREPAID ORDER (₹${ord.total} PAID)`}
+              </div>
+            </div>
+
+            <div class="addr-grid">
+              <div class="ship-to">
+                <div class="sec-label">DELIVER TO (CUSTOMER SHIPPING ADDRESS — AUTO-FETCHED):</div>
+                <div class="cust-name">${ord.customerName}</div>
+                <div class="cust-addr">
+                  ${ord.line1 || ''}${ord.line2 ? `, ${ord.line2}` : ''}<br/>
+                  ${ord.landmark ? `Landmark: ${ord.landmark}<br/>` : ''}
+                  <b>${ord.city || ''}, ${ord.state || ''} — PIN: ${ord.pincode || ''}</b>
+                </div>
+                <div class="cust-phone">Phone: <b>${ord.customerPhone || '-'}</b> ${ord.customerAltPhone ? `/ ${ord.customerAltPhone}` : ''}</div>
+              </div>
+              <div class="meta-box">
+                <div><b>Order #:</b> #${ord.orderNumber}</div>
+                <div><b>Order Date:</b> ${new Date(ord.createdAt).toLocaleDateString()}</div>
+                <div><b>Est. Delivery:</b> ${ord.estimatedDeliveryDate || 'Standard'}</div>
+                <div><b>Courier:</b> ${ord.courier || 'Bhumivera Priority Express'}</div>
+                <div><b>AWB / Ref:</b> <span style="font-family:monospace;font-weight:900;">${awb}</span></div>
+                <div><b>Weight:</b> 0.50 Kg (Sub-28°C Sealed)</div>
+              </div>
+            </div>
+
+            <div class="items-box">
+              <div class="sec-label">PACKED FORMULATIONS (MAIN WAREHOUSE VERIFIED):</div>
+              <div style="font-size:12px;margin-top:4px;line-height:1.45;">${itemsText}</div>
+            </div>
+
+            <div class="return-footer">
+              <div>
+                <b>IF UNDELIVERED, RETURN TO (RTO WAREHOUSE HUB):</b><br/>
+                ${cfg.storeName}, ${cfg.address} • Phone: ${cfg.phone}
+              </div>
+              <div style="text-align:right;font-family:monospace;font-size:11px;">
+                [${awb}]<br/>www.bhumivera.com
+              </div>
+            </div>
+          </div>
+        `;
+      })
+      .join('');
+
+    w.document.write(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>Bhumivera Courier Shipping Labels (${list.length})</title>
+        <style>
+          body { font-family: 'Inter', -apple-system, sans-serif; margin: 0; padding: 16px; background: #fff; color: #000; }
+          .label-card { border: 3px solid #000; border-radius: 8px; padding: 16px; margin-bottom: 24px; page-break-inside: avoid; max-width: 680px; margin-left: auto; margin-right: auto; }
+          .top-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 12px; }
+          .brand { font-size: 16px; font-weight: 900; letter-spacing: 0.5px; }
+          .sub { font-size: 10px; color: #333; margin-top: 2px; }
+          .pay-badge { padding: 6px 12px; font-size: 13px; font-weight: 900; border: 2px solid #000; border-radius: 4px; }
+          .cod { background: #fef08a; }
+          .prepaid { background: #d1fae5; }
+          .addr-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 12px; }
+          .sec-label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #444; letter-spacing: 0.5px; }
+          .cust-name { font-size: 18px; font-weight: 900; margin-top: 4px; }
+          .cust-addr { font-size: 13px; line-height: 1.4; margin-top: 4px; }
+          .cust-phone { font-size: 13px; margin-top: 8px; }
+          .meta-box { border-left: 2px dashed #000; padding-left: 12px; font-size: 12px; line-height: 1.65; }
+          .items-box { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; }
+          .return-footer { display: flex; justify-content: space-between; align-items: center; font-size: 10px; line-height: 1.4; }
+        </style>
+      </head>
+      <body>
+        ${cardsHtml}
+        <script>window.print();</script>
+      </body>
+      </html>
+    `);
+    w.document.close();
+
+    try {
+      await api.post(
+        '/inventory-software/online-orders/mark-labels-printed',
+        { orderIds: list.map(o => o.id) },
+        reqConfig
+      );
+      await fetchBootstrapData(true);
+    } catch {}
+  };
+
+  const handlePrintOnlineOrderGstInvoice = ord => {
+    if (!ord) return;
+    const mappedSale = {
+      invoiceNo: `BV/WEB/${new Date(ord.createdAt).getFullYear()}/${ord.orderNumber}`,
+      date: ord.createdAt,
+      paymentMode: `${ord.paymentMode} (${ord.paymentStatus})`,
+      cashier: 'bhumivera.com',
+      cust: {
+        name: `${ord.customerName} (${ord.city || ''} ${ord.state || ''} - ${ord.pincode || ''})`,
+        phone: ord.customerPhone || '-',
+        gstin: '',
+      },
+      items: (ord.items || []).map(i => ({
+        sku: i.sku,
+        name: i.name,
+        gstHsnCode: i.gstHsnCode || '33049990',
+        q: i.quantity,
+        uom: 'Pcs',
+        p: i.price,
+      })),
+      subTotal: ord.subtotal || ord.total,
+      extraTotal: ord.shippingCost || 0,
+      discount: (Number(ord.discount) || 0) + (Number(ord.tierDiscount) || 0),
+      taxRate: 18,
+      tax: Math.round(((Number(ord.total) || 0) * 18) / 118),
+      billTotal: ord.total,
+      paid: ord.paymentStatus === 'paid' ? ord.total : 0,
+      newBal: 0,
+    };
+    handlePrintA4Invoice(mappedSale);
+  };
+
+  const handleProcessRtoOrder = async (orderId, mode = 'RESTOCK') => {
+    const confirmMsg =
+      mode === 'RESTOCK'
+        ? 'Confirm that this Undelivered (RTO) parcel returned intact? All items will be automatically restocked into live Website & Shop inventory.'
+        : 'Confirm that this Undelivered (RTO) parcel was damaged in transit? Units will be moved to Quarantine Bay without adding to sellable stock.';
+    if (!window.confirm(confirmMsg)) return;
+    try {
+      const res = await api.post(
+        '/inventory-software/returns/rto-process',
+        { orderId, mode, rtoReason },
+        reqConfig
+      );
+      showNotice('success', res.data?.message || 'Undelivered RTO return processed!');
+      await fetchBootstrapData(true);
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Failed to process RTO return.');
+    }
+  };
+
+  const handleScanQrToPos = async e => {
+    if (e) e.preventDefault();
+    if (!scannerInput.trim()) return;
+    try {
+      const res = await api.post(
+        '/inventory-software/scanner/scan',
+        {
+          qrCode: scannerInput.trim(),
+          quantity: Number(scannerQty) || 1,
+          deviceName: 'Inventory Terminal Scanner',
+        },
+        reqConfig
+      );
+      if (res.data?.scanned?.length) {
+        for (const sc of res.data.scanned) {
+          setPosCart(prev => {
+            const existing = prev.find(c => c.sku === sc.sku || c.id === sc.metaId);
+            if (existing) {
+              return prev.map(c =>
+                c.sku === sc.sku || c.id === sc.metaId
+                  ? { ...c, q: Math.min(sc.availableStock, c.q + (Number(scannerQty) || 1)) }
+                  : c
+              );
+            }
+            return [
+              ...prev,
+              {
+                id: sc.metaId,
+                productId: sc.productId,
+                sku: sc.sku,
+                name: sc.name,
+                q: Number(scannerQty) || 1,
+                p: sc.price,
+                max: sc.availableStock,
+                uom: sc.uom || 'Pcs',
+                gstHsnCode: sc.gstHsnCode || '33049990',
+              },
+            ];
+          });
+        }
+        showNotice('success', res.data.message);
+        setScannerInput('');
+        setScannerQty(1);
+        await fetchBootstrapData(true);
+      }
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'QR / Barcode scan failed.');
+    }
+  };
+
+  const handlePullMobileScannerQueueToPos = async () => {
+    try {
+      const res = await api.get('/inventory-software/scanner/queue', reqConfig);
+      const qRows = res.data?.queue || [];
+      if (qRows.length === 0) {
+        showNotice('info', 'No pending items in Mobile QR Scanner queue.');
+        return;
+      }
+      const nextCart = [...posCart];
+      for (const q of qRows) {
+        const idx = nextCart.findIndex(c => c.sku === q.sku || c.id === q.meta_id);
+        if (idx !== -1) {
+          nextCart[idx] = {
+            ...nextCart[idx],
+            q: Math.min(q.available_stock || 999, Number(q.quantity) || 1),
+          };
+        } else {
+          nextCart.push({
+            id: q.meta_id,
+            productId: q.product_id,
+            sku: q.sku,
+            name: q.product_name,
+            q: Number(q.quantity) || 1,
+            p: Number(q.unit_price) || 0,
+            max: Number(q.available_stock) || 99,
+            uom: q.uom || 'Pcs',
+            gstHsnCode: q.gst_hsn_code || '33049990',
+          });
+        }
+      }
+      setPosCart(nextCart);
+      await api.post(
+        '/inventory-software/scanner/queue/consume',
+        { ids: qRows.map(r => r.id) },
+        reqConfig
+      );
+      showNotice('success', `Pulled ${qRows.length} scanned SKU(s) from Mobile QR Scanner into active POS Bill!`);
+      setActiveView('sale');
+      await fetchBootstrapData(true);
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Could not sync mobile scanner queue.');
+    }
+  };
+
+  const handleCreateDailySqlBackup = async (downloadFormat = null) => {
+    setBackupBusy(true);
+    try {
+      const res = await api.post(
+        '/inventory-software/backup/create',
+        { triggerType: 'MANUAL', includePayload: Boolean(downloadFormat) },
+        reqConfig
+      );
+      if (res.data?.snapshotObj) {
+        try {
+          localStorage.setItem('BV_DAILY_EMERGENCY_SQL_BACKUP', JSON.stringify(res.data.snapshotObj));
+        } catch {}
+      }
+      if (downloadFormat === 'sql' && res.data?.sqlDump) {
+        const blob = new Blob([res.data.sqlDump], { type: 'application/sql;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${res.data.backup?.backup_code || 'BhumiVera_SQL_Backup'}.sql`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      } else if (downloadFormat === 'json' && res.data?.snapshotObj) {
+        const blob = new Blob([JSON.stringify(res.data.snapshotObj, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${res.data.backup?.backup_code || 'BhumiVera_Snapshot'}.avbak.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+      }
+      showNotice('success', res.data?.message || 'Daily SQL & Snapshot backup created and synced with Railway & Vercel!');
+      await fetchBootstrapData(true);
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Backup creation failed.');
+    } finally {
+      setBackupBusy(false);
+    }
+  };
+
+  const handleDownloadVaultBackup = async (backupId, backupCode, format = 'sql') => {
+    try {
+      const res = await api.get(`/inventory-software/backup/download/${backupId}`, {
+        ...reqConfig,
+        params: { format },
+        responseType: 'blob',
+      });
+      const url = URL.createObjectURL(res.data);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = format === 'json' ? `${backupCode}.avbak.json` : `${backupCode}.sql`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (err) {
+      showNotice('error', 'Could not download backup file.');
+    }
+  };
+
+  const handleRestoreFromVault = async backup => {
+    if (
+      !window.confirm(
+        `Restore Full Database Backup "${backup.backup_code}" (${backup.backup_date})? This will restore all ${backup.rows_count} records across ${backup.tables_count} MySQL tables on Railway and sync Vercel immediately.`
+      )
+    )
+      return;
+    setBackupBusy(true);
+    try {
+      const res = await api.post(
+        '/inventory-software/backup/restore',
+        { backupId: backup.id },
+        reqConfig
+      );
+      showNotice('success', res.data?.message || 'Database restored and synced!');
+      await fetchBootstrapData(true);
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Database restore failed.');
+    } finally {
+      setBackupBusy(false);
+    }
+  };
+
+  const handleUploadRestoreBackupFile = e => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (
+      !window.confirm(
+        `Restore Railway MySQL database from "${file.name}"? All products, stock, orders, users, and settings in the backup will be restored.`
+      )
+    )
+      return;
+    const reader = new FileReader();
+    reader.onload = async ev => {
+      setBackupBusy(true);
+      try {
+        const content = String(ev.target.result || '');
+        const isSql = file.name.toLowerCase().endsWith('.sql') || content.trim().startsWith('--') || content.includes('CREATE TABLE');
+        const payload = isSql ? { sqlDump: content } : { snapshotObj: JSON.parse(content) };
+        const res = await api.post('/inventory-software/backup/restore', payload, reqConfig);
+        showNotice('success', res.data?.message || 'Database restored from file and synced with Vercel & Railway!');
+        await fetchBootstrapData(true);
+      } catch (err) {
+        showNotice('error', err.response?.data?.message || 'Failed to restore backup file: ' + err.message);
+      } finally {
+        setBackupBusy(false);
+      }
+    };
+    reader.readAsText(file);
+  };
+
+  const handleExportOnlineOrdersExcel = () => {
+    const rows = filteredOnlineOrders.map(o => ({
+      'Order #': o.orderNumber,
+      'Order Date': new Date(o.createdAt).toLocaleString(),
+      'Customer Name': o.customerName,
+      'Customer Phone': o.customerPhone,
+      'Shipping Address': o.fullFormattedAddress,
+      City: o.city,
+      State: o.state,
+      Pincode: o.pincode,
+      'Ordered Items': (o.items || []).map(i => `${i.name} (x${i.quantity})`).join('; '),
+      'Total (INR)': o.total,
+      'Payment Mode': o.paymentMode,
+      'Payment Status': o.paymentStatus,
+      'Order Status': o.status,
+      'Courier Partner': o.courier || '-',
+      'Tracking AWB': o.trackingNumber || '-',
+      'Estimated Delivery Date': o.estimatedDeliveryDate || '-',
+      'Live Location Checkpoint': o.currentLocationCheckpoint || '-',
+      'RTO Status': o.rtoRestockMode || 'NONE',
+    }));
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Online_Orders_Lifecycle');
+    XLSX.writeFile(wb, `BhumiVera_Orders_${new Date().toISOString().slice(0, 10)}.xlsx`);
   };
 
   // ==========================================================================
@@ -1703,35 +2256,37 @@ export default function InventorySoftware() {
   // ==========================================================================
   const navGroups = [
     {
-      title: '1. Omnichannel Core',
+      title: '1. Order Lifecycle & Dispatch',
       items: [
-        { id: 'dash', label: 'Executive Dashboard', icon: Activity },
-        { id: 'inv', label: 'Master Inventory & Web Sync', icon: Boxes },
-        { id: 'sale', label: 'Offline Shop POS Billing', icon: ShoppingCart },
+        { id: 'dash', label: 'Omnichannel Overview', icon: Activity },
+        { id: 'online', label: `Order Lifecycle (${dashMetrics.pendingOnlineDispatch})`, icon: Globe },
+        { id: 'labels', label: 'Auto Shipping Labels & Zones', icon: Printer },
+        { id: 'ret', label: 'Undelivered (RTO) Restock', icon: RotateCcw },
       ],
     },
     {
-      title: '2. Storage Keeper & Vault',
+      title: '2. Unified Stock & POS Billing',
+      items: [
+        { id: 'inv', label: 'Main Inventory (Online+Offline)', icon: Boxes },
+        { id: 'sale', label: 'POS Billing (Online+Offline)', icon: ShoppingCart },
+        { id: 'scanner', label: `QR Scanner API (${scannerQueue.length})`, icon: QrCode },
+      ],
+    },
+    {
+      title: '3. Storage Keeper & GRN',
       items: [
         { id: 'keeper', label: 'Storage Keeper & Bin Map', icon: Warehouse },
-        { id: 'audit', label: 'Physical Stock Audit', icon: ClipboardCheck },
-        { id: 'online', label: `Website Orders (${dashMetrics.pendingOnlineDispatch})`, icon: Globe },
         { id: 'grn', label: 'Suppliers & GRN Inward', icon: Truck },
+        { id: 'audit', label: 'Physical Stock Audit', icon: ClipboardCheck },
+        { id: 'trans', label: 'Damage / Stock Write-Off', icon: Wrench },
       ],
     },
     {
-      title: '3. Customer & Khata',
+      title: '4. Daily SQL Backup & Ledger',
       items: [
-        { id: 'map', label: 'Customer Khata Ledger', icon: Users },
-        { id: 'trans', label: 'Stock Adjustments', icon: Wrench },
-        { id: 'ret', label: 'Returns & Quarantine', icon: RotateCcw },
-      ],
-    },
-    {
-      title: '4. Intelligence & Audit',
-      items: [
-        { id: 'rep', label: 'Time-Machine Reports', icon: FileSpreadsheet },
-        { id: 'logs', label: 'Stock & Audit Ledger', icon: History },
+        { id: 'backup', label: 'Daily SQL Backup (Railway/Vercel)', icon: HardDrive },
+        { id: 'rep', label: 'POS Invoices & Reports', icon: FileSpreadsheet },
+        { id: 'logs', label: 'Stock Movement & Audit Log', icon: History },
       ],
     },
   ];
@@ -2403,82 +2958,92 @@ export default function InventorySoftware() {
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               {/* Left 7 Cols: Customer & Product Selector */}
               <div className="lg:col-span-7 space-y-5">
-                {/* Customer Selection Card */}
-                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-black uppercase text-slate-800 flex items-center gap-2">
-                      <Users className="w-4 h-4 text-emerald-600" />
-                      1. Select Shop Customer / Walk-In Patron
-                    </label>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setEditingCustomer({
-                          id: null,
-                          name: '',
-                          phone: '',
-                          email: '',
-                          gstin: '',
-                          loc: 'Asansol',
-                          type: 'Walk-in',
-                          wallet: 0,
-                          creditLimit: 50000,
-                        });
-                        setActiveModal('customer');
-                      }}
-                      className="px-3 py-1.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 text-xs font-bold"
-                    >
-                      + New Customer Profile
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <select
-                      value={selectedPosCustomer?.id || ''}
-                      onChange={e => {
-                        const found = customers.find(c => String(c.id) === e.target.value);
-                        if (found) setSelectedPosCustomer(found);
-                      }}
-                      className="px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-bold text-xs"
-                    >
-                      {customers.map(c => (
-                        <option key={c.id} value={c.id}>
-                          {c.name} ({c.phone || 'Walk-in'}) — Khata: ₹{c.wallet}
-                        </option>
-                      ))}
-                    </select>
-
-                    <input
-                      type="text"
-                      value={posCustomerSearch}
-                      onChange={e => {
-                        setPosCustomerSearch(e.target.value);
-                        const match = customers.find(
-                          c =>
-                            c.name.toLowerCase().includes(e.target.value.toLowerCase()) ||
-                            c.phone?.includes(e.target.value)
-                        );
-                        if (match) setSelectedPosCustomer(match);
-                      }}
-                      placeholder="Quick search customer by name or phone…"
-                      className="px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 text-xs"
-                    />
-                  </div>
-
-                  {selectedPosCustomer && (
-                    <div className="p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 flex flex-wrap items-center justify-between gap-2 text-xs">
+                {/* Mobile QR Scanner Live Bridge & Invoice Recipient Details */}
+                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+                  <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-900 to-slate-900 text-white flex flex-wrap items-center justify-between gap-3">
+                    <div className="flex items-center gap-2.5">
+                      <QrCode className="w-5 h-5 text-emerald-400 shrink-0" />
                       <div>
-                        <span className="font-bold text-emerald-950">{selectedPosCustomer.name}</span>{' '}
-                        <span className="font-mono text-emerald-700">({selectedPosCustomer.phone})</span>
-                      </div>
-                      <div className="font-bold">
-                        Khata Balance:{' '}
-                        <span className={selectedPosCustomer.wallet < 0 ? 'text-rose-600' : 'text-emerald-700'}>
-                          ₹{selectedPosCustomer.wallet}
-                        </span>
+                        <div className="text-xs font-black uppercase tracking-wide">
+                          Mobile QR Code Scanner Bridge ({scannerQueue.length} Queued)
+                        </div>
+                        <div className="text-[11px] text-slate-300">
+                          Scan product QR codes from your Android Scanner App or enter QR/SKU below to auto-fill bill
+                        </div>
                       </div>
                     </div>
-                  )}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={handlePullMobileScannerQueueToPos}
+                        className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs"
+                      >
+                        Sync Mobile Scanned Items ({scannerQueue.length})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveView('scanner')}
+                        className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 font-bold text-xs"
+                      >
+                        API Pairing QR
+                      </button>
+                    </div>
+                  </div>
+
+                  <form onSubmit={handleScanQrToPos} className="grid grid-cols-12 gap-2">
+                    <input
+                      type="text"
+                      value={scannerInput}
+                      onChange={e => setScannerInput(e.target.value)}
+                      placeholder="Scan or paste Product QR URL, Serial #, Barcode, or SKU (e.g. BV-LUX-CSOAP-04)…"
+                      className="col-span-7 px-3.5 py-2 rounded-xl bg-emerald-50/60 border border-emerald-300 font-mono text-xs"
+                    />
+                    <input
+                      type="number"
+                      min={1}
+                      value={scannerQty}
+                      onChange={e => setScannerQty(e.target.value)}
+                      title="Scanned Quantity (e.g. 10 soaps)"
+                      className="col-span-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono font-bold text-xs text-center"
+                    />
+                    <button
+                      type="submit"
+                      className="col-span-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs"
+                    >
+                      + Scan to Bill
+                    </button>
+                  </form>
+
+                  <div className="border-t border-slate-100 pt-3">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-[11px] font-black uppercase text-slate-700">
+                        1. Bill Recipient Details (Optional — Full Customer CRM is in /admin)
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <input
+                        type="text"
+                        value={posCustomerForm.name}
+                        onChange={e => setPosCustomerForm(prev => ({ ...prev, name: e.target.value }))}
+                        placeholder="Customer Name (or Walk-in)"
+                        className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold"
+                      />
+                      <input
+                        type="text"
+                        value={posCustomerForm.phone}
+                        onChange={e => setPosCustomerForm(prev => ({ ...prev, phone: e.target.value }))}
+                        placeholder="WhatsApp / Phone Number"
+                        className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono text-xs"
+                      />
+                      <input
+                        type="text"
+                        value={posCustomerForm.gstin}
+                        onChange={e => setPosCustomerForm(prev => ({ ...prev, gstin: e.target.value }))}
+                        placeholder="Customer GSTIN (Optional)"
+                        className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono text-xs"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 {/* Product Barcode Scanner & Picker Card */}
@@ -3105,107 +3670,409 @@ export default function InventorySoftware() {
           )}
 
           {/* =================================================================
-              VIEW 6: LIVE ONLINE WEBSITE ORDERS & DISPATCH QUEUE
+              VIEW 6: FULL ONLINE ORDER LIFECYCLE, TRACKING & DISPATCH HUB
              ================================================================= */}
           {activeView === 'online' && (
-            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <div>
-                  <h3 className="text-base font-black uppercase text-slate-900">
-                    Live Online Storefront Orders &amp; Warehouse Dispatch Queue
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Orders placed by customers on <code className="text-emerald-700 font-bold">www.bhumivera.com</code>{' '}
-                    appear here automatically for picking, weighing, and courier dispatch.
-                  </p>
+            <div className="space-y-5">
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div className="bg-white rounded-2xl p-4 border border-slate-200 border-l-4 border-l-slate-800 shadow-sm">
+                  <div className="text-[10px] font-bold uppercase text-slate-500">Total Routed Orders</div>
+                  <div className="text-2xl font-black text-slate-900 mt-1 font-mono">{onlineOrders.length}</div>
+                  <div className="text-[10px] text-emerald-700 font-semibold">100% Routed from bhumivera.com</div>
                 </div>
-                <button
-                  type="button"
-                  onClick={() => fetchBootstrapData()}
-                  className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold"
-                >
-                  Refresh Online Queue
-                </button>
+                <div className="bg-white rounded-2xl p-4 border border-slate-200 border-l-4 border-l-amber-500 shadow-sm">
+                  <div className="text-[10px] font-bold uppercase text-slate-500">Pending / To Pack</div>
+                  <div className="text-2xl font-black text-amber-600 mt-1 font-mono">
+                    {onlineOrders.filter(o => ['pending', 'confirmed', 'packed'].includes(o.status)).length}
+                  </div>
+                  <div className="text-[10px] text-slate-500">Awaiting Warehouse Dispatch</div>
+                </div>
+                <div className="bg-white rounded-2xl p-4 border border-slate-200 border-l-4 border-l-purple-500 shadow-sm">
+                  <div className="text-[10px] font-bold uppercase text-slate-500">Shipped / In Transit</div>
+                  <div className="text-2xl font-black text-purple-700 mt-1 font-mono">
+                    {onlineOrders.filter(o => o.status === 'shipped').length}
+                  </div>
+                  <div className="text-[10px] text-slate-500">With Live AWB Tracking</div>
+                </div>
+                <div className="bg-white rounded-2xl p-4 border border-slate-200 border-l-4 border-l-emerald-500 shadow-sm">
+                  <div className="text-[10px] font-bold uppercase text-slate-500">Delivered Orders</div>
+                  <div className="text-2xl font-black text-emerald-700 mt-1 font-mono">
+                    {onlineOrders.filter(o => o.status === 'delivered').length}
+                  </div>
+                  <div className="text-[10px] text-emerald-700 font-semibold">Non-Returnable once Delivered</div>
+                </div>
+                <div className="bg-white rounded-2xl p-4 border border-slate-200 border-l-4 border-l-rose-500 shadow-sm">
+                  <div className="text-[10px] font-bold uppercase text-slate-500">Undelivered / RTO</div>
+                  <div className="text-2xl font-black text-rose-600 mt-1 font-mono">
+                    {onlineOrders.filter(o => o.status === 'returned').length}
+                  </div>
+                  <div className="text-[10px] text-rose-600 font-semibold">Courier RTO Restock Queue</div>
+                </div>
               </div>
 
-              <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                <table className="w-full text-xs">
-                  <thead className="bg-slate-900 text-white uppercase text-[10px]">
-                    <tr>
-                      <th className="py-3 px-4 text-left">Order #</th>
-                      <th className="py-3 px-4 text-left">Customer &amp; Destination</th>
-                      <th className="py-3 px-4 text-left">Ordered Formulations</th>
-                      <th className="py-3 px-4 text-right">Amount &amp; Mode</th>
-                      <th className="py-3 px-4 text-center">Current Status</th>
-                      <th className="py-3 px-4 text-right">Warehouse Dispatch Action</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200">
-                    {onlineOrders.length === 0 ? (
+              <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                  <div>
+                    <h3 className="text-base font-black uppercase text-slate-900">
+                      Complete Online Order Lifecycle — Placement → Packing → Shipment → Delivery → RTO
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Every order placed on <code className="text-emerald-700 font-bold">bhumivera.com</code> routes here
+                      automatically with live stock verification, automatic delivery date, tracking ID editor, and 1-click
+                      shipping label printing.
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveView('labels')}
+                      className="px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 text-xs font-bold flex items-center gap-1.5"
+                    >
+                      <Printer className="w-3.5 h-3.5" /> Auto Shipping Label Studio
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleExportOnlineOrdersExcel}
+                      className="px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-xs font-bold flex items-center gap-1.5"
+                    >
+                      <Download className="w-3.5 h-3.5 text-emerald-600" /> Export Orders (.xlsx)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => fetchBootstrapData()}
+                      className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" /> Refresh Orders
+                    </button>
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                  <div className="md:col-span-2 relative">
+                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" />
+                    <input
+                      type="text"
+                      value={orderSearch}
+                      onChange={e => setOrderSearch(e.target.value)}
+                      placeholder="Search by Order #, Customer Name, Phone, City (e.g. Delhi), State, Pincode, or Tracking AWB…"
+                      className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs focus:bg-white focus:border-emerald-500 focus:outline-none"
+                    />
+                  </div>
+                  <select
+                    value={orderStatusFilter}
+                    onChange={e => setOrderStatusFilter(e.target.value)}
+                    className="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold"
+                  >
+                    <option value="ALL">All Order Statuses ({onlineOrders.length})</option>
+                    <option value="pending">Pending (New Orders)</option>
+                    <option value="confirmed">Confirmed</option>
+                    <option value="packed">Packed &amp; Weighed</option>
+                    <option value="shipped">Shipped / In Transit</option>
+                    <option value="delivered">Delivered</option>
+                    <option value="returned">Undelivered / Courier RTO</option>
+                    <option value="cancelled">Cancelled</option>
+                  </select>
+                </div>
+
+                <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                  <table className="w-full text-xs">
+                    <thead className="bg-slate-900 text-white uppercase text-[10px]">
                       <tr>
-                        <td colSpan={6} className="py-10 text-center text-slate-400">
-                          No active online orders awaiting warehouse dispatch.
-                        </td>
+                        <th className="py-3 px-3 text-left">Order # &amp; Date</th>
+                        <th className="py-3 px-3 text-left">Customer &amp; Auto Label Address</th>
+                        <th className="py-3 px-3 text-left">Ordered Items vs Live Stock</th>
+                        <th className="py-3 px-3 text-left">Delivery Date &amp; Where Product Is</th>
+                        <th className="py-3 px-3 text-right">Amount &amp; Payment</th>
+                        <th className="py-3 px-3 text-center">Lifecycle Status</th>
+                        <th className="py-3 px-3 text-right">Manage Lifecycle, Label &amp; Tracking</th>
                       </tr>
-                    ) : (
-                      onlineOrders.map(ord => (
-                        <tr key={ord.id} className="hover:bg-slate-50">
-                          <td className="py-3 px-4 font-mono">
-                            <div className="font-bold text-slate-900">#{ord.orderNumber}</div>
-                            <div className="text-[10px] text-slate-500">
-                              {new Date(ord.createdAt).toLocaleString()}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            <div className="font-bold text-slate-900">{ord.customerName}</div>
-                            <div className="text-[11px] text-slate-500">
-                              {ord.city} {ord.state} {ord.pincode} • {ord.customerPhone}
-                            </div>
-                          </td>
-                          <td className="py-3 px-4">
-                            {(ord.items || []).map((it, idx) => (
-                              <div key={idx} className="text-[11px] font-semibold text-slate-700">
-                                • {it.name} <span className="font-mono font-bold text-emerald-700">×{it.quantity}</span>
-                              </div>
-                            ))}
-                          </td>
-                          <td className="py-3 px-4 text-right font-mono">
-                            <div className="font-bold text-slate-900">₹{ord.total}</div>
-                            <div className="text-[10px] uppercase text-slate-500">
-                              {ord.paymentMode} ({ord.paymentStatus})
-                            </div>
-                          </td>
-                          <td className="py-3 px-4 text-center">
-                            <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 font-bold uppercase text-[10px]">
-                              {ord.status}
-                            </span>
-                            {ord.trackingNumber && (
-                              <div className="text-[10px] font-mono text-slate-500 mt-1">AWB: {ord.trackingNumber}</div>
-                            )}
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            <div className="inline-flex items-center gap-1">
-                              {['packed', 'shipped', 'delivered'].map(st => (
-                                <button
-                                  key={st}
-                                  type="button"
-                                  onClick={() => handleUpdateOnlineOrderStatus(ord.id, st)}
-                                  className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase ${
-                                    ord.status === st
-                                      ? 'bg-emerald-600 text-white'
-                                      : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                                  }`}
-                                >
-                                  {st}
-                                </button>
-                              ))}
-                            </div>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {filteredOnlineOrders.length === 0 ? (
+                        <tr>
+                          <td colSpan={7} className="py-10 text-center text-slate-400">
+                            No orders match this filter.
                           </td>
                         </tr>
-                      ))
-                    )}
-                  </tbody>
-                </table>
+                      ) : (
+                        filteredOnlineOrders.map(ord => (
+                          <tr key={ord.id} className="hover:bg-slate-50 align-top">
+                            <td className="py-3 px-3 font-mono">
+                              <div className="font-black text-slate-900 text-sm">#{ord.orderNumber}</div>
+                              <div className="text-[10px] text-slate-500">
+                                {new Date(ord.createdAt).toLocaleString()}
+                              </div>
+                              <span className="mt-1 inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[9px] font-bold uppercase">
+                                {ord.deliveryType || 'standard'}
+                              </span>
+                            </td>
+
+                            <td className="py-3 px-3">
+                              <div className="font-bold text-slate-900">{ord.customerName}</div>
+                              <div className="text-[11px] text-slate-600 max-w-xs line-clamp-2">
+                                {ord.fullFormattedAddress || `${ord.city} ${ord.state} ${ord.pincode}`}
+                              </div>
+                              <div className="text-[11px] font-mono text-emerald-700 font-semibold mt-0.5">
+                                Phone: {ord.customerPhone || '-'}
+                              </div>
+                              {ord.googleMapsUrl && (
+                                <a
+                                  href={ord.googleMapsUrl}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 text-[10px] text-blue-600 hover:underline font-semibold mt-0.5"
+                                >
+                                  <MapPin className="w-3 h-3" /> Open Customer Pin on Maps
+                                </a>
+                              )}
+                            </td>
+
+                            <td className="py-3 px-3 space-y-1.5">
+                              {(ord.items || []).map((it, idx) => (
+                                <div
+                                  key={idx}
+                                  className="p-1.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px]"
+                                >
+                                  <div className="font-bold text-slate-900">
+                                    {it.name}{' '}
+                                    <span className="font-mono font-black text-emerald-700">×{it.quantity}</span>
+                                  </div>
+                                  <div className="font-mono text-[10px] text-slate-500 flex items-center gap-2">
+                                    <span>
+                                      Main Stock:{' '}
+                                      <b className={it.inStockQty > 5 ? 'text-emerald-700' : 'text-rose-600'}>
+                                        {it.inStockQty} avail
+                                      </b>
+                                    </span>
+                                    <span>• Bin: {it.binCode}</span>
+                                  </div>
+                                </div>
+                              ))}
+                            </td>
+
+                            <td className="py-3 px-3 space-y-1">
+                              <div className="text-[11px]">
+                                <span className="text-slate-500 font-semibold">Est. Delivery:</span>{' '}
+                                <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                                  {ord.estimatedDeliveryDate || 'Auto'}
+                                </span>
+                              </div>
+                              <div className="text-[11px] text-slate-700 font-semibold">
+                                {ord.currentLocationCheckpoint}
+                              </div>
+                              {ord.trackingNumber ? (
+                                <div className="text-[10px] font-mono bg-purple-50 text-purple-900 px-2 py-0.5 rounded border border-purple-200 inline-block">
+                                  {ord.courier || 'Courier'} • AWB: <b>{ord.trackingNumber}</b>
+                                </div>
+                              ) : (
+                                <div className="text-[10px] text-amber-700 font-semibold">
+                                  AWB / Tracking ID not assigned yet
+                                </div>
+                              )}
+                            </td>
+
+                            <td className="py-3 px-3 text-right font-mono">
+                              <div className="font-black text-slate-900 text-sm">₹{ord.total}</div>
+                              <div className="text-[10px] uppercase font-bold text-slate-600">
+                                {ord.paymentMode} ({ord.paymentStatus})
+                              </div>
+                            </td>
+
+                            <td className="py-3 px-3 text-center">
+                              <span
+                                className={`px-2.5 py-1 rounded-full font-bold uppercase text-[10px] inline-block ${
+                                  ord.status === 'delivered'
+                                    ? 'bg-emerald-100 text-emerald-800'
+                                    : ord.status === 'shipped'
+                                    ? 'bg-purple-100 text-purple-800'
+                                    : ord.status === 'returned' || ord.status === 'cancelled'
+                                    ? 'bg-rose-100 text-rose-700'
+                                    : 'bg-amber-100 text-amber-800'
+                                }`}
+                              >
+                                {ord.status}
+                              </span>
+                              {ord.rtoRestockMode && ord.rtoRestockMode !== 'NONE' && (
+                                <div className="text-[9px] font-bold text-rose-700 mt-1">
+                                  RTO: {ord.rtoRestockMode}
+                                </div>
+                              )}
+                            </td>
+
+                            <td className="py-3 px-3 text-right space-y-1.5">
+                              <div className="flex flex-wrap justify-end gap-1">
+                                {['confirmed', 'packed', 'shipped', 'delivered'].map(st => (
+                                  <button
+                                    key={st}
+                                    type="button"
+                                    onClick={() => handleUpdateOnlineOrderStatus(ord.id, st)}
+                                    className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase ${
+                                      ord.status === st
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                                    }`}
+                                  >
+                                    {st}
+                                  </button>
+                                ))}
+                              </div>
+                              <div className="flex flex-wrap justify-end gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setEditingOrder({ ...ord });
+                                    setActiveModal('order-detail');
+                                  }}
+                                  className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-bold flex items-center gap-1"
+                                >
+                                  <Edit3 className="w-3 h-3" /> Edit Order / Tracking
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handlePrintShippingLabels(ord)}
+                                  className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold flex items-center gap-1"
+                                >
+                                  <Printer className="w-3 h-3" /> Label
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handlePrintOnlineOrderGstInvoice(ord)}
+                                  className="px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-[10px] font-bold"
+                                >
+                                  GST Bill
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* =================================================================
+              VIEW 6B: AUTO-FETCHED CUSTOMER SHIPPING LABELS & ZONES STUDIO
+             ================================================================= */}
+          {activeView === 'labels' && (
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
+                <div>
+                  <h3 className="text-base font-black uppercase text-slate-900">
+                    Automatic Customer Shipping Label Studio (Zero Manual Typing)
+                  </h3>
+                  <p className="text-xs text-slate-500">
+                    Whatever shipping address the customer enters at checkout (e.g. Delhi, Mumbai, Kolkata, Bengaluru) is
+                    automatically fetched here for 1-click 4×6 Courier Label &amp; Packing Slip printing. Full Customer
+                    CRM remains isolated in <code className="text-emerald-700 font-bold">/admin</code>.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const chosen = onlineOrders.filter(o => selectedLabelOrderIds.includes(o.id));
+                      handlePrintShippingLabels(chosen.length > 0 ? chosen : filteredOnlineOrders.slice(0, 10));
+                    }}
+                    className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase flex items-center gap-2 shadow-sm"
+                  >
+                    <Printer className="w-4 h-4" />
+                    Print {selectedLabelOrderIds.length > 0 ? `${selectedLabelOrderIds.length} Selected` : 'Top 10'} Shipping Labels
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {filteredOnlineOrders.slice(0, 30).map(ord => {
+                  const isSelected = selectedLabelOrderIds.includes(ord.id);
+                  const isCod = String(ord.paymentMode || '').toUpperCase() === 'COD' && ord.paymentStatus !== 'paid';
+                  return (
+                    <div
+                      key={ord.id}
+                      className={`bg-white rounded-2xl p-5 border-2 transition shadow-sm flex flex-col justify-between space-y-3 ${
+                        isSelected ? 'border-emerald-500 bg-emerald-50/20' : 'border-slate-200'
+                      }`}
+                    >
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
+                          <label className="flex items-center gap-2 cursor-pointer font-mono font-black text-slate-900 text-sm">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={e => {
+                                if (e.target.checked) {
+                                  setSelectedLabelOrderIds(prev => [...prev, ord.id]);
+                                } else {
+                                  setSelectedLabelOrderIds(prev => prev.filter(id => id !== ord.id));
+                                }
+                              }}
+                              className="w-4 h-4 accent-emerald-600"
+                            />
+                            #{ord.orderNumber}
+                          </label>
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
+                              isCod ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-800'
+                            }`}
+                          >
+                            {isCod ? `COD: Collect ₹${ord.total}` : `PREPAID: ₹${ord.total}`}
+                          </span>
+                        </div>
+
+                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
+                          <div className="text-[10px] font-bold uppercase text-slate-400">
+                            Auto-Fetched Customer Address ({ord.city || 'India'}):
+                          </div>
+                          <div className="font-black text-slate-900 text-sm">{ord.customerName}</div>
+                          <div className="text-xs text-slate-700 leading-relaxed">
+                            {ord.line1}
+                            {ord.line2 ? `, ${ord.line2}` : ''}
+                            {ord.landmark ? ` (Landmark: ${ord.landmark})` : ''}
+                            <br />
+                            <b className="text-slate-900">
+                              {ord.city}, {ord.state} — {ord.pincode}
+                            </b>
+                          </div>
+                          <div className="text-xs font-mono font-bold text-emerald-700 pt-1">
+                            Phone: {ord.customerPhone || '-'}
+                          </div>
+                        </div>
+
+                        <div className="text-[11px] text-slate-600 space-y-0.5">
+                          <div>
+                            <b>Items:</b> {(ord.items || []).map(i => `${i.name} (×${i.quantity})`).join(', ')}
+                          </div>
+                          <div>
+                            <b>Est. Delivery:</b> <span className="font-mono font-bold">{ord.estimatedDeliveryDate}</span> •{' '}
+                            <b>AWB:</b> <span className="font-mono">{ord.trackingNumber || 'Pending'}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
+                        <button
+                          type="button"
+                          onClick={() => handlePrintShippingLabels(ord)}
+                          className="flex-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center justify-center gap-1.5"
+                        >
+                          <Printer className="w-3.5 h-3.5" /> Print 4×6 Label
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setEditingOrder({ ...ord });
+                            setActiveModal('order-detail');
+                          }}
+                          className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold"
+                        >
+                          Edit Address / AWB
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             </div>
           )}
@@ -3335,131 +4202,150 @@ export default function InventorySoftware() {
           )}
 
           {/* =================================================================
-              VIEW 8: CUSTOMER LEDGER & KHATA MANAGEMENT
+              VIEW 8: UNIQUE PRODUCT QR CODES & FUTURE ANDROID SCANNER APP API
              ================================================================= */}
-          {activeView === 'map' && (
-            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-              <div className="flex items-center justify-between border-b border-slate-100 pb-4">
-                <div>
-                  <h3 className="text-base font-black uppercase text-slate-900">
-                    Customer Directory &amp; Khata Credit Ledger
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Manage retail &amp; B2B salon accounts, record payments received with screenshot proof, and send
-                    WhatsApp reminders.
-                  </p>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setEditingCustomer({
-                      id: null,
-                      name: '',
-                      phone: '',
-                      email: '',
-                      gstin: '',
-                      loc: '',
-                      type: 'Walk-in',
-                      wallet: 0,
-                      creditLimit: 50000,
-                    });
-                    setActiveModal('customer');
-                  }}
-                  className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5"
-                >
-                  <UserPlus className="w-4 h-4" /> Add Customer Profile
-                </button>
-              </div>
+          {activeView === 'scanner' && (
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div className="lg:col-span-5 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                      <h3 className="text-base font-black uppercase text-slate-900 flex items-center gap-2">
+                        <QrCode className="w-5 h-5 text-emerald-600" />
+                        Android Mobile QR Scanner App API Pairing
+                      </h3>
+                      <p className="text-xs text-slate-500 mt-0.5">
+                        100% Ready for your Android QR Scanner App: Scan items on mobile and they automatically appear in
+                        your POS Billing Cart!
+                      </p>
+                    </div>
+                  </div>
 
-              <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                <table className="w-full text-xs">
-                  <thead className="bg-slate-900 text-white uppercase text-[10px]">
-                    <tr>
-                      <th className="py-3 px-4 text-left">Customer / Business Name</th>
-                      <th className="py-3 px-4 text-left">Phone &amp; GSTIN</th>
-                      <th className="py-3 px-4 text-left">Location</th>
-                      <th className="py-3 px-4 text-center">Segment</th>
-                      <th className="py-3 px-4 text-right">Khata Balance (₹)</th>
-                      <th className="py-3 px-4 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200">
-                    {customers.map(c => (
-                      <tr key={c.id} className="hover:bg-slate-50">
-                        <td className="py-3 px-4 font-bold text-slate-900">{c.name}</td>
-                        <td className="py-3 px-4 font-mono">
-                          <div>{c.phone || '-'}</div>
-                          {c.gstin && <div className="text-[10px] text-slate-500">GSTIN: {c.gstin}</div>}
-                        </td>
-                        <td className="py-3 px-4 text-slate-600">{c.loc || '-'}</td>
-                        <td className="py-3 px-4 text-center">
-                          <span className="px-2.5 py-0.5 rounded-full bg-slate-100 text-slate-700 font-bold text-[10px]">
-                            {c.type}
-                          </span>
-                        </td>
-                        <td
-                          className={`py-3 px-4 text-right font-mono font-black text-sm ${
-                            c.wallet < 0 ? 'text-rose-600' : 'text-emerald-700'
-                          }`}
+                  <div className="p-4 rounded-2xl bg-slate-900 text-white flex items-center gap-4">
+                    {pairingQrUrl && (
+                      <img src={pairingQrUrl} alt="Scanner API Pairing QR" className="w-28 h-28 rounded-xl bg-white p-1.5 shrink-0" />
+                    )}
+                    <div className="space-y-1.5 text-xs min-w-0">
+                      <div className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold">
+                        Scanner API Key (x-scanner-api-key)
+                      </div>
+                      <code className="block p-2 rounded-lg bg-slate-950 text-amber-300 font-mono text-[11px] break-all border border-slate-800">
+                        {cfg.scannerApiKey}
+                      </code>
+                      <div className="text-[10px] text-slate-400">
+                        POST <code className="text-emerald-300">/api/inventory-software/scanner/scan</code>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 space-y-3">
+                    <div className="text-xs font-black uppercase text-emerald-950">
+                      Test Live QR Scan → POS Cart (e.g. Sell 10 Soaps via QR)
+                    </div>
+                    <form onSubmit={handleScanQrToPos} className="space-y-3 text-xs">
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1">
+                          Select or Scan Product QR Payload / SKU / Serial #
+                        </label>
+                        <select
+                          value={scannerInput}
+                          onChange={e => setScannerInput(e.target.value)}
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold mb-2"
                         >
-                          ₹{c.wallet}
-                        </td>
-                        <td className="py-3 px-4 text-right">
-                          <div className="inline-flex items-center gap-1.5">
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setKhataForm({
-                                  customerId: c.id,
-                                  customerName: c.name,
-                                  currentBal: c.wallet,
-                                  type: 'RECEIVE_PAYMENT',
-                                  amount: c.wallet < 0 ? String(Math.abs(c.wallet)) : '',
-                                  paymentMode: 'UPI',
-                                  note: '',
-                                  proofBase64: null,
-                                });
-                                setActiveModal('khata');
-                              }}
-                              className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold"
-                            >
-                              Transact Khata
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                if (c.wallet >= 0) {
-                                  showNotice('info', `${c.name} has no outstanding Khata debt.`);
-                                  return;
-                                }
-                                const debt = Math.abs(c.wallet);
-                                const txt = `Dear ${c.name} 🙏\n\nFriendly reminder regarding your outstanding Khata balance of *₹${debt}* with *${cfg.storeName}*.\n\nPlease remit via UPI to: *${cfg.upiId}*\n\nThank you!`;
-                                const ph = (c.phone || '').replace(/[^0-9]/g, '');
-                                window.open(
-                                  `https://api.whatsapp.com/send?phone=${ph}&text=${encodeURIComponent(txt)}`,
-                                  '_blank'
-                                );
-                              }}
-                              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold"
-                            >
-                              Remind WA
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => {
-                                setEditingCustomer({ ...c });
-                                setActiveModal('customer');
-                              }}
-                              className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700"
-                            >
-                              Edit
-                            </button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+                          <option value="">-- Pick a Product QR to Simulate Mobile Scan --</option>
+                          {items.map(it => (
+                            <option key={it.id} value={it.qrCodePayload || it.sku}>
+                              {it.name} ({it.sku}) — Stock: {it.qty}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          type="text"
+                          value={scannerInput}
+                          onChange={e => setScannerInput(e.target.value)}
+                          placeholder="Or paste raw QR URL / SKU / Barcode / Bottle Serial…"
+                          className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-mono"
+                        />
+                      </div>
+                      <div className="grid grid-cols-2 gap-3 items-end">
+                        <div>
+                          <label className="block font-bold text-slate-700 mb-1">Quantity Scanned (e.g. 10)</label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={scannerQty}
+                            onChange={e => setScannerQty(e.target.value)}
+                            className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-mono font-bold"
+                          />
+                        </div>
+                        <button
+                          type="submit"
+                          className="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase"
+                        >
+                          Push to POS Bill →
+                        </button>
+                      </div>
+                    </form>
+                  </div>
+                </div>
+
+                <div className="lg:col-span-7 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
+                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                    <div>
+                      <h3 className="text-base font-black uppercase text-slate-900">
+                        Unique Product QR Codes &amp; Live Mobile Scanner Queue ({scannerQueue.length})
+                      </h3>
+                      <p className="text-xs text-slate-500">
+                        Print unique QR labels for every product or pull mobile-scanned items directly into POS Billing.
+                      </p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handlePullMobileScannerQueueToPos}
+                      className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold"
+                    >
+                      Open POS Cart with Scanned Items →
+                    </button>
+                  </div>
+
+                  <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                    <table className="w-full text-xs">
+                      <thead className="bg-slate-900 text-white uppercase text-[10px]">
+                        <tr>
+                          <th className="py-2.5 px-3 text-left">SKU &amp; Barcode</th>
+                          <th className="py-2.5 px-3 text-left">Formulation</th>
+                          <th className="py-2.5 px-3 text-left">Unique QR Payload</th>
+                          <th className="py-2.5 px-3 text-center">Live Stock</th>
+                          <th className="py-2.5 px-3 text-right">Print QR</th>
+                        </tr>
+                      </thead>
+                      <tbody className="divide-y divide-slate-200">
+                        {items.map(it => (
+                          <tr key={it.id} className="hover:bg-slate-50">
+                            <td className="py-2.5 px-3 font-mono">
+                              <div className="font-bold text-slate-900">{it.sku}</div>
+                              <div className="text-[10px] text-slate-500">{it.barcode}</div>
+                            </td>
+                            <td className="py-2.5 px-3 font-bold text-slate-900">{it.name}</td>
+                            <td className="py-2.5 px-3 font-mono text-[10px] text-emerald-700 break-all max-w-xs">
+                              {it.qrCodePayload}
+                            </td>
+                            <td className="py-2.5 px-3 text-center font-mono font-bold">{it.qty}</td>
+                            <td className="py-2.5 px-3 text-right">
+                              <button
+                                type="button"
+                                onClick={() => handleOpenLabelGenerator(it)}
+                                className="px-3 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold"
+                              >
+                                Print QR Label
+                              </button>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
               </div>
             </div>
           )}
@@ -3540,71 +4426,184 @@ export default function InventorySoftware() {
           )}
 
           {/* =================================================================
-              VIEW 10: CUSTOMER RETURNS & QUARANTINE
+              VIEW 10: UNDELIVERED ORDER (RTO — RETURN TO ORIGIN) & RESTOCK STUDIO
              ================================================================= */}
           {activeView === 'ret' && (
-            <div className="max-w-xl mx-auto bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
-              <h3 className="text-base font-black uppercase text-slate-900 border-b border-slate-100 pb-3">
-                Customer Returns, Exchanges &amp; Quarantine Intake
-              </h3>
-              <p className="text-xs text-slate-500">
-                Process returned items in <b>Restock Mode</b> (adds back to live website stock) or{' '}
-                <b>Quarantine/Scrap Mode</b> (logs to damaged bay without adding to sellable website stock).
-              </p>
-              <div className="space-y-4 text-xs">
-                <div>
-                  <label className="block font-bold uppercase text-slate-600 mb-1">Customer</label>
-                  <select
-                    value={returnForm.customerId}
-                    onChange={e => setReturnForm(prev => ({ ...prev, customerId: e.target.value }))}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-                  >
-                    <option value="">Walk-in / General Return</option>
-                    {customers.map(c => (
-                      <option key={c.id} value={c.id}>
-                        {c.name} ({c.phone})
-                      </option>
-                    ))}
-                  </select>
+            <div className="space-y-6">
+              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 flex flex-wrap items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="text-xs font-black uppercase text-amber-950 flex items-center gap-2">
+                    <ShieldAlert className="w-4 h-4 text-amber-700" />
+                    Bhumivera Strict Return Policy: ZERO Post-Delivery Returns • Undelivered Courier RTO Only
+                  </div>
+                  <p className="text-xs text-amber-900">
+                    Once an order is delivered to the customer, no return is permitted. If an order was shipped/dispatched
+                    but <b>not delivered</b> (door locked, customer unreachable, refused at doorstep, or courier RTO),
+                    process the returned parcel below to automatically <b>Restock to Main Inventory</b> or move to{' '}
+                    <b>Quarantine</b>.
+                  </p>
                 </div>
-                <div>
-                  <label className="block font-bold uppercase text-slate-600 mb-1">Returned Formulation</label>
-                  <select
-                    value={returnForm.metaId || items[0]?.id || ''}
-                    onChange={e => setReturnForm(prev => ({ ...prev, metaId: e.target.value }))}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-                  >
-                    {items.map(it => (
-                      <option key={it.id} value={it.id}>
-                        {it.name} (Current Stock: {it.qty})
-                      </option>
-                    ))}
-                  </select>
+              </div>
+
+              <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                  <div>
+                    <h3 className="text-base font-black uppercase text-slate-900">
+                      1. Undelivered Online Orders (Courier RTO Return &amp; 1-Click Restock Queue)
+                    </h3>
+                    <p className="text-xs text-slate-500">
+                      Select any shipped/in-transit order that returned undelivered to restock its exact quantities back
+                      into <code className="text-emerald-700 font-bold">bhumivera.com</code>.
+                    </p>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={rtoSearch}
+                      onChange={e => setRtoSearch(e.target.value)}
+                      placeholder="Search Order #, AWB Tracking ID, or City…"
+                      className="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs w-64"
+                    />
+                    <select
+                      value={rtoReason}
+                      onChange={e => setRtoReason(e.target.value)}
+                      className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold"
+                    >
+                      <option>Customer Unavailable / Door Locked — Courier Return to Origin (RTO)</option>
+                      <option>Incomplete / Unreachable Address in Destination City (RTO)</option>
+                      <option>Customer Refused Parcel at Doorstep before Delivery (RTO)</option>
+                      <option>Courier Pin Non-Serviceable / Hub Return (RTO)</option>
+                      <option>Parcel Damaged in Courier Transit (Quarantine)</option>
+                    </select>
+                  </div>
                 </div>
-                <div>
-                  <label className="block font-bold uppercase text-slate-600 mb-1">Quantity Returned</label>
-                  <input
-                    type="number"
-                    min={1}
-                    value={returnForm.quantity}
-                    onChange={e => setReturnForm(prev => ({ ...prev, quantity: e.target.value }))}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-                  />
+
+                <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                  <table className="w-full text-xs">
+                    <thead className="bg-slate-900 text-white uppercase text-[10px]">
+                      <tr>
+                        <th className="py-3 px-4 text-left">Order # &amp; AWB</th>
+                        <th className="py-3 px-4 text-left">Customer &amp; City</th>
+                        <th className="py-3 px-4 text-left">Formulations in Parcel</th>
+                        <th className="py-3 px-4 text-center">Current Status</th>
+                        <th className="py-3 px-4 text-right">RTO Restock / Quarantine Action</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {rtoCandidateOrders.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="py-8 text-center text-slate-400">
+                            No shipped/in-transit or RTO orders match this search.
+                          </td>
+                        </tr>
+                      ) : (
+                        rtoCandidateOrders.map(ord => (
+                          <tr key={ord.id} className="hover:bg-slate-50">
+                            <td className="py-3 px-4 font-mono">
+                              <div className="font-bold text-slate-900">#{ord.orderNumber}</div>
+                              <div className="text-[10px] text-purple-700 font-bold">
+                                AWB: {ord.trackingNumber || 'Not set'} ({ord.courier || 'Courier'})
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <div className="font-bold text-slate-900">{ord.customerName}</div>
+                              <div className="text-[11px] text-slate-500">
+                                {ord.city}, {ord.state} — {ord.pincode}
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              {(ord.items || []).map((it, idx) => (
+                                <div key={idx} className="font-semibold text-slate-700">
+                                  • {it.name} <span className="font-mono font-bold text-emerald-700">×{it.quantity}</span>
+                                </div>
+                              ))}
+                            </td>
+                            <td className="py-3 px-4 text-center">
+                              <span className="px-2.5 py-1 rounded-full bg-slate-100 font-bold uppercase text-[10px]">
+                                {ord.status}
+                              </span>
+                              {ord.rtoRestockMode && ord.rtoRestockMode !== 'NONE' && (
+                                <div className="text-[10px] font-bold text-emerald-700 mt-1">
+                                  RTO {ord.rtoRestockMode}
+                                </div>
+                              )}
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              {ord.rtoRestockMode && ord.rtoRestockMode !== 'NONE' ? (
+                                <span className="text-xs font-bold text-slate-400">
+                                  Processed ({ord.rtoRestockMode})
+                                </span>
+                              ) : (
+                                <div className="inline-flex items-center gap-1.5">
+                                  <button
+                                    type="button"
+                                    onClick={() => handleProcessRtoOrder(ord.id, 'RESTOCK')}
+                                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px]"
+                                  >
+                                    RTO Intact → Restock to Website
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleProcessRtoOrder(ord.id, 'QUARANTINE')}
+                                    className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px]"
+                                  >
+                                    RTO Damaged → Quarantine
+                                  </button>
+                                </div>
+                              )}
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
                 </div>
-                <div className="grid grid-cols-2 gap-3 pt-2">
+              </div>
+
+              <div className="max-w-xl bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+                <h4 className="text-sm font-black uppercase text-slate-900 border-b border-slate-100 pb-2">
+                  2. Manual Undelivered Parcel SKU Restock / Quarantine
+                </h4>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs items-end">
+                  <div className="sm:col-span-2">
+                    <label className="block font-bold uppercase text-slate-600 mb-1">Formulation</label>
+                    <select
+                      value={returnForm.metaId || items[0]?.id || ''}
+                      onChange={e => setReturnForm(prev => ({ ...prev, metaId: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold"
+                    >
+                      {items.map(it => (
+                        <option key={it.id} value={it.id}>
+                          {it.name} (Stock: {it.qty})
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold uppercase text-slate-600 mb-1">Quantity</label>
+                    <input
+                      type="number"
+                      min={1}
+                      value={returnForm.quantity}
+                      onChange={e => setReturnForm(prev => ({ ...prev, quantity: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold"
+                    />
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 gap-3 text-xs">
                   <button
                     type="button"
                     onClick={() => handleExecuteReturn('GOOD')}
-                    className="py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase"
+                    className="py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase"
                   >
-                    Restock (Unopened / Good)
+                    Restock Intact Units
                   </button>
                   <button
                     type="button"
                     onClick={() => handleExecuteReturn('BAD')}
-                    className="py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black uppercase"
+                    className="py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black uppercase"
                   >
-                    Quarantine (Damaged / Opened)
+                    Move Damaged to Quarantine
                   </button>
                 </div>
               </div>
@@ -3612,12 +4611,160 @@ export default function InventorySoftware() {
           )}
 
           {/* =================================================================
-              VIEW 11: TIME-MACHINE REPORTS, INVOICES & PROOF GALLERY
+              VIEW 10B: DAILY SQL & FULL DATABASE DISASTER RECOVERY (VERCEL + RAILWAY)
+             ================================================================= */}
+          {activeView === 'backup' && (
+            <div className="space-y-6">
+              <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white flex flex-wrap items-center justify-between gap-4 shadow-lg">
+                <div className="space-y-1 max-w-2xl">
+                  <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase">
+                    <HardDrive className="w-3.5 h-3.5" /> Automated Daily SQL Vault • Synced with Railway MySQL &amp; Vercel
+                  </div>
+                  <h3 className="text-base font-black uppercase mt-1">
+                    Anti-Hack Daily SQL Database Backup &amp; 1-Click Disaster Recovery Restore
+                  </h3>
+                  <p className="text-xs text-slate-300 leading-relaxed">
+                    Every day (and on demand), this engine snapshots all 27 MySQL tables (Products, Stock, Orders,
+                    Order Items, Users, Addresses, Coupons, Reviews, Wallets, Support &amp; Inventory) into a portable
+                    Railway <code className="text-amber-300">.sql</code> dump and encrypted{' '}
+                    <code className="text-emerald-300">.avbak.json</code> archive. Even if someone wipes or hacks your
+                    database, you can restore 100% of your system here in 1 click.
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <button
+                    type="button"
+                    disabled={backupBusy}
+                    onClick={() => handleCreateDailySqlBackup('sql')}
+                    className="px-4 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black uppercase text-xs flex items-center gap-2 shadow-lg disabled:opacity-50"
+                  >
+                    <Download className="w-4 h-4" />
+                    {backupBusy ? 'Generating SQL Dump…' : 'Create & Download Full .SQL Backup'}
+                  </button>
+                  <button
+                    type="button"
+                    disabled={backupBusy}
+                    onClick={() => handleCreateDailySqlBackup('json')}
+                    className="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/30 font-bold text-xs flex items-center gap-2 disabled:opacity-50"
+                  >
+                    <Save className="w-4 h-4" />
+                    Save .AVBAK.JSON Snapshot
+                  </button>
+                  <label className="px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black uppercase text-xs flex items-center gap-2 cursor-pointer shadow-lg">
+                    <Upload className="w-4 h-4" />
+                    Restore from .SQL / .JSON File
+                    <input
+                      type="file"
+                      accept=".sql,.json,.avbak"
+                      onChange={handleUploadRestoreBackupFile}
+                      className="hidden"
+                    />
+                  </label>
+                </div>
+              </div>
+
+              <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
+                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
+                  <div>
+                    <h4 className="text-sm font-black uppercase text-slate-900">
+                      Stored Daily SQL Backups Vault ({dailyBackups.length} Rolling Snapshots on Railway)
+                    </h4>
+                    <p className="text-xs text-slate-500">
+                      Cron Endpoint <code className="font-mono text-emerald-700">/api/inventory-software/backup/cron-daily</code>{' '}
+                      runs automatically via Vercel &amp; Railway every day.
+                    </p>
+                  </div>
+                  <button
+                    type="button"
+                    disabled={backupBusy}
+                    onClick={() => handleCreateDailySqlBackup(null)}
+                    className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold"
+                  >
+                    + Snapshot to Vault Now
+                  </button>
+                </div>
+
+                <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                  <table className="w-full text-xs">
+                    <thead className="bg-slate-900 text-white uppercase text-[10px]">
+                      <tr>
+                        <th className="py-3 px-4 text-left">Backup Code &amp; Date</th>
+                        <th className="py-3 px-4 text-left">Trigger Source</th>
+                        <th className="py-3 px-4 text-center">Tables &amp; Rows</th>
+                        <th className="py-3 px-4 text-left">SHA-512 Quantum Checksum</th>
+                        <th className="py-3 px-4 text-right">Download / 1-Click Restore</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {dailyBackups.length === 0 ? (
+                        <tr>
+                          <td colSpan={5} className="py-8 text-center text-slate-400">
+                            No vault backups recorded yet. Click "Create &amp; Download Full .SQL Backup" above.
+                          </td>
+                        </tr>
+                      ) : (
+                        dailyBackups.map(b => (
+                          <tr key={b.id} className="hover:bg-slate-50">
+                            <td className="py-3 px-4 font-mono">
+                              <div className="font-bold text-slate-900">{b.backup_code}</div>
+                              <div className="text-[10px] text-slate-500">
+                                {new Date(b.created_at).toLocaleString()} (By @{b.created_by})
+                              </div>
+                            </td>
+                            <td className="py-3 px-4">
+                              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] uppercase">
+                                {b.trigger_type}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-center font-mono font-bold">
+                              {b.tables_count} Tables • {Number(b.rows_count).toLocaleString()} Rows
+                            </td>
+                            <td className="py-3 px-4 font-mono text-[10px] text-slate-500 max-w-xs truncate">
+                              {b.checksum_sha512}
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="inline-flex items-center gap-1.5">
+                                <button
+                                  type="button"
+                                  onClick={() => handleDownloadVaultBackup(b.id, b.backup_code, 'sql')}
+                                  className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold"
+                                >
+                                  .SQL
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => handleDownloadVaultBackup(b.id, b.backup_code, 'json')}
+                                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold"
+                                >
+                                  .JSON
+                                </button>
+                                <button
+                                  type="button"
+                                  disabled={backupBusy}
+                                  onClick={() => handleRestoreFromVault(b)}
+                                  className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black uppercase"
+                                >
+                                  Restore SQL
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* =================================================================
+              VIEW 11: TIME-MACHINE REPORTS & POS INVOICES
              ================================================================= */}
           {activeView === 'rep' && (
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
               <div className="lg:col-span-4 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-                <h3 className="text-base font-black uppercase text-slate-900">Time-Machine Reports</h3>
+                <h3 className="text-base font-black uppercase text-slate-900">Time-Machine POS Reports</h3>
                 <div>
                   <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Filter by Date</label>
                   <input
@@ -3641,7 +4788,7 @@ export default function InventorySoftware() {
                 </div>
 
                 <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1">
-                  <div className="text-[10px] font-bold uppercase text-emerald-800">Selected Period Revenue</div>
+                  <div className="text-[10px] font-bold uppercase text-emerald-800">Selected Period POS Revenue</div>
                   <div className="text-2xl font-black text-emerald-700 font-mono">
                     ₹
                     {filteredReportSales
@@ -3657,17 +4804,10 @@ export default function InventorySoftware() {
                 <div className="space-y-2 pt-2 border-t border-slate-100">
                   <button
                     type="button"
-                    onClick={() => setShowProofGallery(prev => !prev)}
-                    className="w-full py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 text-xs font-bold"
-                  >
-                    {showProofGallery ? 'Show Invoices Table' : `View Payment Proof Gallery (${proofs.filter(p => p.src).length})`}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={handleSaveSnapshotBackup}
+                    onClick={() => handleCreateDailySqlBackup('sql')}
                     className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold"
                   >
-                    Save Daily Snapshot (.avbak.json)
+                    Download Full Daily SQL Backup (.sql)
                   </button>
                   <button
                     type="button"
@@ -3680,100 +4820,68 @@ export default function InventorySoftware() {
               </div>
 
               <div className="lg:col-span-8 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-                {showProofGallery ? (
-                  <div className="space-y-3">
-                    <h4 className="text-sm font-black uppercase text-slate-800">Uploaded Payment Proof Gallery</h4>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
-                      {proofs.filter(p => p.src).length === 0 ? (
-                        <div className="col-span-3 py-12 text-center text-slate-400">
-                          No payment proof screenshots uploaded yet.
-                        </div>
-                      ) : (
-                        proofs
-                          .filter(p => p.src)
-                          .map(p => (
-                            <div
-                              key={p.id}
-                              onClick={() => {
-                                setViewingImageSrc(p.src);
-                                setActiveModal('img-viewer');
-                              }}
-                              className="border rounded-xl overflow-hidden cursor-pointer hover:shadow-md"
-                            >
-                              <img src={p.src} alt="Proof" className="w-full h-36 object-cover" />
-                              <div className="p-2.5 text-xs">
-                                <div className="font-bold">{p.cust}</div>
-                                <div className="text-emerald-700 font-mono font-bold">+₹{p.amt}</div>
-                              </div>
-                            </div>
-                          ))
-                      )}
-                    </div>
-                  </div>
-                ) : (
-                  <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                    <table className="w-full text-xs">
-                      <thead className="bg-slate-900 text-white uppercase text-[10px]">
+                <div className="overflow-x-auto border border-slate-200 rounded-xl">
+                  <table className="w-full text-xs">
+                    <thead className="bg-slate-900 text-white uppercase text-[10px]">
+                      <tr>
+                        <th className="py-3 px-4 text-left">Invoice # &amp; Time</th>
+                        <th className="py-3 px-4 text-left">Customer</th>
+                        <th className="py-3 px-4 text-left">Items</th>
+                        <th className="py-3 px-4 text-right">Bill Total</th>
+                        <th className="py-3 px-4 text-center">Status</th>
+                        <th className="py-3 px-4 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-200">
+                      {filteredReportSales.length === 0 ? (
                         <tr>
-                          <th className="py-3 px-4 text-left">Invoice # &amp; Time</th>
-                          <th className="py-3 px-4 text-left">Customer</th>
-                          <th className="py-3 px-4 text-left">Items</th>
-                          <th className="py-3 px-4 text-right">Bill Total</th>
-                          <th className="py-3 px-4 text-center">Status</th>
-                          <th className="py-3 px-4 text-right">Actions</th>
+                          <td colSpan={6} className="py-10 text-center text-slate-400">
+                            No POS invoices found for this filter.
+                          </td>
                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200">
-                        {filteredReportSales.length === 0 ? (
-                          <tr>
-                            <td colSpan={6} className="py-10 text-center text-slate-400">
-                              No POS invoices found for this filter.
+                      ) : (
+                        filteredReportSales.map(s => (
+                          <tr key={s.id} className="hover:bg-slate-50">
+                            <td className="py-3 px-4 font-mono">
+                              <div className="font-bold text-slate-900">{s.invoiceNo}</div>
+                              <div className="text-[10px] text-slate-500">{new Date(s.date).toLocaleString()}</div>
+                            </td>
+                            <td className="py-3 px-4 font-bold">{s.cust?.name}</td>
+                            <td className="py-3 px-4 text-[11px] text-slate-600">
+                              {(s.items || []).map(i => `${i.name} (x${i.q})`).join(', ')}
+                            </td>
+                            <td className="py-3 px-4 text-right font-mono font-bold">₹{s.billTotal}</td>
+                            <td className="py-3 px-4 text-center">
+                              <span
+                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
+                                  s.status === 'cancelled'
+                                    ? 'bg-rose-100 text-rose-700'
+                                    : 'bg-emerald-100 text-emerald-800'
+                                }`}
+                              >
+                                {s.status || 'completed'}
+                              </span>
+                            </td>
+                            <td className="py-3 px-4 text-right">
+                              <div className="inline-flex items-center gap-1">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setViewingSale(s);
+                                    setActiveModal('view-sale');
+                                  }}
+                                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold"
+                                >
+                                  Inspect / Print
+                                </button>
+                              </div>
                             </td>
                           </tr>
-                        ) : (
-                          filteredReportSales.map(s => (
-                            <tr key={s.id} className="hover:bg-slate-50">
-                              <td className="py-3 px-4 font-mono">
-                                <div className="font-bold text-slate-900">{s.invoiceNo}</div>
-                                <div className="text-[10px] text-slate-500">{new Date(s.date).toLocaleString()}</div>
-                              </td>
-                              <td className="py-3 px-4 font-bold">{s.cust?.name}</td>
-                              <td className="py-3 px-4 text-[11px] text-slate-600">
-                                {(s.items || []).map(i => `${i.name} (x${i.q})`).join(', ')}
-                              </td>
-                              <td className="py-3 px-4 text-right font-mono font-bold">₹{s.billTotal}</td>
-                              <td className="py-3 px-4 text-center">
-                                <span
-                                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                                    s.status === 'cancelled'
-                                      ? 'bg-rose-100 text-rose-700'
-                                      : 'bg-emerald-100 text-emerald-800'
-                                  }`}
-                                >
-                                  {s.status || 'completed'}
-                                </span>
-                              </td>
-                              <td className="py-3 px-4 text-right">
-                                <div className="inline-flex items-center gap-1">
-                                  <button
-                                    type="button"
-                                    onClick={() => {
-                                      setViewingSale(s);
-                                      setActiveModal('view-sale');
-                                    }}
-                                    className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 font-bold"
-                                  >
-                                    Inspect / Print
-                                  </button>
-                                </div>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                        ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           )}
@@ -5281,6 +6389,301 @@ export default function InventorySoftware() {
           onClick={() => setActiveModal(null)}
         >
           <img src={viewingImageSrc} alt="Payment Proof" className="max-w-[90%] max-h-[88vh] rounded-2xl border-4 border-white shadow-2xl" />
+        </div>
+      )}
+
+      {/* =====================================================================
+          MODAL: FULL ONLINE ORDER LIFECYCLE, TRACKING, DELIVERY DATE & LABEL EDITOR
+         ===================================================================== */}
+      {activeModal === 'order-detail' && editingOrder && (
+        <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-4xl w-full p-6 space-y-5 shadow-2xl max-h-[92vh] overflow-y-auto text-xs">
+            <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-3">
+              <div>
+                <h3 className="text-base font-black uppercase text-slate-900">
+                  Order #{editingOrder.orderNumber} — Full Lifecycle, Tracking &amp; Shipping Label Editor
+                </h3>
+                <p className="text-[11px] text-slate-500">
+                  Placed on {new Date(editingOrder.createdAt).toLocaleString()} • Payment: {editingOrder.paymentMode} ({editingOrder.paymentStatus})
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => handlePrintShippingLabels(editingOrder)}
+                  className="px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold flex items-center gap-1.5"
+                >
+                  <Printer className="w-3.5 h-3.5" /> Print 4×6 Shipping Label
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handlePrintOnlineOrderGstInvoice(editingOrder)}
+                  className="px-3 py-1.5 rounded-xl bg-slate-900 text-white font-bold"
+                >
+                  Print GST Invoice
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setActiveModal(null);
+                    setEditingOrder(null);
+                  }}
+                  className="text-slate-400 hover:text-slate-700 text-base font-bold px-2"
+                >
+                  ✕
+                </button>
+              </div>
+            </div>
+
+            <form onSubmit={handleSaveOrderDetailsModal} className="grid grid-cols-1 lg:grid-cols-12 gap-5">
+              <div className="lg:col-span-6 space-y-4">
+                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 space-y-3">
+                  <div className="font-black uppercase text-emerald-950">
+                    1. Shipment, Tracking ID, Delivery Date &amp; Live Location
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold uppercase text-slate-600 mb-1">Order Lifecycle Status</label>
+                      <select
+                        value={editingOrder.status}
+                        onChange={e => setEditingOrder(prev => ({ ...prev, status: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold"
+                      >
+                        <option value="pending">Pending</option>
+                        <option value="confirmed">Confirmed</option>
+                        <option value="packed">Packed &amp; Weighed</option>
+                        <option value="shipped">Shipped / In Transit</option>
+                        <option value="delivered">Delivered</option>
+                        <option value="returned">Undelivered / RTO Returned</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block font-bold uppercase text-slate-600 mb-1">
+                        Estimated Delivery Date (Auto)
+                      </label>
+                      <input
+                        type="date"
+                        value={editingOrder.estimatedDeliveryDate || ''}
+                        onChange={e => setEditingOrder(prev => ({ ...prev, estimatedDeliveryDate: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-mono font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold uppercase text-slate-600 mb-1">Courier Partner</label>
+                      <input
+                        type="text"
+                        value={editingOrder.courier || ''}
+                        onChange={e => setEditingOrder(prev => ({ ...prev, courier: e.target.value }))}
+                        placeholder="e.g. Delhivery, Shiprocket, BlueDart"
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold uppercase text-slate-600 mb-1">Tracking ID / AWB Number</label>
+                      <input
+                        type="text"
+                        value={editingOrder.trackingNumber || ''}
+                        onChange={e => setEditingOrder(prev => ({ ...prev, trackingNumber: e.target.value }))}
+                        placeholder="e.g. BHVM202688991"
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-mono font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold uppercase text-slate-600 mb-1">
+                      Where the Product Is Right Now (Live Shipment Checkpoint)
+                    </label>
+                    <input
+                      type="text"
+                      value={editingOrder.currentLocationCheckpoint || ''}
+                      onChange={e =>
+                        setEditingOrder(prev => ({ ...prev, currentLocationCheckpoint: e.target.value }))
+                      }
+                      placeholder="e.g. Dispatched from Asansol Hub → Reached Delhi Gateway Hub"
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-semibold"
+                    />
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5">
+                  <div className="font-black uppercase text-slate-800">
+                    Direct Carrier API Booking (Shiprocket / Delhivery)
+                  </div>
+                  <div className="grid grid-cols-5 gap-2">
+                    <select
+                      value={carrierBookForm.provider}
+                      onChange={e => setCarrierBookForm(prev => ({ ...prev, provider: e.target.value }))}
+                      className="col-span-2 px-2.5 py-1.5 rounded-lg bg-white border font-bold"
+                    >
+                      <option value="shiprocket">Shiprocket</option>
+                      <option value="delhivery">Delhivery</option>
+                    </select>
+                    <input
+                      type="number"
+                      step="0.1"
+                      value={carrierBookForm.weight}
+                      onChange={e => setCarrierBookForm(prev => ({ ...prev, weight: e.target.value }))}
+                      placeholder="Kg"
+                      title="Weight (Kg)"
+                      className="px-2 py-1.5 rounded-lg bg-white border font-mono"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => handleBookCarrierLabel(editingOrder.id)}
+                      className="col-span-2 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-bold"
+                    >
+                      Book Carrier AWB
+                    </button>
+                  </div>
+                </div>
+
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+                  <div className="font-black uppercase text-slate-800">
+                    Ordered Formulations &amp; Main Inventory Stock Check
+                  </div>
+                  {(editingOrder.items || []).map((it, idx) => (
+                    <div key={idx} className="flex items-center justify-between py-1.5 border-b last:border-0">
+                      <div>
+                        <div className="font-bold text-slate-900">
+                          {it.name} <span className="text-emerald-700 font-mono">×{it.quantity}</span>
+                        </div>
+                        <div className="font-mono text-[10px] text-slate-500">
+                          SKU: {it.sku} • Bin: {it.binCode} • Main Stock: <b>{it.inStockQty} units</b>
+                        </div>
+                      </div>
+                      <div className="font-mono font-bold">₹{it.price * it.quantity}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="lg:col-span-6 space-y-4">
+                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-3">
+                  <div className="font-black uppercase text-slate-900">
+                    2. Customer Shipping Label Address (Auto-Fetched from Checkout)
+                  </div>
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold uppercase text-slate-600 mb-1">Recipient Full Name *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editingOrder.customerName || ''}
+                        onChange={e => setEditingOrder(prev => ({ ...prev, customerName: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold uppercase text-slate-600 mb-1">Recipient Phone *</label>
+                      <input
+                        type="text"
+                        required
+                        value={editingOrder.customerPhone || ''}
+                        onChange={e => setEditingOrder(prev => ({ ...prev, customerPhone: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-mono font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold uppercase text-slate-600 mb-1">Address Line 1 (House / Flat / Street)</label>
+                    <input
+                      type="text"
+                      value={editingOrder.line1 || ''}
+                      onChange={e => setEditingOrder(prev => ({ ...prev, line1: e.target.value }))}
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block font-bold uppercase text-slate-600 mb-1">Address Line 2 / Area</label>
+                      <input
+                        type="text"
+                        value={editingOrder.line2 || ''}
+                        onChange={e => setEditingOrder(prev => ({ ...prev, line2: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold uppercase text-slate-600 mb-1">Landmark</label>
+                      <input
+                        type="text"
+                        value={editingOrder.landmark || ''}
+                        onChange={e => setEditingOrder(prev => ({ ...prev, landmark: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-3">
+                    <div>
+                      <label className="block font-bold uppercase text-slate-600 mb-1">City (e.g. Delhi)</label>
+                      <input
+                        type="text"
+                        value={editingOrder.city || ''}
+                        onChange={e => setEditingOrder(prev => ({ ...prev, city: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold uppercase text-slate-600 mb-1">State</label>
+                      <input
+                        type="text"
+                        value={editingOrder.state || ''}
+                        onChange={e => setEditingOrder(prev => ({ ...prev, state: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold"
+                      />
+                    </div>
+                    <div>
+                      <label className="block font-bold uppercase text-slate-600 mb-1">Pincode</label>
+                      <input
+                        type="text"
+                        value={editingOrder.pincode || ''}
+                        onChange={e => setEditingOrder(prev => ({ ...prev, pincode: e.target.value }))}
+                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-mono font-bold"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block font-bold uppercase text-slate-600 mb-1">Dispatch / Courier Notes</label>
+                    <input
+                      type="text"
+                      value={editingOrder.notes || ''}
+                      onChange={e => setEditingOrder(prev => ({ ...prev, notes: e.target.value }))}
+                      placeholder="Special delivery instructions…"
+                      className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300"
+                    />
+                  </div>
+                </div>
+
+                <div className="flex gap-3 pt-2">
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase"
+                  >
+                    Save Order Lifecycle, Tracking &amp; Address
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveModal(null);
+                      setEditingOrder(null);
+                    }}
+                    className="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 font-bold"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+            </form>
+          </div>
         </div>
       )}
     </div>

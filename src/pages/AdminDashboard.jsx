@@ -3,26 +3,23 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   Activity, Award, Bell, Boxes, ChartNoAxesCombined, ChevronDown, Compass, ExternalLink, FileText,
   Gamepad2, Gift, Headphones, Leaf, LogOut, Mail, MessageSquare, Package, QrCode, Settings2,
-  ShieldCheck, ShoppingBag, SlidersHorizontal, Sparkles, Star, Tags, Truck, Users, Wallet, Warehouse, Zap
+  ShieldCheck, SlidersHorizontal, Sparkles, Star, Tags, Users, Wallet, Warehouse, Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { COMPLETE_SITE_NAVIGATION_DIRECTORY } from '../utils/aiCopilotBus';
 import './admin/AdminTheme.css';
 
-// DYNAMIC LAZY IMPORTS to isolate rendering logic
+// DYNAMIC LAZY IMPORTS: Website Governance Only (Orders, Delivery, Returns & Stock isolated in /inventorysoftware)
 const DashboardOverview = lazy(() => import('./admin/DashboardOverview'));
 const ProductManagement = lazy(() => import('./admin/ProductManagement'));
 const CategoryManagement = lazy(() => import('./admin/CategoryManagement'));
-const OrderManagement = lazy(() => import('./admin/OrderManagement'));
 const UserManagement = lazy(() => import('./admin/UserManagement'));
 const AnalyticsManagement = lazy(() => import('./admin/AnalyticsManagement'));
 const ScarcitySimulator = lazy(() => import('./admin/ScarcitySimulator'));
 const ReviewManagement = lazy(() => import('./admin/ReviewManagement'));
-const ReturnManagement = lazy(() => import('./admin/ReturnManagement'));
 const NotificationManagement = lazy(() => import('./admin/NotificationManagement'));
 const TaxManagement = lazy(() => import('./admin/TaxManagement'));
 const GSTAccounting = lazy(() => import('./admin/GSTAccounting'));
-const ShippingManagement = lazy(() => import('./admin/ShippingManagement'));
 const AdminSettings = lazy(() => import('./admin/AdminSettings.jsx'));
 const ImpactManagement = lazy(() => import('./admin/ImpactManagement.jsx'));
 const GrowthOffersHub = lazy(() => import('./admin/GrowthOffersHub.jsx'));
@@ -85,15 +82,12 @@ const TAB_COMPONENTS = {
   products: ProductManagement,
   categories: CategoryManagement,
   'scarcity-simulator': ScarcitySimulator,
-  orders: OrderManagement,
-  returns: ReturnManagement,
   users: UserManagement,
   reviews: ReviewManagement,
   analytics: AnalyticsManagement,
   notifications: NotificationManagement,
   tax: TaxManagement,
   gst: GSTAccounting,
-  shipping: ShippingManagement,
   settings: AdminSettings,
   ...Object.fromEntries(GROWTH_TABS.map(id => [id, GrowthOffersHub])),
   'loyalty-tiers': LoyaltyTierForge,
@@ -115,8 +109,6 @@ const TAB_ICONS = {
   overview: Activity,
   analytics: ChartNoAxesCombined,
   notifications: Bell,
-  orders: ShoppingBag,
-  shipping: Truck,
   impact: Leaf,
   products: Package,
   categories: Boxes,
@@ -136,7 +128,6 @@ const TAB_ICONS = {
   'loyalty-matrix': Award,
   'growth-offers': Gift,
   'wallet-management': Wallet,
-  returns: Truck,
   settings: Settings2,
   tax: Tags,
   gst: FileText,
@@ -186,7 +177,7 @@ export default function AdminDashboard() {
     navigate('/admin/login');
   };
 
-  // Luxury E-Commerce Nomenclature Overhaul (Static System Health, Pause Modules, and raw Logs removed from standard sidebar)
+  // Website Executive Governance Sections (Orders, Delivery, Returns & Stock ported to /inventorysoftware)
   const menuSections = [
     {
       title: 'Workspace',
@@ -197,11 +188,10 @@ export default function AdminDashboard() {
       ],
     },
     {
-      title: 'Client Experience',
+      title: 'Client Experience & CRM',
       items: [
-        { id: 'users', label: 'Client Directory' },
-        { id: 'reviews', label: 'Reviews' },
-        { id: 'returns', label: 'Returns' },
+        { id: 'users', label: 'Customer Management (CRM)' },
+        { id: 'reviews', label: 'Reviews & Moderation' },
         { id: 'support', label: 'Bhumivera Client Concierge' },
         { id: 'contacts', label: 'Contact & Inquiries' },
         { id: 'authenticity', label: 'QR Codes & Genuinity Panel' },
@@ -209,22 +199,21 @@ export default function AdminDashboard() {
       ],
     },
     {
-      title: 'Store Operations',
+      title: 'Website Catalog & Finance',
       items: [
-        { id: 'orders', label: 'Orders' },
-        { id: 'products', label: 'Products' },
+        { id: 'products', label: 'Website Product Catalog' },
         { id: 'categories', label: 'Categories' },
         { id: 'scarcity-simulator', label: 'Stock Pacing Studio' },
-        { id: 'shipping', label: 'Shipping' },
         { id: 'tax', label: 'Taxes' },
         { id: 'gst', label: 'Financial Ledger & GST Compliance' },
       ],
     },
     {
-      title: 'Privilege & Bespoke Curation',
+      title: 'Spins, Referrals & Privilege',
       items: [
-        { id: 'growth-offers', label: 'Promotions & Offers' },
         { id: 'gamification', label: 'Reward Spins & Activities' },
+        { id: 'referral-engine', label: 'Brand Ambassador & Referrals' },
+        { id: 'growth-offers', label: 'Promotions, Coupons & Flash Sales' },
         { id: 'loyalty-tiers', label: 'Clientele Privilege & Tiers' },
         { id: 'loyalty-members', label: 'Privilege Members' },
         { id: 'personalization', label: 'Bespoke Client Curation' },
@@ -232,31 +221,26 @@ export default function AdminDashboard() {
       ],
     },
     {
-      title: 'Ambassador Relations',
-      items: [{ id: 'referral-engine', label: 'Brand Ambassador Program' }],
-    },
-    {
       title: 'Maison Governance',
       items: [
         { id: 'impact', label: 'Earth Impact' },
         { id: 'wallet-management', label: 'Client Wallets' },
-        { id: 'settings', label: 'Settings' },
+        { id: 'settings', label: 'Website Settings' },
       ],
     },
   ];
 
   const quickTabs = [
     'overview',
-    'authenticity',
-    'orders',
-    'gst',
-    'products',
-    'users',
-    'support',
-    'growth-offers',
     'gamification',
+    'referral-engine',
+    'users',
+    'products',
+    'authenticity',
+    'growth-offers',
     'loyalty-tiers',
-    'personalization',
+    'gst',
+    'reviews',
   ];
   const allMenuItems = menuSections.flatMap(section => section.items);
   const quickItems = quickTabs.map(id => allMenuItems.find(item => item.id === id)).filter(Boolean);
@@ -271,7 +255,7 @@ export default function AdminDashboard() {
   const activeLabel =
     allMenuItems.find(item => item.id === activeTab)?.label ||
     (['affiliate', 'referral-engine'].includes(activeTab)
-      ? 'Brand Ambassador Program'
+      ? 'Brand Ambassador & Referrals'
       : ['loyalty-matrix', 'loyalty-tiers'].includes(activeTab)
       ? 'Clientele Privilege & Tiers'
       : GROWTH_TABS.includes(activeTab)
@@ -345,7 +329,7 @@ export default function AdminDashboard() {
             >
               <span className="text-white font-black tracking-[0.12em] text-sm block">Bhumivera</span>
               <span className="text-[#d4af37] font-semibold text-[9px] uppercase tracking-widest block">
-                Maison Executive Suite
+                Website Admin Control
               </span>
             </div>
           </div>
@@ -415,17 +399,17 @@ export default function AdminDashboard() {
             )}
           </nav>
 
-          {/* Direct Portal Links in Sidebar */}
+          {/* Direct Connected Panels in Sidebar */}
           {isSidebarOpen && (
             <div className="px-3 py-2 border-t border-[#d4af37]/15 space-y-1 text-[11px]">
               <p className="px-2 pb-1 text-[9px] font-bold text-[#d4af37] uppercase tracking-widest">
-                Maison Portals
+                Connected Bhumivera Panels
               </p>
               <Link
-                to="/inventorysoftware"
-                className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-emerald-300 font-semibold hover:bg-emerald-500/15"
+                to="/inventorysoftware?view=online"
+                className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold hover:bg-emerald-500/25"
               >
-                <span>10X Inventory &amp; POS Suite</span>
+                <span>Orders, Delivery &amp; Stock</span>
                 <ExternalLink size={12} />
               </Link>
               <Link
@@ -509,13 +493,21 @@ export default function AdminDashboard() {
                 </button>
                 <div className="min-w-0">
                   <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#d4af37]">
-                    Bhumivera Maison Executive Suite
+                    Bhumivera Website Control Center (Orders &amp; Stock Isolated in /inventorysoftware)
                   </p>
                   <h1 className="truncate text-lg font-semibold text-white md:text-xl">{activeLabel}</h1>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
+                <Link
+                  to="/inventorysoftware?view=online"
+                  className="hidden md:inline-flex items-center gap-1.5 rounded-xl border border-emerald-400/40 bg-emerald-500/15 px-3 py-1.5 text-xs font-bold text-emerald-200 hover:bg-emerald-500/25"
+                >
+                  <Warehouse size={14} />
+                  Orders, Delivery &amp; Inventory Hub
+                </Link>
+
                 <button
                   type="button"
                   onClick={() => setShowSiteLinksModal(true)}
@@ -584,14 +576,14 @@ export default function AdminDashboard() {
                         <FileText size={16} className="text-[#d4af37]" aria-hidden="true" />
                         Financial Ledger &amp; GST Compliance
                       </button>
-                      <button
-                        type="button"
-                        onClick={() => openAdminSection('orders')}
-                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-200 transition hover:bg-white/5 hover:text-white"
+                      <Link
+                        to="/inventorysoftware?view=online"
+                        onClick={() => setAccountMenuOpen(false)}
+                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-emerald-300 transition hover:bg-emerald-500/10"
                       >
-                        <ShoppingBag size={16} className="text-slate-300" aria-hidden="true" />
-                        Orders &amp; fulfillment
-                      </button>
+                        <Warehouse size={16} className="text-emerald-400" aria-hidden="true" />
+                        Orders, Delivery &amp; Inventory Hub
+                      </Link>
                       <button
                         type="button"
                         onClick={signOut}

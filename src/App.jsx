@@ -245,15 +245,6 @@ function AdminRoute({ children }) {
   return children;
 }
 
-function WarehouseRoute({ children }) {
-  const { loading } = useAuth() || {};
-  const t = localStorage.getItem('token') || localStorage.getItem('warehouseToken');
-  
-  if (loading) return <PageLoader />;
-  if (!t) return <Navigate to="/warehouseadmin" replace />;
-  return children;
-}
-
 function WebOnlyManagement({ children }) {
   return Capacitor.isNativePlatform() ? <Navigate to="/" replace /> : children;
 }
@@ -461,7 +452,7 @@ function AppContent() {
             <Route path="/address-book" element={<AddressBook />} />
             <Route path="/affiliate" element={<Affiliate />} />
 
-            {/* 10X Super Inventory, Storage Keeper & POS Software (www.bhumivera.com/inventorysoftware) */}
+            {/* 10X Super Inventory, Order Lifecycle, RTO Returns, QR Scanner & Daily SQL Backup Software */}
             <Route path="/inventorysoftware" element={<WebOnlyManagement><InventorySoftware /></WebOnlyManagement>} />
             <Route path="/inventorysoftware/*" element={<WebOnlyManagement><InventorySoftware /></WebOnlyManagement>} />
             <Route path="/inventorymanagement" element={<Navigate to="/inventorysoftware" replace />} />
@@ -470,12 +461,15 @@ function AppContent() {
             <Route path="/warehouse/*" element={<Navigate to="/inventorysoftware" replace />} />
             <Route path="/warehouseadmin" element={<Navigate to="/inventorysoftware" replace />} />
             
-            {/* Executive Admin System (Warehouse & Inventory removed from Admin Panel) */}
+            {/* Executive Website Admin System (Orders, Delivery, RTO Returns & Stock routed to /inventorysoftware) */}
             <Route path="/admin/login" element={<WebOnlyManagement><AdminLogin /></WebOnlyManagement>} />
             <Route path="/admin" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />
             <Route path="/admin/dashboard" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />
-            <Route path="/admin/dashboard/warehouse" element={<Navigate to="/admin/dashboard" replace />} />
-            <Route path="/admin/dashboard/inventory" element={<Navigate to="/admin/dashboard" replace />} />
+            <Route path="/admin/dashboard/orders" element={<Navigate to="/inventorysoftware?view=online" replace />} />
+            <Route path="/admin/dashboard/returns" element={<Navigate to="/inventorysoftware?view=ret" replace />} />
+            <Route path="/admin/dashboard/shipping" element={<Navigate to="/inventorysoftware?view=labels" replace />} />
+            <Route path="/admin/dashboard/warehouse" element={<Navigate to="/inventorysoftware?view=keeper" replace />} />
+            <Route path="/admin/dashboard/inventory" element={<Navigate to="/inventorysoftware?view=inv" replace />} />
             <Route path="/admin/dashboard/support" element={<Navigate to="/support" replace />} />
             <Route path="/admin/dashboard/contact" element={<Navigate to="/support" replace />} />
             <Route path="/admin/dashboard/:tab" element={<WebOnlyManagement><AdminRoute><AdminDashboard /></AdminRoute></WebOnlyManagement>} />

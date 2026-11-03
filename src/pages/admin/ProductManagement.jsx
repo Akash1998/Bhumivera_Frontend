@@ -613,8 +613,20 @@ export default function ProductManagement() {
                       <input type="number" value={form.discount_price} onChange={e=>setForm({...form, discount_price:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-emerald-400 outline-none transition-colors" placeholder="0.00" />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Stock Quantity</label>
-                      <input required type="number" value={form.quantity} onChange={e=>setForm({...form, quantity:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm font-mono text-white outline-none transition-colors" placeholder="0" />
+                      <label className="text-[10px] font-bold text-emerald-400 uppercase tracking-widest flex items-center justify-between mb-2">
+                        <span>Live Synced Stock</span>
+                        <a href="/inventorysoftware?view=inv" className="underline text-[#f3d77b] hover:text-white">Manage in /inventorysoftware →</a>
+                      </label>
+                      <input
+                        required
+                        type="number"
+                        readOnly={Boolean(currentProduct)}
+                        value={form.quantity}
+                        onChange={e=>setForm({...form, quantity:e.target.value})}
+                        title={currentProduct ? "Stock is managed centrally in www.bhumivera.com/inventorysoftware" : "Initial stock quantity"}
+                        className={`w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 rounded-xl p-3 text-sm font-mono text-white outline-none transition-colors ${currentProduct ? "opacity-75 cursor-not-allowed" : "focus:border-emerald-500"}`}
+                        placeholder="0"
+                      />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-2">Category</label>

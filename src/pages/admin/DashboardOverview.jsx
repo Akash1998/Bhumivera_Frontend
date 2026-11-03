@@ -57,11 +57,11 @@ const formatMoney = value => currency.format(Number(value) || 0);
 
 const modules = [
   {
-    title: 'Orders & GST Tax Invoices',
-    description: 'Fulfil orders, reconcile Razorpay & print Maison GST Tax Invoices with logo',
+    title: 'Order Lifecycle, Labels & RTO (/inventorysoftware)',
+    description: 'Full order lifecycle, auto customer shipping labels, tracking ID & RTO restock in Inventory Suite',
     icon: ShoppingCart,
-    href: '/admin/dashboard/orders',
-    color: 'text-violet-200 bg-violet-400/10',
+    href: '/inventorysoftware?view=online',
+    color: 'text-emerald-200 bg-emerald-400/15',
   },
   {
     title: 'Financial Ledger & GST Compliance',
@@ -127,10 +127,10 @@ const modules = [
     color: 'text-teal-200 bg-teal-400/10',
   },
   {
-    title: 'Shipping & Carrier APIs',
-    description: 'Shiprocket, Delhivery, volumetric calculator & delivery zones',
+    title: 'Master Stock, POS & Daily SQL Backup (/inventorysoftware)',
+    description: 'Unified online + offline stock, QR scanner API & daily Railway/Vercel SQL disaster backup',
     icon: Truck,
-    href: '/admin/dashboard/shipping',
+    href: '/inventorysoftware?view=inv',
     color: 'text-blue-200 bg-blue-400/10',
   },
   {
