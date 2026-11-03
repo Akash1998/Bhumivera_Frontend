@@ -761,6 +761,60 @@ export default function InventorySoftware() {
     }
   }, [posPaymentMode, posCalculations.billTotal, cfg.upiId, cfg.storeName]);
 
+  // REAL-TIME 2-WAY SYNC: Poll mobile scanner queue and sync with active POS bill
+  useEffect(() => {
+    if (!authToken || activeView !== 'sale') return;
+
+    let isMounted = true;
+    const syncInterval = setInterval(async () => {
+      try {
+        const res = await api.get('/inventory-software/scanner/queue?sessionCode=DEFAULT-POS-TERMINAL', reqConfig);
+        const qRows = res.data?.queue || [];
+        if (!isMounted) return;
+
+        setScannerQueue(qRows);
+
+        // Sync items into posCart if queue differs from current cart
+        setPosCart(currentCart => {
+          let hasDifferences = false;
+          if (qRows.length !== currentCart.length) {
+            hasDifferences = true;
+          } else {
+            for (const q of qRows) {
+              const matched = currentCart.find(c => c.sku === q.sku);
+              if (!matched || matched.q !== Number(q.quantity)) {
+                hasDifferences = true;
+                break;
+              }
+            }
+          }
+
+          if (!hasDifferences) return currentCart;
+
+          return qRows.map(q => ({
+            id: q.meta_id,
+            productId: q.product_id,
+            sku: q.sku,
+            name: q.product_name,
+            q: Number(q.quantity) || 1,
+            p: Number(q.unit_price) || 0,
+            max: Number(q.available_stock) || 99,
+            uom: q.uom || 'Pcs',
+            gstHsnCode: q.gst_hsn_code || '33049990',
+            queueId: q.id,
+          }));
+        });
+      } catch {
+        // Silently catch background poll failures
+      }
+    }, 1500);
+
+    return () => {
+      isMounted = false;
+      clearInterval(syncInterval);
+    };
+  }, [authToken, activeView, reqConfig]);
+
   // Dashboard Metrics
   const dashMetrics = useMemo(() => {
     const todayStr = new Date().toLocaleDateString();
@@ -3283,6 +3337,19 @@ export default function InventorySoftware() {
                                 },
                               ]);
                             }
+                            api.post(
+                              '/inventory-software/scanner/queue/item',
+                              {
+                                sessionCode: 'DEFAULT-POS-TERMINAL',
+                                sku: it.sku,
+                                metaId: it.id,
+                                delta: 1,
+                                price: it.price,
+                                name: it.name,
+                                availableStock: it.qty,
+                              },
+                              reqConfig
+                            ).catch(() => {});
                           }}
                           className="p-2.5 rounded-xl border border-slate-200 hover:border-emerald-500 bg-slate-50/70 hover:bg-emerald-50/40 text-left transition disabled:opacity-40"
                         >
@@ -3357,11 +3424,7 @@ export default function InventorySoftware() {
                     </div>
                     <button
                       type="button"
-                      onClick={() => {
-                        setPosCart([]);
-                        setPosExtraCharges([]);
-                        setPosDiscount(0);
-                      }}
+                      onClick={handlePosCartClear}
                       className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold"
                     >
                       Clear Cart
@@ -3416,7 +3479,7 @@ export default function InventorySoftware() {
                               <td className="py-2 px-2 text-right">
                                 <button
                                   type="button"
-                                  onClick={() => setPosCart(prev => prev.filter(x => x.id !== c.id))}
+                                  onClick={() => handlePosCartRemoveItem(c.id)}
                                   className="text-rose-500 hover:text-rose-700 font-bold"
                                 >
                                   ✕
