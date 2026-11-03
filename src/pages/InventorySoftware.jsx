@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useMemo } from 'react';
+import React, { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import QRCode from 'qrcode';
@@ -67,6 +67,7 @@ import {
   X,
   Zap,
 } from 'lucide-react';
+import { notifyOperation } from '../utils/operationFeedback';
 
 const LOCAL_DB_KEY = 'BV_INVENTORY_DB_V10X';
 const LOCAL_TOKEN_KEY = 'BV_INV_SOFTWARE_TOKEN';
@@ -439,7 +440,9 @@ export default function InventorySoftware() {
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState(null);
-  const [banner, setBanner] = useState(null);
+  const [apiActivity, setApiActivity] = useState({ pendingCount: 0, label: '', startedAt: 0 });
+  const [apiElapsedSeconds, setApiElapsedSeconds] = useState(0);
+  const bootstrapRequestRef = useRef(null);
 
   // Core Data Collections (Single Main Inventory synced across Online & Offline)
   const [items, setItems] = useState(FALLBACK_CATALOG_ITEMS);
@@ -607,11 +610,47 @@ export default function InventorySoftware() {
   const [profilePassForm, setProfilePassForm] = useState({ currentPassword: '', newPassword: '' });
 
   const showNotice = useCallback((type, message) => {
-    setBanner({ type, message });
-    setTimeout(() => {
-      setBanner(prev => (prev?.message === message ? null : prev));
-    }, 5500);
+    notifyOperation(type, message);
   }, []);
+
+  useEffect(() => {
+    const handleInventoryActivity = event => {
+      setApiActivity(previous => {
+        const pendingCount = Number(event.detail?.pendingCount) || 0;
+        return {
+          pendingCount,
+          label: event.detail?.label || previous.label || 'Saving inventory changes',
+          startedAt: pendingCount === 0 ? 0 : previous.startedAt || Date.now(),
+        };
+      });
+    };
+    window.addEventListener('inventory-api-activity', handleInventoryActivity);
+    return () => window.removeEventListener('inventory-api-activity', handleInventoryActivity);
+  }, []);
+
+  useEffect(() => {
+    if (apiActivity.pendingCount === 0) {
+      setApiElapsedSeconds(0);
+      return undefined;
+    }
+    const updateElapsed = () => {
+      setApiElapsedSeconds(Math.floor((Date.now() - apiActivity.startedAt) / 1000));
+    };
+    updateElapsed();
+    const timer = window.setInterval(updateElapsed, 1000);
+    return () => window.clearInterval(timer);
+  }, [apiActivity.pendingCount, apiActivity.startedAt]);
+
+  useEffect(() => {
+    if (!activeModal) return undefined;
+    const handleModalEscape = event => {
+      if (event.key !== 'Escape' || apiActivity.pendingCount > 0 || loading) return;
+      setActiveModal(null);
+      if (activeModal === 'order-detail') setEditingOrder(null);
+    };
+    window.addEventListener('keydown', handleModalEscape);
+    return () => window.removeEventListener('keydown', handleModalEscape);
+  }, [activeModal, apiActivity.pendingCount, loading]);
 
   const reqConfig = useMemo(
     () => ({
@@ -625,83 +664,96 @@ export default function InventorySoftware() {
   const fetchBootstrapData = useCallback(
     async (silent = false) => {
       if (!authToken) return;
-      if (!silent) setLoading(true);
-      setSyncing(true);
-      try {
-        const res = await api.get('/inventory-software/bootstrap', reqConfig);
-        const d = res.data;
-        if (d?.success) {
-          if (d.viewer) {
-            setViewer(d.viewer);
-            localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(d.viewer));
-            if (d.viewer.firstLogin) {
-              setShowOnboardingModal(true);
+      if (bootstrapRequestRef.current) return bootstrapRequestRef.current;
+      const request = (async () => {
+        if (!silent) setLoading(true);
+        setSyncing(true);
+        try {
+          const res = await api.get('/inventory-software/bootstrap', reqConfig);
+          const d = res.data;
+          if (d?.success) {
+            if (d.viewer) {
+              setViewer(d.viewer);
+              localStorage.setItem(LOCAL_USER_KEY, JSON.stringify(d.viewer));
+              if (d.viewer.firstLogin) {
+                setShowOnboardingModal(true);
+              }
             }
-          }
-          if (Array.isArray(d.items) && d.items.length > 0) setItems(d.items);
-          if (Array.isArray(d.bins) && d.bins.length > 0) setBins(d.bins);
-          if (Array.isArray(d.customers) && d.customers.length > 0) {
-            setCustomers(d.customers);
-            setSelectedPosCustomer(prev => d.customers.find(c => c.id === prev?.id) || d.customers[0]);
-          }
-          if (Array.isArray(d.sales)) setSales(d.sales);
-          if (Array.isArray(d.proofs)) setProofs(d.proofs);
-          if (Array.isArray(d.suppliers)) setSuppliers(d.suppliers);
-          if (Array.isArray(d.grnEntries)) setGrnEntries(d.grnEntries);
-          if (Array.isArray(d.movements)) setMovements(d.movements);
-          if (Array.isArray(d.logs)) setLogs(d.logs);
-          if (Array.isArray(d.onlineOrders)) setOnlineOrders(d.onlineOrders);
-          if (Array.isArray(d.scannerQueue)) setScannerQueue(d.scannerQueue);
-          if (Array.isArray(d.dailyBackups)) setDailyBackups(d.dailyBackups);
-          if (Array.isArray(d.shippingZones)) setShippingZones(d.shippingZones);
-          if (Array.isArray(d.carriers)) setCarriers(d.carriers);
-          if (d.cfg) setCfg(prev => ({ ...prev, ...d.cfg }));
-          setLastSyncedAt(d.syncedAt || new Date().toISOString());
+            if (Array.isArray(d.items) && d.items.length > 0) setItems(d.items);
+            if (Array.isArray(d.bins) && d.bins.length > 0) setBins(d.bins);
+            if (Array.isArray(d.customers) && d.customers.length > 0) {
+              setCustomers(d.customers);
+              setSelectedPosCustomer(prev => d.customers.find(c => c.id === prev?.id) || d.customers[0]);
+            }
+            if (Array.isArray(d.sales)) setSales(d.sales);
+            if (Array.isArray(d.proofs)) setProofs(d.proofs);
+            if (Array.isArray(d.suppliers)) setSuppliers(d.suppliers);
+            if (Array.isArray(d.grnEntries)) setGrnEntries(d.grnEntries);
+            if (Array.isArray(d.movements)) setMovements(d.movements);
+            if (Array.isArray(d.logs)) setLogs(d.logs);
+            if (Array.isArray(d.onlineOrders)) setOnlineOrders(d.onlineOrders);
+            if (Array.isArray(d.scannerQueue)) setScannerQueue(d.scannerQueue);
+            if (Array.isArray(d.dailyBackups)) setDailyBackups(d.dailyBackups);
+            if (Array.isArray(d.shippingZones)) setShippingZones(d.shippingZones);
+            if (Array.isArray(d.carriers)) setCarriers(d.carriers);
+            if (d.cfg) setCfg(prev => ({ ...prev, ...d.cfg }));
+            setLastSyncedAt(d.syncedAt || new Date().toISOString());
 
-          localStorage.setItem(
-            LOCAL_DB_KEY,
-            JSON.stringify({
-              items: d.items,
-              bins: d.bins,
-              customers: d.customers,
-              sales: d.sales,
-              proofs: d.proofs,
-              suppliers: d.suppliers,
-              grnEntries: d.grnEntries,
-              movements: d.movements,
-              logs: d.logs,
-              cfg: d.cfg,
-              syncedAt: new Date().toISOString(),
-            })
-          );
+            localStorage.setItem(
+              LOCAL_DB_KEY,
+              JSON.stringify({
+                items: d.items,
+                bins: d.bins,
+                customers: d.customers,
+                sales: d.sales,
+                proofs: d.proofs,
+                suppliers: d.suppliers,
+                grnEntries: d.grnEntries,
+                movements: d.movements,
+                logs: d.logs,
+                cfg: d.cfg,
+                syncedAt: new Date().toISOString(),
+              })
+            );
+          }
+        } catch (err) {
+          if (err.response?.status === 401 || err.response?.status === 403) {
+            setAuthToken('');
+            localStorage.removeItem(LOCAL_TOKEN_KEY);
+            setLoginError(err.response?.data?.message || 'Session expired. Please sign in.');
+          } else {
+            let loadedLocalCache = false;
+            try {
+              const cached = JSON.parse(localStorage.getItem(LOCAL_DB_KEY) || 'null');
+              if (cached?.items) {
+                loadedLocalCache = true;
+                setItems(cached.items);
+                if (cached.bins) setBins(cached.bins);
+                if (cached.customers) setCustomers(cached.customers);
+                if (cached.sales) setSales(cached.sales);
+                if (cached.proofs) setProofs(cached.proofs);
+                if (cached.suppliers) setSuppliers(cached.suppliers);
+                if (cached.movements) setMovements(cached.movements);
+                if (cached.logs) setLogs(cached.logs);
+              }
+            } catch {}
+            showNotice(
+              'error',
+              loadedLocalCache
+                ? 'Could not reach the server. Showing saved inventory data; changes may be out of date.'
+                : 'Could not reach the server. The displayed inventory data may be out of date.'
+            );
+          }
+        } finally {
+          setLoading(false);
+          setSyncing(false);
+          bootstrapRequestRef.current = null;
         }
-      } catch (err) {
-        if (err.response?.status === 401 || err.response?.status === 403) {
-          setAuthToken('');
-          localStorage.removeItem(LOCAL_TOKEN_KEY);
-          setLoginError(err.response?.data?.message || 'Session expired. Please sign in.');
-        } else {
-          // Load from local cache if offline
-          try {
-            const cached = JSON.parse(localStorage.getItem(LOCAL_DB_KEY) || 'null');
-            if (cached?.items) {
-              setItems(cached.items);
-              if (cached.bins) setBins(cached.bins);
-              if (cached.customers) setCustomers(cached.customers);
-              if (cached.sales) setSales(cached.sales);
-              if (cached.proofs) setProofs(cached.proofs);
-              if (cached.suppliers) setSuppliers(cached.suppliers);
-              if (cached.movements) setMovements(cached.movements);
-              if (cached.logs) setLogs(cached.logs);
-            }
-          } catch {}
-        }
-      } finally {
-        setLoading(false);
-        setSyncing(false);
-      }
+      })();
+      bootstrapRequestRef.current = request;
+      return request;
     },
-    [authToken, reqConfig]
+    [authToken, reqConfig, showNotice]
   );
 
   useEffect(() => {
@@ -2498,25 +2550,6 @@ export default function InventorySoftware() {
             </button>
           </div>
         </header>
-
-        {/* NOTIFICATION BANNER */}
-        {banner && (
-          <div
-            className={`px-6 py-2.5 text-xs font-bold flex items-center justify-between border-b ${
-              banner.type === 'error'
-                ? 'bg-rose-50 text-rose-800 border-rose-200'
-                : 'bg-emerald-50 text-emerald-900 border-emerald-200'
-            }`}
-          >
-            <span className="flex items-center gap-2">
-              {banner.type === 'error' ? <AlertTriangle className="w-4 h-4" /> : <CheckCircle2 className="w-4 h-4" />}
-              {banner.message}
-            </span>
-            <button type="button" onClick={() => setBanner(null)} className="text-slate-500 hover:text-slate-800">
-              ✕
-            </button>
-          </div>
-        )}
 
         {/* CONTENT SCROLL AREA */}
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
@@ -6237,9 +6270,14 @@ export default function InventorySoftware() {
                 onClick={async () => {
                   if (!newCategoryName.trim()) return;
                   const nextCats = [...new Set([...(cfg.cats || []), newCategoryName.trim()])];
-                  setCfg(prev => ({ ...prev, cats: nextCats }));
-                  setNewCategoryName('');
-                  await api.put('/inventory-software/config', { ...cfg, cats: nextCats }, reqConfig).catch(() => {});
+                  try {
+                    await api.put('/inventory-software/config', { ...cfg, cats: nextCats }, reqConfig);
+                    setCfg(prev => ({ ...prev, cats: nextCats }));
+                    setNewCategoryName('');
+                    showNotice('success', 'Product category added.');
+                  } catch (err) {
+                    showNotice('error', err.response?.data?.message || 'Could not add product category.');
+                  }
                 }}
                 className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold"
               >
@@ -6254,8 +6292,13 @@ export default function InventorySoftware() {
                     type="button"
                     onClick={async () => {
                       const nextCats = (cfg.cats || []).filter(x => x !== c);
-                      setCfg(prev => ({ ...prev, cats: nextCats }));
-                      await api.put('/inventory-software/config', { ...cfg, cats: nextCats }, reqConfig).catch(() => {});
+                      try {
+                        await api.put('/inventory-software/config', { ...cfg, cats: nextCats }, reqConfig);
+                        setCfg(prev => ({ ...prev, cats: nextCats }));
+                        showNotice('success', 'Product category removed.');
+                      } catch (err) {
+                        showNotice('error', err.response?.data?.message || 'Could not remove product category.');
+                      }
                     }}
                     className="text-rose-500 font-bold"
                   >
@@ -6319,8 +6362,13 @@ export default function InventorySoftware() {
                     <button
                       type="button"
                       onClick={async () => {
-                        await api.delete(`/inventory-software/auth/passkey/${pk.id}`, reqConfig);
-                        fetchBootstrapData(true);
+                        try {
+                          await api.delete(`/inventory-software/auth/passkey/${pk.id}`, reqConfig);
+                          showNotice('success', 'Passkey removed.');
+                          fetchBootstrapData(true);
+                        } catch (err) {
+                          showNotice('error', err.response?.data?.message || 'Could not remove passkey.');
+                        }
                       }}
                       className="text-rose-600 font-bold"
                     >
@@ -6341,9 +6389,13 @@ export default function InventorySoftware() {
                   <button
                     type="button"
                     onClick={async () => {
-                      await api.post('/inventory-software/auth/2fa/disable', {}, reqConfig);
-                      showNotice('info', '2FA disabled.');
-                      fetchBootstrapData(true);
+                      try {
+                        await api.post('/inventory-software/auth/2fa/disable', {}, reqConfig);
+                        showNotice('info', '2FA disabled.');
+                        fetchBootstrapData(true);
+                      } catch (err) {
+                        showNotice('error', err.response?.data?.message || 'Could not disable 2FA.');
+                      }
                     }}
                     className="px-3 py-1 rounded-lg bg-rose-50 text-rose-700 font-bold"
                   >
@@ -6734,6 +6786,32 @@ export default function InventorySoftware() {
                 </div>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+      {(apiActivity.pendingCount > 0 || loading) && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-[#030a06]/70 p-4 backdrop-blur-sm"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <div className="w-full max-w-sm rounded-2xl border border-emerald-400/25 bg-[#0b2419] p-6 text-center text-[#f2f7f2] shadow-2xl">
+            <RefreshCw className="mx-auto h-10 w-10 animate-spin text-emerald-400" />
+            <h2 className="mt-4 text-base font-black">{apiActivity.label || 'Working on your request'}</h2>
+            <p className="mt-2 text-sm text-[#c0cec3]">
+              {apiActivity.pendingCount > 1
+                ? `${apiActivity.pendingCount} requests are still in progress.`
+                : apiActivity.pendingCount === 1
+                  ? 'Waiting for the server to finish this request.'
+                  : 'Preparing the inventory workspace.'}
+            </p>
+            <p className="mt-1 text-xs text-[#a9bcae]">Elapsed: {apiElapsedSeconds}s</p>
+            <p className="mt-3 text-xs text-[#a9bcae]">
+              {apiElapsedSeconds > 15
+                ? 'This is taking longer than usual. Please keep this window open; the screen remains locked to prevent duplicate actions.'
+                : 'Please wait. The screen is temporarily locked to prevent duplicate actions.'}
+            </p>
           </div>
         </div>
       )}

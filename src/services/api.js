@@ -17,6 +17,40 @@ export const BASE_URL = b;
 
 const api = axios.create({ baseURL: `${BASE_URL}/api`, withCredentials: true });
 let lastReportedApiFailureAt = 0;
+let inventoryPendingRequests = 0;
+
+const isInventoryActivityRequest = config =>
+  String(config?.url || '').startsWith('/inventory-software/') &&
+  !/^\/inventory-software\/auth\/(?:login|passkey-login)(?:\/|$)/.test(config.url);
+
+const updateInventoryRequestActivity = (config, active) => {
+  if (!isInventoryActivityRequest(config) || typeof window === 'undefined') return;
+  if (active) {
+    if (config.__inventoryActivityTracked) return;
+    config.__inventoryActivityTracked = true;
+    inventoryPendingRequests += 1;
+  } else {
+    if (!config.__inventoryActivityTracked) return;
+    config.__inventoryActivityTracked = false;
+    inventoryPendingRequests = Math.max(0, inventoryPendingRequests - 1);
+  }
+
+  const url = String(config.url || '');
+  const label = url.includes('/bootstrap')
+    ? 'Syncing inventory data'
+    : url.includes('/online-orders')
+      ? 'Updating order and dispatch details'
+      : url.includes('/pos/')
+        ? 'Processing POS transaction'
+        : url.includes('/backup/')
+          ? 'Processing database backup'
+          : url.includes('/items/')
+            ? 'Updating product inventory'
+            : 'Saving inventory changes';
+  window.dispatchEvent(new CustomEvent('inventory-api-activity', {
+    detail: { pendingCount: inventoryPendingRequests, label },
+  }));
+};
 
 const isMutation = method => ['post', 'put', 'patch', 'delete'].includes(String(method || '').toLowerCase());
 
@@ -148,6 +182,7 @@ api.interceptors.request.use(c => {
     }
     if (token) c.headers.Authorization = `Bearer ${token}`;
   }
+  updateInventoryRequestActivity(c, true);
   return c;
 }, e => Promise.reject(e));
 
@@ -437,6 +472,17 @@ api.interceptors.response.use(async response => {
   notifyMutationFailure(e);
   return Promise.reject(e);
 });
+
+api.interceptors.response.use(
+  response => {
+    updateInventoryRequestActivity(response.config, false);
+    return response;
+  },
+  error => {
+    updateInventoryRequestActivity(error.config, false);
+    return Promise.reject(error);
+  }
+);
 
 export const auth = { getPasskeyRegisterChallenge: () => api.post('/auth/passkey/register-challenge'), verifyPasskeyRegister: d => api.post('/auth/passkey/register-verify', d), getPasskeyLoginChallenge: email => api.post('/auth/passkey/login-challenge', { email }), verifyPasskeyLogin: d => api.post('/auth/passkey/login-verify', d), listPasskeys: () => api.get('/auth/passkey/list'), deletePasskey: id => api.delete(`/auth/passkey/${id}`), login: d => api.post('/auth/login', d), logout: () => api.post('/auth/logout'), adminLogout: () => { const t = localStorage.getItem('adminToken'); return axios.post(`${BASE_URL}/api/auth/logout`, {}, t ? { headers: { Authorization: `Bearer ${t}` } } : {}).catch(() => ({ data: {} })); }, register: d => api.post('/auth/register', d), verifyEmail: d => api.post('/auth/verify-email', { email: d.email, otp: d.otp, securityAnswer: d.securityAnswer }), getProfile: () => api.get('/auth/profile'), updateProfile: d => api.put('/users/profile', d), verify2FA: d => api.post('/auth/2fa/verify', d), requestPasswordReset: d => api.post('/auth/forgot-password', d), verifyResetOtp: d => api.post('/auth/verify-otp', d), resetPassword: d => api.post('/auth/reset-password', d), verifySecurityQuestion: d => api.post('/auth/security-question/verify', d), adminLogin: d => api.post('/auth/admin/login', d), changeAdminPassword: d => api.post('/auth/admin/change-password', d, { adminAuth: true }), getAdminProfile: () => api.get('/auth/profile'), sendAdminOtp: (email, password) => api.post('/auth/admin/request-otp', { email, password }), verifyAdminOtp: (email, otp) => api.post('/auth/admin/verify-otp', { email, otp }), mobileLoginRequest: email => api.post('/auth/mobile-login/request', { email }), mobileLoginVerify: d => api.post('/auth/mobile-login/verify', d), verifyPremiumResetOtp: d => api.post('/auth/verify-reset-otp', d), verifySecurityQuestionForReset: d => api.post('/auth/security-question/verify-for-reset', d), resetPasswordBearer: (resetJwt, newPassword) => api.post('/auth/reset-password', { newPassword }, { headers: { Authorization: `Bearer ${resetJwt}` } }), adminForgotPassword: d => api.post('/auth/admin/forgot-password', d), adminVerifyResetOtp: d => api.post('/auth/admin/verify-reset-otp', d), adminResetPasswordBearer: (resetJwt, newPassword) => api.post('/auth/admin/reset-password', { newPassword }, { headers: { Authorization: `Bearer ${resetJwt}` } }) };
 const passkeyOwnerConfig = accountType => accountType === 'admin' ? { adminAuth: true } : undefined;
