@@ -1,0 +1,11 @@
+# BHUMIVERA FRONTEND — CURSOR RULES & BOT DIRECTIVES
+# 1. READ "AI_MEMORY/00_START_HERE.md" and "AI_MEMORY/03_BOT_STATE_LEDGER.md" FIRST.
+# 2. CURRENT INVENTORY: 79 Total Pages & Studios (43 Storefront/Portal, 36 Admin Studios) | 7 Contexts.
+# 3. PANEL ISOLATION:
+#    - Orders, Shipping Labels, RTO Returns & Stock belong strictly to "/inventorysoftware".
+#    - Website Marketing & Customer CRM belong to "/admin".
+# 4. SELF-UPDATING RULE:
+#    Even if the user forgot to remind you in their prompt:
+#    Whenever you add, modify, or delete any page, studio, or state provider:
+#    YOU MUST update the count in "AI_MEMORY/02_PAGES_AND_STUDIOS_REGISTRY.md"
+#    and log your delta in "AI_MEMORY/03_BOT_STATE_LEDGER.md" (e.g. 79 -> 80 pages).
