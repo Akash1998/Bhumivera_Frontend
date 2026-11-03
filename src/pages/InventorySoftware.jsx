@@ -1520,7 +1520,14 @@ export default function InventorySoftware() {
         await fetchBootstrapData(true);
       }
     } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Checkout failed.');
+      const status = err.response?.status;
+      const message = err.response?.data?.message;
+      showNotice(
+        'error',
+        !err.response || status >= 500 || status === 429
+          ? `${message || 'Connection problem.'} Your bill is saved. Tap Complete Bill again; it will not be duplicated.`
+          : message || 'Checkout failed.'
+      );
       if (err.response?.data?.code === 'TAX_RATE_MISMATCH') await fetchBootstrapData(true);
     } finally {
       setPosCheckoutBusy(false);
@@ -2142,6 +2149,13 @@ export default function InventorySoftware() {
         reqConfig
       );
       if (res.data?.scanned?.length) {
+        const lowStock = res.data.lowStock || [];
+        if (lowStock.length > 0) {
+          showNotice(
+            'error',
+            `Low stock: ${lowStock.map(i => `${i.name} (${i.remaining} left after this sale)`).join(', ')}`
+          );
+        }
         for (const sc of res.data.scanned) {
           setPosCart(prev => {
             const existing = prev.find(c => c.sku === sc.sku || c.id === sc.metaId);
