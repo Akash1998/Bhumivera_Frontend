@@ -3796,7 +3796,7 @@ export default function InventorySoftware() {
                         </tr>
                       ) : (
                         filteredOnlineOrders.map(ord => (
-                          <tr key={ord.id} className="hover:bg-slate-50 align-top">
+                          <tr key={ord.id} className="hover:bg-[#103323] align-top">
                             <td className="py-3 px-3 font-mono">
                               <div className="font-black text-slate-900 text-sm">#{ord.orderNumber}</div>
                               <div className="text-[10px] text-slate-500">
