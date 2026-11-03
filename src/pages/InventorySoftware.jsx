@@ -1315,6 +1315,7 @@ export default function InventorySoftware() {
     if (!sale) return;
     const w = window.open('', '_blank', 'width=350,height=600');
     if (!w) return;
+    const logoUrl = `${window.location.origin}/logo.webp`;
     w.document.write(`
       <html><head><title>Receipt ${sale.invoiceNo}</title>
       <style>
@@ -1322,7 +1323,9 @@ export default function InventorySoftware() {
         .center { text-align: center; }
         .bold { font-weight: bold; }
         .line { border-top: 1px dashed #000; margin: 8px 0; }
+        .logo { display: block; width: 64px; height: 64px; object-fit: contain; margin: 0 auto 4px; filter: grayscale(1) contrast(2) brightness(.65); }
       </style></head><body>
+        <img class="logo" src="${logoUrl}" alt="Bhumivera logo" />
         <div class="center bold" style="font-size:15px;">BHUMIVERA ORGANICS</div>
         <div class="center" style="font-size:10px;">${cfg.address}</div>
         <div class="center" style="font-size:10px;">GSTIN: ${cfg.gstin}</div>
@@ -1345,8 +1348,51 @@ export default function InventorySoftware() {
         <div>Khata Balance: <span style="float:right;">₹${sale.newBal}</span></div>
         <div class="line"></div>
         <div class="center" style="font-size:10px;">www.bhumivera.com • Thank You!</div>
-        <script>window.print();</script>
+        <script>window.onload = () => window.print();</script>
       </body></html>
+    `);
+    w.document.close();
+  };
+
+  const handlePrintShelfLabel = () => {
+    if (!labelItem || !labelQrUrl) return;
+    const w = window.open('', '_blank', 'width=420,height=600');
+    if (!w) return;
+    const escapeHtml = value =>
+      String(value ?? '').replace(/[&<>"']/g, character => {
+        const entities = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        return entities[character];
+      });
+    const logoUrl = `${window.location.origin}/logo.webp`;
+    w.document.write(`
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <title>Shelf Label - ${escapeHtml(labelItem.sku)}</title>
+          <style>
+            @page { margin: 2mm; }
+            * { box-sizing: border-box; }
+            body { width: 50mm; margin: 0 auto; padding: 2mm; font-family: Arial, sans-serif; color: #000; text-align: center; }
+            .logo { display: block; width: 16mm; height: 16mm; object-fit: contain; margin: 0 auto 1mm; filter: grayscale(1) contrast(2) brightness(.65); }
+            .brand { font-size: 9pt; font-weight: 800; }
+            .name { margin-top: 1mm; font-size: 8pt; font-weight: 700; }
+            .qr { display: block; width: 27mm; height: 27mm; margin: 1.5mm auto; image-rendering: pixelated; }
+            .details { font-size: 7pt; font-weight: 700; overflow-wrap: anywhere; }
+            .price { margin-top: 1mm; font-size: 9pt; font-weight: 800; }
+            @media screen { body { margin: 16px auto; } }
+          </style>
+        </head>
+        <body>
+          <img class="logo" src="${logoUrl}" alt="Bhumivera logo" />
+          <div class="brand">BHUMIVERA ORGANICS</div>
+          <div class="name">${escapeHtml(labelItem.name)}</div>
+          <img class="qr" src="${labelQrUrl}" alt="Product QR code" />
+          <div class="details">SKU: ${escapeHtml(labelItem.sku)} | Bin: ${escapeHtml(labelItem.binCode)}</div>
+          <div class="details">Barcode: ${escapeHtml(labelItem.barcode)} | Batch: ${escapeHtml(labelItem.batchNo || 'N/A')}</div>
+          <div class="price">MRP: ₹${escapeHtml(labelItem.mrp)} (Offer: ₹${escapeHtml(labelItem.price)})</div>
+          <script>window.onload = () => window.print();</script>
+        </body>
+      </html>
     `);
     w.document.close();
   };
@@ -6050,6 +6096,11 @@ export default function InventorySoftware() {
               </button>
             </div>
             <div className="p-4 border-2 border-dashed border-slate-400 rounded-xl space-y-2">
+              <img
+                src="/logo.webp"
+                alt="Bhumivera logo"
+                className="w-16 h-16 object-contain mx-auto grayscale contrast-200"
+              />
               <div className="font-black text-slate-900 text-sm uppercase">BHUMIVERA ORGANICS</div>
               <div className="font-bold text-slate-800">{labelItem.name}</div>
               {labelQrUrl && <img src={labelQrUrl} alt="QR" className="w-32 h-32 mx-auto" />}
@@ -6065,7 +6116,7 @@ export default function InventorySoftware() {
             </div>
             <button
               type="button"
-              onClick={() => window.print()}
+              onClick={handlePrintShelfLabel}
               className="w-full py-3 rounded-xl bg-slate-900 text-white font-bold"
             >
               Print Shelf Label
