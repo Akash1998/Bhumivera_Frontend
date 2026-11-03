@@ -12,6 +12,7 @@ import PhoneRequiredGate from "./components/PhoneRequiredGate.jsx";
 import { CartProvider, useCart } from "./context/CartContext.jsx";
 import { AuthProvider, useAuth } from "./context/AuthContext.jsx";
 import { ToastProvider } from "./context/ToastContext.jsx";
+import GlobalActivityIndicator from "./components/GlobalActivityIndicator.jsx";
 import { WishlistProvider } from "./context/WishlistContext.jsx";
 import { CompareProvider } from "./context/CompareContext.jsx";
 import "./index.css";
@@ -549,6 +550,7 @@ function NativeLaunchGate() {
 function App() {
   return (
     <BrowserRouter>
+      <GlobalActivityIndicator />
       <ToastProvider>
         <AuthProvider>
           <CartProvider>

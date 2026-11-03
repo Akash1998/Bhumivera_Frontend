@@ -1,6 +1,7 @@
 import axios from "axios";
 import { Capacitor } from "@capacitor/core";
 import { notifyOperation } from "../utils/operationFeedback";
+import { beginRequest, endRequest } from "../utils/networkActivity";
 import {
   getPublicCatalogCacheKey,
   isCacheablePublicCatalogResponse,
@@ -17,42 +18,50 @@ export const BASE_URL = b;
 
 const api = axios.create({ baseURL: `${BASE_URL}/api`, withCredentials: true });
 let lastReportedApiFailureAt = 0;
-let inventoryPendingRequests = 0;
-
-const isInventoryActivityRequest = config =>
-  String(config?.url || '').startsWith('/inventory-software/') &&
-  !/^\/inventory-software\/auth\/(?:login|passkey-login)(?:\/|$)/.test(config.url);
-
-const updateInventoryRequestActivity = (config, active) => {
-  if (!isInventoryActivityRequest(config) || typeof window === 'undefined') return;
-  if (active) {
-    if (config.__inventoryActivityTracked) return;
-    config.__inventoryActivityTracked = true;
-    inventoryPendingRequests += 1;
-  } else {
-    if (!config.__inventoryActivityTracked) return;
-    config.__inventoryActivityTracked = false;
-    inventoryPendingRequests = Math.max(0, inventoryPendingRequests - 1);
-  }
-
-  const url = String(config.url || '');
-  const label = url.includes('/bootstrap')
-    ? 'Syncing inventory data'
-    : url.includes('/online-orders')
-      ? 'Updating order and dispatch details'
-      : url.includes('/pos/')
-        ? 'Processing POS transaction'
-        : url.includes('/backup/')
-          ? 'Processing database backup'
-          : url.includes('/items/')
-            ? 'Updating product inventory'
-            : 'Saving inventory changes';
-  window.dispatchEvent(new CustomEvent('inventory-api-activity', {
-    detail: { pendingCount: inventoryPendingRequests, label },
-  }));
-};
 
 const isMutation = method => ['post', 'put', 'patch', 'delete'].includes(String(method || '').toLowerCase());
+
+const inFlightMutations = new Map();
+
+const getActivityLabel = config => {
+  if (config.activityLabel) return config.activityLabel;
+  const url = String(config.url || '');
+  if (url.includes('/bootstrap')) return 'Syncing data…';
+  if (url.includes('/backup')) return 'Processing database backup…';
+  if (url.includes('/pos/')) return 'Processing transaction…';
+  if (/\/(orders|online-orders)/.test(url)) return 'Updating order…';
+  if (/\/(auth|login)/.test(url)) return 'Signing you in…';
+  if (String(config.method).toLowerCase() === 'delete') return 'Deleting…';
+  return 'Saving changes…';
+};
+
+// Tracks activity for the global loader and shares one response between identical in-flight mutations (double clicks).
+const trackAndDedupe = config => {
+  const mutation = isMutation(config.method);
+  beginRequest(config, mutation, mutation ? getActivityLabel(config) : '');
+  if (!mutation || config.allowDuplicate === true) return;
+  const body = config.data;
+  if (body && typeof body !== 'string' && Object.getPrototypeOf(body) !== Object.prototype && !Array.isArray(body)) return;
+  let key;
+  try {
+    key = `${config.method}|${config.baseURL || ''}${config.url}|${typeof body === 'string' ? body : JSON.stringify(body ?? null)}|${config.headers?.Authorization || ''}`;
+  } catch {
+    return;
+  }
+  const existing = inFlightMutations.get(key);
+  if (existing) {
+    config.adapter = () => existing;
+    return;
+  }
+  const baseAdapter = axios.getAdapter(config.adapter || api.defaults.adapter);
+  config.adapter = cfg => {
+    const promise = baseAdapter(cfg);
+    inFlightMutations.set(key, promise);
+    const release = () => inFlightMutations.delete(key);
+    promise.then(release, release);
+    return promise;
+  };
+};
 
 const getOperationLabel = url => {
   const path = String(url || '').split('?')[0].replace(/\/+$/, '');
@@ -182,7 +191,7 @@ api.interceptors.request.use(c => {
     }
     if (token) c.headers.Authorization = `Bearer ${token}`;
   }
-  updateInventoryRequestActivity(c, true);
+  trackAndDedupe(c);
   return c;
 }, e => Promise.reject(e));
 
@@ -475,11 +484,11 @@ api.interceptors.response.use(async response => {
 
 api.interceptors.response.use(
   response => {
-    updateInventoryRequestActivity(response.config, false);
+    endRequest(response.config);
     return response;
   },
   error => {
-    updateInventoryRequestActivity(error.config, false);
+    endRequest(error.config);
     return Promise.reject(error);
   }
 );
