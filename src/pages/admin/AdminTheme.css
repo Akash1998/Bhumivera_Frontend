@@ -9,6 +9,51 @@
   --admin-green: #70d49a;
 }
 
+.inventory-shell {
+  color-scheme: dark;
+  background:
+    radial-gradient(ellipse at 76% 4%, rgba(34, 197, 94, 0.14), transparent 40%),
+    radial-gradient(ellipse at 18% 82%, rgba(212, 175, 55, 0.08), transparent 42%),
+    linear-gradient(135deg, #071a12 0%, #0b2419 52%, #0a1c16 100%) !important;
+}
+
+.inventory-shell [class~="bg-white"],
+.inventory-shell [class~="bg-slate-50"],
+.inventory-shell [class~="bg-slate-100"],
+.inventory-shell [class~="bg-gray-50"],
+.inventory-shell [class~="bg-gray-100"] {
+  background-color: var(--admin-panel) !important;
+}
+
+.inventory-shell [class~="bg-slate-900"] {
+  background-color: var(--admin-forest) !important;
+}
+
+.inventory-shell [class~="bg-slate-800"] {
+  background-color: var(--admin-panel-raised) !important;
+}
+
+.inventory-shell [class~="text-slate-900"],
+.inventory-shell [class~="text-gray-900"] {
+  color: var(--admin-text) !important;
+}
+
+.inventory-shell [class~="text-slate-800"],
+.inventory-shell [class~="text-slate-700"],
+.inventory-shell [class~="text-gray-800"],
+.inventory-shell [class~="text-gray-700"] {
+  color: var(--admin-text-muted) !important;
+}
+
+.inventory-shell [class~="border-slate-100"],
+.inventory-shell [class~="border-slate-200"],
+.inventory-shell [class~="border-slate-300"],
+.inventory-shell [class~="border-gray-100"],
+.inventory-shell [class~="border-gray-200"],
+.inventory-shell [class~="border-gray-300"] {
+  border-color: var(--admin-border) !important;
+}
+
 .admin-theme [class~="text-slate-400"],
 .admin-theme [class~="text-gray-400"],
 .admin-theme [class~="text-zinc-400"] {
