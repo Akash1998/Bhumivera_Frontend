@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BhumiVera | Admin Security Waypoint</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        :root { --font-ui: 'Inter', sans-serif; --font-head: 'Rajdhani', sans-serif; }
+        body { font-family: var(--font-ui); background: #0b0f19; color: #f8fafc; }
+        .font-head { font-family: var(--font-head); }
+        .glass-panel { background: rgba(17, 24, 39, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.6); }
+        .input-dark { background: rgba(15, 23, 42, 0.7); border: 1px solid #334155; color: #fff; transition: all 0.2s; }
+        .input-dark:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); outline: none; }
+        .glow-emerald { text-shadow: 0 0 20px rgba(16, 185, 129, 0.4); }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 relative overflow-hidden">
+    <!-- Ambient background glows -->
+    <div class="absolute -top-40 -left-40 w-96 h-96 bg-emerald-600/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-40 -right-40 w-96 h-96 bg-blue-600/15 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-md w-full space-y-6 relative z-10">
+        <!-- Brand Header -->
+        <div class="text-center">
+            <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-slate-900/90 border-2 border-amber-300/50 p-1.5 mb-3 shadow-[0_0_35px_rgba(251,191,36,0.3)]">
+                <img src="../assets/logo.png" alt="BhumiVera" class="w-full h-full object-contain rounded-full">
+            </div>
+            <h1 class="text-3xl font-extrabold tracking-wider text-white font-head uppercase glow-emerald">
+                BhumiVera <span class="text-emerald-400">Admin</span>
+            </h1>
+            <p class="text-slate-400 text-sm mt-1">Central Identity & Access Management Waypoint</p>
+            <div class="inline-block mt-2 px-3 py-1 bg-emerald-950/60 border border-emerald-500/30 rounded-full text-xs font-mono text-emerald-300">
+                bhumivera.com/admin/login
+            </div>
+        </div>
+
+        <!-- Login Card -->
+        <div class="glass-panel rounded-2xl p-8 space-y-6">
+            <div class="border-b border-slate-700/60 pb-4">
+                <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                    <i class="ph-bold ph-lock-key text-emerald-400"></i> Master Administrator Login
+                </h2>
+                <p class="text-xs text-slate-400 mt-1">Authenticate to access the Staff Account Creation Waypoint</p>
+            </div>
+
+            <form id="admin-login-form" onsubmit="handleAdminLogin(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
+                        Admin Account ID / Username
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                            <i class="ph-bold ph-user text-lg"></i>
+                        </span>
+                        <input type="text" id="adm-user" required placeholder="admin" value="admin"
+                            class="w-full input-dark pl-11 pr-4 py-3.5 rounded-xl text-sm font-semibold placeholder-slate-500">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
+                        Master Passcode
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                            <i class="ph-bold ph-key text-lg"></i>
+                        </span>
+                        <input type="password" id="adm-pass" required placeholder="••••••••••••" value="Admin@123"
+                            class="w-full input-dark pl-11 pr-11 py-3.5 rounded-xl text-sm font-semibold tracking-wider">
+                        <button type="button" onclick="togglePasswordVisibility()" class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-white">
+                            <i id="eye-icon" class="ph-bold ph-eye text-lg"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="login-error" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-bold flex items-center gap-2">
+                    <i class="ph-bold ph-warning-circle text-base"></i>
+                    <span id="login-error-msg">Invalid Credentials.</span>
+                </div>
+
+                <button type="submit" id="btn-login"
+                    class="w-full bg-emerald-500 hover:bg-emerald-600 active:scale-[0.99] text-white py-3.5 rounded-xl font-bold text-sm tracking-wide shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-sign-in text-lg"></i> Access Admin Console
+                </button>
+            </form>
+
+            <div class="pt-4 border-t border-slate-700/60 text-center">
+                <a href="../inventorymanagement/login.html" class="inline-flex items-center gap-2 text-xs font-semibold text-emerald-400 hover:text-emerald-300 transition">
+                    <i class="ph-bold ph-arrow-left"></i> Go to Inventory Software Login Terminal
+                </a>
+            </div>
+        </div>
+
+        <!-- Quick Info Box -->
+        <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 text-xs text-slate-400 space-y-1 text-center">
+            <div class="font-bold text-slate-300">Default Credentials for Demo / Setup:</div>
+            <div>Username: <code class="text-emerald-400 font-mono">admin</code> | Password: <code class="text-emerald-400 font-mono">Admin@123</code></div>
+        </div>
+    </div>
+
+    <!-- Core Scripts -->
+    <script src="../shared/auth.js"></script>
+    <script>
+        function togglePasswordVisibility() {
+            const passInput = document.getElementById('adm-pass');
+            const eyeIcon = document.getElementById('eye-icon');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                eyeIcon.classList.replace('ph-eye', 'ph-eye-slash');
+            } else {
+                passInput.type = 'password';
+                eyeIcon.classList.replace('ph-eye-slash', 'ph-eye');
+            }
+        }
+
+        async function handleAdminLogin(e) {
+            e.preventDefault();
+            const user = document.getElementById('adm-user').value.trim();
+            const pass = document.getElementById('adm-pass').value;
+            const errBox = document.getElementById('login-error');
+            const btn = document.getElementById('btn-login');
+
+            errBox.classList.add('hidden');
+            btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin text-lg"></i> Authenticating...';
+            btn.disabled = true;
+
+            try {
+                const res = await BVAuth.verifyCredentials(user, pass);
+                if (!res.success) {
+                    showError(res.message || 'Access Denied.');
+                    btn.innerHTML = '<i class="ph-bold ph-sign-in text-lg"></i> Access Admin Console';
+                    btn.disabled = false;
+                    return;
+                }
+
+                // Verify admin role
+                if (!res.session || res.session.role !== 'admin') {
+                    showError('Access Denied. Only Master Administrators can access this waypoint.');
+                    await BVAuth.logout();
+                    btn.innerHTML = '<i class="ph-bold ph-sign-in text-lg"></i> Access Admin Console';
+                    btn.disabled = false;
+                    return;
+                }
+
+                // Success: redirect to Admin Waypoint Dashboard
+                window.location.href = 'index.html';
+            } catch (err) {
+                console.error(err);
+                showError('System error during login.');
+                btn.innerHTML = '<i class="ph-bold ph-sign-in text-lg"></i> Access Admin Console';
+                btn.disabled = false;
+            }
+        }
+
+        function showError(msg) {
+            const errBox = document.getElementById('login-error');
+            document.getElementById('login-error-msg').innerText = msg;
+            errBox.classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>

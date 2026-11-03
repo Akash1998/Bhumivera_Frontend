@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BhumiVera | Admin Management Waypoint</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <style>
+        :root { --font-ui: 'Inter', sans-serif; --font-head: 'Rajdhani', sans-serif; --font-mono: 'JetBrains Mono', monospace; }
+        body { font-family: var(--font-ui); background: #090d16; color: #f8fafc; }
+        .font-head { font-family: var(--font-head); }
+        .font-mono { font-family: var(--font-mono); }
+        .glass-card { background: rgba(17, 24, 39, 0.75); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.08); }
+        .input-dark { background: rgba(15, 23, 42, 0.8); border: 1px solid #334155; color: #fff; transition: all 0.2s; }
+        .input-dark:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.2); outline: none; }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+    <!-- Top Navigation Bar -->
+    <header class="h-16 border-b border-slate-800 bg-slate-900/80 backdrop-blur-md px-6 flex items-center justify-between sticky top-0 z-50">
+        <div class="flex items-center gap-3">
+            <img src="../assets/logo.png" alt="BhumiVera" class="w-10 h-10 object-contain rounded-full border border-amber-300/50 bg-slate-900 p-0.5 shadow-md">
+            <div>
+                <div class="font-head text-xl font-bold tracking-wide text-white uppercase leading-none">
+                    BhumiVera <span class="text-emerald-400">Identity Waypoint</span>
+                </div>
+                <div class="text-[11px] text-slate-400 font-mono tracking-wider">
+                    bhumivera.com/admin/login &bull; Security Level: Maximum
+                </div>
+            </div>
+        </div>
+
+        <div class="flex items-center gap-4">
+            <a href="../inventorymanagement/login.html" target="_blank"
+                class="bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white px-3.5 py-2 rounded-xl text-xs font-bold border border-slate-700 transition flex items-center gap-2">
+                <i class="ph-bold ph-arrow-square-out text-base text-emerald-400"></i> Open Inventory App
+            </a>
+            
+            <div class="h-6 w-px bg-slate-800"></div>
+
+            <div class="flex items-center gap-3">
+                <div class="text-right">
+                    <div id="admin-display-name" class="text-xs font-bold text-white">Master Admin</div>
+                    <div class="text-[10px] text-emerald-400 font-mono">SYS-ADMIN</div>
+                </div>
+                <button onclick="handleLogout()" title="Logout"
+                    class="w-9 h-9 rounded-xl bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/20 flex items-center justify-center transition">
+                    <i class="ph-bold ph-power text-lg"></i>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="flex-1 p-6 max-w-7xl w-full mx-auto space-y-6">
+        <!-- Notification Banner -->
+        <div class="p-4 rounded-2xl bg-gradient-to-r from-emerald-950/40 via-slate-900/60 to-blue-950/40 border border-emerald-500/20 flex flex-wrap items-center justify-between gap-4">
+            <div class="flex items-center gap-3.5">
+                <div class="w-10 h-10 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl shrink-0">
+                    <i class="ph-bold ph-shield-check"></i>
+                </div>
+                <div>
+                    <h3 class="text-sm font-bold text-white">Identity Access Management Center</h3>
+                    <p class="text-xs text-slate-400">
+                        Create user accounts below. When staff log in for the first time at <span class="text-emerald-400 font-mono">bhumivera.com/inventorymanagement/login</span>, they can enroll their biometric Passkey & 2FA Authenticator app.
+                    </p>
+                </div>
+            </div>
+            <button onclick="openCreateUserModal()"
+                class="bg-emerald-500 hover:bg-emerald-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-lg shadow-emerald-500/20">
+                <i class="ph-bold ph-user-plus text-base"></i> Create New Account ID
+            </button>
+        </div>
+
+        <!-- Metric Stat Cards -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="glass-card rounded-2xl p-5 border-l-4 border-emerald-500">
+                <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Total System Accounts</div>
+                <div id="stat-total-users" class="text-3xl font-head font-bold text-white mt-2">0</div>
+                <div class="text-[11px] text-emerald-400 font-medium mt-1">Active Credentials</div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-5 border-l-4 border-blue-500">
+                <div class="text-xs font-bold uppercase tracking-wider text-slate-400">2FA Enrolled Accounts</div>
+                <div id="stat-2fa-users" class="text-3xl font-head font-bold text-white mt-2">0</div>
+                <div class="text-[11px] text-blue-400 font-medium mt-1">TOTP Protected</div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-5 border-l-4 border-indigo-500">
+                <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Passkey Devices Enrolled</div>
+                <div id="stat-passkeys-count" class="text-3xl font-head font-bold text-white mt-2">0</div>
+                <div class="text-[11px] text-indigo-400 font-medium mt-1">FIDO2 / WebAuthn Biometrics</div>
+            </div>
+
+            <div class="glass-card rounded-2xl p-5 border-l-4 border-amber-500">
+                <div class="text-xs font-bold uppercase tracking-wider text-slate-400">Pending 1st-Time Setup</div>
+                <div id="stat-pending-setup" class="text-3xl font-head font-bold text-white mt-2">0</div>
+                <div class="text-[11px] text-amber-400 font-medium mt-1">Awaiting User Onboarding</div>
+            </div>
+        </div>
+
+        <!-- User Accounts Table Card -->
+        <div class="glass-card rounded-2xl p-6 space-y-4">
+            <div class="flex flex-wrap items-center justify-between gap-4 border-b border-slate-800 pb-4">
+                <div>
+                    <h2 class="text-lg font-bold text-white flex items-center gap-2">
+                        <i class="ph-bold ph-users-three text-emerald-400"></i> Managed Staff & Administrator Accounts
+                    </h2>
+                    <p class="text-xs text-slate-400 mt-0.5">Control login permissions, reset lost passwords, and configure security parameters.</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                            <i class="ph-bold ph-magnifying-glass text-sm"></i>
+                        </span>
+                        <input type="text" id="user-search" oninput="renderUsersTable()" placeholder="Search accounts..."
+                            class="input-dark pl-9 pr-4 py-2 rounded-xl text-xs w-60">
+                    </div>
+                    <button onclick="renderUsersTable()" title="Refresh List"
+                        class="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+                        <i class="ph-bold ph-arrows-clockwise text-base"></i>
+                    </button>
+                </div>
+            </div>
+
+            <div class="overflow-x-auto rounded-xl border border-slate-800">
+                <table class="w-full text-left text-xs">
+                    <thead class="bg-slate-900/80 text-slate-400 uppercase font-bold tracking-wider border-b border-slate-800">
+                        <tr>
+                            <th class="py-3 px-4">Account ID / Username</th>
+                            <th class="py-3 px-4">Full Name & Contact</th>
+                            <th class="py-3 px-4">Role</th>
+                            <th class="py-3 px-4 text-center">Status</th>
+                            <th class="py-3 px-4 text-center">Passkey</th>
+                            <th class="py-3 px-4 text-center">2FA (TOTP)</th>
+                            <th class="py-3 px-4 text-center">1st Login</th>
+                            <th class="py-3 px-4 text-right">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="users-table-body" class="divide-y divide-slate-800/80 text-slate-300">
+                        <!-- Populated by JavaScript -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Quick Help & Documentation Card -->
+        <div class="glass-card rounded-2xl p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div class="space-y-2">
+                <div class="flex items-center gap-2 text-sm font-bold text-emerald-400">
+                    <i class="ph-bold ph-key-return text-lg"></i> Account Provisioning
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Create the username and temporary password here. Provide these credentials to your staff. They will log in via the inventory portal.
+                </p>
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex items-center gap-2 text-sm font-bold text-blue-400">
+                    <i class="ph-bold ph-fingerprint-simple text-lg"></i> First-Time Setup Wizard
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    Upon their initial login, the staff member is automatically greeted by an onboarding modal to register their fingerprint/face passkey and connect an authenticator app.
+                </p>
+            </div>
+
+            <div class="space-y-2">
+                <div class="flex items-center gap-2 text-sm font-bold text-indigo-400">
+                    <i class="ph-bold ph-arrow-counter-clockwise text-lg"></i> Security Recovery
+                </div>
+                <p class="text-xs text-slate-400 leading-relaxed">
+                    If an employee changes phones or loses their 2FA key, use the "Reset 2FA/Passkey" button in the table to clear their registered devices safely.
+                </p>
+            </div>
+        </div>
+    </main>
+
+    <!-- ================= MODAL: CREATE NEW ACCOUNT ================= -->
+    <div id="modal-create-user" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="glass-card rounded-2xl max-w-lg w-full p-6 space-y-5 border border-slate-700 shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+            <div class="flex items-center justify-between border-b border-slate-800 pb-3">
+                <h3 class="text-base font-bold text-white flex items-center gap-2">
+                    <i class="ph-bold ph-user-plus text-emerald-400"></i> Provision New Account ID
+                </h3>
+                <button onclick="closeModal('modal-create-user')" class="text-slate-400 hover:text-white">
+                    <i class="ph-bold ph-x text-lg"></i>
+                </button>
+            </div>
+
+            <form id="form-create-user" onsubmit="submitCreateUser(event)" class="space-y-4 text-xs">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold uppercase tracking-wider text-slate-300 mb-1">
+                            Account ID / Username *
+                        </label>
+                        <input type="text" id="nu-username" required placeholder="e.g. cashier1, rahul"
+                            class="w-full input-dark p-3 rounded-xl font-mono text-xs">
+                    </div>
+                    <div>
+                        <label class="block font-bold uppercase tracking-wider text-slate-300 mb-1">
+                            Role Assignment *
+                        </label>
+                        <select id="nu-role" class="w-full input-dark p-3 rounded-xl text-xs font-semibold">
+                            <option value="cashier">Cashier (POS & Billing Only)</option>
+                            <option value="manager" selected>Store Manager (Full Operations)</option>
+                            <option value="admin">Master Administrator</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold uppercase tracking-wider text-slate-300 mb-1">
+                        Temporary / Initial Password *
+                    </label>
+                    <div class="relative">
+                        <input type="text" id="nu-password" required placeholder="Enter or generate password"
+                            class="w-full input-dark p-3 pr-24 rounded-xl font-mono text-xs">
+                        <button type="button" onclick="generateRandomPassword()"
+                            class="absolute right-2 top-2 bg-slate-800 hover:bg-slate-700 text-emerald-400 px-2.5 py-1.5 rounded-lg text-[10px] font-bold transition">
+                            Generate
+                        </button>
+                    </div>
+                </div>
+
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block font-bold uppercase tracking-wider text-slate-300 mb-1">
+                            Full Name
+                        </label>
+                        <input type="text" id="nu-fullname" placeholder="Staff Name"
+                            class="w-full input-dark p-3 rounded-xl text-xs">
+                    </div>
+                    <div>
+                        <label class="block font-bold uppercase tracking-wider text-slate-300 mb-1">
+                            Phone / WhatsApp
+                        </label>
+                        <input type="text" id="nu-phone" placeholder="+91 98765 43210"
+                            class="w-full input-dark p-3 rounded-xl font-mono text-xs">
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold uppercase tracking-wider text-slate-300 mb-1">
+                        Email Address
+                    </label>
+                    <input type="email" id="nu-email" placeholder="staff@bhumivera.com"
+                        class="w-full input-dark p-3 rounded-xl text-xs">
+                </div>
+
+                <div class="p-3 rounded-xl bg-slate-900/60 border border-slate-800 flex items-start gap-3">
+                    <input type="checkbox" id="nu-require-onboarding" checked
+                        class="mt-0.5 rounded border-slate-700 text-emerald-500 focus:ring-emerald-500 w-4 h-4">
+                    <div>
+                        <label for="nu-require-onboarding" class="font-bold text-slate-200 cursor-pointer">
+                            Prompt for Passkey & 2FA enrollment on first login
+                        </label>
+                        <p class="text-[11px] text-slate-400 mt-0.5">
+                            User will see the security wizard when logging in for the first time at <code class="text-emerald-400">/inventorymanagement/login</code>.
+                        </p>
+                    </div>
+                </div>
+
+                <div id="create-user-error" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold"></div>
+
+                <div class="flex items-center gap-3 pt-2">
+                    <button type="button" onclick="closeModal('modal-create-user')"
+                        class="flex-1 bg-slate-800 hover:bg-slate-700 text-slate-300 py-3 rounded-xl font-bold transition">
+                        Cancel
+                    </button>
+                    <button type="submit" id="btn-save-user"
+                        class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl font-bold transition shadow-lg shadow-emerald-500/20">
+                        Create Account ID
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: SHARE CREDENTIALS DIALOG ================= -->
+    <div id="modal-share-creds" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+        <div class="glass-card rounded-2xl max-w-md w-full p-6 space-y-4 border border-slate-700 shadow-2xl text-center">
+            <div class="w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 mx-auto flex items-center justify-center text-3xl">
+                <i class="ph-bold ph-check-circle"></i>
+            </div>
+            <h3 class="text-lg font-bold text-white">Account Created Successfully!</h3>
+            <p class="text-xs text-slate-400">
+                Send these login instructions to the user. They can log in directly at the inventory terminal.
+            </p>
+
+            <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 text-left font-mono text-xs space-y-2 text-slate-300">
+                <div><span class="text-slate-500">Portal:</span> <span class="text-emerald-400 font-bold">www.bhumivera.com/inventorymanagement/login</span></div>
+                <div><span class="text-slate-500">Account ID:</span> <span id="share-username" class="text-white font-bold"></span></div>
+                <div><span class="text-slate-500">Password:</span> <span id="share-password" class="text-amber-400 font-bold"></span></div>
+                <div><span class="text-slate-500">Role:</span> <span id="share-role" class="text-blue-400"></span></div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <button onclick="copyShareText()" class="flex-1 bg-slate-800 hover:bg-slate-700 text-white py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-copy"></i> Copy Details
+                </button>
+                <button onclick="sendViaWhatsApp()" class="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white py-2.5 rounded-xl text-xs font-bold transition flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-whatsapp-logo"></i> Send via WhatsApp
+                </button>
+            </div>
+            <button onclick="closeModal('modal-share-creds')" class="text-xs text-slate-400 hover:text-white pt-2 block mx-auto">
+                Close Window
+            </button>
+        </div>
+    </div>
+
+    <!-- Scripts -->
+    <script src="../shared/auth.js"></script>
+    <script>
+        function escapeHTML(str) {
+            if (!str) return '';
+            return String(str)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        let allUsers = [];
+
+        // Check Admin Session Asynchronously with Server Verification
+        async function initAdminConsole() {
+            const session = await BVAuth.checkSession();
+            if (!session || session.role !== 'admin') {
+                window.location.href = 'login.html';
+                return;
+            }
+            document.getElementById('admin-display-name').innerText = session.fullName || session.username;
+            await renderUsersTable();
+        }
+
+        let lastCreatedCreds = null;
+
+        function handleLogout() {
+            BVAuth.logout();
+        }
+
+        function openCreateUserModal() {
+            document.getElementById('form-create-user').reset();
+            document.getElementById('create-user-error').classList.add('hidden');
+            generateRandomPassword();
+            document.getElementById('modal-create-user').classList.remove('hidden');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.add('hidden');
+        }
+
+        function generateRandomPassword() {
+            const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789@#$';
+            let pass = '';
+            for (let i = 0; i < 10; i++) {
+                pass += chars.charAt(Math.floor(Math.random() * chars.length));
+            }
+            document.getElementById('nu-password').value = pass;
+        }
+
+        async function submitCreateUser(e) {
+            e.preventDefault();
+            const username = document.getElementById('nu-username').value.trim();
+            const password = document.getElementById('nu-password').value;
+            const role = document.getElementById('nu-role').value;
+            const fullName = document.getElementById('nu-fullname').value.trim();
+            const phone = document.getElementById('nu-phone').value.trim();
+            const email = document.getElementById('nu-email').value.trim();
+            const requireOnboarding = document.getElementById('nu-require-onboarding').checked;
+            const errBox = document.getElementById('create-user-error');
+            const btn = document.getElementById('btn-save-user');
+
+            errBox.classList.add('hidden');
+            btn.innerHTML = 'Creating...';
+            btn.disabled = true;
+
+            const res = await BVAuth.adminCreateUser({
+                username,
+                password,
+                fullName,
+                phone,
+                email,
+                role
+            });
+
+            btn.innerHTML = 'Create Account ID';
+            btn.disabled = false;
+
+            if (!res.success) {
+                errBox.innerText = res.message || 'Failed to create user.';
+                errBox.classList.remove('hidden');
+                return;
+            }
+
+            // If user opted out of onboarding, mark firstLogin as false
+            if (!requireOnboarding) {
+                BVAuth.completeFirstLogin(username);
+            }
+
+            closeModal('modal-create-user');
+            renderUsersTable();
+
+            // Show share credentials popup
+            lastCreatedCreds = {
+                username,
+                password,
+                role,
+                phone,
+                fullName
+            };
+            document.getElementById('share-username').innerText = username;
+            document.getElementById('share-password').innerText = password;
+            document.getElementById('share-role').innerText = role.toUpperCase();
+            document.getElementById('modal-share-creds').classList.remove('hidden');
+        }
+
+        async function renderUsersTable() {
+            const data = await BVAuth.adminGetUsers();
+            allUsers = data.users || [];
+            const stats = data.stats || {};
+            const search = document.getElementById('user-search').value.toLowerCase().trim();
+            const tbody = document.getElementById('users-table-body');
+
+            const filtered = allUsers.filter(u =>
+                u.username.toLowerCase().includes(search) ||
+                (u.fullName && u.fullName.toLowerCase().includes(search)) ||
+                (u.role && u.role.toLowerCase().includes(search))
+            );
+
+            // Update stats
+            document.getElementById('stat-total-users').innerText = stats.totalUsers || allUsers.length;
+            document.getElementById('stat-2fa-users').innerText = stats.twoFaUsers || 0;
+            document.getElementById('stat-passkeys-count').innerText = stats.passkeysCount || 0;
+            document.getElementById('stat-pending-setup').innerText = stats.pendingSetup || 0;
+
+            tbody.innerHTML = filtered.map(u => {
+                const isMasterAdmin = (u.username === 'admin');
+                const roleBadge = u.role === 'admin'
+                    ? '<span class="px-2 py-0.5 rounded-full bg-purple-500/10 text-purple-400 font-bold border border-purple-500/20">Admin</span>'
+                    : u.role === 'manager'
+                    ? '<span class="px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 font-bold border border-blue-500/20">Manager</span>'
+                    : '<span class="px-2 py-0.5 rounded-full bg-slate-700/60 text-slate-300 font-bold border border-slate-600">Cashier</span>';
+
+                const statusBadge = u.status === 'active'
+                    ? '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 font-bold border border-emerald-500/20"><span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>Active</span>'
+                    : '<span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-rose-500/10 text-rose-400 font-bold border border-rose-500/20"><span class="w-1.5 h-1.5 rounded-full bg-rose-400"></span>Suspended</span>';
+
+                const passkeyBadge = (u.passkeys && u.passkeys.length > 0)
+                    ? `<span class="text-indigo-400 font-bold flex items-center justify-center gap-1"><i class="ph-bold ph-fingerprint text-sm"></i> ${u.passkeys.length} Registered</span>`
+                    : '<span class="text-slate-500">None</span>';
+
+                const totpBadge = u.totpEnabled
+                    ? '<span class="text-emerald-400 font-bold flex items-center justify-center gap-1"><i class="ph-bold ph-shield-check text-sm"></i> Active</span>'
+                    : '<span class="text-slate-500">Disabled</span>';
+
+                const firstLoginBadge = u.firstLogin
+                    ? '<span class="text-amber-400 font-bold flex items-center justify-center gap-1"><i class="ph-bold ph-clock text-sm"></i> Pending</span>'
+                    : '<span class="text-slate-500 font-medium">Completed</span>';
+
+                const safeUser = escapeHTML(u.username);
+                const safeName = escapeHTML(u.fullName || '-');
+                const safeContact = escapeHTML(u.phone || u.email || 'No contact specified');
+
+                return `
+                    <tr class="hover:bg-slate-800/40 transition">
+                        <td class="py-3.5 px-4 font-mono font-bold text-white">
+                            ${safeUser}
+                        </td>
+                        <td class="py-3.5 px-4">
+                            <div class="font-bold text-slate-200">${safeName}</div>
+                            <div class="text-[11px] text-slate-400 font-mono">${safeContact}</div>
+                        </td>
+                        <td class="py-3.5 px-4">${roleBadge}</td>
+                        <td class="py-3.5 px-4 text-center">${statusBadge}</td>
+                        <td class="py-3.5 px-4 text-center">${passkeyBadge}</td>
+                        <td class="py-3.5 px-4 text-center">${totpBadge}</td>
+                        <td class="py-3.5 px-4 text-center">${firstLoginBadge}</td>
+                        <td class="py-3.5 px-4 text-right">
+                            <div class="inline-flex items-center gap-1.5">
+                                <button onclick="quickResetPassword('${safeUser}')" title="Reset Password"
+                                    class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-400 transition">
+                                    <i class="ph-bold ph-key text-sm"></i>
+                                </button>
+                                <button onclick="resetSecuritySettings('${safeUser}')" title="Clear 2FA / Passkey Locks"
+                                    class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-400 transition">
+                                    <i class="ph-bold ph-shield-slash text-sm"></i>
+                                </button>
+                                ${!isMasterAdmin ? `
+                                    <button onclick="toggleUserStatus('${safeUser}')" title="${u.status === 'active' ? 'Suspend' : 'Activate'}"
+                                        class="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 ${u.status === 'active' ? 'text-rose-400' : 'text-emerald-400'} transition">
+                                        <i class="ph-bold ${u.status === 'active' ? 'ph-lock' : 'ph-lock-open'} text-sm"></i>
+                                    </button>
+                                    <button onclick="deleteAccount('${safeUser}')" title="Delete User"
+                                        class="p-1.5 rounded-lg bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 transition">
+                                        <i class="ph-bold ph-trash text-sm"></i>
+                                    </button>
+                                ` : ''}
+                            </div>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        async function quickResetPassword(username) {
+            const newPass = prompt(`Enter new temporary password for user "${username}":`, 'TempPass@123');
+            if (!newPass) return;
+
+            const res = await BVAuth.adminResetPassword(username, newPass);
+            alert(`Password updated! Staff member can now login with:\n\nAccount ID: ${username}\nPassword: ${newPass}`);
+            renderUsersTable();
+        }
+
+        function resetSecuritySettings(username) {
+            if (!confirm(`Are you sure you want to reset 2FA & Passkey registrations for ${username}? They will be prompted to re-register on their next login.`)) return;
+            BVAuth.adminResetSecurity(username);
+            alert(`Security parameters reset for ${username}.`);
+            renderUsersTable();
+        }
+
+        function toggleUserStatus(username) {
+            const newStatus = BVAuth.adminToggleStatus(username);
+            renderUsersTable();
+        }
+
+        function deleteAccount(username) {
+            if (!confirm(`Permanently delete account "${username}"?`)) return;
+            BVAuth.adminDeleteUser(username);
+            renderUsersTable();
+        }
+
+        function copyShareText() {
+            if (!lastCreatedCreds) return;
+            const text = `*BhumiVera Inventory Login Credentials*\nPortal: https://www.bhumivera.com/inventorymanagement/login\nAccount ID: ${lastCreatedCreds.username}\nPassword: ${lastCreatedCreds.password}\nRole: ${lastCreatedCreds.role}\n\nUpon your first login, you will be prompted to enable biometric Passkey and 2FA Authenticator.`;
+            navigator.clipboard.writeText(text);
+            alert('Credentials copied to clipboard!');
+        }
+
+        function sendViaWhatsApp() {
+            if (!lastCreatedCreds) return;
+            const text = `Hello ${lastCreatedCreds.fullName || lastCreatedCreds.username} 🙏\n\nHere are your access credentials for *BhumiVera Inventory*:\n\n*Login URL:* https://www.bhumivera.com/inventorymanagement/login\n*Account ID:* ${lastCreatedCreds.username}\n*Temporary Password:* ${lastCreatedCreds.password}\n*Role:* ${lastCreatedCreds.role.toUpperCase()}\n\nPlease login and complete your Passkey & 2FA security setup.\n\n_BhumiVera Secure Operations_`;
+            const phone = lastCreatedCreds.phone ? lastCreatedCreds.phone.replace(/[^0-9]/g, '') : '';
+            window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`, '_blank');
+        }
+
+        // Initialize console on load with server authentication check
+        window.onload = initAdminConsole;
+    </script>
+</body>
+</html>
