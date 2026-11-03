@@ -20,9 +20,27 @@
 .inventory-shell [class~="bg-white"],
 .inventory-shell [class~="bg-slate-50"],
 .inventory-shell [class~="bg-slate-100"],
+.inventory-shell [class~="bg-slate-50/70"],
 .inventory-shell [class~="bg-gray-50"],
 .inventory-shell [class~="bg-gray-100"] {
   background-color: var(--admin-panel) !important;
+}
+
+.inventory-shell [class~="hover:bg-white"]:hover,
+.inventory-shell [class~="hover:bg-slate-50"]:hover,
+.inventory-shell [class~="hover:bg-slate-100"]:hover,
+.inventory-shell [class~="hover:bg-slate-200"]:hover,
+.inventory-shell [class~="hover:bg-gray-50"]:hover,
+.inventory-shell [class~="hover:bg-gray-100"]:hover {
+  background-color: var(--admin-panel-raised) !important;
+}
+
+.inventory-shell [class~="hover:bg-emerald-50/40"]:hover {
+  background-color: rgba(16, 51, 35, 0.72) !important;
+}
+
+.inventory-shell [class~="focus:bg-white"]:focus {
+  background-color: rgba(7, 26, 18, 0.92) !important;
 }
 
 .inventory-shell [class~="bg-slate-900"] {
