@@ -71,6 +71,11 @@ import {
 const LOCAL_DB_KEY = 'BV_INVENTORY_DB_V10X';
 const LOCAL_TOKEN_KEY = 'BV_INV_SOFTWARE_TOKEN';
 const LOCAL_USER_KEY = 'BV_INV_SOFTWARE_USER';
+const LOCAL_POS_SESSION_KEY = 'BV_POS_SESSION_CODE';
+const LOCAL_POS_DRAFT_KEY = 'BV_POS_DRAFT';
+
+const createPosRequestId = () =>
+  globalThis.crypto?.randomUUID?.() || `pos-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 const FALLBACK_CATALOG_ITEMS = [
   {
@@ -405,6 +410,17 @@ export default function InventorySoftware() {
       localStorage.getItem('supportToken') ||
       ''
   );
+  const [posSessionCode] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem(LOCAL_POS_SESSION_KEY);
+      if (saved) return saved;
+      const sessionCode = `POS-${createPosRequestId()}`.slice(0, 64);
+      sessionStorage.setItem(LOCAL_POS_SESSION_KEY, sessionCode);
+      return sessionCode;
+    } catch {
+      return `POS-${createPosRequestId()}`.slice(0, 64);
+    }
+  });
   const [viewer, setViewer] = useState(() => {
     try {
       const saved = localStorage.getItem(LOCAL_USER_KEY);
@@ -474,6 +490,7 @@ export default function InventorySoftware() {
   const [scannerInput, setScannerInput] = useState('');
   const [scannerQty, setScannerQty] = useState(1);
   const [pairingQrUrl, setPairingQrUrl] = useState('');
+  const [scannerPairingKey, setScannerPairingKey] = useState('');
   const [backupBusy, setBackupBusy] = useState(false);
   const [posCustomerForm, setPosCustomerForm] = useState({
     name: 'Walk-in Retail Shopper',
@@ -512,17 +529,27 @@ export default function InventorySoftware() {
 
   // POS Billing State
   const [posCustomerSearch, setPosCustomerSearch] = useState('');
-  const [selectedPosCustomer, setSelectedPosCustomer] = useState(FALLBACK_CUSTOMERS[0]);
   const [posItemSearch, setPosItemSearch] = useState('');
   const [selectedPosItemId, setSelectedPosItemId] = useState('');
   const [posItemQty, setPosItemQty] = useState(1);
   const [posItemPrice, setPosItemPrice] = useState('');
   const [posCart, setPosCart] = useState([]);
+  const [posCheckoutKey, setPosCheckoutKey] = useState(() => {
+    try {
+      return sessionStorage.getItem('BV_POS_CHECKOUT_KEY') || createPosRequestId();
+    } catch {
+      return createPosRequestId();
+    }
+  });
+  const [posDraftLoaded, setPosDraftLoaded] = useState(false);
+  const [posDraftStatus, setPosDraftStatus] = useState('loading');
+  const [posScannerStatus, setPosScannerStatus] = useState('checking');
+  const [posCheckoutBusy, setPosCheckoutBusy] = useState(false);
   const [posExtraCharges, setPosExtraCharges] = useState([]);
   const [extraName, setExtraName] = useState('');
   const [extraAmt, setExtraAmt] = useState('');
   const [posDiscount, setPosDiscount] = useState(0);
-  const [posTaxRate, setPosTaxRate] = useState(0);
+  const [posTaxRate, setPosTaxRate] = useState(18);
   const [posPaymentMode, setPosPaymentMode] = useState('Cash');
   const [posPaidAmount, setPosPaidAmount] = useState('');
   const [posUpiRef, setPosUpiRef] = useState('');
@@ -651,7 +678,10 @@ export default function InventorySoftware() {
       if (!silent) setLoading(true);
       setSyncing(true);
       try {
-        const res = await api.get('/inventory-software/bootstrap', reqConfig);
+        const res = await api.get(
+          `/inventory-software/bootstrap?sessionCode=${encodeURIComponent(posSessionCode)}`,
+          reqConfig
+        );
         const d = res.data;
         if (d?.success) {
           if (d.viewer) {
@@ -663,9 +693,8 @@ export default function InventorySoftware() {
           }
           if (Array.isArray(d.items) && d.items.length > 0) setItems(d.items);
           if (Array.isArray(d.bins) && d.bins.length > 0) setBins(d.bins);
-          if (Array.isArray(d.customers) && d.customers.length > 0) {
+          if (Array.isArray(d.customers)) {
             setCustomers(d.customers);
-            setSelectedPosCustomer(prev => d.customers.find(c => c.id === prev?.id) || d.customers[0]);
           }
           if (Array.isArray(d.sales)) setSales(d.sales);
           if (Array.isArray(d.proofs)) setProofs(d.proofs);
@@ -678,7 +707,11 @@ export default function InventorySoftware() {
           if (Array.isArray(d.dailyBackups)) setDailyBackups(d.dailyBackups);
           if (Array.isArray(d.shippingZones)) setShippingZones(d.shippingZones);
           if (Array.isArray(d.carriers)) setCarriers(d.carriers);
-          if (d.cfg) setCfg(prev => ({ ...prev, ...d.cfg }));
+          if (d.cfg) {
+            setCfg(prev => ({ ...prev, ...d.cfg }));
+            const configuredTaxRate = Number(d.cfg.taxRate);
+            setPosTaxRate(Number.isFinite(configuredTaxRate) ? configuredTaxRate : 18);
+          }
           setLastSyncedAt(d.syncedAt || new Date().toISOString());
 
           localStorage.setItem(
@@ -724,7 +757,7 @@ export default function InventorySoftware() {
         setSyncing(false);
       }
     },
-    [authToken, reqConfig]
+    [authToken, posSessionCode, reqConfig]
   );
 
   useEffect(() => {
@@ -742,11 +775,17 @@ export default function InventorySoftware() {
     const taxRate = Math.max(0, Number(posTaxRate) || 0);
     const taxAmt = Math.round((taxable * taxRate) / 100);
     const billTotal = taxable + taxAmt;
-    const prevBal = selectedPosCustomer ? Number(selectedPosCustomer.wallet) || 0 : 0;
-    const paid = posPaidAmount === '' ? billTotal : Math.max(0, Number(posPaidAmount) || 0);
+    const phone = posCustomerForm.phone.trim();
+    const matchedCustomer = phone && phone !== '-'
+      ? customers.find(customer => String(customer.phone).trim() === phone)
+      : null;
+    const prevBal = Number(matchedCustomer?.wallet) || 0;
+    const paid = posPaidAmount === ''
+      ? posPaymentMode === 'Khata / Credit' ? 0 : billTotal
+      : Math.max(0, Number(posPaidAmount) || 0);
     const newBal = prevBal - billTotal + paid;
     return { subTotal, extraTotal, disc, taxable, taxRate, taxAmt, billTotal, prevBal, paid, newBal };
-  }, [posCart, posExtraCharges, posDiscount, posTaxRate, selectedPosCustomer, posPaidAmount]);
+  }, [posCart, posExtraCharges, posDiscount, posTaxRate, customers, posCustomerForm, posPaidAmount, posPaymentMode]);
 
   useEffect(() => {
     if (posPaymentMode === 'UPI' && posCalculations.billTotal > 0) {
@@ -761,51 +800,142 @@ export default function InventorySoftware() {
     }
   }, [posPaymentMode, posCalculations.billTotal, cfg.upiId, cfg.storeName]);
 
-  // REAL-TIME 2-WAY SYNC: Poll mobile scanner queue and sync with active POS bill
+  useEffect(() => {
+    if (!authToken) {
+      setPosDraftLoaded(false);
+      setPosDraftStatus('local');
+      return;
+    }
+
+    let active = true;
+    setPosDraftLoaded(false);
+    setPosDraftStatus('loading');
+
+    const restoreDraft = async () => {
+      try {
+        const response = await api.get(
+          `/inventory-software/pos/draft?sessionCode=${encodeURIComponent(posSessionCode)}`,
+          reqConfig
+        );
+        const draft = response.data?.draft || JSON.parse(sessionStorage.getItem(LOCAL_POS_DRAFT_KEY) || 'null');
+        if (active && draft) {
+          setPosCart(Array.isArray(draft.items) ? draft.items : []);
+          setPosExtraCharges(Array.isArray(draft.extraCharges) ? draft.extraCharges : []);
+          setPosDiscount(Number(draft.discount) || 0);
+          setPosPaymentMode(draft.paymentMode || 'Cash');
+          setPosPaidAmount(draft.paidAmount ?? '');
+          setPosUpiRef(draft.upiReference || '');
+          setPosCustomerForm(draft.customer || {
+            name: 'Walk-in Retail Shopper',
+            phone: '',
+            gstin: '',
+          });
+          setPosTaxRate(draft.taxRate === undefined ? 18 : Number(draft.taxRate));
+          if (draft.checkoutKey) setPosCheckoutKey(draft.checkoutKey);
+        }
+        if (active) setPosDraftStatus(response.data?.draft ? 'synced' : 'local');
+      } catch {
+        try {
+          const draft = JSON.parse(sessionStorage.getItem(LOCAL_POS_DRAFT_KEY) || 'null');
+          if (active && draft) {
+            setPosCart(Array.isArray(draft.items) ? draft.items : []);
+            setPosExtraCharges(Array.isArray(draft.extraCharges) ? draft.extraCharges : []);
+            setPosDiscount(Number(draft.discount) || 0);
+            setPosPaymentMode(draft.paymentMode || 'Cash');
+            setPosPaidAmount(draft.paidAmount ?? '');
+            setPosUpiRef(draft.upiReference || '');
+            setPosCustomerForm(draft.customer || {
+              name: 'Walk-in Retail Shopper',
+              phone: '',
+              gstin: '',
+            });
+            setPosTaxRate(draft.taxRate === undefined ? 18 : Number(draft.taxRate));
+            if (draft.checkoutKey) setPosCheckoutKey(draft.checkoutKey);
+          }
+          if (active) setPosDraftStatus('local');
+        } catch {
+          if (active) setPosDraftStatus('local');
+        }
+      } finally {
+        if (active) setPosDraftLoaded(true);
+      }
+    };
+
+    restoreDraft();
+    return () => {
+      active = false;
+    };
+  }, [authToken, posSessionCode, reqConfig]);
+
+  useEffect(() => {
+    if (!posDraftLoaded) return undefined;
+    const draft = {
+      items: posCart,
+      extraCharges: posExtraCharges,
+      discount: posDiscount,
+      taxRate: posTaxRate,
+      paymentMode: posPaymentMode,
+      paidAmount: posPaidAmount,
+      upiReference: posUpiRef,
+      customer: posCustomerForm,
+      checkoutKey: posCheckoutKey,
+    };
+
+    try {
+      sessionStorage.setItem(LOCAL_POS_DRAFT_KEY, JSON.stringify(draft));
+      sessionStorage.setItem('BV_POS_CHECKOUT_KEY', posCheckoutKey);
+    } catch {
+      setPosDraftStatus('local');
+    }
+
+    if (!authToken) {
+      setPosDraftStatus('local');
+      return undefined;
+    }
+
+    const saveTimer = setTimeout(async () => {
+      try {
+        await api.post('/inventory-software/pos/draft', { sessionCode: posSessionCode, draft }, reqConfig);
+        setPosDraftStatus('synced');
+      } catch {
+        setPosDraftStatus('local');
+      }
+    }, 700);
+    return () => clearTimeout(saveTimer);
+  }, [
+    authToken,
+    posDraftLoaded,
+    posSessionCode,
+    posCart,
+    posExtraCharges,
+    posDiscount,
+    posTaxRate,
+    posPaymentMode,
+    posPaidAmount,
+    posUpiRef,
+    posCustomerForm,
+    posCheckoutKey,
+    reqConfig,
+  ]);
+
+  // Poll the paired scanner's queue without replacing the cashier's local draft.
   useEffect(() => {
     if (!authToken || activeView !== 'sale') return;
 
     let isMounted = true;
     const syncInterval = setInterval(async () => {
       try {
-        const res = await api.get('/inventory-software/scanner/queue?sessionCode=DEFAULT-POS-TERMINAL', reqConfig);
+        const res = await api.get(
+          `/inventory-software/scanner/queue?sessionCode=${encodeURIComponent(posSessionCode)}`,
+          reqConfig
+        );
         const qRows = res.data?.queue || [];
         if (!isMounted) return;
 
         setScannerQueue(qRows);
-
-        // Sync items into posCart if queue differs from current cart
-        setPosCart(currentCart => {
-          let hasDifferences = false;
-          if (qRows.length !== currentCart.length) {
-            hasDifferences = true;
-          } else {
-            for (const q of qRows) {
-              const matched = currentCart.find(c => c.sku === q.sku);
-              if (!matched || matched.q !== Number(q.quantity)) {
-                hasDifferences = true;
-                break;
-              }
-            }
-          }
-
-          if (!hasDifferences) return currentCart;
-
-          return qRows.map(q => ({
-            id: q.meta_id,
-            productId: q.product_id,
-            sku: q.sku,
-            name: q.product_name,
-            q: Number(q.quantity) || 1,
-            p: Number(q.unit_price) || 0,
-            max: Number(q.available_stock) || 99,
-            uom: q.uom || 'Pcs',
-            gstHsnCode: q.gst_hsn_code || '33049990',
-            queueId: q.id,
-          }));
-        });
+        setPosScannerStatus('connected');
       } catch {
-        // Silently catch background poll failures
+        if (isMounted) setPosScannerStatus('disconnected');
       }
     }, 1500);
 
@@ -813,7 +943,7 @@ export default function InventorySoftware() {
       isMounted = false;
       clearInterval(syncInterval);
     };
-  }, [authToken, activeView, reqConfig]);
+  }, [authToken, activeView, posSessionCode, reqConfig]);
 
   // Dashboard Metrics
   const dashMetrics = useMemo(() => {
@@ -928,17 +1058,41 @@ export default function InventorySoftware() {
   }, [onlineOrders, rtoSearch]);
 
   useEffect(() => {
-    const payload = JSON.stringify({
-      app: 'BHUMIVERA_ANDROID_QR_SCANNER',
-      endpoint: 'https://service.bhumivera.com/api/inventory-software/scanner/scan',
-      queueEndpoint: 'https://service.bhumivera.com/api/inventory-software/scanner/queue',
-      scannerApiKey: cfg.scannerApiKey || 'BV-SCAN-DEFAULT',
-      sessionCode: 'DEFAULT-POS-TERMINAL',
-    });
-    QRCode.toDataURL(payload, { width: 200, margin: 1 })
-      .then(url => setPairingQrUrl(url))
-      .catch(() => setPairingQrUrl(''));
-  }, [cfg.scannerApiKey]);
+    if (
+      !authToken ||
+      !viewer ||
+      (viewer.role !== 'admin' && !viewer.fullAllAccess && !viewer.permissions?.can_use_pos_billing)
+    ) return undefined;
+    let active = true;
+    setPairingQrUrl('');
+    setScannerPairingKey('');
+    const createPairingQr = async () => {
+      try {
+        const response = await api.post(
+          '/inventory-software/scanner/pair',
+          { sessionCode: posSessionCode, deviceName: 'Bhumivera POS Scanner' },
+          reqConfig
+        );
+        if (!active) return;
+        const payload = JSON.stringify({
+          app: 'BHUMIVERA_ANDROID_QR_SCANNER',
+          endpoint: 'https://service.bhumivera.com/api/inventory-software/scanner/scan',
+          queueEndpoint: 'https://service.bhumivera.com/api/inventory-software/scanner/queue',
+          scannerApiKey: response.data.scannerApiKey,
+          sessionCode: response.data.sessionCode,
+        });
+        setScannerPairingKey(response.data.scannerApiKey);
+        const qrUrl = await QRCode.toDataURL(payload, { width: 200, margin: 1 });
+        if (active) setPairingQrUrl(qrUrl);
+      } catch (err) {
+        if (active) showNotice('error', err.response?.data?.message || 'Could not pair a mobile scanner to this terminal.');
+      }
+    };
+    createPairingQr();
+    return () => {
+      active = false;
+    };
+  }, [authToken, posSessionCode, reqConfig, showNotice, viewer]);
 
   // ==========================================================================
   // HANDLERS: AUTHENTICATION & SECURITY ONBOARDING
@@ -1203,7 +1357,18 @@ export default function InventorySoftware() {
     }
 
     if (existingInCart) {
-      setPosCart(prev => prev.map(c => (c.id === item.id ? { ...c, q: totalRequested, p } : c)));
+      setPosCart(prev =>
+        prev.map(c =>
+          c.id === item.id
+            ? {
+                ...c,
+                q: totalRequested,
+                p,
+                manualQuantity: (c.queueId ? Number(c.manualQuantity) || 0 : Number(c.q) || 0) + q,
+              }
+            : c
+        )
+      );
     } else {
       setPosCart(prev => [
         ...prev,
@@ -1213,6 +1378,8 @@ export default function InventorySoftware() {
           sku: item.sku,
           name: item.name,
           q,
+          manualQuantity: q,
+          queueQuantity: 0,
           p,
           max: item.qty,
           uom: item.uom || 'Pcs',
@@ -1220,21 +1387,6 @@ export default function InventorySoftware() {
         },
       ]);
     }
-
-    // Real-time 2-way sync with mobile scanner queue
-    api.post(
-      '/inventory-software/scanner/queue/item',
-      {
-        sessionCode: 'DEFAULT-POS-TERMINAL',
-        sku: item.sku,
-        metaId: item.id,
-        quantity: totalRequested,
-        price: p,
-        name: item.name,
-        availableStock: item.qty,
-      },
-      reqConfig
-    ).catch(() => {});
 
     setPosItemSearch('');
     setSelectedPosItemId('');
@@ -1255,28 +1407,45 @@ export default function InventorySoftware() {
       prev
         .map(c => {
           if (c.id !== id) return c;
-          return nextQ > 0 ? { ...c, q: nextQ } : null;
+          return nextQ > 0
+            ? { ...c, q: nextQ, manualQuantity: c.queueId ? 0 : nextQ, queueQuantity: c.queueId ? nextQ : 0 }
+            : null;
         })
         .filter(Boolean)
     );
 
-    // Real-time 2-way sync with mobile scanner queue
-    api.post(
-      '/inventory-software/scanner/queue/item',
-      { sessionCode: 'DEFAULT-POS-TERMINAL', sku: item.sku, metaId: id, delta },
-      reqConfig
-    ).catch(() => {});
+    if (item.queueId) {
+      api.post(
+        '/inventory-software/scanner/queue/item',
+        {
+          sessionCode: posSessionCode,
+          sku: item.sku,
+          metaId: id,
+          quantity: nextQ,
+          price: item.p,
+          name: item.name,
+          availableStock: item.max,
+        },
+        reqConfig
+      ).catch(err => {
+        setPosScannerStatus('disconnected');
+        showNotice('error', err.response?.data?.message || 'Could not sync this quantity with the mobile scanner.');
+      });
+    }
   };
 
   const handlePosCartRemoveItem = id => {
     const item = posCart.find(c => c.id === id);
     setPosCart(prev => prev.filter(c => c.id !== id));
-    if (item) {
+    if (item?.queueId) {
       api.post(
         '/inventory-software/scanner/queue/remove',
-        { sessionCode: 'DEFAULT-POS-TERMINAL', sku: item.sku, metaId: id },
+        { sessionCode: posSessionCode, id: item.queueId },
         reqConfig
-      ).catch(() => {});
+      ).catch(err => {
+        setPosScannerStatus('disconnected');
+        showNotice('error', err.response?.data?.message || 'Could not remove the scanner item from its queue.');
+      });
     }
   };
 
@@ -1284,18 +1453,27 @@ export default function InventorySoftware() {
     setPosCart([]);
     setPosExtraCharges([]);
     setPosDiscount(0);
-    api.post(
-      '/inventory-software/scanner/queue/clear',
-      { sessionCode: 'DEFAULT-POS-TERMINAL' },
-      reqConfig
-    ).catch(() => {});
+    setPosPaidAmount('');
+    setPosUpiRef('');
+    setPosCheckoutKey(createPosRequestId());
+    api.post('/inventory-software/scanner/queue/clear', { sessionCode: posSessionCode }, reqConfig)
+      .then(() => {
+        setScannerQueue([]);
+        setPosScannerStatus('connected');
+      })
+      .catch(err => {
+        setPosScannerStatus('disconnected');
+        showNotice('error', err.response?.data?.message || 'Could not clear the mobile scanner queue.');
+      });
   };
 
   const handlePosCheckout = async () => {
+    if (posCheckoutBusy) return;
     if (posCart.length === 0) {
       showNotice('error', 'Add at least one product to the POS bill.');
       return;
     }
+    setPosCheckoutBusy(true);
     try {
       const payload = {
         customer: {
@@ -1310,9 +1488,17 @@ export default function InventorySoftware() {
         paidAmount: posCalculations.paid,
         paymentMode: posPaymentMode,
         upiReference: posUpiRef,
-        scannerQueueIds: scannerQueue.map(q => q.id),
+        sessionCode: posSessionCode,
+        scannerQueueIds: posCart.map(item => item.queueId).filter(Boolean),
       };
-      const res = await api.post('/inventory-software/pos/checkout', payload, reqConfig);
+      const res = await api.post(
+        '/inventory-software/pos/checkout',
+        payload,
+        {
+          ...reqConfig,
+          headers: { ...reqConfig.headers, 'Idempotency-Key': posCheckoutKey },
+        }
+      );
       if (res.data?.success) {
         setLastCompletedSale(res.data.sale);
         setPosCart([]);
@@ -1320,12 +1506,24 @@ export default function InventorySoftware() {
         setPosDiscount(0);
         setPosPaidAmount('');
         setPosUpiRef('');
+        setPosCheckoutKey(createPosRequestId());
+        setScannerQueue(prev => prev.filter(row => !payload.scannerQueueIds.includes(row.id)));
+        try {
+          sessionStorage.removeItem(LOCAL_POS_DRAFT_KEY);
+        } catch {
+          setPosDraftStatus('local');
+        }
+        await api.delete(`/inventory-software/pos/draft?sessionCode=${encodeURIComponent(posSessionCode)}`, reqConfig)
+          .catch(() => setPosDraftStatus('local'));
         setActiveModal('invoice-success');
         showNotice('success', res.data.message);
         await fetchBootstrapData(true);
       }
     } catch (err) {
       showNotice('error', err.response?.data?.message || 'Checkout failed.');
+      if (err.response?.data?.code === 'TAX_RATE_MISMATCH') await fetchBootstrapData(true);
+    } finally {
+      setPosCheckoutBusy(false);
     }
   };
 
@@ -1938,6 +2136,7 @@ export default function InventorySoftware() {
         {
           qrCode: scannerInput.trim(),
           quantity: Number(scannerQty) || 1,
+          sessionCode: posSessionCode,
           deviceName: 'Inventory Terminal Scanner',
         },
         reqConfig
@@ -1947,11 +2146,20 @@ export default function InventorySoftware() {
           setPosCart(prev => {
             const existing = prev.find(c => c.sku === sc.sku || c.id === sc.metaId);
             if (existing) {
+              const manualQuantity = existing.queueId
+                ? Number(existing.manualQuantity) || 0
+                : Number(existing.q) || 0;
               return prev.map(c =>
                 c.sku === sc.sku || c.id === sc.metaId
-                  ? { ...c, q: Math.min(sc.availableStock, c.q + (Number(scannerQty) || 1)) }
-                  : c
-              );
+                    ? {
+                        ...c,
+                        q: Math.min(sc.availableStock, manualQuantity + Number(sc.quantity)),
+                        queueQuantity: Number(sc.quantity),
+                        manualQuantity,
+                        queueId: sc.queueId,
+                      }
+                    : c
+                );
             }
             return [
               ...prev,
@@ -1960,15 +2168,19 @@ export default function InventorySoftware() {
                 productId: sc.productId,
                 sku: sc.sku,
                 name: sc.name,
-                q: Number(scannerQty) || 1,
+                q: Number(sc.quantity) || Number(scannerQty) || 1,
+                manualQuantity: 0,
+                queueQuantity: Number(sc.quantity) || Number(scannerQty) || 1,
                 p: sc.price,
                 max: sc.availableStock,
                 uom: sc.uom || 'Pcs',
                 gstHsnCode: sc.gstHsnCode || '33049990',
+                queueId: sc.queueId,
               },
             ];
           });
         }
+        setScannerQueue(res.data.queue || []);
         showNotice('success', res.data.message);
         setScannerInput('');
         setScannerQty(1);
@@ -1981,7 +2193,10 @@ export default function InventorySoftware() {
 
   const handlePullMobileScannerQueueToPos = async () => {
     try {
-      const res = await api.get('/inventory-software/scanner/queue', reqConfig);
+      const res = await api.get(
+        `/inventory-software/scanner/queue?sessionCode=${encodeURIComponent(posSessionCode)}`,
+        reqConfig
+      );
       const qRows = res.data?.queue || [];
       if (qRows.length === 0) {
         showNotice('info', 'No pending items in Mobile QR Scanner queue.');
@@ -1991,9 +2206,17 @@ export default function InventorySoftware() {
       for (const q of qRows) {
         const idx = nextCart.findIndex(c => c.sku === q.sku || c.id === q.meta_id);
         if (idx !== -1) {
+          const currentItem = nextCart[idx];
+          const manualQuantity = currentItem.queueId
+            ? Number(currentItem.manualQuantity) || 0
+            : Number(currentItem.q) || 0;
+          const queueQuantity = Number(q.quantity) || 1;
           nextCart[idx] = {
-            ...nextCart[idx],
-            q: Math.min(q.available_stock || 999, Number(q.quantity) || 1),
+            ...currentItem,
+            q: Math.min(q.available_stock || 999, manualQuantity + queueQuantity),
+            manualQuantity,
+            queueQuantity,
+            queueId: q.id,
           };
         } else {
           nextCart.push({
@@ -2002,22 +2225,20 @@ export default function InventorySoftware() {
             sku: q.sku,
             name: q.product_name,
             q: Number(q.quantity) || 1,
+            manualQuantity: 0,
+            queueQuantity: Number(q.quantity) || 1,
             p: Number(q.unit_price) || 0,
             max: Number(q.available_stock) || 99,
             uom: q.uom || 'Pcs',
             gstHsnCode: q.gst_hsn_code || '33049990',
+            queueId: q.id,
           });
         }
       }
       setPosCart(nextCart);
-      await api.post(
-        '/inventory-software/scanner/queue/consume',
-        { ids: qRows.map(r => r.id) },
-        reqConfig
-      );
-      showNotice('success', `Pulled ${qRows.length} scanned SKU(s) from Mobile QR Scanner into active POS Bill!`);
+      setScannerQueue(qRows);
+      showNotice('success', `Added ${qRows.length} scanned SKU(s) to the active bill. They remain recoverable until checkout.`);
       setActiveView('sale');
-      await fetchBootstrapData(true);
     } catch (err) {
       showNotice('error', err.response?.data?.message || 'Could not sync mobile scanner queue.');
     }
@@ -3139,7 +3360,8 @@ export default function InventorySoftware() {
                           Mobile QR Code Scanner Bridge ({scannerQueue.length} Queued)
                         </div>
                         <div className="text-[11px] text-slate-300">
-                          Scan product QR codes from your Android Scanner App or enter QR/SKU below to auto-fill bill
+                          Paired terminal: {posSessionCode}. Scans stay queued until checkout completes. Scanner:{' '}
+                          {posScannerStatus}.
                         </div>
                       </div>
                     </div>
@@ -3320,7 +3542,18 @@ export default function InventorySoftware() {
                               return;
                             }
                             if (existing) {
-                              setPosCart(prev => prev.map(c => (c.id === it.id ? { ...c, q: nextQ } : c)));
+                              setPosCart(prev =>
+                                prev.map(c =>
+                                  c.id === it.id
+                                    ? {
+                                        ...c,
+                                        q: nextQ,
+                                        manualQuantity:
+                                          (c.queueId ? Number(c.manualQuantity) || 0 : Number(c.q) || 0) + 1,
+                                      }
+                                    : c
+                                )
+                              );
                             } else {
                               setPosCart(prev => [
                                 ...prev,
@@ -3330,6 +3563,8 @@ export default function InventorySoftware() {
                                   sku: it.sku,
                                   name: it.name,
                                   q: 1,
+                                  manualQuantity: 1,
+                                  queueQuantity: 0,
                                   p: it.price,
                                   max: it.qty,
                                   uom: it.uom,
@@ -3337,19 +3572,6 @@ export default function InventorySoftware() {
                                 },
                               ]);
                             }
-                            api.post(
-                              '/inventory-software/scanner/queue/item',
-                              {
-                                sessionCode: 'DEFAULT-POS-TERMINAL',
-                                sku: it.sku,
-                                metaId: it.id,
-                                delta: 1,
-                                price: it.price,
-                                name: it.name,
-                                availableStock: it.qty,
-                              },
-                              reqConfig
-                            ).catch(() => {});
                           }}
                           className="p-2.5 rounded-xl border border-slate-200 hover:border-emerald-500 bg-slate-50/70 hover:bg-emerald-50/40 text-left transition disabled:opacity-40"
                         >
@@ -3527,18 +3749,10 @@ export default function InventorySoftware() {
                       />
                     </div>
                     <div>
-                      <label className="block text-[10px] font-bold uppercase text-slate-500">GST Tax Rate</label>
-                      <select
-                        value={posTaxRate}
-                        onChange={e => setPosTaxRate(e.target.value)}
-                        className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 font-bold"
-                      >
-                        <option value={0}>0% (Nil)</option>
-                        <option value={5}>5% GST</option>
-                        <option value={12}>12% GST</option>
-                        <option value={18}>18% GST</option>
-                        <option value={28}>28% GST</option>
-                      </select>
+                      <label className="block text-[10px] font-bold uppercase text-slate-500">Configured GST Rate</label>
+                      <div className="w-full px-2.5 py-1.5 rounded-lg bg-slate-100 border border-slate-300 font-bold">
+                        {posTaxRate}% (Store default)
+                      </div>
                     </div>
                   </div>
 
@@ -3596,11 +3810,19 @@ export default function InventorySoftware() {
                 <button
                   type="button"
                   onClick={handlePosCheckout}
-                  className="w-full py-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase tracking-wider text-sm shadow-lg shadow-emerald-600/25 transition flex items-center justify-center gap-2"
+                  disabled={posCheckoutBusy || !posDraftLoaded || posCart.length === 0}
+                  className="w-full py-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black uppercase tracking-wider text-sm shadow-lg shadow-emerald-600/25 transition flex items-center justify-center gap-2"
                 >
                   <CheckCircle2 className="w-5 h-5" />
-                  Complete Bill &amp; Deduct Live Website Stock
+                  {posCheckoutBusy ? 'Saving Invoice…' : !posDraftLoaded ? 'Restoring Bill…' : 'Complete Bill &amp; Deduct Live Website Stock'}
                 </button>
+                <div className="text-center text-[11px] font-semibold text-slate-500">
+                  {posDraftStatus === 'synced'
+                    ? 'Draft saved to this terminal and server.'
+                    : posDraftStatus === 'loading'
+                    ? 'Restoring this terminal’s saved draft…'
+                    : 'Draft saved on this device; server sync will resume when connected.'}
+                </div>
               </div>
             </div>
           )}
@@ -4410,7 +4632,7 @@ export default function InventorySoftware() {
                         Scanner API Key (x-scanner-api-key)
                       </div>
                       <code className="block p-2 rounded-lg bg-slate-950 text-amber-300 font-mono text-[11px] break-all border border-slate-800">
-                        {cfg.scannerApiKey}
+                        {scannerPairingKey || 'Creating terminal-specific key…'}
                       </code>
                       <div className="text-[10px] text-slate-400">
                         POST <code className="text-emerald-300">/api/inventory-software/scanner/scan</code>
