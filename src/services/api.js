@@ -2,6 +2,7 @@ import axios from "axios";
 import { Capacitor } from "@capacitor/core";
 import { notifyOperation } from "../utils/operationFeedback";
 import { beginRequest, endRequest } from "../utils/networkActivity";
+import { dedupeRequestConfig, installRequestDedupe } from "../utils/requestDedupe";
 import {
   getPublicCatalogCacheKey,
   isCacheablePublicCatalogResponse,
@@ -21,8 +22,6 @@ let lastReportedApiFailureAt = 0;
 
 const isMutation = method => ['post', 'put', 'patch', 'delete'].includes(String(method || '').toLowerCase());
 
-const inFlightMutations = new Map();
-
 const getActivityLabel = config => {
   if (config.activityLabel) return config.activityLabel;
   const url = String(config.url || '');
@@ -35,32 +34,11 @@ const getActivityLabel = config => {
   return 'Saving changes…';
 };
 
-// Tracks activity for the global loader and shares one response between identical in-flight mutations (double clicks).
+// Tracks activity for the global loader and applies system-wide request deduplication.
 const trackAndDedupe = config => {
   const mutation = isMutation(config.method);
   beginRequest(config, mutation, mutation ? getActivityLabel(config) : '');
-  if (!mutation || config.allowDuplicate === true) return;
-  const body = config.data;
-  if (body && typeof body !== 'string' && Object.getPrototypeOf(body) !== Object.prototype && !Array.isArray(body)) return;
-  let key;
-  try {
-    key = `${config.method}|${config.baseURL || ''}${config.url}|${typeof body === 'string' ? body : JSON.stringify(body ?? null)}|${config.headers?.Authorization || ''}`;
-  } catch {
-    return;
-  }
-  const existing = inFlightMutations.get(key);
-  if (existing) {
-    config.adapter = () => existing;
-    return;
-  }
-  const baseAdapter = axios.getAdapter(config.adapter || api.defaults.adapter);
-  config.adapter = cfg => {
-    const promise = baseAdapter(cfg);
-    inFlightMutations.set(key, promise);
-    const release = () => inFlightMutations.delete(key);
-    promise.then(release, release);
-    return promise;
-  };
+  dedupeRequestConfig(config, api);
 };
 
 const getOperationLabel = url => {
@@ -712,7 +690,9 @@ export const support = {
   updateStatus: (id, s, adminReply) => api.patch(`/contact/${id}/status`, { status: String(s).replaceAll('-', '_'), ...(adminReply ? { admin_reply: adminReply } : {}) }),
   delete: id => api.delete(`/contact/${id}`)
 };
-const supportClient = axios.create({ baseURL: `${BASE_URL}/api`, withCredentials: true });
+const supportClient = installRequestDedupe(axios.create({ baseURL: `${BASE_URL}/api`, withCredentials: true }));
+// Direct axios calls elsewhere (checkout order creation, push registration, token refresh) are covered too.
+installRequestDedupe(axios);
 const getSupportOrAdminToken = () =>
   localStorage.getItem('supportToken') || localStorage.getItem('adminToken') || '';
 const supportRequest = (method, path, data) => supportClient.request({

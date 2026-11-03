@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Fingerprint } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
+import { dedupedFetch } from '../utils/requestDedupe';
 import { auth as authApi, BASE_URL } from '../services/api';
 import { isPasskeySupported, loginWithPasskey, registerPasskey } from '../utils/webauthnClient';
 import './AdminLogin.css';
@@ -144,7 +145,7 @@ const AdminLogin = () => {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/auth/admin/request-otp`, {
+      const res = await dedupedFetch(`${API}/api/auth/admin/request-otp`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
@@ -189,7 +190,7 @@ const AdminLogin = () => {
 
     setLoading(true);
     try {
-      const res = await fetch(`${API}/api/auth/admin/verify-otp`, {
+      const res = await dedupedFetch(`${API}/api/auth/admin/verify-otp`, {
         method: 'POST',
         credentials: 'include',
         headers: { 'Content-Type': 'application/json' },
