@@ -58,6 +58,11 @@ body {
   color: #fce096;
 }
 
+.premium-page-loader-placeholder {
+  min-height: 100vh;
+  min-height: 100dvh;
+}
+
 .premium-loader-mark {
   position: relative;
   display: grid;

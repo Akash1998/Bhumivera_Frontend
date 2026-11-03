@@ -1,10 +1,17 @@
 import React, { useEffect, useState, useSyncExternalStore } from 'react';
 import { getActivitySnapshot, subscribeActivity } from '../utils/networkActivity';
 
-const BAR_DELAY_MS = 250;
-const OVERLAY_DELAY_MS = 500;
-const SLOW_MS = 4000;
-const VERY_SLOW_MS = 10000;
+const BAR_DELAY_MS = 400;
+const SAVING_DELAY_MS = 700;
+const SLOW_MS = 8000;
+const VERY_SLOW_MS = 20000;
+
+// Only blame the user's network when the browser says it is actually slow; otherwise the server is the likely cause.
+const isSlowConnection = () => {
+  if (typeof navigator === 'undefined') return false;
+  const c = navigator.connection;
+  return Boolean(c && (c.saveData || /^(slow-2g|2g|3g)$/.test(c.effectiveType || '')));
+};
 
 export default function GlobalActivityIndicator() {
   const activity = useSyncExternalStore(subscribeActivity, getActivitySnapshot, getActivitySnapshot);
@@ -28,36 +35,47 @@ export default function GlobalActivityIndicator() {
     };
   }, []);
 
-  const showBar = activity.total > 0 && activity.oldestMs >= BAR_DELAY_MS;
-  const showOverlay = activity.mutations > 0 && activity.oldestMs >= OVERLAY_DELAY_MS;
-  const slow = activity.total > 0 && activity.oldestMs >= SLOW_MS;
-  const verySlow = activity.total > 0 && activity.oldestMs >= VERY_SLOW_MS;
+  const busy = activity.total > 0;
+  const showBar = busy && activity.oldestMs >= BAR_DELAY_MS;
+  const showSaving = activity.mutations > 0 && activity.oldestMs >= SAVING_DELAY_MS;
+  const slow = busy && activity.oldestMs >= SLOW_MS;
+  const verySlow = busy && activity.oldestMs >= VERY_SLOW_MS;
+  const slowNetwork = isSlowConnection();
+
+  let notice = null;
+  if (showSaving) {
+    notice = { title: activity.label || 'Working on it…', text: verySlow ? 'Still working — please keep this page open.' : '' };
+  } else if (slow) {
+    notice = {
+      title: verySlow ? 'Still loading…' : slowNetwork ? 'Slow connection detected' : 'Just a moment…',
+      text: verySlow
+        ? 'This is taking longer than usual. Hang tight.'
+        : slowNetwork ? 'Content is loading — thanks for your patience.' : 'Getting things ready for you.',
+    };
+  }
 
   return (
     <>
       {showBar && (
-        <div className="fixed top-0 left-0 right-0 h-1 z-[10000] overflow-hidden pointer-events-none" role="progressbar" aria-label="Loading">
+        <div className="fixed top-0 left-0 right-0 h-[3px] z-[10000] overflow-hidden pointer-events-none" role="progressbar" aria-label="Loading">
           <div className="h-full w-1/3 bg-gradient-to-r from-emerald-400 via-amber-300 to-emerald-400" style={{ animation: 'bv-activity-slide 1.1s ease-in-out infinite' }} />
         </div>
       )}
 
-      {showOverlay && (
-        <div className="fixed inset-0 z-[9998] flex items-center justify-center bg-black/40 backdrop-blur-[1px] cursor-wait" role="status" aria-live="polite">
-          <div className="flex items-center gap-3 rounded-2xl border border-emerald-500/30 bg-[#071a12]/95 px-5 py-4 text-white shadow-2xl">
-            <span className="h-6 w-6 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin" />
-            <div>
-              <p className="text-sm font-bold">{activity.label || 'Working on it…'}</p>
-              <p className="text-xs text-emerald-100/70">
-                {verySlow ? 'Still working — the network is very slow. Please do not click again.' : slow ? 'Network is slow. Please wait…' : 'Please wait, do not click again.'}
-              </p>
+      {notice && (
+        <div
+          className="fixed left-1/2 bottom-[calc(1rem+env(safe-area-inset-bottom))] z-[10000] pointer-events-none max-w-[calc(100vw-2rem)]"
+          role="status"
+          aria-live="polite"
+          style={{ transform: 'translateX(-50%)', animation: 'bv-activity-fade 0.25s ease-out' }}
+        >
+          <div className="flex items-center gap-3 rounded-full border border-emerald-500/25 bg-[#071a12]/90 px-4 py-2.5 text-white shadow-xl backdrop-blur">
+            <span className="h-4 w-4 shrink-0 rounded-full border-2 border-emerald-400 border-t-transparent animate-spin" aria-hidden="true" />
+            <div className="min-w-0">
+              <p className="text-xs font-semibold leading-tight">{notice.title}</p>
+              {notice.text && <p className="text-[11px] leading-tight text-emerald-100/70">{notice.text}</p>}
             </div>
           </div>
-        </div>
-      )}
-
-      {!showOverlay && slow && (
-        <div className="fixed top-3 left-1/2 -translate-x-1/2 z-[10000] rounded-full bg-amber-400 px-4 py-2 text-xs font-bold text-slate-900 shadow-xl pointer-events-none">
-          {verySlow ? 'Network is very slow — still loading…' : 'Slow network — loading is taking longer than usual…'}
         </div>
       )}
 
@@ -72,7 +90,11 @@ export default function GlobalActivityIndicator() {
         </div>
       )}
 
-      <style>{`@keyframes bv-activity-slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }`}</style>
+      <style>{`
+        @keyframes bv-activity-slide { 0% { transform: translateX(-100%); } 100% { transform: translateX(300%); } }
+        @keyframes bv-activity-fade { from { opacity: 0; margin-bottom: -8px; } to { opacity: 1; margin-bottom: 0; } }
+        @media (prefers-reduced-motion: reduce) { [role="progressbar"] > div { animation: none !important; width: 100% !important; } }
+      `}</style>
     </>
   );
 }

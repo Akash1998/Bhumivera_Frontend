@@ -132,16 +132,26 @@ const CheckoutPage = lazyWithRetry(() => import("./pages/Checkout.jsx"));
 const ProductVerification = lazyWithRetry(() => import("./pages/ProductVerification.jsx"));
 const SellOnBhumivera = lazyWithRetry(() => import("./pages/SellOnBhumivera.jsx"));
 
-const PageLoader = () => (
-  <div className="premium-page-loader" role="status" aria-live="polite" aria-label="Loading Bhumivera">
-    <div className="premium-loader-mark" aria-hidden="true">
-      <span className="premium-loader-orbit" />
-      <span className="premium-loader-core">B</span>
+// Fast page chunks (cached or on a good connection) never flash the full-screen loader.
+const PAGE_LOADER_DELAY_MS = 250;
+
+const PageLoader = () => {
+  const [visible, setVisible] = React.useState(false);
+  useEffect(() => {
+    const timer = setTimeout(() => setVisible(true), PAGE_LOADER_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, []);
+  if (!visible) return <div className="premium-page-loader-placeholder" aria-hidden="true" />;
+  return (
+    <div className="premium-page-loader" role="status" aria-live="polite" aria-label="Loading Bhumivera">
+      <div className="premium-loader-mark" aria-hidden="true">
+        <span className="premium-loader-orbit" />
+        <span className="premium-loader-core">B</span>
+      </div>
+      <span className="premium-loader-wordmark">BHUMIVERA</span>
     </div>
-    <span className="premium-loader-wordmark">BHUMIVERA</span>
-    <span className="premium-loader-caption">Preparing your experience</span>
-  </div>
-);
+  );
+};
 
 const WidgetLoader = ({ label }) => (
   <div
