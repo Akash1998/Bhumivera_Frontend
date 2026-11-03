@@ -63,28 +63,36 @@
   color: var(--admin-text-muted) !important;
 }
 
-.inventory-shell .pos-invoice-panel {
+.inventory-shell .pos-reports-panel {
   color: var(--admin-text);
 }
 
-.inventory-shell .pos-invoice-panel [class~="text-slate-900"],
-.inventory-shell .pos-invoice-panel [class~="text-slate-800"],
-.inventory-shell .pos-invoice-panel [class~="text-slate-700"],
-.inventory-shell .pos-invoice-panel [class~="text-slate-600"],
-.inventory-shell .pos-invoice-panel [class~="text-slate-500"],
-.inventory-shell .pos-invoice-panel [class~="text-slate-400"],
-.inventory-shell .pos-invoice-panel [class~="text-slate-300"],
-.inventory-shell .pos-invoice-panel [class~="text-gray-900"],
-.inventory-shell .pos-invoice-panel [class~="text-gray-800"],
-.inventory-shell .pos-invoice-panel [class~="text-gray-700"],
-.inventory-shell .pos-invoice-panel [class~="text-gray-600"],
-.inventory-shell .pos-invoice-panel [class~="text-gray-500"],
-.inventory-shell .pos-invoice-panel [class~="text-gray-400"] {
+.inventory-shell .pos-reports-panel [class~="text-slate-900"],
+.inventory-shell .pos-reports-panel [class~="text-slate-800"],
+.inventory-shell .pos-reports-panel [class~="text-slate-700"],
+.inventory-shell .pos-reports-panel [class~="text-slate-600"],
+.inventory-shell .pos-reports-panel [class~="text-slate-500"],
+.inventory-shell .pos-reports-panel [class~="text-slate-400"],
+.inventory-shell .pos-reports-panel [class~="text-slate-300"],
+.inventory-shell .pos-reports-panel [class~="text-gray-900"],
+.inventory-shell .pos-reports-panel [class~="text-gray-800"],
+.inventory-shell .pos-reports-panel [class~="text-gray-700"],
+.inventory-shell .pos-reports-panel [class~="text-gray-600"],
+.inventory-shell .pos-reports-panel [class~="text-gray-500"],
+.inventory-shell .pos-reports-panel [class~="text-gray-400"] {
   color: var(--admin-text-muted) !important;
 }
 
-.inventory-shell .pos-invoice-panel tbody td {
+.inventory-shell .pos-reports-panel tbody td {
   color: var(--admin-text);
+}
+
+.inventory-shell .pos-invoice-modal {
+  color: var(--admin-text) !important;
+}
+
+.inventory-shell .pos-invoice-modal [class~="text-emerald-700"] {
+  color: var(--admin-green) !important;
 }
 
 .inventory-shell [class~="border-slate-100"],

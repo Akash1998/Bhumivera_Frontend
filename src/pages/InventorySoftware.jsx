@@ -4942,7 +4942,7 @@ export default function InventorySoftware() {
               VIEW 11: TIME-MACHINE REPORTS & POS INVOICES
              ================================================================= */}
           {activeView === 'rep' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                <div className="pos-reports-panel grid grid-cols-1 lg:grid-cols-12 gap-6">
               <div className="lg:col-span-4 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
                 <h3 className="text-base font-black uppercase text-slate-900">Time-Machine POS Reports</h3>
                 <div>
@@ -4999,7 +4999,7 @@ export default function InventorySoftware() {
                 </div>
               </div>
 
-              <div className="pos-invoice-panel lg:col-span-8 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
+              <div className="lg:col-span-8 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
                 <div className="overflow-x-auto border border-slate-200 rounded-xl">
                   <table className="w-full text-sm">
                     <thead className="bg-slate-900 text-white uppercase text-xs">
@@ -5568,7 +5568,7 @@ export default function InventorySoftware() {
          ===================================================================== */}
       {activeModal === 'view-sale' && viewingSale && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl text-xs">
+          <div className="pos-invoice-modal bg-white rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl text-sm max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3">
               <h3 className="text-base font-black uppercase">Invoice #{viewingSale.invoiceNo}</h3>
               <button type="button" onClick={() => setActiveModal(null)}>
