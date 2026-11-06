@@ -87,7 +87,7 @@ Located in `src/pages/admin/` and loaded dynamically via `AdminDashboard.jsx`:
 12. **`AffiliateManagement.jsx`**: Brand ambassador approvals, commission rates (5%–15%), conversion audit, and payout reconciliation.
 13. **`AuthenticityBatchManagement.jsx`**: Micro-batch creation (250 bottles), serialized QR code generation, and lab CoA assignment.
 14. **`ScarcitySimulator.jsx`**: Live batch allocation pacing and stock countdown visualizer for luxury marketing.
-15. **`PersonalizationCenter.jsx`**: AI-driven product recommendation rules and customer skin-type matching.
+15. **`PersonalizationCenter.jsx`**: Consent-gated recommendation overview with dashboard metrics reset to zero; no fabricated cohorts, personas, sales, or unsaved configuration controls.
 16. **`LifecycleOffers.jsx`**: Automated re-order triggers (30-day, 60-day botanical replenishment reminders).
 17. **`MinCartValueCenter.jsx`**: Dynamic cart checkout restrictions based on regional delivery logistics.
 18. **`SupportAgentManagement.jsx`**: Support desk staff permissions, queue allocations, and response SLA monitoring.
