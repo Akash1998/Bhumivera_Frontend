@@ -98,8 +98,8 @@ export default function GSTAccounting() {
     invoice_prefix: 'BV',
     shipping_sac: '996812',
     shipping_gst_rate: '18',
-    default_hsn_code: '33049990',
-    default_gst_rate: '18',
+    default_hsn_code: '30049011',
+    default_gst_rate: '5',
     bank_name: '',
     bank_account_no: '',
     bank_ifsc: '',
@@ -125,8 +125,8 @@ export default function GSTAccounting() {
   const [orderSearch, setOrderSearch] = useState('');
   const [selectedOrderIds, setSelectedOrderIds] = useState([]);
   const [useDefaultTaxFallback, setUseDefaultTaxFallback] = useState(true);
-  const [bulkHsn, setBulkHsn] = useState('33049990');
-  const [bulkGstRate, setBulkGstRate] = useState('18');
+  const [bulkHsn, setBulkHsn] = useState('30049011');
+  const [bulkGstRate, setBulkGstRate] = useState('5');
 
   // Luxury Invoice Modal State
   const [previewInvoiceDoc, setPreviewInvoiceDoc] = useState(null);
@@ -776,8 +776,8 @@ export default function GSTAccounting() {
                         </span>
                       </td>
                       <td className="p-3 font-mono text-[11px] text-slate-300">
-                        <div>{document.hsn_codes_list || '33049990'}</div>
-                        <div className="text-[10px] text-slate-500">{document.gst_rates_list || '18%'}</div>
+                        <div>{document.hsn_codes_list || '30049011'}</div>
+                        <div className="text-[10px] text-slate-500">{document.gst_rates_list || '5%'}</div>
                       </td>
                       <td className="p-3 text-right font-mono text-slate-200">{rupees(document.taxable_value)}</td>
                       <td className="p-3 text-right font-mono text-slate-300">{rupees(document.cgst)}</td>
@@ -855,7 +855,7 @@ export default function GSTAccounting() {
                   onChange={e => setUseDefaultTaxFallback(e.target.checked)}
                   className="accent-emerald-400"
                 />
-                Auto-apply default HSN ({profile.default_hsn_code || '33049990'} @ {profile.default_gst_rate || 18}%) if item HSN is unset
+                Auto-apply default HSN ({profile.default_hsn_code || '30049011'} @ {profile.default_gst_rate || 5}%) if item HSN is unset
               </label>
 
               <input
@@ -1228,7 +1228,7 @@ export default function GSTAccounting() {
                         value={product.gst_hsn_code || ''}
                         onChange={event => updateProduct(product.id, 'gst_hsn_code', event.target.value)}
                         aria-label={`HSN code for ${product.name}`}
-                        placeholder="33049990"
+                        placeholder="30049011"
                         className="w-28 rounded border border-slate-700 bg-slate-950 px-2 py-1 font-mono text-white"
                       />
                     </td>

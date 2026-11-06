@@ -159,8 +159,8 @@ export function normalizeInvoiceDocument(inputDoc, businessProfile = null) {
     // Build HSN breakup if not already attached
     const hsnMap = new Map();
     for (const line of lines) {
-      const hsn = String(line.hsn_sac || '33049990');
-      const rate = Number(line.gst_rate || 18);
+      const hsn = String(line.hsn_sac || '30049011');
+      const rate = Number(line.gst_rate || 5);
       const key = `${hsn}|${rate}`;
       const existing = hsnMap.get(key) || {
         hsn_sac: hsn,
@@ -282,8 +282,8 @@ export function normalizeInvoiceDocument(inputDoc, businessProfile = null) {
         {
           name: 'Bhumivera Botanical Order Package',
           sku: 'BV-PKG',
-          gst_hsn_code: '33049990',
-          gst_rate: 18,
+          gst_hsn_code: '30049011',
+          gst_rate: 5,
           quantity: 1,
           price: Math.max(0, orderTotal - shippingGross),
         },
@@ -291,7 +291,7 @@ export function normalizeInvoiceDocument(inputDoc, businessProfile = null) {
 
   for (const item of itemsToProcess) {
     const qty = Number(item.quantity || 1);
-    const rate = Number(item.gst_rate ?? 18);
+    const rate = Number(item.gst_rate ?? 5);
     const gross = Number(item.price || 0) * qty;
     const taxable = Math.round((gross / (1 + rate / 100)) * 100) / 100;
     const tax = Math.round((gross - taxable) * 100) / 100;
@@ -307,7 +307,7 @@ export function normalizeInvoiceDocument(inputDoc, businessProfile = null) {
     lineItems.push({
       description: item.name || item.product_name || 'Botanical Formulation',
       sku: item.sku || '',
-      hsn_sac: item.gst_hsn_code || '33049990',
+      hsn_sac: item.gst_hsn_code || '30049011',
       quantity: qty,
       unit_price_inclusive: Number(item.price || 0),
       gst_rate: rate,
@@ -459,7 +459,7 @@ export function buildPrintableLuxuryInvoiceHtml(normalized) {
             <div style="font-weight:800;color:#071510">${escapeHtml(line.description)}</div>
             ${line.sku ? `<div style="font-size:10px;color:#52665c">SKU: ${escapeHtml(line.sku)}</div>` : ''}
           </td>
-          <td style="text-align:center;font-family:monospace;font-weight:700">${escapeHtml(line.hsn_sac || '33049990')}</td>
+          <td style="text-align:center;font-family:monospace;font-weight:700">${escapeHtml(line.hsn_sac || '30049011')}</td>
           <td style="text-align:center">${escapeHtml(line.quantity)} Nos</td>
           <td style="text-align:right;font-family:monospace">${formatInr(line.unit_price_inclusive || line.total)}</td>
           <td style="text-align:right;font-family:monospace">${formatInr(line.taxable_value)}</td>
@@ -863,7 +863,7 @@ export default function LuxuryTaxInvoiceModal({
                         {line.sku && <div className="text-[10px] text-[#52665c]">SKU: {line.sku}</div>}
                       </td>
                       <td className="p-3 border border-[#dce3de] text-center font-mono font-bold">
-                        {line.hsn_sac || '33049990'}
+                        {line.hsn_sac || '30049011'}
                       </td>
                       <td className="p-3 border border-[#dce3de] text-center font-semibold">{line.quantity} Nos</td>
                       <td className="p-3 border border-[#dce3de] text-right font-mono">
