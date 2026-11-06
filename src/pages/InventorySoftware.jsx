@@ -946,6 +946,7 @@ export default function InventorySoftware() {
 
     let isMounted = true;
     const syncInterval = setInterval(async () => {
+      if (document.visibilityState !== 'visible') return;
       try {
         const res = await api.get(
           `/inventory-software/scanner/queue?sessionCode=${encodeURIComponent(posSessionCode)}`,
@@ -959,7 +960,7 @@ export default function InventorySoftware() {
       } catch {
         if (isMounted) setPosScannerStatus('disconnected');
       }
-    }, 1500);
+    }, 2000);
 
     return () => {
       isMounted = false;
