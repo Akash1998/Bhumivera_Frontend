@@ -224,7 +224,7 @@ const API_VERIFICATION_SUITE = [
     id: 'api-loyalty',
     module: 'Clientele Privilege & Tiers',
     method: 'GET',
-    endpoint: '/loyalty-tiers/matrix',
+    endpoint: '/users/loyalty/matrix',
     authScope: 'Admin JWT',
     expectedSchema: '{ data: { config, tiers[] } }',
   },
@@ -240,7 +240,7 @@ const API_VERIFICATION_SUITE = [
     id: 'api-system-health',
     module: 'Deep System Admin Telemetry',
     method: 'GET',
-    endpoint: '/system/health',
+    endpoint: '/admin/system/health',
     authScope: 'Admin JWT',
     expectedSchema: '{ status, services }',
   },
@@ -325,7 +325,9 @@ export default function DashboardOverview() {
   const verifySingleEndpoint = async item => {
     const start = performance.now();
     try {
-      const res = await api.get(item.endpoint);
+      const res = await api.get(item.endpoint, {
+        adminAuth: item.authScope?.includes('Admin') || item.authScope?.includes('JWT'),
+      });
       const latency = Math.round(performance.now() - start);
       const status = res.status || 200;
       setApiResults(prev => ({

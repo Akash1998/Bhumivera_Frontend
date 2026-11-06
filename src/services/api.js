@@ -118,6 +118,10 @@ api.interceptors.request.use(c => {
   const url = c.url || "";
   const isAdminCall = c.adminAuth === true || url.startsWith("/admin/") ||
     url === "/auth/profile" ||
+    url.startsWith("/gst") ||
+    url.startsWith("/system") ||
+    url.startsWith("/loyalty-tiers") ||
+    url.startsWith("/users/loyalty") ||
     url === "/reviews" && c.method === "get" ||
     url.startsWith("/serials/admin/") ||
     url.startsWith("/warehouse/admin/") ||
@@ -182,6 +186,10 @@ const _resolveTokenKind = (url = '', method = '', adminAuth = false) => {
   if (adminAuth) return 'admin';
   const isAdminUrl = url.startsWith("/admin/") ||
     url === "/auth/profile" ||
+    url.startsWith("/gst") ||
+    url.startsWith("/system") ||
+    url.startsWith("/loyalty-tiers") ||
+    url.startsWith("/users/loyalty") ||
     url.startsWith("/categories/admin/") ||
     url === "/reviews" && method === 'get' ||
     url.startsWith("/contact") && method !== 'post' && !url.startsWith("/contact/my") ||
