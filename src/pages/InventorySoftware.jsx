@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import * as XLSX from 'xlsx';
 import QRCode from 'qrcode';
 import api from '../services/api';
+import { filterLifecycleOrders, localOrderDate, matchesOrderStatus } from '../utils/inventoryOrderFilters';
 import './admin/AdminTheme.css';
 import {
   Activity,
@@ -455,6 +456,7 @@ export default function InventorySoftware() {
   const [loading, setLoading] = useState(false);
   const [syncing, setSyncing] = useState(false);
   const [lastSyncedAt, setLastSyncedAt] = useState(null);
+  const [orderSyncError, setOrderSyncError] = useState('');
   const [banner, setBanner] = useState(null);
 
   // Core Data Collections (Single Main Inventory synced across Online & Offline)
@@ -476,6 +478,7 @@ export default function InventorySoftware() {
   // Order Lifecycle, Shipping Labels, RTO Returns, QR Scanner & Daily Backup State
   const [orderSearch, setOrderSearch] = useState('');
   const [orderStatusFilter, setOrderStatusFilter] = useState('ALL');
+  const [orderDateFilter, setOrderDateFilter] = useState('');
   const [editingOrder, setEditingOrder] = useState(null);
   const [selectedLabelOrderIds, setSelectedLabelOrderIds] = useState([]);
   const [carrierBookForm, setCarrierBookForm] = useState({
@@ -683,6 +686,7 @@ export default function InventorySoftware() {
           reqConfig
         );
         const d = res.data;
+        if (!d?.success) throw new Error(d?.message || 'Inventory sync returned an unsuccessful response.');
         if (d?.success) {
           if (d.viewer) {
             setViewer(d.viewer);
@@ -713,6 +717,7 @@ export default function InventorySoftware() {
             setPosTaxRate(Number.isFinite(configuredTaxRate) ? configuredTaxRate : 18);
           }
           setLastSyncedAt(d.syncedAt || new Date().toISOString());
+          setOrderSyncError('');
 
           localStorage.setItem(
             LOCAL_DB_KEY,
@@ -732,6 +737,7 @@ export default function InventorySoftware() {
           );
         }
       } catch (err) {
+        setOrderSyncError(err.response?.data?.message || err.message || 'Could not refresh inventory data.');
         if (err.response?.status === 401 || err.response?.status === 403) {
           setAuthToken('');
           localStorage.removeItem(LOCAL_TOKEN_KEY);
@@ -751,13 +757,14 @@ export default function InventorySoftware() {
               if (cached.logs) setLogs(cached.logs);
             }
           } catch {}
+          showNotice('error', err.response?.data?.message || err.message || 'Could not refresh inventory data.');
         }
       } finally {
         setLoading(false);
         setSyncing(false);
       }
     },
-    [authToken, posSessionCode, reqConfig]
+    [authToken, posSessionCode, reqConfig, showNotice]
   );
 
   useEffect(() => {
@@ -765,6 +772,21 @@ export default function InventorySoftware() {
       fetchBootstrapData();
     }
   }, [authToken, fetchBootstrapData]);
+
+  useEffect(() => {
+    if (!authToken || activeView !== 'online') return undefined;
+    let refreshing = false;
+    const timer = setInterval(async () => {
+      if (document.visibilityState !== 'visible' || refreshing) return;
+      refreshing = true;
+      try {
+        await fetchBootstrapData(true);
+      } finally {
+        refreshing = false;
+      }
+    }, 60000);
+    return () => clearInterval(timer);
+  }, [authToken, activeView, fetchBootstrapData]);
 
   // POS Cart Totals & Dynamic UPI QR Generator
   const posCalculations = useMemo(() => {
@@ -1024,7 +1046,7 @@ export default function InventorySoftware() {
   const filteredOnlineOrders = useMemo(() => {
     const q = orderSearch.trim().toLowerCase();
     return onlineOrders.filter(o => {
-      const matchStatus = orderStatusFilter === 'ALL' || o.status === orderStatusFilter;
+      const matchStatus = matchesOrderStatus(o, orderStatusFilter);
       const matchQuery =
         !q ||
         String(o.orderNumber || '').toLowerCase().includes(q) ||
@@ -1039,6 +1061,12 @@ export default function InventorySoftware() {
       return matchStatus && matchQuery;
     });
   }, [onlineOrders, orderSearch, orderStatusFilter]);
+
+  const lifecycleOrders = useMemo(
+    () => filterLifecycleOrders(onlineOrders, { status: orderStatusFilter, date: orderDateFilter, query: orderSearch }),
+    [onlineOrders, orderStatusFilter, orderDateFilter, orderSearch]
+  );
+  const todayOrderDate = localOrderDate(new Date());
 
   // Filtered Undelivered / RTO Eligible Orders
   const rtoCandidateOrders = useMemo(() => {
@@ -2373,7 +2401,7 @@ export default function InventorySoftware() {
   };
 
   const handleExportOnlineOrdersExcel = () => {
-    const rows = filteredOnlineOrders.map(o => ({
+    const rows = lifecycleOrders.map(o => ({
       'Order #': o.orderNumber,
       'Order Date': new Date(o.createdAt).toLocaleString(),
       'Customer Name': o.customerName,
@@ -4089,53 +4117,41 @@ export default function InventorySoftware() {
               VIEW 6: FULL ONLINE ORDER LIFECYCLE, TRACKING & DISPATCH HUB
              ================================================================= */}
           {activeView === 'online' && (
-            <div className="space-y-5">
-              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-                <div className="bg-white rounded-2xl p-4 border border-slate-200 border-l-4 border-l-slate-800 shadow-sm">
-                  <div className="text-[10px] font-bold uppercase text-slate-500">Total Routed Orders</div>
-                  <div className="text-2xl font-black text-slate-900 mt-1 font-mono">{onlineOrders.length}</div>
-                  <div className="text-[10px] text-emerald-700 font-semibold">100% Routed from bhumivera.com</div>
-                </div>
-                <div className="bg-white rounded-2xl p-4 border border-slate-200 border-l-4 border-l-amber-500 shadow-sm">
-                  <div className="text-[10px] font-bold uppercase text-slate-500">Pending / To Pack</div>
-                  <div className="text-2xl font-black text-amber-600 mt-1 font-mono">
-                    {onlineOrders.filter(o => ['pending', 'confirmed', 'packed'].includes(o.status)).length}
-                  </div>
-                  <div className="text-[10px] text-slate-500">Awaiting Warehouse Dispatch</div>
-                </div>
-                <div className="bg-white rounded-2xl p-4 border border-slate-200 border-l-4 border-l-purple-500 shadow-sm">
-                  <div className="text-[10px] font-bold uppercase text-slate-500">Shipped / In Transit</div>
-                  <div className="text-2xl font-black text-purple-700 mt-1 font-mono">
-                    {onlineOrders.filter(o => o.status === 'shipped').length}
-                  </div>
-                  <div className="text-[10px] text-slate-500">With Live AWB Tracking</div>
-                </div>
-                <div className="bg-white rounded-2xl p-4 border border-slate-200 border-l-4 border-l-emerald-500 shadow-sm">
-                  <div className="text-[10px] font-bold uppercase text-slate-500">Delivered Orders</div>
-                  <div className="text-2xl font-black text-emerald-700 mt-1 font-mono">
-                    {onlineOrders.filter(o => o.status === 'delivered').length}
-                  </div>
-                  <div className="text-[10px] text-emerald-700 font-semibold">Non-Returnable once Delivered</div>
-                </div>
-                <div className="bg-white rounded-2xl p-4 border border-slate-200 border-l-4 border-l-rose-500 shadow-sm">
-                  <div className="text-[10px] font-bold uppercase text-slate-500">Undelivered / RTO</div>
-                  <div className="text-2xl font-black text-rose-600 mt-1 font-mono">
-                    {onlineOrders.filter(o => o.status === 'returned').length}
-                  </div>
-                  <div className="text-[10px] text-rose-600 font-semibold">Courier RTO Restock Queue</div>
-                </div>
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2">
+                {[
+                  { label: 'All orders', status: 'ALL', date: '', count: onlineOrders.length },
+                  { label: 'Arrived today', status: 'ALL', date: todayOrderDate, count: onlineOrders.filter(o => localOrderDate(o.createdAt) === todayOrderDate).length },
+                  { label: 'Awaiting dispatch', status: 'DISPATCH', date: '', count: onlineOrders.filter(o => matchesOrderStatus(o, 'DISPATCH')).length },
+                  { label: 'In transit', status: 'shipped', date: '', count: onlineOrders.filter(o => o.status === 'shipped').length },
+                  { label: 'Delivered', status: 'delivered', date: '', count: onlineOrders.filter(o => o.status === 'delivered').length },
+                  { label: 'Returned / RTO', status: 'returned', date: '', count: onlineOrders.filter(o => o.status === 'returned').length },
+                ].map(card => {
+                  const selected = orderStatusFilter === card.status && orderDateFilter === card.date;
+                  return (
+                    <button
+                      key={card.label}
+                      type="button"
+                      aria-pressed={selected}
+                      onClick={() => { setOrderStatusFilter(card.status); setOrderDateFilter(card.date); setOrderSearch(''); }}
+                      className={`rounded-xl p-3 border text-left shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 ${selected ? 'border-emerald-500 bg-[#16452d]' : 'border-slate-200 bg-white hover:border-emerald-400'}`}
+                    >
+                      <span className="block text-[10px] font-bold uppercase text-slate-500">{card.label}</span>
+                      <span className="block text-xl font-black text-slate-900 font-mono">{card.count}</span>
+                    </button>
+                  );
+                })}
               </div>
 
-              <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
+              <div className="bg-white rounded-2xl p-3 sm:p-4 border border-slate-200 shadow-sm space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
                   <div>
                     <h3 className="text-base font-black uppercase text-slate-900">
-                      Complete Online Order Lifecycle — Placement → Packing → Shipment → Delivery → RTO
+                      Order management
                     </h3>
                     <p className="text-xs text-slate-500">
-                      Every order placed on <code className="text-emerald-700 font-bold">bhumivera.com</code> routes here
-                      automatically with live stock verification, automatic delivery date, tracking ID editor, and 1-click
-                      shipping label printing.
+                      Latest {onlineOrders.length} orders (up to 250). Auto-refreshes every minute while this view is visible.
+                      {lastSyncedAt && ` Last synced ${new Date(lastSyncedAt).toLocaleTimeString()}.`}
                     </p>
                   </div>
                   <div className="flex flex-wrap items-center gap-2">
@@ -4162,24 +4178,32 @@ export default function InventorySoftware() {
                     </button>
                   </div>
                 </div>
+                {orderSyncError && (
+                  <p role="alert" className="rounded-lg border border-rose-400 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-800">
+                    Order refresh failed. The list may be out of date: {orderSyncError}
+                  </p>
+                )}
 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
                   <div className="md:col-span-2 relative">
                     <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" />
                     <input
                       type="text"
+                      aria-label="Search orders"
                       value={orderSearch}
                       onChange={e => setOrderSearch(e.target.value)}
-                      placeholder="Search by Order #, Customer Name, Phone, City (e.g. Delhi), State, Pincode, or Tracking AWB…"
+                      placeholder="Search order, customer, phone, product, city or tracking AWB…"
                       className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs focus:bg-white focus:border-emerald-500 focus:outline-none"
                     />
                   </div>
                   <select
+                    aria-label="Filter by order status"
                     value={orderStatusFilter}
                     onChange={e => setOrderStatusFilter(e.target.value)}
                     className="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold"
                   >
                     <option value="ALL">All Order Statuses ({onlineOrders.length})</option>
+                    <option value="DISPATCH">Awaiting Dispatch</option>
                     <option value="pending">Pending (New Orders)</option>
                     <option value="confirmed">Confirmed</option>
                     <option value="packed">Packed &amp; Weighed</option>
@@ -4188,6 +4212,17 @@ export default function InventorySoftware() {
                     <option value="returned">Undelivered / Courier RTO</option>
                     <option value="cancelled">Cancelled</option>
                   </select>
+                  <input
+                    type="date"
+                    aria-label="Filter by order date"
+                    value={orderDateFilter}
+                    onChange={e => setOrderDateFilter(e.target.value)}
+                    className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold"
+                  />
+                </div>
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
+                  <span>{lifecycleOrders.length} of {onlineOrders.length} loaded orders shown · Dates use your device time zone</span>
+                  <button type="button" onClick={() => { setOrderSearch(''); setOrderStatusFilter('ALL'); setOrderDateFilter(''); }} className="font-bold text-emerald-300 hover:underline">Clear filters</button>
                 </div>
 
                 <div className="overflow-x-auto border border-slate-200 rounded-xl">
@@ -4204,23 +4239,26 @@ export default function InventorySoftware() {
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-slate-200">
-                      {filteredOnlineOrders.length === 0 ? (
+                      {lifecycleOrders.length === 0 ? (
                         <tr>
                           <td colSpan={7} className="py-10 text-center text-slate-400">
                             No orders match this filter.
                           </td>
                         </tr>
                       ) : (
-                        filteredOnlineOrders.map(ord => (
-                          <tr key={ord.id} className="hover:bg-[#103323] align-top">
-                            <td className="py-3 px-3 font-mono">
-                              <div className="font-black text-slate-900 text-sm">#{ord.orderNumber}</div>
+                        lifecycleOrders.map(ord => (
+                          <tr key={ord.id} onClick={e => {
+                            if (e.target.closest('button, a, input, select')) return;
+                            setEditingOrder({ ...ord });
+                            setActiveModal('order-detail');
+                          }} className="cursor-pointer hover:bg-slate-50 align-top">
+                            <td className="py-2 px-3 font-mono">
+                              <button type="button" onClick={() => { setEditingOrder({ ...ord }); setActiveModal('order-detail'); }} className="font-black text-emerald-300 text-sm hover:underline" aria-label={`Open order ${ord.orderNumber}`}>#{ord.orderNumber}</button>
                               <div className="text-[10px] text-slate-500">
                                 {new Date(ord.createdAt).toLocaleString()}
                               </div>
-                              <span className="mt-1 inline-block px-2 py-0.5 rounded bg-slate-100 text-slate-700 text-[9px] font-bold uppercase">
-                                {ord.deliveryType || 'standard'}
-                              </span>
+                              {localOrderDate(ord.createdAt) === todayOrderDate && <span className="mt-1 inline-block px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[9px] font-bold uppercase">Arrived today</span>}
+                              {ord.status === 'pending' && <span className="mt-1 ml-1 inline-block px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[9px] font-bold uppercase">Pending</span>}
                             </td>
 
                             <td className="py-3 px-3">
@@ -4243,27 +4281,11 @@ export default function InventorySoftware() {
                               )}
                             </td>
 
-                            <td className="py-3 px-3 space-y-1.5">
-                              {(ord.items || []).map((it, idx) => (
-                                <div
-                                  key={idx}
-                                  className="p-1.5 rounded-lg bg-slate-50 border border-slate-200 text-[11px]"
-                                >
-                                  <div className="font-bold text-slate-900">
-                                    {it.name}{' '}
-                                    <span className="font-mono font-black text-emerald-700">×{it.quantity}</span>
-                                  </div>
-                                  <div className="font-mono text-[10px] text-slate-500 flex items-center gap-2">
-                                    <span>
-                                      Main Stock:{' '}
-                                      <b className={it.inStockQty > 5 ? 'text-emerald-700' : 'text-rose-600'}>
-                                        {it.inStockQty} avail
-                                      </b>
-                                    </span>
-                                    <span>• Bin: {it.binCode}</span>
-                                  </div>
-                                </div>
-                              ))}
+                            <td className="py-2 px-3">
+                              <div className="font-bold text-slate-900 line-clamp-2">
+                                {(ord.items || []).map(it => `${it.name} ×${it.quantity}`).join(', ') || 'No items'}
+                              </div>
+                              <div className="text-[10px] text-slate-500">{(ord.items || []).length} line items · Open for stock &amp; bin details</div>
                             </td>
 
                             <td className="py-3 px-3 space-y-1">

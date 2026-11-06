@@ -31,7 +31,8 @@ const DEFAULT_PRODUCT_OPTIONS = [
 ];
 
 const COMBO_OPTIONS = [
-  { id: 'bundle-daily-regimen', sku: 'BV-BND-DAILY-01', name: 'The Complete Botanical Daily Regimen', shortName: 'Daily Regimen Combo', price: 2047 },
+  { id: 'bundle-daily-regimen', sku: 'BV-BND-DAILY-01', name: 'The Grand Maison 4-Piece Daily Apothecary', shortName: '4-Piece Daily Apothecary', price: 2596 },
+  { id: 'bundle-royal-crown-trio', sku: 'BV-BND-ROYAL-03', name: 'The Royal Skin & Scalp Stewardship Trio', shortName: 'Skin & Scalp Trio', price: 2047 },
   { id: 'bundle-inside-out-ritual', sku: 'BV-BND-INSIDEOUT-02', name: 'The Inside-Out Skin-Clearing & Cortisol Ritual', shortName: 'Inside-Out Cortisol Combo', price: 1597 },
   { id: 'bundle-grand-maison-vault', sku: 'BV-BND-VAULT-06', name: 'The Grand Maison 6-Piece Apothecary Vault', shortName: '6-Piece Apothecary Vault', price: 3644 },
 ];

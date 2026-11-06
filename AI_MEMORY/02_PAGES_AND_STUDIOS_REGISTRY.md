@@ -33,7 +33,7 @@ All files live in `src/pages/`:
 | **3** | `ProductDetail.jsx` | `/product/:id`, `/products/:id` | Full active potency disclosure table, batch CoA verification link, Wikipedia-linked JSON-LD, reviews tab |
 | **4** | `BundleDetail.jsx` | `/combo/:slug` | Regimen bundle page with component breakdown, live component stock, and regimen reviews |
 | **5** | `ProductVerification.jsx` | `/verify`, `/genuinity`, `/ewarranty` | Authenticity QR code scanner and bottle serial validation against Railway database |
-| **6** | `InventorySoftware.jsx` | `/inventorysoftware`, `/inventorysoftware/*` | **10x Omnichannel Command Center**: Order lifecycle, shipping labels, RTO returns, POS, QR pairing, SQL backup |
+| **6** | `InventorySoftware.jsx` | `/inventorysoftware`, `/inventorysoftware/*` | **10x Omnichannel Command Center**: Order lifecycle with clickable status/today filters, search, date filter and visible-view refresh; shipping labels, RTO returns, POS, QR pairing, SQL backup |
 | **7** | `AdminLogin.jsx` | `/admin/login` | Secure management login with TOTP 2FA, brute-force rate limiter, and role gate |
 | **8** | `AdminDashboard.jsx` | `/admin`, `/admin/dashboard` | Website Owner & Marketing Studio (Catalog, Spins, Referrals, GST, CRM, Reviews) |
 | **9** | `SuperAdminSupport.jsx` | `/superadminsupport` | SuperAdmin Staff IAM Vault: Support agent roles, warehouse staff IDs, passkeys & TOTP |

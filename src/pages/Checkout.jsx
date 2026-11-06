@@ -597,8 +597,11 @@ export default function Checkout() {
                         className="accent-[#D4AF37]"
                       />
                       <div>
-                        <span className="font-semibold text-sm text-white">UPI, Cards, NetBanking (Razorpay)</span>
-                        <p className="text-xs text-[#9BB0A5]">Instant confirmation with GPay, PhonePe, Paytm, or Credit/Debit Cards</p>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm text-white">UPI, Cards, NetBanking (Razorpay)</span>
+                          <span className="rounded-full bg-emerald-500/20 border border-emerald-500/40 px-2 py-0.5 text-[9px] font-bold text-emerald-300">Fastest Dispatch</span>
+                        </div>
+                        <p className="text-xs text-[#9BB0A5]">Instant confirmation with GPay, PhonePe, Paytm, or Credit/Debit Cards (Recommended)</p>
                       </div>
                     </div>
                     <CreditCard className="h-5 w-5 text-[#D4AF37]" />
@@ -642,8 +645,11 @@ export default function Checkout() {
                         className="accent-[#D4AF37]"
                       />
                       <div>
-                        <span className="font-semibold text-sm text-white">Cash on Delivery (COD)</span>
-                        <p className="text-xs text-[#9BB0A5]">Pay cash or scan courier QR at doorstep</p>
+                        <div className="flex items-center gap-2">
+                          <span className="font-semibold text-sm text-white">Cash on Delivery (COD)</span>
+                          <span className="rounded-full bg-amber-500/20 border border-amber-500/40 px-2 py-0.5 text-[9px] font-bold text-amber-300">OTP Verified</span>
+                        </div>
+                        <p className="text-xs text-[#9BB0A5]">Requires doorstep OTP confirmation. For contactless priority dispatch, choose Online UPI.</p>
                       </div>
                     </div>
                     <Truck className="h-5 w-5 text-[#D4AF37]" />

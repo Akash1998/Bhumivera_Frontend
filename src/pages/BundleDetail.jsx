@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, Layers, MapPin, Minus, Plus, ShoppingBag, Star } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Layers, MapPin, Minus, Plus, ShoppingBag, Star, PackageCheck, Truck, ShieldCheck } from 'lucide-react';
 import SEO from '../components/SEO';
 import { MAISON_REGIMEN_BUNDLES } from '../data/bhumiveraUniqueData';
 import { AUTHENTIC_COMBO_REVIEWS_BY_ID } from '../data/bhumiveraAuthenticReviews';
@@ -194,9 +194,20 @@ export default function BundleDetail() {
             </button>
             {loading && <p className="mt-3 text-xs text-[#9BB0A5]">Checking live bundle availability…</p>}
             {loadError && <p role="alert" className="mt-3 text-sm text-rose-300">{loadError}</p>}
-            <p className="mt-5 border-t border-[#244A38] pt-4 text-xs leading-6 text-[#9BB0A5]">
-              No bundle image is used. Inventory is reserved from each included product during order placement.
-            </p>
+            <div className="mt-6 border-t border-[#244A38] pt-5 space-y-3 text-xs leading-5">
+              <div className="flex items-center gap-2.5 text-[#FCE096]">
+                <PackageCheck size={16} className="shrink-0 text-[#D4AF37]" />
+                <span className="font-semibold">{bundle.packaging || 'Maison Rigid Magnetic Gift Box & Custom Precision Foam Shell Included'}</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-emerald-400">
+                <Truck size={16} className="shrink-0" />
+                <span>Complimentary All-India Express Air Courier Included</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-[#9BB0A5]">
+                <ShieldCheck size={16} className="shrink-0 text-[#D4AF37]" />
+                <span>Fresh micro-batch reserve with serialized digital lab assay verification</span>
+              </div>
+            </div>
           </aside>
         </section>
 
