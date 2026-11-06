@@ -1,10 +1,27 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import * as XLSX from 'xlsx';
 import QRCode from 'qrcode';
 import api from '../services/api';
 import { filterLifecycleOrders, localOrderDate, matchesOrderStatus } from '../utils/inventoryOrderFilters';
 import './admin/AdminTheme.css';
+
+import DashboardView from '../components/inventory/views/DashboardView';
+import OrderFulfillmentView from '../components/inventory/views/OrderFulfillmentView';
+import PosTerminalView from '../components/inventory/views/PosTerminalView';
+import CatalogStockView from '../components/inventory/views/CatalogStockView';
+import ShippingLabelsView from '../components/inventory/views/ShippingLabelsView';
+import StorageKeeperView from '../components/inventory/views/StorageKeeperView';
+import GrnInwardView from '../components/inventory/views/GrnInwardView';
+import RtoReturnsView from '../components/inventory/views/RtoReturnsView';
+import StocktakeAuditView from '../components/inventory/views/StocktakeAuditView';
+import ScannerBridgeView from '../components/inventory/views/ScannerBridgeView';
+import ReportsLogsView from '../components/inventory/views/ReportsLogsView';
+
+import WavePicklistModal from '../components/inventory/modals/WavePicklistModal';
+import ManifestPrintModal from '../components/inventory/modals/ManifestPrintModal';
+import PackingVerifyModal from '../components/inventory/modals/PackingVerifyModal';
+import ReturnQcModal from '../components/inventory/modals/ReturnQcModal';
+import ThermalLabelModal from '../components/inventory/modals/ThermalLabelModal';
 import {
   Activity,
   AlertTriangle,
@@ -78,329 +95,9 @@ const LOCAL_POS_DRAFT_KEY = 'BV_POS_DRAFT';
 const createPosRequestId = () =>
   globalThis.crypto?.randomUUID?.() || `pos-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
-const FALLBACK_CATALOG_ITEMS = [
-  {
-    id: 1,
-    productId: 10,
-    sku: 'BV-LUX-CFW-01',
-    barcode: '8908020260015',
-    name: 'Bhumivera Activated Charcoal Purifying Luxury Face Wash',
-    cat: 'Luxury Facial Cleansers',
-    uom: '100 ML',
-    qty: 249,
-    physicalStock: 249,
-    shopDisplayStock: 49,
-    warehouseVaultStock: 200,
-    safetyBufferStock: 0,
-    damagedQuarantineStock: 0,
-    onlineReservedQty: 0,
-    costPrice: 60,
-    mrp: 699,
-    price: 299,
-    gstHsnCode: '30049011',
-    gstRate: 5,
-    minStock: 20,
-    reorderQty: 100,
-    binCode: 'ASN-SHOP-R1-B01',
-    rackLocation: 'Zone A • Rack 01 • Shelf A • Bin 01',
-    batchNo: 'SCFW26H',
-    mfgDate: '2026-08-01',
-    expiryDate: '2028-07-31',
-    soldQty: 42,
-    soldOfflineQty: 18,
-    soldOnlineQty: 24,
-    syncToWebsite: true,
-  },
-  {
-    id: 2,
-    productId: 11,
-    sku: 'BV-LUX-SBFW-02',
-    barcode: '8908020260022',
-    name: 'Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash',
-    cat: 'Luxury Facial Cleansers',
-    uom: '100 ML',
-    qty: 249,
-    physicalStock: 249,
-    shopDisplayStock: 49,
-    warehouseVaultStock: 200,
-    safetyBufferStock: 0,
-    damagedQuarantineStock: 0,
-    onlineReservedQty: 0,
-    costPrice: 62,
-    mrp: 799,
-    price: 399,
-    gstHsnCode: '30049011',
-    gstRate: 5,
-    minStock: 20,
-    reorderQty: 100,
-    binCode: 'ASN-SHOP-R1-B01',
-    rackLocation: 'Zone A • Rack 01 • Shelf A • Bin 02',
-    batchNo: 'SFW26H',
-    mfgDate: '2026-08-01',
-    expiryDate: '2028-07-31',
-    soldQty: 51,
-    soldOfflineQty: 21,
-    soldOnlineQty: 30,
-    syncToWebsite: true,
-  },
-  {
-    id: 3,
-    productId: 12,
-    sku: 'BV-LUX-SH2IN1-03',
-    barcode: '8908020260039',
-    name: 'Bhumivera Royal Botanical 2-in-1 Luxury Shampoo with Conditioner',
-    cat: 'Luxury Hair Care',
-    uom: '200 ML',
-    qty: 199,
-    physicalStock: 199,
-    shopDisplayStock: 39,
-    warehouseVaultStock: 160,
-    safetyBufferStock: 0,
-    damagedQuarantineStock: 0,
-    onlineReservedQty: 0,
-    costPrice: 85,
-    mrp: 899,
-    price: 449,
-    gstHsnCode: '30049011',
-    gstRate: 5,
-    minStock: 15,
-    reorderQty: 100,
-    binCode: 'ASN-SHOP-R1-B02',
-    rackLocation: 'Zone A • Rack 01 • Shelf B • Bin 01',
-    batchNo: 'SHS26H',
-    mfgDate: '2026-08-01',
-    expiryDate: '2028-07-31',
-    soldQty: 64,
-    soldOfflineQty: 29,
-    soldOnlineQty: 35,
-    syncToWebsite: true,
-  },
-  {
-    id: 4,
-    productId: 13,
-    sku: 'BV-LUX-CSOAP-04',
-    barcode: '8908020260046',
-    name: 'Bhumivera Charcoal Deep Cleansing Bar (Handmade Ayurvedic Luxury Soap)',
-    cat: 'Artisanal Ayurvedic Cleansing Bars',
-    uom: '100 GM',
-    qty: 299,
-    physicalStock: 299,
-    shopDisplayStock: 59,
-    warehouseVaultStock: 240,
-    safetyBufferStock: 0,
-    damagedQuarantineStock: 0,
-    onlineReservedQty: 0,
-    costPrice: 24,
-    mrp: 399,
-    price: 199,
-    gstHsnCode: '30049011',
-    gstRate: 5,
-    minStock: 25,
-    reorderQty: 150,
-    binCode: 'ASN-SHOP-R2-B01',
-    rackLocation: 'Zone A • Rack 02 • Shelf A • Bin 01',
-    batchNo: 'SACHS26I',
-    mfgDate: '2026-09-01',
-    expiryDate: '2028-08-31',
-    soldQty: 78,
-    soldOfflineQty: 38,
-    soldOnlineQty: 40,
-    syncToWebsite: true,
-  },
-  {
-    id: 5,
-    productId: 14,
-    sku: 'BV-LUX-ASOAP-05',
-    barcode: '8908020260053',
-    name: 'Bhumivera Soothing Bar (Aloe Vera, Neem & Tulsi Handmade Ayurvedic Soap)',
-    cat: 'Artisanal Ayurvedic Cleansing Bars',
-    uom: '100 GM',
-    qty: 299,
-    physicalStock: 299,
-    shopDisplayStock: 59,
-    warehouseVaultStock: 240,
-    safetyBufferStock: 0,
-    damagedQuarantineStock: 0,
-    onlineReservedQty: 0,
-    costPrice: 24,
-    mrp: 349,
-    price: 199,
-    gstHsnCode: '30049011',
-    gstRate: 5,
-    minStock: 25,
-    reorderQty: 150,
-    binCode: 'ASN-SHOP-R2-B01',
-    rackLocation: 'Zone A • Rack 02 • Shelf A • Bin 02',
-    batchNo: 'SANTS26I',
-    mfgDate: '2026-09-01',
-    expiryDate: '2028-08-31',
-    soldQty: 71,
-    soldOfflineQty: 31,
-    soldOnlineQty: 40,
-    syncToWebsite: true,
-  },
-  {
-    id: 6,
-    productId: 15,
-    sku: 'BV-LUX-TULSI-06',
-    barcode: '8908020260060',
-    name: 'Bhumivera Kalpvriksh Satva Tulsi (Liquid Extract of 7 Types of Tulsi)',
-    cat: 'Luxury Ayurvedic Wellness & Immunity Drops',
-    uom: '30 ML',
-    qty: 299,
-    physicalStock: 299,
-    shopDisplayStock: 59,
-    warehouseVaultStock: 240,
-    safetyBufferStock: 0,
-    damagedQuarantineStock: 0,
-    onlineReservedQty: 0,
-    costPrice: 40,
-    mrp: 499,
-    price: 299,
-    gstHsnCode: '20099000',
-    gstRate: 5,
-    minStock: 20,
-    reorderQty: 120,
-    binCode: 'ASN-SHOP-R2-B01',
-    rackLocation: 'Zone A • Rack 02 • Shelf A • Bin 03',
-    batchNo: 'SPTD26I',
-    mfgDate: '2026-09-01',
-    expiryDate: '2028-08-31',
-    soldQty: 89,
-    soldOfflineQty: 44,
-    soldOnlineQty: 45,
-    syncToWebsite: true,
-  },
-];
-
-const FALLBACK_BINS = [
-  {
-    id: 1,
-    bin_code: 'ASN-SHOP-R1-B01',
-    hub_name: 'Bhumivera Flagship Hub — Asansol',
-    zone_name: 'Zone A: Retail Shop Front Counter',
-    rack_no: 'Rack-01',
-    shelf_level: 'Shelf-A',
-    bin_label: 'Facial Cleansers Display Bay',
-    temperature_target: '22°C - 25°C',
-    capacity_units: 400,
-    occupied_units: 98,
-    keeper_name: 'Rahul Sharma',
-    status: 'active',
-  },
-  {
-    id: 2,
-    bin_code: 'ASN-SHOP-R1-B02',
-    hub_name: 'Bhumivera Flagship Hub — Asansol',
-    zone_name: 'Zone A: Retail Shop Front Counter',
-    rack_no: 'Rack-01',
-    shelf_level: 'Shelf-B',
-    bin_label: 'Royal Hair Care & Shampoo Counter',
-    temperature_target: '22°C - 25°C',
-    capacity_units: 350,
-    occupied_units: 39,
-    keeper_name: 'Rahul Sharma',
-    status: 'active',
-  },
-  {
-    id: 3,
-    bin_code: 'ASN-SHOP-R2-B01',
-    hub_name: 'Bhumivera Flagship Hub — Asansol',
-    zone_name: 'Zone A: Retail Shop Front Counter',
-    rack_no: 'Rack-02',
-    shelf_level: 'Shelf-A',
-    bin_label: 'Artisanal Cleansing Bars & Tulsi Drops',
-    temperature_target: '22°C - 25°C',
-    capacity_units: 600,
-    occupied_units: 177,
-    keeper_name: 'Rahul Sharma',
-    status: 'active',
-  },
-  {
-    id: 4,
-    bin_code: 'ASN-COLD-R1-B01',
-    hub_name: 'Bhumivera Flagship Hub — Asansol',
-    zone_name: 'Zone B: Cold-Pressed Botanical Vault (<28°C)',
-    rack_no: 'Rack-C1',
-    shelf_level: 'Shelf-01',
-    bin_label: 'Climate-Controlled Master Reserve Vault',
-    temperature_target: '18°C - 24°C',
-    capacity_units: 1500,
-    occupied_units: 1280,
-    keeper_name: 'Vikram Rathore',
-    status: 'active',
-  },
-  {
-    id: 5,
-    bin_code: 'ASN-DISPATCH-R1-B01',
-    hub_name: 'Bhumivera Flagship Hub — Asansol',
-    zone_name: 'Zone C: Online Order Dispatch & CCTV Weighing Bay',
-    rack_no: 'Rack-D1',
-    shelf_level: 'Shelf-01',
-    bin_label: 'E-Commerce Pick, Pack & Scale #02 Bay',
-    temperature_target: '22°C - 26°C',
-    capacity_units: 500,
-    occupied_units: 150,
-    keeper_name: 'Vikram Rathore',
-    status: 'active',
-  },
-  {
-    id: 6,
-    bin_code: 'ASN-QUAR-R1-B01',
-    hub_name: 'Bhumivera Flagship Hub — Asansol',
-    zone_name: 'Zone Q: Quarantine & Damaged Stock Bay',
-    rack_no: 'Rack-Q1',
-    shelf_level: 'Shelf-01',
-    bin_label: 'RMA / Transit Damage Quarantine',
-    temperature_target: 'Ambient',
-    capacity_units: 200,
-    occupied_units: 0,
-    keeper_name: 'Nisha Gupta',
-    status: 'quarantine',
-  },
-];
-
-const FALLBACK_CUSTOMERS = [
-  {
-    id: 1,
-    name: 'Walk-in Retail Shopper',
-    phone: '+91 90000 00000',
-    email: 'walkin@bhumivera.com',
-    gstin: '',
-    loc: 'Asansol Flagship Counter',
-    type: 'Walk-in',
-    wallet: 0,
-    creditLimit: 25000,
-    totalPurchases: 0,
-    visitCount: 1,
-  },
-  {
-    id: 2,
-    name: 'Aura Luxury Salon & Wellness Spa',
-    phone: '+91 98321 55667',
-    email: 'procurement@auraspa.in',
-    gstin: '19AABCA1122K1Z1',
-    loc: 'City Centre, Durgapur, WB',
-    type: 'Salon / Spa Partner',
-    wallet: -4500,
-    creditLimit: 100000,
-    totalPurchases: 28500,
-    visitCount: 6,
-  },
-  {
-    id: 3,
-    name: 'Royal Ayurveda & Organic Boutique',
-    phone: '+91 98305 88990',
-    email: 'orders@royalayurveda.in',
-    gstin: '19AABCR3344M1Z8',
-    loc: 'Park Street, Kolkata, WB',
-    type: 'Retail Shop',
-    wallet: 0,
-    creditLimit: 75000,
-    totalPurchases: 42000,
-    visitCount: 9,
-  },
-];
+const FALLBACK_CATALOG_ITEMS = [];
+const FALLBACK_BINS = [];
+const FALLBACK_CUSTOMERS = [];
 
 export default function InventorySoftware() {
   // Authentication & Session State
@@ -441,6 +138,14 @@ export default function InventorySoftware() {
   const [totpSetupData, setTotpSetupData] = useState(null);
   const [totpQrDataUrl, setTotpQrDataUrl] = useState('');
   const [totpVerifyCode, setTotpVerifyCode] = useState('');
+
+  // WMS Upgrades State
+  const [activeWavePicklist, setActiveWavePicklist] = useState(null);
+  const [activeManifest, setActiveManifest] = useState(null);
+  const [verifyPackingOrder, setVerifyPackingOrder] = useState(null);
+  const [returnQcOrder, setReturnQcOrder] = useState(null);
+  const [thermalLabelOrder, setThermalLabelOrder] = useState(null);
+  const [velocityData, setVelocityData] = useState(null);
 
   // Navigation & UI State (supports ?view=online | labels | ret | inv | sale | scanner | backup | keeper | audit | grn)
   const [activeView, setActiveView] = useState(() => {
@@ -717,6 +422,11 @@ export default function InventorySoftware() {
             setPosTaxRate(Number.isFinite(configuredTaxRate) ? configuredTaxRate : 18);
           }
           setLastSyncedAt(d.syncedAt || new Date().toISOString());
+          api.get('/inventory-software/stock/forecast', reqConfig)
+            .then(fRes => {
+              if (fRes.data?.success) setVelocityData(fRes.data);
+            })
+            .catch(() => {});
           setOrderSyncError('');
 
           localStorage.setItem(
@@ -1003,6 +713,8 @@ export default function InventorySoftware() {
       quarantineUnits,
       khataReceivable,
       pendingOnlineDispatch,
+      pendingDispatch: onlineOrders.filter(o => ['pending', 'confirmed'].includes(o.status)).length,
+      packedCount: onlineOrders.filter(o => o.status === 'packed').length,
     };
   }, [items, sales, onlineOrders, customers]);
 
@@ -2693,35 +2405,33 @@ export default function InventorySoftware() {
     {
       title: '1. Order Lifecycle & Dispatch',
       items: [
-        { id: 'dash', label: 'Omnichannel Overview', icon: Activity },
-        { id: 'online', label: `Order Lifecycle (${dashMetrics.pendingOnlineDispatch})`, icon: Globe },
-        { id: 'labels', label: 'Auto Shipping Labels & Zones', icon: Printer },
-        { id: 'ret', label: 'Undelivered (RTO) Restock', icon: RotateCcw },
+        { id: 'dash', label: 'WMS Overview', icon: Activity },
+        { id: 'online', label: `Fulfillment (${dashMetrics.pendingDispatch || dashMetrics.pendingOnlineDispatch || 0})`, icon: Globe },
+        { id: 'labels', label: '4×6 Shipping Labels', icon: Printer },
+        { id: 'ret', label: 'RTO & Return QC', icon: RotateCcw },
       ],
     },
     {
       title: '2. Unified Stock & POS Billing',
       items: [
-        { id: 'inv', label: 'Main Inventory (Online+Offline)', icon: Boxes },
-        { id: 'sale', label: 'POS Billing (Online+Offline)', icon: ShoppingCart },
-        { id: 'scanner', label: `QR Scanner API (${scannerQueue.length})`, icon: QrCode },
+        { id: 'inv', label: 'Master Inventory', icon: Boxes },
+        { id: 'sale', label: 'Retail POS Terminal', icon: ShoppingCart },
+        { id: 'scanner', label: `Mobile Scanner (${scannerQueue.length})`, icon: QrCode },
       ],
     },
     {
       title: '3. Storage Keeper & GRN',
       items: [
-        { id: 'keeper', label: 'Storage Keeper & Bin Map', icon: Warehouse },
+        { id: 'keeper', label: 'Bins & Warehouse Map', icon: Warehouse },
         { id: 'grn', label: 'Suppliers & GRN Inward', icon: Truck },
-        { id: 'audit', label: 'Physical Stock Audit', icon: ClipboardCheck },
-        { id: 'trans', label: 'Damage / Stock Write-Off', icon: Wrench },
+        { id: 'audit', label: 'Physical Stocktake Audit', icon: ClipboardCheck },
       ],
     },
     {
-      title: '4. Daily SQL Backup & Ledger',
+      title: '4. Intelligence & Ledger',
       items: [
-        { id: 'backup', label: 'Daily SQL Backup (Railway/Vercel)', icon: HardDrive },
-        { id: 'rep', label: 'POS Invoices & Reports', icon: FileSpreadsheet },
-        { id: 'logs', label: 'Stock Movement & Audit Log', icon: History },
+        { id: 'rep', label: 'Movement Ledger & Excel', icon: FileSpreadsheet },
+        { id: 'logs', label: 'Staff Audit Trail', icon: History },
       ],
     },
   ];
@@ -2909,2531 +2619,201 @@ export default function InventorySoftware() {
 
         {/* CONTENT SCROLL AREA */}
         <main className="flex-1 overflow-y-auto p-6 space-y-6">
-          {/* =================================================================
-              VIEW 1: OMNICHANNEL EXECUTIVE DASHBOARD
-             ================================================================= */}
           {activeView === 'dash' && (
-            <div className="space-y-6">
-              {/* Omnichannel Anti-Oversell Protection Banner */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-950 text-white flex flex-wrap items-center justify-between gap-4 shadow-md">
-                <div className="flex items-center gap-3.5">
-                  <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 shrink-0">
-                    <Zap className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase tracking-wider">
-                        Atomic Anti-Oversell Protection Active
-                      </span>
-                    </div>
-                    <h3 className="text-sm font-bold mt-0.5">
-                      Real-Time Offline Shop POS ↔ bhumivera.com Website Inventory Bridge
-                    </h3>
-                    <p className="text-xs text-slate-300">
-                      Every offline shop sale in POS immediately deducts available stock on{' '}
-                      <span className="text-emerald-300 font-mono">www.bhumivera.com</span> and recalculates Regimen
-                      Bundles so online shoppers can never buy stock already sold in the shop.
-                    </p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setActiveView('sale')}
-                    className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs transition"
-                  >
-                    Open Retail POS Billing →
-                  </button>
-                </div>
-              </div>
-
-              {/* 8 KPI Cards */}
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <div className="bg-white rounded-2xl p-4 border border-slate-200 border-t-4 border-t-emerald-500 shadow-sm">
-                  <div className="text-[11px] font-bold text-slate-500 uppercase">Offline Shop POS Today</div>
-                  <div className="text-2xl font-black text-slate-900 mt-1">
-                    ₹{dashMetrics.posRevToday.toLocaleString()}
-                  </div>
-                  <div className="text-[11px] text-emerald-600 font-semibold mt-1">
-                    Online Storefront Today: ₹{dashMetrics.onlineRevToday.toLocaleString()}
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl p-4 border border-slate-200 border-t-4 border-t-blue-500 shadow-sm">
-                  <div className="text-[11px] font-bold text-slate-500 uppercase">
-                    Live Stock Valuation ({dashMetrics.totalUnits} Units)
-                  </div>
-                  <div className="text-2xl font-black text-slate-900 mt-1">
-                    ₹{dashMetrics.totalRetailVal.toLocaleString()}
-                  </div>
-                  <div className="text-[11px] text-blue-600 font-semibold mt-1">
-                    Cost: ₹{dashMetrics.totalCostVal.toLocaleString()} • Profit: ₹
-                    {dashMetrics.projectedProfit.toLocaleString()}
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl p-4 border border-slate-200 border-t-4 border-t-amber-500 shadow-sm">
-                  <div className="text-[11px] font-bold text-slate-500 uppercase">Low Stock &amp; Quarantine</div>
-                  <div className="text-2xl font-black text-amber-600 mt-1">
-                    {dashMetrics.lowStockCount} Low / {dashMetrics.outOfStockCount} Out
-                  </div>
-                  <div className="text-[11px] text-slate-500 font-semibold mt-1">
-                    Quarantine Bay: {dashMetrics.quarantineUnits} damaged units
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl p-4 border border-slate-200 border-t-4 border-t-rose-500 shadow-sm">
-                  <div className="text-[11px] font-bold text-slate-500 uppercase">Customer Khata Receivable</div>
-                  <div className="text-2xl font-black text-rose-600 mt-1">
-                    ₹{dashMetrics.khataReceivable.toLocaleString()}
-                  </div>
-                  <div className="text-[11px] text-slate-500 font-semibold mt-1">
-                    Online Orders to Dispatch: {dashMetrics.pendingOnlineDispatch}
-                  </div>
-                </div>
-              </div>
-
-              {/* Top Sellers & Storage Bins Overview */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                    <h3 className="text-sm font-black uppercase text-slate-800 flex items-center gap-2">
-                      <TrendingUp className="w-4 h-4 text-emerald-600" />
-                      Live Website &amp; Shop Stock Matrix
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => setActiveView('inv')}
-                      className="text-xs font-bold text-emerald-600 hover:underline"
-                    >
-                      Manage All ({items.length}) →
-                    </button>
-                  </div>
-                  <div className="overflow-x-auto">
-                    <table className="w-full text-xs">
-                      <thead>
-                        <tr className="bg-slate-50 text-slate-500 uppercase text-[10px]">
-                          <th className="py-2 px-3 text-left">Formulation</th>
-                          <th className="py-2 px-3 text-center">Bin</th>
-                          <th className="py-2 px-3 text-center">Website Live</th>
-                          <th className="py-2 px-3 text-right">Sold</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {items.slice(0, 7).map(it => (
-                          <tr key={it.id} className="hover:bg-slate-50">
-                            <td className="py-2.5 px-3 font-bold text-slate-800">{it.name}</td>
-                            <td className="py-2.5 px-3 text-center font-mono text-[11px] text-slate-500">
-                              {it.binCode}
-                            </td>
-                            <td className="py-2.5 px-3 text-center">
-                              <span
-                                className={`px-2 py-0.5 rounded-full text-[11px] font-bold font-mono ${
-                                  it.qty <= (it.minStock || 15)
-                                    ? 'bg-rose-100 text-rose-700'
-                                    : 'bg-emerald-100 text-emerald-800'
-                                }`}
-                              >
-                                {it.qty} {it.uom}
-                              </span>
-                            </td>
-                            <td className="py-2.5 px-3 text-right font-mono font-bold text-slate-700">
-                              {it.soldQty || 0}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                    <h3 className="text-sm font-black uppercase text-slate-800 flex items-center gap-2">
-                      <Warehouse className="w-4 h-4 text-blue-600" />
-                      Storage Keeper Zones &amp; Bins ({bins.length})
-                    </h3>
-                    <button
-                      type="button"
-                      onClick={() => setActiveView('keeper')}
-                      className="text-xs font-bold text-blue-600 hover:underline"
-                    >
-                      Open Keeper Map →
-                    </button>
-                  </div>
-                  <div className="space-y-2.5 max-h-64 overflow-y-auto pr-1">
-                    {bins.map(b => {
-                      const pct = Math.min(
-                        100,
-                        Math.round(((Number(b.occupied_units) || 0) / Math.max(1, Number(b.capacity_units) || 500)) * 100)
-                      );
-                      return (
-                        <div key={b.bin_code} className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1.5">
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="font-bold text-slate-800">
-                              <code className="text-emerald-700 font-mono mr-1.5">[{b.bin_code}]</code>
-                              {b.bin_label}
-                            </span>
-                            <span className="text-[11px] font-mono font-semibold text-slate-600">
-                              {b.temperature_target} • {pct}% Full
-                            </span>
-                          </div>
-                          <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                            <div
-                              className={`h-full ${
-                                b.status === 'quarantine'
-                                  ? 'bg-rose-500'
-                                  : pct > 85
-                                  ? 'bg-amber-500'
-                                  : 'bg-emerald-500'
-                              }`}
-                              style={{ width: `${pct}%` }}
-                            />
-                          </div>
-                          <div className="flex justify-between text-[10px] text-slate-500">
-                            <span>
-                              {b.zone_name} ({b.rack_no} / {b.shelf_level})
-                            </span>
-                            <span>Keeper: {b.keeper_name}</span>
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
-              {/* Category Quick Filter Grid */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
-                {(cfg.cats || []).map(cat => {
-                  const totalInCat = items
-                    .filter(i => i.cat === cat)
-                    .reduce((sum, i) => sum + (Number(i.qty) || 0), 0);
-                  return (
-                    <button
-                      key={cat}
-                      type="button"
-                      onClick={() => {
-                        setInvCatFilter(cat);
-                        setActiveView('inv');
-                      }}
-                      className="bg-white p-3.5 rounded-2xl border border-slate-200 hover:border-emerald-500 text-left transition shadow-sm"
-                    >
-                      <div className="text-[10px] font-bold uppercase text-slate-500 line-clamp-1">{cat}</div>
-                      <div className="text-xl font-black text-slate-900 mt-1 font-mono">{totalInCat}</div>
-                      <div className="text-[10px] text-emerald-600 font-semibold mt-0.5">Units in Stock →</div>
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+            <DashboardView
+              dashMetrics={dashMetrics}
+              velocityData={velocityData}
+              setActiveView={setActiveView}
+              onOpenWavePicklist={(orderIds) => {
+                api.post('/inventory-software/fulfillment/wave-picklist', { orderIds }, reqConfig)
+                  .then(r => setActiveWavePicklist(r.data?.picklist))
+                  .catch(err => showNotice('error', err.response?.data?.message || 'Wave picklist failed.'));
+              }}
+            />
           )}
 
-          {/* =================================================================
-              VIEW 2: MASTER INVENTORY & REAL-TIME WEBSITE STOCK SYNC
-             ================================================================= */}
-          {activeView === 'inv' && (
-            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
-                <div>
-                  <h3 className="text-base font-black uppercase text-slate-900">
-                    Omnichannel Master Inventory &amp; Live Website Stock Control
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Every quantity change here immediately updates <code className="text-emerald-700 font-bold">bhumivera.com</code>{' '}
-                    product availability and recalculates Regimen Bundles.
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setActiveModal('cats')}
-                    className="px-3 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-xs font-bold flex items-center gap-1.5"
-                  >
-                    <Tag className="w-3.5 h-3.5" /> Categories
-                  </button>
-                  <label className="px-3 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-xs font-bold flex items-center gap-1.5 cursor-pointer">
-                    <Upload className="w-3.5 h-3.5 text-blue-600" /> Import Excel
-                    <input type="file" accept=".xlsx,.xls" onChange={handleImportInventoryExcel} className="hidden" />
-                  </label>
-                  <button
-                    type="button"
-                    onClick={handleExportInventoryExcel}
-                    className="px-3 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-xs font-bold flex items-center gap-1.5"
-                  >
-                    <Download className="w-3.5 h-3.5 text-emerald-600" /> Export (.xlsx)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingItem({
-                        id: null,
-                        name: '',
-                        sku: `BV-SKU-${Math.floor(1000 + Math.random() * 9000)}`,
-                        barcode: `8908020${Math.floor(100000 + Math.random() * 900000)}`,
-                        cat: cfg.cats?.[0] || 'Luxury Facial Cleansers',
-                        uom: '100 ML',
-                        qty: 50,
-                        shopDisplayStock: 15,
-                        warehouseVaultStock: 35,
-                        safetyBufferStock: 0,
-                        costPrice: 120,
-                        mrp: 699,
-                        price: 349,
-                        gstHsnCode: '30049011',
-                        gstRate: 5,
-                        minStock: 15,
-                        reorderQty: 50,
-                        binCode: bins[0]?.bin_code || 'ASN-SHOP-R1-B01',
-                        rackLocation: 'Zone A • Rack 01 • Shelf A',
-                        batchNo: `BV-BATCH-${new Date().getFullYear()}-01`,
-                        mfgDate: new Date().toISOString().split('T')[0],
-                        expiryDate: '2028-08-31',
-                        syncToWebsite: true,
-                      });
-                      setActiveModal('item');
-                    }}
-                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
-                  >
-                    <Plus className="w-4 h-4" /> Add New Formulation / SKU
-                  </button>
-                </div>
-              </div>
-
-              {/* Filter Bar */}
-              <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
-                <div className="relative">
-                  <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
-                  <input
-                    type="text"
-                    value={invSearch}
-                    onChange={e => setInvSearch(e.target.value)}
-                    placeholder="Search name, SKU, barcode, or batch…"
-                    className="w-full pl-9 pr-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs focus:bg-white focus:border-emerald-500 focus:outline-none"
-                  />
-                </div>
-                <select
-                  value={invCatFilter}
-                  onChange={e => setInvCatFilter(e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold"
-                >
-                  <option value="ALL">All Categories</option>
-                  {(cfg.cats || []).map(c => (
-                    <option key={c} value={c}>
-                      {c}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={invBinFilter}
-                  onChange={e => setInvBinFilter(e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold"
-                >
-                  <option value="ALL">All Storage Bins</option>
-                  {bins.map(b => (
-                    <option key={b.bin_code} value={b.bin_code}>
-                      {b.bin_code} — {b.bin_label}
-                    </option>
-                  ))}
-                </select>
-                <select
-                  value={invStockFilter}
-                  onChange={e => setInvStockFilter(e.target.value)}
-                  className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-semibold"
-                >
-                  <option value="ALL">All Stock Levels</option>
-                  <option value="LOW">Low Stock Alerts Only</option>
-                  <option value="OUT">Out of Stock (0)</option>
-                  <option value="QUARANTINE">Has Damaged / Quarantine Units</option>
-                </select>
-              </div>
-
-              {/* Master Inventory Table */}
-              <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                <table className="w-full text-xs">
-                  <thead className="bg-slate-900 text-white uppercase text-[10px]">
-                    <tr>
-                      <th className="py-3 px-3 text-left">SKU &amp; Barcode</th>
-                      <th className="py-3 px-3 text-left">Product / Formulation</th>
-                      <th className="py-3 px-3 text-left">Bin &amp; Batch</th>
-                      <th className="py-3 px-3 text-center">Shop / Vault Split</th>
-                      <th className="py-3 px-3 text-center">Live Website Stock</th>
-                      <th className="py-3 px-3 text-right">Cost / MRP / Sell</th>
-                      <th className="py-3 px-3 text-center">Margin</th>
-                      <th className="py-3 px-3 text-right">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200">
-                    {filteredInventory.map(item => {
-                      const margin =
-                        item.price > 0 ? Math.round(((item.price - (item.costPrice || 0)) / item.price) * 100) : 0;
-                      const isLow = item.qty <= (item.minStock || 15);
-                      return (
-                        <tr key={item.id} className="hover:bg-slate-50">
-                          <td className="py-3 px-3 font-mono">
-                            <div className="font-bold text-slate-900">{item.sku}</div>
-                            <div className="text-[10px] text-slate-500">{item.barcode}</div>
-                          </td>
-                          <td className="py-3 px-3">
-                            <div className="font-bold text-slate-900 flex items-center gap-1.5">
-                              {item.name}
-                              {item.syncToWebsite && (
-                                <span
-                                  title="Synced live with bhumivera.com"
-                                  className="px-1.5 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[9px] font-bold uppercase"
-                                >
-                                  Web Live
-                                </span>
-                              )}
-                            </div>
-                            <div className="text-[11px] text-slate-500">
-                              {item.cat} • UOM: <b>{item.uom}</b> • HSN: {item.gstHsnCode} ({item.gstRate}% GST)
-                            </div>
-                          </td>
-                          <td className="py-3 px-3">
-                            <div className="font-mono font-bold text-blue-700 text-[11px]">{item.binCode}</div>
-                            <div className="text-[10px] text-slate-500">
-                              Batch: {item.batchNo || 'N/A'} {item.expiryDate ? `• Exp: ${item.expiryDate}` : ''}
-                            </div>
-                          </td>
-                          <td className="py-3 px-3 text-center font-mono text-[11px]">
-                            <span className="text-emerald-700 font-bold" title="Retail Shop Counter">
-                              Shop: {item.shopDisplayStock}
-                            </span>{' '}
-                            /{' '}
-                            <span className="text-blue-700 font-bold" title="Cold Vault Reserve">
-                              Vault: {item.warehouseVaultStock}
-                            </span>
-                            {item.damagedQuarantineStock > 0 && (
-                              <div className="text-[10px] text-rose-600 font-bold">
-                                Quarantine: {item.damagedQuarantineStock}
-                              </div>
-                            )}
-                          </td>
-                          <td className="py-3 px-3 text-center">
-                            <div className="inline-flex items-center gap-1.5 bg-slate-100 px-2 py-1 rounded-xl border border-slate-200">
-                              <button
-                                type="button"
-                                onClick={() => handleQuickStockStep(item, -1)}
-                                className="w-6 h-6 rounded-lg bg-white hover:bg-rose-50 text-slate-700 hover:text-rose-600 border border-slate-300 font-bold"
-                                title="Deduct 1 unit from Website & Shop"
-                              >
-                                -
-                              </button>
-                              <span
-                                className={`font-mono font-black text-sm px-2 ${
-                                  item.qty === 0
-                                    ? 'text-rose-600'
-                                    : isLow
-                                    ? 'text-amber-600'
-                                    : 'text-emerald-700'
-                                }`}
-                              >
-                                {item.qty}
-                              </span>
-                              <button
-                                type="button"
-                                onClick={() => handleQuickStockStep(item, 1)}
-                                className="w-6 h-6 rounded-lg bg-white hover:bg-emerald-50 text-slate-700 hover:text-emerald-600 border border-slate-300 font-bold"
-                                title="Add 1 unit to Website & Shop"
-                              >
-                                +
-                              </button>
-                            </div>
-                          </td>
-                          <td className="py-3 px-3 text-right font-mono">
-                            <div className="font-bold text-slate-900">₹{item.price}</div>
-                            <div className="text-[10px] text-slate-500">
-                              Cost: ₹{item.costPrice} • MRP: ₹{item.mrp}
-                            </div>
-                          </td>
-                          <td className="py-3 px-3 text-center font-mono font-bold text-emerald-700">{margin}%</td>
-                          <td className="py-3 px-3 text-right">
-                            <div className="inline-flex items-center gap-1">
-                              <button
-                                type="button"
-                                onClick={() => handleOpenLabelGenerator(item)}
-                                title="Print Barcode / QR Shelf Label"
-                                className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700"
-                              >
-                                <QrCode className="w-3.5 h-3.5" />
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  setEditingItem({ ...item });
-                                  setActiveModal('item');
-                                }}
-                                className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold"
-                              >
-                                Edit
-                              </button>
-                              <button
-                                type="button"
-                                onClick={() => handleDeleteItem(item)}
-                                className="p-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600"
-                              >
-                                <Trash2 className="w-3.5 h-3.5" />
-                              </button>
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* =================================================================
-              VIEW 3: OFFLINE SHOP POS BILLING TERMINAL (ATOMIC WEB DEDUCTION!)
-             ================================================================= */}
-          {activeView === 'sale' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Left 7 Cols: Customer & Product Selector */}
-              <div className="lg:col-span-7 space-y-5">
-                {/* Mobile QR Scanner Live Bridge & Invoice Recipient Details */}
-                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-                  <div className="p-3.5 rounded-xl bg-gradient-to-r from-emerald-900 to-slate-900 text-white flex flex-wrap items-center justify-between gap-3">
-                    <div className="flex items-center gap-2.5">
-                      <QrCode className="w-5 h-5 text-emerald-400 shrink-0" />
-                      <div>
-                        <div className="text-xs font-black uppercase tracking-wide">
-                          Mobile QR Code Scanner Bridge ({scannerQueue.length} Queued)
-                        </div>
-                        <div className="text-[11px] text-slate-300">
-                          Paired terminal: {posSessionCode}. Scans stay queued until checkout completes. Scanner:{' '}
-                          {posScannerStatus}.
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <button
-                        type="button"
-                        onClick={handlePullMobileScannerQueueToPos}
-                        className="px-3 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs"
-                      >
-                        Sync Mobile Scanned Items ({scannerQueue.length})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setActiveView('scanner')}
-                        className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 font-bold text-xs"
-                      >
-                        API Pairing QR
-                      </button>
-                    </div>
-                  </div>
-
-                  <form onSubmit={handleScanQrToPos} className="grid grid-cols-12 gap-2">
-                    <input
-                      type="text"
-                      value={scannerInput}
-                      onChange={e => setScannerInput(e.target.value)}
-                      placeholder="Scan or paste Product QR URL, Serial #, Barcode, or SKU (e.g. BV-LUX-CSOAP-04)…"
-                      className="col-span-7 px-3.5 py-2 rounded-xl bg-emerald-50/60 border border-emerald-300 font-mono text-xs"
-                    />
-                    <input
-                      type="number"
-                      min={1}
-                      value={scannerQty}
-                      onChange={e => setScannerQty(e.target.value)}
-                      title="Scanned Quantity (e.g. 10 soaps)"
-                      className="col-span-2 px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono font-bold text-xs text-center"
-                    />
-                    <button
-                      type="submit"
-                      className="col-span-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs"
-                    >
-                      + Scan to Bill
-                    </button>
-                  </form>
-
-                  <div className="border-t border-slate-100 pt-3">
-                    <div className="flex items-center justify-between mb-2">
-                      <span className="text-[11px] font-black uppercase text-slate-700">
-                        1. Bill Recipient Details (Optional — Full Customer CRM is in /admin)
-                      </span>
-                    </div>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-                      <input
-                        type="text"
-                        value={posCustomerForm.name}
-                        onChange={e => setPosCustomerForm(prev => ({ ...prev, name: e.target.value }))}
-                        placeholder="Customer Name (or Walk-in)"
-                        className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold"
-                      />
-                      <input
-                        type="text"
-                        value={posCustomerForm.phone}
-                        onChange={e => setPosCustomerForm(prev => ({ ...prev, phone: e.target.value }))}
-                        placeholder="WhatsApp / Phone Number"
-                        className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono text-xs"
-                      />
-                      <input
-                        type="text"
-                        value={posCustomerForm.gstin}
-                        onChange={e => setPosCustomerForm(prev => ({ ...prev, gstin: e.target.value }))}
-                        placeholder="Customer GSTIN (Optional)"
-                        className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono text-xs"
-                      />
-                    </div>
-                  </div>
-                </div>
-
-                {/* Product Barcode Scanner & Picker Card */}
-                <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-black uppercase text-slate-800 flex items-center gap-2">
-                      <Barcode className="w-4 h-4 text-emerald-600" />
-                      2. Scan Barcode or Select Formulation (Syncs Live Website Stock)
-                    </label>
-                    <span className="text-[11px] text-emerald-700 font-bold">
-                      Real-Time Website Stock Check Enabled
-                    </span>
-                  </div>
-
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <select
-                      value={selectedPosItemId}
-                      onChange={e => {
-                        setSelectedPosItemId(e.target.value);
-                        const found = items.find(i => String(i.id) === e.target.value);
-                        if (found) {
-                          setPosItemSearch(found.name);
-                          setPosItemPrice(found.price);
-                        }
-                      }}
-                      className="px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-bold text-xs"
-                    >
-                      <option value="">-- Choose Product from Live Catalog --</option>
-                      {items.map(it => (
-                        <option key={it.id} value={it.id} disabled={it.qty <= 0}>
-                          {it.name} — [Available: {it.qty} {it.uom}] • ₹{it.price}
-                        </option>
-                      ))}
-                    </select>
-
-                    <input
-                      type="text"
-                      value={posItemSearch}
-                      onChange={e => {
-                        setPosItemSearch(e.target.value);
-                        const exact = items.find(
-                          i =>
-                            i.barcode === e.target.value.trim() ||
-                            i.sku.toLowerCase() === e.target.value.trim().toLowerCase()
-                        );
-                        if (exact) {
-                          setSelectedPosItemId(String(exact.id));
-                          setPosItemPrice(exact.price);
-                        }
-                      }}
-                      placeholder="Scan Barcode (e.g. 8908020260039) or SKU…"
-                      className="px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-mono text-xs"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-3 gap-3 items-end">
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Quantity</label>
-                      <input
-                        type="number"
-                        min={1}
-                        value={posItemQty}
-                        onChange={e => setPosItemQty(e.target.value)}
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-bold text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Unit Rate (₹)</label>
-                      <input
-                        type="number"
-                        min={0}
-                        value={posItemPrice}
-                        onChange={e => setPosItemPrice(e.target.value)}
-                        placeholder="Auto"
-                        className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-bold text-sm"
-                      />
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handleAddPosCartItem}
-                      className="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase text-xs flex items-center justify-center gap-1.5 shadow-sm h-[42px]"
-                    >
-                      <Plus className="w-4 h-4" /> Add to Bill
-                    </button>
-                  </div>
-
-                  {/* Quick Tap Product Buttons */}
-                  <div className="pt-3 border-t border-slate-100">
-                    <div className="text-[10px] font-bold uppercase text-slate-400 mb-2">
-                      1-Tap Quick Add Flagship Formulations
-                    </div>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                      {items.slice(0, 6).map(it => (
-                        <button
-                          key={it.id}
-                          type="button"
-                          disabled={it.qty <= 0}
-                          onClick={() => {
-                            const existing = posCart.find(c => c.id === it.id);
-                            const nextQ = (existing ? existing.q : 0) + 1;
-                            if (nextQ > it.qty) {
-                              showNotice('error', `Only ${it.qty} units available for ${it.name}!`);
-                              return;
-                            }
-                            if (existing) {
-                              setPosCart(prev =>
-                                prev.map(c =>
-                                  c.id === it.id
-                                    ? {
-                                        ...c,
-                                        q: nextQ,
-                                        manualQuantity:
-                                          (c.queueId ? Number(c.manualQuantity) || 0 : Number(c.q) || 0) + 1,
-                                      }
-                                    : c
-                                )
-                              );
-                            } else {
-                              setPosCart(prev => [
-                                ...prev,
-                                {
-                                  id: it.id,
-                                  productId: it.productId,
-                                  sku: it.sku,
-                                  name: it.name,
-                                  q: 1,
-                                  manualQuantity: 1,
-                                  queueQuantity: 0,
-                                  p: it.price,
-                                  max: it.qty,
-                                  uom: it.uom,
-                                  gstHsnCode: it.gstHsnCode,
-                                },
-                              ]);
-                            }
-                          }}
-                          className="p-2.5 rounded-xl border border-slate-200 hover:border-emerald-500 bg-slate-50/70 hover:bg-emerald-50/40 text-left transition disabled:opacity-40"
-                        >
-                          <div className="font-bold text-slate-800 text-[11px] line-clamp-1">{it.name}</div>
-                          <div className="flex items-center justify-between mt-1 text-[10px] font-mono">
-                            <span className="font-bold text-emerald-700">₹{it.price}</span>
-                            <span className={it.qty <= 5 ? 'text-rose-600 font-bold' : 'text-slate-500'}>
-                              Stk: {it.qty}
-                            </span>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Extra Charges */}
-                  <div className="pt-3 border-t border-dashed border-slate-200 grid grid-cols-12 gap-2 items-end">
-                    <div className="col-span-6">
-                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
-                        Extra Charge (Optional)
-                      </label>
-                      <input
-                        type="text"
-                        value={extraName}
-                        onChange={e => setExtraName(e.target.value)}
-                        placeholder="e.g. Luxury Gift Box, Carry Bag"
-                        className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs"
-                      />
-                    </div>
-                    <div className="col-span-4">
-                      <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Amount (₹)</label>
-                      <input
-                        type="number"
-                        min={0}
-                        value={extraAmt}
-                        onChange={e => setExtraAmt(e.target.value)}
-                        placeholder="0"
-                        className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs"
-                      />
-                    </div>
-                    <div className="col-span-2">
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (!extraName.trim() || Number(extraAmt) <= 0) return;
-                          setPosExtraCharges(prev => [...prev, { n: extraName.trim(), a: Number(extraAmt) }]);
-                          setExtraName('');
-                          setExtraAmt('');
-                        }}
-                        className="w-full py-2 rounded-xl bg-slate-800 text-white text-xs font-bold"
-                      >
-                        + Add
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right 5 Cols: Active POS Invoice & Checkout */}
-              <div className="lg:col-span-5 bg-white rounded-2xl p-5 border-2 border-emerald-500 shadow-xl flex flex-col justify-between space-y-4">
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between border-b border-slate-200 pb-3">
-                    <div>
-                      <h3 className="text-base font-black uppercase text-slate-900 flex items-center gap-2">
-                        <Receipt className="w-5 h-5 text-emerald-600" />
-                        Active Shop Bill ({posCart.reduce((s, i) => s + i.q, 0)} Units)
-                      </h3>
-                      <p className="text-[11px] text-slate-500">
-                        Deducts live stock from <code className="text-emerald-700 font-bold">bhumivera.com</code> on
-                        checkout
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handlePosCartClear}
-                      className="px-2.5 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-600 text-xs font-bold"
-                    >
-                      Clear Cart
-                    </button>
-                  </div>
-
-                  {/* Cart Table */}
-                  <div className="max-h-56 overflow-y-auto border border-slate-200 rounded-xl">
-                    <table className="w-full text-xs">
-                      <thead className="bg-slate-100 text-slate-600 uppercase text-[10px]">
-                        <tr>
-                          <th className="py-2 px-3 text-left">Item</th>
-                          <th className="py-2 px-3 text-center">Qty</th>
-                          <th className="py-2 px-3 text-right">Total</th>
-                          <th className="py-2 px-2"></th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-100">
-                        {posCart.length === 0 ? (
-                          <tr>
-                            <td colSpan={4} className="py-8 text-center text-slate-400">
-                              Scan or select products to build the bill.
-                            </td>
-                          </tr>
-                        ) : (
-                          posCart.map(c => (
-                            <tr key={c.id}>
-                              <td className="py-2 px-3">
-                                <div className="font-bold text-slate-800 line-clamp-1">{c.name}</div>
-                                <div className="text-[10px] text-slate-500 font-mono">
-                                  ₹{c.p} × {c.q} (Max Web Stock: {c.max})
-                                </div>
-                              </td>
-                              <td className="py-2 px-3 text-center whitespace-nowrap">
-                                <button
-                                  type="button"
-                                  onClick={() => handlePosCartQtyMod(c.id, -1)}
-                                  className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 font-bold"
-                                >
-                                  -
-                                </button>
-                                <span className="mx-2 font-mono font-bold">{c.q}</span>
-                                <button
-                                  type="button"
-                                  onClick={() => handlePosCartQtyMod(c.id, 1)}
-                                  className="w-6 h-6 rounded bg-slate-100 hover:bg-slate-200 font-bold"
-                                >
-                                  +
-                                </button>
-                              </td>
-                              <td className="py-2 px-3 text-right font-mono font-bold">₹{c.q * c.p}</td>
-                              <td className="py-2 px-2 text-right">
-                                <button
-                                  type="button"
-                                  onClick={() => handlePosCartRemoveItem(c.id)}
-                                  className="text-rose-500 hover:text-rose-700 font-bold"
-                                >
-                                  ✕
-                                </button>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                        {posExtraCharges.map((x, idx) => (
-                          <tr key={idx} className="bg-emerald-50/50 text-emerald-900">
-                            <td className="py-2 px-3 font-semibold">+ {x.n}</td>
-                            <td className="py-2 px-3 text-center">-</td>
-                            <td className="py-2 px-3 text-right font-mono font-bold">₹{x.a}</td>
-                            <td className="py-2 px-2 text-right">
-                              <button
-                                type="button"
-                                onClick={() => setPosExtraCharges(prev => prev.filter((_, i) => i !== idx))}
-                                className="text-rose-500"
-                              >
-                                ✕
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-
-                {/* Calculation & Payment Box */}
-                <div className="p-4 rounded-xl bg-slate-50 border border-slate-200 space-y-2.5 text-xs">
-                  <div className="flex justify-between text-slate-600">
-                    <span>Items Subtotal:</span>
-                    <span className="font-mono font-bold text-slate-900">₹{posCalculations.subTotal}</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200">
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase text-slate-500">Discount (₹)</label>
-                      <input
-                        type="number"
-                        min={0}
-                        value={posDiscount}
-                        onChange={e => setPosDiscount(e.target.value)}
-                        className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 font-bold"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase text-slate-500">Configured GST Rate</label>
-                      <div className="w-full px-2.5 py-1.5 rounded-lg bg-slate-100 border border-slate-300 font-bold">
-                        {posTaxRate}% (Store default)
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex justify-between text-sm font-black text-slate-900 border-t border-dashed border-slate-300 pt-2">
-                    <span>Grand Payable Bill:</span>
-                    <span className="text-lg text-emerald-700 font-mono">₹{posCalculations.billTotal}</span>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200">
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase text-emerald-800">Payment Mode</label>
-                      <select
-                        value={posPaymentMode}
-                        onChange={e => setPosPaymentMode(e.target.value)}
-                        className="w-full px-2.5 py-1.5 rounded-lg bg-white border border-slate-300 font-bold"
-                      >
-                        <option value="Cash">Cash</option>
-                        <option value="UPI">UPI / QR Scan</option>
-                        <option value="Card">Card</option>
-                        <option value="Khata / Credit">Khata / Credit</option>
-                      </select>
-                    </div>
-                    <div>
-                      <label className="block text-[10px] font-bold uppercase text-emerald-800">Paid Amount (₹)</label>
-                      <input
-                        type="number"
-                        min={0}
-                        value={posPaidAmount}
-                        onChange={e => setPosPaidAmount(e.target.value)}
-                        placeholder={String(posCalculations.billTotal)}
-                        className="w-full px-2.5 py-1.5 rounded-lg bg-emerald-50 border border-emerald-400 font-mono font-bold text-right"
-                      />
-                    </div>
-                  </div>
-
-                  {posPaymentMode === 'UPI' && upiQrDataUrl && (
-                    <div className="p-2.5 rounded-xl bg-white border border-emerald-300 flex items-center gap-3">
-                      <img src={upiQrDataUrl} alt="UPI QR" className="w-20 h-20 rounded border" />
-                      <div className="text-[11px] space-y-1">
-                        <div className="font-bold text-emerald-900">Scan Dynamic UPI QR</div>
-                        <div className="font-mono text-slate-600">{cfg.upiId}</div>
-                        <div className="font-bold text-slate-900">Exact Amount: ₹{posCalculations.billTotal}</div>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className="flex justify-between text-xs font-bold pt-1 border-t border-slate-200">
-                    <span>Customer New Khata Balance:</span>
-                    <span className={posCalculations.newBal < 0 ? 'text-rose-600 font-mono' : 'text-emerald-700 font-mono'}>
-                      ₹{posCalculations.newBal}
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  type="button"
-                  onClick={handlePosCheckout}
-                  disabled={posCheckoutBusy || !posDraftLoaded || posCart.length === 0}
-                  className="w-full py-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 disabled:opacity-50 disabled:cursor-not-allowed text-white font-black uppercase tracking-wider text-sm shadow-lg shadow-emerald-600/25 transition flex items-center justify-center gap-2"
-                >
-                  <CheckCircle2 className="w-5 h-5" />
-                  {posCheckoutBusy ? 'Saving Invoice…' : !posDraftLoaded ? 'Restoring Bill…' : 'Complete Bill &amp; Deduct Live Website Stock'}
-                </button>
-                <div className="text-center text-[11px] font-semibold text-slate-500">
-                  {posDraftStatus === 'synced'
-                    ? 'Draft saved to this terminal and server.'
-                    : posDraftStatus === 'loading'
-                    ? 'Restoring this terminal’s saved draft…'
-                    : 'Draft saved on this device; server sync will resume when connected.'}
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* =================================================================
-              VIEW 4: STORAGE KEEPER & MULTI-BIN RACK MAP
-             ================================================================= */}
-          {activeView === 'keeper' && (
-            <div className="space-y-6">
-              <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-base font-black uppercase text-slate-900">
-                    10X Warehouse Storage Keeper — Multi-Zone, Rack, Shelf &amp; Bin Coordinates
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Track exact physical bin locations, sub-28°C cold-vault reserves, retail counter display stock, and
-                    FEFO batch expiry dates.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setTransferForm({
-                        metaId: items[0]?.id || '',
-                        direction: 'VAULT_TO_SHOP',
-                        quantity: 10,
-                        newBinCode: bins[0]?.bin_code || 'ASN-SHOP-R1-B01',
-                        notes: 'Replenishing retail shop counter from cold vault',
-                      });
-                      setActiveModal('transfer');
-                    }}
-                    className="px-3.5 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold flex items-center gap-1.5"
-                  >
-                    <ArrowLeftRight className="w-4 h-4" /> Transfer Vault ↔ Shop Counter
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setEditingBin({
-                        id: null,
-                        binCode: `ASN-Z1-R0${bins.length + 1}-B01`,
-                        hubName: 'Bhumivera Flagship Hub — Asansol',
-                        zoneName: 'Zone A: Retail Shop Front Counter',
-                        rackNo: `Rack-0${bins.length + 1}`,
-                        shelfLevel: 'Shelf-A',
-                        binLabel: 'Botanical Storage Bay',
-                        temperatureTarget: '22°C - 25°C',
-                        capacityUnits: 500,
-                        occupiedUnits: 0,
-                        keeperName: viewer?.fullName || 'Master Keeper',
-                        status: 'active',
-                        notes: '',
-                      });
-                      setActiveModal('bin');
-                    }}
-                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5"
-                  >
-                    <Plus className="w-4 h-4" /> Create Storage Bin
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {bins.map(b => {
-                  const binItems = items.filter(i => i.binCode === b.bin_code);
-                  const pct = Math.min(
-                    100,
-                    Math.round(((Number(b.occupied_units) || 0) / Math.max(1, Number(b.capacity_units) || 500)) * 100)
-                  );
-                  return (
-                    <div
-                      key={b.bin_code}
-                      className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-col justify-between space-y-4"
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <span className="px-2.5 py-1 rounded-lg bg-slate-900 text-emerald-400 font-mono font-bold text-xs">
-                            {b.bin_code}
-                          </span>
-                          <span className="text-[11px] font-mono font-semibold px-2 py-0.5 rounded bg-blue-50 text-blue-700">
-                            🌡️ {b.temperature_target}
-                          </span>
-                        </div>
-                        <h4 className="font-black text-slate-900 text-sm">{b.bin_label}</h4>
-                        <div className="text-xs text-slate-500">
-                          {b.zone_name} • <b>{b.rack_no}</b> • <b>{b.shelf_level}</b>
-                        </div>
-                        <div className="text-[11px] text-slate-500">Assigned Keeper: <b>{b.keeper_name}</b></div>
-
-                        <div className="pt-2 space-y-1">
-                          <div className="flex justify-between text-[11px] font-bold">
-                            <span>Bin Capacity Utilization</span>
-                            <span>
-                              {b.occupied_units} / {b.capacity_units} Units ({pct}%)
-                            </span>
-                          </div>
-                          <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-                            <div className="h-full bg-emerald-500" style={{ width: `${pct}%` }} />
-                          </div>
-                        </div>
-
-                        {binItems.length > 0 && (
-                          <div className="pt-2 border-t border-slate-100 space-y-1">
-                            <div className="text-[10px] font-bold uppercase text-slate-400">
-                              Stored Formulations ({binItems.length})
-                            </div>
-                            {binItems.map(bi => (
-                              <div key={bi.id} className="flex justify-between text-xs">
-                                <span className="truncate font-semibold text-slate-700">{bi.name}</span>
-                                <span className="font-mono font-bold text-emerald-700 shrink-0 ml-2">
-                                  {bi.qty} {bi.uom}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-
-                      <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setInvBinFilter(b.bin_code);
-                            setActiveView('inv');
-                          }}
-                          className="text-xs font-bold text-emerald-700 hover:underline"
-                        >
-                          Inspect Bin Stock →
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingBin({
-                              id: b.id,
-                              binCode: b.bin_code,
-                              hubName: b.hub_name,
-                              zoneName: b.zone_name,
-                              rackNo: b.rack_no,
-                              shelfLevel: b.shelf_level,
-                              binLabel: b.bin_label,
-                              temperatureTarget: b.temperature_target,
-                              capacityUnits: b.capacity_units,
-                              occupiedUnits: b.occupied_units,
-                              keeperName: b.keeper_name,
-                              status: b.status,
-                              notes: b.notes || '',
-                            });
-                            setActiveModal('bin');
-                          }}
-                          className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700"
-                        >
-                          Edit Bin
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-          )}
-
-          {/* =================================================================
-              VIEW 5: PHYSICAL STOCK AUDIT & RECONCILIATION
-             ================================================================= */}
-          {activeView === 'audit' && (
-            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
-                <div>
-                  <h3 className="text-base font-black uppercase text-slate-900">
-                    Physical Stock Audit &amp; Live Website Reconciliation
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Count physical bottles in your shop and warehouse bins, enter the counted quantity below, and click
-                    Reconcile to sync <code className="text-emerald-700 font-bold">bhumivera.com</code> immediately.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={auditNote}
-                    onChange={e => setAuditNote(e.target.value)}
-                    placeholder="Audit Reference Note…"
-                    className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs w-64"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleReconcilePhysicalAudit}
-                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase tracking-wider shadow-sm"
-                  >
-                    Reconcile &amp; Sync to Live Website
-                  </button>
-                </div>
-              </div>
-
-              <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                <table className="w-full text-xs">
-                  <thead className="bg-slate-900 text-white uppercase text-[10px]">
-                    <tr>
-                      <th className="py-3 px-4 text-left">SKU</th>
-                      <th className="py-3 px-4 text-left">Formulation</th>
-                      <th className="py-3 px-4 text-left">Bin Location</th>
-                      <th className="py-3 px-4 text-center">System / Website Qty</th>
-                      <th className="py-3 px-4 text-center">Physical Counted Qty</th>
-                      <th className="py-3 px-4 text-center">Variance</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-slate-200">
-                    {items.map(it => {
-                      const entered = auditCounts[it.id];
-                      const hasCount = entered !== undefined && entered !== '';
-                      const diff = hasCount ? Number(entered) - Number(it.qty) : 0;
-                      return (
-                        <tr key={it.id} className="hover:bg-slate-50">
-                          <td className="py-3 px-4 font-mono font-bold">{it.sku}</td>
-                          <td className="py-3 px-4 font-bold text-slate-900">{it.name}</td>
-                          <td className="py-3 px-4 font-mono text-slate-600">{it.binCode}</td>
-                          <td className="py-3 px-4 text-center font-mono font-bold text-slate-800">{it.qty}</td>
-                          <td className="py-3 px-4 text-center">
-                            <input
-                              type="number"
-                              min={0}
-                              value={entered ?? ''}
-                              onChange={e => setAuditCounts(prev => ({ ...prev, [it.id]: e.target.value }))}
-                              placeholder={String(it.qty)}
-                              className="w-28 px-3 py-1.5 rounded-lg bg-slate-50 border border-slate-300 text-center font-mono font-bold"
-                            />
-                          </td>
-                          <td className="py-3 px-4 text-center font-mono font-bold">
-                            {!hasCount ? (
-                              <span className="text-slate-400">—</span>
-                            ) : diff === 0 ? (
-                              <span className="text-emerald-600">0 (Exact Match)</span>
-                            ) : (
-                              <span className={diff > 0 ? 'text-blue-600' : 'text-rose-600'}>
-                                {diff > 0 ? `+${diff}` : diff}
-                              </span>
-                            )}
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          )}
-
-          {/* =================================================================
-              VIEW 6: FULL ONLINE ORDER LIFECYCLE, TRACKING & DISPATCH HUB
-             ================================================================= */}
           {activeView === 'online' && (
-            <div className="space-y-3">
-              <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2">
-                {[
-                  { label: 'All orders', status: 'ALL', date: '', count: onlineOrders.length },
-                  { label: 'Arrived today', status: 'ALL', date: todayOrderDate, count: onlineOrders.filter(o => localOrderDate(o.createdAt) === todayOrderDate).length },
-                  { label: 'Awaiting dispatch', status: 'DISPATCH', date: '', count: onlineOrders.filter(o => matchesOrderStatus(o, 'DISPATCH')).length },
-                  { label: 'In transit', status: 'shipped', date: '', count: onlineOrders.filter(o => o.status === 'shipped').length },
-                  { label: 'Delivered', status: 'delivered', date: '', count: onlineOrders.filter(o => o.status === 'delivered').length },
-                  { label: 'Returned / RTO', status: 'returned', date: '', count: onlineOrders.filter(o => o.status === 'returned').length },
-                ].map(card => {
-                  const selected = orderStatusFilter === card.status && orderDateFilter === card.date;
-                  return (
-                    <button
-                      key={card.label}
-                      type="button"
-                      aria-pressed={selected}
-                      onClick={() => { setOrderStatusFilter(card.status); setOrderDateFilter(card.date); setOrderSearch(''); }}
-                      className={`rounded-xl p-3 border text-left shadow-sm transition focus-visible:outline focus-visible:outline-2 focus-visible:outline-emerald-500 ${selected ? 'border-emerald-500 bg-[#16452d]' : 'border-slate-200 bg-white hover:border-emerald-400'}`}
-                    >
-                      <span className="block text-[10px] font-bold uppercase text-slate-500">{card.label}</span>
-                      <span className="block text-xl font-black text-slate-900 font-mono">{card.count}</span>
-                    </button>
-                  );
-                })}
-              </div>
-
-              <div className="bg-white rounded-2xl p-3 sm:p-4 border border-slate-200 shadow-sm space-y-3">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-3">
-                  <div>
-                    <h3 className="text-base font-black uppercase text-slate-900">
-                      Order management
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      Latest {onlineOrders.length} orders (up to 250). Auto-refreshes every minute while this view is visible.
-                      {lastSyncedAt && ` Last synced ${new Date(lastSyncedAt).toLocaleTimeString()}.`}
-                    </p>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setActiveView('labels')}
-                      className="px-3.5 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 text-xs font-bold flex items-center gap-1.5"
-                    >
-                      <Printer className="w-3.5 h-3.5" /> Auto Shipping Label Studio
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleExportOnlineOrdersExcel}
-                      className="px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-xs font-bold flex items-center gap-1.5"
-                    >
-                      <Download className="w-3.5 h-3.5 text-emerald-600" /> Export Orders (.xlsx)
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => fetchBootstrapData()}
-                      className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5"
-                    >
-                      <RefreshCw className="w-3.5 h-3.5" /> Refresh Orders
-                    </button>
-                  </div>
-                </div>
-                {orderSyncError && (
-                  <p role="alert" className="rounded-lg border border-rose-400 bg-rose-50 px-3 py-2 text-xs font-bold text-rose-800">
-                    Order refresh failed. The list may be out of date: {orderSyncError}
-                  </p>
-                )}
-
-                <div className="grid grid-cols-1 md:grid-cols-4 gap-2">
-                  <div className="md:col-span-2 relative">
-                    <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-2.5" />
-                    <input
-                      type="text"
-                      aria-label="Search orders"
-                      value={orderSearch}
-                      onChange={e => setOrderSearch(e.target.value)}
-                      placeholder="Search order, customer, phone, product, city or tracking AWB…"
-                      className="w-full pl-9 pr-4 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs focus:bg-white focus:border-emerald-500 focus:outline-none"
-                    />
-                  </div>
-                  <select
-                    aria-label="Filter by order status"
-                    value={orderStatusFilter}
-                    onChange={e => setOrderStatusFilter(e.target.value)}
-                    className="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold"
-                  >
-                    <option value="ALL">All Order Statuses ({onlineOrders.length})</option>
-                    <option value="DISPATCH">Awaiting Dispatch</option>
-                    <option value="pending">Pending (New Orders)</option>
-                    <option value="confirmed">Confirmed</option>
-                    <option value="packed">Packed &amp; Weighed</option>
-                    <option value="shipped">Shipped / In Transit</option>
-                    <option value="delivered">Delivered</option>
-                    <option value="returned">Undelivered / Courier RTO</option>
-                    <option value="cancelled">Cancelled</option>
-                  </select>
-                  <input
-                    type="date"
-                    aria-label="Filter by order date"
-                    value={orderDateFilter}
-                    onChange={e => setOrderDateFilter(e.target.value)}
-                    className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold"
-                  />
-                </div>
-                <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500">
-                  <span>{lifecycleOrders.length} of {onlineOrders.length} loaded orders shown · Dates use your device time zone</span>
-                  <button type="button" onClick={() => { setOrderSearch(''); setOrderStatusFilter('ALL'); setOrderDateFilter(''); }} className="font-bold text-emerald-300 hover:underline">Clear filters</button>
-                </div>
-
-                <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                  <table className="w-full text-xs">
-                    <thead className="bg-slate-900 text-white uppercase text-[10px]">
-                      <tr>
-                        <th className="py-3 px-3 text-left">Order # &amp; Date</th>
-                        <th className="py-3 px-3 text-left">Customer &amp; Auto Label Address</th>
-                        <th className="py-3 px-3 text-left">Ordered Items vs Live Stock</th>
-                        <th className="py-3 px-3 text-left">Delivery Date &amp; Where Product Is</th>
-                        <th className="py-3 px-3 text-right">Amount &amp; Payment</th>
-                        <th className="py-3 px-3 text-center">Lifecycle Status</th>
-                        <th className="py-3 px-3 text-right">Manage Lifecycle, Label &amp; Tracking</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {lifecycleOrders.length === 0 ? (
-                        <tr>
-                          <td colSpan={7} className="py-10 text-center text-slate-400">
-                            No orders match this filter.
-                          </td>
-                        </tr>
-                      ) : (
-                        lifecycleOrders.map(ord => (
-                          <tr key={ord.id} onClick={e => {
-                            if (e.target.closest('button, a, input, select')) return;
-                            setEditingOrder({ ...ord });
-                            setActiveModal('order-detail');
-                          }} className="cursor-pointer hover:bg-slate-50 align-top">
-                            <td className="py-2 px-3 font-mono">
-                              <button type="button" onClick={() => { setEditingOrder({ ...ord }); setActiveModal('order-detail'); }} className="font-black text-emerald-300 text-sm hover:underline" aria-label={`Open order ${ord.orderNumber}`}>#{ord.orderNumber}</button>
-                              <div className="text-[10px] text-slate-500">
-                                {new Date(ord.createdAt).toLocaleString()}
-                              </div>
-                              {localOrderDate(ord.createdAt) === todayOrderDate && <span className="mt-1 inline-block px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 text-[9px] font-bold uppercase">Arrived today</span>}
-                              {ord.status === 'pending' && <span className="mt-1 ml-1 inline-block px-2 py-0.5 rounded bg-amber-100 text-amber-800 text-[9px] font-bold uppercase">Pending</span>}
-                            </td>
-
-                            <td className="py-3 px-3">
-                              <div className="font-bold text-slate-900">{ord.customerName}</div>
-                              <div className="text-[11px] text-slate-600 max-w-xs line-clamp-2">
-                                {ord.fullFormattedAddress || `${ord.city} ${ord.state} ${ord.pincode}`}
-                              </div>
-                              <div className="text-[11px] font-mono text-emerald-700 font-semibold mt-0.5">
-                                Phone: {ord.customerPhone || '-'}
-                              </div>
-                              {ord.googleMapsUrl && (
-                                <a
-                                  href={ord.googleMapsUrl}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="inline-flex items-center gap-1 text-[10px] text-blue-600 hover:underline font-semibold mt-0.5"
-                                >
-                                  <MapPin className="w-3 h-3" /> Open Customer Pin on Maps
-                                </a>
-                              )}
-                            </td>
-
-                            <td className="py-2 px-3">
-                              <div className="font-bold text-slate-900 line-clamp-2">
-                                {(ord.items || []).map(it => `${it.name} ×${it.quantity}`).join(', ') || 'No items'}
-                              </div>
-                              <div className="text-[10px] text-slate-500">{(ord.items || []).length} line items · Open for stock &amp; bin details</div>
-                            </td>
-
-                            <td className="py-3 px-3 space-y-1">
-                              <div className="text-[11px]">
-                                <span className="text-slate-500 font-semibold">Est. Delivery:</span>{' '}
-                                <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
-                                  {ord.estimatedDeliveryDate || 'Auto'}
-                                </span>
-                              </div>
-                              <div className="text-[11px] text-slate-700 font-semibold">
-                                {ord.currentLocationCheckpoint}
-                              </div>
-                              {ord.trackingNumber ? (
-                                <div className="text-[10px] font-mono bg-purple-50 text-purple-900 px-2 py-0.5 rounded border border-purple-200 inline-block">
-                                  {ord.courier || 'Courier'} • AWB: <b>{ord.trackingNumber}</b>
-                                </div>
-                              ) : (
-                                <div className="text-[10px] text-amber-700 font-semibold">
-                                  AWB / Tracking ID not assigned yet
-                                </div>
-                              )}
-                            </td>
-
-                            <td className="py-3 px-3 text-right font-mono">
-                              <div className="font-black text-slate-900 text-sm">₹{ord.total}</div>
-                              <div className="text-[10px] uppercase font-bold text-slate-600">
-                                {ord.paymentMode} ({ord.paymentStatus})
-                              </div>
-                            </td>
-
-                            <td className="py-3 px-3 text-center">
-                              <span
-                                className={`px-2.5 py-1 rounded-full font-bold uppercase text-[10px] inline-block ${
-                                  ord.status === 'delivered'
-                                    ? 'bg-emerald-100 text-emerald-800'
-                                    : ord.status === 'shipped'
-                                    ? 'bg-purple-100 text-purple-800'
-                                    : ord.status === 'returned' || ord.status === 'cancelled'
-                                    ? 'bg-rose-100 text-rose-700'
-                                    : 'bg-amber-100 text-amber-800'
-                                }`}
-                              >
-                                {ord.status}
-                              </span>
-                              {ord.rtoRestockMode && ord.rtoRestockMode !== 'NONE' && (
-                                <div className="text-[9px] font-bold text-rose-700 mt-1">
-                                  RTO: {ord.rtoRestockMode}
-                                </div>
-                              )}
-                            </td>
-
-                            <td className="py-3 px-3 text-right space-y-1.5">
-                              <div className="flex flex-wrap justify-end gap-1">
-                                {['confirmed', 'packed', 'shipped', 'delivered'].map(st => (
-                                  <button
-                                    key={st}
-                                    type="button"
-                                    onClick={() => handleUpdateOnlineOrderStatus(ord.id, st)}
-                                    className={`px-2 py-1 rounded-lg text-[10px] font-bold uppercase ${
-                                      ord.status === st
-                                        ? 'bg-emerald-600 text-white'
-                                        : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
-                                    }`}
-                                  >
-                                    {st}
-                                  </button>
-                                ))}
-                              </div>
-                              <div className="flex flex-wrap justify-end gap-1">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setEditingOrder({ ...ord });
-                                    setActiveModal('order-detail');
-                                  }}
-                                  className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white text-[10px] font-bold flex items-center gap-1"
-                                >
-                                  <Edit3 className="w-3 h-3" /> Edit Order / Tracking
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handlePrintShippingLabels(ord)}
-                                  className="px-2.5 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-[10px] font-bold flex items-center gap-1"
-                                >
-                                  <Printer className="w-3 h-3" /> Label
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handlePrintOnlineOrderGstInvoice(ord)}
-                                  className="px-2 py-1 rounded-lg bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-[10px] font-bold"
-                                >
-                                  GST Bill
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+            <OrderFulfillmentView
+              orders={onlineOrders}
+              onUpdateOrderStatus={handleUpdateOnlineOrderStatus}
+              onOpenPackingVerify={(order) => setVerifyPackingOrder(order)}
+              onOpenThermalLabel={(order) => setThermalLabelOrder(order)}
+              onOpenWavePicklist={(orderIds) => {
+                api.post('/inventory-software/fulfillment/wave-picklist', { orderIds }, reqConfig)
+                  .then(r => setActiveWavePicklist(r.data?.picklist))
+                  .catch(err => showNotice('error', err.response?.data?.message || 'Wave picklist failed.'));
+              }}
+              onOpenReturnQc={(order) => setReturnQcOrder(order)}
+              syncing={syncing}
+              onRefresh={() => fetchBootstrapData(true)}
+            />
           )}
 
-          {/* =================================================================
-              VIEW 6B: AUTO-FETCHED CUSTOMER SHIPPING LABELS & ZONES STUDIO
-             ================================================================= */}
+          {activeView === 'sale' && (
+            <PosTerminalView
+              items={items}
+              posCart={posCart}
+              setPosCart={setPosCart}
+              onCheckout={handlePosCheckout}
+              checkoutLoading={loading}
+              upiQrDataUrl={upiQrDataUrl}
+              posPaymentMode={posPaymentMode}
+              setPosPaymentMode={setPosPaymentMode}
+              posPaidAmount={posPaidAmount}
+              setPosPaidAmount={setPosPaidAmount}
+              posCustomerForm={posCustomerForm}
+              setPosCustomerForm={setPosCustomerForm}
+              posDiscount={posDiscount}
+              setPosDiscount={setPosDiscount}
+              posTaxRate={cfg.taxRate ?? 5}
+              onPullMobileScanner={handlePullMobileScannerQueueToPos}
+              scannerQueueCount={scannerQueue.length}
+            />
+          )}
+
+          {activeView === 'inv' && (
+            <CatalogStockView
+              items={items}
+              velocityData={velocityData}
+              onEditItem={(item) => {
+                setEditingItem(item || {
+                  name: '',
+                  sku: '',
+                  barcode: '',
+                  cat: 'Luxury Facial Cleansers',
+                  uom: 'Pcs',
+                  qty: 0,
+                  costPrice: 0,
+                  mrp: 0,
+                  price: 0,
+                  gstHsnCode: '30049011',
+                  gstRate: 5,
+                  minStock: 15,
+                  binCode: 'ASN-SHOP-R1-B01',
+                  rackLocation: 'Zone A',
+                });
+                setActiveModal('item');
+              }}
+              onAdjustStock={(item) => {
+                setAdjustmentForm({
+                  metaId: item.id,
+                  operation: 'add',
+                  quantity: 10,
+                  reason: 'Stock replenishment inward',
+                });
+                setActiveModal('adjust');
+              }}
+              onPrintBarcode={(item) => handleOpenLabelModal(item)}
+            />
+          )}
+
           {activeView === 'labels' && (
-            <div className="space-y-6">
-              <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-base font-black uppercase text-slate-900">
-                    Automatic Customer Shipping Label Studio (Zero Manual Typing)
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Whatever shipping address the customer enters at checkout (e.g. Delhi, Mumbai, Kolkata, Bengaluru) is
-                    automatically fetched here for 1-click 4×6 Courier Label &amp; Packing Slip printing. Full Customer
-                    CRM remains isolated in <code className="text-emerald-700 font-bold">/admin</code>.
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const chosen = onlineOrders.filter(o => selectedLabelOrderIds.includes(o.id));
-                      handlePrintShippingLabels(chosen.length > 0 ? chosen : filteredOnlineOrders.slice(0, 10));
-                    }}
-                    className="px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-black uppercase flex items-center gap-2 shadow-sm"
-                  >
-                    <Printer className="w-4 h-4" />
-                    Print {selectedLabelOrderIds.length > 0 ? `${selectedLabelOrderIds.length} Selected` : 'Top 10'} Shipping Labels
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                {filteredOnlineOrders.slice(0, 30).map(ord => {
-                  const isSelected = selectedLabelOrderIds.includes(ord.id);
-                  const isCod = String(ord.paymentMode || '').toUpperCase() === 'COD' && ord.paymentStatus !== 'paid';
-                  return (
-                    <div
-                      key={ord.id}
-                      className={`bg-white rounded-2xl p-5 border-2 transition shadow-sm flex flex-col justify-between space-y-3 ${
-                        isSelected ? 'border-emerald-500 bg-emerald-50/20' : 'border-slate-200'
-                      }`}
-                    >
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between border-b border-slate-100 pb-2">
-                          <label className="flex items-center gap-2 cursor-pointer font-mono font-black text-slate-900 text-sm">
-                            <input
-                              type="checkbox"
-                              checked={isSelected}
-                              onChange={e => {
-                                if (e.target.checked) {
-                                  setSelectedLabelOrderIds(prev => [...prev, ord.id]);
-                                } else {
-                                  setSelectedLabelOrderIds(prev => prev.filter(id => id !== ord.id));
-                                }
-                              }}
-                              className="w-4 h-4 accent-emerald-600"
-                            />
-                            #{ord.orderNumber}
-                          </label>
-                          <span
-                            className={`px-2 py-0.5 rounded text-[10px] font-black uppercase ${
-                              isCod ? 'bg-amber-100 text-amber-900' : 'bg-emerald-100 text-emerald-800'
-                            }`}
-                          >
-                            {isCod ? `COD: Collect ₹${ord.total}` : `PREPAID: ₹${ord.total}`}
-                          </span>
-                        </div>
-
-                        <div className="p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                          <div className="text-[10px] font-bold uppercase text-slate-400">
-                            Auto-Fetched Customer Address ({ord.city || 'India'}):
-                          </div>
-                          <div className="font-black text-slate-900 text-sm">{ord.customerName}</div>
-                          <div className="text-xs text-slate-700 leading-relaxed">
-                            {ord.line1}
-                            {ord.line2 ? `, ${ord.line2}` : ''}
-                            {ord.landmark ? ` (Landmark: ${ord.landmark})` : ''}
-                            <br />
-                            <b className="text-slate-900">
-                              {ord.city}, {ord.state} — {ord.pincode}
-                            </b>
-                          </div>
-                          <div className="text-xs font-mono font-bold text-emerald-700 pt-1">
-                            Phone: {ord.customerPhone || '-'}
-                          </div>
-                        </div>
-
-                        <div className="text-[11px] text-slate-600 space-y-0.5">
-                          <div>
-                            <b>Items:</b> {(ord.items || []).map(i => `${i.name} (×${i.quantity})`).join(', ')}
-                          </div>
-                          <div>
-                            <b>Est. Delivery:</b> <span className="font-mono font-bold">{ord.estimatedDeliveryDate}</span> •{' '}
-                            <b>AWB:</b> <span className="font-mono">{ord.trackingNumber || 'Pending'}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="pt-2 border-t border-slate-100 flex items-center justify-between gap-2">
-                        <button
-                          type="button"
-                          onClick={() => handlePrintShippingLabels(ord)}
-                          className="flex-1 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center justify-center gap-1.5"
-                        >
-                          <Printer className="w-3.5 h-3.5" /> Print 4×6 Label
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            setEditingOrder({ ...ord });
-                            setActiveModal('order-detail');
-                          }}
-                          className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold"
-                        >
-                          Edit Address / AWB
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
+            <ShippingLabelsView
+              orders={onlineOrders}
+              onOpenThermalLabel={(order) => setThermalLabelOrder(order)}
+              onOpenManifest={(orderIds, courier) => {
+                api.post('/inventory-software/fulfillment/manifest', { orderIds, courier }, reqConfig)
+                  .then(r => setActiveManifest(r.data?.manifest))
+                  .catch(err => showNotice('error', err.response?.data?.message || 'Manifest failed.'));
+              }}
+              onMarkLabelsPrinted={async (orderIds) => {
+                await api.post('/inventory-software/online-orders/mark-labels-printed', { orderIds }, reqConfig).catch(() => {});
+                showNotice('success', 'Marked labels printed.');
+                await fetchBootstrapData(true);
+              }}
+              onBookCarrierLabel={async (orderId, form) => {
+                try {
+                  const res = await api.post(`/inventory-software/online-orders/${orderId}/book-carrier-label`, form, reqConfig);
+                  showNotice('success', res.data?.message || 'Label booked.');
+                  await fetchBootstrapData(true);
+                } catch (err) {
+                  showNotice('error', err.response?.data?.message || 'Booking failed.');
+                }
+              }}
+            />
           )}
 
-          {/* =================================================================
-              VIEW 7: SUPPLIERS & GOODS RECEIPT NOTE (GRN) INWARDING
-             ================================================================= */}
+          {activeView === 'keeper' && (
+            <StorageKeeperView
+              bins={bins}
+              onEditBin={(bin) => {
+                setEditingBin(bin || {
+                  code: '',
+                  hub: 'Bhumivera Flagship Hub - Asansol',
+                  zone: 'Zone A - Retail Display',
+                  rack: 'Rack 01',
+                  shelf: 'Shelf A',
+                  label: '',
+                  temp: '22°C - 26°C',
+                  capacity: 500,
+                  occupied: 0,
+                  keeper: viewer?.username || 'Keeper',
+                  status: 'active',
+                });
+                setActiveModal('bin');
+              }}
+              onOpenTransfer={() => setActiveModal('transfer')}
+            />
+          )}
+
           {activeView === 'grn' && (
-            <div className="space-y-6">
-              <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-4">
-                <div>
-                  <h3 className="text-base font-black uppercase text-slate-900">
-                    Suppliers &amp; Goods Receipt Note (GRN) Batch Inwarding
-                  </h3>
-                  <p className="text-xs text-slate-500">
-                    Receive newly bottled production batches or raw materials into bins and automatically increment live
-                    website stock.
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSupplierForm({
-                        id: null,
-                        name: '',
-                        companyName: '',
-                        phone: '',
-                        email: '',
-                        gstin: '',
-                        city: '',
-                        supplyCategory: 'Botanical Extracts & Packaging',
-                        payableBalance: 0,
-                        leadTimeDays: 5,
-                        notes: '',
-                      });
-                      setActiveModal('supplier');
-                    }}
-                    className="px-3.5 py-2 rounded-xl border border-slate-300 hover:bg-slate-50 text-xs font-bold"
-                  >
-                    + Add Supplier
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setGrnForm(prev => ({
-                        ...prev,
-                        metaId: items[0]?.id || '',
-                        supplierName: suppliers[0]?.name || 'Himalayan Phyto-Actives & Cold-Press Labs',
-                      }));
-                      setActiveModal('grn');
-                    }}
-                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5"
-                  >
-                    <PackagePlus className="w-4 h-4" /> Post New GRN Stock Inward
-                  </button>
-                </div>
-              </div>
-
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <div className="lg:col-span-5 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
-                  <h4 className="text-sm font-black uppercase text-slate-800">
-                    Registered Suppliers &amp; Labs ({suppliers.length})
-                  </h4>
-                  <div className="space-y-2.5">
-                    {suppliers.map(sup => (
-                      <div key={sup.id} className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 space-y-1">
-                        <div className="flex justify-between font-bold text-slate-900">
-                          <span>{sup.name}</span>
-                          <span className="font-mono text-xs text-emerald-700">{sup.supplier_code}</span>
-                        </div>
-                        <div className="text-xs text-slate-600">{sup.supply_category}</div>
-                        <div className="text-[11px] text-slate-500 font-mono">
-                          {sup.city} • Phone: {sup.phone || '-'} • GSTIN: {sup.gstin || '-'}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-
-                <div className="lg:col-span-7 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-3">
-                  <h4 className="text-sm font-black uppercase text-slate-800">
-                    Recent Goods Receipt Notes (GRN Inward Ledger)
-                  </h4>
-                  <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                    <table className="w-full text-xs">
-                      <thead className="bg-slate-900 text-white uppercase text-[10px]">
-                        <tr>
-                          <th className="py-2.5 px-3 text-left">GRN #</th>
-                          <th className="py-2.5 px-3 text-left">Formulation &amp; Batch</th>
-                          <th className="py-2.5 px-3 text-center">Accepted Qty</th>
-                          <th className="py-2.5 px-3 text-left">Bin</th>
-                          <th className="py-2.5 px-3 text-right">Total Cost</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200">
-                        {grnEntries.length === 0 ? (
-                          <tr>
-                            <td colSpan={5} className="py-8 text-center text-slate-400">
-                              No GRN inward entries recorded yet. Click "Post New GRN Stock Inward" above.
-                            </td>
-                          </tr>
-                        ) : (
-                          grnEntries.map(g => (
-                            <tr key={g.id}>
-                              <td className="py-2.5 px-3 font-mono font-bold text-emerald-700">{g.grn_no}</td>
-                              <td className="py-2.5 px-3">
-                                <div className="font-bold text-slate-900">{g.product_name}</div>
-                                <div className="text-[10px] text-slate-500">
-                                  Batch: {g.batch_no} • Supplier: {g.supplier_name}
-                                </div>
-                              </td>
-                              <td className="py-2.5 px-3 text-center font-mono font-bold text-emerald-700">
-                                +{g.accepted_qty}
-                              </td>
-                              <td className="py-2.5 px-3 font-mono text-xs">{g.bin_code}</td>
-                              <td className="py-2.5 px-3 text-right font-mono font-bold">₹{g.total_cost}</td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
+            <GrnInwardView
+              grnEntries={grnEntries}
+              suppliers={suppliers}
+              onOpenNewGrn={() => setActiveModal('grn')}
+              onOpenNewSupplier={() => setActiveModal('supplier')}
+            />
           )}
 
-          {/* =================================================================
-              VIEW 8: UNIQUE PRODUCT QR CODES & FUTURE ANDROID SCANNER APP API
-             ================================================================= */}
-          {activeView === 'scanner' && (
-            <div className="space-y-6">
-              <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-                <div className="lg:col-span-5 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <div>
-                      <h3 className="text-base font-black uppercase text-slate-900 flex items-center gap-2">
-                        <QrCode className="w-5 h-5 text-emerald-600" />
-                        Android Mobile QR Scanner App API Pairing
-                      </h3>
-                      <p className="text-xs text-slate-500 mt-0.5">
-                        100% Ready for your Android QR Scanner App: Scan items on mobile and they automatically appear in
-                        your POS Billing Cart!
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-2xl bg-slate-900 text-white flex items-center gap-4">
-                    {pairingQrUrl && (
-                      <img src={pairingQrUrl} alt="Scanner API Pairing QR" className="w-28 h-28 rounded-xl bg-white p-1.5 shrink-0" />
-                    )}
-                    <div className="space-y-1.5 text-xs min-w-0">
-                      <div className="text-[10px] uppercase tracking-wider text-emerald-400 font-bold">
-                        Scanner API Key (x-scanner-api-key)
-                      </div>
-                      <code className="block p-2 rounded-lg bg-slate-950 text-amber-300 font-mono text-[11px] break-all border border-slate-800">
-                        {scannerPairingKey || 'Creating terminal-specific key…'}
-                      </code>
-                      <div className="text-[10px] text-slate-400">
-                        POST <code className="text-emerald-300">/api/inventory-software/scanner/scan</code>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 space-y-3">
-                    <div className="text-xs font-black uppercase text-emerald-950">
-                      Test Live QR Scan → POS Cart (e.g. Sell 10 Soaps via QR)
-                    </div>
-                    <form onSubmit={handleScanQrToPos} className="space-y-3 text-xs">
-                      <div>
-                        <label className="block font-bold text-slate-700 mb-1">
-                          Select or Scan Product QR Payload / SKU / Serial #
-                        </label>
-                        <select
-                          value={scannerInput}
-                          onChange={e => setScannerInput(e.target.value)}
-                          className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold mb-2"
-                        >
-                          <option value="">-- Pick a Product QR to Simulate Mobile Scan --</option>
-                          {items.map(it => (
-                            <option key={it.id} value={it.qrCodePayload || it.sku}>
-                              {it.name} ({it.sku}) — Stock: {it.qty}
-                            </option>
-                          ))}
-                        </select>
-                        <input
-                          type="text"
-                          value={scannerInput}
-                          onChange={e => setScannerInput(e.target.value)}
-                          placeholder="Or paste raw QR URL / SKU / Barcode / Bottle Serial…"
-                          className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-mono"
-                        />
-                      </div>
-                      <div className="grid grid-cols-2 gap-3 items-end">
-                        <div>
-                          <label className="block font-bold text-slate-700 mb-1">Quantity Scanned (e.g. 10)</label>
-                          <input
-                            type="number"
-                            min={1}
-                            value={scannerQty}
-                            onChange={e => setScannerQty(e.target.value)}
-                            className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-mono font-bold"
-                          />
-                        </div>
-                        <button
-                          type="submit"
-                          className="py-2.5 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase"
-                        >
-                          Push to POS Bill →
-                        </button>
-                      </div>
-                    </form>
-                  </div>
-                </div>
-
-                <div className="lg:col-span-7 bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
-                  <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                    <div>
-                      <h3 className="text-base font-black uppercase text-slate-900">
-                        Unique Product QR Codes &amp; Live Mobile Scanner Queue ({scannerQueue.length})
-                      </h3>
-                      <p className="text-xs text-slate-500">
-                        Print unique QR labels for every product or pull mobile-scanned items directly into POS Billing.
-                      </p>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={handlePullMobileScannerQueueToPos}
-                      className="px-4 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold"
-                    >
-                      Open POS Cart with Scanned Items →
-                    </button>
-                  </div>
-
-                  <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                    <table className="w-full text-xs">
-                      <thead className="bg-slate-900 text-white uppercase text-[10px]">
-                        <tr>
-                          <th className="py-2.5 px-3 text-left">SKU &amp; Barcode</th>
-                          <th className="py-2.5 px-3 text-left">Formulation</th>
-                          <th className="py-2.5 px-3 text-left">Unique QR Payload</th>
-                          <th className="py-2.5 px-3 text-center">Live Stock</th>
-                          <th className="py-2.5 px-3 text-right">Print QR</th>
-                        </tr>
-                      </thead>
-                      <tbody className="divide-y divide-slate-200">
-                        {items.map(it => (
-                          <tr key={it.id} className="hover:bg-slate-50">
-                            <td className="py-2.5 px-3 font-mono">
-                              <div className="font-bold text-slate-900">{it.sku}</div>
-                              <div className="text-[10px] text-slate-500">{it.barcode}</div>
-                            </td>
-                            <td className="py-2.5 px-3 font-bold text-slate-900">{it.name}</td>
-                            <td className="py-2.5 px-3 font-mono text-[10px] text-emerald-700 break-all max-w-xs">
-                              {it.qrCodePayload}
-                            </td>
-                            <td className="py-2.5 px-3 text-center font-mono font-bold">{it.qty}</td>
-                            <td className="py-2.5 px-3 text-right">
-                              <button
-                                type="button"
-                                onClick={() => handleOpenLabelGenerator(it)}
-                                className="px-3 py-1 rounded-lg bg-emerald-50 hover:bg-emerald-100 text-emerald-800 font-bold"
-                              >
-                                Print QR Label
-                              </button>
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* =================================================================
-              VIEW 9: STOCK ADJUSTMENTS & INTERNAL WRITE-OFFS
-             ================================================================= */}
-          {activeView === 'trans' && (
-            <div className="max-w-xl mx-auto bg-white rounded-2xl p-6 border border-slate-200 shadow-sm space-y-4">
-              <h3 className="text-base font-black uppercase text-slate-900 border-b border-slate-100 pb-3">
-                Stock Adjustment / Damage Write-Off (Syncs with Website)
-              </h3>
-              <p className="text-xs text-slate-500">
-                Record stock deductions for damaged bottles, expired batches, lab testing samples, or audit adjustments.
-                Deducts immediately from <code className="text-emerald-700 font-bold">bhumivera.com</code>.
-              </p>
-              <form onSubmit={handleExecuteStockAdjustment} className="space-y-4 text-xs">
-                <div>
-                  <label className="block font-bold uppercase text-slate-600 mb-1">Select Formulation</label>
-                  <select
-                    value={adjustmentForm.metaId || items[0]?.id || ''}
-                    onChange={e => setAdjustmentForm(prev => ({ ...prev, metaId: e.target.value }))}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-                  >
-                    {items.map(it => (
-                      <option key={it.id} value={it.id}>
-                        {it.name} (Current Live Stock: {it.qty})
-                      </option>
-                    ))}
-                  </select>
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-bold uppercase text-slate-600 mb-1">Operation</label>
-                    <select
-                      value={adjustmentForm.operation}
-                      onChange={e => setAdjustmentForm(prev => ({ ...prev, operation: e.target.value }))}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-                    >
-                      <option value="subtract">Deduct Stock (-)</option>
-                      <option value="add">Add Stock (+)</option>
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block font-bold uppercase text-slate-600 mb-1">Quantity</label>
-                    <input
-                      type="number"
-                      min={1}
-                      required
-                      value={adjustmentForm.quantity}
-                      onChange={e => setAdjustmentForm(prev => ({ ...prev, quantity: e.target.value }))}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="block font-bold uppercase text-slate-600 mb-1">Reason for Adjustment</label>
-                  <select
-                    value={adjustmentForm.reason}
-                    onChange={e => setAdjustmentForm(prev => ({ ...prev, reason: e.target.value }))}
-                    className="w-full px-3.5 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-semibold"
-                  >
-                    <option>Damaged in Transit / Storage (Move to Quarantine)</option>
-                    <option>Expired Stock (Move to Quarantine)</option>
-                    <option>Quality Control / Lab Assay Sample</option>
-                    <option>Founder / Marketing PR Sample</option>
-                    <option>Inventory Audit Discrepancy</option>
-                  </select>
-                </div>
-                <button
-                  type="submit"
-                  className="w-full py-3 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black uppercase tracking-wider"
-                >
-                  Execute Adjustment &amp; Sync Website Stock
-                </button>
-              </form>
-            </div>
-          )}
-
-          {/* =================================================================
-              VIEW 10: UNDELIVERED ORDER (RTO — RETURN TO ORIGIN) & RESTOCK STUDIO
-             ================================================================= */}
           {activeView === 'ret' && (
-            <div className="space-y-6">
-              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-300 flex flex-wrap items-center justify-between gap-4">
-                <div className="space-y-1">
-                  <div className="text-xs font-black uppercase text-amber-950 flex items-center gap-2">
-                    <ShieldAlert className="w-4 h-4 text-amber-700" />
-                    Bhumivera Strict Return Policy: ZERO Post-Delivery Returns • Undelivered Courier RTO Only
-                  </div>
-                  <p className="text-xs text-amber-900">
-                    Once an order is delivered to the customer, no return is permitted. If an order was shipped/dispatched
-                    but <b>not delivered</b> (door locked, customer unreachable, refused at doorstep, or courier RTO),
-                    process the returned parcel below to automatically <b>Restock to Main Inventory</b> or move to{' '}
-                    <b>Quarantine</b>.
-                  </p>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-                <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
-                  <div>
-                    <h3 className="text-base font-black uppercase text-slate-900">
-                      1. Undelivered Online Orders (Courier RTO Return &amp; 1-Click Restock Queue)
-                    </h3>
-                    <p className="text-xs text-slate-500">
-                      Select any shipped/in-transit order that returned undelivered to restock its exact quantities back
-                      into <code className="text-emerald-700 font-bold">bhumivera.com</code>.
-                    </p>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input
-                      type="text"
-                      value={rtoSearch}
-                      onChange={e => setRtoSearch(e.target.value)}
-                      placeholder="Search Order #, AWB Tracking ID, or City…"
-                      className="px-3.5 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs w-64"
-                    />
-                    <select
-                      value={rtoReason}
-                      onChange={e => setRtoReason(e.target.value)}
-                      className="px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs font-bold"
-                    >
-                      <option>Customer Unavailable / Door Locked — Courier Return to Origin (RTO)</option>
-                      <option>Incomplete / Unreachable Address in Destination City (RTO)</option>
-                      <option>Customer Refused Parcel at Doorstep before Delivery (RTO)</option>
-                      <option>Courier Pin Non-Serviceable / Hub Return (RTO)</option>
-                      <option>Parcel Damaged in Courier Transit (Quarantine)</option>
-                    </select>
-                  </div>
-                </div>
-
-                <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                  <table className="w-full text-xs">
-                    <thead className="bg-slate-900 text-white uppercase text-[10px]">
-                      <tr>
-                        <th className="py-3 px-4 text-left">Order # &amp; AWB</th>
-                        <th className="py-3 px-4 text-left">Customer &amp; City</th>
-                        <th className="py-3 px-4 text-left">Formulations in Parcel</th>
-                        <th className="py-3 px-4 text-center">Current Status</th>
-                        <th className="py-3 px-4 text-right">RTO Restock / Quarantine Action</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {rtoCandidateOrders.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="py-8 text-center text-slate-400">
-                            No shipped/in-transit or RTO orders match this search.
-                          </td>
-                        </tr>
-                      ) : (
-                        rtoCandidateOrders.map(ord => (
-                          <tr key={ord.id} className="hover:bg-slate-50">
-                            <td className="py-3 px-4 font-mono">
-                              <div className="font-bold text-slate-900">#{ord.orderNumber}</div>
-                              <div className="text-[10px] text-purple-700 font-bold">
-                                AWB: {ord.trackingNumber || 'Not set'} ({ord.courier || 'Courier'})
-                              </div>
-                            </td>
-                            <td className="py-3 px-4">
-                              <div className="font-bold text-slate-900">{ord.customerName}</div>
-                              <div className="text-[11px] text-slate-500">
-                                {ord.city}, {ord.state} — {ord.pincode}
-                              </div>
-                            </td>
-                            <td className="py-3 px-4">
-                              {(ord.items || []).map((it, idx) => (
-                                <div key={idx} className="font-semibold text-slate-700">
-                                  • {it.name} <span className="font-mono font-bold text-emerald-700">×{it.quantity}</span>
-                                </div>
-                              ))}
-                            </td>
-                            <td className="py-3 px-4 text-center">
-                              <span className="px-2.5 py-1 rounded-full bg-slate-100 font-bold uppercase text-[10px]">
-                                {ord.status}
-                              </span>
-                              {ord.rtoRestockMode && ord.rtoRestockMode !== 'NONE' && (
-                                <div className="text-[10px] font-bold text-emerald-700 mt-1">
-                                  RTO {ord.rtoRestockMode}
-                                </div>
-                              )}
-                            </td>
-                            <td className="py-3 px-4 text-right">
-                              {ord.rtoRestockMode && ord.rtoRestockMode !== 'NONE' ? (
-                                <span className="text-xs font-bold text-slate-400">
-                                  Processed ({ord.rtoRestockMode})
-                                </span>
-                              ) : (
-                                <div className="inline-flex items-center gap-1.5">
-                                  <button
-                                    type="button"
-                                    onClick={() => handleProcessRtoOrder(ord.id, 'RESTOCK')}
-                                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px]"
-                                  >
-                                    RTO Intact → Restock to Website
-                                  </button>
-                                  <button
-                                    type="button"
-                                    onClick={() => handleProcessRtoOrder(ord.id, 'QUARANTINE')}
-                                    className="px-3 py-1.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold text-[11px]"
-                                  >
-                                    RTO Damaged → Quarantine
-                                  </button>
-                                </div>
-                              )}
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-
-              <div className="max-w-xl bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-                <h4 className="text-sm font-black uppercase text-slate-900 border-b border-slate-100 pb-2">
-                  2. Manual Undelivered Parcel SKU Restock / Quarantine
-                </h4>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-xs items-end">
-                  <div className="sm:col-span-2">
-                    <label className="block font-bold uppercase text-slate-600 mb-1">Formulation</label>
-                    <select
-                      value={returnForm.metaId || items[0]?.id || ''}
-                      onChange={e => setReturnForm(prev => ({ ...prev, metaId: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-                    >
-                      {items.map(it => (
-                        <option key={it.id} value={it.id}>
-                          {it.name} (Stock: {it.qty})
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  <div>
-                    <label className="block font-bold uppercase text-slate-600 mb-1">Quantity</label>
-                    <input
-                      type="number"
-                      min={1}
-                      value={returnForm.quantity}
-                      onChange={e => setReturnForm(prev => ({ ...prev, quantity: e.target.value }))}
-                      className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-                    />
-                  </div>
-                </div>
-                <div className="grid grid-cols-2 gap-3 text-xs">
-                  <button
-                    type="button"
-                    onClick={() => handleExecuteReturn('GOOD')}
-                    className="py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase"
-                  >
-                    Restock Intact Units
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => handleExecuteReturn('BAD')}
-                    className="py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-black uppercase"
-                  >
-                    Move Damaged to Quarantine
-                  </button>
-                </div>
-              </div>
-            </div>
+            <RtoReturnsView
+              orders={onlineOrders}
+              onOpenReturnQc={(order) => setReturnQcOrder(order)}
+              onRefresh={() => fetchBootstrapData(true)}
+            />
           )}
 
-          {/* =================================================================
-              VIEW 10B: DAILY SQL & FULL DATABASE DISASTER RECOVERY (VERCEL + RAILWAY)
-             ================================================================= */}
-          {activeView === 'backup' && (
-            <div className="space-y-6">
-              <div className="p-5 rounded-2xl bg-gradient-to-r from-slate-900 via-emerald-950 to-slate-900 text-white flex flex-wrap items-center justify-between gap-4 shadow-lg">
-                <div className="space-y-1 max-w-2xl">
-                  <div className="inline-flex items-center gap-2 px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 text-[10px] font-bold uppercase">
-                    <HardDrive className="w-3.5 h-3.5" /> Automated Daily SQL Vault • Synced with Railway MySQL &amp; Vercel
-                  </div>
-                  <h3 className="text-base font-black uppercase mt-1">
-                    Anti-Hack Daily SQL Database Backup &amp; 1-Click Disaster Recovery Restore
-                  </h3>
-                  <p className="text-xs text-slate-300 leading-relaxed">
-                    Every day (and on demand), this engine snapshots all 27 MySQL tables (Products, Stock, Orders,
-                    Order Items, Users, Addresses, Coupons, Reviews, Wallets, Support &amp; Inventory) into a portable
-                    Railway <code className="text-amber-300">.sql</code> dump and encrypted{' '}
-                    <code className="text-emerald-300">.avbak.json</code> archive. Even if someone wipes or hacks your
-                    database, you can restore 100% of your system here in 1 click.
-                  </p>
-                </div>
-                <div className="flex flex-wrap items-center gap-2.5">
-                  <button
-                    type="button"
-                    disabled={backupBusy}
-                    onClick={() => handleCreateDailySqlBackup('sql')}
-                    className="px-4 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black uppercase text-xs flex items-center gap-2 shadow-lg disabled:opacity-50"
-                  >
-                    <Download className="w-4 h-4" />
-                    {backupBusy ? 'Generating SQL Dump…' : 'Create & Download Full .SQL Backup'}
-                  </button>
-                  <button
-                    type="button"
-                    disabled={backupBusy}
-                    onClick={() => handleCreateDailySqlBackup('json')}
-                    className="px-4 py-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/30 font-bold text-xs flex items-center gap-2 disabled:opacity-50"
-                  >
-                    <Save className="w-4 h-4" />
-                    Save .AVBAK.JSON Snapshot
-                  </button>
-                  <label className="px-4 py-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-black uppercase text-xs flex items-center gap-2 cursor-pointer shadow-lg">
-                    <Upload className="w-4 h-4" />
-                    Restore from .SQL / .JSON File
-                    <input
-                      type="file"
-                      accept=".sql,.json,.avbak"
-                      onChange={handleUploadRestoreBackupFile}
-                      className="hidden"
-                    />
-                  </label>
-                </div>
-              </div>
-
-              <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-                <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-                  <div>
-                    <h4 className="text-sm font-black uppercase text-slate-900">
-                      Stored Daily SQL Backups Vault ({dailyBackups.length} Rolling Snapshots on Railway)
-                    </h4>
-                    <p className="text-xs text-slate-500">
-                      Cron Endpoint <code className="font-mono text-emerald-700">/api/inventory-software/backup/cron-daily</code>{' '}
-                      runs automatically via Vercel &amp; Railway every day.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    disabled={backupBusy}
-                    onClick={() => handleCreateDailySqlBackup(null)}
-                    className="px-3.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold"
-                  >
-                    + Snapshot to Vault Now
-                  </button>
-                </div>
-
-                <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                  <table className="w-full text-xs">
-                    <thead className="bg-slate-900 text-white uppercase text-[10px]">
-                      <tr>
-                        <th className="py-3 px-4 text-left">Backup Code &amp; Date</th>
-                        <th className="py-3 px-4 text-left">Trigger Source</th>
-                        <th className="py-3 px-4 text-center">Tables &amp; Rows</th>
-                        <th className="py-3 px-4 text-left">SHA-512 Quantum Checksum</th>
-                        <th className="py-3 px-4 text-right">Download / 1-Click Restore</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {dailyBackups.length === 0 ? (
-                        <tr>
-                          <td colSpan={5} className="py-8 text-center text-slate-400">
-                            No vault backups recorded yet. Click "Create &amp; Download Full .SQL Backup" above.
-                          </td>
-                        </tr>
-                      ) : (
-                        dailyBackups.map(b => (
-                          <tr key={b.id} className="hover:bg-slate-50">
-                            <td className="py-3 px-4 font-mono">
-                              <div className="font-bold text-slate-900">{b.backup_code}</div>
-                              <div className="text-[10px] text-slate-500">
-                                {new Date(b.created_at).toLocaleString()} (By @{b.created_by})
-                              </div>
-                            </td>
-                            <td className="py-3 px-4">
-                              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 font-bold text-[10px] uppercase">
-                                {b.trigger_type}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 text-center font-mono font-bold">
-                              {b.tables_count} Tables • {Number(b.rows_count).toLocaleString()} Rows
-                            </td>
-                            <td className="py-3 px-4 font-mono text-[10px] text-slate-500 max-w-xs truncate">
-                              {b.checksum_sha512}
-                            </td>
-                            <td className="py-3 px-4 text-right">
-                              <div className="inline-flex items-center gap-1.5">
-                                <button
-                                  type="button"
-                                  onClick={() => handleDownloadVaultBackup(b.id, b.backup_code, 'sql')}
-                                  className="px-2.5 py-1 rounded-lg bg-slate-900 hover:bg-slate-800 text-white font-bold"
-                                >
-                                  .SQL
-                                </button>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDownloadVaultBackup(b.id, b.backup_code, 'json')}
-                                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold"
-                                >
-                                  .JSON
-                                </button>
-                                <button
-                                  type="button"
-                                  disabled={backupBusy}
-                                  onClick={() => handleRestoreFromVault(b)}
-                                  className="px-3 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 font-black uppercase"
-                                >
-                                  Restore SQL
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+          {activeView === 'audit' && (
+            <StocktakeAuditView
+              items={items}
+              onReconcileAudit={async ({ auditEntries, notes }) => {
+                const counts = auditEntries.map(e => ({
+                  metaId: e.metaId,
+                  physicalCountedQty: e.physicalStock,
+                }));
+                await api.post('/inventory-software/keeper/audit-reconcile', { counts, auditNote: notes }, reqConfig);
+                await fetchBootstrapData(true);
+              }}
+            />
           )}
 
-          {/* =================================================================
-              VIEW 11: TIME-MACHINE REPORTS & POS INVOICES
-             ================================================================= */}
-          {activeView === 'rep' && (
-                <div className="pos-reports-panel grid grid-cols-1 lg:grid-cols-12 gap-6">
-              <div className="lg:col-span-4 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-                <h3 className="text-base font-black uppercase text-slate-900">Time-Machine POS Reports</h3>
-                <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">Filter by Date</label>
-                  <input
-                    type="date"
-                    value={reportDate}
-                    onChange={e => setReportDate(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono font-bold text-xs"
-                  />
-                </div>
-                <div>
-                  <label className="block text-[10px] font-bold uppercase text-slate-500 mb-1">
-                    Or Search Invoice # / Customer
-                  </label>
-                  <input
-                    type="text"
-                    value={reportSearchInv}
-                    onChange={e => setReportSearchInv(e.target.value)}
-                    placeholder="e.g. BV-POS-2026-00001"
-                    className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 text-xs"
-                  />
-                </div>
-
-                <div className="p-4 rounded-xl bg-emerald-50 border border-emerald-200 space-y-1">
-                  <div className="text-[10px] font-bold uppercase text-emerald-800">Selected Period POS Revenue</div>
-                  <div className="text-2xl font-black text-emerald-700 font-mono">
-                    ₹
-                    {filteredReportSales
-                      .filter(s => s.status !== 'cancelled')
-                      .reduce((sum, s) => sum + (Number(s.billTotal) || 0), 0)
-                      .toLocaleString()}
-                  </div>
-                  <div className="text-[11px] text-emerald-700">
-                    {filteredReportSales.length} POS Invoices Generated
-                  </div>
-                </div>
-
-                <div className="space-y-2 pt-2 border-t border-slate-100">
-                  <button
-                    type="button"
-                    onClick={() => handleCreateDailySqlBackup('sql')}
-                    className="w-full py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold"
-                  >
-                    Download Full Daily SQL Backup (.sql)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setReportDate('')}
-                    className="w-full py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-xs font-bold text-slate-700"
-                  >
-                    Show All Historical Invoices
-                  </button>
-                </div>
-              </div>
-
-              <div className="lg:col-span-8 bg-white rounded-2xl p-5 border border-slate-200 shadow-sm">
-                <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                  <table className="w-full text-sm">
-                    <thead className="bg-slate-900 text-white uppercase text-xs">
-                      <tr>
-                        <th className="py-3 px-4 text-left">Invoice # &amp; Time</th>
-                        <th className="py-3 px-4 text-left">Customer</th>
-                        <th className="py-3 px-4 text-left">Items</th>
-                        <th className="py-3 px-4 text-right">Bill Total</th>
-                        <th className="py-3 px-4 text-center">Status</th>
-                        <th className="py-3 px-4 text-right">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {filteredReportSales.length === 0 ? (
-                        <tr>
-                          <td colSpan={6} className="py-10 text-center text-slate-400">
-                            No POS invoices found for this filter.
-                          </td>
-                        </tr>
-                      ) : (
-                        filteredReportSales.map(s => (
-                          <tr key={s.id} className="hover:bg-slate-50">
-                            <td className="py-3 px-4 font-mono">
-                              <div className="font-bold text-slate-900">{s.invoiceNo}</div>
-                              <div className="text-xs text-slate-300">{new Date(s.date).toLocaleString()}</div>
-                            </td>
-                            <td className="py-3 px-4 font-bold">{s.cust?.name}</td>
-                            <td className="py-3 px-4 text-xs text-slate-300">
-                              {(s.items || []).map(i => `${i.name} (x${i.q})`).join(', ')}
-                            </td>
-                            <td className="py-3 px-4 text-right font-mono font-bold">₹{s.billTotal}</td>
-                            <td className="py-3 px-4 text-center">
-                              <span
-                                className={`px-2 py-0.5 rounded-full text-[10px] font-bold uppercase ${
-                                  s.status === 'cancelled'
-                                    ? 'bg-rose-100 text-rose-700'
-                                    : 'bg-emerald-100 text-emerald-800'
-                                }`}
-                              >
-                                {s.status || 'completed'}
-                              </span>
-                            </td>
-                            <td className="py-3 px-4 text-right">
-                              <div className="inline-flex items-center gap-1">
-                                <button
-                                  type="button"
-                                  onClick={() => {
-                                    setViewingSale(s);
-                                    setActiveModal('view-sale');
-                                  }}
-                                  className="px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-100 border border-slate-500 font-bold"
-                                >
-                                  Inspect / Print
-                                </button>
-                              </div>
-                            </td>
-                          </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
+          {activeView === 'scanner' && (
+            <ScannerBridgeView
+              pairingQrUrl={pairingQrUrl}
+              pairingKey={scannerPairingKey}
+              scannerQueue={scannerQueue}
+              onPullQueueToPos={handlePullMobileScannerQueueToPos}
+              onClearQueue={async () => {
+                await api.post('/inventory-software/scanner/queue/clear', { sessionCode: posSessionCode }, reqConfig).catch(() => {});
+                setScannerQueue([]);
+                showNotice('success', 'Scanner queue cleared.');
+              }}
+              onRegenerateKey={async () => {
+                const res = await api.post('/inventory-software/scanner/regenerate-key', {}, reqConfig);
+                if (res.data?.success) {
+                  setScannerPairingKey(res.data.key);
+                  showNotice('success', 'Scanner pairing key regenerated.');
+                }
+              }}
+            />
           )}
 
-          {/* =================================================================
-              VIEW 12: UNIFIED STOCK MOVEMENT LEDGER & 512-BIT AUDIT TRAIL
-             ================================================================= */}
-          {activeView === 'logs' && (
-            <div className="bg-white rounded-2xl p-5 border border-slate-200 shadow-sm space-y-4">
-              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-100 pb-4">
-                <div className="flex items-center gap-2">
-                  <button
-                    type="button"
-                    onClick={() => setLogSubTab('movements')}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold ${
-                      logSubTab === 'movements' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
-                    }`}
-                  >
-                    1. Omnichannel Stock Movement Ledger ({movements.length})
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setLogSubTab('audit')}
-                    className={`px-4 py-2 rounded-xl text-xs font-bold ${
-                      logSubTab === 'audit' ? 'bg-slate-900 text-white' : 'bg-slate-100 text-slate-700'
-                    }`}
-                  >
-                    2. 512-Bit Cryptographic Operations Audit ({logs.length})
-                  </button>
-                </div>
-              </div>
-
-              {logSubTab === 'movements' ? (
-                <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                  <table className="w-full text-xs">
-                    <thead className="bg-slate-900 text-white uppercase text-[10px]">
-                      <tr>
-                        <th className="py-3 px-4 text-left">Timestamp</th>
-                        <th className="py-3 px-4 text-left">Type</th>
-                        <th className="py-3 px-4 text-left">Product / SKU</th>
-                        <th className="py-3 px-4 text-center">Before → Delta → After</th>
-                        <th className="py-3 px-4 text-left">Bin / Reference</th>
-                        <th className="py-3 px-4 text-left">Operator &amp; Reason</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {movements.map(m => (
-                        <tr key={m.id} className="hover:bg-slate-50">
-                          <td className="py-2.5 px-4 font-mono text-[11px] text-slate-500">
-                            {new Date(m.created_at).toLocaleString()}
-                          </td>
-                          <td className="py-2.5 px-4">
-                            <span className="px-2 py-0.5 rounded bg-slate-100 font-mono font-bold text-[10px]">
-                              {m.movement_type}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-4">
-                            <div className="font-bold text-slate-900">{m.product_name}</div>
-                            <div className="text-[10px] font-mono text-slate-500">{m.sku}</div>
-                          </td>
-                          <td className="py-2.5 px-4 text-center font-mono font-bold">
-                            <span className="text-slate-500">{m.qty_before}</span> →{' '}
-                            <span className={m.qty_delta >= 0 ? 'text-emerald-600' : 'text-rose-600'}>
-                              {m.qty_delta >= 0 ? `+${m.qty_delta}` : m.qty_delta}
-                            </span>{' '}
-                            → <span className="text-slate-900">{m.qty_after}</span>
-                          </td>
-                          <td className="py-2.5 px-4 font-mono text-[11px]">
-                            <div>Bin: {m.bin_code || '-'}</div>
-                            {m.reference_id && <div className="text-emerald-700">Ref: {m.reference_id}</div>}
-                          </td>
-                          <td className="py-2.5 px-4">
-                            <div className="font-bold text-slate-800">@{m.operator_username}</div>
-                            <div className="text-[11px] text-slate-500">{m.reason}</div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              ) : (
-                <div className="overflow-x-auto border border-slate-200 rounded-xl">
-                  <table className="w-full text-xs">
-                    <thead className="bg-slate-900 text-white uppercase text-[10px]">
-                      <tr>
-                        <th className="py-3 px-4 text-left">Timestamp</th>
-                        <th className="py-3 px-4 text-left">Operator</th>
-                        <th className="py-3 px-4 text-left">Action Code</th>
-                        <th className="py-3 px-4 text-left">Activity Details</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-slate-200">
-                      {logs.map(l => (
-                        <tr key={l.id} className="hover:bg-slate-50">
-                          <td className="py-2.5 px-4 font-mono text-[11px] text-slate-500">
-                            {new Date(l.t).toLocaleString()}
-                          </td>
-                          <td className="py-2.5 px-4 font-bold">
-                            @{l.user} <span className="text-[10px] text-slate-400 uppercase">({l.role})</span>
-                          </td>
-                          <td className="py-2.5 px-4">
-                            <span className="px-2 py-0.5 rounded bg-emerald-100 text-emerald-800 font-mono font-bold text-[10px]">
-                              {l.act}
-                            </span>
-                          </td>
-                          <td className="py-2.5 px-4 text-slate-700">{l.msg}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+          {(activeView === 'rep' || activeView === 'logs' || activeView === 'trans') && (
+            <ReportsLogsView
+              movements={movements}
+              logs={logs}
+              items={items}
+            />
           )}
         </main>
       </div>
@@ -5896,195 +3276,9 @@ export default function InventorySoftware() {
         </div>
       )}
 
-      {/* =====================================================================
-          MODAL: CUSTOMER ADD / EDIT
-         ===================================================================== */}
-      {activeModal === 'customer' && editingCustomer && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <form onSubmit={handleSaveCustomer} className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-xs">
-            <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="text-base font-black uppercase">Customer &amp; Khata Profile</h3>
-              <button type="button" onClick={() => setActiveModal(null)}>
-                ✕
-              </button>
-            </div>
-            <div>
-              <label className="block font-bold uppercase text-slate-600 mb-1">Customer / Business Name *</label>
-              <input
-                type="text"
-                required
-                value={editingCustomer.name}
-                onChange={e => setEditingCustomer(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Phone / WhatsApp *</label>
-                <input
-                  type="text"
-                  required
-                  value={editingCustomer.phone}
-                  onChange={e => setEditingCustomer(prev => ({ ...prev, phone: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
-                />
-              </div>
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Customer GSTIN</label>
-                <input
-                  type="text"
-                  value={editingCustomer.gstin || ''}
-                  onChange={e => setEditingCustomer(prev => ({ ...prev, gstin: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block font-bold uppercase text-slate-600 mb-1">City / Address</label>
-              <input
-                type="text"
-                value={editingCustomer.loc || ''}
-                onChange={e => setEditingCustomer(prev => ({ ...prev, loc: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Segment</label>
-                <select
-                  value={editingCustomer.type || 'Walk-in'}
-                  onChange={e => setEditingCustomer(prev => ({ ...prev, type: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-                >
-                  <option value="Walk-in">Walk-in</option>
-                  <option value="Retail Shop">Retail Shop</option>
-                  <option value="Salon / Spa Partner">Salon / Spa Partner</option>
-                  <option value="Wholesale Distributor">Wholesale Distributor</option>
-                  <option value="VIP Patron">VIP Patron</option>
-                </select>
-              </div>
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Credit Limit (₹)</label>
-                <input
-                  type="number"
-                  value={editingCustomer.creditLimit || 50000}
-                  onChange={e => setEditingCustomer(prev => ({ ...prev, creditLimit: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono font-bold"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <button type="submit" className="flex-1 py-3 rounded-xl bg-emerald-600 text-white font-black uppercase">
-                Save Customer
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveModal(null)}
-                className="px-5 py-3 rounded-xl bg-slate-100 font-bold"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      
 
-      {/* =====================================================================
-          MODAL: KHATA TRANSACTION (ADD DEBT / RECEIVE PAYMENT + PROOF)
-         ===================================================================== */}
-      {activeModal === 'khata' && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <form onSubmit={handleExecuteKhataTx} className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-xs">
-            <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="text-base font-black uppercase">Khata Ledger Transaction — {khataForm.customerName}</h3>
-              <button type="button" onClick={() => setActiveModal(null)}>
-                ✕
-              </button>
-            </div>
-            <div className="p-3 rounded-xl bg-amber-50 border border-amber-200 text-center">
-              <div className="text-[11px] text-amber-800 font-bold">Current Khata Balance</div>
-              <div className="text-2xl font-black text-amber-900 font-mono">₹{khataForm.currentBal}</div>
-            </div>
-            <div>
-              <label className="block font-bold uppercase text-slate-600 mb-1">Transaction Type</label>
-              <select
-                value={khataForm.type}
-                onChange={e => setKhataForm(prev => ({ ...prev, type: e.target.value }))}
-                className="w-full px-3 py-2.5 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-              >
-                <option value="RECEIVE_PAYMENT">Receive Payment (Clears Customer Debt)</option>
-                <option value="ADD_DEBT">Add Credit Debt (Gave Goods on Credit)</option>
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Amount (₹) *</label>
-                <input
-                  type="number"
-                  min={1}
-                  required
-                  value={khataForm.amount}
-                  onChange={e => setKhataForm(prev => ({ ...prev, amount: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono font-bold text-sm"
-                />
-              </div>
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Mode</label>
-                <select
-                  value={khataForm.paymentMode}
-                  onChange={e => setKhataForm(prev => ({ ...prev, paymentMode: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-                >
-                  <option value="UPI">UPI</option>
-                  <option value="Cash">Cash</option>
-                  <option value="Bank Transfer">Bank NEFT/IMPS</option>
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className="block font-bold uppercase text-slate-600 mb-1">Reference Note</label>
-              <input
-                type="text"
-                value={khataForm.note}
-                onChange={e => setKhataForm(prev => ({ ...prev, note: e.target.value }))}
-                placeholder="e.g. UTR # / Cash Receipt"
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300"
-              />
-            </div>
-            {khataForm.type === 'RECEIVE_PAYMENT' && (
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">
-                  Upload Payment Screenshot / Slip (Optional)
-                </label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={e => {
-                    const f = e.target.files?.[0];
-                    if (!f) return;
-                    const r = new FileReader();
-                    r.onload = ev => setKhataForm(prev => ({ ...prev, proofBase64: ev.target.result }));
-                    r.readAsDataURL(f);
-                  }}
-                  className="w-full text-xs"
-                />
-              </div>
-            )}
-            <div className="flex gap-2 pt-2">
-              <button type="submit" className="flex-1 py-3 rounded-xl bg-emerald-600 text-white font-black uppercase">
-                Record Transaction
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveModal(null)}
-                className="px-5 py-3 rounded-xl bg-slate-100 font-bold"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      
 
       {/* =====================================================================
           MODAL: STORAGE BIN CREATE / EDIT
@@ -6518,148 +3712,9 @@ export default function InventorySoftware() {
         </div>
       )}
 
-      {/* =====================================================================
-          MODAL: STORE & BILLING SETTINGS
-         ===================================================================== */}
-      {activeModal === 'settings' && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-xs">
-            <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="text-base font-black uppercase">Store &amp; Billing Configuration</h3>
-              <button type="button" onClick={() => setActiveModal(null)}>
-                ✕
-              </button>
-            </div>
-            <div>
-              <label className="block font-bold uppercase text-slate-600 mb-1">Business / Store Name</label>
-              <input
-                type="text"
-                value={cfg.storeName}
-                onChange={e => setCfg(prev => ({ ...prev, storeName: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-              />
-            </div>
-            <div>
-              <label className="block font-bold uppercase text-slate-600 mb-1">Registered Address</label>
-              <input
-                type="text"
-                value={cfg.address}
-                onChange={e => setCfg(prev => ({ ...prev, address: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Phone</label>
-                <input
-                  type="text"
-                  value={cfg.phone}
-                  onChange={e => setCfg(prev => ({ ...prev, phone: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
-                />
-              </div>
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">GSTIN</label>
-                <input
-                  type="text"
-                  value={cfg.gstin}
-                  onChange={e => setCfg(prev => ({ ...prev, gstin: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block font-bold uppercase text-slate-600 mb-1">UPI ID (for Live POS QR Code)</label>
-              <input
-                type="text"
-                value={cfg.upiId}
-                onChange={e => setCfg(prev => ({ ...prev, upiId: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
-              />
-            </div>
-            <div className="flex gap-2 pt-2">
-              <button
-                type="button"
-                onClick={async () => {
-                  try {
-                    await api.put('/inventory-software/config', cfg, reqConfig);
-                    showNotice('success', 'Store settings saved.');
-                    setActiveModal(null);
-                  } catch (err) {
-                    showNotice('error', err.response?.data?.message || 'Could not save settings.');
-                  }
-                }}
-                className="flex-1 py-3 rounded-xl bg-emerald-600 text-white font-black uppercase"
-              >
-                Save Configuration
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveModal(null)}
-                className="px-5 py-3 rounded-xl bg-slate-100 font-bold"
-              >
-                Cancel
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      
 
-      {/* =====================================================================
-          MODAL: MANAGE CATEGORIES
-         ===================================================================== */}
-      {activeModal === 'cats' && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-xs">
-            <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="text-base font-black uppercase">Product Categories</h3>
-              <button type="button" onClick={() => setActiveModal(null)}>
-                ✕
-              </button>
-            </div>
-            <div className="flex gap-2">
-              <input
-                type="text"
-                value={newCategoryName}
-                onChange={e => setNewCategoryName(e.target.value)}
-                placeholder="New Category Name…"
-                className="flex-1 px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-              />
-              <button
-                type="button"
-                onClick={async () => {
-                  if (!newCategoryName.trim()) return;
-                  const nextCats = [...new Set([...(cfg.cats || []), newCategoryName.trim()])];
-                  setCfg(prev => ({ ...prev, cats: nextCats }));
-                  setNewCategoryName('');
-                  await api.put('/inventory-software/config', { ...cfg, cats: nextCats }, reqConfig).catch(() => {});
-                }}
-                className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-bold"
-              >
-                Add
-              </button>
-            </div>
-            <div className="divide-y max-h-60 overflow-y-auto">
-              {(cfg.cats || []).map(c => (
-                <div key={c} className="py-2 flex items-center justify-between">
-                  <span className="font-semibold">{c}</span>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      const nextCats = (cfg.cats || []).filter(x => x !== c);
-                      setCfg(prev => ({ ...prev, cats: nextCats }));
-                      await api.put('/inventory-software/config', { ...cfg, cats: nextCats }, reqConfig).catch(() => {});
-                    }}
-                    className="text-rose-500 font-bold"
-                  >
-                    Remove
-                  </button>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
+      
 
       {/* =====================================================================
           MODAL: USER PROFILE, BIOMETRIC PASSKEYS & 2FA AUTHENTICATOR
@@ -7129,6 +4184,55 @@ export default function InventorySoftware() {
             </form>
           </div>
         </div>
+      )}
+
+      {/* =====================================================================
+          NEW WMS MODALS: WAVE PICKING, MANIFEST, VERIFY PACK, RETURN QC, THERMAL
+         ===================================================================== */}
+      {activeWavePicklist && (
+        <WavePicklistModal
+          picklist={activeWavePicklist}
+          onClose={() => setActiveWavePicklist(null)}
+        />
+      )}
+
+      {activeManifest && (
+        <ManifestPrintModal
+          manifest={activeManifest}
+          onClose={() => setActiveManifest(null)}
+        />
+      )}
+
+      {verifyPackingOrder && (
+        <PackingVerifyModal
+          order={verifyPackingOrder}
+          onClose={() => setVerifyPackingOrder(null)}
+          onPackComplete={async (orderId) => {
+            await handleUpdateOnlineOrderStatus(orderId, 'packed');
+            const matched = onlineOrders.find(o => o.id === orderId);
+            if (matched) setThermalLabelOrder(matched);
+          }}
+          reqConfig={reqConfig}
+        />
+      )}
+
+      {returnQcOrder && (
+        <ReturnQcModal
+          order={returnQcOrder}
+          onClose={() => setReturnQcOrder(null)}
+          onQcComplete={async (orderId, grade) => {
+            showNotice('success', `Order #${orderId} return QC recorded as ${grade}.`);
+            await fetchBootstrapData(true);
+          }}
+          reqConfig={reqConfig}
+        />
+      )}
+
+      {thermalLabelOrder && (
+        <ThermalLabelModal
+          order={thermalLabelOrder}
+          onClose={() => setThermalLabelOrder(null)}
+        />
       )}
     </div>
   );
