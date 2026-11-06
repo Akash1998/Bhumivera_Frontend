@@ -14,35 +14,35 @@ export default function ThermalLabelModal({ order, onClose }) {
   const courier = (order.courier || 'Delhivery Express').toUpperCase();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-md w-full flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 overflow-y-auto">
+      <div className="bg-[#0c261b] text-white rounded-2xl shadow-2xl border border-emerald-500/40 max-w-md w-full flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Modal Controls */}
-        <div className="p-4 border-b border-slate-200 flex items-center justify-between bg-slate-50 print:hidden">
+        <div className="p-4 border-b border-emerald-500/30 flex items-center justify-between bg-[#071711] print:hidden">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">4×6″ Thermal Courier Label</h3>
-            <p className="text-[11px] text-slate-500">Order #{order.orderNumber} • {courier}</p>
+            <h3 className="text-sm font-black uppercase text-white tracking-wide">4×6″ Thermal Courier Label</h3>
+            <p className="text-[11px] text-emerald-300 font-medium">Order #{order.orderNumber} • {courier}</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition"
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-black uppercase bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl shadow-md transition"
             >
               <Printer className="w-3.5 h-3.5" /> Print 4×6″
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition"
+              className="text-slate-300 hover:text-white hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition"
             >
               <X className="w-4 h-4" />
             </button>
           </div>
         </div>
 
-        {/* 4x6 Shipping Label Container */}
-        <div className="p-6 bg-slate-100 flex justify-center overflow-y-auto">
+        {/* 4x6 Shipping Label Container (White Background with Black Thermal Ink) */}
+        <div className="p-6 bg-[#040e0a] flex justify-center overflow-y-auto">
           <div
             ref={printAreaRef}
-            className="w-[360px] min-h-[520px] bg-white border-2 border-black p-4 text-black flex flex-col justify-between font-sans shadow-lg print:border-none print:shadow-none print:w-full print:h-full print:p-2"
+            className="w-[360px] min-h-[520px] bg-white border-2 border-black p-4 text-black flex flex-col justify-between font-sans shadow-2xl print:border-none print:shadow-none print:w-full print:h-full print:p-2"
           >
             {/* Carrier Banner & Routing */}
             <div className="border-b-2 border-black pb-2 flex items-center justify-between">
@@ -89,17 +89,17 @@ export default function ThermalLabelModal({ order, onClose }) {
               <div className="text-[9px] uppercase font-bold text-slate-600">Ship To (Consignee)</div>
               <div className="text-xs font-black">{order.customerName}</div>
               <div className="text-[11px] leading-tight text-slate-800">
-                {order.addressLine1 || 'Maison Address Details'}
+                {order.addressLine1 || order.line1 || 'Patron Delivery Destination'}
                 <br />
                 {order.city}, {order.state} - {order.pincode}
               </div>
               <div className="text-[11px] font-bold font-mono">TEL: {order.customerPhone}</div>
             </div>
 
-            {/* Items Summary */}
+            {/* Items Summary with HSN */}
             <div className="py-2 border-b-2 border-black text-[10px]">
               <div className="font-bold flex justify-between">
-                <span>Contents: Botanical Cleansers & Formulations</span>
+                <span>Contents: Formulations • HSN: 30049011</span>
                 <span>Qty: {order.items?.length || 1} SKU(s)</span>
               </div>
               <div className="text-slate-600 truncate mt-0.5">
@@ -119,7 +119,7 @@ export default function ThermalLabelModal({ order, onClose }) {
               </div>
               <div className="text-right">
                 <div className="font-black">BHUMIVERA</div>
-                <div className="text-[8px] text-slate-500 font-mono">Invoice #{order.orderNumber}</div>
+                <div className="text-[8px] text-slate-500 font-mono">Order #{order.orderNumber}</div>
               </div>
             </div>
           </div>

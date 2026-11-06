@@ -53,10 +53,8 @@ export default function ShippingLabelsView({
 
   const handleBulkPrint = () => {
     if (selectedOrderIds.length === 0) return;
-    window.print();
-    if (onMarkLabelsPrinted) {
-      onMarkLabelsPrinted(selectedOrderIds);
-    }
+    const firstMatched = labelOrders.find(o => selectedOrderIds.includes(o.id));
+    if (firstMatched) onOpenThermalLabel(firstMatched);
   };
 
   const handleCreateManifest = () => {
@@ -65,30 +63,30 @@ export default function ShippingLabelsView({
   };
 
   return (
-    <div className="space-y-4 animate-in fade-in duration-150">
+    <div className="space-y-4 animate-in fade-in duration-150 w-full max-w-full overflow-x-hidden">
       {/* Top Controls */}
-      <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
-        <div className="flex flex-wrap items-center gap-2 flex-1">
+      <div className="bg-[#0c261b] p-4 rounded-2xl border border-emerald-500/30 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2 flex-1 min-w-0">
           <div className="relative min-w-[220px] max-w-md flex-1">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Filter by Order #, Recipient, AWB, Pincode..."
-              className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 font-medium"
+              className="w-full pl-9 pr-3 py-2 text-xs bg-[#071711] text-white border border-emerald-500/40 rounded-xl focus:border-emerald-400 focus:outline-none font-medium placeholder-slate-400"
             />
           </div>
 
-          <div className="flex bg-slate-100 p-1 rounded-xl text-xs font-semibold">
+          <div className="flex items-center gap-1 overflow-x-auto py-1 max-w-full scrollbar-thin">
             {['ALL', 'delhivery', 'shiprocket'].map((c) => (
               <button
                 key={c}
                 onClick={() => setCarrierFilter(c)}
-                className={`px-3 py-1.5 rounded-lg uppercase transition ${
+                className={`px-3 py-1.5 rounded-xl text-xs uppercase font-bold transition ${
                   carrierFilter === c
-                    ? 'bg-white text-indigo-700 shadow-sm font-bold'
-                    : 'text-slate-600 hover:text-slate-900'
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm'
+                    : 'bg-[#071711] text-slate-300 hover:text-white hover:bg-emerald-950/50 border border-emerald-500/25'
                 }`}
               >
                 {c}
@@ -98,20 +96,20 @@ export default function ShippingLabelsView({
         </div>
 
         {/* Bulk Action Buttons */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           {selectedOrderIds.length > 0 && (
             <>
               <button
                 onClick={handleBulkPrint}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm transition"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-black uppercase bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl shadow-md transition"
               >
                 <Printer className="w-4 h-4" /> Bulk Print 4×6″ ({selectedOrderIds.length})
               </button>
               <button
                 onClick={handleCreateManifest}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-bold bg-slate-900 hover:bg-black text-white rounded-xl shadow-sm transition"
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-black uppercase bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 rounded-xl shadow-sm transition"
               >
-                <FileText className="w-4 h-4" /> Generate Manifest ({selectedOrderIds.length})
+                <FileText className="w-4 h-4 text-emerald-400" /> Generate Manifest ({selectedOrderIds.length})
               </button>
             </>
           )}
@@ -119,27 +117,27 @@ export default function ShippingLabelsView({
       </div>
 
       {/* Shipping Labels Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-slate-700 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200">
+      <div className="bg-[#0c261b] rounded-2xl border border-emerald-500/30 shadow-xl overflow-hidden w-full max-w-full">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left text-xs min-w-[750px]">
+            <thead className="bg-[#071711] text-emerald-300 uppercase font-bold text-[10px] tracking-wider border-b border-emerald-500/30">
               <tr>
-                <th className="px-4 py-3 text-center">
+                <th className="px-4 py-3 text-center w-10">
                   <input
                     type="checkbox"
                     checked={selectedOrderIds.length > 0 && selectedOrderIds.length === labelOrders.length}
                     onChange={handleSelectAll}
-                    className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                    className="rounded border-emerald-500/50 text-emerald-600 focus:ring-emerald-500 bg-[#071711] w-4 h-4 cursor-pointer"
                   />
                 </th>
                 <th className="px-4 py-3">Order Number</th>
-                <th className="px-4 py-3">Recipient & Address</th>
-                <th className="px-4 py-3">Carrier & Tracking</th>
+                <th className="px-4 py-3">Recipient &amp; Destination</th>
+                <th className="px-4 py-3">Carrier &amp; Tracking</th>
                 <th className="px-4 py-3 text-center">Label Status</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-emerald-500/15">
               {labelOrders.length > 0 ? (
                 labelOrders.map((order) => {
                   const isSelected = selectedOrderIds.includes(order.id);
@@ -148,8 +146,8 @@ export default function ShippingLabelsView({
                   return (
                     <tr
                       key={order.id}
-                      className={`hover:bg-slate-50/80 transition ${
-                        isSelected ? 'bg-indigo-50/40' : ''
+                      className={`hover:bg-emerald-950/30 transition ${
+                        isSelected ? 'bg-emerald-950/50' : ''
                       }`}
                     >
                       <td className="px-4 py-3 text-center">
@@ -157,67 +155,62 @@ export default function ShippingLabelsView({
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleSelect(order.id)}
-                          className="rounded border-slate-300 text-indigo-600 focus:ring-indigo-500 w-4 h-4 cursor-pointer"
+                          className="rounded border-emerald-500/50 text-emerald-600 focus:ring-emerald-500 bg-[#071711] w-4 h-4 cursor-pointer"
                         />
                       </td>
 
-                      <td className="px-4 py-3 font-mono font-bold text-slate-900">
+                      <td className="px-4 py-3 font-mono font-bold text-white">
                         {order.orderNumber}
-                        <div className="text-[10px] text-slate-400 font-sans font-normal">
-                          {order.items?.length || 1} SKU(s) • ₹{order.total}
+                        <div className="text-[10px] text-slate-300 font-sans">
+                          {order.items?.length || 1} SKU(s) • ₹{order.total} • HSN: 30049011
                         </div>
                       </td>
 
                       <td className="px-4 py-3">
-                        <div className="font-semibold text-slate-800">{order.customerName}</div>
-                        <div className="text-[11px] text-slate-500">
-                          {order.city}, {order.state} - {order.pincode}
-                        </div>
+                        <div className="font-semibold text-white">{order.customerName}</div>
+                        <div className="text-[10px] text-slate-300">{order.city}, {order.state} ({order.pincode})</div>
                       </td>
 
-                      <td className="px-4 py-3">
-                        {hasLabel ? (
+                      <td className="px-4 py-3 font-mono">
+                        {order.trackingNumber ? (
                           <div>
-                            <div className="font-mono font-bold text-indigo-700">{order.trackingNumber}</div>
-                            <div className="text-[10px] text-slate-500 uppercase">{order.courier || 'Express'}</div>
+                            <span className="font-bold text-emerald-300 text-xs">{order.trackingNumber}</span>
+                            <div className="text-[10px] text-slate-400 capitalize">{order.courier || 'Express'}</div>
                           </div>
                         ) : (
-                          <span className="text-[10px] text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                            Ready to Book
-                          </span>
+                          <span className="text-[10px] text-slate-400 italic">No AWB assigned</span>
                         )}
                       </td>
 
                       <td className="px-4 py-3 text-center">
-                        {order.labelPrintedAt ? (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
-                            <CheckCircle2 className="w-3 h-3" /> Printed
+                        {hasLabel ? (
+                          <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                            Printed / Active
                           </span>
                         ) : (
-                          <span className="inline-flex items-center gap-1 text-[10px] font-bold text-slate-600 bg-slate-100 px-2.5 py-0.5 rounded-full">
-                            Pending Print
+                          <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                            Needs Label
                           </span>
                         )}
                       </td>
 
                       <td className="px-4 py-3 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <button
-                            onClick={() => onOpenThermalLabel(order)}
-                            className="inline-flex items-center gap-1 px-3 py-1 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs font-bold transition shadow-sm"
-                          >
-                            <Printer className="w-3.5 h-3.5" /> 4×6″ Label
-                          </button>
-                        </div>
+                        <button
+                          onClick={() => onOpenThermalLabel(order)}
+                          className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-xs font-black uppercase tracking-wider transition shadow-sm"
+                        >
+                          <Printer className="w-3.5 h-3.5" />
+                          Print 4×6″
+                        </button>
                       </td>
                     </tr>
                   );
                 })
               ) : (
                 <tr>
-                  <td colSpan={6} className="text-center py-10 text-slate-400">
-                    <Truck className="w-8 h-8 mx-auto text-slate-300 mb-2" />
-                    No orders awaiting shipping labels.
+                  <td colSpan={6} className="text-center py-10 text-slate-300">
+                    <Truck className="w-8 h-8 mx-auto text-emerald-400/60 mb-2" />
+                    No orders matching shipping label criteria.
                   </td>
                 </tr>
               )}

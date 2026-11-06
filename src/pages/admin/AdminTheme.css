@@ -52,15 +52,88 @@
 }
 
 .inventory-shell [class~="text-slate-900"],
-.inventory-shell [class~="text-gray-900"] {
-  color: var(--admin-text) !important;
+.inventory-shell [class~="text-gray-900"],
+.inventory-shell [class~="text-black"] {
+  color: #ffffff !important;
 }
 
 .inventory-shell [class~="text-slate-800"],
+.inventory-shell [class~="text-gray-800"] {
+  color: #f8fafc !important;
+}
+
 .inventory-shell [class~="text-slate-700"],
-.inventory-shell [class~="text-gray-800"],
 .inventory-shell [class~="text-gray-700"] {
-  color: var(--admin-text-muted) !important;
+  color: #e2e8f0 !important;
+}
+
+.inventory-shell [class~="text-slate-600"],
+.inventory-shell [class~="text-gray-600"] {
+  color: #cbd5e1 !important;
+}
+
+.inventory-shell [class~="text-slate-500"],
+.inventory-shell [class~="text-gray-500"] {
+  color: #94a3b8 !important;
+}
+
+.inventory-shell h1,
+.inventory-shell h2,
+.inventory-shell h3,
+.inventory-shell h4,
+.inventory-shell h5,
+.inventory-shell h6 {
+  color: #ffffff !important;
+}
+
+.inventory-shell label {
+  color: #a7f3d0 !important;
+}
+
+/* Form Modals & Dialogs in Inventory Shell */
+.inventory-shell .fixed.inset-0 form,
+.inventory-shell .fixed.inset-0 > div > div,
+.inventory-shell .fixed.inset-0 > div:not([class*="bg-black"]) {
+  background-color: #0c261b !important;
+  color: #ffffff !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+.inventory-shell .fixed.inset-0 input,
+.inventory-shell .fixed.inset-0 select,
+.inventory-shell .fixed.inset-0 textarea {
+  background-color: #071711 !important;
+  color: #ffffff !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+.inventory-shell table thead th {
+  color: #34d399 !important;
+  background-color: #071a12 !important;
+  border-bottom: 1px solid rgba(52, 211, 153, 0.3) !important;
+}
+
+.inventory-shell table tbody tr {
+  border-color: rgba(52, 211, 153, 0.15) !important;
+}
+
+.inventory-shell table tbody td {
+  color: #f8fafc !important;
+}
+
+.inventory-shell table tbody tr:hover {
+  background-color: rgba(16, 51, 35, 0.6) !important;
+}
+
+.inventory-shell .fixed.inset-0 button[type="button"]:not([class*="bg-emerald"]):not([class*="bg-indigo"]):not([class*="bg-rose"]):not([class*="bg-teal"]) {
+  background-color: #1e293b !important;
+  color: #ffffff !important;
+  border-color: #475569 !important;
+}
+
+.inventory-shell .fixed.inset-0 button[type="button"]:not([class*="bg-emerald"]):not([class*="bg-indigo"]):not([class*="bg-rose"]):not([class*="bg-teal"]):hover {
+  background-color: #334155 !important;
+  color: #ffffff !important;
 }
 
 .inventory-shell .pos-reports-panel {

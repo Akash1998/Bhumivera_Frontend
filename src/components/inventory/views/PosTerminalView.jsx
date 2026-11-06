@@ -15,6 +15,8 @@ import {
   Printer,
   Sparkles,
   Zap,
+  ArrowRight,
+  ShieldCheck,
 } from 'lucide-react';
 
 export default function PosTerminalView({
@@ -55,7 +57,8 @@ export default function PosTerminalView({
         !q ||
         i.name?.toLowerCase().includes(q) ||
         i.sku?.toLowerCase().includes(q) ||
-        i.barcode?.includes(q);
+        i.barcode?.includes(q) ||
+        i.gstHsnCode?.includes(q);
       return matchCat && matchQ;
     });
   }, [items, productSearch, selectedCategory]);
@@ -77,7 +80,6 @@ export default function PosTerminalView({
     const raw = scanInput.trim();
     if (!raw) return;
 
-    // Resolve in items
     const matched = items.find(
       i =>
         i.barcode === raw ||
@@ -89,7 +91,7 @@ export default function PosTerminalView({
       addToCart(matched);
       setScanInput('');
     } else {
-      alert(`No product found matching barcode "${raw}"`);
+      alert(`No formulation found matching code "${raw}"`);
     }
   };
 
@@ -136,64 +138,64 @@ export default function PosTerminalView({
   };
 
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 animate-in fade-in duration-150">
+    <div className="grid grid-cols-1 lg:grid-cols-12 gap-5 animate-in fade-in duration-150 w-full max-w-full overflow-x-hidden">
       {/* Left Column: Fast Barcode Input & Catalog Grid (7 Cols) */}
-      <div className="lg:col-span-7 space-y-4">
+      <div className="lg:col-span-7 space-y-4 min-w-0">
         {/* Barcode Scanner Input */}
-        <div className="bg-white p-4 rounded-2xl border border-slate-200 shadow-sm flex items-center gap-3">
+        <div className="bg-[#0c261b] p-4 rounded-2xl border border-emerald-500/30 shadow-lg flex items-center gap-3">
           <form onSubmit={handleBarcodeSubmit} className="flex-1 flex gap-2">
             <div className="relative flex-1">
-              <Barcode className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Barcode className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" />
               <input
                 type="text"
                 value={scanInput}
                 onChange={(e) => setScanInput(e.target.value)}
                 placeholder="Scan EAN-13 Barcode or Type SKU (Enter to add)..."
                 autoFocus
-                className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 font-mono"
+                className="w-full pl-9 pr-3 py-2 text-xs bg-[#071711] text-white border border-emerald-500/40 rounded-xl focus:border-emerald-400 focus:outline-none font-mono placeholder-slate-400"
               />
             </div>
             <button
               type="submit"
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-sm"
+              className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black rounded-xl transition shadow-sm"
             >
-              Add
+              Add Item
             </button>
           </form>
 
           {scannerQueueCount > 0 && (
             <button
               onClick={onPullMobileScanner}
-              className="inline-flex items-center gap-1.5 px-3 py-2 bg-indigo-50 border border-indigo-200 text-indigo-700 rounded-xl text-xs font-bold hover:bg-indigo-100 transition shrink-0 animate-pulse"
+              className="px-3 py-2 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-xl text-xs font-bold shrink-0 hover:bg-amber-500/30 transition flex items-center gap-1.5"
             >
-              <Zap className="w-3.5 h-3.5 text-indigo-600" />
+              <Zap className="w-3.5 h-3.5 text-amber-400" />
               Pull Scanned ({scannerQueueCount})
             </button>
           )}
         </div>
 
-        {/* Product Search & Category Filters */}
-        <div className="space-y-2">
+        {/* Catalog Search & Filter Tabs */}
+        <div className="bg-[#0c261b] p-3 rounded-2xl border border-emerald-500/30 shadow-lg space-y-2">
           <div className="relative">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" />
             <input
               type="text"
               value={productSearch}
               onChange={(e) => setProductSearch(e.target.value)}
-              placeholder="Filter catalog products..."
-              className="w-full pl-9 pr-3 py-2 text-xs border border-slate-200 rounded-xl focus:ring-2 focus:ring-indigo-500 bg-white"
+              placeholder="Search formulations by name, SKU, or HSN (30049011)..."
+              className="w-full pl-9 pr-3 py-1.5 text-xs bg-[#071711] text-white border border-emerald-500/40 rounded-xl focus:border-emerald-400 focus:outline-none placeholder-slate-400 font-medium"
             />
           </div>
 
-          <div className="flex gap-1.5 overflow-x-auto pb-1 scrollbar-none">
+          <div className="flex items-center gap-1.5 overflow-x-auto py-1 max-w-full scrollbar-thin">
             {categories.map((cat) => (
               <button
                 key={cat}
                 onClick={() => setSelectedCategory(cat)}
-                className={`px-3 py-1.5 rounded-xl text-xs whitespace-nowrap font-medium transition ${
+                className={`px-3 py-1 rounded-xl text-[11px] whitespace-nowrap font-bold transition ${
                   selectedCategory === cat
-                    ? 'bg-slate-900 text-white font-bold'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                    ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm'
+                    : 'bg-[#071711] text-slate-300 hover:text-white hover:bg-emerald-950/50 border border-emerald-500/25'
                 }`}
               >
                 {cat}
@@ -208,17 +210,22 @@ export default function PosTerminalView({
             <div
               key={p.id}
               onClick={() => addToCart(p)}
-              className="bg-white p-3 rounded-xl border border-slate-200 shadow-sm hover:border-emerald-500 hover:shadow-md transition cursor-pointer flex flex-col justify-between group"
+              className="bg-[#0c261b] p-3.5 rounded-xl border border-emerald-500/30 shadow-sm hover:border-emerald-400 hover:shadow-emerald-950/40 transition cursor-pointer flex flex-col justify-between group"
             >
               <div>
-                <div className="text-[10px] font-mono text-slate-400 truncate">{p.sku}</div>
-                <h4 className="text-xs font-bold text-slate-900 group-hover:text-emerald-700 transition line-clamp-2 mt-0.5">
+                <div className="flex items-center justify-between text-[10px] font-mono text-emerald-300">
+                  <span className="truncate">{p.sku}</span>
+                  <span className="px-1.5 py-0.2 rounded bg-emerald-500/20 text-emerald-300 font-bold">
+                    HSN:{p.gstHsnCode || '30049011'}
+                  </span>
+                </div>
+                <h4 className="text-xs font-bold text-white group-hover:text-emerald-300 transition line-clamp-2 mt-1">
                   {p.name}
                 </h4>
               </div>
-              <div className="mt-3 flex items-center justify-between pt-2 border-t border-slate-100">
-                <span className="text-xs font-black text-slate-900">₹{p.price}</span>
-                <span className="text-[10px] text-slate-500">{p.qty || p.physicalStock} in stock</span>
+              <div className="mt-3 flex items-center justify-between pt-2 border-t border-emerald-500/20">
+                <span className="text-sm font-black text-white font-mono">₹{p.price}</span>
+                <span className="text-[10px] text-slate-300 font-medium">{p.qty || p.physicalStock} in stock</span>
               </div>
             </div>
           ))}
@@ -226,33 +233,33 @@ export default function PosTerminalView({
       </div>
 
       {/* Right Column: Active Cart & Checkout (5 Cols) */}
-      <div className="lg:col-span-5 bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col justify-between h-full min-h-[580px]">
+      <div className="lg:col-span-5 bg-[#0c261b] p-5 rounded-2xl border border-emerald-500/30 shadow-xl flex flex-col justify-between h-full min-h-[580px]">
         {/* Cart Header */}
-        <div className="border-b border-slate-100 pb-3 flex items-center justify-between">
+        <div className="border-b border-emerald-500/20 pb-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <ShoppingCart className="w-4 h-4 text-emerald-600" />
-            <h3 className="text-sm font-bold text-slate-900">Active Register Bill</h3>
+            <ShoppingCart className="w-4 h-4 text-emerald-400" />
+            <h3 className="text-sm font-black uppercase tracking-wider text-white">Active Register Bill</h3>
           </div>
-          <span className="text-xs font-mono font-bold text-slate-500">
+          <span className="text-xs font-mono font-bold text-emerald-300 bg-emerald-500/20 px-2 py-0.5 rounded-full border border-emerald-500/30">
             {posCart.reduce((sum, i) => sum + i.q, 0)} Items
           </span>
         </div>
 
         {/* Customer Quick Lookup */}
-        <div className="py-2.5 border-b border-slate-100 grid grid-cols-2 gap-2 text-xs">
+        <div className="py-2.5 border-b border-emerald-500/20 grid grid-cols-2 gap-2 text-xs">
           <input
             type="text"
             value={posCustomerForm.name}
             onChange={(e) => setPosCustomerForm(prev => ({ ...prev, name: e.target.value }))}
             placeholder="Shopper Name"
-            className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs"
+            className="px-2.5 py-1.5 bg-[#071711] text-white border border-emerald-500/40 rounded-lg text-xs placeholder-slate-400 focus:border-emerald-400 focus:outline-none"
           />
           <input
             type="text"
             value={posCustomerForm.phone}
             onChange={(e) => setPosCustomerForm(prev => ({ ...prev, phone: e.target.value }))}
             placeholder="Phone Number"
-            className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs font-mono"
+            className="px-2.5 py-1.5 bg-[#071711] text-white border border-emerald-500/40 rounded-lg text-xs font-mono placeholder-slate-400 focus:border-emerald-400 focus:outline-none"
           />
         </div>
 
@@ -262,32 +269,36 @@ export default function PosTerminalView({
             posCart.map((item, idx) => (
               <div
                 key={idx}
-                className="flex items-center justify-between p-2 rounded-xl bg-slate-50 border border-slate-100 text-xs"
+                className="flex items-center justify-between p-2.5 rounded-xl bg-[#071711] border border-emerald-500/30 text-xs"
               >
-                <div className="flex-1 mr-2">
-                  <div className="font-bold text-slate-900 truncate">{item.name}</div>
-                  <div className="text-[10px] font-mono text-slate-400">
-                    ₹{item.p} × {item.q}
+                <div className="flex-1 mr-2 min-w-0">
+                  <div className="font-bold text-white truncate">{item.name}</div>
+                  <div className="text-[10px] font-mono text-emerald-300 flex items-center gap-2 mt-0.5">
+                    <span>₹{item.p} × {item.q}</span>
+                    <span className="text-slate-400">|</span>
+                    <span className="bg-emerald-500/15 px-1 py-0.2 rounded text-[9px] text-emerald-400 font-bold">
+                      HSN: {item.gstHsnCode || '30049011'}
+                    </span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1.5 shrink-0">
                   <button
                     onClick={() => updateCartQty(idx, -1)}
-                    className="p-1 rounded bg-white border border-slate-200 hover:bg-slate-100 text-slate-700"
+                    className="p-1 rounded bg-[#0c261b] border border-emerald-500/40 hover:bg-emerald-900/40 text-white"
                   >
                     <Minus className="w-3 h-3" />
                   </button>
-                  <span className="font-bold font-mono px-1 text-slate-900">{item.q}</span>
+                  <span className="font-black font-mono px-1.5 text-white">{item.q}</span>
                   <button
                     onClick={() => updateCartQty(idx, 1)}
-                    className="p-1 rounded bg-white border border-slate-200 hover:bg-slate-100 text-slate-700"
+                    className="p-1 rounded bg-[#0c261b] border border-emerald-500/40 hover:bg-emerald-900/40 text-white"
                   >
                     <Plus className="w-3 h-3" />
                   </button>
                   <button
                     onClick={() => removeFromCart(idx)}
-                    className="p-1 text-slate-400 hover:text-rose-600 transition ml-1"
+                    className="p-1 text-slate-400 hover:text-rose-400 transition ml-1"
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>
@@ -296,23 +307,23 @@ export default function PosTerminalView({
             ))
           ) : (
             <div className="text-center py-12 text-slate-400 text-xs">
-              Cart is currently empty. Scan a product barcode to begin.
+              Cart is currently empty. Scan or tap a formulation to add.
             </div>
           )}
         </div>
 
         {/* Payment Modes & Totals */}
-        <div className="border-t border-slate-200 pt-3 space-y-3">
+        <div className="border-t border-emerald-500/20 pt-3 space-y-3">
           {/* Payment Method Selector */}
           <div className="grid grid-cols-4 gap-1.5 text-xs font-semibold">
             {['Cash', 'UPI', 'Card', 'NetBanking'].map((mode) => (
               <button
                 key={mode}
                 onClick={() => setPosPaymentMode(mode)}
-                className={`py-2 rounded-xl border text-center transition ${
+                className={`py-2 rounded-xl border text-center transition font-bold ${
                   posPaymentMode === mode
-                    ? 'border-emerald-600 bg-emerald-50 text-emerald-800 font-bold'
-                    : 'border-slate-200 text-slate-600 hover:bg-slate-50'
+                    ? 'border-emerald-400 bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-sm'
+                    : 'border-emerald-500/30 bg-[#071711] text-slate-300 hover:text-white hover:bg-emerald-950/40'
                 }`}
               >
                 {mode}
@@ -320,35 +331,59 @@ export default function PosTerminalView({
             ))}
           </div>
 
+          {/* Quick Cash Tender Chips */}
+          {posPaymentMode === 'Cash' && totals.grandTotal > 0 && (
+            <div className="flex items-center gap-1.5 overflow-x-auto py-1">
+              <span className="text-[10px] text-emerald-300 font-bold uppercase">Quick Cash:</span>
+              <button
+                type="button"
+                onClick={() => setPosPaidAmount(String(totals.grandTotal))}
+                className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-[10px] font-mono font-bold hover:bg-emerald-500/30"
+              >
+                Exact ₹{totals.grandTotal}
+              </button>
+              {[500, 1000, 2000].filter(a => a >= totals.grandTotal).map(amt => (
+                <button
+                  key={amt}
+                  type="button"
+                  onClick={() => setPosPaidAmount(String(amt))}
+                  className="px-2 py-0.5 rounded bg-[#071711] text-white border border-emerald-500/30 text-[10px] font-mono hover:bg-emerald-950/40"
+                >
+                  ₹{amt}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Dynamic UPI QR Code Preview */}
           {posPaymentMode === 'UPI' && upiQrDataUrl && (
-            <div className="bg-slate-50 border border-slate-200 rounded-xl p-3 text-center space-y-1">
+            <div className="bg-[#071711] border border-emerald-500/30 rounded-xl p-3 text-center space-y-1.5">
               <img
                 src={upiQrDataUrl}
                 alt="Dynamic UPI QR"
-                className="w-28 h-28 mx-auto rounded-lg shadow-sm"
+                className="w-28 h-28 mx-auto rounded-lg shadow-md border-2 border-emerald-400/50"
               />
-              <div className="text-[10px] text-slate-500 font-medium">
-                Scan with any UPI App (GPay, PhonePe, Paytm) • Exact Amount ₹{totals.grandTotal}
+              <div className="text-[10px] text-emerald-300 font-bold">
+                Scan with GPay / PhonePe / Paytm • Exact Amount ₹{totals.grandTotal}
               </div>
             </div>
           )}
 
           {/* Summary Breakdown */}
-          <div className="space-y-1 text-xs text-slate-600">
+          <div className="space-y-1 text-xs text-slate-300">
             <div className="flex justify-between">
               <span>Subtotal</span>
-              <span className="font-mono">₹{totals.subTotal}</span>
+              <span className="font-mono text-white">₹{totals.subTotal}</span>
             </div>
             {totals.taxAmt > 0 && (
               <div className="flex justify-between">
                 <span>GST ({posTaxRate}%)</span>
-                <span className="font-mono">₹{totals.taxAmt}</span>
+                <span className="font-mono text-white">₹{totals.taxAmt}</span>
               </div>
             )}
-            <div className="flex justify-between text-base font-black text-slate-900 pt-1 border-t border-slate-200">
+            <div className="flex justify-between text-base font-black text-white pt-1.5 border-t border-emerald-500/20">
               <span>Grand Total</span>
-              <span className="font-mono text-emerald-700">₹{totals.grandTotal}</span>
+              <span className="font-mono text-emerald-400 text-lg">₹{totals.grandTotal}</span>
             </div>
           </div>
 
@@ -356,7 +391,7 @@ export default function PosTerminalView({
           <button
             onClick={onCheckout}
             disabled={checkoutLoading || posCart.length === 0}
-            className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl transition shadow-lg shadow-emerald-600/30 text-xs flex items-center justify-center gap-2 disabled:opacity-50"
+            className="w-full py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black uppercase tracking-wider rounded-xl transition shadow-xl shadow-emerald-950/60 text-xs flex items-center justify-center gap-2 disabled:opacity-50"
           >
             <Printer className="w-4 h-4" />
             {checkoutLoading ? 'Processing Checkout...' : `Collect ₹${totals.grandTotal} & Print Receipt`}

@@ -24,7 +24,8 @@ export default function StocktakeAuditView({
       !q ||
       i.name?.toLowerCase().includes(q) ||
       i.sku?.toLowerCase().includes(q) ||
-      i.binCode?.toLowerCase().includes(q)
+      i.binCode?.toLowerCase().includes(q) ||
+      i.gstHsnCode?.includes(q)
     );
   });
 
@@ -56,7 +57,7 @@ export default function StocktakeAuditView({
       return;
     }
 
-    if (!window.confirm(`Reconcile stock balances for ${auditEntries.length} SKU(s)? This will adjust physical inventory.`)) {
+    if (!window.confirm(`Reconcile stock balances for ${auditEntries.length} formulation(s)? This will update live website inventory.`)) {
       return;
     }
 
@@ -74,35 +75,38 @@ export default function StocktakeAuditView({
   };
 
   return (
-    <div className="space-y-4 animate-in fade-in duration-150">
+    <div className="space-y-4 animate-in fade-in duration-150 w-full max-w-full overflow-x-hidden">
       {/* Top Banner */}
-      <div className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm flex flex-col md:flex-row md:items-center justify-between gap-3">
+      <div className="bg-[#0c261b] p-5 rounded-2xl border border-emerald-500/30 shadow-lg flex flex-col md:flex-row md:items-center justify-between gap-3">
         <div>
           <div className="flex items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-indigo-100 text-indigo-800 flex items-center gap-1">
-              <ClipboardCheck className="w-3.5 h-3.5" /> Blind Cycle Count & Stocktake Audit
+            <span className="px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
+              <ClipboardCheck className="w-3.5 h-3.5" /> Blind Cycle Count &amp; Stocktake Audit
             </span>
           </div>
-          <h3 className="text-base font-bold text-slate-900 mt-1">
-            Physical Warehouse Stock Verification & Variance Resolution
+          <h3 className="text-base font-black text-white mt-1 uppercase tracking-wide">
+            Physical Warehouse Stock Verification &amp; Variance Resolution
           </h3>
+          <p className="text-xs text-slate-300 mt-0.5 font-medium">
+            Synchronizes physical shelf counts directly with products.quantity on bhumivera.com.
+          </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-2 shrink-0">
           <div className="relative min-w-[220px]">
-            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400" />
             <input
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Filter SKUs for audit..."
-              className="w-full pl-9 pr-3 py-2 text-xs border border-slate-300 rounded-xl focus:ring-2 focus:ring-indigo-500 font-medium"
+              className="w-full pl-9 pr-3 py-2 text-xs bg-[#071711] text-white border border-emerald-500/40 rounded-xl focus:border-emerald-400 focus:outline-none font-medium placeholder-slate-400"
             />
           </div>
           <button
             onClick={handleCommitAudit}
             disabled={loading || Object.keys(countedQuantities).length === 0}
-            className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl text-xs font-bold transition shadow-sm disabled:opacity-50 shrink-0"
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition shadow-lg shadow-emerald-950/50 disabled:opacity-50 shrink-0"
           >
             <Save className="w-4 h-4" /> {loading ? 'Saving...' : 'Commit Reconciliation'}
           </button>
@@ -110,20 +114,20 @@ export default function StocktakeAuditView({
       </div>
 
       {/* Stocktake Table */}
-      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs">
-            <thead className="bg-slate-50 text-slate-700 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200">
+      <div className="bg-[#0c261b] rounded-2xl border border-emerald-500/30 shadow-xl overflow-hidden w-full max-w-full">
+        <div className="overflow-x-auto w-full">
+          <table className="w-full text-left text-xs min-w-[800px]">
+            <thead className="bg-[#071711] text-emerald-300 uppercase font-bold text-[10px] tracking-wider border-b border-emerald-500/30">
               <tr>
-                <th className="px-4 py-3">Product Name</th>
-                <th className="px-4 py-3">SKU & Barcode</th>
+                <th className="px-4 py-3">Product Formulation</th>
+                <th className="px-4 py-3">SKU &amp; HSN</th>
                 <th className="px-4 py-3">Bin Location</th>
                 <th className="px-4 py-3 text-center">System Ledger Stock</th>
                 <th className="px-4 py-3 text-center">Physical Count (Audited)</th>
                 <th className="px-4 py-3 text-center">Discrepancy (Variance)</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100">
+            <tbody className="divide-y divide-emerald-500/15">
               {filteredItems.map((item) => {
                 const sysStock = Number(item.qty ?? item.physicalStock) || 0;
                 const counted = countedQuantities[item.sku];
@@ -131,16 +135,19 @@ export default function StocktakeAuditView({
                 const variance = hasCount ? Number(counted) - sysStock : null;
 
                 return (
-                  <tr key={item.id} className="hover:bg-slate-50/80 transition">
-                    <td className="px-4 py-3 font-semibold text-slate-900">{item.name}</td>
-                    <td className="px-4 py-3 font-mono text-slate-600">{item.sku}</td>
-                    <td className="px-4 py-3 font-mono text-slate-700">
+                  <tr key={item.id} className="hover:bg-emerald-950/30 transition">
+                    <td className="px-4 py-3 font-bold text-white">{item.name}</td>
+                    <td className="px-4 py-3 font-mono">
+                      <div className="text-emerald-300 font-bold">{item.sku}</div>
+                      <div className="text-[10px] text-slate-400">HSN: {item.gstHsnCode || '30049011'}</div>
+                    </td>
+                    <td className="px-4 py-3 font-mono text-slate-200">
                       <div className="flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
+                        <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                         <span>{item.binCode || 'ASN-DEFAULT'}</span>
                       </div>
                     </td>
-                    <td className="px-4 py-3 text-center font-mono font-bold text-slate-800">
+                    <td className="px-4 py-3 text-center font-mono font-black text-white text-sm">
                       {sysStock}
                     </td>
                     <td className="px-4 py-3 text-center">
@@ -150,18 +157,18 @@ export default function StocktakeAuditView({
                         value={counted ?? ''}
                         onChange={(e) => handleCountChange(item.sku, e.target.value)}
                         placeholder="Count..."
-                        className="w-24 text-center font-mono font-bold px-2 py-1 border border-slate-300 rounded-lg text-xs focus:ring-2 focus:ring-emerald-500"
+                        className="w-24 text-center font-mono font-black px-2 py-1 bg-[#071711] text-emerald-300 border border-emerald-500/40 rounded-lg text-xs focus:border-emerald-400 focus:outline-none"
                       />
                     </td>
                     <td className="px-4 py-3 text-center font-mono font-bold">
                       {variance === null ? (
-                        <span className="text-slate-300">—</span>
+                        <span className="text-slate-400">—</span>
                       ) : variance === 0 ? (
-                        <span className="text-emerald-600">0 (Exact)</span>
+                        <span className="text-emerald-400 font-black">0 (Exact)</span>
                       ) : variance > 0 ? (
-                        <span className="text-indigo-600">+{variance} (Surplus)</span>
+                        <span className="text-teal-300 font-black">+{variance} (Surplus)</span>
                       ) : (
-                        <span className="text-rose-600">{variance} (Shortage)</span>
+                        <span className="text-rose-400 font-black">{variance} (Shortage)</span>
                       )}
                     </td>
                   </tr>

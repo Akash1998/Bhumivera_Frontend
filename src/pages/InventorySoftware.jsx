@@ -1408,7 +1408,8 @@ export default function InventorySoftware() {
         ${(sale.items || [])
           .map(
             i =>
-              `<div>${i.name} x${i.q}<span style="float:right;">₹${(Number(i.p) * Number(i.q)).toFixed(0)}</span></div>`
+              `<div><b>${i.name}</b> x${i.q}<span style="float:right;">₹${(Number(i.p) * Number(i.q)).toFixed(0)}</span></div>
+              <div style="font-size:9px;color:#555;margin-bottom:3px;">HSN: ${i.gstHsnCode || '30049011'} | Rate: ₹${Number(i.p).toFixed(2)} | GST: ${i.gstRate || 5}%</div>`
           )
           .join('')}
         <div class="line"></div>
@@ -1459,7 +1460,8 @@ export default function InventorySoftware() {
           <div class="name">${escapeHtml(labelItem.name)}</div>
           <img class="qr" src="${labelQrUrl}" alt="Product QR code" />
           <div class="details">SKU: ${escapeHtml(labelItem.sku)} | Bin: ${escapeHtml(labelItem.binCode)}</div>
-          <div class="details">Barcode: ${escapeHtml(labelItem.barcode)} | Batch: ${escapeHtml(labelItem.batchNo || 'N/A')}</div>
+          <div class="details">Barcode: ${escapeHtml(labelItem.barcode)} | HSN: ${escapeHtml(labelItem.gstHsnCode || '30049011')}</div>
+          <div class="details">Batch: ${escapeHtml(labelItem.batchNo || 'N/A')} | Exp: ${escapeHtml(labelItem.expiryDate || 'N/A')}</div>
           <div class="price">MRP: ₹${escapeHtml(labelItem.mrp)} (Offer: ₹${escapeHtml(labelItem.price)})</div>
           <script>window.onload = () => window.print();</script>
         </body>
@@ -1543,6 +1545,45 @@ export default function InventorySoftware() {
       await fetchBootstrapData(true);
     } catch (err) {
       showNotice('error', err.response?.data?.message || 'Failed to inward GRN.');
+    }
+  };
+
+  const [savingSettings, setSavingSettings] = useState(false);
+  const handleSaveStoreSettings = async e => {
+    if (e) e.preventDefault();
+    setSavingSettings(true);
+    try {
+      const res = await api.put(
+        '/inventory-software/config',
+        {
+          storeName: cfg.storeName,
+          tagline: cfg.tagline,
+          address: cfg.address,
+          phone: cfg.phone,
+          email: cfg.email,
+          website: cfg.website,
+          gstin: cfg.gstin,
+          upiId: cfg.upiId,
+          taxRate: Number(cfg.taxRate) || 0,
+          autoSyncWebsite: Boolean(cfg.autoSyncWebsite),
+          posHoldReservation: Boolean(cfg.posHoldReservation),
+          cats: cfg.cats,
+          hid: cfg.hid,
+          logo: cfg.logo,
+        },
+        reqConfig
+      );
+      if (res.data?.success) {
+        showNotice('success', 'Store & Sync Settings saved successfully. Website sync is active.');
+        setActiveModal(null);
+        await fetchBootstrapData(true);
+      } else {
+        showNotice('error', res.data?.message || 'Could not save store settings.');
+      }
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Failed to update store settings.');
+    } finally {
+      setSavingSettings(false);
     }
   };
 
@@ -2929,59 +2970,317 @@ export default function InventorySoftware() {
       )}
 
       {/* =====================================================================
+          MODAL: STORE & SYNC SETTINGS (WEBSITE 2-WAY SYNC, GSTIN, HSN, UPI)
+         ===================================================================== */}
+      {activeModal === 'settings' && (
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+          <form
+            onSubmit={handleSaveStoreSettings}
+            className="bg-[#0c261b] text-white border border-emerald-500/40 rounded-2xl max-w-2xl w-full p-6 space-y-5 shadow-2xl max-h-[92vh] overflow-y-auto text-xs"
+          >
+            <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center border border-emerald-500/30">
+                  <Store className="w-4 h-4" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black uppercase text-white tracking-wide">
+                    Store Profile &amp; Synchronization Command
+                  </h3>
+                  <p className="text-[11px] text-emerald-300/80 font-medium">
+                    Omnichannel 2-way live sync with bhumivera.com, GSTIN, HSN codes &amp; UPI terminal
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="text-slate-300 hover:text-white hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition"
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Section 1: Store Identity */}
+            <div className="space-y-3">
+              <div className="text-[11px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5 border-b border-emerald-500/20 pb-1">
+                <span>1. Legal Store Identity &amp; Location</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">
+                    Store Legal Name *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={cfg.storeName || ''}
+                    onChange={e => setCfg(prev => ({ ...prev, storeName: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-bold focus:border-emerald-400 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">
+                    Tagline / Subtitle
+                  </label>
+                  <input
+                    type="text"
+                    value={cfg.tagline || ''}
+                    onChange={e => setCfg(prev => ({ ...prev, tagline: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 focus:border-emerald-400 focus:outline-none"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">
+                  Physical Hub / Warehouse Address *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={cfg.address || ''}
+                  onChange={e => setCfg(prev => ({ ...prev, address: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-medium focus:border-emerald-400 focus:outline-none"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">
+                    Store Phone / WhatsApp
+                  </label>
+                  <input
+                    type="text"
+                    value={cfg.phone || ''}
+                    onChange={e => setCfg(prev => ({ ...prev, phone: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-mono focus:border-emerald-400 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">
+                    Concierge / Billing Email
+                  </label>
+                  <input
+                    type="email"
+                    value={cfg.email || ''}
+                    onChange={e => setCfg(prev => ({ ...prev, email: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 focus:border-emerald-400 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">
+                    Official Website Domain
+                  </label>
+                  <input
+                    type="text"
+                    value={cfg.website || ''}
+                    onChange={e => setCfg(prev => ({ ...prev, website: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-mono focus:border-emerald-400 focus:outline-none"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 2: Taxation & HSN */}
+            <div className="space-y-3">
+              <div className="text-[11px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5 border-b border-emerald-500/20 pb-1">
+                <span>2. GSTIN, Default HSN &amp; Tax Structure</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">
+                    GSTIN Identification *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={cfg.gstin || ''}
+                    onChange={e => setCfg(prev => ({ ...prev, gstin: e.target.value }))}
+                    className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-mono font-bold focus:border-emerald-400 focus:outline-none"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">
+                    Default GST Tax Rate (%)
+                  </label>
+                  <select
+                    value={cfg.taxRate ?? 5}
+                    onChange={e => setCfg(prev => ({ ...prev, taxRate: Number(e.target.value) }))}
+                    className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-bold focus:border-emerald-400 focus:outline-none"
+                  >
+                    <option value={0}>0% (Tax Exempt)</option>
+                    <option value={5}>5% (Ayurvedic &amp; Botanical Medicaments)</option>
+                    <option value={12}>12% (Standard Ayurvedic)</option>
+                    <option value={18}>18% (Luxury Cosmetics &amp; Soaps)</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">
+                    Primary HSN Code
+                  </label>
+                  <input
+                    type="text"
+                    defaultValue="30049011"
+                    disabled
+                    className="w-full px-3 py-2 rounded-xl bg-[#071711]/60 text-emerald-300 border border-emerald-500/30 font-mono font-bold cursor-not-allowed"
+                    title="HSN 30049011: Ayurvedic Medicaments & Formulations"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Section 3: Retail POS UPI Payment Gateway */}
+            <div className="space-y-3">
+              <div className="text-[11px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5 border-b border-emerald-500/20 pb-1">
+                <span>3. POS Terminal &amp; Merchant UPI Gateway</span>
+              </div>
+              <div>
+                <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">
+                  Merchant UPI VPA ID (For Instant Dynamic QR Code at POS Checkout) *
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={cfg.upiId || ''}
+                  onChange={e => setCfg(prev => ({ ...prev, upiId: e.target.value }))}
+                  placeholder="e.g. bhumivera@okhdfcbank"
+                  className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-mono font-bold focus:border-emerald-400 focus:outline-none"
+                />
+              </div>
+            </div>
+
+            {/* Section 4: Live Website 2-Way Sync & Strategy */}
+            <div className="space-y-3">
+              <div className="text-[11px] font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5 border-b border-emerald-500/20 pb-1">
+                <span>4. Omnichannel Live Stock Automation &amp; Allocation</span>
+              </div>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                <label className="flex items-center gap-3 p-3 rounded-xl bg-[#071711] border border-emerald-500/30 cursor-pointer hover:border-emerald-400 transition">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(cfg.autoSyncWebsite)}
+                    onChange={e => setCfg(prev => ({ ...prev, autoSyncWebsite: e.target.checked }))}
+                    className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 bg-[#0c261b] border-emerald-500/50"
+                  />
+                  <div>
+                    <div className="font-bold text-white text-xs">2-Way Live Sync with Website</div>
+                    <div className="text-[10px] text-slate-300">
+                      Instantly update bhumivera.com stock on every POS sale &amp; GRN inward
+                    </div>
+                  </div>
+                </label>
+
+                <label className="flex items-center gap-3 p-3 rounded-xl bg-[#071711] border border-emerald-500/30 cursor-pointer hover:border-emerald-400 transition">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(cfg.posHoldReservation)}
+                    onChange={e => setCfg(prev => ({ ...prev, posHoldReservation: e.target.checked }))}
+                    className="w-4 h-4 rounded text-emerald-600 focus:ring-emerald-500 bg-[#0c261b] border-emerald-500/50"
+                  />
+                  <div>
+                    <div className="font-bold text-white text-xs">POS Hold Stock Reservation</div>
+                    <div className="text-[10px] text-slate-300">
+                      Prevent overselling by holding items while POS cart is active
+                    </div>
+                  </div>
+                </label>
+              </div>
+
+              <div className="p-3 rounded-xl bg-emerald-950/40 border border-emerald-500/30 flex items-center justify-between">
+                <div>
+                  <span className="text-[11px] font-bold text-emerald-300 uppercase">Batch Allocation Strategy:</span>
+                  <p className="text-[10px] text-slate-300">
+                    Strict FIFO / FEFO (First-In, First-Out &amp; First-Expired, First-Out) enforced automatically.
+                  </p>
+                </div>
+                <span className="px-2.5 py-1 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 font-mono text-[11px] font-black">
+                  FEFO ACTIVE
+                </span>
+              </div>
+            </div>
+
+            {/* Modal Actions */}
+            <div className="flex items-center gap-3 pt-3 border-t border-emerald-500/30">
+              <button
+                type="submit"
+                disabled={savingSettings}
+                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black uppercase tracking-wider text-xs shadow-lg shadow-emerald-950/50 transition disabled:opacity-50"
+              >
+                {savingSettings ? 'Saving & Syncing...' : 'Save Settings & Sync Live Website'}
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="px-6 py-3 rounded-xl bg-slate-800 text-white hover:bg-slate-700 border border-slate-600 font-bold text-xs transition shadow-sm"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* =====================================================================
           MODAL: ADD / EDIT INVENTORY ITEM
          ===================================================================== */}
       {activeModal === 'item' && editingItem && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
           <form
             onSubmit={handleSaveItemModal}
-            className="bg-white rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto text-xs"
+            className="bg-[#0c261b] text-white border border-emerald-500/40 rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto text-xs"
           >
-            <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="text-base font-black uppercase text-slate-900">
+            <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
+              <h3 className="text-base font-black uppercase text-white tracking-wide">
                 {editingItem.id ? 'Edit Formulation & Sync Website Stock' : 'Add New Formulation / SKU'}
               </h3>
-              <button type="button" onClick={() => setActiveModal(null)} className="text-slate-400 hover:text-slate-700">
+              <button
+                type="button"
+                onClick={() => setActiveModal(null)}
+                className="text-slate-300 hover:text-white hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition"
+              >
                 ✕
               </button>
             </div>
 
             <div>
-              <label className="block font-bold uppercase text-slate-600 mb-1">Product / Formulation Name *</label>
+              <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">
+                Product / Formulation Name *
+              </label>
               <input
                 type="text"
                 required
                 value={editingItem.name}
                 onChange={e => setEditingItem(prev => ({ ...prev, name: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold"
+                className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-bold focus:border-emerald-400 focus:outline-none"
               />
             </div>
 
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">SKU Code</label>
+                <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">SKU Code</label>
                 <input
                   type="text"
                   value={editingItem.sku}
                   onChange={e => setEditingItem(prev => ({ ...prev, sku: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
+                  className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-mono focus:border-emerald-400 focus:outline-none"
                 />
               </div>
               <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Barcode (EAN-13)</label>
+                <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">Barcode (EAN-13)</label>
                 <input
                   type="text"
                   value={editingItem.barcode}
                   onChange={e => setEditingItem(prev => ({ ...prev, barcode: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
+                  className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-mono focus:border-emerald-400 focus:outline-none"
                 />
               </div>
               <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Category</label>
+                <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">Category</label>
                 <select
                   value={editingItem.cat}
                   onChange={e => setEditingItem(prev => ({ ...prev, cat: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-semibold"
+                  className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-semibold focus:border-emerald-400 focus:outline-none"
                 >
                   {(cfg.cats || []).map(c => (
                     <option key={c} value={c}>
@@ -2992,9 +3291,9 @@ export default function InventorySoftware() {
               </div>
             </div>
 
-            <div className="grid grid-cols-4 gap-3 p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+            <div className="grid grid-cols-4 gap-3 p-3 rounded-xl bg-[#071711] border border-emerald-500/30">
               <div>
-                <label className="block font-bold uppercase text-emerald-900 mb-1">Total Stock Qty</label>
+                <label className="block font-bold uppercase text-emerald-400 text-[11px] mb-1">Total Stock Qty</label>
                 <input
                   type="number"
                   min={0}
@@ -3009,91 +3308,101 @@ export default function InventorySoftware() {
                       warehouseVaultStock: Math.max(0, total - shop),
                     }));
                   }}
-                  className="w-full px-3 py-2 rounded-lg bg-white border border-emerald-400 font-mono font-black text-sm"
+                  className="w-full px-3 py-2 rounded-lg bg-[#0c261b] text-emerald-300 border border-emerald-500/40 font-mono font-black text-sm"
                 />
               </div>
               <div>
-                <label className="block font-bold uppercase text-emerald-900 mb-1">Shop Counter</label>
+                <label className="block font-bold uppercase text-emerald-400 text-[11px] mb-1">Shop Counter</label>
                 <input
                   type="number"
                   min={0}
                   value={editingItem.shopDisplayStock}
                   onChange={e => setEditingItem(prev => ({ ...prev, shopDisplayStock: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 font-mono font-bold"
+                  className="w-full px-3 py-2 rounded-lg bg-[#0c261b] text-white border border-emerald-500/40 font-mono font-bold"
                 />
               </div>
               <div>
-                <label className="block font-bold uppercase text-emerald-900 mb-1">Cold Vault</label>
+                <label className="block font-bold uppercase text-emerald-400 text-[11px] mb-1">Cold Vault</label>
                 <input
                   type="number"
                   min={0}
                   value={editingItem.warehouseVaultStock}
                   onChange={e => setEditingItem(prev => ({ ...prev, warehouseVaultStock: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 font-mono font-bold"
+                  className="w-full px-3 py-2 rounded-lg bg-[#0c261b] text-white border border-emerald-500/40 font-mono font-bold"
                 />
               </div>
               <div>
-                <label className="block font-bold uppercase text-emerald-900 mb-1">Safety Buffer</label>
+                <label className="block font-bold uppercase text-emerald-400 text-[11px] mb-1">Safety Buffer</label>
                 <input
                   type="number"
                   min={0}
                   value={editingItem.safetyBufferStock || 0}
                   onChange={e => setEditingItem(prev => ({ ...prev, safetyBufferStock: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg bg-white border border-slate-300 font-mono"
+                  className="w-full px-3 py-2 rounded-lg bg-[#0c261b] text-white border border-emerald-500/40 font-mono"
                 />
               </div>
             </div>
 
-            <div className="grid grid-cols-4 gap-3">
+            <div className="grid grid-cols-5 gap-3">
               <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Unit Cost (₹)</label>
+                <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">Unit Cost (₹)</label>
                 <input
                   type="number"
                   min={0}
                   value={editingItem.costPrice}
                   onChange={e => setEditingItem(prev => ({ ...prev, costPrice: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono font-bold"
+                  className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-mono font-bold"
                 />
               </div>
               <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">MRP (₹)</label>
+                <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">MRP (₹)</label>
                 <input
                   type="number"
                   min={0}
                   value={editingItem.mrp}
                   onChange={e => setEditingItem(prev => ({ ...prev, mrp: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono font-bold"
+                  className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-mono font-bold"
                 />
               </div>
               <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Selling Price (₹)</label>
+                <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">Sale Price (₹)</label>
                 <input
                   type="number"
                   min={0}
                   value={editingItem.price}
                   onChange={e => setEditingItem(prev => ({ ...prev, price: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono font-bold"
+                  className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-mono font-bold"
                 />
               </div>
               <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">GST Rate (%)</label>
+                <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">GST Rate (%)</label>
                 <input
                   type="number"
                   min={0}
                   value={editingItem.gstRate}
                   onChange={e => setEditingItem(prev => ({ ...prev, gstRate: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono font-bold"
+                  className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-mono font-bold"
+                />
+              </div>
+              <div>
+                <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">HSN Code</label>
+                <input
+                  type="text"
+                  value={editingItem.gstHsnCode || '30049011'}
+                  onChange={e => setEditingItem(prev => ({ ...prev, gstHsnCode: e.target.value }))}
+                  className="w-full px-3 py-2 rounded-xl bg-[#071711] text-emerald-300 border border-emerald-500/40 font-mono font-bold"
+                  placeholder="30049011"
                 />
               </div>
             </div>
 
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Assigned Storage Bin</label>
+                <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">Assigned Bin</label>
                 <select
                   value={editingItem.binCode}
                   onChange={e => setEditingItem(prev => ({ ...prev, binCode: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
+                  className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-mono"
                 >
                   {bins.map(b => (
                     <option key={b.bin_code} value={b.bin_code}>
@@ -3103,36 +3412,37 @@ export default function InventorySoftware() {
                 </select>
               </div>
               <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Batch Number</label>
+                <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">Batch Number</label>
                 <input
                   type="text"
                   value={editingItem.batchNo || ''}
                   onChange={e => setEditingItem(prev => ({ ...prev, batchNo: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
+                  placeholder="Inward via GRN"
+                  className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-mono"
                 />
               </div>
               <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Expiry Date</label>
+                <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">Expiry Date</label>
                 <input
                   type="date"
                   value={editingItem.expiryDate || ''}
                   onChange={e => setEditingItem(prev => ({ ...prev, expiryDate: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
+                  className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-mono"
                 />
               </div>
             </div>
 
-            <div className="flex gap-3 pt-2">
+            <div className="flex gap-3 pt-2 border-t border-emerald-500/30">
               <button
                 type="submit"
-                className="flex-1 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black uppercase"
+                className="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black uppercase tracking-wider text-xs shadow-lg shadow-emerald-950/50 transition"
               >
                 Save &amp; Sync to Live Website
               </button>
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="px-6 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 font-bold"
+                className="px-6 py-3 rounded-xl bg-slate-800 text-white hover:bg-slate-700 border border-slate-600 font-bold text-xs transition shadow-sm"
               >
                 Cancel
               </button>
@@ -3145,55 +3455,49 @@ export default function InventorySoftware() {
           MODAL: INVOICE SUCCESS & PRINT / WHATSAPP SHARE
          ===================================================================== */}
       {activeModal === 'invoice-success' && lastCompletedSale && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl">
-            <div className="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="bg-[#0c261b] text-white border border-emerald-500/40 rounded-2xl max-w-md w-full p-6 text-center space-y-4 shadow-2xl">
+            <div className="w-16 h-16 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 flex items-center justify-center mx-auto">
               <CheckCircle2 className="w-9 h-9" />
             </div>
-            <h3 className="text-xl font-black uppercase text-slate-900">
+            <h3 className="text-xl font-black uppercase text-white tracking-wide">
               Invoice {lastCompletedSale.invoiceNo} Generated!
             </h3>
-            <p className="text-xs text-slate-500">
-              Live website stock on <code className="text-emerald-700 font-bold">bhumivera.com</code> has been
-              atomically deducted so online customers see the updated stock immediately.
+            <p className="text-xs text-slate-300">
+              Live website stock on <code className="text-emerald-400 font-bold font-mono">bhumivera.com</code> has been
+              atomically deducted so online patrons see updated stock immediately.
             </p>
-            <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-200 text-left font-mono text-xs space-y-1">
-              <div>
-                Customer: <b>{lastCompletedSale.cust?.name}</b>
-              </div>
-              <div>
-                Bill Total: <b className="text-emerald-700">₹{lastCompletedSale.billTotal}</b>
-              </div>
-              <div>
-                Paid ({lastCompletedSale.paymentMode}): <b>₹{lastCompletedSale.paid}</b>
-              </div>
+            <div className="p-3.5 rounded-xl bg-[#071711] border border-emerald-500/30 text-left font-mono text-xs space-y-1.5">
+              <div className="text-slate-300">Customer: <b className="text-white">{lastCompletedSale.cust?.name || 'Walk-in Retail Patron'}</b></div>
+              <div className="text-slate-300">Bill Total: <b className="text-emerald-400 font-bold">₹{lastCompletedSale.billTotal}</b></div>
+              <div className="text-slate-300">Paid ({lastCompletedSale.paymentMode}): <b className="text-white">₹{lastCompletedSale.paid}</b></div>
             </div>
-            <div className="space-y-2">
+            <div className="space-y-2 pt-1">
               <button
                 type="button"
                 onClick={() => handleShareWhatsAppInvoice(lastCompletedSale)}
-                className="w-full py-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center justify-center gap-2"
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs flex items-center justify-center gap-2 shadow-lg shadow-emerald-950/50 transition"
               >
-                <Send className="w-4 h-4" /> Share Invoice on WhatsApp
+                <Send className="w-4 h-4" /> Share Official Invoice on WhatsApp
               </button>
               <button
                 type="button"
                 onClick={() => handlePrintA4Invoice(lastCompletedSale)}
-                className="w-full py-3 rounded-xl bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs flex items-center justify-center gap-2"
+                className="w-full py-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 font-bold text-xs flex items-center justify-center gap-2 transition"
               >
-                <Printer className="w-4 h-4" /> Print / Save Official A4 GST Tax Invoice
+                <Printer className="w-4 h-4" /> Print / Save Official A4 GST Tax Invoice (with HSN)
               </button>
               <button
                 type="button"
                 onClick={() => handlePrintThermal(lastCompletedSale)}
-                className="w-full py-2.5 rounded-xl border border-slate-300 hover:bg-slate-50 font-bold text-xs"
+                className="w-full py-2.5 rounded-xl bg-[#071711] hover:bg-emerald-950/50 text-emerald-300 border border-emerald-500/40 font-bold text-xs transition flex items-center justify-center gap-2"
               >
-                Print 80mm Thermal POS Receipt
+                <Receipt className="w-4 h-4" /> Print 80mm Thermal POS Receipt
               </button>
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="w-full py-2 text-xs text-slate-500 hover:text-slate-800 font-semibold"
+                className="w-full py-2.5 rounded-xl bg-slate-800 text-slate-200 hover:text-white hover:bg-slate-700 border border-slate-600 text-xs font-bold transition shadow-sm"
               >
                 Close &amp; Start Next Sale
               </button>
@@ -3206,8 +3510,8 @@ export default function InventorySoftware() {
           MODAL: VIEW / CANCEL EXISTING INVOICE
          ===================================================================== */}
       {activeModal === 'view-sale' && viewingSale && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="pos-invoice-modal bg-white rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl text-sm max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+          <div className="pos-invoice-modal bg-[#0c261b] text-white border border-emerald-500/40 rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl text-sm max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b pb-3">
               <h3 className="text-base font-black uppercase">Invoice #{viewingSale.invoiceNo}</h3>
               <button type="button" onClick={() => setActiveModal(null)}>
@@ -3284,11 +3588,11 @@ export default function InventorySoftware() {
           MODAL: STORAGE BIN CREATE / EDIT
          ===================================================================== */}
       {activeModal === 'bin' && editingBin && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <form onSubmit={handleSaveBin} className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-xs">
-            <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="text-base font-black uppercase">Storage Keeper Bin Configuration</h3>
-              <button type="button" onClick={() => setActiveModal(null)}>
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+          <form onSubmit={handleSaveBin} className="bg-[#0c261b] text-white border border-emerald-500/40 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-xs">
+            <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
+              <h3 className="text-base font-black uppercase text-white tracking-wide">Storage Keeper Bin Configuration</h3>
+              <button type="button" onClick={() => setActiveModal(null)} className="text-slate-300 hover:text-white hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition">
                 ✕
               </button>
             </div>
@@ -3379,7 +3683,7 @@ export default function InventorySoftware() {
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="px-5 py-3 rounded-xl bg-slate-100 font-bold"
+                className="px-5 py-3 rounded-xl bg-slate-800 text-white hover:bg-slate-700 border border-slate-600 font-bold text-xs transition shadow-sm"
               >
                 Cancel
               </button>
@@ -3392,14 +3696,14 @@ export default function InventorySoftware() {
           MODAL: INTERNAL BIN / VAULT ↔ SHOP STOCK TRANSFER
          ===================================================================== */}
       {activeModal === 'transfer' && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
           <form
             onSubmit={handleExecuteBinTransfer}
-            className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-xs"
+            className="bg-[#0c261b] text-white border border-emerald-500/40 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-xs"
           >
-            <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="text-base font-black uppercase">Internal Vault ↔ Shop Counter Transfer</h3>
-              <button type="button" onClick={() => setActiveModal(null)}>
+            <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
+              <h3 className="text-base font-black uppercase text-white tracking-wide">Internal Vault ↔ Shop Counter Transfer</h3>
+              <button type="button" onClick={() => setActiveModal(null)} className="text-slate-300 hover:text-white hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition">
                 ✕
               </button>
             </div>
@@ -3461,7 +3765,7 @@ export default function InventorySoftware() {
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="px-5 py-3 rounded-xl bg-slate-100 font-bold"
+                className="px-5 py-3 rounded-xl bg-slate-800 text-white hover:bg-slate-700 border border-slate-600 font-bold text-xs transition shadow-sm"
               >
                 Cancel
               </button>
@@ -3474,14 +3778,14 @@ export default function InventorySoftware() {
           MODAL: POST GRN STOCK INWARD
          ===================================================================== */}
       {activeModal === 'grn' && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
           <form
             onSubmit={handlePostGrnInward}
-            className="bg-white rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl text-xs"
+            className="bg-[#0c261b] text-white border border-emerald-500/40 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl text-xs"
           >
-            <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="text-base font-black uppercase">Post Goods Receipt Note (GRN Stock Inward)</h3>
-              <button type="button" onClick={() => setActiveModal(null)}>
+            <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
+              <h3 className="text-base font-black uppercase text-white tracking-wide">Post Goods Receipt Note (GRN Stock Inward)</h3>
+              <button type="button" onClick={() => setActiveModal(null)} className="text-slate-300 hover:text-white hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition">
                 ✕
               </button>
             </div>
@@ -3594,7 +3898,7 @@ export default function InventorySoftware() {
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="px-5 py-3 rounded-xl bg-slate-100 font-bold"
+                className="px-5 py-3 rounded-xl bg-slate-800 text-white hover:bg-slate-700 border border-slate-600 font-bold text-xs transition shadow-sm"
               >
                 Cancel
               </button>
@@ -3607,11 +3911,11 @@ export default function InventorySoftware() {
           MODAL: ADD SUPPLIER
          ===================================================================== */}
       {activeModal === 'supplier' && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-          <form onSubmit={handleSaveSupplier} className="bg-white rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-xs">
-            <div className="flex items-center justify-between border-b pb-3">
-              <h3 className="text-base font-black uppercase">Supplier / Lab Profile</h3>
-              <button type="button" onClick={() => setActiveModal(null)}>
+        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
+          <form onSubmit={handleSaveSupplier} className="bg-[#0c261b] text-white border border-emerald-500/40 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-xs">
+            <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
+              <h3 className="text-base font-black uppercase text-white tracking-wide">Supplier / Lab Profile</h3>
+              <button type="button" onClick={() => setActiveModal(null)} className="text-slate-300 hover:text-white hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition">
                 ✕
               </button>
             </div>
@@ -3661,7 +3965,7 @@ export default function InventorySoftware() {
               <button
                 type="button"
                 onClick={() => setActiveModal(null)}
-                className="px-5 py-3 rounded-xl bg-slate-100 font-bold"
+                className="px-5 py-3 rounded-xl bg-slate-800 text-white hover:bg-slate-700 border border-slate-600 font-bold text-xs transition shadow-sm"
               >
                 Cancel
               </button>
@@ -3896,7 +4200,7 @@ export default function InventorySoftware() {
          ===================================================================== */}
       {activeModal === 'order-detail' && editingOrder && (
         <div className="fixed inset-0 z-50 bg-black/65 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white rounded-2xl max-w-4xl w-full p-6 space-y-5 shadow-2xl max-h-[92vh] overflow-y-auto text-xs">
+          <div className="bg-[#0c261b] text-white border border-emerald-500/40 rounded-2xl max-w-4xl w-full p-6 space-y-5 shadow-2xl max-h-[92vh] overflow-y-auto text-xs">
             <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-3">
               <div>
                 <h3 className="text-base font-black uppercase text-slate-900">
@@ -4175,7 +4479,7 @@ export default function InventorySoftware() {
                       setActiveModal(null);
                       setEditingOrder(null);
                     }}
-                    className="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 font-bold"
+                    className="px-5 py-3 rounded-xl bg-slate-800 text-white hover:bg-slate-700 border border-slate-600 font-bold text-xs transition shadow-sm"
                   >
                     Cancel
                   </button>

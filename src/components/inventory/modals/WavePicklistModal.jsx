@@ -1,5 +1,5 @@
 import React from 'react';
-import { X, Printer, CheckCircle, MapPin, Package, ArrowRight } from 'lucide-react';
+import { X, Printer, CheckCircle, MapPin, Package, ArrowRight, ShieldCheck } from 'lucide-react';
 
 export default function WavePicklistModal({ picklist, onClose }) {
   if (!picklist) return null;
@@ -9,101 +9,104 @@ export default function WavePicklistModal({ picklist, onClose }) {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 overflow-y-auto">
+      <div className="bg-[#0c261b] text-white rounded-2xl shadow-2xl border border-emerald-500/40 max-w-4xl w-full max-h-[90vh] flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div className="p-5 border-b border-emerald-500/30 flex items-center justify-between bg-[#071711]">
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-amber-100 text-amber-800">
-                WMS Wave Picking Engine
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
+                <ShieldCheck className="w-3.5 h-3.5" /> WMS Wave Picking Engine (FIFO / FEFO)
               </span>
-              <span className="text-xs font-mono text-slate-500">{picklist.waveId}</span>
+              <span className="text-xs font-mono text-emerald-400 font-bold">{picklist.waveId}</span>
             </div>
-            <h3 className="text-lg font-bold text-slate-900 mt-1">
+            <h3 className="text-lg font-black text-white mt-1 tracking-wide">
               Consolidated Warehouse Walk-Route Picklist
             </h3>
-            <p className="text-xs text-slate-500">
+            <p className="text-xs text-slate-300 font-medium">
               {picklist.orderCount} Orders Aggregated • {picklist.totalItemsToPick} Total Units • {picklist.totalUniqueSkus} Unique SKUs
             </p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={handlePrint}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-emerald-600 text-white rounded-lg hover:bg-emerald-700 transition"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-black bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl shadow-md transition"
             >
               <Printer className="w-4 h-4" /> Print Picklist
             </button>
             <button
               onClick={onClose}
-              className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition"
+              className="text-slate-300 hover:text-white hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition"
             >
               <X className="w-5 h-5" />
             </button>
           </div>
         </div>
 
-        {/* Picklist Walk Path Table */}
+        {/* Pick Rows Grouped by Zone & Bin Walk Path */}
         <div className="p-5 overflow-y-auto flex-1 space-y-4">
-          <div className="bg-amber-50/60 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 flex items-center gap-2">
-            <MapPin className="w-4 h-4 text-amber-600 shrink-0" />
-            <span>
-              <strong>Optimal Walk Route:</strong> Items are pre-sorted by Zone, Rack, Shelf, and Bin to minimize walking distance across the warehouse.
-            </span>
-          </div>
-
-          <div className="border border-slate-200 rounded-xl overflow-hidden">
+          <div className="border border-emerald-500/30 rounded-xl overflow-hidden bg-[#071711]">
             <table className="w-full text-left text-xs">
-              <thead className="bg-slate-100 text-slate-700 uppercase font-bold text-[10px] tracking-wider border-b border-slate-200">
+              <thead className="bg-[#040e0a] text-emerald-300 uppercase font-bold text-[10px] tracking-wider border-b border-emerald-500/30">
                 <tr>
-                  <th className="px-3 py-2.5">Bin & Location</th>
-                  <th className="px-3 py-2.5">SKU & Barcode</th>
-                  <th className="px-3 py-2.5">Product Name</th>
-                  <th className="px-3 py-2.5 text-center">Pick Qty</th>
-                  <th className="px-3 py-2.5">Order Breakdown</th>
-                  <th className="px-3 py-2.5 text-center">Verified</th>
+                  <th className="px-4 py-3">Location (Bin &amp; Shelf)</th>
+                  <th className="px-4 py-3">Formulation &amp; SKU</th>
+                  <th className="px-4 py-3">HSN Code</th>
+                  <th className="px-4 py-3 text-center">Batch (FEFO)</th>
+                  <th className="px-4 py-3 text-center">Pick Qty</th>
+                  <th className="px-4 py-3">Destination Orders</th>
+                  <th className="px-4 py-3 text-center w-12">Picked</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-slate-100">
-                {picklist.walkPath?.map((item, idx) => (
-                  <tr key={idx} className="hover:bg-slate-50/80 transition">
-                    <td className="px-3 py-2.5 font-mono">
-                      <div className="font-bold text-slate-900 flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-indigo-600 shrink-0" />
-                        {item.binCode}
+              <tbody className="divide-y divide-emerald-500/15">
+                {(picklist.picklist || []).map((item, idx) => (
+                  <tr key={idx} className="hover:bg-emerald-950/40 transition">
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5 font-mono font-bold text-emerald-300">
+                        <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                        <span>{item.binCode}</span>
                       </div>
-                      <div className="text-[10px] text-slate-500">
-                        {item.zone} • Rack {item.rack}
-                      </div>
+                      <div className="text-[10px] text-slate-300 font-sans mt-0.5">{item.rackLocation}</div>
                     </td>
-                    <td className="px-3 py-2.5 font-mono">
-                      <div className="font-semibold text-slate-800">{item.sku}</div>
-                      <div className="text-[10px] text-slate-400">{item.barcode}</div>
+
+                    <td className="px-4 py-3">
+                      <div className="font-bold text-white line-clamp-1">{item.name}</div>
+                      <div className="text-[10px] font-mono text-slate-400">{item.sku}</div>
                     </td>
-                    <td className="px-3 py-2.5 font-medium text-slate-800">
-                      {item.name}
+
+                    <td className="px-4 py-3 font-mono font-bold text-emerald-400">
+                      {item.gstHsnCode || '30049011'}
                     </td>
-                    <td className="px-3 py-2.5 text-center">
-                      <span className="inline-block px-2.5 py-1 rounded-md text-xs font-bold bg-indigo-50 text-indigo-700 border border-indigo-200">
+
+                    <td className="px-4 py-3 text-center font-mono">
+                      <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-bold text-[10px] border border-emerald-500/30">
+                        {item.batchNo || 'FIFO-AUTO'}
+                      </span>
+                    </td>
+
+                    <td className="px-4 py-3 text-center">
+                      <span className="inline-block px-3 py-1 rounded-lg bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 font-mono font-black text-sm">
                         {item.totalPickQuantity}
                       </span>
                     </td>
-                    <td className="px-3 py-2.5 text-[11px] text-slate-600">
+
+                    <td className="px-4 py-3">
                       <div className="flex flex-wrap gap-1">
-                        {item.orderAllocations?.map((alloc, aIdx) => (
+                        {(item.orders || []).map((o, oIdx) => (
                           <span
-                            key={aIdx}
-                            className="bg-slate-100 px-1.5 py-0.5 rounded text-[10px] font-mono text-slate-700"
+                            key={oIdx}
+                            className="px-1.5 py-0.5 rounded bg-[#0c261b] text-slate-200 border border-emerald-500/30 font-mono text-[9px]"
                           >
-                            #{alloc.orderId}: {alloc.quantity}
+                            #{o.orderNumber} ({o.qty})
                           </span>
                         ))}
                       </div>
                     </td>
-                    <td className="px-3 py-2.5 text-center">
+
+                    <td className="px-4 py-3 text-center">
                       <input
                         type="checkbox"
-                        className="rounded border-slate-300 text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer"
+                        className="rounded border-emerald-500/50 text-emerald-600 focus:ring-emerald-500 bg-[#0c261b] w-4 h-4 cursor-pointer"
                       />
                     </td>
                   </tr>
@@ -114,13 +117,16 @@ export default function WavePicklistModal({ picklist, onClose }) {
         </div>
 
         {/* Footer */}
-        <div className="p-4 border-t border-slate-200 bg-slate-50 flex items-center justify-between text-xs">
-          <span className="text-slate-500">Generated at: {new Date(picklist.generatedAt).toLocaleString()}</span>
+        <div className="p-4 border-t border-emerald-500/30 bg-[#071711] flex items-center justify-between text-xs text-slate-300">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-emerald-400">Picker Signature:</span>
+            <span className="border-b border-dashed border-slate-500 w-36 inline-block" />
+          </div>
           <button
             onClick={onClose}
-            className="px-4 py-2 font-semibold bg-slate-800 text-white rounded-lg hover:bg-slate-900 transition"
+            className="px-4 py-2 bg-slate-800 text-white hover:bg-slate-700 border border-slate-600 rounded-xl font-bold transition shadow-sm"
           >
-            Close & Start Picking
+            Close Picklist
           </button>
         </div>
       </div>

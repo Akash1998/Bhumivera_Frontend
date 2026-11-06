@@ -38,24 +38,24 @@ export default function ReturnQcModal({ order, onClose, onQcComplete, reqConfig 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 overflow-y-auto">
-      <div className="bg-white rounded-2xl shadow-2xl border border-slate-200 max-w-lg w-full flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 overflow-y-auto">
+      <div className="bg-[#0c261b] text-white rounded-2xl shadow-2xl border border-emerald-500/40 max-w-lg w-full flex flex-col overflow-hidden animate-in fade-in zoom-in-95 duration-150">
         {/* Header */}
-        <div className="p-5 border-b border-slate-200 flex items-center justify-between bg-slate-50">
+        <div className="p-5 border-b border-emerald-500/30 flex items-center justify-between bg-[#071711]">
           <div>
             <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full text-xs font-bold uppercase tracking-wider bg-purple-100 text-purple-800 flex items-center gap-1">
-                <RotateCcw className="w-3.5 h-3.5" /> Return & RTO Quality Inspection
+              <span className="px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider bg-rose-500/25 text-rose-300 border border-rose-500/40 flex items-center gap-1">
+                <RotateCcw className="w-3.5 h-3.5" /> Return &amp; RTO Quality Inspection
               </span>
-              <span className="text-xs font-mono text-slate-500">#{order.orderNumber}</span>
+              <span className="text-xs font-mono text-emerald-400 font-bold">#{order.orderNumber}</span>
             </div>
-            <h3 className="text-base font-bold text-slate-900 mt-1">
-              Unboxing Condition & Restock Grading
+            <h3 className="text-base font-black text-white mt-1 uppercase tracking-wide">
+              Unboxing Condition &amp; Restock Grading
             </h3>
           </div>
           <button
             onClick={onClose}
-            className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition"
+            className="text-slate-300 hover:text-white hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition"
           >
             <X className="w-5 h-5" />
           </button>
@@ -64,7 +64,7 @@ export default function ReturnQcModal({ order, onClose, onQcComplete, reqConfig 
         {/* Content */}
         <form onSubmit={handleSubmit} className="p-5 space-y-4">
           <div className="space-y-3">
-            <label className="block text-xs font-bold uppercase tracking-wider text-slate-700">
+            <label className="block text-xs font-bold uppercase tracking-wider text-emerald-300">
               Select Return Condition Grade
             </label>
 
@@ -73,17 +73,17 @@ export default function ReturnQcModal({ order, onClose, onQcComplete, reqConfig 
               onClick={() => setSelectedGrade('GRADE_A')}
               className={`p-3.5 rounded-xl border-2 cursor-pointer transition flex items-start gap-3 ${
                 selectedGrade === 'GRADE_A'
-                  ? 'border-emerald-600 bg-emerald-50/50'
-                  : 'border-slate-200 hover:border-slate-300'
+                  ? 'border-emerald-400 bg-emerald-950/40'
+                  : 'border-emerald-500/25 bg-[#071711] hover:border-emerald-500/40'
               }`}
             >
-              <div className="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 font-bold text-sm">
+              <div className="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 flex items-center justify-center shrink-0 font-bold text-sm">
                 A
               </div>
               <div className="space-y-0.5 flex-1">
-                <div className="text-xs font-bold text-slate-900">Grade A — Pristine & Factory Sealed</div>
-                <div className="text-[11px] text-slate-500">
-                  Packaging and outer seal 100% intact. Automatically restocks back into <strong>Sellable Warehouse Vault</strong>.
+                <div className="text-xs font-bold text-white">Grade A — Pristine &amp; Factory Sealed</div>
+                <div className="text-[11px] text-slate-300">
+                  Outer seal intact. Automatically restocks into <strong>Sellable Warehouse Vault</strong> and live website.
                 </div>
               </div>
             </div>
@@ -92,17 +92,17 @@ export default function ReturnQcModal({ order, onClose, onQcComplete, reqConfig 
               onClick={() => setSelectedGrade('GRADE_B')}
               className={`p-3.5 rounded-xl border-2 cursor-pointer transition flex items-start gap-3 ${
                 selectedGrade === 'GRADE_B'
-                  ? 'border-amber-600 bg-amber-50/50'
-                  : 'border-slate-200 hover:border-slate-300'
+                  ? 'border-amber-400 bg-amber-950/40'
+                  : 'border-emerald-500/25 bg-[#071711] hover:border-emerald-500/40'
               }`}
             >
-              <div className="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 font-bold text-sm">
+              <div className="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-300 border border-amber-500/30 flex items-center justify-center shrink-0 font-bold text-sm">
                 B
               </div>
               <div className="space-y-0.5 flex-1">
-                <div className="text-xs font-bold text-slate-900">Grade B — Box Distressed / Seal Intact</div>
-                <div className="text-[11px] text-slate-500">
-                  Outer luxury carton crushed by courier, but botanical formulation uncompromised. Restocks into <strong>Offline Shop Display / Clearance</strong>.
+                <div className="text-xs font-bold text-white">Grade B — Outer Box Distressed / Seal Intact</div>
+                <div className="text-[11px] text-slate-300">
+                  Carton bruised in transit, formulation intact. Restocks into <strong>Offline Shop Counter / Clearance</strong>.
                 </div>
               </div>
             </div>
@@ -111,17 +111,17 @@ export default function ReturnQcModal({ order, onClose, onQcComplete, reqConfig 
               onClick={() => setSelectedGrade('GRADE_C')}
               className={`p-3.5 rounded-xl border-2 cursor-pointer transition flex items-start gap-3 ${
                 selectedGrade === 'GRADE_C'
-                  ? 'border-rose-600 bg-rose-50/50'
-                  : 'border-slate-200 hover:border-slate-300'
+                  ? 'border-rose-400 bg-rose-950/40'
+                  : 'border-emerald-500/25 bg-[#071711] hover:border-emerald-500/40'
               }`}
             >
-              <div className="w-8 h-8 rounded-lg bg-rose-100 text-rose-700 flex items-center justify-center shrink-0 font-bold text-sm">
+              <div className="w-8 h-8 rounded-lg bg-rose-500/20 text-rose-300 border border-rose-500/30 flex items-center justify-center shrink-0 font-bold text-sm">
                 C
               </div>
               <div className="space-y-0.5 flex-1">
-                <div className="text-xs font-bold text-slate-900">Grade C — Damaged / Leaked / Tampered</div>
-                <div className="text-[11px] text-slate-500">
-                  Product leaked, broken glass, or seal tampered. Routed directly into <strong>Damaged Quarantine</strong> (Zero sellable inventory addition).
+                <div className="text-xs font-bold text-white">Grade C — Damaged / Leaked / Tampered</div>
+                <div className="text-[11px] text-slate-300">
+                  Bottle broken or seal broken. Quarantined in <strong>Bay Q (Zero sellable inventory addition)</strong>.
                 </div>
               </div>
             </div>
@@ -129,37 +129,37 @@ export default function ReturnQcModal({ order, onClose, onQcComplete, reqConfig 
 
           {/* Notes Input */}
           <div>
-            <label className="block text-xs font-semibold text-slate-700 mb-1">
-              Inspector Notes & Unboxing Observation
+            <label className="block text-xs font-bold uppercase tracking-wider text-emerald-300 mb-1">
+              Inspector Notes &amp; Unboxing Observation
             </label>
             <textarea
               rows={2}
               value={notes}
               onChange={(e) => setNotes(e.target.value)}
-              placeholder="e.g. Courier delivered box with crushed corner, face wash seal intact..."
-              className="w-full text-xs p-2.5 border border-slate-300 rounded-lg focus:ring-2 focus:ring-indigo-500"
+              placeholder="e.g. Outer carton dented, seal 100% verified intact..."
+              className="w-full text-xs p-2.5 bg-[#071711] text-white border border-emerald-500/40 rounded-xl focus:border-emerald-400 focus:outline-none placeholder-slate-400"
             />
           </div>
 
           {errorMsg && (
-            <div className="p-3 bg-rose-50 border border-rose-200 rounded-lg text-xs text-rose-700">
+            <div className="p-3 bg-rose-950/40 border border-rose-500/40 rounded-xl text-xs text-rose-300">
               {errorMsg}
             </div>
           )}
 
           {/* Actions */}
-          <div className="flex justify-end gap-2 pt-2 border-t border-slate-100">
+          <div className="flex justify-end gap-2 pt-2 border-t border-emerald-500/30">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-lg transition"
+              className="px-5 py-2.5 rounded-xl bg-slate-800 text-white hover:bg-slate-700 border border-slate-600 font-bold text-xs transition shadow-sm"
             >
               Cancel
             </button>
             <button
               type="submit"
               disabled={loading}
-              className="px-5 py-2 text-xs font-bold bg-indigo-600 text-white rounded-lg hover:bg-indigo-700 transition disabled:opacity-50"
+              className="px-5 py-2.5 text-xs font-black uppercase tracking-wider bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl shadow-lg transition disabled:opacity-50"
             >
               {loading ? 'Recording...' : 'Commit QC Decision'}
             </button>
