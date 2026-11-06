@@ -93,7 +93,6 @@ export default function ReviewManagement() {
   const [selectedReviewIds, setSelectedReviewIds] = useState([]);
   const [bulkAction, setBulkAction] = useState('');
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
-  const [isImporting, setIsImporting] = useState(false);
 
   // Inspector / Editor Modal State
   const [selectedReview, setSelectedReview] = useState(null);
@@ -390,21 +389,6 @@ export default function ReviewManagement() {
     }
   };
 
-  const handleImportBundledReviews = async () => {
-    if (!window.confirm('Import 1500 reviews into the database as PENDING (hidden from customers)? This can only be done once.')) return;
-    setIsImporting(true);
-    try {
-      const res = await api.post('/reviews/admin/import-bundled-pending', {}, { adminAuth: true });
-      showToast?.(res.data?.message || 'Reviews imported.', 'success');
-      await fetchReviews();
-    } catch (error) {
-      console.error('[ADMIN_REVIEW_IMPORT]', error);
-      showToast?.(error.response?.data?.message || error.normalized?.message || 'Import failed.', 'error');
-    } finally {
-      setIsImporting(false);
-    }
-  };
-
   const handleDeleteReview = async (reviewId, isPermanent = true) => {
     const actionText = isPermanent ? 'permanently delete' : 'hide/archive';
     if (!window.confirm(`Are you sure you want to ${actionText} review #${reviewId}?`)) return;
@@ -609,16 +593,6 @@ export default function ReviewManagement() {
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
-          {!loading && !reviewLoadError && reviews.length === 0 && (
-            <button
-              type="button"
-              onClick={handleImportBundledReviews}
-              disabled={isImporting}
-              className="inline-flex items-center gap-2 rounded-xl border border-[#d4af37]/60 px-4 py-2.5 text-xs font-black uppercase tracking-widest text-[#d4af37] hover:bg-[#d4af37]/10 transition-all disabled:opacity-60"
-            >
-              {isImporting ? 'Importing…' : 'Import 1500 Reviews (Pending)'}
-            </button>
-          )}
           <button
             type="button"
             onClick={handleStartCreateNew}
