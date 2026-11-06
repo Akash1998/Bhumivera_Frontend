@@ -3,7 +3,6 @@ import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, CheckCircle2, Layers, MapPin, Minus, Plus, ShoppingBag, Star, PackageCheck, Truck, ShieldCheck } from 'lucide-react';
 import SEO from '../components/SEO';
 import { MAISON_REGIMEN_BUNDLES } from '../data/bhumiveraUniqueData';
-import { AUTHENTIC_COMBO_REVIEWS_BY_ID } from '../data/bhumiveraAuthenticReviews';
 import { products as productsApi, reviews as reviewsApi } from '../services/api';
 import { useCart } from '../context/CartContext';
 
@@ -54,29 +53,25 @@ export default function BundleDetail() {
   useEffect(() => {
     let active = true;
     if (!bundle) return undefined;
+    setComboReviews([]);
+    setReviewSummary({ total: 0, average: 0 });
+    setReviewLoadError('');
     reviewsApi.getByCombo(bundle.id)
       .then(response => {
         const rows = response.data?.reviews;
-        if (!Array.isArray(rows) || rows.length === 0) throw new Error('The regimen reviews response is empty.');
+        if (!Array.isArray(rows) || !response.data?.summary) throw new Error('The regimen reviews response is incomplete.');
         if (active) {
           setComboReviews(rows);
-          setReviewSummary(response.data?.summary || { total: rows.length, average: 4.72 });
+          setReviewSummary(response.data.summary);
           setReviewLoadError('');
         }
       })
-      .catch(() => {
+      .catch(error => {
+        console.error('[COMBO_REVIEWS_LOAD]', error);
         if (active) {
-          const fallback = AUTHENTIC_COMBO_REVIEWS_BY_ID?.[bundle.id] || AUTHENTIC_COMBO_REVIEWS_BY_ID?.[bundle.name] || [];
-          if (fallback.length > 0) {
-            const avg = Number((fallback.reduce((s, r) => s + (Number(r.rating) || 5), 0) / fallback.length).toFixed(2));
-            setComboReviews(fallback);
-            setReviewSummary({ total: fallback.length, average: avg });
-            setReviewLoadError('');
-          } else {
-            setComboReviews([]);
-            setReviewSummary({ total: 0, average: 0 });
-            setReviewLoadError('Regimen reviews could not be loaded right now.');
-          }
+          setComboReviews([]);
+          setReviewSummary({ total: 0, average: 0 });
+          setReviewLoadError('Regimen reviews could not be loaded right now.');
         }
       });
     return () => { active = false; };

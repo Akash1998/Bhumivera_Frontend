@@ -75,7 +75,7 @@ Located in `src/pages/admin/` and loaded dynamically via `AdminDashboard.jsx`:
 
 1. **`DashboardOverview.jsx`**: High-level platform health, live order counter, daily gross revenue, and direct jump cards to `/inventorysoftware`.
 2. **`ProductManagement.jsx`**: Website product catalog, active percentages, milligram disclosures, SEO metadata. (Stock editing locked to `/inventorysoftware`).
-3. **`ReviewManagement.jsx`**: Moderation & studio for all 1,500 authentic pan-India reviews across all 6 products & 3 combos. Full edit of names, cities, dates (2020-2026), photos, videos.
+3. **`ReviewManagement.jsx`**: Database-backed review moderation and editing; an empty response stays empty, and load or write errors are reported without substituting bundled reviews.
 4. **`UserManagement.jsx`**: Complete Customer CRM, LTV calculation, order histories, account status, role management.
 5. **`GSTAccounting.jsx`**: Financial ledger, GSTIN reports, state tax breakup (CGST, SGST, IGST), downloadable branded tax invoices.
 6. **`GamificationStudio.jsx`**: Wheel of Fortune reward spin configuration, probability weights, and prize allocation.

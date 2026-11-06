@@ -1,5 +1,4 @@
 import { FALLBACK_CATALOG_PRODUCTS, CHARCOAL_FACE_WASH_EXACT, SHAMPOO_2IN1_EXACT, BHUMIVERA_6_PRODUCTS } from '../data/bhumiveraUniqueData';
-import { AUTHENTIC_PRODUCT_REVIEWS_BY_ID } from '../data/bhumiveraAuthenticReviews';
 import LuxuryProductSeoSection from '../components/LuxuryProductSeoSection';
 import SEO from '../components/SEO';
 import SEOStructuredData from '../components/SEOStructuredData';
@@ -304,7 +303,7 @@ export default function ProductDetail() {
             const productKey = fetchedProduct.id ?? fetchedProduct.slug ?? id;
             const revRes = await reviewsApi.getByProduct(productKey);
             const reviewPayload = revRes.data?.data || revRes.data || {};
-            const reviewRows = Array.isArray(reviewPayload) ? reviewPayload : reviewPayload.reviews || [];
+            const reviewRows = Array.isArray(reviewPayload) ? reviewPayload : reviewPayload.reviews;
             const summary = reviewPayload.summary || revRes.data?.summary;
             if (!Array.isArray(reviewRows) || !summary) {
               throw new Error('The product reviews response is incomplete.');
@@ -313,20 +312,9 @@ export default function ProductDetail() {
             setReviewSummary(summary);
           } catch (error) {
             console.error('Failed to load product reviews:', error);
-            const fallbackPid = Number(fetchedProduct?.id) || 1;
-            const fallbackRevs = AUTHENTIC_PRODUCT_REVIEWS_BY_ID[fallbackPid] || AUTHENTIC_PRODUCT_REVIEWS_BY_ID[1] || [];
-            if (fallbackRevs.length > 0) {
-              setReviewsData(fallbackRevs.map(r => ({ ...r, comment: r.body || r.comment || '' })));
-              setReviewSummary({
-                total: Number(fetchedProduct?.review_count || fetchedProduct?.reviews || fallbackRevs.length),
-                average: Number(fetchedProduct?.rating || 4.58),
-              });
-              setReviewLoadError('');
-            } else {
-              setReviewsData([]);
-              setReviewSummary(null);
-              setReviewLoadError('Customer reviews could not be loaded. Please try again shortly.');
-            }
+            setReviewsData([]);
+            setReviewSummary(null);
+            setReviewLoadError('Customer reviews could not be loaded. Please try again shortly.');
           }
         } else {
           setReviewsData([]);

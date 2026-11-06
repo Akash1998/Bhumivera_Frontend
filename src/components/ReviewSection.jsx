@@ -2,7 +2,6 @@ import React, { useState, useEffect, useMemo, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { reviews as reviewsApi } from '../services/api';
-import { AUTHENTIC_PRODUCT_REVIEWS_BY_ID } from '../data/bhumiveraAuthenticReviews';
 import { getProductImageUrl } from '../utils/productImageUrl';
 import {
   ThumbsUp,
@@ -76,6 +75,8 @@ export default function ReviewSection({ productId }) {
   const navigate = useNavigate();
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [reviewLoadError, setReviewLoadError] = useState('');
+  const [submitError, setSubmitError] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [filter, setFilter] = useState('all');
   const [helpfulVotes, setHelpfulVotes] = useState({});
@@ -86,22 +87,22 @@ export default function ReviewSection({ productId }) {
   useEffect(() => {
     let active = true;
     setLoading(true);
+    setReviews([]);
+    setReviewLoadError('');
     const load = async () => {
       try {
         const res = await reviewsApi.getByProduct(productId || 1);
         const payload = res.data?.data || res.data || {};
-        const rows = Array.isArray(payload) ? payload : payload.reviews || [];
-        if (active && rows.length > 0) {
+        const rows = Array.isArray(payload) ? payload : payload.reviews;
+        if (!Array.isArray(rows)) throw new Error('The product reviews response is invalid.');
+        if (active) {
           setReviews(rows.map(normalizeReview));
-          setLoading(false);
-          return;
         }
-      } catch (_) {}
-      if (active) {
-        const pid = Number(productId) || 1;
-        const fallback = AUTHENTIC_PRODUCT_REVIEWS_BY_ID[pid] || AUTHENTIC_PRODUCT_REVIEWS_BY_ID[1] || [];
-        setReviews(fallback.map(normalizeReview));
-        setLoading(false);
+      } catch (error) {
+        console.error('[PRODUCT_REVIEWS_LOAD]', error);
+        if (active) setReviewLoadError('Customer reviews could not be loaded. Please try again shortly.');
+      } finally {
+        if (active) setLoading(false);
       }
     };
     load();
@@ -126,8 +127,9 @@ export default function ReviewSection({ productId }) {
     e.preventDefault();
     if (!formData.comment.trim()) return;
     setSubmitting(true);
+    setSubmitError('');
     try {
-      await reviewsApi.submit({
+      const response = await reviewsApi.submit({
         product_id: Number(productId) || 1,
         rating: formData.rating,
         title: formData.title,
@@ -136,21 +138,26 @@ export default function ReviewSection({ productId }) {
         reviewer_location: formData.location || 'India',
         images: [],
       });
-    } catch (_) {}
-    const newReview = normalizeReview({
-      id: `rev-${Date.now()}`,
-      rating: formData.rating,
-      title: formData.title,
-      comment: formData.comment,
-      user_name: user?.name || 'Verified Patron',
-      reviewer_location: formData.location || 'India',
-      verified: true,
-      created_at: new Date().toISOString(),
-      images: formData.images,
-    });
-    setReviews((prev) => [newReview, ...prev]);
-    setFormData({ rating: 5, title: '', comment: '', location: '', images: [] });
-    setSubmitting(false);
+      if (!response.data?.id) throw new Error('The server did not return the saved review ID.');
+      const newReview = normalizeReview({
+        id: response.data.id,
+        rating: formData.rating,
+        title: formData.title,
+        comment: formData.comment,
+        user_name: user?.name || 'Verified Patron',
+        reviewer_location: formData.location || 'India',
+        verified: true,
+        created_at: new Date().toISOString(),
+        images: [],
+      });
+      setReviews((prev) => [newReview, ...prev]);
+      setFormData({ rating: 5, title: '', comment: '', location: '', images: [] });
+    } catch (error) {
+      console.error('[PRODUCT_REVIEW_SUBMIT]', error);
+      setSubmitError('Your review could not be submitted. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const filteredReviews = useMemo(() => {
@@ -172,6 +179,7 @@ export default function ReviewSection({ productId }) {
 
   return (
     <div className="space-y-12">
+      {submitError && <p role="alert" className="text-sm text-rose-300">{submitError}</p>}
       <div className="grid lg:grid-cols-12 gap-10">
         {/* Left: Stats & Form */}
         <div className="lg:col-span-4 space-y-8">
@@ -444,9 +452,9 @@ export default function ReviewSection({ productId }) {
             {!loading && filteredReviews.length === 0 && (
               <div className="two-tone-card py-16 text-center space-y-3 bg-[#0d1520] rounded-2xl border border-white/10">
                 <div className="font-serif text-2xl text-[#94a3b8] uppercase tracking-wider">
-                  No Reviews Match Filter
+                  {reviewLoadError || (reviews.length ? 'No Reviews Match Filter' : 'No reviews yet')}
                 </div>
-                <p className="text-xs text-[#94a3b8]">Try selecting All Reviews or add customer photos via the Admin Panel.</p>
+                {!reviewLoadError && reviews.length > 0 && <p className="text-xs text-[#94a3b8]">Try selecting All Reviews.</p>}
               </div>
             )}
           </div>

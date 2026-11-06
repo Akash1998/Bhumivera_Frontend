@@ -10,7 +10,6 @@ import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import compressImageForUpload from '../../utils/compressImageForUpload';
 import { getProductImageUrl as getImageUrl } from '../../utils/productImageUrl';
-import { ALL_1500_AUTHENTIC_REVIEWS } from '../../data/bhumiveraAuthenticReviews';
 
 const REVIEW_MEDIA_PLACEHOLDER = '/images/review-placeholder.svg';
 const MAX_REVIEW_MEDIA_BYTES = 25 * 1024 * 1024;
@@ -141,22 +140,17 @@ export default function ReviewManagement() {
     setLoading(true);
     try {
       const res = await api.get('/reviews', { adminAuth: true });
-      const data = Array.isArray(res.data) ? res.data : (res.data?.reviews || res.data?.data || []);
-      if (!Array.isArray(data) || data.length === 0) {
-        throw new Error('The reviews API returned an empty or invalid response.');
-      }
+      const data = Array.isArray(res.data) ? res.data : (res.data?.reviews ?? res.data?.data);
+      if (!Array.isArray(data)) throw new Error('The reviews API returned an invalid response.');
       setReviews(data.map(normalizeReviewRecord));
+      setSelectedReviewIds([]);
       setReviewLoadError('');
     } catch (error) {
-      console.warn('[ADMIN_REVIEWS_LOAD_FALLBACK]', error.message);
-      if (Array.isArray(ALL_1500_AUTHENTIC_REVIEWS) && ALL_1500_AUTHENTIC_REVIEWS.length > 0) {
-        setReviews(ALL_1500_AUTHENTIC_REVIEWS.map(normalizeReviewRecord));
-        setReviewLoadError('');
-      } else {
-        setReviews([]);
-        setReviewLoadError('Reviews could not be loaded from the database. Check the API connection and retry.');
-        showToast?.('Could not load reviews from the database.', 'error');
-      }
+      console.error('[ADMIN_REVIEWS_LOAD]', error);
+      setReviews([]);
+      setSelectedReviewIds([]);
+      setReviewLoadError('Reviews could not be loaded from the database. Check the API connection and retry.');
+      showToast?.('Could not load reviews from the database.', 'error');
     } finally {
       setLoading(false);
     }
@@ -389,22 +383,7 @@ export default function ReviewManagement() {
       setIsCreatingNew(false);
     } catch (error) {
       console.error('[ADMIN_REVIEW_SAVE]', error);
-      // Also update local state if working in offline preview mode
-      const fallbackSaved = normalizeReviewRecord({
-        ...selectedReview,
-        ...payload,
-        id: isCreatingNew ? Math.max(3000, ...reviews.map(r => Number(r.id) || 0)) + 1 : selectedReview.id,
-      });
-      if (isCreatingNew) {
-        setReviews(current => [fallbackSaved, ...current]);
-      } else {
-        setReviews(current => current.map(r => String(r.id) === String(selectedReview.id) ? fallbackSaved : r));
-      }
-      window.dispatchEvent(new Event('bhumivera:reviews-updated'));
-      showToast?.('Review saved.', 'success');
-      setSelectedReview(null);
-      setReviewDraft(null);
-      setIsCreatingNew(false);
+      showToast?.(error.normalized?.message || error.response?.data?.message || 'Review could not be saved.', 'error');
     } finally {
       setIsUpdating(false);
     }
@@ -422,6 +401,7 @@ export default function ReviewManagement() {
     }
     setReviews(current => current.filter(review => String(review.id) !== String(reviewId)));
     setSelectedReviewIds(current => current.filter(id => id !== String(reviewId)));
+    window.dispatchEvent(new Event('bhumivera:reviews-updated'));
     showToast?.(`Review #${reviewId} deleted successfully.`, 'success');
     if (selectedReview && String(selectedReview.id) === String(reviewId)) {
       setSelectedReview(null);
@@ -747,7 +727,7 @@ export default function ReviewManagement() {
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 group-focus-within:text-amber-500" size={17} />
           <input 
             type="text"
-            placeholder="Search 1,500+ reviews by customer, city, language, combo, keyword, order #…"
+            placeholder="Search reviews by customer, city, combo, keyword, order #…"
             value={searchTerm}
             onChange={(e) => { setSearchTerm(e.target.value); setCurrentPage(1); }}
             className="w-full bg-[#081b15]/90 border border-slate-800 focus:border-amber-500/50 rounded-xl py-3 pl-11 pr-4 text-white font-semibold text-xs outline-none"
