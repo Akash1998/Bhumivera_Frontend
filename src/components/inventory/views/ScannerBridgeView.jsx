@@ -22,7 +22,7 @@ export default function ScannerBridgeView({
   onPullQueueToPos,
   onClearQueue,
   onRegenerateKey,
-  daysRemaining = 90,
+  hoursRemaining = 12,
   expiresAt = null,
   sessionCode = 'REG-POS-01',
   onOpenBatchQrModal = null,
@@ -34,12 +34,7 @@ export default function ScannerBridgeView({
       alert('Pop-up blocked. Please enable pop-ups to print the Station Placard.');
       return;
     }
-
-    const expiryFormatted = expiresAt ? new Date(expiresAt).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
-      year: 'numeric',
-    }) : '90 Days from Activation';
+    const expiryFormatted = expiresAt ? new Date(expiresAt).toLocaleString('en-IN') : '12 hours from pairing';
 
     printWindow.document.write(`
       <!DOCTYPE html>
@@ -145,13 +140,13 @@ export default function ScannerBridgeView({
             </div>
 
             <div class="security-banner">
-              🔒 90-DAY ENTERPRISE DEVICE TOKEN — VALID UNTIL ${expiryFormatted.toUpperCase()}
+              🔒 12-HOUR DEVICE SESSION — VALID UNTIL ${expiryFormatted.toUpperCase()}
             </div>
 
             <div class="steps-box">
               <div><b>1. Open Scanner APK:</b> Launch Bhumivera Scanner on your Android device.</div>
               <div><b>2. Scan This Placard:</b> Point camera at the QR code above to link your phone.</div>
-              <div><b>3. Auto-Login 90 Days:</b> Authenticates instantly; no login required for 90 days.</div>
+              <div><b>3. 12-Hour Session:</b> The scanner remains connected for 12 hours; scan the dock QR again after it expires.</div>
               <div><b>4. Pick &amp; Pack:</b> Scan product barcodes/batch QRs to verify picks and push live bills!</div>
             </div>
 
@@ -181,7 +176,7 @@ export default function ScannerBridgeView({
               <Smartphone className="w-3.5 h-3.5" /> Native Android Scanner 2.0
             </span>
             <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-teal-500/20 text-teal-200 border border-teal-500/40 flex items-center gap-1 font-mono">
-              <ShieldCheck className="w-3.5 h-3.5 text-teal-400" /> 90-Day Token Active ({daysRemaining} days left)
+              <ShieldCheck className="w-3.5 h-3.5 text-teal-400" /> 12-Hour Session · {hoursRemaining}h Remaining
             </span>
           </div>
 
@@ -190,7 +185,7 @@ export default function ScannerBridgeView({
           </h2>
 
           <p className="text-xs text-slate-300 leading-relaxed font-medium">
-            Scan this dock station QR code using the Bhumivera Android Scanner app. Once paired, the app stays securely authenticated for <b>90 days</b>. Warehouse staff can walk up, pick and pack items, scan batch QR stickers, and push items directly to desktop registers or packing verification buffers.
+            Scan this dock station QR code using the Bhumivera Android Scanner app. The scanner stays connected for 12 hours. Warehouse staff can scan order tokens, verify each picked unit, and see packing progress update on this screen.
           </p>
 
           <div className="pt-1 flex flex-wrap items-center gap-2.5">
@@ -250,11 +245,11 @@ export default function ScannerBridgeView({
             />
           ) : (
             <div className="w-36 h-36 flex items-center justify-center text-slate-400 text-xs font-mono">
-              Loading 90-Day Token...
+              Loading 12-hour pairing key...
             </div>
           )}
           <div className="text-[11px] font-black text-emerald-300 mt-2 flex items-center justify-center gap-1">
-            <CheckCircle2 className="w-3 h-3 text-emerald-400" /> 90-Day Active Dock
+            <CheckCircle2 className="w-3 h-3 text-emerald-400" /> 12-Hour Dock Session
           </div>
           <button
             onClick={handlePrintPlacard}

@@ -201,7 +201,7 @@ export default function InventorySoftware() {
   const [scannerQty, setScannerQty] = useState(1);
   const [pairingQrUrl, setPairingQrUrl] = useState('');
   const [scannerPairingKey, setScannerPairingKey] = useState('');
-  const [scannerDaysRemaining, setScannerDaysRemaining] = useState(90);
+  const [scannerHoursRemaining, setScannerHoursRemaining] = useState(12);
   const [scannerExpiresAt, setScannerExpiresAt] = useState(null);
   const [batchQrProduct, setBatchQrProduct] = useState(null);
   const [batchQrBatch, setBatchQrBatch] = useState('');
@@ -814,11 +814,11 @@ export default function InventorySoftware() {
 
     const initPairingSession = async () => {
       try {
-        // Query existing 90-day session configuration to preserve persistent login
+        // Reuse the active 12-hour scanner key for this terminal.
         const cfgRes = await api.get(`/inventory-software/scanner/config?sessionCode=${posSessionCode}`, reqConfig).catch(() => null);
         let apiKey = cfgRes?.data?.scannerApiKey;
-        let daysRem = cfgRes?.data?.daysRemaining ?? 90;
-        let expAt = cfgRes?.data?.expiresAt ?? null;
+        let hoursRemaining = cfgRes?.data?.hoursRemaining ?? 12;
+        let expiresAt = cfgRes?.data?.expiresAt ?? null;
 
         // If no active session key exists yet, initialize it
         if (!apiKey) {
@@ -828,14 +828,14 @@ export default function InventorySoftware() {
             reqConfig
           );
           apiKey = pairRes?.data?.scannerApiKey;
-          daysRem = pairRes?.data?.daysRemaining ?? 90;
-          expAt = pairRes?.data?.expiresAt ?? null;
+          hoursRemaining = pairRes?.data?.hoursRemaining ?? 12;
+          expiresAt = pairRes?.data?.expiresAt ?? null;
         }
 
         if (!active || !apiKey) return;
         setScannerPairingKey(apiKey);
-        setScannerDaysRemaining(daysRem);
-        setScannerExpiresAt(expAt);
+        setScannerHoursRemaining(hoursRemaining);
+        setScannerExpiresAt(expiresAt);
 
         const payload = JSON.stringify({
           app: 'BHUMIVERA_ANDROID_QR_SCANNER',
@@ -843,6 +843,7 @@ export default function InventorySoftware() {
           queueEndpoint: 'https://service.bhumivera.com/api/inventory-software/scanner/queue',
           scannerApiKey: apiKey,
           sessionCode: posSessionCode,
+          expiresAt,
         });
         const qrUrl = await QRCode.toDataURL(payload, { width: 220, margin: 1 });
         if (active) setPairingQrUrl(qrUrl);
@@ -866,18 +867,19 @@ export default function InventorySoftware() {
       if (res.data?.success) {
         const apiKey = res.data.scannerApiKey;
         setScannerPairingKey(apiKey);
-        setScannerDaysRemaining(res.data.daysRemaining || 90);
-        setScannerExpiresAt(res.data.expiresAt);
+        setScannerHoursRemaining(res.data.hoursRemaining ?? 12);
+        setScannerExpiresAt(res.data.expiresAt ?? null);
         const payload = JSON.stringify({
           app: 'BHUMIVERA_ANDROID_QR_SCANNER',
           endpoint: 'https://service.bhumivera.com/api/inventory-software/scanner/scan',
           queueEndpoint: 'https://service.bhumivera.com/api/inventory-software/scanner/queue',
           scannerApiKey: apiKey,
           sessionCode: posSessionCode,
+          expiresAt: res.data.expiresAt,
         });
         const qrUrl = await QRCode.toDataURL(payload, { width: 220, margin: 1 });
         setPairingQrUrl(qrUrl);
-        showNotice('success', 'Scanner pairing key rotated. New 90-day session token created.');
+        showNotice('success', 'Scanner key rotated. Scan the refreshed pairing QR to start a new 12-hour session.');
       }
     } catch (err) {
       showNotice('error', err.response?.data?.message || 'Failed to rotate pairing key.');
@@ -2909,7 +2911,7 @@ export default function InventorySoftware() {
             <ScannerBridgeView
               pairingQrUrl={pairingQrUrl}
               pairingKey={scannerPairingKey}
-              daysRemaining={scannerDaysRemaining}
+              hoursRemaining={scannerHoursRemaining}
               expiresAt={scannerExpiresAt}
               sessionCode={posSessionCode}
               scannerQueue={scannerQueue}

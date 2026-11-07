@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import QRCode from 'qrcode';
 import {
   X,
@@ -64,6 +64,7 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
   const [errorMsg, setErrorMsg] = useState('');
   const [rejectedBarcode, setRejectedBarcode] = useState('');
   const [loading, setLoading] = useState(false);
+  const [liveSyncError, setLiveSyncError] = useState('');
 
   // Admin live order editor mode
   const [isAdminEditMode, setIsAdminEditMode] = useState(false);
@@ -79,13 +80,61 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
   const [orderQrUrl, setOrderQrUrl] = useState('');
 
   const [tokenNotice, setTokenNotice] = useState('');
+  const lastServerTotal = useRef(0);
 
   useEffect(() => {
     if (order?.items) {
       setOrderItems(order.items);
       setEditableItems(order.items.map(it => ({ ...it })));
+      lastServerTotal.current = order.items.reduce((sum, item) => sum + (Number(item.verifiedCount) || 0), 0);
+      setVerifiedItems(Object.fromEntries(
+        order.items.map((item, index) => [
+          item.id ?? item.orderItemId ?? item.productId ?? index,
+          Number(item.verifiedCount) || 0,
+        ])
+      ));
     }
   }, [order]);
+
+  useEffect(() => {
+    if (!order?.id) return undefined;
+    let active = true;
+
+    const refreshPackingProgress = async () => {
+      try {
+        const { data } = await api.get(`/inventory-software/orders/${order.id}/manifest`, reqConfig);
+        const liveItems = data?.items || data?.order?.items;
+        if (!active || !Array.isArray(liveItems)) return;
+        const totalScanned = liveItems.reduce((sum, item) => sum + (Number(item.verifiedCount) || 0), 0);
+        const totalUnits = liveItems.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
+        if (totalScanned > lastServerTotal.current) {
+          setTokenNotice(`Live scanner update: ${totalScanned - lastServerTotal.current} unit(s) verified (${totalScanned}/${totalUnits}).`);
+        }
+        lastServerTotal.current = totalScanned;
+        setOrderItems(liveItems);
+        setVerifiedItems(Object.fromEntries(
+          liveItems.map((item, index) => [
+            item.orderItemId ?? item.id ?? item.productId ?? index,
+            Number(item.verifiedCount) || 0,
+          ])
+        ));
+        setLiveSyncError('');
+      } catch (err) {
+        if (active) {
+          setLiveSyncError(err.response?.data?.message || 'Live scanner updates are temporarily unavailable.');
+        }
+      }
+    };
+
+    refreshPackingProgress();
+    const timer = window.setInterval(() => {
+      if (document.visibilityState === 'visible') refreshPackingProgress();
+    }, 2500);
+    return () => {
+      active = false;
+      window.clearInterval(timer);
+    };
+  }, [order?.id, reqConfig]);
 
   // Generate Order QR code for the pick slip
   useEffect(() => {
@@ -104,7 +153,10 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
   if (!order) return null;
 
   const totalQuantity = orderItems.reduce((sum, it) => sum + (Number(it.quantity) || 1), 0);
-  const totalVerified = Object.values(verifiedItems).reduce((sum, count) => sum + count, 0);
+  const totalVerified = orderItems.reduce(
+    (sum, item, index) => sum + (Number(verifiedItems[item.id ?? item.orderItemId ?? item.productId ?? index]) || 0),
+    0
+  );
   const isComplete = totalVerified >= totalQuantity && totalQuantity > 0;
 
   const handleScanSubmit = async (e) => {
@@ -134,12 +186,18 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
 
       if (res.data?.verified) {
         playSuccessChime();
-        const matchedProduct = res.data.product;
+        const { progress } = res.data;
+        if (Number.isFinite(progress?.totalVerified)) lastServerTotal.current = progress.totalVerified;
         setVerifiedItems(prev => {
-          const currentCount = prev[matchedProduct.productId] || 0;
-          return { ...prev, [matchedProduct.productId]: currentCount + 1 };
+          const itemKey = progress?.orderItemId ?? res.data.product?.productId;
+          if (itemKey == null) return prev;
+          return { ...prev, [itemKey]: Number(progress?.verifiedCount) || (prev[itemKey] || 0) + 1 };
         });
+        setLiveSyncError('');
+        setTokenNotice(res.data.message || '');
         setBarcodeInput('');
+      } else {
+        throw new Error(res.data?.message || 'The server did not confirm this scan.');
       }
     } catch (err) {
       playMismatchAlarm();
@@ -176,10 +234,10 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
   };
 
   const handleAddNewItem = () => {
-    if (!newItemName.trim()) return;
+    if (!newItemName.trim() || !newItemSku.trim()) return;
     const item = {
-      productId: Date.now(),
-      sku: newItemSku.trim() || `BV-${Date.now().toString().slice(-6)}`,
+      productId: null,
+      sku: newItemSku.trim(),
       name: newItemName.trim(),
       quantity: Number(newItemQty) || 1,
       price: Number(newItemPrice) || 299,
@@ -205,12 +263,26 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
         reqConfig
       );
       if (res.data?.success) {
-        setOrderItems(res.data.items || editableItems);
+        setOrderItems(editableItems.map(item => ({ ...item, verifiedCount: 0 })));
         setIsAdminEditMode(false);
         setErrorMsg('');
         setRejectedBarcode('');
-        // Reset verified counts to re-verify updated order
         setVerifiedItems({});
+        lastServerTotal.current = 0;
+        try {
+          const { data } = await api.get(`/inventory-software/orders/${order.id}/manifest`, reqConfig);
+          if (Array.isArray(data?.items)) {
+            setOrderItems(data.items);
+            setVerifiedItems(Object.fromEntries(
+              data.items.map((item, index) => [
+                item.orderItemId ?? item.id ?? item.productId ?? index,
+                Number(item.verifiedCount) || 0,
+              ])
+            ));
+          }
+        } catch (refreshErr) {
+          setLiveSyncError(refreshErr.response?.data?.message || 'Items were saved, but the refreshed checklist could not be loaded yet.');
+        }
         playSuccessChime();
       }
     } catch (err) {
@@ -376,13 +448,13 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
                     type="text"
                     value={newItemSku}
                     onChange={(e) => setNewItemSku(e.target.value)}
-                    placeholder="SKU (e.g. BV-GUN-01)"
+                    placeholder="Catalog SKU (required)"
                     className="px-2.5 py-1.5 bg-black/50 border border-white/20 rounded-lg text-white font-mono"
                   />
                   <button
                     type="button"
                     onClick={handleAddNewItem}
-                    disabled={!newItemName.trim()}
+                    disabled={!newItemName.trim() || !newItemSku.trim()}
                     className="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white font-bold rounded-lg transition disabled:opacity-50 flex items-center justify-center gap-1"
                   >
                     <Plus className="w-3.5 h-3.5" /> Add
@@ -399,6 +471,9 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
               <span className={isComplete ? 'text-emerald-400 font-black' : 'text-slate-200'}>
                 {totalVerified} of {totalQuantity} Units Scanned
               </span>
+            </div>
+            <div className={`mb-1.5 text-[10px] font-semibold ${liveSyncError ? 'text-amber-300' : 'text-emerald-300'}`} role="status">
+              {liveSyncError || 'Live scanner updates connected'}
             </div>
             <div className="w-full h-2.5 bg-[#071711] rounded-full overflow-hidden border border-emerald-500/25">
               <div
@@ -461,7 +536,7 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
           {tokenNotice && (
             <div className="p-3 bg-emerald-950/70 border border-emerald-500 rounded-xl text-xs text-emerald-200 flex items-start gap-2.5">
               <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
-              <div>{tokenNotice}</div>
+              <div><strong>Latest scan:</strong> {tokenNotice}</div>
             </div>
           )}
 
@@ -472,7 +547,8 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
               <span>Scanned / Target</span>
             </div>
             {orderItems.map((item, idx) => {
-              const countVerified = verifiedItems[item.productId] || 0;
+              const itemKey = item.id ?? item.orderItemId ?? item.productId ?? idx;
+              const countVerified = verifiedItems[itemKey] || 0;
               const isItemDone = countVerified >= Number(item.quantity);
 
               return (
