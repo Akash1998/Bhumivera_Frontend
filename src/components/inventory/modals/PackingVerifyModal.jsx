@@ -78,6 +78,8 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
   const [showPickSlip, setShowPickSlip] = useState(false);
   const [orderQrUrl, setOrderQrUrl] = useState('');
 
+  const [tokenNotice, setTokenNotice] = useState('');
+
   useEffect(() => {
     if (order?.items) {
       setOrderItems(order.items);
@@ -90,8 +92,9 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
     if (!order?.id) return;
     const orderToken = `ORD:${order.id}`;
     QRCode.toDataURL(orderToken, {
-      width: 180,
-      margin: 1,
+      width: 220,
+      margin: 2,
+      errorCorrectionLevel: 'M',
       color: { dark: '#000000', light: '#ffffff' },
     })
       .then(url => setOrderQrUrl(url))
@@ -110,6 +113,16 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
     if (!code) return;
     setErrorMsg('');
     setRejectedBarcode('');
+    setTokenNotice('');
+
+    // Handle scanning the order token itself
+    if (code.startsWith('ORD:') || code.startsWith('ord:') || code === String(order.id) || code === String(order.orderNumber || order.order_number)) {
+      playSuccessChime();
+      setTokenNotice(`✔ Order #${order.orderNumber || order.id} Token recognized. Now scan physical product formulation items (e.g. BV-LUX-CFW-01) to pack.`);
+      setBarcodeInput('');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -441,6 +454,14 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
                   </div>
                 )}
               </div>
+            </div>
+          )}
+
+          {/* ORDER TOKEN NOTIFICATION BANNER */}
+          {tokenNotice && (
+            <div className="p-3 bg-emerald-950/70 border border-emerald-500 rounded-xl text-xs text-emerald-200 flex items-start gap-2.5">
+              <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0 mt-0.5" />
+              <div>{tokenNotice}</div>
             </div>
           )}
 
