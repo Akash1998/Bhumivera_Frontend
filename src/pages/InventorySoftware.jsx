@@ -22,6 +22,7 @@ import ManifestPrintModal from '../components/inventory/modals/ManifestPrintModa
 import PackingVerifyModal from '../components/inventory/modals/PackingVerifyModal';
 import ReturnQcModal from '../components/inventory/modals/ReturnQcModal';
 import ThermalLabelModal from '../components/inventory/modals/ThermalLabelModal';
+import BatchBarcodeGeneratorModal from '../components/inventory/modals/BatchBarcodeGeneratorModal';
 import {
   Activity,
   AlertTriangle,
@@ -199,6 +200,10 @@ export default function InventorySoftware() {
   const [scannerQty, setScannerQty] = useState(1);
   const [pairingQrUrl, setPairingQrUrl] = useState('');
   const [scannerPairingKey, setScannerPairingKey] = useState('');
+  const [scannerDaysRemaining, setScannerDaysRemaining] = useState(90);
+  const [scannerExpiresAt, setScannerExpiresAt] = useState(null);
+  const [batchQrProduct, setBatchQrProduct] = useState(null);
+  const [batchQrBatch, setBatchQrBatch] = useState('');
   const [backupBusy, setBackupBusy] = useState(false);
   const [posCustomerForm, setPosCustomerForm] = useState({
     name: 'Walk-in Retail Shopper',
@@ -805,35 +810,84 @@ export default function InventorySoftware() {
       (viewer.role !== 'admin' && !viewer.fullAllAccess && !viewer.permissions?.can_use_pos_billing)
     ) return undefined;
     let active = true;
-    setPairingQrUrl('');
-    setScannerPairingKey('');
-    const createPairingQr = async () => {
+
+    const initPairingSession = async () => {
       try {
-        const response = await api.post(
-          '/inventory-software/scanner/pair',
-          { sessionCode: posSessionCode, deviceName: 'Bhumivera POS Scanner' },
-          reqConfig
-        );
-        if (!active) return;
+        // Query existing 90-day session configuration to preserve persistent login
+        const cfgRes = await api.get(`/inventory-software/scanner/config?sessionCode=${posSessionCode}`, reqConfig).catch(() => null);
+        let apiKey = cfgRes?.data?.scannerApiKey;
+        let daysRem = cfgRes?.data?.daysRemaining ?? 90;
+        let expAt = cfgRes?.data?.expiresAt ?? null;
+
+        // If no active session key exists yet, initialize it
+        if (!apiKey) {
+          const pairRes = await api.post(
+            '/inventory-software/scanner/pair',
+            { sessionCode: posSessionCode, deviceName: 'Bhumivera POS Scanner' },
+            reqConfig
+          );
+          apiKey = pairRes?.data?.scannerApiKey;
+          daysRem = pairRes?.data?.daysRemaining ?? 90;
+          expAt = pairRes?.data?.expiresAt ?? null;
+        }
+
+        if (!active || !apiKey) return;
+        setScannerPairingKey(apiKey);
+        setScannerDaysRemaining(daysRem);
+        setScannerExpiresAt(expAt);
+
         const payload = JSON.stringify({
           app: 'BHUMIVERA_ANDROID_QR_SCANNER',
           endpoint: 'https://service.bhumivera.com/api/inventory-software/scanner/scan',
           queueEndpoint: 'https://service.bhumivera.com/api/inventory-software/scanner/queue',
-          scannerApiKey: response.data.scannerApiKey,
-          sessionCode: response.data.sessionCode,
+          scannerApiKey: apiKey,
+          sessionCode: posSessionCode,
         });
-        setScannerPairingKey(response.data.scannerApiKey);
-        const qrUrl = await QRCode.toDataURL(payload, { width: 200, margin: 1 });
+        const qrUrl = await QRCode.toDataURL(payload, { width: 220, margin: 1 });
         if (active) setPairingQrUrl(qrUrl);
       } catch (err) {
-        if (active) showNotice('error', err.response?.data?.message || 'Could not pair a mobile scanner to this terminal.');
+        if (active) showNotice('error', err.response?.data?.message || 'Could not initialize scanner session.');
       }
     };
-    createPairingQr();
+    initPairingSession();
     return () => {
       active = false;
     };
   }, [authToken, posSessionCode, reqConfig, showNotice, viewer]);
+
+  const handleRotateScannerKey = async () => {
+    try {
+      const res = await api.post(
+        '/inventory-software/scanner/pair',
+        { sessionCode: posSessionCode, rotate: true, deviceName: 'Bhumivera POS Scanner' },
+        reqConfig
+      );
+      if (res.data?.success) {
+        const apiKey = res.data.scannerApiKey;
+        setScannerPairingKey(apiKey);
+        setScannerDaysRemaining(res.data.daysRemaining || 90);
+        setScannerExpiresAt(res.data.expiresAt);
+        const payload = JSON.stringify({
+          app: 'BHUMIVERA_ANDROID_QR_SCANNER',
+          endpoint: 'https://service.bhumivera.com/api/inventory-software/scanner/scan',
+          queueEndpoint: 'https://service.bhumivera.com/api/inventory-software/scanner/queue',
+          scannerApiKey: apiKey,
+          sessionCode: posSessionCode,
+        });
+        const qrUrl = await QRCode.toDataURL(payload, { width: 220, margin: 1 });
+        setPairingQrUrl(qrUrl);
+        showNotice('success', 'Scanner pairing key rotated. New 90-day session token created.');
+      }
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Failed to rotate pairing key.');
+    }
+  };
+
+  const handleOpenBatchQrModal = (prod = null, batch = '') => {
+    setBatchQrProduct(prod);
+    setBatchQrBatch(batch);
+    setActiveModal('batch-qr');
+  };
 
   // ==========================================================================
   // HANDLERS: AUTHENTICATION & SECURITY ONBOARDING
@@ -2609,11 +2663,21 @@ export default function InventorySoftware() {
             </div>
           </div>
 
-          <div className="flex items-center gap-2.5">
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => handleOpenBatchQrModal()}
+              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-600 text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
+              title="Generate & Print Batch Barcodes / QR Stickers"
+            >
+              <QrCode className="w-3.5 h-3.5 text-emerald-400" />
+              Batch QR Studio
+            </button>
+
             <button
               type="button"
               onClick={() => fetchBootstrapData()}
-              className="px-3 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold flex items-center gap-1.5 transition"
+              className="px-3 py-2 rounded-xl bg-[#0c261b] hover:bg-[#133827] text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${syncing ? 'animate-spin' : ''}`} />
               Sync Live Website Stock
@@ -2622,7 +2686,7 @@ export default function InventorySoftware() {
             <button
               type="button"
               onClick={() => setActiveView('sale')}
-              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition"
+              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white text-xs font-black uppercase tracking-wider flex items-center gap-1.5 shadow-md transition"
             >
               <ShoppingCart className="w-3.5 h-3.5" />
               New POS Bill
@@ -2631,9 +2695,9 @@ export default function InventorySoftware() {
             <button
               type="button"
               onClick={() => setActiveModal('profile')}
-              className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-bold flex items-center gap-1.5"
+              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-600 text-xs font-bold flex items-center gap-1.5 transition"
             >
-              <Fingerprint className="w-3.5 h-3.5 text-emerald-600" />
+              <Fingerprint className="w-3.5 h-3.5 text-emerald-400" />
               Passkey &amp; 2FA
             </button>
           </div>
@@ -2716,6 +2780,7 @@ export default function InventorySoftware() {
             <CatalogStockView
               items={items}
               velocityData={velocityData}
+              onGenerateBatchQr={(item) => handleOpenBatchQrModal(item)}
               onEditItem={(item) => {
                 setEditingItem(item || {
                   name: '',
@@ -2832,6 +2897,9 @@ export default function InventorySoftware() {
             <ScannerBridgeView
               pairingQrUrl={pairingQrUrl}
               pairingKey={scannerPairingKey}
+              daysRemaining={scannerDaysRemaining}
+              expiresAt={scannerExpiresAt}
+              sessionCode={posSessionCode}
               scannerQueue={scannerQueue}
               onPullQueueToPos={handlePullMobileScannerQueueToPos}
               onClearQueue={async () => {
@@ -2839,13 +2907,8 @@ export default function InventorySoftware() {
                 setScannerQueue([]);
                 showNotice('success', 'Scanner queue cleared.');
               }}
-              onRegenerateKey={async () => {
-                const res = await api.post('/inventory-software/scanner/regenerate-key', {}, reqConfig);
-                if (res.data?.success) {
-                  setScannerPairingKey(res.data.key);
-                  showNotice('success', 'Scanner pairing key regenerated.');
-                }
-              }}
+              onRegenerateKey={handleRotateScannerKey}
+              onOpenBatchQrModal={() => handleOpenBatchQrModal()}
             />
           )}
 
@@ -4536,6 +4599,20 @@ export default function InventorySoftware() {
         <ThermalLabelModal
           order={thermalLabelOrder}
           onClose={() => setThermalLabelOrder(null)}
+        />
+      )}
+
+      {activeModal === 'batch-qr' && (
+        <BatchBarcodeGeneratorModal
+          isOpen={true}
+          onClose={() => {
+            setActiveModal(null);
+            setBatchQrProduct(null);
+            setBatchQrBatch('');
+          }}
+          catalog={items}
+          initialProduct={batchQrProduct}
+          initialBatch={batchQrBatch}
         />
       )}
     </div>

@@ -10,6 +10,7 @@ import {
   Sparkles,
   AlertTriangle,
   Package,
+  QrCode,
 } from 'lucide-react';
 
 export default function CatalogStockView({
@@ -18,6 +19,7 @@ export default function CatalogStockView({
   onEditItem,
   onAdjustStock,
   onPrintBarcode,
+  onGenerateBatchQr,
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCat, setSelectedCat] = useState('ALL');
@@ -88,12 +90,21 @@ export default function CatalogStockView({
           </div>
         </div>
 
-        <button
-          onClick={() => onEditItem(null)}
-          className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition shadow-lg shadow-emerald-950/50 shrink-0"
-        >
-          <Plus className="w-4 h-4" /> Add Master SKU
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <button
+            onClick={() => onGenerateBatchQr ? onGenerateBatchQr(null) : onEditItem(null)}
+            className="inline-flex items-center gap-1.5 px-3 py-2 bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-slate-600 rounded-xl text-xs font-bold transition shadow-sm"
+            title="Generate and print batch barcodes / QR stickers for mobile scanner"
+          >
+            <QrCode className="w-4 h-4 text-emerald-400" /> Batch Barcodes / QR
+          </button>
+          <button
+            onClick={() => onEditItem(null)}
+            className="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition shadow-lg shadow-emerald-950/50"
+          >
+            <Plus className="w-4 h-4" /> Add Master SKU
+          </button>
+        </div>
       </div>
 
       {/* Products Stock Table */}
@@ -190,6 +201,13 @@ export default function CatalogStockView({
 
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">
+                          <button
+                            onClick={() => onGenerateBatchQr ? onGenerateBatchQr(item) : onEditItem(item)}
+                            className="p-1.5 text-emerald-300 hover:text-white hover:bg-emerald-800/40 rounded-lg transition"
+                            title="Generate Batch Barcode / QR Sticker for Android Scanner"
+                          >
+                            <QrCode className="w-3.5 h-3.5" />
+                          </button>
                           <button
                             onClick={() => onAdjustStock(item)}
                             className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-white rounded-lg text-xs font-bold transition border border-slate-600"
