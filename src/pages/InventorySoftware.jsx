@@ -23,6 +23,7 @@ import PackingVerifyModal from '../components/inventory/modals/PackingVerifyModa
 import ReturnQcModal from '../components/inventory/modals/ReturnQcModal';
 import ThermalLabelModal from '../components/inventory/modals/ThermalLabelModal';
 import BatchBarcodeGeneratorModal from '../components/inventory/modals/BatchBarcodeGeneratorModal';
+import PackageFinderModal from '../components/inventory/modals/PackageFinderModal';
 import {
   Activity,
   AlertTriangle,
@@ -2676,6 +2677,16 @@ export default function InventorySoftware() {
 
             <button
               type="button"
+              onClick={() => setActiveModal('package-finder')}
+              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-600 text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
+              title="Lost Parcel Intelligence & Package Recovery"
+            >
+              <Package className="w-3.5 h-3.5 text-teal-400" />
+              Package Finder
+            </button>
+
+            <button
+              type="button"
               onClick={() => fetchBootstrapData()}
               className="px-3 py-2 rounded-xl bg-[#0c261b] hover:bg-[#133827] text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
             >
@@ -2751,6 +2762,7 @@ export default function InventorySoftware() {
               onOpenReturnQc={(order) => setReturnQcOrder(order)}
               syncing={syncing}
               onRefresh={() => fetchBootstrapData(true)}
+              onOpenPackageFinder={() => setActiveModal('package-finder')}
             />
           )}
 
@@ -2909,6 +2921,7 @@ export default function InventorySoftware() {
               }}
               onRegenerateKey={handleRotateScannerKey}
               onOpenBatchQrModal={() => handleOpenBatchQrModal()}
+              onOpenPackageFinder={() => setActiveModal('package-finder')}
             />
           )}
 
@@ -4613,6 +4626,26 @@ export default function InventorySoftware() {
           catalog={items}
           initialProduct={batchQrProduct}
           initialBatch={batchQrBatch}
+        />
+      )}
+
+      {activeModal === 'package-finder' && (
+        <PackageFinderModal
+          isOpen={true}
+          onClose={() => setActiveModal(null)}
+          reqConfig={reqConfig}
+          onOpenOrder={(ord) => {
+            setEditingOrder(ord);
+            setActiveModal('order-detail');
+          }}
+          onVerifyPacking={(ord) => {
+            setActiveModal(null);
+            setVerifyPackingOrder(ord);
+          }}
+          onPrintLabel={(ord) => {
+            setActiveModal(null);
+            setThermalLabelOrder(ord);
+          }}
         />
       )}
     </div>

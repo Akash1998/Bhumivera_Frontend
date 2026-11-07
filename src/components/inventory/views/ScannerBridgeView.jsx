@@ -12,6 +12,7 @@ import {
   Printer,
   Calendar,
   Layers,
+  Package,
 } from 'lucide-react';
 
 export default function ScannerBridgeView({
@@ -25,6 +26,7 @@ export default function ScannerBridgeView({
   expiresAt = null,
   sessionCode = 'REG-POS-01',
   onOpenBatchQrModal = null,
+  onOpenPackageFinder = null,
 }) {
   const handlePrintPlacard = () => {
     const printWindow = window.open('', '_blank');
@@ -205,6 +207,15 @@ export default function ScannerBridgeView({
                 className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl transition shadow-sm"
               >
                 <QrCode className="w-3.5 h-3.5 text-emerald-400" /> Generate Product Batch QR
+              </button>
+            )}
+
+            {onOpenPackageFinder && (
+              <button
+                onClick={onOpenPackageFinder}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-teal-200 bg-teal-950/60 hover:bg-teal-900/80 border border-teal-500/50 rounded-xl transition shadow-sm"
+              >
+                <Package className="w-3.5 h-3.5 text-teal-400" /> Lost Package Finder
               </button>
             )}
 

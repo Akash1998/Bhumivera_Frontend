@@ -37,8 +37,18 @@ export default function ProductVerification() {
   const [searchParams] = useSearchParams();
   const { user } = useAuth() || {};
   const userId = user?.id;
-  const urlGiftCode = (searchParams.get('qr') || searchParams.get('gift') || searchParams.get('code') || '').toUpperCase();
-  const urlSerial = searchParams.get('serial') || '';
+
+  const rawCode = (searchParams.get('code') || searchParams.get('qr') || '').trim();
+  const isBhumiveraProductCode =
+    rawCode.toUpperCase().startsWith('BV:') ||
+    rawCode.toUpperCase().startsWith('BV|') ||
+    rawCode.toUpperCase().startsWith('BV-');
+
+  const urlSerial = searchParams.get('serial') || (isBhumiveraProductCode ? rawCode : '');
+  const urlGiftCode = (!isBhumiveraProductCode
+    ? (searchParams.get('qr') || searchParams.get('gift') || searchParams.get('code') || '')
+    : (searchParams.get('gift') || '')
+  ).toUpperCase();
   const urlGiftSerial = searchParams.get('serial') || '';
   const [serial, setSerial] = useState(urlSerial);
   const [loading, setLoading] = useState(false);

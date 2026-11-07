@@ -1,17 +1,39 @@
-import React, { useRef } from 'react';
-import { X, Printer, Download, Package } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import QRCode from 'qrcode';
+import { X, Printer, Download, Package, QrCode } from 'lucide-react';
 
 export default function ThermalLabelModal({ order, onClose }) {
   const printAreaRef = useRef(null);
+  const [packageQrUrl, setPackageQrUrl] = useState('');
 
   if (!order) return null;
+
+  const awb = order.trackingNumber || `BV-TRK-${order.id}`;
+  const courier = (order.courier || 'Delhivery Express').toUpperCase();
+  const packagePayload = `PKG:${order.id}`;
+
+  useEffect(() => {
+    let active = true;
+    QRCode.toDataURL(packagePayload, {
+      width: 140,
+      margin: 1,
+      color: {
+        dark: '#000000',
+        light: '#ffffff',
+      },
+    })
+      .then(url => {
+        if (active) setPackageQrUrl(url);
+      })
+      .catch(err => console.error('Failed to generate Package QR', err));
+    return () => {
+      active = false;
+    };
+  }, [order.id, packagePayload]);
 
   const handlePrint = () => {
     window.print();
   };
-
-  const awb = order.trackingNumber || `BV-TRK-${order.id}`;
-  const courier = (order.courier || 'Delhivery Express').toUpperCase();
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-4 overflow-y-auto">
@@ -20,7 +42,7 @@ export default function ThermalLabelModal({ order, onClose }) {
         <div className="p-4 border-b border-emerald-500/30 flex items-center justify-between bg-[#071711] print:hidden">
           <div>
             <h3 className="text-sm font-black uppercase text-white tracking-wide">4×6″ Thermal Courier Label</h3>
-            <p className="text-[11px] text-emerald-300 font-medium">Order #{order.orderNumber} • {courier}</p>
+            <p className="text-[11px] text-emerald-300 font-medium">Order #{order.orderNumber} • {courier} • PKG ID: {packagePayload}</p>
           </div>
           <div className="flex items-center gap-2">
             <button
@@ -61,26 +83,34 @@ export default function ThermalLabelModal({ order, onClose }) {
             </div>
 
             {/* AWB Barcode Simulation */}
-            <div className="py-3 border-b-2 border-black text-center">
+            <div className="py-2.5 border-b-2 border-black text-center">
               <div className="text-[10px] uppercase font-bold text-slate-600">AWB Tracking Number</div>
               {/* High-density barcode graphic */}
-              <div className="h-14 flex items-center justify-center my-1">
-                <div className="w-64 h-12 flex items-center justify-center bg-repeating-linear-stripes text-transparent select-none font-mono tracking-widest text-xs border-y border-black">
+              <div className="h-12 flex items-center justify-center my-1">
+                <div className="w-64 h-10 flex items-center justify-center bg-repeating-linear-stripes text-transparent select-none font-mono tracking-widest text-xs border-y border-black">
                   ||| | | |||| | ||| || |||| | | ||| || |||| | | |||
                 </div>
               </div>
               <div className="font-mono text-sm font-black tracking-widest">{awb}</div>
             </div>
 
-            {/* Destination Pincode & Routing Hub */}
-            <div className="grid grid-cols-2 border-b-2 border-black py-2">
-              <div className="border-r-2 border-black pr-2">
-                <div className="text-[9px] uppercase font-bold text-slate-600">Destination PIN</div>
-                <div className="text-2xl font-black font-mono">{order.pincode || '713304'}</div>
+            {/* Destination Pincode & Package Recovery QR */}
+            <div className="grid grid-cols-3 border-b-2 border-black py-2 items-center">
+              <div className="col-span-2 pr-2 border-r-2 border-black">
+                <div className="text-[9px] uppercase font-bold text-slate-600">Destination PIN & Hub</div>
+                <div className="text-2xl font-black font-mono leading-tight">{order.pincode || '713304'}</div>
+                <div className="text-xs font-black uppercase truncate">{order.city || 'KOLKATA'} / {order.state || 'WB'}</div>
+                <div className="text-[10px] font-mono mt-1 font-black text-emerald-900 bg-emerald-100 px-1.5 py-0.5 rounded inline-block">
+                  {packagePayload}
+                </div>
               </div>
-              <div className="pl-2">
-                <div className="text-[9px] uppercase font-bold text-slate-600">Routing Hub</div>
-                <div className="text-sm font-black uppercase">{order.city || 'KOLKATA'} / {order.state || 'WB'}</div>
+              <div className="flex flex-col items-center justify-center pl-2">
+                {packageQrUrl ? (
+                  <img src={packageQrUrl} alt="Package Recovery QR" className="w-16 h-16 object-contain" />
+                ) : (
+                  <div className="w-16 h-16 border border-black flex items-center justify-center text-[9px] font-mono">QR</div>
+                )}
+                <span className="text-[8px] font-mono font-black uppercase tracking-tight mt-0.5 text-center">PACKAGE QR</span>
               </div>
             </div>
 

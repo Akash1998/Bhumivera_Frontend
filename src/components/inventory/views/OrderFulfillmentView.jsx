@@ -27,6 +27,7 @@ export default function OrderFulfillmentView({
   onOpenReturnQc,
   syncing,
   onRefresh,
+  onOpenPackageFinder,
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -136,6 +137,17 @@ export default function OrderFulfillmentView({
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2 shrink-0">
+          {onOpenPackageFinder && (
+            <button
+              onClick={onOpenPackageFinder}
+              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-teal-200 bg-teal-950/60 hover:bg-teal-900 border border-teal-500/50 rounded-xl transition shadow"
+              title="Search lost or misplaced packages by parcel barcode"
+            >
+              <Package className="w-4 h-4 text-teal-300" />
+              Package Finder
+            </button>
+          )}
+
           {selectedOrderIds.length > 0 && (
             <button
               onClick={handleLaunchWave}
