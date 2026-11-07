@@ -33,7 +33,7 @@ All files live in `src/pages/`:
 | **3** | `ProductDetail.jsx` | `/product/:id`, `/products/:id` | Full active potency disclosure table, batch CoA verification link, Wikipedia-linked JSON-LD, reviews tab |
 | **4** | `BundleDetail.jsx` | `/combo/:slug` | Regimen bundle page with component breakdown, live component stock, and regimen reviews |
 | **5** | `ProductVerification.jsx` | `/verify`, `/genuinity`, `/ewarranty` | Authenticity QR code scanner and bottle serial validation against Railway database |
-| **6** | `InventorySoftware.jsx` | `/inventorysoftware`, `/inventorysoftware/*` | **10x Omnichannel Command Center**: Order lifecycle with clickable status/today filters, search, date filter and visible-view refresh; shipping labels, RTO returns, POS, 12-hour scanner pairing, live order packing progress, SQL backup |
+| **6** | `InventorySoftware.jsx` | `/inventorysoftware`, `/inventorysoftware/*` | **10x Omnichannel Command Center**: Order lifecycle with clickable status/today filters, search, date filter and visible-view refresh; shipping labels, RTO returns, POS, 12-hour scanner pairing, live order packing progress, printable fulfillment QR bill/pick slip, SQL backup |
 | **7** | `AdminLogin.jsx` | `/admin/login` | Secure management login with TOTP 2FA, brute-force rate limiter, and role gate |
 | **8** | `AdminDashboard.jsx` | `/admin`, `/admin/dashboard` | Website Owner & Marketing Studio (Catalog, Spins, Referrals, GST, CRM, Reviews) |
 | **9** | `SuperAdminSupport.jsx` | `/superadminsupport` | SuperAdmin Staff IAM Vault: Support agent roles, warehouse staff IDs, passkeys & TOTP |
@@ -119,7 +119,7 @@ The entire operational engine for warehouse, orders, and retail POS is encapsula
 * `?view=ret`: **RTO (Return to Origin) Studio** (`RESTOCK` mode for unopened parcels vs `QUARANTINE` mode for transit damage).
 * `?view=inv`: **Master Stock Control** (Unified stock locking online website stock `products.quantity` and physical warehouse stock).
 * `?view=sale`: **Offline POS Terminal** (Live cart, barcode scan bar, dynamic Indian UPI QR, 1-click WhatsApp e-billing).
-* `?view=scanner`: **Mobile Android Scanner Pairing** (12-hour API session QR, explicit key rotation, scanner status, and live order packing progress).
+* `?view=scanner`: **Mobile Android Scanner Pairing** (12-hour API session QR, explicit key rotation, scanner status, and live order packing progress); the mobile app exposes Scan, Fulfill, Finder, POS, and local POS Drafts as separate destinations.
 * `?view=keeper`: **Storage Bin Keeper** (Warehouse rack, shelf, and bin allocation `A1-R02-B05`).
 * `?view=grn`: **Goods Received Notes** (Factory batch inwarding and stock increment).
 * `?view=audit`: **Physical Stock Audit** (Variance check between physical floor count and database count).

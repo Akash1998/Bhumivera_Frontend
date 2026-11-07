@@ -76,7 +76,7 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
   const [savingOrder, setSavingOrder] = useState(false);
 
   // Printable pick slip / Order QR modal view
-  const [showPickSlip, setShowPickSlip] = useState(false);
+  const [showPickSlip, setShowPickSlip] = useState(true);
   const [orderQrUrl, setOrderQrUrl] = useState('');
 
   const [tokenNotice, setTokenNotice] = useState('');
@@ -149,6 +149,91 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
       .then(url => setOrderQrUrl(url))
       .catch(err => console.error('Failed to generate order QR', err));
   }, [order?.id]);
+
+  const handlePrintOrderSlip = () => {
+    if (!orderQrUrl) {
+      setTokenNotice('The fulfillment QR is still generating. Please try again in a moment.');
+      return;
+    }
+
+    const printWindow = window.open('', '_blank', 'width=800,height=700');
+    if (!printWindow) {
+      setTokenNotice('Allow pop-ups to print the order bill and fulfillment QR.');
+      return;
+    }
+
+    const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, char => ({
+      '&': '&amp;',
+      '<': '&lt;',
+      '>': '&gt;',
+      '"': '&quot;',
+      "'": '&#39;',
+    })[char]);
+    const itemRows = orderItems.map(item => `
+      <tr>
+        <td>${escapeHtml(item.name)}</td>
+        <td>${escapeHtml(item.sku || '')}</td>
+        <td>${Number(item.quantity) || 1}</td>
+        <td>₹${(Number(item.price) || 0).toFixed(2)}</td>
+      </tr>
+    `).join('');
+    const orderTotal = Number(order.total ?? order.totalAmount) || 0;
+    const orderAddress = order.fullFormattedAddress || order.shippingAddress ||
+      [order.line1, order.line2, order.landmark, order.city, order.state, order.pincode].filter(Boolean).join(', ');
+
+    printWindow.document.write(`
+      <!doctype html>
+      <html>
+        <head>
+          <title>Bhumivera Order ${escapeHtml(order.orderNumber)}</title>
+          <style>
+            * { box-sizing: border-box; }
+            body { font: 14px Arial, sans-serif; color: #111; margin: 24px auto; max-width: 760px; padding: 0 24px; }
+            header { border-bottom: 2px solid #166534; padding-bottom: 12px; margin-bottom: 16px; }
+            h1 { font-size: 20px; margin: 0 0 4px; }
+            .sub { color: #475569; font-size: 12px; }
+            .order { display: flex; justify-content: space-between; gap: 20px; }
+            .details { line-height: 1.6; }
+            .qr { text-align: center; min-width: 150px; }
+            .qr img { width: 140px; height: 140px; }
+            .token { font: bold 12px monospace; }
+            table { border-collapse: collapse; width: 100%; margin-top: 20px; }
+            th, td { border-bottom: 1px solid #cbd5e1; padding: 8px; text-align: left; }
+            th { background: #f1f5f9; }
+            .total { text-align: right; font-size: 18px; font-weight: bold; margin-top: 14px; }
+            .hint { margin-top: 20px; border: 1px solid #94a3b8; padding: 10px; text-align: center; font-size: 11px; }
+            @media print { body { margin: 0; max-width: none; } }
+          </style>
+        </head>
+        <body>
+          <header>
+            <h1>Bhumivera · Order Bill &amp; Fulfillment Slip</h1>
+            <div class="sub">Scan the order QR in the paired scanner app to load the picking checklist.</div>
+          </header>
+          <section class="order">
+            <div class="details">
+              <strong>Order #${escapeHtml(order.orderNumber)}</strong><br>
+              Customer: ${escapeHtml(order.customerName)}<br>
+              Phone: ${escapeHtml(order.customerPhone)}<br>
+              Address: ${escapeHtml(orderAddress)}
+            </div>
+            <div class="qr">
+              <img src="${escapeHtml(orderQrUrl)}" alt="Order fulfillment QR">
+              <div class="token">ORD:${escapeHtml(order.id)}</div>
+            </div>
+          </section>
+          <table>
+            <thead><tr><th>Product</th><th>SKU</th><th>Qty</th><th>Unit price</th></tr></thead>
+            <tbody>${itemRows}</tbody>
+          </table>
+          <div class="total">Order total: ₹${orderTotal.toFixed(2)}</div>
+          <div class="hint">Attach this slip to the parcel. The scanner accepts only the current items and quantities on this order.</div>
+          <script>window.onload = () => { window.focus(); window.print(); };</script>
+        </body>
+      </html>
+    `);
+    printWindow.document.close();
+  };
 
   if (!order) return null;
 
@@ -315,7 +400,7 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
               onClick={() => setShowPickSlip(!showPickSlip)}
               className="text-xs font-bold text-emerald-300 hover:text-white bg-emerald-950/60 hover:bg-emerald-800/60 border border-emerald-500/40 px-2.5 py-1.5 rounded-xl flex items-center gap-1.5 transition"
             >
-              <QrCode className="w-3.5 h-3.5" /> {showPickSlip ? 'Close Token' : 'Order QR Token'}
+              <QrCode className="w-3.5 h-3.5" /> {showPickSlip ? 'Hide Order Slip' : 'Order Bill + QR'}
             </button>
             <button
               onClick={() => setIsAdminEditMode(!isAdminEditMode)}
@@ -364,10 +449,10 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
                 </div>
                 <button
                   type="button"
-                  onClick={() => window.print()}
+                  onClick={handlePrintOrderSlip}
                   className="mt-2 text-[10px] font-black bg-black text-white px-3 py-1 rounded shadow uppercase tracking-wider flex items-center gap-1"
                 >
-                  <Printer className="w-3 h-3" /> Print Token Slip
+                  <Printer className="w-3 h-3" /> Print Bill with Fulfillment QR
                 </button>
               </div>
             </div>
