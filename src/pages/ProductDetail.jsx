@@ -128,7 +128,7 @@ export default function ProductDetail() {
   const [activeMedia, setActiveMedia] = useState(null);
   const [isGalleryZoomed, setIsGalleryZoomed] = useState(false);
   const [isLightboxOpen, setIsLightboxOpen] = useState(false);
-  const [isLightboxZoomed, setIsLightboxZoomed] = useState(false);
+  const [lightboxZoom, setLightboxZoom] = useState(1);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('details');
   const [isAdding, setIsAdding] = useState(false);
@@ -492,7 +492,7 @@ export default function ProductDetail() {
     const nextIndex = (activeImageIndex + direction + gallery.length) % gallery.length;
     setActiveMedia(gallery[nextIndex]);
     setIsGalleryZoomed(false);
-    setIsLightboxZoomed(false);
+    setLightboxZoom(1);
   };
 
   useEffect(() => {
@@ -509,7 +509,7 @@ export default function ProductDetail() {
           const currentIndex = images.findIndex(image => getImageUrl(image) === getImageUrl(current));
           return images[(currentIndex + direction + images.length) % images.length];
         });
-        setIsLightboxZoomed(false);
+        setLightboxZoom(1);
       }
     };
     window.addEventListener('keydown', handleKeyDown);
@@ -638,14 +638,19 @@ export default function ProductDetail() {
                   fetchpriority="high"
                   alt={`${product.luxuryName || product.name} - ${product.active_ingredients || product.primaryBotanicals || "Bhumivera Luxury Botanical Formula"}`}
                   onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}
-                  onMouseMove={event => {
+                  onPointerMove={event => {
+                    if (event.pointerType !== 'mouse') return;
                     const bounds = event.currentTarget.parentElement.getBoundingClientRect();
                     const x = ((event.clientX - bounds.left) / bounds.width) * 100;
                     const y = ((event.clientY - bounds.top) / bounds.height) * 100;
                     event.currentTarget.style.transformOrigin = `${x}% ${y}%`;
                   }}
-                  onMouseEnter={() => setIsGalleryZoomed(true)}
-                  onMouseLeave={() => setIsGalleryZoomed(false)}
+                  onPointerEnter={event => {
+                    if (event.pointerType === 'mouse') setIsGalleryZoomed(true);
+                  }}
+                  onPointerLeave={event => {
+                    if (event.pointerType === 'mouse') setIsGalleryZoomed(false);
+                  }}
                   onClick={() => {
                     setIsGalleryZoomed(false);
                     setIsLightboxOpen(true);
@@ -905,7 +910,7 @@ export default function ProductDetail() {
       <AnimatePresence>
         {isLightboxOpen && (
           <Motion.div
-            className="fixed inset-0 z-[120] flex items-center justify-center overflow-hidden bg-[#07130d]/95 p-3 backdrop-blur-md sm:p-8"
+            className="fixed inset-0 z-[120] flex items-center justify-center overflow-hidden overscroll-contain bg-[#07130d]/95 p-3 backdrop-blur-md [touch-action:none] sm:p-8"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
@@ -948,17 +953,51 @@ export default function ProductDetail() {
               alt={`${product.name} enlarged`}
               onClick={event => {
                 event.stopPropagation();
-                setIsLightboxZoomed(value => !value);
+                setLightboxZoom(value => value === 1 ? 1.6 : 1);
               }}
-              className={`max-h-[88vh] max-w-[88vw] cursor-zoom-in object-contain transition-transform duration-300 ${isLightboxZoomed ? 'cursor-zoom-out' : ''}`}
+              className="absolute left-1/2 top-1/2 max-h-full max-w-full -translate-x-1/2 -translate-y-1/2 cursor-zoom-in select-none object-contain"
               initial={{ opacity: 0, scale: 0.96 }}
-              animate={{ opacity: 1, scale: isLightboxZoomed ? 1.6 : 1 }}
+              animate={{ opacity: 1, scale: lightboxZoom }}
               exit={{ opacity: 0, scale: 0.96 }}
               transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
             />
-            <p className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-white/10 bg-[#102219]/85 px-4 py-2 text-center font-mono text-[9px] uppercase tracking-[0.12em] text-[#c5d0c8]">
-              Click image to zoom · Esc to close · Use ← / → to browse
-            </p>
+            <div className="absolute bottom-4 left-1/2 z-20 flex -translate-x-1/2 items-center gap-2 rounded-full border border-white/10 bg-[#102219]/95 p-1.5 shadow-xl">
+              <button
+                type="button"
+                onClick={event => {
+                  event.stopPropagation();
+                  setLightboxZoom(value => Math.max(1, Number((value - 0.25).toFixed(2))));
+                }}
+                aria-label="Zoom out"
+                disabled={lightboxZoom <= 1}
+                className="flex h-10 w-10 items-center justify-center rounded-full text-lg text-[#f4d98a] hover:bg-white/10 disabled:opacity-40"
+              >
+                −
+              </button>
+              <button
+                type="button"
+                onClick={event => {
+                  event.stopPropagation();
+                  setLightboxZoom(1);
+                }}
+                aria-label="Reset image zoom"
+                className="min-w-16 px-2 font-mono text-[9px] font-bold uppercase tracking-wider text-[#c5d0c8]"
+              >
+                {lightboxZoom === 1 ? 'Fit' : `${Math.round(lightboxZoom * 100)}%`}
+              </button>
+              <button
+                type="button"
+                onClick={event => {
+                  event.stopPropagation();
+                  setLightboxZoom(value => Math.min(2.5, Number((value + 0.25).toFixed(2))));
+                }}
+                aria-label="Zoom in"
+                disabled={lightboxZoom >= 2.5}
+                className="flex h-10 w-10 items-center justify-center rounded-full text-lg text-[#f4d98a] hover:bg-white/10 disabled:opacity-40"
+              >
+                +
+              </button>
+            </div>
           </Motion.div>
         )}
       </AnimatePresence>
