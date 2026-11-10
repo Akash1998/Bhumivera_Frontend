@@ -62,7 +62,9 @@ export default function ManifestPrintModal({ manifest, onClose }) {
                 {(manifest.shipments || []).map((s, idx) => (
                   <tr key={idx} className="hover:bg-emerald-950/40 transition">
                     <td className="px-4 py-3 text-center font-mono text-slate-400">{idx + 1}</td>
-                    <td className="px-4 py-3 font-mono font-black text-emerald-300">{s.trackingNumber}</td>
+                    <td className="px-4 py-3 font-mono font-black text-emerald-300">
+                      <a href={s.trackingUrl} target="_blank" rel="noreferrer" className="hover:text-white hover:underline">{s.trackingNumber}</a>
+                    </td>
                     <td className="px-4 py-3 font-mono font-bold text-white">{s.orderNumber}</td>
                     <td className="px-4 py-3 font-semibold text-slate-200">{s.customerName}</td>
                     <td className="px-4 py-3 text-slate-300">{s.destinationCity} ({s.pincode})</td>

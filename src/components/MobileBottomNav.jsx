@@ -12,10 +12,12 @@ export default function MobileBottomNav() {
 
   const cartCount = cartItems.reduce((acc, i) => acc + (Number(i.quantity) || 1), 0);
 
-  // Hide on admin, warehouse, and support management routes
+  // Hide storefront navigation in management and scanner workspaces.
   if (
     location.pathname.startsWith('/admin') ||
     location.pathname.startsWith('/warehouse') ||
+    location.pathname.startsWith('/scanner') ||
+    location.pathname.startsWith('/bombera') ||
     location.pathname.startsWith('/inventorysoftware') ||
     location.pathname.startsWith('/inventorymanagement') ||
     location.pathname.startsWith('/support') ||

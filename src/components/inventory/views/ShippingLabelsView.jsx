@@ -10,6 +10,10 @@ import {
   ExternalLink,
 } from 'lucide-react';
 
+const isShipmentReady = order =>
+  ['shipped', 'out_for_delivery', 'delivered'].includes(String(order.status || '').toLowerCase()) &&
+  Boolean(order.trackingNumber && order.trackingUrl && order.courier);
+
 export default function ShippingLabelsView({
   orders = [],
   onOpenManifest,
@@ -35,6 +39,9 @@ export default function ShippingLabelsView({
     });
   }, [orders, searchTerm, carrierFilter]);
 
+  const eligibleOrders = useMemo(() => labelOrders.filter(isShipmentReady), [labelOrders]);
+  const selectedEligibleIds = selectedOrderIds.filter(id => eligibleOrders.some(order => order.id === id));
+
   const toggleSelect = (id) => {
     setSelectedOrderIds(prev =>
       prev.includes(id) ? prev.filter(x => x !== id) : [...prev, id]
@@ -42,16 +49,16 @@ export default function ShippingLabelsView({
   };
 
   const handleSelectAll = () => {
-    if (selectedOrderIds.length === labelOrders.length) {
+    if (selectedEligibleIds.length === eligibleOrders.length && eligibleOrders.length > 0) {
       setSelectedOrderIds([]);
     } else {
-      setSelectedOrderIds(labelOrders.map(o => o.id));
+      setSelectedOrderIds(eligibleOrders.map(o => o.id));
     }
   };
 
   const handleCreateManifest = () => {
-    if (selectedOrderIds.length === 0) return;
-    onOpenManifest(selectedOrderIds, carrierFilter === 'ALL' ? 'Delhivery & Shiprocket' : carrierFilter);
+    if (selectedEligibleIds.length === 0) return;
+    onOpenManifest(selectedEligibleIds, carrierFilter === 'ALL' ? 'Delhivery & Shiprocket' : carrierFilter);
   };
 
   return (
@@ -89,13 +96,13 @@ export default function ShippingLabelsView({
 
         {/* Bulk Action Buttons */}
         <div className="flex items-center gap-2 shrink-0">
-          {selectedOrderIds.length > 0 && (
+          {selectedEligibleIds.length > 0 && (
             <>
               <button
                 onClick={handleCreateManifest}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-black uppercase bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 rounded-xl shadow-sm transition"
               >
-                <FileText className="w-4 h-4 text-emerald-400" /> Generate Manifest ({selectedOrderIds.length})
+                <FileText className="w-4 h-4 text-emerald-400" /> Generate Manifest ({selectedEligibleIds.length})
               </button>
             </>
           )}
@@ -111,7 +118,8 @@ export default function ShippingLabelsView({
                 <th className="px-4 py-3 text-center w-10">
                   <input
                     type="checkbox"
-                    checked={selectedOrderIds.length > 0 && selectedOrderIds.length === labelOrders.length}
+                    checked={eligibleOrders.length > 0 && selectedEligibleIds.length === eligibleOrders.length}
+                    disabled={eligibleOrders.length === 0}
                     onChange={handleSelectAll}
                     className="rounded border-emerald-500/50 text-emerald-600 focus:ring-emerald-500 bg-[#071711] w-4 h-4 cursor-pointer"
                   />
@@ -126,8 +134,9 @@ export default function ShippingLabelsView({
             <tbody className="divide-y divide-emerald-500/15">
               {labelOrders.length > 0 ? (
                 labelOrders.map((order) => {
-                  const isSelected = selectedOrderIds.includes(order.id);
-                  const hasLabel = Boolean(order.trackingNumber);
+                  const isSelected = selectedEligibleIds.includes(order.id);
+                  const hasLabel = (order.shippingLabels || []).some(label => label.status === 'booked' && label.label_url);
+                  const shipmentReady = isShipmentReady(order);
 
                   return (
                     <tr
@@ -141,6 +150,7 @@ export default function ShippingLabelsView({
                           type="checkbox"
                           checked={isSelected}
                           onChange={() => toggleSelect(order.id)}
+                          disabled={!shipmentReady}
                           className="rounded border-emerald-500/50 text-emerald-600 focus:ring-emerald-500 bg-[#071711] w-4 h-4 cursor-pointer"
                         />
                       </td>
@@ -171,19 +181,25 @@ export default function ShippingLabelsView({
                       <td className="px-4 py-3 text-center">
                         {hasLabel ? (
                           <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                            AWB Assigned
+                            Label ready
                           </span>
                         ) : (
-                          <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                            Needs Label
+                          <span className={`inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase border ${
+                            shipmentReady
+                              ? 'bg-sky-500/20 text-sky-200 border-sky-500/30'
+                              : 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                          }`}>
+                            {shipmentReady ? 'Shipment details saved' : 'Awaiting shipment'}
                           </span>
                         )}
                       </td>
 
                       <td className="px-4 py-3 text-right">
                         {hasLabel ? (
-                          <span className="text-[10px] font-bold text-emerald-300">Carrier booked</span>
-                        ) : (
+                          <a href={order.shippingLabels.find(label => label.status === 'booked' && label.label_url)?.label_url} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-[10px] font-bold text-emerald-300 hover:text-white">
+                            <ExternalLink size={12} /> Open shipping document
+                          </a>
+                        ) : shipmentReady ? (
                           <button
                             type="button"
                             onClick={() => onBookCarrierLabel(order.id, {
@@ -192,8 +208,10 @@ export default function ShippingLabelsView({
                             })}
                             className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-black text-white hover:bg-emerald-500"
                           >
-                            Book Carrier Label
+                            Generate shipping PDF
                           </button>
+                        ) : (
+                          <span className="text-[10px] text-slate-400">Add shipment tracking first</span>
                         )}
                       </td>
                     </tr>

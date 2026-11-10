@@ -1224,9 +1224,19 @@ export default function InventorySoftware() {
   const handleUpdateOnlineOrderStatus = async (orderId, status, extra = {}) => {
     let trackingNumber = extra.trackingNumber;
     let courier = extra.courier;
-    if (status === 'shipped' && (!String(trackingNumber || '').trim() || !String(courier || '').trim())) {
-      showNotice('error', 'Enter the actual courier and tracking/AWB number at shipment handover. Packing does not need tracking details.');
+    let trackingUrl = extra.trackingUrl;
+    if (status === 'shipped' && (!String(trackingNumber || '').trim() || !String(courier || '').trim() || !String(trackingUrl || '').trim())) {
+      showNotice('error', 'Enter the courier, real tracking/AWB number, and tracking link at shipment handover. Packing does not need shipping details.');
       return false;
+    }
+    if (status === 'shipped') {
+      try {
+        const parsedTrackingUrl = new URL(String(trackingUrl).trim());
+        if (!['http:', 'https:'].includes(parsedTrackingUrl.protocol)) throw new Error('unsupported protocol');
+      } catch {
+        showNotice('error', 'Enter a valid courier tracking link starting with https://.');
+        return false;
+      }
     }
     try {
       const res = await api.put(
@@ -1235,6 +1245,7 @@ export default function InventorySoftware() {
           status,
           trackingNumber,
           courier: courier || undefined,
+          trackingUrl: trackingUrl || undefined,
           estimatedDeliveryDate: extra.estimatedDeliveryDate,
           currentLocationCheckpoint: extra.currentLocationCheckpoint,
         },
@@ -1250,7 +1261,9 @@ export default function InventorySoftware() {
       await fetchBootstrapData(true);
       return true;
     } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Could not update online order status.');
+      const backendMessage = err.response?.data?.message;
+      const failureStage = err.response?.data?.stage;
+      showNotice('error', `${backendMessage || 'Could not update online order status.'}${failureStage ? ` (Stage: ${failureStage})` : ''}`);
       return false;
     }
   };

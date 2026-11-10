@@ -59,10 +59,10 @@ const prepareApi = () => {
 const signInAndStartWork = async () => {
   fireEvent.change(screen.getByLabelText('Staff ID'), { target: { value: 'sample' } });
   fireEvent.change(screen.getByLabelText('Password'), { target: { value: 'password' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Sign in' }));
-  await screen.findByRole('button', { name: 'Go to Work' });
-  fireEvent.click(screen.getByRole('button', { name: 'Go to Work' }));
-  await screen.findByText(/On work · Sample Staff/i);
+  fireEvent.click(screen.getByRole('button', { name: /Sign in/ }));
+  await screen.findByRole('button', { name: /Go to Work/ });
+  fireEvent.click(screen.getByRole('button', { name: /Go to Work/ }));
+  await screen.findByText('Live shift');
 };
 
 describe('fulfillment scanner PWA', () => {
@@ -103,7 +103,7 @@ describe('fulfillment scanner PWA', () => {
     await screen.findByText('Aloe Vera Soap: 1/1 scanned.');
 
     fireEvent.click(screen.getByRole('button', { name: 'Confirm Packed' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Upload Now' }));
+    fireEvent.click(await screen.findByRole('button', { name: /Upload Now/ }));
     await screen.findByText('Uploaded packed order.');
     expect(api.post).toHaveBeenCalledWith(
       '/inventory-software/fulfillment/pwa-batch',
@@ -146,7 +146,7 @@ describe('fulfillment scanner PWA', () => {
     expect(localStorage.getItem('BV_SCANNER_PWA_PACKED_BATCH_sample')).toContain('"orderId":99');
     expect(api.post).not.toHaveBeenCalledWith('/inventory-software/fulfillment/pwa-batch', expect.anything(), expect.anything());
 
-    fireEvent.click(screen.getByRole('button', { name: 'Upload Bulk' }));
+    fireEvent.click(screen.getByRole('button', { name: /Upload/ }));
     await screen.findByText('Uploaded packed order.');
     expect(localStorage.getItem('BV_SCANNER_PWA_PACKED_BATCH_sample')).toBe('[]');
   });

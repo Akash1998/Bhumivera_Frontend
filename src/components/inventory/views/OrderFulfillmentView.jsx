@@ -37,7 +37,7 @@ export default function OrderFulfillmentView({
   const [selectedOrderIds, setSelectedOrderIds] = useState([]);
   const [detailOrder, setDetailOrder] = useState(null);
   const [shippingOrder, setShippingOrder] = useState(null);
-  const [shippingDetails, setShippingDetails] = useState({ courier: '', trackingNumber: '' });
+  const [shippingDetails, setShippingDetails] = useState({ courier: '', trackingNumber: '', trackingUrl: '' });
 
   // Filtered orders
   const filteredOrders = useMemo(() => {
@@ -276,6 +276,11 @@ export default function OrderFulfillmentView({
                             <div className="text-[10px] text-slate-300 font-medium capitalize">
                               {order.courier || 'Express Handover'}
                             </div>
+                            {order.trackingUrl && (
+                              <a href={order.trackingUrl} target="_blank" rel="noreferrer" className="mt-1 inline-flex items-center gap-1 text-[10px] text-sky-300 hover:text-white">
+                                <ExternalLink size={11} /> Track parcel
+                              </a>
+                            )}
                           </div>
                         ) : (
                           <span className="text-[10px] text-slate-400 italic">No AWB assigned yet</span>
@@ -308,7 +313,7 @@ export default function OrderFulfillmentView({
                       {/* Actions */}
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {['confirmed', 'packed'].includes(order.status) && (
+                          {['confirmed', 'packed', 'shipped', 'out_for_delivery', 'delivered'].includes(order.status) && (
                             <button
                               onClick={() => onOpenFulfillmentQr(order)}
                               className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-xs font-black uppercase tracking-wider transition shadow-sm"
@@ -327,15 +332,19 @@ export default function OrderFulfillmentView({
                             </button>
                           )}
 
-                          {order.status === 'packed' && (
+                          {['packed', 'shipped'].includes(order.status) && (
                             <button
                               onClick={() => {
                                 setShippingOrder(order);
-                                setShippingDetails({ courier: order.courier || '', trackingNumber: order.trackingNumber || '' });
+                                setShippingDetails({
+                                  courier: order.courier || '',
+                                  trackingNumber: order.trackingNumber || '',
+                                  trackingUrl: order.trackingUrl || '',
+                                });
                               }}
                               className="px-2.5 py-1 bg-indigo-600 hover:bg-indigo-500 text-white rounded-lg text-xs font-bold transition"
                             >
-                              Add tracking &amp; ship
+                              {order.status === 'packed' ? 'Add tracking & ship' : 'Edit shipment details'}
                             </button>
                           )}
 
@@ -409,7 +418,7 @@ export default function OrderFulfillmentView({
             <div className="mb-4 flex items-start justify-between gap-4">
               <div>
                 <h2 id="shipping-details-title" className="text-lg font-black">Ship order #{shippingOrder.orderNumber}</h2>
-                <p className="text-xs text-slate-400">Tracking is required at courier handover, not during PWA packing.</p>
+                <p className="text-xs text-slate-400">Enter real courier details at handover. This triggers the shipment email and enables invoice PDF printing.</p>
               </div>
               <button type="button" aria-label="Close" onClick={() => setShippingOrder(null)} className="rounded-lg p-2 hover:bg-white/10"><X size={17} /></button>
             </div>
@@ -418,6 +427,9 @@ export default function OrderFulfillmentView({
             </label>
             <label className="block text-xs text-slate-300">Tracking / AWB number
               <input required value={shippingDetails.trackingNumber} onChange={event => setShippingDetails({ ...shippingDetails, trackingNumber: event.target.value })} placeholder="Enter the real courier AWB" className="mt-1.5 min-h-11 w-full rounded-lg border border-white/10 bg-[#071711] px-3 font-mono text-sm text-white outline-none focus:border-emerald-400" />
+            </label>
+            <label className="mt-3 block text-xs text-slate-300">Courier tracking link
+              <input required type="url" inputMode="url" value={shippingDetails.trackingUrl} onChange={event => setShippingDetails({ ...shippingDetails, trackingUrl: event.target.value })} placeholder="https://courier.example/track/..." className="mt-1.5 min-h-11 w-full rounded-lg border border-white/10 bg-[#071711] px-3 text-sm text-white outline-none focus:border-emerald-400" />
             </label>
             <div className="mt-5 flex justify-end gap-2">
               <button type="button" onClick={() => setShippingOrder(null)} className="min-h-10 rounded-lg border border-white/15 px-4 text-sm font-bold">Cancel</button>
@@ -493,6 +505,7 @@ export default function OrderFulfillmentView({
                 <p><strong>Payment:</strong> {detailOrder.paymentMode || '—'} · {detailOrder.paymentStatus || '—'}</p>
                 <p><strong>Courier:</strong> {detailOrder.courier || 'Not assigned'}</p>
                 <p><strong>Tracking/AWB:</strong> {detailOrder.trackingNumber || 'Not assigned yet'}</p>
+                {detailOrder.trackingUrl && <p><strong>Tracking link:</strong> <a href={detailOrder.trackingUrl} target="_blank" rel="noreferrer" className="break-all text-sky-300 underline">{detailOrder.trackingUrl}</a></p>}
                 <p><strong>Estimated delivery:</strong> {detailOrder.estimatedDeliveryDate || 'Not set'}</p>
               </div>
               <div className="rounded-xl border border-white/10 bg-black/10 p-4 text-right text-xs leading-6">

@@ -111,6 +111,8 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
   const [qrUrl, setQrUrl] = useState('');
   const [paymentQrUrl, setPaymentQrUrl] = useState('');
   const [error, setError] = useState('');
+  const canPrintInvoice = ['shipped', 'out_for_delivery', 'delivered'].includes(String(order?.status || '').toLowerCase()) &&
+    Boolean(order?.courier && order?.trackingNumber && order?.trackingUrl);
 
   useEffect(() => {
     if (!order?.id) return undefined;
@@ -139,6 +141,10 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
 
   const printSlip = () => {
     if (!qrUrl || !paymentQrUrl) return;
+    if (!canPrintInvoice) {
+      setError('Printing is available after the courier, tracking/AWB number, and tracking link are saved on the shipped order.');
+      return;
+    }
     const printWindow = window.open('', '_blank', 'width=900,height=900');
     if (!printWindow) {
       setError('Allow pop-ups to print the tax invoice and fulfillment QR.');
@@ -198,21 +204,22 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
       <!doctype html>
       <html><head><title>Tax Invoice ${escapeHtml(order.invoiceNumber || order.orderNumber || order.id)}</title>
         <style>
-          *{box-sizing:border-box}body{font:10px Arial,sans-serif;color:#17221e;margin:0;padding:18px}
-          .sheet{max-width:900px;margin:auto;border:1px solid #87958f;padding:18px}
+          *{box-sizing:border-box}body{font:10px Arial,sans-serif;color:#17221e;margin:0;padding:18px;max-width:100%;overflow-x:hidden}
+          .sheet{width:100%;max-width:900px;margin:auto;border:1px solid #87958f;padding:18px;overflow:hidden}
           .head{display:grid;grid-template-columns:1fr 175px;gap:14px;border-bottom:2px solid #234f3d;padding-bottom:12px}
           .brand{display:flex;gap:12px;align-items:center}.brand img{width:62px;height:62px;object-fit:contain}
           h1{font-size:21px;letter-spacing:1.5px;color:#234f3d;margin:0 0 4px}.muted{color:#5d6a64;line-height:1.5}
           .title{text-align:right}.title h2{font-size:16px;margin:4px 0;color:#17221e}.title strong{font-size:11px}
-          .two{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:12px 0}
+          .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px;margin:12px 0}
           .box{border:1px solid #c3cdc8;padding:8px;line-height:1.5}.box h3{margin:0 0 4px;font-size:10px;text-transform:uppercase;color:#234f3d}
-          table{width:100%;border-collapse:collapse;margin:10px 0}th,td{border:1px solid #abb8b1;padding:5px 4px;vertical-align:top}
+          table{width:100%;max-width:100%;table-layout:fixed;border-collapse:collapse;margin:10px 0}th,td{border:1px solid #abb8b1;padding:5px 4px;vertical-align:top;overflow-wrap:anywhere}
           th{background:#e8efeb;font-size:8px;text-transform:uppercase}.center{text-align:center}.num{text-align:right;white-space:nowrap}
-          small{display:block;color:#66736c;margin-top:3px}.bottom{display:grid;grid-template-columns:1fr 255px;gap:14px;margin-top:8px}
+          small{display:block;color:#66736c;margin-top:3px}.bottom{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,255px);gap:14px;margin-top:8px}
           .amount{text-align:right;font-size:12px;font-weight:bold}.amount .grand{font-size:16px;color:#234f3d;border-top:2px solid #234f3d;padding-top:7px;margin-top:6px}
-          .qrbox{display:flex;align-items:center;gap:12px;border:1px solid #c3cdc8;padding:8px;margin-top:10px}.qrbox img{width:90px;height:90px;object-fit:contain}
-          .qrbox.pack img{width:160px;height:160px}.foot{border-top:1px solid #abb8b1;margin-top:14px;padding-top:9px;display:grid;grid-template-columns:1fr 1fr;gap:20px;line-height:1.5}
+          .qrbox{display:flex;min-width:0;align-items:center;gap:12px;border:1px solid #c3cdc8;padding:8px;margin-top:10px;overflow:hidden}.qrbox img{flex:none;width:90px;height:90px;object-fit:contain}.qrbox span{min-width:0;overflow-wrap:anywhere}
+          .qrbox.pack img{width:160px;height:160px}.foot{border-top:1px solid #abb8b1;margin-top:14px;padding-top:9px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;line-height:1.5}
           .sign{text-align:right;padding-top:25px}.note{font-size:8px;color:#5d6a64;margin-top:8px}
+          @media(max-width:680px){body{padding:8px}.sheet{padding:10px}.head,.two,.bottom,.foot{grid-template-columns:minmax(0,1fr)}.title{text-align:left}.bottom .amount{text-align:left}.qrbox.pack img{width:120px;height:120px}table{font-size:7px}th,td{padding:3px 2px;word-break:break-word}}
           @media print{body{padding:0}.sheet{border:0;max-width:none;padding:8mm}button{display:none}}
         </style>
       </head><body><main class="sheet">
@@ -268,6 +275,11 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
             Invoice GSTIN uses Inventory Store Settings ({storeConfig.gstin}), which differs from the supplied invoice reference. Verify the legal GSTIN before issuing tax invoices.
           </p>
         )}
+        {!canPrintInvoice && (
+          <p role="status" className="mb-3 rounded-lg border border-sky-400/30 bg-sky-400/10 p-3 text-xs text-sky-100">
+            The fulfillment QR is ready to scan from this screen. Invoice PDF/printing stays locked until courier, tracking/AWB, and the tracking link are saved at shipment.
+          </p>
+        )}
         {qrUrl ? (
           <div className="flex flex-col items-center rounded-xl bg-white p-4 text-slate-900">
             <img src={qrUrl} alt={`Fulfillment manifest QR for order ${order.orderNumber || order.id}`} className="h-52 w-52" />
@@ -275,8 +287,8 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
             <span className="mt-1 text-[10px] text-slate-500">{qrPayloadLength.toLocaleString()} character manifest</span>
           </div>
         ) : <p className="py-10 text-center text-sm text-slate-300">Generating invoice and fulfillment QR…</p>}
-        <button type="button" disabled={!qrUrl || !paymentQrUrl} onClick={printSlip} className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 font-black text-emerald-950 disabled:opacity-50">
-          <Printer size={16} /> Print Tax Invoice &amp; Fulfillment QR
+        <button type="button" disabled={!qrUrl || !paymentQrUrl || !canPrintInvoice} onClick={printSlip} className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 font-black text-emerald-950 disabled:opacity-50">
+          <Printer size={16} /> {canPrintInvoice ? 'Print Tax Invoice & Fulfillment QR' : 'Printing unlocks after shipment details'}
         </button>
       </section>
     </div>

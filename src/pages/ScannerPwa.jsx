@@ -45,6 +45,17 @@ const readPackedBatch = username => {
   }
 };
 
+const getActiveOrderKey = username => `BV_SCANNER_ACTIVE_ORDER_${String(username || 'staff').toLowerCase()}`;
+
+const readActivePackingState = username => {
+  try {
+    const saved = JSON.parse(sessionStorage.getItem(getActiveOrderKey(username)) || 'null');
+    return saved?.order && saved?.progress ? saved : null;
+  } catch {
+    return null;
+  }
+};
+
 const normalizeProductCode = value => {
   let code = String(value || '').trim();
   if (!code) return '';
@@ -133,11 +144,12 @@ export default function ScannerPwa() {
   const [cameraMode, setCameraMode] = useState('order');
   const [cameraAttempt, setCameraAttempt] = useState(0);
   const [orderInput, setOrderInput] = useState('');
-  const [activeOrder, setActiveOrder] = useState(null);
-  const [scanProgress, setScanProgress] = useState({});
+  const [activeOrder, setActiveOrder] = useState(() => readActivePackingState(readSession()?.staff?.username)?.order || null);
+  const [scanProgress, setScanProgress] = useState(() => readActivePackingState(readSession()?.staff?.username)?.progress || {});
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [batch, setBatch] = useState(() => readPackedBatch(readSession()?.staff?.username));
   const [notice, setNotice] = useState(null);
+  const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   const videoRef = useRef(null);
 
   const staffName = session?.staff?.fullName || session?.staff?.username || 'Staff';
@@ -173,7 +185,7 @@ export default function ScannerPwa() {
   }, [batch, session]);
 
   const sendHeartbeat = useCallback(async () => {
-    if (!session?.token || !onWork) return;
+    if (!session?.token || !onWork || !isOnline) return;
     await api.post(
       '/inventory-software/workroom/heartbeat',
       {
@@ -201,7 +213,17 @@ export default function ScannerPwa() {
       },
       authConfig(session)
     );
-  }, [activeOrder, batch, expectedUnits, onWork, scannedUnits, scanProgress, session, staffName, staffUsername]);
+  }, [activeOrder, batch, expectedUnits, isOnline, onWork, scannedUnits, scanProgress, session, staffName, staffUsername]);
+
+  useEffect(() => {
+    const updateNetworkState = () => setIsOnline(navigator.onLine);
+    window.addEventListener('online', updateNetworkState);
+    window.addEventListener('offline', updateNetworkState);
+    return () => {
+      window.removeEventListener('online', updateNetworkState);
+      window.removeEventListener('offline', updateNetworkState);
+    };
+  }, []);
 
   useEffect(() => {
     const manifest = document.querySelector('link[rel="manifest"]');
@@ -228,7 +250,17 @@ export default function ScannerPwa() {
       window.clearInterval(timer);
       document.removeEventListener('visibilitychange', heartbeat);
     };
-  }, [onWork, sendHeartbeat, session]);
+  }, [isOnline, onWork, sendHeartbeat, session]);
+
+  useEffect(() => {
+    if (!staffUsername) return;
+    const key = getActiveOrderKey(staffUsername);
+    if (activeOrder) {
+      sessionStorage.setItem(key, JSON.stringify({ order: activeOrder, progress: scanProgress }));
+    } else {
+      sessionStorage.removeItem(key);
+    }
+  }, [activeOrder, scanProgress, staffUsername]);
 
   const handleLogin = async event => {
     event.preventDefault();
@@ -255,9 +287,17 @@ export default function ScannerPwa() {
       }));
       setSession(nextSession);
       setBatch(readPackedBatch(nextSession.staff?.username));
+      const savedPackingState = readActivePackingState(nextSession.staff?.username);
+      setActiveOrder(savedPackingState?.order || null);
+      setScanProgress(savedPackingState?.progress || {});
       setPassword('');
       setOnWork(false);
-      setNotice({ type: 'success', text: `Signed in as ${data.staff?.fullName || username}. Tap Go to Work when ready.` });
+      setNotice({
+        type: 'success',
+        text: savedPackingState?.order
+          ? `Signed in as ${data.staff?.fullName || username}. Your unfinished order was restored from this browser tab.`
+          : `Signed in as ${data.staff?.fullName || username}. Tap Go to Work when ready.`,
+      });
     } catch (error) {
       setNotice({ type: 'error', text: formatError(error) });
     } finally {
@@ -279,11 +319,12 @@ export default function ScannerPwa() {
   };
 
   const clearActiveOrder = useCallback(() => {
+    if (staffUsername) sessionStorage.removeItem(getActiveOrderKey(staffUsername));
     setActiveOrder(null);
     setScanProgress({});
     setSelectedItemId(null);
     setCameraOpen(false);
-  }, []);
+  }, [staffUsername]);
 
   const loadOrder = useCallback(async rawOrderCode => {
     if (!session || !onWork) {
@@ -379,6 +420,10 @@ export default function ScannerPwa() {
 
   const uploadPackedOrders = async packedOrders => {
     if (!session || packedOrders.length === 0) return;
+    if (!navigator.onLine) {
+      setNotice({ type: 'error', text: 'You are offline. Your packed order is preserved on this device; reconnect before uploading.' });
+      return;
+    }
     setBusy(true);
     try {
       const { data } = await api.post(
@@ -533,27 +578,44 @@ export default function ScannerPwa() {
   );
 
   return (
-    <main className="min-h-screen bg-[#07110d] px-4 py-6 text-slate-100 sm:px-6">
-      <div className="mx-auto w-full max-w-xl">
-        <header className="mb-6 flex items-center justify-between gap-4">
+    <main className="relative min-h-screen overflow-hidden bg-[#07110d] px-3 py-4 text-slate-100 sm:px-6 sm:py-7">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,rgba(16,185,129,0.12),transparent_38%),radial-gradient(ellipse_at_bottom_left,rgba(20,83,45,0.18),transparent_40%)]" />
+      <div className="relative mx-auto w-full max-w-2xl">
+        <header className="mb-5 flex items-center justify-between gap-3 rounded-2xl border border-white/10 bg-[#0b1812]/90 p-3 shadow-xl shadow-black/20 backdrop-blur sm:mb-7 sm:p-4">
           <div className="flex items-center gap-3">
-            <div className="flex h-11 w-11 items-center justify-center rounded-2xl border border-emerald-400/40 bg-emerald-400/10 text-emerald-300">
-              <ScanLine size={23} />
+            <div className="flex h-12 w-12 items-center justify-center rounded-2xl border border-emerald-300/30 bg-gradient-to-br from-emerald-300/20 to-emerald-900/30 text-emerald-200 shadow-inner">
+              <ScanLine size={24} strokeWidth={2.2} />
             </div>
             <div>
-              <p className="font-mono text-[10px] font-bold uppercase tracking-[0.22em] text-emerald-300">Bhumivera · Fulfillment</p>
-              <h1 className="text-xl font-black text-white">Packer Scanner</h1>
+              <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-emerald-300">Bhumivera · Operations</p>
+              <h1 className="text-lg font-black tracking-tight text-white sm:text-xl">Fulfillment Scanner</h1>
             </div>
           </div>
-          {session && (
-            <button type="button" disabled={busy} onClick={handleLogout} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/10 px-3 text-xs font-semibold text-slate-300 hover:bg-white/5">
-              <LogOut size={15} /> Sign out
-            </button>
-          )}
+          <div className="flex items-center gap-2">
+            <span className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1.5 text-[10px] font-bold ${isOnline ? 'border-emerald-400/25 bg-emerald-400/10 text-emerald-200' : 'border-amber-400/30 bg-amber-400/10 text-amber-200'}`}>
+              <span className={`h-1.5 w-1.5 rounded-full ${isOnline ? 'bg-emerald-300' : 'bg-amber-300'}`} />
+              {isOnline ? 'ONLINE' : 'OFFLINE'}
+            </span>
+            {session && (
+              <button type="button" disabled={busy} onClick={handleLogout} className="inline-flex min-h-10 items-center gap-2 rounded-xl border border-white/10 px-3 text-xs font-semibold text-slate-300 transition hover:border-rose-400/30 hover:bg-rose-400/10 hover:text-rose-100 disabled:opacity-50">
+                <LogOut size={15} /> <span className="hidden sm:inline">Sign out</span>
+              </button>
+            )}
+          </div>
         </header>
 
+        {session && (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-2 rounded-xl border border-white/10 bg-white/[0.03] px-3 py-2.5 text-xs">
+            <span className="font-semibold text-white">{staffName}</span>
+            <span className="font-mono text-[10px] text-slate-400">{session.sessionCode}</span>
+            <span className={`rounded-full px-2 py-1 text-[9px] font-black uppercase tracking-wider ${onWork ? 'bg-emerald-400/15 text-emerald-200' : 'bg-white/10 text-slate-300'}`}>
+              {onWork ? 'On shift' : 'Signed in'}
+            </span>
+          </div>
+        )}
+
         {notice && (
-          <div role={notice.type === 'error' ? 'alert' : 'status'} className={`mb-5 flex items-start gap-2 rounded-xl border px-4 py-3 text-sm ${
+          <div role={notice.type === 'error' ? 'alert' : 'status'} className={`mb-4 flex items-start gap-2 rounded-xl border px-4 py-3 text-sm shadow-lg ${
             notice.type === 'error' ? 'border-rose-400/30 bg-rose-400/10 text-rose-100'
               : notice.type === 'success' ? 'border-emerald-400/30 bg-emerald-400/10 text-emerald-100'
                 : 'border-sky-400/30 bg-sky-400/10 text-sky-100'
@@ -564,68 +626,102 @@ export default function ScannerPwa() {
         )}
 
         {cameraOpen && (
-          <section className="mb-5 overflow-hidden rounded-3xl border border-white/10 bg-black">
-            <div className="relative aspect-[4/5] max-h-[65vh]">
+          <section className="mb-5 overflow-hidden rounded-3xl border border-emerald-300/25 bg-black shadow-2xl shadow-black/40">
+            <div className="relative aspect-[4/5] max-h-[62vh]">
               <video ref={videoRef} autoPlay muted playsInline className="absolute inset-0 h-full w-full object-cover" />
-              <button type="button" onClick={() => setCameraOpen(false)} aria-label="Close camera" className="absolute right-3 top-3 z-20 rounded-full bg-black/70 p-3 text-white">
+              <div className="absolute inset-5 rounded-3xl border border-emerald-300/70 shadow-[0_0_24px_rgba(16,185,129,0.25)] pointer-events-none" />
+              <button type="button" onClick={() => setCameraOpen(false)} aria-label="Close camera" className="absolute right-3 top-3 z-20 rounded-full border border-white/20 bg-black/75 p-3 text-white shadow-xl">
                 <X size={20} />
               </button>
+              <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/70 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-emerald-100">Align code inside frame</span>
             </div>
-            <p className="p-3 text-center text-xs text-slate-300">
+            <p className="p-3 text-center text-xs leading-5 text-slate-300">
               {cameraMode === 'order' ? 'Scan the fulfillment QR. It contains the order manifest; loading it does not fetch from the database.' : `Scan the SKU or barcode for ${selectedItem?.name || 'the selected item'}.`}
             </p>
           </section>
         )}
 
         {!session ? (
-          <section className="rounded-3xl border border-emerald-400/30 bg-emerald-400/[0.06] p-5 shadow-2xl sm:p-7">
-            <div className="mb-5 flex items-start gap-3">
-              <ShieldCheck className="mt-0.5 shrink-0 text-emerald-300" size={23} />
-              <div>
-                <h2 className="font-bold text-white">Staff sign in</h2>
-                <p className="mt-1 text-sm leading-6 text-slate-300">Use the login ID and password assigned by your administrator. The staff roster must be loaded from Workroom → Staff Accounts before the backend can validate a scanner login.</p>
+          <section className="overflow-hidden rounded-3xl border border-emerald-300/25 bg-[#0b1812]/95 shadow-2xl shadow-black/30">
+            <div className="relative overflow-hidden border-b border-white/10 bg-gradient-to-br from-emerald-900/60 via-[#0b1812] to-[#0b1812] p-6 sm:p-8">
+              <div aria-hidden="true" className="absolute -right-10 -top-16 h-48 w-48 rounded-full border border-emerald-300/10" />
+              <div aria-hidden="true" className="absolute -right-2 -top-8 h-32 w-32 rounded-full border border-emerald-300/10" />
+              <div className="relative flex items-start gap-4">
+                <div className="rounded-2xl border border-emerald-300/30 bg-emerald-300/10 p-3 text-emerald-200"><ShieldCheck size={25} /></div>
+                <div>
+                  <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300">Secure staff workspace</p>
+                  <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">Welcome back</h2>
+                  <p className="mt-2 max-w-md text-sm leading-6 text-slate-300">Sign in with the staff credentials created by your administrator. Your packing work stays local until you choose to upload.</p>
+                </div>
               </div>
+            </div>
+            <div className="p-5 sm:p-8">
+            <div className="mb-5 rounded-xl border border-sky-300/15 bg-sky-300/[0.05] p-3 text-xs leading-5 text-sky-100/80">
+              Staff roster must be loaded from Inventory Software → Workroom → Staff Accounts before first sign-in after a backend restart.
             </div>
             <form onSubmit={handleLogin} className="space-y-4">
-              <label className="block text-xs font-semibold text-slate-300">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
                 Staff ID
-                <input autoComplete="username" value={username} onChange={event => setUsername(event.target.value)} required className="mt-2 min-h-12 w-full rounded-xl border border-white/10 bg-black/30 px-4 text-base text-white outline-none focus:border-emerald-400" />
+                <input autoComplete="username" value={username} onChange={event => setUsername(event.target.value)} required className="mt-2 min-h-13 w-full rounded-xl border border-white/10 bg-black/30 px-4 text-base normal-case tracking-normal text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-300 focus:ring-2 focus:ring-emerald-300/10" placeholder="Enter your assigned staff ID" />
               </label>
-              <label className="block text-xs font-semibold text-slate-300">
+              <label className="block text-xs font-bold uppercase tracking-wider text-slate-300">
                 Password
-                <input autoComplete="current-password" type="password" value={password} onChange={event => setPassword(event.target.value)} required className="mt-2 min-h-12 w-full rounded-xl border border-white/10 bg-black/30 px-4 text-base text-white outline-none focus:border-emerald-400" />
+                <input autoComplete="current-password" type="password" value={password} onChange={event => setPassword(event.target.value)} required className="mt-2 min-h-13 w-full rounded-xl border border-white/10 bg-black/30 px-4 text-base normal-case tracking-normal text-white outline-none transition placeholder:text-slate-500 focus:border-emerald-300 focus:ring-2 focus:ring-emerald-300/10" placeholder="Your password" />
               </label>
-              <button type="submit" disabled={busy} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 font-black text-emerald-950 disabled:opacity-60">
+              <button type="submit" disabled={busy || !isOnline} className="flex min-h-13 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-300 to-teal-300 px-4 font-black text-[#062017] shadow-lg shadow-emerald-950/30 transition hover:brightness-105 disabled:cursor-not-allowed disabled:opacity-50">
                 {busy && <LoaderCircle size={17} className="animate-spin" />}
-                {busy ? 'Signing in…' : 'Sign in'}
+                {busy ? 'Signing in…' : isOnline ? 'Sign in to scanner' : 'Internet required to sign in'}
               </button>
             </form>
+            <div className="mt-6 grid grid-cols-3 gap-2 border-t border-white/10 pt-5 text-center">
+              {[['01', 'Scan order'], ['02', 'Verify items'], ['03', 'Upload when ready']].map(([number, label]) => (
+                <div key={number} className="rounded-xl bg-white/[0.03] px-2 py-3">
+                  <span className="block font-mono text-[10px] font-bold text-emerald-300">{number}</span>
+                  <span className="mt-1 block text-[10px] font-semibold text-slate-300 sm:text-xs">{label}</span>
+                </div>
+              ))}
+            </div>
+            </div>
           </section>
         ) : !onWork ? (
-          <section className="space-y-4 rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-7">
-            <div className="flex items-center gap-3">
-              <Smartphone className="text-emerald-300" />
-              <div>
-                <h2 className="font-bold text-white">Welcome, {staffName}</h2>
-                <p className="text-sm text-slate-400">Signed in · {session.sessionCode}</p>
+          <section className="overflow-hidden rounded-3xl border border-white/10 bg-[#0b1812]/95 shadow-2xl shadow-black/30">
+            <div className="flex items-center gap-4 border-b border-white/10 bg-gradient-to-r from-emerald-900/45 to-transparent p-5 sm:p-7">
+              <div className="rounded-2xl border border-emerald-300/25 bg-emerald-300/10 p-3 text-emerald-200"><Smartphone size={24} /></div>
+              <div className="min-w-0">
+                <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-300">Ready for your shift</p>
+                <h2 className="mt-1 truncate text-xl font-black text-white">Welcome, {staffName}</h2>
+                <p className="mt-1 text-xs text-slate-400">Device session · {session.sessionCode}</p>
               </div>
             </div>
-            <button type="button" disabled={busy} onClick={handleGoToWork} className="flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 font-black text-emerald-950 disabled:opacity-60">
-              {busy ? <LoaderCircle size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
-              Go to Work
-            </button>
-            <p className="text-xs leading-5 text-slate-400">Your live work status is visible in the Inventory Software workroom. Scanning the embedded order QR and saving a bulk pack uses backend memory and your device only; SQL is used when you explicitly upload.</p>
+            <div className="p-5 sm:p-7">
+              <div className="mb-5 grid grid-cols-3 gap-2">
+                {[['Camera', 'Ready on demand'], ['Packing data', 'Saved on device'], ['Inventory', 'Upload to update']].map(([title, detail]) => (
+                  <div key={title} className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
+                    <span className="block text-[9px] font-black uppercase tracking-wider text-emerald-300">{title}</span>
+                    <span className="mt-1 block text-[10px] leading-4 text-slate-300">{detail}</span>
+                  </div>
+                ))}
+              </div>
+              <button type="button" disabled={busy || !isOnline} onClick={handleGoToWork} className="flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-300 to-teal-300 px-4 font-black text-[#062017] shadow-lg shadow-emerald-950/30 transition hover:brightness-105 disabled:opacity-50">
+                {busy ? <LoaderCircle size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
+                {isOnline ? 'Start shift · Go to Work' : 'Reconnect to start shift'}
+              </button>
+              <p className="mt-4 text-center text-xs leading-5 text-slate-400">Work status is visible in Inventory Software. QR decoding, product verification, and local bulk saves do not query SQL. Upload only when ready.</p>
+            </div>
           </section>
         ) : confirmedOrder ? (
-          <section className="space-y-4 rounded-3xl border border-emerald-400/30 bg-emerald-400/[0.06] p-5 sm:p-7">
-            <div className="text-center">
-              <PackageCheck className="mx-auto mb-2 text-emerald-300" size={38} />
-              <h2 className="text-xl font-black text-white">Confirm Packed</h2>
-              <p className="mt-1 text-sm text-slate-300">Order #{confirmedOrder.orderNumber} · {confirmedOrder.verifiedItems.reduce((sum, item) => sum + item.quantity, 0)} verified units</p>
+          <section className="space-y-4 rounded-3xl border border-emerald-300/25 bg-[#0b1812]/95 p-5 shadow-2xl shadow-black/30 sm:p-7">
+            <div className="rounded-2xl border border-emerald-300/15 bg-gradient-to-br from-emerald-300/10 to-transparent p-5 text-center">
+              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-full border border-emerald-300/30 bg-emerald-300/10 shadow-[0_0_30px_rgba(16,185,129,0.12)]">
+                <PackageCheck className="text-emerald-200" size={34} />
+              </div>
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300">Verification complete</p>
+              <h2 className="mt-1 text-2xl font-black text-white">Ready to upload</h2>
+              <p className="mt-2 text-sm text-slate-300">Order #{confirmedOrder.orderNumber} · {confirmedOrder.verifiedItems.reduce((sum, item) => sum + item.quantity, 0)} verified units</p>
             </div>
-            <button type="button" disabled={busy} onClick={() => uploadPackedOrders([confirmedOrder])} className="flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 font-black text-emerald-950 disabled:opacity-60">
+            <button type="button" disabled={busy || !isOnline} onClick={() => uploadPackedOrders([confirmedOrder])} className="flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-300 to-teal-300 px-4 font-black text-[#062017] shadow-lg shadow-emerald-950/30 disabled:opacity-50">
               {busy ? <LoaderCircle size={18} className="animate-spin" /> : <CloudUpload size={19} />}
-              Upload Now
+              {isOnline ? 'Upload Now · Update Inventory' : 'Saved locally · reconnect to upload'}
             </button>
             <button type="button" disabled={busy} onClick={handleSaveBulk} className="flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 px-4 font-bold text-white disabled:opacity-60">
               Save Bulk on This Device
@@ -634,24 +730,35 @@ export default function ScannerPwa() {
           </section>
         ) : activeOrder ? (
           <section className="space-y-4">
-            <div className="flex items-center justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <div>
-                <p className="text-[10px] font-bold uppercase tracking-wider text-emerald-300">Order #{activeOrder.orderNumber}</p>
-                <h2 className="font-bold text-white">{activeOrder.customerName}</h2>
-                <p className="text-xs text-slate-400">{scannedUnits}/{expectedUnits} units scanned</p>
+            <div className="overflow-hidden rounded-2xl border border-emerald-300/20 bg-[#0b1812]/95 shadow-xl">
+              <div className="flex items-start justify-between gap-3 p-4 sm:p-5">
+                <div className="min-w-0">
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-300">Active packing order</p>
+                  <h2 className="mt-1 truncate text-lg font-black text-white">#{activeOrder.orderNumber}</h2>
+                  <p className="mt-1 text-xs text-slate-400">{activeOrder.customerName} · {orderItems.length} product lines</p>
+                </div>
+                <button type="button" aria-label="Back to scanner home" onClick={handleCancelPacking} disabled={busy} className="shrink-0 rounded-xl border border-white/10 p-2.5 text-slate-300 transition hover:border-rose-300/30 hover:bg-rose-300/10 hover:text-rose-100"><ArrowLeft size={18} /></button>
               </div>
-              <button type="button" aria-label="Back to scanner home" onClick={handleCancelPacking} disabled={busy} className="rounded-lg p-2 text-slate-300 hover:bg-white/10"><ArrowLeft size={18} /></button>
+              <div className="border-t border-white/8 bg-black/10 px-4 py-3 sm:px-5">
+                <div className="mb-2 flex items-center justify-between text-xs">
+                  <span className="font-bold text-white">Scan progress</span>
+                  <span className="font-mono font-bold text-emerald-200">{scannedUnits} / {expectedUnits} units</span>
+                </div>
+                <div className="h-2 overflow-hidden rounded-full bg-white/10">
+                  <div className="h-full rounded-full bg-gradient-to-r from-emerald-400 to-teal-300 transition-all duration-300" style={{ width: `${expectedUnits ? Math.min(100, (scannedUnits / expectedUnits) * 100) : 0}%` }} />
+                </div>
+              </div>
             </div>
             <div className="space-y-3">
               {orderItems.map(item => {
                 const progress = scanProgress[String(item.orderItemId)] || { codes: [], quantity: Number(item.quantity) || 1 };
                 const complete = progress.codes.length >= progress.quantity;
                 return (
-                  <article key={item.orderItemId} className={`rounded-2xl border p-4 ${complete ? 'border-emerald-400/40 bg-emerald-400/[0.06]' : 'border-white/10 bg-white/[0.03]'}`}>
+                  <article key={item.orderItemId} className={`rounded-2xl border p-4 shadow-lg shadow-black/10 transition ${complete ? 'border-emerald-300/35 bg-emerald-300/[0.06]' : 'border-white/10 bg-[#0b1812]/90'}`}>
                     <div className="flex items-start justify-between gap-3">
-                      <div>
+                      <div className="min-w-0">
                         <h3 className="font-bold text-white">{item.name}</h3>
-                        <p className="mt-1 font-mono text-xs text-slate-400">{item.sku} · Qty {progress.codes.length}/{progress.quantity}</p>
+                        <p className="mt-1 truncate font-mono text-xs text-slate-400">{item.sku || item.barcode || 'Barcode not listed'} · Qty {progress.codes.length}/{progress.quantity}</p>
                       </div>
                       {complete && <CheckCircle2 size={19} className="shrink-0 text-emerald-300" />}
                     </div>
@@ -664,7 +771,7 @@ export default function ScannerPwa() {
                           setCameraMode('product');
                           setCameraOpen(true);
                         }}
-                        className="mt-3 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl border border-emerald-400/40 bg-emerald-400/10 font-bold text-emerald-200"
+                        className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-emerald-300/30 bg-gradient-to-r from-emerald-300/15 to-teal-300/10 font-bold text-emerald-100 transition hover:border-emerald-200/60 hover:bg-emerald-300/20"
                       >
                         <Camera size={17} /> Scan {item.name}
                       </button>
@@ -674,7 +781,7 @@ export default function ScannerPwa() {
               })}
             </div>
             {orderComplete && (
-              <button type="button" onClick={savePackedOrder} className="flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 font-black text-emerald-950">
+              <button type="button" onClick={savePackedOrder} className="flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-300 to-teal-300 px-4 font-black text-[#062017] shadow-lg shadow-emerald-950/30">
                 <PackageCheck size={19} /> Confirm Packed
               </button>
             )}
@@ -682,40 +789,54 @@ export default function ScannerPwa() {
           </section>
         ) : (
           <section className="space-y-4">
-            <div className="rounded-2xl border border-emerald-400/30 bg-emerald-400/[0.06] p-4">
-              <div className="flex items-center gap-2 text-sm font-bold text-emerald-200">
-                <CheckCircle2 size={17} /> On work · {staffName}
+            <div className="rounded-2xl border border-emerald-300/20 bg-gradient-to-r from-emerald-900/35 to-[#0b1812] p-4 shadow-lg shadow-black/20">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center gap-2 text-sm font-bold text-emerald-100">
+                  <span className="flex h-8 w-8 items-center justify-center rounded-full bg-emerald-300/15"><CheckCircle2 size={17} /></span>
+                  On work · {staffName}
+                </div>
+                <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-emerald-200">Live shift</span>
               </div>
-              <p className="mt-1 text-xs text-slate-400">Inventory Software sees your status live. Order stock remains reserved by the existing customer order.</p>
+              <p className="mt-2 text-xs leading-5 text-slate-400">Order details and scans stay on this device. Existing website order reservations are unchanged until upload.</p>
             </div>
 
-            <div className="rounded-3xl border border-white/10 bg-white/[0.03] p-5">
-              <h2 className="mb-3 font-bold text-white">Scan Order</h2>
-              <button type="button" disabled={busy || cameraOpen} onClick={() => { setCameraMode('order'); setCameraOpen(true); }} className="flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-emerald-400 px-4 font-black text-emerald-950 disabled:opacity-60">
+            <div className="rounded-3xl border border-white/10 bg-[#0b1812]/95 p-5 shadow-xl shadow-black/20 sm:p-6">
+              <div className="mb-4 flex items-center justify-between gap-3">
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.18em] text-emerald-300">Packing station</p>
+                  <h2 className="mt-1 text-lg font-black text-white">Start an order</h2>
+                </div>
+                <div className="rounded-xl border border-emerald-300/20 bg-emerald-300/10 p-2.5 text-emerald-200"><Camera size={19} /></div>
+              </div>
+              <button type="button" disabled={busy || cameraOpen} onClick={() => { setCameraMode('order'); setCameraOpen(true); }} className="flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-300 to-teal-300 px-4 font-black text-[#062017] shadow-lg shadow-emerald-950/30 transition hover:brightness-105 disabled:opacity-50">
                 <Camera size={20} /> Scan Order Bill QR
               </button>
-              <form onSubmit={event => { event.preventDefault(); loadOrder(orderInput); }} className="mt-3 flex gap-2">
-                <input value={orderInput} onChange={event => setOrderInput(event.target.value)} placeholder="Or enter ORD number" className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-3 font-mono text-sm text-white outline-none focus:border-emerald-400" />
-                <button type="submit" disabled={busy} className="rounded-xl border border-white/15 px-4 text-xs font-bold text-white">Load</button>
+              <div className="my-4 flex items-center gap-3 text-[9px] font-bold uppercase tracking-widest text-slate-500"><span className="h-px flex-1 bg-white/10" />or enter order number<span className="h-px flex-1 bg-white/10" /></div>
+              <form onSubmit={event => { event.preventDefault(); loadOrder(orderInput); }} className="flex gap-2">
+                <input value={orderInput} onChange={event => setOrderInput(event.target.value)} placeholder="Order number" className="min-w-0 flex-1 rounded-xl border border-white/10 bg-black/30 px-3 py-3 font-mono text-sm text-white outline-none transition placeholder:font-sans placeholder:text-slate-500 focus:border-emerald-300" />
+                <button type="submit" disabled={busy || !orderInput.trim()} className="rounded-xl border border-white/15 px-5 text-xs font-black text-white transition hover:border-emerald-300/40 hover:bg-emerald-300/10 disabled:opacity-40">Load</button>
               </form>
             </div>
 
-            <div className="rounded-2xl border border-white/10 bg-white/[0.03] p-4">
-              <div className="flex items-center justify-between gap-3">
-                <div>
-                  <h3 className="font-bold text-white">Saved Bulk · {batch.length} order(s)</h3>
-                  <p className="text-xs text-slate-400">{batchUnits} verified units saved on this device</p>
+            <div className="overflow-hidden rounded-2xl border border-white/10 bg-[#0b1812]/95 shadow-lg shadow-black/20">
+              <div className="flex items-center justify-between gap-3 p-4 sm:p-5">
+                <div className="flex min-w-0 items-center gap-3">
+                  <div className="rounded-xl border border-sky-300/20 bg-sky-300/10 p-2.5 text-sky-200"><CloudUpload size={18} /></div>
+                  <div className="min-w-0">
+                    <h3 className="font-black text-white">Bulk upload queue</h3>
+                    <p className="text-xs text-slate-400">{batch.length} order(s) · {batchUnits} verified units saved on device</p>
+                  </div>
                 </div>
-                <button type="button" disabled={busy || batch.length === 0} onClick={() => uploadPackedOrders(batch)} className="inline-flex min-h-10 items-center gap-2 rounded-xl bg-emerald-400 px-3 text-xs font-black text-emerald-950 disabled:opacity-50">
-                  {busy ? <LoaderCircle size={15} className="animate-spin" /> : <Upload size={15} />} Upload Bulk
+                <button type="button" disabled={busy || batch.length === 0 || !isOnline} onClick={() => uploadPackedOrders(batch)} className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-xl bg-emerald-300 px-3 text-xs font-black text-[#062017] transition hover:brightness-105 disabled:opacity-40">
+                  {busy ? <LoaderCircle size={15} className="animate-spin" /> : <Upload size={15} />} Upload
                 </button>
               </div>
               {batch.length > 0 && (
-                <ul className="mt-3 space-y-2 border-t border-white/10 pt-3">
+                <ul className="space-y-2 border-t border-white/10 p-4 sm:px-5">
                   {batch.map(order => (
-                    <li key={order.orderId} className="flex justify-between gap-2 text-xs">
-                      <span className="font-mono text-slate-200">Order #{order.orderNumber}</span>
-                      <span className="text-slate-400">{order.verifiedItems.reduce((sum, item) => sum + item.quantity, 0)} units</span>
+                    <li key={order.orderId} className="flex items-center justify-between gap-3 rounded-xl bg-white/[0.03] px-3 py-2.5 text-xs">
+                      <span className="min-w-0 truncate font-mono font-bold text-slate-200">Order #{order.orderNumber}</span>
+                      <span className="shrink-0 rounded-full bg-white/5 px-2 py-1 text-[10px] text-slate-400">{order.verifiedItems.reduce((sum, item) => sum + item.quantity, 0)} units</span>
                     </li>
                   ))}
                 </ul>
