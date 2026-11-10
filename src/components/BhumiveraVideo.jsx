@@ -2,8 +2,6 @@ import React from 'react';
 
 /**
  * BhumiveraVideo (Static Photographic Specimen Frame)
- * All video animations (.mp4 / <video>) have been removed across the platform.
- * Renders a high-resolution, watermark-free static photograph with optional specimen badge.
  */
 export default function BhumiveraVideo({
   src,
