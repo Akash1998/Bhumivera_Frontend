@@ -68,15 +68,15 @@ export function stopCamera(videoElement) {
 export function getCameraCapabilities(videoElement) {
   const track = videoElement?.srcObject?.getVideoTracks?.()?.[0];
   if (!track || typeof track.getCapabilities !== 'function') {
-    return { torch: false, hardwareZoom: null };
+    return { torch: false, zoom: null, focus: [] };
   }
   const caps = track.getCapabilities();
   return {
     torch: Boolean(caps.torch),
-    hardwareZoom:
-      caps.zoom && typeof caps.zoom.min === 'number'
-        ? { min: caps.zoom.min, max: caps.zoom.max, step: caps.zoom.step || 0.1 }
-        : null,
+    zoom: caps.zoom && typeof caps.zoom.min === 'number'
+      ? { min: caps.zoom.min, max: caps.zoom.max, step: caps.zoom.step || 0.1 }
+      : null,
+    focus: Array.isArray(caps.focusMode) ? caps.focusMode : [],
   };
 }
 
@@ -100,6 +100,35 @@ export async function setHardwareZoom(videoElement, zoomLevel) {
   } catch {
     return false;
   }
+}
+
+export async function setZoom(videoElement, zoomLevel, digitalFallback) {
+  const track = videoElement?.srcObject?.getVideoTracks?.()?.[0];
+  const zoom = track?.getCapabilities?.()?.zoom;
+  if (zoom) {
+    await track.applyConstraints({
+      advanced: [{ zoom: Math.min(zoom.max, Math.max(zoom.min, zoomLevel)) }],
+    });
+    return 'hardware';
+  }
+  digitalFallback?.(zoomLevel);
+  return 'digital';
+}
+
+export async function focusAt(videoElement, x, y) {
+  const track = videoElement?.srcObject?.getVideoTracks?.()?.[0];
+  const focusModes = track?.getCapabilities?.()?.focusMode;
+  if (!track || !Array.isArray(focusModes) || focusModes.length === 0) return false;
+
+  const advanced = [{ pointsOfInterest: [{ x, y }] }];
+  if (focusModes.includes('single-shot')) advanced.push({ focusMode: 'single-shot' });
+  await track.applyConstraints({ advanced });
+  if (focusModes.includes('continuous')) {
+    window.setTimeout(() => {
+      track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
+    }, 1200);
+  }
+  return true;
 }
 
 /**
