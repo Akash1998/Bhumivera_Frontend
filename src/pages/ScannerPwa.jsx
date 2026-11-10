@@ -94,11 +94,36 @@ const getOrderId = value => {
 
 const decodeFulfillmentQr = value => {
   const raw = String(value || '').trim();
-  if (!raw.startsWith('BV-PWA1:')) return null;
-  const encoded = raw.slice('BV-PWA1:'.length).replace(/-/g, '+').replace(/_/g, '/');
+  const isCompactManifest = raw.startsWith('BV-PWA2:');
+  if (!isCompactManifest && !raw.startsWith('BV-PWA1:')) return null;
+  const prefix = isCompactManifest ? 'BV-PWA2:' : 'BV-PWA1:';
+  const encoded = raw.slice(prefix.length).replace(/-/g, '+').replace(/_/g, '/');
   const binary = window.atob(encoded.padEnd(Math.ceil(encoded.length / 4) * 4, '='));
   const bytes = Uint8Array.from(binary, character => character.charCodeAt(0));
   const payload = JSON.parse(new TextDecoder().decode(bytes));
+  if (isCompactManifest && Array.isArray(payload)) {
+    if (payload[0] !== 2 || !payload[1] || !Array.isArray(payload[5])) {
+      throw new Error('This compact fulfillment QR does not contain a valid order manifest.');
+    }
+    const items = payload[5].map(item => {
+      if (!Array.isArray(item)) throw new Error('This fulfillment QR contains an invalid item entry.');
+      return {
+        orderItemId: item[0],
+        name: item[1] || 'Product',
+        sku: item[2] || '',
+        barcode: item[3] || item[2] || '',
+        quantity: Number(item[4]) || 1,
+      };
+    });
+    return {
+      id: payload[1],
+      orderNumber: payload[2] || String(payload[1]),
+      status: payload[3] || 'pending',
+      customerName: payload[4] || 'Customer',
+      totalItemsCount: items.reduce((sum, item) => sum + item.quantity, 0),
+      items,
+    };
+  }
   if (payload?.v !== 1 || !payload?.i || !Array.isArray(payload?.x)) {
     throw new Error('This fulfillment QR does not contain a valid order manifest.');
   }
@@ -656,7 +681,7 @@ export default function ScannerPwa() {
               <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white">Align code in view</span>
             </div>
             <p className="p-3 text-center text-xs leading-5 text-slate-300">
-              {cameraMode === 'order' ? 'Scan the fulfillment QR. It contains the order manifest and loads locally.' : `Scan the SKU or barcode for ${selectedItem?.name || 'the selected item'}.`}
+              {cameraMode === 'order' ? 'Scan the compact fulfillment QR. It contains order and product codes and loads locally.' : `Scan the SKU or barcode for ${selectedItem?.name || 'the selected item'}.`}
             </p>
           </section>
         )}

@@ -47,39 +47,24 @@ const amountInIndianWords = amount => {
 };
 
 const encodeOrderManifest = order => {
-  const manifest = {
-    v: 1,
-    i: order.id,
-    n: order.orderNumber || String(order.id),
-    f: order.invoiceNumber || '',
-    d: order.createdAt || '',
-    s: order.status || 'pending',
-    c: order.customerName || 'Customer',
-    p: order.customerPhone || '',
-    a: order.fullFormattedAddress || order.shippingAddress || '',
-    t: {
-      subtotal: Number(order.subtotal) || 0,
-      discount: Number(order.discount) || 0,
-      shipping: Number(order.shippingCost) || 0,
-      total: Number(order.total ?? order.totalAmount) || 0,
-    },
-    x: (order.items || []).map(item => ({
-      i: item.id || item.orderItemId,
-      p: item.productId,
-      n: item.name || 'Product',
-      k: item.sku || '',
-      b: item.barcode || item.sku || '',
-      q: Number(item.quantity) || 1,
-      u: Number(item.price) || 0,
-      m: Number(item.mrp) || Number(item.price) || 0,
-      h: item.gstHsnCode || '',
-      g: Number(item.gstRate) || 5,
-    })),
-  };
+  const manifest = [
+    2,
+    order.id,
+    order.orderNumber || String(order.id),
+    order.status || 'pending',
+    order.customerName || 'Customer',
+    (order.items || []).map(item => [
+      item.id || item.orderItemId,
+      item.name || 'Product',
+      item.sku || '',
+      item.barcode || item.sku || '',
+      Number(item.quantity) || 1,
+    ]),
+  ];
   const bytes = new TextEncoder().encode(JSON.stringify(manifest));
   let binary = '';
   bytes.forEach(byte => { binary += String.fromCharCode(byte); });
-  return `BV-PWA1:${btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')}`;
+  return `BV-PWA2:${btoa(binary).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')}`;
 };
 
 const buildInvoiceRows = order => {
@@ -124,8 +109,8 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
       ? `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(storeConfig.storeName || 'Bhumivera')}&am=${total.toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Invoice ${order.invoiceNumber || order.orderNumber || order.id}`)}`
       : `https://bhumivera.com/verify?order=${encodeURIComponent(order.orderNumber || order.id)}`;
     Promise.all([
-      QRCode.toDataURL(encodeOrderManifest(order), { width: 360, margin: 2, errorCorrectionLevel: 'M' }),
-      QRCode.toDataURL(paymentPayload, { width: 240, margin: 2, errorCorrectionLevel: 'M' }),
+      QRCode.toDataURL(encodeOrderManifest(order), { width: 1080, margin: 4, errorCorrectionLevel: 'M' }),
+      QRCode.toDataURL(paymentPayload, { width: 600, margin: 4, errorCorrectionLevel: 'M' }),
     ]).then(([manifestUrl, payUrl]) => {
       if (active) {
         setQrUrl(manifestUrl);
@@ -216,11 +201,11 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
           th{background:#e8efeb;font-size:8px;text-transform:uppercase}.center{text-align:center}.num{text-align:right;white-space:nowrap}
           small{display:block;color:#66736c;margin-top:3px}.bottom{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,255px);gap:14px;margin-top:8px}
           .amount{text-align:right;font-size:12px;font-weight:bold}.amount .grand{font-size:16px;color:#234f3d;border-top:2px solid #234f3d;padding-top:7px;margin-top:6px}
-          .qrbox{display:flex;min-width:0;align-items:center;gap:12px;border:1px solid #c3cdc8;padding:8px;margin-top:10px;overflow:hidden}.qrbox img{flex:none;width:90px;height:90px;object-fit:contain}.qrbox span{min-width:0;overflow-wrap:anywhere}
-          .qrbox.pack img{width:160px;height:160px}.foot{border-top:1px solid #abb8b1;margin-top:14px;padding-top:9px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;line-height:1.5}
+          .qrbox{display:flex;min-width:0;align-items:center;gap:12px;border:1px solid #c3cdc8;padding:8px;margin-top:10px;overflow:hidden}.qrbox img{flex:none;width:140px;height:140px;object-fit:contain;image-rendering:pixelated}.qrbox span{min-width:0;overflow-wrap:anywhere}
+          .qrbox.pack img{width:240px;height:240px}.foot{border-top:1px solid #abb8b1;margin-top:14px;padding-top:9px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;line-height:1.5}
           .sign{text-align:right;padding-top:25px}.note{font-size:8px;color:#5d6a64;margin-top:8px}
-          @media(max-width:680px){body{padding:8px}.sheet{padding:10px}.head,.two,.bottom,.foot{grid-template-columns:minmax(0,1fr)}.title{text-align:left}.bottom .amount{text-align:left}.qrbox.pack img{width:120px;height:120px}table{font-size:7px}th,td{padding:3px 2px;word-break:break-word}}
-          @media print{body{padding:0}.sheet{border:0;max-width:none;padding:8mm}button{display:none}}
+          @media(max-width:680px){body{padding:8px}.sheet{padding:10px}.head,.two,.bottom,.foot{grid-template-columns:minmax(0,1fr)}.title{text-align:left}.bottom .amount{text-align:left}.qrbox.pack img{width:200px;height:200px}table{font-size:7px}th,td{padding:3px 2px;word-break:break-word}}
+          @media print{body{padding:0}.sheet{border:0;max-width:none;padding:8mm}.qrbox.pack{break-inside:avoid}.qrbox.pack img{width:240px;height:240px}button{display:none}}
         </style>
       </head><body><main class="sheet">
         <header class="head">
@@ -265,7 +250,7 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
         <div className="mb-4 flex items-center justify-between">
           <div>
             <h2 id="fulfillment-qr-title" className="font-black">Tax Invoice · {order.invoiceNumber || order.orderNumber || order.id}</h2>
-            <p className="text-xs text-slate-400">The QR contains the complete packing manifest; opening it does not fetch an order from SQL.</p>
+            <p className="text-xs text-slate-400">Compact packing QR with order and item codes; scanning it does not fetch from SQL.</p>
           </div>
           <button type="button" aria-label="Close" onClick={onClose} className="rounded-lg p-2 text-slate-300 hover:bg-white/10"><X size={18} /></button>
         </div>
@@ -282,9 +267,9 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
         )}
         {qrUrl ? (
           <div className="flex flex-col items-center rounded-xl bg-white p-4 text-slate-900">
-            <img src={qrUrl} alt={`Fulfillment manifest QR for order ${order.orderNumber || order.id}`} className="h-52 w-52" />
+            <img src={qrUrl} alt={`Fulfillment manifest QR for order ${order.orderNumber || order.id}`} className="h-80 w-80 max-w-full object-contain [image-rendering:pixelated]" />
             <strong className="font-mono">Order {order.orderNumber || order.id}</strong>
-            <span className="mt-1 text-[10px] text-slate-500">{qrPayloadLength.toLocaleString()} character manifest</span>
+            <span className="mt-1 text-[10px] text-slate-500">{qrPayloadLength.toLocaleString()} character compact manifest · 1080 px QR</span>
           </div>
         ) : <p className="py-10 text-center text-sm text-slate-300">Generating invoice and fulfillment QR…</p>}
         <button type="button" disabled={!qrUrl || !paymentQrUrl || !canPrintInvoice} onClick={printSlip} className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 font-black text-emerald-950 disabled:opacity-50">

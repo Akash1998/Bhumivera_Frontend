@@ -22,18 +22,32 @@ vi.mock('../utils/qrScanEngine', () => ({
 }));
 
 const orderPayload = {
-  v: 1,
+  v: 2,
   i: 99,
   n: 'ORD-99',
   s: 'confirmed',
   c: 'Sample Customer',
-  t: { total: 598, subtotal: 598, discount: 0, shipping: 0 },
   x: [
-    { i: 901, n: 'Charcoal Face Wash', k: 'SKU-1', b: 'BAR-1', q: 1, u: 299 },
-    { i: 902, n: 'Aloe Vera Soap', k: 'SKU-2', b: 'BAR-2', q: 1, u: 299 },
+    [901, 'Charcoal Face Wash', 'SKU-1', 'BAR-1', 1],
+    [902, 'Aloe Vera Soap', 'SKU-2', 'BAR-2', 1],
   ],
 };
-const fulfillmentQr = `BV-PWA1:${btoa(unescape(encodeURIComponent(JSON.stringify(orderPayload))))
+const fulfillmentQr = `BV-PWA2:${btoa(unescape(encodeURIComponent(JSON.stringify([
+  orderPayload.v,
+  orderPayload.i,
+  orderPayload.n,
+  orderPayload.s,
+  orderPayload.c,
+  orderPayload.x,
+]))))
+  .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')}`;
+const legacyFulfillmentQr = `BV-PWA1:${btoa(unescape(encodeURIComponent(JSON.stringify({
+  v: 1,
+  i: 100,
+  n: 'ORD-100',
+  s: 'confirmed',
+  x: [{ i: 903, n: 'Test Soap', k: 'SKU-3', b: 'BAR-3', q: 1 }],
+}))))
   .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')}`;
 
 const prepareApi = () => {
@@ -153,6 +167,19 @@ describe('fulfillment scanner PWA', () => {
     );
     expect(screen.getByText('Charcoal Face Wash')).toBeTruthy();
     expect(screen.getByText('Aloe Vera Soap')).toBeTruthy();
+  });
+
+  it('continues to read previously printed fulfillment QR codes', async () => {
+    render(<ScannerPwa />);
+    await signInAndStartWork();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Scan Order Bill QR' }));
+    await waitFor(() => expect(scannerMock.onResult).toBeTruthy());
+    scannerMock.onResult(legacyFulfillmentQr);
+
+    await screen.findByText(/Order #ORD-100 loaded/i);
+    expect(screen.getByText('Test Soap')).toBeTruthy();
+    expect(api.get).not.toHaveBeenCalled();
   });
 
   it('saves completed orders locally and uploads them from the bulk queue later', async () => {
