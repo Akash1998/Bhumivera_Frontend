@@ -30,7 +30,7 @@ All files live in `src/pages/`:
 | :---: | :--- | :--- | :--- |
 | **1** | `PremiumHome.jsx` (`Home.jsx`) | `/` | Flagship storefront, 4-pillar stewardship ledger, regimen bundles, ingredient showcase |
 | **2** | `Shop.jsx` | `/shop`, `/collections`, `/category/:slug` | Filterable 6-product luxury catalog + 3 architectural regimen bundles with live batch stock |
-| **3** | `ProductDetail.jsx` | `/product/:id`, `/products/:id` | Full active potency disclosure table, batch CoA verification link, Wikipedia-linked JSON-LD, reviews tab |
+| **3** | `ProductDetail.jsx` | `/product/:id`, `/products/:id` | Product details render independently from review loading; includes active potency disclosure, batch CoA verification, JSON-LD, and reviews tab |
 | **4** | `BundleDetail.jsx` | `/combo/:slug` | Regimen bundle page with component breakdown, live component stock, and regimen reviews |
 | **5** | `ProductVerification.jsx` | `/verify`, `/genuinity`, `/ewarranty` | Authenticity QR code scanner and bottle serial validation against Railway database |
 | **6** | `InventorySoftware.jsx` | `/inventorysoftware`, `/inventorysoftware/*` | **10x Omnichannel Command Center**: Order lifecycle with clickable status/today filters, search, date filter and visible-view refresh; shipping labels, RTO returns, POS, 12-hour scanner pairing, live order packing progress, printable fulfillment QR bill/pick slip, SQL backup |

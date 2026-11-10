@@ -159,9 +159,11 @@ export default function ProductDetail() {
   }, [activeTab, location.hash, reviewsData.length]);
 
   useEffect(() => {
+    let active = true;
+    let hasLoadedProduct = false;
     const fetchProductData = async () => {
       try {
-        setLoading(true);
+        if (!hasLoadedProduct) setLoading(true);
         let fetchedProduct = null;
         const fallbackProduct = FALLBACK_CATALOG_PRODUCTS.find(
           product => String(product.id) === String(id) || product.slug === String(id)
@@ -290,52 +292,68 @@ export default function ProductDetail() {
            fetchedProduct.images = safeImages;
         }
 
+        if (!active) return;
         setProduct(fetchedProduct);
-        if (fetchedProduct?.images?.length > 0) {
-          setActiveMedia(fetchedProduct.images[0]);
-        }
-
-        if (fetchedProduct) {
-          setReviewsData([]);
-          setReviewSummary(null);
-          setReviewLoadError('');
-          try {
-            const productKey = fetchedProduct.id ?? fetchedProduct.slug ?? id;
-            const revRes = await reviewsApi.getByProduct(productKey);
-            const reviewPayload = revRes.data?.data || revRes.data || {};
-            const reviewRows = Array.isArray(reviewPayload) ? reviewPayload : reviewPayload.reviews;
-            const summary = reviewPayload.summary || revRes.data?.summary;
-            if (!Array.isArray(reviewRows) || !summary) {
-              throw new Error('The product reviews response is incomplete.');
-            }
-            setReviewsData(reviewRows.map(review => ({ ...review, comment: review.body || review.comment || '' })));
-            setReviewSummary(summary);
-          } catch (error) {
-            console.error('Failed to load product reviews:', error);
-            setReviewsData([]);
-            setReviewSummary(null);
-            setReviewLoadError('Customer reviews could not be loaded. Please try again shortly.');
-          }
-        } else {
-          setReviewsData([]);
-          setReviewSummary(null);
-          setReviewLoadError('');
-        }
+        if (fetchedProduct?.images?.length > 0) setActiveMedia(fetchedProduct.images[0]);
+        hasLoadedProduct = true;
       } catch (err) {
-        console.error("Failed to load product ecosystem:", err);
+        console.error("Failed to load product details:", err);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
     
     fetchProductData();
     window.addEventListener('online', fetchProductData);
-    window.addEventListener('bhumivera:reviews-updated', fetchProductData);
     return () => {
+      active = false;
       window.removeEventListener('online', fetchProductData);
-      window.removeEventListener('bhumivera:reviews-updated', fetchProductData);
     };
   }, [id]);
+
+  useEffect(() => {
+    const productKey = product?.id ?? product?.slug ?? id;
+    if (!productKey || !product) {
+      setReviewsData([]);
+      setReviewSummary(null);
+      setReviewLoadError('');
+      return undefined;
+    }
+
+    let active = true;
+    const fetchProductReviews = async () => {
+      setReviewsData([]);
+      setReviewSummary(null);
+      setReviewLoadError('');
+      try {
+        const revRes = await reviewsApi.getByProduct(productKey);
+        const reviewPayload = revRes.data?.data || revRes.data || {};
+        const reviewRows = Array.isArray(reviewPayload) ? reviewPayload : reviewPayload.reviews;
+        const summary = reviewPayload.summary || revRes.data?.summary;
+        if (!Array.isArray(reviewRows) || !summary) {
+          throw new Error('The product reviews response is incomplete.');
+        }
+        if (!active) return;
+        setReviewsData(reviewRows.map(review => ({ ...review, comment: review.body || review.comment || '' })));
+        setReviewSummary(summary);
+      } catch (error) {
+        console.error('Failed to load product reviews:', error);
+        if (!active) return;
+        setReviewsData([]);
+        setReviewSummary(null);
+        setReviewLoadError('Customer reviews could not be loaded. Please try again shortly.');
+      }
+    };
+
+    fetchProductReviews();
+    window.addEventListener('online', fetchProductReviews);
+    window.addEventListener('bhumivera:reviews-updated', fetchProductReviews);
+    return () => {
+      active = false;
+      window.removeEventListener('online', fetchProductReviews);
+      window.removeEventListener('bhumivera:reviews-updated', fetchProductReviews);
+    };
+  }, [product, id]);
 
   useEffect(() => {
     if (!product?.id || !canPersonalize) {
