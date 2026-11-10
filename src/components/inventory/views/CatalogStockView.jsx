@@ -5,7 +5,6 @@ import {
   Filter,
   Plus,
   Edit3,
-  MapPin,
   Barcode,
   Sparkles,
   AlertTriangle,
@@ -51,8 +50,7 @@ export default function CatalogStockView({
         i.name?.toLowerCase().includes(q) ||
         i.sku?.toLowerCase().includes(q) ||
         i.barcode?.includes(q) ||
-        i.gstHsnCode?.includes(q) ||
-        i.binCode?.toLowerCase().includes(q);
+        i.gstHsnCode?.includes(q);
       return matchCat && matchQ;
     });
   }, [items, searchTerm, selectedCat]);
@@ -68,7 +66,7 @@ export default function CatalogStockView({
               type="text"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder="Search by SKU, Product Name, HSN (30049011), EAN-13, Bin Code..."
+              placeholder="Search by SKU, product name, or HSN code"
               className="w-full pl-9 pr-3 py-2 text-xs bg-[#071711] text-white border border-emerald-500/40 rounded-xl focus:border-emerald-400 focus:outline-none font-medium placeholder-slate-400"
             />
           </div>
@@ -110,15 +108,13 @@ export default function CatalogStockView({
       {/* Products Stock Table */}
       <div className="bg-[#0c261b] rounded-2xl border border-emerald-500/30 shadow-xl overflow-hidden w-full max-w-full">
         <div className="overflow-x-auto w-full">
-          <table className="w-full text-left text-xs min-w-[850px]">
+          <table className="w-full text-left text-xs min-w-[760px]">
             <thead className="bg-[#071711] text-emerald-300 uppercase font-bold text-[10px] tracking-wider border-b border-emerald-500/30">
               <tr>
                 <th className="px-4 py-3">Product Formulation &amp; Category</th>
                 <th className="px-4 py-3">SKU &amp; Barcode</th>
                 <th className="px-4 py-3 text-center">HSN &amp; GST</th>
-                <th className="px-4 py-3">Bin Location</th>
-                <th className="px-4 py-3 text-center">Physical Stock</th>
-                <th className="px-4 py-3 text-center">Shop / Vault</th>
+                <th className="px-4 py-3 text-center">Website Stock</th>
                 <th className="px-4 py-3 text-center">Velocity (DOC)</th>
                 <th className="px-4 py-3 text-right">Pricing (MRP/Sale)</th>
                 <th className="px-4 py-3 text-right">Actions</th>
@@ -129,7 +125,8 @@ export default function CatalogStockView({
                 filteredItems.map((item) => {
                   const vel = velocityMap[item.sku];
                   const doc = vel?.daysOfCover ?? 45;
-                  const isLow = (item.qty || item.physicalStock) <= (item.minStock || 20);
+                  const websiteStock = Number(item.qty ?? item.availableStock ?? 0);
+                  const isLow = websiteStock <= (item.minStock || 20);
 
                   return (
                     <tr key={item.id} className="hover:bg-emerald-950/30 transition">
@@ -153,27 +150,15 @@ export default function CatalogStockView({
                         </div>
                       </td>
 
-                      <td className="px-4 py-3 font-mono">
-                        <div className="flex items-center gap-1 font-bold text-slate-200">
-                          <MapPin className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                          <span>{item.binCode || 'ASN-DEFAULT'}</span>
-                        </div>
-                        <div className="text-[10px] text-slate-400 font-sans">{item.rackLocation || 'Zone A'}</div>
-                      </td>
-
                       <td className="px-4 py-3 text-center">
                         <span className={`inline-block px-3 py-1 rounded-lg text-xs font-black font-mono shadow-sm ${
                           isLow
                             ? 'bg-rose-500/20 text-rose-300 border border-rose-500/40'
                             : 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/40'
                         }`}>
-                          {item.qty ?? item.physicalStock ?? 0}
+                          {websiteStock}
                         </span>
-                      </td>
-
-                      <td className="px-4 py-3 text-center text-[11px] text-slate-300">
-                        <div>Shop: <strong className="text-white">{item.shopDisplayStock || 0}</strong></div>
-                        <div className="text-[10px] text-slate-400">Vault: {item.warehouseVaultStock || 0}</div>
+                        <div className="mt-1 text-[9px] text-slate-400">Synced with website quantity</div>
                       </td>
 
                       {/* AI Velocity Days-of-Cover Badge */}
@@ -229,7 +214,7 @@ export default function CatalogStockView({
                 })
               ) : (
                 <tr>
-                  <td colSpan={9} className="text-center py-10 text-slate-300">
+                  <td colSpan={7} className="text-center py-10 text-slate-300">
                     <Boxes className="w-8 h-8 mx-auto text-emerald-400/60 mb-2" />
                     No formulations matching search criteria.
                   </td>

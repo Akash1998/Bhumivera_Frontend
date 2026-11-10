@@ -2,7 +2,7 @@
   "id": "/scanner",
   "name": "Bhumivera Warehouse Scanner",
   "short_name": "BV Scanner",
-  "description": "Scan Bhumivera warehouse products and sync them to the POS queue.",
+  "description": "Verify fulfillment orders and upload packed orders to Inventory Software.",
   "start_url": "/scanner",
   "scope": "/scanner",
   "display": "standalone",

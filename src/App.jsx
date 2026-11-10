@@ -96,7 +96,7 @@ const VisualGuideModal = lazyWithRetry(() => import("./components/VisualGuideMod
 const Home = lazyWithRetry(() => import("./pages/PremiumHome.jsx"));
 const LabProtocol = lazyWithRetry(() => import("./pages/LabProtocol.jsx"));
 const InventorySoftware = lazyWithRetry(() => import("./pages/InventorySoftware.jsx"));
-const WarehouseScannerPwa = lazyWithRetry(() => import("./pages/WarehouseScannerPwa.jsx"));
+const WarehouseScannerPwa = lazyWithRetry(() => import("./pages/ScannerPwa.jsx"));
 const Shop = lazyWithRetry(() => import("./pages/Shop.jsx"));
 const ProductDetail = lazyWithRetry(() => import("./pages/ProductDetail.jsx"));
 const BundleDetail = lazyWithRetry(() => import("./pages/BundleDetail.jsx"));

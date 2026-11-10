@@ -7,23 +7,18 @@ import './admin/AdminTheme.css';
 
 import DashboardView from '../components/inventory/views/DashboardView';
 import OrderFulfillmentView from '../components/inventory/views/OrderFulfillmentView';
-import PosTerminalView from '../components/inventory/views/PosTerminalView';
+import PosTerminalView from '../components/inventory/views/ManualPosTerminalView';
 import CatalogStockView from '../components/inventory/views/CatalogStockView';
 import ShippingLabelsView from '../components/inventory/views/ShippingLabelsView';
-import StorageKeeperView from '../components/inventory/views/StorageKeeperView';
-import GrnInwardView from '../components/inventory/views/GrnInwardView';
 import RtoReturnsView from '../components/inventory/views/RtoReturnsView';
-import StocktakeAuditView from '../components/inventory/views/StocktakeAuditView';
-import ScannerBridgeView from '../components/inventory/views/ScannerBridgeView';
 import ReportsLogsView from '../components/inventory/views/ReportsLogsView';
+import WorkroomView from '../components/inventory/views/WorkroomView';
 
 import WavePicklistModal from '../components/inventory/modals/WavePicklistModal';
 import ManifestPrintModal from '../components/inventory/modals/ManifestPrintModal';
-import PackingVerifyModal from '../components/inventory/modals/PackingVerifyModal';
+import FulfillmentOrderQrModal from '../components/inventory/modals/FulfillmentOrderQrModal';
 import ReturnQcModal from '../components/inventory/modals/ReturnQcModal';
-import ThermalLabelModal from '../components/inventory/modals/ThermalLabelModal';
 import BatchBarcodeGeneratorModal from '../components/inventory/modals/BatchBarcodeGeneratorModal';
-import PackageFinderModal from '../components/inventory/modals/PackageFinderModal';
 import {
   Activity,
   AlertTriangle,
@@ -92,13 +87,11 @@ const LOCAL_DB_KEY = 'BV_INVENTORY_DB_V10X';
 const LOCAL_TOKEN_KEY = 'BV_INV_SOFTWARE_TOKEN';
 const LOCAL_USER_KEY = 'BV_INV_SOFTWARE_USER';
 const LOCAL_POS_SESSION_KEY = 'BV_POS_SESSION_CODE';
-const LOCAL_POS_DRAFT_KEY = 'BV_POS_DRAFT';
 
 const createPosRequestId = () =>
   globalThis.crypto?.randomUUID?.() || `pos-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 
 const FALLBACK_CATALOG_ITEMS = [];
-const FALLBACK_BINS = [];
 const FALLBACK_CUSTOMERS = [];
 
 export default function InventorySoftware() {
@@ -165,17 +158,16 @@ export default function InventorySoftware() {
   // WMS Upgrades State
   const [activeWavePicklist, setActiveWavePicklist] = useState(null);
   const [activeManifest, setActiveManifest] = useState(null);
-  const [verifyPackingOrder, setVerifyPackingOrder] = useState(null);
+  const [fulfillmentQrOrder, setFulfillmentQrOrder] = useState(null);
   const [returnQcOrder, setReturnQcOrder] = useState(null);
-  const [thermalLabelOrder, setThermalLabelOrder] = useState(null);
   const [velocityData, setVelocityData] = useState(null);
 
-  // Navigation & UI State (supports ?view=online | labels | ret | inv | sale | scanner | backup | keeper | audit | grn)
+  // Navigation and UI state for the simplified inventory workflow.
   const [activeView, setActiveView] = useState(() => {
     try {
       const params = new URLSearchParams(window.location.search);
       const requested = params.get('view');
-      const allowed = ['dash', 'online', 'labels', 'ret', 'inv', 'sale', 'scanner', 'backup', 'keeper', 'audit', 'grn', 'trans', 'rep', 'logs'];
+      const allowed = ['dash', 'online', 'labels', 'ret', 'inv', 'sale', 'workroom', 'backup', 'trans', 'rep', 'logs'];
       if (requested && allowed.includes(requested)) return requested;
       if (requested === 'shipping') return 'labels';
     } catch {}
@@ -189,21 +181,17 @@ export default function InventorySoftware() {
 
   // Core Data Collections (Single Main Inventory synced across Online & Offline)
   const [items, setItems] = useState(FALLBACK_CATALOG_ITEMS);
-  const [bins, setBins] = useState(FALLBACK_BINS);
   const [customers, setCustomers] = useState(FALLBACK_CUSTOMERS);
   const [sales, setSales] = useState([]);
   const [proofs, setProofs] = useState([]);
-  const [suppliers, setSuppliers] = useState([]);
-  const [grnEntries, setGrnEntries] = useState([]);
   const [movements, setMovements] = useState([]);
   const [logs, setLogs] = useState([]);
   const [onlineOrders, setOnlineOrders] = useState([]);
-  const [scannerQueue, setScannerQueue] = useState([]);
   const [dailyBackups, setDailyBackups] = useState([]);
   const [shippingZones, setShippingZones] = useState([]);
   const [carriers, setCarriers] = useState([]);
 
-  // Order Lifecycle, Shipping Labels, RTO Returns, QR Scanner & Daily Backup State
+  // Order lifecycle, shipping, returns, and daily backup state
   const [orderSearch, setOrderSearch] = useState('');
   const [orderStatusFilter, setOrderStatusFilter] = useState('ALL');
   const [orderDateFilter, setOrderDateFilter] = useState('');
@@ -218,29 +206,15 @@ export default function InventorySoftware() {
   });
   const [rtoSearch, setRtoSearch] = useState('');
   const [rtoReason, setRtoReason] = useState('Customer Unavailable / Door Locked — Courier Return to Origin (RTO)');
-  const [scannerInput, setScannerInput] = useState('');
-  const [scannerQty, setScannerQty] = useState(1);
-  const [pairingQrUrl, setPairingQrUrl] = useState('');
-  const [scannerPairingKey, setScannerPairingKey] = useState('');
-  const [scannerHoursRemaining, setScannerHoursRemaining] = useState(12);
-  const [scannerExpiresAt, setScannerExpiresAt] = useState(null);
-  // On-Demand Connection & 10-Minute Idle Auto-Disconnect State (Offline by default to save SQL & RAM)
-  const [scannerConnected, setScannerConnected] = useState(false);
-  const [scannerIdlePaused, setScannerIdlePaused] = useState(false);
-  const [scannerIdleExpiresAt, setScannerIdleExpiresAt] = useState(null);
-  const [remainingIdleSeconds, setRemainingIdleSeconds] = useState(600);
-  // Multi-Staff Order Lock & API-Synced Drafts / Paused Bills State
-  const [posOrderId, setPosOrderId] = useState('');
-  const [posActiveDraftId, setPosActiveDraftId] = useState('');
-  const [orderLockStatus, setOrderLockStatus] = useState(null);
+  // Order locks are displayed in fulfillment; retail billing remains manual and independent.
   const [orderLocks, setOrderLocks] = useState([]);
-  const [savedDrafts, setSavedDrafts] = useState([]);
   const [batchQrProduct, setBatchQrProduct] = useState(null);
   const [batchQrBatch, setBatchQrBatch] = useState('');
   const [backupBusy, setBackupBusy] = useState(false);
   const [posCustomerForm, setPosCustomerForm] = useState({
     name: 'Walk-in Retail Shopper',
     phone: '',
+    address: '',
     gstin: '',
   });
   const [cfg, setCfg] = useState({
@@ -271,14 +245,8 @@ export default function InventorySoftware() {
   const [invSearch, setInvSearch] = useState('');
   const [invCatFilter, setInvCatFilter] = useState('ALL');
   const [invStockFilter, setInvStockFilter] = useState('ALL');
-  const [invBinFilter, setInvBinFilter] = useState('ALL');
 
   // POS Billing State
-  const [posCustomerSearch, setPosCustomerSearch] = useState('');
-  const [posItemSearch, setPosItemSearch] = useState('');
-  const [selectedPosItemId, setSelectedPosItemId] = useState('');
-  const [posItemQty, setPosItemQty] = useState(1);
-  const [posItemPrice, setPosItemPrice] = useState('');
   const [posCart, setPosCart] = useState([]);
   const [posCheckoutKey, setPosCheckoutKey] = useState(() => {
     try {
@@ -287,23 +255,16 @@ export default function InventorySoftware() {
       return createPosRequestId();
     }
   });
-  const [posDraftLoaded, setPosDraftLoaded] = useState(false);
-  const [posDraftStatus, setPosDraftStatus] = useState('loading');
-  const [posScannerStatus, setPosScannerStatus] = useState('checking');
   const [posCheckoutBusy, setPosCheckoutBusy] = useState(false);
-  const [posExtraCharges, setPosExtraCharges] = useState([]);
-  const [extraName, setExtraName] = useState('');
-  const [extraAmt, setExtraAmt] = useState('');
   const [posDiscount, setPosDiscount] = useState(0);
   const [posTaxRate, setPosTaxRate] = useState(18);
   const [posPaymentMode, setPosPaymentMode] = useState('Cash');
   const [posPaidAmount, setPosPaidAmount] = useState('');
-  const [posUpiRef, setPosUpiRef] = useState('');
   const [upiQrDataUrl, setUpiQrDataUrl] = useState('');
   const [lastCompletedSale, setLastCompletedSale] = useState(null);
 
   // Modals State
-  const [activeModal, setActiveModal] = useState(null); // 'item' | 'customer' | 'khata' | 'bin' | 'transfer' | 'grn' | 'supplier' | 'invoice-success' | 'view-sale' | 'cats' | 'settings' | 'profile' | 'label' | 'img-viewer'
+  const [activeModal, setActiveModal] = useState(null);
   const [editingItem, setEditingItem] = useState(null);
   useEffect(() => {
     if (!activeModal) return undefined;
@@ -339,41 +300,6 @@ export default function InventorySoftware() {
     note: '',
     proofBase64: null,
   });
-  const [editingBin, setEditingBin] = useState(null);
-  const [transferForm, setTransferForm] = useState({
-    metaId: '',
-    direction: 'VAULT_TO_SHOP',
-    quantity: 10,
-    newBinCode: '',
-    notes: '',
-  });
-  const [grnForm, setGrnForm] = useState({
-    supplierId: '',
-    supplierName: 'Himalayan Phyto-Actives & Cold-Press Labs',
-    metaId: '',
-    batchNo: `BV-BATCH-${new Date().getFullYear()}-${Math.floor(100 + Math.random() * 900)}`,
-    mfgDate: new Date().toISOString().split('T')[0],
-    expiryDate: '2028-10-31',
-    receivedQty: 50,
-    rejectedQty: 0,
-    unitCost: 115,
-    binCode: 'ASN-COLD-R1-B01',
-    invoiceRef: '',
-    notes: '',
-  });
-  const [supplierForm, setSupplierForm] = useState({
-    id: null,
-    name: '',
-    companyName: '',
-    phone: '',
-    email: '',
-    gstin: '',
-    city: '',
-    supplyCategory: 'Botanical Extracts & Packaging',
-    payableBalance: 0,
-    leadTimeDays: 5,
-    notes: '',
-  });
   const [adjustmentForm, setAdjustmentForm] = useState({
     metaId: '',
     operation: 'subtract',
@@ -389,8 +315,6 @@ export default function InventorySoftware() {
     refundAmount: 0,
     reason: 'Customer Exchange / Return',
   });
-  const [auditCounts, setAuditCounts] = useState({});
-  const [auditNote, setAuditNote] = useState('Monthly Physical Bin Stock Verification');
   const [reportDate, setReportDate] = useState(() => new Date().toISOString().split('T')[0]);
   const [reportSearchInv, setReportSearchInv] = useState('');
   const [showProofGallery, setShowProofGallery] = useState(false);
@@ -399,7 +323,6 @@ export default function InventorySoftware() {
   const [labelItem, setLabelItem] = useState(null);
   const [labelQrUrl, setLabelQrUrl] = useState('');
   const [newCategoryName, setNewCategoryName] = useState('');
-  const [logSubTab, setLogSubTab] = useState('movements'); // 'movements' | 'audit'
   const [profilePassForm, setProfilePassForm] = useState({ currentPassword: '', newPassword: '' });
 
   const showNotice = useCallback((type, message) => {
@@ -425,7 +348,7 @@ export default function InventorySoftware() {
       setSyncing(true);
       try {
         const res = await api.get(
-          `/inventory-software/bootstrap?sessionCode=${encodeURIComponent(posSessionCode)}`,
+          '/inventory-software/bootstrap',
           reqConfig
         );
         const d = res.data;
@@ -439,20 +362,15 @@ export default function InventorySoftware() {
             }
           }
           if (Array.isArray(d.items) && d.items.length > 0) setItems(d.items);
-          if (Array.isArray(d.bins) && d.bins.length > 0) setBins(d.bins);
           if (Array.isArray(d.customers)) {
             setCustomers(d.customers);
           }
           if (Array.isArray(d.sales)) setSales(d.sales);
           if (Array.isArray(d.proofs)) setProofs(d.proofs);
-          if (Array.isArray(d.suppliers)) setSuppliers(d.suppliers);
-          if (Array.isArray(d.grnEntries)) setGrnEntries(d.grnEntries);
           if (Array.isArray(d.movements)) setMovements(d.movements);
           if (Array.isArray(d.logs)) setLogs(d.logs);
           if (Array.isArray(d.onlineOrders)) setOnlineOrders(d.onlineOrders);
           if (Array.isArray(d.orderLocks)) setOrderLocks(d.orderLocks);
-          if (Array.isArray(d.savedDrafts)) setSavedDrafts(d.savedDrafts);
-          if (Array.isArray(d.scannerQueue)) setScannerQueue(d.scannerQueue);
           if (Array.isArray(d.dailyBackups)) setDailyBackups(d.dailyBackups);
           if (Array.isArray(d.shippingZones)) setShippingZones(d.shippingZones);
           if (Array.isArray(d.carriers)) setCarriers(d.carriers);
@@ -473,12 +391,9 @@ export default function InventorySoftware() {
             LOCAL_DB_KEY,
             JSON.stringify({
               items: d.items,
-              bins: d.bins,
               customers: d.customers,
               sales: d.sales,
               proofs: d.proofs,
-              suppliers: d.suppliers,
-              grnEntries: d.grnEntries,
               movements: d.movements,
               logs: d.logs,
               cfg: d.cfg,
@@ -498,11 +413,9 @@ export default function InventorySoftware() {
             const cached = JSON.parse(localStorage.getItem(LOCAL_DB_KEY) || 'null');
             if (cached?.items) {
               setItems(cached.items);
-              if (cached.bins) setBins(cached.bins);
               if (cached.customers) setCustomers(cached.customers);
               if (cached.sales) setSales(cached.sales);
               if (cached.proofs) setProofs(cached.proofs);
-              if (cached.suppliers) setSuppliers(cached.suppliers);
               if (cached.movements) setMovements(cached.movements);
               if (cached.logs) setLogs(cached.logs);
             }
@@ -514,7 +427,7 @@ export default function InventorySoftware() {
         setSyncing(false);
       }
     },
-    [authToken, posSessionCode, reqConfig, showNotice]
+    [authToken, reqConfig, showNotice]
   );
 
   useEffect(() => {
@@ -524,19 +437,11 @@ export default function InventorySoftware() {
   }, [authToken, fetchBootstrapData]);
 
   // Disabled automatic background /bootstrap SQL polling when idle to prevent unnecessary SQL & RAM usage.
-  const touchLocalScannerActivity = React.useCallback(() => {
-    if (scannerConnected) {
-      setScannerIdleExpiresAt(Date.now() + 10 * 60 * 1000);
-      setRemainingIdleSeconds(600);
-    }
-  }, [scannerConnected]);
-
   // POS Cart Totals & Dynamic UPI QR Generator
   const posCalculations = useMemo(() => {
     const subTotal = posCart.reduce((sum, i) => sum + Number(i.p) * Number(i.q), 0);
-    const extraTotal = posExtraCharges.reduce((sum, x) => sum + Number(x.a), 0);
     const disc = Math.max(0, Number(posDiscount) || 0);
-    const taxable = Math.max(0, subTotal + extraTotal - disc);
+    const taxable = Math.max(0, subTotal - disc);
     const taxRate = Math.max(0, Number(posTaxRate) || 0);
     const taxAmt = Math.round((taxable * taxRate) / 100);
     const billTotal = taxable + taxAmt;
@@ -549,8 +454,8 @@ export default function InventorySoftware() {
       ? posPaymentMode === 'Khata / Credit' ? 0 : billTotal
       : Math.max(0, Number(posPaidAmount) || 0);
     const newBal = prevBal - billTotal + paid;
-    return { subTotal, extraTotal, disc, taxable, taxRate, taxAmt, billTotal, prevBal, paid, newBal };
-  }, [posCart, posExtraCharges, posDiscount, posTaxRate, customers, posCustomerForm, posPaidAmount, posPaymentMode]);
+    return { subTotal, disc, taxable, taxRate, taxAmt, billTotal, prevBal, paid, newBal };
+  }, [posCart, posDiscount, posTaxRate, customers, posCustomerForm, posPaidAmount, posPaymentMode]);
 
   useEffect(() => {
     if (posPaymentMode === 'UPI' && posCalculations.billTotal > 0) {
@@ -566,226 +471,12 @@ export default function InventorySoftware() {
   }, [posPaymentMode, posCalculations.billTotal, cfg.upiId, cfg.storeName]);
 
   useEffect(() => {
-    if (!authToken) {
-      setPosDraftLoaded(false);
-      setPosDraftStatus('local');
-      return;
-    }
-
-    let active = true;
-    setPosDraftLoaded(false);
-    setPosDraftStatus('loading');
-
-    const restoreDraft = async () => {
-      try {
-        const response = await api.get(
-          `/inventory-software/pos/draft?sessionCode=${encodeURIComponent(posSessionCode)}`,
-          reqConfig
-        );
-        const draft = response.data?.draft || JSON.parse(sessionStorage.getItem(LOCAL_POS_DRAFT_KEY) || 'null');
-        if (active && draft) {
-          setPosCart(Array.isArray(draft.items) ? draft.items : []);
-          setPosExtraCharges(Array.isArray(draft.extraCharges) ? draft.extraCharges : []);
-          setPosDiscount(Number(draft.discount) || 0);
-          setPosPaymentMode(draft.paymentMode || 'Cash');
-          setPosPaidAmount(draft.paidAmount ?? '');
-          setPosUpiRef(draft.upiReference || '');
-          setPosCustomerForm(draft.customer || {
-            name: 'Walk-in Retail Shopper',
-            phone: '',
-            gstin: '',
-          });
-          setPosTaxRate(draft.taxRate === undefined ? 18 : Number(draft.taxRate));
-          if (draft.checkoutKey) setPosCheckoutKey(draft.checkoutKey);
-        }
-        if (active) setPosDraftStatus(response.data?.draft ? 'synced' : 'local');
-      } catch {
-        try {
-          const draft = JSON.parse(sessionStorage.getItem(LOCAL_POS_DRAFT_KEY) || 'null');
-          if (active && draft) {
-            setPosCart(Array.isArray(draft.items) ? draft.items : []);
-            setPosExtraCharges(Array.isArray(draft.extraCharges) ? draft.extraCharges : []);
-            setPosDiscount(Number(draft.discount) || 0);
-            setPosPaymentMode(draft.paymentMode || 'Cash');
-            setPosPaidAmount(draft.paidAmount ?? '');
-            setPosUpiRef(draft.upiReference || '');
-            setPosCustomerForm(draft.customer || {
-              name: 'Walk-in Retail Shopper',
-              phone: '',
-              gstin: '',
-            });
-            setPosTaxRate(draft.taxRate === undefined ? 18 : Number(draft.taxRate));
-            if (draft.checkoutKey) setPosCheckoutKey(draft.checkoutKey);
-          }
-          if (active) setPosDraftStatus('local');
-        } catch {
-          if (active) setPosDraftStatus('local');
-        }
-      } finally {
-        if (active) setPosDraftLoaded(true);
-      }
-    };
-
-    restoreDraft();
-    return () => {
-      active = false;
-    };
-  }, [authToken, posSessionCode, reqConfig]);
-
-  useEffect(() => {
-    if (!posDraftLoaded) return undefined;
-    const draft = {
-      items: posCart,
-      extraCharges: posExtraCharges,
-      discount: posDiscount,
-      taxRate: posTaxRate,
-      paymentMode: posPaymentMode,
-      paidAmount: posPaidAmount,
-      upiReference: posUpiRef,
-      customer: posCustomerForm,
-      checkoutKey: posCheckoutKey,
-    };
-
     try {
-      sessionStorage.setItem(LOCAL_POS_DRAFT_KEY, JSON.stringify(draft));
       sessionStorage.setItem('BV_POS_CHECKOUT_KEY', posCheckoutKey);
     } catch {
-      setPosDraftStatus('local');
+      // Session storage is optional; the in-memory idempotency key still protects this page session.
     }
-
-    if (!authToken) {
-      setPosDraftStatus('local');
-      return undefined;
-    }
-
-    const saveTimer = setTimeout(async () => {
-      try {
-        await api.post('/inventory-software/pos/draft', { sessionCode: posSessionCode, draft }, reqConfig);
-        setPosDraftStatus('synced');
-      } catch {
-        setPosDraftStatus('local');
-      }
-    }, 700);
-    return () => clearTimeout(saveTimer);
-  }, [
-    authToken,
-    posDraftLoaded,
-    posSessionCode,
-    posCart,
-    posExtraCharges,
-    posDiscount,
-    posTaxRate,
-    posPaymentMode,
-    posPaidAmount,
-    posUpiRef,
-    posCustomerForm,
-    posCheckoutKey,
-    reqConfig,
-  ]);
-
-  // 10-Minute Idle Countdown Timer: Automatically terminates scanner connection after 10 minutes of zero usage!
-  useEffect(() => {
-    if (!scannerConnected || !scannerIdleExpiresAt) return undefined;
-    const countdown = setInterval(() => {
-      const remMs = scannerIdleExpiresAt - Date.now();
-      if (remMs <= 0) {
-        setScannerConnected(false);
-        setScannerIdlePaused(true);
-        setRemainingIdleSeconds(0);
-        setPosScannerStatus('disconnected');
-        api.post('/inventory-software/scanner/disconnect', { sessionCode: posSessionCode }, reqConfig).catch(() => {});
-        showNotice(
-          'info',
-          '⏸️ Scanner connection automatically paused after 10 minutes of inactivity to save SQL & RAM. Click "Resume Scanner" anytime to continue from your exact bill.'
-        );
-      } else {
-        setRemainingIdleSeconds(Math.ceil(remMs / 1000));
-      }
-    }, 1000);
-    return () => clearInterval(countdown);
-  }, [scannerConnected, scannerIdleExpiresAt, posSessionCode, reqConfig, showNotice]);
-
-  // Poll the paired scanner's in-memory queue ONLY when explicitly connected (0 SQL queries when unchanged!)
-  // and automatically sync newly scanned items into the active POS billing cart!
-  useEffect(() => {
-    if (!authToken || !scannerConnected) return undefined;
-
-    let isMounted = true;
-    let lastQueueSig = '';
-    const syncInterval = setInterval(async () => {
-      if (document.visibilityState !== 'visible') return;
-      try {
-        const res = await api.get(
-          `/inventory-software/scanner/queue?sessionCode=${encodeURIComponent(posSessionCode)}`,
-          reqConfig
-        );
-        if (!isMounted) return;
-        const qRows = res.data?.queue || [];
-        if (Array.isArray(res.data?.drafts)) {
-          setSavedDrafts(res.data.drafts);
-        }
-        setScannerQueue(qRows);
-        setPosScannerStatus('connected');
-
-        const sig = JSON.stringify(qRows.map(r => `${r.id}:${r.sku}:${r.quantity}`));
-        if (sig !== lastQueueSig && qRows.length > 0) {
-          lastQueueSig = sig;
-          // Activity occurred on scanner -> refresh 10-minute idle timer and auto-sync into POS cart!
-          setScannerIdleExpiresAt(Date.now() + 10 * 60 * 1000);
-          setRemainingIdleSeconds(600);
-          setPosCart(prev => {
-            const nextCart = [...prev];
-            for (const q of qRows) {
-              const idx = nextCart.findIndex(c => c.sku === q.sku || c.id === q.meta_id);
-              if (idx !== -1) {
-                const currentItem = nextCart[idx];
-                const manualQuantity = currentItem.queueId
-                  ? Number(currentItem.manualQuantity) || 0
-                  : 0;
-                const queueQuantity = Number(q.quantity) || 1;
-                nextCart[idx] = {
-                  ...currentItem,
-                  q: Math.min(q.available_stock || 999, manualQuantity + queueQuantity),
-                  manualQuantity,
-                  queueQuantity,
-                  queueId: q.id,
-                };
-              } else {
-                nextCart.push({
-                  id: q.meta_id,
-                  productId: q.product_id,
-                  sku: q.sku,
-                  name: q.product_name,
-                  q: Number(q.quantity) || 1,
-                  manualQuantity: 0,
-                  queueQuantity: Number(q.quantity) || 1,
-                  p: Number(q.unit_price) || 0,
-                  max: Number(q.available_stock) || 99,
-                  uom: q.uom || 'Pcs',
-                  gstHsnCode: q.gst_hsn_code || '30049011',
-                  queueId: q.id,
-                });
-              }
-            }
-            return nextCart;
-          });
-        }
-      } catch (err) {
-        if (!isMounted) return;
-        if (err.response?.status === 408 || err.response?.data?.code === 'SCANNER_IDLE_TIMEOUT') {
-          setScannerConnected(false);
-          setScannerIdlePaused(true);
-          setRemainingIdleSeconds(0);
-          setPosScannerStatus('disconnected');
-        }
-      }
-    }, 2500);
-
-    return () => {
-      isMounted = false;
-      clearInterval(syncInterval);
-    };
-  }, [authToken, scannerConnected, posSessionCode, reqConfig]);
+  }, [posCheckoutKey]);
 
   // Dashboard Metrics
   const dashMetrics = useMemo(() => {
@@ -838,14 +529,13 @@ export default function InventorySoftware() {
         it.barcode?.toLowerCase().includes(q) ||
         it.batchNo?.toLowerCase().includes(q);
       const matchCat = invCatFilter === 'ALL' || it.cat === invCatFilter;
-      const matchBin = invBinFilter === 'ALL' || it.binCode === invBinFilter;
       let matchStock = true;
       if (invStockFilter === 'LOW') matchStock = it.qty <= (it.minStock || 15) && it.qty > 0;
       if (invStockFilter === 'OUT') matchStock = it.qty === 0;
       if (invStockFilter === 'QUARANTINE') matchStock = (it.damagedQuarantineStock || 0) > 0;
-      return matchSearch && matchCat && matchBin && matchStock;
+      return matchSearch && matchCat && matchStock;
     });
-  }, [items, invSearch, invCatFilter, invStockFilter, invBinFilter]);
+  }, [items, invSearch, invCatFilter, invStockFilter]);
 
   // Filtered Reports
   const filteredReportSales = useMemo(() => {
@@ -906,298 +596,6 @@ export default function InventorySoftware() {
       );
     });
   }, [onlineOrders, rtoSearch]);
-
-  // Explicit Manual Connect / Resume Scanner Function (Only connects when user clicks Connect!)
-  const handleConnectScanner = async () => {
-    try {
-      const pairRes = await api.post(
-        '/inventory-software/scanner/pair',
-        {
-          sessionCode: posSessionCode,
-          deviceName: `${operatorName}'s Bombera Scanner`,
-          operatorUsername: viewer?.username || operatorName.toLowerCase(),
-          operatorName,
-        },
-        reqConfig
-      );
-      const apiKey = pairRes?.data?.scannerApiKey;
-      const hoursRemaining = pairRes?.data?.hoursRemaining ?? 12;
-      const expiresAt = pairRes?.data?.expiresAt ?? null;
-
-      if (apiKey) {
-        setScannerPairingKey(apiKey);
-        setScannerHoursRemaining(hoursRemaining);
-        setScannerExpiresAt(expiresAt);
-        const payload = JSON.stringify({
-          app: 'BHUMIVERA_ANDROID_QR_SCANNER',
-          endpoint: 'https://service.bhumivera.com/api/inventory-software/scanner/scan',
-          queueEndpoint: 'https://service.bhumivera.com/api/inventory-software/scanner/queue',
-          scannerApiKey: apiKey,
-          sessionCode: posSessionCode,
-          operatorName,
-          expiresAt,
-          idleTimeoutMinutes: 10,
-        });
-        const qrUrl = await QRCode.toDataURL(payload, { width: 220, margin: 1 });
-        setPairingQrUrl(qrUrl);
-      }
-
-      // Also call /scanner/connect to restore any existing queue/drafts from where the user left off
-      const connRes = await api.post(
-        '/inventory-software/scanner/connect',
-        {
-          sessionCode: posSessionCode,
-          operatorUsername: viewer?.username || operatorName.toLowerCase(),
-          operatorName,
-        },
-        reqConfig
-      ).catch(() => null);
-
-      if (connRes?.data?.queue) {
-        setScannerQueue(connRes.data.queue);
-      }
-      if (connRes?.data?.drafts) {
-        setSavedDrafts(connRes.data.drafts);
-      }
-      if (connRes?.data?.draft && posCart.length === 0 && Array.isArray(connRes.data.draft.items) && connRes.data.draft.items.length > 0) {
-        setPosCart(connRes.data.draft.items);
-        if (connRes.data.draft.orderId) setPosOrderId(connRes.data.draft.orderId);
-      }
-
-      setScannerConnected(true);
-      setScannerIdlePaused(false);
-      setScannerIdleExpiresAt(Date.now() + 10 * 60 * 1000);
-      setRemainingIdleSeconds(600);
-      setPosScannerStatus('connected');
-      showNotice(
-        'success',
-        `🟢 Scanner connected for ${operatorName} (${posSessionCode}). Auto-disconnects after 10m of inactivity to save SQL & RAM.`
-      );
-    } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Could not connect scanner session.');
-    }
-  };
-
-  const handleDisconnectScanner = async () => {
-    try {
-      await api.post('/inventory-software/scanner/disconnect', { sessionCode: posSessionCode }, reqConfig).catch(() => {});
-      setScannerConnected(false);
-      setScannerIdlePaused(true);
-      setRemainingIdleSeconds(0);
-      setPosScannerStatus('disconnected');
-      showNotice('info', '⏸️ Scanner disconnected. Your active bill & drafts are preserved for when you resume.');
-    } catch (err) {
-      setScannerConnected(false);
-    }
-  };
-
-  // Multi-Staff Order ID Claim / Mutex Lock Handler (Stops Akash & Priya C from billing the same Order ID e.g. 1234)
-  const handleClaimOrderId = async (targetOrderId) => {
-    const cleanId = String(targetOrderId ?? posOrderId ?? '').trim();
-    if (!cleanId) return;
-    touchLocalScannerActivity();
-    try {
-      const res = await api.post(
-        '/inventory-software/orders/claim',
-        {
-          orderId: cleanId,
-          sessionCode: posSessionCode,
-          operatorUsername: viewer?.username || operatorName.toLowerCase(),
-          operatorName,
-          lockType: 'BILLING',
-        },
-        reqConfig
-      );
-      if (res.data?.success) {
-        setOrderLockStatus({
-          locked: true,
-          conflict: false,
-          orderId: cleanId,
-          lockedBy: operatorName,
-          message: res.data.message,
-        });
-        showNotice('success', `🔒 Order #${cleanId} locked exclusively for ${operatorName}.`);
-        const locksRes = await api.get('/inventory-software/orders/locks', reqConfig).catch(() => null);
-        if (locksRes?.data?.locks) setOrderLocks(locksRes.data.locks);
-      }
-    } catch (err) {
-      const data = err.response?.data || {};
-      setOrderLockStatus({
-        locked: false,
-        conflict: true,
-        orderId: cleanId,
-        lockedBy: data.lockedBy || 'Another Staff Member',
-        message: data.message || `⛔ Order #${cleanId} is already being billed by another staff member!`,
-      });
-      showNotice('error', data.message || `⛔ Order #${cleanId} is already being billed by another staff member!`);
-    }
-  };
-
-  const handleReleaseOrderId = async (targetOrderId) => {
-    const cleanId = String(targetOrderId ?? posOrderId ?? '').trim();
-    if (!cleanId) return;
-    try {
-      await api.post(
-        '/inventory-software/orders/release',
-        {
-          orderId: cleanId,
-          sessionCode: posSessionCode,
-          operatorUsername: viewer?.username || operatorName.toLowerCase(),
-          operatorName,
-        },
-        reqConfig
-      );
-      setOrderLockStatus(null);
-      setPosOrderId('');
-      const locksRes = await api.get('/inventory-software/orders/locks', reqConfig).catch(() => null);
-      if (locksRes?.data?.locks) setOrderLocks(locksRes.data.locks);
-      showNotice('info', `Released lock on Order #${cleanId}.`);
-    } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Could not release order lock.');
-    }
-  };
-
-  // API-Synced POS Drafts, Pause Billing & Resume Bill Handlers
-  const handleSaveOrPausePosBill = async (mode = 'draft') => {
-    if (posCart.length === 0) {
-      showNotice('error', 'Add at least one product before saving or pausing the bill.');
-      return;
-    }
-    touchLocalScannerActivity();
-    try {
-      const res = await api.post(
-        '/inventory-software/pos/drafts',
-        {
-          id: posActiveDraftId || undefined,
-          sessionCode: posSessionCode,
-          orderId: posOrderId.trim() || undefined,
-          status: mode === 'paused' ? 'paused' : 'draft',
-          customerName: posCustomerForm.name?.trim() || 'Walk-in Retail Shopper',
-          customerPhone: posCustomerForm.phone?.trim() || '',
-          customerGstin: posCustomerForm.gstin?.trim() || '',
-          paymentMode: posPaymentMode,
-          items: posCart,
-          extraCharges: posExtraCharges,
-          discount: posDiscount,
-          taxRate: posTaxRate,
-          operatorUsername: viewer?.username || operatorName.toLowerCase(),
-          operatorName,
-        },
-        reqConfig
-      );
-      if (res.data?.success) {
-        if (Array.isArray(res.data.drafts)) setSavedDrafts(res.data.drafts);
-        if (mode === 'paused') {
-          // Clear active POS register so staff can bill the next customer, while keeping the paused bill in savedDrafts!
-          setPosCart([]);
-          setPosExtraCharges([]);
-          setPosDiscount(0);
-          setPosPaidAmount('');
-          setPosOrderId('');
-          setPosActiveDraftId('');
-          setOrderLockStatus(null);
-          showNotice('success', `⏸️ Bill paused & synced via API! You can resume it anytime from "Saved & Paused Bills" or the Scanner App.`);
-        } else {
-          setPosActiveDraftId(res.data.draft?.id || '');
-          showNotice('success', `💾 Draft "${res.data.draft?.title || 'Bill'}" saved & synced via API!`);
-        }
-      }
-    } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Could not save/pause bill.');
-    }
-  };
-
-  const handleResumePosDraft = async (draft) => {
-    if (!draft) return;
-    touchLocalScannerActivity();
-    try {
-      const res = await api.post(
-        `/inventory-software/pos/drafts/${encodeURIComponent(draft.id)}/resume`,
-        {
-          sessionCode: posSessionCode,
-          operatorUsername: viewer?.username || operatorName.toLowerCase(),
-          operatorName,
-        },
-        reqConfig
-      );
-      const restored = res.data?.draft || draft;
-      const mappedItems = (restored.items || []).map(it => ({
-        id: it.id || it.metaId,
-        productId: it.productId,
-        sku: it.sku,
-        name: it.name,
-        q: Number(it.q ?? it.quantity) || 1,
-        p: Number(it.p ?? it.price) || 0,
-        uom: it.uom || 'Pcs',
-        gstHsnCode: it.gstHsnCode || '30049011',
-        gstRate: Number(it.gstRate) || 5,
-      }));
-      setPosCart(mappedItems);
-      setPosExtraCharges(Array.isArray(restored.extraCharges) ? restored.extraCharges : []);
-      setPosDiscount(Number(restored.discount) || 0);
-      setPosPaymentMode(restored.paymentMode || 'UPI');
-      setPosCustomerForm({
-        name: restored.customerName || 'Walk-in Retail Shopper',
-        phone: restored.customerPhone || '',
-        gstin: restored.customerGstin || '',
-      });
-      setPosActiveDraftId(restored.id);
-      if (restored.orderId) {
-        setPosOrderId(restored.orderId);
-        setOrderLockStatus({
-          locked: true,
-          conflict: false,
-          orderId: restored.orderId,
-          lockedBy: operatorName,
-        });
-      }
-      showNotice('success', `▶ Resumed bill "${restored.title}" (${mappedItems.length} items).`);
-    } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Could not resume bill.');
-    }
-  };
-
-  const handleDeletePosDraft = async (draftId) => {
-    if (!draftId) return;
-    try {
-      const res = await api.delete(`/inventory-software/pos/drafts/${encodeURIComponent(draftId)}`, reqConfig);
-      if (Array.isArray(res.data?.drafts)) setSavedDrafts(res.data.drafts);
-      else setSavedDrafts(prev => prev.filter(d => d.id !== draftId));
-      if (posActiveDraftId === draftId) setPosActiveDraftId('');
-      showNotice('info', 'Removed saved draft.');
-    } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Could not delete draft.');
-    }
-  };
-
-  const handleRotateScannerKey = async () => {
-    try {
-      const res = await api.post(
-        '/inventory-software/scanner/pair',
-        { sessionCode: posSessionCode, rotate: true, deviceName: 'Bhumivera POS Scanner' },
-        reqConfig
-      );
-      if (res.data?.success) {
-        const apiKey = res.data.scannerApiKey;
-        setScannerPairingKey(apiKey);
-        setScannerHoursRemaining(res.data.hoursRemaining ?? 12);
-        setScannerExpiresAt(res.data.expiresAt ?? null);
-        const payload = JSON.stringify({
-          app: 'BHUMIVERA_ANDROID_QR_SCANNER',
-          endpoint: 'https://service.bhumivera.com/api/inventory-software/scanner/scan',
-          queueEndpoint: 'https://service.bhumivera.com/api/inventory-software/scanner/queue',
-          scannerApiKey: apiKey,
-          sessionCode: posSessionCode,
-          expiresAt: res.data.expiresAt,
-        });
-        const qrUrl = await QRCode.toDataURL(payload, { width: 220, margin: 1 });
-        setPairingQrUrl(qrUrl);
-        showNotice('success', 'Scanner key rotated. Scan the refreshed pairing QR to start a new 12-hour session.');
-      }
-    } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Failed to rotate pairing key.');
-    }
-  };
 
   const handleOpenBatchQrModal = (prod = null, batch = '') => {
     setBatchQrProduct(prod);
@@ -1417,7 +815,10 @@ export default function InventorySoftware() {
     e.preventDefault();
     if (!editingItem?.name) return;
     try {
-      const res = await api.post('/inventory-software/items/save', editingItem, reqConfig);
+      const itemPayload = Object.fromEntries(
+        Object.entries(editingItem).filter(([key]) => !['binCode', 'shopDisplayStock', 'warehouseVaultStock'].includes(key))
+      );
+      const res = await api.post('/inventory-software/items/save', itemPayload, reqConfig);
       showNotice('success', res.data?.message || 'Item saved and synced to live website.');
       setActiveModal(null);
       setEditingItem(null);
@@ -1438,146 +839,6 @@ export default function InventorySoftware() {
     }
   };
 
-  const handleAddPosCartItem = () => {
-    const item =
-      items.find(
-        x =>
-          String(x.id) === String(selectedPosItemId) ||
-          x.name.toLowerCase() === posItemSearch.trim().toLowerCase() ||
-          x.sku.toLowerCase() === posItemSearch.trim().toLowerCase() ||
-          x.barcode === posItemSearch.trim()
-      ) || null;
-
-    if (!item) {
-      showNotice('error', 'Select a valid product or scan its barcode/SKU.');
-      return;
-    }
-
-    const q = Math.max(1, parseInt(posItemQty, 10) || 1);
-    const p = posItemPrice !== '' ? Math.max(0, parseFloat(posItemPrice) || 0) : item.price;
-
-    const existingInCart = posCart.find(c => c.id === item.id);
-    const totalRequested = (existingInCart ? existingInCart.q : 0) + q;
-
-    if (totalRequested > item.qty) {
-      showNotice(
-        'error',
-        `Insufficient stock for "${item.name}"! Only ${item.qty} available on Website & Shop.`
-      );
-      return;
-    }
-
-    if (existingInCart) {
-      setPosCart(prev =>
-        prev.map(c =>
-          c.id === item.id
-            ? {
-                ...c,
-                q: totalRequested,
-                p,
-                manualQuantity: (c.queueId ? Number(c.manualQuantity) || 0 : Number(c.q) || 0) + q,
-              }
-            : c
-        )
-      );
-    } else {
-      setPosCart(prev => [
-        ...prev,
-        {
-          id: item.id,
-          productId: item.productId,
-          sku: item.sku,
-          name: item.name,
-          q,
-          manualQuantity: q,
-          queueQuantity: 0,
-          p,
-          max: item.qty,
-          uom: item.uom || 'Pcs',
-          gstHsnCode: item.gstHsnCode || '30049011',
-        },
-      ]);
-    }
-
-    setPosItemSearch('');
-    setSelectedPosItemId('');
-    setPosItemQty(1);
-    setPosItemPrice('');
-  };
-
-  const handlePosCartQtyMod = (id, delta) => {
-    const item = posCart.find(c => c.id === id);
-    if (!item) return;
-    const nextQ = item.q + delta;
-    if (nextQ > item.max) {
-      showNotice('error', `Max available stock is ${item.max} units.`);
-      return;
-    }
-
-    setPosCart(prev =>
-      prev
-        .map(c => {
-          if (c.id !== id) return c;
-          return nextQ > 0
-            ? { ...c, q: nextQ, manualQuantity: c.queueId ? 0 : nextQ, queueQuantity: c.queueId ? nextQ : 0 }
-            : null;
-        })
-        .filter(Boolean)
-    );
-
-    if (item.queueId) {
-      api.post(
-        '/inventory-software/scanner/queue/item',
-        {
-          sessionCode: posSessionCode,
-          sku: item.sku,
-          metaId: id,
-          quantity: nextQ,
-          price: item.p,
-          name: item.name,
-          availableStock: item.max,
-        },
-        reqConfig
-      ).catch(err => {
-        setPosScannerStatus('disconnected');
-        showNotice('error', err.response?.data?.message || 'Could not sync this quantity with the mobile scanner.');
-      });
-    }
-  };
-
-  const handlePosCartRemoveItem = id => {
-    const item = posCart.find(c => c.id === id);
-    setPosCart(prev => prev.filter(c => c.id !== id));
-    if (item?.queueId) {
-      api.post(
-        '/inventory-software/scanner/queue/remove',
-        { sessionCode: posSessionCode, id: item.queueId },
-        reqConfig
-      ).catch(err => {
-        setPosScannerStatus('disconnected');
-        showNotice('error', err.response?.data?.message || 'Could not remove the scanner item from its queue.');
-      });
-    }
-  };
-
-  const handlePosCartClear = () => {
-    setPosCart([]);
-    setPosExtraCharges([]);
-    setPosDiscount(0);
-    setPosPaidAmount('');
-    setPosUpiRef('');
-    setPosCheckoutKey(createPosRequestId());
-    api.post('/inventory-software/scanner/queue/clear', { sessionCode: posSessionCode }, reqConfig)
-      .then(() => {
-        setScannerQueue([]);
-        setPosScannerStatus('connected');
-      })
-      .catch(err => {
-        setPosScannerStatus('disconnected');
-        showNotice('error', err.response?.data?.message || 'Could not clear the mobile scanner queue.');
-      });
-  };
-
   const handlePosCheckout = async () => {
     if (posCheckoutBusy) return;
     if (posCart.length === 0) {
@@ -1590,21 +851,19 @@ export default function InventorySoftware() {
         customer: {
           name: posCustomerForm.name?.trim() || 'Walk-in Retail Shopper',
           phone: posCustomerForm.phone?.trim() || '-',
+          address: posCustomerForm.address?.trim() || '',
           gstin: posCustomerForm.gstin?.trim() || '',
         },
         items: posCart,
-        extraCharges: posExtraCharges,
+        extraCharges: [],
         discount: posCalculations.disc,
         taxRate: posCalculations.taxRate,
         paidAmount: posCalculations.paid,
         paymentMode: posPaymentMode,
-        upiReference: posUpiRef,
+        upiReference: '',
         sessionCode: posSessionCode,
-        orderId: posOrderId.trim() || undefined,
-        draftId: posActiveDraftId || undefined,
         operatorUsername: viewer?.username || operatorName.toLowerCase(),
         operatorName,
-        scannerQueueIds: posCart.map(item => item.queueId).filter(Boolean),
       };
       const res = await api.post(
         '/inventory-software/pos/checkout',
@@ -1617,22 +876,9 @@ export default function InventorySoftware() {
       if (res.data?.success) {
         setLastCompletedSale(res.data.sale);
         setPosCart([]);
-        setPosExtraCharges([]);
         setPosDiscount(0);
         setPosPaidAmount('');
-        setPosUpiRef('');
-        setPosOrderId('');
-        setPosActiveDraftId('');
-        setOrderLockStatus(null);
         setPosCheckoutKey(createPosRequestId());
-        setScannerQueue(prev => prev.filter(row => !payload.scannerQueueIds.includes(row.id)));
-        try {
-          sessionStorage.removeItem(LOCAL_POS_DRAFT_KEY);
-        } catch {
-          setPosDraftStatus('local');
-        }
-        await api.delete(`/inventory-software/pos/draft?sessionCode=${encodeURIComponent(posSessionCode)}`, reqConfig)
-          .catch(() => setPosDraftStatus('local'));
         setActiveModal('invoice-success');
         showNotice('success', res.data.message);
         await fetchBootstrapData(true);
@@ -1643,7 +889,7 @@ export default function InventorySoftware() {
       showNotice(
         'error',
         !err.response || status >= 500 || status === 429
-          ? `${message || 'Connection problem.'} Your bill is saved. Tap Complete Bill again; it will not be duplicated.`
+          ? `${message || 'Connection problem.'} Your cart remains open. Retry Complete Bill; the idempotency key prevents duplicate invoices.`
           : message || 'Checkout failed.'
       );
       if (err.response?.data?.code === 'TAX_RATE_MISMATCH') await fetchBootstrapData(true);
@@ -1725,6 +971,7 @@ export default function InventorySoftware() {
           <div style="font-size:11px;font-weight:700;color:#64748b;text-transform:uppercase;">Billed To Customer</div>
           <div style="font-size:15px;font-weight:700;margin-top:2px;">${sale.cust?.name || 'Walk-in Retail Shopper'}</div>
           <div>Phone: ${sale.cust?.phone || '-'} ${sale.cust?.gstin ? `| Customer GSTIN: <b>${sale.cust.gstin}</b>` : ''}</div>
+            ${sale.cust?.address ? `<div>Address: ${sale.cust.address}</div>` : ''}
         </div>
         <table>
           <thead>
@@ -1836,7 +1083,7 @@ export default function InventorySoftware() {
           <div class="brand">BHUMIVERA ORGANICS</div>
           <div class="name">${escapeHtml(labelItem.name)}</div>
           <img class="qr" src="${labelQrUrl}" alt="Product QR code" />
-          <div class="details">SKU: ${escapeHtml(labelItem.sku)} | Bin: ${escapeHtml(labelItem.binCode)}</div>
+          <div class="details">SKU: ${escapeHtml(labelItem.sku)}</div>
           <div class="details">Barcode: ${escapeHtml(labelItem.barcode)} | HSN: ${escapeHtml(labelItem.gstHsnCode || '30049011')}</div>
           <div class="details">Batch: ${escapeHtml(labelItem.batchNo || 'N/A')} | Exp: ${escapeHtml(labelItem.expiryDate || 'N/A')}</div>
           <div class="price">MRP: ₹${escapeHtml(labelItem.mrp)} (Offer: ₹${escapeHtml(labelItem.price)})</div>
@@ -1849,81 +1096,14 @@ export default function InventorySoftware() {
 
   const handleShareWhatsAppInvoice = sale => {
     if (!sale) return;
-    const text = `Hello ${sale.cust?.name || 'Patron'} 🙏\n\nThank you for shopping at *${cfg.storeName}* ✨\n\n*Invoice #:* ${sale.invoiceNo}\n*Items:* ${(sale.items || []).map(i => `${i.name} (x${i.q})`).join(', ')}\n*Bill Total:* ₹${sale.billTotal}\n*Paid (${sale.paymentMode}):* ₹${sale.paid}\n*Khata Balance:* ₹${sale.newBal}\n\n_${cfg.tagline}_\nhttps://${cfg.website}`;
+    const text = `Hello ${sale.cust?.name || 'Patron'} 🙏\n\nThank you for shopping at *${cfg.storeName}* ✨\n\n*Invoice #:* ${sale.invoiceNo}\n*Address:* ${sale.cust?.address || '-'}\n*Items:* ${(sale.items || []).map(i => `${i.name} (x${i.q})`).join(', ')}\n*Bill Total:* ₹${sale.billTotal}\n*Paid (${sale.paymentMode}):* ₹${sale.paid}\n*Khata Balance:* ₹${sale.newBal}\n\n_${cfg.tagline}_\nhttps://${cfg.website}`;
     const phone = (sale.cust?.phone || '').replace(/[^0-9]/g, '');
     window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`, '_blank');
   };
 
   // ==========================================================================
-  // HANDLERS: STORAGE KEEPER, AUDIT, GRN, KHATA, ADJUSTMENTS & RETURNS
+  // HANDLERS: KHATA, ADJUSTMENTS & RETURNS
   // ==========================================================================
-
-  const handleSaveBin = async e => {
-    e.preventDefault();
-    try {
-      const res = await api.post('/inventory-software/keeper/bins/save', editingBin, reqConfig);
-      showNotice('success', res.data?.message || 'Storage bin saved.');
-      setActiveModal(null);
-      await fetchBootstrapData(true);
-    } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Could not save bin.');
-    }
-  };
-
-  const handleExecuteBinTransfer = async e => {
-    e.preventDefault();
-    try {
-      const res = await api.post('/inventory-software/keeper/transfer', transferForm, reqConfig);
-      showNotice('success', res.data?.message || 'Bin stock transfer completed.');
-      setActiveModal(null);
-      await fetchBootstrapData(true);
-    } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Transfer failed.');
-    }
-  };
-
-  const handleReconcilePhysicalAudit = async () => {
-    const counts = Object.entries(auditCounts)
-      .filter(([, val]) => val !== '' && val !== undefined)
-      .map(([metaId, val]) => ({
-        metaId: Number(metaId),
-        physicalCountedQty: Math.max(0, parseInt(val, 10) || 0),
-      }));
-
-    if (counts.length === 0) {
-      showNotice('error', 'Enter at least one physical count in the table to reconcile.');
-      return;
-    }
-
-    try {
-      const res = await api.post(
-        '/inventory-software/keeper/audit-reconcile',
-        { counts, auditNote },
-        reqConfig
-      );
-      showNotice('success', res.data?.message || 'Physical stock audit reconciled with live website!');
-      setAuditCounts({});
-      await fetchBootstrapData(true);
-    } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Audit reconciliation failed.');
-    }
-  };
-
-  const handlePostGrnInward = async e => {
-    e.preventDefault();
-    if (!grnForm.metaId) {
-      showNotice('error', 'Select a product SKU to inward.');
-      return;
-    }
-    try {
-      const res = await api.post('/inventory-software/grn/inward', grnForm, reqConfig);
-      showNotice('success', res.data?.message || 'GRN posted & website stock incremented!');
-      setActiveModal(null);
-      await fetchBootstrapData(true);
-    } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Failed to inward GRN.');
-    }
-  };
 
   const [savingSettings, setSavingSettings] = useState(false);
   const handleSaveStoreSettings = async e => {
@@ -1961,18 +1141,6 @@ export default function InventorySoftware() {
       showNotice('error', err.response?.data?.message || 'Failed to update store settings.');
     } finally {
       setSavingSettings(false);
-    }
-  };
-
-  const handleSaveSupplier = async e => {
-    e.preventDefault();
-    try {
-      const res = await api.post('/inventory-software/suppliers/save', supplierForm, reqConfig);
-      showNotice('success', res.data?.message || 'Supplier saved.');
-      setActiveModal(null);
-      await fetchBootstrapData(true);
-    } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Failed to save supplier.');
     }
   };
 
@@ -2134,114 +1302,6 @@ export default function InventorySoftware() {
     }
   };
 
-  const handlePrintShippingLabels = async ordersToPrint => {
-    const list = Array.isArray(ordersToPrint) ? ordersToPrint : [ordersToPrint];
-    if (list.length === 0) {
-      showNotice('error', 'Select at least one order to print shipping labels.');
-      return;
-    }
-    const w = window.open('', '_blank', 'width=850,height=900');
-    if (!w) return;
-
-    const cardsHtml = list
-      .map(ord => {
-        const isCod = String(ord.paymentMode || '').toUpperCase() === 'COD' && ord.paymentStatus !== 'paid';
-        const itemsText = (ord.items || []).map(i => `${i.name} (SKU: ${i.sku || '-'}) × ${i.quantity}`).join('<br/>');
-        const awb = ord.trackingNumber || `ORD-${ord.orderNumber}`;
-        return `
-          <div class="label-card">
-            <div class="top-bar">
-              <div>
-                <div class="brand">BHUMIVERA ORGANICS INDIA PVT. LTD.</div>
-                <div class="sub">CIN: U20237WB2026PTC295842 • GSTIN: ${cfg.gstin}</div>
-              </div>
-              <div class="pay-badge ${isCod ? 'cod' : 'prepaid'}">
-                ${isCod ? `CASH ON DELIVERY (COLLECT ₹${ord.total})` : `PREPAID ORDER (₹${ord.total} PAID)`}
-              </div>
-            </div>
-
-            <div class="addr-grid">
-              <div class="ship-to">
-                <div class="sec-label">DELIVER TO (CUSTOMER SHIPPING ADDRESS — AUTO-FETCHED):</div>
-                <div class="cust-name">${ord.customerName}</div>
-                <div class="cust-addr">
-                  ${ord.line1 || ''}${ord.line2 ? `, ${ord.line2}` : ''}<br/>
-                  ${ord.landmark ? `Landmark: ${ord.landmark}<br/>` : ''}
-                  <b>${ord.city || ''}, ${ord.state || ''} — PIN: ${ord.pincode || ''}</b>
-                </div>
-                <div class="cust-phone">Phone: <b>${ord.customerPhone || '-'}</b> ${ord.customerAltPhone ? `/ ${ord.customerAltPhone}` : ''}</div>
-              </div>
-              <div class="meta-box">
-                <div><b>Order #:</b> #${ord.orderNumber}</div>
-                <div><b>Order Date:</b> ${new Date(ord.createdAt).toLocaleDateString()}</div>
-                <div><b>Est. Delivery:</b> ${ord.estimatedDeliveryDate || 'Standard'}</div>
-                <div><b>Courier:</b> ${ord.courier || 'Bhumivera Priority Express'}</div>
-                <div><b>AWB / Ref:</b> <span style="font-family:monospace;font-weight:900;">${awb}</span></div>
-                <div><b>Weight:</b> 0.50 Kg (Sub-28°C Sealed)</div>
-              </div>
-            </div>
-
-            <div class="items-box">
-              <div class="sec-label">PACKED FORMULATIONS (MAIN WAREHOUSE VERIFIED):</div>
-              <div style="font-size:12px;margin-top:4px;line-height:1.45;">${itemsText}</div>
-            </div>
-
-            <div class="return-footer">
-              <div>
-                <b>IF UNDELIVERED, RETURN TO (RTO WAREHOUSE HUB):</b><br/>
-                ${cfg.storeName}, ${cfg.address} • Phone: ${cfg.phone}
-              </div>
-              <div style="text-align:right;font-family:monospace;font-size:11px;">
-                [${awb}]<br/>www.bhumivera.com
-              </div>
-            </div>
-          </div>
-        `;
-      })
-      .join('');
-
-    w.document.write(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>Bhumivera Courier Shipping Labels (${list.length})</title>
-        <style>
-          body { font-family: 'Inter', -apple-system, sans-serif; margin: 0; padding: 16px; background: #fff; color: #000; }
-          .label-card { border: 3px solid #000; border-radius: 8px; padding: 16px; margin-bottom: 24px; page-break-inside: avoid; max-width: 680px; margin-left: auto; margin-right: auto; }
-          .top-bar { display: flex; justify-content: space-between; align-items: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 12px; }
-          .brand { font-size: 16px; font-weight: 900; letter-spacing: 0.5px; }
-          .sub { font-size: 10px; color: #333; margin-top: 2px; }
-          .pay-badge { padding: 6px 12px; font-size: 13px; font-weight: 900; border: 2px solid #000; border-radius: 4px; }
-          .cod { background: #fef08a; }
-          .prepaid { background: #d1fae5; }
-          .addr-grid { display: grid; grid-template-columns: 1.5fr 1fr; gap: 14px; border-bottom: 2px solid #000; padding-bottom: 12px; margin-bottom: 12px; }
-          .sec-label { font-size: 10px; font-weight: 800; text-transform: uppercase; color: #444; letter-spacing: 0.5px; }
-          .cust-name { font-size: 18px; font-weight: 900; margin-top: 4px; }
-          .cust-addr { font-size: 13px; line-height: 1.4; margin-top: 4px; }
-          .cust-phone { font-size: 13px; margin-top: 8px; }
-          .meta-box { border-left: 2px dashed #000; padding-left: 12px; font-size: 12px; line-height: 1.65; }
-          .items-box { border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; }
-          .return-footer { display: flex; justify-content: space-between; align-items: center; font-size: 10px; line-height: 1.4; }
-        </style>
-      </head>
-      <body>
-        ${cardsHtml}
-        <script>window.print();</script>
-      </body>
-      </html>
-    `);
-    w.document.close();
-
-    try {
-      await api.post(
-        '/inventory-software/online-orders/mark-labels-printed',
-        { orderIds: list.map(o => o.id) },
-        reqConfig
-      );
-      await fetchBootstrapData(true);
-    } catch {}
-  };
-
   const handlePrintOnlineOrderGstInvoice = ord => {
     if (!ord) return;
     const mappedSale = {
@@ -2290,130 +1350,6 @@ export default function InventorySoftware() {
       await fetchBootstrapData(true);
     } catch (err) {
       showNotice('error', err.response?.data?.message || 'Failed to process RTO return.');
-    }
-  };
-
-  const handleScanQrToPos = async e => {
-    if (e) e.preventDefault();
-    if (!scannerInput.trim()) return;
-    try {
-      const res = await api.post(
-        '/inventory-software/scanner/scan',
-        {
-          qrCode: scannerInput.trim(),
-          quantity: Number(scannerQty) || 1,
-          sessionCode: posSessionCode,
-          deviceName: 'Inventory Terminal Scanner',
-        },
-        reqConfig
-      );
-      if (res.data?.scanned?.length) {
-        const lowStock = res.data.lowStock || [];
-        if (lowStock.length > 0) {
-          showNotice(
-            'error',
-            `Low stock: ${lowStock.map(i => `${i.name} (${i.remaining} left after this sale)`).join(', ')}`
-          );
-        }
-        for (const sc of res.data.scanned) {
-          setPosCart(prev => {
-            const existing = prev.find(c => c.sku === sc.sku || c.id === sc.metaId);
-            if (existing) {
-              const manualQuantity = existing.queueId
-                ? Number(existing.manualQuantity) || 0
-                : Number(existing.q) || 0;
-              return prev.map(c =>
-                c.sku === sc.sku || c.id === sc.metaId
-                    ? {
-                        ...c,
-                        q: Math.min(sc.availableStock, manualQuantity + Number(sc.quantity)),
-                        queueQuantity: Number(sc.quantity),
-                        manualQuantity,
-                        queueId: sc.queueId,
-                      }
-                    : c
-                );
-            }
-            return [
-              ...prev,
-              {
-                id: sc.metaId,
-                productId: sc.productId,
-                sku: sc.sku,
-                name: sc.name,
-                q: Number(sc.quantity) || Number(scannerQty) || 1,
-                manualQuantity: 0,
-                queueQuantity: Number(sc.quantity) || Number(scannerQty) || 1,
-                p: sc.price,
-                max: sc.availableStock,
-                uom: sc.uom || 'Pcs',
-                gstHsnCode: sc.gstHsnCode || '30049011',
-                queueId: sc.queueId,
-              },
-            ];
-          });
-        }
-        setScannerQueue(res.data.queue || []);
-        showNotice('success', res.data.message);
-        setScannerInput('');
-        setScannerQty(1);
-        await fetchBootstrapData(true);
-      }
-    } catch (err) {
-      showNotice('error', err.response?.data?.message || 'QR / Barcode scan failed.');
-    }
-  };
-
-  const handlePullMobileScannerQueueToPos = async () => {
-    try {
-      const res = await api.get(
-        `/inventory-software/scanner/queue?sessionCode=${encodeURIComponent(posSessionCode)}`,
-        reqConfig
-      );
-      const qRows = res.data?.queue || [];
-      if (qRows.length === 0) {
-        showNotice('info', 'No pending items in Mobile QR Scanner queue.');
-        return;
-      }
-      const nextCart = [...posCart];
-      for (const q of qRows) {
-        const idx = nextCart.findIndex(c => c.sku === q.sku || c.id === q.meta_id);
-        if (idx !== -1) {
-          const currentItem = nextCart[idx];
-          const manualQuantity = currentItem.queueId
-            ? Number(currentItem.manualQuantity) || 0
-            : Number(currentItem.q) || 0;
-          const queueQuantity = Number(q.quantity) || 1;
-          nextCart[idx] = {
-            ...currentItem,
-            q: Math.min(q.available_stock || 999, manualQuantity + queueQuantity),
-            manualQuantity,
-            queueQuantity,
-            queueId: q.id,
-          };
-        } else {
-          nextCart.push({
-            id: q.meta_id,
-            productId: q.product_id,
-            sku: q.sku,
-            name: q.product_name,
-            q: Number(q.quantity) || 1,
-            manualQuantity: 0,
-            queueQuantity: Number(q.quantity) || 1,
-            p: Number(q.unit_price) || 0,
-            max: Number(q.available_stock) || 99,
-            uom: q.uom || 'Pcs',
-            gstHsnCode: q.gst_hsn_code || '30049011',
-            queueId: q.id,
-          });
-        }
-      }
-      setPosCart(nextCart);
-      setScannerQueue(qRows);
-      showNotice('success', `Added ${qRows.length} scanned SKU(s) to the active bill. They remain recoverable until checkout.`);
-      setActiveView('sale');
-    } catch (err) {
-      showNotice('error', err.response?.data?.message || 'Could not sync mobile scanner queue.');
     }
   };
 
@@ -2570,16 +1506,11 @@ export default function InventorySoftware() {
       Category: i.cat,
       UOM: i.uom,
       'Live Website Stock': i.qty,
-      'Shop Counter Stock': i.shopDisplayStock,
-      'Cold Vault Stock': i.warehouseVaultStock,
-      'Safety Buffer': i.safetyBufferStock,
-      'Quarantine / Damaged': i.damagedQuarantineStock,
+      'Reserved Online': i.onlineReservedQty,
       'Cost Price (INR)': i.costPrice,
       'MRP (INR)': i.mrp,
       'Selling Price (INR)': i.price,
       'Stock Valuation (INR)': i.qty * i.price,
-      'Bin Code': i.binCode,
-      'Rack Coordinate': i.rackLocation,
       'Batch Number': i.batchNo,
       'Expiry Date': i.expiryDate,
       'Sold Offline': i.soldOfflineQty,
@@ -2615,7 +1546,6 @@ export default function InventorySoftware() {
               costPrice: Number(row['Cost Price (INR)'] ?? row['Cost Price'] ?? 0),
               mrp: Number(row['MRP (INR)'] ?? row.MRP ?? 0),
               price: Number(row['Selling Price (INR)'] ?? row['Unit Price'] ?? row.Price ?? 0),
-              binCode: row['Bin Code'] || 'ASN-SHOP-R1-B01',
               syncToWebsite: true,
             },
             reqConfig
@@ -2637,7 +1567,6 @@ export default function InventorySoftware() {
       exportedAt: new Date().toISOString(),
       store: cfg,
       items,
-      bins,
       customers,
       sales,
       movements,
@@ -2692,7 +1621,7 @@ export default function InventorySoftware() {
               BhumiVera <span className="text-emerald-400">10X Inventory &amp; POS</span>
             </h1>
             <p className="text-xs text-slate-400">
-              Omnichannel Storage Keeper, Real-Time Website Stock Sync &amp; Retail POS Terminal
+              Inventory Management, Live Website Stock &amp; Retail POS
             </p>
             <div className="inline-block px-3 py-1 rounded-full bg-emerald-950/80 border border-emerald-500/30 text-[11px] font-mono text-emerald-300">
               www.bhumivera.com/inventorysoftware
@@ -2704,7 +1633,7 @@ export default function InventorySoftware() {
               <div>
                 <h2 className="text-sm font-bold text-white flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                  Staff &amp; Keeper Terminal Sign-In
+                  Staff Sign-In
                 </h2>
                 <p className="text-[11px] text-slate-400 mt-0.5">
                   Sign in with your Account ID provisioned at <code className="text-amber-300">/superadminsupport</code>
@@ -2729,7 +1658,7 @@ export default function InventorySoftware() {
                   required
                   value={loginForm.username}
                   onChange={e => setLoginForm(prev => ({ ...prev, username: e.target.value }))}
-                  placeholder="e.g. admin, manager, cashier1, keeper1"
+                  placeholder="e.g. admin, manager, cashier1"
                   className="w-full px-3.5 py-3 rounded-xl bg-slate-950 border border-slate-700 text-white font-mono text-xs focus:border-emerald-500 focus:outline-none"
                 />
               </div>
@@ -2821,32 +1750,29 @@ export default function InventorySoftware() {
   // ==========================================================================
   const navGroups = [
     {
-      title: '1. Order Lifecycle & Dispatch',
+      title: '1. Orders & Dispatch',
       items: [
-        { id: 'dash', label: 'WMS Overview', icon: Activity },
+        { id: 'dash', label: 'Inventory Overview', icon: Activity },
         { id: 'online', label: `Fulfillment (${dashMetrics.pendingDispatch || dashMetrics.pendingOnlineDispatch || 0})`, icon: Globe },
-        { id: 'labels', label: '4×6 Shipping Labels', icon: Printer },
+        { id: 'labels', label: 'Carrier Labels & Manifests', icon: Printer },
         { id: 'ret', label: 'RTO & Return QC', icon: RotateCcw },
       ],
     },
     {
-      title: '2. Unified Stock & POS Billing',
+      title: '2. Stock & Retail Billing',
       items: [
         { id: 'inv', label: 'Master Inventory', icon: Boxes },
         { id: 'sale', label: 'Retail POS Terminal', icon: ShoppingCart },
-        { id: 'scanner', label: `Mobile Scanner (${scannerQueue.length})`, icon: QrCode },
       ],
     },
     {
-      title: '3. Storage Keeper & GRN',
+      title: '3. PWA Workroom',
       items: [
-        { id: 'keeper', label: 'Bins & Warehouse Map', icon: Warehouse },
-        { id: 'grn', label: 'Suppliers & GRN Inward', icon: Truck },
-        { id: 'audit', label: 'Physical Stocktake Audit', icon: ClipboardCheck },
+        { id: 'workroom', label: 'PWA Staff & Live Activity', icon: Users },
       ],
     },
     {
-      title: '4. Intelligence & Ledger',
+      title: '4. Reports & Ledger',
       items: [
         { id: 'rep', label: 'Movement Ledger & Excel', icon: FileSpreadsheet },
         { id: 'logs', label: 'Staff Audit Trail', icon: History },
@@ -2864,7 +1790,7 @@ export default function InventorySoftware() {
           </div>
           <div className="min-w-0">
             <div className="font-black text-white tracking-wider text-sm uppercase truncate">BHUMIVERA 10X</div>
-            <div className="text-[10px] text-emerald-400 font-mono truncate">Inventory • Keeper • POS</div>
+            <div className="text-[10px] text-emerald-400 font-mono truncate">Inventory • Fulfillment • POS</div>
           </div>
         </div>
 
@@ -2999,16 +1925,6 @@ export default function InventorySoftware() {
 
             <button
               type="button"
-              onClick={() => setActiveModal('package-finder')}
-              className="px-3 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-teal-300 border border-slate-600 text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
-              title="Lost Parcel Intelligence & Package Recovery"
-            >
-              <Package className="w-3.5 h-3.5 text-teal-400" />
-              Package Finder
-            </button>
-
-            <button
-              type="button"
               onClick={() => fetchBootstrapData()}
               className="px-3 py-2 rounded-xl bg-[#0c261b] hover:bg-[#133827] text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center gap-1.5 transition shadow-sm"
             >
@@ -3076,25 +1992,7 @@ export default function InventorySoftware() {
               orderLocks={orderLocks}
               operatorName={operatorName}
               onUpdateOrderStatus={handleUpdateOnlineOrderStatus}
-              onOpenPackingVerify={async (order) => {
-                try {
-                  await api.post(
-                    '/inventory-software/orders/claim',
-                    {
-                      orderId: order.orderNumber || order.id,
-                      sessionCode: posSessionCode,
-                      operatorUsername: viewer?.username || operatorName.toLowerCase(),
-                      operatorName,
-                      lockType: 'PACKING',
-                    },
-                    reqConfig
-                  );
-                  setVerifyPackingOrder(order);
-                } catch (err) {
-                  showNotice('error', err.response?.data?.message || `Order #${order.orderNumber} is currently locked by another staff member.`);
-                }
-              }}
-              onOpenThermalLabel={(order) => setThermalLabelOrder(order)}
+              onOpenFulfillmentQr={order => setFulfillmentQrOrder(order)}
               onOpenWavePicklist={(orderIds) => {
                 api.post('/inventory-software/fulfillment/wave-picklist', { orderIds }, reqConfig)
                   .then(r => setActiveWavePicklist(r.data?.picklist))
@@ -3103,7 +2001,6 @@ export default function InventorySoftware() {
               onOpenReturnQc={(order) => setReturnQcOrder(order)}
               syncing={syncing}
               onRefresh={() => fetchBootstrapData(true)}
-              onOpenPackageFinder={() => setActiveModal('package-finder')}
             />
           )}
 
@@ -3113,7 +2010,7 @@ export default function InventorySoftware() {
               posCart={posCart}
               setPosCart={setPosCart}
               onCheckout={handlePosCheckout}
-              checkoutLoading={loading}
+              checkoutLoading={posCheckoutBusy}
               upiQrDataUrl={upiQrDataUrl}
               posPaymentMode={posPaymentMode}
               setPosPaymentMode={setPosPaymentMode}
@@ -3124,25 +2021,7 @@ export default function InventorySoftware() {
               posDiscount={posDiscount}
               setPosDiscount={setPosDiscount}
               posTaxRate={cfg.taxRate ?? 5}
-              onPullMobileScanner={handlePullMobileScannerQueueToPos}
-              scannerQueueCount={scannerQueue.length}
-              scannerConnected={scannerConnected}
-              scannerIdlePaused={scannerIdlePaused}
-              remainingIdleSeconds={remainingIdleSeconds}
-              onConnectScanner={handleConnectScanner}
-              onDisconnectScanner={handleDisconnectScanner}
-              posOrderId={posOrderId}
-              setPosOrderId={setPosOrderId}
-              onClaimOrderId={handleClaimOrderId}
-              onReleaseOrderId={handleReleaseOrderId}
-              orderLockStatus={orderLockStatus}
-              orderLocks={orderLocks}
               operatorName={operatorName}
-              savedDrafts={savedDrafts}
-              onSaveDraft={() => handleSaveOrPausePosBill('draft')}
-              onPauseBill={() => handleSaveOrPausePosBill('paused')}
-              onResumeDraft={handleResumePosDraft}
-              onDeleteDraft={handleDeletePosDraft}
             />
           )}
 
@@ -3165,8 +2044,6 @@ export default function InventorySoftware() {
                   gstHsnCode: '30049011',
                   gstRate: 5,
                   minStock: 15,
-                  binCode: 'ASN-SHOP-R1-B01',
-                  rackLocation: 'Zone A',
                 });
                 setActiveModal('item');
               }}
@@ -3179,24 +2056,19 @@ export default function InventorySoftware() {
                 });
                 setActiveModal('adjust');
               }}
-              onPrintBarcode={(item) => handleOpenLabelModal(item)}
+              onPrintBarcode={handleOpenLabelGenerator}
             />
           )}
 
           {activeView === 'labels' && (
             <ShippingLabelsView
               orders={onlineOrders}
-              onOpenThermalLabel={(order) => setThermalLabelOrder(order)}
               onOpenManifest={(orderIds, courier) => {
                 api.post('/inventory-software/fulfillment/manifest', { orderIds, courier }, reqConfig)
                   .then(r => setActiveManifest(r.data?.manifest))
                   .catch(err => showNotice('error', err.response?.data?.message || 'Manifest failed.'));
               }}
-              onMarkLabelsPrinted={async (orderIds) => {
-                await api.post('/inventory-software/online-orders/mark-labels-printed', { orderIds }, reqConfig).catch(() => {});
-                showNotice('success', 'Marked labels printed.');
-                await fetchBootstrapData(true);
-              }}
+              carrierBookForm={carrierBookForm}
               onBookCarrierLabel={async (orderId, form) => {
                 try {
                   const res = await api.post(`/inventory-software/online-orders/${orderId}/book-carrier-label`, form, reqConfig);
@@ -3209,38 +2081,6 @@ export default function InventorySoftware() {
             />
           )}
 
-          {activeView === 'keeper' && (
-            <StorageKeeperView
-              bins={bins}
-              onEditBin={(bin) => {
-                setEditingBin(bin || {
-                  code: '',
-                  hub: 'Bhumivera Flagship Hub - Asansol',
-                  zone: 'Zone A - Retail Display',
-                  rack: 'Rack 01',
-                  shelf: 'Shelf A',
-                  label: '',
-                  temp: '22°C - 26°C',
-                  capacity: 500,
-                  occupied: 0,
-                  keeper: viewer?.username || 'Keeper',
-                  status: 'active',
-                });
-                setActiveModal('bin');
-              }}
-              onOpenTransfer={() => setActiveModal('transfer')}
-            />
-          )}
-
-          {activeView === 'grn' && (
-            <GrnInwardView
-              grnEntries={grnEntries}
-              suppliers={suppliers}
-              onOpenNewGrn={() => setActiveModal('grn')}
-              onOpenNewSupplier={() => setActiveModal('supplier')}
-            />
-          )}
-
           {activeView === 'ret' && (
             <RtoReturnsView
               orders={onlineOrders}
@@ -3249,45 +2089,8 @@ export default function InventorySoftware() {
             />
           )}
 
-          {activeView === 'audit' && (
-            <StocktakeAuditView
-              items={items}
-              onReconcileAudit={async ({ auditEntries, notes }) => {
-                const counts = auditEntries.map(e => ({
-                  metaId: e.metaId,
-                  physicalCountedQty: e.physicalStock,
-                }));
-                await api.post('/inventory-software/keeper/audit-reconcile', { counts, auditNote: notes }, reqConfig);
-                await fetchBootstrapData(true);
-              }}
-            />
-          )}
-
-          {activeView === 'scanner' && (
-            <ScannerBridgeView
-              pairingQrUrl={pairingQrUrl}
-              pairingKey={scannerPairingKey}
-              hoursRemaining={scannerHoursRemaining}
-              expiresAt={scannerExpiresAt}
-              sessionCode={posSessionCode}
-              scannerConnected={scannerConnected}
-              scannerIdlePaused={scannerIdlePaused}
-              remainingIdleSeconds={remainingIdleSeconds}
-              onConnectScanner={handleConnectScanner}
-              onDisconnectScanner={handleDisconnectScanner}
-              operatorName={operatorName}
-              onChangeOperatorName={handleChangeOperatorName}
-              scannerQueue={scannerQueue}
-              onPullQueueToPos={handlePullMobileScannerQueueToPos}
-              onClearQueue={async () => {
-                await api.post('/inventory-software/scanner/queue/clear', { sessionCode: posSessionCode }, reqConfig).catch(() => {});
-                setScannerQueue([]);
-                showNotice('success', 'Scanner queue cleared.');
-              }}
-              onRegenerateKey={handleRotateScannerKey}
-              onOpenBatchQrModal={() => handleOpenBatchQrModal()}
-              onOpenPackageFinder={() => setActiveModal('package-finder')}
-            />
+          {activeView === 'workroom' && (
+            <WorkroomView authToken={authToken} viewer={viewer} />
           )}
 
           {(activeView === 'rep' || activeView === 'logs' || activeView === 'trans') && (
@@ -3607,7 +2410,7 @@ export default function InventorySoftware() {
                   <div>
                     <div className="font-bold text-white text-xs">2-Way Live Sync with Website</div>
                     <div className="text-[10px] text-slate-300">
-                      Instantly update bhumivera.com stock on every POS sale &amp; GRN inward
+                      Keep bhumivera.com stock in sync with inventory changes and POS sales
                     </div>
                   </div>
                 </label>
@@ -3732,7 +2535,7 @@ export default function InventorySoftware() {
               </div>
             </div>
 
-            <div className="grid grid-cols-4 gap-3 p-3 rounded-xl bg-[#071711] border border-emerald-500/30">
+            <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-[#071711] border border-emerald-500/30">
               <div>
                 <label className="block font-bold uppercase text-emerald-400 text-[11px] mb-1">Total Stock Qty</label>
                 <input
@@ -3741,35 +2544,9 @@ export default function InventorySoftware() {
                   value={editingItem.qty}
                   onChange={e => {
                     const total = Math.max(0, parseInt(e.target.value, 10) || 0);
-                    const shop = Math.min(total, editingItem.shopDisplayStock || Math.ceil(total * 0.3));
-                    setEditingItem(prev => ({
-                      ...prev,
-                      qty: total,
-                      shopDisplayStock: shop,
-                      warehouseVaultStock: Math.max(0, total - shop),
-                    }));
+                    setEditingItem(prev => ({ ...prev, qty: total }));
                   }}
                   className="w-full px-3 py-2 rounded-lg bg-[#0c261b] text-emerald-300 border border-emerald-500/40 font-mono font-black text-sm"
-                />
-              </div>
-              <div>
-                <label className="block font-bold uppercase text-emerald-400 text-[11px] mb-1">Shop Counter</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={editingItem.shopDisplayStock}
-                  onChange={e => setEditingItem(prev => ({ ...prev, shopDisplayStock: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg bg-[#0c261b] text-white border border-emerald-500/40 font-mono font-bold"
-                />
-              </div>
-              <div>
-                <label className="block font-bold uppercase text-emerald-400 text-[11px] mb-1">Cold Vault</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={editingItem.warehouseVaultStock}
-                  onChange={e => setEditingItem(prev => ({ ...prev, warehouseVaultStock: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-lg bg-[#0c261b] text-white border border-emerald-500/40 font-mono font-bold"
                 />
               </div>
               <div>
@@ -3837,28 +2614,14 @@ export default function InventorySoftware() {
               </div>
             </div>
 
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">Assigned Bin</label>
-                <select
-                  value={editingItem.binCode}
-                  onChange={e => setEditingItem(prev => ({ ...prev, binCode: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-mono"
-                >
-                  {bins.map(b => (
-                    <option key={b.bin_code} value={b.bin_code}>
-                      {b.bin_code}
-                    </option>
-                  ))}
-                </select>
-              </div>
+            <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block font-bold uppercase text-emerald-300 text-[11px] mb-1">Batch Number</label>
                 <input
                   type="text"
                   value={editingItem.batchNo || ''}
                   onChange={e => setEditingItem(prev => ({ ...prev, batchNo: e.target.value }))}
-                  placeholder="Inward via GRN"
+                  placeholder="Stock received"
                   className="w-full px-3 py-2 rounded-xl bg-[#071711] text-white border border-emerald-500/40 font-mono"
                 />
               </div>
@@ -4026,403 +2789,13 @@ export default function InventorySoftware() {
       
 
       {/* =====================================================================
-          MODAL: STORAGE BIN CREATE / EDIT
-         ===================================================================== */}
-      {activeModal === 'bin' && editingBin && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
-          <form onSubmit={handleSaveBin} className="bg-[#0c261b] text-white border border-emerald-500/40 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-xs">
-            <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
-              <h3 className="text-base font-black uppercase text-white tracking-wide">Storage Keeper Bin Configuration</h3>
-              <button type="button" onClick={() => setActiveModal(null)} className="text-slate-300 hover:text-white hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition">
-                ✕
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Bin Code *</label>
-                <input
-                  type="text"
-                  required
-                  value={editingBin.binCode}
-                  onChange={e => setEditingBin(prev => ({ ...prev, binCode: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono font-bold"
-                />
-              </div>
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Target Temp</label>
-                <input
-                  type="text"
-                  value={editingBin.temperatureTarget}
-                  onChange={e => setEditingBin(prev => ({ ...prev, temperatureTarget: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block font-bold uppercase text-slate-600 mb-1">Warehouse Zone *</label>
-              <input
-                type="text"
-                required
-                value={editingBin.zoneName}
-                onChange={e => setEditingBin(prev => ({ ...prev, zoneName: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Rack Number</label>
-                <input
-                  type="text"
-                  value={editingBin.rackNo}
-                  onChange={e => setEditingBin(prev => ({ ...prev, rackNo: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300"
-                />
-              </div>
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Shelf Level</label>
-                <input
-                  type="text"
-                  value={editingBin.shelfLevel}
-                  onChange={e => setEditingBin(prev => ({ ...prev, shelfLevel: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block font-bold uppercase text-slate-600 mb-1">Bin Description / Label</label>
-              <input
-                type="text"
-                value={editingBin.binLabel}
-                onChange={e => setEditingBin(prev => ({ ...prev, binLabel: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Max Capacity (Units)</label>
-                <input
-                  type="number"
-                  value={editingBin.capacityUnits}
-                  onChange={e => setEditingBin(prev => ({ ...prev, capacityUnits: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
-                />
-              </div>
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Keeper Name</label>
-                <input
-                  type="text"
-                  value={editingBin.keeperName}
-                  onChange={e => setEditingBin(prev => ({ ...prev, keeperName: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <button type="submit" className="flex-1 py-3 rounded-xl bg-emerald-600 text-white font-black uppercase">
-                Save Storage Bin
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveModal(null)}
-                className="px-5 py-3 rounded-xl bg-slate-800 text-white hover:bg-slate-700 border border-slate-600 font-bold text-xs transition shadow-sm"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* =====================================================================
-          MODAL: INTERNAL BIN / VAULT ↔ SHOP STOCK TRANSFER
-         ===================================================================== */}
-      {activeModal === 'transfer' && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
-          <form
-            onSubmit={handleExecuteBinTransfer}
-            className="bg-[#0c261b] text-white border border-emerald-500/40 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-xs"
-          >
-            <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
-              <h3 className="text-base font-black uppercase text-white tracking-wide">Internal Vault ↔ Shop Counter Transfer</h3>
-              <button type="button" onClick={() => setActiveModal(null)} className="text-slate-300 hover:text-white hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition">
-                ✕
-              </button>
-            </div>
-            <div>
-              <label className="block font-bold uppercase text-slate-600 mb-1">Select Formulation</label>
-              <select
-                value={transferForm.metaId}
-                onChange={e => setTransferForm(prev => ({ ...prev, metaId: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-              >
-                {items.map(it => (
-                  <option key={it.id} value={it.id}>
-                    {it.name} (Shop: {it.shopDisplayStock} | Vault: {it.warehouseVaultStock})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Transfer Direction</label>
-                <select
-                  value={transferForm.direction}
-                  onChange={e => setTransferForm(prev => ({ ...prev, direction: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-                >
-                  <option value="VAULT_TO_SHOP">Cold Vault → Shop Counter</option>
-                  <option value="SHOP_TO_VAULT">Shop Counter → Cold Vault</option>
-                </select>
-              </div>
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Quantity to Move</label>
-                <input
-                  type="number"
-                  min={1}
-                  value={transferForm.quantity}
-                  onChange={e => setTransferForm(prev => ({ ...prev, quantity: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono font-bold"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block font-bold uppercase text-slate-600 mb-1">Assign Primary Bin</label>
-              <select
-                value={transferForm.newBinCode}
-                onChange={e => setTransferForm(prev => ({ ...prev, newBinCode: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
-              >
-                {bins.map(b => (
-                  <option key={b.bin_code} value={b.bin_code}>
-                    {b.bin_code} — {b.bin_label}
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <button type="submit" className="flex-1 py-3 rounded-xl bg-blue-600 text-white font-black uppercase">
-                Execute Transfer
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveModal(null)}
-                className="px-5 py-3 rounded-xl bg-slate-800 text-white hover:bg-slate-700 border border-slate-600 font-bold text-xs transition shadow-sm"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* =====================================================================
-          MODAL: POST GRN STOCK INWARD
-         ===================================================================== */}
-      {activeModal === 'grn' && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
-          <form
-            onSubmit={handlePostGrnInward}
-            className="bg-[#0c261b] text-white border border-emerald-500/40 rounded-2xl max-w-lg w-full p-6 space-y-4 shadow-2xl text-xs"
-          >
-            <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
-              <h3 className="text-base font-black uppercase text-white tracking-wide">Post Goods Receipt Note (GRN Stock Inward)</h3>
-              <button type="button" onClick={() => setActiveModal(null)} className="text-slate-300 hover:text-white hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition">
-                ✕
-              </button>
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Supplier / Lab</label>
-                <input
-                  type="text"
-                  required
-                  value={grnForm.supplierName}
-                  onChange={e => setGrnForm(prev => ({ ...prev, supplierName: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-                />
-              </div>
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Target Bin</label>
-                <select
-                  value={grnForm.binCode}
-                  onChange={e => setGrnForm(prev => ({ ...prev, binCode: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
-                >
-                  {bins.map(b => (
-                    <option key={b.bin_code} value={b.bin_code}>
-                      {b.bin_code}
-                    </option>
-                  ))}
-                </select>
-              </div>
-            </div>
-            <div>
-              <label className="block font-bold uppercase text-slate-600 mb-1">Select Formulation to Inward *</label>
-              <select
-                value={grnForm.metaId}
-                onChange={e => setGrnForm(prev => ({ ...prev, metaId: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-              >
-                {items.map(it => (
-                  <option key={it.id} value={it.id}>
-                    {it.name} (Current Stock: {it.qty})
-                  </option>
-                ))}
-              </select>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Received Qty *</label>
-                <input
-                  type="number"
-                  min={1}
-                  required
-                  value={grnForm.receivedQty}
-                  onChange={e => setGrnForm(prev => ({ ...prev, receivedQty: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-emerald-50 border border-emerald-400 font-mono font-bold"
-                />
-              </div>
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Damaged / Rejected</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={grnForm.rejectedQty}
-                  onChange={e => setGrnForm(prev => ({ ...prev, rejectedQty: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
-                />
-              </div>
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Unit Cost (₹)</label>
-                <input
-                  type="number"
-                  min={0}
-                  value={grnForm.unitCost}
-                  onChange={e => setGrnForm(prev => ({ ...prev, unitCost: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
-                />
-              </div>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Batch Number</label>
-                <input
-                  type="text"
-                  value={grnForm.batchNo}
-                  onChange={e => setGrnForm(prev => ({ ...prev, batchNo: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
-                />
-              </div>
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Mfg Date</label>
-                <input
-                  type="date"
-                  value={grnForm.mfgDate}
-                  onChange={e => setGrnForm(prev => ({ ...prev, mfgDate: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
-                />
-              </div>
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Expiry Date</label>
-                <input
-                  type="date"
-                  value={grnForm.expiryDate}
-                  onChange={e => setGrnForm(prev => ({ ...prev, expiryDate: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
-                />
-              </div>
-            </div>
-            <div className="flex gap-2 pt-2">
-              <button type="submit" className="flex-1 py-3 rounded-xl bg-emerald-600 text-white font-black uppercase">
-                Inward Batch &amp; Add to Live Website Stock
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveModal(null)}
-                className="px-5 py-3 rounded-xl bg-slate-800 text-white hover:bg-slate-700 border border-slate-600 font-bold text-xs transition shadow-sm"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* =====================================================================
-          MODAL: ADD SUPPLIER
-         ===================================================================== */}
-      {activeModal === 'supplier' && (
-        <div className="fixed inset-0 z-50 bg-black/75 backdrop-blur-md flex items-center justify-center p-4">
-          <form onSubmit={handleSaveSupplier} className="bg-[#0c261b] text-white border border-emerald-500/40 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl text-xs">
-            <div className="flex items-center justify-between border-b border-emerald-500/30 pb-3">
-              <h3 className="text-base font-black uppercase text-white tracking-wide">Supplier / Lab Profile</h3>
-              <button type="button" onClick={() => setActiveModal(null)} className="text-slate-300 hover:text-white hover:bg-white/10 w-8 h-8 rounded-full flex items-center justify-center font-bold text-lg transition">
-                ✕
-              </button>
-            </div>
-            <div>
-              <label className="block font-bold uppercase text-slate-600 mb-1">Supplier Name *</label>
-              <input
-                type="text"
-                required
-                value={supplierForm.name}
-                onChange={e => setSupplierForm(prev => ({ ...prev, name: e.target.value, companyName: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-bold"
-              />
-            </div>
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">Phone</label>
-                <input
-                  type="text"
-                  value={supplierForm.phone}
-                  onChange={e => setSupplierForm(prev => ({ ...prev, phone: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
-                />
-              </div>
-              <div>
-                <label className="block font-bold uppercase text-slate-600 mb-1">GSTIN</label>
-                <input
-                  type="text"
-                  value={supplierForm.gstin}
-                  onChange={e => setSupplierForm(prev => ({ ...prev, gstin: e.target.value }))}
-                  className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300 font-mono"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="block font-bold uppercase text-slate-600 mb-1">City / State</label>
-              <input
-                type="text"
-                value={supplierForm.city}
-                onChange={e => setSupplierForm(prev => ({ ...prev, city: e.target.value }))}
-                className="w-full px-3 py-2 rounded-xl bg-slate-50 border border-slate-300"
-              />
-            </div>
-            <div className="flex gap-2 pt-2">
-              <button type="submit" className="flex-1 py-3 rounded-xl bg-emerald-600 text-white font-black uppercase">
-                Save Supplier
-              </button>
-              <button
-                type="button"
-                onClick={() => setActiveModal(null)}
-                className="px-5 py-3 rounded-xl bg-slate-800 text-white hover:bg-slate-700 border border-slate-600 font-bold text-xs transition shadow-sm"
-              >
-                Cancel
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
-
-      {/* =====================================================================
           MODAL: BARCODE / QR SHELF LABEL GENERATOR
          ===================================================================== */}
       {activeModal === 'label' && labelItem && (
         <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl max-w-sm w-full p-6 text-center space-y-4 shadow-2xl text-xs">
             <div className="flex items-center justify-between border-b pb-2">
-              <h3 className="font-black uppercase">Printable Shelf &amp; Bin QR Label</h3>
+              <h3 className="font-black uppercase">Printable Product QR Label</h3>
               <button type="button" onClick={() => setActiveModal(null)}>
                 ✕
               </button>
@@ -4437,7 +2810,7 @@ export default function InventorySoftware() {
               <div className="font-bold text-slate-800">{labelItem.name}</div>
               {labelQrUrl && <img src={labelQrUrl} alt="QR" className="w-32 h-32 mx-auto" />}
               <div className="font-mono font-bold text-xs">
-                SKU: {labelItem.sku} | Bin: {labelItem.binCode}
+                SKU: {labelItem.sku}
               </div>
               <div className="font-mono text-[11px] text-slate-600">
                 Barcode: {labelItem.barcode} • Batch: {labelItem.batchNo || 'N/A'}
@@ -4645,20 +3018,13 @@ export default function InventorySoftware() {
             <div className="flex flex-wrap items-center justify-between gap-3 border-b pb-3">
               <div>
                 <h3 className="text-base font-black uppercase text-slate-900">
-                  Order #{editingOrder.orderNumber} — Full Lifecycle, Tracking &amp; Shipping Label Editor
+                  Order #{editingOrder.orderNumber} — Fulfillment &amp; Tracking
                 </h3>
                 <p className="text-[11px] text-slate-500">
                   Placed on {new Date(editingOrder.createdAt).toLocaleString()} • Payment: {editingOrder.paymentMode} ({editingOrder.paymentStatus})
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => handlePrintShippingLabels(editingOrder)}
-                  className="px-3 py-1.5 rounded-xl bg-emerald-600 text-white font-bold flex items-center gap-1.5"
-                >
-                  <Printer className="w-3.5 h-3.5" /> Print 4×6 Shipping Label
-                </button>
                 <button
                   type="button"
                   onClick={() => handlePrintOnlineOrderGstInvoice(editingOrder)}
@@ -4797,7 +3163,7 @@ export default function InventorySoftware() {
                           {it.name} <span className="text-emerald-700 font-mono">×{it.quantity}</span>
                         </div>
                         <div className="font-mono text-[10px] text-slate-500">
-                          SKU: {it.sku} • Bin: {it.binCode} • Main Stock: <b>{it.inStockQty} units</b>
+                          SKU: {it.sku} • Main Stock: <b>{it.inStockQty} units</b>
                         </div>
                       </div>
                       <div className="font-mono font-bold">₹{it.price * it.quantity}</div>
@@ -4948,19 +3314,8 @@ export default function InventorySoftware() {
         />
       )}
 
-      {verifyPackingOrder && (
-        <PackingVerifyModal
-          order={verifyPackingOrder}
-          operatorName={operatorName}
-          sessionCode={posSessionCode}
-          onClose={() => setVerifyPackingOrder(null)}
-          onPackComplete={async (orderId) => {
-            await handleUpdateOnlineOrderStatus(orderId, 'packed');
-            const matched = onlineOrders.find(o => o.id === orderId);
-            if (matched) setThermalLabelOrder(matched);
-          }}
-          reqConfig={reqConfig}
-        />
+      {fulfillmentQrOrder && (
+        <FulfillmentOrderQrModal order={fulfillmentQrOrder} onClose={() => setFulfillmentQrOrder(null)} />
       )}
 
       {returnQcOrder && (
@@ -4972,13 +3327,6 @@ export default function InventorySoftware() {
             await fetchBootstrapData(true);
           }}
           reqConfig={reqConfig}
-        />
-      )}
-
-      {thermalLabelOrder && (
-        <ThermalLabelModal
-          order={thermalLabelOrder}
-          onClose={() => setThermalLabelOrder(null)}
         />
       )}
 
@@ -4996,25 +3344,6 @@ export default function InventorySoftware() {
         />
       )}
 
-      {activeModal === 'package-finder' && (
-        <PackageFinderModal
-          isOpen={true}
-          onClose={() => setActiveModal(null)}
-          reqConfig={reqConfig}
-          onOpenOrder={(ord) => {
-            setEditingOrder(ord);
-            setActiveModal('order-detail');
-          }}
-          onVerifyPacking={(ord) => {
-            setActiveModal(null);
-            setVerifyPackingOrder(ord);
-          }}
-          onPrintLabel={(ord) => {
-            setActiveModal(null);
-            setThermalLabelOrder(ord);
-          }}
-        />
-      )}
     </div>
   );
 }

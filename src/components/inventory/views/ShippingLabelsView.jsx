@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from 'react';
 import {
-  Printer,
   Truck,
   CheckCircle2,
   Search,
@@ -13,10 +12,9 @@ import {
 
 export default function ShippingLabelsView({
   orders = [],
-  onOpenThermalLabel,
   onOpenManifest,
-  onMarkLabelsPrinted,
   onBookCarrierLabel,
+  carrierBookForm,
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedOrderIds, setSelectedOrderIds] = useState([]);
@@ -49,12 +47,6 @@ export default function ShippingLabelsView({
     } else {
       setSelectedOrderIds(labelOrders.map(o => o.id));
     }
-  };
-
-  const handleBulkPrint = () => {
-    if (selectedOrderIds.length === 0) return;
-    const firstMatched = labelOrders.find(o => selectedOrderIds.includes(o.id));
-    if (firstMatched) onOpenThermalLabel(firstMatched);
   };
 
   const handleCreateManifest = () => {
@@ -100,12 +92,6 @@ export default function ShippingLabelsView({
           {selectedOrderIds.length > 0 && (
             <>
               <button
-                onClick={handleBulkPrint}
-                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-black uppercase bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl shadow-md transition"
-              >
-                <Printer className="w-4 h-4" /> Bulk Print 4×6″ ({selectedOrderIds.length})
-              </button>
-              <button
                 onClick={handleCreateManifest}
                 className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-black uppercase bg-slate-800 hover:bg-slate-700 text-white border border-slate-600 rounded-xl shadow-sm transition"
               >
@@ -133,7 +119,7 @@ export default function ShippingLabelsView({
                 <th className="px-4 py-3">Order Number</th>
                 <th className="px-4 py-3">Recipient &amp; Destination</th>
                 <th className="px-4 py-3">Carrier &amp; Tracking</th>
-                <th className="px-4 py-3 text-center">Label Status</th>
+                <th className="px-4 py-3 text-center">Carrier Status</th>
                 <th className="px-4 py-3 text-right">Actions</th>
               </tr>
             </thead>
@@ -185,7 +171,7 @@ export default function ShippingLabelsView({
                       <td className="px-4 py-3 text-center">
                         {hasLabel ? (
                           <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
-                            Printed / Active
+                            AWB Assigned
                           </span>
                         ) : (
                           <span className="inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase bg-amber-500/20 text-amber-300 border border-amber-500/30">
@@ -195,13 +181,20 @@ export default function ShippingLabelsView({
                       </td>
 
                       <td className="px-4 py-3 text-right">
-                        <button
-                          onClick={() => onOpenThermalLabel(order)}
-                          className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-xs font-black uppercase tracking-wider transition shadow-sm"
-                        >
-                          <Printer className="w-3.5 h-3.5" />
-                          Print 4×6″
-                        </button>
+                        {hasLabel ? (
+                          <span className="text-[10px] font-bold text-emerald-300">Carrier booked</span>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() => onBookCarrierLabel(order.id, {
+                              provider: carrierFilter === 'ALL' ? 'shiprocket' : carrierFilter.toLowerCase(),
+                              ...carrierBookForm,
+                            })}
+                            className="rounded-lg bg-emerald-600 px-3 py-1.5 text-xs font-black text-white hover:bg-emerald-500"
+                          >
+                            Book Carrier Label
+                          </button>
+                        )}
                       </td>
                     </tr>
                   );

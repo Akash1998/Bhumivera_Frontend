@@ -21,13 +21,11 @@ import { localOrderDate } from '../../../utils/inventoryOrderFilters';
 export default function OrderFulfillmentView({
   orders = [],
   onUpdateOrderStatus,
-  onOpenPackingVerify,
-  onOpenThermalLabel,
+  onOpenFulfillmentQr,
   onOpenWavePicklist,
   onOpenReturnQc,
   syncing,
   onRefresh,
-  onOpenPackageFinder,
   orderLocks = [],
   operatorName = 'Akash',
 }) {
@@ -139,17 +137,6 @@ export default function OrderFulfillmentView({
 
         {/* Action Buttons */}
         <div className="flex items-center gap-2 shrink-0">
-          {onOpenPackageFinder && (
-            <button
-              onClick={onOpenPackageFinder}
-              className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-teal-200 bg-teal-950/60 hover:bg-teal-900 border border-teal-500/50 rounded-xl transition shadow"
-              title="Search lost or misplaced packages by parcel barcode"
-            >
-              <Package className="w-4 h-4 text-teal-300" />
-              Package Finder
-            </button>
-          )}
-
           {selectedOrderIds.length > 0 && (
             <button
               onClick={handleLaunchWave}
@@ -310,23 +297,13 @@ export default function OrderFulfillmentView({
                       {/* Actions */}
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-1.5">
-                          {order.status === 'pending' && (
+                          {!['cancelled', 'delivered', 'shipped'].includes(order.status) && (
                             <button
-                              onClick={() => onOpenPackingVerify(order)}
+                              onClick={() => onOpenFulfillmentQr(order)}
                               className="inline-flex items-center gap-1 px-3 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-xs font-black uppercase tracking-wider transition shadow-sm"
-                              title="Scan-to-Verify & Box Order"
+                              title="Print the order bill and fulfillment QR for the PWA packer"
                             >
-                              <ShieldCheck className="w-3.5 h-3.5" /> Scan &amp; Pack
-                            </button>
-                          )}
-
-                          {['packed', 'shipped', 'delivered'].includes(order.status) && (
-                            <button
-                              onClick={() => onOpenThermalLabel(order)}
-                              className="p-1.5 text-slate-300 hover:text-white hover:bg-emerald-800/40 rounded-lg transition"
-                              title="Print 4×6″ Thermal Courier Label"
-                            >
-                              <Printer className="w-4 h-4" />
+                              <Printer className="w-3.5 h-3.5" /> Print Order QR
                             </button>
                           )}
 
