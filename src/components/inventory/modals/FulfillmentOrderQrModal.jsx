@@ -208,15 +208,15 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
           .amount{text-align:right;font-size:8px;font-weight:bold}.amount-row{display:flex;justify-content:space-between;gap:8px;margin:4px 0}.amount .grand{font-size:12px;border-top:1.5px solid #111;padding-top:6px;margin-top:6px}
           .shipline{margin-top:8px;border:1px solid #333;padding:7px 8px;line-height:1.5;display:flex;justify-content:space-between;gap:10px}.shipline strong{font-size:7px;text-transform:uppercase;letter-spacing:.6px}.shipvalue{text-align:right;font-weight:bold}
           .qrbox{display:flex;min-width:0;align-items:center;gap:8px;border:1px solid #333;padding:6px;margin-top:7px;overflow:hidden;line-height:1.4}.qrbox img{flex:none;width:20mm;height:20mm;object-fit:contain;image-rendering:pixelated}.qrbox span{min-width:0;overflow-wrap:anywhere}
-          .closing{display:grid;grid-template-columns:36mm minmax(0,1fr) 44mm;align-items:center;gap:9px;margin-top:10px;padding:8px;border:1px solid #444;background:#f7f7f4;break-inside:avoid}
-          .closing .qrbox{margin:0;border:0;padding:0;justify-content:center}.closing .qrbox.pack img{width:30mm;height:30mm}
-          .gratitude{font-size:8px;line-height:1.5}.gratitude h3{margin:0 0 4px;font-size:9px;text-transform:uppercase;letter-spacing:.6px}.quote{font-size:10px;font-style:italic;font-weight:bold;margin:5px 0}
+          .bottom>div:first-child{display:flex;flex-direction:column}.tax-qr{display:flex;flex:1;justify-content:center;align-items:center;min-height:42mm;margin-top:4mm}.tax-qr img{display:block;width:34mm;height:34mm;object-fit:contain;image-rendering:pixelated}
+          .closing{display:grid;grid-template-columns:minmax(0,1fr) 44mm;align-items:center;gap:12px;margin-top:10px;padding:10px;border:1px solid #444;background:#f7f7f4;break-inside:avoid}
+          .gratitude{font-size:11px;line-height:1.6}.gratitude h3{margin:0 0 5px;font-size:12px;text-transform:uppercase;letter-spacing:.6px}.gratitude p{margin:0}
           .signature{text-align:center;border-left:1px solid #999;padding-left:7px}.signature .script{font-family:"Segoe Script","Brush Script MT",cursive;font-size:17px;font-style:italic;line-height:1.2}.signature strong{display:block;margin-top:3px;font-size:8px}.signature small{font-size:7px}
           .foot{border-top:1px solid #333;margin-top:8px;padding-top:6px;display:grid;grid-template-columns:1fr;gap:6px;line-height:1.4}
           .note{font-size:7px;color:#333;margin-top:5px}
           @page{size:A4 portrait;margin:0}
-          @media(max-width:680px){body{padding:6px}.sheet{min-height:0;padding:5mm}.head{grid-template-columns:1fr 130px}.two,.bottom,.foot{gap:5px}.bottom{grid-template-columns:minmax(0,1fr) minmax(0,180px)}.closing{grid-template-columns:32mm minmax(0,1fr);gap:6px}.signature{grid-column:1/-1;border-left:0;border-top:1px solid #999;padding:6px 0 0}.closing .qrbox.pack img{width:27mm;height:27mm}table{font-size:6px}th,td{padding:2px}}
-          @media print{html,body{width:210mm;height:297mm;padding:0}body{display:flex;justify-content:center;align-items:flex-start}.sheet{width:194mm;height:281mm;max-width:none;min-height:0;margin:8mm auto;padding:6mm;border:1.2px solid #111;break-inside:avoid;page-break-inside:avoid}.head,.two,.bottom,.foot,.shipline,.qrbox,.closing,table{break-inside:avoid;page-break-inside:avoid}button{display:none}}
+          @media(max-width:680px){body{padding:6px}.sheet{min-height:0;padding:5mm}.head{grid-template-columns:1fr 130px}.two,.bottom,.foot{gap:5px}.bottom{grid-template-columns:minmax(0,1fr) minmax(0,180px)}.closing{grid-template-columns:minmax(0,1fr) 36mm;gap:6px}.tax-qr{min-height:36mm}.tax-qr img{width:30mm;height:30mm}table{font-size:6px}th,td{padding:2px}}
+          @media print{html,body{width:210mm;height:297mm;padding:0}body{display:flex;justify-content:center;align-items:flex-start}.sheet{width:194mm;height:281mm;max-width:none;min-height:0;margin:8mm auto;padding:6mm;border:1.2px solid #111;break-inside:avoid;page-break-inside:avoid}.head,.two,.bottom,.foot,.shipline,.qrbox,.tax-qr,.closing,table{break-inside:avoid;page-break-inside:avoid}button{display:none}}
         </style>
       </head><body><main class="sheet">
         <header class="head">
@@ -236,6 +236,7 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
             <p class="section-label">Tax summary by HSN</p>
             <table><thead><tr><th>HSN</th><th>Taxable</th><th>Rate</th>${isIntraState ? '<th>CGST</th><th>SGST</th>' : '<th>IGST</th>'}<th>Total Tax</th></tr></thead><tbody>${hsnHtml}</tbody></table>
             <div class="note">${isIntraState ? 'Intra-state supply: CGST and SGST apply.' : 'Inter-state supply: IGST applies.'} Goods once sold are subject to applicable return and consumer protection policies.</div>
+            <div class="tax-qr"><img src="${qrUrl}" alt="Order fulfillment QR code"/></div>
           </div>
           <div class="box amount">
             <p class="section-label">Payment summary</p>
@@ -252,12 +253,9 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
         </div>
         <section class="shipline"><div><strong>Shipped by</strong><br/>${escapeHtml(courierName)}</div><div class="shipvalue"><strong>Tracking / AWB</strong><br/>${escapeHtml(trackingNumber)}</div></section>
         <section class="closing">
-          <div class="qrbox pack"><img src="${qrUrl}" alt="Order fulfillment QR code"/></div>
           <div class="gratitude">
-            <h3>Thank you for choosing a kinder way</h3>
-            <div>Your thoughtful choice supports a more nature-conscious future. We are grateful to have you with us on this journey.</div>
-            <div class="quote">“Small choices, rooted in care, help the whole Earth bloom.”</div>
-            <div>With heartfelt thanks, Team Bhumivera</div>
+            <h3>Thank you for choosing a more thoughtful way</h3>
+            <p>Thank you for choosing Bhumivera and for making space for more thoughtful, nature-conscious living. Your order supports our promise to create with care, respect natural resources, and make mindful choices at every step. We believe small acts of care can grow into lasting change. We’re grateful for your trust and glad to share this greener journey with you.</p>
           </div>
           <div class="signature">
             <div class="script">Akash Prasad</div>
