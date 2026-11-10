@@ -1,179 +1,228 @@
-import {
-  BarcodeFormat,
-  BinaryBitmap,
-  DecodeHintType,
-  HybridBinarizer,
-  InvertedLuminanceSource,
-  MultiFormatReader,
-} from '@zxing/library';
-import { HTMLCanvasElementLuminanceSource } from '@zxing/browser';
+import { BarcodeFormat, DecodeHintType } from '@zxing/library';
+import { BrowserMultiFormatReader } from '@zxing/browser';
 
-const DECODE_SIZE = 960;
-const SCAN_INTERVAL_MS = 90;
-
-const buildReader = () => {
+function buildReader() {
   const hints = new Map();
-  hints.set(DecodeHintType.POSSIBLE_FORMATS, [BarcodeFormat.QR_CODE]);
+  hints.set(DecodeHintType.POSSIBLE_FORMATS, [
+    BarcodeFormat.QR_CODE,
+    BarcodeFormat.CODE_128,
+    BarcodeFormat.EAN_13,
+    BarcodeFormat.EAN_8,
+  ]);
   hints.set(DecodeHintType.TRY_HARDER, true);
-  const reader = new MultiFormatReader();
-  reader.setHints(hints);
-  return reader;
-};
+  return new BrowserMultiFormatReader(hints);
+}
 
-const decodeCanvas = (reader, canvas, inverted) => {
+/**
+ * Starts rear camera with HD preference for small or distant QR / barcode labels.
+ * @param {HTMLVideoElement} videoElement
+ * @returns {Promise<MediaStream>}
+ */
+export async function startCamera(videoElement) {
+  let stream;
   try {
-    const source = new HTMLCanvasElementLuminanceSource(canvas);
-    const bitmap = new BinaryBitmap(new HybridBinarizer(inverted ? new InvertedLuminanceSource(source) : source));
-    return reader.decode(bitmap).getText();
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: {
+        facingMode: { ideal: 'environment' },
+        width: { ideal: 1920, min: 640 },
+        height: { ideal: 1080, min: 480 },
+      },
+      audio: false,
+    });
   } catch {
-    return null;
+    stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' },
+      audio: false,
+    });
   }
-};
 
-export const getTrack = video => video?.srcObject?.getVideoTracks?.()[0] || null;
+  videoElement.srcObject = stream;
+  videoElement.setAttribute('playsinline', 'true');
+  await videoElement.play();
 
-export const getCameraCapabilities = video => {
-  const track = getTrack(video);
-  const caps = track?.getCapabilities?.() || {};
-  return {
-    zoom: caps.zoom ? { min: caps.zoom.min, max: caps.zoom.max, step: caps.zoom.step || 0.1 } : null,
-    torch: Boolean(caps.torch),
-    focus: Array.isArray(caps.focusMode) ? caps.focusMode : [],
-  };
-};
-
-export const startCamera = async video => {
-  const attempts = [
-    { facingMode: { ideal: 'environment' }, width: { ideal: 3840 }, height: { ideal: 2160 }, frameRate: { ideal: 30 } },
-    { facingMode: { ideal: 'environment' }, width: { ideal: 1920 }, height: { ideal: 1080 } },
-    { facingMode: { ideal: 'environment' } },
-    true,
-  ];
-  let lastError;
-  for (const videoConstraints of attempts) {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: videoConstraints, audio: false });
-      video.srcObject = stream;
-      await video.play().catch(() => {});
-      const track = stream.getVideoTracks()[0];
-      const caps = track?.getCapabilities?.() || {};
-      const advanced = [];
-      if (caps.focusMode?.includes('continuous')) advanced.push({ focusMode: 'continuous' });
-      if (caps.exposureMode?.includes('continuous')) advanced.push({ exposureMode: 'continuous' });
-      if (caps.whiteBalanceMode?.includes('continuous')) advanced.push({ whiteBalanceMode: 'continuous' });
-      if (advanced.length) await track.applyConstraints({ advanced }).catch(() => {});
-      return stream;
-    } catch (error) {
-      lastError = error;
-      if (error?.name === 'NotAllowedError' || error?.name === 'SecurityError') break;
+  const [track] = stream.getVideoTracks();
+  if (track && typeof track.getCapabilities === 'function') {
+    const caps = track.getCapabilities();
+    const advanced = [];
+    if (Array.isArray(caps.focusMode) && caps.focusMode.includes('continuous')) {
+      advanced.push({ focusMode: 'continuous' });
+    }
+    if (advanced.length) {
+      track.applyConstraints({ advanced }).catch(() => {});
     }
   }
-  throw lastError || new Error('Unable to start the camera.');
-};
 
-export const stopCamera = video => {
-  const stream = video?.srcObject;
-  stream?.getTracks?.().forEach(track => track.stop());
-  if (video) video.srcObject = null;
-};
+  return stream;
+}
 
-export const setZoom = async (video, value, digitalFallback) => {
-  const track = getTrack(video);
-  const zoom = track?.getCapabilities?.()?.zoom;
-  if (zoom) {
-    await track.applyConstraints({ advanced: [{ zoom: Math.min(zoom.max, Math.max(zoom.min, value)) }] });
-    return 'hardware';
+export function stopCamera(videoElement) {
+  const stream = videoElement?.srcObject;
+  if (stream && typeof stream.getTracks === 'function') {
+    stream.getTracks().forEach((t) => t.stop());
   }
-  digitalFallback?.(value);
-  return 'digital';
-};
-
-export const setTorch = async (video, on) => {
-  const track = getTrack(video);
-  if (!track?.getCapabilities?.()?.torch) return false;
-  await track.applyConstraints({ advanced: [{ torch: on }] });
-  return true;
-};
-
-export const focusAt = async (video, x, y) => {
-  const track = getTrack(video);
-  const caps = track?.getCapabilities?.() || {};
-  if (!caps.focusMode) return false;
-  const advanced = [{ pointsOfInterest: [{ x, y }] }];
-  if (caps.focusMode.includes('single-shot')) advanced.push({ focusMode: 'single-shot' });
-  await track.applyConstraints({ advanced }).catch(() => {});
-  if (caps.focusMode.includes('continuous')) {
-    window.setTimeout(() => {
-      track.applyConstraints({ advanced: [{ focusMode: 'continuous' }] }).catch(() => {});
-    }, 1200);
+  if (videoElement) {
+    videoElement.srcObject = null;
   }
-  return true;
-};
+}
 
-// Scans repeatedly until a QR is decoded. Each pass tries the centre square (what the user sees),
-// then the full frame, then a tighter centre crop, each normal and colour-inverted.
-export const startScanLoop = (video, { onResult, getDigitalZoom = () => 1 }) => {
-  const reader = buildReader();
-  const canvas = document.createElement('canvas');
-  canvas.width = DECODE_SIZE;
-  canvas.height = DECODE_SIZE;
-  const context = canvas.getContext('2d', { willReadFrequently: true });
-  const nativeDetector = typeof window.BarcodeDetector === 'function'
-    ? new window.BarcodeDetector({ formats: ['qr_code'] })
-    : null;
-  let stopped = false;
-  let frame = 0;
-  let timer;
-
-  const regionsFor = (vw, vh) => {
-    const side = Math.min(vw, vh);
-    const zoom = Math.max(1, getDigitalZoom());
-    const visible = side / zoom;
-    const centre = { sx: (vw - visible) / 2, sy: (vh - visible) / 2, sw: visible, sh: visible };
-    const tight = { sx: (vw - visible * 0.6) / 2, sy: (vh - visible * 0.6) / 2, sw: visible * 0.6, sh: visible * 0.6 };
-    const full = { sx: 0, sy: 0, sw: vw, sh: vh };
-    return [centre, full, tight];
+export function getCameraCapabilities(videoElement) {
+  const track = videoElement?.srcObject?.getVideoTracks?.()?.[0];
+  if (!track || typeof track.getCapabilities !== 'function') {
+    return { torch: false, hardwareZoom: null };
+  }
+  const caps = track.getCapabilities();
+  return {
+    torch: Boolean(caps.torch),
+    hardwareZoom:
+      caps.zoom && typeof caps.zoom.min === 'number'
+        ? { min: caps.zoom.min, max: caps.zoom.max, step: caps.zoom.step || 0.1 }
+        : null,
   };
+}
 
-  const tick = async () => {
-    if (stopped) return;
-    const vw = video.videoWidth;
-    const vh = video.videoHeight;
-    if (vw && vh && video.readyState >= 2) {
-      frame += 1;
+export async function setTorch(videoElement, enabled) {
+  const track = videoElement?.srcObject?.getVideoTracks?.()?.[0];
+  if (!track) return false;
+  try {
+    await track.applyConstraints({ advanced: [{ torch: Boolean(enabled) }] });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+export async function setHardwareZoom(videoElement, zoomLevel) {
+  const track = videoElement?.srcObject?.getVideoTracks?.()?.[0];
+  if (!track) return false;
+  try {
+    await track.applyConstraints({ advanced: [{ zoom: Number(zoomLevel) }] });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Runs a frame scan loop: full frame first, then center crop for small/far QR codes,
+ * with digital zoom crop when hardware zoom is unavailable.
+ * Supports continuous scanning mode (`continuous: true`) with an automatic cooldown per code.
+ * @param {HTMLVideoElement} videoElement
+ * @param {{
+ *   onResult: (raw: string) => void,
+ *   getDigitalZoom?: () => number,
+ *   continuous?: boolean,
+ *   cooldownMs?: number,
+ * }} options
+ * @returns {() => void} stop function
+ */
+export function startScanLoop(videoElement, { onResult, getDigitalZoom, continuous = false, cooldownMs = 1100 }) {
+  let stopped = false;
+  let timerId = null;
+  let lastRawValue = '';
+  let lastRawAt = 0;
+
+  const fullCanvas = document.createElement('canvas');
+  const cropCanvas = document.createElement('canvas');
+  const fullCtx = fullCanvas.getContext('2d', { willReadFrequently: true });
+  const cropCtx = cropCanvas.getContext('2d', { willReadFrequently: true });
+
+  const nativeDetector =
+    typeof window !== 'undefined' && 'BarcodeDetector' in window
+      ? new window.BarcodeDetector({ formats: ['qr_code', 'code_128', 'ean_13', 'ean_8'] })
+      : null;
+
+  const zxingReader = buildReader();
+
+  async function tryDecodeCanvas(canvas) {
+    if (nativeDetector) {
       try {
-        if (nativeDetector) {
-          const codes = await nativeDetector.detect(video);
-          const hit = codes.find(code => code.rawValue);
-          if (hit && !stopped) {
-            onResult(hit.rawValue);
-            return;
-          }
-        }
-        const regions = regionsFor(vw, vh);
-        const region = regions[frame % regions.length];
-        const outWidth = region.sw >= region.sh ? DECODE_SIZE : Math.round(DECODE_SIZE * (region.sw / region.sh));
-        const outHeight = region.sh > region.sw ? DECODE_SIZE : Math.round(DECODE_SIZE * (region.sh / region.sw));
-        canvas.width = outWidth;
-        canvas.height = outHeight;
-        context.imageSmoothingEnabled = true;
-        context.imageSmoothingQuality = 'high';
-        context.drawImage(video, region.sx, region.sy, region.sw, region.sh, 0, 0, outWidth, outHeight);
-        const text = decodeCanvas(reader, canvas, false) || decodeCanvas(reader, canvas, true);
-        if (text && !stopped) {
-          onResult(text);
-          return;
+        const codes = await nativeDetector.detect(canvas);
+        if (codes && codes.length > 0 && codes[0].rawValue) {
+          return codes[0].rawValue.trim();
         }
       } catch {
-        // A failed frame is ignored; the next tick tries again.
+        // Fall through to ZXing
       }
     }
-    timer = window.setTimeout(tick, SCAN_INTERVAL_MS);
-  };
+    try {
+      const res = zxingReader.decodeFromCanvas(canvas);
+      if (res && res.getText()) {
+        return res.getText().trim();
+      }
+    } catch {
+      // NotFoundException on empty frame is expected
+    }
+    return null;
+  }
 
-  timer = window.setTimeout(tick, SCAN_INTERVAL_MS);
+  async function tick() {
+    if (stopped) return;
+
+    if (videoElement && videoElement.readyState >= HTMLMediaElement.HAVE_CURRENT_DATA) {
+      const vw = videoElement.videoWidth;
+      const vh = videoElement.videoHeight;
+
+      if (vw > 0 && vh > 0) {
+        const dZoom = Math.max(1, Number(getDigitalZoom ? getDigitalZoom() : 1) || 1);
+
+        fullCanvas.width = vw;
+        fullCanvas.height = vh;
+
+        if (dZoom > 1.05) {
+          const sw = vw / dZoom;
+          const sh = vh / dZoom;
+          const sx = (vw - sw) / 2;
+          const sy = (vh - sh) / 2;
+          fullCtx.drawImage(videoElement, sx, sy, sw, sh, 0, 0, vw, vh);
+        } else {
+          fullCtx.drawImage(videoElement, 0, 0, vw, vh);
+        }
+
+        let decoded = await tryDecodeCanvas(fullCanvas);
+
+        if (!decoded) {
+          const cropRatio = 0.52;
+          const cw = Math.floor(vw * cropRatio);
+          const ch = Math.floor(vh * cropRatio);
+          const cx = Math.floor((vw - cw) / 2);
+          const cy = Math.floor((vh - ch) / 2);
+
+          cropCanvas.width = 720;
+          cropCanvas.height = 720;
+          cropCtx.imageSmoothingEnabled = true;
+          cropCtx.imageSmoothingQuality = 'high';
+          cropCtx.drawImage(fullCanvas, cx, cy, cw, ch, 0, 0, 720, 720);
+
+          decoded = await tryDecodeCanvas(cropCanvas);
+        }
+
+        if (decoded && !stopped) {
+          const now = Date.now();
+          if (!continuous) {
+            stopped = true;
+            onResult(decoded);
+            return;
+          }
+          if (decoded !== lastRawValue || now - lastRawAt > cooldownMs) {
+            lastRawValue = decoded;
+            lastRawAt = now;
+            onResult(decoded);
+          }
+        }
+      }
+    }
+
+    if (!stopped) {
+      timerId = window.setTimeout(tick, 130);
+    }
+  }
+
+  tick();
+
   return () => {
     stopped = true;
-    window.clearTimeout(timer);
+    if (timerId) {
+      window.clearTimeout(timerId);
+    }
   };
-};
+}

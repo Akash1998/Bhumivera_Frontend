@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import QRCode from 'qrcode';
 import {
   QrCode,
   Smartphone,
@@ -15,6 +16,9 @@ import {
   PlayCircle,
   Clock,
   Users,
+  ExternalLink,
+  Copy,
+  KeyRound,
 } from 'lucide-react';
 
 export default function ScannerBridgeView({
@@ -37,6 +41,30 @@ export default function ScannerBridgeView({
   onOpenBatchQrModal = null,
   onOpenPackageFinder = null,
 }) {
+  const [pwaLaunchQrUrl, setPwaLaunchQrUrl] = useState('');
+  const [copiedUrl, setCopiedUrl] = useState(false);
+
+  const pwaFullUrl =
+    typeof window !== 'undefined' ? `${window.location.origin}/scanner` : 'https://bhumivera.com/scanner';
+
+  useEffect(() => {
+    QRCode.toDataURL(pwaFullUrl, {
+      width: 240,
+      margin: 1,
+      color: { dark: '#042f2e', light: '#ffffff' },
+    })
+      .then(url => setPwaLaunchQrUrl(url))
+      .catch(() => {});
+  }, [pwaFullUrl]);
+
+  const handleCopyPwaUrl = () => {
+    if (navigator?.clipboard) {
+      navigator.clipboard.writeText(pwaFullUrl);
+      setCopiedUrl(true);
+      setTimeout(() => setCopiedUrl(false), 2500);
+    }
+  };
+
   const formatIdleTime = secs => {
     const s = Math.max(0, Number(secs) || 0);
     const m = Math.floor(s / 60);
@@ -146,9 +174,9 @@ export default function ScannerBridgeView({
               ⚡ ON-DEMAND CONNECTION • 10-MINUTE IDLE AUTO-SLEEP (KEY VALID UNTIL ${expiryFormatted.toUpperCase()})
             </div>
             <div class="steps-box">
-              <div><b>1. Click Connect in Software:</b> Connection only starts when activated on screen.</div>
-              <div><b>2. Scan This QR in Bombera/Bhumivera Scanner App:</b> Pairs your phone to ${operatorName}'s terminal.</div>
-              <div><b>3. 10-Minute Idle Auto-Sleep:</b> Automatically disconnects after 10m of no scans to save SQL &amp; RAM.</div>
+              <div><b>1. Open Scanner App on Phone:</b> Visit <b>bhumivera.com/scanner</b> or open Bombera Scanner APK.</div>
+              <div><b>2. Login or Scan QR:</b> Sign in with Staff ID &amp; Password (24×7) OR scan this QR to pair with ${operatorName}'s terminal.</div>
+              <div><b>3. 10-Minute Idle Auto-Sleep:</b> Automatically pauses after 10m of no scans to save SQL &amp; RAM.</div>
               <div><b>4. Seamless Resume:</b> Reconnect anytime to resume your exact cart, drafts, and order progress!</div>
             </div>
             <div class="dock-footer">
@@ -169,6 +197,77 @@ export default function ScannerBridgeView({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-150 w-full max-w-full overflow-x-hidden">
+      {/* NEW: Direct Mobile Scanner PWA Launcher & 2-Way Connection Guide */}
+      <div className="bg-gradient-to-r from-[#071f16] via-[#0c261b] to-[#071f16] p-5 rounded-2xl border-2 border-emerald-400/50 shadow-xl flex flex-col lg:flex-row items-center justify-between gap-6">
+        <div className="space-y-3 flex-1">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-500/20 border border-emerald-400/40 text-emerald-300 text-xs font-black uppercase tracking-wider">
+            <Smartphone className="w-3.5 h-3.5" /> Step 1: Where to Get &amp; Install the Mobile Scanner PWA
+          </div>
+          <h3 className="text-lg lg:text-xl font-black text-white">
+            Open <span className="text-emerald-400 font-mono underline">{pwaFullUrl}</span> on Any Phone (Android or iPhone)
+          </h3>
+          <p className="text-xs text-slate-200 leading-relaxed">
+            The Mobile Scanner Web App (PWA) is built directly into your website! Scan the white QR code on the right with your phone&apos;s normal camera (or open <b className="text-emerald-300">{pwaFullUrl}</b> in Chrome/Safari), then tap <b>&ldquo;Install App / Add to Home Screen&rdquo;</b>.
+          </p>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+            <div className="p-3 rounded-xl bg-[#071711] border border-emerald-500/30">
+              <div className="text-xs font-black text-emerald-300 flex items-center gap-1.5 mb-1">
+                <KeyRound className="w-3.5 h-3.5" /> Way 1: Direct Staff Login (Recommended 24×7)
+              </div>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                No QR pairing needed! Open <span className="font-mono text-white">/scanner</span> on your phone and log in with Staff ID &amp; Password:
+                <br />
+                <span className="font-mono text-emerald-200">
+                  akash / Admin@123 • priya / Priya@123 • cashier1 / Cashier@123 • keeper1 / Keeper@123
+                </span>
+              </p>
+            </div>
+            <div className="p-3 rounded-xl bg-[#071711] border border-emerald-500/30">
+              <div className="text-xs font-black text-teal-300 flex items-center gap-1.5 mb-1">
+                <QrCode className="w-3.5 h-3.5" /> Way 2: Pair with This PC via QR Code
+              </div>
+              <p className="text-[11px] text-slate-300 leading-relaxed">
+                Click <b>&ldquo;Connect Scanner Now&rdquo;</b> in the section below to generate your station Pairing QR, then tap <b>&ldquo;Scan Desktop Pairing QR&rdquo;</b> inside the mobile scanner app.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5 pt-1">
+            <a
+              href="/scanner"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-black text-xs uppercase tracking-wider shadow-lg transition"
+            >
+              <ExternalLink className="w-4 h-4" /> Open Mobile Scanner PWA (/scanner)
+            </a>
+            <button
+              type="button"
+              onClick={handleCopyPwaUrl}
+              className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-[#071711] hover:bg-slate-800 border border-emerald-500/40 text-emerald-300 font-bold text-xs transition"
+            >
+              <Copy className="w-3.5 h-3.5" /> {copiedUrl ? 'Copied Link!' : 'Copy Scanner URL'}
+            </button>
+          </div>
+        </div>
+
+        {/* Phone Camera QR to Open /scanner */}
+        <div className="bg-white p-3.5 rounded-2xl text-center shrink-0 shadow-xl border-2 border-emerald-400 flex flex-col items-center w-48">
+          {pwaLaunchQrUrl ? (
+            <img src={pwaLaunchQrUrl} alt="Open Mobile Scanner PWA QR" className="w-36 h-36 rounded-lg mx-auto" />
+          ) : (
+            <div className="w-36 h-36 flex items-center justify-center text-xs text-slate-600 font-bold">
+              Generating QR...
+            </div>
+          )}
+          <div className="text-[11px] font-black text-slate-900 mt-1.5 uppercase tracking-wide">
+            Scan with Phone Camera
+          </div>
+          <div className="text-[10px] font-bold text-emerald-700">Opens /scanner Web App</div>
+        </div>
+      </div>
+
       {/* Staff Identity & Multi-Operator Isolation Bar */}
       <div className="bg-[#071711] p-4 rounded-2xl border border-emerald-500/30 flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
@@ -247,7 +346,7 @@ export default function ScannerBridgeView({
           <p className="text-xs text-slate-300 leading-relaxed font-medium">
             {scannerConnected
               ? `Your scanner session (${sessionCode}) is actively connected. If there is no scanning or billing activity for 10 minutes, the connection will automatically pause so it never hits SQL or wastes RAM. You can resume anytime from the exact same place.`
-              : `To save memory and prevent unnecessary SQL database hits, the scanner does NOT connect automatically on login. Click "Connect / Resume Scanner" below when you are ready to scan and bill.`}
+              : `To save memory and prevent unnecessary SQL database hits, the desktop bridge does NOT poll automatically on login. Click "Connect Scanner Now" below when you want live scans to stream directly into this PC's POS cart.`}
           </p>
 
           <div className="pt-1 flex flex-wrap items-center gap-2.5">
