@@ -276,7 +276,7 @@ export default function WarehouseScannerPwa() {
               <section className="overflow-hidden rounded-3xl border border-white/10 bg-black">
                 <div className="relative aspect-[4/5] max-h-[65vh]">
                   <video ref={videoRef} autoPlay muted playsInline className="h-full w-full object-cover" />
-                  <div className="pointer-events-none absolute inset-[16%] rounded-3xl border-2 border-emerald-300/90 shadow-[0_0_0_999px_rgba(0,0,0,0.28)]" />
+                  <div className="pointer-events-none absolute inset-[16%] rounded-3xl border-2 border-emerald-300/90" />
                   <button type="button" onClick={() => setCameraOpen(false)} aria-label="Close camera" className="absolute right-3 top-3 rounded-full bg-black/70 p-3 text-white">
                     <X size={20} />
                   </button>
