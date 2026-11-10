@@ -57,7 +57,7 @@ const playMismatchAlarm = () => {
   }
 };
 
-export default function PackingVerifyModal({ order, onClose, onPackComplete, reqConfig }) {
+export default function PackingVerifyModal({ order, onClose, onPackComplete, reqConfig, operatorName = 'Akash', sessionCode = 'STAFF-AKASH' }) {
   const [orderItems, setOrderItems] = useState(order?.items || []);
   const [barcodeInput, setBarcodeInput] = useState('');
   const [verifiedItems, setVerifiedItems] = useState({});
@@ -102,7 +102,7 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
 
     const refreshPackingProgress = async () => {
       try {
-        const { data } = await api.get(`/inventory-software/orders/${order.id}/manifest`, reqConfig);
+        const { data } = await api.get(`/inventory-software/orders/${order.id}/manifest?sessionCode=${encodeURIComponent(sessionCode)}&operatorName=${encodeURIComponent(operatorName)}`, reqConfig);
         const liveItems = data?.items || data?.order?.items;
         if (!active || !Array.isArray(liveItems)) return;
         const totalScanned = liveItems.reduce((sum, item) => sum + (Number(item.verifiedCount) || 0), 0);
@@ -265,7 +265,7 @@ export default function PackingVerifyModal({ order, onClose, onPackComplete, req
     try {
       const res = await api.post(
         '/inventory-software/fulfillment/verify-pack',
-        { orderId: order.id, barcode: code },
+        { orderId: order.id, barcode: code, sessionCode, operatorName },
         reqConfig
       );
 

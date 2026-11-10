@@ -28,6 +28,8 @@ export default function OrderFulfillmentView({
   syncing,
   onRefresh,
   onOpenPackageFinder,
+  orderLocks = [],
+  operatorName = 'Akash',
 }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('ALL');
@@ -225,7 +227,7 @@ export default function OrderFulfillmentView({
                             timeStyle: 'short',
                           })}
                         </div>
-                        <div className="mt-1">
+                        <div className="mt-1 flex flex-wrap items-center gap-1">
                           <span className={`px-2 py-0.5 rounded text-[9px] font-black uppercase tracking-wider ${
                             order.paymentMode === 'cod'
                               ? 'bg-amber-500/20 text-amber-300 border border-amber-500/30'
@@ -233,6 +235,11 @@ export default function OrderFulfillmentView({
                           }`}>
                             {order.paymentMode} • ₹{order.total}
                           </span>
+                          {(order.lockedBy || orderLocks.find(l => l.orderKey === String(order.orderNumber).toUpperCase() || l.orderKey === String(order.id))) && (
+                            <span className="px-2 py-0.5 rounded text-[9px] font-black uppercase bg-rose-500/25 text-rose-200 border border-rose-500/40">
+                              🔒 In Progress: {order.lockedBy || orderLocks.find(l => l.orderKey === String(order.orderNumber).toUpperCase() || l.orderKey === String(order.id))?.lockedBy}
+                            </span>
+                          )}
                         </div>
                       </td>
 

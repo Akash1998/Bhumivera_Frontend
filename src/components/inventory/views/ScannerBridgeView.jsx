@@ -6,13 +6,15 @@ import {
   Trash2,
   Zap,
   RefreshCw,
-  KeyRound,
   ShieldCheck,
   CreditCard,
   Printer,
-  Calendar,
-  Layers,
   Package,
+  Power,
+  PauseCircle,
+  PlayCircle,
+  Clock,
+  Users,
 } from 'lucide-react';
 
 export default function ScannerBridgeView({
@@ -24,11 +26,29 @@ export default function ScannerBridgeView({
   onRegenerateKey,
   hoursRemaining = 12,
   expiresAt = null,
-  sessionCode = 'REG-POS-01',
+  sessionCode = 'STAFF-AKASH',
+  scannerConnected = false,
+  scannerIdlePaused = false,
+  remainingIdleSeconds = 600,
+  onConnectScanner,
+  onDisconnectScanner,
+  operatorName = 'Akash',
+  onChangeOperatorName,
   onOpenBatchQrModal = null,
   onOpenPackageFinder = null,
 }) {
+  const formatIdleTime = secs => {
+    const s = Math.max(0, Number(secs) || 0);
+    const m = Math.floor(s / 60);
+    const rem = s % 60;
+    return `${String(m).padStart(2, '0')}:${String(rem).padStart(2, '0')}`;
+  };
+
   const handlePrintPlacard = () => {
+    if (!pairingQrUrl) {
+      alert('Click "Connect Scanner" first to activate your session and generate the pairing QR code.');
+      return;
+    }
     const printWindow = window.open('', '_blank');
     if (!printWindow) {
       alert('Pop-up blocked. Please enable pop-ups to print the Station Placard.');
@@ -40,7 +60,7 @@ export default function ScannerBridgeView({
       <!DOCTYPE html>
       <html>
         <head>
-          <title>Bhumivera Warehouse Station Dock Placard - ${sessionCode}</title>
+          <title>Bhumivera Staff Scanner Station Placard - ${sessionCode}</title>
           <style>
             * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
             body { background: #fff; color: #000; padding: 15mm; display: flex; justify-content: center; }
@@ -50,7 +70,6 @@ export default function ScannerBridgeView({
               border-radius: 6mm;
               padding: 8mm;
               text-align: center;
-              box-shadow: 0 4px 12px rgba(0,0,0,0.1);
             }
             .brand-header {
               font-size: 18pt;
@@ -61,17 +80,12 @@ export default function ScannerBridgeView({
               padding-bottom: 3mm;
               margin-bottom: 4mm;
             }
-            .sub-title {
-              font-size: 11pt;
-              font-weight: 800;
-              color: #222;
-              margin-bottom: 1mm;
-            }
+            .sub-title { font-size: 11pt; font-weight: 800; color: #222; margin-bottom: 1mm; }
             .station-badge {
               display: inline-block;
               background: #000;
               color: #fff;
-              font-size: 12pt;
+              font-size: 11pt;
               font-weight: 900;
               padding: 2mm 6mm;
               border-radius: 4mm;
@@ -87,11 +101,7 @@ export default function ScannerBridgeView({
               padding: 2.5mm;
               border-radius: 4mm;
             }
-            .qr-wrapper img {
-              width: 50mm;
-              height: 50mm;
-              display: block;
-            }
+            .qr-wrapper img { width: 50mm; height: 50mm; display: block; }
             .security-banner {
               background: #f0fdf4;
               border: 1.5px solid #16a34a;
@@ -114,7 +124,6 @@ export default function ScannerBridgeView({
               line-height: 1.6;
               max-width: 130mm;
             }
-            .steps-box b { color: #000; }
             .dock-footer {
               margin-top: 4mm;
               font-size: 7.5pt;
@@ -123,35 +132,27 @@ export default function ScannerBridgeView({
               border-top: 1px solid #000;
               padding-top: 2mm;
             }
-            @media print {
-              body { padding: 0; }
-              .dock-card { border: 3px solid #000 !important; box-shadow: none !important; }
-            }
           </style>
         </head>
         <body>
           <div class="dock-card">
             <div class="brand-header">BHUMIVERA AUSHADH</div>
-            <div class="sub-title">WAREHOUSE PACKING &amp; PICKING DOCK STATION</div>
-            <div class="station-badge">TERMINAL: ${sessionCode}</div>
-            
+            <div class="sub-title">STAFF SCANNER &amp; POS TERMINAL PAIRING</div>
+            <div class="station-badge">STAFF: ${operatorName.toUpperCase()} • SESSION: ${sessionCode}</div>
             <div class="qr-wrapper">
               <img src="${pairingQrUrl}" alt="Pairing QR" />
             </div>
-
             <div class="security-banner">
-              🔒 12-HOUR DEVICE SESSION — VALID UNTIL ${expiryFormatted.toUpperCase()}
+              ⚡ ON-DEMAND CONNECTION • 10-MINUTE IDLE AUTO-SLEEP (KEY VALID UNTIL ${expiryFormatted.toUpperCase()})
             </div>
-
             <div class="steps-box">
-              <div><b>1. Open Scanner APK:</b> Launch Bhumivera Scanner on your Android device.</div>
-              <div><b>2. Scan This Placard:</b> Point camera at the QR code above to link your phone.</div>
-              <div><b>3. 12-Hour Session:</b> The scanner remains connected for 12 hours; scan the dock QR again after it expires.</div>
-              <div><b>4. Pick &amp; Pack:</b> Scan product barcodes/batch QRs to verify picks and push live bills!</div>
+              <div><b>1. Click Connect in Software:</b> Connection only starts when activated on screen.</div>
+              <div><b>2. Scan This QR in Bombera/Bhumivera Scanner App:</b> Pairs your phone to ${operatorName}'s terminal.</div>
+              <div><b>3. 10-Minute Idle Auto-Sleep:</b> Automatically disconnects after 10m of no scans to save SQL &amp; RAM.</div>
+              <div><b>4. Seamless Resume:</b> Reconnect anytime to resume your exact cart, drafts, and order progress!</div>
             </div>
-
             <div class="dock-footer">
-              Flagship Logistics Hub: Asansol (ASN-01) | Sub-15ms CameraX Pipeline | AES-256 Encrypted Token
+              Flagship Logistics Hub: Asansol (ASN-01) | Zero Idle SQL Overhead | Multi-Staff Order Lock Active
             </div>
           </div>
           <script>
@@ -168,95 +169,202 @@ export default function ScannerBridgeView({
 
   return (
     <div className="space-y-6 animate-in fade-in duration-150 w-full max-w-full overflow-x-hidden">
-      {/* Top Banner */}
+      {/* Staff Identity & Multi-Operator Isolation Bar */}
+      <div className="bg-[#071711] p-4 rounded-2xl border border-emerald-500/30 flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-300">
+            <Users className="w-5 h-5" />
+          </div>
+          <div>
+            <div className="text-xs font-black uppercase text-white flex items-center gap-2">
+              <span>Active Staff Operator &amp; Dedicated Terminal Session</span>
+              <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px]">
+                {sessionCode}
+              </span>
+            </div>
+            <p className="text-[11px] text-slate-300">
+              Each staff member gets an isolated scanner connection &amp; automatic Order ID lock so two staff never bill the same order.
+            </p>
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="text-[11px] font-bold text-emerald-300">Staff Name:</span>
+          {['Akash', 'Priya C', 'Rahul', 'Vikram', 'Karan'].map(name => (
+            <button
+              key={name}
+              type="button"
+              onClick={() => onChangeOperatorName && onChangeOperatorName(name)}
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold transition border ${
+                operatorName?.toLowerCase() === name.toLowerCase()
+                  ? 'bg-emerald-600 text-white border-emerald-300 shadow-sm'
+                  : 'bg-[#0c261b] text-slate-300 border-emerald-500/30 hover:text-white'
+              }`}
+            >
+              {name}
+            </button>
+          ))}
+          <input
+            type="text"
+            value={operatorName}
+            onChange={e => onChangeOperatorName && onChangeOperatorName(e.target.value)}
+            placeholder="Custom Staff Name"
+            className="px-2.5 py-1 rounded-lg bg-[#0c261b] border border-emerald-500/40 text-xs font-bold text-white w-32 focus:outline-none focus:border-emerald-400"
+          />
+        </div>
+      </div>
+
+      {/* Main Connection & Pairing Banner */}
       <div className="bg-[#0c261b] p-6 rounded-2xl border border-emerald-500/30 shadow-xl flex flex-col md:flex-row items-center justify-between gap-6">
         <div className="space-y-3 max-w-xl">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider bg-emerald-500/25 text-emerald-300 border border-emerald-500/40 flex items-center gap-1">
-              <Smartphone className="w-3.5 h-3.5" /> Native Android Scanner 2.0
+            <span
+              className={`px-2.5 py-0.5 rounded-full text-xs font-black uppercase tracking-wider flex items-center gap-1 border ${
+                scannerConnected
+                  ? 'bg-emerald-500/25 text-emerald-300 border-emerald-500/40'
+                  : 'bg-amber-500/20 text-amber-300 border-amber-500/40'
+              }`}
+            >
+              <Smartphone className="w-3.5 h-3.5" />
+              {scannerConnected
+                ? 'Connected to Bombera/Bhumivera Scanner'
+                : scannerIdlePaused
+                ? 'Paused after 10m Inactivity (0 SQL/RAM Usage)'
+                : 'Offline / Not Connected (On-Demand Mode)'}
             </span>
-            <span className="px-2 py-0.5 rounded-full text-[11px] font-bold bg-teal-500/20 text-teal-200 border border-teal-500/40 flex items-center gap-1 font-mono">
-              <ShieldCheck className="w-3.5 h-3.5 text-teal-400" /> 12-Hour Session · {hoursRemaining}h Remaining
-            </span>
+
+            {scannerConnected && (
+              <span className="px-2.5 py-0.5 rounded-full text-[11px] font-bold bg-teal-500/20 text-teal-200 border border-teal-500/40 flex items-center gap-1 font-mono">
+                <Clock className="w-3.5 h-3.5 text-teal-400" /> Auto-Disconnect in {formatIdleTime(remainingIdleSeconds)} if idle
+              </span>
+            )}
           </div>
 
           <h2 className="text-xl lg:text-2xl font-black text-white tracking-wide">
-            Warehouse Station Dock &amp; Mobile Scanner Link
+            On-Demand Mobile Scanner Bridge ({operatorName})
           </h2>
 
           <p className="text-xs text-slate-300 leading-relaxed font-medium">
-            Scan this dock station QR code using the Bhumivera Android Scanner app. The scanner stays connected for 12 hours. Warehouse staff can scan order tokens, verify each picked unit, and see packing progress update on this screen.
+            {scannerConnected
+              ? `Your scanner session (${sessionCode}) is actively connected. If there is no scanning or billing activity for 10 minutes, the connection will automatically pause so it never hits SQL or wastes RAM. You can resume anytime from the exact same place.`
+              : `To save memory and prevent unnecessary SQL database hits, the scanner does NOT connect automatically on login. Click "Connect / Resume Scanner" below when you are ready to scan and bill.`}
           </p>
 
           <div className="pt-1 flex flex-wrap items-center gap-2.5">
-            <button
-              onClick={handlePrintPlacard}
-              className="inline-flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-black text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 border border-emerald-400/40 rounded-xl transition shadow-md"
-            >
-              <Printer className="w-3.5 h-3.5" /> Print Station Dock Placard
-            </button>
+            {!scannerConnected ? (
+              <button
+                type="button"
+                onClick={onConnectScanner}
+                className="inline-flex items-center gap-2 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-white bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 border border-emerald-400/50 rounded-xl transition shadow-lg"
+              >
+                <PlayCircle className="w-4 h-4" />
+                {scannerIdlePaused || pairingKey ? 'Resume Scanner Connection (Restore State)' : 'Connect Scanner Now'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={onDisconnectScanner}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-black uppercase text-amber-200 bg-amber-950/70 hover:bg-amber-900 border border-amber-500/50 rounded-xl transition shadow-md"
+              >
+                <PauseCircle className="w-4 h-4 text-amber-400" /> Pause / Disconnect Scanner
+              </button>
+            )}
+
+            {scannerConnected && (
+              <button
+                type="button"
+                onClick={handlePrintPlacard}
+                className="inline-flex items-center gap-1.5 px-3.5 py-2 text-xs font-black text-white bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl transition shadow-md"
+              >
+                <Printer className="w-3.5 h-3.5 text-emerald-400" /> Print Station Pairing QR
+              </button>
+            )}
 
             {onOpenBatchQrModal && (
               <button
+                type="button"
                 onClick={onOpenBatchQrModal}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl transition shadow-sm"
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-white bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-xl transition shadow-sm"
               >
-                <QrCode className="w-3.5 h-3.5 text-emerald-400" /> Generate Product Batch QR
+                <QrCode className="w-3.5 h-3.5 text-emerald-400" /> Generate Standalone Product QRs (A4)
               </button>
             )}
 
             {onOpenPackageFinder && (
               <button
+                type="button"
                 onClick={onOpenPackageFinder}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-teal-200 bg-teal-950/60 hover:bg-teal-900/80 border border-teal-500/50 rounded-xl transition shadow-sm"
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-teal-200 bg-teal-950/60 hover:bg-teal-900/80 border border-teal-500/50 rounded-xl transition shadow-sm"
               >
                 <Package className="w-3.5 h-3.5 text-teal-400" /> Lost Package Finder
               </button>
             )}
 
-            <button
-              onClick={onRegenerateKey}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold text-slate-200 bg-slate-800/80 hover:bg-slate-700 border border-slate-600 rounded-xl transition shadow-sm"
-              title="Force regenerate pairing key and invalidate previous key"
-            >
-              <RefreshCw className="w-3.5 h-3.5 text-emerald-400" /> Rotate Key
-            </button>
+            {scannerConnected && (
+              <button
+                type="button"
+                onClick={onRegenerateKey}
+                className="inline-flex items-center gap-1.5 px-3 py-2 text-xs font-bold text-slate-200 bg-slate-800/80 hover:bg-slate-700 border border-slate-600 rounded-xl transition shadow-sm"
+                title="Force regenerate pairing key"
+              >
+                <RefreshCw className="w-3.5 h-3.5 text-emerald-400" /> Rotate Key
+              </button>
+            )}
           </div>
 
-          <div className="flex items-center gap-2 text-xs text-emerald-300 font-mono">
-            <span className="text-slate-400">Terminal:</span>
+          <div className="flex flex-wrap items-center gap-2 text-xs text-emerald-300 font-mono">
+            <span className="text-slate-400">Operator:</span>
+            <span className="font-bold text-white bg-slate-800/60 px-2 py-0.5 rounded border border-slate-700">
+              {operatorName}
+            </span>
+            <span className="text-slate-400 ml-1">Session:</span>
             <span className="font-bold text-white bg-slate-800/60 px-2 py-0.5 rounded border border-slate-700">
               {sessionCode}
             </span>
-            <span className="text-slate-400 ml-2">Key:</span>
-            <span className="font-bold text-emerald-300">{pairingKey ? `${pairingKey.slice(0, 16)}...` : '••••••••'}</span>
+            <span className="text-slate-400 ml-1">Key:</span>
+            <span className="font-bold text-emerald-300">
+              {pairingKey ? `${pairingKey.slice(0, 14)}...` : 'Click Connect'}
+            </span>
           </div>
         </div>
 
         {/* Pairing QR Code Graphic */}
-        <div className="bg-[#071711] border-2 border-dashed border-emerald-500/40 p-4 rounded-2xl text-center shrink-0 shadow-lg flex flex-col items-center">
-          {pairingQrUrl ? (
-            <img
-              src={pairingQrUrl}
-              alt="Station Dock Pairing QR"
-              className="w-36 h-36 rounded-xl mx-auto shadow-md border-2 border-emerald-400/50 cursor-pointer hover:opacity-90 transition"
-              onClick={handlePrintPlacard}
-              title="Click to print station dock placard"
-            />
+        <div className="bg-[#071711] border-2 border-dashed border-emerald-500/40 p-4 rounded-2xl text-center shrink-0 shadow-lg flex flex-col items-center min-w-[200px]">
+          {scannerConnected && pairingQrUrl ? (
+            <>
+              <img
+                src={pairingQrUrl}
+                alt="Station Dock Pairing QR"
+                className="w-36 h-36 rounded-xl mx-auto shadow-md border-2 border-emerald-400/50 cursor-pointer hover:opacity-90 transition"
+                onClick={handlePrintPlacard}
+                title="Scan with Bombera/Bhumivera Scanner App to connect"
+              />
+              <div className="text-[11px] font-black text-emerald-300 mt-2 flex items-center justify-center gap-1">
+                <CheckCircle2 className="w-3 h-3 text-emerald-400" /> Active • Sleeps in {formatIdleTime(remainingIdleSeconds)}
+              </div>
+              <button
+                type="button"
+                onClick={handlePrintPlacard}
+                className="text-[10px] text-teal-300 hover:text-white underline font-bold mt-0.5"
+              >
+                Click QR to Print Placard
+              </button>
+            </>
           ) : (
-            <div className="w-36 h-36 flex items-center justify-center text-slate-400 text-xs font-mono">
-              Loading 12-hour pairing key...
+            <div className="w-40 h-40 flex flex-col items-center justify-center text-slate-300 text-xs p-2 space-y-2">
+              <Power className="w-8 h-8 text-amber-400" />
+              <div className="font-bold text-white text-[11px]">
+                {scannerIdlePaused ? 'Session Paused (10m Idle)' : 'Scanner Not Connected'}
+              </div>
+              <button
+                type="button"
+                onClick={onConnectScanner}
+                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-black text-[10px] uppercase"
+              >
+                {scannerIdlePaused ? 'Resume Session' : 'Click to Connect'}
+              </button>
             </div>
           )}
-          <div className="text-[11px] font-black text-emerald-300 mt-2 flex items-center justify-center gap-1">
-            <CheckCircle2 className="w-3 h-3 text-emerald-400" /> 12-Hour Dock Session
-          </div>
-          <button
-            onClick={handlePrintPlacard}
-            className="text-[10px] text-teal-300 hover:text-white underline font-bold mt-0.5"
-          >
-            Click QR to Print Placard
-          </button>
         </div>
       </div>
 
@@ -266,7 +374,7 @@ export default function ScannerBridgeView({
           <div className="flex items-center gap-2">
             <Zap className="w-4 h-4 text-emerald-400" />
             <h3 className="text-sm font-black uppercase text-white tracking-wide">
-              Incoming Hardware Scanner Buffer ({scannerQueue.length})
+              Live Scanned Items Queue ({scannerQueue.length}) — Auto-Syncs to POS Billing
             </h3>
           </div>
 
@@ -277,7 +385,7 @@ export default function ScannerBridgeView({
                   onClick={onPullQueueToPos}
                   className="inline-flex items-center gap-1.5 px-3.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-xl text-xs font-black uppercase tracking-wider transition shadow-sm"
                 >
-                  <CreditCard className="w-3.5 h-3.5" /> Pull to Active POS Cart ({scannerQueue.length})
+                  <CreditCard className="w-3.5 h-3.5" /> Open in POS Cart ({scannerQueue.length})
                 </button>
                 <button
                   onClick={onClearQueue}
@@ -308,10 +416,10 @@ export default function ScannerBridgeView({
                 scannerQueue.map((item, idx) => (
                   <tr key={idx} className="hover:bg-emerald-950/30 transition">
                     <td className="px-4 py-3 font-mono text-slate-300">
-                      {new Date(item.scannedAt || Date.now()).toLocaleTimeString()}
+                      {new Date(item.created_at || item.scannedAt || Date.now()).toLocaleTimeString()}
                     </td>
                     <td className="px-4 py-3 font-bold text-white">
-                      <div>{item.productName}</div>
+                      <div>{item.product_name || item.productName}</div>
                       {item.batchNo && (
                         <span className="text-[10px] font-mono font-bold text-teal-300 bg-teal-950/50 px-1.5 py-0.5 rounded border border-teal-500/30">
                           Batch: {item.batchNo}
@@ -320,12 +428,12 @@ export default function ScannerBridgeView({
                     </td>
                     <td className="px-4 py-3 font-mono">
                       <span className="text-emerald-300 font-bold">{item.sku}</span>
-                      <span className="text-[10px] text-slate-400 ml-2">HSN: {item.gstHsnCode || '30049011'}</span>
+                      <span className="text-[10px] text-slate-400 ml-2">HSN: {item.gst_hsn_code || item.gstHsnCode || '30049011'}</span>
                     </td>
                     <td className="px-4 py-3 text-center font-mono font-black text-white">{item.quantity || 1}</td>
-                    <td className="px-4 py-3 text-right font-mono font-black text-white">₹{item.unitPrice}</td>
+                    <td className="px-4 py-3 text-right font-mono font-black text-white">₹{item.unit_price ?? item.unitPrice}</td>
                     <td className="px-4 py-3 text-right text-slate-300 font-mono text-[11px]">
-                      {item.scannedBy || 'Android Scanner'}
+                      {item.device_name || item.scannedBy || 'Bombera Scanner'}
                     </td>
                   </tr>
                 ))
@@ -333,7 +441,9 @@ export default function ScannerBridgeView({
                 <tr>
                   <td colSpan={6} className="text-center py-10 text-slate-300">
                     <Smartphone className="w-8 h-8 mx-auto text-emerald-400/60 mb-2" />
-                    No items in scanner buffer. Pull triggers on mobile scan.
+                    {scannerConnected
+                      ? 'Connected & waiting for mobile QR scans. Every scanned product automatically appears in your POS bill.'
+                      : 'Scanner is currently offline (saving SQL & RAM). Click "Connect Scanner Now" above to begin scanning.'}
                   </td>
                 </tr>
               )}

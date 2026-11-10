@@ -110,17 +110,38 @@ export default function InventorySoftware() {
       localStorage.getItem('supportToken') ||
       ''
   );
-  const [posSessionCode] = useState(() => {
+  const [operatorName, setOperatorName] = useState(() => {
     try {
-      const saved = sessionStorage.getItem(LOCAL_POS_SESSION_KEY);
-      if (saved) return saved;
-      const sessionCode = `POS-${createPosRequestId()}`.slice(0, 64);
-      sessionStorage.setItem(LOCAL_POS_SESSION_KEY, sessionCode);
-      return sessionCode;
+      const savedOp = localStorage.getItem('BV_INV_OPERATOR_NAME');
+      if (savedOp) return savedOp;
+      const u = JSON.parse(localStorage.getItem(LOCAL_USER_KEY) || 'null');
+      return u?.fullName?.split('(')[0]?.trim() || u?.username || 'Akash';
     } catch {
-      return `POS-${createPosRequestId()}`.slice(0, 64);
+      return 'Akash';
     }
   });
+  const [posSessionCode, setPosSessionCode] = useState(() => {
+    try {
+      const savedOp = localStorage.getItem('BV_INV_OPERATOR_NAME') || 'AKASH';
+      const cleanOp = savedOp.toUpperCase().replace(/[^A-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'AKASH';
+      return `STAFF-${cleanOp}`.slice(0, 64);
+    } catch {
+      return 'STAFF-AKASH';
+    }
+  });
+  const handleChangeOperatorName = (newName) => {
+    const clean = String(newName || '').trim() || 'Akash';
+    setOperatorName(clean);
+    try {
+      localStorage.setItem('BV_INV_OPERATOR_NAME', clean);
+    } catch {}
+    const slug = clean.toUpperCase().replace(/[^A-Z0-9]/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') || 'STAFF';
+    const nextSession = `STAFF-${slug}`.slice(0, 64);
+    setPosSessionCode(nextSession);
+    try {
+      sessionStorage.setItem(LOCAL_POS_SESSION_KEY, nextSession);
+    } catch {}
+  };
   const [viewer, setViewer] = useState(() => {
     try {
       const saved = localStorage.getItem(LOCAL_USER_KEY);
@@ -203,6 +224,17 @@ export default function InventorySoftware() {
   const [scannerPairingKey, setScannerPairingKey] = useState('');
   const [scannerHoursRemaining, setScannerHoursRemaining] = useState(12);
   const [scannerExpiresAt, setScannerExpiresAt] = useState(null);
+  // On-Demand Connection & 10-Minute Idle Auto-Disconnect State (Offline by default to save SQL & RAM)
+  const [scannerConnected, setScannerConnected] = useState(false);
+  const [scannerIdlePaused, setScannerIdlePaused] = useState(false);
+  const [scannerIdleExpiresAt, setScannerIdleExpiresAt] = useState(null);
+  const [remainingIdleSeconds, setRemainingIdleSeconds] = useState(600);
+  // Multi-Staff Order Lock & API-Synced Drafts / Paused Bills State
+  const [posOrderId, setPosOrderId] = useState('');
+  const [posActiveDraftId, setPosActiveDraftId] = useState('');
+  const [orderLockStatus, setOrderLockStatus] = useState(null);
+  const [orderLocks, setOrderLocks] = useState([]);
+  const [savedDrafts, setSavedDrafts] = useState([]);
   const [batchQrProduct, setBatchQrProduct] = useState(null);
   const [batchQrBatch, setBatchQrBatch] = useState('');
   const [backupBusy, setBackupBusy] = useState(false);
@@ -418,6 +450,8 @@ export default function InventorySoftware() {
           if (Array.isArray(d.movements)) setMovements(d.movements);
           if (Array.isArray(d.logs)) setLogs(d.logs);
           if (Array.isArray(d.onlineOrders)) setOnlineOrders(d.onlineOrders);
+          if (Array.isArray(d.orderLocks)) setOrderLocks(d.orderLocks);
+          if (Array.isArray(d.savedDrafts)) setSavedDrafts(d.savedDrafts);
           if (Array.isArray(d.scannerQueue)) setScannerQueue(d.scannerQueue);
           if (Array.isArray(d.dailyBackups)) setDailyBackups(d.dailyBackups);
           if (Array.isArray(d.shippingZones)) setShippingZones(d.shippingZones);
@@ -489,20 +523,13 @@ export default function InventorySoftware() {
     }
   }, [authToken, fetchBootstrapData]);
 
-  useEffect(() => {
-    if (!authToken || activeView !== 'online') return undefined;
-    let refreshing = false;
-    const timer = setInterval(async () => {
-      if (document.visibilityState !== 'visible' || refreshing) return;
-      refreshing = true;
-      try {
-        await fetchBootstrapData(true);
-      } finally {
-        refreshing = false;
-      }
-    }, 60000);
-    return () => clearInterval(timer);
-  }, [authToken, activeView, fetchBootstrapData]);
+  // Disabled automatic background /bootstrap SQL polling when idle to prevent unnecessary SQL & RAM usage.
+  const touchLocalScannerActivity = React.useCallback(() => {
+    if (scannerConnected) {
+      setScannerIdleExpiresAt(Date.now() + 10 * 60 * 1000);
+      setRemainingIdleSeconds(600);
+    }
+  }, [scannerConnected]);
 
   // POS Cart Totals & Dynamic UPI QR Generator
   const posCalculations = useMemo(() => {
@@ -656,11 +683,35 @@ export default function InventorySoftware() {
     reqConfig,
   ]);
 
-  // Poll the paired scanner's queue without replacing the cashier's local draft.
+  // 10-Minute Idle Countdown Timer: Automatically terminates scanner connection after 10 minutes of zero usage!
   useEffect(() => {
-    if (!authToken || activeView !== 'sale') return;
+    if (!scannerConnected || !scannerIdleExpiresAt) return undefined;
+    const countdown = setInterval(() => {
+      const remMs = scannerIdleExpiresAt - Date.now();
+      if (remMs <= 0) {
+        setScannerConnected(false);
+        setScannerIdlePaused(true);
+        setRemainingIdleSeconds(0);
+        setPosScannerStatus('disconnected');
+        api.post('/inventory-software/scanner/disconnect', { sessionCode: posSessionCode }, reqConfig).catch(() => {});
+        showNotice(
+          'info',
+          '⏸️ Scanner connection automatically paused after 10 minutes of inactivity to save SQL & RAM. Click "Resume Scanner" anytime to continue from your exact bill.'
+        );
+      } else {
+        setRemainingIdleSeconds(Math.ceil(remMs / 1000));
+      }
+    }, 1000);
+    return () => clearInterval(countdown);
+  }, [scannerConnected, scannerIdleExpiresAt, posSessionCode, reqConfig, showNotice]);
+
+  // Poll the paired scanner's in-memory queue ONLY when explicitly connected (0 SQL queries when unchanged!)
+  // and automatically sync newly scanned items into the active POS billing cart!
+  useEffect(() => {
+    if (!authToken || !scannerConnected) return undefined;
 
     let isMounted = true;
+    let lastQueueSig = '';
     const syncInterval = setInterval(async () => {
       if (document.visibilityState !== 'visible') return;
       try {
@@ -668,21 +719,73 @@ export default function InventorySoftware() {
           `/inventory-software/scanner/queue?sessionCode=${encodeURIComponent(posSessionCode)}`,
           reqConfig
         );
-        const qRows = res.data?.queue || [];
         if (!isMounted) return;
-
+        const qRows = res.data?.queue || [];
+        if (Array.isArray(res.data?.drafts)) {
+          setSavedDrafts(res.data.drafts);
+        }
         setScannerQueue(qRows);
         setPosScannerStatus('connected');
-      } catch {
-        if (isMounted) setPosScannerStatus('disconnected');
+
+        const sig = JSON.stringify(qRows.map(r => `${r.id}:${r.sku}:${r.quantity}`));
+        if (sig !== lastQueueSig && qRows.length > 0) {
+          lastQueueSig = sig;
+          // Activity occurred on scanner -> refresh 10-minute idle timer and auto-sync into POS cart!
+          setScannerIdleExpiresAt(Date.now() + 10 * 60 * 1000);
+          setRemainingIdleSeconds(600);
+          setPosCart(prev => {
+            const nextCart = [...prev];
+            for (const q of qRows) {
+              const idx = nextCart.findIndex(c => c.sku === q.sku || c.id === q.meta_id);
+              if (idx !== -1) {
+                const currentItem = nextCart[idx];
+                const manualQuantity = currentItem.queueId
+                  ? Number(currentItem.manualQuantity) || 0
+                  : 0;
+                const queueQuantity = Number(q.quantity) || 1;
+                nextCart[idx] = {
+                  ...currentItem,
+                  q: Math.min(q.available_stock || 999, manualQuantity + queueQuantity),
+                  manualQuantity,
+                  queueQuantity,
+                  queueId: q.id,
+                };
+              } else {
+                nextCart.push({
+                  id: q.meta_id,
+                  productId: q.product_id,
+                  sku: q.sku,
+                  name: q.product_name,
+                  q: Number(q.quantity) || 1,
+                  manualQuantity: 0,
+                  queueQuantity: Number(q.quantity) || 1,
+                  p: Number(q.unit_price) || 0,
+                  max: Number(q.available_stock) || 99,
+                  uom: q.uom || 'Pcs',
+                  gstHsnCode: q.gst_hsn_code || '30049011',
+                  queueId: q.id,
+                });
+              }
+            }
+            return nextCart;
+          });
+        }
+      } catch (err) {
+        if (!isMounted) return;
+        if (err.response?.status === 408 || err.response?.data?.code === 'SCANNER_IDLE_TIMEOUT') {
+          setScannerConnected(false);
+          setScannerIdlePaused(true);
+          setRemainingIdleSeconds(0);
+          setPosScannerStatus('disconnected');
+        }
       }
-    }, 2000);
+    }, 2500);
 
     return () => {
       isMounted = false;
       clearInterval(syncInterval);
     };
-  }, [authToken, activeView, posSessionCode, reqConfig]);
+  }, [authToken, scannerConnected, posSessionCode, reqConfig]);
 
   // Dashboard Metrics
   const dashMetrics = useMemo(() => {
@@ -804,58 +907,268 @@ export default function InventorySoftware() {
     });
   }, [onlineOrders, rtoSearch]);
 
-  useEffect(() => {
-    if (
-      !authToken ||
-      !viewer ||
-      (viewer.role !== 'admin' && !viewer.fullAllAccess && !viewer.permissions?.can_use_pos_billing)
-    ) return undefined;
-    let active = true;
+  // Explicit Manual Connect / Resume Scanner Function (Only connects when user clicks Connect!)
+  const handleConnectScanner = async () => {
+    try {
+      const pairRes = await api.post(
+        '/inventory-software/scanner/pair',
+        {
+          sessionCode: posSessionCode,
+          deviceName: `${operatorName}'s Bombera Scanner`,
+          operatorUsername: viewer?.username || operatorName.toLowerCase(),
+          operatorName,
+        },
+        reqConfig
+      );
+      const apiKey = pairRes?.data?.scannerApiKey;
+      const hoursRemaining = pairRes?.data?.hoursRemaining ?? 12;
+      const expiresAt = pairRes?.data?.expiresAt ?? null;
 
-    const initPairingSession = async () => {
-      try {
-        // Reuse the active 12-hour scanner key for this terminal.
-        const cfgRes = await api.get(`/inventory-software/scanner/config?sessionCode=${posSessionCode}`, reqConfig).catch(() => null);
-        let apiKey = cfgRes?.data?.scannerApiKey;
-        let hoursRemaining = cfgRes?.data?.hoursRemaining ?? 12;
-        let expiresAt = cfgRes?.data?.expiresAt ?? null;
-
-        // If no active session key exists yet, initialize it
-        if (!apiKey) {
-          const pairRes = await api.post(
-            '/inventory-software/scanner/pair',
-            { sessionCode: posSessionCode, deviceName: 'Bhumivera POS Scanner' },
-            reqConfig
-          );
-          apiKey = pairRes?.data?.scannerApiKey;
-          hoursRemaining = pairRes?.data?.hoursRemaining ?? 12;
-          expiresAt = pairRes?.data?.expiresAt ?? null;
-        }
-
-        if (!active || !apiKey) return;
+      if (apiKey) {
         setScannerPairingKey(apiKey);
         setScannerHoursRemaining(hoursRemaining);
         setScannerExpiresAt(expiresAt);
-
         const payload = JSON.stringify({
           app: 'BHUMIVERA_ANDROID_QR_SCANNER',
           endpoint: 'https://service.bhumivera.com/api/inventory-software/scanner/scan',
           queueEndpoint: 'https://service.bhumivera.com/api/inventory-software/scanner/queue',
           scannerApiKey: apiKey,
           sessionCode: posSessionCode,
+          operatorName,
           expiresAt,
+          idleTimeoutMinutes: 10,
         });
         const qrUrl = await QRCode.toDataURL(payload, { width: 220, margin: 1 });
-        if (active) setPairingQrUrl(qrUrl);
-      } catch (err) {
-        if (active) showNotice('error', err.response?.data?.message || 'Could not initialize scanner session.');
+        setPairingQrUrl(qrUrl);
       }
-    };
-    initPairingSession();
-    return () => {
-      active = false;
-    };
-  }, [authToken, posSessionCode, reqConfig, showNotice, viewer]);
+
+      // Also call /scanner/connect to restore any existing queue/drafts from where the user left off
+      const connRes = await api.post(
+        '/inventory-software/scanner/connect',
+        {
+          sessionCode: posSessionCode,
+          operatorUsername: viewer?.username || operatorName.toLowerCase(),
+          operatorName,
+        },
+        reqConfig
+      ).catch(() => null);
+
+      if (connRes?.data?.queue) {
+        setScannerQueue(connRes.data.queue);
+      }
+      if (connRes?.data?.drafts) {
+        setSavedDrafts(connRes.data.drafts);
+      }
+      if (connRes?.data?.draft && posCart.length === 0 && Array.isArray(connRes.data.draft.items) && connRes.data.draft.items.length > 0) {
+        setPosCart(connRes.data.draft.items);
+        if (connRes.data.draft.orderId) setPosOrderId(connRes.data.draft.orderId);
+      }
+
+      setScannerConnected(true);
+      setScannerIdlePaused(false);
+      setScannerIdleExpiresAt(Date.now() + 10 * 60 * 1000);
+      setRemainingIdleSeconds(600);
+      setPosScannerStatus('connected');
+      showNotice(
+        'success',
+        `🟢 Scanner connected for ${operatorName} (${posSessionCode}). Auto-disconnects after 10m of inactivity to save SQL & RAM.`
+      );
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Could not connect scanner session.');
+    }
+  };
+
+  const handleDisconnectScanner = async () => {
+    try {
+      await api.post('/inventory-software/scanner/disconnect', { sessionCode: posSessionCode }, reqConfig).catch(() => {});
+      setScannerConnected(false);
+      setScannerIdlePaused(true);
+      setRemainingIdleSeconds(0);
+      setPosScannerStatus('disconnected');
+      showNotice('info', '⏸️ Scanner disconnected. Your active bill & drafts are preserved for when you resume.');
+    } catch (err) {
+      setScannerConnected(false);
+    }
+  };
+
+  // Multi-Staff Order ID Claim / Mutex Lock Handler (Stops Akash & Priya C from billing the same Order ID e.g. 1234)
+  const handleClaimOrderId = async (targetOrderId) => {
+    const cleanId = String(targetOrderId ?? posOrderId ?? '').trim();
+    if (!cleanId) return;
+    touchLocalScannerActivity();
+    try {
+      const res = await api.post(
+        '/inventory-software/orders/claim',
+        {
+          orderId: cleanId,
+          sessionCode: posSessionCode,
+          operatorUsername: viewer?.username || operatorName.toLowerCase(),
+          operatorName,
+          lockType: 'BILLING',
+        },
+        reqConfig
+      );
+      if (res.data?.success) {
+        setOrderLockStatus({
+          locked: true,
+          conflict: false,
+          orderId: cleanId,
+          lockedBy: operatorName,
+          message: res.data.message,
+        });
+        showNotice('success', `🔒 Order #${cleanId} locked exclusively for ${operatorName}.`);
+        const locksRes = await api.get('/inventory-software/orders/locks', reqConfig).catch(() => null);
+        if (locksRes?.data?.locks) setOrderLocks(locksRes.data.locks);
+      }
+    } catch (err) {
+      const data = err.response?.data || {};
+      setOrderLockStatus({
+        locked: false,
+        conflict: true,
+        orderId: cleanId,
+        lockedBy: data.lockedBy || 'Another Staff Member',
+        message: data.message || `⛔ Order #${cleanId} is already being billed by another staff member!`,
+      });
+      showNotice('error', data.message || `⛔ Order #${cleanId} is already being billed by another staff member!`);
+    }
+  };
+
+  const handleReleaseOrderId = async (targetOrderId) => {
+    const cleanId = String(targetOrderId ?? posOrderId ?? '').trim();
+    if (!cleanId) return;
+    try {
+      await api.post(
+        '/inventory-software/orders/release',
+        {
+          orderId: cleanId,
+          sessionCode: posSessionCode,
+          operatorUsername: viewer?.username || operatorName.toLowerCase(),
+          operatorName,
+        },
+        reqConfig
+      );
+      setOrderLockStatus(null);
+      setPosOrderId('');
+      const locksRes = await api.get('/inventory-software/orders/locks', reqConfig).catch(() => null);
+      if (locksRes?.data?.locks) setOrderLocks(locksRes.data.locks);
+      showNotice('info', `Released lock on Order #${cleanId}.`);
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Could not release order lock.');
+    }
+  };
+
+  // API-Synced POS Drafts, Pause Billing & Resume Bill Handlers
+  const handleSaveOrPausePosBill = async (mode = 'draft') => {
+    if (posCart.length === 0) {
+      showNotice('error', 'Add at least one product before saving or pausing the bill.');
+      return;
+    }
+    touchLocalScannerActivity();
+    try {
+      const res = await api.post(
+        '/inventory-software/pos/drafts',
+        {
+          id: posActiveDraftId || undefined,
+          sessionCode: posSessionCode,
+          orderId: posOrderId.trim() || undefined,
+          status: mode === 'paused' ? 'paused' : 'draft',
+          customerName: posCustomerForm.name?.trim() || 'Walk-in Retail Shopper',
+          customerPhone: posCustomerForm.phone?.trim() || '',
+          customerGstin: posCustomerForm.gstin?.trim() || '',
+          paymentMode: posPaymentMode,
+          items: posCart,
+          extraCharges: posExtraCharges,
+          discount: posDiscount,
+          taxRate: posTaxRate,
+          operatorUsername: viewer?.username || operatorName.toLowerCase(),
+          operatorName,
+        },
+        reqConfig
+      );
+      if (res.data?.success) {
+        if (Array.isArray(res.data.drafts)) setSavedDrafts(res.data.drafts);
+        if (mode === 'paused') {
+          // Clear active POS register so staff can bill the next customer, while keeping the paused bill in savedDrafts!
+          setPosCart([]);
+          setPosExtraCharges([]);
+          setPosDiscount(0);
+          setPosPaidAmount('');
+          setPosOrderId('');
+          setPosActiveDraftId('');
+          setOrderLockStatus(null);
+          showNotice('success', `⏸️ Bill paused & synced via API! You can resume it anytime from "Saved & Paused Bills" or the Scanner App.`);
+        } else {
+          setPosActiveDraftId(res.data.draft?.id || '');
+          showNotice('success', `💾 Draft "${res.data.draft?.title || 'Bill'}" saved & synced via API!`);
+        }
+      }
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Could not save/pause bill.');
+    }
+  };
+
+  const handleResumePosDraft = async (draft) => {
+    if (!draft) return;
+    touchLocalScannerActivity();
+    try {
+      const res = await api.post(
+        `/inventory-software/pos/drafts/${encodeURIComponent(draft.id)}/resume`,
+        {
+          sessionCode: posSessionCode,
+          operatorUsername: viewer?.username || operatorName.toLowerCase(),
+          operatorName,
+        },
+        reqConfig
+      );
+      const restored = res.data?.draft || draft;
+      const mappedItems = (restored.items || []).map(it => ({
+        id: it.id || it.metaId,
+        productId: it.productId,
+        sku: it.sku,
+        name: it.name,
+        q: Number(it.q ?? it.quantity) || 1,
+        p: Number(it.p ?? it.price) || 0,
+        uom: it.uom || 'Pcs',
+        gstHsnCode: it.gstHsnCode || '30049011',
+        gstRate: Number(it.gstRate) || 5,
+      }));
+      setPosCart(mappedItems);
+      setPosExtraCharges(Array.isArray(restored.extraCharges) ? restored.extraCharges : []);
+      setPosDiscount(Number(restored.discount) || 0);
+      setPosPaymentMode(restored.paymentMode || 'UPI');
+      setPosCustomerForm({
+        name: restored.customerName || 'Walk-in Retail Shopper',
+        phone: restored.customerPhone || '',
+        gstin: restored.customerGstin || '',
+      });
+      setPosActiveDraftId(restored.id);
+      if (restored.orderId) {
+        setPosOrderId(restored.orderId);
+        setOrderLockStatus({
+          locked: true,
+          conflict: false,
+          orderId: restored.orderId,
+          lockedBy: operatorName,
+        });
+      }
+      showNotice('success', `▶ Resumed bill "${restored.title}" (${mappedItems.length} items).`);
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Could not resume bill.');
+    }
+  };
+
+  const handleDeletePosDraft = async (draftId) => {
+    if (!draftId) return;
+    try {
+      const res = await api.delete(`/inventory-software/pos/drafts/${encodeURIComponent(draftId)}`, reqConfig);
+      if (Array.isArray(res.data?.drafts)) setSavedDrafts(res.data.drafts);
+      else setSavedDrafts(prev => prev.filter(d => d.id !== draftId));
+      if (posActiveDraftId === draftId) setPosActiveDraftId('');
+      showNotice('info', 'Removed saved draft.');
+    } catch (err) {
+      showNotice('error', err.response?.data?.message || 'Could not delete draft.');
+    }
+  };
 
   const handleRotateScannerKey = async () => {
     try {
@@ -1287,6 +1600,10 @@ export default function InventorySoftware() {
         paymentMode: posPaymentMode,
         upiReference: posUpiRef,
         sessionCode: posSessionCode,
+        orderId: posOrderId.trim() || undefined,
+        draftId: posActiveDraftId || undefined,
+        operatorUsername: viewer?.username || operatorName.toLowerCase(),
+        operatorName,
         scannerQueueIds: posCart.map(item => item.queueId).filter(Boolean),
       };
       const res = await api.post(
@@ -1304,6 +1621,9 @@ export default function InventorySoftware() {
         setPosDiscount(0);
         setPosPaidAmount('');
         setPosUpiRef('');
+        setPosOrderId('');
+        setPosActiveDraftId('');
+        setOrderLockStatus(null);
         setPosCheckoutKey(createPosRequestId());
         setScannerQueue(prev => prev.filter(row => !payload.scannerQueueIds.includes(row.id)));
         try {
@@ -2753,8 +3073,27 @@ export default function InventorySoftware() {
           {activeView === 'online' && (
             <OrderFulfillmentView
               orders={onlineOrders}
+              orderLocks={orderLocks}
+              operatorName={operatorName}
               onUpdateOrderStatus={handleUpdateOnlineOrderStatus}
-              onOpenPackingVerify={(order) => setVerifyPackingOrder(order)}
+              onOpenPackingVerify={async (order) => {
+                try {
+                  await api.post(
+                    '/inventory-software/orders/claim',
+                    {
+                      orderId: order.orderNumber || order.id,
+                      sessionCode: posSessionCode,
+                      operatorUsername: viewer?.username || operatorName.toLowerCase(),
+                      operatorName,
+                      lockType: 'PACKING',
+                    },
+                    reqConfig
+                  );
+                  setVerifyPackingOrder(order);
+                } catch (err) {
+                  showNotice('error', err.response?.data?.message || `Order #${order.orderNumber} is currently locked by another staff member.`);
+                }
+              }}
               onOpenThermalLabel={(order) => setThermalLabelOrder(order)}
               onOpenWavePicklist={(orderIds) => {
                 api.post('/inventory-software/fulfillment/wave-picklist', { orderIds }, reqConfig)
@@ -2787,6 +3126,23 @@ export default function InventorySoftware() {
               posTaxRate={cfg.taxRate ?? 5}
               onPullMobileScanner={handlePullMobileScannerQueueToPos}
               scannerQueueCount={scannerQueue.length}
+              scannerConnected={scannerConnected}
+              scannerIdlePaused={scannerIdlePaused}
+              remainingIdleSeconds={remainingIdleSeconds}
+              onConnectScanner={handleConnectScanner}
+              onDisconnectScanner={handleDisconnectScanner}
+              posOrderId={posOrderId}
+              setPosOrderId={setPosOrderId}
+              onClaimOrderId={handleClaimOrderId}
+              onReleaseOrderId={handleReleaseOrderId}
+              orderLockStatus={orderLockStatus}
+              orderLocks={orderLocks}
+              operatorName={operatorName}
+              savedDrafts={savedDrafts}
+              onSaveDraft={() => handleSaveOrPausePosBill('draft')}
+              onPauseBill={() => handleSaveOrPausePosBill('paused')}
+              onResumeDraft={handleResumePosDraft}
+              onDeleteDraft={handleDeletePosDraft}
             />
           )}
 
@@ -2914,6 +3270,13 @@ export default function InventorySoftware() {
               hoursRemaining={scannerHoursRemaining}
               expiresAt={scannerExpiresAt}
               sessionCode={posSessionCode}
+              scannerConnected={scannerConnected}
+              scannerIdlePaused={scannerIdlePaused}
+              remainingIdleSeconds={remainingIdleSeconds}
+              onConnectScanner={handleConnectScanner}
+              onDisconnectScanner={handleDisconnectScanner}
+              operatorName={operatorName}
+              onChangeOperatorName={handleChangeOperatorName}
               scannerQueue={scannerQueue}
               onPullQueueToPos={handlePullMobileScannerQueueToPos}
               onClearQueue={async () => {
@@ -4588,6 +4951,8 @@ export default function InventorySoftware() {
       {verifyPackingOrder && (
         <PackingVerifyModal
           order={verifyPackingOrder}
+          operatorName={operatorName}
+          sessionCode={posSessionCode}
           onClose={() => setVerifyPackingOrder(null)}
           onPackComplete={async (orderId) => {
             await handleUpdateOnlineOrderStatus(orderId, 'packed');
