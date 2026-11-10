@@ -811,7 +811,7 @@ html.pwa-standalone .site-shell > footer {
   }
 }
 
-.site-shell main :is(div, section, article)[class*="rounded-"][class*="border"]:is(
+.site-shell main :is(div, section, article)[class*="rounded-"][class*="border"]:not([class~="product-media-gallery"]):is(
   [class~="p-3"],
   [class~="p-3.5"],
   [class~="p-4"],
@@ -1271,13 +1271,21 @@ html.pwa-standalone .site-shell > footer {
   }
 }
 
-.site-shell main :is(div, section, article)[class*="rounded-"][class*="border"]:not([class*="bg-emerald"]):not([class*="bg-green"]):not([class*="bg-red"]):not([class*="bg-yellow"]):not([class*="bg-amber"]):not([class*="bg-blue"]),
-.management-shell main :is(div, section, article)[class*="rounded-"][class*="border"]:not([class*="bg-emerald"]):not([class*="bg-green"]):not([class*="bg-red"]):not([class*="bg-yellow"]):not([class*="bg-amber"]):not([class*="bg-blue"]) {
+.site-shell main :is(div, section, article)[class*="rounded-"][class*="border"]:not([class~="product-media-gallery"]):not([class*="bg-emerald"]):not([class*="bg-green"]):not([class*="bg-red"]):not([class*="bg-yellow"]):not([class*="bg-amber"]):not([class*="bg-blue"]),
+.management-shell main :is(div, section, article)[class*="rounded-"][class*="border"]:not([class~="product-media-gallery"]):not([class*="bg-emerald"]):not([class*="bg-green"]):not([class*="bg-red"]):not([class*="bg-yellow"]):not([class*="bg-amber"]):not([class*="bg-blue"]) {
   background-color: rgba(5, 13, 8, 0.136);
   -webkit-backdrop-filter: blur(22px) saturate(138%);
   backdrop-filter: blur(22px) saturate(138%);
   border-color: rgba(212, 175, 55, 0.2);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.045), inset 0 -18px 32px rgba(0, 0, 0, 0.12), 0 16px 38px rgba(0, 0, 0, 0.24);
+}
+
+.site-shell main .product-media-gallery {
+  background:
+    radial-gradient(ellipse at 50% 35%, rgba(52, 94, 68, 0.88), rgba(20, 41, 31, 0.98) 68%),
+    #14291f;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
 }
 
 .site-shell main :is(input:not([type="checkbox"]):not([type="radio"]), textarea, select),

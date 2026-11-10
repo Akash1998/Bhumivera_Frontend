@@ -126,6 +126,9 @@ export default function ProductDetail() {
   const [recommendationReason, setRecommendationReason] = useState('');
   const [loading, setLoading] = useState(true);
   const [activeMedia, setActiveMedia] = useState(null);
+  const [isGalleryZoomed, setIsGalleryZoomed] = useState(false);
+  const [isLightboxOpen, setIsLightboxOpen] = useState(false);
+  const [isLightboxZoomed, setIsLightboxZoomed] = useState(false);
   const [quantity, setQuantity] = useState(1);
   const [activeTab, setActiveTab] = useState('details');
   const [isAdding, setIsAdding] = useState(false);
@@ -488,7 +491,33 @@ export default function ProductDetail() {
     if (gallery.length < 2) return;
     const nextIndex = (activeImageIndex + direction + gallery.length) % gallery.length;
     setActiveMedia(gallery[nextIndex]);
+    setIsGalleryZoomed(false);
+    setIsLightboxZoomed(false);
   };
+
+  useEffect(() => {
+    if (!isLightboxOpen) return undefined;
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    const handleKeyDown = event => {
+      if (event.key === 'Escape') setIsLightboxOpen(false);
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowRight') {
+        const images = product?.images || [];
+        if (images.length < 2) return;
+        const direction = event.key === 'ArrowLeft' ? -1 : 1;
+        setActiveMedia(current => {
+          const currentIndex = images.findIndex(image => getImageUrl(image) === getImageUrl(current));
+          return images[(currentIndex + direction + images.length) % images.length];
+        });
+        setIsLightboxZoomed(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [isLightboxOpen, product?.images]);
   
   if (loading) return <SkeletonPDP />;
 
@@ -593,18 +622,36 @@ export default function ProductDetail() {
             })}
           </div>
 
-          <div className="group relative aspect-[0.94] w-full overflow-hidden rounded-[1.75rem] border border-[#e8d9ae]/75 bg-[radial-gradient(ellipse_at_50%_44%,#fffdf7_0%,#f0eadc_60%,#e0d7c4_100%)] shadow-[0_30px_90px_rgba(0,0,0,0.28)] sm:aspect-square md:sticky md:top-28 md:aspect-square md:h-auto md:min-h-0 md:self-start lg:top-32">
-            <div className="pointer-events-none absolute inset-4 rounded-[1.35rem] border border-[#244a38]/10 sm:inset-6" />
+          <div className="product-media-gallery group relative aspect-[4/5] w-full overflow-hidden rounded-[1.75rem] border border-[#d4af37]/30 bg-[radial-gradient(ellipse_at_50%_35%,#244232_0%,#14291f_68%,#101b15_100%)] shadow-[0_30px_90px_rgba(0,0,0,0.32)] md:sticky md:top-28 md:aspect-[4/5] md:self-start lg:top-32">
+            <div className="pointer-events-none absolute inset-3 rounded-[1.35rem] border border-[#d4af37]/10 sm:inset-4" />
             <AnimatePresence mode="wait">
               <Motion.div
                 key={getImageUrl(activeMedia)}
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                exit={{ opacity: 0 }}
-                transition={{ duration: 0.8 }}
-                className="h-full w-full p-7 pt-14 sm:p-10 sm:pt-16 md:p-12 md:pt-16 lg:p-16 lg:pt-20"
+                initial={{ opacity: 0, scale: 0.975, x: 12 }}
+                animate={{ opacity: 1, scale: 1, x: 0 }}
+                exit={{ opacity: 0, scale: 1.015, x: -12 }}
+                transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
+                className="absolute inset-0 overflow-hidden p-3 pt-14 sm:p-4 sm:pt-16"
               >
-                <img src={getImageUrl(activeMedia)} width="800" height="800" fetchpriority="high" alt={`${product.luxuryName || product.name} - ${product.active_ingredients || product.primaryBotanicals || "Bhumivera Luxury Botanical Formula"}`} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full rounded-2xl object-contain transition-transform duration-700 group-hover:scale-[1.025] sm:rounded-[1.35rem]" />
+                <img
+                  src={getImageUrl(activeMedia)}
+                  fetchpriority="high"
+                  alt={`${product.luxuryName || product.name} - ${product.active_ingredients || product.primaryBotanicals || "Bhumivera Luxury Botanical Formula"}`}
+                  onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }}
+                  onMouseMove={event => {
+                    const bounds = event.currentTarget.parentElement.getBoundingClientRect();
+                    const x = ((event.clientX - bounds.left) / bounds.width) * 100;
+                    const y = ((event.clientY - bounds.top) / bounds.height) * 100;
+                    event.currentTarget.style.transformOrigin = `${x}% ${y}%`;
+                  }}
+                  onMouseEnter={() => setIsGalleryZoomed(true)}
+                  onMouseLeave={() => setIsGalleryZoomed(false)}
+                  onClick={() => {
+                    setIsGalleryZoomed(false);
+                    setIsLightboxOpen(true);
+                  }}
+                  className={`h-full w-full cursor-zoom-in object-contain transition-transform duration-300 ease-out ${isGalleryZoomed ? 'scale-[1.8]' : 'scale-100'}`}
+                />
               </Motion.div>
             </AnimatePresence>
 
@@ -643,6 +690,17 @@ export default function ProductDetail() {
               }`}
             >
               <Heart size={18} fill={isWishlisted(product) ? 'currentColor' : 'none'} />
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setIsGalleryZoomed(false);
+                setIsLightboxOpen(true);
+              }}
+              aria-label="Open product image zoom"
+              className="absolute bottom-4 right-4 z-20 rounded-full border border-[#d4af37]/35 bg-[#0d1d15]/90 px-3 py-2 font-mono text-[9px] font-bold uppercase tracking-[0.12em] text-[#f4d98a] shadow-lg transition hover:border-[#d4af37]/70 hover:bg-[#173323] sm:bottom-5 sm:right-5"
+            >
+              Click to zoom
             </button>
           </div>
         </div>
@@ -843,6 +901,67 @@ export default function ProductDetail() {
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {isLightboxOpen && (
+          <Motion.div
+            className="fixed inset-0 z-[120] flex items-center justify-center overflow-hidden bg-[#07130d]/95 p-3 backdrop-blur-md sm:p-8"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setIsLightboxOpen(false)}
+            role="dialog"
+            aria-modal="true"
+            aria-label={`${product.name} image viewer`}
+          >
+            <button
+              type="button"
+              onClick={() => setIsLightboxOpen(false)}
+              aria-label="Close image viewer"
+              className="absolute right-4 top-4 z-10 rounded-full border border-[#d4af37]/35 bg-[#102219] p-3 text-[#f4d98a] transition hover:bg-[#1c382b] sm:right-7 sm:top-7"
+            >
+              <X size={20} />
+            </button>
+            {product.images?.length > 1 && (
+              <>
+                <button
+                  type="button"
+                  onClick={event => { event.stopPropagation(); showAdjacentImage(-1); }}
+                  aria-label="Previous product image"
+                  className="absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-[#d4af37]/35 bg-[#102219]/90 p-3 text-[#f4d98a] transition hover:bg-[#1c382b] sm:left-7"
+                >
+                  <ChevronLeft size={22} />
+                </button>
+                <button
+                  type="button"
+                  onClick={event => { event.stopPropagation(); showAdjacentImage(1); }}
+                  aria-label="Next product image"
+                  className="absolute right-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-[#d4af37]/35 bg-[#102219]/90 p-3 text-[#f4d98a] transition hover:bg-[#1c382b] sm:right-7"
+                >
+                  <ChevronRight size={22} />
+                </button>
+              </>
+            )}
+            <Motion.img
+              key={getImageUrl(activeMedia)}
+              src={getImageUrl(activeMedia)}
+              alt={`${product.name} enlarged`}
+              onClick={event => {
+                event.stopPropagation();
+                setIsLightboxZoomed(value => !value);
+              }}
+              className={`max-h-[88vh] max-w-[88vw] cursor-zoom-in object-contain transition-transform duration-300 ${isLightboxZoomed ? 'cursor-zoom-out' : ''}`}
+              initial={{ opacity: 0, scale: 0.96 }}
+              animate={{ opacity: 1, scale: isLightboxZoomed ? 1.6 : 1 }}
+              exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.28, ease: [0.22, 1, 0.36, 1] }}
+            />
+            <p className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full border border-white/10 bg-[#102219]/85 px-4 py-2 text-center font-mono text-[9px] uppercase tracking-[0.12em] text-[#c5d0c8]">
+              Click image to zoom · Esc to close · Use ← / → to browse
+            </p>
+          </Motion.div>
+        )}
+      </AnimatePresence>
 
       <div className="relative z-10 mx-auto mt-10 max-w-7xl px-4 md:mt-16 md:px-6">
         <div id="product-information" className="scroll-mt-24 no-scrollbar relative mb-6 flex overflow-x-auto border-b border-[#d4af37]/20 sm:mb-8">
