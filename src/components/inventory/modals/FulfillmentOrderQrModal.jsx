@@ -148,17 +148,14 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
       current.tax += row.tax;
       hsnTotals.set(hsn, current);
     });
-    const rowsHtml = rows.map((item, index) => `
+    const rowsHtml = rows.map(item => `
       <tr>
-        <td class="center">${index + 1}</td>
-        <td><strong>${escapeHtml(item.name)}</strong><small>SKU: ${escapeHtml(item.sku || '-')}</small></td>
-        <td class="center">${escapeHtml(item.gstHsnCode || '30049011')}</td>
+        <td><strong>${escapeHtml(item.name)}</strong><small>SKU: ${escapeHtml(item.sku || '-')} · HSN: ${escapeHtml(item.gstHsnCode || '30049011')}</small></td>
         <td class="center">${item.quantity}</td>
         <td class="num">${currency(item.mrpTotal)}</td>
         <td class="num">${currency(item.discount)}</td>
         <td class="num">${currency(item.taxable)}</td>
-        <td class="center">${item.rate}%</td>
-        <td class="num">${currency(item.tax)}</td>
+        <td class="center">${item.rate}%<small>${currency(item.tax)}</small></td>
         <td class="num">${currency(item.net)}</td>
       </tr>
     `).join('');
@@ -187,62 +184,68 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
     const logoUrl = `${window.location.origin}/logo.webp`;
     const courierName = order.courier || 'Courier not recorded';
     const trackingNumber = order.trackingNumber || 'Not recorded';
-    const trackingUrl = order.trackingUrl || '';
 
     printWindow.document.write(`
       <!doctype html>
       <html><head><title>Tax Invoice ${escapeHtml(order.invoiceNumber || order.orderNumber || order.id)}</title>
         <style>
-          *{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#111;font:8px Arial,Helvetica,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
-          body{padding:12px}.sheet{width:100%;max-width:194mm;min-height:281mm;margin:0 auto;border:1.2px solid #111;padding:6mm;overflow:hidden}
-          .head{display:grid;grid-template-columns:1fr 165px;gap:10px;align-items:center;border-bottom:2px solid #111;padding:0 0 8px}
-          .brand{display:flex;gap:10px;align-items:center}.brand img{width:27mm;height:27mm;object-fit:contain;filter:grayscale(1) contrast(1.5)}
-          h1{font-size:19px;letter-spacing:2px;margin:0 0 2px}.muted{color:#333;line-height:1.35}
-          .title{text-align:right}.title h2{font-size:15px;letter-spacing:1px;margin:2px 0 5px}.title strong{font-size:10px}
-          .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;margin:8px 0}
-          .box{border:1px solid #333;padding:6px;line-height:1.4}.box h3{margin:0 0 3px;font-size:8px;text-transform:uppercase;letter-spacing:.5px}
-          table{width:100%;max-width:100%;table-layout:fixed;border-collapse:collapse;margin:6px 0}
-          th,td{border:1px solid #555;padding:3px 2px;vertical-align:top;overflow-wrap:anywhere}
-          th{background:#eee;font-size:6.5px;text-transform:uppercase}td{font-size:7px}.center{text-align:center}.num{text-align:right;white-space:nowrap}
-          small{display:block;color:#333;margin-top:2px}.bottom{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,220px);gap:8px;margin-top:6px}
-          .amount{text-align:right;font-size:8px;font-weight:bold}.amount .grand{font-size:11px;border-top:1.5px solid #111;padding-top:4px;margin-top:4px}
-          .shipline{margin-top:7px;border:1px solid #333;padding:5px;line-height:1.45}.shipline strong{font-size:7px;text-transform:uppercase}
-          .qrbox{display:flex;min-width:0;align-items:center;gap:8px;border:1px solid #333;padding:5px;margin-top:6px;overflow:hidden;line-height:1.4}.qrbox img{flex:none;width:22mm;height:22mm;object-fit:contain;image-rendering:pixelated}.qrbox span{min-width:0;overflow-wrap:anywhere}
-          .qrbox.pack img{width:38mm;height:38mm}.foot{border-top:1px solid #333;margin-top:8px;padding-top:6px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;line-height:1.4}
-          .sign{text-align:right;padding-top:15px}.note{font-size:6.5px;color:#333;margin-top:5px}
-          @page{size:A4 portrait;margin:8mm}
-          @media(max-width:680px){body{padding:6px}.sheet{min-height:0;padding:5mm}.head{grid-template-columns:1fr 130px}.two,.bottom,.foot{gap:5px}.bottom{grid-template-columns:minmax(0,1fr) minmax(0,180px)}.qrbox.pack img{width:32mm;height:32mm}table{font-size:6px}th,td{padding:2px}}
-          @media print{html,body{width:194mm;height:281mm;padding:0}.sheet{width:194mm;height:281mm;max-width:none;min-height:0;margin:0;padding:6mm;border:1.2px solid #111;break-inside:avoid;page-break-inside:avoid}.head,.two,.bottom,.foot,.shipline,.qrbox,table{break-inside:avoid;page-break-inside:avoid}button{display:none}}
+          *{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#111;font:9px Arial,Helvetica,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+          body{padding:12px}.sheet{width:100%;max-width:194mm;min-height:281mm;margin:0 auto;border:1.5px solid #111;padding:7mm;overflow:hidden;position:relative}
+          .head{display:grid;grid-template-columns:1fr 170px;gap:12px;align-items:center;border-bottom:2px solid #111;padding:0 0 9px}
+          .brand{display:flex;gap:12px;align-items:center}.brand img{width:24mm;height:24mm;object-fit:contain;filter:grayscale(1) contrast(1.35)}
+          h1{font-size:20px;letter-spacing:2.4px;margin:0 0 4px}.muted{color:#333;line-height:1.45}
+          .title{text-align:right}.title h2{font-size:17px;letter-spacing:1.2px;margin:2px 0 7px}.invoice-no{display:inline-block;border:1px solid #111;padding:5px 8px;font-size:10px;font-weight:bold}.invoice-meta{margin-top:6px;line-height:1.6;color:#333}
+          .section-label{font-size:8px;font-weight:bold;text-transform:uppercase;letter-spacing:.8px;margin:0 0 5px}
+          .two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:9px;margin:10px 0}
+          .box{border:1px solid #333;padding:8px;line-height:1.5}.box h3{margin:0 0 5px;font-size:8px;text-transform:uppercase;letter-spacing:.7px;border-bottom:1px solid #aaa;padding-bottom:4px}
+          table{width:100%;max-width:100%;table-layout:fixed;border-collapse:collapse;margin:7px 0}
+          th,td{border:1px solid #555;padding:4px 3px;vertical-align:top;overflow-wrap:anywhere}
+          th{background:#e8e8e8;font-size:7px;text-transform:uppercase;letter-spacing:.25px}td{font-size:8px}.center{text-align:center}.num{text-align:right;white-space:nowrap}
+          small{display:block;color:#333;margin-top:2px;font-size:7px}.bottom{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,215px);gap:10px;margin-top:8px}
+          .amount{text-align:right;font-size:8px;font-weight:bold}.amount-row{display:flex;justify-content:space-between;gap:8px;margin:4px 0}.amount .grand{font-size:12px;border-top:1.5px solid #111;padding-top:6px;margin-top:6px}
+          .shipline{margin-top:8px;border:1px solid #333;padding:7px 8px;line-height:1.5;display:flex;justify-content:space-between;gap:10px}.shipline strong{font-size:7px;text-transform:uppercase;letter-spacing:.6px}.shipvalue{text-align:right;font-weight:bold}
+          .qrbox{display:flex;min-width:0;align-items:center;gap:8px;border:1px solid #333;padding:6px;margin-top:7px;overflow:hidden;line-height:1.4}.qrbox img{flex:none;width:20mm;height:20mm;object-fit:contain;image-rendering:pixelated}.qrbox span{min-width:0;overflow-wrap:anywhere}
+          .qrbox.pack img{width:32mm;height:32mm}.qrbox.pack{margin-top:9px}.foot{border-top:1px solid #333;margin-top:9px;padding-top:7px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;line-height:1.45}
+          .sign{text-align:right;padding-top:12px}.note{font-size:7px;color:#333;margin-top:5px}
+          @page{size:A4 portrait;margin:0}
+          @media(max-width:680px){body{padding:6px}.sheet{min-height:0;padding:5mm}.head{grid-template-columns:1fr 130px}.two,.bottom,.foot{gap:5px}.bottom{grid-template-columns:minmax(0,1fr) minmax(0,180px)}.qrbox.pack img{width:30mm;height:30mm}table{font-size:6px}th,td{padding:2px}}
+          @media print{html,body{width:210mm;height:297mm;padding:0}body{display:flex;justify-content:center;align-items:flex-start}.sheet{width:194mm;height:281mm;max-width:none;min-height:0;margin:8mm auto;padding:6mm;border:1.2px solid #111;break-inside:avoid;page-break-inside:avoid}.head,.two,.bottom,.foot,.shipline,.qrbox,table{break-inside:avoid;page-break-inside:avoid}button{display:none}}
         </style>
       </head><body><main class="sheet">
         <header class="head">
           <div class="brand"><img src="${escapeHtml(logoUrl)}" alt="Bhumivera logo"/>
             <div><h1>BHUMIVERA</h1><strong>${escapeHtml(sellerName)}</strong><div class="muted">${escapeHtml(sellerAddress)}<br/>${escapeHtml(sellerPhone)} · ${escapeHtml(sellerEmail)}<br/>GSTIN: <strong>${escapeHtml(gstin || 'Not configured')}</strong></div></div>
           </div>
-          <div class="title"><h2>TAX INVOICE</h2><div>Invoice No.</div><strong>${escapeHtml(order.invoiceNumber || `BV/${order.id}`)}</strong><div style="margin-top:5px">Invoice Date: ${escapeHtml(invoiceDate)}</div><div>Payment: ${escapeHtml(order.paymentMode || 'Online')} · ${escapeHtml(order.paymentStatus || 'pending')}</div></div>
+          <div class="title"><h2>TAX INVOICE</h2><div class="invoice-no">${escapeHtml(order.invoiceNumber || `BV/${order.id}`)}</div><div class="invoice-meta">Order: <strong>${escapeHtml(order.orderNumber || order.id)}</strong><br/>Date: ${escapeHtml(invoiceDate)}<br/>Payment: ${escapeHtml(order.paymentMode || 'Online')} · ${escapeHtml(order.paymentStatus || 'pending')}</div></div>
         </header>
         <section class="two">
-          <div class="box"><h3>Bill To</h3><strong>${escapeHtml(order.customerName || 'Customer')}</strong><br/>${escapeHtml(order.customerPhone || '')}<br/>${escapeHtml(order.customerEmail || '')}</div>
-          <div class="box"><h3>Ship To</h3>${escapeHtml(address || 'Address not provided')}<br/>${escapeHtml(order.customerPhone || '')}</div>
+          <div class="box"><h3>Bill to</h3><strong>${escapeHtml(order.customerName || 'Customer')}</strong><br/>${escapeHtml(order.customerPhone || '')}<br/>${escapeHtml(order.customerEmail || '')}</div>
+          <div class="box"><h3>Ship to</h3>${escapeHtml(address || 'Address not provided')}<br/>${escapeHtml(order.customerPhone || '')}</div>
         </section>
-        <table><thead><tr><th>#</th><th>Description</th><th>HSN/SAC</th><th>Qty</th><th>MRP</th><th>Discount</th><th>Taxable</th><th>GST</th><th>Tax Amt</th><th>Amount</th></tr></thead><tbody>${rowsHtml}</tbody></table>
+        <p class="section-label">Order items</p>
+        <table><thead><tr><th style="width:33%">Product / SKU / HSN</th><th style="width:7%">Qty</th><th style="width:12%">MRP</th><th style="width:12%">Discount</th><th style="width:14%">Taxable</th><th style="width:10%">GST</th><th style="width:12%">Amount</th></tr></thead><tbody>${rowsHtml}</tbody></table>
         <div class="bottom">
           <div>
-            <strong>GST Summary by HSN</strong>
+            <p class="section-label">Tax summary by HSN</p>
             <table><thead><tr><th>HSN</th><th>Taxable</th><th>Rate</th>${isIntraState ? '<th>CGST</th><th>SGST</th>' : '<th>IGST</th>'}<th>Total Tax</th></tr></thead><tbody>${hsnHtml}</tbody></table>
             <div class="note">${isIntraState ? 'Intra-state supply: CGST and SGST apply.' : 'Inter-state supply: IGST applies.'} Goods once sold are subject to applicable return and consumer protection policies.</div>
           </div>
           <div class="box amount">
-            <div>Total MRP: ${currency(mrpTotal)}</div><div>Discount: -${currency(discountTotal)}</div>
-            <div>Taxable Value: ${currency(taxableTotal)}</div><div>${isIntraState ? 'CGST + SGST' : 'IGST'}: ${currency(taxTotal)}</div>
-            <div>Shipping: ${currency(shipping)}</div><div>Round Off: ${currency(roundOff)}</div>
-            <div class="grand">Invoice Total: ${currency(total)}</div><div>Amount in words: ${escapeHtml(amountInIndianWords(total))}</div><div>Amount received / payable as per payment mode</div>
-            <div class="qrbox"><img src="${paymentQrUrl}" alt="Payment or order verification QR"/><span><strong>SCAN TO PAY / VERIFY</strong><br/>UPI: ${escapeHtml(storeConfig.upiId || 'Not configured')}<br/>Order: ${escapeHtml(order.orderNumber || order.id)}</span></div>
+            <p class="section-label">Payment summary</p>
+            <div class="amount-row"><span>Total MRP</span><span>${currency(mrpTotal)}</span></div>
+            <div class="amount-row"><span>Discount</span><span>−${currency(discountTotal)}</span></div>
+            <div class="amount-row"><span>Taxable value</span><span>${currency(taxableTotal)}</span></div>
+            <div class="amount-row"><span>${isIntraState ? 'CGST + SGST' : 'IGST'}</span><span>${currency(taxTotal)}</span></div>
+            <div class="amount-row"><span>Shipping</span><span>${currency(shipping)}</span></div>
+            <div class="amount-row"><span>Round off</span><span>${currency(roundOff)}</span></div>
+            <div class="grand amount-row"><span>Invoice total</span><span>${currency(total)}</span></div>
+            <div class="note">${escapeHtml(amountInIndianWords(total))}</div>
+            <div class="qrbox"><img src="${paymentQrUrl}" alt="Payment or order verification QR"/><span><strong>PAY / VERIFY</strong><br/>UPI: ${escapeHtml(storeConfig.upiId || 'Not configured')}<br/>Order: ${escapeHtml(order.orderNumber || order.id)}</span></div>
           </div>
         </div>
-        <section class="shipline"><strong>Shipped by courier</strong><br/>${escapeHtml(courierName)} · Tracking / AWB: ${escapeHtml(trackingNumber)}${trackingUrl ? `<br/>Tracking link: ${escapeHtml(trackingUrl)}` : ''}</section>
-        <div class="qrbox pack"><img src="${qrUrl}" alt="Self-contained fulfillment QR"/><span><strong>FULFILLMENT QR</strong><br/>Scan in Bhumivera PWA. Contains the order manifest for local packing; inventory is updated only when the packer uploads.</span></div>
-        <footer class="foot"><div><strong>Declaration</strong><br/>We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.<div class="note">This is a computer-generated invoice. Please retain it for your records.</div></div><div class="sign">For ${escapeHtml(sellerName)}<br/><br/><strong>Authorised Signatory</strong></div></footer>
+        <section class="shipline"><div><strong>Shipped by</strong><br/>${escapeHtml(courierName)}</div><div class="shipvalue"><strong>Tracking / AWB</strong><br/>${escapeHtml(trackingNumber)}</div></section>
+        <div class="qrbox pack"><img src="${qrUrl}" alt="Self-contained fulfillment QR"/><span><strong>FULFILLMENT QR</strong><br/>Scan in Bhumivera PWA to verify and pack this order. Inventory is updated when the packer uploads.</span></div>
+        <footer class="foot"><div><strong>Invoice declaration</strong><br/>We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.<div class="note">Computer-generated tax invoice. Please retain for your records.</div></div><div class="sign">For ${escapeHtml(sellerName)}<br/><br/><strong>Authorised signatory</strong></div></footer>
       </main><script>window.print()</script></body></html>
     `);
     printWindow.document.close();
