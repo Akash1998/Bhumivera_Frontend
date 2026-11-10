@@ -33,10 +33,11 @@ vi.mock('../services/api', () => ({
 }));
 
 function CartHarness({ productId = 17 }) {
-  const { cartItems, addToCart } = useCart();
+  const { cartItems, addToCart, isCartOpen } = useCart();
   return (
     <>
       <output data-testid="cart-items">{JSON.stringify(cartItems)}</output>
+      <output data-testid="cart-open">{String(isCartOpen)}</output>
       <button type="button" onClick={() => addToCart({ id: productId, name: 'Sea Buckthorn Oil', quantity: 0 })}>
         Add product
       </button>
@@ -69,6 +70,7 @@ describe('cart additions with live inventory', () => {
     expect(JSON.parse(screen.getByTestId('cart-items').textContent)).toMatchObject([
       { product_id: 17, quantity: 1, product: { quantity: 8, status: 'active' } },
     ]);
+    expect(screen.getByTestId('cart-open').textContent).toBe('false');
     expect(rescueEvent).not.toHaveBeenCalled();
     expect(mockToast.success).toHaveBeenCalledWith('Added to bag successfully.');
     window.removeEventListener(AI_COPILOT_EVENT, rescueEvent);

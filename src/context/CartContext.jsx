@@ -263,8 +263,6 @@ export const CartProvider = ({ children }) => {
       return false;
     }
 
-    setIsCartOpen(true);
-
     if (cartProduct.category === 'Lights' || cartProduct.category_name === 'Lights') {
       setUpsells([{ id: 6, _id: '6', slug: 'kalpvriksh-satva-tulsi-7-tulsi-extract', name: 'Bhumivera Kalpvriksh Satva Tulsi (7-Tulsi Extract)', price: 499, img: '/images/products/bhumivera-kalpvriksh-satva-tulsi-drops.webp' }]);
     }
