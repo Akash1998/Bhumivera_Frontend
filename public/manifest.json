@@ -1,0 +1,59 @@
+{
+  "name": "Bhumivera Organics — The Transparent Maison",
+  "short_name": "Bhumivera",
+  "description": "100% active, milligram-disclosed cold-pressed botanical skincare. Family manufacturing heritage since 2016.",
+  "id": "/",
+  "start_url": "/",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
+  "background_color": "#14251c",
+  "theme_color": "#14251c",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "lang": "en-IN",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "categories": ["shopping", "beauty", "lifestyle"],
+  "shortcuts": [
+    {
+      "name": "Shop Flagship Formulations",
+      "short_name": "Shop",
+      "description": "Browse 100% active, milligram-disclosed botanical skincare.",
+      "url": "/shop",
+      "icons": [{"src": "/icon-192.png", "sizes": "192x192", "type": "image/png"}]
+    },
+    {
+      "name": "Verify Bottle Serial & QR",
+      "short_name": "Verify",
+      "description": "Verify serial authenticity and claim ₹300 welcome credit.",
+      "url": "/verify",
+      "icons": [{"src": "/icon-192.png", "sizes": "192x192", "type": "image/png"}]
+    },
+    {
+      "name": "My Account & Orders",
+      "short_name": "Account",
+      "description": "View orders, vault wallet passbook, and tracking.",
+      "url": "/profile",
+      "icons": [{"src": "/icon-192.png", "sizes": "192x192", "type": "image/png"}]
+    }
+  ],
+  "prefer_related_applications": false
+}

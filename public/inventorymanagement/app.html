@@ -1,0 +1,2169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>BhumiVera | Enterprise Inventory & POS Suite</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700;800&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/@phosphor-icons/web"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.28/jspdf.plugin.autotable.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="../shared/qrcode.js"></script>
+<script src="../assets/logo-base64.js"></script>
+<script src="../shared/auth.js"></script>
+<script src="../shared/storage.js"></script>
+
+<style>
+:root {
+    --bg-body: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-sidebar: #0f172a;
+    --pri: #10b981;
+    --pri-dark: #047857;
+    --pri-light: #ecfdf5;
+    --text-main: #0f172a;
+    --text-mute: #64748b;
+    --border: 1px solid #e2e8f0;
+    --font-ui: 'Inter', sans-serif;
+    --font-head: 'Rajdhani', sans-serif;
+    --font-mono: 'JetBrains Mono', monospace;
+    --rad: 12px;
+    --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 2px 4px -1px rgba(0, 0, 0, 0.03);
+}
+
+* { margin:0; padding:0; box-sizing:border-box; outline:none; -webkit-tap-highlight-color:transparent; }
+body { background:var(--bg-body); color:var(--text-main); font-family:var(--font-ui); height:100vh; overflow:hidden; display:flex; font-size:13px; }
+.font-head { font-family:var(--font-head); }
+.font-mono { font-family:var(--font-mono); }
+.hidden { display:none !important; }
+.flex-col { display:flex; flex-direction:column; }
+.card { background:var(--bg-card); border:var(--border); border-radius:var(--rad); padding:20px; box-shadow:var(--shadow); }
+.btn { padding:9px 16px; border:none; border-radius:8px; cursor:pointer; font-weight:600; font-size:12px; display:inline-flex; align-items:center; justify-content:center; gap:6px; transition:all 0.2s ease; }
+.btn-pri { background:var(--pri); color:#fff; box-shadow:0 2px 6px rgba(16, 185, 129, 0.25); }
+.btn-pri:hover { background:var(--pri-dark); transform:translateY(-1px); }
+.btn-sec { background:#fff; border:1px solid #cbd5e1; color:var(--text-main); }
+.btn-sec:hover { background:var(--pri-light); border-color:var(--pri); color:var(--pri-dark); }
+.btn-dan { background:#fef2f2; color:#b91c1c; border:1px solid #fecaca; }
+.btn-dan:hover { background:#fee2e2; }
+.btn-org { background:#fff7ed; color:#c2410c; border:1px solid #fdba74; }
+.btn-sm { padding:5px 10px; font-size:11px; }
+input, select, textarea { width:100%; background:#f8fafc; border:1px solid #cbd5e1; color:var(--text-main); padding:10px 12px; border-radius:8px; font-family:var(--font-ui); font-size:13px; margin-bottom:6px; transition:all 0.2s; }
+input:focus, select:focus, textarea:focus { background:#fff; border-color:var(--pri); box-shadow:0 0 0 3px rgba(16, 185, 129, 0.15); }
+label { font-size:11px; color:var(--text-mute); font-weight:700; margin:0 0 4px 1px; display:block; text-transform:uppercase; letter-spacing:0.5px; }
+.table-wrap { overflow:auto; border:var(--border); border-radius:8px; background:#fff; height:100%; }
+table { width:100%; border-collapse:collapse; white-space:nowrap; font-size:13px; }
+th { text-align:left; padding:12px 16px; background:#f1f5f9; color:#334155; font-weight:700; border-bottom:2px solid #e2e8f0; position:sticky; top:0; z-index:10; cursor:pointer; text-transform:uppercase; font-size:11px; letter-spacing:0.5px; }
+th:hover { background:#e2e8f0; }
+td { padding:10px 16px; border-bottom:1px solid #f1f5f9; vertical-align:middle; font-weight:500; }
+tr:hover td { background:#f8fafc; }
+.pill { padding:3px 10px; border-radius:12px; font-size:11px; font-weight:700; display:inline-flex; align-items:center; gap:4px; }
+.p-green { background:#dcfce7; color:#15803d; }
+.p-blue { background:#dbeafe; color:#1e40af; }
+.p-red { background:#fee2e2; color:#991b1b; }
+.p-amber { background:#fef3c7; color:#b45309; }
+.p-gray { background:#f1f5f9; color:#475569; }
+
+#app { display:flex; width:100%; height:100%; }
+.sidebar { width:250px; background:var(--bg-sidebar); display:flex; flex-direction:column; padding:20px 0; flex-shrink:0; color:#94a3b8; border-right:1px solid #1e293b; z-index:20; }
+.brand { font-family:var(--font-head); font-size:24px; font-weight:800; margin-bottom:25px; display:flex; align-items:center; padding:0 20px; color:#fff; letter-spacing:1px; gap:10px; }
+.brand img { width:32px; height:32px; object-fit:contain; border-radius:6px; background:#fff; padding:2px; }
+.nav-head { font-size:10px; color:#64748b; text-transform:uppercase; margin:16px 0 6px 20px; font-weight:800; letter-spacing:1px; }
+.nav-item { height:42px; display:flex; align-items:center; color:#94a3b8; cursor:pointer; padding:0 20px; font-size:13px; font-weight:500; border-left:3px solid transparent; transition:all 0.2s; gap:10px; }
+.nav-item:hover { background:#1e293b; color:#fff; padding-left:24px; }
+.nav-item.active { background:rgba(16, 185, 129, 0.15); color:#34d399; border-left-color:var(--pri); font-weight:700; }
+.main { flex:1; display:flex; flex-direction:column; overflow:hidden; background:var(--bg-body); }
+.top-bar { height:65px; padding:0 30px; display:flex; align-items:center; justify-content:space-between; background:#fff; border-bottom:var(--border); }
+.content { padding:24px 30px; overflow-y:auto; height:calc(100% - 65px); }
+.view { display:none; height:100%; }
+.view.active { display:block; animation:fadeIn 0.25s ease; }
+.modal-mask { position:fixed; inset:0; background:rgba(15, 23, 42, 0.6); z-index:5000; display:none; align-items:center; justify-content:center; backdrop-filter:blur(4px); }
+.modal { width:520px; max-width:95%; background:#fff; border-radius:14px; padding:25px; box-shadow:0 25px 50px -12px rgba(0, 0, 0, 0.25); max-height:90vh; overflow-y:auto; animation:slideUp 0.25s ease; border:1px solid #e2e8f0; }
+
+.qty-btn { width:26px; height:26px; border-radius:6px; border:1px solid #cbd5e1; background:#f8fafc; cursor:pointer; display:inline-flex; align-items:center; justify-content:center; font-weight:bold; color:var(--text-mute); font-size:15px; }
+.qty-btn:hover { background:var(--pri-light); color:var(--pri-dark); border-color:var(--pri); }
+.stk-tag { font-size:11px; padding:3px 6px; border-radius:4px; font-weight:700; }
+.stk-ok { background:#d1fae5; color:#065f46; border:1px solid #34d399; }
+.stk-low { background:#fee2e2; color:#991b1b; border:1px solid #fca5a5; }
+
+@keyframes slideUp { from{transform:translateY(20px); opacity:0;} to{transform:translateY(0); opacity:1;} }
+@keyframes fadeIn { from{opacity:0;} to{opacity:1;} }
+@media (max-width: 1024px) {
+    .sidebar { width:70px; }
+    .brand span, .nav-item span, .nav-head { display:none; }
+    .brand { padding:0 16px; }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+    <!-- Sidebar Navigation -->
+    <aside class="sidebar">
+        <div class="brand">
+            <img src="../assets/logo.png" alt="BhumiVera" class="w-9 h-9 object-contain rounded-full shadow-md bg-white/10 p-0.5 border border-amber-300/40">
+            <span class="font-head text-white tracking-wider">BHUMIVERA</span>
+        </div>
+        
+        <div class="nav-head">Operate</div>
+        <div class="nav-item active" onclick="BV.UI.nav('dash')"><i class="ph-bold ph-squares-four text-lg"></i><span>Dashboard</span></div>
+        <div class="nav-item" onclick="BV.UI.nav('inv')"><i class="ph-bold ph-box text-lg"></i><span>Inventory</span></div>
+        <div class="nav-item" onclick="BV.UI.nav('sale')"><i class="ph-bold ph-shopping-cart text-lg"></i><span>POS Billing</span></div>
+        
+        <div class="nav-head">Customer & Khata</div>
+        <div class="nav-item" onclick="BV.UI.nav('map')"><i class="ph-bold ph-users text-lg"></i><span>Customer Ledger</span></div>
+        <div class="nav-item" onclick="BV.UI.nav('trans')"><i class="ph-bold ph-wrench text-lg"></i><span>Stock Adjustment</span></div>
+        <div class="nav-item" onclick="BV.UI.nav('ret')"><i class="ph-bold ph-arrow-u-up-left text-lg"></i><span>Returns & Exchange</span></div>
+        
+        <div class="nav-head">Analytics & Audit</div>
+        <div class="nav-item" onclick="BV.UI.nav('rep')"><i class="ph-bold ph-chart-line-up text-lg"></i><span>Reports & Bills</span></div>
+        <div class="nav-item" onclick="BV.UI.nav('logs')"><i class="ph-bold ph-scroll text-lg"></i><span>System Audit Logs</span></div>
+        
+        <div class="nav-head">Administration</div>
+        <div class="nav-item" onclick="BV.UI.modal('m-store-settings')"><i class="ph-bold ph-storefront text-lg"></i><span>Store Info & Settings</span></div>
+        <a href="../admin/index.html" class="nav-item text-indigo-400 hover:text-indigo-300" target="_blank"><i class="ph-bold ph-shield-check text-lg"></i><span>Admin Waypoint</span></a>
+        
+        <div class="nav-item mt-auto text-rose-400 hover:text-rose-300" onclick="BV.Auth.logout()"><i class="ph-bold ph-power text-lg"></i><span>Logout</span></div>
+    </aside>
+
+    <!-- Main Workspace -->
+    <main class="main">
+        <!-- Top Application Header -->
+        <header class="top-bar">
+            <div class="flex-col">
+                <h2 class="text-xl font-bold font-head uppercase tracking-wider text-slate-800" id="page-title">DASHBOARD</h2>
+                <span class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider font-mono">
+                    <span class="inline-block w-2 h-2 rounded-full bg-emerald-500 mr-1 animate-pulse"></span>
+                    BhumiVera Enterprise Suite &bull; Online
+                </span>
+            </div>
+
+            <div class="flex items-center gap-4">
+                <button class="btn btn-sec btn-sm" onclick="BV.UI.modal('m-store-settings')">
+                    <i class="ph-bold ph-storefront text-base text-emerald-600"></i> Store Info
+                </button>
+                <!-- User Profile & Security Quick Dropdown -->
+                <div class="flex items-center gap-3 bg-slate-50 border border-slate-200 py-1.5 px-3 rounded-xl cursor-pointer hover:bg-slate-100 transition" onclick="BV.UI.modal('m-profile')">
+                    <div class="text-right">
+                        <div class="text-xs font-bold text-slate-800" id="top-user-name">Active User</div>
+                        <div class="text-[10px] font-mono font-bold text-emerald-600 uppercase" id="top-user-role">Role</div>
+                    </div>
+                    <img src="../assets/logo.png" class="w-9 h-9 rounded-full object-contain border border-amber-300/60 bg-white p-0.5 shadow-sm" id="top-user-avatar" alt="Avatar">
+                </div>
+            </div>
+        </header>
+
+        <!-- Content Area -->
+        <div class="content">
+
+            <!-- ================= VIEW 1: DASHBOARD ================= -->
+            <div id="v-dash" class="view active space-y-5">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h3 class="text-lg font-bold font-head text-slate-800 uppercase">Executive Overview</h3>
+                        <p class="text-xs text-slate-500">Real-time stock valuation, daily sales, and operational health.</p>
+                    </div>
+                    <button class="btn btn-sec btn-sm" onclick="BV.UI.modal('m-dash-set')">
+                        <i class="ph-bold ph-sliders"></i> Customize Widgets
+                    </button>
+                </div>
+
+                <!-- 4 Top Stat Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                    <div class="card border-t-4 border-emerald-500">
+                        <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">Revenue Today</div>
+                        <div class="text-2xl font-head font-extrabold text-slate-800 mt-1" id="d-sale-today">₹0</div>
+                        <div class="text-[11px] text-emerald-600 font-semibold mt-0.5">Live POS Transaction Volume</div>
+                    </div>
+
+                    <div class="card border-t-4 border-blue-500">
+                        <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">Total Stock Value</div>
+                        <div class="text-2xl font-head font-extrabold text-slate-800 mt-1" id="d-stock-val">₹0</div>
+                        <div class="text-[11px] text-blue-600 font-semibold mt-0.5" id="d-stock-cost">Cost: ₹0</div>
+                    </div>
+
+                    <div class="card border-t-4 border-amber-500">
+                        <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">Low Stock Alerts</div>
+                        <div class="text-2xl font-head font-extrabold text-amber-600 mt-1" id="d-low-alert">0</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">Items below minimum reorder point</div>
+                    </div>
+
+                    <div class="card border-t-4 border-rose-500">
+                        <div class="text-xs font-bold text-slate-500 uppercase tracking-wider">Customer Debt (Khata)</div>
+                        <div class="text-2xl font-head font-extrabold text-rose-600 mt-1" id="d-cust-debt">₹0</div>
+                        <div class="text-[11px] text-slate-500 mt-0.5">Receivable outstanding</div>
+                    </div>
+                </div>
+
+                <!-- Storage & Performance Bar -->
+                <div class="card py-3 px-5 flex items-center gap-4">
+                    <div class="text-xs font-bold text-emerald-800 uppercase whitespace-nowrap">Local Database Health:</div>
+                    <div class="flex-1 h-2.5 bg-slate-200 rounded-full overflow-hidden shadow-inner">
+                        <div id="d-str-bar" class="h-full bg-emerald-500 transition-all duration-300 w-0"></div>
+                    </div>
+                    <div class="text-xs font-mono font-bold text-slate-700" id="d-str-txt">0%</div>
+                </div>
+
+                <!-- Top Movers & Dead Stock Tables -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div class="card space-y-3">
+                        <h4 class="text-sm font-bold font-head uppercase text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2">
+                            <i class="ph-bold ph-trend-up text-emerald-500 text-lg"></i> Top Selling Items
+                        </h4>
+                        <div class="table-wrap max-h-48">
+                            <table id="t-top-sell">
+                                <thead><tr><th>Item</th><th class="text-right">Sold</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="card space-y-3">
+                        <h4 class="text-sm font-bold font-head uppercase text-slate-800 flex items-center gap-2 border-b border-slate-100 pb-2">
+                            <i class="ph-bold ph-trend-down text-rose-500 text-lg"></i> Inactive Stock Candidates
+                        </h4>
+                        <div class="table-wrap max-h-48">
+                            <table id="t-dead-sell">
+                                <thead><tr><th>Item</th><th class="text-right">Added On</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category Stock Pills Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3" id="dash-cats"></div>
+            </div>
+
+            <!-- ================= VIEW 2: MASTER INVENTORY ================= -->
+            <div id="v-inv" class="view">
+                <div class="card h-full flex flex-col space-y-4">
+                    <div class="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                            <h3 class="text-lg font-bold font-head text-slate-800 uppercase">Master Inventory Control</h3>
+                            <p class="text-xs text-slate-500">Track barcodes, stock levels, unit costs, and profit margins.</p>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <button class="btn btn-sec btn-sm" onclick="BV.UI.modal('m-cats')"><i class="ph-bold ph-tag"></i> Categories</button>
+                            <button class="btn btn-sec btn-sm" onclick="BV.UI.modal('m-imp-stock')"><i class="ph-bold ph-upload-simple"></i> Import Excel</button>
+                            <button class="btn btn-sec btn-sm" onclick="BV.Sys.exportStockExcel()"><i class="ph-bold ph-download-simple"></i> Export</button>
+                            <button class="btn btn-pri btn-sm" onclick="BV.Inv.newItem()"><i class="ph-bold ph-plus"></i> Add New Item</button>
+                        </div>
+                    </div>
+
+                    <!-- Search and Filters -->
+                    <div class="flex flex-wrap items-center gap-3">
+                        <div class="relative flex-1 min-w-[200px]">
+                            <span class="absolute inset-y-0 left-0 flex items-center pl-3 text-slate-400">
+                                <i class="ph-bold ph-magnifying-glass"></i>
+                            </span>
+                            <input id="inv-s" placeholder="Search by name, SKU, or Barcode..." oninput="BV.Inv.ren()"
+                                class="pl-9 mb-0">
+                        </div>
+                        <select id="inv-filter" style="width:200px; margin-bottom:0;" onchange="BV.Inv.ren()"></select>
+                        <select id="inv-stock-filter" style="width:160px; margin-bottom:0;" onchange="BV.Inv.ren()">
+                            <option value="ALL">All Stock Levels</option>
+                            <option value="LOW">Low Stock Only</option>
+                            <option value="OUT">Out of Stock</option>
+                        </select>
+                    </div>
+
+                    <!-- Table -->
+                    <div class="table-wrap flex-1">
+                        <table id="t-inv">
+                            <thead>
+                                <tr>
+                                    <th onclick="BV.UI.sort('t-inv',0)">SKU / Barcode</th>
+                                    <th onclick="BV.UI.sort('t-inv',1)">Item Name</th>
+                                    <th onclick="BV.UI.sort('t-inv',2)">Category</th>
+                                    <th onclick="BV.UI.sort('t-inv',3)" class="text-center">Stock Qty</th>
+                                    <th onclick="BV.UI.sort('t-inv',4)" class="text-right">Cost Price</th>
+                                    <th onclick="BV.UI.sort('t-inv',5)" class="text-right">Selling Price</th>
+                                    <th onclick="BV.UI.sort('t-inv',6)" class="text-center">Margin %</th>
+                                    <th class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= VIEW 3: POS TERMINAL ================= -->
+            <div id="v-sale" class="view">
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-5 h-full">
+                    <!-- Left Column: Customer & Item Selection (7 cols) -->
+                    <div class="lg:col-span-7 flex flex-col space-y-4">
+                        <!-- Customer Selection Card -->
+                        <div class="card space-y-3">
+                            <div class="flex items-center justify-between">
+                                <label class="text-xs font-bold text-slate-700 uppercase flex items-center gap-1.5">
+                                    <i class="ph-bold ph-user-focus text-emerald-600 text-base"></i> Customer Profile
+                                </label>
+                                <button class="btn btn-sec btn-sm" onclick="BV.Map.newCust()">+ New Customer</button>
+                            </div>
+                            <div class="relative">
+                                <input id="sl-c" placeholder="Type customer name or phone..." onkeyup="BV.Sale.sug(this.value)" class="mb-0 font-semibold">
+                                <div id="sl-sug" class="card hidden absolute top-full left-0 w-full z-50 p-2 shadow-2xl mt-1 max-h-48 overflow-y-auto"></div>
+                            </div>
+                            <div id="sl-c-info" class="hidden p-3 rounded-xl bg-emerald-50 border border-emerald-200">
+                                <div class="flex items-center justify-between">
+                                    <span class="font-bold text-emerald-900" id="sl-c-name"></span>
+                                    <span class="font-mono text-xs text-emerald-700 font-bold" id="sl-c-phone"></span>
+                                </div>
+                                <div class="text-xs mt-1 text-slate-600">
+                                    Khata Balance: <span id="sl-c-bal" class="font-bold text-sm">₹0</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Item Scanner & Add Card -->
+                        <div class="card flex-1 space-y-3 flex flex-col">
+                            <label class="text-xs font-bold text-slate-700 uppercase flex items-center gap-1.5">
+                                <i class="ph-bold ph-barcode text-emerald-600 text-base"></i> Add Products & Charges
+                            </label>
+                            
+                            <div class="space-y-1">
+                                <input list="sl-items-list" id="sl-item-input" placeholder="Scan barcode or type item name..." onchange="BV.Sale.setPrice()" class="mb-1 font-semibold">
+                                <datalist id="sl-items-list"></datalist>
+                                <div id="sl-stock-display" class="text-right text-xs font-bold h-4"></div>
+                            </div>
+
+                            <div class="grid grid-cols-3 gap-3">
+                                <div>
+                                    <label>Quantity</label>
+                                    <input type="number" id="sl-qty" value="1" min="1" oninput="BV.Sale.checkStk()" class="font-bold">
+                                </div>
+                                <div>
+                                    <label>Rate (₹)</label>
+                                    <input type="number" id="sl-price" min="0" class="font-bold">
+                                </div>
+                                <div class="flex items-end">
+                                    <button class="btn btn-pri w-full h-[42px]" onclick="BV.Sale.add()">
+                                        <i class="ph-bold ph-plus"></i> Add
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Extra Charge Row -->
+                            <div class="pt-3 border-t border-dashed border-slate-200 grid grid-cols-12 gap-3 items-end">
+                                <div class="col-span-6">
+                                    <label>Extra Charge (Optional)</label>
+                                    <input id="sl-xc-name" placeholder="e.g. Packing, Transport" class="mb-0">
+                                </div>
+                                <div class="col-span-4">
+                                    <label>Amount (₹)</label>
+                                    <input type="number" id="sl-xc-amt" min="0" placeholder="0" class="mb-0">
+                                </div>
+                                <div class="col-span-2">
+                                    <button class="btn btn-sec w-full h-[40px]" onclick="BV.Sale.addXC()">Add</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Right Column: Live Invoice & Checkout (5 cols) -->
+                    <div class="lg:col-span-5 card flex flex-col border-2 border-emerald-500 shadow-xl h-full space-y-3">
+                        <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                            <h3 class="font-head text-xl font-bold uppercase text-slate-800 flex items-center gap-2">
+                                <i class="ph-bold ph-receipt text-emerald-600"></i> Active Bill
+                            </h3>
+                            <button class="btn btn-dan btn-sm" onclick="BV.Sale.clearAll()">
+                                <i class="ph-bold ph-trash"></i> Reset
+                            </button>
+                        </div>
+
+                        <!-- Cart Items List -->
+                        <div class="table-wrap flex-1 border-0 border-y border-slate-200 rounded-none max-h-56">
+                            <table id="t-cart">
+                                <thead>
+                                    <tr>
+                                        <th>Item</th>
+                                        <th class="text-center">Qty</th>
+                                        <th class="text-right">Total</th>
+                                        <th></th>
+                                    </tr>
+                                </thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+
+                        <!-- Financial Calculation Panel -->
+                        <div class="p-4 rounded-xl bg-slate-50 border border-slate-200 text-xs space-y-2">
+                            <div class="flex justify-between text-slate-500">
+                                <span>Item Subtotal</span>
+                                <span id="sl-sub" class="font-bold font-mono text-slate-800">₹0</span>
+                            </div>
+                            <div class="flex justify-between text-slate-500">
+                                <span>Extra Charges</span>
+                                <span id="sl-xc-tot" class="font-bold font-mono text-slate-800">₹0</span>
+                            </div>
+                            <div class="flex justify-between text-slate-500">
+                                <span>Prev. Khata Balance</span>
+                                <span id="sl-prev-bal" class="font-bold font-mono">₹0</span>
+                            </div>
+
+                            <!-- Discount & Tax Controls -->
+                            <div class="grid grid-cols-2 gap-2 pt-1 border-t border-slate-200">
+                                <div>
+                                    <label class="text-[10px]">Discount (₹)</label>
+                                    <input type="number" id="sl-disc" value="0" min="0" oninput="BV.Sale.rC()" class="mb-0 text-xs p-1.5 font-bold">
+                                </div>
+                                <div>
+                                    <label class="text-[10px]">GST / Tax (%)</label>
+                                    <select id="sl-tax" onchange="BV.Sale.rC()" class="mb-0 text-xs p-1.5 font-bold">
+                                        <option value="0" selected>0% (Nil / No Extra Tax)</option>
+                                        <option value="5">5% GST</option>
+                                        <option value="12">12% GST</option>
+                                        <option value="18">18% GST</option>
+                                        <option value="28">28% GST</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <div class="border-t border-dashed border-slate-300 pt-1.5 flex justify-between text-sm font-bold text-slate-800">
+                                <span>Payable Bill Total</span>
+                                <span id="sl-payable" class="text-base text-emerald-700">₹0</span>
+                            </div>
+
+                            <!-- Payment Received & Mode -->
+                            <div class="pt-1.5 border-t border-slate-200 grid grid-cols-2 gap-2 items-center">
+                                <div>
+                                    <label class="text-[10px] text-emerald-800">Payment Mode</label>
+                                    <select id="sl-pay-mode" class="mb-0 text-xs p-1.5 font-bold">
+                                        <option value="Cash">Cash</option>
+                                        <option value="UPI">UPI / QR</option>
+                                        <option value="Card">Card</option>
+                                        <option value="Credit">Khata / Credit</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label class="text-[10px] text-emerald-800">Paid Amount (₹)</label>
+                                    <input type="number" id="sl-paid" value="0" min="0" oninput="BV.Sale.rC()" class="mb-0 text-xs p-1.5 font-bold text-right bg-emerald-50 border-emerald-300 text-emerald-900">
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between text-base font-extrabold text-slate-900 font-head border-t border-slate-200 pt-2">
+                                <span>New Khata Balance</span>
+                                <span id="sl-new-bal" class="text-lg">₹0</span>
+                            </div>
+                        </div>
+
+                        <!-- Checkout Button -->
+                        <button id="btn-checkout" class="btn btn-pri w-full py-4 text-base font-head font-extrabold tracking-wider" onclick="BV.Sale.checkout()">
+                            Select Customer to Checkout
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= VIEW 4: CUSTOMER KHATA LEDGER ================= -->
+            <div id="v-map" class="view">
+                <div class="card h-full flex flex-col space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-bold font-head text-slate-800 uppercase">Customer Ledger & Khata</h3>
+                            <p class="text-xs text-slate-500">Track credit debts, payments received, and send WhatsApp payment reminders.</p>
+                        </div>
+                        <button class="btn btn-pri btn-sm" onclick="BV.Map.newCust()">
+                            <i class="ph-bold ph-user-plus"></i> Add Customer Profile
+                        </button>
+                    </div>
+
+                    <div class="table-wrap flex-1">
+                        <table id="t-cust">
+                            <thead>
+                                <tr>
+                                    <th onclick="BV.UI.sort('t-cust',0)">Customer Name</th>
+                                    <th onclick="BV.UI.sort('t-cust',1)">Phone Number</th>
+                                    <th onclick="BV.UI.sort('t-cust',2)">Location</th>
+                                    <th onclick="BV.UI.sort('t-cust',3)" class="text-center">Type</th>
+                                    <th onclick="BV.UI.sort('t-cust',4)" class="text-right">Balance (₹)</th>
+                                    <th class="text-right">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= VIEW 5: STOCK ADJUSTMENTS ================= -->
+            <div id="v-trans" class="view">
+                <div class="card max-w-lg mx-auto space-y-4">
+                    <h3 class="text-lg font-bold font-head uppercase text-slate-800 border-b border-slate-100 pb-2">
+                        Stock Adjustment / Internal Write-off
+                    </h3>
+                    <p class="text-xs text-slate-500">Deduct stock for damages, personal consumption, samples, or inventory audits.</p>
+                    
+                    <div>
+                        <label>Select Item</label>
+                        <select id="tf-item" class="font-semibold"></select>
+                    </div>
+                    <div>
+                        <label>Quantity to Remove</label>
+                        <input type="number" id="tf-qty" value="1" min="1" class="font-bold text-base">
+                    </div>
+                    <div>
+                        <label>Reason for Adjustment</label>
+                        <select id="tf-reason">
+                            <option>Damaged in Transit / Storage</option>
+                            <option>Expired Stock</option>
+                            <option>Internal / Personal Use</option>
+                            <option>Marketing Sample / Gift</option>
+                            <option>Inventory Audit Discrepancy</option>
+                            <option>Other</option>
+                        </select>
+                    </div>
+                    <button class="btn btn-dan w-full py-3 font-bold text-sm" onclick="BV.Trans.exec()">
+                        Deduct & Record Adjustment
+                    </button>
+                </div>
+            </div>
+
+            <!-- ================= VIEW 6: RETURNS & REPLACEMENTS ================= -->
+            <div id="v-ret" class="view">
+                <div class="card max-w-lg mx-auto space-y-4">
+                    <h3 class="text-lg font-bold font-head uppercase text-slate-800 border-b border-slate-100 pb-2">
+                        Item Replacement & Returns
+                    </h3>
+                    <p class="text-xs text-slate-500">Process goods returned by customer. Exchange mode maintains wallet unchanged.</p>
+
+                    <div>
+                        <label>Customer</label>
+                        <div class="relative">
+                            <input id="rt-c" placeholder="Search customer name..." onkeyup="BV.Ret.sug(this.value)" class="font-semibold mb-0">
+                            <div id="rt-sug" class="card hidden absolute top-full left-0 w-full z-50 p-2 shadow-2xl mt-1"></div>
+                        </div>
+                        <div id="rt-sel-cust" class="hidden mt-2 p-2.5 rounded-lg bg-emerald-50 text-emerald-800 font-bold text-xs"></div>
+                    </div>
+
+                    <div>
+                        <label>Returned Item</label>
+                        <select id="rt-item" class="font-semibold"></select>
+                    </div>
+
+                    <div>
+                        <label>Quantity Returned</label>
+                        <input type="number" id="rt-qty" value="1" min="1" class="font-bold text-base">
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-3 pt-2">
+                        <button class="btn btn-pri py-3 font-bold" onclick="BV.Ret.exec('GOOD')">
+                            Restock (Good Condition)
+                        </button>
+                        <button class="btn btn-dan py-3 font-bold" onclick="BV.Ret.exec('BAD')">
+                            Scrap (Damaged Condition)
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= VIEW 7: REPORTS & INTELLIGENCE ================= -->
+            <div id="v-rep" class="view">
+                <div class="card h-full p-0 overflow-hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-12 h-full">
+                        <!-- Sidebar: Filter & Summary (4 cols) -->
+                        <div class="md:col-span-4 p-5 bg-slate-50 border-r border-slate-200 flex flex-col space-y-4 overflow-y-auto">
+                            <h3 class="font-head text-lg font-bold uppercase text-slate-800">Time Machine Reports</h3>
+                            <div>
+                                <label>Select Report Date</label>
+                                <input type="date" id="rep-date" onchange="BV.Rep.gen()" class="font-bold font-mono">
+                            </div>
+
+                            <div class="card p-3 space-y-1">
+                                <div class="text-xs font-bold text-slate-500 uppercase">Day's Total Revenue</div>
+                                <div class="text-2xl font-head font-extrabold text-emerald-700" id="rep-rev">₹0</div>
+                            </div>
+
+                            <div class="card p-3 space-y-1">
+                                <div class="text-xs font-bold text-slate-500 uppercase">Invoices Generated</div>
+                                <div class="text-2xl font-head font-extrabold text-slate-800" id="rep-items">0</div>
+                            </div>
+
+                            <div class="space-y-2 pt-2 border-t border-slate-200">
+                                <button class="btn btn-sec w-full" onclick="BV.Rep.toggleMode()">
+                                    <i class="ph-bold ph-images"></i> Toggle Payment Proof Gallery
+                                </button>
+                                <button class="btn btn-pri w-full" onclick="BV.Rep.snap()">
+                                    <i class="ph-bold ph-lock-key"></i> Save Daily Snapshot (.avbak)
+                                </button>
+                                <button class="btn btn-sec w-full" onclick="BV.Rep.expExcel()">
+                                    <i class="ph-bold ph-file-xls"></i> Export to Excel
+                                </button>
+                            </div>
+
+                            <div class="pt-3 border-t border-slate-200 space-y-2">
+                                <label>Search Invoice / Bill Number</label>
+                                <div class="flex gap-2">
+                                    <input id="rep-inv-search" placeholder="e.g. BV-2026-00001" class="mb-0">
+                                    <button class="btn btn-pri" onclick="BV.Rep.searchInv()">
+                                        <i class="ph-bold ph-magnifying-glass"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Area: Table / Gallery (8 cols) -->
+                        <div class="md:col-span-8 p-5 flex flex-col overflow-hidden">
+                            <div id="rep-tbl-view" class="table-wrap flex-1">
+                                <table id="t-rep">
+                                    <thead>
+                                        <tr>
+                                            <th>Time</th>
+                                            <th>Type</th>
+                                            <th>Details</th>
+                                            <th class="text-right">Amount (₹)</th>
+                                            <th class="text-right">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                            <div id="rep-gal-view" class="hidden flex-1 overflow-y-auto p-3 bg-white border border-slate-200 rounded-xl">
+                                <div id="rep-gal-grid" class="grid grid-cols-2 sm:grid-cols-4 gap-3"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ================= VIEW 8: SYSTEM LOGS ================= -->
+            <div id="v-logs" class="view">
+                <div class="card h-full flex flex-col space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h3 class="text-lg font-bold font-head text-slate-800 uppercase">System Audit Trail</h3>
+                            <p class="text-xs text-slate-500">Complete immutable record of all user operations and transactions.</p>
+                        </div>
+                        <button class="btn btn-sec btn-sm font-bold" onclick="BV.Sys.expLogsExcel()">
+                            <i class="ph-bold ph-download-simple"></i> Export Logs (.xlsx)
+                        </button>
+                    </div>
+                    <div class="table-wrap flex-1">
+                        <table id="t-logs">
+                            <thead>
+                                <tr>
+                                    <th>Timestamp</th>
+                                    <th>Operator</th>
+                                    <th>Action</th>
+                                    <th>Activity Details</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </main>
+</div>
+
+<!-- ================= MODALS SECTION ================= -->
+
+<!-- MODAL: ITEM ADD / EDIT -->
+<div id="m-add-item" class="modal-mask"><div class="modal space-y-4">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <h3 class="font-head text-lg font-bold uppercase text-slate-800" id="item-modal-title">Item Master</h3>
+        <button onclick="BV.UI.closeM('m-add-item')" class="text-slate-400 hover:text-slate-600"><i class="ph-bold ph-x text-lg"></i></button>
+    </div>
+    <div class="grid grid-cols-2 gap-3">
+        <div><label>Category</label><select id="ni-cat" class="font-semibold"></select></div>
+        <div>
+            <label>SKU / Barcode</label>
+            <div class="flex gap-1.5">
+                <input id="ni-sku" placeholder="SKU-XXXX" class="font-mono text-xs mb-0">
+                <button type="button" onclick="BV.Inv.genSKU()" class="btn btn-sec btn-sm" title="Auto Generate"><i class="ph-bold ph-magic-wand"></i></button>
+            </div>
+        </div>
+    </div>
+    <div><label>Item Name *</label><input id="ni-n" class="font-semibold" placeholder="e.g. Hydraulic Seal Ring 45mm"></div>
+    <div class="grid grid-cols-3 gap-3">
+        <div><label>Stock Qty</label><input type="number" id="ni-q" min="0" class="font-bold"></div>
+        <div><label>Unit Cost (₹)</label><input type="number" id="ni-cp" min="0" oninput="BV.Inv.calcMargin()" class="font-bold"></div>
+        <div><label>Selling Price (₹)</label><input type="number" id="ni-p" min="0" oninput="BV.Inv.calcMargin()" class="font-bold"></div>
+    </div>
+    <div class="grid grid-cols-3 gap-3">
+        <div><label>Unit of Measure</label><select id="ni-uom"><option>Pcs</option><option>Kg</option><option>Box</option><option>Ltr</option><option>Mtr</option><option>Pkt</option></select></div>
+        <div><label>Min Stock Alert</label><input type="number" id="ni-min" min="0" value="5" class="font-bold"></div>
+        <div><label>Margin %</label><input id="ni-margin" readonly class="font-bold bg-slate-100 text-emerald-700"></div>
+    </div>
+    <div class="flex gap-3 pt-2">
+        <button class="btn btn-pri flex-1 py-3 font-bold" onclick="BV.Inv.add()">Save Item</button>
+        <button class="btn btn-sec flex-1 py-3 font-bold" onclick="BV.UI.closeM('m-add-item')">Cancel</button>
+    </div>
+</div></div>
+
+<!-- MODAL: IMPORT STOCK EXCEL -->
+<div id="m-imp-stock" class="modal-mask"><div class="modal space-y-4">
+    <h3 class="font-head text-lg font-bold uppercase text-slate-800">Import Stock from Excel</h3>
+    <p class="text-xs text-slate-500">Upload .xlsx or .xls file. Columns supported: Item Name, Category, Current Stock, Unit Price.</p>
+    <input type="file" id="imp-file" accept=".xlsx, .xls" class="p-4 bg-slate-50 border-2 border-dashed border-slate-300">
+    <div class="flex gap-3">
+        <button class="btn btn-pri flex-1 py-3 font-bold" onclick="BV.Inv.importExcel()">Import Items</button>
+        <button class="btn btn-sec flex-1 py-3 font-bold" onclick="BV.UI.closeM('m-imp-stock')">Cancel</button>
+    </div>
+</div></div>
+
+<!-- MODAL: CUSTOMER PROFILE -->
+<div id="m-add-cust" class="modal-mask"><div class="modal space-y-4">
+    <h3 class="font-head text-lg font-bold uppercase text-slate-800" id="mc-title">Customer Profile</h3>
+    <div><label>Customer / Business Name *</label><input id="nc-n" class="font-semibold" placeholder="e.g. Apex Machinery"></div>
+    <div><label>Phone / WhatsApp *</label><input id="nc-p" class="font-mono" placeholder="+91 98765 43210"></div>
+    <div><label>Location / Address</label><input id="nc-l" placeholder="City or Shop Address"></div>
+    <div class="grid grid-cols-2 gap-3">
+        <div><label>Customer Type</label><select id="nc-t"><option value="Walk-in">Walk-in</option><option value="Shop">Shop / Retailer</option><option value="Wholesale">Wholesaler</option></select></div>
+        <div><label>Credit Limit (₹)</label><input type="number" id="nc-limit" value="50000" class="font-bold"></div>
+    </div>
+    <div class="flex gap-3 pt-2">
+        <button class="btn btn-pri flex-1 py-3 font-bold" onclick="BV.Map.add()">Save Profile</button>
+        <button class="btn btn-sec flex-1 py-3 font-bold" onclick="BV.UI.closeM('m-add-cust')">Cancel</button>
+    </div>
+</div></div>
+
+<!-- MODAL: KHATA TRANSACTION (ADD DEBT / RECEIVE PAYMENT) -->
+<div id="m-credit" class="modal-mask"><div class="modal space-y-4">
+    <h3 class="font-head text-lg font-bold uppercase text-slate-800">Khata Transaction Manager</h3>
+    <div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-center">
+        <span class="text-xs text-amber-800 font-semibold">Current Balance:</span>
+        <div id="cm-bal" class="text-2xl font-head font-extrabold text-amber-700">₹0</div>
+    </div>
+    <div>
+        <label>Transaction Type</label>
+        <select id="cm-act" onchange="BV.Fin.togProof()" class="font-bold">
+            <option value="ADD">Add Debt (Gave Goods on Credit)</option>
+            <option value="SUB">Receive Payment (Clear Debt)</option>
+        </select>
+    </div>
+    <div><label>Amount (₹) *</label><input type="number" id="cm-amt" min="1" class="font-bold text-lg"></div>
+    <div><label>Reference Note</label><input id="cm-ref" placeholder="e.g. Invoice #123, Bank UPI"></div>
+    
+    <div id="cm-proof-box" class="hidden p-3 rounded-xl bg-slate-50 border border-slate-200 space-y-2">
+        <label>Upload Payment Proof (Screenshot / Slip)</label>
+        <input type="file" id="cm-img" accept="image/*" class="text-xs bg-white">
+    </div>
+
+    <div class="flex gap-3 pt-2">
+        <button class="btn btn-pri flex-1 py-3 font-bold" onclick="BV.Fin.exec()">Process Transaction</button>
+        <button class="btn btn-sec flex-1 py-3 font-bold" onclick="BV.UI.closeM('m-credit')">Cancel</button>
+    </div>
+</div></div>
+
+<!-- MODAL: INVOICE SUCCESS POPUP -->
+<div id="m-invoice" class="modal-mask"><div class="modal text-center space-y-4">
+    <div class="w-16 h-16 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center text-3xl mx-auto">
+        <i class="ph-bold ph-check"></i>
+    </div>
+    <h3 class="font-head text-2xl font-bold uppercase text-slate-800">Invoice Generated!</h3>
+    <p class="text-xs text-slate-500">Transaction recorded. Share with customer or print thermal receipt.</p>
+    
+    <div class="space-y-2 pt-2">
+        <button class="btn btn-pri w-full py-3.5 font-bold text-sm bg-emerald-600 hover:bg-emerald-500" onclick="BV.Sale.shareWA()">
+            <i class="ph-bold ph-whatsapp-logo text-lg"></i> Share on WhatsApp & Generate PDF
+        </button>
+        <button class="btn btn-sec w-full py-2.5 font-bold text-xs" onclick="BV.Sale.printThermal()">
+            <i class="ph-bold ph-printer text-base"></i> Print 80mm Thermal Receipt
+        </button>
+        <button class="btn btn-sec w-full py-2 text-xs" onclick="BV.UI.closeM('m-invoice')">
+            Close & Start Next Sale
+        </button>
+    </div>
+</div></div>
+
+<!-- MODAL: INVOICE DETAILS VIEWER -->
+<div id="m-view-sale" class="modal-mask"><div class="modal max-w-xl space-y-4">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+        <h3 class="font-head text-lg font-bold uppercase text-slate-800">Invoice Details</h3>
+        <button onclick="BV.UI.closeM('m-view-sale')" class="text-slate-400 hover:text-slate-600"><i class="ph-bold ph-x text-lg"></i></button>
+    </div>
+    <div id="vs-content" class="text-xs space-y-3"></div>
+</div></div>
+
+<!-- MODAL: MANAGE CATEGORIES -->
+<div id="m-cats" class="modal-mask"><div class="modal space-y-4">
+    <h3 class="font-head text-lg font-bold uppercase text-slate-800">Product Categories</h3>
+    <div class="flex gap-2">
+        <input id="new-cat" placeholder="New Category Name" class="mb-0 font-semibold">
+        <button class="btn btn-pri" onclick="BV.Sys.addCat()">Add</button>
+    </div>
+    <div id="cat-list" class="flex-col max-h-60 overflow-y-auto divide-y divide-slate-100"></div>
+    <button class="btn btn-sec w-full py-2.5 font-bold" onclick="BV.UI.closeM('m-cats')">Done</button>
+</div></div>
+
+<!-- MODAL: DASHBOARD VISIBILITY -->
+<div id="m-dash-set" class="modal-mask"><div class="modal space-y-4">
+    <h3 class="font-head text-lg font-bold uppercase text-slate-800">Dashboard Visibility</h3>
+    <p class="text-xs text-slate-500">Uncheck any category to hide its widget from the dashboard.</p>
+    <div id="dash-vis-list" class="space-y-2 max-h-60 overflow-y-auto"></div>
+    <button class="btn btn-sec w-full py-2.5 font-bold" onclick="BV.UI.closeM('m-dash-set'); BV.Sys.dash()">Save & Close</button>
+</div></div>
+
+<!-- MODAL: STORE SETTINGS -->
+<div id="m-store-settings" class="modal-mask"><div class="modal space-y-4">
+    <h3 class="font-head text-lg font-bold uppercase text-slate-800">Store & Billing Configuration</h3>
+    <div><label>Business / Store Name</label><input id="cfg-name" class="font-semibold"></div>
+    <div><label>Address</label><input id="cfg-addr"></div>
+    <div class="grid grid-cols-2 gap-3">
+        <div><label>Contact Phone</label><input id="cfg-phone" class="font-mono"></div>
+        <div><label>GSTIN Number</label><input id="cfg-gstin" class="font-mono"></div>
+    </div>
+    <div><label>UPI ID (for Live QR on Invoice)</label><input id="cfg-upi" class="font-mono" placeholder="yourname@bank"></div>
+    <div class="flex gap-3 pt-2">
+        <button class="btn btn-pri flex-1 py-3 font-bold" onclick="BV.Sys.saveStoreConfig()">Save Changes</button>
+        <button class="btn btn-sec flex-1 py-3 font-bold" onclick="BV.UI.closeM('m-store-settings')">Cancel</button>
+    </div>
+</div></div>
+
+<!-- ================= MODAL: IN-APP USER PROFILE & SECURITY ================= -->
+<div id="m-profile" class="modal-mask"><div class="modal max-w-lg space-y-5">
+    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+        <div class="flex items-center gap-2">
+            <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold">
+                <i class="ph-bold ph-shield-check"></i>
+            </div>
+            <h3 class="font-head text-lg font-bold uppercase text-slate-800">Profile & Security Center</h3>
+        </div>
+        <button onclick="BV.UI.closeM('m-profile')" class="text-slate-400 hover:text-slate-600"><i class="ph-bold ph-x text-lg"></i></button>
+    </div>
+
+    <!-- User Header Info -->
+    <div class="p-3.5 rounded-xl bg-slate-50 border border-slate-200 flex items-center justify-between">
+        <div>
+            <div class="text-sm font-bold text-slate-800" id="prof-fullname">-</div>
+            <div class="text-xs text-slate-500 font-mono" id="prof-username">-</div>
+        </div>
+        <span class="px-2.5 py-1 rounded-full text-xs font-bold uppercase bg-emerald-100 text-emerald-800" id="prof-role">-</span>
+    </div>
+
+    <!-- Security Tabs: Passkey & 2FA -->
+    <div class="space-y-4 text-xs">
+        <!-- PASSKEY SECTION -->
+        <div class="p-4 rounded-xl border border-slate-200 space-y-3 bg-white">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2 font-bold text-slate-800 text-sm">
+                    <i class="ph-bold ph-fingerprint text-emerald-600 text-lg"></i> Biometric Passkeys (FIDO2)
+                </div>
+                <button class="btn btn-sec btn-sm" onclick="BV.Profile.addPasskey()">
+                    <i class="ph-bold ph-plus"></i> Register Device
+                </button>
+            </div>
+            <p class="text-slate-500 text-[11px]">Enables 1-click passwordless login on this browser or phone.</p>
+            <div id="prof-passkeys-list" class="space-y-1.5 divide-y divide-slate-100"></div>
+        </div>
+
+        <!-- 2FA TOTP SECTION -->
+        <div class="p-4 rounded-xl border border-slate-200 space-y-3 bg-white">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-2 font-bold text-slate-800 text-sm">
+                    <i class="ph-bold ph-shield-check text-blue-600 text-lg"></i> 2FA Authenticator (TOTP)
+                </div>
+                <div id="prof-2fa-badge"></div>
+            </div>
+            <p class="text-slate-500 text-[11px]">Protects your account with Google Authenticator / Microsoft Authenticator.</p>
+            <div id="prof-2fa-controls"></div>
+        </div>
+
+        <!-- CHANGE PASSWORD SECTION -->
+        <div class="p-4 rounded-xl border border-slate-200 space-y-2 bg-white">
+            <div class="font-bold text-slate-800 text-sm flex items-center gap-2">
+                <i class="ph-bold ph-lock-key text-slate-600 text-lg"></i> Change Password
+            </div>
+            <div class="grid grid-cols-2 gap-2">
+                <input type="password" id="prof-old-pass" placeholder="Current Password" class="mb-0 text-xs">
+                <input type="password" id="prof-new-pass" placeholder="New Password" class="mb-0 text-xs">
+            </div>
+            <button class="btn btn-sec w-full mt-2" onclick="BV.Profile.updatePassword()">Update Passcode</button>
+        </div>
+    </div>
+
+    <button class="btn btn-dan w-full py-3 font-bold" onclick="BV.Auth.logout()">
+        <i class="ph-bold ph-power"></i> Sign Out of Terminal
+    </button>
+</div></div>
+
+<!-- IMAGE LIGHTBOX -->
+<div id="m-img-view" class="modal-mask" onclick="this.style.display='none'">
+    <img id="full-img" class="max-w-[90%] max-h-[90vh] rounded-xl shadow-2xl m-auto border-4 border-white">
+</div>
+
+<!-- ================= CORE CONTROLLER SCRIPT ================= -->
+<script>
+const $=id=>document.getElementById(id),_N=v=>parseFloat(v)||0,_V=id=>document.getElementById(id).value;
+
+const BV = {
+    c: [],
+    xc: [],
+    tmp: {},
+
+    Sys: {
+        async init() {
+            // Verify session with server API
+            const session = await BVAuth.checkSession();
+            if (!session) {
+                window.location.href = 'login.html';
+                return;
+            }
+
+            // Populate Top Bar Profile
+            $('top-user-name').innerText = session.fullName || session.username;
+            $('top-user-role').innerText = session.role;
+            $('top-user-avatar').innerText = (session.fullName || session.username).charAt(0).toUpperCase();
+
+            // Load and sync real data from SQLite Server Engine
+            await BVStore.sync();
+            BV.Sys.dash();
+            BV.Inv.ren();
+            BV.Sys.str();
+            BV.Sale.loadState();
+
+            const cfg = BVStore.getConfig();
+            if (cfg.logo) {
+                $('logo-prev').src = cfg.logo;
+            }
+        },
+
+        dash() {
+            const data = BVStore.getData();
+            const todayStr = new Date().toLocaleDateString();
+
+            const todayRev = data.s
+                .filter(s => new Date(s.date).toLocaleDateString() === todayStr)
+                .reduce((sum, s) => sum + _N(s.billTotal || s.total), 0);
+            $('d-sale-today').innerText = '₹' + todayRev.toLocaleString();
+
+            const totalStockVal = data.i.reduce((sum, item) => sum + (_N(item.qty) * _N(item.price)), 0);
+            const totalStockCost = data.i.reduce((sum, item) => sum + (_N(item.qty) * _N(item.costPrice)), 0);
+            $('d-stock-val').innerText = '₹' + totalStockVal.toLocaleString();
+            $('d-stock-cost').innerText = 'Valuation Cost: ₹' + totalStockCost.toLocaleString();
+
+            const lowAlerts = data.i.filter(item => item.qty <= (item.minStock || 5)).length;
+            $('d-low-alert').innerText = lowAlerts;
+
+            const totalDebt = data.c.reduce((sum, cust) => sum + (cust.wallet < 0 ? Math.abs(cust.wallet) : 0), 0);
+            $('d-cust-debt').innerText = '₹' + totalDebt.toLocaleString();
+
+            // Top Sellers
+            const top = [...data.i].sort((a,b)=>(b.soldQty||0)-(a.soldQty||0)).slice(0, 5);
+            $('t-top-sell').getElementsByTagName('tbody')[0].innerHTML = top.map(x =>
+                `<tr><td class="font-bold">${x.name}</td><td class="text-right font-mono font-bold text-emerald-700">${x.soldQty||0}</td></tr>`
+            ).join('');
+
+            // Dead Stock (least sold / oldest)
+            const dead = [...data.i].filter(x => !x.soldQty).slice(0, 5);
+            $('t-dead-sell').getElementsByTagName('tbody')[0].innerHTML = dead.map(x =>
+                `<tr><td class="font-bold">${x.name}</td><td class="text-right font-mono text-xs text-slate-500">${new Date(x.dateAdded).toLocaleDateString()}</td></tr>`
+            ).join('');
+
+            // Categories Grid
+            const activeCats = (data.cfg.cats || []).filter(c => !(data.cfg.hid || []).includes(c));
+            $('dash-cats').innerHTML = activeCats.map(c => {
+                const count = data.i.filter(i => i.cat === c).reduce((sum, i) => sum + _N(i.qty), 0);
+                return `
+                    <div class="card p-3 cursor-pointer hover:border-emerald-500 transition hover:-translate-y-0.5" onclick="BV.Sys.openCat('${c}')">
+                        <div class="text-[11px] font-bold text-slate-500 uppercase truncate">${c}</div>
+                        <div class="text-xl font-head font-extrabold text-slate-800 mt-1">${count}</div>
+                    </div>
+                `;
+            }).join('');
+
+            BV.Sys.popCats();
+        },
+
+        openCat(c) {
+            BV.UI.nav('inv');
+            const f = $('inv-filter');
+            if (f) { f.value = c; BV.Inv.ren(); }
+        },
+
+        str() {
+            const raw = JSON.stringify(BVStore.getData());
+            const usedBytes = raw.length;
+            const maxBytes = 5000000;
+            const pct = Math.min(100, (usedBytes / maxBytes) * 100);
+            $('d-str-bar').style.width = pct + '%';
+            $('d-str-txt').innerText = pct.toFixed(1) + '%';
+            if ($('str-bar')) $('str-bar').style.width = pct + '%';
+            if ($('str-use')) $('str-use').innerText = pct.toFixed(1) + '%';
+        },
+
+        popCats() {
+            const cfg = BVStore.getConfig();
+            const cats = [...(cfg.cats || [])].sort((a,b)=>a.localeCompare(b));
+            $('cat-list').innerHTML = cats.map(c =>
+                `<div class="flex items-center justify-between py-2"><span>${c}</span><button class="btn btn-dan btn-sm" onclick="BV.Sys.delCat('${c}')">X</button></div>`
+            ).join('');
+
+            $('dash-vis-list').innerHTML = cats.map(c =>
+                `<div class="flex items-center gap-2"><input type="checkbox" ${(cfg.hid||[]).includes(c)?'':'checked'} onclick="BV.Sys.togVis('${c}')" class="w-4 h-4 mb-0"><span>${c}</span></div>`
+            ).join('');
+        },
+
+        addCat() {
+            const name = $('new-cat').value.trim();
+            if (!name) return;
+            const cfg = BVStore.getConfig();
+            if (!cfg.cats.includes(name)) {
+                cfg.cats.push(name);
+                BVStore.updateConfig(cfg);
+            }
+            $('new-cat').value = '';
+            BV.Sys.dash();
+            BV.Inv.ren();
+        },
+
+        delCat(c) {
+            if (!confirm(`Delete category "${c}"?`)) return;
+            const cfg = BVStore.getConfig();
+            cfg.cats = cfg.cats.filter(x => x !== c);
+            BVStore.updateConfig(cfg);
+            BV.Sys.dash();
+            BV.Inv.ren();
+        },
+
+        togVis(c) {
+            const cfg = BVStore.getConfig();
+            cfg.hid = cfg.hid || [];
+            if (cfg.hid.includes(c)) {
+                cfg.hid = cfg.hid.filter(x => x !== c);
+            } else {
+                cfg.hid.push(c);
+            }
+            BVStore.updateConfig(cfg);
+            BV.Sys.dash();
+        },
+
+        setLogo(e) {
+            const f = e.files[0];
+            if (!f) return;
+            const r = new FileReader();
+            r.onload = x => {
+                BVStore.setLogo(x.target.result);
+                $('logo-prev').src = x.target.result;
+                alert('Brand Logo Updated for Invoices!');
+            };
+            r.readAsDataURL(f);
+        },
+
+        saveStoreConfig() {
+            const cfg = BVStore.getConfig();
+            cfg.storeName = _V('cfg-name');
+            cfg.address = _V('cfg-addr');
+            cfg.phone = _V('cfg-phone');
+            cfg.gstin = _V('cfg-gstin');
+            cfg.upiId = _V('cfg-upi');
+            BVStore.updateConfig(cfg);
+            BV.UI.closeM('m-store-settings');
+            alert('Store configuration saved successfully!');
+        },
+
+        exportSalesExcel() {
+            const sales = BVStore.getSales();
+            const data = sales.map(s => ({
+                "Invoice ID": s.invoiceNo || s.id,
+                "Date": new Date(s.date).toLocaleDateString(),
+                "Time": new Date(s.date).toLocaleTimeString(),
+                "Customer": s.cust.name,
+                "Phone": s.cust.phone,
+                "Items": s.items.map(i => `${i.name} (x${i.q})`).join('; '),
+                "Subtotal": s.subTotal || s.total,
+                "Tax": s.tax || 0,
+                "Total Bill": s.billTotal || s.total,
+                "Paid": s.paid || 0,
+                "Payment Mode": s.paymentMode || 'Cash'
+            }));
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Sales");
+            XLSX.writeFile(wb, "BhumiVera_Sales_Export.xlsx");
+        },
+
+        exportStockExcel() {
+            const items = BVStore.getItems();
+            const data = items.map(i => ({
+                "SKU": i.sku,
+                "Barcode": i.barcode,
+                "Item Name": i.name,
+                "Category": i.cat,
+                "Current Stock": i.qty,
+                "Cost Price (INR)": i.costPrice,
+                "Selling Price (INR)": i.price,
+                "Total Value (INR)": i.qty * i.price,
+                "Total Sold": i.soldQty || 0
+            }));
+            const ws = XLSX.utils.json_to_sheet(data);
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Stock");
+            XLSX.writeFile(wb, "BhumiVera_Stock_Inventory.xlsx");
+        },
+
+        expLogsExcel() {
+            const logs = BVStore.getLogs();
+            const ws = XLSX.utils.json_to_sheet(logs.map(l => ({
+                "Timestamp": l.t,
+                "Operator": l.user || 'Admin',
+                "Action": l.act,
+                "Details": l.msg
+            })));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Logs");
+            XLSX.writeFile(wb, "BhumiVera_Audit_Logs.xlsx");
+        }
+    },
+
+    Auth: {
+        logout() {
+            BVAuth.logout();
+            window.location.href = 'login.html';
+        }
+    },
+
+    UI: {
+        nav(page) {
+            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(i => i.classList.remove('active'));
+            const target = $('v-' + page);
+            if (target) target.classList.add('active');
+
+            const titleMap = {
+                'dash': 'Executive Dashboard',
+                'inv': 'Master Inventory Control',
+                'sale': 'POS Billing Terminal',
+                'map': 'Customer Ledger & Khata',
+                'trans': 'Stock Adjustments',
+                'ret': 'Returns & Replacement',
+                'rep': 'Reports & Statements',
+                'logs': 'Audit Trail Logs'
+            };
+            $('page-title').innerText = titleMap[page] || page.toUpperCase();
+
+            if (page === 'inv') BV.Inv.ren();
+            if (page === 'map') BV.Map.ren();
+            if (page === 'logs') BV.UI.rLogs();
+            if (page === 'trans') BV.Trans.load();
+        },
+
+        modal(id) { $(id).style.display = 'flex'; },
+        closeM(id) { $(id).style.display = 'none'; },
+
+        sort(tableId, colIdx) {
+            const tb = $(tableId);
+            const rows = Array.from(tb.rows).slice(1);
+            const asc = tb.getAttribute('data-asc') === 'true';
+            rows.sort((a, b) => {
+                const x = a.cells[colIdx].innerText;
+                const y = b.cells[colIdx].innerText;
+                return asc ? x.localeCompare(y, undefined, { numeric: true }) : y.localeCompare(x, undefined, { numeric: true });
+            });
+            rows.forEach(r => tb.tBodies[0].appendChild(r));
+            tb.setAttribute('data-asc', !asc);
+        },
+
+        rLogs() {
+            const logs = BVStore.getLogs();
+            $('t-logs').getElementsByTagName('tbody')[0].innerHTML = logs.map(l =>
+                `<tr>
+                    <td class="font-mono text-xs text-slate-500">${new Date(l.t).toLocaleString()}</td>
+                    <td class="font-bold text-slate-700">${l.user || 'Admin'}</td>
+                    <td><span class="pill p-green">${l.act}</span></td>
+                    <td class="text-slate-600">${l.msg}</td>
+                </tr>`
+            ).join('');
+        },
+
+        viewImg(src) {
+            $('full-img').src = src;
+            $('m-img-view').style.display = 'flex';
+        }
+    },
+
+    Inv: {
+        ren() {
+            const search = _V('inv-s').toLowerCase().trim();
+            const cat = _V('inv-filter') || 'ALL';
+            const stockFilter = _V('inv-stock-filter') || 'ALL';
+
+            const items = BVStore.getItems();
+            const filtered = items.filter(x => {
+                const matchSearch = x.name.toLowerCase().includes(search) ||
+                    (x.sku && x.sku.toLowerCase().includes(search)) ||
+                    (x.barcode && x.barcode.toLowerCase().includes(search));
+                const matchCat = (cat === 'ALL' || x.cat === cat);
+                let matchStock = true;
+                if (stockFilter === 'LOW') matchStock = (x.qty <= (x.minStock || 5) && x.qty > 0);
+                if (stockFilter === 'OUT') matchStock = (x.qty === 0);
+                return matchSearch && matchCat && matchStock;
+            }).sort((a,b)=>a.name.localeCompare(b.name));
+
+            $('t-inv').getElementsByTagName('tbody')[0].innerHTML = filtered.map(x => {
+                const margin = x.costPrice ? Math.round(((x.price - x.costPrice) / x.price) * 100) : 0;
+                const stockBadge = x.qty === 0
+                    ? '<span class="pill p-red">Out of Stock</span>'
+                    : x.qty <= (x.minStock || 5)
+                    ? `<span class="pill p-amber font-mono">${x.qty} ${x.uom||'Pcs'} (Low)</span>`
+                    : `<span class="pill p-green font-mono">${x.qty} ${x.uom||'Pcs'}</span>`;
+
+                return `
+                    <tr>
+                        <td class="font-mono text-xs font-bold text-slate-600">${x.sku || '-'}</td>
+                        <td class="font-bold text-slate-900">${x.name}</td>
+                        <td><span class="pill p-gray">${x.cat}</span></td>
+                        <td class="text-center">${stockBadge}</td>
+                        <td class="text-right font-mono">₹${x.costPrice || 0}</td>
+                        <td class="text-right font-mono font-bold text-slate-900">₹${x.price}</td>
+                        <td class="text-center font-mono font-bold ${margin > 20 ? 'text-emerald-700' : 'text-slate-600'}">${margin}%</td>
+                        <td class="text-right">
+                            <button class="btn btn-sec btn-sm" onclick="BV.Inv.edit(${x.id})">Edit</button>
+                            <button class="btn btn-dan btn-sm" onclick="BV.Inv.del(${x.id})">Del</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+
+            // Categories dropdown
+            const cfg = BVStore.getConfig();
+            const sCats = [...cfg.cats].sort((a,b)=>a.localeCompare(b));
+            $('ni-cat').innerHTML = sCats.map(c => `<option>${c}</option>`).join('');
+
+            const curFilter = $('inv-filter').value;
+            const filterHtml = '<option value="ALL">All Categories</option>' + sCats.map(c => `<option value="${c}">${c}</option>`).join('');
+            if ($('inv-filter').innerHTML !== filterHtml) {
+                $('inv-filter').innerHTML = filterHtml;
+                if (curFilter) $('inv-filter').value = curFilter;
+            }
+        },
+
+        newItem() {
+            BV.tmp.eid = null;
+            $('item-modal-title').innerText = 'Add New Item';
+            $('ni-n').value = '';
+            $('ni-q').value = '10';
+            $('ni-cp').value = '100';
+            $('ni-p').value = '150';
+            $('ni-min').value = '5';
+            BV.Inv.genSKU();
+            BV.Inv.calcMargin();
+            BV.UI.modal('m-add-item');
+        },
+
+        edit(id) {
+            const item = BVStore.getItemById(id);
+            if (!item) return;
+            BV.tmp.eid = id;
+            $('item-modal-title').innerText = 'Edit Item';
+            $('ni-n').value = item.name;
+            $('ni-cat').value = item.cat;
+            $('ni-sku').value = item.sku || '';
+            $('ni-q').value = item.qty;
+            $('ni-cp').value = item.costPrice || 0;
+            $('ni-p').value = item.price;
+            $('ni-min').value = item.minStock || 5;
+            $('ni-uom').value = item.uom || 'Pcs';
+            BV.Inv.calcMargin();
+            BV.UI.modal('m-add-item');
+        },
+
+        genSKU() {
+            $('ni-sku').value = 'SKU-' + Math.floor(100000 + Math.random() * 900000);
+        },
+
+        calcMargin() {
+            const cp = _N(_V('ni-cp'));
+            const sp = _N(_V('ni-p'));
+            const margin = sp > 0 ? Math.round(((sp - cp) / sp) * 100) : 0;
+            $('ni-margin').value = margin + '%';
+        },
+
+        add() {
+            const name = _V('ni-n').trim();
+            const qty = _N(_V('ni-q'));
+            const costPrice = _N(_V('ni-cp'));
+            const price = _N(_V('ni-p'));
+            const cat = _V('ni-cat');
+            const sku = _V('ni-sku');
+            const minStock = _N(_V('ni-min'));
+            const uom = _V('ni-uom');
+
+            if (!name || price < 0) {
+                alert('Please enter a valid item name and selling price.');
+                return;
+            }
+
+            BVStore.saveItem({
+                id: BV.tmp.eid,
+                name,
+                qty,
+                costPrice,
+                price,
+                cat,
+                sku,
+                minStock,
+                uom
+            });
+
+            BV.UI.closeM('m-add-item');
+            BV.Inv.ren();
+            BV.Sys.dash();
+        },
+
+        del(id) {
+            if (confirm('Permanently delete this product from inventory?')) {
+                BVStore.deleteItem(id);
+                BV.Inv.ren();
+                BV.Sys.dash();
+            }
+        },
+
+        importExcel() {
+            const f = $('imp-file').files[0];
+            if (!f) return;
+            const r = new FileReader();
+            r.onload = e => {
+                const data = new Uint8Array(e.target.result);
+                const wb = XLSX.read(data, { type: 'array' });
+                const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                let count = 0;
+                json.forEach(row => {
+                    const name = row['Item Name'] || row.Name || row['name'];
+                    if (!name) return;
+                    BVStore.saveItem({
+                        name: name,
+                        cat: row['Category'] || 'General',
+                        qty: _N(row['Current Stock'] || row.Qty || 0),
+                        costPrice: _N(row['Cost Price'] || 0),
+                        price: _N(row['Unit Price'] || row.Price || 0),
+                        sku: row['SKU'] || ''
+                    });
+                    count++;
+                });
+                BV.Inv.ren();
+                BV.Sys.dash();
+                BV.UI.closeM('m-imp-stock');
+                alert(`Successfully imported ${count} items!`);
+            };
+            r.readAsArrayBuffer(f);
+        }
+    },
+
+    Map: {
+        ren() {
+            const custs = BVStore.getCustomers();
+            $('t-cust').getElementsByTagName('tbody')[0].innerHTML = custs.map(c => {
+                const balClass = c.wallet < 0 ? 'text-rose-600 font-extrabold' : 'text-emerald-700 font-extrabold';
+                return `
+                    <tr>
+                        <td class="font-bold text-slate-900">${c.name}</td>
+                        <td class="font-mono">${c.phone || '-'}</td>
+                        <td>${c.loc || '-'}</td>
+                        <td class="text-center"><span class="pill p-gray">${c.type || 'Walk-in'}</span></td>
+                        <td class="text-right font-mono ${balClass}">₹${c.wallet}</td>
+                        <td class="text-right">
+                            <button class="btn btn-sec btn-sm font-bold text-emerald-700" onclick="BV.Fin.open('C', ${c.id})">Transact</button>
+                            <button class="btn btn-sec btn-sm" onclick="BV.Map.sendReminder(${c.id})"><i class="ph-bold ph-whatsapp-logo text-emerald-600"></i> Remind</button>
+                            <button class="btn btn-sec btn-sm" onclick="BV.Map.edit(${c.id})">Edit</button>
+                            <button class="btn btn-dan btn-sm" onclick="BV.Map.del(${c.id})">Del</button>
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+        },
+
+        newCust() {
+            BV.tmp.ecid = null;
+            $('mc-title').innerText = 'New Customer Profile';
+            $('nc-n').value = '';
+            $('nc-p').value = '';
+            $('nc-l').value = '';
+            $('nc-t').value = 'Walk-in';
+            $('nc-limit').value = '50000';
+            BV.UI.modal('m-add-cust');
+        },
+
+        edit(id) {
+            const c = BVStore.getCustomerById(id);
+            if (!c) return;
+            BV.tmp.ecid = id;
+            $('mc-title').innerText = 'Edit Customer Profile';
+            $('nc-n').value = c.name;
+            $('nc-p').value = c.phone;
+            $('nc-l').value = c.loc || '';
+            $('nc-t').value = c.type || 'Walk-in';
+            $('nc-limit').value = c.creditLimit || 50000;
+            BV.UI.modal('m-add-cust');
+        },
+
+        add() {
+            const name = _V('nc-n').trim();
+            const phone = _V('nc-p').trim();
+            if (!name) { alert('Customer name required.'); return; }
+
+            BVStore.saveCustomer({
+                id: BV.tmp.ecid,
+                name: name,
+                phone: phone,
+                loc: _V('nc-l'),
+                type: _V('nc-t'),
+                creditLimit: _N(_V('nc-limit'))
+            });
+
+            BV.UI.closeM('m-add-cust');
+            BV.Map.ren();
+        },
+
+        del(id) {
+            if (confirm('Delete this customer profile?')) {
+                BVStore.deleteCustomer(id);
+                BV.Map.ren();
+            }
+        },
+
+        sendReminder(id) {
+            const c = BVStore.getCustomerById(id);
+            if (!c) return;
+            if (c.wallet >= 0) {
+                alert(`${c.name} has no outstanding debt balance.`);
+                return;
+            }
+            const debt = Math.abs(c.wallet);
+            const cfg = BVStore.getConfig();
+            const text = `Dear ${c.name} 🙏\n\nThis is a friendly reminder regarding your outstanding Khata balance of *₹${debt}* with *${cfg.storeName}*.\n\nPlease clear the balance via UPI to: *${cfg.upiId}*.\n\nThank you for your business!`;
+            const phone = c.phone.replace(/[^0-9]/g, '');
+            window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(text)}`, '_blank');
+        }
+    },
+
+    Sale: {
+        saveState() {
+            const state = {
+                c: BV.c,
+                xc: BV.xc,
+                scId: BV.tmp.sc ? BV.tmp.sc.id : null,
+                paid: _N(_V('sl-paid')),
+                disc: _N(_V('sl-disc')),
+                tax: _N(_V('sl-tax'))
+            };
+            sessionStorage.setItem('BV_POS_STATE', JSON.stringify(state));
+        },
+
+        loadState() {
+            const raw = sessionStorage.getItem('BV_POS_STATE');
+            if (raw) {
+                try {
+                    const s = JSON.parse(raw);
+                    BV.c = s.c || [];
+                    BV.xc = s.xc || [];
+                    if (s.paid) $('sl-paid').value = s.paid;
+                    if (s.disc) $('sl-disc').value = s.disc;
+                    if (s.tax) $('sl-tax').value = s.tax;
+                    if (s.scId) {
+                        BV.Sale.pick(s.scId, true);
+                    } else {
+                        BV.Sale.rC();
+                    }
+                } catch(e) {}
+            }
+        },
+
+        clearAll() {
+            if (BV.c.length > 0 && !confirm('Clear current bill cart?')) return;
+            BV.c = [];
+            BV.xc = [];
+            BV.tmp.sc = null;
+            $('sl-c').value = '';
+            $('sl-c-info').classList.add('hidden');
+            $('sl-paid').value = '0';
+            $('sl-disc').value = '0';
+            $('btn-checkout').innerText = 'Select Customer to Checkout';
+            BV.Sale.rC();
+        },
+
+        sug(v) {
+            if (v.length < 2) { $('sl-sug').classList.add('hidden'); return; }
+            const custs = BVStore.getCustomers().filter(c =>
+                c.name.toLowerCase().includes(v.toLowerCase()) ||
+                (c.phone && c.phone.includes(v))
+            );
+            $('sl-sug').innerHTML = custs.map(c =>
+                `<div class="p-2 hover:bg-emerald-50 rounded-lg cursor-pointer font-bold text-slate-800" onclick="BV.Sale.pick(${c.id})">${c.name} (${c.phone||'-'})</div>`
+            ).join('');
+            $('sl-sug').classList.remove('hidden');
+        },
+
+        pick(id, skipSave = false) {
+            const c = BVStore.getCustomerById(id);
+            if (!c) return;
+            BV.tmp.sc = c;
+            $('sl-c').value = c.name;
+            $('sl-c-name').innerText = c.name;
+            $('sl-c-phone').innerText = c.phone || 'No phone';
+            $('sl-c-bal').innerText = '₹' + c.wallet;
+            $('sl-c-bal').className = c.wallet < 0 ? 'text-rose-600 font-bold' : 'text-emerald-700 font-bold';
+            $('sl-sug').classList.add('hidden');
+            $('sl-c-info').classList.remove('hidden');
+            BV.Sale.loadItems();
+            $('btn-checkout').innerText = 'Complete & Generate Invoice';
+            if (!skipSave) BV.Sale.rC();
+        },
+
+        loadItems() {
+            const items = BVStore.getItems().sort((a,b)=>a.name.localeCompare(b.name));
+            $('sl-items-list').innerHTML = items.map(x =>
+                `<option value="${x.name}">${x.qty} in Stock &bull; ₹${x.price} [${x.sku||''}]</option>`
+            ).join('');
+        },
+
+        setPrice() {
+            const val = $('sl-item-input').value;
+            const item = BVStore.getItemByBarcode(val) || BVStore.getItems().find(x => x.name === val);
+            if (item) {
+                $('sl-item-input').value = item.name;
+                $('sl-price').value = item.price;
+                const s = $('sl-stock-display');
+                s.innerText = `Available: ${item.qty} ${item.uom||'Pcs'}`;
+                s.className = item.qty < 5 ? 'text-rose-600 font-bold text-xs' : 'text-emerald-700 font-bold text-xs';
+            }
+        },
+
+        checkStk() {
+            const val = $('sl-item-input').value;
+            const item = BVStore.getItems().find(x => x.name === val);
+            if (!item) return;
+            const q = _N($('sl-qty').value);
+            if (q > item.qty) {
+                $('sl-stock-display').innerText = `Max Stock Available: ${item.qty}`;
+            }
+        },
+
+        add() {
+            const name = $('sl-item-input').value;
+            const q = _N(_V('sl-qty'));
+            const p = _N(_V('sl-price'));
+            if (!name || q <= 0 || p < 0) return;
+
+            const item = BVStore.getItems().find(x => x.name === name);
+            if (!item) { alert('Select a valid item.'); return; }
+            if (item.qty < q) { alert('Insufficient stock!'); return; }
+
+            const ex = BV.c.find(x => x.id === item.id);
+            if (ex) {
+                if (item.qty < (ex.q + q)) { alert('Total quantity exceeds stock!'); return; }
+                ex.q += q;
+            } else {
+                BV.c.push({ id: item.id, name: item.name, sku: item.sku, q: q, p: p, max: item.qty, uom: item.uom });
+            }
+
+            $('sl-item-input').value = '';
+            $('sl-qty').value = '1';
+            $('sl-price').value = '';
+            $('sl-stock-display').innerText = '';
+            BV.Sale.rC();
+        },
+
+        addXC() {
+            const n = _V('sl-xc-name').trim();
+            const a = _N(_V('sl-xc-amt'));
+            if (!n || a <= 0) return;
+            BV.xc.push({ n, a });
+            $('sl-xc-name').value = '';
+            $('sl-xc-amt').value = '';
+            BV.Sale.rC();
+        },
+
+        remXC(idx) {
+            BV.xc.splice(idx, 1);
+            BV.Sale.rC();
+        },
+
+        rC() {
+            const itemsHtml = BV.c.map(x => `
+                <tr>
+                    <td class="font-bold text-slate-800">${x.name}</td>
+                    <td class="text-center">
+                        <button class="qty-btn" onclick="BV.Sale.mod(${x.id}, -1)">-</button>
+                        <span class="font-bold mx-2 font-mono">${x.q}</span>
+                        <button class="qty-btn" onclick="BV.Sale.mod(${x.id}, 1)">+</button>
+                    </td>
+                    <td class="text-right font-mono font-bold">₹${x.q * x.p}</td>
+                    <td class="text-right">
+                        <button onclick="BV.Sale.rem(${x.id})" class="text-rose-500 font-bold p-1"><i class="ph-bold ph-x"></i></button>
+                    </td>
+                </tr>
+            `).join('');
+
+            const xcHtml = BV.xc.map((x, i) => `
+                <tr class="text-emerald-800">
+                    <td><i class="ph-bold ph-plus-circle"></i> ${x.n} (Extra)</td>
+                    <td class="text-center">-</td>
+                    <td class="text-right font-mono font-bold">₹${x.a}</td>
+                    <td class="text-right"><button onclick="BV.Sale.remXC(${i})" class="text-rose-500 font-bold p-1"><i class="ph-bold ph-x"></i></button></td>
+                </tr>
+            `).join('');
+
+            $('t-cart').getElementsByTagName('tbody')[0].innerHTML = itemsHtml + xcHtml;
+
+            const itemTot = BV.c.reduce((sum, item) => sum + (item.q * item.p), 0);
+            const xcTot = BV.xc.reduce((sum, x) => sum + x.a, 0);
+            const disc = _N(_V('sl-disc'));
+            const taxRate = _N(_V('sl-tax'));
+            const taxable = Math.max(0, itemTot + xcTot - disc);
+            const taxAmt = Math.round((taxable * taxRate) / 100);
+            const billTotal = taxable + taxAmt;
+
+            const prevBal = BV.tmp.sc ? BV.tmp.sc.wallet : 0;
+            const paid = _N(_V('sl-paid'));
+            const newBal = prevBal - billTotal + paid;
+
+            $('sl-sub').innerText = '₹' + itemTot;
+            $('sl-xc-tot').innerText = '₹' + xcTot;
+            $('sl-prev-bal').innerText = '₹' + prevBal;
+            $('sl-prev-bal').className = prevBal < 0 ? 'font-mono text-rose-600 font-bold' : 'font-mono text-emerald-700 font-bold';
+            $('sl-payable').innerText = '₹' + billTotal;
+            $('sl-new-bal').innerText = '₹' + newBal;
+            $('sl-new-bal').className = newBal < 0 ? 'text-lg text-rose-600' : 'text-lg text-emerald-700';
+
+            BV.Sale.saveState();
+        },
+
+        mod(id, delta) {
+            const item = BV.c.find(x => x.id === id);
+            if (!item) return;
+            const nq = item.q + delta;
+            if (nq > item.max) { alert('Exceeds available stock.'); return; }
+            if (nq <= 0) { BV.Sale.rem(id); return; }
+            item.q = nq;
+            BV.Sale.rC();
+        },
+
+        rem(id) {
+            BV.c = BV.c.filter(x => x.id !== id);
+            BV.Sale.rC();
+        },
+
+        checkout() {
+            if (!BV.tmp.sc) { alert('Please select or create a customer first.'); return; }
+            if (BV.c.length === 0 && BV.xc.length === 0) { alert('Cart is empty.'); return; }
+
+            const session = BVAuth.getCurrentSession();
+            const cashier = session ? session.username : 'Admin';
+
+            const sale = BVStore.processSale({
+                customer: BV.tmp.sc,
+                items: BV.c,
+                extraCharges: BV.xc,
+                discount: _N(_V('sl-disc')),
+                taxRate: _N(_V('sl-tax')),
+                paidAmount: _N(_V('sl-paid')),
+                paymentMode: _V('sl-pay-mode'),
+                cashier: cashier
+            });
+
+            BV.tmp.lSale = sale;
+
+            // Reset Cart
+            BV.c = [];
+            BV.xc = [];
+            BV.tmp.sc = null;
+            $('sl-c').value = '';
+            $('sl-c-info').classList.add('hidden');
+            $('sl-paid').value = '0';
+            $('sl-disc').value = '0';
+            BV.Sale.saveState();
+            BV.Sale.rC();
+            BV.Inv.ren();
+            BV.Sys.dash();
+
+            BV.UI.modal('m-invoice');
+        },
+
+        shareWA() {
+            const s = BV.tmp.lSale;
+            if (!s) return;
+            const cfg = BVStore.getConfig();
+            const txt = `Hello ${s.cust.name} 🙏\n\nThank you for choosing *${cfg.storeName}* ✨\n\n*Invoice #:* ${s.invoiceNo || s.id}\n*Bill Amount:* ₹${s.billTotal}\n*Payment Received:* ₹${s.paid}\n*New Balance:* ₹${s.newBal}\n\nPlease find your official tax invoice attached.\n\n_${cfg.tagline}_`;
+            const phone = s.cust.phone ? s.cust.phone.replace(/[^0-9]/g, '') : '';
+            window.open(`https://api.whatsapp.com/send?phone=${phone}&text=${encodeURIComponent(txt)}`, '_blank');
+            BV.Sale.downloadPDF(s);
+        },
+
+        downloadPDF(s) {
+            const doc = new window.jspdf.jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+            const margin = 18;
+            const width = doc.internal.pageSize.getWidth();
+            const height = doc.internal.pageSize.getHeight();
+            const cfg = BVStore.getConfig();
+
+            // Header Banner
+            doc.setFillColor(16, 185, 129);
+            doc.rect(0, 0, width, 8, 'F');
+
+            // Golden Emblem Logo & Title
+            let textStartX = margin;
+            if (window.BHUMIVERA_LOGO) {
+                try {
+                    doc.addImage(window.BHUMIVERA_LOGO, 'PNG', margin, 12, 26, 26);
+                    textStartX = margin + 30;
+                } catch(e) {}
+            }
+
+            doc.setFont("helvetica", "bold");
+            doc.setFontSize(20);
+            doc.setTextColor(4, 120, 87);
+            doc.text(cfg.storeName || "BHUMIVERA", textStartX, 20);
+
+            doc.setFontSize(8);
+            doc.setFont("helvetica", "italic");
+            doc.setTextColor(180, 130, 20);
+            doc.text(cfg.tagline || "Rooted in nature. Made for your everyday", textStartX, 25);
+
+            doc.setFontSize(8.5);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(90);
+            doc.text(cfg.address || "Delhi, India", textStartX, 30);
+            doc.text(`Phone: ${cfg.phone} | GSTIN: ${cfg.gstin || '-'}`, textStartX, 35);
+
+            // Right side: Invoice meta
+            doc.setFontSize(14);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(15, 23, 42);
+            doc.text("TAX INVOICE", width - margin, 24, { align: 'right' });
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "normal");
+            doc.text(`Invoice #: ${s.invoiceNo || s.id}`, width - margin, 30, { align: 'right' });
+            doc.text(`Date: ${new Date(s.date).toLocaleDateString()} ${new Date(s.date).toLocaleTimeString()}`, width - margin, 35, { align: 'right' });
+
+            doc.setDrawColor(226, 232, 240);
+            doc.setLineWidth(0.5);
+            doc.line(margin, 42, width - margin, 42);
+
+            // Bill To
+            doc.setFontSize(11);
+            doc.setFont("helvetica", "bold");
+            doc.text("BILLED TO:", margin, 50);
+            doc.setFont("helvetica", "normal");
+            doc.setFontSize(10);
+            doc.text(s.cust.name, margin, 56);
+            doc.text(`Phone: ${s.cust.phone}`, margin, 61);
+
+            // Items Table
+            const bodyData = s.items.map(i => [
+                i.sku || '-',
+                i.name,
+                i.q + ' ' + (i.uom || 'Pcs'),
+                'INR ' + i.p.toFixed(2),
+                'INR ' + (i.p * i.q).toFixed(2)
+            ]);
+            (s.extra || []).forEach(x => {
+                bodyData.push(['-', `+ Extra: ${x.n}`, '-', '-', 'INR ' + parseFloat(x.a).toFixed(2)]);
+            });
+
+            doc.autoTable({
+                startY: 68,
+                head: [['SKU', 'ITEM DESCRIPTION', 'QTY', 'RATE', 'TOTAL']],
+                body: bodyData,
+                theme: 'grid',
+                headStyles: { fillColor: [16, 185, 129], textColor: 255, fontStyle: 'bold', fontSize: 9 },
+                bodyStyles: { textColor: 40, fontSize: 9 },
+                margin: { left: margin, right: margin }
+            });
+
+            // Financial Summary Block
+            let finalY = doc.lastAutoTable.finalY + 10;
+            if (finalY > height - 60) { doc.addPage(); finalY = 20; }
+
+            const boxW = 100;
+            const boxX = width - margin - boxW;
+            doc.setFillColor(248, 250, 252);
+            doc.rect(boxX, finalY, boxW, 40, 'F');
+            doc.setDrawColor(226, 232, 240);
+            doc.rect(boxX, finalY, boxW, 40, 'D');
+
+            doc.setFontSize(9);
+            doc.text("Subtotal:", boxX + 8, finalY + 8);
+            doc.text(`INR ${(s.subTotal || s.total).toFixed(2)}`, width - margin - 8, finalY + 8, { align: 'right' });
+            doc.text(`Tax / GST (${s.taxRate || 0}%):`, boxX + 8, finalY + 14);
+            doc.text(`INR ${(s.tax || 0).toFixed(2)}`, width - margin - 8, finalY + 14, { align: 'right' });
+            doc.setFont("helvetica", "bold");
+            doc.text("Total Payable:", boxX + 8, finalY + 22);
+            doc.text(`INR ${s.billTotal.toFixed(2)}`, width - margin - 8, finalY + 22, { align: 'right' });
+            doc.setFont("helvetica", "normal");
+            doc.text("Amount Received:", boxX + 8, finalY + 28);
+            doc.text(`INR ${(s.paid || 0).toFixed(2)}`, width - margin - 8, finalY + 28, { align: 'right' });
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(4, 120, 87);
+            doc.text("Running Khata Balance:", boxX + 8, finalY + 35);
+            doc.text(`INR ${s.newBal.toFixed(2)}`, width - margin - 8, finalY + 35, { align: 'right' });
+
+            // Footer
+            doc.setFontSize(8);
+            doc.setFont("helvetica", "italic");
+            doc.setTextColor(130);
+            doc.text("Thank you for your business! System generated by BhumiVera Enterprise Suite.", width / 2, height - 12, { align: 'center' });
+
+            doc.save(`Invoice_${s.invoiceNo || s.id}.pdf`);
+        },
+
+        printThermal() {
+            const s = BV.tmp.lSale;
+            if (!s) return;
+            const w = window.open('', '_blank', 'width=350,height=600');
+            w.document.write(`
+                <html><head><title>Thermal Receipt</title>
+                <style>
+                    body { font-family: monospace; font-size: 12px; margin: 0; padding: 10px; width: 280px; }
+                    .center { text-align: center; }
+                    .right { text-align: right; }
+                    .bold { font-weight: bold; }
+                    .line { border-top: 1px dashed #000; margin: 8px 0; }
+                </style></head><body>
+                <div class="center bold" style="font-size:16px;">BHUMIVERA</div>
+                <div class="center">POS Receipt</div>
+                <div class="line"></div>
+                <div>Inv #: ${s.invoiceNo || s.id}</div>
+                <div>Date: ${new Date(s.date).toLocaleString()}</div>
+                <div>Cust: ${s.cust.name}</div>
+                <div class="line"></div>
+                ${s.items.map(i => `<div>${i.name} x${i.q}<span class="right" style="float:right;">₹${i.p*i.q}</span></div>`).join('')}
+                <div class="line"></div>
+                <div class="bold">Total: <span style="float:right;">₹${s.billTotal}</span></div>
+                <div>Paid: <span style="float:right;">₹${s.paid}</span></div>
+                <div class="bold">Khata Bal: <span style="float:right;">₹${s.newBal}</span></div>
+                <div class="line"></div>
+                <div class="center" style="font-size:10px;">Thank you! Visit again.</div>
+                <script>window.print();<\/script>
+                </body></html>
+            `);
+            w.document.close();
+        }
+    },
+
+    Fin: {
+        open(t, id) {
+            BV.tmp.fid = id;
+            const cust = BVStore.getCustomerById(id);
+            if (cust) {
+                $('cm-bal').innerText = '₹' + cust.wallet;
+                BV.UI.modal('m-credit');
+            }
+        },
+
+        togProof() {
+            const act = _V('cm-act');
+            if (act === 'SUB') $('cm-proof-box').classList.remove('hidden');
+            else $('cm-proof-box').classList.add('hidden');
+        },
+
+        exec() {
+            const act = _V('cm-act');
+            const amt = _N(_V('cm-amt'));
+            const ref = _V('cm-ref');
+            const file = $('cm-img').files[0];
+
+            if (amt <= 0) { alert('Enter valid amount.'); return; }
+
+            const type = act === 'ADD' ? 'ADD_DEBT' : 'RECEIVE_PAYMENT';
+
+            if (file && type === 'RECEIVE_PAYMENT') {
+                const reader = new FileReader();
+                reader.onload = x => {
+                    BVStore.recordKhataTransaction(BV.tmp.fid, type, amt, ref, x.target.result);
+                    BV.UI.closeM('m-credit');
+                    BV.Map.ren();
+                    BV.Sys.dash();
+                };
+                reader.readAsDataURL(file);
+            } else {
+                BVStore.recordKhataTransaction(BV.tmp.fid, type, amt, ref, null);
+                BV.UI.closeM('m-credit');
+                BV.Map.ren();
+                BV.Sys.dash();
+            }
+        }
+    },
+
+    Trans: {
+        load() {
+            const items = BVStore.getItems();
+            $('tf-item').innerHTML = items.map(x => `<option value="${x.id}">${x.name} (Qty: ${x.qty})</option>`).join('');
+        },
+
+        exec() {
+            const id = _V('tf-item');
+            const qty = _N(_V('tf-qty'));
+            const reason = _V('tf-reason');
+            if (qty <= 0) return;
+
+            const ok = BVStore.adjustStockItem(id, qty, reason);
+            if (!ok) { alert('Insufficient stock or item error.'); return; }
+
+            alert('Stock adjustment recorded successfully!');
+            BV.Trans.load();
+            BV.Inv.ren();
+            BV.Sys.dash();
+        }
+    },
+
+    Ret: {
+        sug(v) {
+            if (v.length < 2) { $('rt-sug').classList.add('hidden'); return; }
+            const custs = BVStore.getCustomers().filter(c => c.name.toLowerCase().includes(v.toLowerCase()));
+            $('rt-sug').innerHTML = custs.map(c =>
+                `<div class="p-2 hover:bg-emerald-50 rounded-lg cursor-pointer font-bold" onclick="BV.Ret.pick(${c.id})">${c.name}</div>`
+            ).join('');
+            $('rt-sug').classList.remove('hidden');
+        },
+
+        pick(id) {
+            const c = BVStore.getCustomerById(id);
+            BV.tmp.retCust = c;
+            $('rt-c').value = c.name;
+            $('rt-sel-cust').innerText = `Selected Customer: ${c.name}`;
+            $('rt-sel-cust').classList.remove('hidden');
+            $('rt-sug').classList.add('hidden');
+            $('rt-item').innerHTML = BVStore.getItems().map(x => `<option value="${x.id}">${x.name} (Stock: ${x.qty})</option>`).join('');
+        },
+
+        exec(mode) {
+            if (!BV.tmp.retCust) { alert('Select a customer first.'); return; }
+            const itemId = _V('rt-item');
+            const qty = _N(_V('rt-qty'));
+            if (qty <= 0) return;
+
+            BVStore.processReturn(BV.tmp.retCust.id, itemId, qty, mode);
+            alert(`Return processed in ${mode === 'GOOD' ? 'Restock' : 'Scrap'} mode!`);
+            BV.Inv.ren();
+            BV.Sys.dash();
+        }
+    },
+
+    Rep: {
+        gen() {
+            const date = _V('rep-date');
+            if (!date) return;
+            const sales = BVStore.getSales().filter(s => s.date.startsWith(date));
+            const proofs = BVStore.getProofs().filter(p => p.t.startsWith(date));
+
+            const totalRev = sales.reduce((sum, s) => sum + (s.billTotal || s.total), 0);
+            $('rep-rev').innerText = '₹' + totalRev.toLocaleString();
+            $('rep-items').innerText = sales.length;
+
+            const salesHtml = sales.map(s => `
+                <tr>
+                    <td class="font-mono text-xs">${new Date(s.date).toLocaleTimeString()}</td>
+                    <td><span class="pill p-blue">SALE</span></td>
+                    <td class="font-bold">${s.cust.name}</td>
+                    <td class="text-right font-mono font-bold">₹${s.billTotal}</td>
+                    <td class="text-right"><button class="btn btn-sec btn-sm" onclick="BV.Rep.viewSale(${s.id})">View Bill</button></td>
+                </tr>
+            `).join('');
+
+            const proofsHtml = proofs.map(p => `
+                <tr>
+                    <td class="font-mono text-xs">${new Date(p.t).toLocaleTimeString()}</td>
+                    <td><span class="pill p-green">PAYMENT</span></td>
+                    <td class="font-bold">${p.cust} <span class="text-slate-400 font-normal">(${p.note||''})</span></td>
+                    <td class="text-right font-mono font-bold text-emerald-700">+₹${p.amt}</td>
+                    <td class="text-right">${p.src ? `<button class="btn btn-sec btn-sm" onclick="BV.UI.viewImg('${p.src}')">View Proof</button>` : '<span class="text-slate-400">No Slip</span>'}</td>
+                </tr>
+            `).join('');
+
+            $('t-rep').getElementsByTagName('tbody')[0].innerHTML = salesHtml + proofsHtml;
+        },
+
+        toggleMode() {
+            const tbl = $('rep-tbl-view');
+            const gal = $('rep-gal-view');
+            if (tbl.classList.contains('hidden')) {
+                tbl.classList.remove('hidden');
+                gal.classList.add('hidden');
+            } else {
+                tbl.classList.add('hidden');
+                gal.classList.remove('hidden');
+                BV.Rep.renderGallery();
+            }
+        },
+
+        renderGallery() {
+            const proofs = BVStore.getProofs().filter(p => p.src);
+            $('rep-gal-grid').innerHTML = proofs.map(p => `
+                <div class="border rounded-xl overflow-hidden cursor-pointer hover:shadow-md transition" onclick="BV.UI.viewImg('${p.src}')">
+                    <img src="${p.src}" class="w-full h-32 object-cover">
+                    <div class="p-2 text-xs font-bold text-slate-700">${p.cust}: ₹${p.amt}</div>
+                </div>
+            `).join('');
+        },
+
+        viewSale(id) {
+            const s = BVStore.getSales().find(x => x.id == id);
+            if (!s) return;
+            const content = `
+                <div class="p-3 bg-slate-50 rounded-xl space-y-1">
+                    <div><b>Invoice #:</b> ${s.invoiceNo || s.id}</div>
+                    <div><b>Customer:</b> ${s.cust.name} (${s.cust.phone})</div>
+                    <div><b>Date:</b> ${new Date(s.date).toLocaleString()}</div>
+                </div>
+                <table class="w-full text-xs">
+                    <thead><tr><th>Item</th><th class="text-right">Qty</th><th class="text-right">Total</th></tr></thead>
+                    <tbody>${s.items.map(i => `<tr><td>${i.name}</td><td class="text-right font-mono">${i.q}</td><td class="text-right font-mono font-bold">₹${i.p*i.q}</td></tr>`).join('')}</tbody>
+                </table>
+                <div class="flex justify-between font-bold text-sm pt-2 border-t">
+                    <span>Total Amount:</span>
+                    <span>₹${s.billTotal}</span>
+                </div>
+                <div class="flex gap-2 pt-2">
+                    <button class="btn btn-sec flex-1" onclick="BV.Sale.downloadPDF(BVStore.getSales().find(x=>x.id==${s.id}))">Download PDF</button>
+                    <button class="btn btn-dan flex-1" onclick="BV.Rep.cancelSale(${s.id})">Cancel & Restock</button>
+                </div>
+            `;
+            $('vs-content').innerHTML = content;
+            BV.UI.modal('m-view-sale');
+        },
+
+        searchInv() {
+            const term = _V('rep-inv-search').trim().toLowerCase();
+            const sale = BVStore.getSales().find(s =>
+                (s.invoiceNo && s.invoiceNo.toLowerCase() === term) ||
+                String(s.id) === term
+            );
+            if (sale) BV.Rep.viewSale(sale.id);
+            else alert('Invoice not found.');
+        },
+
+        cancelSale(id) {
+            if (!confirm('Are you sure you want to cancel this invoice and restock the items?')) return;
+            BVStore.cancelSale(id);
+            BV.UI.closeM('m-view-sale');
+            BV.Rep.gen();
+            BV.Inv.ren();
+            BV.Sys.dash();
+            alert('Sale cancelled and items restocked.');
+        },
+
+        snap() {
+            const date = _V('rep-date');
+            if (!date) { alert('Select date first.'); return; }
+            const data = JSON.parse(JSON.stringify(BVStore.getData()));
+            data.s = data.s.filter(s => s.date.startsWith(date));
+            const blob = new Blob([JSON.stringify(data)], { type: 'application/json' });
+            saveAs(blob, `BhumiVera_DailySnapshot_${date}.json`);
+        },
+
+        expExcel() {
+            const ws = XLSX.utils.table_to_sheet($('t-rep'));
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Report");
+            XLSX.writeFile(wb, "Daily_Report.xlsx");
+        }
+    },
+
+    Profile: {
+        open() {
+            const session = BVAuth.getCurrentSession();
+            if (!session) return;
+            const user = BVAuth.findUser(session.username);
+
+            $('prof-fullname').innerText = user.fullName || user.username;
+            $('prof-username').innerText = `@${user.username}`;
+            $('prof-role').innerText = user.role;
+
+            // Passkeys List
+            const passkeys = user.passkeys || [];
+            if (passkeys.length === 0) {
+                $('prof-passkeys-list').innerHTML = '<div class="text-slate-400 text-[11px] py-1">No passkeys registered on this account.</div>';
+            } else {
+                $('prof-passkeys-list').innerHTML = passkeys.map(p => `
+                    <div class="flex items-center justify-between py-1.5">
+                        <div class="font-bold text-slate-700 flex items-center gap-1.5"><i class="ph-bold ph-fingerprint text-emerald-600"></i> ${p.name}</div>
+                        <button class="text-rose-500 font-bold hover:underline text-[11px]" onclick="BV.Profile.removePasskey('${p.id}')">Remove</button>
+                    </div>
+                `).join('');
+            }
+
+            // 2FA Badge & Controls
+            if (user.totpEnabled) {
+                $('prof-2fa-badge').innerHTML = '<span class="pill p-green">Active</span>';
+                $('prof-2fa-controls').innerHTML = `
+                    <button class="btn btn-dan btn-sm w-full" onclick="BV.Profile.disable2FA()">
+                        Disable 2FA Authenticator
+                    </button>
+                `;
+            } else {
+                $('prof-2fa-badge').innerHTML = '<span class="pill p-gray">Disabled</span>';
+                $('prof-2fa-controls').innerHTML = `
+                    <button class="btn btn-sec btn-sm w-full text-blue-600 font-bold" onclick="BV.Profile.setup2FA()">
+                        + Setup 2FA Authenticator App
+                    </button>
+                `;
+            }
+
+            BV.UI.modal('m-profile');
+        },
+
+        async addPasskey() {
+            const session = BVAuth.getCurrentSession();
+            const name = prompt('Enter a label for this device (e.g. Work PC, MacBook, Samsung Galaxy):', 'Workstation Device');
+            if (!name) return;
+            try {
+                const res = await BVAuth.enrollPasskey(session.username, name);
+                if (res.success) {
+                    alert('Biometric Passkey registered successfully!');
+                    BV.Profile.open();
+                }
+            } catch(e) { alert(e.message || 'Passkey enrollment error'); }
+        },
+
+        removePasskey(id) {
+            const session = BVAuth.getCurrentSession();
+            if (confirm('Remove this biometric passkey?')) {
+                BVAuth.removePasskey(session.username, id);
+                BV.Profile.open();
+            }
+        },
+
+        setup2FA() {
+            const session = BVAuth.getCurrentSession();
+            const data = BVAuth.generate2FAData(session.username);
+            const code = prompt(`Scan in Google Authenticator or use secret key:\n\nSecret: ${data.secret}\n\nEnter 6-digit confirmation code:`);
+            if (!code) return;
+            BVAuth.enable2FA(session.username, data.secret, code).then(res => {
+                alert(res.message);
+                BV.Profile.open();
+            });
+        },
+
+        disable2FA() {
+            const session = BVAuth.getCurrentSession();
+            if (confirm('Disable Two-Factor Authentication?')) {
+                BVAuth.disable2FA(session.username);
+                BV.Profile.open();
+            }
+        },
+
+        async updatePassword() {
+            const session = BVAuth.getCurrentSession();
+            const oldP = _V('prof-old-pass');
+            const newP = _V('prof-new-pass');
+            if (!oldP || !newP) { alert('Enter both current and new password.'); return; }
+            const res = await BVAuth.changePassword(session.username, oldP, newP);
+            alert(res.message);
+            if (res.success) {
+                $('prof-old-pass').value = '';
+                $('prof-new-pass').value = '';
+            }
+        }
+    }
+};
+
+window.onload = async () => {
+    await BV.Sys.init();
+    // Default report date to today
+    const todayISO = new Date().toISOString().split('T')[0];
+    $('rep-date').value = todayISO;
+    BV.Rep.gen();
+};
+</script>
+</body>
+</html>

@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BhumiVera | Inventory Terminal Login</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Rajdhani:wght@600;700&family=JetBrains+Mono:wght@500;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/@phosphor-icons/web"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    <script src="../shared/qrcode.js"></script>
+    <style>
+        :root { --font-ui: 'Inter', sans-serif; --font-head: 'Rajdhani', sans-serif; --font-mono: 'JetBrains Mono', monospace; }
+        body { font-family: var(--font-ui); background: #070a12; color: #f8fafc; }
+        .font-head { font-family: var(--font-head); }
+        .font-mono { font-family: var(--font-mono); }
+        .glass-panel { background: rgba(15, 23, 42, 0.75); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.08); box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7); }
+        .input-dark { background: rgba(11, 15, 25, 0.85); border: 1px solid #334155; color: #fff; transition: all 0.2s; }
+        .input-dark:focus { border-color: #10b981; box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.25); outline: none; }
+        .glow-emerald { text-shadow: 0 0 25px rgba(16, 185, 129, 0.45); }
+        .fade-in { animation: fadeIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+    </style>
+</head>
+<body class="min-h-screen flex items-center justify-center p-4 relative overflow-x-hidden">
+    <!-- Ambient glowing spheres -->
+    <div class="absolute -top-32 -left-32 w-80 h-80 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none"></div>
+    <div class="absolute -bottom-32 -right-32 w-80 h-80 bg-blue-500/15 rounded-full blur-3xl pointer-events-none"></div>
+
+    <div class="max-w-md w-full space-y-6 relative z-10">
+        <!-- Brand Header -->
+        <div class="text-center">
+            <div class="inline-flex items-center justify-center w-24 h-24 rounded-full bg-slate-900/90 border-2 border-amber-300/50 p-1.5 mb-3 shadow-[0_0_35px_rgba(251,191,36,0.3)]">
+                <img src="../assets/logo.png" alt="BhumiVera" class="w-full h-full object-contain rounded-full">
+            </div>
+            <h1 class="text-3xl font-extrabold tracking-wider text-white font-head uppercase glow-emerald">
+                BhumiVera <span class="text-emerald-400">Inventory</span>
+            </h1>
+            <p class="text-xs text-amber-200/80 font-medium italic">Rooted in nature. Made for your everyday</p>
+            <div class="inline-flex items-center gap-1.5 mt-2 px-3 py-1 bg-slate-900/80 border border-slate-700/80 rounded-full text-[11px] font-mono text-emerald-400">
+                <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                <span>www.bhumivera.com/inventorymanagement/login</span>
+            </div>
+        </div>
+
+        <!-- ================= CARD 1: MAIN LOGIN SCREEN ================= -->
+        <div id="view-login" class="glass-panel rounded-2xl p-7 space-y-5 fade-in">
+            <div class="border-b border-slate-800 pb-3 flex items-center justify-between">
+                <div>
+                    <h2 class="text-base font-bold text-white flex items-center gap-2">
+                        <i class="ph-bold ph-key text-emerald-400"></i> Terminal Access
+                    </h2>
+                    <p class="text-[11px] text-slate-400">Sign in with Account ID or Biometric Passkey</p>
+                </div>
+                <span class="px-2.5 py-1 bg-emerald-500/10 text-emerald-400 text-[10px] font-bold rounded-lg border border-emerald-500/20 font-mono">
+                    v10.0 ULTRA
+                </span>
+            </div>
+
+            <!-- Login Form -->
+            <form id="form-login" onsubmit="handleLoginSubmit(event)" class="space-y-4 text-xs">
+                <div>
+                    <label class="block font-bold uppercase tracking-wider text-slate-300 mb-1.5">
+                        Account ID / Username
+                    </label>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                            <i class="ph-bold ph-user text-base"></i>
+                        </span>
+                        <input type="text" id="login-user" required placeholder="e.g. manager, admin, cashier1"
+                            class="w-full input-dark pl-10 pr-4 py-3 rounded-xl font-semibold text-xs placeholder-slate-500 font-mono">
+                    </div>
+                </div>
+
+                <div>
+                    <div class="flex items-center justify-between mb-1.5">
+                        <label class="font-bold uppercase tracking-wider text-slate-300">
+                            Passcode / Password
+                        </label>
+                        <a href="../admin/login.html" class="text-[10px] text-emerald-400 hover:underline font-medium">
+                            Forgot? Ask Admin
+                        </a>
+                    </div>
+                    <div class="relative">
+                        <span class="absolute inset-y-0 left-0 flex items-center pl-3.5 text-slate-400">
+                            <i class="ph-bold ph-lock-key text-base"></i>
+                        </span>
+                        <input type="password" id="login-pass" required placeholder="••••••••••••"
+                            class="w-full input-dark pl-10 pr-10 py-3 rounded-xl font-semibold text-xs tracking-wider">
+                        <button type="button" onclick="togglePassVisibility()" class="absolute inset-y-0 right-0 flex items-center pr-3.5 text-slate-400 hover:text-white">
+                            <i id="login-eye-icon" class="ph-bold ph-eye text-base"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <div id="login-msg" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold flex items-center gap-2">
+                    <i class="ph-bold ph-warning-circle text-base shrink-0"></i>
+                    <span id="login-msg-text"></span>
+                </div>
+
+                <button type="submit" id="btn-submit-login"
+                    class="w-full bg-emerald-500 hover:bg-emerald-600 active:scale-[0.99] text-white py-3.5 rounded-xl font-bold text-xs tracking-wide shadow-lg shadow-emerald-500/20 transition flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-sign-in text-base"></i> Access Terminal
+                </button>
+            </form>
+
+            <!-- Divider -->
+            <div class="relative flex items-center justify-center">
+                <div class="border-t border-slate-800 w-full"></div>
+                <span class="bg-slate-900 px-3 text-[10px] uppercase font-bold text-slate-500 tracking-wider absolute">OR USE PASSWORDLESS</span>
+            </div>
+
+            <!-- Passkey Biometric Login Button -->
+            <button type="button" onclick="handlePasskeyLogin()" id="btn-passkey-login"
+                class="w-full bg-slate-900 hover:bg-slate-800 border border-slate-700/80 text-white py-3 rounded-xl font-bold text-xs transition flex items-center justify-center gap-2.5 shadow-md">
+                <i class="ph-bold ph-fingerprint text-lg text-emerald-400"></i> Sign in with Passkey / Biometrics
+            </button>
+
+            <!-- Waypoint Footer Link -->
+            <div class="pt-3 border-t border-slate-800/80 text-center">
+                <a href="../admin/login.html" class="inline-flex items-center gap-1.5 text-xs text-slate-400 hover:text-emerald-400 transition font-medium">
+                    <i class="ph-bold ph-shield-check text-emerald-400"></i> Admin Access Waypoint & Account Creator &rarr;
+                </a>
+            </div>
+        </div>
+
+        <!-- ================= CARD 2: 2FA TOTP CHALLENGE SCREEN ================= -->
+        <div id="view-2fa" class="glass-panel rounded-2xl p-7 space-y-5 fade-in hidden">
+            <div class="text-center space-y-2">
+                <div class="w-14 h-14 rounded-2xl bg-blue-500/10 border border-blue-500/30 text-blue-400 mx-auto flex items-center justify-center text-3xl">
+                    <i class="ph-bold ph-shield-check"></i>
+                </div>
+                <h2 class="text-lg font-bold text-white">Two-Factor Authentication</h2>
+                <p class="text-xs text-slate-400">
+                    Enter the 6-digit verification code from your Google Authenticator or Microsoft Authenticator app.
+                </p>
+                <div class="text-xs font-mono text-emerald-400" id="challenge-username"></div>
+            </div>
+
+            <form id="form-2fa" onsubmit="handle2FASubmit(event)" class="space-y-4">
+                <div>
+                    <input type="text" id="totp-code" maxlength="6" pattern="[0-9]*" inputmode="numeric" required autofocus placeholder="000000"
+                        class="w-full input-dark py-4 text-center font-mono text-2xl font-bold tracking-[0.5em] text-white rounded-xl placeholder-slate-700">
+                </div>
+
+                <div id="challenge-msg" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold text-center"></div>
+
+                <button type="submit" id="btn-verify-2fa"
+                    class="w-full bg-blue-600 hover:bg-blue-500 text-white py-3.5 rounded-xl font-bold text-xs tracking-wide shadow-lg shadow-blue-500/25 transition flex items-center justify-center gap-2">
+                    <i class="ph-bold ph-check-circle text-base"></i> Verify & Authenticate
+                </button>
+
+                <button type="button" onclick="cancel2FA()"
+                    class="w-full bg-slate-800 hover:bg-slate-700 text-slate-300 py-2.5 rounded-xl text-xs font-bold transition">
+                    &larr; Back to Login
+                </button>
+            </form>
+        </div>
+
+        <!-- Quick Demo Switcher Footer -->
+        <div class="p-3 rounded-xl bg-slate-900/40 border border-slate-800/80 text-[11px] text-slate-400 flex items-center justify-between">
+            <div class="flex items-center gap-2">
+                <i class="ph-bold ph-info text-emerald-400 text-sm"></i>
+                <span>Demo Accounts:</span>
+            </div>
+            <div class="space-x-2 font-mono">
+                <button onclick="fillDemo('manager','Manager@123')" class="text-emerald-400 hover:underline">manager</button>
+                <span class="text-slate-600">|</span>
+                <button onclick="fillDemo('admin','Admin@123')" class="text-emerald-400 hover:underline">admin</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================= MODAL: FIRST-TIME SETUP WIZARD ================= -->
+    <div id="modal-first-login" class="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4 hidden">
+        <div class="glass-panel rounded-2xl max-w-lg w-full p-6 sm:p-8 space-y-6 border border-emerald-500/30 shadow-2xl animate-in fade-in zoom-in-95 duration-200 max-h-[90vh] overflow-y-auto">
+            
+            <div class="text-center space-y-1.5 border-b border-slate-800 pb-4">
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-emerald-500/20 text-emerald-400 text-3xl mb-1">
+                    <i class="ph-bold ph-shield-star"></i>
+                </div>
+                <h3 class="text-xl font-extrabold text-white font-head uppercase tracking-wider">
+                    Welcome to BhumiVera Inventory!
+                </h3>
+                <p class="text-xs text-slate-400">
+                    First-time login detected for <span id="onboarding-user-label" class="text-emerald-400 font-mono font-bold"></span>. Let's secure your profile.
+                </p>
+            </div>
+
+            <!-- Onboarding Steps Navigation -->
+            <div class="grid grid-cols-3 gap-2 text-center text-[11px] font-bold">
+                <div id="step-tab-1" class="p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                    1. Password
+                </div>
+                <div id="step-tab-2" class="p-2 rounded-xl bg-slate-800 text-slate-400 border border-slate-700">
+                    2. Passkey
+                </div>
+                <div id="step-tab-3" class="p-2 rounded-xl bg-slate-800 text-slate-400 border border-slate-700">
+                    3. 2FA Setup
+                </div>
+            </div>
+
+            <!-- STEP 1: CHANGE TEMPORARY PASSWORD -->
+            <div id="step-content-1" class="space-y-4 text-xs">
+                <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-800 text-slate-300 space-y-1">
+                    <div class="font-bold text-white flex items-center gap-2">
+                        <i class="ph-bold ph-lock-key text-emerald-400"></i> Set Your Permanent Password
+                    </div>
+                    <p class="text-[11px] text-slate-400">
+                        Replace your temporary administrator-assigned password with a strong personal passcode.
+                    </p>
+                </div>
+
+                <div class="space-y-3">
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Current Temporary Password</label>
+                        <input type="password" id="ob-old-pass" placeholder="••••••••••••"
+                            class="w-full input-dark p-3 rounded-xl font-mono text-xs">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">New Personal Password</label>
+                        <input type="password" id="ob-new-pass" placeholder="At least 6 characters"
+                            class="w-full input-dark p-3 rounded-xl font-mono text-xs">
+                    </div>
+                    <div>
+                        <label class="block font-bold text-slate-300 mb-1">Confirm New Password</label>
+                        <input type="password" id="ob-confirm-pass" placeholder="Re-enter new password"
+                            class="w-full input-dark p-3 rounded-xl font-mono text-xs">
+                    </div>
+                </div>
+
+                <div id="step1-error" class="hidden p-3 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs font-semibold"></div>
+
+                <button onclick="handleStep1Password()"
+                    class="w-full bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl font-bold transition flex items-center justify-center gap-2">
+                    Save Password & Continue &rarr;
+                </button>
+            </div>
+
+            <!-- STEP 2: ENROLL BIOMETRIC PASSKEY -->
+            <div id="step-content-2" class="space-y-4 text-xs hidden">
+                <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-800 text-slate-300 space-y-1">
+                    <div class="font-bold text-white flex items-center gap-2">
+                        <i class="ph-bold ph-fingerprint text-emerald-400"></i> Register Biometric Passkey
+                    </div>
+                    <p class="text-[11px] text-slate-400">
+                        Enable 1-click passwordless login using your fingerprint, Windows Hello, Face ID, or device security key.
+                    </p>
+                </div>
+
+                <div id="passkey-status-box" class="p-5 rounded-2xl bg-slate-900/60 border border-slate-800 text-center space-y-3">
+                    <div class="w-16 h-16 rounded-full bg-indigo-500/10 text-indigo-400 flex items-center justify-center text-3xl mx-auto border border-indigo-500/20">
+                        <i class="ph-bold ph-fingerprint"></i>
+                    </div>
+                    <div>
+                        <div class="font-bold text-white text-sm" id="passkey-status-title">No Passkey Registered Yet</div>
+                        <p class="text-[11px] text-slate-400 mt-0.5">Click below to bind this device to your account.</p>
+                    </div>
+                    <button type="button" onclick="enrollDevicePasskey()" id="btn-enroll-passkey"
+                        class="bg-indigo-600 hover:bg-indigo-500 text-white px-5 py-2.5 rounded-xl font-bold text-xs transition inline-flex items-center gap-2 shadow-lg shadow-indigo-600/25">
+                        <i class="ph-bold ph-plus-circle text-base"></i> Register This Device
+                    </button>
+                </div>
+
+                <div class="flex items-center gap-3">
+                    <button onclick="goToStep(1)" class="w-1/3 bg-slate-800 hover:bg-slate-700 text-slate-300 py-3 rounded-xl font-bold transition">
+                        &larr; Back
+                    </button>
+                    <button onclick="goToStep(3)" class="w-2/3 bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl font-bold transition">
+                        Next: 2FA Setup &rarr;
+                    </button>
+                </div>
+            </div>
+
+            <!-- STEP 3: ENABLE 2FA TOTP -->
+            <div id="step-content-3" class="space-y-4 text-xs hidden">
+                <div class="bg-slate-900/80 p-3.5 rounded-xl border border-slate-800 text-slate-300 space-y-1">
+                    <div class="font-bold text-white flex items-center gap-2">
+                        <i class="ph-bold ph-shield-check text-blue-400"></i> Connect Authenticator App (2FA)
+                    </div>
+                    <p class="text-[11px] text-slate-400">
+                        Scan this QR code using Google Authenticator, Authy, or Microsoft Authenticator.
+                    </p>
+                </div>
+
+                <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 flex flex-col items-center justify-center gap-3">
+                    <div id="ob-qrcode" class="p-3 bg-white rounded-xl shadow-lg"></div>
+                    <div class="text-center">
+                        <div class="text-[10px] text-slate-500 uppercase tracking-wider font-bold">Manual Secret Key</div>
+                        <div id="ob-secret-key" class="font-mono text-emerald-400 text-xs font-bold tracking-wider select-all mt-0.5"></div>
+                    </div>
+                </div>
+
+                <div>
+                    <label class="block font-bold text-slate-300 mb-1">Enter 6-Digit Code from App to Confirm</label>
+                    <div class="flex gap-2">
+                        <input type="text" id="ob-totp-verify" maxlength="6" placeholder="000000"
+                            class="flex-1 input-dark p-3 text-center font-mono text-base font-bold tracking-widest rounded-xl">
+                        <button type="button" onclick="verifyAndActivate2FA()"
+                            class="bg-blue-600 hover:bg-blue-500 text-white px-4 rounded-xl font-bold transition">
+                            Verify Code
+                        </button>
+                    </div>
+                    <div id="ob-2fa-status" class="text-[11px] font-bold mt-1.5 hidden"></div>
+                </div>
+
+                <div class="pt-2 border-t border-slate-800 flex items-center gap-3">
+                    <button onclick="goToStep(2)" class="w-1/3 bg-slate-800 hover:bg-slate-700 text-slate-300 py-3 rounded-xl font-bold transition">
+                        &larr; Back
+                    </button>
+                    <button onclick="finishOnboardingAndLaunch()"
+                        class="w-2/3 bg-emerald-500 hover:bg-emerald-600 text-white py-3 rounded-xl font-bold transition shadow-lg shadow-emerald-500/25 flex items-center justify-center gap-2">
+                        <i class="ph-bold ph-rocket-launch text-base"></i> Launch Inventory Suite
+                    </button>
+                </div>
+            </div>
+
+        </div>
+    </div>
+
+    <!-- Core Scripts -->
+    <script src="../shared/auth.js"></script>
+    <script>
+        let pendingUser = null;
+        let generated2FA = null;
+
+        function fillDemo(u, p) {
+            document.getElementById('login-user').value = u;
+            document.getElementById('login-pass').value = p;
+        }
+
+        function togglePassVisibility() {
+            const passInput = document.getElementById('login-pass');
+            const icon = document.getElementById('login-eye-icon');
+            if (passInput.type === 'password') {
+                passInput.type = 'text';
+                icon.classList.replace('ph-eye', 'ph-eye-slash');
+            } else {
+                passInput.type = 'password';
+                icon.classList.replace('ph-eye-slash', 'ph-eye');
+            }
+        }
+
+        // Handle Main Login
+        async function handleLoginSubmit(e) {
+            e.preventDefault();
+            const username = document.getElementById('login-user').value.trim();
+            const password = document.getElementById('login-pass').value;
+            const msgBox = document.getElementById('login-msg');
+            const btn = document.getElementById('btn-submit-login');
+
+            msgBox.classList.add('hidden');
+            btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin text-base"></i> Verifying...';
+            btn.disabled = true;
+
+            try {
+                const res = await BVAuth.verifyCredentials(username, password);
+
+                if (!res.success) {
+                    document.getElementById('login-msg-text').innerText = res.message || 'Invalid Credentials.';
+                    msgBox.classList.remove('hidden');
+                    btn.innerHTML = '<i class="ph-bold ph-sign-in text-base"></i> Access Terminal';
+                    btn.disabled = false;
+                    return;
+                }
+
+                // If 2FA is required
+                if (res.requires2FA) {
+                    pendingUser = username;
+                    document.getElementById('challenge-username').innerText = `Account: ${username}`;
+                    document.getElementById('view-login').classList.add('hidden');
+                    document.getElementById('view-2fa').classList.remove('hidden');
+                    document.getElementById('totp-code').focus();
+                    btn.innerHTML = '<i class="ph-bold ph-sign-in text-base"></i> Access Terminal';
+                    btn.disabled = false;
+                    return;
+                }
+
+                // If First-Time Login setup is pending
+                if (res.firstLogin) {
+                    pendingUser = username;
+                    startFirstTimeOnboarding(username, password);
+                    btn.innerHTML = '<i class="ph-bold ph-sign-in text-base"></i> Access Terminal';
+                    btn.disabled = false;
+                    return;
+                }
+
+                // Normal Login Success
+                window.location.href = 'app.html';
+            } catch (err) {
+                console.error(err);
+                document.getElementById('login-msg-text').innerText = 'Authentication failed.';
+                msgBox.classList.remove('hidden');
+                btn.innerHTML = '<i class="ph-bold ph-sign-in text-base"></i> Access Terminal';
+                btn.disabled = false;
+            }
+        }
+
+        // Handle 2FA Verification
+        async function handle2FASubmit(e) {
+            e.preventDefault();
+            const code = document.getElementById('totp-code').value.trim();
+            const msgBox = document.getElementById('challenge-msg');
+            const btn = document.getElementById('btn-verify-2fa');
+
+            msgBox.classList.add('hidden');
+            btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i> Verifying...';
+            btn.disabled = true;
+
+            const res = await BVAuth.complete2FALogin(pendingUser, code);
+
+            if (!res.success) {
+                msgBox.innerText = res.message || 'Invalid 2FA Code.';
+                msgBox.classList.remove('hidden');
+                btn.innerHTML = '<i class="ph-bold ph-check-circle text-base"></i> Verify & Authenticate';
+                btn.disabled = false;
+                return;
+            }
+
+            if (res.firstLogin) {
+                startFirstTimeOnboarding(pendingUser);
+                return;
+            }
+
+            window.location.href = 'app.html';
+        }
+
+        function cancel2FA() {
+            document.getElementById('view-2fa').classList.add('hidden');
+            document.getElementById('view-login').classList.remove('hidden');
+            document.getElementById('totp-code').value = '';
+            document.getElementById('challenge-msg').classList.add('hidden');
+        }
+
+        // Handle Biometric Passkey Login
+        async function handlePasskeyLogin() {
+            let user = document.getElementById('login-user').value.trim();
+            if (!user) {
+                user = prompt('Enter your Account ID to authenticate with Passkey:');
+                if (!user) return;
+                document.getElementById('login-user').value = user;
+            }
+
+            const btn = document.getElementById('btn-passkey-login');
+            const origText = btn.innerHTML;
+            btn.innerHTML = '<i class="ph-bold ph-fingerprint animate-pulse text-lg text-emerald-400"></i> Touch Fingerprint / Face ID...';
+
+            try {
+                const res = await BVAuth.loginWithPasskey(user);
+                if (res.success) {
+                    window.location.href = 'app.html';
+                }
+            } catch (err) {
+                alert(err.message || 'Passkey authentication failed.');
+                btn.innerHTML = origText;
+            }
+        }
+
+        // First Time Onboarding Wizard Logic
+        async function startFirstTimeOnboarding(username, currentPass = '') {
+            document.getElementById('onboarding-user-label').innerText = username;
+            document.getElementById('ob-old-pass').value = currentPass;
+            document.getElementById('modal-first-login').classList.remove('hidden');
+            goToStep(1);
+
+            try {
+                // Preload 2FA secret from server
+                generated2FA = await BVAuth.generate2FAData(username);
+                document.getElementById('ob-secret-key').innerText = generated2FA.secret;
+
+                // Render QR Code
+                const qrContainer = document.getElementById('ob-qrcode');
+                qrContainer.innerHTML = '';
+                new QRCode(qrContainer, {
+                    text: generated2FA.otpauthUrl,
+                    width: 140,
+                    height: 140,
+                    colorDark: '#0f172a',
+                    colorLight: '#ffffff'
+                });
+            } catch (err) {
+                console.error('Failed to load 2FA setup data:', err);
+            }
+        }
+
+        function goToStep(step) {
+            for (let i = 1; i <= 3; i++) {
+                document.getElementById(`step-content-${i}`).classList.add('hidden');
+                const tab = document.getElementById(`step-tab-${i}`);
+                tab.className = 'p-2 rounded-xl bg-slate-800 text-slate-400 border border-slate-700';
+            }
+            document.getElementById(`step-content-${step}`).classList.remove('hidden');
+            const activeTab = document.getElementById(`step-tab-${step}`);
+            activeTab.className = 'p-2 rounded-xl bg-emerald-500/20 text-emerald-400 border border-emerald-500/30';
+        }
+
+        async function handleStep1Password() {
+            const oldPass = document.getElementById('ob-old-pass').value;
+            const newPass = document.getElementById('ob-new-pass').value;
+            const confirmPass = document.getElementById('ob-confirm-pass').value;
+            const errBox = document.getElementById('step1-error');
+
+            errBox.classList.add('hidden');
+
+            if (!oldPass || !newPass) {
+                errBox.innerText = 'Please enter both current and new password.';
+                errBox.classList.remove('hidden');
+                return;
+            }
+            if (newPass.length < 6) {
+                errBox.innerText = 'New password must be at least 6 characters.';
+                errBox.classList.remove('hidden');
+                return;
+            }
+            if (newPass !== confirmPass) {
+                errBox.innerText = 'Passwords do not match.';
+                errBox.classList.remove('hidden');
+                return;
+            }
+
+            const res = await BVAuth.changePassword(pendingUser, oldPass, newPass);
+            if (!res.success) {
+                errBox.innerText = res.message || 'Error updating password.';
+                errBox.classList.remove('hidden');
+                return;
+            }
+
+            goToStep(2);
+        }
+
+        async function enrollDevicePasskey() {
+            const btn = document.getElementById('btn-enroll-passkey');
+            btn.innerHTML = '<i class="ph-bold ph-spinner animate-spin"></i> Communicating with device...';
+            btn.disabled = true;
+
+            try {
+                const res = await BVAuth.enrollPasskey(pendingUser, 'Primary Workstation');
+                if (res.success) {
+                    const statusBox = document.getElementById('passkey-status-box');
+                    statusBox.className = 'p-5 rounded-2xl bg-emerald-950/40 border border-emerald-500/30 text-center space-y-2';
+                    document.getElementById('passkey-status-title').innerHTML = '<span class="text-emerald-400 flex items-center justify-center gap-1.5"><i class="ph-bold ph-check-circle"></i> Passkey Enrolled Successfully!</span>';
+                    btn.innerHTML = '<i class="ph-bold ph-check"></i> Registered';
+                    btn.className = 'bg-emerald-600 text-white px-5 py-2.5 rounded-xl font-bold text-xs inline-flex items-center gap-2';
+                }
+            } catch (err) {
+                alert(err.message || 'Passkey enrollment error.');
+                btn.innerHTML = '<i class="ph-bold ph-plus-circle"></i> Register This Device';
+                btn.disabled = false;
+            }
+        }
+
+        async function verifyAndActivate2FA() {
+            const code = document.getElementById('ob-totp-verify').value.trim();
+            const statusLabel = document.getElementById('ob-2fa-status');
+            statusLabel.classList.remove('hidden');
+
+            if (!code || code.length !== 6) {
+                statusLabel.className = 'text-[11px] font-bold mt-1.5 text-rose-400';
+                statusLabel.innerText = 'Enter 6 digits from authenticator app.';
+                return;
+            }
+
+            const res = await BVAuth.enable2FA(pendingUser, generated2FA.secret, code);
+            if (res.success) {
+                statusLabel.className = 'text-[11px] font-bold mt-1.5 text-emerald-400';
+                statusLabel.innerText = '✓ Authenticator linked successfully!';
+            } else {
+                statusLabel.className = 'text-[11px] font-bold mt-1.5 text-rose-400';
+                statusLabel.innerText = '✗ Invalid code. Check app clock.';
+            }
+        }
+
+        function finishOnboardingAndLaunch() {
+            BVAuth.completeFirstLogin(pendingUser);
+            window.location.href = 'app.html';
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,259 @@
+.admin-theme {
+  color-scheme: dark;
+  --admin-forest: #071a12;
+  --admin-panel: #0b2419;
+  --admin-panel-raised: #103323;
+  --admin-border: rgba(144, 190, 157, 0.22);
+  --admin-text: #f2f7f2;
+  --admin-text-muted: #c0cec3;
+  --admin-green: #70d49a;
+}
+
+.inventory-shell {
+  color-scheme: dark;
+  background:
+    radial-gradient(ellipse at 76% 4%, rgba(34, 197, 94, 0.14), transparent 40%),
+    radial-gradient(ellipse at 18% 82%, rgba(212, 175, 55, 0.08), transparent 42%),
+    linear-gradient(135deg, #071a12 0%, #0b2419 52%, #0a1c16 100%) !important;
+}
+
+.inventory-shell [class~="bg-white"],
+.inventory-shell [class~="bg-slate-50"],
+.inventory-shell [class~="bg-slate-100"],
+.inventory-shell [class~="bg-slate-50/70"],
+.inventory-shell [class~="bg-gray-50"],
+.inventory-shell [class~="bg-gray-100"] {
+  background-color: var(--admin-panel) !important;
+}
+
+.inventory-shell [class~="hover:bg-white"]:hover,
+.inventory-shell [class~="hover:bg-slate-50"]:hover,
+.inventory-shell [class~="hover:bg-slate-100"]:hover,
+.inventory-shell [class~="hover:bg-slate-200"]:hover,
+.inventory-shell [class~="hover:bg-gray-50"]:hover,
+.inventory-shell [class~="hover:bg-gray-100"]:hover {
+  background-color: var(--admin-panel-raised) !important;
+}
+
+.inventory-shell [class~="hover:bg-emerald-50/40"]:hover {
+  background-color: rgba(16, 51, 35, 0.72) !important;
+}
+
+.inventory-shell [class~="focus:bg-white"]:focus {
+  background-color: rgba(7, 26, 18, 0.92) !important;
+}
+
+.inventory-shell [class~="bg-slate-900"] {
+  background-color: var(--admin-forest) !important;
+}
+
+.inventory-shell [class~="bg-slate-800"] {
+  background-color: var(--admin-panel-raised) !important;
+}
+
+.inventory-shell [class~="text-slate-900"],
+.inventory-shell [class~="text-gray-900"],
+.inventory-shell [class~="text-black"] {
+  color: #ffffff !important;
+}
+
+.inventory-shell [class~="text-slate-800"],
+.inventory-shell [class~="text-gray-800"] {
+  color: #f8fafc !important;
+}
+
+.inventory-shell [class~="text-slate-700"],
+.inventory-shell [class~="text-gray-700"] {
+  color: #e2e8f0 !important;
+}
+
+.inventory-shell [class~="text-slate-600"],
+.inventory-shell [class~="text-gray-600"] {
+  color: #cbd5e1 !important;
+}
+
+.inventory-shell [class~="text-slate-500"],
+.inventory-shell [class~="text-gray-500"] {
+  color: #94a3b8 !important;
+}
+
+.inventory-shell h1,
+.inventory-shell h2,
+.inventory-shell h3,
+.inventory-shell h4,
+.inventory-shell h5,
+.inventory-shell h6 {
+  color: #ffffff !important;
+}
+
+.inventory-shell label {
+  color: #a7f3d0 !important;
+}
+
+/* Form Modals & Dialogs in Inventory Shell */
+.inventory-shell .fixed.inset-0 form,
+.inventory-shell .fixed.inset-0 > div > div,
+.inventory-shell .fixed.inset-0 > div:not([class*="bg-black"]) {
+  background-color: #0c261b !important;
+  color: #ffffff !important;
+  border-color: rgba(16, 185, 129, 0.35) !important;
+}
+
+.inventory-shell .fixed.inset-0 input,
+.inventory-shell .fixed.inset-0 select,
+.inventory-shell .fixed.inset-0 textarea {
+  background-color: #071711 !important;
+  color: #ffffff !important;
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+
+.inventory-shell table thead th {
+  color: #34d399 !important;
+  background-color: #071a12 !important;
+  border-bottom: 1px solid rgba(52, 211, 153, 0.3) !important;
+}
+
+.inventory-shell table tbody tr {
+  border-color: rgba(52, 211, 153, 0.15) !important;
+}
+
+.inventory-shell table tbody td {
+  color: #f8fafc !important;
+}
+
+.inventory-shell table tbody tr:hover {
+  background-color: rgba(16, 51, 35, 0.6) !important;
+}
+
+.inventory-shell .fixed.inset-0 button[type="button"]:not([class*="bg-emerald"]):not([class*="bg-indigo"]):not([class*="bg-rose"]):not([class*="bg-teal"]) {
+  background-color: #1e293b !important;
+  color: #ffffff !important;
+  border-color: #475569 !important;
+}
+
+.inventory-shell .fixed.inset-0 button[type="button"]:not([class*="bg-emerald"]):not([class*="bg-indigo"]):not([class*="bg-rose"]):not([class*="bg-teal"]):hover {
+  background-color: #334155 !important;
+  color: #ffffff !important;
+}
+
+.inventory-shell .pos-reports-panel {
+  color: var(--admin-text);
+}
+
+.inventory-shell .pos-reports-panel [class~="text-slate-900"],
+.inventory-shell .pos-reports-panel [class~="text-slate-800"],
+.inventory-shell .pos-reports-panel [class~="text-slate-700"],
+.inventory-shell .pos-reports-panel [class~="text-slate-600"],
+.inventory-shell .pos-reports-panel [class~="text-slate-500"],
+.inventory-shell .pos-reports-panel [class~="text-slate-400"],
+.inventory-shell .pos-reports-panel [class~="text-slate-300"],
+.inventory-shell .pos-reports-panel [class~="text-gray-900"],
+.inventory-shell .pos-reports-panel [class~="text-gray-800"],
+.inventory-shell .pos-reports-panel [class~="text-gray-700"],
+.inventory-shell .pos-reports-panel [class~="text-gray-600"],
+.inventory-shell .pos-reports-panel [class~="text-gray-500"],
+.inventory-shell .pos-reports-panel [class~="text-gray-400"] {
+  color: var(--admin-text-muted) !important;
+}
+
+.inventory-shell .pos-reports-panel tbody td {
+  color: var(--admin-text);
+}
+
+.inventory-shell .pos-invoice-modal {
+  color: var(--admin-text) !important;
+}
+
+.inventory-shell .pos-invoice-modal [class~="text-emerald-700"] {
+  color: var(--admin-green) !important;
+}
+
+.inventory-shell [class~="border-slate-100"],
+.inventory-shell [class~="border-slate-200"],
+.inventory-shell [class~="border-slate-300"],
+.inventory-shell [class~="border-gray-100"],
+.inventory-shell [class~="border-gray-200"],
+.inventory-shell [class~="border-gray-300"] {
+  border-color: var(--admin-border) !important;
+}
+
+.admin-theme [class~="text-slate-400"],
+.admin-theme [class~="text-gray-400"],
+.admin-theme [class~="text-zinc-400"] {
+  color: var(--admin-text-muted) !important;
+}
+
+.admin-theme [class~="text-slate-500"],
+.admin-theme [class~="text-gray-500"],
+.admin-theme [class~="text-zinc-500"] {
+  color: #a9bcae !important;
+}
+
+.admin-theme [class~="text-slate-600"],
+.admin-theme [class~="text-gray-600"],
+.admin-theme [class~="text-zinc-600"] {
+  color: #91a99a !important;
+}
+
+.admin-theme [class~="border-slate-800"],
+.admin-theme [class~="border-slate-700"],
+.admin-theme [class~="border-gray-800"],
+.admin-theme [class~="border-gray-700"],
+.admin-theme [class~="border-zinc-800"],
+.admin-theme [class~="border-zinc-700"] {
+  border-color: var(--admin-border) !important;
+}
+
+.admin-theme input:not([type="checkbox"]):not([type="radio"]),
+.admin-theme select,
+.admin-theme textarea {
+  color-scheme: dark;
+  color: var(--admin-text);
+  background-color: rgba(7, 26, 18, 0.92);
+  border-color: var(--admin-border);
+}
+
+.admin-theme input::placeholder,
+.admin-theme textarea::placeholder {
+  color: #a9bcae;
+  opacity: 1;
+}
+
+.admin-theme select option,
+.admin-theme select optgroup {
+  color: var(--admin-text);
+  background-color: #0b2419;
+}
+
+.admin-theme input:focus-visible,
+.admin-theme select:focus-visible,
+.admin-theme textarea:focus-visible,
+.admin-theme button:focus-visible,
+.admin-theme a:focus-visible {
+  outline: 2px solid var(--admin-green);
+  outline-offset: 2px;
+}
+
+.admin-theme ::selection {
+  color: #071a12;
+  background: #70d49a;
+}
+
+.admin-theme ::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+.admin-theme ::-webkit-scrollbar-track {
+  background: #071a12;
+}
+
+.admin-theme ::-webkit-scrollbar-thumb {
+  border: 2px solid #071a12;
+  border-radius: 999px;
+  background: #347653;
+}
+
+.admin-theme ::-webkit-scrollbar-thumb:hover {
+  background: #4b9b6d;
+}
