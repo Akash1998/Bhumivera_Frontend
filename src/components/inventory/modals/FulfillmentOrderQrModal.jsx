@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import QRCode from 'qrcode';
 import { AlertCircle, Printer, X } from 'lucide-react';
+import { getInvoiceNumber } from '../../../utils/invoiceNumber';
 
 const escapeHtml = value => String(value ?? '').replace(/[&<>"']/g, character => ({
   '&': '&amp;',
@@ -104,9 +105,10 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
     let active = true;
     setError('');
     const total = Number(order.total ?? order.totalAmount) || 0;
+    const invoiceNumber = getInvoiceNumber(order);
     const upiId = String(storeConfig.upiId || '').trim();
     const paymentPayload = upiId
-      ? `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(storeConfig.storeName || 'Bhumivera')}&am=${total.toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Invoice ${order.invoiceNumber || order.orderNumber || order.id}`)}`
+      ? `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(storeConfig.storeName || 'Bhumivera')}&am=${total.toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Invoice ${invoiceNumber}`)}`
       : `https://bhumivera.com/verify?order=${encodeURIComponent(order.orderNumber || order.id)}`;
     Promise.all([
       QRCode.toDataURL(encodeOrderManifest(order), { width: 1080, margin: 4, errorCorrectionLevel: 'M' }),
@@ -184,10 +186,11 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
     const logoUrl = `${window.location.origin}/logo.webp`;
     const courierName = order.courier || 'Courier not recorded';
     const trackingNumber = order.trackingNumber || 'Not recorded';
+    const invoiceNumber = getInvoiceNumber(order);
 
     printWindow.document.write(`
       <!doctype html>
-      <html><head><title>Tax Invoice ${escapeHtml(order.invoiceNumber || order.orderNumber || order.id)}</title>
+      <html><head><title>Tax Invoice ${escapeHtml(invoiceNumber)}</title>
         <style>
           *{box-sizing:border-box}html,body{margin:0;padding:0;background:#fff;color:#111;font:9px Arial,Helvetica,sans-serif;-webkit-print-color-adjust:exact;print-color-adjust:exact}
           body{padding:12px}.sheet{width:100%;max-width:194mm;min-height:281mm;margin:0 auto;border:1.5px solid #111;padding:7mm;overflow:hidden;position:relative}
@@ -205,18 +208,22 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
           .amount{text-align:right;font-size:8px;font-weight:bold}.amount-row{display:flex;justify-content:space-between;gap:8px;margin:4px 0}.amount .grand{font-size:12px;border-top:1.5px solid #111;padding-top:6px;margin-top:6px}
           .shipline{margin-top:8px;border:1px solid #333;padding:7px 8px;line-height:1.5;display:flex;justify-content:space-between;gap:10px}.shipline strong{font-size:7px;text-transform:uppercase;letter-spacing:.6px}.shipvalue{text-align:right;font-weight:bold}
           .qrbox{display:flex;min-width:0;align-items:center;gap:8px;border:1px solid #333;padding:6px;margin-top:7px;overflow:hidden;line-height:1.4}.qrbox img{flex:none;width:20mm;height:20mm;object-fit:contain;image-rendering:pixelated}.qrbox span{min-width:0;overflow-wrap:anywhere}
-          .qrbox.pack img{width:32mm;height:32mm}.qrbox.pack{margin-top:9px}.foot{border-top:1px solid #333;margin-top:9px;padding-top:7px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;line-height:1.45}
-          .sign{text-align:right;padding-top:12px}.note{font-size:7px;color:#333;margin-top:5px}
+          .closing{display:grid;grid-template-columns:36mm minmax(0,1fr) 44mm;align-items:center;gap:9px;margin-top:10px;padding:8px;border:1px solid #444;background:#f7f7f4;break-inside:avoid}
+          .closing .qrbox{margin:0;border:0;padding:0;justify-content:center}.closing .qrbox.pack img{width:30mm;height:30mm}
+          .gratitude{font-size:8px;line-height:1.5}.gratitude h3{margin:0 0 4px;font-size:9px;text-transform:uppercase;letter-spacing:.6px}.quote{font-size:10px;font-style:italic;font-weight:bold;margin:5px 0}
+          .signature{text-align:center;border-left:1px solid #999;padding-left:7px}.signature .script{font-family:"Segoe Script","Brush Script MT",cursive;font-size:17px;font-style:italic;line-height:1.2}.signature strong{display:block;margin-top:3px;font-size:8px}.signature small{font-size:7px}
+          .foot{border-top:1px solid #333;margin-top:8px;padding-top:6px;display:grid;grid-template-columns:1fr;gap:6px;line-height:1.4}
+          .note{font-size:7px;color:#333;margin-top:5px}
           @page{size:A4 portrait;margin:0}
-          @media(max-width:680px){body{padding:6px}.sheet{min-height:0;padding:5mm}.head{grid-template-columns:1fr 130px}.two,.bottom,.foot{gap:5px}.bottom{grid-template-columns:minmax(0,1fr) minmax(0,180px)}.qrbox.pack img{width:30mm;height:30mm}table{font-size:6px}th,td{padding:2px}}
-          @media print{html,body{width:210mm;height:297mm;padding:0}body{display:flex;justify-content:center;align-items:flex-start}.sheet{width:194mm;height:281mm;max-width:none;min-height:0;margin:8mm auto;padding:6mm;border:1.2px solid #111;break-inside:avoid;page-break-inside:avoid}.head,.two,.bottom,.foot,.shipline,.qrbox,table{break-inside:avoid;page-break-inside:avoid}button{display:none}}
+          @media(max-width:680px){body{padding:6px}.sheet{min-height:0;padding:5mm}.head{grid-template-columns:1fr 130px}.two,.bottom,.foot{gap:5px}.bottom{grid-template-columns:minmax(0,1fr) minmax(0,180px)}.closing{grid-template-columns:32mm minmax(0,1fr);gap:6px}.signature{grid-column:1/-1;border-left:0;border-top:1px solid #999;padding:6px 0 0}.closing .qrbox.pack img{width:27mm;height:27mm}table{font-size:6px}th,td{padding:2px}}
+          @media print{html,body{width:210mm;height:297mm;padding:0}body{display:flex;justify-content:center;align-items:flex-start}.sheet{width:194mm;height:281mm;max-width:none;min-height:0;margin:8mm auto;padding:6mm;border:1.2px solid #111;break-inside:avoid;page-break-inside:avoid}.head,.two,.bottom,.foot,.shipline,.qrbox,.closing,table{break-inside:avoid;page-break-inside:avoid}button{display:none}}
         </style>
       </head><body><main class="sheet">
         <header class="head">
           <div class="brand"><img src="${escapeHtml(logoUrl)}" alt="Bhumivera logo"/>
             <div><h1>BHUMIVERA</h1><strong>${escapeHtml(sellerName)}</strong><div class="muted">${escapeHtml(sellerAddress)}<br/>${escapeHtml(sellerPhone)} · ${escapeHtml(sellerEmail)}<br/>GSTIN: <strong>${escapeHtml(gstin || 'Not configured')}</strong></div></div>
           </div>
-          <div class="title"><h2>TAX INVOICE</h2><div class="invoice-no">${escapeHtml(order.invoiceNumber || `BV/${order.id}`)}</div><div class="invoice-meta">Order: <strong>${escapeHtml(order.orderNumber || order.id)}</strong><br/>Date: ${escapeHtml(invoiceDate)}<br/>Payment: ${escapeHtml(order.paymentMode || 'Online')} · ${escapeHtml(order.paymentStatus || 'pending')}</div></div>
+          <div class="title"><h2>TAX INVOICE</h2><div class="invoice-no">${escapeHtml(invoiceNumber)}</div><div class="invoice-meta">Order: <strong>${escapeHtml(order.orderNumber || order.id)}</strong><br/>Date: ${escapeHtml(invoiceDate)}<br/>Payment: ${escapeHtml(order.paymentMode || 'Online')} · ${escapeHtml(order.paymentStatus || 'pending')}</div></div>
         </header>
         <section class="two">
           <div class="box"><h3>Bill to</h3><strong>${escapeHtml(order.customerName || 'Customer')}</strong><br/>${escapeHtml(order.customerPhone || '')}<br/>${escapeHtml(order.customerEmail || '')}</div>
@@ -244,8 +251,21 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
           </div>
         </div>
         <section class="shipline"><div><strong>Shipped by</strong><br/>${escapeHtml(courierName)}</div><div class="shipvalue"><strong>Tracking / AWB</strong><br/>${escapeHtml(trackingNumber)}</div></section>
-        <div class="qrbox pack"><img src="${qrUrl}" alt="Self-contained fulfillment QR"/><span><strong>FULFILLMENT QR</strong><br/>Scan in Bhumivera PWA to verify and pack this order. Inventory is updated when the packer uploads.</span></div>
-        <footer class="foot"><div><strong>Invoice declaration</strong><br/>We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.<div class="note">Computer-generated tax invoice. Please retain for your records.</div></div><div class="sign">For ${escapeHtml(sellerName)}<br/><br/><strong>Authorised signatory</strong></div></footer>
+        <section class="closing">
+          <div class="qrbox pack"><img src="${qrUrl}" alt="Order fulfillment QR code"/></div>
+          <div class="gratitude">
+            <h3>Thank you for choosing a kinder way</h3>
+            <div>Your thoughtful choice supports a more nature-conscious future. We are grateful to have you with us on this journey.</div>
+            <div class="quote">“Small choices, rooted in care, help the whole Earth bloom.”</div>
+            <div>With heartfelt thanks, Team Bhumivera</div>
+          </div>
+          <div class="signature">
+            <div class="script">Akash Prasad</div>
+            <strong>Akash Prasad</strong>
+            <small>Authorised Signatory</small>
+          </div>
+        </section>
+        <footer class="foot"><div><strong>Invoice declaration</strong> · We declare that this invoice shows the actual price of the goods described and that all particulars are true and correct.<div class="note">Computer-generated tax invoice. Please retain for your records.</div></div></footer>
       </main><script>window.print()</script></body></html>
     `);
     printWindow.document.close();
@@ -260,7 +280,7 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
       <section role="dialog" aria-modal="true" aria-labelledby="fulfillment-qr-title" className="w-full max-w-lg rounded-2xl border border-emerald-500/30 bg-[#0c261b] p-5 text-white shadow-2xl">
         <div className="mb-4 flex items-center justify-between">
           <div>
-            <h2 id="fulfillment-qr-title" className="font-black">Tax Invoice · {order.invoiceNumber || order.orderNumber || order.id}</h2>
+            <h2 id="fulfillment-qr-title" className="font-black">Tax Invoice · {getInvoiceNumber(order)}</h2>
             <p className="text-xs text-slate-400">Compact packing QR with order and item codes; scanning it does not fetch from SQL.</p>
           </div>
           <button type="button" aria-label="Close" onClick={onClose} className="rounded-lg p-2 text-slate-300 hover:bg-white/10"><X size={18} /></button>
