@@ -400,7 +400,9 @@ export default function InventorySoftware() {
               syncedAt: new Date().toISOString(),
             })
           );
+          return d;
         }
+        return null;
       } catch (err) {
         setOrderSyncError(err.response?.data?.message || err.message || 'Could not refresh inventory data.');
         if (err.response?.status === 401 || err.response?.status === 403) {
@@ -422,6 +424,7 @@ export default function InventorySoftware() {
           } catch {}
           showNotice('error', err.response?.data?.message || err.message || 'Could not refresh inventory data.');
         }
+        return null;
       } finally {
         setLoading(false);
         setSyncing(false);
@@ -1258,7 +1261,22 @@ export default function InventorySoftware() {
       } else {
         showNotice('success', res.data?.message || `Order #${orderId} marked ${status.toUpperCase()}.`);
       }
-      await fetchBootstrapData(true);
+      const refreshedData = await fetchBootstrapData(true);
+      if (status === 'shipped') {
+        const savedOrder = refreshedData?.onlineOrders?.find(order => String(order.id) === String(orderId)) ||
+          onlineOrders.find(order => String(order.id) === String(orderId));
+        if (savedOrder) {
+          setFulfillmentQrOrder({
+            ...savedOrder,
+            status: 'shipped',
+            courier: courier || savedOrder.courier,
+            trackingNumber: trackingNumber || savedOrder.trackingNumber,
+            trackingUrl: trackingUrl || savedOrder.trackingUrl,
+          });
+        } else {
+          showNotice('error', `Shipment saved for order #${orderId}, but its invoice details could not be loaded. Refresh orders and open Invoice / QR.`);
+        }
+      }
       return true;
     } catch (err) {
       const backendMessage = err.response?.data?.message;
