@@ -1,9 +1,7 @@
 import { FALLBACK_CATALOG_PRODUCTS, CHARCOAL_FACE_WASH_EXACT, SHAMPOO_2IN1_EXACT, BHUMIVERA_6_PRODUCTS } from '../data/bhumiveraUniqueData';
-import LuxuryProductSeoSection from '../components/LuxuryProductSeoSection';
 import SEO from '../components/SEO';
 import SEOStructuredData from '../components/SEOStructuredData';
 import ProductDeliveryPromise from '../components/ProductDeliveryPromise';
-import ScarcitySimulationBadge from '../components/ScarcitySimulationBadge';
 import React, { useRef, useState, useEffect } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { motion as Motion, AnimatePresence, useInView } from 'framer-motion';
@@ -22,7 +20,6 @@ import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
 import { getProductImageUrl } from '../utils/productImageUrl';
-import useScarcitySimulator from '../hooks/useScarcitySimulator';
 import { haptics } from '../utils/haptics';
 
 const splitUrls = value => {
@@ -74,6 +71,35 @@ const getSecureExternalUrl = value => {
 const getImageUrl = image => getProductImageUrl(image) || '/logo.webp';
 const REVIEW_MEDIA_PLACEHOLDER = '/images/review-placeholder.svg';
 
+const getIngredientHighlights = product => {
+  const source = product?.active_ingredients || product?.primaryBotanicals || product?.clinicalActives || '';
+  return String(source)
+    .split(',')
+    .map(entry => {
+      const potencyMatch = entry.match(/\(([^()]*(?:%|mg|ml)[^()]*)\)/i) ||
+        entry.match(/(\d+(?:\.\d+)?\s*(?:%|mg|ml))/i);
+      const name = entry.replace(potencyMatch?.[0] || '', '').replace(/[()]/g, '').trim();
+      if (!name || /^(base|aqua|perfume|excipient)/i.test(name)) return null;
+      const normalizedName = name.toLowerCase();
+      const benefit = normalizedName.includes('charcoal')
+        ? 'Helps lift excess oil and everyday grime'
+        : normalizedName.includes('glycerin') || normalizedName.includes('hyaluronic')
+          ? 'Helps skin feel comfortably hydrated'
+          : normalizedName.includes('sea buckthorn')
+            ? 'An antioxidant-rich botanical'
+            : normalizedName.includes('neem')
+              ? 'A traditional clarifying botanical'
+              : normalizedName.includes('niacinamide')
+                ? 'Supports a balanced-looking complexion'
+                : normalizedName.includes('aloe') || normalizedName.includes('cucumber')
+                  ? 'A soothing, moisture-supporting botanical'
+                  : 'A disclosed botanical active';
+      return { name, potency: potencyMatch?.[1] || 'Disclosed', benefit };
+    })
+    .filter(Boolean)
+    .slice(0, 4);
+};
+
 export default function ProductDetail() {
   const { id } = useParams();
   const location = useLocation();
@@ -92,6 +118,7 @@ export default function ProductDetail() {
   
   const [product, setProduct] = useState(null);
   const [unitsOrderedToday, setUnitsOrderedToday] = useState(null);
+  const [todaySalesStatus, setTodaySalesStatus] = useState('loading');
   const [reviewsData, setReviewsData] = useState([]);
   const [reviewSummary, setReviewSummary] = useState(null);
   const [reviewLoadError, setReviewLoadError] = useState('');
@@ -106,45 +133,52 @@ export default function ProductDetail() {
   const [activeVideo, setActiveVideo] = useState(null);
   const [reviewRatingFilter, setReviewRatingFilter] = useState('all');
   const [reviewSort, setReviewSort] = useState('newest');
-  const {
-    products: simulatorProducts,
-    enabled: simulatorEnabled,
-    sampleActivityEnabled,
-    error: simulatorError,
-  } =
-    useScarcitySimulator(product?.id != null ? [product.id] : []);
-  const productSimulation = simulatorProducts[String(product?.id)];
-  const unitsSoldToday = Number(
-    productSimulation?.simulatedSoldToday ?? productSimulation?.soldToday
-  ) || 0;
   const addToBagButtonRef = useRef(null);
   const isAddToBagButtonVisible = useInView(addToBagButtonRef, { amount: 0.01, initial: true });
 
   useEffect(() => {
     if (!product?.id) {
       setUnitsOrderedToday(null);
+      setTodaySalesStatus('unavailable');
       return undefined;
     }
 
     let active = true;
     setUnitsOrderedToday(null);
-    scarcitySimulator.getPopularToday()
+    setTodaySalesStatus('loading');
+    const loadTodaySales = () => {
+      if (document.hidden) return;
+      scarcitySimulator.getTodaySales([product.id])
       .then(response => {
-        const products = response.data?.products;
-        if (!Array.isArray(products)) {
-          throw new Error('Order popularity response was invalid.');
+        const sales = response.data?.products?.[String(product.id)];
+        const count = Number(sales?.unitsOrdered);
+        if (!Number.isFinite(count) || count < 0) {
+          throw new Error('Verified product sales response was invalid.');
         }
-        const matchingProduct = products.find(item => String(item.id) === String(product.id));
-        const count = Number(matchingProduct?.unitsOrdered);
-        if (active) setUnitsOrderedToday(matchingProduct && Number.isFinite(count) ? count : null);
+        if (active) {
+          setUnitsOrderedToday(count);
+          setTodaySalesStatus('ready');
+        }
       })
       .catch(error => {
         console.error('[PRODUCT_TODAYS_ORDERS]', error);
-        if (active) setUnitsOrderedToday(null);
+        if (active) {
+          setUnitsOrderedToday(null);
+          setTodaySalesStatus('unavailable');
+        }
       });
+    };
+    loadTodaySales();
+    const interval = window.setInterval(loadTodaySales, 60_000);
+    const handleFocus = () => loadTodaySales();
+    window.addEventListener('focus', handleFocus);
+    document.addEventListener('visibilitychange', handleFocus);
 
     return () => {
       active = false;
+      window.clearInterval(interval);
+      window.removeEventListener('focus', handleFocus);
+      document.removeEventListener('visibilitychange', handleFocus);
     };
   }, [product?.id]);
 
@@ -412,19 +446,12 @@ export default function ProductDetail() {
     product?.quantity !== undefined &&
     product?.quantity !== '';
   const stockQuantity = Number(product?.quantity);
-  const isLowStock = !productUnavailable &&
-    hasKnownStock &&
-    Number.isFinite(stockQuantity) &&
-    stockQuantity > 0 &&
-    stockQuantity <= 5;
   const isOutOfStock = productUnavailable || (hasKnownStock && stockQuantity <= 0);
   const stockStatus = productUnavailable
     ? 'Not available for purchase'
     : isOutOfStock
       ? 'Currently unavailable'
-      : isLowStock
-        ? `Only ${stockQuantity} left — order soon`
-        : 'In Stock · Ready for Cleanroom Dispatch';
+      : 'In stock · Ready to dispatch';
   let rawSpecifications = product?.specifications || {};
   if (typeof rawSpecifications === 'string') {
     try { rawSpecifications = JSON.parse(rawSpecifications); } catch { rawSpecifications = {}; }
@@ -432,6 +459,7 @@ export default function ProductDetail() {
   const specificationEntries = rawSpecifications && typeof rawSpecifications === 'object' && !Array.isArray(rawSpecifications)
     ? Object.entries(rawSpecifications).filter(([, value]) => value !== null && value !== undefined && String(value).trim())
     : [];
+  const ingredientHighlights = getIngredientHighlights(product);
   const productRating = reviewSummary
     ? Number(reviewSummary.average || 0)
     : 0;
@@ -524,7 +552,7 @@ export default function ProductDetail() {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#14291F] pb-28 pt-20 font-sans text-[#FAF7F2] selection:bg-[#D4AF37]/30 selection:text-white md:pb-32 md:pt-24">
+    <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(ellipse_at_50%_0%,#214634_0%,#14291f_44%,#101b15_100%)] pb-28 pt-8 font-sans text-[#FAF7F2] selection:bg-[#D4AF37]/30 selection:text-white md:pb-32 md:pt-12">
       <SEOStructuredData product={product} />
       <SEO 
         title={`${product.name} | Bhumivera`}
@@ -535,7 +563,7 @@ export default function ProductDetail() {
         schema={productSchema} 
       />
 
-      <div className="relative z-10 mx-auto mb-4 flex max-w-7xl items-center gap-1.5 overflow-hidden px-4 text-[9px] font-bold uppercase tracking-[0.14em] text-[#94a3b8] md:mb-8 md:gap-2 md:px-6 md:text-xs md:tracking-widest">
+      <div className="relative z-10 mx-auto mb-5 flex max-w-7xl items-center gap-1.5 overflow-hidden px-4 text-[9px] font-bold uppercase tracking-[0.14em] text-[#b8c5bb] md:mb-7 md:gap-2 md:px-6 md:text-[10px] md:tracking-[0.2em]">
         <Link to="/" className="hover:text-[#fce096] transition-colors">Home</Link>
         <ChevronRight size={12} className="shrink-0 text-[#d4af37]/60 md:h-[14px] md:w-[14px]" />
         <Link to={`/shop?category=${product.category_id}`} className="shrink-0 hover:text-[#fce096] transition-colors">{product.category_name || 'Botanicals'}</Link>
@@ -543,9 +571,9 @@ export default function ProductDetail() {
         <span className="truncate text-[#fce096]">{product.name}</span>
       </div>
 
-      <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 gap-6 md:gap-10 lg:grid-cols-12 lg:gap-16">
+      <div className="relative z-10 mx-auto grid max-w-7xl grid-cols-1 gap-7 px-0 md:gap-10 lg:grid-cols-12 lg:gap-12 lg:px-6">
         
-        <div className="relative flex flex-col-reverse gap-3 md:flex-row md:gap-5 lg:col-span-7">
+        <div className="relative flex flex-col-reverse gap-3 px-4 md:flex-row md:gap-5 lg:col-span-7 lg:px-0">
           <div className="no-scrollbar flex shrink-0 gap-2 overflow-x-auto px-4 py-1 md:w-20 md:flex-col md:gap-3 md:overflow-y-auto md:px-0 lg:w-24">
             {product.images?.map((media, idx) => {
               const url = getImageUrl(media);
@@ -565,7 +593,8 @@ export default function ProductDetail() {
             })}
           </div>
 
-          <div className="group relative aspect-[0.94] w-full overflow-hidden rounded-2xl border border-[#d4af37]/20 bg-[#171813] shadow-2xl sm:aspect-square sm:rounded-2xl md:sticky md:top-28 md:aspect-auto md:h-[min(72vh,680px)] md:min-h-[500px] md:self-start lg:top-32">
+          <div className="group relative aspect-[0.94] w-full overflow-hidden rounded-[1.75rem] border border-[#e8d9ae]/75 bg-[radial-gradient(ellipse_at_50%_44%,#fffdf7_0%,#f0eadc_60%,#e0d7c4_100%)] shadow-[0_30px_90px_rgba(0,0,0,0.28)] sm:aspect-square md:sticky md:top-28 md:aspect-square md:h-auto md:min-h-0 md:self-start lg:top-32">
+            <div className="pointer-events-none absolute inset-4 rounded-[1.35rem] border border-[#244a38]/10 sm:inset-6" />
             <AnimatePresence mode="wait">
               <Motion.div
                 key={getImageUrl(activeMedia)}
@@ -573,9 +602,9 @@ export default function ProductDetail() {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 transition={{ duration: 0.8 }}
-                className="h-full w-full p-5 sm:p-8 md:p-10 lg:p-12"
+                className="h-full w-full p-7 pt-14 sm:p-10 sm:pt-16 md:p-12 md:pt-16 lg:p-16 lg:pt-20"
               >
-                <img src={getImageUrl(activeMedia)} width="800" height="800" fetchpriority="high" alt={`${product.luxuryName || product.name} - ${product.active_ingredients || product.primaryBotanicals || "Bhumivera Luxury Botanical Formula"}`} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full object-contain transition-transform duration-700 group-hover:scale-[1.025]" />
+                <img src={getImageUrl(activeMedia)} width="800" height="800" fetchpriority="high" alt={`${product.luxuryName || product.name} - ${product.active_ingredients || product.primaryBotanicals || "Bhumivera Luxury Botanical Formula"}`} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="w-full h-full rounded-2xl object-contain transition-transform duration-700 group-hover:scale-[1.025] sm:rounded-[1.35rem]" />
               </Motion.div>
             </AnimatePresence>
 
@@ -596,7 +625,7 @@ export default function ProductDetail() {
             )}
 
             <div className="absolute left-3 top-3 z-10 flex flex-col gap-3 sm:left-6 sm:top-6">
-              {product.is_featured === 1 && <span className="rounded-full btn-gold-luxury px-3 py-1.5 font-mono text-[9px] uppercase tracking-widest text-white shadow-sm sm:px-4 sm:text-[10px]">Premium Selection</span>}
+              {product.is_featured === 1 && <span className="rounded-full btn-gold-luxury px-3 py-1.5 font-mono text-[9px] uppercase tracking-widest text-white shadow-sm sm:px-4 sm:text-[10px]">Signature</span>}
             </div>
             
             <button
@@ -618,82 +647,100 @@ export default function ProductDetail() {
           </div>
         </div>
 
-        <div className="relative flex flex-col px-4 md:px-0 lg:col-span-5">
-          <div className="mb-5 border-b border-[#d4af37]/20 pb-5 md:mb-8 md:pb-8">
-            <div className="mb-3 flex flex-wrap items-center gap-2 sm:gap-3">
-               <span className="block font-mono text-[9px] uppercase tracking-[0.2em] text-[#d4af37] sm:text-[10px]">
-                 SKU: {product.sku || 'N/A'}
-               </span>
-                {product.brand && (
-                  <span className="flex items-center gap-1 rounded-full bg-[#171813] border border-white/10 px-2.5 py-1 text-[9px] font-bold uppercase tracking-widest text-[#FCE096] sm:px-3 sm:text-[10px]">
-                    <Tag size={12} className="text-[#D4AF37]" /> {product.brand}
-                  </span>
-               )}
+        <div className="relative flex flex-col rounded-[1.75rem] border border-[#d4af37]/25 bg-[linear-gradient(145deg,rgba(26,52,39,0.96),rgba(15,29,21,0.96))] p-5 shadow-[0_24px_70px_rgba(0,0,0,0.22)] sm:p-7 lg:col-span-5 lg:p-8">
+          <div className="mb-6 border-b border-[#d4af37]/20 pb-6 sm:mb-7 sm:pb-7">
+            <div className="mb-4 flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-2 rounded-full border border-[#d4af37]/30 bg-[#102219]/70 px-3 py-1.5 font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[#f4d98a]">
+                <FlaskConical size={12} /> The Bhumivera formula ledger
+              </span>
+              {product.brand && <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#aebdb1]">{product.brand} · {product.sku || `BV-${product.id}`}</span>}
             </div>
             
-            <h1 className="mb-2 font-serif font-bold text-2xl sm:text-4xl md:text-5xl leading-tight text-white">
+            <h1 className="mb-3 font-serif font-medium text-[2rem] leading-[1.08] tracking-[-0.035em] text-[#fffaf0] sm:text-4xl md:text-[3.35rem]">
               {product.name}
             </h1>
 
-            {productRating > 0 && <a href="#product-reviews" onClick={() => setActiveTab('reviews')} className="mb-4 inline-flex min-h-10 items-center gap-2 text-xs text-[#DFD7C4] hover:text-[#FCE096] sm:text-sm">
+            {productRating > 0 && <a href="#product-reviews" onClick={() => setActiveTab('reviews')} className="mb-4 inline-flex min-h-9 items-center gap-2 text-xs text-[#d7dfd7] hover:text-[#FCE096] sm:text-sm">
               <span className="flex text-[#D4AF37]" aria-label={`${productRating.toFixed(1)} out of 5 stars`}>{[1, 2, 3, 4, 5].map(star => <Star key={star} size={13} fill={star <= Math.round(productRating) ? 'currentColor' : 'none'} />)}</span>
               <span>{productRating.toFixed(1)}{reviewCount > 0 ? ` · ${reviewCount} reviews` : ''}</span>
             </a>}
             
-            <div className="mb-4 flex flex-col gap-2 md:mb-5">
+            <div className="mb-5 flex flex-col gap-2">
               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-                <span className="font-serif text-3xl font-bold text-[#FCE096] sm:text-4xl">
+                <span className="font-serif text-4xl font-semibold tracking-tight text-[#f2d783] sm:text-[2.8rem]">
                   ₹{product.discount_price || product.price}
                 </span>
                 {product.discount_price && (
-                  <span className="text-base font-medium text-[#9BB0A5] line-through sm:text-xl">₹{product.price}</span>
+                  <span className="text-base font-medium text-[#9bb0a5] line-through sm:text-lg">₹{product.price}</span>
                 )}
               </div>
+              <span className="font-mono text-[9px] uppercase tracking-[0.14em] text-[#9eafa2]">One clear price · no surprise product add-ons</span>
             </div>
 
-            {unitsOrderedToday > 0 && (
-              <div className="mb-4 rounded-xl border border-rose-400/30 bg-rose-950/25 px-4 py-3">
-                <p className="flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-rose-200">
-                  <span className="relative flex h-2 w-2" aria-hidden="true">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-rose-300 opacity-60 motion-reduce:animate-none" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-rose-400" />
-                  </span>
-                  Going fast today
-                </p>
-                <p className="mt-1 text-sm text-[#DFD7C4]">
-                  Units Sold Today: {unitsSoldToday}. Shop now while your pick is still in stock.
+            <div className="mb-5 flex items-center justify-between gap-4 rounded-2xl border border-[#d4af37]/25 bg-[#0d1d15]/75 px-4 py-3.5">
+              <div className="flex items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-full border border-[#d4af37]/25 bg-[#d4af37]/10 text-[#e7ca78]"><Package size={16} /></span>
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.14em] text-[#e9d79d]">Verified units sold today</p>
+                  <p className="mt-0.5 text-[10px] text-[#aebdb1]">
+                    {todaySalesStatus === 'ready'
+                      ? 'Paid & cash-on-delivery orders · resets at midnight IST'
+                      : todaySalesStatus === 'loading'
+                        ? 'Connecting to the verified order ledger…'
+                        : 'Verified sales count is temporarily unavailable'}
+                  </p>
+                </div>
+              </div>
+              <span className="min-w-8 text-right font-serif text-2xl font-semibold tabular-nums text-[#fff8e9]" aria-live="polite">
+                {unitsOrderedToday === null ? '—' : unitsOrderedToday}
+              </span>
+            </div>
+
+            {ingredientHighlights.length > 0 && (
+              <div className="mb-5 overflow-hidden rounded-[1.35rem] border border-[#d4af37]/30 bg-[linear-gradient(140deg,rgba(8,21,14,0.82),rgba(22,45,32,0.74))]">
+                <div className="flex items-end justify-between gap-3 border-b border-[#d4af37]/15 px-4 py-3.5 sm:px-5">
+                  <div>
+                      <p className="font-mono text-[8px] font-bold uppercase tracking-[0.2em] text-[#d9bf6e]">Key actives · label-level potencies</p>
+                      <h2 className="mt-1 font-serif text-lg leading-tight text-[#fff9ed]">Ingredients, in the open</h2>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('formulation');
+                      window.setTimeout(() => document.getElementById('product-information')?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 0);
+                    }}
+                    className="shrink-0 text-[9px] font-bold uppercase tracking-wider text-[#f0d98f] underline decoration-[#d4af37]/40 underline-offset-4 hover:text-white"
+                  >
+                    Full ledger
+                  </button>
+                </div>
+                <div className="grid grid-cols-2 gap-px bg-[#d4af37]/10">
+                  {ingredientHighlights.map(ingredient => (
+                    <article key={`${ingredient.name}-${ingredient.potency}`} className="min-h-24 bg-[#14291f]/90 p-3.5 sm:p-4">
+                      <p className="font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-[#b8c5bb]">{ingredient.name}</p>
+                      <p className="mt-1 font-serif text-2xl leading-none text-[#f2d783]">{ingredient.potency}</p>
+                      <p className="mt-2 text-[10px] leading-4 text-[#d4ddd5]">{ingredient.benefit}</p>
+                    </article>
+                  ))}
+                </div>
+                <p className="px-4 py-2.5 text-[9px] leading-relaxed text-[#9eafa2] sm:px-5">
+                  Concentrations shown as disclosed in the product formula. Ingredient descriptions are informational, not medical claims.
                 </p>
               </div>
             )}
 
-            {simulatorEnabled && (
-              <div className="mb-4">
-                <ScarcitySimulationBadge
-                  snapshot={productSimulation}
-                  productName={product.name}
-                  sampleActivityEnabled={sampleActivityEnabled}
-                />
-              </div>
-            )}
-
-            <p className="line-clamp-3 text-sm leading-6 text-[#DFD7C4] md:line-clamp-none md:leading-7">
-              {product.description}
+            <p className="line-clamp-4 text-sm leading-6 text-[#d7dfd7] md:line-clamp-none md:leading-7">
+              {product.short_description || product.description}
             </p>
           </div>
 
-          <div className="product-detail-translucent relative mb-6 rounded-2xl two-tone-panel-gold p-4 shadow-2xl sm:p-6 md:mb-8 md:rounded-3xl md:p-7">
+          <div className="product-detail-translucent relative mb-6 rounded-2xl border border-[#d4af37]/25 bg-[#0d1d15]/75 p-4 shadow-xl sm:p-6 md:mb-7 md:rounded-3xl md:p-7">
             <div className="mb-4 flex items-center justify-between gap-3 sm:mb-5">
-              <span className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 py-1.5 text-[9px] font-mono uppercase tracking-[0.12em] sm:text-[10px] sm:tracking-widest ${isOutOfStock || isLowStock ? 'bg-red-950/60 border border-red-500/40 text-red-300' : 'bg-[#171813] border border-[#D4AF37]/40 text-[#FCE096]'}`}>
-                {isLowStock && (
-                  <span className="relative flex h-2 w-2" aria-hidden="true">
-                    <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-red-300 opacity-60 motion-reduce:animate-none" />
-                    <span className="relative inline-flex h-2 w-2 rounded-full bg-red-400" />
-                  </span>
-                )}
+              <span className={`inline-flex min-h-8 items-center gap-2 rounded-full px-3 py-1.5 text-[9px] font-mono uppercase tracking-[0.12em] sm:text-[10px] sm:tracking-widest ${isOutOfStock ? 'border border-red-500/40 bg-red-950/60 text-red-300' : 'border border-emerald-300/25 bg-emerald-950/40 text-emerald-100'}`}>
                 {isOutOfStock ? <AlertCircle size={16}/> : <Package size={16}/>}
                 {stockStatus}
               </span>
-              <span className="shrink-0 text-[10px] font-medium text-[#9BB0A5]">Secure checkout</span>
+              <span className="shrink-0 text-[10px] font-medium text-[#b8c5bb]">Secure checkout</span>
             </div>
 
             <div className="flex flex-col gap-3 sm:flex-row">
@@ -712,7 +759,7 @@ export default function ProductDetail() {
                 type="button"
                 onClick={handleAddToCart} 
                 disabled={isOutOfStock || isAdding}
-                className="btn-gold-luxury relative flex min-h-12 flex-1 items-center justify-center gap-2 overflow-hidden rounded-xl px-4 text-xs font-bold uppercase tracking-[0.12em] shadow-xl transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-14 sm:tracking-widest"
+                className="btn-gold-luxury relative flex min-h-12 min-w-0 flex-1 items-center justify-center gap-2 overflow-hidden whitespace-nowrap rounded-xl px-3 text-[10px] font-bold uppercase tracking-[0.08em] shadow-xl transition-all active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50 sm:min-h-14 sm:px-4 sm:text-xs sm:tracking-widest"
               >
                 <span className={`flex items-center gap-2 transition-transform duration-300 ${isAdding ? '-translate-y-12' : ''}`}>
                   <Leaf size={16} /> {isAdding ? 'Adding...' : 'Add to Bag'}
@@ -755,12 +802,12 @@ export default function ProductDetail() {
                   </div>
                 </div>
                 <span className="rounded-full bg-[#171813] border border-[#D4AF37]/30 px-2.5 py-1 text-[9px] font-mono font-bold text-[#FCE096]">
-                  Virgin Seal
+                Traceability
                 </span>
               </div>
 
               <p className="text-xs text-[#DFD7C4] leading-relaxed mb-3.5">
-                Every bottle carries an individualized serial number (#087 of 250). Scan or enter your bottle serial to inspect analytical lab pH calibration ({product.phLevel || 'pH 5.51'}), heavy-metal assay (ND), and formulation monograph.
+                Use the product or batch details printed on your pack to explore its formulation and traceability information. We keep the ingredient story clear, without substituting estimated batch or lab claims for product records.
               </p>
 
               <div className="flex flex-col sm:flex-row items-center gap-2">
@@ -768,7 +815,7 @@ export default function ProductDetail() {
                   to={`/verify?serial=${encodeURIComponent(product.batchCode || 'BV-CH26-8841')}`}
                   className="btn-gold-luxury w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider shadow-md transition-all"
                 >
-                  <QrCode size={14} /> Scan / Verify Genuinity Test
+                  <QrCode size={14} /> Explore product traceability
                 </Link>
                 <Link
                   to="/science"
@@ -798,7 +845,7 @@ export default function ProductDetail() {
       </div>
 
       <div className="relative z-10 mx-auto mt-10 max-w-7xl px-4 md:mt-16 md:px-6">
-        <div className="no-scrollbar relative mb-8 flex overflow-x-auto border-b border-[#d4af37]/20 sm:mb-12">
+        <div id="product-information" className="scroll-mt-24 no-scrollbar relative mb-6 flex overflow-x-auto border-b border-[#d4af37]/20 sm:mb-8">
           {['details', 'formulation', 'specifications', 'reviews'].map((tab) => (
             <button
               key={tab}
@@ -815,11 +862,28 @@ export default function ProductDetail() {
           ))}
         </div>
 
-        <div className="min-h-[400px]">
+        <div className="min-h-0">
           <AnimatePresence mode="wait">
             {activeTab === 'details' && (
-              <Motion.div key="details" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="text-[#cbd5e1] leading-loose text-base max-w-4xl whitespace-pre-wrap">
-                {product.description}
+              <Motion.div key="details" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
+                <article className="rounded-3xl border border-[#d4af37]/25 bg-[linear-gradient(145deg,rgba(26,52,39,0.82),rgba(15,29,21,0.9))] p-6 sm:p-8">
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-[#d9bf6e]">01 / The product, plainly</p>
+                  <h2 className="mt-2 font-serif text-2xl leading-tight text-[#fff9ed] sm:text-3xl">Care with nothing important hidden.</h2>
+                  <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-[#d4ddd5]">{product.description}</p>
+                </article>
+                <aside className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                  {[
+                    { label: 'Designed for', value: product.skinTypeCompatibility || product.primaryBotanicals || 'A considered botanical care ritual' },
+                    { label: 'Formulation detail', value: product.surfactantSystem || product.clinicalActives || product.active_ingredients || 'See the full ingredient ledger for disclosed actives' },
+                    { label: 'Use', value: product.ritualTiming || product.directions || 'Follow the directions printed on the product pack' },
+                    { label: 'Formula standard', value: product.phLevel || product.ph_level || 'Ingredient and product details shown above' },
+                  ].map(item => (
+                    <div key={item.label} className="rounded-2xl border border-white/10 bg-[#0c1a12]/65 p-4 sm:p-5">
+                      <p className="font-mono text-[8px] font-bold uppercase tracking-[0.18em] text-[#d9bf6e]">{item.label}</p>
+                      <p className="mt-2 text-sm leading-6 text-[#edf0e9]">{item.value}</p>
+                    </div>
+                  ))}
+                </aside>
               </Motion.div>
             )}
 
@@ -1055,8 +1119,6 @@ export default function ProductDetail() {
           </AnimatePresence>
         </div>
       </div>
-
-      <LuxuryProductSeoSection product={product} />
 
       {/* PHASE 3 & 5: RAG CITATION ARCHITECTURE — EXACT LABEL COMPOSITION TABLE, COMPARISON MATRIX, DIRECT-ANSWER FAQ BLOCK & PILLAR LINK SILOS */}
       <section className="relative z-10 mx-auto mt-16 max-w-7xl px-4 md:px-6 space-y-12">
