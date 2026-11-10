@@ -1,0 +1,33 @@
+{
+  "id": "/scanner",
+  "name": "Bhumivera Warehouse Scanner",
+  "short_name": "BV Scanner",
+  "description": "Scan Bhumivera warehouse products and sync them to the POS queue.",
+  "start_url": "/scanner",
+  "scope": "/scanner",
+  "display": "standalone",
+  "display_override": ["standalone", "minimal-ui"],
+  "orientation": "portrait",
+  "background_color": "#07110d",
+  "theme_color": "#07110d",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
