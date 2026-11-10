@@ -65,6 +65,8 @@ describe('warehouse scanner PWA', () => {
     await screen.findByText('Sample Staff');
     fireEvent.click(screen.getByRole('button', { name: 'Scan Product' }));
     await waitFor(() => expect(scannerMock.onResult).toBeTruthy());
+    expect(document.querySelector('video').style.filter).toBe('none');
+    expect(document.querySelector('video').style.backdropFilter).toBe('none');
     scannerMock.onResult('SKU-1');
 
     expect(await screen.findByText('Sample Product')).toBeTruthy();

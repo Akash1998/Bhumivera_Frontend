@@ -280,16 +280,9 @@ export default function WarehouseScannerPwa() {
                     autoPlay
                     muted
                     playsInline
-                    className="absolute inset-0 h-full w-full object-cover"
+                    className="absolute inset-0 h-full w-full object-cover [backface-visibility:hidden]"
                     style={{ filter: 'none', WebkitFilter: 'none', backdropFilter: 'none', WebkitBackdropFilter: 'none' }}
                   />
-                  <div aria-hidden="true" className="pointer-events-none absolute inset-0">
-                    <div className="absolute inset-x-0 top-0 h-[16%] bg-black/30" />
-                    <div className="absolute inset-x-0 bottom-0 h-[16%] bg-black/30" />
-                    <div className="absolute bottom-[16%] left-0 top-[16%] w-[16%] bg-black/30" />
-                    <div className="absolute bottom-[16%] right-0 top-[16%] w-[16%] bg-black/30" />
-                  </div>
-                  <div className="pointer-events-none absolute inset-[16%] z-10 rounded-3xl border-2 border-emerald-300/90" />
                   <button type="button" onClick={() => setCameraOpen(false)} aria-label="Close camera" className="absolute right-3 top-3 z-20 rounded-full bg-black/70 p-3 text-white">
                     <X size={20} />
                   </button>
