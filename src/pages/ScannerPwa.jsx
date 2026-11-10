@@ -333,19 +333,33 @@ export default function ScannerPwa() {
     }
     setBusy(true);
     try {
-      const order = decodeFulfillmentQr(rawOrderCode);
+      let order = decodeFulfillmentQr(rawOrderCode);
       if (!order) {
         const orderRef = getOrderId(rawOrderCode);
-        throw new Error(orderRef
-          ? 'This QR contains only an order number. Print a new fulfillment QR with the embedded item manifest.'
-          : 'Scan the fulfillment QR printed from Inventory Software. The QR must contain the order manifest.');
+        if (!orderRef) {
+          throw new Error('Enter an order ID or scan the fulfillment QR printed from Inventory Software.');
+        }
+        const { data } = await api.get(
+          `/inventory-software/orders/${encodeURIComponent(orderRef)}/manifest`,
+          authConfig(session),
+        );
+        if (!data?.success || !data.order) {
+          throw new Error(data?.message || `Order "${orderRef}" could not be loaded.`);
+        }
+        order = data.order;
       }
       if (String(order.status).toLowerCase() !== 'confirmed') {
         throw new Error(`Order #${order.orderNumber || order.id} must be confirmed before packing. Current status: ${order.status}.`);
       }
-      if (!order.id || order.items.length === 0) {
-        throw new Error('The fulfillment QR has no packable items.');
+      if (!order.id || !Array.isArray(order.items) || order.items.length === 0) {
+        throw new Error('The order manifest has no packable items.');
       }
+      order.items = order.items.map(item => ({
+        ...item,
+        quantity: Number(item.quantity) || 1,
+        sku: item.sku || '',
+        barcode: item.barcode || item.sku || '',
+      }));
       const progress = Object.fromEntries(order.items.map(item => [
         String(item.orderItemId),
         { codes: [], quantity: Number(item.quantity) || 1 },
@@ -626,17 +640,23 @@ export default function ScannerPwa() {
         )}
 
         {cameraOpen && (
-          <section className="mb-5 overflow-hidden rounded-3xl border border-emerald-300/25 bg-black shadow-2xl shadow-black/40">
+          <section className="mb-5 overflow-hidden bg-black">
             <div className="relative aspect-[4/5] max-h-[62vh]">
-              <video ref={videoRef} autoPlay muted playsInline className="absolute inset-0 h-full w-full object-cover" />
-              <div className="absolute inset-5 rounded-3xl border border-emerald-300/70 shadow-[0_0_24px_rgba(16,185,129,0.25)] pointer-events-none" />
-              <button type="button" onClick={() => setCameraOpen(false)} aria-label="Close camera" className="absolute right-3 top-3 z-20 rounded-full border border-white/20 bg-black/75 p-3 text-white shadow-xl">
+              <video
+                ref={videoRef}
+                autoPlay
+                muted
+                playsInline
+                className="absolute inset-0 h-full w-full object-contain"
+                style={{ filter: 'none', opacity: 1, transform: 'none' }}
+              />
+              <button type="button" onClick={() => setCameraOpen(false)} aria-label="Close camera" className="absolute right-3 top-3 z-20 rounded-full bg-black p-3 text-white">
                 <X size={20} />
               </button>
-              <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black/70 px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-emerald-100">Align code inside frame</span>
+              <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white">Align code in view</span>
             </div>
             <p className="p-3 text-center text-xs leading-5 text-slate-300">
-              {cameraMode === 'order' ? 'Scan the fulfillment QR. It contains the order manifest; loading it does not fetch from the database.' : `Scan the SKU or barcode for ${selectedItem?.name || 'the selected item'}.`}
+              {cameraMode === 'order' ? 'Scan the fulfillment QR. It contains the order manifest and loads locally.' : `Scan the SKU or barcode for ${selectedItem?.name || 'the selected item'}.`}
             </p>
           </section>
         )}
@@ -797,7 +817,7 @@ export default function ScannerPwa() {
                 </div>
                 <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-emerald-200">Live shift</span>
               </div>
-              <p className="mt-2 text-xs leading-5 text-slate-400">Order details and scans stay on this device. Existing website order reservations are unchanged until upload.</p>
+              <p className="mt-2 text-xs leading-5 text-slate-400">Fulfillment QR scans load locally; manual order-ID lookup fetches the manifest from Inventory Software. Product scans stay on this device until upload.</p>
             </div>
 
             <div className="rounded-3xl border border-white/10 bg-[#0b1812]/95 p-5 shadow-xl shadow-black/20 sm:p-6">

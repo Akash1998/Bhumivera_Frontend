@@ -14,7 +14,7 @@ function buildReader() {
 }
 
 /**
- * Starts rear camera with HD preference for small or distant QR / barcode labels.
+ * Starts the rear camera without applying image or focus processing.
  * @param {HTMLVideoElement} videoElement
  * @returns {Promise<MediaStream>}
  */
@@ -22,11 +22,7 @@ export async function startCamera(videoElement) {
   let stream;
   try {
     stream = await navigator.mediaDevices.getUserMedia({
-      video: {
-        facingMode: { ideal: 'environment' },
-        width: { ideal: 1920, min: 640 },
-        height: { ideal: 1080, min: 480 },
-      },
+      video: { facingMode: { ideal: 'environment' } },
       audio: false,
     });
   } catch {
@@ -39,18 +35,6 @@ export async function startCamera(videoElement) {
   videoElement.srcObject = stream;
   videoElement.setAttribute('playsinline', 'true');
   await videoElement.play();
-
-  const [track] = stream.getVideoTracks();
-  if (track && typeof track.getCapabilities === 'function') {
-    const caps = track.getCapabilities();
-    const advanced = [];
-    if (Array.isArray(caps.focusMode) && caps.focusMode.includes('continuous')) {
-      advanced.push({ focusMode: 'continuous' });
-    }
-    if (advanced.length) {
-      track.applyConstraints({ advanced }).catch(() => {});
-    }
-  }
 
   return stream;
 }

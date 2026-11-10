@@ -68,6 +68,7 @@ const signInAndStartWork = async () => {
 describe('fulfillment scanner PWA', () => {
   beforeEach(() => {
     localStorage.clear();
+    sessionStorage.clear();
     scannerMock.onResult = null;
     scannerMock.scanLoops = 0;
     prepareApi();
@@ -121,6 +122,37 @@ describe('fulfillment scanner PWA', () => {
       }),
       expect.objectContaining({ headers: { Authorization: 'Bearer staff-token' } }),
     );
+  });
+
+  it('loads an order manifest by order ID from Inventory Software', async () => {
+    api.get.mockResolvedValueOnce({
+      data: {
+        success: true,
+        order: {
+          id: 99,
+          orderNumber: 'ORD-99',
+          status: 'confirmed',
+          customerName: 'Sample Customer',
+          items: [
+            { orderItemId: 901, name: 'Charcoal Face Wash', sku: 'SKU-1', quantity: 1 },
+            { orderItemId: 902, name: 'Aloe Vera Soap', sku: 'SKU-2', quantity: 1 },
+          ],
+        },
+      },
+    });
+
+    render(<ScannerPwa />);
+    await signInAndStartWork();
+    fireEvent.change(screen.getByPlaceholderText('Order number'), { target: { value: '99' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Load' }));
+
+    await screen.findByText(/Order #ORD-99 loaded/i);
+    expect(api.get).toHaveBeenCalledWith(
+      '/inventory-software/orders/99/manifest',
+      expect.objectContaining({ headers: { Authorization: expect.any(String) } }),
+    );
+    expect(screen.getByText('Charcoal Face Wash')).toBeTruthy();
+    expect(screen.getByText('Aloe Vera Soap')).toBeTruthy();
   });
 
   it('saves completed orders locally and uploads them from the bulk queue later', async () => {
