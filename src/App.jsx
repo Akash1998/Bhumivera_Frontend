@@ -96,6 +96,7 @@ const VisualGuideModal = lazyWithRetry(() => import("./components/VisualGuideMod
 const Home = lazyWithRetry(() => import("./pages/PremiumHome.jsx"));
 const LabProtocol = lazyWithRetry(() => import("./pages/LabProtocol.jsx"));
 const InventorySoftware = lazyWithRetry(() => import("./pages/InventorySoftware.jsx"));
+const WarehouseScannerPwa = lazyWithRetry(() => import("./pages/WarehouseScannerPwa.jsx"));
 const Shop = lazyWithRetry(() => import("./pages/Shop.jsx"));
 const ProductDetail = lazyWithRetry(() => import("./pages/ProductDetail.jsx"));
 const BundleDetail = lazyWithRetry(() => import("./pages/BundleDetail.jsx"));
@@ -352,6 +353,8 @@ function AppContent() {
     return (
       path.startsWith("/admin") || 
       path.startsWith("/warehouse") || 
+      path.startsWith("/scanner") ||
+      path.startsWith("/bombera") ||
       path.startsWith("/inventorysoftware") ||
       path.startsWith("/inventorymanagement") ||
       path.startsWith("/support") ||
@@ -464,6 +467,8 @@ function AppContent() {
             <Route path="/affiliate" element={<Affiliate />} />
 
             {/* 10X Super Inventory, Order Lifecycle, RTO Returns, QR Scanner & Daily SQL Backup Software */}
+            <Route path="/scanner" element={<WarehouseScannerPwa />} />
+            <Route path="/bombera" element={<WarehouseScannerPwa />} />
             <Route path="/inventorysoftware" element={<WebOnlyManagement><InventorySoftware /></WebOnlyManagement>} />
             <Route path="/inventorysoftware/*" element={<WebOnlyManagement><InventorySoftware /></WebOnlyManagement>} />
             <Route path="/inventorymanagement" element={<Navigate to="/inventorysoftware" replace />} />
