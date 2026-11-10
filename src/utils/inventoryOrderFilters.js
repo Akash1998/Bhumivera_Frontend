@@ -1,4 +1,4 @@
-export const DISPATCH_STATUSES = ['pending', 'confirmed', 'packed'];
+export const DISPATCH_STATUSES = ['pending', 'confirmed', 'packed', 'shipped', 'out_for_delivery'];
 
 export function localOrderDate(value) {
   if (!value) return '';

@@ -81,6 +81,46 @@ const getOrderId = value => {
   return match?.[1]?.replace(/^#/, '').trim() || '';
 };
 
+const decodeFulfillmentQr = value => {
+  const raw = String(value || '').trim();
+  if (!raw.startsWith('BV-PWA1:')) return null;
+  const encoded = raw.slice('BV-PWA1:'.length).replace(/-/g, '+').replace(/_/g, '/');
+  const binary = window.atob(encoded.padEnd(Math.ceil(encoded.length / 4) * 4, '='));
+  const bytes = Uint8Array.from(binary, character => character.charCodeAt(0));
+  const payload = JSON.parse(new TextDecoder().decode(bytes));
+  if (payload?.v !== 1 || !payload?.i || !Array.isArray(payload?.x)) {
+    throw new Error('This fulfillment QR does not contain a valid order manifest.');
+  }
+  return {
+    id: payload.i,
+    orderNumber: payload.n || String(payload.i),
+    invoiceNumber: payload.f || '',
+    createdAt: payload.d || null,
+    status: payload.s || 'pending',
+    customerName: payload.c || 'Customer',
+    customerPhone: payload.p || '',
+    customerEmail: payload.e || '',
+    shippingAddress: payload.a || '',
+    totalAmount: Number(payload.t?.total) || 0,
+    subtotal: Number(payload.t?.subtotal) || 0,
+    discount: Number(payload.t?.discount) || 0,
+    shippingCost: Number(payload.t?.shipping) || 0,
+    totalItemsCount: payload.x.reduce((sum, item) => sum + (Number(item.q) || 0), 0),
+    items: payload.x.map(item => ({
+      orderItemId: item.i,
+      productId: item.p,
+      name: item.n || 'Product',
+      sku: item.k || '',
+      barcode: item.b || item.k || '',
+      quantity: Number(item.q) || 1,
+      price: Number(item.u) || 0,
+      mrp: Number(item.m) || Number(item.u) || 0,
+      gstHsnCode: item.h || '',
+      gstRate: Number(item.g) || 5,
+    })),
+  };
+};
+
 const formatError = error => error.response?.data?.message || error.message || 'The request could not be completed.';
 
 export default function ScannerPwa() {
@@ -143,6 +183,15 @@ export default function ScannerPwa() {
         deviceName: 'Bhumivera Scanner PWA',
         mode: activeOrder ? 'PACKING' : 'IDLE',
         activeOrder: activeOrder?.orderNumber || '',
+        activeOrderItems: activeOrder
+          ? (activeOrder.items || []).map(item => ({
+            orderItemId: item.orderItemId,
+            name: item.name,
+            sku: item.sku,
+            expectedUnits: Number(item.quantity) || 1,
+            scannedUnits: scanProgress[String(item.orderItemId)]?.codes.length || 0,
+          }))
+          : [],
         scannedUnits,
         expectedUnits,
         savedBulkOrders: batch.map(order => ({
@@ -152,7 +201,7 @@ export default function ScannerPwa() {
       },
       authConfig(session)
     );
-  }, [activeOrder, batch, expectedUnits, onWork, scannedUnits, session, staffName, staffUsername]);
+  }, [activeOrder, batch, expectedUnits, onWork, scannedUnits, scanProgress, session, staffName, staffUsername]);
 
   useEffect(() => {
     const manifest = document.querySelector('link[rel="manifest"]');
@@ -236,52 +285,25 @@ export default function ScannerPwa() {
     setCameraOpen(false);
   }, []);
 
-  const handleReleaseOrder = useCallback(async order => {
-    if (!order || !session) return;
-    const ids = new Set([String(order.id), String(order.orderNumber)].filter(Boolean));
-    await Promise.all([...ids].map(orderId => api.post(
-      '/inventory-software/orders/release',
-      {
-        orderId,
-        sessionCode: session.sessionCode,
-        operatorUsername: staffUsername,
-        operatorName: staffName,
-      },
-      authConfig(session)
-    )));
-  }, [session, staffName, staffUsername]);
-
   const loadOrder = useCallback(async rawOrderCode => {
     if (!session || !onWork) {
       setNotice({ type: 'error', text: 'Tap Go to Work before loading an order.' });
       return;
     }
-    const id = getOrderId(rawOrderCode);
-    if (!id) {
-      setNotice({ type: 'error', text: 'Scan the fulfillment QR printed on the order bill, or enter its ORD number.' });
-      return;
-    }
     setBusy(true);
-    setNotice({ type: 'info', text: `Loading order ${id}…` });
     try {
-      const { data } = await api.get(
-        `/inventory-software/orders/${encodeURIComponent(id)}/manifest`,
-        {
-          params: {
-            sessionCode: session.sessionCode,
-            operatorUsername: staffUsername,
-            operatorName: staffName,
-          },
-          ...authConfig(session),
-        }
-      );
-      const order = data?.order;
-      if (!data?.success || !order?.id || !Array.isArray(order.items) || order.items.length === 0) {
-        throw new Error(data?.message || 'The order has no packable items.');
+      const order = decodeFulfillmentQr(rawOrderCode);
+      if (!order) {
+        const orderRef = getOrderId(rawOrderCode);
+        throw new Error(orderRef
+          ? 'This QR contains only an order number. Print a new fulfillment QR with the embedded item manifest.'
+          : 'Scan the fulfillment QR printed from Inventory Software. The QR must contain the order manifest.');
       }
-      if (['cancelled', 'delivered', 'shipped', 'returned', 'archived', 'packed'].includes(String(order.status).toLowerCase())) {
-        await handleReleaseOrder(order);
-        throw new Error(`Order #${order.orderNumber || order.id} is already ${order.status} and cannot be packed.`);
+      if (String(order.status).toLowerCase() !== 'confirmed') {
+        throw new Error(`Order #${order.orderNumber || order.id} must be confirmed before packing. Current status: ${order.status}.`);
+      }
+      if (!order.id || order.items.length === 0) {
+        throw new Error('The fulfillment QR has no packable items.');
       }
       const progress = Object.fromEntries(order.items.map(item => [
         String(item.orderItemId),
@@ -296,7 +318,7 @@ export default function ScannerPwa() {
     } finally {
       setBusy(false);
     }
-  }, [handleReleaseOrder, onWork, session, staffName, staffUsername]);
+  }, [onWork, session]);
 
   const matchesOrderItem = (code, item) => {
     const clean = normalizeProductCode(code).toLowerCase();
@@ -339,6 +361,7 @@ export default function ScannerPwa() {
     const entry = {
       orderId: activeOrder.id,
       orderNumber: activeOrder.orderNumber,
+      invoiceNumber: activeOrder.invoiceNumber,
       customerName: activeOrder.customerName,
       packedAt: Date.now(),
       packedBy: staffName,
@@ -371,14 +394,31 @@ export default function ScannerPwa() {
       if (!data?.success || Number(data.count) !== packedOrders.length) {
         throw new Error(data?.message || 'The server did not confirm every packed order.');
       }
+      let nextBatch = batch;
       if (batch.some(item => packedOrders.some(packed => String(packed.orderId) === String(item.orderId)))) {
         const sentIds = new Set(packedOrders.map(item => String(item.orderId)));
-        persistBatch(batch.filter(item => !sentIds.has(String(item.orderId))));
+        nextBatch = batch.filter(item => !sentIds.has(String(item.orderId)));
+        persistBatch(nextBatch);
       }
       setConfirmedOrder(null);
       clearActiveOrder();
-      await sendHeartbeat().catch(() => {});
-      setNotice({ type: 'success', text: data.message || 'Packed orders uploaded to Inventory Software.' });
+      try {
+        await updateWorkroom({
+          onWork: true,
+          mode: 'IDLE',
+          activeOrder: '',
+          activeOrderItems: [],
+          scannedUnits: 0,
+          expectedUnits: 0,
+          savedBulkOrders: nextBatch.map(order => ({
+            orderId: String(order.orderId),
+            orderNumber: String(order.orderNumber || order.orderId),
+          })),
+        });
+        setNotice({ type: 'success', text: data.message || 'Packed orders uploaded to Inventory Software.' });
+      } catch (presenceError) {
+        setNotice({ type: 'error', text: `Orders uploaded successfully, but live workroom presence did not refresh: ${formatError(presenceError)}` });
+      }
     } catch (error) {
       setNotice({ type: 'error', text: `Upload failed; your packed order is preserved: ${formatError(error)}` });
     } finally {
@@ -392,27 +432,38 @@ export default function ScannerPwa() {
       confirmedOrder,
       ...batch.filter(item => String(item.orderId) !== String(confirmedOrder.orderId)),
     ];
+    persistBatch(nextBatch);
+    setConfirmedOrder(null);
+    clearActiveOrder();
     try {
-      persistBatch(nextBatch);
-      await handleReleaseOrder(activeOrder);
-      setConfirmedOrder(null);
-      clearActiveOrder();
-      setNotice({ type: 'success', text: 'Packed order saved on this device. Upload it from the bulk queue when ready.' });
+      await updateWorkroom({
+        onWork: true,
+        mode: 'IDLE',
+        activeOrder: '',
+        activeOrderItems: [],
+        scannedUnits: 0,
+        expectedUnits: 0,
+        savedBulkOrders: nextBatch.map(order => ({
+          orderId: String(order.orderId),
+          orderNumber: String(order.orderNumber || order.orderId),
+        })),
+      });
+      setNotice({ type: 'success', text: 'Packed order saved on this device. Inventory is unchanged until you upload the bulk queue.' });
     } catch (error) {
-      setNotice({ type: 'error', text: `Saved locally, but the order lock could not be released: ${formatError(error)}` });
+      setNotice({ type: 'error', text: `Order is saved locally, but live workroom presence did not update: ${formatError(error)}` });
     }
   };
 
   const handleCancelPacking = async () => {
     if (!activeOrder || !window.confirm('Cancel this packing attempt? No stock is changed; the customer order stays open.')) return;
     setBusy(true);
+    clearActiveOrder();
+    setConfirmedOrder(null);
     try {
-      await handleReleaseOrder(activeOrder);
-      clearActiveOrder();
-      setConfirmedOrder(null);
+      await updateWorkroom({ onWork: true, mode: 'IDLE', activeOrder: '', activeOrderItems: [], scannedUnits: 0, expectedUnits: 0 });
       setNotice({ type: 'info', text: 'Packing attempt canceled. The customer order remains open and its existing stock reservation is unchanged.' });
     } catch (error) {
-      setNotice({ type: 'error', text: `Could not release the order lock: ${formatError(error)}` });
+      setNotice({ type: 'error', text: `Packing was canceled locally, but live workroom presence did not update: ${formatError(error)}` });
     } finally {
       setBusy(false);
     }
@@ -422,7 +473,6 @@ export default function ScannerPwa() {
     setBusy(true);
     try {
       if (onWork) await updateWorkroom({ onWork: false, mode: 'OFF_WORK' });
-      if (activeOrder) await handleReleaseOrder(activeOrder);
     } catch (error) {
       setNotice({ type: 'error', text: `Could not close the live work session: ${formatError(error)}` });
       setBusy(false);
@@ -522,7 +572,7 @@ export default function ScannerPwa() {
               </button>
             </div>
             <p className="p-3 text-center text-xs text-slate-300">
-              {cameraMode === 'order' ? 'Scan the fulfillment QR printed on the order bill.' : `Scan the SKU or barcode for ${selectedItem?.name || 'the selected item'}.`}
+              {cameraMode === 'order' ? 'Scan the fulfillment QR. It contains the order manifest; loading it does not fetch from the database.' : `Scan the SKU or barcode for ${selectedItem?.name || 'the selected item'}.`}
             </p>
           </section>
         )}
@@ -533,7 +583,7 @@ export default function ScannerPwa() {
               <ShieldCheck className="mt-0.5 shrink-0 text-emerald-300" size={23} />
               <div>
                 <h2 className="font-bold text-white">Staff sign in</h2>
-                <p className="mt-1 text-sm leading-6 text-slate-300">Use your Inventory Software staff ID and password. Scanner access uses the same staff account.</p>
+                <p className="mt-1 text-sm leading-6 text-slate-300">Use the login ID and password assigned by your administrator. The staff roster must be loaded from Workroom → Staff Accounts before the backend can validate a scanner login.</p>
               </div>
             </div>
             <form onSubmit={handleLogin} className="space-y-4">
@@ -564,7 +614,7 @@ export default function ScannerPwa() {
               {busy ? <LoaderCircle size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
               Go to Work
             </button>
-            <p className="text-xs leading-5 text-slate-400">Your live work status and packing progress will be visible in the Inventory Software workroom. Presence updates use backend memory, not periodic SQL queries.</p>
+            <p className="text-xs leading-5 text-slate-400">Your live work status is visible in the Inventory Software workroom. Scanning the embedded order QR and saving a bulk pack uses backend memory and your device only; SQL is used when you explicitly upload.</p>
           </section>
         ) : confirmedOrder ? (
           <section className="space-y-4 rounded-3xl border border-emerald-400/30 bg-emerald-400/[0.06] p-5 sm:p-7">

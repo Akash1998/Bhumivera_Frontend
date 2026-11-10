@@ -1224,9 +1224,9 @@ export default function InventorySoftware() {
   const handleUpdateOnlineOrderStatus = async (orderId, status, extra = {}) => {
     let trackingNumber = extra.trackingNumber;
     let courier = extra.courier;
-    if (status === 'shipped' && !trackingNumber) {
-      trackingNumber = window.prompt('Enter Courier Tracking / AWB Number:', `BHVM${Date.now().toString().slice(-8)}`) || undefined;
-      courier = window.prompt('Enter Courier Partner Name (e.g. Delhivery, Shiprocket, BlueDart):', courier || 'Delhivery Surface Express') || 'Bhumivera Priority Express';
+    if (status === 'shipped' && (!String(trackingNumber || '').trim() || !String(courier || '').trim())) {
+      showNotice('error', 'Enter the actual courier and tracking/AWB number at shipment handover. Packing does not need tracking details.');
+      return false;
     }
     try {
       const res = await api.put(
@@ -1240,10 +1240,18 @@ export default function InventorySoftware() {
         },
         reqConfig
       );
-      showNotice('success', res.data?.message || `Order #${orderId} marked ${status.toUpperCase()}.`);
+      if (res.data?.emailSent === false && res.data?.emailError) {
+        showNotice('error', `${res.data.message || 'Order status updated.'} Customer email was not sent: ${res.data.emailError}`);
+      } else if (res.data?.warnings?.length) {
+        showNotice('error', `${res.data.message || 'Order status updated.'} ${res.data.warnings.join(' ')}`);
+      } else {
+        showNotice('success', res.data?.message || `Order #${orderId} marked ${status.toUpperCase()}.`);
+      }
       await fetchBootstrapData(true);
+      return true;
     } catch (err) {
       showNotice('error', err.response?.data?.message || 'Could not update online order status.');
+      return false;
     }
   };
 
@@ -1254,7 +1262,6 @@ export default function InventorySoftware() {
       const res = await api.put(
         `/inventory-software/online-orders/${editingOrder.id}/edit`,
         {
-          status: editingOrder.status,
           courier: editingOrder.courier,
           trackingNumber: editingOrder.trackingNumber,
           estimatedDeliveryDate: editingOrder.estimatedDeliveryDate,
@@ -3054,19 +3061,9 @@ export default function InventorySoftware() {
 
                   <div className="grid grid-cols-2 gap-3">
                     <div>
-                      <label className="block font-bold uppercase text-slate-600 mb-1">Order Lifecycle Status</label>
-                      <select
-                        value={editingOrder.status}
-                        onChange={e => setEditingOrder(prev => ({ ...prev, status: e.target.value }))}
-                        className="w-full px-3 py-2 rounded-xl bg-white border border-slate-300 font-bold"
-                      >
-                        <option value="pending">Pending</option>
-                        <option value="confirmed">Confirmed</option>
-                        <option value="packed">Packed &amp; Weighed</option>
-                        <option value="shipped">Shipped / In Transit</option>
-                        <option value="delivered">Delivered</option>
-                        <option value="returned">Undelivered / RTO Returned</option>
-                      </select>
+                      <label className="block font-bold uppercase text-slate-600 mb-1">Current lifecycle status</label>
+                      <div className="w-full rounded-xl border border-slate-300 bg-slate-100 px-3 py-2 font-bold capitalize">{String(editingOrder.status || '').replace(/_/g, ' ')}</div>
+                      <p className="mt-1 text-[10px] text-slate-500">Use fulfillment actions to change status and trigger the correct validation/email.</p>
                     </div>
                     <div>
                       <label className="block font-bold uppercase text-slate-600 mb-1">
@@ -3315,7 +3312,7 @@ export default function InventorySoftware() {
       )}
 
       {fulfillmentQrOrder && (
-        <FulfillmentOrderQrModal order={fulfillmentQrOrder} onClose={() => setFulfillmentQrOrder(null)} />
+        <FulfillmentOrderQrModal order={fulfillmentQrOrder} storeConfig={cfg} onClose={() => setFulfillmentQrOrder(null)} />
       )}
 
       {returnQcOrder && (

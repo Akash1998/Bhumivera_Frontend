@@ -21,22 +21,23 @@ vi.mock('../utils/qrScanEngine', () => ({
   stopCamera: vi.fn(),
 }));
 
-const orderManifest = {
-  success: true,
-  order: {
-    id: 99,
-    orderNumber: 'ORD-99',
-    customerName: 'Sample Customer',
-    status: 'pending',
-    items: [
-      { orderItemId: 901, name: 'Charcoal Face Wash', sku: 'SKU-1', barcode: 'BAR-1', quantity: 1 },
-      { orderItemId: 902, name: 'Aloe Vera Soap', sku: 'SKU-2', barcode: 'BAR-2', quantity: 1 },
-    ],
-  },
+const orderPayload = {
+  v: 1,
+  i: 99,
+  n: 'ORD-99',
+  s: 'confirmed',
+  c: 'Sample Customer',
+  t: { total: 598, subtotal: 598, discount: 0, shipping: 0 },
+  x: [
+    { i: 901, n: 'Charcoal Face Wash', k: 'SKU-1', b: 'BAR-1', q: 1, u: 299 },
+    { i: 902, n: 'Aloe Vera Soap', k: 'SKU-2', b: 'BAR-2', q: 1, u: 299 },
+  ],
 };
+const fulfillmentQr = `BV-PWA1:${btoa(unescape(encodeURIComponent(JSON.stringify(orderPayload))))
+  .replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/g, '')}`;
 
 const prepareApi = () => {
-  api.get.mockResolvedValue({ data: orderManifest });
+  api.get.mockResolvedValue({ data: {} });
   api.post.mockImplementation(path => {
     if (path.endsWith('/scanner/auth/login')) {
       return Promise.resolve({
@@ -83,12 +84,9 @@ describe('fulfillment scanner PWA', () => {
 
     fireEvent.click(screen.getByRole('button', { name: 'Scan Order Bill QR' }));
     await waitFor(() => expect(scannerMock.onResult).toBeTruthy());
-    scannerMock.onResult('ORD:99');
+    scannerMock.onResult(fulfillmentQr);
     await screen.findByText(/Order #ORD-99 loaded/i);
-    expect(api.get).toHaveBeenCalledWith(
-      '/inventory-software/orders/99/manifest',
-      expect.objectContaining({ params: expect.objectContaining({ sessionCode: 'STAFF-SAMPLE' }) }),
-    );
+    expect(api.get).not.toHaveBeenCalled();
 
     fireEvent.click(screen.getByRole('button', { name: 'Scan Charcoal Face Wash' }));
     await waitFor(() => expect(scannerMock.onResult).toBeTruthy());
@@ -130,7 +128,7 @@ describe('fulfillment scanner PWA', () => {
     await signInAndStartWork();
     fireEvent.click(screen.getByRole('button', { name: 'Scan Order Bill QR' }));
     await waitFor(() => expect(scannerMock.onResult).toBeTruthy());
-    scannerMock.onResult('ORD:99');
+    scannerMock.onResult(fulfillmentQr);
     await screen.findByText(/Order #ORD-99 loaded/i);
 
     fireEvent.click(screen.getByRole('button', { name: 'Scan Charcoal Face Wash' }));

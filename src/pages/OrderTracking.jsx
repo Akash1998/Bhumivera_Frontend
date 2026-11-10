@@ -17,11 +17,12 @@ const STATUS_STEPS = [
   { key: 'confirmed', label: 'Confirmed', icon: CheckCircle2, description: 'Your order has been confirmed.' },
   { key: 'packed', label: 'Packed', icon: Package, description: 'Your parcel is prepared for dispatch.' },
   { key: 'shipped', label: 'Shipped', icon: Truck, description: 'Your parcel has been handed to the courier.' },
+  { key: 'out_for_delivery', label: 'Out for Delivery', icon: Truck, description: 'Your parcel is with the courier for delivery today.' },
   { key: 'delivered', label: 'Delivered', icon: PartyPopper, description: 'Your parcel has been marked delivered.' },
 ];
 
 const STATUS_MAP = {
-  pending: 0, placed: 0, confirmed: 1, packed: 2, shipped: 3, delivered: 4,
+  pending: 0, placed: 0, confirmed: 1, packed: 2, shipped: 3, out_for_delivery: 4, delivered: 5,
 };
 
 function getStepIndex(status) {
@@ -165,8 +166,8 @@ export default function OrderTracking() {
             Status reflects the latest update recorded for this order. Courier movement scans are provided by the carrier once an AWB has been issued.
           </p>
 
-          {/* 5-Stage Progress Bar */}
-          <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
+          {/* Six-stage customer order lifecycle */}
+          <div className="mt-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-6">
             {STATUS_STEPS.map((st, idx) => {
               const Icon = st.icon;
               const done = idx <= stepIndex;
