@@ -570,7 +570,6 @@ export const reviews = {
   createAdmin: data => api.post('/reviews/admin', data, { adminAuth: true }),
   updateAdmin: (id, data) => api.put(`/reviews/admin/${id}`, data, { adminAuth: true }),
   approve: id => api.put(`/reviews/${id}/approve`, {}, { adminAuth: true }),
-  bulkRandomizeDates: data => api.post('/reviews/admin/bulk-randomize-dates', data, { adminAuth: true }),
   delete: id => api.delete(`/reviews/${id}`, { adminAuth: true })
 };
 export const recommendations = {

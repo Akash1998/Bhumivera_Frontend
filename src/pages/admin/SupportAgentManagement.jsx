@@ -1,51 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Download, ExternalLink, Headphones, Search, ShieldCheck, Users } from 'lucide-react';
+import { Download, ExternalLink, Headphones, Search, Users } from 'lucide-react';
 import { supportAgents } from '../../services/api';
-
-const ROLE_DESCRIPTIONS = {
-  agent:
-    'L1 Support Agent — Live chat replies, order tracking, RMA creation, status changes (Active, Pending, Waiting for Review, Resolved). Max 10% 1-time courtesy coupon.',
-  supervisor:
-    'L2 Support Supervisor — All Agent rights + Order Cancellations, Goodwill Wallet Credits (up to ₹150), Chat Reassignment & Escalation Queue. Max 12% courtesy coupon.',
-  manager:
-    'L3 Support Manager — Full Access Control + Create/Edit Staff Logins, Role Matrix, Goodwill Wallet Credits (up to ₹250), and AI Support Feature Governance.',
-};
-
-const ROLE_BENCHMARK_TABLE = [
-  {
-    role: 'Agent (L1)',
-    maxCoupon: '10% (1x per customer)',
-    maxWalletCredit: '₹0',
-    canCancelOrder: 'No',
-    canDeleteTickets: 'No (SuperAdmin Only)',
-    portalAccess: '/support',
-  },
-  {
-    role: 'Supervisor (L2)',
-    maxCoupon: '12% (1x per customer)',
-    maxWalletCredit: '₹150 (1x per customer)',
-    canCancelOrder: 'Yes',
-    canDeleteTickets: 'No (SuperAdmin Only)',
-    portalAccess: '/support',
-  },
-  {
-    role: 'Manager (L3)',
-    maxCoupon: '15% (1x per customer)',
-    maxWalletCredit: '₹250 (1x per customer)',
-    canCancelOrder: 'Yes',
-    canDeleteTickets: 'No (SuperAdmin Only)',
-    portalAccess: '/support & /superadminsupport',
-  },
-  {
-    role: 'SuperAdmin / Owner',
-    maxCoupon: 'Up to 50% (Unrestricted)',
-    maxWalletCredit: 'Up to ₹2,000',
-    canCancelOrder: 'Yes',
-    canDeleteTickets: 'Yes (Single & Bulk Purge + SHA-512 Audit)',
-    portalAccess: '/admin, /support & /superadminsupport',
-  },
-];
 
 export default function SupportAgentManagement() {
   const [agents, setAgents] = useState([]);
@@ -55,7 +11,7 @@ export default function SupportAgentManagement() {
     email: '',
     password: '',
     role: 'agent',
-    department: 'Customer Concierge',
+    department: '',
   });
   const [searchQuery, setSearchQuery] = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
@@ -88,7 +44,7 @@ export default function SupportAgentManagement() {
         email: '',
         password: '',
         role: 'agent',
-        department: 'Customer Concierge',
+        department: '',
       });
       setMessage('Support login ID created with role-based permissions. Staff can sign in at /support.');
       await loadAgents();
@@ -160,7 +116,7 @@ export default function SupportAgentManagement() {
         a.name,
         a.email || '',
         a.role || 'agent',
-        a.department || 'Customer Concierge',
+        a.department || '',
         a.is_active ? 'Active' : 'Disabled',
         a.created_at || '',
       ]
@@ -229,39 +185,6 @@ export default function SupportAgentManagement() {
         </p>
       )}
 
-      {/* Role Governance Benchmark Matrix */}
-      <div className="rounded-xl border border-white/10 bg-black/25 overflow-hidden">
-        <div className="px-4 py-2.5 border-b border-white/10 flex items-center gap-2 text-xs font-bold text-[#d4af37]">
-          <ShieldCheck size={15} /> Role Benchmark &amp; Anti-Abuse Permission Matrix
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full min-w-[760px] text-left text-xs">
-            <thead className="bg-black/40 uppercase text-[10px] text-slate-400">
-              <tr>
-                <th className="p-3">Role Tier</th>
-                <th className="p-3">Courtesy Coupon Cap</th>
-                <th className="p-3">Goodwill Wallet Credit Cap</th>
-                <th className="p-3">Order Cancellation</th>
-                <th className="p-3">Support Ticket Deletion</th>
-                <th className="p-3">Authorized Portals</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/10">
-              {ROLE_BENCHMARK_TABLE.map(row => (
-                <tr key={row.role}>
-                  <td className="p-3 font-bold text-white">{row.role}</td>
-                  <td className="p-3 text-amber-200">{row.maxCoupon}</td>
-                  <td className="p-3 text-emerald-300">{row.maxWalletCredit}</td>
-                  <td className="p-3 text-slate-300">{row.canCancelOrder}</td>
-                  <td className="p-3 text-rose-200">{row.canDeleteTickets}</td>
-                  <td className="p-3 font-mono text-cyan-300">{row.portalAccess}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
       <form onSubmit={createAgent} className="grid gap-3 sm:grid-cols-2 lg:grid-cols-6">
         <input
           required
@@ -270,7 +193,7 @@ export default function SupportAgentManagement() {
           pattern="[A-Za-z0-9._@-]+"
           value={form.username}
           onChange={event => setForm(current => ({ ...current, username: event.target.value }))}
-          placeholder="Login ID (e.g. agent.riya)"
+          placeholder="Login ID"
           className="admin-glass-control rounded-lg px-3 py-2 text-sm text-white"
         />
         <input
@@ -316,7 +239,7 @@ export default function SupportAgentManagement() {
         </button>
       </form>
 
-      <p className="text-xs text-gray-400">{ROLE_DESCRIPTIONS[form.role]}</p>
+      <p className="text-xs text-gray-400">Choose the support role to assign to this staff account.</p>
 
       {/* Filter & Expanded 8-Column Roster Table */}
       <div className="space-y-3">
@@ -375,7 +298,7 @@ export default function SupportAgentManagement() {
                     <td className="p-3 font-mono text-slate-500">#{agent.id}</td>
                     <td className="p-3 font-semibold text-white">{agent.name}</td>
                     <td className="p-3 font-mono text-cyan-300">@{agent.username}</td>
-                    <td className="p-3 text-slate-300">{agent.department || 'Customer Concierge'}</td>
+                    <td className="p-3 text-slate-300">{agent.department || '—'}</td>
                     <td className="p-3">
                       <select
                         disabled={busy}

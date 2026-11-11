@@ -27,9 +27,9 @@ export default function LoyaltyTierForge() {
   const [tiers, setTiers] = useState([]);
   const [matrixConfig, setMatrixConfig] = useState(defaultConfig);
   const [draft, setDraft] = useState(null);
-  const [previewPoints, setPreviewPoints] = useState(2500);
-  const [simCartSubtotal, setSimCartSubtotal] = useState(1800);
-  const [simCustomerPoints, setSimCustomerPoints] = useState(3200);
+  const [previewPoints, setPreviewPoints] = useState('');
+  const [simCartSubtotal, setSimCartSubtotal] = useState('');
+  const [simCustomerPoints, setSimCustomerPoints] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const { showToast } = useToast() || {};
@@ -78,7 +78,7 @@ export default function LoyaltyTierForge() {
       .sort((a, b) => Number(a.min_points) - Number(b.min_points));
     let currentIndex = 0;
     ordered.forEach((tier, index) => {
-      if (previewPoints >= Number(tier.min_points)) currentIndex = index;
+      if (Number(previewPoints || 0) >= Number(tier.min_points)) currentIndex = index;
     });
     const current = ordered[currentIndex];
     const next = ordered[currentIndex + 1];
@@ -447,14 +447,18 @@ export default function LoyaltyTierForge() {
       </section>
 
       {/* Two-Column Journey Preview & Checkout Margin Simulator */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      {tiers.length > 0 && <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <section className="border border-slate-800 rounded-xl p-5 bg-[#081b15]/60">
           <div className="flex items-center justify-between gap-4">
             <div>
               <h3 className="text-sm font-bold text-white">Customer journey preview</h3>
               <p className="mt-1 text-xs text-slate-500">
-                {preview.current?.name || 'No current tier'}
-                {preview.next ? ` · ${preview.missing} points to ${preview.next.name}` : ' · Top tier reached'}
+                {previewPoints === '' ? 'Enter a customer point balance to preview tier progress.' : (
+                  <>
+                    {preview.current?.name || 'No current tier'}
+                    {preview.next ? ` · ${preview.missing} points to ${preview.next.name}` : ' · Top tier reached'}
+                  </>
+                )}
               </p>
             </div>
             <label className="text-xs text-slate-400">
@@ -463,18 +467,20 @@ export default function LoyaltyTierForge() {
                 type="number"
                 min="0"
                 value={previewPoints}
-                onChange={event => setPreviewPoints(Math.max(0, Number(event.target.value) || 0))}
+                onChange={event => setPreviewPoints(event.target.value)}
                 className="ml-2 w-24 border-b border-slate-700 bg-transparent px-1 py-1 text-white"
               />
             </label>
           </div>
-          <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-800">
-            <div className="h-full bg-emerald-400 transition-all" style={{ width: `${preview.progress}%` }} />
-          </div>
-          <div className="mt-2 flex justify-between text-[10px] text-slate-500">
-            <span>{preview.current?.name || '—'}</span>
-            <span>{preview.next?.name || 'Top tier'}</span>
-          </div>
+          {previewPoints !== '' && <>
+            <div className="mt-4 h-2 overflow-hidden rounded-full bg-slate-800">
+              <div className="h-full bg-emerald-400 transition-all" style={{ width: `${preview.progress}%` }} />
+            </div>
+            <div className="mt-2 flex justify-between text-[10px] text-slate-500">
+              <span>{preview.current?.name || '—'}</span>
+              <span>{preview.next?.name || 'Top tier'}</span>
+            </div>
+          </>}
         </section>
 
         <section className="border border-slate-800 rounded-xl p-5 bg-[#081b15]/60 space-y-3">
@@ -484,12 +490,12 @@ export default function LoyaltyTierForge() {
           </div>
           <div className="grid grid-cols-2 gap-3 text-xs">
             <label className="text-slate-400">
-              Simulated Cart Subtotal (₹)
+              Cart Subtotal (₹)
               <input
                 type="number"
-                min="100"
+                min="0"
                 value={simCartSubtotal}
-                onChange={e => setSimCartSubtotal(Math.max(0, Number(e.target.value) || 0))}
+                onChange={e => setSimCartSubtotal(e.target.value)}
                 className="mt-1 w-full border border-slate-700 bg-black/30 px-2.5 py-1.5 text-white font-mono"
               />
             </label>
@@ -499,12 +505,12 @@ export default function LoyaltyTierForge() {
                 type="number"
                 min="0"
                 value={simCustomerPoints}
-                onChange={e => setSimCustomerPoints(Math.max(0, Number(e.target.value) || 0))}
+                onChange={e => setSimCustomerPoints(e.target.value)}
                 className="mt-1 w-full border border-slate-700 bg-black/30 px-2.5 py-1.5 text-white font-mono"
               />
             </label>
           </div>
-          <div className="grid grid-cols-3 gap-2 text-xs pt-1">
+          {simCartSubtotal !== '' && simCustomerPoints !== '' && <div className="grid grid-cols-3 gap-2 text-xs pt-1">
             <div className="p-2.5 rounded bg-black/30 border border-white/10">
               <span className="text-[10px] text-slate-400 block">Tier &amp; Points Discount</span>
               <strong className="text-emerald-300 font-mono">
@@ -519,9 +525,9 @@ export default function LoyaltyTierForge() {
               <span className="text-[10px] text-slate-400 block">New Points Earned</span>
               <strong className="text-[#d4af37] font-mono">+{checkoutSimulation.totalPointsEarned} pts</strong>
             </div>
-          </div>
+          </div>}
         </section>
-      </div>
+      </div>}
 
       {draft && (
         <div role="presentation" className="fixed inset-0 z-[100] flex items-center justify-center bg-black/70 p-4">

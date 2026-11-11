@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo, useCallback, useRef } from 'react';
 import { 
   MessageSquare, Star, CheckCircle, XCircle, AlertTriangle, 
   Search, Filter, RefreshCw, Archive, Eye, User, Box, 
@@ -6,13 +6,12 @@ import {
   Calendar, MapPin, Plus, Image as ImageIcon, ChevronLeft, ChevronRight, Edit3, Layers, Truck, Trash2
 } from 'lucide-react';
 import axios from 'axios';
-import api, { products as productsApi, reviews as reviewsApi } from '../../services/api';
+import api, { products as productsApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import compressImageForUpload from '../../utils/compressImageForUpload';
 import { getProductImageUrl as getImageUrl } from '../../utils/productImageUrl';
 import { isComboProduct } from '../../utils/comboProducts';
 
-const REVIEW_MEDIA_PLACEHOLDER = '/images/review-placeholder.svg';
 const MAX_REVIEW_MEDIA_BYTES = 25 * 1024 * 1024;
 
 const STATUS_MAP = {
@@ -20,17 +19,6 @@ const STATUS_MAP = {
   'approved': { label: 'Published (Live)', color: 'emerald', icon: CheckCircle },
   'rejected': { label: 'Filtered (Hidden)', color: 'rose', icon: XCircle }
 };
-
-const DEFAULT_PRODUCT_OPTIONS = [
-  { id: 10, legacyId: 1, skuNumber: 1, sku: 'BV-LUX-CFW-01', name: 'Bhumivera Activated Charcoal Purifying Luxury Face Wash (₹299)', shortName: 'Activated Charcoal Face Wash', slug: 'activated-charcoal-luxury-face-wash', price: 299 },
-  { id: 11, legacyId: 2, skuNumber: 2, sku: 'BV-LUX-SBFW-02', name: 'Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash (₹399)', shortName: 'Sea Buckthorn Face Wash', slug: 'himalayan-seabuckthorn-luxury-face-wash', price: 399 },
-  { id: 12, legacyId: 3, skuNumber: 3, sku: 'BV-LUX-SH2IN1-03', name: 'Bhumivera Royal Botanical 2-in-1 Luxury Shampoo with Conditioner (₹449)', shortName: 'Royal 2-in-1 Shampoo', slug: 'luxury-2-in-1-botanical-shampoo-conditioner', price: 449 },
-  { id: 13, legacyId: 4, skuNumber: 4, sku: 'BV-LUX-CSOAP-04', name: 'Bhumivera Charcoal Deep Cleansing Bar — Handmade Ayurvedic Soap (₹199)', shortName: 'Charcoal Cleansing Bar', slug: 'artisanal-charcoal-handmade-soap', price: 199 },
-  { id: 14, legacyId: 5, skuNumber: 5, sku: 'BV-LUX-ASOAP-05', name: 'Bhumivera Soothing Bar — Aloe Vera, Neem & Tulsi Soap (₹199)', shortName: 'Aloe Neem Tulsi Bar', slug: 'artisanal-aloe-vera-handmade-soap', price: 199 },
-  { id: 15, legacyId: 6, skuNumber: 6, sku: 'BV-LUX-TULSI-06', name: 'Bhumivera Kalpvriksh Satva Tulsi — 7-Tulsi Liquid Extract (₹299)', shortName: 'Kalpvriksh 7-Tulsi Drops', slug: 'kalpvriksh-satva-tulsi-7-tulsi-extract', price: 299 },
-];
-
-const PRODUCT_OPTIONS = DEFAULT_PRODUCT_OPTIONS;
 
 const CATEGORY_OPTIONS = [
   'Quick & Everyday Impressions',
@@ -44,32 +32,16 @@ const CATEGORY_OPTIONS = [
   'Shipping & Packaging Feedback'
 ];
 
-const PRESET_PRODUCT_PHOTOS = [
-  { label: 'Sea Buckthorn Wash', url: '/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp' },
-  { label: 'Charcoal Face Wash', url: '/images/products/bhumivera-activated-charcoal-luxury-face-wash.webp' },
-  { label: 'Kalpvriksh 7-Tulsi', url: '/images/products/bhumivera-kalpvriksh-satva-tulsi-drops.webp' },
-  { label: 'Royal 2-in-1 Shampoo', url: '/images/products/bhumivera-luxury-2-in-1-shampoo-conditioner.webp' },
-  { label: 'Bubble Wrap Parcel', url: '/assets/images/tracking-bubble-wrap.webp' },
-  { label: 'Tamper Seal Check', url: '/assets/images/tracking-tamper-seal.webp' },
-];
-
-const PRESET_PRODUCT_VIDEOS = [
-  { label: 'Sea Buckthorn Ritual Video', url: '/assets/videos/seabuckthorn-botanical.mp4' },
-  { label: 'Charcoal Purification Video', url: '/assets/videos/charcoal-purification.mp4' },
-  { label: '7-Tulsi Extract Video', url: '/assets/videos/tulsi-botanical.mp4' },
-  { label: 'Unboxing & Seal Video', url: '/assets/videos/unboxing-protection.mp4' },
-  { label: 'Aloe Cellular Lab Video', url: '/assets/videos/aloevera-cellular.mp4' },
-];
-
 const toDateInputValue = isoString => {
-  if (!isoString) return new Date().toISOString().slice(0, 10);
+  if (!isoString) return '';
   const d = new Date(isoString);
-  if (Number.isNaN(d.getTime())) return new Date().toISOString().slice(0, 10);
+  if (Number.isNaN(d.getTime())) return '';
   return d.toISOString().slice(0, 10);
 };
 
 export default function ReviewManagement() {
   const [reviews, setReviews] = useState([]);
+  const [productOptions, setProductOptions] = useState([]);
   const [comboOptions, setComboOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reviewLoadError, setReviewLoadError] = useState('');
@@ -89,23 +61,6 @@ export default function ReviewManagement() {
   const [bulkAction, setBulkAction] = useState('');
   const [isBulkDeleting, setIsBulkDeleting] = useState(false);
 
-  // Bulk Date Randomizer State
-  const [isRandomizeModalOpen, setIsRandomizeModalOpen] = useState(false);
-  const [randomizeStartDate, setRandomizeStartDate] = useState('2019-01-01');
-  const [randomizeEndDate, setRandomizeEndDate] = useState(new Date().toISOString().slice(0, 10));
-  const [randomizeScope, setRandomizeScope] = useState('selected'); // 'selected' | 'filtered'
-  const [isRandomizing, setIsRandomizing] = useState(false);
-
-  useEffect(() => {
-    if (yearFilter !== 'all') {
-      setRandomizeStartDate(`${yearFilter}-01-01`);
-      setRandomizeEndDate(`${yearFilter}-12-31`);
-    } else {
-      setRandomizeStartDate('2019-01-01');
-      setRandomizeEndDate(new Date().toISOString().slice(0, 10));
-    }
-  }, [yearFilter]);
-
   // Inspector / Editor Modal Sta
   const [selectedReview, setSelectedReview] = useState(null);
   const [isCreatingNew, setIsCreatingNew] = useState(false);
@@ -124,15 +79,22 @@ export default function ReviewManagement() {
         const products = response.data?.data || response.data?.products || response.data;
         if (!Array.isArray(products)) throw new Error('The admin products response is invalid.');
         if (active) {
-          setComboOptions(products
-            .filter(isComboProduct)
-            .map(product => ({
-              id: String(product.id ?? product._id),
-              sku: product.sku || '',
-              name: product.name,
-              shortName: product.name,
-              price: Number(product.price) || 0,
-            })));
+          setProductOptions(products.filter(product => !isComboProduct(product)).map(product => ({
+            id: Number(product.id ?? product._id),
+            legacyId: product.legacy_id ?? product.legacyId,
+            sku: product.sku || '',
+            name: product.name,
+            shortName: product.name,
+            slug: product.slug || '',
+            price: Number(product.price) || 0,
+          })));
+          setComboOptions(products.filter(isComboProduct).map(product => ({
+            id: String(product.id ?? product._id),
+            sku: product.sku || '',
+            name: product.name,
+            shortName: product.name,
+            price: Number(product.price) || 0,
+          })));
         }
       })
       .catch(error => {
@@ -144,33 +106,40 @@ export default function ReviewManagement() {
 
   const normalizeReviewRecord = useCallback(r => {
     const slug = r.product_slug ||
-      PRODUCT_OPTIONS.find(p => Number(p.id) === Number(r.product_id) || Number(p.legacyId) === Number(r.product_id))?.slug ||
+      productOptions.find(p => Number(p.id) === Number(r.product_id) || Number(p.legacyId) === Number(r.product_id))?.slug ||
       '';
-    const prod = PRODUCT_OPTIONS.find(p => p.slug === slug || Number(p.id) === Number(r.product_id) || Number(p.legacyId) === Number(r.product_id));
+    const prod = productOptions.find(p => p.slug === slug || Number(p.id) === Number(r.product_id) || Number(p.legacyId) === Number(r.product_id));
     return {
       ...r,
       id: r.id || r._id,
-      product_id: prod?.id || Number(r.product_id) || 10,
-      product_slug: slug || prod?.slug || '',
-      product_name: r.product_name || prod?.name || 'Bhumivera Product',
-      user_name: r.user_name || r.reviewer_name || r.user?.name || 'Verified Patron',
-      reviewer_name: r.reviewer_name || r.user_name || r.user?.name || 'Verified Patron',
-      reviewer_location: r.reviewer_location || 'India',
-      category_tag: r.category_tag || 'Quick & Everyday Impressions',
+      product_id: prod?.id || Number(r.product_id) || '',
+      product_slug: slug || prod?.slug || r.product_slug || '',
+      product_name: r.product_name || prod?.name || '',
+      user_name: r.user_name || r.reviewer_name || r.user?.name || '',
+      reviewer_name: r.reviewer_name || r.user_name || r.user?.name || '',
+      reviewer_location: r.reviewer_location || '',
+      category_tag: r.category_tag || '',
       is_combo_review: Boolean(r.is_combo_review || r.combo_name || r.category_tag === 'Combo Pack Ritual'),
       combo_name: r.combo_name || null,
       combo_slug: r.combo_slug || null,
       combo_sku: r.combo_sku || null,
-      order_number: r.order_number || `BV-2026-${100000 + (Number(r.id) || 1)}`,
+      order_number: r.order_number || '',
       helpful_count: Number(r.helpful_count) || 0,
-      status: Number(r.is_approved ?? 1) === 1 ? 'approved' : 'pending',
-      is_approved: Number(r.is_approved ?? 1) === 1 ? 1 : 0,
+      status: Number(r.is_approved ?? 0) === 1 ? 'approved' : 'pending',
+      is_approved: Number(r.is_approved ?? 0) === 1 ? 1 : 0,
       body: r.body || r.comment || '',
       comment: r.comment || r.body || '',
       images: Array.isArray(r.images) ? r.images : [],
       videos: Array.isArray(r.videos) ? r.videos : [],
     };
-  }, []);
+  }, [productOptions]);
+
+  const normalizeReviewRecordRef = useRef(normalizeReviewRecord);
+  normalizeReviewRecordRef.current = normalizeReviewRecord;
+
+  useEffect(() => {
+    setReviews(current => current.map(normalizeReviewRecord));
+  }, [normalizeReviewRecord]);
 
   const fetchReviews = useCallback(async () => {
     setLoading(true);
@@ -178,7 +147,7 @@ export default function ReviewManagement() {
       const res = await api.get('/reviews', { adminAuth: true });
       const data = Array.isArray(res.data) ? res.data : (res.data?.reviews ?? res.data?.data);
       if (!Array.isArray(data)) throw new Error('The reviews API returned an invalid response.');
-      setReviews(data.map(normalizeReviewRecord));
+      setReviews(data.map(review => normalizeReviewRecordRef.current(review)));
       setSelectedReviewIds([]);
       setReviewLoadError('');
     } catch (error) {
@@ -190,7 +159,7 @@ export default function ReviewManagement() {
     } finally {
       setLoading(false);
     }
-  }, [normalizeReviewRecord, showToast]);
+  }, [showToast]);
 
   useEffect(() => {
     fetchReviews();
@@ -201,15 +170,15 @@ export default function ReviewManagement() {
     setSelectedReview(review);
     setCustomImageUrl('');
     setCustomVideoUrl('');
-    const prod = PRODUCT_OPTIONS.find(p => p.slug === review.product_slug || Number(p.id) === Number(review.product_id) || Number(p.legacyId) === Number(review.product_id)) || PRODUCT_OPTIONS[0];
+    const prod = productOptions.find(p => p.slug === review.product_slug || Number(p.id) === Number(review.product_id) || Number(p.legacyId) === Number(review.product_id));
     setReviewDraft({
-      product_id: prod.id,
-      product_slug: prod.slug,
-      product_name: prod.name,
-      user_name: review.user_name || review.reviewer_name || 'Verified Patron',
-      reviewer_location: review.reviewer_location || 'India',
-      rating: Number(review.rating) || 5,
-      category_tag: review.category_tag || 'Quick & Everyday Impressions',
+      product_id: prod?.id || Number(review.product_id) || '',
+      product_slug: prod?.slug || review.product_slug || '',
+      product_name: prod?.name || review.product_name || '',
+      user_name: review.user_name || review.reviewer_name || '',
+      reviewer_location: review.reviewer_location || '',
+      rating: Number(review.rating) || 0,
+      category_tag: review.category_tag || '',
       is_combo_review: Boolean(review.is_combo_review || review.combo_name || review.category_tag === 'Combo Pack Ritual'),
       combo_name: review.combo_name || '',
       order_number: review.order_number || '',
@@ -217,7 +186,7 @@ export default function ReviewManagement() {
       title: review.title || '',
       body: review.body || review.comment || '',
       created_date: toDateInputValue(review.created_at),
-      is_approved: Number(review.is_approved ?? 1) === 1,
+      is_approved: Number(review.is_approved ?? 0) === 1,
       images: Array.isArray(review.images) ? [...review.images] : [],
       videos: Array.isArray(review.videos) ? [...review.videos] : [],
     });
@@ -227,42 +196,46 @@ export default function ReviewManagement() {
     setIsCreatingNew(true);
     setCustomImageUrl('');
     setCustomVideoUrl('');
-    const defaultProd = PRODUCT_OPTIONS[0];
+    const defaultProd = productOptions[0];
+    if (!defaultProd) {
+      showToast?.('Load at least one catalog product before adding a review.', 'error');
+      return;
+    }
     const blankReview = {
       id: `new-${Date.now()}`,
-      product_id: defaultProd.id,
-      product_name: defaultProd.name,
+      product_id: '',
+      product_name: '',
       user_name: '',
-      reviewer_location: 'Asansol, West Bengal',
-      rating: 5,
-      category_tag: 'Combo Pack Ritual',
-      is_combo_review: true,
-      combo_name: 'The Complete Botanical Daily Regimen',
-      order_number: `BV-2026-${Math.floor(100000 + Math.random() * 90000)}`,
-      helpful_count: 5,
+      reviewer_location: '',
+      rating: 0,
+      category_tag: '',
+      is_combo_review: false,
+      combo_name: '',
+      order_number: '',
+      helpful_count: 0,
       title: '',
       body: '',
-      status: 'approved',
-      is_approved: 1,
-      created_at: new Date().toISOString(),
+      status: 'pending',
+      is_approved: 0,
+      created_at: '',
       images: [],
       videos: [],
     };
     setSelectedReview(blankReview);
     setReviewDraft({
-      product_id: defaultProd.id,
+      product_id: '',
       user_name: '',
-      reviewer_location: 'Asansol, West Bengal',
-      rating: 5,
-      category_tag: 'Combo Pack Ritual',
-      is_combo_review: true,
-      combo_name: 'The Complete Botanical Daily Regimen',
-      order_number: blankReview.order_number,
-      helpful_count: 5,
+      reviewer_location: '',
+      rating: 0,
+      category_tag: '',
+      is_combo_review: false,
+      combo_name: '',
+      order_number: '',
+      helpful_count: 0,
       title: '',
       body: '',
-      created_date: toDateInputValue(new Date().toISOString()),
-      is_approved: true,
+      created_date: '',
+      is_approved: false,
       images: [],
       videos: [],
     });
@@ -359,8 +332,16 @@ export default function ReviewManagement() {
       showToast?.('Please enter customer review text before saving.', 'error');
       return;
     }
+    if (!Number(reviewDraft.rating) || Number(reviewDraft.rating) < 1 || Number(reviewDraft.rating) > 5) {
+      showToast?.('Choose a customer rating from 1 to 5 stars.', 'error');
+      return;
+    }
+    const prodObj = productOptions.find(p => Number(p.id) === Number(reviewDraft.product_id) || p.slug === reviewDraft.product_slug || Number(p.legacyId) === Number(reviewDraft.product_id));
+    if (!prodObj) {
+      showToast?.('Choose a product from the current catalog before saving.', 'error');
+      return;
+    }
     setIsUpdating(true);
-    const prodObj = PRODUCT_OPTIONS.find(p => Number(p.id) === Number(reviewDraft.product_id) || p.slug === reviewDraft.product_slug || Number(p.legacyId) === Number(reviewDraft.product_id)) || PRODUCT_OPTIONS[0];
     const comboObj = comboOptions.find(c => c.name === reviewDraft.combo_name || c.id === String(reviewDraft.combo_name || ''));
     const isoCreatedAt = reviewDraft.created_date
       ? new Date(`${reviewDraft.created_date}T12:00:00Z`).toISOString()
@@ -375,11 +356,11 @@ export default function ReviewManagement() {
       product_id: Number(prodObj.id),
       product_name: prodObj.name,
       product_slug: prodObj.slug,
-      user_name: (reviewDraft.user_name || 'Verified Patron').trim(),
-      reviewer_name: (reviewDraft.user_name || 'Verified Patron').trim(),
-      reviewer_location: (reviewDraft.reviewer_location || 'India').trim(),
-      rating: Number(reviewDraft.rating) || 5,
-      category_tag: reviewDraft.category_tag || 'Quick & Everyday Impressions',
+      user_name: (reviewDraft.user_name || '').trim(),
+      reviewer_name: (reviewDraft.user_name || '').trim(),
+      reviewer_location: (reviewDraft.reviewer_location || '').trim(),
+      rating: Number(reviewDraft.rating),
+      category_tag: reviewDraft.category_tag || '',
       is_combo_review: isComboReview,
       combo_name: resolvedComboName,
       combo_slug: comboObj?.id || null,
@@ -459,12 +440,6 @@ export default function ReviewManagement() {
       return;
     }
 
-    if (bulkAction === 'randomize_dates') {
-      setRandomizeScope('selected');
-      setIsRandomizeModalOpen(true);
-      return;
-    }
-
     const actionLabels = {
       approve: 'approve and publish',
       archive: 'hide and archive',
@@ -519,46 +494,9 @@ export default function ReviewManagement() {
     }
   };
 
-  const handleExecuteRandomizeDates = async () => {
-    const targetIds = randomizeScope === 'selected' ? selectedReviewIds : filteredReviewIds;
-    if (!targetIds.length) {
-      showToast?.('No reviews available to randomize in this scope.', 'error');
-      return;
-    }
-    if (!randomizeStartDate || !randomizeEndDate) {
-      showToast?.('Please specify both a start date and an end date.', 'error');
-      return;
-    }
-    if (new Date(randomizeStartDate) > new Date(randomizeEndDate)) {
-      showToast?.('Start date cannot be after end date.', 'error');
-      return;
-    }
-
-    setIsRandomizing(true);
-    try {
-      const res = await reviewsApi.bulkRandomizeDates({
-        review_ids: targetIds,
-        start_date: randomizeStartDate,
-        end_date: randomizeEndDate
-      });
-      const count = res.data?.count || targetIds.length;
-      showToast?.(`Successfully randomized publication dates for ${count} review(s) across ${randomizeStartDate} to ${randomizeEndDate}!`, 'success');
-      setIsRandomizeModalOpen(false);
-      setBulkAction('');
-      await fetchReviews();
-      window.dispatchEvent(new Event('bhumivera:reviews-updated'));
-    } catch (err) {
-      console.error('[BULK_RANDOMIZE_ERROR]', err);
-      showToast?.(err.response?.data?.message || err.message || 'Failed to randomize review dates.', 'error');
-    } finally {
-      setIsRandomizing(false);
-    }
-  };
-
-
   // --- ANALYTICS & PRODUCT + COMBO BREAKDOWN (6 Products + 3 Combos = 9 Items) ---
   const productBreakdown = useMemo(() => {
-    return PRODUCT_OPTIONS.map(prod => {
+    return productOptions.map(prod => {
       const pRevs = reviews.filter(r =>
         (r.product_slug === prod.slug ||
          Number(r.product_id) === Number(prod.id) ||
@@ -567,11 +505,11 @@ export default function ReviewManagement() {
       );
       const count = pRevs.length;
       const avg = count > 0
-        ? (pRevs.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / count).toFixed(2)
+        ? (pRevs.reduce((acc, r) => acc + (Number(r.rating) || 0), 0) / count).toFixed(2)
         : '0.00';
       return { ...prod, count, avg };
     });
-  }, [reviews]);
+  }, [reviews, productOptions]);
 
   const comboBreakdown = useMemo(() => {
     return comboOptions.map(combo => {
@@ -581,7 +519,7 @@ export default function ReviewManagement() {
       );
       const count = cRevs.length;
       const avg = count > 0
-        ? (cRevs.reduce((acc, r) => acc + (Number(r.rating) || 5), 0) / count).toFixed(2)
+        ? (cRevs.reduce((acc, r) => acc + (Number(r.rating) || 0), 0) / count).toFixed(2)
         : '0.00';
       return { ...combo, count, avg };
     });
@@ -593,7 +531,7 @@ export default function ReviewManagement() {
       if (searchTerm.trim() && !searchStr.includes(searchTerm.toLowerCase())) return false;
       if (productFilter !== 'all') {
         const matchesSlug = r.product_slug === productFilter;
-        const matchesOption = PRODUCT_OPTIONS.some(p => p.slug === productFilter && (Number(p.id) === Number(r.product_id) || Number(p.legacyId) === Number(r.product_id)));
+        const matchesOption = productOptions.some(p => p.slug === productFilter && (Number(p.id) === Number(r.product_id) || Number(p.legacyId) === Number(r.product_id)));
         if (!matchesSlug && !matchesOption) return false;
       }
       if (comboFilter !== 'all') {
@@ -621,9 +559,14 @@ export default function ReviewManagement() {
       if (mediaFilter === 'videos' && (!Array.isArray(r.videos) || r.videos.length === 0)) return false;
       return true;
     }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  }, [reviews, searchTerm, productFilter, comboFilter, comboOptions, categoryFilter, yearFilter, statusFilter, ratingFilter, mediaFilter]);
+  }, [reviews, productOptions, searchTerm, productFilter, comboFilter, comboOptions, categoryFilter, yearFilter, statusFilter, ratingFilter, mediaFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredReviews.length / itemsPerPage));
+  const reviewYears = [...new Set(reviews
+    .map(review => new Date(review.created_at).getFullYear())
+    .filter(year => Number.isInteger(year) && year > 0))]
+    .sort((a, b) => b - a)
+    .map(String);
   const paginatedReviews = filteredReviews.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
   const filteredReviewIds = filteredReviews.map(review => String(review.id || review._id));
   const visibleReviewIds = paginatedReviews.map(review => String(review.id || review._id));
@@ -654,7 +597,7 @@ export default function ReviewManagement() {
   const totalReviews = reviews.length;
   const comboRevs = reviews.filter(r => r.is_combo_review || r.combo_name || r.category_tag === 'Combo Pack Ritual');
   const comboAvg = comboRevs.length > 0
-    ? (comboRevs.reduce((a, r) => a + (Number(r.rating) || 5), 0) / comboRevs.length).toFixed(2)
+    ? (comboRevs.reduce((a, r) => a + (Number(r.rating) || 0), 0) / comboRevs.length).toFixed(2)
     : '0.00';
   const oneStarShippingCount = reviews.filter(r =>
     Number(r.rating) === 1 && /shipping|packaging|transit/i.test(r.category_tag || '')
@@ -673,20 +616,10 @@ export default function ReviewManagement() {
             Customer Reviews &amp; Media Database ({totalReviews} reviews)
           </h1>
           <p className="text-slate-400 text-xs mt-1 flex items-center gap-2">
-            <BarChart2 size={13} className="text-[#d4af37]" /> Database-backed reviews across {reviewedProductCount} of 6 products &amp; {reviewedComboCount} of 3 regimen combos · Filter by 2019 onward, rating, status &amp; media
+            <BarChart2 size={13} className="text-[#d4af37]" /> Database-backed reviews across {reviewedProductCount} products and {reviewedComboCount} combos · Filter by date, rating, status &amp; media
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-2.5">
-          <button
-            type="button"
-            onClick={() => {
-              setRandomizeScope(selectedReviewIds.length > 0 ? 'selected' : 'filtered');
-              setIsRandomizeModalOpen(true);
-            }}
-            className="inline-flex items-center gap-2 rounded-xl bg-purple-900/60 border border-purple-500/40 px-4 py-2.5 text-xs font-black uppercase tracking-wider text-purple-200 hover:bg-purple-800/80 hover:text-white transition-all shadow-lg"
-          >
-            🎲 Randomize Dates
-          </button>
           <button
             type="button"
             onClick={handleStartCreateNew}
@@ -883,11 +816,8 @@ export default function ReviewManagement() {
             aria-label="Filter by review year"
             className="bg-[#081b15]/90 border border-slate-800 rounded-xl py-3 px-3 text-white font-bold text-xs outline-none cursor-pointer"
           >
-            <option value="all">All Review Dates (2019 – Present)</option>
-            {Array.from(
-              { length: Math.max(0, new Date().getFullYear() - 2019 + 1) },
-              (_, index) => String(new Date().getFullYear() - index)
-            ).map(yr => (
+            <option value="all">All Review Dates</option>
+            {reviewYears.map(yr => (
               <option key={yr} value={yr}>Year {yr}</option>
             ))}
           </select>
@@ -931,17 +861,6 @@ export default function ReviewManagement() {
             </button>
             <button
               type="button"
-              onClick={() => {
-                setRandomizeScope('filtered');
-                setIsRandomizeModalOpen(true);
-              }}
-              disabled={filteredReviewIds.length === 0 || isBulkDeleting}
-              className="rounded-lg border border-purple-500/40 bg-purple-500/15 px-3 py-2 text-xs font-bold text-purple-200 hover:bg-purple-500/25 disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              🎲 Randomize All Filtered ({filteredReviewIds.length})
-            </button>
-            <button
-              type="button"
               onClick={toggleVisibleReviews}
               disabled={visibleReviewIds.length === 0 || isBulkDeleting}
               className="rounded-lg border border-emerald-500/40 bg-emerald-500/10 px-3 py-2 text-xs font-bold text-emerald-200 hover:bg-emerald-500/20 disabled:cursor-not-allowed disabled:opacity-50"
@@ -963,7 +882,6 @@ export default function ReviewManagement() {
                   <option value="">Choose bulk action…</option>
                   <option value="approve">Approve / Publish</option>
                   <option value="archive">Archive / Hide</option>
-                  <option value="randomize_dates">🎲 Randomize Publication Dates…</option>
                   <option value="delete">Permanently Delete</option>
                 </select>
                 <button
@@ -973,8 +891,6 @@ export default function ReviewManagement() {
                   className={`rounded-lg border px-3 py-2 text-xs font-black transition-colors disabled:cursor-not-allowed disabled:opacity-50 ${
                     bulkAction === 'delete'
                       ? 'border-rose-500/40 bg-rose-500/15 text-rose-200 hover:bg-rose-500/25'
-                      : bulkAction === 'randomize_dates'
-                      ? 'border-purple-500/40 bg-purple-500/20 text-purple-200 hover:bg-purple-500/30'
                       : 'border-emerald-500/40 bg-emerald-500/10 text-emerald-200 hover:bg-emerald-500/20'
                   }`}
                 >
@@ -1171,7 +1087,7 @@ export default function ReviewManagement() {
                   {isCreatingNew ? 'Add New Customer Review to Database' : `Edit Database Review #${selectedReview.id}`}
                 </h2>
                 <p className="text-xs text-slate-400 mt-0.5">
-                  Edit review date (2019–Present), star rating (1–5), product, combo bundle, customer city, order #, and attach photos &amp; videos
+                  Edit review date, star rating, product, combo, customer details, order reference, and media
                 </p>
               </div>
               <button
@@ -1186,13 +1102,15 @@ export default function ReviewManagement() {
             <div className="p-6 space-y-5 max-h-[82vh] overflow-y-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <label className="block text-xs font-bold uppercase text-slate-300">
-                  Assigned Product (1–6)
+                  Assigned Product
                   <select
+                    required
                     value={reviewDraft.product_id}
                     onChange={e => setReviewDraft(cur => ({ ...cur, product_id: Number(e.target.value) }))}
                     className="mt-1.5 w-full rounded-xl border border-slate-700 bg-[#081b15] p-3 text-xs text-white"
                   >
-                    {PRODUCT_OPTIONS.map(p => (
+                    <option value="">Choose a catalog product</option>
+                    {productOptions.map(p => (
                       <option key={p.id} value={p.id}>{p.sku} · {p.name}</option>
                     ))}
                   </select>
@@ -1233,6 +1151,7 @@ export default function ReviewManagement() {
                     }))}
                     className="mt-1.5 w-full rounded-xl border border-slate-700 bg-[#081b15] p-3 text-xs text-white"
                   >
+                    <option value="">Choose a category</option>
                     {CATEGORY_OPTIONS.map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
@@ -1247,6 +1166,7 @@ export default function ReviewManagement() {
                       onChange={e => setReviewDraft(cur => ({ ...cur, rating: Number(e.target.value) }))}
                       className="rounded-xl border border-slate-700 bg-[#081b15] p-3 text-xs font-bold text-amber-400"
                     >
+                      <option value={0}>Choose rating</option>
                       {[5, 4, 3, 2, 1].map(r => (
                         <option key={r} value={r}>{r} / 5 Stars</option>
                       ))}
@@ -1269,33 +1189,11 @@ export default function ReviewManagement() {
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
                     <label className="block text-xs font-bold uppercase text-[#fce096]">
-                      Review Date (2019 – Present)
+                      Review Date
                     </label>
-                    <div className="flex items-center gap-1.5">
-                      <span className="text-[10px] uppercase font-mono text-slate-400">Select Year:</span>
-                      <select
-                        value={reviewDraft.created_date ? reviewDraft.created_date.slice(0, 4) : String(new Date().getFullYear())}
-                        onChange={e => {
-                          const yr = e.target.value;
-                          const monthDay = reviewDraft.created_date && reviewDraft.created_date.length >= 10
-                            ? reviewDraft.created_date.slice(4)
-                            : '-01-15';
-                          setReviewDraft(cur => ({ ...cur, created_date: `${yr}${monthDay}` }));
-                        }}
-                        className="bg-[#081b15] border border-[#d4af37]/50 rounded-lg px-2 py-0.5 text-xs text-[#fce096] font-mono font-bold cursor-pointer outline-none"
-                      >
-                        {Array.from(
-                          { length: Math.max(0, new Date().getFullYear() - 2019 + 1) },
-                          (_, index) => String(new Date().getFullYear() - index)
-                        ).map(yr => (
-                          <option key={yr} value={yr}>{yr}</option>
-                        ))}
-                      </select>
-                    </div>
                   </div>
                   <input
                     type="date"
-                    min="2019-01-01"
                     max={new Date().toISOString().slice(0, 10)}
                     value={reviewDraft.created_date}
                     onChange={e => setReviewDraft(cur => ({ ...cur, created_date: e.target.value }))}
@@ -1308,10 +1206,11 @@ export default function ReviewManagement() {
                 <label className="block text-xs font-bold uppercase text-slate-300">
                   Customer Name
                   <input
+                    required
                     type="text"
                     value={reviewDraft.user_name}
                     onChange={e => setReviewDraft(cur => ({ ...cur, user_name: e.target.value }))}
-                    placeholder="e.g. Subhajit Chatterjee"
+                    placeholder="Enter customer name"
                     className="mt-1.5 w-full rounded-xl border border-slate-700 bg-[#081b15] p-3 text-sm text-white"
                   />
                 </label>
@@ -1322,7 +1221,7 @@ export default function ReviewManagement() {
                     type="text"
                     value={reviewDraft.reviewer_location}
                     onChange={e => setReviewDraft(cur => ({ ...cur, reviewer_location: e.target.value }))}
-                    placeholder="e.g. Asansol, West Bengal"
+                    placeholder="City, State"
                     className="mt-1.5 w-full rounded-xl border border-slate-700 bg-[#081b15] p-3 text-sm text-white"
                   />
                 </label>
@@ -1333,7 +1232,7 @@ export default function ReviewManagement() {
                     type="text"
                     value={reviewDraft.order_number || ''}
                     onChange={e => setReviewDraft(cur => ({ ...cur, order_number: e.target.value }))}
-                    placeholder="e.g. BV-2026-100501"
+                    placeholder="Actual order reference"
                     className="mt-1.5 w-full rounded-xl border border-slate-700 bg-[#081b15] p-3 text-sm font-mono text-white"
                   />
                 </label>
@@ -1417,19 +1316,6 @@ export default function ReviewManagement() {
                 </div>
 
                 <div className="flex flex-wrap gap-1.5">
-                  {PRESET_PRODUCT_PHOTOS.map(preset => (
-                    <button
-                      key={preset.url}
-                      type="button"
-                      onClick={() => {
-                        if ((reviewDraft.images?.length || 0) >= 5) return;
-                        setReviewDraft(cur => ({ ...cur, images: [...(cur.images || []), preset.url] }));
-                      }}
-                      className="rounded-lg border border-slate-700 bg-[#10241f] px-2.5 py-1 text-[11px] text-slate-200 hover:border-[#d4af37]"
-                    >
-                      + {preset.label}
-                    </button>
-                  ))}
                 </div>
 
                 <div className="flex flex-wrap gap-3 pt-1">
@@ -1485,27 +1371,12 @@ export default function ReviewManagement() {
                 </div>
 
                 <div className="flex flex-wrap gap-1.5">
-                  {PRESET_PRODUCT_VIDEOS.map(preset => (
-                    <button
-                      key={preset.url}
-                      type="button"
-                      onClick={() => {
-                        if ((reviewDraft.videos?.length || 0) >= 3) return;
-                        setReviewDraft(cur => ({ ...cur, videos: [...(cur.videos || []), preset.url] }));
-                      }}
-                      className="rounded-lg border border-slate-700 bg-[#10241f] px-2.5 py-1 text-[11px] text-emerald-300 hover:border-emerald-400"
-                    >
-                      + {preset.label}
-                    </button>
-                  ))}
                 </div>
 
                 <div className="flex flex-wrap gap-3 pt-1">
                   {(reviewDraft.videos || []).map((vid, index) => (
                     <div key={`${vid}-${index}`} className="relative h-24 w-32 overflow-hidden rounded-xl border border-emerald-500/50 bg-black">
-                      {vid === REVIEW_MEDIA_PLACEHOLDER
-                        ? <img src={getImageUrl(vid)} alt="Video placeholder" className="h-full w-full object-cover" />
-                        : <video src={getImageUrl(vid)} controls className="h-full w-full object-cover" />}
+                      <video src={getImageUrl(vid)} controls className="h-full w-full object-cover" />
                       <button
                         type="button"
                         onClick={() => setReviewDraft(cur => ({ ...cur, videos: cur.videos.filter((_, idx) => idx !== index) }))}
@@ -1567,217 +1438,6 @@ export default function ReviewManagement() {
         </div>
       )}
 
-      {/* BULK DATE RANDOMIZATION MODAL */}
-      {isRandomizeModalOpen && (
-        <div className="fixed inset-0 z-[80] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md overflow-y-auto">
-          <div className="bg-[#10241f] border border-purple-500/50 w-full max-w-xl rounded-3xl shadow-2xl overflow-hidden my-auto animate-in fade-in zoom-in-95 duration-200">
-            <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-[#081b15]">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-2xl bg-purple-500/20 text-purple-300 border border-purple-500/30">
-                  <Calendar size={20} />
-                </div>
-                <div>
-                  <h3 className="text-lg font-black text-white flex items-center gap-2">
-                    Bulk Randomize Review Dates
-                  </h3>
-                  <p className="text-xs text-slate-400">
-                    Distribute publication dates randomly across a custom timeline
-                  </p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => { setIsRandomizeModalOpen(false); setBulkAction(''); }}
-                aria-label="Close modal"
-                className="text-slate-400 hover:text-white p-2 rounded-xl hover:bg-white/5 transition-colors"
-              >
-                <X size={20} />
-              </button>
-            </div>
-
-            <div className="p-6 space-y-5">
-              {/* Scope Selector */}
-              <div>
-                <label className="text-xs font-black uppercase tracking-wider text-slate-300 block mb-2">
-                  1. Target Review Scope
-                </label>
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => setRandomizeScope('selected')}
-                    className={`p-3.5 rounded-2xl border text-left transition-all ${
-                      randomizeScope === 'selected'
-                        ? 'bg-purple-500/20 border-purple-400 text-white ring-2 ring-purple-500/30'
-                        : 'bg-[#081b15]/60 border-slate-800 text-slate-400 hover:border-slate-700'
-                    }`}
-                  >
-                    <div className="text-xs font-bold flex items-center justify-between">
-                      <span>Selected Reviews</span>
-                      <span className="font-mono px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 text-[11px]">
-                        {selectedReviewIds.length}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-1">
-                      Only reviews checked in the table
-                    </p>
-                  </button>
-
-                  <button
-                    type="button"
-                    onClick={() => setRandomizeScope('filtered')}
-                    className={`p-3.5 rounded-2xl border text-left transition-all ${
-                      randomizeScope === 'filtered'
-                        ? 'bg-purple-500/20 border-purple-400 text-white ring-2 ring-purple-500/30'
-                        : 'bg-[#081b15]/60 border-slate-800 text-slate-400 hover:border-slate-700'
-                    }`}
-                  >
-                    <div className="text-xs font-bold flex items-center justify-between">
-                      <span>All Filtered Reviews</span>
-                      <span className="font-mono px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[11px]">
-                        {filteredReviewIds.length}
-                      </span>
-                    </div>
-                    <p className="text-[11px] text-slate-500 mt-1">
-                      {yearFilter !== 'all' ? `Filtered year ${yearFilter}` : 'Matches active filter'}
-                    </p>
-                  </button>
-                </div>
-              </div>
-
-              {/* Date Range Inputs */}
-              <div>
-                <label className="text-xs font-black uppercase tracking-wider text-slate-300 block mb-2">
-                  2. Custom Date Range Timeline
-                </label>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-400 block mb-1">
-                      Earliest Date (From)
-                    </label>
-                    <input
-                      type="date"
-                      value={randomizeStartDate}
-                      onChange={e => setRandomizeStartDate(e.target.value)}
-                      className="w-full bg-[#081b15] border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:border-purple-400"
-                    />
-                  </div>
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-400 block mb-1">
-                      Latest Date (To)
-                    </label>
-                    <input
-                      type="date"
-                      value={randomizeEndDate}
-                      onChange={e => setRandomizeEndDate(e.target.value)}
-                      className="w-full bg-[#081b15] border border-slate-700 rounded-xl px-3 py-2.5 text-xs text-white outline-none focus:border-purple-400"
-                    />
-                  </div>
-                </div>
-
-                {/* Quick Presets */}
-                <div className="flex flex-wrap gap-1.5 mt-2.5">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRandomizeStartDate('2019-01-01');
-                      setRandomizeEndDate(new Date().toISOString().slice(0, 10));
-                    }}
-                    className="px-2.5 py-1 rounded-lg bg-[#081b15] border border-slate-700 text-xs font-mono text-purple-300 hover:border-purple-400 transition-colors"
-                  >
-                    2019 – Present
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRandomizeStartDate('2020-01-01');
-                      setRandomizeEndDate(new Date().toISOString().slice(0, 10));
-                    }}
-                    className="px-2.5 py-1 rounded-lg bg-[#081b15] border border-slate-700 text-xs font-mono text-purple-300 hover:border-purple-400 transition-colors"
-                  >
-                    2020 – Present
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setRandomizeStartDate('2023-01-01');
-                      setRandomizeEndDate(new Date().toISOString().slice(0, 10));
-                    }}
-                    className="px-2.5 py-1 rounded-lg bg-[#081b15] border border-slate-700 text-xs font-mono text-purple-300 hover:border-purple-400 transition-colors"
-                  >
-                    2023 – Present
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      const d = new Date();
-                      d.setFullYear(d.getFullYear() - 1);
-                      setRandomizeStartDate(d.toISOString().slice(0, 10));
-                      setRandomizeEndDate(new Date().toISOString().slice(0, 10));
-                    }}
-                    className="px-2.5 py-1 rounded-lg bg-[#081b15] border border-slate-700 text-xs font-mono text-purple-300 hover:border-purple-400 transition-colors"
-                  >
-                    Last 12 Months
-                  </button>
-                  {yearFilter !== 'all' && (
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setRandomizeStartDate(`${yearFilter}-01-01`);
-                        setRandomizeEndDate(`${yearFilter}-12-31`);
-                      }}
-                      className="px-2.5 py-1 rounded-lg bg-amber-500/20 border border-amber-500/50 text-xs font-mono text-amber-300 hover:bg-amber-500/30 transition-colors"
-                    >
-                      ★ Filtered Year ({yearFilter})
-                    </button>
-                  )}
-                </div>
-              </div>
-
-              {/* Notice & Summary Box */}
-              <div className="rounded-2xl border border-purple-500/30 bg-[#081b15] p-4 text-xs text-slate-300 space-y-1">
-                <div className="flex items-center justify-between text-purple-300 font-bold">
-                  <span>Target Count:</span>
-                  <span className="font-mono text-sm font-black">
-                    {randomizeScope === 'selected' ? selectedReviewIds.length : filteredReviewIds.length} Reviews
-                  </span>
-                </div>
-                <p className="text-[11px] text-slate-400 leading-relaxed pt-1">
-                  Each review will be assigned a random date &amp; time between <strong className="text-white">{randomizeStartDate}</strong> and <strong className="text-white">{randomizeEndDate}</strong>. Updates execute directly in MySQL.
-                </p>
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-3 pt-2">
-                <button
-                  type="button"
-                  disabled={isRandomizing}
-                  onClick={() => { setIsRandomizeModalOpen(false); setBulkAction(''); }}
-                  className="px-4 py-2.5 rounded-xl border border-slate-700 text-xs font-bold text-slate-400 hover:text-white transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="button"
-                  disabled={
-                    isRandomizing ||
-                    (randomizeScope === 'selected' ? selectedReviewIds.length === 0 : filteredReviewIds.length === 0)
-                  }
-                  onClick={handleExecuteRandomizeDates}
-                  className="px-6 py-2.5 rounded-xl bg-purple-500 text-slate-950 font-black text-xs uppercase tracking-wider hover:bg-purple-400 disabled:opacity-50 transition-all flex items-center gap-2 shadow-lg"
-                >
-                  {isRandomizing ? (
-                    <>
-                      <RefreshCw size={14} className="animate-spin" /> Randomizing Dates…
-                    </>
-                  ) : (
-                    `🎲 Apply Random Dates (${randomizeScope === 'selected' ? selectedReviewIds.length : filteredReviewIds.length})`
-                  )}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
 
     </div>
   );

@@ -4,9 +4,9 @@ import { useToast } from '../../context/ToastContext';
 import { BadgeCheck, Gift, LoaderCircle, Pencil, Plus, RefreshCw, ShoppingCart, Trash2, Truck, X } from 'lucide-react';
 
 const EMPTY_RULE = {
-  name: '', description: '', priority: 0, min_cart_value: 799, max_cart_value: '',
-  discount_amount: 0, discount_percent: 0, free_shipping_enabled: 1,
-  gift_product_id: '', gift_quantity: 1, loyalty_bonus_points: 100,
+  name: '', description: '', priority: 0, min_cart_value: '', max_cart_value: '',
+  discount_amount: 0, discount_percent: 0, free_shipping_enabled: 0,
+  gift_product_id: '', gift_quantity: 1, loyalty_bonus_points: 0,
   auto_coupon_code: '', enforce_min_checkout: 0, badge_text: '',
   start_time: '', end_time: '', status: 'active',
 };
@@ -19,7 +19,7 @@ export default function MinCartValueCenter() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editor, setEditor] = useState(null);
-  const [subtotal, setSubtotal] = useState(500);
+  const [subtotal, setSubtotal] = useState('');
   const [preview, setPreview] = useState(null);
   const [previewLoading, setPreviewLoading] = useState(false);
   const { showToast } = useToast() || {};
@@ -43,10 +43,14 @@ export default function MinCartValueCenter() {
   useEffect(() => { refresh(); }, []);
 
   useEffect(() => {
+    if (subtotal === '') {
+      setPreview(null);
+      return undefined;
+    }
     const timer = setTimeout(async () => {
       setPreviewLoading(true);
       try {
-        const response = await cartRulesApi.preview(subtotal);
+        const response = await cartRulesApi.preview(Number(subtotal));
         setPreview(response.data);
       } catch (error) {
         showToast?.(error.normalized?.message || 'Could not calculate the preview.', 'error');
@@ -168,12 +172,11 @@ export default function MinCartValueCenter() {
         </section>
 
         <aside className="border-l border-slate-800 pl-0 xl:pl-6">
-          <h3 className="text-sm font-bold text-white">Subtotal simulator</h3>
-          <label htmlFor="cart-rule-subtotal" className="mt-5 block text-xs text-slate-400">Cart subtotal</label>
-          <div className="mt-2 flex items-center gap-3"><span className="text-sm text-slate-500">₹</span><input id="cart-rule-subtotal" type="number" min="0" step="25" value={subtotal} onChange={event => setSubtotal(Math.max(0, Number(event.target.value) || 0))} className="min-w-0 flex-1 border-b border-slate-700 bg-transparent py-2 text-lg font-bold text-white outline-none focus:border-emerald-400"/></div>
-          <input aria-label="Adjust simulated subtotal" type="range" min="0" max="10000" step="25" value={subtotal} onChange={event => setSubtotal(Number(event.target.value))} className="mt-5 w-full accent-emerald-400"/>
+          <h3 className="text-sm font-bold text-white">Cart rule preview</h3>
+          <label htmlFor="cart-rule-subtotal" className="mt-5 block text-xs text-slate-400">Enter a cart subtotal to preview</label>
+          <div className="mt-2 flex items-center gap-3"><span className="text-sm text-slate-500">₹</span><input id="cart-rule-subtotal" type="number" min="0" step="1" value={subtotal} onChange={event => setSubtotal(event.target.value)} className="min-w-0 flex-1 border-b border-slate-700 bg-transparent py-2 text-lg font-bold text-white outline-none focus:border-emerald-400"/></div>
           <div className="mt-6 space-y-4 border-t border-slate-800 pt-4">
-            {previewLoading ? <p className="text-xs text-slate-500">Updating preview…</p> : preview ? <>
+            {subtotal === '' ? <p className="text-xs text-slate-500">Enter a subtotal to calculate the configured rules.</p> : previewLoading ? <p className="text-xs text-slate-500">Updating preview…</p> : preview ? <>
               <div><p className="text-[10px] uppercase tracking-wider text-slate-500">Unlocked rules</p><p className="mt-1 text-sm font-semibold text-white">{preview.badges?.length ? preview.badges.join(', ') : 'No tier unlocked'}</p></div>
               <div className="flex justify-between text-xs"><span className="text-slate-400">Rule savings</span><span className="font-semibold text-emerald-300">{money(preview.totalDiscount)}</span></div>
               <div className="flex justify-between text-xs"><span className="text-slate-400">Delivery</span><span className="font-semibold text-white">{preview.freeShipping ? 'Free' : 'Standard'}</span></div>

@@ -15,36 +15,6 @@ const toSlug = (str) => String(str || '')
   .replace(/[^a-z0-9]+/g, '-')
   .replace(/(^-|-$)/g, '');
 
-const DEFAULT_CATEGORY_METADATA = {
-  'Artisanal Ayurvedic Cleansing Bars': {
-    slug: 'artisanal-ayurvedic-cleansing-bars',
-    description: 'Handcrafted 100% natural Ayurvedic luxury bathing bars formulated with pure Activated Charcoal, Aloe Vera, Neem, and Sacred Tulsi. Free from sulfates, parabens, and harsh synthetic detergents.'
-  },
-  'Luxury Facial Cleansers': {
-    slug: 'luxury-facial-cleansers',
-    description: 'Sulfate-free, pH 5.5 skin-barrier calibrated luxury facial cleansers. Formulated with 4% Himalayan Sea Buckthorn, 3% Activated Charcoal, Hyaluronic Acid, and Niacinamide with 100% label-disclosed potencies.'
-  },
-  'Luxury Hair Care': {
-    slug: 'luxury-hair-care',
-    description: 'Royal Ayurvedic 2-in-1 conditioning shampoos and restorative botanical hair rituals formulated with natural saponin extracts of Reetha, Amla, Bhringraj, Rosemary Oil, and Shikakai.'
-  },
-  'Luxury Ayurvedic Wellness & Immunity Drops': {
-    slug: 'luxury-ayurvedic-wellness-immunity-drops',
-    description: 'High-potency 90% liquid distillate of 7 sacred Tulsi varieties (Van, Sweet, Marua, Bisva, Kala, Rama & Lemon Tulsi) designed to balance stress, enhance vitality, and promote healthy radiant skin from within.'
-  }
-};
-
-const DEFAULT_SUBCATEGORIES_SEED = [
-  { id: 201, category_id: 2, category_name: 'Luxury Facial Cleansers', name: 'Himalayan Sea Buckthorn Radiance Cleansers', slug: 'seabuckthorn-radiance-cleansers', description: 'Botanical Omega-7, Vitamin C and Niacinamide radiance face washes for brightening and cellular renewal.', created_at: '2026-10-23T08:36:55.000Z' },
-  { id: 202, category_id: 2, category_name: 'Luxury Facial Cleansers', name: 'Activated Charcoal Deep Pore Purifiers', slug: 'activated-charcoal-purifiers', description: 'Microporous carbon facial cleansers crafted to adsorb PM2.5 pollution and excess sebum without barrier stripping.', created_at: '2026-10-23T08:36:55.000Z' },
-  { id: 301, category_id: 3, category_name: 'Luxury Hair Care', name: 'Botanical Saponin Conditioning Shampoos', slug: 'botanical-saponin-shampoos', description: 'Low-pH sulfate-free dual-action 2-in-1 hair cleansers with Reetha, Amla, Shikakai, and pure Rosemary Oil.', created_at: '2026-10-23T08:36:55.000Z' },
-  { id: 302, category_id: 3, category_name: 'Luxury Hair Care', name: 'Scalp & Root Revitalizing Rituals', slug: 'scalp-root-revitalizing-rituals', description: 'Ayurvedic multi-herb botanical hair and scalp treatments designed to strengthen hair roots.', created_at: '2026-10-23T08:36:55.000Z' },
-  { id: 401, category_id: 4, category_name: 'Artisanal Ayurvedic Cleansing Bars', name: 'Activated Charcoal Detox Bathing Bars', slug: 'charcoal-detox-bathing-bars', description: 'Handcrafted obsidian Ayurvedic cleansing bars infused with Aloe Vera for gentle, non-stripping deep body purification.', created_at: '2026-10-23T08:36:55.000Z' },
-  { id: 402, category_id: 4, category_name: 'Artisanal Ayurvedic Cleansing Bars', name: 'Aloe Vera Neem & Tulsi Soothing Bars', slug: 'aloe-neem-tulsi-soothing-bars', description: 'Traditional sacred botanical bathing bars for blemish-prone, sensitive skin delivering a calm, glowing finish.', created_at: '2026-10-23T08:36:55.000Z' },
-  { id: 501, category_id: 5, category_name: 'Luxury Ayurvedic Wellness & Immunity Drops', name: 'Seven-Tulsi Liquid Extracts & Adaptogens', slug: 'seven-tulsi-liquid-extracts', description: 'Concentrated 90% liquid distillates of 7 sacred Tulsi varieties for gut-skin axis harmony and daily wellness.', created_at: '2026-10-23T08:36:55.000Z' },
-  { id: 502, category_id: 5, category_name: 'Luxury Ayurvedic Wellness & Immunity Drops', name: 'Bio-Active Botanical Wellness Distillates', slug: 'bio-active-botanical-distillates', description: 'Ingestible cellular adaptogens formulated to protect against oxidative stress and environmental wear.', created_at: '2026-10-23T08:36:55.000Z' }
-];
-
 export default function CategoryManagement() {
   // --- CORE DATA STATES ---
   const [categories, setCategories] = useState([]);
@@ -56,7 +26,6 @@ export default function CategoryManagement() {
   const [filterMode, setFilterMode] = useState('all'); // all, missing_seo, master_only
   const [expandedRows, setExpandedRows] = useState({});
   const [selectedaccesss, setSelectedaccesss] = useState([]);
-  const [viewMode, setViewMode] = useState('list'); // list, visual
   const [activeInspectoraccess, setActiveInspectoraccess] = useState(null);
 
   // --- MODAL / FORM STATES ---
@@ -70,11 +39,6 @@ export default function CategoryManagement() {
   const [auditError, setAuditError] = useState('');
 
   const { showToast } = useToast() || {};
-
-  // --- INITIALIZATION ---
-  useEffect(() => { 
-    fetchTaxonomy(); 
-  }, []);
 
   useEffect(() => {
     fetchAuditHistory();
@@ -101,34 +65,20 @@ export default function CategoryManagement() {
     }
   };
 
-  const fetchTaxonomy = async () => {
+  const fetchTaxonomy = useCallback(async () => {
     setLoading(true);
     try {
       // Execute parallel queries for high-speed data fetching
       const [catRes, subRes] = await Promise.all([
         api.get('/categories'),
-        api.get('/subcategories').catch(() => ({ data: { data: [] } }))
+        api.get('/subcategories')
       ]);
       
       const rawCategories = catRes.data?.categories || catRes.data?.data || catRes.data || [];
       const rawSubcategories = subRes.data?.subcategories || subRes.data?.data || subRes.data || [];
       
-      const enrichedCategories = (Array.isArray(rawCategories) ? rawCategories : []).map(c => {
-        const meta = DEFAULT_CATEGORY_METADATA[c.name] || {};
-        return {
-          ...c,
-          slug: c.slug || meta.slug || toSlug(c.name),
-          description: c.description || meta.description || `Luxury botanical formulations within the ${c.name} collection by Bhumivera Organics.`
-        };
-      });
-
-      let enrichedSubcategories = (Array.isArray(rawSubcategories) && rawSubcategories.length > 0)
-        ? rawSubcategories.map(s => ({
-            ...s,
-            slug: s.slug || toSlug(s.name),
-            description: s.description || `Specialized botanical formulations in ${s.name} by Bhumivera Organics.`
-          }))
-        : DEFAULT_SUBCATEGORIES_SEED;
+      const enrichedCategories = Array.isArray(rawCategories) ? rawCategories : [];
+      const enrichedSubcategories = Array.isArray(rawSubcategories) ? rawSubcategories : [];
 
       setCategories(enrichedCategories);
       setSubcategories(enrichedSubcategories);
@@ -145,7 +95,11 @@ export default function CategoryManagement() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [showToast]);
+
+  useEffect(() => {
+    fetchTaxonomy();
+  }, [fetchTaxonomy]);
 
   // --- UTILITY FUNCTIONS ---
   const toggleRow = (id) => {
@@ -178,36 +132,21 @@ export default function CategoryManagement() {
     );
   }, [subcategories]);
 
-  // --- ADVANCED METRICS & SEO SCORING ---
-  const calculateSEOScore = (item) => {
-    let score = 0;
-    if (item.name && item.name.length > 3) score += 30;
-    if (item.slug && item.slug.length > 3) score += 30;
-    if (item.description && item.description.length > 20) score += 40;
-    return score;
-  };
+  const getMissingSeoFields = item => [
+    ['name', 'Name'],
+    ['slug', 'Slug'],
+    ['description', 'Description'],
+  ].filter(([key]) => !String(item?.[key] || '').trim()).map(([, label]) => label);
 
   const taxonomyMetrics = useMemo(() => {
     const totalClusters = categories.length;
     const totalSubaccesss = subcategories.length;
-    let totalSEOScore = 0;
-    let missingDescCount = 0;
-
-    categories.forEach(c => {
-      totalSEOScore += calculateSEOScore(c);
-      if (!c.description) missingDescCount++;
-    });
-    
-    subcategories.forEach(s => {
-      totalSEOScore += calculateSEOScore(s);
-      if (!s.description) missingDescCount++;
-    });
-
     const totalaccesss = totalClusters + totalSubaccesss;
-    const averageHealth = totalaccesss > 0 ? Math.round(totalSEOScore / totalaccesss) : 0;
+    const missingSeoFieldCount = [...categories, ...subcategories]
+      .reduce((count, item) => count + getMissingSeoFields(item).length, 0);
     const emptyClusters = categories.filter(c => getSubcategories(c.id || c._id).length === 0).length;
 
-    return { totalClusters, totalSubaccesss, totalaccesss, averageHealth, missingDescCount, emptyClusters };
+    return { totalClusters, totalSubaccesss, totalaccesss, missingSeoFieldCount, emptyClusters };
   }, [categories, subcategories, getSubcategories]);
 
   // --- FILTERING ENGINE ---
@@ -232,8 +171,8 @@ export default function CategoryManagement() {
 
     // 2. Mode Filters
     if (filterMode === 'missing_seo') {
-      processedCategories = processedCategories.filter(c => !c.description || calculateSEOScore(c) < 100);
-      processedSubcategories = processedSubcategories.filter(s => !s.description || calculateSEOScore(s) < 100);
+      processedCategories = processedCategories.filter(c => getMissingSeoFields(c).length > 0);
+      processedSubcategories = processedSubcategories.filter(s => getMissingSeoFields(s).length > 0);
     } else if (filterMode === 'master_only') {
       processedSubcategories = []; // Hide all subs
     }
@@ -244,16 +183,16 @@ export default function CategoryManagement() {
   // --- DATA EXPORT PROTOCOL ---
   const exportTaxonomyCSV = () => {
     
-    const headers = ['access Level', 'ID', 'Name', 'Slug', 'Parent ID', 'SEO Score', 'Created At'];
+    const headers = ['access Level', 'ID', 'Name', 'Slug', 'Parent ID', 'Missing SEO fields', 'Created At'];
     const rows = [];
 
     categories.forEach(cat => {
       const catId = cat.id || cat._id;
-      rows.push(['Master', catId, cat.name, cat.slug, 'NULL', calculateSEOScore(cat), cat.created_at || 'N/A']);
+      rows.push(['Master', catId, cat.name, cat.slug, 'NULL', getMissingSeoFields(cat).join('; ') || 'None', cat.created_at || 'N/A']);
       
       const subs = getSubcategories(catId);
       subs.forEach(sub => {
-        rows.push(['Sub-access', sub.id || sub._id, sub.name, sub.slug, catId, calculateSEOScore(sub), sub.created_at || 'N/A']);
+        rows.push(['Sub-access', sub.id || sub._id, sub.name, sub.slug, catId, getMissingSeoFields(sub).join('; ') || 'None', sub.created_at || 'N/A']);
       });
     });
 
@@ -294,71 +233,44 @@ export default function CategoryManagement() {
   };
 
   const handleAutoSlug = (name) => {
-    const meta = DEFAULT_CATEGORY_METADATA[name] || {};
-    const generatedSlug = meta.slug || toSlug(name);
     setForm(prev => ({ 
       ...prev, 
       name, 
-      slug: generatedSlug,
-      description: (!prev.description || prev.description.length < 5) ? (meta.description || prev.description) : prev.description
+      slug: toSlug(name),
     }));
   };
 
   const handleAutoOptimizeAllSeo = async () => {
     setIsProcessing(true);
-    showToast?.('⚡ Optimizing complete Taxonomy Matrix to 100% SEO...', 'info');
     try {
-      // 1. Optimize all master categories
       for (const cat of categories) {
         const catId = cat.id || cat._id;
-        const meta = DEFAULT_CATEGORY_METADATA[cat.name] || {};
-        const slug = cat.slug && cat.slug.length > 3 ? cat.slug : (meta.slug || toSlug(cat.name));
-        const description = cat.description && cat.description.length > 20 ? cat.description : (meta.description || `Luxury botanical formulations within the ${cat.name} collection by Bhumivera Organics.`);
-        
+        const slug = cat.slug || toSlug(cat.name);
         await api.put(`/categories/${catId}`, {
           name: cat.name,
           slug,
-          description,
+          description: cat.description || '',
           image_url: cat.image_url || '',
           is_active: cat.is_active !== undefined ? cat.is_active : 1,
-        }).catch(err => console.warn(`Failed syncing category ${cat.name}:`, err.message));
+        });
       }
 
-      // 2. Sync subcategories
-      if (subcategories.length === 0) {
-        for (const sub of DEFAULT_SUBCATEGORIES_SEED) {
-          const matchingCat = categories.find(c => c.name === sub.category_name || (sub.category_id && (c.id === sub.category_id || c._id === sub.category_id)));
-          const catId = matchingCat ? (matchingCat.id || matchingCat._id) : sub.category_id;
-          if (catId) {
-            await api.post('/subcategories', {
-              name: sub.name,
-              slug: sub.slug,
-              description: sub.description,
-              category_id: catId,
-            }).catch(err => console.warn(`Failed seeding subcategory ${sub.name}:`, err.message));
-          }
-        }
-      } else {
-        for (const sub of subcategories) {
-          const subId = sub.id || sub._id;
-          const slug = sub.slug && sub.slug.length > 3 ? sub.slug : toSlug(sub.name);
-          const description = sub.description && sub.description.length > 20 ? sub.description : `Specialized botanical formulations in ${sub.name} by Bhumivera Organics.`;
-          await api.put(`/subcategories/${subId}`, {
-            name: sub.name,
-            slug,
-            description,
-            category_id: sub.category_id,
-          }).catch(err => console.warn(`Failed syncing subcategory ${sub.name}:`, err.message));
-        }
+      for (const sub of subcategories) {
+        const subId = sub.id || sub._id;
+        await api.put(`/subcategories/${subId}`, {
+          name: sub.name,
+          slug: sub.slug || toSlug(sub.name),
+          description: sub.description || '',
+          category_id: sub.category_id,
+        });
       }
 
-      showToast?.('Taxonomy matrix successfully optimized to 100% SEO Health!', 'success');
+      showToast?.('Category and subcategory slugs updated. Descriptions were not changed.', 'success');
       await fetchTaxonomy();
       fetchAuditHistory();
     } catch (err) {
       console.error('Auto SEO Optimization error:', err);
-      showToast?.('Matrix SEO optimization applied locally; server partially synced.', 'warning');
-      await fetchTaxonomy();
+      showToast?.(err.response?.data?.message || 'Could not update all category slugs.', 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -426,7 +338,7 @@ export default function CategoryManagement() {
         await handleDelete(id, mode, true);
       }
       setSelectedaccesss([]);
-    } catch (error) {
+    } catch {
       showToast?.('Bulk purge encountered an error.', 'error');
     } finally {
       setIsProcessing(false);
@@ -448,10 +360,6 @@ export default function CategoryManagement() {
     }
 
     const isMaster = !!activeInspectoraccess.isMaster;
-    const score = calculateSEOScore(activeInspectoraccess);
-    const healthColor = score === 100 ? 'text-emerald-400' : score >= 60 ? 'text-amber-400' : 'text-rose-400';
-    const healthBg = score === 100 ? 'bg-emerald-500/10 border-emerald-500/20' : score >= 60 ? 'bg-amber-500/10 border-amber-500/20' : 'bg-rose-500/10 border-rose-500/20';
-
     return (
       <div className="h-full flex flex-col bg-[#10241f]/55 backdrop-blur-xl border-l border-slate-800/80 overflow-y-auto animate-in slide-in-from-right-4 duration-300">
         <div className="p-5 border-b border-slate-800 bg-[#081b15]/65 backdrop-blur-xl sticky top-0 z-10 flex justify-between items-start">
@@ -471,35 +379,22 @@ export default function CategoryManagement() {
         </div>
 
         <div className="p-5 space-y-6">
-          {/* SEO Health Card */}
-          <div className={`p-4 rounded-2xl border ${healthBg}`}>
+          <div className="p-4 rounded-2xl border border-slate-800 bg-white/[0.02]">
             <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 flex items-center gap-2">
-              <Activity size={12} /> Optimization Telemetry
+              <Activity size={12} /> SEO fields
             </h4>
-            <div className="flex items-end gap-3 mb-4">
-              <span className={`text-4xl font-black font-mono leading-none ${healthColor}`}>{score}</span>
-              <span className="text-sm font-bold text-slate-500 mb-1">/ 100</span>
-            </div>
-            
             <div className="space-y-3">
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-400">access Identifier</span>
-                <span className={activeInspectoraccess.name?.length > 3 ? 'text-emerald-400' : 'text-rose-400'}>
-                  {activeInspectoraccess.name ? 'Valid' : 'Missing'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-400">URL Slug Integrity</span>
-                <span className={activeInspectoraccess.slug?.length > 3 ? 'text-emerald-400' : 'text-rose-400'}>
-                  {activeInspectoraccess.slug ? 'Valid' : 'Missing'}
-                </span>
-              </div>
-              <div className="flex justify-between items-center text-xs">
-                <span className="text-slate-400">Meta Description</span>
-                <span className={activeInspectoraccess.description?.length > 20 ? 'text-emerald-400' : 'text-amber-400'}>
-                  {activeInspectoraccess.description ? `${activeInspectoraccess.description.length} chars` : 'Null Payload'}
-                </span>
-              </div>
+              {['Name', 'Slug', 'Description'].map(field => {
+                const hasValue = Boolean(String(activeInspectoraccess[field.toLowerCase()] || '').trim());
+                return (
+                  <div key={field} className="flex justify-between items-center text-xs">
+                    <span className="text-slate-400">{field}</span>
+                    <span className={hasValue ? 'text-emerald-400' : 'text-rose-400'}>
+                      {hasValue ? 'Present' : 'Missing'}
+                    </span>
+                  </div>
+                );
+              })}
             </div>
           </div>
 
@@ -602,10 +497,10 @@ export default function CategoryManagement() {
           <div className="flex flex-wrap items-center gap-3">
             {/* Quick Stats Mini-Bar */}
             <div className="hidden xl:flex items-center gap-4 px-4 py-2 bg-[#10241f]/80 backdrop-blur-xl border border-slate-800 rounded-xl mr-2">
-              <div className="flex flex-col">
-                <span className="text-[8px] font-black uppercase text-slate-500 tracking-widest">Global Health</span>
-                <span className={`text-sm font-black font-mono leading-none ${taxonomyMetrics.averageHealth >= 80 ? 'text-emerald-400' : 'text-amber-400'}`}>
-                  {taxonomyMetrics.averageHealth}/100
+                <div className="flex flex-col">
+                  <span className="text-[8px] font-black uppercase text-slate-500 tracking-widest">Missing SEO fields</span>
+                  <span className="text-sm font-black font-mono leading-none text-slate-300">
+                    {taxonomyMetrics.missingSeoFieldCount}
                 </span>
               </div>
               <div className="w-px h-6 bg-slate-800"></div>
@@ -629,10 +524,10 @@ export default function CategoryManagement() {
               onClick={handleAutoOptimizeAllSeo}
               disabled={isProcessing}
               className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] disabled:opacity-50"
-              title="Automatically calibrate all category slugs and semantic descriptions to 100% SEO Health"
+              title="Generate URL slugs from existing category names"
             >
               <Zap size={14} className="text-yellow-300" />
-              100% SEO Autopilot
+              Generate missing slugs
             </button>
 
             <button onClick={() => openModal('subcategory')} className="flex items-center gap-2 px-4 py-3 bg-blue-500/10 border border-blue-500/30 text-blue-400 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-blue-500 hover:text-white transition-all shadow-[0_0_15px_rgba(59,130,246,0.1)]">
@@ -693,7 +588,7 @@ export default function CategoryManagement() {
               </button>
               Hierarchy access
             </div>
-            <div className="col-span-4">SEO Health / Slug</div>
+            <div className="col-span-4">SEO fields / Slug</div>
             <div className="col-span-3 text-right">Telemetry</div>
           </div>
 
@@ -710,7 +605,7 @@ export default function CategoryManagement() {
                 const isExpanded = expandedRows[catId];
                 const subs = getSubcategories(catId);
                 const isSelected = selectedaccesss.includes(catId);
-                const score = calculateSEOScore(category);
+                const missingFields = getMissingSeoFields(category);
                 const isInspecting = activeInspectoraccess && (activeInspectoraccess.id || activeInspectoraccess._id) === catId;
 
                 return (
@@ -734,9 +629,9 @@ export default function CategoryManagement() {
                       </div>
                       
                       <div className="col-span-4 flex items-center gap-3">
-                        <div className="w-full max-w-[80px] bg-[#081b15]/90 backdrop-blur-xl h-1.5 rounded-full overflow-hidden border border-slate-800 flex-shrink-0">
-                          <div className={`h-full ${score === 100 ? 'bg-emerald-500' : score >= 60 ? 'bg-amber-500' : 'bg-rose-500'}`} style={{ width: `${score}%` }} />
-                        </div>
+                        <span className="text-[9px] font-mono text-slate-500 whitespace-nowrap">
+                          {missingFields.length ? `${missingFields.length} missing` : 'Complete'}
+                        </span>
                         <span className="text-[10px] font-mono text-slate-400 truncate">/{category.slug}</span>
                       </div>
 
@@ -758,7 +653,7 @@ export default function CategoryManagement() {
                           subs.map((sub, index) => {
                             const subId = sub.id || sub._id;
                             const isSubSelected = selectedaccesss.includes(subId);
-                            const subScore = calculateSEOScore(sub);
+                            const missingFields = getMissingSeoFields(sub);
                             const isSubInspecting = activeInspectoraccess && (activeInspectoraccess.id || activeInspectoraccess._id) === subId;
                             const isLast = index === subs.length - 1;
 
@@ -779,9 +674,9 @@ export default function CategoryManagement() {
                                 </div>
                                 
                                 <div className="col-span-4 flex items-center gap-3">
-                                  <div className="w-full max-w-[60px] bg-[#081b15]/90 backdrop-blur-xl h-1 rounded-full overflow-hidden border border-slate-800 flex-shrink-0">
-                                    <div className={`h-full ${subScore === 100 ? 'bg-emerald-500' : subScore >= 60 ? 'bg-amber-500' : 'bg-rose-500'}`} style={{ width: `${subScore}%` }} />
-                                  </div>
+                                  <span className="text-[9px] font-mono text-slate-500 whitespace-nowrap">
+                                    {missingFields.length ? `${missingFields.length} missing` : 'Complete'}
+                                  </span>
                                   <span className="text-[9px] font-mono text-slate-500 truncate">/{sub.slug}</span>
                                 </div>
 
@@ -921,20 +816,13 @@ export default function CategoryManagement() {
                 <div>
                   <div className="flex justify-between items-end mb-2">
                     <div className="flex items-center gap-3">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">SEO Semantic Payload</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Description</label>
                       <button
                         type="button"
-                        onClick={() => {
-                          const meta = DEFAULT_CATEGORY_METADATA[form.name] || {};
-                          const autoSlug = form.slug || meta.slug || toSlug(form.name);
-                          const autoDesc = meta.description || (modalMode === 'category'
-                            ? `Luxury botanical formulations and Ayurvedic care products within the ${form.name} collection by Bhumivera Organics.`
-                            : `Handcrafted natural botanical formulations in ${form.name} by Bhumivera Organics.`);
-                          setForm(prev => ({ ...prev, slug: autoSlug, description: autoDesc }));
-                        }}
+                        onClick={() => setForm(prev => ({ ...prev, slug: prev.slug || toSlug(prev.name) }))}
                         className="text-[9px] font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20"
                       >
-                        <Zap size={10} /> Auto-Fill 100% SEO
+                        <Zap size={10} /> Generate slug
                       </button>
                     </div>
                     <span className={`text-[10px] font-mono ${form.description.length > 20 ? 'text-emerald-500' : 'text-amber-500'}`}>
@@ -942,11 +830,11 @@ export default function CategoryManagement() {
                     </span>
                   </div>
                   <textarea 
-                    rows={3} placeholder="Inject metadata for crawler interpretation..."
+                  rows={3} placeholder="Category description"
                     value={form.description} onChange={e => setForm({...form, description: e.target.value})}
                     className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl p-3.5 text-sm text-slate-300 resize-none outline-none focus:border-emerald-500/50 transition-colors"
                   />
-                  <p className="text-[9px] text-slate-600 mt-1 font-mono">Minimum 20 characters recommended for optimal PageRank health.</p>
+                  <p className="text-[9px] text-slate-600 mt-1 font-mono">Saved with this category and shown wherever the catalog uses it.</p>
                 </div>
 
                 {/* Active Toggle */}

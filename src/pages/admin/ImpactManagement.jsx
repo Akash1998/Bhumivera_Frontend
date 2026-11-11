@@ -3,72 +3,22 @@ import {
   CheckCircle2,
   Download,
   FileImage,
-  Leaf,
   RefreshCw,
   Search,
   ShieldCheck,
-  Sprout,
-  Droplets,
-  HeartHandshake,
 } from 'lucide-react';
 import { impact as impactApi } from '../../services/api';
 
-const PROJECTS = [
-  ['native-trees', 'Native sapling nurseries & afforestation'],
-  ['river-care', 'Riparian bank & watershed stewardship'],
-  ['community-care', 'Botanical literacy & community gardens'],
-  ['saffron-pollinators', 'Pampore saffron & bee sanctuaries (Upcoming 2027)'],
-  ['sacred-groves', 'Ancient sacred grove reserves (Upcoming 2027)'],
-  ['wetland-rejuvenation', 'Earthen kunds & wetland revival (Upcoming 2027)'],
-];
-
-const PROJECT_LABELS = Object.fromEntries(PROJECTS);
-
-const PROJECT_BENCHMARKS = {
-  'native-trees': {
-    unitLabel: 'Native saplings planted & maintained',
-    inrPerUnit: 125,
-    region: 'Western Ghats & Nilgiri Biosphere',
-    auditor: 'Bhumivera Ecological Trust · Geo-Tagged Sapling Registry',
-  },
-  'river-care': {
-    unitLabel: 'KL watershed & riparian buffer restored',
-    inrPerUnit: 80,
-    region: 'Cauvery & Kabini Tributary Basins',
-    auditor: 'Riparian Clean-Water Collective',
-  },
-  'community-care': {
-    unitLabel: 'Artisan smallholder training & health hours',
-    inrPerUnit: 150,
-    region: 'Wayanad, Idukki & Jaintia Hills Farmer Cooperatives',
-    auditor: 'Fair-Harvest Community Guild',
-  },
-  'saffron-pollinators': {
-    unitLabel: 'Bee apiaries & organic saffron buffer belts',
-    inrPerUnit: 200,
-    region: 'Pampore Karewas & Kashmir Valley (1,600m)',
-    auditor: 'Alpine Pollinator & Saffron Stewardship Trust',
-  },
-  'sacred-groves': {
-    unitLabel: 'Heritage sacred grove reserves mapped & conserved',
-    inrPerUnit: 250,
-    region: 'Vindhya & Central Indian Forest Belts',
-    auditor: 'Ethnobotanical Heritage Trust',
-  },
-  'wetland-rejuvenation': {
-    unitLabel: 'Earthen percolation reservoirs & aquifers restored',
-    inrPerUnit: 180,
-    region: 'Arid & Drought-Prone Rural Belts',
-    auditor: 'Indigenous Watershed Restoration Council',
-  },
-};
+const projectLabel = key => String(key || '').split('-').map(word => (
+  word ? `${word[0].toUpperCase()}${word.slice(1)}` : ''
+)).join(' ');
 
 export default function ImpactManagement() {
   const [contributions, setContributions] = useState([]);
   const [updates, setUpdates] = useState([]);
   const [references, setReferences] = useState({});
   const [form, setForm] = useState({
-    projectKey: 'native-trees',
+    projectKey: '',
     title: '',
     summary: '',
     fieldDate: '',
@@ -130,7 +80,7 @@ export default function ImpactManagement() {
     try {
       await impactApi.createUpdate(form);
       setForm({
-        projectKey: 'native-trees',
+        projectKey: '',
         title: '',
         summary: '',
         fieldDate: '',
@@ -162,13 +112,15 @@ export default function ImpactManagement() {
     });
   }, [contributions, statusFilter, projectFilter, searchQuery]);
 
+  const projectOptions = useMemo(() => [...new Set([
+    ...contributions.map(contribution => contribution.project_key),
+    ...updates.map(update => update.project_key),
+  ].filter(Boolean))].sort(), [contributions, updates]);
+
   const metrics = useMemo(() => {
     let totalPledged = 0;
     let totalCollected = 0;
     let pendingPledged = 0;
-    let treesUnits = 0;
-    let riverUnits = 0;
-    let communityUnits = 0;
 
     contributions.forEach(c => {
       const amt = Number(c.amount) || 0;
@@ -178,19 +130,9 @@ export default function ImpactManagement() {
       } else if (c.status === 'pledged') {
         pendingPledged += amt;
       }
-      if (c.project_key === 'native-trees') treesUnits += amt / 125;
-      else if (c.project_key === 'river-care') riverUnits += amt / 80;
-      else if (c.project_key === 'community-care') communityUnits += amt / 150;
     });
 
-    return {
-      totalPledged,
-      totalCollected,
-      pendingPledged,
-      treesUnits: Math.max(1, Math.round(treesUnits)),
-      riverUnits: Math.max(1, Math.round(riverUnits)),
-      communityUnits: Math.max(1, Math.round(communityUnits)),
-    };
+    return { totalPledged, totalCollected, pendingPledged };
   }, [contributions]);
 
   const handleExportCsv = () => {
@@ -201,34 +143,26 @@ export default function ImpactManagement() {
       'Customer Name',
       'Customer Email',
       'Project Key',
-      'Project Label',
-      'Pledge Amount (INR)',
-      'Ecological Unit Impact',
+      'Contribution Amount (INR)',
       'Status',
       'Collection Reference',
       'Created At',
     ];
     const escapeCell = v => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const rows = filteredContributions.map(c => {
-      const bench = PROJECT_BENCHMARKS[c.project_key] || PROJECT_BENCHMARKS['native-trees'];
-      const units = ((Number(c.amount) || 0) / bench.inrPerUnit).toFixed(2);
-      return [
+    const rows = filteredContributions.map(c => [
         c.id,
         c.order_id,
         c.order_status,
         c.customer_name,
         c.customer_email,
         c.project_key,
-        PROJECT_LABELS[c.project_key] || c.project_key,
         Number(c.amount || 0).toFixed(2),
-        `${units} (${bench.unitLabel})`,
         c.status,
         c.collection_reference || '',
         c.created_at || '',
       ]
         .map(escapeCell)
-        .join(',');
-    });
+        .join(','));
     const csv = `\uFEFF${headers.map(escapeCell).join(',')}\n${rows.join('\n')}`;
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8' });
     const url = URL.createObjectURL(blob);
@@ -246,12 +180,11 @@ export default function ImpactManagement() {
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-slate-800 pb-5">
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-300">
-            Bhumivera Earth Ledger · ESG &amp; Ecological Audit
+            Bhumivera contribution records
           </p>
           <h1 className="mt-2 font-serif text-3xl">Impact reconciliation</h1>
           <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
-            Keep pledges separate from collected funds. Public figures include only reconciled collection and field
-            reports with media evidence.
+            Review contribution records, reconcile collected amounts, and publish field reports with evidence.
           </p>
         </div>
         <div className="flex items-center gap-2">
@@ -261,7 +194,7 @@ export default function ImpactManagement() {
             className="inline-flex items-center gap-2 border border-emerald-400/30 bg-emerald-500/15 px-3.5 py-2.5 text-xs font-bold text-emerald-200 hover:bg-emerald-500/25"
           >
             <Download size={15} />
-            Export 12-Col Earth Ledger CSV
+            Export contribution records
           </button>
           <button
             onClick={() => void load()}
@@ -281,10 +214,9 @@ export default function ImpactManagement() {
         </p>
       )}
 
-      {/* 6-Card Ecological Telemetry Strip */}
-      <section className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+      <section className="grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-slate-800 bg-[#081b15]/80 p-3.5">
-          <span className="text-[11px] text-slate-400 block">Total Pledged</span>
+          <span className="text-[11px] text-slate-400 block">Total contributions</span>
           <strong className="text-lg font-black text-white">
             ₹{metrics.totalPledged.toLocaleString('en-IN')}
           </strong>
@@ -296,35 +228,17 @@ export default function ImpactManagement() {
           </strong>
         </div>
         <div className="rounded-xl border border-slate-800 bg-[#081b15]/80 p-3.5">
-          <span className="text-[11px] text-slate-400 block">Pending COD Settlement</span>
+          <span className="text-[11px] text-slate-400 block">Pending collection</span>
           <strong className="text-lg font-black text-amber-300">
             ₹{metrics.pendingPledged.toLocaleString('en-IN')}
           </strong>
-        </div>
-        <div className="rounded-xl border border-slate-800 bg-[#081b15]/80 p-3.5">
-          <span className="text-[11px] text-slate-400 flex items-center gap-1">
-            <Sprout size={12} className="text-emerald-400" /> Native Saplings
-          </span>
-          <strong className="text-lg font-black text-emerald-200">{metrics.treesUnits}</strong>
-        </div>
-        <div className="rounded-xl border border-slate-800 bg-[#081b15]/80 p-3.5">
-          <span className="text-[11px] text-slate-400 flex items-center gap-1">
-            <Droplets size={12} className="text-cyan-400" /> Watershed Units
-          </span>
-          <strong className="text-lg font-black text-cyan-200">{metrics.riverUnits} KL</strong>
-        </div>
-        <div className="rounded-xl border border-slate-800 bg-[#081b15]/80 p-3.5">
-          <span className="text-[11px] text-slate-400 flex items-center gap-1">
-            <HeartHandshake size={12} className="text-[#d4af37]" /> Farmer Care Hours
-          </span>
-          <strong className="text-lg font-black text-[#d4af37]">{metrics.communityUnits} hrs</strong>
         </div>
       </section>
 
       <section className="space-y-4">
         <div className="flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h2 className="text-xl font-semibold">COD contributions</h2>
+            <h2 className="text-xl font-semibold">Contributions</h2>
             <p className="mt-1 text-sm text-slate-500">
               Only mark collected after the customer payment has been reconciled.
             </p>
@@ -354,10 +268,10 @@ export default function ImpactManagement() {
               onChange={e => setProjectFilter(e.target.value)}
               className="border border-slate-700 bg-[#081b15]/90 px-3 py-1.5 text-xs text-white"
             >
-              <option value="all">All Ecological Projects</option>
-              {PROJECTS.map(([key, label]) => (
+              <option value="all">All projects</option>
+              {projectOptions.map(key => (
                 <option key={key} value={key}>
-                  {label}
+                  {projectLabel(key)}
                 </option>
               ))}
             </select>
@@ -371,18 +285,13 @@ export default function ImpactManagement() {
                 <th className="py-3 pr-4">Order</th>
                 <th className="py-3 pr-4">Customer</th>
                 <th className="py-3 pr-4">Project</th>
-                <th className="py-3 pr-4">Biosphere Region</th>
-                <th className="py-3 pr-4">Pledge</th>
-                <th className="py-3 pr-4">Est. Field Impact</th>
+                <th className="py-3 pr-4">Amount</th>
                 <th className="py-3 pr-4">Status</th>
                 <th className="py-3">Collection reference</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-800">
               {filteredContributions.map(contribution => {
-                const bench =
-                  PROJECT_BENCHMARKS[contribution.project_key] || PROJECT_BENCHMARKS['native-trees'];
-                const estUnits = ((Number(contribution.amount) || 0) / bench.inrPerUnit).toFixed(2);
                 return (
                   <tr key={contribution.id}>
                     <td className="py-4 pr-4">
@@ -394,14 +303,10 @@ export default function ImpactManagement() {
                       <span className="block text-xs text-slate-500">{contribution.customer_email}</span>
                     </td>
                     <td className="py-4 pr-4">
-                      {PROJECT_LABELS[contribution.project_key] || contribution.project_key}
+                      {projectLabel(contribution.project_key)}
                     </td>
-                    <td className="py-4 pr-4 text-xs text-slate-400">{bench.region}</td>
                     <td className="py-4 pr-4 font-semibold">
                       ₹{Number(contribution.amount).toLocaleString('en-IN')}
-                    </td>
-                    <td className="py-4 pr-4 text-xs text-emerald-300 font-mono">
-                      {estUnits} units
                     </td>
                     <td className="py-4 pr-4">
                       <span
@@ -449,7 +354,7 @@ export default function ImpactManagement() {
               })}
               {!loading && filteredContributions.length === 0 && (
                 <tr>
-                  <td colSpan="8" className="py-10 text-center text-slate-500">
+                  <td colSpan="6" className="py-10 text-center text-slate-500">
                     No contribution pledges yet.
                   </td>
                 </tr>
@@ -471,16 +376,21 @@ export default function ImpactManagement() {
             <label className="text-xs font-semibold text-slate-400">
               Project
               <select
+                required
                 value={form.projectKey}
                 onChange={event => setForm(current => ({ ...current, projectKey: event.target.value }))}
                 className="mt-2 w-full border border-slate-700 bg-[#081b15]/90 backdrop-blur-xl px-3 py-3 text-sm text-white"
               >
-                {PROJECTS.map(([key, label]) => (
+                <option value="">Choose a project from existing records</option>
+                {projectOptions.map(key => (
                   <option key={key} value={key}>
-                    {label}
+                    {projectLabel(key)}
                   </option>
                 ))}
               </select>
+              {projectOptions.length === 0 && (
+                <span className="mt-1 block text-amber-300">No project keys are available in existing records.</span>
+              )}
             </label>
             <label className="text-xs font-semibold text-slate-400">
               Field date
@@ -559,7 +469,7 @@ export default function ImpactManagement() {
             {updates.slice(0, 8).map(update => (
               <article key={update.id} className="border-b border-slate-800 pb-4">
                 <p className="text-xs uppercase tracking-widest text-emerald-300">
-                  {PROJECT_LABELS[update.project_key] || update.project_key}
+                  {projectLabel(update.project_key)}
                 </p>
                 <h3 className="mt-1 font-semibold">{update.title}</h3>
                 <p className="mt-1 line-clamp-3 text-sm leading-6 text-slate-400">{update.summary}</p>

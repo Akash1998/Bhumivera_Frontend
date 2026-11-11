@@ -9,17 +9,9 @@ const HOOKS = [
   ['seasonal_countdown', 'Seasonal sale countdown'],
 ];
 
-const DEFAULT_SPIN_REWARDS = [
-  { label: '₹50 off', description: '', termsAndConditions: '', rewardType: 'discount', discountType: 'fixed', discountValue: 50, minimumOrderAmount: 500, maxDiscount: '', chance: 80, expiryDays: 30 },
-  { label: '5% off (up to ₹200)', description: '', termsAndConditions: '', rewardType: 'discount', discountType: 'percentage', discountValue: 5, minimumOrderAmount: 500, maxDiscount: 200, chance: 85, expiryDays: 30 },
-  { label: '₹100 off', description: '', termsAndConditions: '', rewardType: 'discount', discountType: 'fixed', discountValue: 100, minimumOrderAmount: 599, maxDiscount: '', chance: 20, expiryDays: 30 },
-  { label: '10% off (up to ₹500)', description: '', termsAndConditions: '', rewardType: 'discount', discountType: 'percentage', discountValue: 10, minimumOrderAmount: 1000, maxDiscount: 500, chance: 40, expiryDays: 30 },
-  { label: '₹500 off', description: '', termsAndConditions: '', rewardType: 'discount', discountType: 'fixed', discountValue: 500, minimumOrderAmount: 2000, maxDiscount: '', chance: 5, expiryDays: 30 },
-];
-
 export default function GamificationStudio() {
   const [values, setValues] = useState({});
-  const [spinRewards, setSpinRewards] = useState(DEFAULT_SPIN_REWARDS);
+  const [spinRewards, setSpinRewards] = useState([]);
   const [loading, setLoading] = useState(true);
   const [savingKey, setSavingKey] = useState('');
   const [savingSpinRewards, setSavingSpinRewards] = useState(false);
@@ -103,16 +95,16 @@ export default function GamificationStudio() {
   const addSpinReward = () => {
     if (spinRewards.length >= 12) return;
     setSpinRewards(current => [...current, {
-      label: 'New reward',
+      label: '',
       description: '',
       termsAndConditions: '',
       rewardType: 'discount',
       discountType: 'fixed',
-      discountValue: 50,
+      discountValue: '',
       minimumOrderAmount: 0,
       maxDiscount: '',
       chance: 0,
-      expiryDays: 30,
+      expiryDays: '',
     }]);
   };
 

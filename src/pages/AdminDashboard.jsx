@@ -11,6 +11,8 @@ import './admin/AdminTheme.css';
 
 // DYNAMIC LAZY IMPORTS: Website Governance Only (Orders, Delivery, Returns & Stock isolated in /inventorysoftware)
 const DashboardOverview = lazy(() => import('./admin/DashboardOverview'));
+const SystemHealth = lazy(() => import('./admin/SystemHealth'));
+const SystemLogs = lazy(() => import('./admin/SystemLogs'));
 const ProductManagement = lazy(() => import('./admin/ProductManagement'));
 const CategoryManagement = lazy(() => import('./admin/CategoryManagement'));
 const UserManagement = lazy(() => import('./admin/UserManagement'));
@@ -78,6 +80,8 @@ class ErrorBoundary extends Component {
 
 const TAB_COMPONENTS = {
   overview: DashboardOverview,
+  'system-health': SystemHealth,
+  'system-logs': SystemLogs,
   products: ProductManagement,
   categories: CategoryManagement,
   'scarcity-simulator': ScarcitySimulator,
@@ -105,6 +109,8 @@ const TAB_COMPONENTS = {
 
 const TAB_ICONS = {
   overview: Activity,
+  'system-health': ShieldCheck,
+  'system-logs': FileText,
   analytics: ChartNoAxesCombined,
   notifications: Bell,
   impact: Leaf,
@@ -187,6 +193,8 @@ export default function AdminDashboard() {
       items: [
         { id: 'overview', label: 'Dashboard' },
         { id: 'analytics', label: 'Analytics' },
+        { id: 'system-health', label: 'System Health' },
+        { id: 'system-logs', label: 'System Logs' },
         { id: 'notifications', label: 'Notifications' },
       ],
     },

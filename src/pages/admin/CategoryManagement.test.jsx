@@ -5,12 +5,14 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import CategoryManagement from './CategoryManagement';
 import api from '../../services/api';
 
+const { showToastMock } = vi.hoisted(() => ({ showToastMock: vi.fn() }));
+
 vi.mock('../../services/api', () => ({
   default: { get: vi.fn() },
 }));
 
 vi.mock('../../context/ToastContext', () => ({
-  useToast: () => ({ showToast: vi.fn() }),
+  useToast: () => ({ showToast: showToastMock }),
 }));
 
 describe('CategoryManagement audit history', () => {
