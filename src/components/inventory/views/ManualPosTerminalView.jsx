@@ -6,6 +6,7 @@ export default function ManualPosTerminalView({
   posCart = [],
   setPosCart,
   onCheckout,
+  onScanCode,
   checkoutLoading,
   upiQrDataUrl,
   posPaymentMode,
@@ -20,6 +21,7 @@ export default function ManualPosTerminalView({
   operatorName,
 }) {
   const [productSearch, setProductSearch] = useState('');
+  const [scanCode, setScanCode] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('ALL');
 
   const categories = useMemo(() => (
@@ -50,7 +52,11 @@ export default function ManualPosTerminalView({
       const index = previous.findIndex(item => item.id === product.id || item.sku === product.sku);
       if (index >= 0) {
         const next = [...previous];
+        if (product.serialNumber && next[index].serialNumbers?.includes(product.serialNumber)) return previous;
         next[index] = { ...next[index], q: next[index].q + 1 };
+        if (product.serialNumber) {
+          next[index] = { ...next[index], serialNumbers: [...(next[index].serialNumbers || []), product.serialNumber] };
+        }
         return next;
       }
       return [...previous, {
@@ -63,8 +69,16 @@ export default function ManualPosTerminalView({
         uom: product.uom || 'Pcs',
         gstHsnCode: product.gstHsnCode || '30049011',
         gstRate: product.gstRate || 5,
+        serialNumbers: product.serialNumber ? [product.serialNumber] : [],
       }];
     });
+  };
+
+  const submitScannedCode = () => {
+    const code = scanCode.trim();
+    if (!code || !onScanCode) return;
+    setScanCode('');
+    onScanCode(code);
   };
 
   const updateQuantity = (index, delta) => {
@@ -80,6 +94,26 @@ export default function ManualPosTerminalView({
   return (
     <div className="grid gap-5 xl:grid-cols-[1.3fr_1fr]">
       <section className="space-y-4">
+        <div className="rounded-2xl border border-emerald-500/30 bg-[#0c261b] p-4">
+          <label className="block text-xs font-bold text-emerald-200" htmlFor="pos-item-qr">
+            Scan an individual item QR / barcode
+          </label>
+          <input
+            id="pos-item-qr"
+            value={scanCode}
+            onChange={event => setScanCode(event.target.value)}
+            onKeyDown={event => {
+              if (event.key === 'Enter') {
+                event.preventDefault();
+                submitScannedCode();
+              }
+            }}
+            placeholder="Scan or enter code, then press Enter"
+            className="mt-2 min-h-11 w-full rounded-xl border border-emerald-500/40 bg-[#071711] px-3 text-sm text-white outline-none focus:border-emerald-300"
+            autoComplete="off"
+          />
+          <p className="mt-2 text-[10px] text-slate-400">Unique item codes resolve to their registered product and can only be sold once.</p>
+        </div>
         <div className="rounded-2xl border border-emerald-500/30 bg-[#0c261b] p-4">
           <label className="relative block">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-emerald-400" />
@@ -159,6 +193,7 @@ export default function ManualPosTerminalView({
               <div className="min-w-0">
                 <p className="truncate text-sm font-bold">{item.name}</p>
                 <p className="font-mono text-[10px] text-slate-400">₹{item.p} × {item.q}</p>
+                {item.serialNumbers?.length > 0 && <p className="mt-1 break-all font-mono text-[9px] text-emerald-300">Item codes: {item.serialNumbers.join(', ')}</p>}
               </div>
               <div className="flex shrink-0 items-center gap-1.5">
                 <button type="button" aria-label={`Decrease ${item.name}`} onClick={() => updateQuantity(index, -1)} className="rounded-md border border-white/10 p-1.5"><Minus size={13} /></button>

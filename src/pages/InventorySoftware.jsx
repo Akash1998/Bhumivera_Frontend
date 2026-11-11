@@ -842,6 +842,53 @@ export default function InventorySoftware() {
     }
   };
 
+  const handleManualPosScan = async code => {
+    try {
+      const { data } = await api.post('/inventory-software/scanner/lookup', { code }, reqConfig);
+      const item = data?.item;
+      if (!item) {
+        showNotice('error', 'This QR or barcode is not registered to an inventory product.');
+        return;
+      }
+      if (item.serialNumber && item.serialStatus !== 'available') {
+        showNotice('error', `Item ${item.serialNumber} is ${item.serialStatus || 'unavailable'} and cannot be billed.`);
+        return;
+      }
+      if (item.serialNumber && posCart.some(cartItem => cartItem.serialNumbers?.includes(item.serialNumber))) {
+        showNotice('error', `Item ${item.serialNumber} is already in this bill.`);
+        return;
+      }
+      setPosCart(previous => {
+        const index = previous.findIndex(cartItem => cartItem.sku === item.sku);
+        const serialNumbers = item.serialNumber ? [item.serialNumber] : [];
+        if (index >= 0) {
+          const next = [...previous];
+          next[index] = {
+            ...next[index],
+            q: Number(next[index].q) + 1,
+            serialNumbers: [...(next[index].serialNumbers || []), ...serialNumbers],
+          };
+          return next;
+        }
+        return [...previous, {
+          id: item.metaId,
+          productId: item.productId,
+          sku: item.sku,
+          name: item.name,
+          q: 1,
+          p: Number(item.price) || 0,
+          uom: item.uom || 'Pcs',
+          gstHsnCode: item.gstHsnCode || '30049011',
+          gstRate: Number(item.gstRate) || 5,
+          serialNumbers,
+        }];
+      });
+      showNotice('success', `Added ${item.name}${item.serialNumber ? ` · item ${item.serialNumber}` : ''} to the POS bill.`);
+    } catch (error) {
+      showNotice('error', error.response?.data?.message || 'Could not resolve the scanned product code.');
+    }
+  };
+
   const handlePosCheckout = async () => {
     if (posCheckoutBusy) return;
     if (posCart.length === 0) {
@@ -927,7 +974,7 @@ export default function InventorySoftware() {
         <tr>
           <td style="padding:10px;border-bottom:1px solid #e2e8f0;">${idx + 1}</td>
           <td style="padding:10px;border-bottom:1px solid #e2e8f0;font-family:monospace;">${it.sku || '-'}</td>
-          <td style="padding:10px;border-bottom:1px solid #e2e8f0;font-weight:600;">${it.name}</td>
+          <td style="padding:10px;border-bottom:1px solid #e2e8f0;font-weight:600;">${it.name}${it.serialNumbers?.length ? `<div style="font-size:10px;color:#475569;">Item code: ${it.serialNumbers.join(', ')}</div>` : ''}</td>
           <td style="padding:10px;border-bottom:1px solid #e2e8f0;text-align:center;">${it.gstHsnCode || '30049011'}</td>
           <td style="padding:10px;border-bottom:1px solid #e2e8f0;text-align:center;font-weight:600;">${it.q} ${it.uom || 'Pcs'}</td>
           <td style="padding:10px;border-bottom:1px solid #e2e8f0;text-align:right;">₹${Number(it.p).toFixed(2)}</td>
@@ -1036,11 +1083,13 @@ export default function InventorySoftware() {
           .map(
             i =>
               `<div><b>${i.name}</b> x${i.q}<span style="float:right;">₹${(Number(i.p) * Number(i.q)).toFixed(0)}</span></div>
-              <div style="font-size:9px;color:#555;margin-bottom:3px;">HSN: ${i.gstHsnCode || '30049011'} | Rate: ₹${Number(i.p).toFixed(2)} | GST: ${i.gstRate || 5}%</div>`
+              <div style="font-size:9px;color:#555;margin-bottom:3px;">HSN: ${i.gstHsnCode || '30049011'} | Rate: ₹${Number(i.p).toFixed(2)} | GST: ${i.gstRate || 5}%${i.serialNumbers?.length ? ` | Item code: ${i.serialNumbers.join(', ')}` : ''}</div>`
           )
           .join('')}
         <div class="line"></div>
         <div>Subtotal: <span style="float:right;">₹${sale.subTotal}</span></div>
+        ${sale.extraTotal ? `<div>Extra charges: <span style="float:right;">₹${sale.extraTotal}</span></div>` : ''}
+        ${sale.discount ? `<div>Discount: <span style="float:right;">-₹${sale.discount}</span></div>` : ''}
         <div>GST (${sale.taxRate}%): <span style="float:right;">₹${sale.tax}</span></div>
         <div class="bold" style="font-size:14px;">TOTAL: <span style="float:right;">₹${sale.billTotal}</span></div>
         <div>Paid (${sale.paymentMode}): <span style="float:right;">₹${sale.paid}</span></div>
@@ -2048,6 +2097,7 @@ export default function InventorySoftware() {
               posCart={posCart}
               setPosCart={setPosCart}
               onCheckout={handlePosCheckout}
+              onScanCode={handleManualPosScan}
               checkoutLoading={posCheckoutBusy}
               upiQrDataUrl={upiQrDataUrl}
               posPaymentMode={posPaymentMode}

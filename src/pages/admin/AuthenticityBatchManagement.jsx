@@ -106,6 +106,7 @@ const PRODUCT_PRESETS = {
 const getSequencePreview = (seed, count) => {
   const n = Number(count) || 1;
   const cleanSeed = String(seed || '').trim().toUpperCase();
+  if (!cleanSeed) return `Unique random item codes (${n} ${n === 1 ? 'unit' : 'units'})`;
   if (n <= 1) return cleanSeed || 'Auto-generated single code';
 
   if (/^\d+$/.test(cleanSeed)) {
@@ -145,7 +146,7 @@ export default function AuthenticityBatchManagement() {
   const [form, setForm] = useState({
     productId: '',
     count: 1, // Default 1, can be 1, 30, 100, 110, etc.
-    serialNumber: '123456',
+    serialNumber: '',
     batchNumber: 'BATCH-04/26-SB',
     bottleSequence: 'Bottle #083 of 250',
     manufactureDate: new Date().toISOString().slice(0, 10),
@@ -289,7 +290,9 @@ export default function AuthenticityBatchManagement() {
     const prefix = PRODUCT_PRESETS[Number(form.productId)]?.prefix || 'BHMV';
     const yy = String(new Date().getFullYear()).slice(-2);
     const mm = String(new Date().getMonth() + 1).padStart(2, '0');
-    const rand = Math.random().toString(36).substring(2, 7).toUpperCase();
+    const bytes = new Uint8Array(4);
+    window.crypto.getRandomValues(bytes);
+    const rand = Array.from(bytes, byte => byte.toString(16).padStart(2, '0')).join('').toUpperCase();
     setForm(prev => ({
       ...prev,
       serialNumber: `${prefix}-${yy}${mm}-${rand}`,
@@ -558,17 +561,21 @@ export default function AuthenticityBatchManagement() {
       (s.batchNumber || '').toLowerCase().includes(q)
     );
   }, [genuinitySerials, searchFilter]);
+  const printableSerials = useMemo(
+    () => filteredSerials.filter(serial => serial.status === 'available'),
+    [filteredSerials]
+  );
 
   // Bulk Selection Handlers
   const isAllSelected = useMemo(() => {
-    return filteredSerials.length > 0 && selectedSerialIds.length === filteredSerials.length;
-  }, [filteredSerials, selectedSerialIds]);
+    return printableSerials.length > 0 && printableSerials.every(serial => selectedSerialIds.includes(serial.id));
+  }, [printableSerials, selectedSerialIds]);
 
   const toggleSelectAll = () => {
     if (isAllSelected) {
       setSelectedSerialIds([]);
     } else {
-      setSelectedSerialIds(filteredSerials.map(s => s.id));
+      setSelectedSerialIds(printableSerials.map(s => s.id));
     }
   };
 
@@ -579,10 +586,10 @@ export default function AuthenticityBatchManagement() {
   };
 
   const handleDeleteSingleSerial = async (serialId, serialNumber) => {
-    if (!window.confirm(`Delete serial record "${serialNumber}"? This cannot be undone.`)) return;
+    if (!window.confirm(`Void unused serial code "${serialNumber}"? The code will remain permanently reserved in the authenticity registry.`)) return;
     try {
       await serialsApi.deleteGenuinitySerial(serialId);
-      showToast?.(`Deleted serial ${serialNumber}`, 'success');
+      showToast?.(`Voided unused serial ${serialNumber}`, 'success');
       setSelectedSerialIds(prev => prev.filter(x => x !== serialId));
       if (generatedResult?.id === serialId) {
         setGeneratedResult(null);
@@ -595,11 +602,12 @@ export default function AuthenticityBatchManagement() {
   };
 
   const handleDeleteSelected = async () => {
-    if (selectedSerialIds.length === 0) return;
-    if (!window.confirm(`Delete ${selectedSerialIds.length} selected serial(s)? This cannot be undone.`)) return;
+    const availableIds = printableSerials.filter(s => selectedSerialIds.includes(s.id)).map(s => s.id);
+    if (availableIds.length === 0) return;
+    if (!window.confirm(`Void ${availableIds.length} unused serial code(s)? The codes will remain permanently reserved.`)) return;
     try {
-      await serialsApi.bulkDeleteGenuinitySerials({ serialIds: selectedSerialIds });
-      showToast?.(`Deleted ${selectedSerialIds.length} serials successfully.`, 'success');
+      await serialsApi.bulkDeleteGenuinitySerials({ serialIds: availableIds });
+      showToast?.(`Voided ${availableIds.length} unused serial codes.`, 'success');
       setSelectedSerialIds([]);
       setGeneratedResult(null);
       await loadRegistry();
@@ -609,12 +617,12 @@ export default function AuthenticityBatchManagement() {
   };
 
   const handleDeleteAllFiltered = async () => {
-    if (filteredSerials.length === 0) return;
-    if (!window.confirm(`Are you sure you want to permanently delete ALL ${filteredSerials.length} listed serials?`)) return;
+    if (printableSerials.length === 0) return;
+    if (!window.confirm(`Void all ${printableSerials.length} unused item codes in this filtered list? Codes remain reserved.`)) return;
     try {
-      const allIds = filteredSerials.map(s => s.id);
+      const allIds = printableSerials.map(s => s.id);
       await serialsApi.bulkDeleteGenuinitySerials({ serialIds: allIds });
-      showToast?.(`Deleted ${allIds.length} serials successfully.`, 'success');
+      showToast?.(`Voided ${allIds.length} unused item codes.`, 'success');
       setSelectedSerialIds([]);
       setGeneratedResult(null);
       await loadRegistry();
@@ -624,12 +632,12 @@ export default function AuthenticityBatchManagement() {
   };
 
   const handlePrintSelected = () => {
-    const selectedRecords = filteredSerials.filter(s => selectedSerialIds.includes(s.id));
+    const selectedRecords = printableSerials.filter(s => selectedSerialIds.includes(s.id));
     printA4StickerSheets(selectedRecords);
   };
 
   const handlePrintAllFiltered = () => {
-    printA4StickerSheets(filteredSerials);
+    printA4StickerSheets(printableSerials);
   };
 
   return (
@@ -644,7 +652,7 @@ export default function AuthenticityBatchManagement() {
             <QrCode className="text-[#D4AF37]" /> Serial Numbers &amp; QR Genuinity Panel
           </h1>
           <p className="mt-1.5 max-w-3xl text-xs sm:text-sm leading-relaxed text-slate-300">
-            Unified QR generator for single orders (e.g. <code className="rounded bg-black/60 px-1.5 py-0.5 font-mono text-[#FCE096]">123456</code>) or bulk production (e.g. 100 QR codes). Automatically registers certified laboratory assay details. Any phone camera scan opens <strong className="text-white">bhumivera.com/verify?code=123456</strong> and auto-populates the customer genuinity certificate.
+            Generate a unique, product-linked QR for every physical unit. Leave the serial seed blank for secure unique codes, or enter a seed for a controlled serial range. Each item code verifies its product and can be scanned for individual retail billing.
           </p>
         </div>
         <button
@@ -824,11 +832,10 @@ export default function AuthenticityBatchManagement() {
                 </button>
               </div>
               <input
-                required
                 type="text"
                 value={form.serialNumber}
                 onChange={e => setForm(prev => ({ ...prev, serialNumber: e.target.value.toUpperCase() }))}
-                placeholder={Number(form.count) > 1 ? 'e.g. 123456 or BV-001' : 'e.g. 123456'}
+                placeholder="Optional: enter a serial seed; blank generates unique codes"
                 className="w-full rounded-xl border border-slate-700 bg-[#081b15] p-3 font-mono text-base font-bold text-[#FCE096] outline-none focus:border-[#D4AF37]"
               />
               <div className="text-[11px] font-mono text-slate-400 truncate">
@@ -995,7 +1002,7 @@ export default function AuthenticityBatchManagement() {
               ? 'Generating & Registering Genuinity…'
               : Number(form.count) > 1
                 ? `⚡ Generate ${form.count} QR Codes & Save Batch (${getSequencePreview(form.serialNumber, form.count)})`
-                : `✨ Generate QR Code & Save Record (${form.serialNumber || '123456'})`}
+                : `✨ Generate QR Code & Save Record (${form.serialNumber || 'unique code'})`}
           </button>
         </form>
       </section>
@@ -1027,23 +1034,23 @@ export default function AuthenticityBatchManagement() {
             {/* Print All Filtered */}
             <button
               type="button"
-              disabled={printing || filteredSerials.length === 0}
+              disabled={printing || printableSerials.length === 0}
               onClick={handlePrintAllFiltered}
               className="inline-flex items-center gap-1.5 rounded-xl border border-[#D4AF37]/50 bg-[#10241f] px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-[#FCE096] hover:bg-[#D4AF37]/20 disabled:opacity-50"
               title="Print all currently listed QR codes on A4 sticker sheets"
             >
-              <Printer size={14} /> Print All ({filteredSerials.length}) QRs
+              <Printer size={14} /> Print All ({printableSerials.length}) QRs
             </button>
 
             {/* Delete All Filtered */}
             <button
               type="button"
-              disabled={filteredSerials.length === 0}
+              disabled={printableSerials.length === 0}
               onClick={handleDeleteAllFiltered}
               className="inline-flex items-center gap-1.5 rounded-xl border border-rose-900/60 bg-rose-950/40 px-3.5 py-2 text-xs font-bold uppercase tracking-wider text-rose-300 hover:bg-rose-900/40 disabled:opacity-50"
-              title="Delete all listed serials"
+              title="Void all unused item codes in this filtered list"
             >
-              <Trash2 size={14} /> Delete All
+              <Trash2 size={14} /> Void Unused
             </button>
           </div>
         </div>
@@ -1147,7 +1154,9 @@ export default function AuthenticityBatchManagement() {
                       </td>
                       <td className="px-4 py-4">
                         <div className="font-mono text-xs font-bold text-[#FCE096]">{record.serialNumber}</div>
-                        <div className="mt-0.5 text-[10px] text-emerald-400">Active · Available</div>
+                        <div className={`mt-0.5 text-[10px] ${record.status === 'available' ? 'text-emerald-400' : record.status === 'sold' ? 'text-sky-300' : record.status === 'voided' ? 'text-rose-400' : 'text-amber-300'}`}>
+                          {record.status === 'available' ? 'Available' : record.status === 'sold' ? 'Sold' : record.status === 'voided' ? 'Voided' : record.status || 'Unknown'}
+                        </div>
                       </td>
                       <td className="px-4 py-4">
                         <div className="text-xs font-semibold text-white">{record.productName}</div>
@@ -1171,9 +1180,10 @@ export default function AuthenticityBatchManagement() {
                         </button>
                         <button
                           type="button"
+                          disabled={record.status !== 'available' || printing}
                           onClick={() => printA4StickerSheets([record])}
                           className="inline-flex items-center gap-1.5 rounded-lg border border-slate-700 bg-slate-900 px-3 py-1.5 text-[10px] font-bold uppercase tracking-wider text-slate-300 hover:text-[#FCE096] hover:border-[#D4AF37]"
-                          title="Print this sticker on A4 sheet"
+                          title={record.status === 'available' ? 'Print this item sticker on A4 sheet' : 'Only unused item codes can be printed'}
                         >
                           <Printer size={13} /> Print
                         </button>
@@ -1194,9 +1204,10 @@ export default function AuthenticityBatchManagement() {
                         </a>
                         <button
                           type="button"
+                          disabled={record.status !== 'available'}
                           onClick={() => handleDeleteSingleSerial(record.id, record.serialNumber)}
                           className="inline-flex items-center p-1.5 text-slate-500 hover:text-rose-400"
-                          title="Delete serial"
+                          title="Void unused serial code"
                         >
                           <Trash2 size={14} />
                         </button>

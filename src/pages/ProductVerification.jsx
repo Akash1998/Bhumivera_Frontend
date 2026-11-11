@@ -100,6 +100,7 @@ export default function ProductVerification() {
         productName: registry.productName,
         serial: registry.serialNumber,
         batchCode: registry.batchNumber,
+        itemStatus: registry.itemStatus,
         bottleSequence: registry.bottleSequence || `Bottle #${registry.serialNumber}`,
         calibratedPh: registry.calibratedPh || '5.3–5.5 pH (Skin-Identical)',
         extractionTemp: registry.extractionTemp || 'Sub-28°C Cold-Pressed Verified',
@@ -627,6 +628,14 @@ export default function ProductVerification() {
                 <dt className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">Serial &amp; Batch ID</dt>
                 <dd className="mt-1 font-mono font-semibold text-[#fce096]">{coaData.serial} · {coaData.batchCode}</dd>
               </div>
+              {coaData.itemStatus && (
+                <div className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e]/70 p-4">
+                  <dt className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">Individual item status</dt>
+                  <dd className="mt-1 font-semibold text-emerald-400">
+                    {coaData.itemStatus === 'sold' ? 'Sold — checkout recorded' : coaData.itemStatus}
+                  </dd>
+                </div>
+              )}
               <div className="rounded-xl border border-[#d4af37]/20 bg-[#070a0e]/70 p-4">
                 <dt className="font-mono text-[10px] uppercase tracking-wider text-[#94a3b8]">Digital Electrode pH Assay</dt>
                 <dd className="mt-1 font-semibold text-emerald-400">{coaData.calibratedPh}</dd>
