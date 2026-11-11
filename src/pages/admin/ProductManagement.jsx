@@ -816,7 +816,9 @@ export default function ProductManagement() {
                                     <input
                                       type="checkbox"
                                       checked={Boolean(selected)}
-                                      onChange={() => {}}
+                                      aria-label={`Include ${prod.name} in combo`}
+                                      onClick={e => e.stopPropagation()}
+                                      onChange={() => handleToggleComboProduct(prod)}
                                       className="accent-amber-500 w-4 h-4 rounded cursor-pointer shrink-0"
                                     />
                                     <img
