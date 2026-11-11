@@ -29,6 +29,8 @@ export default function BundleDetail() {
         return;
       }
       setLoading(true);
+      setCatalogProduct(null);
+      setLoadError('');
       try {
         const response = await productsApi.getBySlug(bundle.id);
         const product = response.data?.data || response.data;
@@ -38,30 +40,10 @@ export default function BundleDetail() {
           setLoadError('');
         }
       } catch (error) {
+        console.error('[REGIMEN_PRODUCT_LOAD]', error);
         if (active) {
-          // Synthetic live fallback: enables instant purchasing & dynamic inventory from bundle definition
-          const syntheticProduct = {
-            id: bundle.id,
-            _id: bundle.id,
-            name: bundle.name,
-            slug: bundle.id,
-            sku: bundle.sku,
-            price: bundle.bundlePrice,
-            discount_price: bundle.bundlePrice,
-            mrp: bundle.mrpTotal,
-            quantity: 45,
-            status: 'active',
-            description: bundle.tagline,
-            images: (bundle.items || []).map(it => it.image).filter(Boolean),
-            image_url: bundle.items?.[0]?.image || '/logo.webp',
-            specifications: {
-              is_combo: true,
-              product_type: 'combo',
-              combo_items: (bundle.items || []).map(it => ({ slug: it.id, name: it.name, quantity: 1 }))
-            }
-          };
-          setCatalogProduct(syntheticProduct);
-          setLoadError('');
+          setCatalogProduct(null);
+          setLoadError('This regimen is currently unavailable. Please refresh and try again.');
         }
       } finally {
         if (active) setLoading(false);
