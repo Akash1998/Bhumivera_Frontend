@@ -3,12 +3,14 @@ import React from 'react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import ReviewManagement from './ReviewManagement';
-import api from '../../services/api';
+import api, { products } from '../../services/api';
 
 const showToast = vi.hoisted(() => vi.fn());
 
 vi.mock('../../services/api', () => ({
   default: { get: vi.fn(), post: vi.fn(), put: vi.fn(), delete: vi.fn() },
+  products: { getAllAdmin: vi.fn(() => Promise.resolve({ data: [] })) },
+  reviews: {},
 }));
 vi.mock('../../context/ToastContext', () => ({
   useToast: () => ({ showToast }),
@@ -17,6 +19,7 @@ vi.mock('../../context/ToastContext', () => ({
 describe('database-backed admin reviews', () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    products.getAllAdmin.mockResolvedValue({ data: [] });
   });
   afterEach(() => {
     cleanup();
@@ -29,10 +32,24 @@ describe('database-backed admin reviews', () => {
 
     expect(await screen.findByText('No database reviews match these filters.')).toBeTruthy();
     expect(screen.getByText('Customer Reviews & Media Database (0 reviews)')).toBeTruthy();
+    expect(screen.getByRole('combobox', { name: 'Filter by combo pack' }).options).toHaveLength(1);
     expect(screen.queryByRole('alert')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Refresh customer reviews' }));
     await waitFor(() => expect(api.get).toHaveBeenCalledTimes(2));
     expect(screen.getByText('Customer Reviews & Media Database (0 reviews)')).toBeTruthy();
+  });
+
+  it('uses only combos returned by the admin product catalog', async () => {
+    products.getAllAdmin.mockResolvedValue({
+      data: [{ id: 41, name: 'Catalog Combo', sku: 'REAL-COMBO-41', specifications: { is_combo: true } }],
+    });
+    api.get.mockResolvedValue({ data: [] });
+    render(React.createElement(ReviewManagement));
+
+    await waitFor(() => expect(
+      screen.getByRole('option', { name: 'REAL-COMBO-41 · Catalog Combo' })
+    ).toBeTruthy());
+    expect(screen.queryByText('The Royal Skin & Scalp Stewardship Trio')).toBeNull();
   });
 
   it('shows the actual 450 records returned by the database', async () => {

@@ -6,10 +6,11 @@ import {
   Calendar, MapPin, Plus, Image as ImageIcon, ChevronLeft, ChevronRight, Edit3, Layers, Truck, Trash2
 } from 'lucide-react';
 import axios from 'axios';
-import api, { reviews as reviewsApi } from '../../services/api';
+import api, { products as productsApi, reviews as reviewsApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import compressImageForUpload from '../../utils/compressImageForUpload';
 import { getProductImageUrl as getImageUrl } from '../../utils/productImageUrl';
+import { isComboProduct } from '../../utils/comboProducts';
 
 const REVIEW_MEDIA_PLACEHOLDER = '/images/review-placeholder.svg';
 const MAX_REVIEW_MEDIA_BYTES = 25 * 1024 * 1024;
@@ -27,13 +28,6 @@ const DEFAULT_PRODUCT_OPTIONS = [
   { id: 13, legacyId: 4, skuNumber: 4, sku: 'BV-LUX-CSOAP-04', name: 'Bhumivera Charcoal Deep Cleansing Bar — Handmade Ayurvedic Soap (₹199)', shortName: 'Charcoal Cleansing Bar', slug: 'artisanal-charcoal-handmade-soap', price: 199 },
   { id: 14, legacyId: 5, skuNumber: 5, sku: 'BV-LUX-ASOAP-05', name: 'Bhumivera Soothing Bar — Aloe Vera, Neem & Tulsi Soap (₹199)', shortName: 'Aloe Neem Tulsi Bar', slug: 'artisanal-aloe-vera-handmade-soap', price: 199 },
   { id: 15, legacyId: 6, skuNumber: 6, sku: 'BV-LUX-TULSI-06', name: 'Bhumivera Kalpvriksh Satva Tulsi — 7-Tulsi Liquid Extract (₹299)', shortName: 'Kalpvriksh 7-Tulsi Drops', slug: 'kalpvriksh-satva-tulsi-7-tulsi-extract', price: 299 },
-];
-
-const COMBO_OPTIONS = [
-  { id: 'bundle-daily-regimen', sku: 'BV-BND-DAILY-01', name: 'The Grand Maison 4-Piece Daily Apothecary', shortName: '4-Piece Daily Apothecary', price: 2596 },
-  { id: 'bundle-royal-crown-trio', sku: 'BV-BND-ROYAL-03', name: 'The Royal Skin & Scalp Stewardship Trio', shortName: 'Skin & Scalp Trio', price: 2047 },
-  { id: 'bundle-inside-out-ritual', sku: 'BV-BND-INSIDEOUT-02', name: 'The Inside-Out Skin-Clearing & Cortisol Ritual', shortName: 'Inside-Out Cortisol Combo', price: 1597 },
-  { id: 'bundle-grand-maison-vault', sku: 'BV-BND-VAULT-06', name: 'The Grand Maison 6-Piece Apothecary Vault', shortName: '6-Piece Apothecary Vault', price: 3644 },
 ];
 
 const PRODUCT_OPTIONS = DEFAULT_PRODUCT_OPTIONS;
@@ -76,6 +70,7 @@ const toDateInputValue = isoString => {
 
 export default function ReviewManagement() {
   const [reviews, setReviews] = useState([]);
+  const [comboOptions, setComboOptions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [reviewLoadError, setReviewLoadError] = useState('');
   
@@ -122,12 +117,36 @@ export default function ReviewManagement() {
 
   const { showToast } = useToast() || {};
 
+  useEffect(() => {
+    let active = true;
+    productsApi.getAllAdmin()
+      .then(response => {
+        const products = response.data?.data || response.data?.products || response.data;
+        if (!Array.isArray(products)) throw new Error('The admin products response is invalid.');
+        if (active) {
+          setComboOptions(products
+            .filter(isComboProduct)
+            .map(product => ({
+              id: String(product.id ?? product._id),
+              sku: product.sku || '',
+              name: product.name,
+              shortName: product.name,
+              price: Number(product.price) || 0,
+            })));
+        }
+      })
+      .catch(error => {
+        console.error('[ADMIN_REVIEW_COMBOS_LOAD]', error);
+        if (active) showToast?.('Could not load catalog combos for review management.', 'error');
+      });
+    return () => { active = false; };
+  }, [showToast]);
+
   const normalizeReviewRecord = useCallback(r => {
     const slug = r.product_slug ||
       PRODUCT_OPTIONS.find(p => Number(p.id) === Number(r.product_id) || Number(p.legacyId) === Number(r.product_id))?.slug ||
       '';
     const prod = PRODUCT_OPTIONS.find(p => p.slug === slug || Number(p.id) === Number(r.product_id) || Number(p.legacyId) === Number(r.product_id));
-    const comboObj = COMBO_OPTIONS.find(c => c.name === r.combo_name || c.id === r.combo_slug || c.sku === r.combo_sku);
     return {
       ...r,
       id: r.id || r._id,
@@ -139,9 +158,9 @@ export default function ReviewManagement() {
       reviewer_location: r.reviewer_location || 'India',
       category_tag: r.category_tag || 'Quick & Everyday Impressions',
       is_combo_review: Boolean(r.is_combo_review || r.combo_name || r.category_tag === 'Combo Pack Ritual'),
-      combo_name: comboObj?.name || r.combo_name || null,
-      combo_slug: comboObj?.id || r.combo_slug || null,
-      combo_sku: comboObj?.sku || r.combo_sku || null,
+      combo_name: r.combo_name || null,
+      combo_slug: r.combo_slug || null,
+      combo_sku: r.combo_sku || null,
       order_number: r.order_number || `BV-2026-${100000 + (Number(r.id) || 1)}`,
       helpful_count: Number(r.helpful_count) || 0,
       status: Number(r.is_approved ?? 1) === 1 ? 'approved' : 'pending',
@@ -342,14 +361,14 @@ export default function ReviewManagement() {
     }
     setIsUpdating(true);
     const prodObj = PRODUCT_OPTIONS.find(p => Number(p.id) === Number(reviewDraft.product_id) || p.slug === reviewDraft.product_slug || Number(p.legacyId) === Number(reviewDraft.product_id)) || PRODUCT_OPTIONS[0];
-    const comboObj = COMBO_OPTIONS.find(c => c.name === reviewDraft.combo_name || c.id === reviewDraft.combo_name);
+    const comboObj = comboOptions.find(c => c.name === reviewDraft.combo_name || c.id === String(reviewDraft.combo_name || ''));
     const isoCreatedAt = reviewDraft.created_date
       ? new Date(`${reviewDraft.created_date}T12:00:00Z`).toISOString()
       : new Date().toISOString();
 
     const isComboReview = Boolean(comboObj || reviewDraft.combo_name || reviewDraft.category_tag === 'Combo Pack Ritual');
     const resolvedComboName = isComboReview
-      ? (comboObj?.name || reviewDraft.combo_name || 'The Complete Botanical Daily Regimen')
+      ? (comboObj?.name || reviewDraft.combo_name || null)
       : null;
 
     const payload = {
@@ -555,7 +574,7 @@ export default function ReviewManagement() {
   }, [reviews]);
 
   const comboBreakdown = useMemo(() => {
-    return COMBO_OPTIONS.map(combo => {
+    return comboOptions.map(combo => {
       const cRevs = reviews.filter(r =>
         (r.combo_name === combo.name || r.combo_slug === combo.id || r.combo_sku === combo.sku) &&
         r.status === 'approved'
@@ -566,7 +585,7 @@ export default function ReviewManagement() {
         : '0.00';
       return { ...combo, count, avg };
     });
-  }, [reviews]);
+  }, [comboOptions, reviews]);
 
   const filteredReviews = useMemo(() => {
     return reviews.filter(r => {
@@ -578,7 +597,7 @@ export default function ReviewManagement() {
         if (!matchesSlug && !matchesOption) return false;
       }
       if (comboFilter !== 'all') {
-        const targetCombo = COMBO_OPTIONS.find(c => c.id === comboFilter || c.name === comboFilter || c.sku === comboFilter);
+        const targetCombo = comboOptions.find(c => c.id === comboFilter || c.name === comboFilter || c.sku === comboFilter);
         if (targetCombo) {
           if (r.combo_name !== targetCombo.name && r.combo_slug !== targetCombo.id && r.combo_sku !== targetCombo.sku) return false;
         }
@@ -602,7 +621,7 @@ export default function ReviewManagement() {
       if (mediaFilter === 'videos' && (!Array.isArray(r.videos) || r.videos.length === 0)) return false;
       return true;
     }).sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
-  }, [reviews, searchTerm, productFilter, comboFilter, categoryFilter, yearFilter, statusFilter, ratingFilter, mediaFilter]);
+  }, [reviews, searchTerm, productFilter, comboFilter, comboOptions, categoryFilter, yearFilter, statusFilter, ratingFilter, mediaFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredReviews.length / itemsPerPage));
   const paginatedReviews = filteredReviews.slice((currentPage - 1) * itemsPerPage, currentPage * itemsPerPage);
@@ -816,7 +835,7 @@ export default function ReviewManagement() {
             className="bg-[#081b15]/90 border border-slate-800 rounded-xl py-3 px-3 text-white font-bold text-xs outline-none cursor-pointer"
           >
             <option value="all">All Combos &amp; Single SKUs</option>
-            {COMBO_OPTIONS.map(c => (
+            {comboOptions.map(c => (
               <option key={c.id} value={c.id}>{c.sku} · {c.shortName}</option>
             ))}
           </select>
@@ -1195,7 +1214,7 @@ export default function ReviewManagement() {
                     className="mt-1.5 w-full rounded-xl border border-emerald-500/40 bg-[#081b15] p-3 text-xs text-white"
                   >
                     <option value="">None (Single Product Review)</option>
-                    {COMBO_OPTIONS.map(c => (
+                    {comboOptions.map(c => (
                       <option key={c.id} value={c.name}>{c.sku} · {c.name} (₹{c.price})</option>
                     ))}
                   </select>
