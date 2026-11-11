@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "./AuthContext";
 import { useSettings } from "./SettingsContext";
-import { cart as cartApi, products as productsApi } from "../services/api";
+import { cart as cartApi, cartRules as cartRulesApi, products as productsApi } from "../services/api";
 import { useToast } from './ToastContext';
 import {
   AI_COPILOT_ADD_CART_RETRY_EVENT,
@@ -404,6 +404,40 @@ export const CartProvider = ({ children }) => {
       return acc + (price * (item.quantity || 1));
     }, 0);
   };
+
+  useEffect(() => {
+    if (isCustomerAuthenticated) return undefined;
+    const subtotal = (Array.isArray(cart) ? cart : []).reduce((total, item) => {
+      const product = item.product || item;
+      const price = Number(product.discount_price || product.price || item.unit_price) || 0;
+      return total + price * (Number(item.quantity) || 1);
+    }, 0);
+    if (subtotal <= 0) {
+      setRulePreview(null);
+      setRulePreviewLoading(false);
+      return undefined;
+    }
+
+    let active = true;
+    const timer = setTimeout(() => {
+      setRulePreviewLoading(true);
+      cartRulesApi.preview(subtotal)
+        .then(response => {
+          if (active) setRulePreview(response.data?.data || response.data || null);
+        })
+        .catch(error => {
+          console.error('[GUEST_CART_RULE_PREVIEW]', error);
+          if (active) setRulePreview(null);
+        })
+        .finally(() => {
+          if (active) setRulePreviewLoading(false);
+        });
+    }, 150);
+    return () => {
+      active = false;
+      clearTimeout(timer);
+    };
+  }, [cart, isCustomerAuthenticated]);
 
   useEffect(() => {
     if (!rulePreview) return;

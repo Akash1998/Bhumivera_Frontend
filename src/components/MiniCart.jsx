@@ -9,6 +9,7 @@ import { useWishlist } from '../context/WishlistContext';
 import { addresses as addressesApi, coupons as couponsApi, orders as ordersApi, payments as paymentsApi, products as productsApi, wallet as walletApi } from '../services/api';
 import { useToast } from '../context/ToastContext';
 import { getProductImageUrl } from '../utils/productImageUrl';
+import { getCartGiftProgress } from '../utils/cartGiftProgress';
 import {
   estimateShoppingWalletReward,
   NEW_CUSTOMER_BONUS_PERCENT,
@@ -196,6 +197,8 @@ export default function MiniCart() {
     .filter(tier => !tier.unlocked && Number(tier.missingAmount) > 0)
     .sort((first, second) => Number(first.missingAmount) - Number(second.missingAmount))[0];
   const unlockedCartReward = (rulePreview?.tiers || []).find(tier => tier.unlocked);
+  const { unlocked: unlockedGiftRewards, next: nextGiftReward, target: giftProgressTarget, progressPercent: giftProgressPercent } =
+    getCartGiftProgress(rulePreview?.tiers, subtotal);
   const selectedAddressDetails = addresses.find(address => String(address.id) === String(selectedAddress));
 
   useEffect(() => {
@@ -705,6 +708,30 @@ export default function MiniCart() {
                       ? <><Gift size={14} className="mt-0.5 shrink-0 text-[#D4AF37]"/><span>{unlockedCartReward.badge || unlockedCartReward.name} reward unlocked</span></>
                       : <><ShieldCheck size={14} className="mt-0.5 shrink-0 text-[#D4AF37]"/><span>Rewards and complimentary gifts apply automatically.</span></>}
               </div>
+              {giftProgressTarget && <div className="mt-3 rounded-xl border border-[#D4AF37]/20 bg-[#0D1C14]/70 p-3" aria-label="Free gift progress">
+                <div className="flex items-center justify-between gap-2">
+                  <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#FCE096]"><Gift size={13}/> Free gift progress</span>
+                  <span className="text-[10px] text-[#9BB0A5]">{cartCount} {cartCount === 1 ? 'item' : 'items'} in bag</span>
+                </div>
+                <div
+                  className="mt-2 h-2 overflow-hidden rounded-full bg-white/10"
+                  role="progressbar"
+                  aria-label="Progress toward free gift"
+                  aria-valuemin={0}
+                  aria-valuemax={100}
+                  aria-valuenow={Math.round(giftProgressPercent)}
+                >
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#D4AF37] to-[#FCE096] transition-[width] duration-300"
+                    style={{ width: `${giftProgressPercent}%` }}
+                  />
+                </div>
+                <p className="mt-2 text-[11px] leading-5 text-[#DFD7C4]">
+                  {nextGiftReward
+                    ? <>Add <strong className="text-[#FCE096]">{formatPrice(Math.max(0, Number(nextGiftReward.minCartValue) - subtotal))}</strong> more to unlock <strong className="text-white">{nextGiftReward.giftProductName || 'a free gift'}</strong>{Number(nextGiftReward.giftQuantity) > 1 ? ` × ${nextGiftReward.giftQuantity}` : ''}.</>
+                    : <>You’ve unlocked all available free gifts{unlockedGiftRewards.length ? `: ${unlockedGiftRewards.map(tier => tier.giftProductName || tier.badge || tier.name).join(', ')}` : ''}.</>}
+                </p>
+              </div>}
               <div className="mt-2.5 flex items-center gap-2 border-t border-[#244A38] pt-2.5 text-xs text-[#DFD7C4]">
                 <Truck size={14} className="shrink-0 text-[#D4AF37]"/>
                 <span>{amountToFreeShipping > 0 ? <>Add <strong className="text-[#FCE096]">{formatPrice(amountToFreeShipping)}</strong> for free delivery</> : <strong className="text-white">Complimentary Delivery Unlocked</strong>}</span>

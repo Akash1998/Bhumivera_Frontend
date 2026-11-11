@@ -121,6 +121,9 @@ export default function MinCartValueCenter() {
         <div>
           <p className="text-xs font-bold uppercase tracking-[0.18em] text-emerald-400">Promotions / Cart thresholds</p>
           <h2 className="mt-2 text-2xl font-black text-white">MIN-CART-VALUE CONTROL CENTER</h2>
+          <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-400">
+            Active rules with a gift product power the customer cart’s free-gift progress bar. Set the minimum cart value, gift product and quantity below; customers see the next eligible gift as they shop.
+          </p>
         </div>
         <div className="flex gap-2">
           <button title="Refresh rules" onClick={refresh} className="rounded-lg border border-slate-700 p-2.5 text-slate-300 hover:border-emerald-500 hover:text-white"><RefreshCw size={17}/></button>
