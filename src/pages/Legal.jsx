@@ -541,79 +541,91 @@ const LEGAL_CLAUSES = {
   privacy: [
     {
       num: '6.1',
-      title: '1. Personal data we process (Data Fiduciary disclosure)',
+      title: '1. Who is responsible and what personal data we collect',
       body: [
-        'In accordance with the Digital Personal Data Protection (DPDP) Act, 2023 and the Information Technology (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011, Bhumivera acts as the Data Fiduciary for personal data collected on our platform. Depending on your interactions, we process: (a) Account identity data (full name, email address, 10-digit mobile number); (b) Authentication & security data (Scrypt/PBKDF2 password hashes, WebAuthn Passkey public keys, OTP verification logs); (c) Fulfilment & billing data (shipping/billing addresses, pin codes, optional Google Maps coordinates, GSTIN); (d) Transaction & ledger data (orders, payment reference IDs, Wallet/Loyalty/Referral ledgers); and (e) Support & review submissions (chat transcripts, 360° unboxing videos, review photos, consent versions).',
+        'Bhumivera is responsible for personal data it determines to process through this website, mobile applications and customer-service channels. We collect information you provide directly, information generated when you use account or shopping features, and limited technical information needed to deliver and protect the service. We aim to ask only for information relevant to the interaction you choose.',
+        'Depending on what you use, this may include your name, email address, phone number, login and account-security records, delivery and billing details, order contents and history, payment or refund references, cart and wishlist contents, loyalty or referral activity, product questions, support conversations, reviews and media you submit, and your recorded privacy or marketing choices. Do not include passwords, one-time codes, payment PINs or other secrets in support messages.',
+        'When you use a passkey, the platform may receive and retain the public credential needed to verify it; the private key remains with your device or credential provider. We do not need your biometric template to verify a passkey. Payment providers may handle payment credentials directly; Bhumivera receives the transaction information needed to confirm, fulfil, refund or reconcile the payment.',
       ],
     },
     {
       num: '6.2',
-      title: '2. Privacy-by-design operational request diagnostics',
+      title: '2. Technical information, diagnostics and local storage',
       body: [
-        'To maintain platform reliability and troubleshoot errors, our backend request observability middleware records request timestamp, HTTP method, route path (stripped of query strings), HTTP status code, latency duration, and a random request UUID. Sanitized backend HTTP error records and database error fingerprints are retained for up to 30 days, while aggregate in-memory request counters expire within 15 minutes. Our application diagnostics do NOT harvest raw visitor IP addresses, Wi-Fi SSID names, precise GPS background tracking, or cross-site ad-network fingerprints.',
+        'For security, reliability and troubleshooting, application diagnostics may record the time of a request, method, route without its query string, response status, processing time and a random request identifier. Sanitized server error records and database error fingerprints are retained for up to 30 days; aggregate in-memory request counters expire within 15 minutes. These records help investigate service failures and abuse and are not intended to build advertising profiles.',
+        'Our website and browser storage may keep information needed for sign-in, cart continuity, saved preferences, security and essential operation. Your browser controls whether local storage or cookies can be stored, but blocking them may prevent account, checkout or security features from working. Hosting, network-security and payment providers may independently process technical connection data under their own services and policies.',
       ],
     },
     {
       num: '6.3',
-      title: '3. Lawful purposes & consent architecture under the DPDP Act, 2023',
+      title: '3. Why we use your data and the choices that govern it',
       body: [
-        'We process personal data strictly for lawful purposes for which you have given consent or for certain legitimate uses permitted under the DPDP Act, 2023—specifically: account registration and security, order processing and doorstep delivery, payment reconciliation and GST tax invoicing, Courtesy Protection and warranty verification, fraud/abuse prevention, and statutory compliance.',
+        'We use personal data for specific service purposes: to create and secure accounts; maintain carts and wishlists; accept and fulfil orders; communicate delivery, payment, refund and support updates; issue invoices and maintain required financial records; administer a benefit or warranty you request; moderate customer-submitted content; prevent fraud and protect the platform; and meet legal obligations. We do not treat an optional marketing or personalization choice as a condition of buying a product.',
+        'Where consent is the basis for an optional use, we will present the choice separately and use the information for the stated purpose. Where processing is necessary to provide a service you request or is otherwise permitted or required by applicable law, we may process it for that limited reason. If a requested detail is necessary to complete an order or verify an account, not providing it may mean we cannot complete that action.',
       ],
     },
     {
       num: '6.4',
-      title: '4. Granular opt-in for first-party product recommendations',
+      title: '4. Optional product recommendations and personalization',
       body: [
-        'During registration or in your Profile, you may separately and optionally opt in to first-party product recommendations (`product-recommendations-v2`). This consent is completely independent of accepting these Conditions or marketing emails. When active, it uses only your Bhumivera purchases, wishlist items, approved reviews, and product views to suggest relevant items on our site. Withdrawing this consent in your Profile immediately purges your stored product-view signals.',
+        'Personalized first-party product recommendations are optional and separate from account registration, order fulfilment and promotional email consent. If you opt in, we may use your Bhumivera purchases, wishlist items, approved reviews and product views to tailor recommendations on our own platform. We do not describe this as medical, biometric or health profiling.',
+        'You can turn this choice off in your Profile. Once the change is accepted, we stop using the opt-in recommendation feature and remove stored product-view signals associated with that feature, subject to technical processing time and any record we must retain by law. Your past purchases and tax records are not erased merely because you turn recommendations off.',
       ],
     },
     {
       num: '6.5',
-      title: '5. Transactional vs. promotional communications',
+      title: '5. Marketing choices and essential service messages',
       body: [
-        'Promotional marketing emails and campaigns are sent only to customers who have explicitly opted in, and you may unsubscribe at any time via your Profile or email footer. Essential transactional, security, OTP, order-tracking, invoice, and support-ticket communications are necessary for contract performance and account safety and are not affected by marketing opt-outs.',
+        'We send promotional email campaigns only where you have opted in. You may withdraw that choice through your Profile or the unsubscribe control in a marketing email. We will apply the change to future promotional sends as promptly as our systems allow; a message already queued or sent before the change may still arrive.',
+        'Marketing opt-out does not disable essential messages about authentication, account security, an order you placed, delivery, payment, refunds, invoices or a support request. These are service communications, not promotional campaigns. We do not add marketing content to a message in a way that defeats your opt-out.',
       ],
     },
     {
       num: '6.6',
-      title: '6. PCI-DSS payment security & zero raw card storage',
+      title: '6. Payment information and payment providers',
       body: [
-        'Online payments are processed directly by regulated payment gateways (such as Razorpay). Bhumivera never receives or stores your raw credit/debit card number, CVV, net-banking password, or UPI PIN on our application servers.',
+        'Online payments are handled through the payment method and provider presented at checkout. We receive transaction status and references needed to confirm an order, handle a refund, reconcile accounts and respond to payment disputes. Payment providers may collect payment credentials directly and process them under their own privacy notices and applicable requirements.',
+        'Never send a card security code, UPI PIN, password or one-time passcode to Bhumivera by email, chat or phone. We will not ask you to disclose those credentials to receive a refund. If you believe a payment credential has been exposed, contact your bank or payment provider immediately.',
       ],
     },
     {
       num: '6.7',
-      title: '7. Data sharing with fulfilment partners & statutory authorities',
+      title: '7. When information is shared and how we limit disclosure',
       body: [
-        'We NEVER sell your personal data to third parties or data brokers. We share strictly necessary data only with: (a) logistics and courier partners (name, delivery address, phone, parcel weight/collectable amount) to deliver your order; (b) payment gateways and banks to process payments/refunds; (c) cloud hosting, object storage (Cloudflare R2), and transactional email/SMS/OTP infrastructure providers bound by confidentiality; and (d) courts, law enforcement, or tax/regulatory authorities when required by a lawful order.',
+        'We do not sell personal data to data brokers. We disclose information only as needed to provide the feature or service, protect users and the platform, or comply with law. Recipients may include couriers (delivery name, address, phone and shipment details), payment providers and banks (transaction references), hosting and storage providers, and email, SMS or OTP delivery providers. These providers receive only the information reasonably required for their assigned service.',
+        'We may also disclose relevant information to a court, regulator, tax authority, law-enforcement agency or other person when required by applicable law or valid legal process, or when necessary to investigate suspected fraud, protect safety or enforce our rights. We do not authorize a service provider to use customer data for its own unrelated advertising. Where another business acts as an independent controller or fiduciary, its own notice also applies.',
       ],
     },
     {
       num: '6.8',
-      title: '8. Fortress cryptographic security controls',
+      title: '8. Security, access controls and incident response',
       body: [
-        'Bhumivera protects stored credentials and administrative vaults using industry-leading cryptography, including hybrid Scrypt + PBKDF2-HMAC-SHA512 key derivation, AES-256-GCM authenticated encryption, constant-time token comparisons (`crypto.timingSafeEqual`), HTTP-Only `Secure` `SameSite=Strict` cookies, CSRF protection, and role-based access control (RBAC). While no internet system can guarantee absolute immunity from every external threat, we maintain rigorous technical and organizational safeguards.',
+        'We use administrative access controls and technical safeguards designed to reduce the risk of unauthorized access, alteration, loss or disclosure. Access is limited according to operational responsibilities, and authentication and security events may be reviewed to protect accounts and investigate incidents. We require personnel and service providers who handle information for us to protect it and use it only for their assigned purpose.',
+        'No website, transmission method or storage system can be guaranteed completely secure. We therefore cannot promise that a breach or service interruption is impossible. If an incident affects personal data, we will investigate, take reasonable containment and remediation steps, and provide notices to affected people or authorities when required by applicable law.',
       ],
     },
     {
       num: '6.9',
-      title: '9. Data retention schedules & statutory ledger preservation',
+      title: '9. Retention, deletion and account closure',
       body: [
-        'We retain account and transaction records for as long as your account remains active and for the statutory retention period required under Indian tax, GST, accounting, audit, and cyber-security laws (typically 8 financial years for tax invoices and financial ledgers under the CGST Act, 2017 and Income-tax Act, 1961).',
+        'We keep account information while your account is active and while it is needed to provide the services you use. We retain order, payment, invoice, tax and accounting records for the period required by applicable law, and may preserve relevant records longer where needed to resolve a dispute, prevent fraud or establish or defend a legal claim.',
+        'When information is no longer needed, we aim to delete it or remove its association with you in accordance with our retention practices. Closing an account or asking us to erase data does not require us to delete records we are legally required to retain; any such retained information remains restricted to that legal or protective purpose. Backups and system logs may take time to cycle out.',
       ],
     },
     {
       num: '6.10',
-      title: '10. Rights & duties of Data Principals (DPDP Act, 2023)',
+      title: '10. Your privacy rights and how to exercise them',
       body: [
-        'Under the DPDP Act, 2023, you have the right to access a summary of your personal data, request correction or updating of inaccurate data, withdraw optional consent, and request erasure of personal data that is no longer necessary for the purpose collected or required to be retained by law. Simultaneously, under Section 15 of the DPDP Act, 2023, Data Principals have a statutory duty NOT to impersonate another person, NOT to suppress material information, and NOT to register false or frivolous grievances or complaints.',
+        'Subject to the Digital Personal Data Protection Act, 2023 and other applicable law, you may request access to information about personal data we process, correction or updating of inaccurate information, erasure where retention is no longer required, withdrawal of consent for processing based on consent, and grievance redressal. You may also nominate another person to exercise rights in the circumstances permitted by law.',
+        'Contact support@bhumivera.com from your registered email address and describe the right you wish to exercise. We may ask for proportionate information to verify your identity and protect your account; do not send a password, OTP, payment PIN or full payment credential. We will review the request, respond within the time required by applicable law, explain any lawful reason we cannot fully comply, and provide an escalation route if you remain dissatisfied. Withdrawal applies prospectively and does not invalidate processing already lawfully completed.',
       ],
     },
     {
       num: '6.11',
-      title: '11. Children’s privacy & Data Protection Grievance contact',
+      title: '11. Children’s data, policy updates and contact',
       body: [
-        'Our services are not directed to children under 18 without verifiable parental involvement. If a parent or guardian believes a child has provided personal data without consent, or if you wish to exercise any privacy right, email our Grievance Officer at support@bhumivera.com from your registered email address (never include passwords or OTPs).',
+        'Our account and shopping services are intended for adults. A person under 18 should use them only with a parent or lawful guardian involved. If you believe a child has provided personal data in a way that is not permitted, contact us so we can review the circumstances and take any action required by law. We do not ask children to provide personal information for targeted advertising.',
+        'We may revise this Notice when our services, data practices or legal obligations change. The latest version and its effective date will appear on this page. Material changes will be communicated through an appropriate channel where required. For privacy requests or concerns, email support@bhumivera.com from your registered address; never include passwords or OTPs. This Notice is intended to explain our practices, not to limit rights that cannot be waived under applicable law.',
       ],
     },
   ],
@@ -822,9 +834,9 @@ export default function Legal() {
         route={SECTION_TO_PATH[selectedSection] || '/legal'}
       />
       <div className="mx-auto max-w-6xl">
-        {/* 1. DYNAMIC DOMAIN-SPECIFIC LEGAL HEADER WITH UNIQUE REAL-LIFE PHOTOGRAPHY */}
+        {/* 1. DYNAMIC DOMAIN-SPECIFIC LEGAL HEADER */}
         <header className="overflow-hidden rounded-2xl border border-[#d4af37]/30 bg-[#0d1520] text-[#e2e8f0] shadow-xl">
-          <div className="grid lg:grid-cols-[1.2fr_0.8fr]">
+          <div className={activeProfile.heroImage ? 'grid lg:grid-cols-[1.2fr_0.8fr]' : ''}>
             <div className="p-6 sm:p-9 lg:p-11">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-sub-gold inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/40 bg-[#070a0e] px-3.5 py-1 text-[10px] tracking-[0.2em] text-[#fce096]">
@@ -858,17 +870,18 @@ export default function Legal() {
               </div>
             </div>
 
-            {/* Unique Domain-Specific High-Resolution Static Photograph */}
-            <div className="relative min-h-[260px] border-t border-white/10 bg-[#070a0e] lg:border-l lg:border-t-0">
-              <img
-                src={activeProfile.heroImage}
-                alt={activeProfile.title}
-                className="h-full w-full object-cover"
-              />
-              <div className="pointer-events-none absolute bottom-3 left-3 rounded-full border border-[#d4af37]/40 bg-black/80 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-[#fce096] backdrop-blur-md">
-                {activeProfile.code} · Verified Statutory Dossier
+            {activeProfile.heroImage && (
+              <div className="relative min-h-[260px] border-t border-white/10 bg-[#070a0e] lg:border-l lg:border-t-0">
+                <img
+                  src={activeProfile.heroImage}
+                  alt={activeProfile.title}
+                  className="h-full w-full object-cover"
+                />
+                <div className="pointer-events-none absolute bottom-3 left-3 rounded-full border border-[#d4af37]/40 bg-black/80 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-[#fce096] backdrop-blur-md">
+                  {activeProfile.code} · Verified Statutory Dossier
+                </div>
               </div>
-            </div>
+            )}
           </div>
 
           {/* Domain-Specific Key Metrics Bar */}
