@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import Legal from './Legal';
@@ -21,12 +21,19 @@ describe('legal page imagery', () => {
     vi.restoreAllMocks();
   });
 
-  it('renders the privacy notice without images or image-based examples', () => {
+  it.each([
+    '/legal/conditions-of-use',
+    '/legal/shipping-hygiene',
+    '/legal/unboxing-antiscam',
+    '/legal/wallet-loyalty-referrals',
+    '/legal/warranty-affiliate-b2b',
+    '/legal/privacy-dpdp',
+    '/legal/medical-ip-shield',
+    '/legal/arbitration-grievance',
+  ])('renders %s without part images', (path) => {
     vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
-    const { container } = renderLegal('/legal/privacy-dpdp');
+    const { container } = renderLegal(path);
 
-    expect(screen.getByRole('heading', { name: /Privacy & DPDP Act 2023 Notice/i })).toBeTruthy();
     expect(container.querySelectorAll('img')).toHaveLength(0);
-    expect(screen.queryByText(/Real-Life Case Precedents/i)).toBeNull();
   });
 });

@@ -1276,6 +1276,7 @@ export const LEGAL_SECTION_PROFILES = {
     title: 'Privacy & DPDP Act 2023 Notice',
     subtitle: 'A clear account of the personal data we use, why we use it, who may receive it, how long we retain it, and how you can exercise your rights.',
     statuteBadge: 'Digital Personal Data Protection (DPDP) Act 2023 · IT Rules 2011',
+    heroImage: '/logo.webp',
     keyMetrics: [
       ['Clear purposes', 'Data used for stated service needs'],
       ['Optional choices', 'Marketing and recommendations are separate'],

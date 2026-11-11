@@ -836,7 +836,7 @@ export default function Legal() {
       <div className="mx-auto max-w-6xl">
         {/* 1. DYNAMIC DOMAIN-SPECIFIC LEGAL HEADER */}
         <header className="overflow-hidden rounded-2xl border border-[#d4af37]/30 bg-[#0d1520] text-[#e2e8f0] shadow-xl">
-          <div className={activeProfile.heroImage ? 'grid lg:grid-cols-[1.2fr_0.8fr]' : ''}>
+          <div>
             <div className="p-6 sm:p-9 lg:p-11">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-sub-gold inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/40 bg-[#070a0e] px-3.5 py-1 text-[10px] tracking-[0.2em] text-[#fce096]">
@@ -869,19 +869,6 @@ export default function Legal() {
                 </button>
               </div>
             </div>
-
-            {activeProfile.heroImage && (
-              <div className="relative min-h-[260px] border-t border-white/10 bg-[#070a0e] lg:border-l lg:border-t-0">
-                <img
-                  src={activeProfile.heroImage}
-                  alt={activeProfile.title}
-                  className="h-full w-full object-cover"
-                />
-                <div className="pointer-events-none absolute bottom-3 left-3 rounded-full border border-[#d4af37]/40 bg-black/80 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-[#fce096] backdrop-blur-md">
-                  {activeProfile.code} · Verified Statutory Dossier
-                </div>
-              </div>
-            )}
           </div>
 
           {/* Domain-Specific Key Metrics Bar */}
@@ -931,14 +918,14 @@ export default function Legal() {
           </div>
         </div>
 
-        {/* 3. REAL-LIFE ILLUSTRATED CASE EXAMPLES FOR THIS SPECIFIC LEGAL LINK */}
+        {/* 3. CASE EXAMPLES FOR THIS SPECIFIC LEGAL LINK */}
         {activeProfile.realLifeExamples && activeProfile.realLifeExamples.length > 0 && (
           <section className="mt-8">
             <div className="mb-4 flex items-center justify-between">
               <span className="font-sub-gold text-[10px] tracking-[0.2em] text-[#fce096] block">
-                Real-Life Case Precedents · {activeProfile.code}
+                Case Examples · {activeProfile.code}
               </span>
-              <span className="text-xs text-[#94a3b8]">Photographic &amp; Operational Examples</span>
+              <span className="text-xs text-[#94a3b8]">Policy examples</span>
             </div>
             <div className="grid gap-6 md:grid-cols-2">
               {activeProfile.realLifeExamples.map((ex) => (
@@ -946,14 +933,6 @@ export default function Legal() {
                   key={ex.caseCode}
                   className="two-tone-card overflow-hidden rounded-2xl border border-[#d4af37]/25 bg-[#0d1520] shadow-md transition-all hover:border-[#d4af37]/60"
                 >
-                  <div className="aspect-[16/9] w-full overflow-hidden bg-[#070a0e]">
-                    <img
-                      src={ex.image}
-                      alt={ex.title}
-                      loading="lazy"
-                      className="h-full w-full object-cover"
-                    />
-                  </div>
                   <div className="p-6">
                     <span className="rounded bg-[#070a0e] border border-[#d4af37]/35 px-2.5 py-1 font-mono text-[10px] font-bold text-[#fce096]">
                       {ex.caseCode}
