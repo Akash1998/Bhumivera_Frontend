@@ -361,7 +361,7 @@ export default function InventorySoftware() {
               setShowOnboardingModal(true);
             }
           }
-          if (Array.isArray(d.items) && d.items.length > 0) setItems(d.items);
+          if (Array.isArray(d.items)) setItems(d.items);
           if (Array.isArray(d.customers)) {
             setCustomers(d.customers);
           }
