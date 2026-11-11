@@ -51,7 +51,9 @@ const allFeatures = groups.flatMap(group => group.features);
 export default function GrowthOffersHub() {
   const navigate = useNavigate();
   const { tab } = useParams();
-  const initialFeature = allFeatures.find(feature => feature.id === (tab === 'loyalty-tiers' ? 'loyalty-matrix' : tab)) || allFeatures[0];
+  const initialFeature = allFeatures.find(feature =>
+    feature.id === (tab === 'loyalty-tiers' ? 'loyalty-matrix' : tab === 'growth-offers' ? 'min-cart-value' : tab)
+  ) || allFeatures[0];
   const [selectedId, setSelectedId] = useState(initialFeature.id);
   const [activeGroup, setActiveGroup] = useState(groups.find(group => group.features.some(feature => feature.id === initialFeature.id))?.id || groups[0].id);
   const [mobileShowingTool, setMobileShowingTool] = useState(false);

@@ -210,11 +210,11 @@ export default function AdminDashboard() {
       ],
     },
     {
-      title: 'Spins, Referrals & Privilege',
+      title: 'Growth, Offers & Privilege',
       items: [
         { id: 'gamification', label: 'Reward Spins & Activities' },
         { id: 'referral-engine', label: 'Brand Ambassador & Referrals' },
-        { id: 'growth-offers', label: 'Promotions, Coupons & Flash Sales' },
+        { id: 'growth-offers', label: 'Growth & Offers · Cart Gifts, Coupons, Sales' },
         { id: 'loyalty-tiers', label: 'Clientele Privilege & Tiers' },
         { id: 'loyalty-members', label: 'Privilege Members' },
         { id: 'personalization', label: 'Bespoke Client Curation' },
