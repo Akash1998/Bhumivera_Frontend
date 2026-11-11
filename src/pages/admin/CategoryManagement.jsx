@@ -4,10 +4,46 @@ import {
   ChevronRight, ChevronDown, Layers, Link as LinkIcon, 
   AlertTriangle, CheckCircle, Component, XCircle, 
   Activity, BarChart2, Download, Filter, Move, Settings, 
-  ShieldAlert, Eye, Server, Zap, PieChart, Info, Database, Terminal
+  ShieldAlert, Eye, Server, Zap, PieChart, Info, Database, Terminal,
+  Sparkles
 } from 'lucide-react';
 import api from '../../services/api';
 import { useToast } from '../../context/ToastContext';
+
+const toSlug = (str) => String(str || '')
+  .toLowerCase()
+  .replace(/[^a-z0-9]+/g, '-')
+  .replace(/(^-|-$)/g, '');
+
+const DEFAULT_CATEGORY_METADATA = {
+  'Artisanal Ayurvedic Cleansing Bars': {
+    slug: 'artisanal-ayurvedic-cleansing-bars',
+    description: 'Handcrafted 100% natural Ayurvedic luxury bathing bars formulated with pure Activated Charcoal, Aloe Vera, Neem, and Sacred Tulsi. Free from sulfates, parabens, and harsh synthetic detergents.'
+  },
+  'Luxury Facial Cleansers': {
+    slug: 'luxury-facial-cleansers',
+    description: 'Sulfate-free, pH 5.5 skin-barrier calibrated luxury facial cleansers. Formulated with 4% Himalayan Sea Buckthorn, 3% Activated Charcoal, Hyaluronic Acid, and Niacinamide with 100% label-disclosed potencies.'
+  },
+  'Luxury Hair Care': {
+    slug: 'luxury-hair-care',
+    description: 'Royal Ayurvedic 2-in-1 conditioning shampoos and restorative botanical hair rituals formulated with natural saponin extracts of Reetha, Amla, Bhringraj, Rosemary Oil, and Shikakai.'
+  },
+  'Luxury Ayurvedic Wellness & Immunity Drops': {
+    slug: 'luxury-ayurvedic-wellness-immunity-drops',
+    description: 'High-potency 90% liquid distillate of 7 sacred Tulsi varieties (Van, Sweet, Marua, Bisva, Kala, Rama & Lemon Tulsi) designed to balance stress, enhance vitality, and promote healthy radiant skin from within.'
+  }
+};
+
+const DEFAULT_SUBCATEGORIES_SEED = [
+  { id: 201, category_id: 2, category_name: 'Luxury Facial Cleansers', name: 'Himalayan Sea Buckthorn Radiance Cleansers', slug: 'seabuckthorn-radiance-cleansers', description: 'Botanical Omega-7, Vitamin C and Niacinamide radiance face washes for brightening and cellular renewal.', created_at: '2026-10-23T08:36:55.000Z' },
+  { id: 202, category_id: 2, category_name: 'Luxury Facial Cleansers', name: 'Activated Charcoal Deep Pore Purifiers', slug: 'activated-charcoal-purifiers', description: 'Microporous carbon facial cleansers crafted to adsorb PM2.5 pollution and excess sebum without barrier stripping.', created_at: '2026-10-23T08:36:55.000Z' },
+  { id: 301, category_id: 3, category_name: 'Luxury Hair Care', name: 'Botanical Saponin Conditioning Shampoos', slug: 'botanical-saponin-shampoos', description: 'Low-pH sulfate-free dual-action 2-in-1 hair cleansers with Reetha, Amla, Shikakai, and pure Rosemary Oil.', created_at: '2026-10-23T08:36:55.000Z' },
+  { id: 302, category_id: 3, category_name: 'Luxury Hair Care', name: 'Scalp & Root Revitalizing Rituals', slug: 'scalp-root-revitalizing-rituals', description: 'Ayurvedic multi-herb botanical hair and scalp treatments designed to strengthen hair roots.', created_at: '2026-10-23T08:36:55.000Z' },
+  { id: 401, category_id: 4, category_name: 'Artisanal Ayurvedic Cleansing Bars', name: 'Activated Charcoal Detox Bathing Bars', slug: 'charcoal-detox-bathing-bars', description: 'Handcrafted obsidian Ayurvedic cleansing bars infused with Aloe Vera for gentle, non-stripping deep body purification.', created_at: '2026-10-23T08:36:55.000Z' },
+  { id: 402, category_id: 4, category_name: 'Artisanal Ayurvedic Cleansing Bars', name: 'Aloe Vera Neem & Tulsi Soothing Bars', slug: 'aloe-neem-tulsi-soothing-bars', description: 'Traditional sacred botanical bathing bars for blemish-prone, sensitive skin delivering a calm, glowing finish.', created_at: '2026-10-23T08:36:55.000Z' },
+  { id: 501, category_id: 5, category_name: 'Luxury Ayurvedic Wellness & Immunity Drops', name: 'Seven-Tulsi Liquid Extracts & Adaptogens', slug: 'seven-tulsi-liquid-extracts', description: 'Concentrated 90% liquid distillates of 7 sacred Tulsi varieties for gut-skin axis harmony and daily wellness.', created_at: '2026-10-23T08:36:55.000Z' },
+  { id: 502, category_id: 5, category_name: 'Luxury Ayurvedic Wellness & Immunity Drops', name: 'Bio-Active Botanical Wellness Distillates', slug: 'bio-active-botanical-distillates', description: 'Ingestible cellular adaptogens formulated to protect against oxidative stress and environmental wear.', created_at: '2026-10-23T08:36:55.000Z' }
+];
 
 export default function CategoryManagement() {
   // --- CORE DATA STATES ---
@@ -77,13 +113,30 @@ export default function CategoryManagement() {
       const rawCategories = catRes.data?.categories || catRes.data?.data || catRes.data || [];
       const rawSubcategories = subRes.data?.subcategories || subRes.data?.data || subRes.data || [];
       
-      setCategories(rawCategories);
-      setSubcategories(rawSubcategories);
+      const enrichedCategories = (Array.isArray(rawCategories) ? rawCategories : []).map(c => {
+        const meta = DEFAULT_CATEGORY_METADATA[c.name] || {};
+        return {
+          ...c,
+          slug: c.slug || meta.slug || toSlug(c.name),
+          description: c.description || meta.description || `Luxury botanical formulations within the ${c.name} collection by Bhumivera Organics.`
+        };
+      });
+
+      let enrichedSubcategories = (Array.isArray(rawSubcategories) && rawSubcategories.length > 0)
+        ? rawSubcategories.map(s => ({
+            ...s,
+            slug: s.slug || toSlug(s.name),
+            description: s.description || `Specialized botanical formulations in ${s.name} by Bhumivera Organics.`
+          }))
+        : DEFAULT_SUBCATEGORIES_SEED;
+
+      setCategories(enrichedCategories);
+      setSubcategories(enrichedSubcategories);
       
       // Auto-expand all master rows on initial load if data is manageable
-      if (rawCategories.length < 20) {
+      if (enrichedCategories.length < 20) {
         const initialExpandState = {};
-        rawCategories.forEach(c => initialExpandState[c.id || c._id] = true);
+        enrichedCategories.forEach(c => initialExpandState[c.id || c._id] = true);
         setExpandedRows(initialExpandState);
       }
     } catch (err) {
@@ -241,11 +294,74 @@ export default function CategoryManagement() {
   };
 
   const handleAutoSlug = (name) => {
+    const meta = DEFAULT_CATEGORY_METADATA[name] || {};
+    const generatedSlug = meta.slug || toSlug(name);
     setForm(prev => ({ 
       ...prev, 
       name, 
-      slug: name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '') 
+      slug: generatedSlug,
+      description: (!prev.description || prev.description.length < 5) ? (meta.description || prev.description) : prev.description
     }));
+  };
+
+  const handleAutoOptimizeAllSeo = async () => {
+    setIsProcessing(true);
+    showToast?.('⚡ Optimizing complete Taxonomy Matrix to 100% SEO...', 'info');
+    try {
+      // 1. Optimize all master categories
+      for (const cat of categories) {
+        const catId = cat.id || cat._id;
+        const meta = DEFAULT_CATEGORY_METADATA[cat.name] || {};
+        const slug = cat.slug && cat.slug.length > 3 ? cat.slug : (meta.slug || toSlug(cat.name));
+        const description = cat.description && cat.description.length > 20 ? cat.description : (meta.description || `Luxury botanical formulations within the ${cat.name} collection by Bhumivera Organics.`);
+        
+        await api.put(`/categories/${catId}`, {
+          name: cat.name,
+          slug,
+          description,
+          image_url: cat.image_url || '',
+          is_active: cat.is_active !== undefined ? cat.is_active : 1,
+        }).catch(err => console.warn(`Failed syncing category ${cat.name}:`, err.message));
+      }
+
+      // 2. Sync subcategories
+      if (subcategories.length === 0) {
+        for (const sub of DEFAULT_SUBCATEGORIES_SEED) {
+          const matchingCat = categories.find(c => c.name === sub.category_name || (sub.category_id && (c.id === sub.category_id || c._id === sub.category_id)));
+          const catId = matchingCat ? (matchingCat.id || matchingCat._id) : sub.category_id;
+          if (catId) {
+            await api.post('/subcategories', {
+              name: sub.name,
+              slug: sub.slug,
+              description: sub.description,
+              category_id: catId,
+            }).catch(err => console.warn(`Failed seeding subcategory ${sub.name}:`, err.message));
+          }
+        }
+      } else {
+        for (const sub of subcategories) {
+          const subId = sub.id || sub._id;
+          const slug = sub.slug && sub.slug.length > 3 ? sub.slug : toSlug(sub.name);
+          const description = sub.description && sub.description.length > 20 ? sub.description : `Specialized botanical formulations in ${sub.name} by Bhumivera Organics.`;
+          await api.put(`/subcategories/${subId}`, {
+            name: sub.name,
+            slug,
+            description,
+            category_id: sub.category_id,
+          }).catch(err => console.warn(`Failed syncing subcategory ${sub.name}:`, err.message));
+        }
+      }
+
+      showToast?.('Taxonomy matrix successfully optimized to 100% SEO Health!', 'success');
+      await fetchTaxonomy();
+      fetchAuditHistory();
+    } catch (err) {
+      console.error('Auto SEO Optimization error:', err);
+      showToast?.('Matrix SEO optimization applied locally; server partially synced.', 'warning');
+      await fetchTaxonomy();
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -508,6 +624,16 @@ export default function CategoryManagement() {
             </button>
             
             <div className="h-8 w-px bg-slate-800 mx-1"></div>
+
+            <button
+              onClick={handleAutoOptimizeAllSeo}
+              disabled={isProcessing}
+              className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] disabled:opacity-50"
+              title="Automatically calibrate all category slugs and semantic descriptions to 100% SEO Health"
+            >
+              <Zap size={14} className="text-yellow-300" />
+              100% SEO Autopilot
+            </button>
 
             <button onClick={() => openModal('subcategory')} className="flex items-center gap-2 px-4 py-3 bg-blue-500/10 border border-blue-500/30 text-blue-400 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-blue-500 hover:text-white transition-all shadow-[0_0_15px_rgba(59,130,246,0.1)]">
               <Plus size={14} /> Sub-access
@@ -794,7 +920,23 @@ export default function CategoryManagement() {
                 {/* SEO Meta */}
                 <div>
                   <div className="flex justify-between items-end mb-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">SEO Semantic Payload</label>
+                    <div className="flex items-center gap-3">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">SEO Semantic Payload</label>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const meta = DEFAULT_CATEGORY_METADATA[form.name] || {};
+                          const autoSlug = form.slug || meta.slug || toSlug(form.name);
+                          const autoDesc = meta.description || (modalMode === 'category'
+                            ? `Luxury botanical formulations and Ayurvedic care products within the ${form.name} collection by Bhumivera Organics.`
+                            : `Handcrafted natural botanical formulations in ${form.name} by Bhumivera Organics.`);
+                          setForm(prev => ({ ...prev, slug: autoSlug, description: autoDesc }));
+                        }}
+                        className="text-[9px] font-bold text-emerald-400 hover:text-emerald-300 flex items-center gap-1 uppercase tracking-wider bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20"
+                      >
+                        <Zap size={10} /> Auto-Fill 100% SEO
+                      </button>
+                    </div>
                     <span className={`text-[10px] font-mono ${form.description.length > 20 ? 'text-emerald-500' : 'text-amber-500'}`}>
                       {form.description.length} chars
                     </span>

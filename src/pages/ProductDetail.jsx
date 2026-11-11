@@ -1,6 +1,7 @@
-import { FALLBACK_CATALOG_PRODUCTS, CHARCOAL_FACE_WASH_EXACT, SHAMPOO_2IN1_EXACT, BHUMIVERA_6_PRODUCTS } from '../data/bhumiveraUniqueData';
+import { FALLBACK_CATALOG_PRODUCTS, CHARCOAL_FACE_WASH_EXACT, SHAMPOO_2IN1_EXACT, SEABUCKTHORN_FACE_WASH_EXACT, BHUMIVERA_6_PRODUCTS } from '../data/bhumiveraUniqueData';
 import SEO from '../components/SEO';
 import SEOStructuredData from '../components/SEOStructuredData';
+import LuxuryProductSeoSection from '../components/LuxuryProductSeoSection';
 import ProductDeliveryPromise from '../components/ProductDeliveryPromise';
 import React, { useRef, useState, useEffect } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
@@ -275,7 +276,26 @@ export default function ProductDetail() {
                directAnswerFaqs: sixMatch.faqs,
              };
            }
-           if (lowerIdOrName.includes('charcoal')) {
+           if (lowerIdOrName.includes('seabuckthorn') || lowerIdOrName.includes('sea buckthorn')) {
+             fetchedProduct = {
+               ...fetchedProduct,
+               luxuryName: SEABUCKTHORN_FACE_WASH_EXACT.name,
+               seoSlug: SEABUCKTHORN_FACE_WASH_EXACT.slug,
+               luxurySku: SEABUCKTHORN_FACE_WASH_EXACT.sku,
+               mpn: SEABUCKTHORN_FACE_WASH_EXACT.mpn,
+               luxuryCategory: SEABUCKTHORN_FACE_WASH_EXACT.category,
+               seo_title: SEABUCKTHORN_FACE_WASH_EXACT.seo_title,
+               meta_description: SEABUCKTHORN_FACE_WASH_EXACT.meta_description,
+               short_description: SEABUCKTHORN_FACE_WASH_EXACT.short_description,
+               ph_level: SEABUCKTHORN_FACE_WASH_EXACT.ph_level,
+               active_ingredients: SEABUCKTHORN_FACE_WASH_EXACT.active_ingredients,
+               seoImage: SEABUCKTHORN_FACE_WASH_EXACT.image_url,
+               directAnswerFaqs: SEABUCKTHORN_FACE_WASH_EXACT.faqs,
+               exactCompositionTable: SEABUCKTHORN_FACE_WASH_EXACT.composition_table,
+               editorialHeading: SEABUCKTHORN_FACE_WASH_EXACT.editorial_heading,
+               editorialParagraphs: SEABUCKTHORN_FACE_WASH_EXACT.editorial_paragraphs,
+             };
+           } else if (lowerIdOrName.includes('charcoal')) {
              fetchedProduct = {
                ...fetchedProduct,
                luxuryName: CHARCOAL_FACE_WASH_EXACT.name,
@@ -584,11 +604,11 @@ export default function ProductDetail() {
     <div className="relative min-h-screen overflow-hidden bg-[radial-gradient(ellipse_at_50%_0%,#214634_0%,#14291f_44%,#101b15_100%)] pb-28 pt-8 font-sans text-[#FAF7F2] selection:bg-[#D4AF37]/30 selection:text-white md:pb-32 md:pt-12">
       <SEOStructuredData product={product} />
       <SEO 
-        title={`${product.name} | Bhumivera`}
-        description={product.description?.substring(0, 155)}
-        keywords={`${product.name}, Bhumivera, skincare, hair care`}
-        ogImage={product.images && product.images.length > 0 ? getImageUrl(product.images[0]) : undefined}
-        route={`/product/${product.slug || product.id}`}
+        title={product.meta_title || product.seo_title || `${product.luxuryName || product.name} | Bhumivera`}
+        description={product.meta_description || product.short_description || product.description?.substring(0, 155)}
+        keywords={product.tags || product.search_keywords || `${product.luxuryName || product.name}, seabuckthorn face wash, sea buckthorn face wash, Bhumivera, skincare, hair care`}
+        ogImage={product.images && product.images.length > 0 ? getImageUrl(product.images[0]) : (product.seoImage ? getImageUrl(product.seoImage) : undefined)}
+        route={`/product/${product.seoSlug || product.slug || product.id}`}
         schema={productSchema} 
       />
 
@@ -1443,6 +1463,9 @@ export default function ProductDetail() {
           )}
         </section>
       )}
+
+      {/* Radical Milligram Disclosure, Transparency Lineage & Direct-Answer FAQ SEO Section */}
+      <LuxuryProductSeoSection product={product} />
 
       {canPersonalize && recommendedProducts.length > 0 && (
         <section className="max-w-7xl mx-auto px-6 mt-16 relative z-10">

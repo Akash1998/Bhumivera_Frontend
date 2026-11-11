@@ -1509,6 +1509,56 @@ export const SHAMPOO_2IN1_EXACT = {
 };
 
 
+export const SEABUCKTHORN_FACE_WASH_EXACT = {
+  name: 'Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash',
+  slug: 'himalayan-seabuckthorn-luxury-face-wash',
+  rating: 4.74,
+  review_count: 290,
+  reviews: 290,
+  sku: 'BV-LUX-SBFW-02',
+  mpn: 'BVSBFW100ML',
+  price: 799.00,
+  mrp: 999.00,
+  stock: 250,
+  category: 'Luxury Facial Cleansers',
+  ph_level: '5.4 (Radiance & Acid-Mantle Balanced Botanical Cleanser)',
+  active_ingredients: 'Sea Buckthorn (4%), Glycerin (5%), Haridra/Turmeric (0.5%), Neem (0.5%), Cucumber Extract (0.5%), Manjistha Extract (0.5%), Hyaluronic Acid (0.1%), Niacinamide (0.1%), Perfume (0.5%), Base (Q.S.)',
+  image_url: '/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp',
+  seo_title: 'Bhumivera Himalayan Sea Buckthorn Luxury Face Wash (100ml) | 4% Sea Buckthorn, 5% Glycerin, Hyaluronic Acid, Niacinamide & Manjistha Brightening Cleanser',
+  meta_description: 'Discover Bhumivera Himalayan Sea Buckthorn Face Wash (100ml): formulated for conscious skincare buyers with 4% Sea Buckthorn (Omega-7 & Vitamin C), 5% Glycerin, 0.5% Manjistha, 0.5% Haridra, 0.1% Hyaluronic Acid & 0.1% Niacinamide.',
+  short_description: 'Brightening botanical luxury face wash crafted for skin-conscious buyers. Formulated per 100ml with a label-disclosed 4% Himalayan Sea Buckthorn extract, 5% Botanical Glycerin, 0.5% Manjistha, 0.5% Haridra, 0.5% Neem, 0.5% Cucumber, 0.1% Hyaluronic Acid & 0.1% Niacinamide.',
+  editorial_heading: 'Golden Himalayan Botanical Nutrition: 4% Sea Buckthorn',
+  editorial_paragraphs: [
+    "Harvested from high-altitude Himalayan valleys, Hippophae rhamnoides (Sea Buckthorn) is prized in botanical skincare for its rare lipid and antioxidant profile. While conventional brightening washes use trace extracts below 0.1%, the Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash is formulated with a label-disclosed 4.0% concentration of Sea Buckthorn per 100ml.",
+    "Naturally rich in Omega-7 (Palmitoleic Acid), beta-carotene, and bio-available Vitamin C carotenoids, this golden emulsion works in harmony with 5.0% Pure Glycerin, 0.1% Hyaluronic Acid, 0.1% Niacinamide, 0.5% Manjistha, and 0.5% Haridra to gently lift dull surface impurities, replenish the moisture barrier, and unveil a fresh, lit-from-within radiant glow."
+  ],
+  composition_table: [
+    { active: 'Himalayan Sea Buckthorn', potency: '4.0%', classification: 'Hippophae rhamnoides Berry Extract', mechanism: 'Supplies rare Omega-7 palmitoleic acid, Omega 3-6-9, and natural carotenoids to nourish skin barrier and promote cellular radiance.' },
+    { active: 'Botanical Glycerin', potency: '5.0%', classification: 'Plant Humectant Cushion', mechanism: 'Creates an intensive moisture cushion that prevents post-wash tightness and preserves skin hydration.' },
+    { active: 'Manjistha Extract', potency: '0.5%', classification: 'Rubia cordifolia Phyto-Complex', mechanism: 'Complexion-evening Ayurvedic root that visibly reduces dullness and helps fade post-blemish discoloration.' },
+    { active: 'Haridra (Wild Turmeric)', potency: '0.5%', classification: 'Curcuma longa Antioxidant Rhizome', mechanism: 'Fights oxidative stress and imparts natural cellular luminosity.' },
+    { active: 'Neem Extract', potency: '0.5%', classification: 'Azadirachta indica Clarifier', mechanism: 'Keeps pores clean, clear, and purified.' },
+    { active: 'Cucumber Extract', potency: '0.5%', classification: 'Cucumis sativus Soothing Agent', mechanism: 'Cools and refreshes tired skin with botanical hydration.' },
+    { active: 'Hyaluronic Acid', potency: '0.1%', classification: 'Sodium Hyaluronate', mechanism: 'Multi-molecular humectant that binds water to skin cells for instant plumpness.' },
+    { active: 'Niacinamide (Vitamin B3)', potency: '0.1%', classification: 'Nicotinamide Lipid Support', mechanism: 'Refines pore texture and supports the lipid barrier.' },
+    { active: 'Cleanser Base', potency: 'Q.S.', classification: 'Sulfate-Free Cleansing Emulsion', mechanism: 'pH 5.4 skin-barrier balanced cleansing matrix.' }
+  ],
+  faqs: [
+    {
+      q: 'What is the exact ingredient percentage breakdown of Bhumivera Sea Buckthorn Face Wash?',
+      a: 'Every 100ml bottle features a 100% transparent label: 4% Sea Buckthorn, 5% Glycerin, 0.5% Haridra, 0.5% Neem, 0.5% Cucumber Extract, 0.5% Manjistha Extract, 0.1% Hyaluronic Acid, and 0.1% Niacinamide.'
+    },
+    {
+      q: 'Why is Sea Buckthorn effective for dull skin and pigmentation?',
+      a: 'Sea Buckthorn berries are rich in rare Omega-7 (Palmitoleic acid) and natural Vitamin C carotenoids. Combined with Ayurvedic Manjistha and Niacinamide, it enhances cellular radiance while preventing moisture loss.'
+    },
+    {
+      q: 'Is Bhumivera Sea Buckthorn Face Wash sulfate-free and pH balanced?',
+      a: 'Yes. It is 100% sulfate-free (no SLS/SLES), paraben-free, and precisely calibrated to pH 5.3–5.5 to respect your skin\'s acid mantle.'
+    }
+  ]
+};
+
 export const BHUMIVERA_6_PRODUCTS = [
   {
     "id": 1,
@@ -1672,7 +1722,11 @@ export const BHUMIVERA_6_PRODUCTS = [
     "slug": "himalayan-seabuckthorn-luxury-face-wash",
     "legacySlugs": [
       "aloe vera face wash",
-      "sea-buckthorn-niacinamide-luxury-face-wash"
+      "sea-buckthorn-niacinamide-luxury-face-wash",
+      "seabuckthorn-face-wash",
+      "sea-buckthorn-face-wash",
+      "seabuckthorn",
+      "sea-buckthorn"
     ],
     "sku": "BV-LUX-SBFW-02",
     "legacySkus": [
@@ -1704,7 +1758,7 @@ export const BHUMIVERA_6_PRODUCTS = [
     "seo_title": "Bhumivera Himalayan Sea Buckthorn Luxury Face Wash (100ml) | 4% Sea Buckthorn, 5% Glycerin, Hyaluronic Acid, Niacinamide & Manjistha Brightening Cleanser",
     "meta_description": "Discover Bhumivera Himalayan Sea Buckthorn Face Wash (100ml): formulated for conscious skincare buyers with 4% Sea Buckthorn (Omega-7 & Vitamin C), 5% Glycerin, 0.5% Manjistha, 0.5% Haridra, 0.1% Hyaluronic Acid & 0.1% Niacinamide.",
     "short_description": "Brightening botanical luxury face wash crafted for skin-conscious buyers. Formulated per 100ml with a label-disclosed 4% Himalayan Sea Buckthorn extract, 5% Botanical Glycerin, 0.5% Manjistha, 0.5% Haridra, 0.5% Neem, 0.5% Cucumber, 0.1% Hyaluronic Acid & 0.1% Niacinamide.",
-    "search_keywords": "sea buckthorn face wash India, brightening botanical face wash for glowing skin, omega 7 vitamin c face wash with niacinamide hyaluronic acid, gentle sulfate free face wash for dry dull skin, manjistha turmeric radiance cleanser, conscious skincare face wash India",
+    "search_keywords": "seabuckthorn face wash, sea buckthorn face wash, seabuckthorn face wash India, himalayan sea buckthorn face wash, bhumivera sea buckthorn, best sea buckthorn face wash, brightening botanical face wash for glowing skin, omega 7 vitamin c face wash with niacinamide hyaluronic acid, gentle sulfate free face wash for dry dull skin, manjistha turmeric radiance cleanser, conscious skincare face wash India, organic seabuckthorn cleanser",
     "conscious_buyer_highlights": [
       "High-Potency 4% Sea Buckthorn: Delivers natural Omega-7, carotenoids, and botanical antioxidants at a full 4.0% concentration.",
       "Dewy Glass-Skin Hydration: 5.0% Botanical Glycerin and 0.1% Hyaluronic Acid lock in moisture during cleansing.",

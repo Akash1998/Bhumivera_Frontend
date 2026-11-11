@@ -234,13 +234,20 @@ export default function Shop() {
   const filteredProducts = useMemo(() => {
     const list = products.filter((p) => {
       const q = searchTerm.toLowerCase().trim();
+      const normalizedQ = q.replace(/seabuckthorn/g, 'sea buckthorn');
+      const closedQ = q.replace(/sea\s+buckthorn/g, 'seabuckthorn');
       const matchSearch =
         !q ||
         p.name?.toLowerCase().includes(q) ||
+        p.name?.toLowerCase().includes(normalizedQ) ||
+        p.name?.toLowerCase().includes(closedQ) ||
+        p.slug?.toLowerCase().includes(q.replace(/\s+/g, '-')) ||
         p.subtitle?.toLowerCase().includes(q) ||
         p.short_description?.toLowerCase().includes(q) ||
         p.description?.toLowerCase().includes(q) ||
         p.active_ingredients?.toLowerCase().includes(q) ||
+        p.search_keywords?.toLowerCase().includes(q) ||
+        p.tags?.toLowerCase().includes(q) ||
         p.category?.toLowerCase().includes(q) ||
         p.category_name?.toLowerCase().includes(q);
 

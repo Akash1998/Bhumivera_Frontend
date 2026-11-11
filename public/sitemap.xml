@@ -20,9 +20,33 @@
   </url>
   <url>
     <loc>https://bhumivera.com/products</loc>
-    <lastmod>2026-10-29</lastmod>
+    <lastmod>2026-11-11</lastmod>
     <changefreq>daily</changefreq>
-    <priority>0.90</priority>
+    <priority>0.95</priority>
+  </url>
+  <url>
+    <loc>https://bhumivera.com/category/luxury-facial-cleansers</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+  </url>
+  <url>
+    <loc>https://bhumivera.com/category/luxury-hair-care</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+  </url>
+  <url>
+    <loc>https://bhumivera.com/category/artisanal-ayurvedic-cleansing-bars</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+  </url>
+  <url>
+    <loc>https://bhumivera.com/category/luxury-ayurvedic-wellness-immunity-drops</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
   </url>
   <url>
     <loc>https://bhumivera.com/science</loc>
@@ -106,7 +130,7 @@
   </url>
   <url>
     <loc>https://bhumivera.com/products/himalayan-seabuckthorn-luxury-face-wash</loc>
-    <lastmod>2026-10-29</lastmod>
+    <lastmod>2026-11-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
     <image:image>
@@ -116,12 +140,32 @@
   </url>
   <url>
     <loc>https://bhumivera.com/product/himalayan-seabuckthorn-luxury-face-wash</loc>
-    <lastmod>2026-10-29</lastmod>
+    <lastmod>2026-11-11</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
     <image:image>
       <image:loc>https://bhumivera.com/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp</image:loc>
       <image:title>Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://bhumivera.com/products/seabuckthorn-face-wash</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://bhumivera.com/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp</image:loc>
+      <image:title>Bhumivera Himalayan Sea Buckthorn Luxury Face Wash</image:title>
+    </image:image>
+  </url>
+  <url>
+    <loc>https://bhumivera.com/product/seabuckthorn-face-wash</loc>
+    <lastmod>2026-11-11</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.95</priority>
+    <image:image>
+      <image:loc>https://bhumivera.com/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp</image:loc>
+      <image:title>Bhumivera Himalayan Sea Buckthorn Luxury Face Wash</image:title>
     </image:image>
   </url>
   <url>
