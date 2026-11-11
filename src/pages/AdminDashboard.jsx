@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState, Suspense, Component, lazy } from 'r
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   Activity, Award, Bell, Boxes, ChartNoAxesCombined, ChevronDown, Compass, ExternalLink, FileText,
-  Gamepad2, Gift, Headphones, Leaf, LogOut, Mail, MessageSquare, Package, QrCode, Settings2,
+  Gamepad2, Gift, Headphones, Leaf, LogOut, Mail, MessageSquare, Package, Settings2,
   ShieldCheck, SlidersHorizontal, Sparkles, Star, Tags, Users, Wallet, Warehouse, Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -27,7 +27,6 @@ const WalletManagement = lazy(() => import('./admin/WalletManagement.jsx'));
 const ReferralEngine = lazy(() => import('./admin/AffiliateManagement.jsx'));
 const SupportManagement = lazy(() => import('./admin/SupportManagement.jsx'));
 const ContactManagement = lazy(() => import('./admin/ContactManagement.jsx'));
-const AuthenticityBatchManagement = lazy(() => import('./admin/AuthenticityBatchManagement.jsx'));
 const SupportAgentManagement = lazy(() => import('./admin/SupportAgentManagement.jsx'));
 const LoyaltyTierForge = lazy(() => import('./admin/LoyaltyTierForge.jsx'));
 const LoyaltyMembers = lazy(() => import('./admin/LoyaltyMembers.jsx'));
@@ -101,7 +100,6 @@ const TAB_COMPONENTS = {
   impact: ImpactManagement,
   support: SupportManagement,
   contacts: ContactManagement,
-  authenticity: AuthenticityBatchManagement,
   'support-agents': SupportAgentManagement,
 };
 
@@ -134,7 +132,6 @@ const TAB_ICONS = {
   users: Users,
   support: Headphones,
   contacts: MessageSquare,
-  authenticity: QrCode,
   'support-agents': Users,
 };
 
@@ -149,6 +146,12 @@ export default function AdminDashboard() {
   const activeTab = tab || 'overview';
   const [isSidebarOpen, setSidebarOpen] = useState(true);
   const [navSearch, setNavSearch] = useState('');
+
+  useEffect(() => {
+    if (tab === 'authenticity') {
+      navigate('/inventorysoftware?view=inv', { replace: true });
+    }
+  }, [tab, navigate]);
 
   useEffect(() => {
     if (!isAccountMenuOpen) return undefined;
@@ -193,7 +196,6 @@ export default function AdminDashboard() {
         { id: 'users', label: 'Customer Management (CRM)' },
         { id: 'reviews', label: 'Reviews & Moderation' },
         { id: 'contacts', label: 'Contact & Inquiries' },
-        { id: 'authenticity', label: 'QR Codes & Genuinity Panel' },
         { id: 'support-agents', label: 'Support Staff Roster' },
       ],
     },
@@ -235,7 +237,6 @@ export default function AdminDashboard() {
     'referral-engine',
     'users',
     'products',
-    'authenticity',
     'growth-offers',
     'loyalty-tiers',
     'gst',

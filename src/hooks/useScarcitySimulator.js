@@ -10,18 +10,26 @@ export default function useScarcitySimulator(productIds = []) {
   const [enabled, setEnabled] = useState(false);
   const [sampleActivityEnabled, setSampleActivityEnabled] = useState(false);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let active = true;
-    let timer;
     const load = async () => {
+      const requestedIds = idsKey ? idsKey.split(',') : [];
+      if (requestedIds.length === 0) {
+        setProducts({});
+        setEnabled(false);
+        setSampleActivityEnabled(false);
+        setLoading(false);
+        return;
+      }
+
+      setLoading(true);
       try {
-        const requestedIds = idsKey ? idsKey.split(',') : [];
         const chunks = [];
         for (let index = 0; index < requestedIds.length; index += 100) {
           chunks.push(requestedIds.slice(index, index + 100));
         }
-        if (chunks.length === 0) chunks.push([]);
         const responses = await Promise.all(chunks.map(ids => scarcitySimulator.getPublic(ids)));
         const data = responses[0]?.data || {};
         if (!active) return;
@@ -36,9 +44,11 @@ export default function useScarcitySimulator(productIds = []) {
           setSampleActivityEnabled(false);
           setError('');
         }
+      } finally {
+        if (active) setLoading(false);
       }
     };
-    load();
+    void load();
     const handleFocus = () => {
       if (!document.hidden) load();
     };
@@ -49,5 +59,5 @@ export default function useScarcitySimulator(productIds = []) {
     };
   }, [idsKey]);
 
-  return { products, enabled, sampleActivityEnabled, error };
+  return { products, enabled, sampleActivityEnabled, error, loading };
 }

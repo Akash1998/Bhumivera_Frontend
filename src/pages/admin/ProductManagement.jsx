@@ -1,13 +1,12 @@
 import React, { useState, useEffect, useMemo, useRef } from 'react';
 import axios from 'axios';
-import * as XLSX from 'xlsx';
 import { 
   Box, Plus, Edit2, Trash2, Search, RefreshCw, AlertTriangle, 
   CheckCircle, XCircle, ChevronLeft, ChevronRight, Image as ImageIcon, 
-  Video, BoxSelect, ShieldCheck, Tag, Activity, Cpu, QrCode, List, Database, UploadCloud, Globe, Eye,
+  Video, BoxSelect, ShieldCheck, Tag, Activity, Cpu, List, Database, UploadCloud, Globe, Eye,
   Layers
 } from 'lucide-react';
-import api, { products as productsApi, categories as categoriesApi, serials as serialsApi } from '../../services/api';
+import api, { products as productsApi, categories as categoriesApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { getProductImageUrl as getImageUrl } from '../../utils/productImageUrl';
 import compressImageForUpload from '../../utils/compressImageForUpload';
@@ -42,10 +41,6 @@ const INITIAL_PRODUCT_STATE = {
   meta_title: '', meta_description: '', tags: '', sku: '', brand: 'Bhumivera'
 };
 
-const INITIAL_SERIAL_STATE = {
-  count: 10, prefix: 'BHU', format: 'advanced'
-};
-
 const formatUrlLines = value => {
   if (Array.isArray(value)) return value.filter(url => typeof url === 'string').join('\n');
   if (typeof value !== 'string') return '';
@@ -69,14 +64,10 @@ export default function ProductManagement() {
 
   // --- Modal & Tab State ---
   const [isProductModalOpen, setProductModalOpen] = useState(false);
-  const [isSerialModalOpen, setSerialModalOpen] = useState(false);
   const [activeTab, setActiveTab] = useState('basic'); 
-  const [serialTab, setSerialTab] = useState('generate');
   
   // --- Entity State ---
   const [currentProduct, setCurrentProduct] = useState(null);
-  const [productSerials, setProductSerials] = useState([]);
-  const [loadingSerials, setLoadingSerials] = useState(false);
   
   // --- Upload State ---
   const [isUploading, setIsUploading] = useState(false);
@@ -96,7 +87,6 @@ export default function ProductManagement() {
   const [imagePreviews, setImagePreviews] = useState([]);
   const [existingImages, setExistingImages] = useState([]);
   const [specs, setSpecs] = useState([{ key: '', value: '' }]);
-  const [serialForm, setSerialForm] = useState(INITIAL_SERIAL_STATE);
   const [productType, setProductType] = useState('single'); // 'single' | 'combo'
   const [selectedComboProducts, setSelectedComboProducts] = useState([]); // [{ id, slug, name, quantity }]
 
@@ -464,76 +454,6 @@ export default function ProductManagement() {
     }
   };
 
-  // --- Handlers: Serial Numbers ---
-  const openSerialModal = (product) => {
-    setCurrentProduct(product); 
-    setSerialTab('generate');
-    setSerialForm({ 
-      count: 10, 
-      prefix: String(product.name || 'BHU').substring(0, 3).toUpperCase(), 
-      format: 'advanced'
-    });
-    setSerialModalOpen(true);
-  };
-
-  const loadProductSerials = async () => {
-    if (!currentProduct) return;
-    setLoadingSerials(true);
-    try {
-      const res = await serialsApi.getByProduct(currentProduct.id || currentProduct._id);
-      const sData = res.data?.serials || res.data?.data || res.data;
-      setProductSerials(Array.isArray(sData) ? sData : []);
-    } catch(e) {
-      console.error(e);
-      setProductSerials([]); // Typecast failsafe
-    } finally { 
-      setLoadingSerials(false); 
-    }
-  };
-
-  useEffect(() => { 
-    if (isSerialModalOpen && serialTab === 'view') loadProductSerials(); 
-  }, [serialTab, isSerialModalOpen]);
-
-  const handleGenerateSerials = async (e) => {
-    e.preventDefault();
-    try {
-      const payload = { productId: currentProduct._id || currentProduct.id, ...serialForm };
-      await serialsApi.generate(payload);
-      showToast?.(`Generated ${serialForm.count} serial numbers.`, 'success');
-      
-      const updatedRes = await serialsApi.getByProduct(payload.productId);
-      const sData = updatedRes.data?.serials || updatedRes.data?.data || updatedRes.data;
-      const fullList = Array.isArray(sData) ? sData : [];
-      
-      const worksheetData = fullList.map(s => ({ 
-        'Product': currentProduct.name, 
-        'Serial Number': s.serial_number || s.serial, 
-        'Status': s.status, 
-        'Generated Date': new Date(s.created_at).toLocaleString() 
-      }));
-      
-      const worksheet = XLSX.utils.json_to_sheet(worksheetData);
-      const workbook = XLSX.utils.book_new();
-      XLSX.utils.book_append_sheet(workbook, worksheet, "Serial Numbers");
-      XLSX.writeFile(workbook, `${currentProduct.name.replace(/\s+/g, '_')}_Serials.xlsx`);
-      
-      setSerialTab('view'); 
-    } catch (err) { 
-      showToast?.('Generation failed.', 'error'); 
-    }
-  };
-
-  const handleDeleteSerial = async (serialId) => {
-    if (!window.confirm('Delete this serial number?')) return;
-    try { 
-      await serialsApi.delete(currentProduct._id || currentProduct.id, serialId); 
-      loadProductSerials(); 
-    } catch (err) {
-      console.error(err);
-    }
-  };
-
   // --- Render Prep ---
   const filteredProducts = useMemo(() => {
     // Zero-Regression circuit breaker: prevent .filter() Kernel Panic if products is destroyed
@@ -665,7 +585,6 @@ export default function ProductManagement() {
                   </td>
                   <td className="p-4 text-right">
                     <div className="flex items-center justify-end gap-2 opacity-40 group-hover:opacity-100 transition-opacity">
-                      <button onClick={() => openSerialModal(product)} className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 rounded-lg text-amber-500 hover:bg-amber-500 hover:text-slate-950 transition-colors tooltip-trigger" title="Serial Numbers"><QrCode size={16} /></button>
                       <button onClick={() => openProductModal(product)} className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 rounded-lg text-blue-500 hover:bg-blue-500 hover:text-slate-950 transition-colors" title="Edit Product"><Edit2 size={16} /></button>
                       <button onClick={() => handleDelete(product._id || product.id)} className="p-2 bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 rounded-lg text-rose-500 hover:bg-rose-500 hover:text-white transition-colors" title="Delete Product"><Trash2 size={16} /></button>
                     </div>
@@ -1115,98 +1034,6 @@ https://www.instagram.com/reel/...`} value={form.video_urls} onChange={e=>setFor
         </div>
       )}
 
-      {/* --- SERIAL GENERATION MODAL --- */}
-      {isSerialModalOpen && currentProduct && (
-        <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-[#081b15]/90 backdrop-blur-xl/90 backdrop-blur-md">
-          <div className="bg-[#10241f]/90 backdrop-blur-xl border border-slate-800 w-full max-w-3xl rounded-[2rem] shadow-2xl overflow-hidden flex flex-col max-h-[85vh]">
-            <div className="p-6 border-b border-slate-800 flex justify-between items-center bg-amber-500/10">
-              <div>
-                <h2 className="text-xl font-black text-white uppercase tracking-tight flex items-center gap-3">
-                  <QrCode size={24} className="text-amber-500"/> Serial Number Generator
-                </h2>
-                <p className="text-[10px] font-mono text-slate-400 mt-1 uppercase tracking-widest">Product: {currentProduct.name}</p>
-              </div>
-              <button onClick={() => setSerialModalOpen(false)} className="text-slate-500 hover:text-white bg-[#10241f]/85 backdrop-blur-xl p-2 rounded-full transition-colors"><XCircle size={20} /></button>
-            </div>
-            
-            <div className="flex border-b border-slate-800 px-6 bg-[#10241f]/45 backdrop-blur-xl">
-              <button onClick={() => setSerialTab('generate')} className={`flex items-center gap-2 px-6 py-4 text-[10px] font-black uppercase tracking-widest border-b-2 transition-colors ${serialTab === 'generate' ? 'border-amber-500 text-amber-400 bg-amber-500/5' : 'border-transparent text-slate-500 hover:text-slate-300'}`}>
-                <Plus size={16} /> Generate New
-              </button>
-              <button onClick={() => setSerialTab('view')} className={`flex items-center gap-2 px-6 py-4 text-[10px] font-black uppercase tracking-widest border-b-2 transition-colors ${serialTab === 'view' ? 'border-amber-500 text-amber-400 bg-amber-500/5' : 'border-transparent text-slate-500 hover:text-slate-300'}`}>
-                <List size={16} /> View Saved Numbers
-              </button>
-            </div>
-            
-            <div className="flex-1 overflow-y-auto custom-scrollbar">
-              {serialTab === 'generate' && (
-                <form onSubmit={handleGenerateSerials} className="p-8 space-y-6">
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
-                    <div className="bg-[#10241f]/55 backdrop-blur-xl p-4 rounded-xl border border-slate-800">
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Quantity to Generate</label>
-                      <input type="number" required min="1" max="1000" value={serialForm.count} onChange={e=>setSerialForm({...serialForm, count: parseInt(e.target.value)})} className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-white font-mono outline-none" />
-                    </div>
-                    <div className="bg-[#10241f]/55 backdrop-blur-xl p-4 rounded-xl border border-slate-800">
-                      <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest block mb-2">Code Prefix</label>
-                      <input type="text" required value={serialForm.prefix} onChange={e=>setSerialForm({...serialForm, prefix: e.target.value.toUpperCase()})} className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 focus:border-amber-500 rounded-lg p-3 text-amber-500 font-mono outline-none tracking-widest" />
-                    </div>
-                  </div>
-                  
-                  <div className="pt-4 border-t border-slate-800">
-                    <button type="submit" className="w-full py-4 bg-amber-500 text-slate-950 font-black uppercase tracking-widest text-sm rounded-xl hover:bg-amber-400 hover:shadow-[0_0_20px_rgba(245,158,11,0.3)] transition-all flex justify-center items-center gap-3">
-                      <QrCode size={18} /> Generate & Download Excel
-                    </button>
-                  </div>
-                </form>
-              )}
-              
-              {serialTab === 'view' && (
-                <div className="p-6">
-                  {loadingSerials ? (
-                    <div className="flex flex-col items-center justify-center py-20 space-y-4">
-                      <RefreshCw className="w-8 h-8 text-amber-500 animate-spin" />
-                      <p className="text-amber-500 font-mono text-xs uppercase tracking-widest animate-pulse">Loading Numbers...</p>
-                    </div>
-                  ) : (
-                    <div className="bg-[#10241f]/55 backdrop-blur-xl border border-slate-800 rounded-xl overflow-hidden">
-                      <table className="w-full text-left border-collapse">
-                        <thead>
-                          <tr className="bg-[#081b15]/90 backdrop-blur-xl border-b border-slate-800">
-                            <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Serial Number</th>
-                            <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest">Status</th>
-                            <th className="p-4 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Actions</th>
-                          </tr>
-                        </thead>
-                        <tbody className="divide-y divide-slate-800/50">
-                          {productSerials.length === 0 ? (
-                            <tr><td colSpan="3" className="p-6 text-center text-slate-500 font-mono text-xs">No serial numbers found for this product.</td></tr>
-                          ) : productSerials.map((s, idx) => (
-                            <tr key={idx} className="hover:bg-slate-800/50 transition-colors">
-                              <td className="p-3 font-mono text-xs text-amber-400 tracking-wider font-bold">
-                                {s.serial_number || s.serial}
-                              </td>
-                              <td className="p-3">
-                                <span className={`px-2 py-1 rounded text-[9px] font-black uppercase tracking-widest border ${s.status === 'active' || s.status === 'sold' ? 'bg-emerald-500/10 text-emerald-500 border-emerald-500/20' : 'bg-slate-800 text-slate-400 border-slate-700'}`}>
-                                  {s.status}
-                                </span>
-                              </td>
-                              <td className="p-3 text-right">
-                                <button onClick={() => handleDeleteSerial(s.id || s._id)} className="text-rose-500 hover:bg-rose-500 hover:text-white border border-transparent hover:border-rose-500 p-2 rounded-lg transition-all" title="Delete Serial">
-                                  <Trash2 size={14} />
-                                </button>
-                              </td>
-                            </tr>
-                          ))}
-                        </tbody>
-                      </table>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 }

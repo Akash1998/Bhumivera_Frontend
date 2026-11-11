@@ -616,9 +616,6 @@ export const scarcitySimulator = {
     params: productIds?.length ? { ids: productIds.join(',') } : {},
   }),
   getPopularToday: () => api.get('/settings/catalog-highlights'),
-  getTodaySales: productIds => api.get('/settings/catalog-sales/today', {
-    params: { ids: productIds.join(',') },
-  }),
 };
 export const clientErrors = { getAllAdmin: limit => api.get('/logs/client', { params: { limit } }) };
 export const systemAdmin = {

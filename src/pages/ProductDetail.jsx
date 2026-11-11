@@ -13,10 +13,10 @@ import {
 } from 'lucide-react';
 import { 
   products as productsApi, 
-  scarcitySimulator,
   reviews as reviewsApi,
   recommendations as recommendationsApi
 } from '../services/api';
+import useScarcitySimulator from '../hooks/useScarcitySimulator';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
 import { useAuth } from '../context/AuthContext';
@@ -118,8 +118,21 @@ export default function ProductDetail() {
   );
   
   const [product, setProduct] = useState(null);
-  const [unitsOrderedToday, setUnitsOrderedToday] = useState(null);
-  const [todaySalesStatus, setTodaySalesStatus] = useState('loading');
+  const {
+    products: allocationSnapshots,
+    enabled: allocationEnabled,
+    loading: allocationLoading,
+  } = useScarcitySimulator(product?.id ? [product.id] : []);
+  const allocationSnapshot = allocationSnapshots[String(product?.id)];
+  const allocationUnitsToday = allocationSnapshot?.simulatedSoldToday ?? allocationSnapshot?.soldToday;
+  const unitsOrderedToday = allocationUnitsToday != null && Number.isFinite(Number(allocationUnitsToday))
+    ? Number(allocationUnitsToday)
+    : null;
+  const todaySalesStatus = allocationLoading
+    ? 'loading'
+    : allocationEnabled && allocationSnapshot
+      ? 'ready'
+      : 'unavailable';
   const [reviewsData, setReviewsData] = useState([]);
   const [reviewSummary, setReviewSummary] = useState(null);
   const [reviewLoadError, setReviewLoadError] = useState('');
@@ -139,52 +152,6 @@ export default function ProductDetail() {
   const [reviewSort, setReviewSort] = useState('newest');
   const addToBagButtonRef = useRef(null);
   const isAddToBagButtonVisible = useInView(addToBagButtonRef, { amount: 0.01, initial: true });
-
-  useEffect(() => {
-    if (!product?.id) {
-      setUnitsOrderedToday(null);
-      setTodaySalesStatus('unavailable');
-      return undefined;
-    }
-
-    let active = true;
-    setUnitsOrderedToday(null);
-    setTodaySalesStatus('loading');
-    const loadTodaySales = () => {
-      if (document.hidden) return;
-      scarcitySimulator.getTodaySales([product.id])
-      .then(response => {
-        const sales = response.data?.products?.[String(product.id)];
-        const count = Number(sales?.unitsOrdered);
-        if (!Number.isFinite(count) || count < 0) {
-          throw new Error('Verified product sales response was invalid.');
-        }
-        if (active) {
-          setUnitsOrderedToday(count);
-          setTodaySalesStatus('ready');
-        }
-      })
-      .catch(error => {
-        console.error('[PRODUCT_TODAYS_ORDERS]', error);
-        if (active) {
-          setUnitsOrderedToday(null);
-          setTodaySalesStatus('unavailable');
-        }
-      });
-    };
-    loadTodaySales();
-    const interval = window.setInterval(loadTodaySales, 60_000);
-    const handleFocus = () => loadTodaySales();
-    window.addEventListener('focus', handleFocus);
-    document.addEventListener('visibilitychange', handleFocus);
-
-    return () => {
-      active = false;
-      window.clearInterval(interval);
-      window.removeEventListener('focus', handleFocus);
-      document.removeEventListener('visibilitychange', handleFocus);
-    };
-  }, [product?.id]);
 
   useEffect(() => {
     if (location.hash === '#product-reviews') setActiveTab('reviews');
