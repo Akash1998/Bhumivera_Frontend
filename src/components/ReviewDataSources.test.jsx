@@ -8,7 +8,7 @@ import BundleDetail from '../pages/BundleDetail';
 import { products, reviews } from '../services/api';
 
 vi.mock('../services/api', () => ({
-  products: { getBySlug: vi.fn() },
+  products: { getBySlug: vi.fn(), getAllActive: vi.fn() },
   reviews: { getByProduct: vi.fn(), getByCombo: vi.fn(), submit: vi.fn() },
 }));
 vi.mock('../context/AuthContext', () => ({ useAuth: () => ({ user: null }) }));
@@ -18,7 +18,15 @@ vi.mock('./SEO', () => ({ default: () => null }));
 describe('storefront review data sources', () => {
   beforeEach(() => {
     vi.clearAllMocks();
-    products.getBySlug.mockResolvedValue({ data: { id: 1, quantity: 1 } });
+    products.getBySlug.mockResolvedValue({
+      data: {
+        id: 1,
+        slug: 'test-combo',
+        quantity: 1,
+        specifications: { is_combo: true, combo_items: [{ product_id: 2, slug: 'test-item' }] },
+      },
+    });
+    products.getAllActive.mockResolvedValue({ data: { data: [{ id: 2, slug: 'test-item', name: 'Test item' }] } });
   });
   afterEach(() => {
     cleanup();
@@ -41,17 +49,17 @@ describe('storefront review data sources', () => {
   });
 
   it.each([
-    ['empty result', () => reviews.getByCombo.mockResolvedValue({ data: { reviews: [], summary: { total: 0, average: 0 } } }), 'No approved reviews are currently recorded for this complete regimen.'],
-    ['API error', () => reviews.getByCombo.mockRejectedValue(new Error('Unavailable')), 'Regimen reviews could not be loaded right now.'],
+    ['empty result', () => reviews.getByCombo.mockResolvedValue({ data: { reviews: [], summary: { total: 0, average: 0 } } }), 'No approved reviews are currently recorded for this combo.'],
+    ['API error', () => reviews.getByCombo.mockRejectedValue(new Error('Unavailable')), 'Combo reviews could not be loaded right now.'],
   ])('does not use bundled regimen reviews on %s', async (_label, setup, message) => {
     vi.spyOn(console, 'error').mockImplementation(() => {});
     setup();
     render(
-      <MemoryRouter initialEntries={['/combo/bundle-daily-regimen']}>
+      <MemoryRouter initialEntries={['/combo/test-combo']}>
         <Routes><Route path="/combo/:slug" element={<BundleDetail />} /></Routes>
       </MemoryRouter>,
     );
     expect(await screen.findByText(message)).toBeTruthy();
-    expect(screen.getByText('Regimen reviews (0)')).toBeTruthy();
+    expect(screen.getByText('Combo reviews (0)')).toBeTruthy();
   });
 });

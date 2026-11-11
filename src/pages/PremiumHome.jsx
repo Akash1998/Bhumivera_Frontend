@@ -7,21 +7,15 @@ import {
   ShieldCheck,
   ShoppingBag,
   Sprout,
-  CheckCircle2,
   ThermometerSnowflake,
   Search,
   Award,
   Lock,
-  PackageCheck,
-  Sparkles,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO, { GLOBAL_CORPORATE_FAQS } from '../components/SEO';
-import { useToast } from '../context/ToastContext';
-import {
-  HOME_VISUAL_ASSETS,
-  MAISON_REGIMEN_BUNDLES,
-} from '../data/bhumiveraUniqueData';
+import ActiveComboShowcase from '../components/ActiveComboShowcase';
+import { HOME_VISUAL_ASSETS } from '../data/bhumiveraUniqueData';
 
 const tiles = [
   { to: '/shop', label: 'The 6 Formulations', note: '100% Active % Disclosed', icon: ShoppingBag },
@@ -206,93 +200,7 @@ export default function PremiumHome() {
           ))}
         </div>
 
-        {/* MAISON CURATED REGIMEN COMBOS (₹1,199 – ₹1,499) */}
-        <div className="mt-10 sm:mt-14">
-          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-            <div>
-              <p className="font-sub-gold inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-[0.26em]">
-                <Sparkles size={14} className="text-[#D4AF37]" /> Curated Regimen Sets · Unboxing Experience
-              </p>
-              <h2 className="mt-2 font-serif text-2xl font-bold sm:text-4xl text-white">
-                <span className="font-headline-gold">Maison Botanical Combos</span>{' '}
-                <span className="font-headline-silver">(₹1,199 – ₹1,499)</span>
-              </h2>
-              <p className="mt-1.5 text-xs sm:text-sm text-[#DFD7C4]">
-                Complete skin &amp; hair rituals packed in our artisanal rigid magnetic gift box with custom foam inserts. All-India express shipping included.
-              </p>
-            </div>
-            <Link
-              to="/shop"
-              className="inline-flex items-center gap-1.5 text-xs font-bold uppercase tracking-wider text-[#D4AF37] hover:text-[#FCE096] transition shrink-0"
-            >
-              View all sets <ArrowRight size={14} />
-            </Link>
-          </div>
-
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4 sm:gap-6">
-            {(MAISON_REGIMEN_BUNDLES || []).slice(0, 3).map((bundle) => (
-              <div
-                key={bundle.id}
-                className="group flex flex-col justify-between rounded-2xl border border-[#244A38] bg-gradient-to-b from-[#102219] to-[#070a0e] hover:border-[#D4AF37]/60 p-5 sm:p-6 transition-all duration-300 shadow-xl hover:shadow-[0_0_30px_rgba(212,175,55,0.15)] relative overflow-hidden"
-              >
-                <div className="absolute top-0 right-0 h-24 w-24 bg-gradient-to-bl from-[#D4AF37]/10 to-transparent rounded-bl-full pointer-events-none" />
-                
-                <div>
-                  <div className="flex items-center justify-between gap-2">
-                    <span className="inline-block rounded-full border border-[#D4AF37]/45 bg-[#D4AF37]/15 px-3 py-0.5 font-mono text-[9px] sm:text-[10px] font-bold text-[#FCE096]">
-                      {bundle.badge}
-                    </span>
-                    <span className="font-mono text-[10px] text-emerald-400 font-semibold">{bundle.sku}</span>
-                  </div>
-
-                  <Link
-                    to={`/combo/${bundle.id}`}
-                    className="mt-3 block font-serif text-lg sm:text-xl font-bold text-white hover:text-[#FCE096] transition-colors"
-                  >
-                    {bundle.name}
-                  </Link>
-
-                  <p className="mt-1.5 text-xs text-[#9BB0A5] line-clamp-2 leading-relaxed">{bundle.tagline}</p>
-
-                  <div className="mt-4 pt-3 border-t border-[#244A38]/60 space-y-2">
-                    <p className="font-mono text-[10px] uppercase tracking-wider text-[#D4AF37] font-bold">
-                      Includes {bundle.items?.length} Full Formulations:
-                    </p>
-                    <ul className="space-y-1.5 text-xs text-[#DFD7C4]">
-                      {bundle.items?.map((it) => (
-                        <li key={it.id} className="flex items-center gap-2">
-                          <CheckCircle2 size={13} className="shrink-0 text-[#D4AF37]" />
-                          <span className="truncate">{it.name}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-
-                  <div className="mt-4 rounded-xl border border-[#244A38] bg-[#070a0e]/70 p-2.5 text-[11px] text-[#9BB0A5] flex items-center gap-2">
-                    <PackageCheck size={14} className="shrink-0 text-[#D4AF37]" />
-                    <span className="truncate">Rigid Magnetic Box + Precision Foam Shell Included</span>
-                  </div>
-                </div>
-
-                <div className="mt-5 pt-4 border-t border-[#244A38] flex items-center justify-between gap-3">
-                  <div>
-                    <div className="flex items-baseline gap-2">
-                      <span className="font-serif text-xl sm:text-2xl font-bold text-[#FCE096]">₹{bundle.bundlePrice}</span>
-                      <span className="text-xs text-[#9BB0A5] line-through">₹{bundle.mrpTotal}</span>
-                    </div>
-                    <span className="text-[10px] font-bold text-emerald-400">Save ₹{bundle.savings} · Free Courier</span>
-                  </div>
-                  <Link
-                    to={`/combo/${bundle.id}`}
-                    className="btn-gold-luxury shrink-0 rounded-xl px-4 py-2.5 text-[10px] font-bold uppercase tracking-wider shadow-lg"
-                  >
-                    View Set
-                  </Link>
-                </div>
-              </div>
-            ))}
-          </div>
-        </div>
+        <ActiveComboShowcase variant="home" />
 
         {/* GENUINE BOTTLE SERIAL & QR VERIFICATION CALLOUT */}
         <div id="live-batch-coa" className="mt-8 sm:mt-12 rounded-2xl sm:rounded-3xl border border-[#D4AF37]/45 bg-gradient-to-br from-[#102219] via-[#0d1c14] to-[#070a0e] p-4 sm:p-9 shadow-2xl">

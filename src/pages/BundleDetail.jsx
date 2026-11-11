@@ -1,16 +1,24 @@
 import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, CheckCircle2, Layers, MapPin, Minus, Plus, ShoppingBag, Star, PackageCheck, Truck, ShieldCheck } from 'lucide-react';
+import { ArrowLeft, CheckCircle2, Layers, MapPin, Minus, Plus, ShoppingBag, Star } from 'lucide-react';
 import SEO from '../components/SEO';
-import { MAISON_REGIMEN_BUNDLES } from '../data/bhumiveraUniqueData';
 import { products as productsApi, reviews as reviewsApi } from '../services/api';
 import { useCart } from '../context/CartContext';
+import {
+  getComboPrice,
+  isComboProduct,
+  resolveComboItems,
+} from '../utils/comboProducts';
+
+const money = value => Number(value || 0).toLocaleString('en-IN', {
+  maximumFractionDigits: 2,
+});
 
 export default function BundleDetail() {
   const { slug } = useParams();
   const { addToCart } = useCart();
-  const bundle = MAISON_REGIMEN_BUNDLES.find(item => item.id === slug || item.sku === slug);
   const [catalogProduct, setCatalogProduct] = useState(null);
+  const [catalogProducts, setCatalogProducts] = useState([]);
   const [comboReviews, setComboReviews] = useState([]);
   const [reviewSummary, setReviewSummary] = useState({ total: 0, average: 0 });
   const [reviewLoadError, setReviewLoadError] = useState('');
@@ -24,18 +32,25 @@ export default function BundleDetail() {
   useEffect(() => {
     let active = true;
     const loadBundle = async () => {
-      if (!bundle) {
-        setLoading(false);
-        return;
-      }
       setLoading(true);
       setCatalogProduct(null);
+      setCatalogProducts([]);
       setLoadError('');
       try {
-        const response = await productsApi.getBySlug(bundle.id);
+        const [response, catalogResponse] = await Promise.all([
+          productsApi.getBySlug(slug),
+          productsApi.getAllActive(),
+        ]);
         const product = response.data?.data || response.data;
-        if (!product?.id) throw new Error('Catalog record pending');
+        const activeProducts = catalogResponse.data?.data || catalogResponse.data;
+        if (!product?.id || !isComboProduct(product)) {
+          throw new Error('The requested catalog product is not an active combo.');
+        }
+        if (!Array.isArray(activeProducts)) {
+          throw new Error('Current combo contents could not be verified.');
+        }
         if (active) {
+          setCatalogProducts(activeProducts);
           setCatalogProduct(product);
           setLoadError('');
         }
@@ -43,7 +58,8 @@ export default function BundleDetail() {
         console.error('[REGIMEN_PRODUCT_LOAD]', error);
         if (active) {
           setCatalogProduct(null);
-          setLoadError('This regimen is currently unavailable. Please refresh and try again.');
+          setCatalogProducts([]);
+          setLoadError('This combo is currently unavailable. Please refresh and try again.');
         }
       } finally {
         if (active) setLoading(false);
@@ -51,18 +67,18 @@ export default function BundleDetail() {
     };
     void loadBundle();
     return () => { active = false; };
-  }, [bundle]);
+  }, [slug]);
 
   useEffect(() => {
     let active = true;
-    if (!bundle) return undefined;
+    if (!catalogProduct?.id) return undefined;
     setComboReviews([]);
     setReviewSummary({ total: 0, average: 0 });
     setReviewLoadError('');
-    reviewsApi.getByCombo(bundle.id)
+    reviewsApi.getByCombo(catalogProduct.id)
       .then(response => {
         const rows = response.data?.reviews;
-        if (!Array.isArray(rows) || !response.data?.summary) throw new Error('The regimen reviews response is incomplete.');
+        if (!Array.isArray(rows) || !response.data?.summary) throw new Error('The combo reviews response is incomplete.');
         if (active) {
           setComboReviews(rows);
           setReviewSummary(response.data.summary);
@@ -74,31 +90,48 @@ export default function BundleDetail() {
         if (active) {
           setComboReviews([]);
           setReviewSummary({ total: 0, average: 0 });
-          setReviewLoadError('Regimen reviews could not be loaded right now.');
+          setReviewLoadError('Combo reviews could not be loaded right now.');
         }
       });
     return () => { active = false; };
-  }, [bundle]);
+  }, [catalogProduct]);
 
   const filteredComboReviews = useMemo(() => {
     if (ratingFilter === 'all') return comboReviews;
     return comboReviews.filter(r => Number(r.rating) === Number(ratingFilter));
   }, [comboReviews, ratingFilter]);
 
-  if (!bundle) {
+  const comboItems = resolveComboItems(catalogProduct, catalogProducts);
+  const comboPrice = getComboPrice(catalogProduct);
+  const regularPrice = Number(catalogProduct?.price) || 0;
+  const availableStock = Math.max(0, Number(catalogProduct?.quantity) || 0);
+  const hasValidComboItems = comboItems.length > 0 &&
+    comboItems.every(item => item.catalogMatch && item.id != null && item.slug);
+  const comboIsAvailable = hasValidComboItems &&
+    availableStock > 0;
+
+  if (loading) {
+    return (
+      <main className="min-h-screen bg-[#081b15] px-6 pb-24 pt-32 text-white">
+        <p role="status" className="mx-auto max-w-3xl text-center text-[#DFD7C4]">Loading combo from the current catalog…</p>
+      </main>
+    );
+  }
+
+  if (!loading && !catalogProduct) {
     return (
       <main className="min-h-screen bg-[#081b15] px-6 pb-24 pt-32 text-white">
         <div className="mx-auto max-w-3xl rounded-3xl border border-slate-700 bg-[#10241f] p-8 text-center">
-          <h1 className="font-serif text-3xl font-bold">Regimen not found</h1>
+          <h1 className="font-serif text-3xl font-bold">Combo unavailable</h1>
+          {loadError && <p role="alert" className="mt-3 text-sm text-rose-300">{loadError}</p>}
           <Link to="/shop" className="mt-5 inline-flex items-center gap-2 text-[#FCE096]">Browse the collection</Link>
         </div>
       </main>
     );
   }
 
-  const availableStock = Math.max(0, Number(catalogProduct?.quantity) || 0);
   const handleAddToBag = async () => {
-    if (!catalogProduct || adding || availableStock < 1) return;
+    if (!catalogProduct || adding || !comboIsAvailable) return;
     setAdding(true);
     try {
       await addToCart(catalogProduct, quantity);
@@ -109,7 +142,11 @@ export default function BundleDetail() {
 
   return (
     <main className="min-h-screen bg-[#081b15] px-4 pb-24 pt-28 text-[#FAF7F2] sm:px-6">
-      <SEO title={`${bundle.name} | Bhumivera`} description={bundle.tagline} route={`/combo/${bundle.id}`} />
+      <SEO
+        title={`${catalogProduct.name} | Bhumivera`}
+        description={catalogProduct.description || catalogProduct.meta_description || ''}
+        route={`/combo/${catalogProduct.slug}`}
+      />
       <div className="mx-auto max-w-6xl">
         <Link to="/shop" className="inline-flex items-center gap-2 text-sm text-[#DFD7C4] hover:text-[#FCE096]">
           <ArrowLeft size={16} /> Back to collection
@@ -119,35 +156,49 @@ export default function BundleDetail() {
           <div className="rounded-3xl border border-[#D4AF37]/35 bg-[#102219] p-6 sm:p-10">
             <div className="flex flex-wrap items-center gap-3">
               <span className="rounded-full border border-[#D4AF37]/45 bg-[#D4AF37]/10 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-wider text-[#FCE096]">
-                {bundle.badge}
+                {catalogProduct.sku || 'Combo'}
               </span>
-              <span className="font-mono text-xs text-emerald-300">{bundle.sku}</span>
             </div>
             <div className="mt-7 flex h-16 w-16 items-center justify-center rounded-2xl border border-[#D4AF37]/30 bg-[#081b15] text-[#FCE096]">
               <Layers size={30} />
             </div>
-            <h1 className="mt-6 max-w-3xl font-serif text-3xl font-bold leading-tight sm:text-5xl">{bundle.name}</h1>
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-[#DFD7C4] sm:text-base">{bundle.tagline}</p>
+            <h1 className="mt-6 max-w-3xl font-serif text-3xl font-bold leading-tight sm:text-5xl">{catalogProduct.name}</h1>
+            {catalogProduct.description && (
+              <p className="mt-4 max-w-3xl whitespace-pre-line text-sm leading-7 text-[#DFD7C4] sm:text-base">
+                {catalogProduct.description}
+              </p>
+            )}
             <div className="mt-6 flex flex-wrap items-center gap-4 text-sm">
               {reviewSummary.total > 0 && (
                 <>
                   <span className="inline-flex items-center gap-1.5 text-[#FCE096]"><Star size={16} fill="currentColor" /> {reviewSummary.average}</span>
-                  <span className="text-[#9BB0A5]">{reviewSummary.total} regimen reviews</span>
+                  <span className="text-[#9BB0A5]">{reviewSummary.total} combo reviews</span>
                 </>
               )}
-              <span className="text-[#9BB0A5]">{bundle.phWindow}</span>
             </div>
             <div className="mt-8 border-t border-[#244A38] pt-6">
-              <h2 className="font-serif text-xl font-bold text-white">Inside this regimen</h2>
+              <h2 className="font-serif text-xl font-bold text-white">Products in this combo</h2>
               <ul className="mt-4 space-y-4">
-                {bundle.items.map(item => (
-                  <li key={item.id} className="flex items-start gap-3 rounded-2xl border border-[#244A38] bg-[#081b15]/70 p-4">
+                {comboItems.map((item, index) => (
+                  <li key={`${item.id ?? item.slug ?? item.name}-${index}`} className="flex items-start gap-3 rounded-2xl border border-[#244A38] bg-[#081b15]/70 p-4">
                     <CheckCircle2 size={18} className="mt-0.5 shrink-0 text-[#D4AF37]" />
                     <div className="min-w-0 flex-1">
-                      <Link to={`/product/${item.slug}`} className="font-semibold text-white hover:text-[#FCE096]">{item.name}</Link>
-                      <p className="mt-1 text-xs leading-5 text-[#9BB0A5]">{item.active}</p>
+                      {item.slug ? (
+                        <Link to={`/product/${item.slug}`} className="font-semibold text-white hover:text-[#FCE096]">{item.name}</Link>
+                      ) : (
+                        <p className="font-semibold text-white">{item.name}</p>
+                      )}
+                      {item.componentQuantity > 1 && (
+                        <p className="mt-1 text-xs text-[#9BB0A5]">Quantity: {item.componentQuantity}</p>
+                      )}
+                      {(item.short_description || item.description) && (
+                        <p className="mt-1 text-xs leading-5 text-[#9BB0A5]">{item.short_description || item.description}</p>
+                      )}
+                      {!item.catalogMatch && <p className="mt-1 text-xs text-rose-300">This product is no longer active.</p>}
                     </div>
-                    <span className="shrink-0 font-mono text-xs text-[#FCE096]">₹{item.price}</span>
+                    <span className="shrink-0 font-mono text-xs text-[#FCE096]">
+                      ₹{money(Number(item.discount_price) > 0 ? item.discount_price : item.price)}
+                    </span>
                   </li>
                 ))}
               </ul>
@@ -155,14 +206,18 @@ export default function BundleDetail() {
           </div>
 
           <aside className="h-fit rounded-3xl border border-[#D4AF37]/35 bg-[#102219] p-6 sm:p-8">
-            <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#9BB0A5]">Complete set · {bundle.items.length} products</p>
+            <p className="font-mono text-xs uppercase tracking-[0.2em] text-[#9BB0A5]">Combo · {comboItems.length} products</p>
             <div className="mt-5 flex items-baseline gap-3">
-              <span className="font-serif text-4xl font-bold text-[#FCE096]">₹{bundle.bundlePrice}</span>
-              <span className="text-sm text-[#9BB0A5] line-through">₹{bundle.mrpTotal}</span>
+              <span className="font-serif text-4xl font-bold text-[#FCE096]">₹{money(comboPrice)}</span>
+              {regularPrice > comboPrice && (
+                <span className="text-sm text-[#9BB0A5] line-through">₹{money(regularPrice)}</span>
+              )}
             </div>
-            <p className="mt-2 inline-flex rounded-md border border-emerald-500/30 bg-emerald-950/50 px-2.5 py-1 text-xs font-bold text-emerald-300">
-              You save ₹{bundle.savings}
-            </p>
+            {regularPrice > comboPrice && (
+              <p className="mt-2 inline-flex rounded-md border border-emerald-500/30 bg-emerald-950/50 px-2.5 py-1 text-xs font-bold text-emerald-300">
+                You save ₹{money(regularPrice - comboPrice)}
+              </p>
+            )}
             <div className="mt-6 flex items-center gap-3">
               <button
                 type="button"
@@ -179,33 +234,22 @@ export default function BundleDetail() {
                 onClick={() => setQuantity(value => Math.min(10, availableStock, value + 1))}
                 className="rounded-lg border border-slate-700 p-2 text-white disabled:opacity-40"
               ><Plus size={16} /></button>
-              {availableStock > 0 && <span className="text-xs text-[#9BB0A5]">{availableStock} sets currently available</span>}
+              {availableStock > 0 && <span className="text-xs text-[#9BB0A5]">{availableStock} available</span>}
             </div>
             <button
               type="button"
               onClick={handleAddToBag}
-              disabled={loading || adding || !catalogProduct || availableStock < 1}
+              disabled={adding || !comboIsAvailable}
               className="btn-gold-luxury mt-6 flex w-full items-center justify-center gap-2 rounded-xl px-5 py-4 text-xs font-bold uppercase tracking-widest disabled:cursor-not-allowed disabled:opacity-50"
             >
               <ShoppingBag size={16} />
-              {adding ? 'Adding regimen…' : availableStock < 1 && !loading ? 'Currently unavailable' : 'Add complete regimen to bag'}
+              {adding ? 'Adding combo…' : comboIsAvailable ? 'Add combo to bag' : 'Currently unavailable'}
             </button>
-            {loading && <p className="mt-3 text-xs text-[#9BB0A5]">Checking live bundle availability…</p>}
-            {loadError && <p role="alert" className="mt-3 text-sm text-rose-300">{loadError}</p>}
-            <div className="mt-6 border-t border-[#244A38] pt-5 space-y-3 text-xs leading-5">
-              <div className="flex items-center gap-2.5 text-[#FCE096]">
-                <PackageCheck size={16} className="shrink-0 text-[#D4AF37]" />
-                <span className="font-semibold">{bundle.packaging || 'Maison Rigid Magnetic Gift Box & Custom Precision Foam Shell Included'}</span>
-              </div>
-              <div className="flex items-center gap-2.5 text-emerald-400">
-                <Truck size={16} className="shrink-0" />
-                <span>Complimentary All-India Express Air Courier Included</span>
-              </div>
-              <div className="flex items-center gap-2.5 text-[#9BB0A5]">
-                <ShieldCheck size={16} className="shrink-0 text-[#D4AF37]" />
-                <span>Fresh micro-batch reserve with serialized digital lab assay verification</span>
-              </div>
-            </div>
+            {!hasValidComboItems && (
+              <p role="alert" className="mt-3 text-sm text-rose-300">
+                One or more combo products could not be verified in the active catalog.
+              </p>
+            )}
           </aside>
         </section>
 
@@ -213,7 +257,7 @@ export default function BundleDetail() {
           <div className="flex flex-wrap items-center justify-between gap-3">
             <div>
               <p className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Customer feedback</p>
-              <h2 className="mt-1 font-serif text-2xl font-bold text-white">Regimen reviews ({filteredComboReviews.length})</h2>
+              <h2 className="mt-1 font-serif text-2xl font-bold text-white">Combo reviews ({filteredComboReviews.length})</h2>
             </div>
             <div className="flex flex-wrap items-center gap-3">
               {reviewSummary.total > 0 && (
@@ -225,7 +269,7 @@ export default function BundleDetail() {
                 <select
                   value={ratingFilter}
                   onChange={e => setRatingFilter(e.target.value)}
-                  aria-label="Filter regimen reviews by rating"
+                  aria-label="Filter combo reviews by rating"
                   className="rounded-lg border border-[#D4AF37]/30 bg-[#081b15] px-3 py-1.5 text-xs text-[#FCE096] outline-none"
                 >
                   <option value="all">All ratings ({comboReviews.length})</option>
@@ -273,13 +317,13 @@ export default function BundleDetail() {
                     onClick={() => setVisibleCount(c => c + 24)}
                     className="btn-silver-luxury rounded-xl px-6 py-2.5 text-xs font-bold uppercase tracking-wider text-[#FCE096]"
                   >
-                    Show more regimen reviews ({filteredComboReviews.length - visibleCount} remaining)
+                    Show more combo reviews ({filteredComboReviews.length - visibleCount} remaining)
                   </button>
                 </div>
               )}
             </>
           ) : (
-            <p className="mt-5 text-sm text-[#9BB0A5]">No approved reviews are currently recorded for this complete regimen.</p>
+            <p className="mt-5 text-sm text-[#9BB0A5]">No approved reviews are currently recorded for this combo.</p>
           )}
         </section>
       </div>
