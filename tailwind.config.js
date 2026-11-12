@@ -9,7 +9,6 @@ export default {
         display: ['"Playfair Display"', 'Georgia', 'serif'],
         editorial: ['"Playfair Display"', 'Georgia', 'serif'],
         royal: ['"Cinzel"', 'serif'],
-        cormorant: ['"Cormorant Garamond"', 'Georgia', 'serif'],
       },
       colors: {
         // Muted botanical olive for restrained brand accents

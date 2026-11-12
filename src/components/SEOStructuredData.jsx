@@ -4,7 +4,6 @@ import {
   GLOBAL_ORGANIZATION_LD,
   GLOBAL_WEBSITE_LD,
   GLOBAL_BRAND_LD,
-  GLOBAL_FLAGSHIP_ITEMLIST_LD,
   GLOBAL_CORPORATE_FAQS,
 } from './SEO';
 
@@ -231,7 +230,6 @@ export default function SEOStructuredData({ product, breadcrumbs = [], faqs = []
     GLOBAL_ORGANIZATION_LD,
     GLOBAL_WEBSITE_LD,
     GLOBAL_BRAND_LD,
-    GLOBAL_FLAGSHIP_ITEMLIST_LD,
     productSchema,
     breadcrumbSchema,
   ];

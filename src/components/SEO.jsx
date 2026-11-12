@@ -174,53 +174,6 @@ export const GLOBAL_BRAND_LD = {
   slogan: 'The Transparent Maison — Rooted in Heritage Since 2016',
 };
 
-export const GLOBAL_FLAGSHIP_ITEMLIST_LD = {
-  '@type': 'ItemList',
-  '@id': `${SITE_URL}/#flagship-catalog`,
-  name: 'Bhumivera Official 6-Product Luxury Botanical Catalog',
-  description:
-    'Complete 6-SKU collection of Bhumivera 100% active percentage and milligram-disclosed botanical skincare, haircare, cleansing bars, and 7-Tulsi adaptogen drops.',
-  numberOfItems: 6,
-  itemListElement: [
-    {
-      '@type': 'ListItem',
-      position: 1,
-      name: 'Bhumivera Activated Charcoal Purifying Luxury Face Wash (100 ML) — 3% Charcoal, 5% Glycerin, 0.1% Hyaluronic Acid, 0.1% Niacinamide, 0.5% Manjistha, 0.5% Haridra, 0.5% Neem',
-      url: `${SITE_URL}/product/activated-charcoal-luxury-face-wash`,
-    },
-    {
-      '@type': 'ListItem',
-      position: 2,
-      name: 'Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash (100 ML) — 4% Sea Buckthorn (Omega-7), 5% Glycerin, 0.1% Hyaluronic Acid, 0.1% Niacinamide, 0.5% Manjistha, 0.5% Haridra',
-      url: `${SITE_URL}/product/himalayan-seabuckthorn-luxury-face-wash`,
-    },
-    {
-      '@type': 'ListItem',
-      position: 3,
-      name: 'Bhumivera Royal Botanical 2-in-1 Luxury Shampoo with Conditioner (200 ML) — 25mg Reetha, 20mg Amla, 10mg Rosemary Oil, 10mg Bhringraj, 10mg Triphala, 10mg Neem, 10mg Aloe Vera, 5mg Shikakai',
-      url: `${SITE_URL}/product/luxury-2-in-1-botanical-shampoo-conditioner`,
-    },
-    {
-      '@type': 'ListItem',
-      position: 4,
-      name: 'Bhumivera Charcoal Deep Cleansing Bar (100 GM) — Handmade Ayurvedic Activated Charcoal & Aloe Vera Luxury Bathing Soap',
-      url: `${SITE_URL}/product/artisanal-charcoal-handmade-soap`,
-    },
-    {
-      '@type': 'ListItem',
-      position: 5,
-      name: 'Bhumivera Soothing Bar (100 GM) — Handmade Aloe Vera, Neem & Sacred Tulsi Ayurvedic Cleansing Soap',
-      url: `${SITE_URL}/product/artisanal-aloe-vera-handmade-soap`,
-    },
-    {
-      '@type': 'ListItem',
-      position: 6,
-      name: 'Bhumivera Kalpvriksh Satva Tulsi (30 ML) — 9.0ml per 10ml Concentrated Liquid Extract of 7 Types of Tulsi (Van, Sweet, Marua, Bisva, Kala, Rama & Lemon Tulsi)',
-      url: `${SITE_URL}/product/kalpvriksh-satva-tulsi-7-tulsi-extract`,
-    },
-  ],
-};
-
 export const GLOBAL_CORPORATE_FAQS = [
   {
     q: 'What is Bhumivera?',
@@ -311,7 +264,6 @@ export default function SEO({
       GLOBAL_ORGANIZATION_LD,
       GLOBAL_WEBSITE_LD,
       GLOBAL_BRAND_LD,
-      GLOBAL_FLAGSHIP_ITEMLIST_LD,
       webPageNode,
     ];
     if (schema) {

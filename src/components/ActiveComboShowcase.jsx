@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { CheckCircle2, Layers } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { products as productsApi } from '../services/api';
@@ -15,11 +15,37 @@ const money = value => Number(value || 0).toLocaleString('en-IN', {
 });
 
 export default function ActiveComboShowcase({ variant = 'shop' }) {
+  const sectionRef = useRef(null);
   const [combos, setCombos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [shouldLoad, setShouldLoad] = useState(() => variant !== 'home');
 
   useEffect(() => {
+    if (variant !== 'home') {
+      setShouldLoad(true);
+      return undefined;
+    }
+    if (shouldLoad) return undefined;
+
+    const section = sectionRef.current;
+    if (!section || typeof IntersectionObserver === 'undefined') {
+      setShouldLoad(true);
+      return undefined;
+    }
+
+    const observer = new IntersectionObserver(([entry]) => {
+      if (!entry.isIntersecting) return;
+      setShouldLoad(true);
+      observer.disconnect();
+    }, { rootMargin: '0px 0px -25% 0px' });
+
+    observer.observe(section);
+    return () => observer.disconnect();
+  }, [shouldLoad, variant]);
+
+  useEffect(() => {
+    if (!shouldLoad) return undefined;
     let active = true;
     productsApi.getAllActive()
       .then(response => {
@@ -50,14 +76,14 @@ export default function ActiveComboShowcase({ variant = 'shop' }) {
         if (active) setLoading(false);
       });
     return () => { active = false; };
-  }, []);
+  }, [shouldLoad]);
 
   if (loadError) return <p role="alert" className="my-8 text-sm text-rose-300">{loadError}</p>;
   if (!loading && combos.length === 0) return null;
 
   const isHome = variant === 'home';
   return (
-    <section className={isHome ? 'mt-10 sm:mt-14' : 'mb-6 sm:mb-12'}>
+    <section ref={sectionRef} className={isHome ? 'mt-10 sm:mt-14' : 'mb-6 sm:mb-12'}>
       <div className={`mb-4 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between ${isHome ? '' : 'sm:mb-6'}`}>
         <div>
           <span className="inline-flex items-center gap-1.5 font-mono text-[10px] font-bold uppercase tracking-widest text-[#FCE096]">

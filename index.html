@@ -27,16 +27,24 @@
         const heroPreload = document.createElement('link');
         heroPreload.rel = 'preload';
         heroPreload.as = 'image';
-        heroPreload.href = '/assets/images/seabuckthorn nature.webp';
+        heroPreload.href = '/assets/images/seabuckthorn-nature-hero.webp';
         heroPreload.type = 'image/webp';
         heroPreload.fetchPriority = 'high';
         document.head.appendChild(heroPreload);
       }
     </script>
     <link
-      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600;1,700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap"
-      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600;1,700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap"
+      rel="preload"
+      as="style"
+      onload="this.onload=null;this.rel='stylesheet'"
     />
+    <noscript>
+      <link
+        href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;500;600;700;800;900&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,600;1,700&family=Plus+Jakarta+Sans:ital,wght@0,300;0,400;0,500;0,600;0,700;0,800;1,400;1,600&display=swap"
+        rel="stylesheet"
+      />
+    </noscript>
     <meta name="author" content="Bhumivera Organics India Private Limited (Inc. August 4, 2026) · MPG E-Business Private Limited Heritage (Est. September 22, 2016)" />
     <meta name="copyright" content="Bhumivera Organics India Private Limited · The Transparent Maison (Est. 2016 Lineage)" />
     <script>
@@ -241,50 +249,6 @@
               "@type": "SearchAction",
               "target": "https://www.bhumivera.com/search?q={search_term_string}",
               "query-input": "required name=search_term_string"
-            }
-          ]
-        },
-        {
-          "@type": "ItemList",
-          "@id": "https://www.bhumivera.com/#flagship-catalog",
-          "name": "Bhumivera Official 6-Product Luxury Botanical Catalog",
-          "numberOfItems": 6,
-          "itemListElement": [
-            {
-              "@type": "ListItem",
-              "position": 1,
-              "name": "Bhumivera Activated Charcoal Purifying Luxury Face Wash (100 ML) — 3% Charcoal, 5% Glycerin, 0.1% Hyaluronic Acid, 0.1% Niacinamide, 0.5% Manjistha, 0.5% Haridra, 0.5% Neem",
-              "url": "https://www.bhumivera.com/product/activated-charcoal-luxury-face-wash"
-            },
-            {
-              "@type": "ListItem",
-              "position": 2,
-              "name": "Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash (100 ML) — 4% Sea Buckthorn (Omega-7), 5% Glycerin, 0.1% Hyaluronic Acid, 0.1% Niacinamide, 0.5% Manjistha, 0.5% Haridra",
-              "url": "https://www.bhumivera.com/product/himalayan-seabuckthorn-luxury-face-wash"
-            },
-            {
-              "@type": "ListItem",
-              "position": 3,
-              "name": "Bhumivera Royal Botanical 2-in-1 Luxury Shampoo with Conditioner (200 ML) — 25mg Reetha, 20mg Amla, 10mg Rosemary Oil, 10mg Bhringraj, 10mg Triphala, 10mg Neem, 10mg Aloe Vera, 5mg Shikakai",
-              "url": "https://www.bhumivera.com/product/luxury-2-in-1-botanical-shampoo-conditioner"
-            },
-            {
-              "@type": "ListItem",
-              "position": 4,
-              "name": "Bhumivera Charcoal Deep Cleansing Bar (100 GM) — Handmade Ayurvedic Activated Charcoal & Aloe Vera Luxury Soap",
-              "url": "https://www.bhumivera.com/product/artisanal-charcoal-handmade-soap"
-            },
-            {
-              "@type": "ListItem",
-              "position": 5,
-              "name": "Bhumivera Soothing Bar (100 GM) — Handmade Aloe Vera, Neem & Sacred Tulsi Ayurvedic Soap",
-              "url": "https://www.bhumivera.com/product/artisanal-aloe-vera-handmade-soap"
-            },
-            {
-              "@type": "ListItem",
-              "position": 6,
-              "name": "Bhumivera Kalpvriksh Satva Tulsi (30 ML) — 9.0ml per 10ml Concentrated Liquid Extract of 7 Types of Tulsi",
-              "url": "https://www.bhumivera.com/product/kalpvriksh-satva-tulsi-7-tulsi-extract"
             }
           ]
         },

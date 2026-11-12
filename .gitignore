@@ -45,3 +45,6 @@ android-native/build/
 android-native/app/build/
 .vercel
 .env*
+
+.vercel
+.env*

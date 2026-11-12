@@ -33,8 +33,12 @@ export const CartProvider = ({ children }) => {
   const { isAuthenticated, user } = useAuth();
   const isCustomerAuthenticated = isAuthenticated &&
     !['admin', 'superadmin', 'warehouse_admin'].includes(user?.role);
-  const { settings } = useSettings();
+  const { settings, loadSettings } = useSettings();
   const toast = useToast();
+
+  useEffect(() => {
+    if (isCartOpen) void loadSettings();
+  }, [isCartOpen, loadSettings]);
 
   const loadCart = useCallback(async () => {
     if (isCustomerAuthenticated) {

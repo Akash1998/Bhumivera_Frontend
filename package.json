@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
+    "indexnow:submit": "node scripts/submit-indexnow.cjs",
     "lint": "eslint .",
     "test": "vitest run",
     "preview": "vite preview",

@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { cleanup, render, screen } from '@testing-library/react';
+import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { MemoryRouter } from 'react-router-dom';
 import ActiveComboShowcase from './ActiveComboShowcase';
@@ -15,7 +15,10 @@ describe('active combo showcase', () => {
     vi.clearAllMocks();
   });
 
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    vi.unstubAllGlobals();
+  });
 
   it('renders only active combos with their current catalog products and prices', async () => {
     products.getAllActive.mockResolvedValue({
@@ -65,5 +68,29 @@ describe('active combo showcase', () => {
     expect(screen.getByText('₹125')).toBeTruthy();
     expect(screen.queryByText('Inactive combo')).toBeNull();
     expect(screen.queryByText('Old name')).toBeNull();
+  });
+
+  it('defers homepage catalog loading until the showcase approaches the viewport', async () => {
+    let intersectionCallback;
+    class MockIntersectionObserver {
+      constructor(callback) {
+        intersectionCallback = callback;
+      }
+
+      observe = vi.fn();
+      disconnect = vi.fn();
+    }
+
+    vi.stubGlobal('IntersectionObserver', MockIntersectionObserver);
+    products.getAllActive.mockResolvedValue({ data: { data: [] } });
+    render(<MemoryRouter><ActiveComboShowcase variant="home" /></MemoryRouter>);
+
+    expect(products.getAllActive).not.toHaveBeenCalled();
+
+    act(() => {
+      intersectionCallback([{ isIntersecting: true }]);
+    });
+
+    await waitFor(() => expect(products.getAllActive).toHaveBeenCalledTimes(1));
   });
 });

@@ -169,10 +169,6 @@
       "destination": "/llms-full.txt"
     },
     {
-      "source": "/bhumivera-indexnow-2026.txt",
-      "destination": "/bhumivera-indexnow-2026.txt"
-    },
-    {
       "source": "/api/seo-prerender/:path*",
       "destination": "https://service.bhumivera.com/api/seo-prerender/:path*"
     },

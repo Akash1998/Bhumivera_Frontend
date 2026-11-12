@@ -15,7 +15,7 @@ import {
 import { Link } from 'react-router-dom';
 import SEO, { GLOBAL_CORPORATE_FAQS } from '../components/SEO';
 import ActiveComboShowcase from '../components/ActiveComboShowcase';
-import { HOME_VISUAL_ASSETS } from '../data/bhumiveraUniqueData';
+import { HOME_HERO_IMAGE } from '../data/homeVisualAssets';
 
 const tiles = [
   { to: '/shop', label: 'The 6 Formulations', note: '100% Active % Disclosed', icon: ShoppingBag },
@@ -127,7 +127,7 @@ export default function PremiumHome() {
         description="Discover Bhumivera (bhumivera.com). Founded on a decade of family manufacturing heritage with MPG E-Business (Est. 2016), delivering 100% active, milligram-disclosed cold-pressed botanical skincare."
         keywords="Bhumivera, bhumivera.com, The Transparent Maison, Bhumivera Organics India Private Limited, MPG E-Business Private Limited, Dilip Prasad Nonia, Akash Prasad, Akash Prasad, Payal Prasad & Aman Prasad, Asansol West Bengal, 100% active percentage skincare, milligram disclosure"
         route="/"
-        ogImage={HOME_VISUAL_ASSETS.heroPrimary}
+        ogImage={HOME_HERO_IMAGE}
         faqs={HOME_CONSCIOUS_FAQS}
       />
 
@@ -135,7 +135,7 @@ export default function PremiumHome() {
       <section className="premium-home-hero relative isolate min-h-[82svh] overflow-hidden bg-[#14291F]">
         <div className="absolute inset-0 -z-20">
           <img
-            src={HOME_VISUAL_ASSETS.heroPrimary}
+            src={HOME_HERO_IMAGE}
             alt="Himalayan Sea Buckthorn harvest in Ladakh mountain valley"
             className="premium-home-hero__image h-full w-full object-cover object-center opacity-30"
             loading="eager"

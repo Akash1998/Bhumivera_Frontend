@@ -8,7 +8,6 @@ import { SettingsProvider } from "./context/SettingsContext.jsx";
 import { reportClientError } from "./services/api.js";
 import { initializeNativeApp } from "./utils/nativeApp.js";
 import { Capacitor } from "@capacitor/core";
-import "@capgo/capacitor-social-login";
 
 installRuntimeShield();
 void initializeNativeApp();
