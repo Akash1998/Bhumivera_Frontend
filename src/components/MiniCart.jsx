@@ -10,12 +10,6 @@ import { addresses as addressesApi, coupons as couponsApi, orders as ordersApi, 
 import { useToast } from '../context/ToastContext';
 import { getProductImageUrl } from '../utils/productImageUrl';
 import { getCartGiftProgress } from '../utils/cartGiftProgress';
-import {
-  estimateShoppingWalletReward,
-  NEW_CUSTOMER_BONUS_PERCENT,
-  SHOPPING_WALLET_REWARD_CAP,
-  SHOPPING_WALLET_REWARD_PERCENT,
-} from '../utils/shoppingWalletReward';
 import { calculateDeliveryCosts, PREMIUM_DELIVERY_SURCHARGE, PREMIUM_DELIVERY_THRESHOLD } from '../utils/shippingOptions';
 import { calculateReferralWalletRedemption, calculateTierDiscount } from '../utils/walletRedemption';
 
@@ -66,10 +60,7 @@ export default function MiniCart() {
   const navigate = useNavigate();
   const toast = useToast();
   const [recommendations, setRecommendations] = useState([]);
-  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
   const [recommendationsLoaded, setRecommendationsLoaded] = useState(false);
-  const [recommendationsError, setRecommendationsError] = useState('');
-  const [recommendationsRetry, setRecommendationsRetry] = useState(0);
   const [recommendationsOpen, setRecommendationsOpen] = useState(false);
   const [offers, setOffers] = useState([]);
   const [offersOpen, setOffersOpen] = useState(true);
@@ -78,8 +69,11 @@ export default function MiniCart() {
   const [couponBusy, setCouponBusy] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [checkoutStep, setCheckoutStep] = useState(0);
-  const [summaryExpanded, setSummaryExpanded] = useState(true);
+  const [summaryExpanded, setSummaryExpanded] = useState(false);
   const checkoutOpen = checkoutStep > 0;
+  useEffect(() => {
+    if (checkoutOpen) setSummaryExpanded(false);
+  }, [checkoutOpen]);
   const [addresses, setAddresses] = useState([]);
   const [selectedAddress, setSelectedAddress] = useState('');
   const [addressForm, setAddressForm] = useState(blankAddress);
@@ -141,23 +135,6 @@ export default function MiniCart() {
   const totalSavings = discount + couponDiscount + tierDiscount + referralWalletAmount + loyaltyDiscount;
   const estimatedTotal = Math.max(0, subtotal - totalSavings);
   const finalTotal = Math.max(0, subtotal + shippingCost - totalSavings);
-  const shoppingWalletRewardEligibleSubtotal = Math.max(
-    0,
-    subtotal - discount - couponDiscount - tierDiscount - referralWalletAmount - loyaltyDiscount,
-  );
-  const isNewCustomer = Boolean(codEligibility.available && codEligibility.isNewCustomer);
-  const shoppingWalletRewardEstimate = estimateShoppingWalletReward(
-    shoppingWalletRewardEligibleSubtotal,
-    isNewCustomer,
-  );
-  const baseShoppingWalletRewardEstimate = Math.min(
-    SHOPPING_WALLET_REWARD_CAP,
-    Math.round(shoppingWalletRewardEligibleSubtotal * SHOPPING_WALLET_REWARD_PERCENT) / 100,
-  );
-  const firstOrderRewardBonusEstimate = Math.max(
-    0,
-    Math.round((shoppingWalletRewardEstimate - baseShoppingWalletRewardEstimate) * 100) / 100,
-  );
   const recommendationsToShow = useMemo(() => {
     const cartIds = new Set(cartItems.map(item => String(item.product_id || item.product?.id || item.id)));
     return recommendations.filter(product => !cartIds.has(String(product.id || product._id))).slice(0, 4);
@@ -204,28 +181,21 @@ export default function MiniCart() {
   useEffect(() => {
     if (!isCartOpen || checkoutOpen || !recommendationsOpen || cartItems.length === 0 || recommendationsLoaded) return undefined;
     let active = true;
-    setRecommendationsLoading(true);
-    setRecommendationsError('');
     productsApi.getAllActive({ sort: 'rating' })
       .then(response => {
         const data = response.data?.products || response.data?.data || response.data;
         if (active) {
           setRecommendations(Array.isArray(data) ? data : []);
           setRecommendationsLoaded(true);
-          setRecommendationsLoading(false);
         }
       })
       .catch(error => {
         console.error('[MINI_CART_RECOMMENDATIONS]', error);
-        if (active) {
-          setRecommendationsError('Recommendations could not be loaded. Please try again.');
-          setRecommendationsLoading(false);
-        }
       });
     return () => {
       active = false;
     };
-  }, [isCartOpen, checkoutOpen, recommendationsOpen, cartItems.length, recommendationsLoaded, recommendationsRetry]);
+  }, [isCartOpen, checkoutOpen, recommendationsOpen, cartItems.length, recommendationsLoaded]);
 
   useEffect(() => {
     if (!isCartOpen || (!offersOpen && checkoutStep !== 1)) return undefined;
