@@ -1213,7 +1213,7 @@ export default function ProductDetail() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {recommendedProducts.map(recommended => (
               <Link key={recommended.id} to={`/product/${recommended.slug || recommended.id}`} className="group overflow-hidden rounded-2xl two-tone-card border border-[#d4af37]/25 transition hover:-translate-y-1 hover:border-[#d4af37]/60 hover:shadow-2xl">
-                <div className="aspect-[4/5] overflow-hidden bg-[#070a0e] p-4">
+                <div className="aspect-[4/5] overflow-hidden bg-[linear-gradient(145deg,#f6f1e7,#e8ddc8)] p-2.5 sm:p-3">
                   <img src={getImageUrl(recommended.images?.[0] || recommended.image_url)} alt={recommended.name} loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-full w-full object-contain transition-transform duration-700 group-hover:scale-105"/>
                 </div>
                 <div className="p-4">
