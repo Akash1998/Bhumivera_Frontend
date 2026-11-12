@@ -69,4 +69,3 @@ User-agent: WhatsApp
 Allow: /
 
 Sitemap: https://www.bhumivera.com/sitemap.xml
-Sitemap: https://bhumivera.com/sitemap.xml

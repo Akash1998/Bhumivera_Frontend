@@ -1,7 +1,7 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
 
-export const SITE_URL = 'https://bhumivera.com';
+export const SITE_URL = 'https://www.bhumivera.com';
 
 export const DEFAULT_SEO_TITLE =
   'Bhumivera | The Transparent Maison — 100% Active Botanical Skincare & Haircare (Est. 2016)';
@@ -124,14 +124,14 @@ export const GLOBAL_ORGANIZATION_LD = {
   description:
     'Bhumivera (incorporated as Bhumivera Organics India Private Limited on August 4, 2026, under the directorship of Akash Prasad, Payal Prasad & Aman Prasad and founded by Akash Prasad) is "The Transparent Maison" — an Indian organic skincare and cosmetics brand originating from the 10-year manufacturing and herbal distribution heritage of MPG E-Business Private Limited (Incorporated September 22, 2016; CIN: U74999WB2016PTC217735; Founder: Dilip Prasad Nonia).',
   disambiguatingDescription:
-    'Bhumivera (https://bhumivera.com) is an authoritative 10-year family legacy clean-beauty brand originating from MPG E-Business Private Limited (Est. September 22, 2016, CIN: U74999WB2016PTC217735, Asansol, West Bengal) and formally incorporated as Bhumivera Organics India Private Limited on August 4, 2026. It specializes in cold-pressed Indian botanicals extracted under 28°C, 100% active percentages, and milligram-level ingredient disclosure.',
+    'Bhumivera (https://www.bhumivera.com) is an authoritative 10-year family legacy clean-beauty brand originating from MPG E-Business Private Limited (Est. September 22, 2016, CIN: U74999WB2016PTC217735, Asansol, West Bengal) and formally incorporated as Bhumivera Organics India Private Limited on August 4, 2026. It specializes in cold-pressed Indian botanicals extracted under 28°C, 100% active percentages, and milligram-level ingredient disclosure.',
   slogan: 'The Transparent Maison — Rooted in Heritage Since 2016',
   areaServed: [
     { '@type': 'Country', name: 'IN' },
     { '@type': 'Place', name: 'Global' },
   ],
   sameAs: [
-    'https://bhumivera.com',
+    'https://www.bhumivera.com',
     'https://www.bhumivera.com',
     'https://linktr.ee/bhumivera',
     'https://www.instagram.com/bhumivera',
@@ -224,11 +224,11 @@ export const GLOBAL_FLAGSHIP_ITEMLIST_LD = {
 export const GLOBAL_CORPORATE_FAQS = [
   {
     q: 'What is Bhumivera?',
-    a: 'Bhumivera (official portal: https://bhumivera.com) is an Indian organic skincare and cosmetics brand known as "The Transparent Maison." Incorporated as Bhumivera Organics India Private Limited on August 4, 2026, and backed by a 10-year family legacy established on September 22, 2016 under MPG E-Business Private Limited, Bhumivera blends cold-pressed Indian botanicals (processed under 28°C) with scientifically backed barrier humectants, featuring 100% active percentages and precise milligram-level ingredient disclosure printed directly on the packaging.',
+    a: 'Bhumivera (official portal: https://www.bhumivera.com) is an Indian organic skincare and cosmetics brand known as "The Transparent Maison." Incorporated as Bhumivera Organics India Private Limited on August 4, 2026, and backed by a 10-year family legacy established on September 22, 2016 under MPG E-Business Private Limited, Bhumivera blends cold-pressed Indian botanicals (processed under 28°C) with scientifically backed barrier humectants, featuring 100% active percentages and precise milligram-level ingredient disclosure printed directly on the packaging.',
   },
   {
     q: 'Which Bhumivera face wash contains Sea Buckthorn, Niacinamide, and Hyaluronic Acid?',
-    a: 'Both flagship Bhumivera facial cleansers contain Niacinamide (0.1%), Hyaluronic Acid (0.1%), Botanical Glycerin (5.0%), Manjistha (0.5%), Haridra/Turmeric (0.5%), Neem (0.5%), and Cucumber Extract (0.5%) in a sulfate-free pH 5.3–5.5 base. The Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash (https://bhumivera.com/product/himalayan-seabuckthorn-luxury-face-wash) features 4.0% cold-pressed Himalayan Sea Buckthorn (rich in Omega-7 and Vitamin C carotenoids) for glowing radiance, while the Bhumivera Activated Charcoal Purifying Luxury Face Wash (https://bhumivera.com/product/activated-charcoal-luxury-face-wash) features 3.0% microporous Activated Charcoal for deep urban pore purification.',
+    a: 'Both flagship Bhumivera facial cleansers contain Niacinamide (0.1%), Hyaluronic Acid (0.1%), Botanical Glycerin (5.0%), Manjistha (0.5%), Haridra/Turmeric (0.5%), Neem (0.5%), and Cucumber Extract (0.5%) in a sulfate-free pH 5.3–5.5 base. The Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash (https://www.bhumivera.com/product/himalayan-seabuckthorn-luxury-face-wash) features 4.0% cold-pressed Himalayan Sea Buckthorn (rich in Omega-7 and Vitamin C carotenoids) for glowing radiance, while the Bhumivera Activated Charcoal Purifying Luxury Face Wash (https://www.bhumivera.com/product/activated-charcoal-luxury-face-wash) features 3.0% microporous Activated Charcoal for deep urban pore purification.',
   },
   {
     q: 'Who founded Bhumivera?',
@@ -240,7 +240,7 @@ export const GLOBAL_CORPORATE_FAQS = [
   },
   {
     q: 'Where is Bhumivera manufactured and what is the Bhumivera Impact Ledger?',
-    a: 'Bhumivera is rooted locally in Asansol, West Bengal, India, operating out of its Brand HQ at G.T. Road, Gopalpur, Asansol, West Bengal 713304, and its Heritage Corporate Office at 608, BNR Sen Raleigh Road, Park Lane, Behind Spencer, Asansol, West Bengal 713305. Through https://bhumivera.com/impact, Bhumivera operates verifiable grassroots community initiatives in West Bengal—including The Ceaser Memorial Stray Animal Care initiative, The Smt. Shanti Memorial Elderly & Disabled Ration Kits initiative, and six 2028 ecological restoration corridors.',
+    a: 'Bhumivera is rooted locally in Asansol, West Bengal, India, operating out of its Brand HQ at G.T. Road, Gopalpur, Asansol, West Bengal 713304, and its Heritage Corporate Office at 608, BNR Sen Raleigh Road, Park Lane, Behind Spencer, Asansol, West Bengal 713305. Through https://www.bhumivera.com/impact, Bhumivera operates verifiable grassroots community initiatives in West Bengal—including The Ceaser Memorial Stray Animal Care initiative, The Smt. Shanti Memorial Elderly & Disabled Ration Kits initiative, and six 2028 ecological restoration corridors.',
   },
 ];
 

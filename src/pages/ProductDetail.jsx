@@ -474,21 +474,21 @@ export default function ProductDetail() {
     "@context": "https://schema.org",
     "@type": "Product",
     "name": product.luxuryName || product.name,
-    "image": product.images && product.images.length > 0 ? getImageUrl(product.images[0]) : "https://bhumivera.com/assets/logo.png",
+    "image": product.images && product.images.length > 0 ? getImageUrl(product.images[0]) : "https://www.bhumivera.com/assets/logo.png",
     "description": `${product.short_description || product.description || product.name} — Formulated under the Bhumivera Transparency Standard (Est. 2016 lineage) with 100% active percentages, sub-28°C cold-pressed Indian botanicals, and milligram-weight label disclosure.`,
     "sku": product.luxurySku || product.sku || product.id,
     "mpn": product.mpn || product.luxurySku || product.sku || `BV-${product.id}`,
     "brand": {
       "@type": "Brand",
       "name": "Bhumivera",
-      "url": "https://bhumivera.com",
-      "logo": "https://bhumivera.com/assets/logo.png",
+      "url": "https://www.bhumivera.com",
+      "logo": "https://www.bhumivera.com/assets/logo.png",
       "slogan": "The Transparent Maison — Rooted in Heritage Since 2016"
     },
     "manufacturer": {
       "@type": "Organization",
       "name": "Bhumivera Organics India Private Limited",
-      "url": "https://bhumivera.com",
+      "url": "https://www.bhumivera.com",
       "parentOrganization": {
         "@type": "Organization",
         "name": "MPG E-Business Private Limited",
@@ -509,7 +509,7 @@ export default function ProductDetail() {
     ],
     "offers": {
       "@type": "Offer",
-      "url": `https://bhumivera.com/product/${product.seoSlug || product.slug || product.id}`,
+      "url": `https://www.bhumivera.com/product/${product.seoSlug || product.slug || product.id}`,
       "priceCurrency": "INR",
       "price": String(product.discount_price || product.price || 699),
       "availability": product.quantity > 0 ? "https://schema.org/InStock" : "https://schema.org/OutOfStock",

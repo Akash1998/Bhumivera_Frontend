@@ -2,115 +2,115 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:image="http://www.google.com/schemas/sitemap-image/1.1">
   <!-- Core Storefront & Brand Authority Pages -->
   <url>
-    <loc>https://bhumivera.com/</loc>
+    <loc>https://www.bhumivera.com/</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/shop</loc>
+    <loc>https://www.bhumivera.com/shop</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.98</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/products</loc>
+    <loc>https://www.bhumivera.com/products</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.98</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/collections</loc>
+    <loc>https://www.bhumivera.com/collections</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/about</loc>
+    <loc>https://www.bhumivera.com/about</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/science</loc>
+    <loc>https://www.bhumivera.com/science</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/bhumivera-science</loc>
+    <loc>https://www.bhumivera.com/bhumivera-science</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/lab</loc>
+    <loc>https://www.bhumivera.com/lab</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/provenance-engine</loc>
+    <loc>https://www.bhumivera.com/provenance-engine</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/somatic-registry</loc>
+    <loc>https://www.bhumivera.com/somatic-registry</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/verify</loc>
+    <loc>https://www.bhumivera.com/verify</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/purchase-protection</loc>
+    <loc>https://www.bhumivera.com/purchase-protection</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/compare</loc>
+    <loc>https://www.bhumivera.com/compare</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/flash-sales</loc>
+    <loc>https://www.bhumivera.com/flash-sales</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.85</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/order-tracking</loc>
+    <loc>https://www.bhumivera.com/order-tracking</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/affiliate</loc>
+    <loc>https://www.bhumivera.com/affiliate</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/sell-on-bhumivera</loc>
+    <loc>https://www.bhumivera.com/sell-on-bhumivera</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/mpgebusiness</loc>
+    <loc>https://www.bhumivera.com/mpgebusiness</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/contact</loc>
+    <loc>https://www.bhumivera.com/contact</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
@@ -118,25 +118,25 @@
 
   <!-- Category Silos -->
   <url>
-    <loc>https://bhumivera.com/category/luxury-facial-cleansers</loc>
+    <loc>https://www.bhumivera.com/category/luxury-facial-cleansers</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/category/luxury-hair-care</loc>
+    <loc>https://www.bhumivera.com/category/luxury-hair-care</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/category/artisanal-ayurvedic-cleansing-bars</loc>
+    <loc>https://www.bhumivera.com/category/artisanal-ayurvedic-cleansing-bars</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/category/luxury-ayurvedic-wellness-immunity-drops</loc>
+    <loc>https://www.bhumivera.com/category/luxury-ayurvedic-wellness-immunity-drops</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
@@ -144,61 +144,61 @@
 
   <!-- Impact, Community & All 8 Grassroots Corridor Dossiers -->
   <url>
-    <loc>https://bhumivera.com/impact</loc>
+    <loc>https://www.bhumivera.com/impact</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.95</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/community</loc>
+    <loc>https://www.bhumivera.com/community</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/impact/stray-animal-care</loc>
+    <loc>https://www.bhumivera.com/impact/stray-animal-care</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.92</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/impact/elderly-disabled-rations</loc>
+    <loc>https://www.bhumivera.com/impact/elderly-disabled-rations</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.92</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/impact/damodar-cleanup</loc>
+    <loc>https://www.bhumivera.com/impact/damodar-cleanup</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.88</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/impact/jute-sapling-nursery</loc>
+    <loc>https://www.bhumivera.com/impact/jute-sapling-nursery</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.88</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/impact/village-pukur-revival</loc>
+    <loc>https://www.bhumivera.com/impact/village-pukur-revival</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.88</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/impact/herbal-kitchen-gardens</loc>
+    <loc>https://www.bhumivera.com/impact/herbal-kitchen-gardens</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.88</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/impact/mandi-vermicomposting</loc>
+    <loc>https://www.bhumivera.com/impact/mandi-vermicomposting</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.88</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/impact/coal-belt-microgrove</loc>
+    <loc>https://www.bhumivera.com/impact/coal-belt-microgrove</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.88</priority>
@@ -206,37 +206,37 @@
 
   <!-- Pillar Guides & Ingredient Education Monographs -->
   <url>
-    <loc>https://bhumivera.com/guides</loc>
+    <loc>https://www.bhumivera.com/guides</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.92</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/guides/ultimate-guide-luxury-organic-face-wash-india</loc>
+    <loc>https://www.bhumivera.com/guides/ultimate-guide-luxury-organic-face-wash-india</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.92</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/guides/science-of-sulfate-free-luxury-herbal-shampoos</loc>
+    <loc>https://www.bhumivera.com/guides/science-of-sulfate-free-luxury-herbal-shampoos</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.92</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/guides/niacinamide-hyaluronic-acid-botanical-face-wash-guide</loc>
+    <loc>https://www.bhumivera.com/guides/niacinamide-hyaluronic-acid-botanical-face-wash-guide</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.92</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/guides/himalayan-seabuckthorn-omega-7-skincare-guide</loc>
+    <loc>https://www.bhumivera.com/guides/himalayan-seabuckthorn-omega-7-skincare-guide</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.92</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/guides/seven-tulsi-cortisol-gut-skin-axis-guide</loc>
+    <loc>https://www.bhumivera.com/guides/seven-tulsi-cortisol-gut-skin-axis-guide</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
@@ -244,55 +244,55 @@
 
   <!-- Legal & Statutory Governance Silos -->
   <url>
-    <loc>https://bhumivera.com/legal</loc>
+    <loc>https://www.bhumivera.com/legal</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.80</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/legal/conditions-of-use</loc>
+    <loc>https://www.bhumivera.com/legal/conditions-of-use</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/legal/shipping-hygiene</loc>
+    <loc>https://www.bhumivera.com/legal/shipping-hygiene</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/legal/unboxing-antiscam</loc>
+    <loc>https://www.bhumivera.com/legal/unboxing-antiscam</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/legal/wallet-loyalty-referrals</loc>
+    <loc>https://www.bhumivera.com/legal/wallet-loyalty-referrals</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/legal/warranty-affiliate-b2b</loc>
+    <loc>https://www.bhumivera.com/legal/warranty-affiliate-b2b</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/legal/privacy-dpdp</loc>
+    <loc>https://www.bhumivera.com/legal/privacy-dpdp</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/legal/medical-ip-shield</loc>
+    <loc>https://www.bhumivera.com/legal/medical-ip-shield</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/legal/arbitration-grievance</loc>
+    <loc>https://www.bhumivera.com/legal/arbitration-grievance</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.75</priority>
@@ -300,13 +300,13 @@
 
   <!-- AI & LLM Ground-Truth Endpoints -->
   <url>
-    <loc>https://bhumivera.com/llms.txt</loc>
+    <loc>https://www.bhumivera.com/llms.txt</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/llms-full.txt</loc>
+    <loc>https://www.bhumivera.com/llms-full.txt</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.90</priority>
@@ -314,25 +314,25 @@
 
   <!-- Regimen Bundles -->
   <url>
-    <loc>https://bhumivera.com/combo/bundle-daily-regimen</loc>
+    <loc>https://www.bhumivera.com/combo/bundle-daily-regimen</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/combo/bundle-royal-crown-trio</loc>
+    <loc>https://www.bhumivera.com/combo/bundle-royal-crown-trio</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/combo/bundle-inside-out-ritual</loc>
+    <loc>https://www.bhumivera.com/combo/bundle-inside-out-ritual</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.90</priority>
   </url>
   <url>
-    <loc>https://bhumivera.com/combo/bundle-grand-maison-vault</loc>
+    <loc>https://www.bhumivera.com/combo/bundle-grand-maison-vault</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.90</priority>
@@ -340,172 +340,172 @@
 
   <!-- 6 Flagship Products & High-Intent Keyword Slugs -->
   <url>
-    <loc>https://bhumivera.com/products/activated-charcoal-luxury-face-wash</loc>
+    <loc>https://www.bhumivera.com/products/activated-charcoal-luxury-face-wash</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.98</priority>
     <image:image>
-      <image:loc>https://bhumivera.com/images/products/bhumivera-activated-charcoal-luxury-face-wash.webp</image:loc>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-activated-charcoal-luxury-face-wash.webp</image:loc>
       <image:title>Bhumivera Activated Charcoal Purifying Luxury Face Wash (100 ML) — 3% Charcoal, 5% Glycerin, Hyaluronic Acid &amp; Niacinamide</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://bhumivera.com/product/activated-charcoal-luxury-face-wash</loc>
+    <loc>https://www.bhumivera.com/product/activated-charcoal-luxury-face-wash</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.98</priority>
     <image:image>
-      <image:loc>https://bhumivera.com/images/products/bhumivera-activated-charcoal-luxury-face-wash.webp</image:loc>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-activated-charcoal-luxury-face-wash.webp</image:loc>
       <image:title>Bhumivera Activated Charcoal Purifying Luxury Face Wash (100 ML) — 3% Charcoal, 5% Glycerin, Hyaluronic Acid &amp; Niacinamide</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://bhumivera.com/product/charcoal-face-wash</loc>
+    <loc>https://www.bhumivera.com/product/charcoal-face-wash</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
     <image:image>
-      <image:loc>https://bhumivera.com/images/products/bhumivera-activated-charcoal-luxury-face-wash.webp</image:loc>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-activated-charcoal-luxury-face-wash.webp</image:loc>
       <image:title>Bhumivera Activated Charcoal Face Wash with Niacinamide &amp; Hyaluronic Acid</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://bhumivera.com/products/himalayan-seabuckthorn-luxury-face-wash</loc>
+    <loc>https://www.bhumivera.com/products/himalayan-seabuckthorn-luxury-face-wash</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.98</priority>
     <image:image>
-      <image:loc>https://bhumivera.com/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp</image:loc>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp</image:loc>
       <image:title>Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash (100 ML) — 4% Sea Buckthorn, 5% Glycerin, Hyaluronic Acid &amp; Niacinamide</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://bhumivera.com/product/himalayan-seabuckthorn-luxury-face-wash</loc>
+    <loc>https://www.bhumivera.com/product/himalayan-seabuckthorn-luxury-face-wash</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.98</priority>
     <image:image>
-      <image:loc>https://bhumivera.com/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp</image:loc>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp</image:loc>
       <image:title>Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash (100 ML) — 4% Sea Buckthorn, 5% Glycerin, Hyaluronic Acid &amp; Niacinamide</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://bhumivera.com/products/seabuckthorn-face-wash</loc>
+    <loc>https://www.bhumivera.com/products/seabuckthorn-face-wash</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
     <image:image>
-      <image:loc>https://bhumivera.com/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp</image:loc>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp</image:loc>
       <image:title>Bhumivera Himalayan Sea Buckthorn Luxury Face Wash</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://bhumivera.com/product/seabuckthorn-face-wash</loc>
+    <loc>https://www.bhumivera.com/product/seabuckthorn-face-wash</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
     <image:image>
-      <image:loc>https://bhumivera.com/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp</image:loc>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp</image:loc>
       <image:title>Bhumivera Himalayan Sea Buckthorn Luxury Face Wash</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://bhumivera.com/product/bhumivera-seabuckthorn-face-wash</loc>
+    <loc>https://www.bhumivera.com/product/bhumivera-seabuckthorn-face-wash</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
     <image:image>
-      <image:loc>https://bhumivera.com/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp</image:loc>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp</image:loc>
       <image:title>Bhumivera Seabuckthorn Face Wash (100 ML) — 4% Sea Buckthorn &amp; Niacinamide</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://bhumivera.com/product/facewash-with-niacinamide</loc>
+    <loc>https://www.bhumivera.com/product/facewash-with-niacinamide</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.95</priority>
     <image:image>
-      <image:loc>https://bhumivera.com/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp</image:loc>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp</image:loc>
       <image:title>Bhumivera Botanical Face Wash with Niacinamide, Hyaluronic Acid &amp; 4% Sea Buckthorn</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://bhumivera.com/products/luxury-2-in-1-botanical-shampoo-conditioner</loc>
+    <loc>https://www.bhumivera.com/products/luxury-2-in-1-botanical-shampoo-conditioner</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.98</priority>
     <image:image>
-      <image:loc>https://bhumivera.com/images/products/bhumivera-luxury-2-in-1-shampoo-conditioner.webp</image:loc>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-luxury-2-in-1-shampoo-conditioner.webp</image:loc>
       <image:title>Bhumivera Royal Botanical 2-in-1 Luxury Shampoo with Conditioner (200 ML) — Reetha, Amla, Rosemary &amp; Bhringraj</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://bhumivera.com/product/luxury-2-in-1-botanical-shampoo-conditioner</loc>
+    <loc>https://www.bhumivera.com/product/luxury-2-in-1-botanical-shampoo-conditioner</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.98</priority>
     <image:image>
-      <image:loc>https://bhumivera.com/images/products/bhumivera-luxury-2-in-1-shampoo-conditioner.webp</image:loc>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-luxury-2-in-1-shampoo-conditioner.webp</image:loc>
       <image:title>Bhumivera Royal Botanical 2-in-1 Luxury Shampoo with Conditioner (200 ML) — Reetha, Amla, Rosemary &amp; Bhringraj</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://bhumivera.com/products/artisanal-charcoal-handmade-soap</loc>
+    <loc>https://www.bhumivera.com/products/artisanal-charcoal-handmade-soap</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.98</priority>
     <image:image>
-      <image:loc>https://bhumivera.com/images/products/bhumivera-artisanal-charcoal-handmade-soap.webp</image:loc>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-artisanal-charcoal-handmade-soap.webp</image:loc>
       <image:title>Bhumivera Charcoal Deep Cleansing Bar (100 GM) — Handmade Ayurvedic Activated Charcoal &amp; Aloe Vera Soap</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://bhumivera.com/product/artisanal-charcoal-handmade-soap</loc>
+    <loc>https://www.bhumivera.com/product/artisanal-charcoal-handmade-soap</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.98</priority>
     <image:image>
-      <image:loc>https://bhumivera.com/images/products/bhumivera-artisanal-charcoal-handmade-soap.webp</image:loc>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-artisanal-charcoal-handmade-soap.webp</image:loc>
       <image:title>Bhumivera Charcoal Deep Cleansing Bar (100 GM) — Handmade Ayurvedic Activated Charcoal &amp; Aloe Vera Soap</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://bhumivera.com/products/artisanal-aloe-vera-handmade-soap</loc>
+    <loc>https://www.bhumivera.com/products/artisanal-aloe-vera-handmade-soap</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.98</priority>
     <image:image>
-      <image:loc>https://bhumivera.com/images/products/bhumivera-artisanal-aloe-vera-handmade-soap.webp</image:loc>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-artisanal-aloe-vera-handmade-soap.webp</image:loc>
       <image:title>Bhumivera Soothing Bar (100 GM) — Aloe Vera, Neem &amp; Sacred Tulsi Handmade Ayurvedic Soap</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://bhumivera.com/product/artisanal-aloe-vera-handmade-soap</loc>
+    <loc>https://www.bhumivera.com/product/artisanal-aloe-vera-handmade-soap</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.98</priority>
     <image:image>
-      <image:loc>https://bhumivera.com/images/products/bhumivera-artisanal-aloe-vera-handmade-soap.webp</image:loc>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-artisanal-aloe-vera-handmade-soap.webp</image:loc>
       <image:title>Bhumivera Soothing Bar (100 GM) — Aloe Vera, Neem &amp; Sacred Tulsi Handmade Ayurvedic Soap</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://bhumivera.com/products/kalpvriksh-satva-tulsi-7-tulsi-extract</loc>
+    <loc>https://www.bhumivera.com/products/kalpvriksh-satva-tulsi-7-tulsi-extract</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.98</priority>
     <image:image>
-      <image:loc>https://bhumivera.com/images/products/bhumivera-kalpvriksh-satva-tulsi-drops.webp</image:loc>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-kalpvriksh-satva-tulsi-drops.webp</image:loc>
       <image:title>Bhumivera Kalpvriksh Satva Tulsi (30 ML) — 9.0ml per 10ml Liquid Extract of 7 Types of Tulsi</image:title>
     </image:image>
   </url>
   <url>
-    <loc>https://bhumivera.com/product/kalpvriksh-satva-tulsi-7-tulsi-extract</loc>
+    <loc>https://www.bhumivera.com/product/kalpvriksh-satva-tulsi-7-tulsi-extract</loc>
     <lastmod>2026-11-12</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.98</priority>
     <image:image>
-      <image:loc>https://bhumivera.com/images/products/bhumivera-kalpvriksh-satva-tulsi-drops.webp</image:loc>
+      <image:loc>https://www.bhumivera.com/images/products/bhumivera-kalpvriksh-satva-tulsi-drops.webp</image:loc>
       <image:title>Bhumivera Kalpvriksh Satva Tulsi (30 ML) — 9.0ml per 10ml Liquid Extract of 7 Types of Tulsi</image:title>
     </image:image>
   </url>
