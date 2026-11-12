@@ -72,6 +72,7 @@ const getSecureExternalUrl = value => {
 const getImageUrl = image => getProductImageUrl(image) || '/logo.webp';
 const displayProductValue = value =>
   typeof value === 'string' || typeof value === 'number' ? String(value).trim() : '';
+const normalizeProductIdentity = value => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
 const REVIEW_MEDIA_PLACEHOLDER = '/images/review-placeholder.svg';
 
 const getIngredientHighlights = product => {
@@ -434,6 +435,30 @@ export default function ProductDetail() {
   const productLinks = splitUrls(product?.product_links)
     .map(url => getSecureExternalUrl(url))
     .filter(Boolean);
+  const publicRecommendedProducts = product
+    ? FALLBACK_CATALOG_PRODUCTS
+      .filter(candidate => {
+        const sameProduct = String(candidate.id) === String(product.id) ||
+          normalizeProductIdentity(candidate.slug) === normalizeProductIdentity(product.slug) ||
+          normalizeProductIdentity(candidate.name) === normalizeProductIdentity(product.name);
+        const hasStockCount = candidate.quantity !== null &&
+          candidate.quantity !== undefined &&
+          candidate.quantity !== '';
+        return !sameProduct &&
+          candidate.status !== 'inactive' &&
+          candidate.inStock !== false &&
+          (!hasStockCount || Number(candidate.quantity) > 0);
+      })
+      .sort((left, right) =>
+        Number(String(right.category_id) === String(product.category_id)) -
+        Number(String(left.category_id) === String(product.category_id))
+      )
+      .slice(0, 4)
+    : [];
+  const usePersonalizedRecommendations = canPersonalize && recommendedProducts.length > 0;
+  const displayedRecommendations = usePersonalizedRecommendations
+    ? recommendedProducts
+    : publicRecommendedProducts;
   const activeImageIndex = Math.max(0, (product?.images || []).findIndex(image => getImageUrl(image) === getImageUrl(activeMedia)));
 
   const showAdjacentImage = direction => {
@@ -1208,15 +1233,19 @@ export default function ProductDetail() {
         </section>
       )}
 
-      {canPersonalize && recommendedProducts.length > 0 && (
+      {displayedRecommendations.length > 0 && (
         <section className="max-w-7xl mx-auto px-6 mt-16 relative z-10">
           <div className="mb-6 border-b border-[#d4af37]/20 pb-4">
-            <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#d4af37]">Picked for you</p>
+            <p className="text-[10px] font-mono uppercase tracking-[0.2em] text-[#d4af37]">
+              {usePersonalizedRecommendations ? 'Picked for you' : 'More to explore'}
+            </p>
             <h2 className="mt-2 font-serif text-3xl text-white">You may also love</h2>
-            <p className="mt-2 text-sm text-[#94a3b8]">{recommendationReason}</p>
+            <p className="mt-2 text-sm text-[#94a3b8]">
+              {usePersonalizedRecommendations ? recommendationReason : 'Discover more from our product range.'}
+            </p>
           </div>
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-            {recommendedProducts.map(recommended => (
+            {displayedRecommendations.map(recommended => (
               <Link key={recommended.id} to={`/product/${recommended.slug || recommended.id}`} className="group overflow-hidden rounded-2xl two-tone-card border border-[#d4af37]/25 transition hover:-translate-y-1 hover:border-[#d4af37]/60 hover:shadow-2xl">
                 <div className="aspect-[4/5] overflow-hidden bg-transparent">
                   <img src={getImageUrl(recommended.images?.[0] || recommended.image_url)} alt={recommended.name} loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"/>
