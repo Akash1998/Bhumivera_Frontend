@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link, useLocation, useParams } from 'react-router-dom';
 import { ArrowRight, Check, Gift, Leaf, LoaderCircle, PackageCheck, Sparkles } from 'lucide-react';
 import { motion as Motion } from 'framer-motion';
@@ -10,6 +10,7 @@ const projectNames = {
   'river-care': 'River care',
   'community-care': 'Community care',
 };
+const spinWheelColors = ['#d4af37', '#101a26', '#fce096', '#0d1520', '#cbd5e1', '#070a0e'];
 
 export default function OrderSuccess() {
   const { state } = useLocation();
@@ -24,6 +25,26 @@ export default function OrderSuccess() {
   const [spinRotation, setSpinRotation] = useState(0);
   const [spinning, setSpinning] = useState(false);
   const [spinDismissed, setSpinDismissed] = useState(false);
+  const spinRewardSegments = useMemo(() => {
+    const totalWeight = spinRewards.reduce((total, reward) => total + (Number(reward.chance) || 0), 0);
+    if (totalWeight <= 0) return [];
+
+    let accumulatedWeight = 0;
+    return spinRewards.map((reward, index) => {
+      const weight = Number(reward.chance) || 0;
+      const startAngle = accumulatedWeight / totalWeight * 360;
+      accumulatedWeight += weight;
+      const endAngle = accumulatedWeight / totalWeight * 360;
+      return {
+        index,
+        weight,
+        color: spinWheelColors[index % spinWheelColors.length],
+        startAngle,
+        endAngle,
+        centerAngle: (startAngle + endAngle) / 2,
+      };
+    });
+  }, [spinRewards]);
 
   useEffect(() => {
     if (!orderId) return undefined;
@@ -65,15 +86,15 @@ export default function OrderSuccess() {
     try {
       const { data } = await gamificationApi.claimOrderSpin(orderId);
       const segmentCount = spinRewards.length;
+      const rewardSegment = spinRewardSegments[Number(data.rewardIndex)];
       if (!segmentCount || !Number.isInteger(Number(data.rewardIndex)) ||
-          Number(data.rewardIndex) < 0 || Number(data.rewardIndex) >= segmentCount) {
+          Number(data.rewardIndex) < 0 || Number(data.rewardIndex) >= segmentCount ||
+          !rewardSegment || rewardSegment.weight <= 0) {
         throw new Error('The configured reward wheel could not be matched to the issued reward. Please refresh and try again.');
       }
-      const segmentAngle = 360 / segmentCount;
-      const rewardCenterAngle = Number(data.rewardIndex) * segmentAngle + segmentAngle / 2;
       setSpinRotation(rotation => {
         const currentAngle = ((rotation % 360) + 360) % 360;
-        const targetAngle = (360 - rewardCenterAngle + 360) % 360;
+        const targetAngle = (360 - rewardSegment.centerAngle + 360) % 360;
         const alignment = (targetAngle - currentAngle + 360) % 360;
         return rotation + 5 * 360 + alignment;
       });
@@ -156,13 +177,9 @@ export default function OrderSuccess() {
                   <Motion.div
                     className="h-full w-full rounded-full"
                     style={{
-                      background: `conic-gradient(${spinRewards.map((reward, index) => {
-                        const segmentAngle = 360 / Math.max(spinRewards.length, 1);
-                        const start = index * segmentAngle;
-                        const end = (index + 1) * segmentAngle - 1;
-                        const colors = ['#d4af37', '#101a26', '#fce096', '#0d1520', '#cbd5e1', '#070a0e'];
-                        return `${colors[index % colors.length]} ${start}deg ${end}deg`;
-                      }).join(', ')})`
+                      background: `conic-gradient(${spinRewardSegments.map(segment =>
+                        `${segment.color} ${segment.startAngle}deg ${segment.endAngle}deg`
+                      ).join(', ')})`
                     }}
                     animate={{ rotate: spinRotation }}
                     transition={{ duration: 4, ease: 'easeOut' }}
@@ -172,29 +189,6 @@ export default function OrderSuccess() {
                   </span>
                   <span className="absolute -top-1 left-1/2 z-10 -translate-x-1/2 border-x-[9px] border-t-[14px] border-x-transparent border-t-[#d4af37] drop-shadow-md" aria-hidden="true" />
                 </div>
-                {spinRewards.length > 0 && (
-                  <div className="w-full max-w-[22rem]">
-                    <p className="mb-2 text-center font-sub-gold text-[10px] font-semibold uppercase tracking-[0.2em]">Possible rewards</p>
-                    <ul className="grid grid-cols-1 gap-1.5 sm:grid-cols-2">
-                      {spinRewards.map((reward, index) => (
-                        <li key={`${reward.label}-${index}`} className="flex min-w-0 items-start gap-2 rounded-lg border border-white/10 bg-[#070a0e]/50 px-2.5 py-2 text-[11px]">
-                          <span className="flex min-w-0 items-center gap-2 text-[#fce096]">
-                            <span className="h-2 w-2 shrink-0 rounded-full" style={{ backgroundColor: ['#d4af37', '#101a26', '#fce096', '#0d1520', '#cbd5e1', '#070a0e'][index % 6] }} />
-                            <span className="min-w-0">
-                              <span className="block truncate">{reward.label}</span>
-                              {(reward.description || Number(reward.minimumOrderAmount) > 0) && (
-                                <span className="mt-0.5 block text-[10px] leading-snug text-[#94a3b8]">
-                                  {reward.description}
-                                  {Number(reward.minimumOrderAmount) > 0 && ` · Min. ₹${Number(reward.minimumOrderAmount).toLocaleString('en-IN')}`}
-                                </span>
-                              )}
-                            </span>
-                          </span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
                 </div>
                 <div className="max-w-sm text-center sm:text-left">
                   <button

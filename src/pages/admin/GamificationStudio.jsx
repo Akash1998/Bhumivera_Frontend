@@ -168,6 +168,9 @@ export default function GamificationStudio() {
           {spinRewards.map((reward, index) => (
             <fieldset key={index} className="grid gap-3 rounded-xl border border-white/10 bg-black/10 p-3 sm:grid-cols-2">
               <legend className="px-1 text-xs font-bold text-emerald-200">Prize {index + 1}</legend>
+              <span className="text-right text-[11px] font-semibold text-emerald-200">
+                {chanceTotal > 0 ? `${((Number(reward.chance) || 0) / chanceTotal * 100).toFixed(2)}% odds` : 'Odds unavailable'}
+              </span>
               <button type="button" onClick={() => setSpinRewards(current => current.filter((_, rewardIndex) => rewardIndex !== index))} disabled={spinRewards.length <= 1} aria-label={`Remove reward ${index + 1}`} className="inline-flex items-center gap-1 text-xs text-rose-300 disabled:opacity-40"><Trash2 size={13}/>Remove</button>
               <label className="text-[11px] font-semibold text-slate-400 sm:col-span-2">Reward shown to customer
                 <input value={reward.label} maxLength={120} onChange={event => updateSpinReward(index, 'label', event.target.value)} className="mt-1 w-full rounded-lg border border-white/10 bg-slate-950/60 px-3 py-2 text-sm text-white outline-none focus:border-emerald-400/50"/>
