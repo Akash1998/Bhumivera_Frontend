@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { cartRules as cartRulesApi, products as productsApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
-import { Download, Layers3, Plus, RefreshCw, Search, ShieldCheck, Trash2 } from 'lucide-react';
+import { Download, Layers3, Pencil, Plus, RefreshCw, Search, ShieldCheck, Trash2, X } from 'lucide-react';
 
 const blankRule = {
   name: '',
@@ -24,6 +24,13 @@ const blankRule = {
   status: 'active',
 };
 const dateToIso = value => (value ? new Date(value).toISOString() : null);
+const toDateTimeLocal = value => {
+  if (!value) return '';
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return '';
+  const localDate = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+  return localDate.toISOString().slice(0, 16);
+};
 
 export default function CartRulesEngine() {
   const [rules, setRules] = useState([]);
@@ -32,6 +39,7 @@ export default function CartRulesEngine() {
   const [productsError, setProductsError] = useState('');
   const [loyaltyTiers, setLoyaltyTiers] = useState([]);
   const [draft, setDraft] = useState(blankRule);
+  const [editingRuleId, setEditingRuleId] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -80,7 +88,7 @@ export default function CartRulesEngine() {
     loadProducts();
   }, [loadProducts]);
 
-  const create = async event => {
+  const saveRule = async event => {
     event.preventDefault();
     setSaving(true);
     const payload = {
@@ -101,15 +109,43 @@ export default function CartRulesEngine() {
       end_time: dateToIso(draft.end_time),
     };
     try {
-      await cartRulesApi.create(payload);
-      setDraft(blankRule);
-      showToast?.('Cart rule created.', 'success');
+      if (editingRuleId !== null) {
+        await cartRulesApi.update(editingRuleId, payload);
+        showToast?.('Cart rule updated.', 'success');
+      } else {
+        await cartRulesApi.create(payload);
+        showToast?.('Cart rule created.', 'success');
+      }
+      setDraft({ ...blankRule });
+      setEditingRuleId(null);
       await load();
     } catch (error) {
-      showToast?.(error.normalized?.message || 'Could not create cart rule.', 'error');
+      showToast?.(error.normalized?.message || (editingRuleId !== null ? 'Could not update cart rule.' : 'Could not create cart rule.'), 'error');
     } finally {
       setSaving(false);
     }
+  };
+
+  const editRule = rule => {
+    setEditingRuleId(rule.id);
+    setDraft({
+      ...blankRule,
+      ...rule,
+      max_cart_value: rule.max_cart_value ?? '',
+      gift_product_id: rule.gift_product_id ?? '',
+      loyalty_tier_id: rule.loyalty_tier_id ?? '',
+      customer_id: rule.customer_id ?? '',
+      free_shipping_enabled: Number(rule.free_shipping_enabled) || 0,
+      enforce_min_checkout: Number(rule.enforce_min_checkout) || 0,
+      start_time: toDateTimeLocal(rule.start_time),
+      end_time: toDateTimeLocal(rule.end_time),
+    });
+    document.getElementById('cart-rule-editor')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  };
+
+  const cancelEdit = () => {
+    setDraft({ ...blankRule });
+    setEditingRuleId(null);
   };
 
   const toggle = async rule => {
@@ -237,7 +273,15 @@ export default function CartRulesEngine() {
         </ul>
       </aside>
 
-      <form onSubmit={create} className="admin-glass-panel grid gap-4 rounded-2xl p-5 md:grid-cols-4">
+      <form id="cart-rule-editor" onSubmit={saveRule} className="admin-glass-panel grid gap-4 rounded-2xl p-5 md:grid-cols-4">
+        <div className="md:col-span-4 flex items-center justify-between border-b border-white/10 pb-3">
+          <h3 className="text-sm font-semibold text-white">{editingRuleId !== null ? 'Edit reward rule' : 'Create reward rule'}</h3>
+          {editingRuleId !== null && (
+            <button type="button" onClick={cancelEdit} className="inline-flex items-center gap-1 text-xs text-slate-400 hover:text-white">
+              <X size={14}/> Cancel edit
+            </button>
+          )}
+        </div>
         <label className="text-xs text-slate-300">
           Rule name
           <input
@@ -432,7 +476,7 @@ export default function CartRulesEngine() {
           className="inline-flex items-center justify-center gap-2 self-end rounded-lg bg-emerald-400 px-4 py-2 text-sm font-bold text-slate-950 transition hover:bg-emerald-300 disabled:opacity-50"
         >
           <Plus size={15} />
-          Add rule
+          {saving ? 'Saving…' : editingRuleId !== null ? 'Save changes' : 'Create rule'}
         </button>
       </form>
 
@@ -517,6 +561,13 @@ export default function CartRulesEngine() {
                       </button>
                     </td>
                     <td>
+                      <button
+                        aria-label={`Edit ${rule.name}`}
+                        onClick={() => editRule(rule)}
+                        className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white"
+                      >
+                        <Pencil size={15}/>
+                      </button>
                       <button
                         aria-label={`Delete ${rule.name}`}
                         onClick={() => remove(rule)}

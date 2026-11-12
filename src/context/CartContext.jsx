@@ -16,6 +16,72 @@ const PENDING_CART_ADD_KEY = "Bhumivera_pending_cart_add";
 
 export const getCartProductId = product => product?.product_id ?? product?._id ?? product?.id;
 
+function GiftUnlockCelebration({ celebration }) {
+  useEffect(() => {
+    if (!celebration) return undefined;
+    const timer = setTimeout(() => celebration.onComplete(), 3200);
+    return () => clearTimeout(timer);
+  }, [celebration]);
+
+  if (!celebration) return null;
+  const confetti = Array.from({ length: 48 }, (_, index) => ({
+    left: `${(index * 37) % 101}%`,
+    delay: `${(index % 9) * 0.035}s`,
+    duration: `${2.2 + (index % 6) * 0.12}s`,
+    drift: `${((index % 7) - 3) * 28}px`,
+    rotation: `${360 + (index % 4) * 180}deg`,
+    color: ['#D4AF37', '#FCE096', '#8BCB91', '#F7F5EE'][index % 4],
+    shape: index % 3 === 0 ? 'rounded-full' : 'rounded-sm',
+  }));
+  const giftNames = celebration.names.join(', ');
+
+  return (
+    <>
+      <style>{`
+        @keyframes gift-unlock-confetti-fall {
+          0% { opacity: 0; transform: translate3d(0, -12vh, 0) rotate(0deg) scale(.7); }
+          12% { opacity: 1; }
+          100% { opacity: 0; transform: translate3d(var(--gift-drift), 110vh, 0) rotate(var(--gift-rotation)) scale(1); }
+        }
+        @keyframes gift-unlock-message-pop {
+          0% { opacity: 0; transform: translateY(-14px) scale(.92); }
+          12%, 82% { opacity: 1; transform: translateY(0) scale(1); }
+          100% { opacity: 0; transform: translateY(-6px) scale(.98); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .gift-unlock-confetti { display: none; }
+          .gift-unlock-message { animation: none !important; }
+        }
+      `}</style>
+      <div key={celebration.id} className="pointer-events-none fixed inset-0 z-[200] overflow-hidden" aria-hidden="true">
+        {confetti.map((piece, index) => (
+          <span
+            key={index}
+            className={`gift-unlock-confetti absolute top-0 h-2.5 w-1.5 ${piece.shape}`}
+            style={{
+              left: piece.left,
+              backgroundColor: piece.color,
+              animation: `gift-unlock-confetti-fall ${piece.duration} ease-out ${piece.delay} both`,
+              '--gift-drift': piece.drift,
+              '--gift-rotation': piece.rotation,
+            }}
+          />
+        ))}
+      </div>
+      <div
+        key={`message-${celebration.id}`}
+        role="status"
+        aria-live="polite"
+        className="gift-unlock-message pointer-events-none fixed left-1/2 top-5 z-[201] -translate-x-1/2 rounded-2xl border border-[#D4AF37]/50 bg-[#102219]/95 px-5 py-3 text-center text-sm text-white shadow-2xl backdrop-blur-xl"
+        style={{ animation: 'gift-unlock-message-pop 3.2s ease both' }}
+      >
+        <span className="block font-bold text-[#FCE096]">🎁 Free gift unlocked!</span>
+        <span className="mt-1 block max-w-[min(80vw,32rem)] text-xs text-[#DFD7C4]">{giftNames}</span>
+      </div>
+    </>
+  );
+}
+
 export const CartProvider = ({ children }) => {
   const [cart, setCart] = useState([]);
   const [cartLoading, setCartLoading] = useState(false);
@@ -29,7 +95,9 @@ export const CartProvider = ({ children }) => {
   const [abandonment, setAbandonment] = useState(null);
   const [couponStackPolicy, setCouponStackPolicy] = useState('both');
   const [rulePreviewLoading, setRulePreviewLoading] = useState(false);
-  const previousRuleIds = useRef(null);
+  const [giftCelebration, setGiftCelebration] = useState(null);
+  const previousRuleIds = useRef(new Set());
+  const skipInitialRulePreview = useRef(true);
   const { isAuthenticated, user } = useAuth();
   const isCustomerAuthenticated = isAuthenticated &&
     !['admin', 'superadmin', 'warehouse_admin'].includes(user?.role);
@@ -144,6 +212,8 @@ export const CartProvider = ({ children }) => {
       try {
         const saved = localStorage.getItem(GUEST_CART_KEY);
         const parsed = saved ? JSON.parse(saved) : [];
+        skipInitialRulePreview.current = parsed.length > 0;
+        previousRuleIds.current = new Set();
         setCart(Array.isArray(parsed) ? parsed : []);
         setRulePreview(null);
         setReferralReward({ balance: 0, estimatedAmount: 0, tiers: [] });
@@ -446,9 +516,23 @@ export const CartProvider = ({ children }) => {
   useEffect(() => {
     if (!rulePreview) return;
     const currentIds = new Set((rulePreview.matchedRuleIds || []).map(String));
-    if (previousRuleIds.current) {
-      const newlyUnlocked = (rulePreview.matchedRules || []).filter(rule => currentIds.has(String(rule.id)) && !previousRuleIds.current.has(String(rule.id)));
-      newlyUnlocked.forEach(rule => toast.success(`🎉 You unlocked ${rule.badge_text || rule.name}`));
+    if (skipInitialRulePreview.current) {
+      previousRuleIds.current = currentIds;
+      skipInitialRulePreview.current = false;
+      return;
+    }
+    const newlyUnlocked = (rulePreview.matchedRules || []).filter(rule => currentIds.has(String(rule.id)) && !previousRuleIds.current.has(String(rule.id)));
+    newlyUnlocked.forEach(rule => toast.success(`🎉 You unlocked ${rule.badge_text || rule.name}`));
+    const newGiftNames = [...new Set(newlyUnlocked
+      .filter(rule => rule.gift_product_id != null)
+      .map(rule => rule.gift_product_name || rule.badge_text || rule.name)
+      .filter(Boolean))];
+    if (newGiftNames.length) {
+      setGiftCelebration({
+        id: Date.now(),
+        names: newGiftNames,
+        onComplete: () => setGiftCelebration(null),
+      });
     }
     previousRuleIds.current = currentIds;
   }, [rulePreview, toast]);
@@ -483,6 +567,7 @@ export const CartProvider = ({ children }) => {
       shippingProgress,
       freeShippingThreshold,
       rulePreview,
+      giftCelebration,
       referralReward,
       loyalty,
       couponStackPolicy,
@@ -491,6 +576,7 @@ export const CartProvider = ({ children }) => {
       loadCart
     }}>
       {children}
+      <GiftUnlockCelebration celebration={giftCelebration} />
     </CartContext.Provider>
   );
 };

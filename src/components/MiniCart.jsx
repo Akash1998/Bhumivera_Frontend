@@ -35,6 +35,28 @@ const getImageUrl = image => getProductImageUrl(image) || '/logo.webp';
 
 const formatPrice = value => `₹${(Number(value) || 0).toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 const blankAddress = { label: 'Home', fullName: '', phone: '', addressLine1: '', addressLine2: '', city: '', state: '', pincode: '', country: 'India', isDefault: false };
+function CartGiftRewards({ gifts, compact = false }) {
+  if (!Array.isArray(gifts) || gifts.length === 0) return null;
+  return (
+    <section aria-label="Free gifts included with this order" className={`rounded-2xl border border-[#D4AF37]/35 bg-[#14291F] ${compact ? 'p-3' : 'p-4'}`}>
+      <div className="mb-2 flex items-center gap-2 text-[10px] font-bold uppercase tracking-[0.14em] text-[#FCE096]">
+        <Gift size={14}/> Free gifts included
+      </div>
+      <div className="space-y-2">
+        {gifts.map((gift, index) => (
+          <article key={`${gift.ruleId || 'rule'}-${gift.productId || index}`} className="flex items-center gap-3 rounded-xl border border-[#D4AF37]/15 bg-[#0D1C14]/70 p-2.5">
+            <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#D4AF37]/25 bg-[#D4AF37]/10 text-[#FCE096]"><Gift size={18}/></span>
+            <div className="min-w-0 flex-1">
+              <p className="truncate text-xs font-semibold text-white">{gift.productName || 'Complimentary gift'}</p>
+              <p className="mt-1 text-[10px] text-[#9BB0A5]">Quantity: {Number(gift.quantity) || 1} · Added automatically when you place your order</p>
+            </div>
+            <span className="shrink-0 rounded-full border border-emerald-300/25 bg-emerald-300/10 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-emerald-200">Free</span>
+          </article>
+        ))}
+      </div>
+    </section>
+  );
+}
 const calculatePointsRedemption = (loyalty, eligibleSubtotal) => {
   const toCents = value => Math.round(Math.max(0, Number(value) || 0) * 100);
   const balance = Math.floor(Math.max(0, Number(loyalty?.pointsBalance) || 0));
@@ -61,6 +83,9 @@ export default function MiniCart() {
   const toast = useToast();
   const [recommendations, setRecommendations] = useState([]);
   const [recommendationsLoaded, setRecommendationsLoaded] = useState(false);
+  const [recommendationsLoading, setRecommendationsLoading] = useState(false);
+  const [recommendationsError, setRecommendationsError] = useState('');
+  const [recommendationsRetryKey, setRecommendationsRetryKey] = useState(0);
   const [recommendationsOpen, setRecommendationsOpen] = useState(false);
   const [offers, setOffers] = useState([]);
   const [offersOpen, setOffersOpen] = useState(true);
@@ -147,9 +172,12 @@ export default function MiniCart() {
   const estimatedTotal = Math.max(0, subtotal - totalSavings);
   const finalTotal = Math.max(0, subtotal + shippingCost - totalSavings);
   const recommendationsToShow = useMemo(() => {
-    const cartIds = new Set(cartItems.map(item => String(item.product_id || item.product?.id || item.id)));
-    return recommendations.filter(product => !cartIds.has(String(product.id || product._id))).slice(0, 4);
-  }, [cartItems, recommendations]);
+    const cartIds = new Set(cartItems.map(item => String(item.product_id || item.product?.id || item.product?._id || item.id || item._id)));
+    (rulePreview?.gifts || []).forEach(gift => {
+      if (gift.productId != null) cartIds.add(String(gift.productId));
+    });
+    return recommendations.filter(product => !cartIds.has(String(product.id || product._id)));
+  }, [cartItems, recommendations, rulePreview?.gifts]);
   const offersToShow = useMemo(() => offers
     .map(offer => {
       const isReferralReward = offer.reward_type === 'referral_wallet';
@@ -192,21 +220,30 @@ export default function MiniCart() {
   useEffect(() => {
     if (!isCartOpen || checkoutOpen || !recommendationsOpen || cartItems.length === 0 || recommendationsLoaded) return undefined;
     let active = true;
+    setRecommendationsLoading(true);
+    setRecommendationsError('');
     productsApi.getAllActive({ sort: 'rating' })
       .then(response => {
         const data = response.data?.products || response.data?.data || response.data;
         if (active) {
-          setRecommendations(Array.isArray(data) ? data : []);
+          if (!Array.isArray(data)) {
+            throw new Error('The product catalog response was not a list.');
+          }
+          setRecommendations(data);
           setRecommendationsLoaded(true);
         }
       })
       .catch(error => {
         console.error('[MINI_CART_RECOMMENDATIONS]', error);
+        if (active) setRecommendationsError(error.normalized?.message || error.response?.data?.message || error.message || 'Could not load products.');
+      })
+      .finally(() => {
+        if (active) setRecommendationsLoading(false);
       });
     return () => {
       active = false;
     };
-  }, [isCartOpen, checkoutOpen, recommendationsOpen, cartItems.length, recommendationsLoaded]);
+  }, [isCartOpen, checkoutOpen, recommendationsOpen, cartItems.length, recommendationsLoaded, recommendationsRetryKey]);
 
   useEffect(() => {
     if (!isCartOpen || (!offersOpen && checkoutStep !== 1)) return undefined;
@@ -412,6 +449,11 @@ export default function MiniCart() {
     window.requestAnimationFrame(() => {
       document.getElementById('mini-cart-pairings')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
     });
+  };
+
+  const retryRecommendations = () => {
+    setRecommendationsError('');
+    setRecommendationsRetryKey(key => key + 1);
   };
 
   const continueToPayment = () => {
@@ -793,6 +835,8 @@ export default function MiniCart() {
               </article>;
             })}
 
+            {!checkoutOpen && <CartGiftRewards gifts={rulePreview?.gifts}/>}
+
             {!checkoutOpen && <div className="grid grid-cols-2 gap-2 rounded-xl border border-[#244A38] bg-[#102219] p-3 text-[10px] font-semibold text-[#DFD7C4]">
               <span className="flex items-center gap-1.5 text-[#cbd5e1]"><ShieldCheck size={14} className="text-[#d4af37]"/>Artisanal Tamper-Proof</span>
               <span className="flex items-center gap-1.5 text-[#cbd5e1]"><BadgeCheck size={14} className="text-[#d4af37]"/>Lab Verified pH 5.5</span>
@@ -800,6 +844,7 @@ export default function MiniCart() {
 
             {checkoutOpen && <section className="two-tone-panel rounded-2xl p-4 border border-[#244A38]" aria-label="Checkout details">
               <div className="space-y-4">
+              <CartGiftRewards gifts={rulePreview?.gifts} compact/>
               <nav aria-label="Checkout progress" className="grid grid-cols-2 gap-2">
                 {['Delivery', 'Payment'].map((label, index) => {
                   const step = index + 1;
@@ -932,19 +977,25 @@ export default function MiniCart() {
               </div>}
             </section>}
 
-            {!checkoutOpen && <section className="overflow-hidden rounded-2xl border border-[#244A38] bg-[#1C382B]">
+            {!checkoutOpen && <section id="mini-cart-pairings" className="overflow-hidden rounded-2xl border border-[#244A38] bg-[#1C382B]">
               <button type="button" aria-expanded={recommendationsOpen} onClick={() => setRecommendationsOpen(open => !open)} className="flex w-full items-center justify-between px-4 py-3 text-left">
-                <span><span className="block text-xs font-serif font-bold uppercase tracking-wider text-white">Considered Pairings</span><span className="mt-0.5 block text-[10px] text-[#9BB0A5]">Curated for complete routine balance</span></span>
+                <span><span className="block text-xs font-serif font-bold uppercase tracking-wider text-white">Considered Pairings</span><span className="mt-0.5 block text-[10px] text-[#9BB0A5]">{recommendationsLoading ? 'Loading products…' : `${recommendationsToShow.length} products available · already-added products hidden`}</span></span>
                 {recommendationsOpen ? <ChevronUp size={16} className="text-[#9BB0A5]"/> : <ChevronDown size={16} className="text-[#9BB0A5]"/>}
               </button>
-              {recommendationsOpen && <div className="space-y-2 border-t border-[#244A38] p-3 bg-[#102219]">
-                <div className="grid grid-cols-2 gap-2">
-                  {recommendationsToShow.slice(0, 2).map(product => <article key={product.id || product._id} className="flex min-w-0 items-center gap-2 rounded-xl border border-[#244A38] bg-[#14291F] p-2">
-                    <img src={getImageUrl(product.image_url || product.images || product.image)} alt={product.name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-12 w-12 shrink-0 rounded-lg bg-black/40 object-contain p-1"/>
-                    <div className="min-w-0 flex-1"><p className="line-clamp-2 text-[10px] font-semibold leading-tight text-white">{product.name}</p><p className="mt-1 text-[10px] font-bold text-[#D4AF37]">{formatPrice(product.discount_price || product.price)}</p></div>
-                    <button type="button" aria-label={`Add ${product.name} to bag`} onClick={() => addToCart(product)} className="shrink-0 rounded-lg border border-[#D4AF37]/40 p-1.5 text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#14291F]"><Plus size={14}/></button>
-                  </article>)}
-                </div>
+              {recommendationsOpen && <div className="max-h-80 overflow-y-auto overscroll-contain border-t border-[#244A38] bg-[#102219] p-3">
+                {recommendationsLoading
+                  ? <p role="status" className="py-4 text-center text-xs text-[#9BB0A5]">Loading the product catalog…</p>
+                  : recommendationsError
+                    ? <div className="py-3 text-center text-xs text-rose-300"><p role="alert">{recommendationsError}</p><button type="button" onClick={retryRecommendations} className="mt-2 font-semibold underline">Try again</button></div>
+                    : recommendationsToShow.length === 0
+                      ? <p className="py-4 text-center text-xs text-[#9BB0A5]">All available products are already in your bag.</p>
+                      : <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                        {recommendationsToShow.map(product => <article key={product.id || product._id} className="flex min-w-0 items-center gap-2 rounded-xl border border-[#244A38] bg-[#14291F] p-2">
+                          <img src={getImageUrl(product.image_url || product.images || product.image)} alt={product.name} onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-12 w-12 shrink-0 rounded-lg bg-black/40 object-contain p-1"/>
+                          <div className="min-w-0 flex-1"><p className="line-clamp-2 text-[10px] font-semibold leading-tight text-white">{product.name}</p><p className="mt-1 text-[10px] font-bold text-[#D4AF37]">{formatPrice(product.discount_price || product.price)}</p></div>
+                          <button type="button" aria-label={`Add ${product.name} to bag`} onClick={() => addToCart(product)} className="shrink-0 rounded-lg border border-[#D4AF37]/40 p-1.5 text-[#D4AF37] hover:bg-[#D4AF37] hover:text-[#14291F]"><Plus size={14}/></button>
+                        </article>)}
+                      </div>}
               </div>}
             </section>}
           </>}
