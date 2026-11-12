@@ -16,6 +16,16 @@ const currency = value => `₹${(Number(value) || 0).toLocaleString('en-IN', {
   maximumFractionDigits: 2,
 })}`;
 
+const createQrDataUrl = async (payload, width) => {
+  const svg = await QRCode.toString(payload, {
+    type: 'svg',
+    width,
+    margin: 4,
+    errorCorrectionLevel: 'M',
+  });
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+};
+
 const amountInIndianWords = amount => {
   const belowTwenty = ['', 'One', 'Two', 'Three', 'Four', 'Five', 'Six', 'Seven', 'Eight', 'Nine', 'Ten', 'Eleven', 'Twelve', 'Thirteen', 'Fourteen', 'Fifteen', 'Sixteen', 'Seventeen', 'Eighteen', 'Nineteen'];
   const tensWords = ['', '', 'Twenty', 'Thirty', 'Forty', 'Fifty', 'Sixty', 'Seventy', 'Eighty', 'Ninety'];
@@ -111,8 +121,8 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
       ? `upi://pay?pa=${encodeURIComponent(upiId)}&pn=${encodeURIComponent(storeConfig.storeName || 'Bhumivera')}&am=${total.toFixed(2)}&cu=INR&tn=${encodeURIComponent(`Invoice ${invoiceNumber}`)}`
       : `https://bhumivera.com/verify?order=${encodeURIComponent(order.orderNumber || order.id)}`;
     Promise.all([
-      QRCode.toDataURL(encodeOrderManifest(order), { width: 1080, margin: 4, errorCorrectionLevel: 'M' }),
-      QRCode.toDataURL(paymentPayload, { width: 600, margin: 4, errorCorrectionLevel: 'M' }),
+      createQrDataUrl(encodeOrderManifest(order), 2048),
+      createQrDataUrl(paymentPayload, 1024),
     ]).then(([manifestUrl, payUrl]) => {
       if (active) {
         setQrUrl(manifestUrl);
@@ -208,14 +218,14 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
           .amount{text-align:right;font-size:8px;font-weight:bold}.amount-row{display:flex;justify-content:space-between;gap:8px;margin:4px 0}.amount .grand{font-size:12px;border-top:1.5px solid #111;padding-top:6px;margin-top:6px}
           .shipline{margin-top:8px;border:1px solid #333;padding:7px 8px;line-height:1.5;display:flex;justify-content:space-between;gap:10px}.shipline strong{font-size:7px;text-transform:uppercase;letter-spacing:.6px}.shipvalue{text-align:right;font-weight:bold}
           .qrbox{display:flex;min-width:0;align-items:center;gap:8px;border:1px solid #333;padding:6px;margin-top:7px;overflow:hidden;line-height:1.4}.qrbox img{flex:none;width:20mm;height:20mm;object-fit:contain;image-rendering:pixelated}.qrbox span{min-width:0;overflow-wrap:anywhere}
-          .bottom>div:first-child{display:flex;flex-direction:column}.tax-qr{display:flex;flex:1;justify-content:center;align-items:center;min-height:42mm;margin-top:4mm}.tax-qr img{display:block;width:34mm;height:34mm;object-fit:contain;image-rendering:pixelated}
+          .bottom>div:first-child{display:flex;flex-direction:column}.tax-qr{display:flex;flex:1;justify-content:center;align-items:center;min-height:56mm;margin-top:4mm}.tax-qr img{display:block;width:48mm;height:48mm;object-fit:contain}
           .closing{display:grid;grid-template-columns:minmax(0,1fr) 44mm;align-items:center;gap:12px;margin-top:10px;padding:10px;border:1px solid #444;background:#f7f7f4;break-inside:avoid}
           .gratitude{font-size:11px;line-height:1.6}.gratitude h3{margin:0 0 5px;font-size:12px;text-transform:uppercase;letter-spacing:.6px}.gratitude p{margin:0}
           .signature{text-align:center;border-left:1px solid #999;padding-left:7px}.signature .script{font-family:"Segoe Script","Brush Script MT",cursive;font-size:17px;font-style:italic;line-height:1.2}.signature strong{display:block;margin-top:3px;font-size:8px}.signature small{font-size:7px}
           .foot{border-top:1px solid #333;margin-top:8px;padding-top:6px;display:grid;grid-template-columns:1fr;gap:6px;line-height:1.4}
           .note{font-size:7px;color:#333;margin-top:5px}
           @page{size:A4 portrait;margin:0}
-          @media(max-width:680px){body{padding:6px}.sheet{min-height:0;padding:5mm}.head{grid-template-columns:1fr 130px}.two,.bottom,.foot{gap:5px}.bottom{grid-template-columns:minmax(0,1fr) minmax(0,180px)}.closing{grid-template-columns:minmax(0,1fr) 36mm;gap:6px}.tax-qr{min-height:36mm}.tax-qr img{width:30mm;height:30mm}table{font-size:6px}th,td{padding:2px}}
+          @media(max-width:680px){body{padding:6px}.sheet{min-height:0;padding:5mm}.head{grid-template-columns:1fr 130px}.two,.bottom,.foot{gap:5px}.bottom{grid-template-columns:minmax(0,1fr) minmax(0,180px)}.closing{grid-template-columns:minmax(0,1fr) 36mm;gap:6px}.tax-qr{min-height:46mm}.tax-qr img{width:40mm;height:40mm}table{font-size:6px}th,td{padding:2px}}
           @media print{html,body{width:210mm;height:297mm;padding:0}body{display:flex;justify-content:center;align-items:flex-start}.sheet{width:194mm;height:281mm;max-width:none;min-height:0;margin:8mm auto;padding:6mm;border:1.2px solid #111;break-inside:avoid;page-break-inside:avoid}.head,.two,.bottom,.foot,.shipline,.qrbox,.tax-qr,.closing,table{break-inside:avoid;page-break-inside:avoid}button{display:none}}
         </style>
       </head><body><main class="sheet">
@@ -296,9 +306,9 @@ export default function FulfillmentOrderQrModal({ order, storeConfig = {}, onClo
         )}
         {qrUrl ? (
           <div className="flex flex-col items-center rounded-xl bg-white p-4 text-slate-900">
-            <img src={qrUrl} alt={`Fulfillment manifest QR for order ${order.orderNumber || order.id}`} className="h-80 w-80 max-w-full object-contain [image-rendering:pixelated]" />
+            <img src={qrUrl} alt={`Fulfillment manifest QR for order ${order.orderNumber || order.id}`} className="max-w-full object-contain" style={{ width: 'min(78vw, 28rem)', height: 'min(78vw, 28rem)' }} />
             <strong className="font-mono">Order {order.orderNumber || order.id}</strong>
-            <span className="mt-1 text-[10px] text-slate-500">{qrPayloadLength.toLocaleString()} character compact manifest · 1080 px QR</span>
+            <span className="mt-1 text-[10px] text-slate-500">{qrPayloadLength.toLocaleString()} character manifest · crisp vector QR</span>
           </div>
         ) : <p className="py-10 text-center text-sm text-slate-300">Generating invoice and fulfillment QR…</p>}
         <button type="button" disabled={!qrUrl || !paymentQrUrl || !canPrintInvoice} onClick={printSlip} className="mt-4 flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-emerald-500 px-4 font-black text-emerald-950 disabled:opacity-50">
