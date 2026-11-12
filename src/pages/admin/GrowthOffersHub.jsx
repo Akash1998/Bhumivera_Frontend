@@ -3,10 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import { Award, FlaskConical, Gift, LoaderCircle, Megaphone, Users } from 'lucide-react';
 
 const LoyaltyMembers = lazy(() => import('./LoyaltyMembers'));
-const CouponManagement = lazy(() => import('./CouponManagement'));
 const FlashSalesManagement = lazy(() => import('./FlashSalesManagement'));
-const MinCartValueCenter = lazy(() => import('./MinCartValueCenter'));
-const CartRulesEngine = lazy(() => import('./CartRulesEngine'));
 const GamificationStudio = lazy(() => import('./GamificationStudio'));
 const LifecycleOffers = lazy(() => import('./LifecycleOffers'));
 const PersonalizationCenter = lazy(() => import('./PersonalizationCenter'));
@@ -14,23 +11,20 @@ const LoyaltyTierForge = lazy(() => import('./LoyaltyTierForge'));
 
 const groups = [
   {
-    id: 'offers',
-    label: 'Offers & checkout',
+    id: 'campaigns',
+    label: 'Campaigns',
     icon: Megaphone,
     features: [
-      { id: 'coupons', label: 'Coupons', purpose: 'Give customers a code for a price discount.', steps: 'Create a code, choose its discount and dates, then save it.', component: CouponManagement },
       { id: 'flash-sales', label: 'Flash sales', purpose: 'Discount selected products for a limited time.', steps: 'Create a sale, select products, set the start and end time, then save.', component: FlashSalesManagement },
-      { id: 'min-cart-value', label: 'Cart minimums', purpose: 'Offer a benefit when a cart reaches a certain value.', steps: 'Set the minimum amount, choose benefits, and save the rule.', component: MinCartValueCenter },
-      { id: 'cart-rules', label: 'Cart rules', purpose: 'Set conditions for discounts, free shipping, gifts, or bonus points.', steps: 'Choose the cart conditions and customer group, then create the rule.', component: CartRulesEngine },
     ],
   },
   {
     id: 'loyalty',
-    label: 'Clientele Privilege & Tiers',
+    label: 'Loyalty program',
     icon: Award,
     features: [
-      { id: 'loyalty-matrix', label: 'Matrix controls', purpose: 'Set point earning, redemption safeguards, lifetime tiers, and real tier benefits.', steps: 'Configure the program and redemption caps, then define each tier’s qualifying points and checkout benefits.', component: LoyaltyTierForge },
-      { id: 'loyalty', label: 'Members & points', purpose: 'Review member balances and make reasoned point adjustments.', steps: 'Search a member and record a points or lifetime-tier adjustment with a reason.', component: LoyaltyMembers },
+      { id: 'loyalty-matrix', label: 'Loyalty settings & tiers', purpose: 'Set point earning, redemption limits, tier thresholds, and tier benefits.', steps: 'Configure the program, then set the points and checkout benefits for each tier.', component: LoyaltyTierForge },
+      { id: 'loyalty', label: 'Customer points', purpose: 'Review member balances and make reasoned point adjustments.', steps: 'Search a customer and record a points adjustment with a reason.', component: LoyaltyMembers },
       { id: 'gamification', label: 'Reward activities', purpose: 'Enable activities such as reward spins and sale countdowns.', steps: 'Turn an activity on or off. Changes are saved as you make them.', component: GamificationStudio },
     ],
   },
@@ -52,7 +46,15 @@ export default function GrowthOffersHub() {
   const navigate = useNavigate();
   const { tab } = useParams();
   const initialFeature = allFeatures.find(feature =>
-    feature.id === (tab === 'loyalty-tiers' ? 'loyalty-matrix' : tab === 'growth-offers' ? 'min-cart-value' : tab)
+    feature.id === (
+      tab === 'loyalty-tiers'
+        ? 'loyalty-matrix'
+        : tab === 'loyalty-members'
+          ? 'loyalty'
+          : tab === 'growth-offers'
+            ? 'flash-sales'
+            : tab
+    )
   ) || allFeatures[0];
   const [selectedId, setSelectedId] = useState(initialFeature.id);
   const [activeGroup, setActiveGroup] = useState(groups.find(group => group.features.some(feature => feature.id === initialFeature.id))?.id || groups[0].id);
@@ -65,11 +67,13 @@ export default function GrowthOffersHub() {
       navigate('/admin/dashboard/loyalty-matrix', { replace: true });
       return;
     }
-    const feature = allFeatures.find(item => item.id === tab);
+    const featureId = tab === 'loyalty-members' ? 'loyalty' : tab;
+    const feature = allFeatures.find(item => item.id === featureId);
     if (feature) {
       setSelectedId(feature.id);
       setActiveGroup(groups.find(group => group.features.some(item => item.id === feature.id))?.id || groups[0].id);
       setMobileShowingTool(true);
+      if (feature.id !== tab) navigate(`/admin/dashboard/${feature.id}`, { replace: true });
     }
   }, [tab, navigate]);
 

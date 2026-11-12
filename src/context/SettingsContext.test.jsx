@@ -10,12 +10,12 @@ vi.mock('../services/api', () => ({
 }));
 
 function SettingsProbe() {
-  const { settings: publicSettings, loadSettings } = useSettings();
-  return (
-    <button type="button" onClick={() => { void loadSettings(); }}>
-      {publicSettings?.free_shipping_threshold ?? 'Load settings'}
-    </button>
-  );
+  const { settings: publicSettings, loadSettings, updatePublicSettings } = useSettings();
+  return <>
+    <button type="button" onClick={() => { void loadSettings(); }}>Load public settings</button>
+    <button type="button" onClick={() => updatePublicSettings({ free_shipping_threshold: '599' })}>Update threshold</button>
+    <p>{publicSettings?.free_shipping_threshold ?? 'Not loaded'}</p>
+  </>;
 }
 
 describe('SettingsProvider', () => {
@@ -38,11 +38,29 @@ describe('SettingsProvider', () => {
     expect(settings.getPublic).not.toHaveBeenCalled();
 
     await act(async () => {
-      fireEvent.click(screen.getByRole('button'));
-      fireEvent.click(screen.getByRole('button'));
+      fireEvent.click(screen.getByRole('button', { name: 'Load public settings' }));
+      fireEvent.click(screen.getByRole('button', { name: 'Load public settings' }));
     });
 
-    await waitFor(() => expect(screen.getByRole('button').textContent).toBe('4000'));
+    await waitFor(() => expect(screen.getByText('4000')).toBeTruthy());
+    expect(settings.getPublic).toHaveBeenCalledTimes(1);
+  });
+
+  it('updates already-loaded public settings after an admin save', async () => {
+    render(
+      <SettingsProvider>
+        <SettingsProbe />
+      </SettingsProvider>
+    );
+
+    await act(async () => {
+      fireEvent.click(screen.getByRole('button', { name: 'Load public settings' }));
+    });
+    await waitFor(() => expect(screen.getByText('4000')).toBeTruthy());
+
+    fireEvent.click(screen.getByRole('button', { name: 'Update threshold' }));
+
+    expect(screen.getByText('599')).toBeTruthy();
     expect(settings.getPublic).toHaveBeenCalledTimes(1);
   });
 });

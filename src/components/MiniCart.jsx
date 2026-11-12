@@ -123,10 +123,18 @@ export default function MiniCart() {
   const loyaltyDiscount = redeemLoyaltyPoints ? pointsRedemption.discount : 0;
   const loyaltyFreeShipping = Boolean(loyalty?.enabled && Number(loyalty?.currentTier?.free_shipping) === 1);
   const couponFreeShipping = appliedCoupon?.rewardType === 'free_shipping';
+  const matchedFreeShippingRule = (rulePreview?.matchedRules || []).find(rule => Number(rule.free_shipping_enabled) === 1);
   const amountToFreeShipping = rulePreview?.freeShipping || loyaltyFreeShipping || couponFreeShipping ? 0 : Math.max(0, Number(freeShippingThreshold) - subtotal);
   const freeDeliveryProgress = amountToFreeShipping > 0 && Number(freeShippingThreshold) > 0
     ? Math.min(100, Math.max(0, subtotal * 100 / Number(freeShippingThreshold)))
     : 100;
+  const freeDeliverySources = [
+    loyaltyFreeShipping ? `${loyalty?.currentTier?.name || 'Member'} tier benefit` : '',
+    matchedFreeShippingRule ? `Cart rule: ${matchedFreeShippingRule.badge_text || matchedFreeShippingRule.name || 'free delivery reward'}` : rulePreview?.freeShipping ? 'Cart rule benefit' : '',
+    couponFreeShipping ? 'Free-delivery coupon' : '',
+    subtotal >= Number(freeShippingThreshold) && Number(freeShippingThreshold) > 0 ? `${formatPrice(freeShippingThreshold)} order threshold` : '',
+    Number(freeShippingThreshold) <= 0 ? 'Free-delivery threshold is set to ₹0' : '',
+  ].filter(Boolean);
   const { standardCost: standardDeliveryCost, premiumCost: premiumDeliveryCost } = calculateDeliveryCosts({
     subtotal,
     standardCharge: settings?.standard_charge ?? settings?.default_shipping_charge ?? 50,
@@ -737,7 +745,7 @@ export default function MiniCart() {
                 <p className="mt-2 text-[11px] leading-5 text-[#DFD7C4]">
                     {amountToFreeShipping > 0
                       ? <>Add <strong className="text-[#FCE096]">{formatPrice(amountToFreeShipping)}</strong> more to get free delivery.</>
-                      : <strong className="text-white">Free delivery is unlocked for this bag.</strong>}
+                      : <><strong className="text-white">Free delivery is unlocked.</strong>{freeDeliverySources.length > 0 && <span className="block text-[#9BB0A5]">Via {freeDeliverySources.join(' · ')}</span>}</>}
                 </p>
               </div>
               {(amountToFreeShipping > 0 || upcomingCartReward) && <button

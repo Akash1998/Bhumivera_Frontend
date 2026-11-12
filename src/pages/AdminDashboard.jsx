@@ -3,13 +3,13 @@ import { Link, useNavigate, useParams } from 'react-router-dom';
 import {
   Activity, Award, Bell, Boxes, ChartNoAxesCombined, ChevronDown, Compass, ExternalLink, FileText,
   Gamepad2, Gift, Headphones, Leaf, LogOut, Mail, MessageSquare, Package, Settings2,
-  ShieldCheck, SlidersHorizontal, Sparkles, Star, Tags, Users, Wallet, Warehouse, Zap
+  ShieldCheck, ShoppingCart, SlidersHorizontal, Sparkles, Star, Tags, Truck, Users, Wallet, Warehouse, Zap
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { COMPLETE_SITE_NAVIGATION_DIRECTORY } from '../utils/aiCopilotBus';
 import './admin/AdminTheme.css';
 
-// DYNAMIC LAZY IMPORTS: Website Governance Only (Orders, Delivery, Returns & Stock isolated in /inventorysoftware)
+// Business-domain screens are lazy-loaded; fulfillment tools open their connected operations panel.
 const DashboardOverview = lazy(() => import('./admin/DashboardOverview'));
 const SystemHealth = lazy(() => import('./admin/SystemHealth'));
 const SystemLogs = lazy(() => import('./admin/SystemLogs'));
@@ -25,25 +25,26 @@ const GSTAccounting = lazy(() => import('./admin/GSTAccounting'));
 const AdminSettings = lazy(() => import('./admin/AdminSettings.jsx'));
 const ImpactManagement = lazy(() => import('./admin/ImpactManagement.jsx'));
 const GrowthOffersHub = lazy(() => import('./admin/GrowthOffersHub.jsx'));
+const CartCheckoutHub = lazy(() => import('./admin/CartCheckoutHub.jsx'));
 const WalletManagement = lazy(() => import('./admin/WalletManagement.jsx'));
 const ReferralEngine = lazy(() => import('./admin/AffiliateManagement.jsx'));
 const SupportManagement = lazy(() => import('./admin/SupportManagement.jsx'));
 const ContactManagement = lazy(() => import('./admin/ContactManagement.jsx'));
 const SupportAgentManagement = lazy(() => import('./admin/SupportAgentManagement.jsx'));
-const LoyaltyTierForge = lazy(() => import('./admin/LoyaltyTierForge.jsx'));
-const LoyaltyMembers = lazy(() => import('./admin/LoyaltyMembers.jsx'));
-const PersonalizationCenter = lazy(() => import('./admin/PersonalizationCenter.jsx'));
-const LifecycleOffers = lazy(() => import('./admin/LifecycleOffers.jsx'));
 
 const GROWTH_TABS = [
   'flash-sales',
-  'coupons',
   'loyalty',
   'loyalty-matrix',
-  'min-cart-value',
-  'cart-rules',
   'gamification',
   'ab-experiments',
+];
+const GROWTH_SECTION_TABS = [
+  ...GROWTH_TABS,
+  'loyalty-tiers',
+  'loyalty-members',
+  'personalization',
+  'lifecycle-offers',
 ];
 
 class ErrorBoundary extends Component {
@@ -93,10 +94,10 @@ const TAB_COMPONENTS = {
   gst: GSTAccounting,
   settings: AdminSettings,
   ...Object.fromEntries(GROWTH_TABS.map(id => [id, GrowthOffersHub])),
-  'loyalty-tiers': LoyaltyTierForge,
-  'loyalty-members': LoyaltyMembers,
-  personalization: PersonalizationCenter,
-  'lifecycle-offers': LifecycleOffers,
+  'loyalty-tiers': GrowthOffersHub,
+  'loyalty-members': GrowthOffersHub,
+  personalization: GrowthOffersHub,
+  'lifecycle-offers': GrowthOffersHub,
   affiliate: ReferralEngine,
   'referral-engine': ReferralEngine,
   'growth-offers': GrowthOffersHub,
@@ -105,6 +106,10 @@ const TAB_COMPONENTS = {
   support: SupportManagement,
   contacts: ContactManagement,
   'support-agents': SupportAgentManagement,
+  'cart-checkout': CartCheckoutHub,
+  'cart-rules': CartCheckoutHub,
+  'min-cart-value': CartCheckoutHub,
+  coupons: CartCheckoutHub,
 };
 
 const TAB_ICONS = {
@@ -139,6 +144,13 @@ const TAB_ICONS = {
   support: Headphones,
   contacts: MessageSquare,
   'support-agents': Users,
+  'cart-checkout': ShoppingCart,
+  orders: Warehouse,
+  'support-desk': Headphones,
+  'superadmin-support': ShieldCheck,
+  shipping: Truck,
+  returns: Package,
+  inventory: Boxes,
 };
 
 export default function AdminDashboard() {
@@ -186,69 +198,83 @@ export default function AdminDashboard() {
     navigate('/admin/login');
   };
 
-  // Website Executive Governance Sections (Orders, Delivery, Returns & Stock ported to /inventorysoftware)
+  // Keep each business area together, linking external operations to their specialized screens.
   const menuSections = [
     {
       title: 'Workspace',
       items: [
         { id: 'overview', label: 'Dashboard' },
         { id: 'analytics', label: 'Analytics' },
+        { id: 'notifications', label: 'Notifications' },
         { id: 'system-health', label: 'System Health' },
         { id: 'system-logs', label: 'System Logs' },
-        { id: 'notifications', label: 'Notifications' },
       ],
     },
     {
-      title: 'Client Experience & CRM',
+      title: 'Orders & Fulfillment',
       items: [
-        { id: 'users', label: 'Customer Management (CRM)' },
-        { id: 'reviews', label: 'Reviews & Moderation' },
-        { id: 'contacts', label: 'Contact & Inquiries' },
-        { id: 'support-agents', label: 'Support Staff Roster' },
+        { id: 'orders', label: 'Order management', path: '/inventorysoftware?view=online' },
+        { id: 'shipping', label: 'Delivery & shipping labels', path: '/inventorysoftware?view=labels' },
+        { id: 'returns', label: 'Returns & RTO', path: '/inventorysoftware?view=ret' },
       ],
     },
     {
-      title: 'Website Catalog & Finance',
+      title: 'Products & Catalog',
       items: [
-        { id: 'products', label: 'Website Product Catalog' },
+        { id: 'products', label: 'Product catalog' },
         { id: 'categories', label: 'Categories' },
-        { id: 'scarcity-simulator', label: 'Stock Pacing Studio' },
-        { id: 'tax', label: 'Taxes' },
-        { id: 'gst', label: 'Financial Ledger & GST Compliance' },
+        { id: 'inventory', label: 'Stock & inventory', path: '/inventorysoftware?view=inv' },
+        { id: 'scarcity-simulator', label: 'Stock pacing' },
+        { id: 'reviews', label: 'Reviews & Moderation' },
       ],
     },
     {
-      title: 'Growth, Offers & Privilege',
+      title: 'Customers & Support',
       items: [
-        { id: 'gamification', label: 'Reward Spins & Activities' },
+        { id: 'users', label: 'Customer management (CRM)' },
+        { id: 'wallet-management', label: 'Customer wallets' },
+        { id: 'contacts', label: 'Contact & Inquiries' },
+        { id: 'support', label: 'Support operations' },
+        { id: 'support-agents', label: 'Support staff' },
+        { id: 'support-desk', label: 'Customer support desk', path: '/support' },
+      ],
+    },
+    {
+      title: 'Cart & Checkout',
+      items: [
+        { id: 'cart-checkout', label: 'Cart, delivery & checkout' },
+      ],
+    },
+    {
+      title: 'Growth & Loyalty',
+      items: [
         { id: 'referral-engine', label: 'Brand Ambassador & Referrals' },
-        { id: 'growth-offers', label: 'Growth & Offers · Cart Gifts, Coupons, Sales' },
-        { id: 'loyalty-tiers', label: 'Clientele Privilege & Tiers' },
-        { id: 'loyalty-members', label: 'Privilege Members' },
-        { id: 'personalization', label: 'Bespoke Client Curation' },
-        { id: 'lifecycle-offers', label: 'Lifecycle Automations' },
+        { id: 'growth-offers', label: 'Offers & loyalty tools' },
       ],
     },
     {
-      title: 'Maison Governance',
+      title: 'Finance & Compliance',
       items: [
+        { id: 'tax', label: 'Taxes' },
+        { id: 'gst', label: 'Finance & GST' },
+      ],
+    },
+    {
+      title: 'Store & Platform',
+      items: [
+        { id: 'settings', label: 'Website & account settings' },
         { id: 'impact', label: 'Earth Impact' },
-        { id: 'wallet-management', label: 'Client Wallets' },
-        { id: 'settings', label: 'Website Settings' },
+        { id: 'superadmin-support', label: 'Platform support', path: '/superadminsupport' },
       ],
     },
   ];
 
   const quickTabs = [
     'overview',
-    'gamification',
-    'referral-engine',
-    'users',
+    'orders',
     'products',
-    'growth-offers',
-    'loyalty-tiers',
-    'gst',
-    'reviews',
+    'users',
+    'cart-checkout',
   ];
   const allMenuItems = menuSections.flatMap(section => section.items);
   const quickItems = quickTabs.map(id => allMenuItems.find(item => item.id === id)).filter(Boolean);
@@ -262,13 +288,13 @@ export default function AdminDashboard() {
     .filter(section => section.items.length);
   const activeLabel =
     allMenuItems.find(item => item.id === activeTab)?.label ||
-    (['affiliate', 'referral-engine'].includes(activeTab)
-      ? 'Brand Ambassador & Referrals'
-      : ['loyalty-matrix', 'loyalty-tiers'].includes(activeTab)
-      ? 'Clientele Privilege & Tiers'
-      : GROWTH_TABS.includes(activeTab)
-      ? 'Promotions & Offers'
-      : 'Dashboard');
+    (['cart-rules', 'min-cart-value', 'coupons'].includes(activeTab)
+      ? 'Cart & Checkout'
+      : ['affiliate', 'referral-engine'].includes(activeTab)
+        ? 'Brand Ambassador & Referrals'
+        : GROWTH_SECTION_TABS.includes(activeTab)
+          ? 'Growth & Loyalty'
+          : 'Dashboard');
   const ActiveComponent = TAB_COMPONENTS[activeTab] || DashboardOverview;
 
   const filteredDirectoryLinks = COMPLETE_SITE_NAVIGATION_DIRECTORY.filter(item => {
@@ -337,7 +363,7 @@ export default function AdminDashboard() {
             >
               <span className="text-white font-black tracking-[0.12em] text-sm block">Bhumivera</span>
               <span className="text-[#d4af37] font-semibold text-[9px] uppercase tracking-widest block">
-                Website Admin Control
+                Admin Dashboard
               </span>
             </div>
           </div>
@@ -383,7 +409,7 @@ export default function AdminDashboard() {
                         type="button"
                         title={!isSidebarOpen ? item.label : undefined}
                         aria-current={isActive ? 'page' : undefined}
-                        onClick={() => navigate(`/admin/dashboard/${item.id}`)}
+                        onClick={() => navigate(item.path || `/admin/dashboard/${item.id}`)}
                         className={`w-full min-h-9 flex items-center px-3 py-2 rounded-lg transition-colors border ${
                           isActive
                             ? 'bg-[#d4af37]/15 border-[#d4af37]/30 text-[#f3d77b]'
@@ -396,7 +422,10 @@ export default function AdminDashboard() {
                           className="flex-shrink-0"
                           aria-hidden="true"
                         />
-                        {isSidebarOpen && <span className="truncate text-xs font-medium">{item.label}</span>}
+                        {isSidebarOpen && <>
+                          <span className="truncate text-xs font-medium">{item.label}</span>
+                          {item.path && <ExternalLink size={12} className="ml-auto shrink-0 text-slate-500" aria-hidden="true"/>}
+                        </>}
                       </button>
                     );
                   })}
@@ -406,43 +435,6 @@ export default function AdminDashboard() {
               <p className="px-3 py-4 text-xs text-slate-500">No matching section.</p>
             )}
           </nav>
-
-          {/* Direct Connected Panels in Sidebar */}
-          {isSidebarOpen && (
-            <div className="px-3 py-2 border-t border-[#d4af37]/15 space-y-1 text-[11px]">
-              <p className="px-2 pb-1 text-[9px] font-bold text-[#d4af37] uppercase tracking-widest">
-                Connected Bhumivera Panels
-              </p>
-              <Link
-                to="/inventorysoftware?view=online"
-                className="flex items-center justify-between px-2.5 py-1.5 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-bold hover:bg-emerald-500/25"
-              >
-                <span>Orders, Delivery &amp; Stock</span>
-                <ExternalLink size={12} />
-              </Link>
-              <Link
-                to="/superadminsupport"
-                className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-purple-200 hover:bg-purple-500/15"
-              >
-                <span>SuperAdmin Support</span>
-                <ExternalLink size={12} />
-              </Link>
-              <Link
-                to="/support"
-                className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-emerald-200 hover:bg-emerald-500/15"
-              >
-                <span>Customer Support Desk</span>
-                <ExternalLink size={12} />
-              </Link>
-              <Link
-                to="/"
-                className="flex items-center justify-between px-2.5 py-1.5 rounded-lg text-amber-200 hover:bg-amber-500/15"
-              >
-                <span>Main Storefront</span>
-                <ExternalLink size={12} />
-              </Link>
-            </div>
-          )}
 
           <div className="p-3 border-t border-[#d4af37]/15 bg-[#071a12] sticky bottom-0 z-10">
             <button
@@ -501,28 +493,20 @@ export default function AdminDashboard() {
                 </button>
                 <div className="min-w-0">
                   <p className="text-[9px] font-semibold uppercase tracking-[0.16em] text-[#d4af37]">
-                    Bhumivera Website Control Center (Orders &amp; Stock Isolated in /inventorysoftware)
+                    Bhumivera Admin · grouped by task
                   </p>
                   <h1 className="truncate text-lg font-semibold text-white md:text-xl">{activeLabel}</h1>
                 </div>
               </div>
 
               <div className="flex items-center gap-2">
-                <Link
-                  to="/inventorysoftware?view=online"
-                  className="hidden md:inline-flex items-center gap-1.5 rounded-xl border border-emerald-400/40 bg-emerald-500/15 px-3 py-1.5 text-xs font-bold text-emerald-200 hover:bg-emerald-500/25"
-                >
-                  <Warehouse size={14} />
-                  Orders, Delivery &amp; Inventory Hub
-                </Link>
-
                 <button
                   type="button"
                   onClick={() => setShowSiteLinksModal(true)}
                   className="hidden sm:inline-flex items-center gap-1.5 rounded-xl border border-[#d4af37]/30 bg-[#d4af37]/10 px-3 py-1.5 text-xs font-semibold text-[#f3d77b] hover:bg-[#d4af37]/20"
                 >
                   <Compass size={14} />
-                  Maison Route Registry
+                  All site links
                 </button>
 
                 <div className="relative border-l border-white/10 pl-3 md:pl-5" ref={accountMenuRef}>
@@ -578,22 +562,6 @@ export default function AdminDashboard() {
                       </button>
                       <button
                         type="button"
-                        onClick={() => openAdminSection('gst')}
-                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-slate-200 transition hover:bg-white/5 hover:text-white"
-                      >
-                        <FileText size={16} className="text-[#d4af37]" aria-hidden="true" />
-                        Financial Ledger &amp; GST Compliance
-                      </button>
-                      <Link
-                        to="/inventorysoftware?view=online"
-                        onClick={() => setAccountMenuOpen(false)}
-                        className="flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left text-sm text-emerald-300 transition hover:bg-emerald-500/10"
-                      >
-                        <Warehouse size={16} className="text-emerald-400" aria-hidden="true" />
-                        Orders, Delivery &amp; Inventory Hub
-                      </Link>
-                      <button
-                        type="button"
                         onClick={signOut}
                         className="mt-1 flex w-full items-center gap-3 rounded-lg border-t border-white/10 px-3 py-2.5 text-left text-sm font-semibold text-rose-300 transition hover:bg-rose-500/10"
                       >
@@ -614,7 +582,7 @@ export default function AdminDashboard() {
                     key={item.id}
                     type="button"
                     aria-current={isActive ? 'page' : undefined}
-                    onClick={() => navigate(`/admin/dashboard/${item.id}`)}
+                    onClick={() => navigate(item.path || `/admin/dashboard/${item.id}`)}
                     className={`inline-flex min-h-8 shrink-0 items-center gap-1.5 rounded-full border px-3 text-[11px] font-medium transition ${
                       isActive
                         ? 'border-[#d4af37]/40 bg-[#d4af37] text-[#0b2419]'
@@ -655,10 +623,10 @@ export default function AdminDashboard() {
             <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
               <div>
                 <p className="text-[10px] uppercase tracking-widest text-[#d4af37] font-bold">
-                  Complete Platform Link Registry
+                  Platform link directory
                 </p>
                 <h2 className="text-lg font-bold text-white">
-                  All Storefront, Account, Support, Policy &amp; Executive Links ({filteredDirectoryLinks.length})
+                  Site and admin links ({filteredDirectoryLinks.length})
                 </h2>
               </div>
               <div className="flex items-center gap-2">

@@ -34,8 +34,12 @@ export const SettingsProvider = ({ children }) => {
     return request.current;
   }, [settings]);
 
+  const updatePublicSettings = useCallback(updates => {
+    setSettings(current => current === null ? current : { ...current, ...updates });
+  }, []);
+
   return (
-    <SettingsContext.Provider value={{ settings, loading, loadSettings }}>
+    <SettingsContext.Provider value={{ settings, loading, loadSettings, updatePublicSettings }}>
       {children}
     </SettingsContext.Provider>
   );
