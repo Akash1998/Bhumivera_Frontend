@@ -198,7 +198,7 @@ export default function AdminDashboard() {
     navigate('/admin/login');
   };
 
-  // Keep each business area together, linking external operations to their specialized screens.
+  // Keep separate-tab operations together at the bottom of the sidebar.
   const menuSections = [
     {
       title: 'Workspace',
@@ -211,19 +211,10 @@ export default function AdminDashboard() {
       ],
     },
     {
-      title: 'Orders & Fulfillment',
-      items: [
-        { id: 'orders', label: 'Order management', path: '/inventorysoftware?view=online' },
-        { id: 'shipping', label: 'Delivery & shipping labels', path: '/inventorysoftware?view=labels' },
-        { id: 'returns', label: 'Returns & RTO', path: '/inventorysoftware?view=ret' },
-      ],
-    },
-    {
       title: 'Products & Catalog',
       items: [
         { id: 'products', label: 'Product catalog' },
         { id: 'categories', label: 'Categories' },
-        { id: 'inventory', label: 'Stock & inventory', path: '/inventorysoftware?view=inv' },
         { id: 'scarcity-simulator', label: 'Stock pacing' },
         { id: 'reviews', label: 'Reviews & Moderation' },
       ],
@@ -236,7 +227,6 @@ export default function AdminDashboard() {
         { id: 'contacts', label: 'Contact & Inquiries' },
         { id: 'support', label: 'Support operations' },
         { id: 'support-agents', label: 'Support staff' },
-        { id: 'support-desk', label: 'Customer support desk', path: '/support' },
       ],
     },
     {
@@ -264,6 +254,16 @@ export default function AdminDashboard() {
       items: [
         { id: 'settings', label: 'Website & account settings' },
         { id: 'impact', label: 'Earth Impact' },
+      ],
+    },
+    {
+      title: 'Separate workspaces',
+      items: [
+        { id: 'orders', label: 'Order management', path: '/inventorysoftware?view=online' },
+        { id: 'shipping', label: 'Delivery & shipping labels', path: '/inventorysoftware?view=labels' },
+        { id: 'returns', label: 'Returns & RTO', path: '/inventorysoftware?view=ret' },
+        { id: 'inventory', label: 'Stock & inventory', path: '/inventorysoftware?view=inv' },
+        { id: 'support-desk', label: 'Customer support desk', path: '/support' },
         { id: 'superadmin-support', label: 'Platform support', path: '/superadminsupport' },
       ],
     },
@@ -271,13 +271,14 @@ export default function AdminDashboard() {
 
   const quickTabs = [
     'overview',
-    'orders',
     'products',
     'users',
     'cart-checkout',
   ];
   const allMenuItems = menuSections.flatMap(section => section.items);
-  const quickItems = quickTabs.map(id => allMenuItems.find(item => item.id === id)).filter(Boolean);
+  const quickItems = quickTabs
+    .map(id => allMenuItems.find(item => item.id === id))
+    .filter(item => item && !item.path);
   const normalizedSearch = navSearch.trim().toLowerCase();
   const visibleSections = menuSections
     .filter(section => section.items.length)
@@ -403,19 +404,18 @@ export default function AdminDashboard() {
                   {section.items.map(item => {
                     const isActive = activeTab === item.id;
                     const Icon = TAB_ICONS[item.id] || Activity;
-                    return (
-                      <button
-                        key={item.id}
-                        type="button"
-                        title={!isSidebarOpen ? item.label : undefined}
-                        aria-current={isActive ? 'page' : undefined}
-                        onClick={() => navigate(item.path || `/admin/dashboard/${item.id}`)}
-                        className={`w-full min-h-9 flex items-center px-3 py-2 rounded-lg transition-colors border ${
-                          isActive
-                            ? 'bg-[#d4af37]/15 border-[#d4af37]/30 text-[#f3d77b]'
-                            : 'border-transparent text-slate-300 hover:bg-white/5 hover:text-white'
-                        } ${!isSidebarOpen ? 'justify-center' : 'gap-2.5'}`}
-                      >
+                    const itemClassName = item.path
+                      ? `w-full min-h-9 flex items-center px-3 py-2 rounded-lg transition-colors border ${
+                        isActive
+                          ? 'bg-red-500/15 border-red-400/30 text-red-200'
+                          : 'border-transparent text-red-300 hover:bg-red-500/10 hover:text-red-200'
+                      } ${!isSidebarOpen ? 'justify-center' : 'gap-2.5'}`
+                      : `w-full min-h-9 flex items-center px-3 py-2 rounded-lg transition-colors border ${
+                        isActive
+                          ? 'bg-[#d4af37]/15 border-[#d4af37]/30 text-[#f3d77b]'
+                          : 'border-transparent text-slate-300 hover:bg-white/5 hover:text-white'
+                      } ${!isSidebarOpen ? 'justify-center' : 'gap-2.5'}`;
+                    const itemContent = <>
                         <Icon
                           size={17}
                           strokeWidth={isActive ? 2.3 : 1.8}
@@ -424,8 +424,30 @@ export default function AdminDashboard() {
                         />
                         {isSidebarOpen && <>
                           <span className="truncate text-xs font-medium">{item.label}</span>
-                          {item.path && <ExternalLink size={12} className="ml-auto shrink-0 text-slate-500" aria-hidden="true"/>}
+                          {item.path && <ExternalLink size={12} className="ml-auto shrink-0 text-red-400" aria-hidden="true"/>}
                         </>}
+                      </>;
+                    return item.path ? (
+                      <Link
+                        key={item.id}
+                        to={item.path}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        title={!isSidebarOpen ? `${item.label} (opens in a new tab)` : undefined}
+                        className={itemClassName}
+                      >
+                        {itemContent}
+                      </Link>
+                    ) : (
+                      <button
+                        key={item.id}
+                        type="button"
+                        title={!isSidebarOpen ? item.label : undefined}
+                        aria-current={isActive ? 'page' : undefined}
+                        onClick={() => navigate(`/admin/dashboard/${item.id}`)}
+                        className={itemClassName}
+                      >
+                        {itemContent}
                       </button>
                     );
                   })}
