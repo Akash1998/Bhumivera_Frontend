@@ -49,7 +49,7 @@ export default function Register() {
   const [turnstileToken, setTurnstileToken] = useState('');
   const [googleSignInError, setGoogleSignInError] = useState('');
 
-  const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY || "0x4AAAAAAADBENLaxaG5Y9r6D";
+  const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim() || '';
 
   useEffect(() => {
     let active = true;
@@ -328,24 +328,29 @@ export default function Register() {
                   </label>
 
                   <div className="flex justify-center pt-2">
-                    {/* Attach the ref to the Turnstile component */}
-                    <Turnstile
-                      ref={turnstileRef}
-                      siteKey={TURNSTILE_SITE_KEY}
-                      onSuccess={token => {
-                        setTurnstileToken(token);
-                        setError('');
-                      }}
-                      onExpire={() => {
-                        setTurnstileToken('');
-                        setError('Security verification expired. Please complete the challenge again.');
-                      }}
-                      onError={() => {
-                        setTurnstileToken('');
-                        setError('Security verification could not load. Refresh the page and try again.');
-                      }}
-                      options={{ theme: 'light' }}
-                    />
+                    {TURNSTILE_SITE_KEY ? (
+                      <Turnstile
+                        ref={turnstileRef}
+                        siteKey={TURNSTILE_SITE_KEY}
+                        onSuccess={token => {
+                          setTurnstileToken(token);
+                          setError('');
+                        }}
+                        onExpire={() => {
+                          setTurnstileToken('');
+                          setError('Security verification expired. Please complete the challenge again.');
+                        }}
+                        onError={() => {
+                          setTurnstileToken('');
+                          setError('Security verification could not load. Refresh the page and try again.');
+                        }}
+                        options={{ theme: 'light' }}
+                      />
+                    ) : (
+                      <p role="alert" className="text-sm text-red-600">
+                        Security verification is not configured. Please contact support.
+                      </p>
+                    )}
                   </div>
                   
                   <SubmitButton loading={loading} text="Initialize Registry" disabled={!turnstileToken} />
