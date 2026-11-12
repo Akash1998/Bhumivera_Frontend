@@ -603,7 +603,6 @@ export default function ProductDetail() {
           </div>
 
           <div className="product-media-gallery group relative aspect-[4/5] w-full overflow-hidden rounded-[1.75rem] border border-[#d4af37]/30 bg-[radial-gradient(ellipse_at_50%_35%,#244232_0%,#14291f_68%,#101b15_100%)] shadow-[0_30px_90px_rgba(0,0,0,0.32)] md:sticky md:top-28 md:aspect-[4/5] md:self-start lg:top-32">
-            <div className="pointer-events-none absolute inset-3 rounded-[1.35rem] border border-[#d4af37]/10 sm:inset-4" />
             <AnimatePresence mode="wait">
               <Motion.div
                 key={getImageUrl(activeMedia)}
@@ -611,7 +610,7 @@ export default function ProductDetail() {
                 animate={{ opacity: 1, scale: 1, x: 0 }}
                 exit={{ opacity: 0, scale: 1.015, x: -12 }}
                 transition={{ duration: 0.36, ease: [0.22, 1, 0.36, 1] }}
-                className="absolute inset-0 overflow-hidden p-3 pt-14 sm:p-4 sm:pt-16"
+                className="absolute inset-0 overflow-hidden"
               >
                 <img
                   src={getImageUrl(activeMedia)}
@@ -635,7 +634,7 @@ export default function ProductDetail() {
                     setIsGalleryZoomed(false);
                     setIsLightboxOpen(true);
                   }}
-                  className={`h-full w-full cursor-zoom-in object-contain transition-transform duration-300 ease-out ${isGalleryZoomed ? 'scale-[1.8]' : 'scale-100'}`}
+                  className={`h-full w-full cursor-zoom-in object-cover object-center transition-transform duration-300 ease-out ${isGalleryZoomed ? 'scale-[1.8]' : 'scale-100'}`}
                 />
               </Motion.div>
             </AnimatePresence>
