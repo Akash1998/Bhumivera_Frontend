@@ -1,7 +1,6 @@
-import { FALLBACK_CATALOG_PRODUCTS, CHARCOAL_FACE_WASH_EXACT, SHAMPOO_2IN1_EXACT, SEABUCKTHORN_FACE_WASH_EXACT, BHUMIVERA_6_PRODUCTS } from '../data/bhumiveraUniqueData';
+import { FALLBACK_CATALOG_PRODUCTS, BHUMIVERA_6_PRODUCTS } from '../data/bhumiveraUniqueData';
 import SEO from '../components/SEO';
 import SEOStructuredData from '../components/SEOStructuredData';
-import LuxuryProductSeoSection from '../components/LuxuryProductSeoSection';
 import ProductDeliveryPromise from '../components/ProductDeliveryPromise';
 import QASection from '../components/QASection';
 import React, { useRef, useState, useEffect } from 'react';
@@ -71,6 +70,8 @@ const getSecureExternalUrl = value => {
 };
 
 const getImageUrl = image => getProductImageUrl(image) || '/logo.webp';
+const displayProductValue = value =>
+  typeof value === 'string' || typeof value === 'number' ? String(value).trim() : '';
 const REVIEW_MEDIA_PLACEHOLDER = '/images/review-placeholder.svg';
 
 const getIngredientHighlights = product => {
@@ -400,10 +401,18 @@ export default function ProductDetail() {
   if (typeof rawSpecifications === 'string') {
     try { rawSpecifications = JSON.parse(rawSpecifications); } catch { rawSpecifications = {}; }
   }
-  const specificationEntries = rawSpecifications && typeof rawSpecifications === 'object' && !Array.isArray(rawSpecifications)
-    ? Object.entries(rawSpecifications).filter(([, value]) => value !== null && value !== undefined && String(value).trim())
-    : [];
+  const productSpecifications = rawSpecifications && typeof rawSpecifications === 'object' && !Array.isArray(rawSpecifications)
+    ? rawSpecifications
+    : {};
   const ingredientHighlights = getIngredientHighlights(product);
+  const productHighlights = [
+    { label: 'Suitable for', value: product?.skinTypeCompatibility || productSpecifications['Skin / Hair Type Suitability'] },
+    { label: 'Size', value: product?.net_volume || product?.volume },
+    { label: 'pH', value: product?.ph_level || product?.phLevel },
+    { label: 'How to use', value: product?.directions || product?.ritualTiming },
+  ].map(item => ({ ...item, value: displayProductValue(item.value) }))
+    .filter(item => item.value)
+    .slice(0, 4);
   const productRating = reviewSummary
     ? Number(reviewSummary.average || 0)
     : 0;
@@ -660,7 +669,7 @@ export default function ProductDetail() {
               {product.brand && <span className="font-mono text-[9px] uppercase tracking-[0.16em] text-[#aebdb1]">{product.brand} · {product.sku || `BV-${product.id}`}</span>}
             </div>
             
-            <h1 className="mb-3 font-serif font-medium text-[2rem] leading-[1.08] tracking-[-0.035em] text-[#fffaf0] sm:text-4xl md:text-[3.35rem]">
+            <h1 className="mb-3 break-words font-serif font-medium text-[2rem] leading-[1.08] tracking-[-0.035em] text-[#fffaf0] [overflow-wrap:anywhere] sm:text-4xl md:text-[3.35rem]">
               {product.name}
             </h1>
 
@@ -721,7 +730,7 @@ export default function ProductDetail() {
                 <div className="grid grid-cols-2 gap-px bg-[#d4af37]/10">
                   {ingredientHighlights.map(ingredient => (
                     <article key={`${ingredient.name}-${ingredient.potency}`} className="min-h-24 bg-[#14291f]/90 p-3.5 sm:p-4">
-                      <p className="font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-[#b8c5bb]">{ingredient.name}</p>
+                      <p className="break-words font-mono text-[8px] font-bold uppercase tracking-[0.12em] text-[#b8c5bb] [overflow-wrap:anywhere]">{ingredient.name}</p>
                       <p className="mt-1 font-serif text-2xl leading-none text-[#f2d783]">{ingredient.potency}</p>
                       <p className="mt-2 text-[10px] leading-4 text-[#d4ddd5]">{ingredient.benefit}</p>
                     </article>
@@ -733,7 +742,7 @@ export default function ProductDetail() {
               </div>
             )}
 
-            <p className="line-clamp-4 text-sm leading-6 text-[#d7dfd7] md:line-clamp-none md:leading-7">
+            <p className="line-clamp-3 break-words text-sm leading-6 text-[#d7dfd7] [overflow-wrap:anywhere]">
               {product.short_description || product.description}
             </p>
           </div>
@@ -816,7 +825,9 @@ export default function ProductDetail() {
 
               <div className="flex flex-col sm:flex-row items-center gap-2">
                 <Link
-                  to={`/verify?serial=${encodeURIComponent(product.batchCode || 'BV-CH26-8841')}`}
+                  to={(product.batchCode || product.batch_no)
+                    ? `/verify?serial=${encodeURIComponent(product.batchCode || product.batch_no)}`
+                    : '/verify'}
                   className="btn-gold-luxury w-full sm:flex-1 inline-flex items-center justify-center gap-2 rounded-xl px-4 py-2.5 text-xs font-bold uppercase tracking-wider shadow-md transition-all"
                 >
                   <QrCode size={14} /> Explore product traceability
@@ -945,23 +956,21 @@ export default function ProductDetail() {
 
       <div className="relative z-10 mx-auto mt-10 max-w-7xl px-4 md:mt-16 md:px-6">
         <div id="product-information" className="scroll-mt-24 no-scrollbar relative mb-6 flex overflow-x-auto border-b border-[#d4af37]/20 sm:mb-8">
-          {['details', 'formulation', 'specifications', 'qa', 'reviews'].map((tab) => (
+          {['details', 'formulation', 'qa', 'reviews'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
-              className={`relative min-h-12 whitespace-nowrap px-5 pb-3 text-[10px] font-mono uppercase tracking-widest transition-colors sm:px-8 sm:pb-6 sm:text-xs ${
+              className={`relative min-h-12 shrink-0 whitespace-nowrap px-4 pb-3 text-[10px] font-mono uppercase tracking-wider transition-colors sm:px-8 sm:pb-6 sm:text-xs sm:tracking-widest ${
                 activeTab === tab ? 'text-[#fce096]' : 'text-[#94a3b8] hover:text-[#fce096]'
               }`}
             >
               {tab === 'reviews'
                 ? `Reviews (${reviewCount})`
                 : tab === 'formulation'
-                  ? 'Formulation & Actives (10x)'
-                  : tab === 'specifications'
-                    ? `Specifications (${specificationEntries.length})`
-                    : tab === 'qa'
-                      ? `Technical Q&A (${(product.faqs || product.directAnswerFaqs || []).length})`
-                      : 'Monograph & Details'}
+                  ? 'Ingredients & use'
+                  : tab === 'qa'
+                    ? 'Product Q&A'
+                    : 'Overview'}
               {activeTab === tab && (
                 <Motion.div layoutId="activeTabIndicator" className="absolute bottom-0 left-0 w-full h-0.5 bg-[#d4af37]" />
               )}
@@ -973,46 +982,39 @@ export default function ProductDetail() {
           <AnimatePresence mode="wait">
             {activeTab === 'details' && (
               <Motion.div key="details" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
-                <article className="rounded-3xl border border-[#d4af37]/25 bg-[linear-gradient(145deg,rgba(26,52,39,0.82),rgba(15,29,21,0.9))] p-6 sm:p-8 backdrop-blur-xl">
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-[#d9bf6e]">01 / Complete Product Monograph &amp; Clinical Overview</p>
-                  <h2 className="mt-2 font-serif text-2xl leading-tight text-[#fff9ed] sm:text-3xl">Care with nothing important hidden.</h2>
-                  <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-[#d4ddd5]">{product.description || product.short_description}</p>
-                  {product.full_description && (
-                    <div
-                      className="mt-6 pt-6 border-t border-[#d4af37]/20 prose prose-invert max-w-none text-sm leading-7 text-[#d4ddd5] space-y-4 [&_h3]:font-serif [&_h3]:text-xl [&_h3]:text-[#fce096] [&_h3]:mt-6 [&_h3]:mb-2 [&_h4]:font-serif [&_h4]:text-base [&_h4]:text-white [&_a]:text-[#fce096] [&_a]:underline [&_table]:w-full [&_table]:border-collapse [&_th]:bg-[#14291F] [&_th]:p-3 [&_th]:text-left [&_th]:text-xs [&_th]:text-[#fce096] [&_td]:p-3 [&_td]:border-t [&_td]:border-white/10 [&_td]:text-xs [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
-                      dangerouslySetInnerHTML={{ __html: product.full_description }}
-                    />
-                  )}
+                <article className="min-w-0 rounded-3xl border border-[#d4af37]/25 bg-[linear-gradient(145deg,rgba(26,52,39,0.82),rgba(15,29,21,0.9))] p-5 backdrop-blur-xl sm:p-8">
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[#d9bf6e]">Product overview</p>
+                  <h2 className="mt-2 break-words font-serif text-2xl leading-tight text-[#fff9ed] sm:text-3xl">{product.name}</h2>
+                  <p className="mt-3 line-clamp-5 break-words text-sm leading-6 text-[#d4ddd5] [overflow-wrap:anywhere]">
+                    {product.short_description || product.meta_description || product.description || product.name}
+                  </p>
                 </article>
-                <aside className="space-y-4">
-                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                    {[
-                      { label: 'Designed for', value: product.skinTypeCompatibility || product.primaryBotanicals || product.specifications?.['Skin / Hair Type Suitability'] || 'Oily, Combination, Dry, Sensitive & Normal Profiles' },
-                      { label: 'Label-Disclosed Actives', value: product.active_ingredients || product.surfactantSystem || product.clinicalActives || 'See full ingredient ledger for disclosed actives' },
-                      { label: 'Application Ritual', value: product.ritualTiming || product.directions || 'Follow the directions printed on the product pack' },
-                      { label: 'pH & Processing Standard', value: product.phLevel || product.ph_level || 'Sub-28°C Cold-Processed · pH Calibrated' },
-                      { label: 'Batch & Origin', value: `${product.batch_no || 'BATCH-04/26'} · ${product.manufacturer_name || 'Bhumivera Organics India Pvt. Ltd.'}` },
-                    ].map(item => (
-                      <div key={item.label} className="rounded-2xl border border-white/10 bg-[#0c1a12]/70 p-4 sm:p-5 backdrop-blur-lg">
-                        <p className="font-mono text-[8px] font-bold uppercase tracking-[0.18em] text-[#d9bf6e]">{item.label}</p>
-                        <p className="mt-2 text-xs sm:text-sm leading-6 text-[#edf0e9]">{item.value}</p>
-                      </div>
-                    ))}
-                  </div>
-                  {Array.isArray(product.related_products) && product.related_products.length > 0 && (
-                    <div className="rounded-2xl border border-[#d4af37]/30 bg-[#0c1a12]/80 p-5 backdrop-blur-lg">
-                      <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-[#fce096] mb-3">
-                        Complementary Regimen Pairings
+                <aside className="grid min-w-0 gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                  {productHighlights.map(item => (
+                    <div key={item.label} className="min-w-0 rounded-2xl border border-white/10 bg-[#0c1a12]/70 p-4 backdrop-blur-lg sm:p-5">
+                      <p className="font-mono text-[8px] font-bold uppercase tracking-[0.16em] text-[#d9bf6e]">{item.label}</p>
+                      <p className="mt-2 break-words text-xs leading-5 text-[#edf0e9] [overflow-wrap:anywhere]">{item.value}</p>
+                    </div>
+                  ))}
+                  {ingredientHighlights.length > 0 && (
+                    <div className="min-w-0 rounded-2xl border border-white/10 bg-[#0c1a12]/70 p-4 backdrop-blur-lg sm:p-5">
+                      <p className="font-mono text-[8px] font-bold uppercase tracking-[0.16em] text-[#d9bf6e]">Key ingredients</p>
+                      <p className="mt-2 break-words text-xs leading-5 text-[#edf0e9] [overflow-wrap:anywhere]">
+                        {ingredientHighlights.map(item => item.name).join(' · ')}
                       </p>
-                      <div className="space-y-2.5">
-                        {product.related_products.map((rel, idx) => (
+                    </div>
+                  )}
+                  {Array.isArray(product.related_products) && product.related_products.length > 0 && (
+                    <div className="min-w-0 rounded-2xl border border-[#d4af37]/30 bg-[#0c1a12]/80 p-4 backdrop-blur-lg sm:p-5">
+                      <p className="font-mono text-[9px] font-bold uppercase tracking-[0.16em] text-[#fce096]">Pairs well with</p>
+                      <div className="mt-2 space-y-2">
+                        {product.related_products.slice(0, 2).map((rel, idx) => (
                           <Link
-                            key={idx}
+                            key={rel.slug || idx}
                             to={`/product/${rel.slug}`}
-                            className="block rounded-xl border border-white/10 bg-[#070a0e]/80 p-3 hover:border-[#d4af37] transition"
+                            className="block break-words text-sm font-semibold text-white underline decoration-[#d4af37]/40 underline-offset-4 [overflow-wrap:anywhere]"
                           >
-                            <span className="font-mono text-[9px] uppercase tracking-wider text-[#d4af37] block">{rel.relation}</span>
-                            <span className="font-serif text-sm font-semibold text-white">{rel.name} →</span>
+                            {rel.name}
                           </Link>
                         ))}
                       </div>
@@ -1023,150 +1025,49 @@ export default function ProductDetail() {
             )}
 
             {activeTab === 'formulation' && (
-              <Motion.div key="formulation" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-6xl space-y-6">
-                <div className="rounded-3xl two-tone-card p-6 md:p-8 border border-[#d4af37]/40 shadow-xl relative overflow-hidden backdrop-blur-xl">
-                  <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#d4af37]/30 pb-4 mb-6">
-                    <div>
-                      <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#070a0e] text-[#fce096] border border-[#d4af37]/40 font-mono text-[9px] font-bold uppercase tracking-widest">
-                        <Sparkles size={12} className="text-[#d4af37]" /> Formulated under the Bhumivera Transparency Standard (Est. 2016 lineage)
-                      </span>
-                      <h3 className="mt-2 font-serif text-2xl sm:text-3xl text-white">
-                        10x Enhanced Milligram-Weight &amp; Active Phytochemical Breakdown
-                      </h3>
-                      <p className="mt-1 text-xs text-[#cbd5e1]">
-                        Every active botanical, humectant, and barrier vitamin is disclosed with its INCI nomenclature, bioactive marker profile, &lt;28°C extraction protocol, harvest corridor, pH stability window, and synergistic mechanism.
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Full 10x Active Cards for ALL 6 Products */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                    {(product.composition_table || product.exactCompositionTable || []).map((ing, idx) => (
-                      <div key={idx} className="p-4 rounded-2xl bg-[#070a0e]/85 border border-[#d4af37]/30 flex flex-col justify-between gap-3 shadow-sm">
-                        <div>
+              <Motion.div key="formulation" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-4xl space-y-4">
+                <section className="rounded-3xl border border-[#d4af37]/30 bg-[#102219]/80 p-5 sm:p-7">
+                  <h3 className="font-serif text-2xl text-white">Key ingredients</h3>
+                  {ingredientHighlights.length > 0 ? (
+                    <div className="mt-4 grid gap-3 sm:grid-cols-2">
+                      {ingredientHighlights.map(ingredient => (
+                        <article key={`${ingredient.name}-${ingredient.potency}`} className="min-w-0 rounded-2xl border border-white/10 bg-[#070a0e]/55 p-4">
                           <div className="flex items-start justify-between gap-3">
-                            <div>
-                              <p className="font-serif font-bold text-sm sm:text-base text-white">{ing.ingredient || ing.active}</p>
-                              <p className="text-[11px] italic text-[#94a3b8]">{ing.botanical || ing.classification}</p>
-                            </div>
-                            <span className="font-mono text-xs font-bold text-[#fce096] shrink-0 bg-[#d4af37]/15 border border-[#d4af37]/35 px-2.5 py-1 rounded-lg">
-                              {ing.concentration || ing.potency}
-                            </span>
+                            <p className="break-words text-sm font-semibold text-white [overflow-wrap:anywhere]">{ingredient.name}</p>
+                            <span className="shrink-0 rounded-lg bg-[#d4af37]/15 px-2 py-1 font-mono text-xs font-bold text-[#fce096]">{ingredient.potency}</span>
                           </div>
-                          {ing.inci && (
-                            <p className="mt-1.5 font-mono text-[10px] text-[#d4af37]">
-                              INCI: {ing.inci}
-                            </p>
-                          )}
-                          <p className="mt-2 text-xs text-[#cbd5e1] leading-relaxed">
-                            {ing.role || ing.mechanism}
-                          </p>
-                        </div>
-                        <div className="pt-3 border-t border-white/10 space-y-1 text-[11px] text-[#94a3b8]">
-                          {ing.molecular_markers && (
-                            <p><strong className="text-[#fce096]">Bioactive Markers:</strong> {ing.molecular_markers}</p>
-                          )}
-                          {ing.extraction_method && (
-                            <p><strong className="text-[#fce096]">Extraction Protocol:</strong> {ing.extraction_method}</p>
-                          )}
-                          {ing.harvest_corridor && (
-                            <p>
-                              <strong className="text-[#fce096]">Harvest Corridor:</strong>{' '}
-                              <Link to={ing.corridor_url || '/provenance-engine'} className="text-white underline hover:text-[#fce096]">
-                                {ing.harvest_corridor}
-                              </Link>{' '}
-                              ({ing.ph_window || product.ph_level})
-                            </p>
-                          )}
-                          {ing.synergy_partners && (
-                            <p><strong className="text-[#fce096]">Synergy Partners:</strong> {ing.synergy_partners}</p>
-                          )}
-                          {ing.reference_url && (
-                            <p className="pt-1">
-                              <a href={ing.reference_url} target="_blank" rel="noopener noreferrer" className="font-mono text-[10px] text-[#fce096] underline hover:text-white">
-                                Open Scientific / Botanical Reference ↗
-                              </a>
-                            </p>
-                          )}
-                        </div>
+                          <p className="mt-2 text-xs leading-5 text-[#cbd5e1]">{ingredient.benefit}</p>
+                        </article>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="mt-3 text-sm text-[#cbd5e1]">See the product label for the complete ingredient list.</p>
+                  )}
+                  <p className="mt-4 text-[11px] leading-5 text-[#9eafa2]">Ingredient information is provided for transparency and is not a medical claim.</p>
+                </section>
+                {(product.directions || product.caution) && (
+                  <section className="grid gap-3 sm:grid-cols-2">
+                    {product.directions && (
+                      <div className="min-w-0 rounded-2xl border border-white/10 bg-[#102219]/80 p-4 sm:p-5">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-[#fce096]">How to use</h4>
+                        <p className="mt-2 break-words text-sm leading-6 text-[#cbd5e1] [overflow-wrap:anywhere]">{product.directions}</p>
                       </div>
-                    ))}
-                  </div>
-
-                  {/* Directions and Caution (Transcribed directly from bottle) */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 border-t border-[#d4af37]/30 pt-5">
-                    <div className="p-4 rounded-2xl bg-[#070a0e]/60 border border-[#d4af37]/20">
-                      <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#fce096] flex items-center gap-1.5">
-                        <CheckCircle2 size={13} className="text-[#d4af37]" /> Directions For Application
-                      </p>
-                      <p className="text-xs text-[#cbd5e1] leading-relaxed mt-2">
-                        {product.directions || 'Follow the step-by-step ritual instructions printed on the physical bottle or monograph above. Conduct a 24-hour inner-forearm patch test prior to first use.'}
-                      </p>
-                    </div>
-
-                    <div className="p-4 rounded-2xl bg-[#070a0e]/60 border border-[#d4af37]/20">
-                      <p className="font-mono text-[10px] font-bold uppercase tracking-widest text-[#fce096] flex items-center gap-1.5">
-                        <AlertCircle size={13} className="text-[#d4af37]" /> Storage &amp; Natural Caution
-                      </p>
-                      <p className="text-xs text-[#cbd5e1] leading-relaxed mt-2">
-                        {product.caution || 'Product contains natural botanical ingredients & may change colour and fragrance across seasonal harvests without losing effectiveness. Patch test recommended. Store in a cool and dry place away from direct sunlight.'}
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className="mt-6 flex flex-wrap items-center justify-between gap-4 pt-4 border-t border-[#d4af37]/30">
-                    <div className="flex items-center gap-2 text-xs text-[#cbd5e1]">
-                      <Lock size={14} className="text-[#d4af37]" />
-                      <span>100% Sealed Sanitary Custody: Artisanal Personal Care Purity Standard</span>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      <Link
-                        to="/somatic-registry"
-                        className="btn-silver-luxury inline-flex items-center gap-2 rounded-xl text-white px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
-                      >
-                        Inspect Somatic Label Registry
-                      </Link>
-                      <Link
-                        to={`/verify?serial=${encodeURIComponent(product.batchCode || product.batch_no || 'BV-CH26-8841')}`}
-                        className="btn-gold-luxury inline-flex items-center gap-2 rounded-xl text-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider shadow-sm transition-all"
-                      >
-                        <QrCode size={14} /> Open Full Lab Assay Report
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-              </Motion.div>
-            )}
-            
-            {activeTab === 'specifications' && (
-              <Motion.div key="specs" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-5xl rounded-3xl two-tone-card border border-[#d4af37]/30 p-6 md:p-8 backdrop-blur-xl">
-                <div className="flex flex-wrap items-center justify-between gap-3 mb-6 border-b border-[#d4af37]/20 pb-4">
-                  <div>
-                    <span className="font-mono text-[10px] uppercase tracking-widest text-[#d4af37] block">
-                      20x Enhanced Analytical, Physical, Packaging &amp; Regulatory Specifications
-                    </span>
-                    <h3 className="font-serif text-2xl text-white mt-1">
-                      Complete Technical Specification Dossier ({specificationEntries.length} Verified Parameters)
-                    </h3>
-                  </div>
+                    )}
+                    {product.caution && (
+                      <div className="min-w-0 rounded-2xl border border-white/10 bg-[#102219]/80 p-4 sm:p-5">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-[#fce096]">Good to know</h4>
+                        <p className="mt-2 break-words text-sm leading-6 text-[#cbd5e1] [overflow-wrap:anywhere]">{product.caution}</p>
+                      </div>
+                    )}
+                  </section>
+                )}
+                {(product.batchCode || product.batch_no) && (
                   <Link
-                    to="/provenance-engine"
-                    className="font-mono text-xs text-[#fce096] underline hover:text-white"
+                    to={`/verify?serial=${encodeURIComponent(product.batchCode || product.batch_no)}`}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#d4af37]/35 px-4 py-2.5 text-xs font-semibold text-[#fce096] transition hover:bg-[#d4af37]/10"
                   >
-                    View Regional Harvest Corridors ↗
+                    <QrCode size={14} /> Check product traceability
                   </Link>
-                </div>
-                {specificationEntries.length > 0 ? (
-                  <div className="grid grid-cols-1 gap-x-10 gap-y-2 md:grid-cols-2">
-                    {specificationEntries.map(([label, value]) => (
-                      <div key={label} className="flex items-start justify-between gap-4 py-3 border-b border-[#d4af37]/15 border-dashed">
-                        <span className="text-[#94a3b8] text-xs font-mono uppercase tracking-wider">{label.replaceAll('_', ' ')}</span>
-                        <span className="max-w-[62%] text-right text-xs sm:text-sm font-medium text-[#fce096]">{typeof value === 'object' ? JSON.stringify(value) : String(value)}</span>
-                      </div>
-                    ))}
-                  </div>
-                ) : (
-                  <p className="text-sm leading-6 text-[#cbd5e1]">Detailed specifications have not been published for this product yet. Contact us for product-specific questions.</p>
                 )}
               </Motion.div>
             )}
@@ -1268,138 +1169,6 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      {/* PHASE 3 & 5: RAG CITATION ARCHITECTURE — EXACT LABEL COMPOSITION TABLE, COMPARISON MATRIX, DIRECT-ANSWER FAQ BLOCK & PILLAR LINK SILOS */}
-      <section className="relative z-10 mx-auto mt-16 max-w-7xl px-4 md:px-6 space-y-12">
-        {product.editorialParagraphs && (
-          <div className="rounded-3xl two-tone-card border border-[#d4af37]/35 p-6 sm:p-8 shadow-xl">
-            <span className="font-mono text-[10px] uppercase tracking-widest text-[#fce096] block mb-2">
-              Luxury Editorial Monograph · {product.luxurySku || product.sku}
-            </span>
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white mb-4">
-              {product.editorialHeading}
-            </h2>
-            <div className="space-y-4 text-sm sm:text-base text-[#cbd5e1] leading-relaxed">
-              {product.editorialParagraphs.map((para, idx) => (
-                <p key={idx}>{para}</p>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {product.exactCompositionTable && (
-          <div className="rounded-3xl two-tone-card border border-[#d4af37]/35 p-6 sm:p-8 shadow-xl overflow-hidden">
-            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white mb-2">
-              Exact Label Composition &amp; Clinical Mechanism Table
-            </h2>
-            <p className="text-xs font-mono uppercase tracking-wider text-[#fce096] mb-6">
-              100% Label-Verified Active Concentrations · Calibrated at {product.ph_level || product.phLevel}
-            </p>
-            <div className="overflow-x-auto rounded-2xl border border-[#d4af37]/25 bg-[#070a0e]/80">
-              <table className="w-full text-left border-collapse text-xs sm:text-sm">
-                <thead>
-                  <tr className="border-b border-[#d4af37]/30 bg-[#102219] text-[#fce096] font-mono uppercase text-[11px]">
-                    <th className="p-4">Active Ingredient (Label Verified)</th>
-                    <th className="p-4">Standardized Potency</th>
-                    <th className="p-4">Clinical / Botanical Classification</th>
-                    <th className="p-4">Botanical & Cosmetic Action</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/10 text-[#cbd5e1]">
-                  {product.exactCompositionTable.map((row, idx) => (
-                    <tr key={idx} className="hover:bg-white/5">
-                      <td className="p-4 font-bold text-white">{row.active}</td>
-                      <td className="p-4 font-mono font-bold text-[#fce096]">{row.potency}</td>
-                      <td className="p-4 italic text-[#94a3b8]">{row.classification}</td>
-                      <td className="p-4 leading-relaxed">{row.mechanism}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )}
-
-        <div className="rounded-3xl two-tone-card border border-[#d4af37]/35 p-6 sm:p-8 shadow-xl overflow-hidden">
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white mb-6">
-            Bhumivera Luxury Botanical Formula vs. Conventional Commercial Cleansers
-          </h2>
-          <div className="overflow-x-auto rounded-2xl border border-[#d4af37]/25 bg-[#070a0e]/80">
-            <table className="w-full text-left border-collapse text-xs sm:text-sm">
-              <thead>
-                <tr className="border-b border-[#d4af37]/30 bg-[#102219] text-[#fce096] font-mono uppercase text-[11px]">
-                  <th className="p-4">Evaluation Metric</th>
-                  <th className="p-4">Bhumivera Organics Luxury Formula</th>
-                  <th className="p-4">Conventional Commercial Cleansers</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/10 text-[#cbd5e1]">
-                <tr>
-                  <td className="p-4 font-bold text-white">pH Calibration</td>
-                  <td className="p-4 text-[#fce096] font-semibold">{product.ph_level || product.phLevel || 'pH 5.0–5.5 Skin & Cuticle Identical'}</td>
-                  <td className="p-4">Alkaline pH 7.5–9.5 (Disrupts acid mantle &amp; swells cuticles)</td>
-                </tr>
-                <tr>
-                  <td className="p-4 font-bold text-white">Cleansing Surfactants</td>
-                  <td className="p-4 text-[#fce096] font-semibold">Wild Reetha Saponins (25mg), Shikakai (5mg) &amp; Plant Glucosides (0% SLS/SLES)</td>
-                  <td className="p-4">Harsh Sodium Lauryl Sulfate (SLS) &amp; Sodium Laureth Sulfate (SLES)</td>
-                </tr>
-                <tr>
-                  <td className="p-4 font-bold text-white">Active Disclosure</td>
-                  <td className="p-4 text-[#fce096] font-semibold">100% Exact Percentages &amp; Milligram Potencies Printed on Label</td>
-                  <td className="p-4">Proprietary blends with &lt;0.01% trace botanical dustings</td>
-                </tr>
-                <tr>
-                  <td className="p-4 font-bold text-white">Barrier Hydration</td>
-                  <td className="p-4 text-[#fce096] font-semibold">5.0% Botanical Glycerin, 0.1% Hyaluronic Acid, Niacinamide &amp; Aloe Vera</td>
-                  <td className="p-4">Synthetic PEGs, drying alcohols &amp; occlusive silicones</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="rounded-3xl two-tone-panel-gold border border-[#d4af37]/40 p-6 sm:p-8 shadow-xl">
-          <h2 className="font-serif text-2xl sm:text-3xl font-bold text-white mb-6">
-            Direct-Answer Botanical &amp; Ayurvedic Q&amp;A
-          </h2>
-          <div className="space-y-4">
-            {(product.directAnswerFaqs || CHARCOAL_FACE_WASH_EXACT.faqs).map((item, idx) => (
-              <div key={idx} className="rounded-2xl bg-[#070a0e]/85 border border-[#d4af37]/25 p-5">
-                <h3 className="font-serif text-base sm:text-lg font-bold text-[#fce096] mb-2">
-                  {idx + 1}. {item.q}
-                </h3>
-                <p className="text-xs sm:text-sm text-[#cbd5e1] leading-relaxed">{item.a}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-
-        <div className="rounded-3xl two-tone-card border border-[#d4af37]/30 p-6 sm:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
-          <div>
-            <span className="font-mono text-[10px] uppercase tracking-widest text-[#fce096]">
-              Authority Buying Guides &amp; Botanical Science
-            </span>
-            <h2 className="font-serif text-xl sm:text-2xl font-bold text-white mt-1">
-              Explore Our Complete Skincare &amp; Trichology Monographs
-            </h2>
-          </div>
-          <div className="flex flex-wrap gap-3">
-            <Link
-              to="/guides/ultimate-guide-luxury-organic-face-wash-india"
-              className="btn-gold-luxury px-4 py-2.5 rounded-xl text-xs font-bold uppercase tracking-wider text-white"
-            >
-              Luxury Organic Face Wash Guide
-            </Link>
-            <Link
-              to="/guides/science-of-sulfate-free-luxury-herbal-shampoos"
-              className="btn-silver-luxury px-4 py-2.5 rounded-xl text-xs font-semibold text-[#FAF7F2]"
-            >
-              Sulfate-Free Herbal Shampoo Science
-            </Link>
-          </div>
-        </div>
-      </section>
-
       {(videoEmbeds.length > 0 || productLinks.length > 0) && (
         <section className="max-w-7xl mx-auto px-6 mt-16 relative z-10">
           {videoEmbeds.length > 0 && (
@@ -1433,14 +1202,6 @@ export default function ProductDetail() {
           )}
         </section>
       )}
-
-      {/* Radical Milligram Disclosure, Transparency Lineage & Direct-Answer FAQ SEO Section */}
-      <LuxuryProductSeoSection product={product} />
-
-      {/* Interactive Specialist Q&A Desk */}
-      <section className="max-w-7xl mx-auto my-12 px-4 sm:px-6 relative z-10">
-        <QASection productId={product.id} product={product} />
-      </section>
 
       {canPersonalize && recommendedProducts.length > 0 && (
         <section className="max-w-7xl mx-auto px-6 mt-16 relative z-10">
