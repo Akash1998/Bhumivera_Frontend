@@ -7,7 +7,6 @@ import {
   CloudUpload,
   LoaderCircle,
   LogOut,
-  Package,
   PackageCheck,
   ScanLine,
   ShieldCheck,
@@ -16,7 +15,6 @@ import {
   X,
 } from 'lucide-react';
 import api from '../services/api';
-import { getProductImageUrl } from '../utils/productImageUrl';
 import { startCamera, startScanLoop, stopCamera } from '../utils/qrScanEngine';
 
 const TOKEN_KEY = 'BV_SCANNER_PWA_TOKEN';
@@ -183,10 +181,8 @@ export default function ScannerPwa() {
   const [activeOrder, setActiveOrder] = useState(() => readActivePackingState(readSession()?.staff?.username)?.order || null);
   const [scanProgress, setScanProgress] = useState(() => readActivePackingState(readSession()?.staff?.username)?.progress || {});
   const [pendingScans, setPendingScans] = useState(() => readPendingScans(readSession()?.staff?.username));
-  const [selectedItemId, setSelectedItemId] = useState(null);
   const [batch, setBatch] = useState(() => readPackedBatch(readSession()?.staff?.username));
   const [notice, setNotice] = useState(null);
-  const [failedProductImages, setFailedProductImages] = useState({});
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   const videoRef = useRef(null);
   const pendingScanSyncRef = useRef(null);
@@ -195,10 +191,29 @@ export default function ScannerPwa() {
   const staffName = session?.staff?.fullName || session?.staff?.username || 'Staff';
   const staffUsername = session?.staff?.username || '';
   const orderItems = useMemo(() => activeOrder?.items || [], [activeOrder]);
+  const groupedOrderItems = useMemo(() => {
+    const groups = new Map();
+    for (const item of orderItems) {
+      const productId = Number(item.productId) || 0;
+      const productCode = String(item.sku || item.barcode || item.name || item.orderItemId).trim().toLowerCase();
+      const key = productId ? `product:${productId}` : `code:${productCode}`;
+      const group = groups.get(key) || {
+        key,
+        name: item.name || 'Product',
+        quantity: 0,
+        scanned: 0,
+      };
+      const progress = scanProgress[String(item.orderItemId)];
+      group.quantity += Number(item.quantity) || 1;
+      group.scanned += progress?.codes.length || 0;
+      groups.set(key, group);
+    }
+    return [...groups.values()];
+  }, [orderItems, scanProgress]);
+  const nextGroup = groupedOrderItems.find(group => group.scanned < group.quantity) || null;
   const scannedUnits = Object.values(scanProgress).reduce((sum, item) => sum + item.codes.length, 0);
   const expectedUnits = orderItems.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
   const orderComplete = expectedUnits > 0 && scannedUnits === expectedUnits;
-  const selectedItem = orderItems.find(item => String(item.orderItemId) === String(selectedItemId));
 
   const persistBatch = useCallback((nextBatch, usernameForKey = staffUsername) => {
     localStorage.setItem(getBatchKey(usernameForKey), JSON.stringify(nextBatch));
@@ -410,7 +425,6 @@ export default function ScannerPwa() {
     if (staffUsername) localStorage.removeItem(getActiveOrderKey(staffUsername));
     setActiveOrder(null);
     setScanProgress({});
-    setSelectedItemId(null);
     setCameraOpen(false);
   }, [staffUsername]);
 
@@ -505,7 +519,6 @@ export default function ScannerPwa() {
       }));
       setActiveOrder(order);
       setScanProgress(progress);
-      setFailedProductImages({});
       setOrderInput('');
       if (!manifestError) {
         setNotice({ type: 'success', text: `Order #${order.orderNumber || order.id} loaded. Scan only the products shown.` });
@@ -523,22 +536,26 @@ export default function ScannerPwa() {
   };
 
   const handleProductScan = useCallback(rawCode => {
-    if (!selectedItem) {
-      setNotice({ type: 'error', text: 'Choose a remaining product card before scanning.' });
-      return false;
-    }
     const cleanCode = normalizeProductCode(rawCode);
-    if (!matchesOrderItem(cleanCode, selectedItem)) {
+    const matchingItems = orderItems.filter(item => matchesOrderItem(cleanCode, item));
+    const targetItem = matchingItems.find(item => {
+      const progress = scanProgress[String(item.orderItemId)];
+      const quantity = Number(item.quantity) || 1;
+      return (progress?.codes.length || 0) < quantity;
+    });
+    if (!targetItem) {
       setNotice({
         type: 'error',
-        text: `Wrong product. This scan does not match ${selectedItem.name} (${selectedItem.sku || selectedItem.barcode}).`,
+        text: matchingItems.length
+          ? `All units of ${matchingItems[0].name} are already scanned.`
+          : 'Wrong product. This code is not listed on a remaining item in the order.',
       });
       return false;
     }
-    const key = String(selectedItem.orderItemId);
-    const current = scanProgress[key] || { codes: [], quantity: Number(selectedItem.quantity) || 1 };
+    const key = String(targetItem.orderItemId);
+    const current = scanProgress[key] || { codes: [], quantity: Number(targetItem.quantity) || 1 };
     if (current.codes.length >= current.quantity) {
-      setNotice({ type: 'error', text: `${selectedItem.name} is already fully scanned.` });
+      setNotice({ type: 'error', text: `${targetItem.name} is already fully scanned.` });
       return false;
     }
     const nextProgress = {
@@ -552,7 +569,7 @@ export default function ScannerPwa() {
     const scanId = nextProgress[key].scanIds[nextProgress[key].scanIds.length - 1];
     const pending = [
       ...readPendingScans(staffUsername),
-      { scanId, orderId: activeOrder.id, orderItemId: selectedItem.orderItemId, scannedCode: cleanCode },
+      { scanId, orderId: activeOrder.id, orderItemId: targetItem.orderItemId, scannedCode: cleanCode },
     ];
     try {
       localStorage.setItem(getPendingScansKey(staffUsername), JSON.stringify(pending));
@@ -563,23 +580,17 @@ export default function ScannerPwa() {
       return false;
     }
     setScanProgress(nextProgress);
-    const nextItem = orderItems.find(item => {
-      const progress = nextProgress[String(item.orderItemId)];
-      return (progress?.codes.length || 0) < (progress?.quantity || Number(item.quantity) || 1);
-    });
-    if (nextItem) {
-      setSelectedItemId(nextItem.orderItemId);
-    } else {
-      setSelectedItemId(null);
+    const nextScannedUnits = Object.values(nextProgress).reduce((sum, item) => sum + item.codes.length, 0);
+    if (nextScannedUnits >= expectedUnits) {
       setCameraOpen(false);
     }
     setNotice({
       type: 'success',
-      text: `${selectedItem.name}: ${current.codes.length + 1}/${current.quantity} scanned. Saved on this phone.`,
+      text: `${targetItem.name}: ${current.codes.length + 1}/${current.quantity} scanned. Saved on this phone.`,
     });
     if (navigator.onLine) syncPendingScans();
     return true;
-  }, [activeOrder, orderItems, scanProgress, selectedItem, staffUsername, syncPendingScans]);
+  }, [activeOrder, expectedUnits, orderItems, scanProgress, staffUsername, syncPendingScans]);
 
   handleProductScanRef.current = handleProductScan;
 
@@ -723,7 +734,6 @@ export default function ScannerPwa() {
     setSession(null);
     setOnWork(false);
     setBatch([]);
-    setSelectedItemId(null);
     setCameraOpen(false);
     setConfirmedOrder(null);
     setBusy(false);
@@ -820,6 +830,21 @@ export default function ScannerPwa() {
 
         {cameraOpen && (
           <section className="mb-5 overflow-hidden bg-black">
+            {cameraMode === 'product' && (
+              <div className="border-b border-emerald-300/20 bg-[#0b1812] px-4 py-3 text-center">
+                <p className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-300">
+                  Next suggested · any remaining product can be scanned
+                </p>
+                <p className="mt-1 truncate text-sm font-bold text-white">
+                  {nextGroup?.name || 'All items scanned'}
+                </p>
+                {nextGroup && (
+                  <p className="mt-0.5 text-xs font-mono text-emerald-100">
+                    ×{nextGroup.quantity - nextGroup.scanned} remaining
+                  </p>
+                )}
+              </div>
+            )}
             <div className="relative aspect-[4/5] max-h-[62vh]">
               <video
                 ref={videoRef}
@@ -835,7 +860,9 @@ export default function ScannerPwa() {
               <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white">Align code in view</span>
             </div>
             <p className="p-3 text-center text-xs leading-5 text-slate-300">
-              {cameraMode === 'order' ? 'Scan the fulfillment QR to load the order. Progress syncs to Inventory Software when online.' : `Scan any product in this order. Next: ${selectedItem?.name || 'remaining item'}.`}
+              {cameraMode === 'order'
+                ? 'Scan the fulfillment QR to load the order. Progress syncs to Inventory Software when online.'
+                : 'The scanner matches each barcode to any remaining product in this order.'}
             </p>
           </section>
         )}
@@ -948,69 +975,35 @@ export default function ScannerPwa() {
                 </div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              {orderItems.map(item => {
-                const itemKey = String(item.orderItemId);
-                const progress = scanProgress[itemKey] || { codes: [], quantity: Number(item.quantity) || 1 };
-                const complete = progress.codes.length >= progress.quantity;
-                const imageUrl = getProductImageUrl(item.imageUrl || item.image || item.images);
-                const isSelected = String(selectedItemId) === itemKey;
+            <div className="space-y-2">
+              {groupedOrderItems.map(group => {
+                const complete = group.scanned >= group.quantity;
                 return (
-                  <article
-                    key={item.orderItemId}
-                    className={`min-w-0 overflow-hidden rounded-2xl border p-2.5 shadow-lg shadow-black/10 transition sm:p-3 ${
-                      complete ? 'border-emerald-300/35 bg-emerald-300/[0.06]'
-                        : isSelected && cameraOpen ? 'border-emerald-300/60 bg-emerald-300/[0.08]'
-                          : 'border-white/10 bg-[#0b1812]/90'
+                  <div
+                    key={group.key}
+                    className={`flex min-w-0 items-center justify-between gap-3 rounded-xl border px-3 py-2.5 ${
+                      complete ? 'border-emerald-300/25 bg-emerald-300/[0.05]' : 'border-white/10 bg-[#0b1812]/90'
                     }`}
                   >
-                    <div className="relative aspect-square overflow-hidden rounded-xl bg-white">
-                      {imageUrl && !failedProductImages[itemKey] ? (
-                        <img
-                          src={imageUrl}
-                          alt={item.name}
-                          loading="lazy"
-                          decoding="async"
-                          className="h-full w-full object-contain p-2"
-                          onError={() => setFailedProductImages(current => ({ ...current, [itemKey]: true }))}
-                        />
-                      ) : (
-                        <div className="flex h-full w-full items-center justify-center bg-[#11281e] text-emerald-200/70">
-                          <Package size={38} strokeWidth={1.5} />
-                        </div>
-                      )}
-                      <span className="absolute right-2 top-2 rounded-full bg-[#07110d]/90 px-2.5 py-1 text-sm font-black text-white shadow">
-                        ×{progress.quantity}
-                      </span>
-                      {complete && (
-                        <span className="absolute left-2 top-2 rounded-full bg-emerald-300 p-1 text-[#062017]">
-                          <CheckCircle2 size={17} />
-                        </span>
-                      )}
+                    <div className="min-w-0">
+                      <p className="truncate text-sm font-semibold text-white" title={group.name}>{group.name}</p>
+                      <p className="mt-0.5 text-[10px] font-mono text-slate-400">{group.scanned}/{group.quantity} scanned</p>
                     </div>
-                    <h3 className="mt-2 line-clamp-2 min-h-8 text-xs font-bold leading-4 text-white" title={item.name}>
-                      {item.name}
-                    </h3>
-                    <p className="mt-1 truncate font-mono text-[10px] text-slate-400">{progress.codes.length}/{progress.quantity} scanned</p>
-                    {!complete && (
-                      <button
-                        type="button"
-                        aria-label={`Scan ${item.name}`}
-                        disabled={busy}
-                        onClick={() => {
-                          setSelectedItemId(item.orderItemId);
-                          setCameraMode('product');
-                          setCameraOpen(true);
-                        }}
-                        className="mt-2 flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-emerald-300/30 bg-gradient-to-r from-emerald-300/15 to-teal-300/10 text-xs font-bold text-emerald-100 transition hover:border-emerald-200/60 hover:bg-emerald-300/20"
-                      >
-                        <Camera size={15} /> Scan
-                      </button>
-                    )}
-                  </article>
+                    <span className="shrink-0 rounded-full bg-white/10 px-2.5 py-1 text-sm font-black text-emerald-100">
+                      ×{group.quantity}
+                    </span>
+                  </div>
                 );
               })}
             </div>
+            <button
+              type="button"
+              disabled={busy || orderComplete || cameraOpen}
+              onClick={() => { setCameraMode('product'); setCameraOpen(true); }}
+              className="flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-300 to-teal-300 px-4 font-black text-[#062017] shadow-lg shadow-emerald-950/30 disabled:opacity-50"
+            >
+              <Camera size={19} /> {cameraOpen ? 'Scanner Active' : 'Scan Now'}
+            </button>
             {orderComplete && (
               <button type="button" onClick={savePackedOrder} className="flex min-h-14 w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-emerald-300 to-teal-300 px-4 font-black text-[#062017] shadow-lg shadow-emerald-950/30">
                 <PackageCheck size={19} /> Confirm Packed
@@ -1028,7 +1021,7 @@ export default function ScannerPwa() {
                 </div>
                 <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-emerald-200">Live shift</span>
               </div>
-              <p className="mt-2 text-xs leading-5 text-slate-400">Scan an order, then verify its items. The camera moves to the next unfinished product automatically and stays open while you pack.</p>
+              <p className="mt-2 text-xs leading-5 text-slate-400">Scan an order, then open one camera for every item. Product barcodes are accepted in any order while progress is saved.</p>
             </div>
 
             <div className="rounded-3xl border border-white/10 bg-[#0b1812]/95 p-5 shadow-xl shadow-black/20 sm:p-6">

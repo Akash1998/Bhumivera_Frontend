@@ -95,7 +95,7 @@ describe('fulfillment scanner PWA', () => {
     vi.clearAllMocks();
   });
 
-  it('requires the exact ordered item codes and uploads a fully packed order', async () => {
+  it('accepts products in any order and uploads a fully packed order', async () => {
     render(<ScannerPwa />);
     await signInAndStartWork();
 
@@ -108,33 +108,31 @@ describe('fulfillment scanner PWA', () => {
       expect.objectContaining({ headers: { Authorization: 'Bearer staff-token' } }),
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Scan Charcoal Face Wash' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Scan Now' }));
     await waitFor(() => expect(scannerMock.onResult).toBeTruthy());
     const firstLoop = scannerMock.scanLoops;
-    scannerMock.onResult('SKU-2');
+    scannerMock.onResult('NOT-IN-ORDER');
     await screen.findByText(/Wrong product/i);
     expect(scannerMock.scanLoops).toBe(firstLoop);
     expect(scannerMock.continuous).toBe(true);
-    scannerMock.onResult('SKU-1');
-    await screen.findByText(/Charcoal Face Wash: 1\/1 scanned\. Saved on this phone\./);
+    scannerMock.onResult('SKU-2');
+    await screen.findByText(/Aloe Vera Soap: 1\/1 scanned\. Saved on this phone\./);
     expect(document.querySelector('video')).toBeTruthy();
     expect(scannerMock.scanLoops).toBe(firstLoop);
     expect(api.post).toHaveBeenCalledWith(
       '/inventory-software/fulfillment/pwa-scan',
       expect.objectContaining({
         orderId: 99,
-        orderItemId: 901,
-        scannedCode: 'SKU-1',
+        orderItemId: 902,
+        scannedCode: 'SKU-2',
         scanId: expect.any(String),
       }),
       expect.objectContaining({ headers: { Authorization: 'Bearer staff-token' } }),
     );
-    expect(localStorage.getItem('BV_SCANNER_ACTIVE_ORDER_sample')).toContain('"SKU-1"');
+    expect(localStorage.getItem('BV_SCANNER_ACTIVE_ORDER_sample')).toContain('"SKU-2"');
 
-    fireEvent.click(screen.getByRole('button', { name: 'Scan Aloe Vera Soap' }));
-    await waitFor(() => expect(scannerMock.onResult).toBeTruthy());
-    scannerMock.onResult('BAR-2');
-    await screen.findByText(/Aloe Vera Soap: 1\/1 scanned\. Saved on this phone\./);
+    scannerMock.onResult('SKU-1');
+    await screen.findByText(/Charcoal Face Wash: 1\/1 scanned\. Saved on this phone\./);
 
     fireEvent.click(screen.getByRole('button', { name: 'Confirm Packed' }));
     fireEvent.click(await screen.findByRole('button', { name: /Upload Now/ }));
@@ -148,7 +146,7 @@ describe('fulfillment scanner PWA', () => {
             orderId: 99,
             verifiedItems: [
               expect.objectContaining({ orderItemId: 901, scannedCodes: ['SKU-1'] }),
-              expect.objectContaining({ orderItemId: 902, scannedCodes: ['BAR-2'] }),
+              expect.objectContaining({ orderItemId: 902, scannedCodes: ['SKU-2'] }),
             ],
           }),
         ],
@@ -188,7 +186,7 @@ describe('fulfillment scanner PWA', () => {
     expect(screen.getByText('Aloe Vera Soap')).toBeTruthy();
   });
 
-  it('shows product photos and compact quantity badges in a two-column scanner grid', async () => {
+  it('groups duplicate products, accepts out-of-order scans, and uses one scanner action', async () => {
     api.get.mockResolvedValueOnce({
       data: {
         success: true,
@@ -198,8 +196,9 @@ describe('fulfillment scanner PWA', () => {
           status: 'confirmed',
           customerName: 'Sample Customer',
           items: [
-            { orderItemId: 901, name: 'Charcoal Face Wash', sku: 'SKU-1', quantity: 2, imageUrl: 'https://images.example.com/facewash.webp' },
-            { orderItemId: 902, name: 'Aloe Vera Soap', sku: 'SKU-2', quantity: 1, imageUrl: 'https://images.example.com/soap.webp' },
+            { orderItemId: 901, productId: 77, name: 'Charcoal Face Wash', sku: 'SKU-1', quantity: 1 },
+            { orderItemId: 902, productId: 77, name: 'Charcoal Face Wash', sku: 'SKU-1', quantity: 2 },
+            { orderItemId: 903, productId: 88, name: 'Aloe Vera Soap', sku: 'SKU-2', quantity: 1 },
           ],
         },
       },
@@ -211,11 +210,26 @@ describe('fulfillment scanner PWA', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Load' }));
     await screen.findByText(/Order #ORD-99 loaded/i);
 
-    const faceWashImage = screen.getByAltText('Charcoal Face Wash');
-    expect(faceWashImage.getAttribute('src')).toBe('https://images.example.com/facewash.webp');
-    expect(faceWashImage.closest('.grid')).toBeTruthy();
-    expect(screen.getByText('×2')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Scan Charcoal Face Wash' })).toBeTruthy();
+    expect(screen.getByText('×3')).toBeTruthy();
+    expect(screen.getAllByText('Charcoal Face Wash')).toHaveLength(1);
+    expect(screen.getAllByRole('button', { name: 'Scan Now' })).toHaveLength(1);
+    expect(screen.queryByRole('img')).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Scan Now' }));
+    await waitFor(() => expect(scannerMock.onResult).toBeTruthy());
+    scannerMock.onResult('SKU-2');
+    await screen.findByText(/Aloe Vera Soap: 1\/1 scanned/);
+    scannerMock.onResult('SKU-1');
+    await screen.findByText(/Charcoal Face Wash: 1\/1 scanned/);
+    scannerMock.onResult('SKU-1');
+    await screen.findByText(/Charcoal Face Wash: 1\/2 scanned/);
+    scannerMock.onResult('SKU-1');
+    await screen.findByText(/Charcoal Face Wash: 2\/2 scanned/);
+
+    const recordedScans = api.post.mock.calls
+      .filter(([path]) => path.endsWith('/fulfillment/pwa-scan'))
+      .map(([, payload]) => payload.orderItemId);
+    expect(recordedScans).toEqual([903, 901, 902, 902]);
   });
 
   it('continues to read previously printed fulfillment QR codes', async () => {
@@ -242,7 +256,7 @@ describe('fulfillment scanner PWA', () => {
     scannerMock.onResult(fulfillmentQr);
     await screen.findByText(/Order #ORD-99 loaded from printed manifest/i);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Scan Charcoal Face Wash' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Scan Now' }));
     await waitFor(() => expect(scannerMock.onResult).toBeTruthy());
     scannerMock.onResult('SKU-1');
     await screen.findByText(/Charcoal Face Wash: 1\/1 scanned\. Saved on this phone\./);
@@ -262,12 +276,10 @@ describe('fulfillment scanner PWA', () => {
     scannerMock.onResult(fulfillmentQr);
     await screen.findByText(/Order #ORD-99 loaded/i);
 
-    fireEvent.click(screen.getByRole('button', { name: 'Scan Charcoal Face Wash' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Scan Now' }));
     await waitFor(() => expect(scannerMock.onResult).toBeTruthy());
     scannerMock.onResult('SKU-1');
     await screen.findByText(/Charcoal Face Wash: 1\/1 scanned\. Saved on this phone\./);
-    fireEvent.click(screen.getByRole('button', { name: 'Scan Aloe Vera Soap' }));
-    await waitFor(() => expect(scannerMock.onResult).toBeTruthy());
     scannerMock.onResult('SKU-2');
     await screen.findByText(/Aloe Vera Soap: 1\/1 scanned\. Saved on this phone\./);
 
