@@ -1,5 +1,6 @@
 import React, { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import "@capgo/capacitor-social-login";
 import { HelmetProvider } from "react-helmet-async";
 import "./index.css";
 import { installRuntimeShield } from "./utils/runtimeShield.js";
