@@ -133,13 +133,18 @@ export default function CartRulesEngine() {
 
   const filteredRules = useMemo(() => {
     const q = searchQuery.trim().toLowerCase();
-    if (!q) return rules;
-    return rules.filter(
-      r =>
+    return rules
+      .filter(r =>
+        !q ||
         String(r.name || '').toLowerCase().includes(q) ||
         String(r.badge_text || '').toLowerCase().includes(q) ||
         String(r.description || '').toLowerCase().includes(q)
-    );
+      )
+      .sort((first, second) =>
+        Number(first.min_cart_value) - Number(second.min_cart_value) ||
+        Number(second.priority) - Number(first.priority) ||
+        Number(first.id) - Number(second.id)
+      );
   }, [rules, searchQuery]);
 
   const handleExportCsv = () => {
@@ -197,9 +202,12 @@ export default function CartRulesEngine() {
       <header className="flex flex-wrap items-end justify-between gap-4 border-b border-white/10 pb-5">
         <div>
           <p className="text-xs font-bold uppercase tracking-widest text-emerald-300">
-            Cart policy &amp; Dynamic Cart Thresholds
+            Cumulative cart reward tiers
           </p>
           <h2 className="mt-2 text-2xl font-semibold text-white">Cart rules</h2>
+          <p className="mt-2 max-w-3xl text-sm leading-6 text-slate-400">
+            Each rule is a spend milestone. Customers receive every eligible active milestone they reach, so higher tiers can build on lower ones.
+          </p>
         </div>
         <div className="flex items-center gap-2">
           <button
@@ -218,6 +226,16 @@ export default function CartRulesEngine() {
           </button>
         </div>
       </header>
+
+      <aside className="rounded-2xl border border-emerald-300/20 bg-emerald-300/5 p-4 text-sm leading-6 text-emerald-50">
+        <h3 className="font-semibold">How to set up cumulative rewards</h3>
+        <ul className="mt-2 list-disc space-y-1 pl-5 text-emerald-50/80">
+          <li>Create one rule for each cart amount and choose that milestone’s delivery, gift, discount, or points.</li>
+          <li>Leave <strong>Maximum ₹</strong> empty if the reward should continue applying at higher cart totals.</li>
+          <li>Each rule can include one gift product. To include another gift at the same milestone, create an additional rule at that amount.</li>
+          <li>A higher milestone can combine free delivery with its own gift; gifts from earlier eligible milestones remain included.</li>
+        </ul>
+      </aside>
 
       <form onSubmit={create} className="admin-glass-panel grid gap-4 rounded-2xl p-5 md:grid-cols-4">
         <label className="text-xs text-slate-300">
@@ -250,7 +268,7 @@ export default function CartRulesEngine() {
           />
         </label>
         <label className="text-xs text-slate-300">
-          Maximum ₹
+          Maximum ₹ (optional cap)
           <input
             min="0"
             type="number"
@@ -258,6 +276,7 @@ export default function CartRulesEngine() {
             onChange={event => setDraft(current => ({ ...current, max_cart_value: event.target.value }))}
             className="admin-glass-control mt-1 w-full rounded-lg px-3 py-2 text-sm"
           />
+          <span className="mt-1 block text-[10px] leading-4 text-slate-500">Leave blank for the reward to remain eligible above this milestone.</span>
         </label>
         <label className="text-xs text-slate-300">
           Discount ₹
@@ -420,7 +439,7 @@ export default function CartRulesEngine() {
       <div className="admin-glass-panel overflow-hidden rounded-2xl">
         <div className="p-4 border-b border-white/10 flex flex-wrap items-center justify-between gap-2">
           <span className="text-xs font-bold text-white">
-            Expanded 10-Column Cart Rules Matrix ({filteredRules.length})
+            Reward milestones — lowest to highest ({filteredRules.length})
           </span>
           <div className="relative">
             <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" />
