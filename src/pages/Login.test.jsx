@@ -17,6 +17,7 @@ vi.mock('../utils/webauthnClient', () => ({
   storeBrowserPassword: vi.fn(),
 }));
 vi.mock('../utils/googleSignIn', () => ({
+  prepareGoogleSignIn: vi.fn().mockResolvedValue(undefined),
   requestGoogleIdToken: vi.fn().mockResolvedValue('google-id-token'),
 }));
 

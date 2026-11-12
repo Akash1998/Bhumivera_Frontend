@@ -5,6 +5,7 @@ const GOOGLE_WEB_CLIENT_ID = import.meta.env.VITE_GOOGLE_WEB_CLIENT_ID ||
   '445526551634-kr5t8oq6p1stodd8hf2mdmcpep201j9l.apps.googleusercontent.com';
 
 let initializationPromise;
+let googleSignInInitialized = false;
 
 const initializeGoogleSignIn = async SocialLogin => {
   if (!initializationPromise) {
@@ -23,17 +24,23 @@ const initializeGoogleSignIn = async SocialLogin => {
     });
   }
   await initializationPromise;
+  googleSignInInitialized = true;
 };
 
+export const prepareGoogleSignIn = () => initializeGoogleSignIn(SocialLogin);
+
 export const requestGoogleIdToken = async () => {
-  await initializeGoogleSignIn(SocialLogin);
-  const result = await SocialLogin.login({
+  if (!googleSignInInitialized) {
+    await initializeGoogleSignIn(SocialLogin);
+  }
+  const loginPromise = SocialLogin.login({
     provider: 'google',
     options: {
       scopes: ['profile', 'email'],
       filterByAuthorizedAccounts: false,
     },
   });
+  const result = await loginPromise;
   const idToken = result.provider === 'google' ? result.result?.idToken : null;
   if (!idToken) {
     throw new Error(Capacitor.isNativePlatform()
