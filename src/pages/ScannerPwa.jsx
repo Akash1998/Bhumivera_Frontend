@@ -46,13 +46,23 @@ const readPackedBatch = username => {
 };
 
 const getActiveOrderKey = username => `BV_SCANNER_ACTIVE_ORDER_${String(username || 'staff').toLowerCase()}`;
+const getPendingScansKey = username => `BV_SCANNER_PENDING_SCANS_${String(username || 'staff').toLowerCase()}`;
 
 const readActivePackingState = username => {
   try {
-    const saved = JSON.parse(sessionStorage.getItem(getActiveOrderKey(username)) || 'null');
+    const saved = JSON.parse(localStorage.getItem(getActiveOrderKey(username)) || 'null');
     return saved?.order && saved?.progress ? saved : null;
   } catch {
     return null;
+  }
+};
+
+const readPendingScans = username => {
+  try {
+    const pending = JSON.parse(localStorage.getItem(getPendingScansKey(username)) || '[]');
+    return Array.isArray(pending) ? pending : [];
+  } catch {
+    return [];
   }
 };
 
@@ -171,11 +181,13 @@ export default function ScannerPwa() {
   const [orderInput, setOrderInput] = useState('');
   const [activeOrder, setActiveOrder] = useState(() => readActivePackingState(readSession()?.staff?.username)?.order || null);
   const [scanProgress, setScanProgress] = useState(() => readActivePackingState(readSession()?.staff?.username)?.progress || {});
+  const [pendingScans, setPendingScans] = useState(() => readPendingScans(readSession()?.staff?.username));
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [batch, setBatch] = useState(() => readPackedBatch(readSession()?.staff?.username));
   const [notice, setNotice] = useState(null);
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   const videoRef = useRef(null);
+  const pendingScanSyncRef = useRef(null);
 
   const staffName = session?.staff?.fullName || session?.staff?.username || 'Staff';
   const staffUsername = session?.staff?.username || '';
@@ -189,6 +201,48 @@ export default function ScannerPwa() {
     localStorage.setItem(getBatchKey(usernameForKey), JSON.stringify(nextBatch));
     setBatch(nextBatch);
   }, [staffUsername]);
+
+  const persistPendingScans = useCallback((nextPending) => {
+    localStorage.setItem(getPendingScansKey(staffUsername), JSON.stringify(nextPending));
+    setPendingScans(nextPending);
+  }, [staffUsername]);
+
+  const syncPendingScans = useCallback(async () => {
+    if (!session?.token || !navigator.onLine) return false;
+    if (pendingScanSyncRef.current) return pendingScanSyncRef.current;
+    const sync = (async () => {
+      while (true) {
+        const scan = readPendingScans(staffUsername)[0];
+        if (!scan) break;
+        try {
+          const { data } = await api.post(
+            '/inventory-software/fulfillment/pwa-scan',
+            {
+              ...scan,
+              sessionCode: session.sessionCode,
+              operatorUsername: staffUsername,
+              operatorName: staffName,
+            },
+            authConfig(session)
+          );
+          if (!data?.success) throw new Error(data?.message || 'The server did not confirm this scan.');
+          const remaining = readPendingScans(staffUsername)
+            .filter(item => item.scanId !== scan.scanId);
+          persistPendingScans(remaining);
+        } catch (error) {
+          setNotice({ type: 'error', text: `Scan saved on this phone; server sync is pending: ${formatError(error)}` });
+          return false;
+        }
+      }
+      return true;
+    })();
+    pendingScanSyncRef.current = sync;
+    try {
+      return await sync;
+    } finally {
+      pendingScanSyncRef.current = null;
+    }
+  }, [persistPendingScans, session, staffName, staffUsername]);
 
   const updateWorkroom = useCallback(async (body, targetSession = session) => {
     if (!targetSession?.token) return;
@@ -281,11 +335,16 @@ export default function ScannerPwa() {
     if (!staffUsername) return;
     const key = getActiveOrderKey(staffUsername);
     if (activeOrder) {
-      sessionStorage.setItem(key, JSON.stringify({ order: activeOrder, progress: scanProgress }));
+      localStorage.setItem(key, JSON.stringify({ order: activeOrder, progress: scanProgress }));
     } else {
-      sessionStorage.removeItem(key);
+      localStorage.removeItem(key);
     }
   }, [activeOrder, scanProgress, staffUsername]);
+
+  useEffect(() => {
+    if (!session || !isOnline || pendingScans.length === 0) return;
+    syncPendingScans();
+  }, [isOnline, pendingScans.length, session, syncPendingScans]);
 
   const handleLogin = async event => {
     event.preventDefault();
@@ -320,9 +379,10 @@ export default function ScannerPwa() {
       setNotice({
         type: 'success',
         text: savedPackingState?.order
-          ? `Signed in as ${data.staff?.fullName || username}. Your unfinished order was restored from this browser tab.`
+          ? `Signed in as ${data.staff?.fullName || username}. Your unfinished order was restored from this device.`
           : `Signed in as ${data.staff?.fullName || username}. Tap Go to Work when ready.`,
       });
+      setPendingScans(readPendingScans(nextSession.staff?.username));
     } catch (error) {
       setNotice({ type: 'error', text: formatError(error) });
     } finally {
@@ -344,7 +404,7 @@ export default function ScannerPwa() {
   };
 
   const clearActiveOrder = useCallback(() => {
-    if (staffUsername) sessionStorage.removeItem(getActiveOrderKey(staffUsername));
+    if (staffUsername) localStorage.removeItem(getActiveOrderKey(staffUsername));
     setActiveOrder(null);
     setScanProgress({});
     setSelectedItemId(null);
@@ -359,19 +419,40 @@ export default function ScannerPwa() {
     setBusy(true);
     try {
       let order = decodeFulfillmentQr(rawOrderCode);
-      if (!order) {
-        const orderRef = getOrderId(rawOrderCode);
-        if (!orderRef) {
-          throw new Error('Enter an order ID or scan the fulfillment QR printed from Inventory Software.');
-        }
+      const hasQrManifest = Boolean(order);
+      const orderRef = order?.id ? String(order.id) : getOrderId(rawOrderCode);
+      if (!orderRef) {
+        throw new Error('Enter an order ID or scan the fulfillment QR printed from Inventory Software.');
+      }
+      let manifestError = null;
+      try {
         const { data } = await api.get(
           `/inventory-software/orders/${encodeURIComponent(orderRef)}/manifest`,
           authConfig(session),
         );
-        if (!data?.success || !data.order) {
-          throw new Error(data?.message || `Order "${orderRef}" could not be loaded.`);
+        if (data?.success && data.order) {
+          order = data.order;
+        } else {
+          manifestError = new Error(data?.message || `Order "${orderRef}" could not be loaded from Inventory Software.`);
         }
-        order = data.order;
+      } catch (error) {
+        manifestError = error;
+      }
+      if (!order && manifestError) {
+        throw manifestError;
+      }
+      if (manifestError && !hasQrManifest) {
+        throw manifestError;
+      }
+      if (manifestError && order) {
+        setNotice({
+          type: 'info',
+          text: `Order #${order.orderNumber || order.id} loaded from printed manifest. Server progress could not be loaded: ${formatError(manifestError)}`,
+        });
+      }
+      if (!order) {
+        const orderRefFromInput = getOrderId(rawOrderCode);
+        throw new Error(`Order "${orderRefFromInput}" could not be loaded.`);
       }
       if (String(order.status).toLowerCase() !== 'confirmed') {
         throw new Error(`Order #${order.orderNumber || order.id} must be confirmed before packing. Current status: ${order.status}.`);
@@ -385,20 +466,52 @@ export default function ScannerPwa() {
         sku: item.sku || '',
         barcode: item.barcode || item.sku || '',
       }));
-      const progress = Object.fromEntries(order.items.map(item => [
-        String(item.orderItemId),
-        { codes: [], quantity: Number(item.quantity) || 1 },
-      ]));
+      const localState = readActivePackingState(staffUsername);
+      const localMatches = String(localState?.order?.id) === String(order.id);
+      const queuedScans = readPendingScans(staffUsername).filter(scan => String(scan.orderId) === String(order.id));
+      const progress = Object.fromEntries(order.items.map(item => {
+        const itemId = String(item.orderItemId);
+        const knownScans = new Map();
+        (Array.isArray(item.scannedCodes) ? item.scannedCodes : []).forEach(scan => {
+          if (scan?.scanId && scan?.code) knownScans.set(scan.scanId, scan.code);
+        });
+        if (localMatches) {
+          const localProgress = localState.progress?.[itemId];
+          (localProgress?.codes || []).forEach((code, index) => {
+            const scanId = localProgress.scanIds?.[index];
+            if (scanId) knownScans.set(scanId, code);
+            else if (!knownScans.has(`local-${index}`)) knownScans.set(`local-${index}`, code);
+          });
+        }
+        queuedScans.filter(scan => String(scan.orderItemId) === itemId)
+          .forEach(scan => knownScans.set(scan.scanId, scan.scannedCode));
+        const verifiedCount = Math.min(
+          Number(item.quantity) || 1,
+          Number(item.verifiedCount) || 0,
+        );
+        const legacyCode = item.sku || item.barcode;
+        for (let index = knownScans.size; index < verifiedCount && legacyCode; index += 1) {
+          knownScans.set(`server-progress-${itemId}-${index}`, legacyCode);
+        }
+        const scans = [...knownScans.entries()];
+        return [itemId, {
+          codes: scans.map(([, code]) => code),
+          scanIds: scans.map(([scanId]) => scanId),
+          quantity: Number(item.quantity) || 1,
+        }];
+      }));
       setActiveOrder(order);
       setScanProgress(progress);
       setOrderInput('');
-      setNotice({ type: 'success', text: `Order #${order.orderNumber || order.id} loaded. Scan only the products shown.` });
+      if (!manifestError) {
+        setNotice({ type: 'success', text: `Order #${order.orderNumber || order.id} loaded. Scan only the products shown.` });
+      }
     } catch (error) {
       setNotice({ type: 'error', text: formatError(error) });
     } finally {
       setBusy(false);
     }
-  }, [onWork, session]);
+  }, [onWork, session, staffUsername]);
 
   const matchesOrderItem = (code, item) => {
     const clean = normalizeProductCode(code).toLowerCase();
@@ -426,15 +539,33 @@ export default function ScannerPwa() {
     }
     const nextProgress = {
       ...scanProgress,
-      [key]: { ...current, codes: [...current.codes, cleanCode] },
+      [key]: {
+        ...current,
+        codes: [...current.codes, cleanCode],
+        scanIds: [...(current.scanIds || []), globalThis.crypto?.randomUUID?.() || `scan-${Date.now()}-${Math.random().toString(36).slice(2)}`],
+      },
     };
+    const scanId = nextProgress[key].scanIds[nextProgress[key].scanIds.length - 1];
+    const pending = [
+      ...readPendingScans(staffUsername),
+      { scanId, orderId: activeOrder.id, orderItemId: selectedItem.orderItemId, scannedCode: cleanCode },
+    ];
+    try {
+      localStorage.setItem(getPendingScansKey(staffUsername), JSON.stringify(pending));
+      localStorage.setItem(getActiveOrderKey(staffUsername), JSON.stringify({ order: activeOrder, progress: nextProgress }));
+      setPendingScans(pending);
+    } catch (error) {
+      setNotice({ type: 'error', text: `Scan could not be saved on this phone: ${formatError(error)}` });
+      return false;
+    }
     setScanProgress(nextProgress);
     setNotice({
       type: 'success',
-      text: `${selectedItem.name}: ${current.codes.length + 1}/${current.quantity} scanned.`,
+      text: `${selectedItem.name}: ${current.codes.length + 1}/${current.quantity} scanned. Saved on this phone.`,
     });
+    if (navigator.onLine) syncPendingScans();
     return true;
-  }, [scanProgress, selectedItem]);
+  }, [activeOrder, scanProgress, selectedItem, staffUsername, syncPendingScans]);
 
   const savePackedOrder = () => {
     if (!activeOrder || !orderComplete) return;
@@ -465,6 +596,11 @@ export default function ScannerPwa() {
     }
     setBusy(true);
     try {
+      const queuedForOrders = readPendingScans(staffUsername)
+        .some(scan => packedOrders.some(order => String(order.orderId) === String(scan.orderId)));
+      if (queuedForOrders && !(await syncPendingScans())) {
+        throw new Error('Pending scans must sync to Inventory Software before this order can be uploaded.');
+      }
       const { data } = await api.post(
         '/inventory-software/fulfillment/pwa-batch',
         {
@@ -478,6 +614,10 @@ export default function ScannerPwa() {
       if (!data?.success || Number(data.count) !== packedOrders.length) {
         throw new Error(data?.message || 'The server did not confirm every packed order.');
       }
+      const uploadedIds = new Set(packedOrders.map(order => String(order.orderId)));
+      const remainingScans = readPendingScans(staffUsername)
+        .filter(scan => !uploadedIds.has(String(scan.orderId)));
+      persistPendingScans(remainingScans);
       let nextBatch = batch;
       if (batch.some(item => packedOrders.some(packed => String(packed.orderId) === String(item.orderId)))) {
         const sentIds = new Set(packedOrders.map(item => String(item.orderId)));
@@ -567,7 +707,8 @@ export default function ScannerPwa() {
     setSession(null);
     setOnWork(false);
     setBatch([]);
-    clearActiveOrder();
+    setSelectedItemId(null);
+    setCameraOpen(false);
     setConfirmedOrder(null);
     setBusy(false);
   };
@@ -681,7 +822,7 @@ export default function ScannerPwa() {
               <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white">Align code in view</span>
             </div>
             <p className="p-3 text-center text-xs leading-5 text-slate-300">
-              {cameraMode === 'order' ? 'Scan the compact fulfillment QR. It contains order and product codes and loads locally.' : `Scan the SKU or barcode for ${selectedItem?.name || 'the selected item'}.`}
+              {cameraMode === 'order' ? 'Scan the fulfillment QR to load the order. Progress syncs to Inventory Software when online.' : `Scan the SKU or barcode for ${selectedItem?.name || 'the selected item'}.`}
             </p>
           </section>
         )}
@@ -696,7 +837,7 @@ export default function ScannerPwa() {
                 <div>
                   <p className="mb-1 text-[10px] font-black uppercase tracking-[0.2em] text-emerald-300">Secure staff workspace</p>
                   <h2 className="text-2xl font-black tracking-tight text-white sm:text-3xl">Welcome back</h2>
-                  <p className="mt-2 max-w-md text-sm leading-6 text-slate-300">Sign in with the staff credentials created by your administrator. Your packing work stays local until you choose to upload.</p>
+                  <p className="mt-2 max-w-md text-sm leading-6 text-slate-300">Sign in with the staff credentials created by your administrator. Each scan is saved on this device and synced to Inventory Software; an order is marked packed only after upload.</p>
                 </div>
               </div>
             </div>
@@ -740,7 +881,7 @@ export default function ScannerPwa() {
             </div>
             <div className="p-5 sm:p-7">
               <div className="mb-5 grid grid-cols-3 gap-2">
-                {[['Camera', 'Ready on demand'], ['Packing data', 'Saved on device'], ['Inventory', 'Upload to update']].map(([title, detail]) => (
+                {[['Camera', 'Ready on demand'], ['Scan progress', 'Saved on device + server'], ['Inventory', 'Upload to mark packed']].map(([title, detail]) => (
                   <div key={title} className="rounded-xl border border-white/8 bg-white/[0.03] p-3">
                     <span className="block text-[9px] font-black uppercase tracking-wider text-emerald-300">{title}</span>
                     <span className="mt-1 block text-[10px] leading-4 text-slate-300">{detail}</span>
@@ -751,7 +892,7 @@ export default function ScannerPwa() {
                 {busy ? <LoaderCircle size={18} className="animate-spin" /> : <CheckCircle2 size={18} />}
                 {isOnline ? 'Start shift · Go to Work' : 'Reconnect to start shift'}
               </button>
-              <p className="mt-4 text-center text-xs leading-5 text-slate-400">Work status is visible in Inventory Software. QR decoding, product verification, and local bulk saves do not query SQL. Upload only when ready.</p>
+              <p className="mt-4 text-center text-xs leading-5 text-slate-400">Work status is visible in Inventory Software. Each product scan syncs to the server; upload the completed order to mark it packed.</p>
             </div>
           </section>
         ) : confirmedOrder ? (

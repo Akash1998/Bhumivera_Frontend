@@ -70,6 +70,10 @@ const getSecureExternalUrl = value => {
 };
 
 const getImageUrl = image => getProductImageUrl(image) || '/logo.webp';
+const getRecommendedImageUrl = product =>
+  [product.images, product.image_url, product.image, product.imageUrl]
+    .map(getProductImageUrl)
+    .find(Boolean) || '/logo.webp';
 const displayProductValue = value =>
   typeof value === 'string' || typeof value === 'number' ? String(value).trim() : '';
 const normalizeProductIdentity = value => String(value || '').toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -1246,8 +1250,8 @@ export default function ProductDetail() {
           <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
             {displayedRecommendations.map(recommended => (
               <Link key={recommended.id} to={`/product/${recommended.slug || recommended.id}`} className="group overflow-hidden rounded-2xl two-tone-card border border-[#d4af37]/25 transition hover:-translate-y-1 hover:border-[#d4af37]/60 hover:shadow-2xl">
-                <div className="aspect-[4/5] overflow-hidden bg-transparent">
-                  <img src={getImageUrl(recommended.images?.[0] || recommended.image_url)} alt={recommended.name} loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-full w-full object-cover object-center transition-transform duration-700 group-hover:scale-105"/>
+                <div className="aspect-[4/5] overflow-hidden bg-[#091710]">
+                  <img src={getRecommendedImageUrl(recommended)} alt={recommended.name} loading="lazy" onError={event => { event.currentTarget.onerror = null; event.currentTarget.src = '/logo.webp'; }} className="h-full w-full object-contain object-center p-2 transition-transform duration-700 group-hover:scale-105"/>
                 </div>
                 <div className="p-4">
                   <h3 className="line-clamp-2 text-sm font-medium text-white">{recommended.name}</h3>
