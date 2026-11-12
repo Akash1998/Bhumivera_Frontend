@@ -124,6 +124,9 @@ export default function MiniCart() {
   const loyaltyFreeShipping = Boolean(loyalty?.enabled && Number(loyalty?.currentTier?.free_shipping) === 1);
   const couponFreeShipping = appliedCoupon?.rewardType === 'free_shipping';
   const amountToFreeShipping = rulePreview?.freeShipping || loyaltyFreeShipping || couponFreeShipping ? 0 : Math.max(0, Number(freeShippingThreshold) - subtotal);
+  const freeDeliveryProgress = amountToFreeShipping > 0 && Number(freeShippingThreshold) > 0
+    ? Math.min(100, Math.max(0, subtotal * 100 / Number(freeShippingThreshold)))
+    : 100;
   const { standardCost: standardDeliveryCost, premiumCost: premiumDeliveryCost } = calculateDeliveryCosts({
     subtotal,
     standardCharge: settings?.standard_charge ?? settings?.default_shipping_charge ?? 50,
@@ -394,6 +397,13 @@ export default function MiniCart() {
       return;
     }
     setCheckoutStep(1);
+  };
+
+  const browseRewardPairings = () => {
+    setRecommendationsOpen(true);
+    window.requestAnimationFrame(() => {
+      document.getElementById('mini-cart-pairings')?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    });
   };
 
   const continueToPayment = () => {
@@ -702,11 +712,43 @@ export default function MiniCart() {
                     : <>You’ve unlocked all available free gifts{unlockedGiftRewards.length ? `: ${unlockedGiftRewards.map(tier => tier.giftProductName || tier.badge || tier.name).join(', ')}` : ''}.</>}
                 </p>
               </div>}
-              <div className="mt-2.5 flex items-center gap-2 border-t border-[#244A38] pt-2.5 text-xs text-[#DFD7C4]">
-                <Truck size={14} className="shrink-0 text-[#D4AF37]"/>
-                <span>{amountToFreeShipping > 0 ? <>Add <strong className="text-[#FCE096]">{formatPrice(amountToFreeShipping)}</strong> for free delivery</> : <strong className="text-white">Complimentary Delivery Unlocked</strong>}</span>
-                {rulePreviewLoading && <span className="ml-auto text-[10px] text-[#9BB0A5]">Updating…</span>}
+              <div className="mt-3 rounded-xl border border-[#244A38] bg-[#0D1C14]/70 p-3" aria-label="Free delivery progress">
+                <div className="flex items-center justify-between gap-2">
+                    <span className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#FCE096]"><Truck size={13}/> Free delivery</span>
+                    {rulePreviewLoading
+                      ? <span className="text-[10px] text-[#9BB0A5]">Updating…</span>
+                      : amountToFreeShipping > 0
+                        ? <span className="text-[10px] text-[#9BB0A5]">{formatPrice(amountToFreeShipping)} to go</span>
+                        : <span className="text-[10px] font-semibold text-[#FCE096]">Unlocked</span>}
+                </div>
+                <div
+                    className="mt-2 h-2 overflow-hidden rounded-full bg-white/10"
+                    role="progressbar"
+                    aria-label="Progress toward free delivery"
+                    aria-valuemin={0}
+                    aria-valuemax={100}
+                    aria-valuenow={Math.round(freeDeliveryProgress)}
+                >
+                    <div
+                      className="h-full rounded-full bg-gradient-to-r from-[#2D7653] to-[#8BCB91] transition-[width] duration-300"
+                      style={{ width: `${freeDeliveryProgress}%` }}
+                    />
+                </div>
+                <p className="mt-2 text-[11px] leading-5 text-[#DFD7C4]">
+                    {amountToFreeShipping > 0
+                      ? <>Add <strong className="text-[#FCE096]">{formatPrice(amountToFreeShipping)}</strong> more to get free delivery.</>
+                      : <strong className="text-white">Free delivery is unlocked for this bag.</strong>}
+                </p>
               </div>
+              {(amountToFreeShipping > 0 || upcomingCartReward) && <button
+                type="button"
+                onClick={browseRewardPairings}
+                className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-3 py-2.5 text-[11px] font-semibold text-[#FCE096] transition hover:bg-[#D4AF37]/20"
+              >
+                <Sparkles size={14}/>
+                Browse products to unlock your next reward
+                <ArrowRight size={14}/>
+              </button>}
             </section>}
 
             {!checkoutOpen && cartItems.map(item => {
@@ -825,7 +867,7 @@ export default function MiniCart() {
               </div>
             </section>}
 
-            {!checkoutOpen && <section className="overflow-hidden rounded-2xl border border-[#244A38] bg-[#1C382B]">
+            {!checkoutOpen && <section id="mini-cart-pairings" className="overflow-hidden rounded-2xl border border-[#244A38] bg-[#1C382B]">
               <button type="button" onClick={() => setOffersOpen(open => !open)} aria-expanded={offersOpen} className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left">
                 <span className="flex items-center gap-2"><span className="rounded-lg bg-[#14291F] p-2 text-[#D4AF37] border border-[#244A38]"><Tag size={15}/></span><span><span className="block text-sm font-serif font-bold text-white">Coupons &amp; Offers</span><span className="block text-[10px] text-[#9BB0A5]">{offersToShow.length ? `${offersToShow.length} available offers` : 'Enter a promo code'}</span></span></span>
                 {offersOpen ? <ChevronUp size={16} className="text-[#9BB0A5]"/> : <ChevronDown size={16} className="text-[#9BB0A5]"/>}
