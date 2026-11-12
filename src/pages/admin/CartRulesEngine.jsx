@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { cartRules as cartRulesApi } from '../../services/api';
+import { cartRules as cartRulesApi, products as productsApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
 import { Download, Layers3, Plus, RefreshCw, Search, ShieldCheck, Trash2 } from 'lucide-react';
 
@@ -27,6 +27,9 @@ const dateToIso = value => (value ? new Date(value).toISOString() : null);
 
 export default function CartRulesEngine() {
   const [rules, setRules] = useState([]);
+  const [products, setProducts] = useState([]);
+  const [productsLoading, setProductsLoading] = useState(true);
+  const [productsError, setProductsError] = useState('');
   const [loyaltyTiers, setLoyaltyTiers] = useState([]);
   const [draft, setDraft] = useState(blankRule);
   const [searchQuery, setSearchQuery] = useState('');
@@ -50,9 +53,32 @@ export default function CartRulesEngine() {
     }
   }, [showToast]);
 
+  const loadProducts = useCallback(async () => {
+    setProductsLoading(true);
+    setProductsError('');
+    try {
+      const response = await productsApi.getAllAdmin();
+      const data = response.data?.products || response.data?.data || response.data;
+      if (!Array.isArray(data)) {
+        throw new Error('Product list response was not a list.');
+      }
+      setProducts(data.filter(product => product && (product.id ?? product._id) != null));
+    } catch (error) {
+      setProducts([]);
+      setProductsError(error.normalized?.message || error.response?.data?.message || 'Could not load products. Refresh and try again.');
+      showToast?.(error.normalized?.message || 'Could not load products for cart rewards.', 'error');
+    } finally {
+      setProductsLoading(false);
+    }
+  }, [showToast]);
+
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
 
   const create = async event => {
     event.preventDefault();
@@ -280,16 +306,31 @@ export default function CartRulesEngine() {
             className="admin-glass-control mt-1 w-full rounded-lg px-3 py-2 text-sm"
           />
         </label>
-        <label className="text-xs text-slate-300">
-          Gift product ID
-          <input
-            min="1"
-            type="number"
+        <div className="text-xs text-slate-300">
+          <label htmlFor="cart-rule-gift-product">Gift product</label>
+          <select
+            id="cart-rule-gift-product"
             value={draft.gift_product_id}
             onChange={event => setDraft(current => ({ ...current, gift_product_id: event.target.value }))}
-            className="admin-glass-control mt-1 w-full rounded-lg px-3 py-2 text-sm"
-          />
-        </label>
+            disabled={productsLoading || products.length === 0}
+            className="admin-glass-control mt-1 w-full rounded-lg px-3 py-2 text-sm disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            <option value="">{productsLoading ? 'Loading products…' : products.length ? 'Select a gift product' : 'No products available'}</option>
+            {products.map(product => (
+              <option key={product.id ?? product._id} value={product.id ?? product._id}>
+                {product.name || `Product #${product.id ?? product._id}`}
+              </option>
+            ))}
+          </select>
+          {productsError && (
+            <div className="mt-1 flex items-center justify-between gap-2 text-[11px] text-rose-300">
+              <span role="alert">{productsError}</span>
+              <button type="button" onClick={loadProducts} disabled={productsLoading} className="shrink-0 underline hover:text-white disabled:opacity-50">
+                Retry
+              </button>
+            </div>
+          )}
+        </div>
         <label className="text-xs text-slate-300">
           Gift quantity
           <input
