@@ -563,10 +563,11 @@ export default function CartRulesEngine() {
                     <td>
                       <button
                         aria-label={`Edit ${rule.name}`}
+                        title={`Edit ${rule.name}`}
                         onClick={() => editRule(rule)}
-                        className="rounded-lg p-2 text-slate-400 transition hover:bg-white/10 hover:text-white"
+                        className="inline-flex items-center gap-1 rounded-lg px-2 py-1.5 text-xs font-semibold text-emerald-300 transition hover:bg-emerald-400/10 hover:text-emerald-200"
                       >
-                        <Pencil size={15}/>
+                        <Pencil size={14}/> Edit
                       </button>
                       <button
                         aria-label={`Delete ${rule.name}`}
