@@ -7,6 +7,7 @@ import {
   CloudUpload,
   LoaderCircle,
   LogOut,
+  Package,
   PackageCheck,
   ScanLine,
   ShieldCheck,
@@ -15,6 +16,7 @@ import {
   X,
 } from 'lucide-react';
 import api from '../services/api';
+import { getProductImageUrl } from '../utils/productImageUrl';
 import { startCamera, startScanLoop, stopCamera } from '../utils/qrScanEngine';
 
 const TOKEN_KEY = 'BV_SCANNER_PWA_TOKEN';
@@ -177,7 +179,6 @@ export default function ScannerPwa() {
   const [busy, setBusy] = useState(false);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraMode, setCameraMode] = useState('order');
-  const [cameraAttempt, setCameraAttempt] = useState(0);
   const [orderInput, setOrderInput] = useState('');
   const [activeOrder, setActiveOrder] = useState(() => readActivePackingState(readSession()?.staff?.username)?.order || null);
   const [scanProgress, setScanProgress] = useState(() => readActivePackingState(readSession()?.staff?.username)?.progress || {});
@@ -185,13 +186,15 @@ export default function ScannerPwa() {
   const [selectedItemId, setSelectedItemId] = useState(null);
   const [batch, setBatch] = useState(() => readPackedBatch(readSession()?.staff?.username));
   const [notice, setNotice] = useState(null);
+  const [failedProductImages, setFailedProductImages] = useState({});
   const [isOnline, setIsOnline] = useState(() => navigator.onLine);
   const videoRef = useRef(null);
   const pendingScanSyncRef = useRef(null);
+  const handleProductScanRef = useRef(null);
 
   const staffName = session?.staff?.fullName || session?.staff?.username || 'Staff';
   const staffUsername = session?.staff?.username || '';
-  const orderItems = activeOrder?.items || [];
+  const orderItems = useMemo(() => activeOrder?.items || [], [activeOrder]);
   const scannedUnits = Object.values(scanProgress).reduce((sum, item) => sum + item.codes.length, 0);
   const expectedUnits = orderItems.reduce((sum, item) => sum + (Number(item.quantity) || 1), 0);
   const orderComplete = expectedUnits > 0 && scannedUnits === expectedUnits;
@@ -502,6 +505,7 @@ export default function ScannerPwa() {
       }));
       setActiveOrder(order);
       setScanProgress(progress);
+      setFailedProductImages({});
       setOrderInput('');
       if (!manifestError) {
         setNotice({ type: 'success', text: `Order #${order.orderNumber || order.id} loaded. Scan only the products shown.` });
@@ -520,14 +524,14 @@ export default function ScannerPwa() {
 
   const handleProductScan = useCallback(rawCode => {
     if (!selectedItem) {
-      setNotice({ type: 'error', text: 'Choose the product card you are packing before opening the camera.' });
+      setNotice({ type: 'error', text: 'Choose a remaining product card before scanning.' });
       return false;
     }
     const cleanCode = normalizeProductCode(rawCode);
     if (!matchesOrderItem(cleanCode, selectedItem)) {
       setNotice({
         type: 'error',
-        text: `Wrong product. This scan does not match ${selectedItem.name} (${selectedItem.sku}).`,
+        text: `Wrong product. This scan does not match ${selectedItem.name} (${selectedItem.sku || selectedItem.barcode}).`,
       });
       return false;
     }
@@ -559,13 +563,25 @@ export default function ScannerPwa() {
       return false;
     }
     setScanProgress(nextProgress);
+    const nextItem = orderItems.find(item => {
+      const progress = nextProgress[String(item.orderItemId)];
+      return (progress?.codes.length || 0) < (progress?.quantity || Number(item.quantity) || 1);
+    });
+    if (nextItem) {
+      setSelectedItemId(nextItem.orderItemId);
+    } else {
+      setSelectedItemId(null);
+      setCameraOpen(false);
+    }
     setNotice({
       type: 'success',
       text: `${selectedItem.name}: ${current.codes.length + 1}/${current.quantity} scanned. Saved on this phone.`,
     });
     if (navigator.onLine) syncPendingScans();
     return true;
-  }, [activeOrder, scanProgress, selectedItem, staffUsername, syncPendingScans]);
+  }, [activeOrder, orderItems, scanProgress, selectedItem, staffUsername, syncPendingScans]);
+
+  handleProductScanRef.current = handleProductScan;
 
   const savePackedOrder = () => {
     if (!activeOrder || !orderComplete) return;
@@ -724,6 +740,8 @@ export default function ScannerPwa() {
         return;
       }
       stopLoop = startScanLoop(video, {
+        continuous: cameraMode === 'product',
+        cooldownMs: 900,
         onResult: rawValue => {
           if (!active) return;
           if (cameraMode === 'order') {
@@ -731,12 +749,7 @@ export default function ScannerPwa() {
             setCameraOpen(false);
             loadOrder(rawValue);
           } else {
-            if (handleProductScan(rawValue)) {
-              stopLoop();
-              setCameraOpen(false);
-            } else {
-              setCameraAttempt(value => value + 1);
-            }
+            handleProductScanRef.current?.(rawValue);
           }
         },
       });
@@ -750,7 +763,7 @@ export default function ScannerPwa() {
       stopLoop();
       stopCamera(video);
     };
-  }, [cameraAttempt, cameraMode, cameraOpen, handleProductScan, loadOrder]);
+  }, [cameraMode, cameraOpen, loadOrder]);
 
   const batchUnits = useMemo(
     () => batch.reduce((sum, order) => sum + order.verifiedItems.reduce((units, item) => units + item.verifiedCount, 0), 0),
@@ -822,7 +835,7 @@ export default function ScannerPwa() {
               <span className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-black px-4 py-2 text-[10px] font-bold uppercase tracking-widest text-white">Align code in view</span>
             </div>
             <p className="p-3 text-center text-xs leading-5 text-slate-300">
-              {cameraMode === 'order' ? 'Scan the fulfillment QR to load the order. Progress syncs to Inventory Software when online.' : `Scan the SKU or barcode for ${selectedItem?.name || 'the selected item'}.`}
+              {cameraMode === 'order' ? 'Scan the fulfillment QR to load the order. Progress syncs to Inventory Software when online.' : `Scan any product in this order. Next: ${selectedItem?.name || 'remaining item'}.`}
             </p>
           </section>
         )}
@@ -935,31 +948,63 @@ export default function ScannerPwa() {
                 </div>
               </div>
             </div>
-            <div className="space-y-3">
+            <div className="grid grid-cols-2 gap-3">
               {orderItems.map(item => {
-                const progress = scanProgress[String(item.orderItemId)] || { codes: [], quantity: Number(item.quantity) || 1 };
+                const itemKey = String(item.orderItemId);
+                const progress = scanProgress[itemKey] || { codes: [], quantity: Number(item.quantity) || 1 };
                 const complete = progress.codes.length >= progress.quantity;
+                const imageUrl = getProductImageUrl(item.imageUrl || item.image || item.images);
+                const isSelected = String(selectedItemId) === itemKey;
                 return (
-                  <article key={item.orderItemId} className={`rounded-2xl border p-4 shadow-lg shadow-black/10 transition ${complete ? 'border-emerald-300/35 bg-emerald-300/[0.06]' : 'border-white/10 bg-[#0b1812]/90'}`}>
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <h3 className="font-bold text-white">{item.name}</h3>
-                        <p className="mt-1 truncate font-mono text-xs text-slate-400">{item.sku || item.barcode || 'Barcode not listed'} · Qty {progress.codes.length}/{progress.quantity}</p>
-                      </div>
-                      {complete && <CheckCircle2 size={19} className="shrink-0 text-emerald-300" />}
+                  <article
+                    key={item.orderItemId}
+                    className={`min-w-0 overflow-hidden rounded-2xl border p-2.5 shadow-lg shadow-black/10 transition sm:p-3 ${
+                      complete ? 'border-emerald-300/35 bg-emerald-300/[0.06]'
+                        : isSelected && cameraOpen ? 'border-emerald-300/60 bg-emerald-300/[0.08]'
+                          : 'border-white/10 bg-[#0b1812]/90'
+                    }`}
+                  >
+                    <div className="relative aspect-square overflow-hidden rounded-xl bg-white">
+                      {imageUrl && !failedProductImages[itemKey] ? (
+                        <img
+                          src={imageUrl}
+                          alt={item.name}
+                          loading="lazy"
+                          decoding="async"
+                          className="h-full w-full object-contain p-2"
+                          onError={() => setFailedProductImages(current => ({ ...current, [itemKey]: true }))}
+                        />
+                      ) : (
+                        <div className="flex h-full w-full items-center justify-center bg-[#11281e] text-emerald-200/70">
+                          <Package size={38} strokeWidth={1.5} />
+                        </div>
+                      )}
+                      <span className="absolute right-2 top-2 rounded-full bg-[#07110d]/90 px-2.5 py-1 text-sm font-black text-white shadow">
+                        ×{progress.quantity}
+                      </span>
+                      {complete && (
+                        <span className="absolute left-2 top-2 rounded-full bg-emerald-300 p-1 text-[#062017]">
+                          <CheckCircle2 size={17} />
+                        </span>
+                      )}
                     </div>
+                    <h3 className="mt-2 line-clamp-2 min-h-8 text-xs font-bold leading-4 text-white" title={item.name}>
+                      {item.name}
+                    </h3>
+                    <p className="mt-1 truncate font-mono text-[10px] text-slate-400">{progress.codes.length}/{progress.quantity} scanned</p>
                     {!complete && (
                       <button
                         type="button"
+                        aria-label={`Scan ${item.name}`}
                         disabled={busy}
                         onClick={() => {
                           setSelectedItemId(item.orderItemId);
                           setCameraMode('product');
                           setCameraOpen(true);
                         }}
-                        className="mt-3 flex min-h-12 w-full items-center justify-center gap-2 rounded-xl border border-emerald-300/30 bg-gradient-to-r from-emerald-300/15 to-teal-300/10 font-bold text-emerald-100 transition hover:border-emerald-200/60 hover:bg-emerald-300/20"
+                        className="mt-2 flex min-h-10 w-full items-center justify-center gap-1.5 rounded-xl border border-emerald-300/30 bg-gradient-to-r from-emerald-300/15 to-teal-300/10 text-xs font-bold text-emerald-100 transition hover:border-emerald-200/60 hover:bg-emerald-300/20"
                       >
-                        <Camera size={17} /> Scan {item.name}
+                        <Camera size={15} /> Scan
                       </button>
                     )}
                   </article>
@@ -983,7 +1028,7 @@ export default function ScannerPwa() {
                 </div>
                 <span className="rounded-full border border-emerald-300/20 bg-emerald-300/10 px-2.5 py-1 text-[9px] font-black uppercase tracking-widest text-emerald-200">Live shift</span>
               </div>
-              <p className="mt-2 text-xs leading-5 text-slate-400">Fulfillment QR scans load locally; manual order-ID lookup fetches the manifest from Inventory Software. Product scans stay on this device until upload.</p>
+              <p className="mt-2 text-xs leading-5 text-slate-400">Scan an order, then verify its items. The camera moves to the next unfinished product automatically and stays open while you pack.</p>
             </div>
 
             <div className="rounded-3xl border border-white/10 bg-[#0b1812]/95 p-5 shadow-xl shadow-black/20 sm:p-6">

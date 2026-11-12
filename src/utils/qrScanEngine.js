@@ -132,7 +132,7 @@ export function startScanLoop(videoElement, { onResult, getDigitalZoom, continuo
   let stopped = false;
   let timerId = null;
   let lastRawValue = '';
-  let lastRawAt = 0;
+  let absentSince = 0;
 
   const fullCanvas = document.createElement('canvas');
   const cropCanvas = document.createElement('canvas');
@@ -214,13 +214,15 @@ export function startScanLoop(videoElement, { onResult, getDigitalZoom, continuo
           if (!continuous) {
             stopped = true;
             onResult(decoded);
-            return;
-          }
-          if (decoded !== lastRawValue || now - lastRawAt > cooldownMs) {
+          } else if (decoded !== lastRawValue || (absentSince && now - absentSince >= cooldownMs)) {
             lastRawValue = decoded;
-            lastRawAt = now;
+            absentSince = 0;
             onResult(decoded);
+          } else {
+            absentSince = 0;
           }
+        } else if (continuous && lastRawValue && !absentSince) {
+          absentSince = Date.now();
         }
       }
     }
