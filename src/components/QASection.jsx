@@ -1,10 +1,12 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '../context/AuthContext';
-import { MessageSquare, HelpCircle, Send, Search, ThumbsUp, Loader2, Sparkles, CheckCircle2 } from 'lucide-react';
+import { MessageSquare, HelpCircle, Send, Search, Loader2, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { fetchProductQA, submitProductQuestion, qa as qaApi } from '../services/api';
+import { fetchProductQA, submitProductQuestion } from '../services/api';
 
-const QASection = ({ productId, product }) => {
+const MotionForm = motion.form;
+
+const QASection = ({ productId }) => {
   const { user } = useAuth();
   const [questions, setQuestions] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -12,46 +14,28 @@ const QASection = ({ productId, product }) => {
   const [showQuestionForm, setShowQuestionForm] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
   const [newQuestion, setNewQuestion] = useState('');
+  const [loadError, setLoadError] = useState('');
 
-  const seededFaqs = useMemo(() => {
-    const rawFaqs = product?.faqs || product?.directAnswerFaqs || [];
-    if (!Array.isArray(rawFaqs)) return [];
-    return rawFaqs.map((item, idx) => ({
-      id: `seeded-${productId || 'bv'}-${idx + 1}`,
-      question: item.q || item.question || '',
-      answer: item.a || item.answer || '',
-      user_name: 'Verified Formulation Patron',
-      created_at: '2026-10-18T10:00:00.000Z',
-      helpful_count: 18 + ((idx * 7) % 29),
-      isSeeded: true,
-    })).filter(q => q.question);
-  }, [product, productId]);
-
-  useEffect(() => {
-    loadQA();
-  }, [productId, seededFaqs]);
-
-  const loadQA = async () => {
+  const loadQA = useCallback(async () => {
     try {
       setLoading(true);
-      const data = await fetchProductQA(productId);
-      const apiRows = Array.isArray(data) ? data : [];
-      if (apiRows.length > 0) {
-        const existingQuestions = new Set(apiRows.map(r => String(r.question || '').toLowerCase().trim()));
-        const merged = [
-          ...apiRows,
-          ...seededFaqs.filter(s => !existingQuestions.has(s.question.toLowerCase().trim())),
-        ];
-        setQuestions(merged);
-      } else {
-        setQuestions(seededFaqs);
-      }
-    } catch {
-      setQuestions(seededFaqs);
+      setLoadError('');
+      const response = await fetchProductQA(productId);
+      const rows = response.data;
+      if (!Array.isArray(rows)) throw new Error('The product Q&A response was invalid.');
+      setQuestions(rows);
+    } catch (error) {
+      console.error('Failed to load product questions:', error);
+      setQuestions([]);
+      setLoadError('Questions could not be loaded. Please try again.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [productId]);
+
+  useEffect(() => {
+    loadQA();
+  }, [loadQA]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -68,27 +52,6 @@ const QASection = ({ productId, product }) => {
       console.error('Failed to submit question:', err);
     } finally {
       setSubmitting(false);
-    }
-  };
-
-  const handleVoteHelpful = async (qId) => {
-    if (String(qId).startsWith('seeded-')) {
-      setQuestions((prev) =>
-        prev.map((q) =>
-          q.id === qId ? { ...q, helpful_count: Number(q.helpful_count || 0) + 1 } : q
-        )
-      );
-      return;
-    }
-    try {
-      await qaApi.voteHelpful(qId);
-      setQuestions((prev) =>
-        prev.map((q) =>
-          q.id === qId ? { ...q, helpful_count: Number(q.helpful_count || 0) + 1 } : q
-        )
-      );
-    } catch (err) {
-      console.error('Failed to vote helpful:', err);
     }
   };
 
@@ -130,7 +93,7 @@ const QASection = ({ productId, product }) => {
 
       <AnimatePresence>
         {showQuestionForm && (
-          <motion.form
+          <MotionForm
             initial={{ height: 0, opacity: 0 }}
             animate={{ height: 'auto', opacity: 1 }}
             exit={{ height: 0, opacity: 0 }}
@@ -156,7 +119,7 @@ const QASection = ({ productId, product }) => {
                 </button>
               </div>
             </div>
-          </motion.form>
+          </MotionForm>
         )}
       </AnimatePresence>
 
@@ -181,17 +144,9 @@ const QASection = ({ productId, product }) => {
               <div className="flex-1">
                 <h4 className="font-serif text-sm sm:text-base font-bold text-white leading-tight mb-1.5">{q.question}</h4>
                 <div className="flex flex-wrap items-center gap-3 font-mono text-[10px] text-[#94a3b8] uppercase tracking-wider">
-                  <span>Asked by {q.user_name || 'Verified Patron'}</span>
+                  <span>Asked by {q.user_name || 'Customer'}</span>
                   <span>•</span>
-                  <span>{new Date(q.created_at || Date.now()).toLocaleDateString()}</span>
-                  {q.isSeeded && (
-                    <>
-                      <span>•</span>
-                      <span className="inline-flex items-center gap-1 text-[#fce096]">
-                        <CheckCircle2 size={11} className="text-[#d4af37]" /> Verified Lab Answer
-                      </span>
-                    </>
-                  )}
+                  {q.created_at && <span>{new Date(q.created_at).toLocaleDateString()}</span>}
                 </div>
               </div>
             </div>
@@ -206,14 +161,9 @@ const QASection = ({ productId, product }) => {
                   <p className="text-xs sm:text-sm text-[#cbd5e1] leading-relaxed">{q.answer}</p>
                 </div>
                 <div className="mt-2.5 flex items-center gap-4">
-                  <button
-                    type="button"
-                    onClick={() => handleVoteHelpful(q.id)}
-                    className="flex items-center gap-1.5 font-mono text-[10px] font-bold text-[#94a3b8] hover:text-[#fce096] transition-colors uppercase tracking-wider"
-                  >
-                    <ThumbsUp size={12} className="text-[#d4af37]" />
-                    Helpful ({q.helpful_count || 0})
-                  </button>
+                  <span className="font-mono text-[10px] font-bold text-[#94a3b8] uppercase tracking-wider">
+                    Helpful ({Number(q.helpful_count) || 0})
+                  </span>
                 </div>
               </div>
             ) : (
@@ -228,7 +178,9 @@ const QASection = ({ productId, product }) => {
         )) : (
           <div className="text-center py-12 bg-[#070a0e]/80 rounded-2xl border border-dashed border-white/10">
             <MessageSquare className="mx-auto text-[#d4af37] mb-2 opacity-60" size={32} />
-            <p className="font-serif text-sm text-[#cbd5e1]">No inquiries matching this search.</p>
+            <p role={loadError ? 'alert' : undefined} className="font-serif text-sm text-[#cbd5e1]">
+              {loadError || 'No inquiries matching this search.'}
+            </p>
             <p className="font-mono text-[10px] text-[#94a3b8] uppercase tracking-widest mt-1">Try another keyword or ask our formulation desk above</p>
           </div>
         )}
