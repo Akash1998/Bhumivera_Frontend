@@ -1,5 +1,6 @@
 import React from 'react';
 import { ArrowRight, BriefcaseBusiness, ClipboardList, MessageCircle } from 'lucide-react';
+import SEO from '../components/SEO';
 
 const phoneNumber = '+917430985647';
 const whatsappNumber = '917430985647';
@@ -25,6 +26,11 @@ const points = [
 export default function MPGEBusinessLanding() {
   return (
     <main className="min-h-screen bg-[#070a0e] text-[#e2e8f0] pb-24 font-sans selection:bg-[#d4af37]/30 selection:text-white">
+      <SEO
+        title="MPG E-Business Private Limited (Est. 2016) · Business Enquiries & Supply Desk | Bhumivera"
+        description="Official Business Enquiries & Supply Desk for MPG E-Business Private Limited (Incorporated September 22, 2016 · CIN: U74999WB2016PTC217735 · Asansol, West Bengal) and Bhumivera Organics India Private Limited."
+        route="/mpgebusiness"
+      />
       {/* Hero Section */}
       <section className="bg-[#070a0e] border-b border-[#d4af37]/20 px-5 py-20 sm:px-8 sm:py-28">
         <div className="mx-auto max-w-4xl">

@@ -1535,3 +1535,93 @@ html.pwa-standalone .site-shell > footer {
   color: #1b2921 !important;
   border-color: rgba(212, 175, 55, 0.4) !important;
 }
+
+
+/* ============================================================================
+   ULTRA-SMOOTH TRUE TRANSPARENT CRYSTAL GLASSMORPHISM ENGINE (EXCLUDING BOT)
+   Strictly scoped via :not([class*="bhumivera-concierge"]) so the Concierge
+   Bot (SupportAssistant.jsx) remains 100% untouched.
+   ============================================================================ */
+html {
+  scroll-behavior: smooth;
+}
+
+.site-shell main :is(
+  .two-tone-card,
+  .two-tone-panel,
+  .two-tone-panel-gold,
+  .card-glass-forest,
+  .gold-plate,
+  .silver-plate,
+  .gold-plate-card,
+  .silver-plate-card
+):not([class*="bhumivera-concierge"]) {
+  background-color: rgba(10, 22, 15, 0.28) !important;
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 0.075) 0%, rgba(255, 255, 255, 0.018) 42%, rgba(6, 15, 10, 0.24) 100%),
+    radial-gradient(ellipse at 14% 0%, rgba(212, 175, 55, 0.09), transparent 62%) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(155%) !important;
+  backdrop-filter: blur(26px) saturate(155%) !important;
+  border: 1px solid rgba(212, 175, 55, 0.28) !important;
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.14),
+    inset 0 0 24px rgba(212, 175, 55, 0.035),
+    0 20px 50px -12px rgba(0, 0, 0, 0.46) !important;
+  transition:
+    transform 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    background-color 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    border-color 280ms cubic-bezier(0.22, 1, 0.36, 1),
+    box-shadow 280ms cubic-bezier(0.22, 1, 0.36, 1) !important;
+  will-change: transform, backdrop-filter;
+}
+
+.site-shell main .two-tone-card:not([class*="bhumivera-concierge"]):hover,
+.site-shell main .card-glass-forest:not([class*="bhumivera-concierge"]):hover {
+  background-color: rgba(14, 30, 21, 0.36) !important;
+  border-color: rgba(232, 201, 130, 0.52) !important;
+  box-shadow:
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.22),
+    0 24px 58px -10px rgba(0, 0, 0, 0.54),
+    0 0 28px rgba(212, 175, 55, 0.14) !important;
+}
+
+/* True transparent frosted glass tables & specification matrices (excluding bot) */
+.site-shell main table:not([class*="bhumivera-concierge"] *) {
+  background-color: rgba(6, 14, 10, 0.24);
+  -webkit-backdrop-filter: blur(20px) saturate(145%);
+  backdrop-filter: blur(20px) saturate(145%);
+}
+
+.site-shell main thead tr:not([class*="bhumivera-concierge"] *) {
+  background: linear-gradient(90deg, rgba(18, 38, 27, 0.62), rgba(10, 24, 17, 0.54)) !important;
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+}
+
+.site-shell main tbody tr:not([class*="bhumivera-concierge"] *) {
+  transition: background-color 180ms ease;
+}
+
+.site-shell main tbody tr:not([class*="bhumivera-concierge"] *):hover {
+  background-color: rgba(212, 175, 55, 0.065) !important;
+}
+
+/* Translucent crystal header & sticky navigation bar */
+.site-shell nav.sticky:not([class*="bhumivera-concierge"]) {
+  background: linear-gradient(110deg, rgba(6, 15, 10, 0.34), rgba(10, 23, 16, 0.28)) !important;
+  -webkit-backdrop-filter: blur(30px) saturate(165%) !important;
+  backdrop-filter: blur(30px) saturate(165%) !important;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.26) !important;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.09),
+    0 16px 42px rgba(0, 0, 0, 0.34) !important;
+}
+
+/* Mobile bottom bar crystal glass finish */
+.mobile-bottom-nav:not([class*="bhumivera-concierge"]) {
+  background: linear-gradient(180deg, rgba(12, 28, 20, 0.72), rgba(7, 17, 12, 0.82)) !important;
+  -webkit-backdrop-filter: blur(26px) saturate(160%) !important;
+  backdrop-filter: blur(26px) saturate(160%) !important;
+  border-top: 1px solid rgba(212, 175, 55, 0.3) !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1), 0 -10px 34px rgba(0, 0, 0, 0.55) !important;
+}

@@ -176,9 +176,15 @@ export default function Impact() {
   return (
     <main className="min-h-screen bg-[#070a0e] text-[#e2e8f0] pb-24 font-sans selection:bg-[#d4af37]/30 selection:text-white">
       <SEO
-        title="Public Stewardship & Grassroots Action | Bhumivera"
-        description="Bhumivera grassroots community action: Stray dog & cat rescue honoring Ceaser, food and ration kits honoring Smt. Shanti in West Bengal, and six upcoming ecological corridors starting from 2028 onwards."
+        title="Bhumivera Public Stewardship & Ecological Impact Ledger | Ceaser & Smt. Shanti Memorials + 2028 Botanical Corridors"
+        description="Explore Bhumivera's verified Public Stewardship & Ecological Impact Ledger (bhumivera.com/impact): December 2026 Ceaser Memorial Stray Animal Care, Smt. Shanti Memorial Ration Kits in Asansol West Bengal, and 6 upcoming 2028 botanical restoration corridors."
+        keywords="bhumivera impact, bhumivera public stewardship ledger, ceaser memorial stray animal rescue asansol, smt shanti memorial ration kits west bengal, bhumivera organics csr, damodar river vetiver restoration, ladakh sea buckthorn stewardship, pampore saffron pollinators"
         route="/impact"
+        faqs={impactQuestions.map(([q, a]) => ({ q, a }))}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Public Stewardship & Impact Ledger', url: '/impact' },
+        ]}
       />
 
       {/* 1. HERO SECTION */}
@@ -832,6 +838,65 @@ export default function Impact() {
                 )}
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* 8B. BOTANICAL HARVEST TO GRASSROOTS STEWARDSHIP CROSS-REFERENCE MATRIX */}
+      <section className="mx-auto max-w-7xl px-6 py-8">
+        <div className="rounded-3xl border border-[#d4af37]/30 bg-[#0d1520]/85 p-6 sm:p-10 shadow-2xl backdrop-blur-xl">
+          <span className="font-sub-gold text-[10px] tracking-[0.25em] block uppercase text-[#fce096]">
+            Seed-to-Bottle &amp; Community Circle
+          </span>
+          <h2 className="font-serif text-2xl sm:text-3xl text-white mt-1 mb-3">
+            How Every Bhumivera Formulation Connects to Our Grassroots &amp; Ecological Corridors
+          </h2>
+          <p className="text-xs sm:text-sm text-[#cbd5e1] mb-6 leading-relaxed">
+            Every bottle compounded by <strong className="text-white">Bhumivera Organics India Private Limited</strong> (<Link to="/about" className="text-[#fce096] underline">About the Maison</Link>) and <strong className="text-white">MPG E-Business Private Limited</strong> (<Link to="/mpge-business" className="text-[#fce096] underline">Est. 2016 Heritage</Link>) is linked to verifiable regional sourcing (<Link to="/provenance-engine" className="text-[#fce096] underline">Provenance Engine</Link>) and community stewardship:
+          </p>
+          <div className="overflow-x-auto rounded-2xl border border-[#d4af37]/25 bg-[#070a0e]/85">
+            <table className="w-full text-left border-collapse text-xs sm:text-sm">
+              <thead>
+                <tr className="border-b border-[#d4af37]/30 bg-[#102219] text-[#fce096] font-mono uppercase text-[11px]">
+                  <th className="p-3.5">Grassroots / Ecological Corridor</th>
+                  <th className="p-3.5">Location &amp; Timeline</th>
+                  <th className="p-3.5">Connected Botanical &amp; Formulation Link</th>
+                  <th className="p-3.5">Verification &amp; Science Silo</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10 text-[#cbd5e1]">
+                <tr>
+                  <td className="p-3.5 font-bold text-white"><Link to="/impact/stray-animal-care" className="text-[#fce096] underline">Ceaser Memorial — Stray Dog &amp; Cat Rescue</Link></td>
+                  <td className="p-3.5">Asansol &amp; Paschim Bardhaman, WB · Active Dec 2026</td>
+                  <td className="p-3.5"><Link to="/product/himalayan-seabuckthorn-luxury-face-wash" className="text-[#fce096] underline">4% Himalayan Sea Buckthorn Face Wash</Link> (100% Cruelty-Free)</td>
+                  <td className="p-3.5"><Link to="/verify" className="text-[#fce096] underline">Batch COA Registry (/verify)</Link></td>
+                </tr>
+                <tr>
+                  <td className="p-3.5 font-bold text-white"><Link to="/impact/hunger-free-elders" className="text-[#fce096] underline">Smt. Shanti Memorial — Elder Ration Kits</Link></td>
+                  <td className="p-3.5">Asansol, Raniganj &amp; Kulti, WB · Active Dec 2026</td>
+                  <td className="p-3.5"><Link to="/product/kalpvriksh-satva-tulsi-7-tulsi-extract" className="text-[#fce096] underline">Kalpvriksh Satva 7-Tulsi Drops (30ml)</Link></td>
+                  <td className="p-3.5"><Link to="/community" className="text-[#fce096] underline">100+ Volunteer Hub (/community)</Link></td>
+                </tr>
+                <tr>
+                  <td className="p-3.5 font-bold text-white"><Link to="/impact/native-trees" className="text-[#fce096] underline">Native Neem, Amla &amp; Banyan Sapling Corridor</Link></td>
+                  <td className="p-3.5">Raniganj–Asansol Coalfield Belt · Starting 2028</td>
+                  <td className="p-3.5"><Link to="/product/luxury-2-in-1-botanical-shampoo-conditioner" className="text-[#fce096] underline">Royal 2-in-1 Shampoo (25mg Reetha, 20mg Amla, 10mg Neem)</Link></td>
+                  <td className="p-3.5"><Link to="/science" className="text-[#fce096] underline">Botanical Science (/science)</Link></td>
+                </tr>
+                <tr>
+                  <td className="p-3.5 font-bold text-white"><Link to="/impact/river-care" className="text-[#fce096] underline">Damodar &amp; Ajay Riverbank Vetiver Buffer</Link></td>
+                  <td className="p-3.5">Paschim Bardhaman &amp; Birbhum, WB · Starting 2028</td>
+                  <td className="p-3.5"><Link to="/product/activated-charcoal-luxury-face-wash" className="text-[#fce096] underline">3% Activated Charcoal Face Wash</Link> &amp; <Link to="/product/artisanal-charcoal-handmade-soap" className="text-[#fce096] underline">Charcoal Bar</Link></td>
+                  <td className="p-3.5"><Link to="/somatic-registry" className="text-[#fce096] underline">Somatic Label Registry</Link></td>
+                </tr>
+                <tr>
+                  <td className="p-3.5 font-bold text-white"><Link to="/impact/sacred-groves" className="text-[#fce096] underline">Sacred Groves &amp; Medicinal Herb Nurseries</Link></td>
+                  <td className="p-3.5">Bankura &amp; Purulia, WB · Starting 2028</td>
+                  <td className="p-3.5"><Link to="/product/artisanal-aloe-vera-handmade-soap" className="text-[#fce096] underline">Soothing Aloe Vera, Neem &amp; Tulsi Bar</Link></td>
+                  <td className="p-3.5"><Link to="/guides" className="text-[#fce096] underline">Botanical Buying Guides (/guides)</Link></td>
+                </tr>
+              </tbody>
+            </table>
           </div>
         </div>
       </section>

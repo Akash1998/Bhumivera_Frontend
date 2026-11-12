@@ -182,7 +182,7 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(Googlebot|Bingbot|PerplexityBot|ClaudeBot|anthropic-ai|GPTBot|OAI-SearchBot|ChatGPT-User|Google-Extended|facebookexternalhit|WhatsApp|Twitterbot).*"
+          "value": ".*(Googlebot|Bingbot|Slurp|DuckDuckBot|Bravebot|Brave|Applebot|Yandex|Baiduspider|PerplexityBot|ClaudeBot|anthropic-ai|GPTBot|OAI-SearchBot|ChatGPT-User|Google-Extended|facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot).*"
         }
       ],
       "destination": "https://service.bhumivera.com/api/seo-prerender/products/:slug"
@@ -193,32 +193,76 @@
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(Googlebot|Bingbot|PerplexityBot|ClaudeBot|anthropic-ai|GPTBot|OAI-SearchBot|ChatGPT-User|Google-Extended|facebookexternalhit|WhatsApp|Twitterbot).*"
+          "value": ".*(Googlebot|Bingbot|Slurp|DuckDuckBot|Bravebot|Brave|Applebot|Yandex|Baiduspider|PerplexityBot|ClaudeBot|anthropic-ai|GPTBot|OAI-SearchBot|ChatGPT-User|Google-Extended|facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot).*"
         }
       ],
       "destination": "https://service.bhumivera.com/api/seo-prerender/product/:slug"
     },
     {
-      "source": "/about",
+      "source": "/category/:slug",
       "has": [
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(Googlebot|Bingbot|PerplexityBot|ClaudeBot|anthropic-ai|GPTBot|OAI-SearchBot|ChatGPT-User|Google-Extended).*"
+          "value": ".*(Googlebot|Bingbot|Slurp|DuckDuckBot|Bravebot|Brave|Applebot|Yandex|Baiduspider|PerplexityBot|ClaudeBot|anthropic-ai|GPTBot|OAI-SearchBot|ChatGPT-User|Google-Extended|facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot).*"
         }
       ],
-      "destination": "https://service.bhumivera.com/api/seo-prerender/about"
+      "destination": "https://service.bhumivera.com/api/seo-prerender/category/:slug"
     },
     {
-      "source": "/science",
+      "source": "/combo/:slug",
       "has": [
         {
           "type": "header",
           "key": "user-agent",
-          "value": ".*(Googlebot|Bingbot|PerplexityBot|ClaudeBot|anthropic-ai|GPTBot|OAI-SearchBot|ChatGPT-User|Google-Extended).*"
+          "value": ".*(Googlebot|Bingbot|Slurp|DuckDuckBot|Bravebot|Brave|Applebot|Yandex|Baiduspider|PerplexityBot|ClaudeBot|anthropic-ai|GPTBot|OAI-SearchBot|ChatGPT-User|Google-Extended|facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot).*"
         }
       ],
-      "destination": "https://service.bhumivera.com/api/seo-prerender/science"
+      "destination": "https://service.bhumivera.com/api/seo-prerender/combo/:slug"
+    },
+    {
+      "source": "/impact/:slug*",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Googlebot|Bingbot|Slurp|DuckDuckBot|Bravebot|Brave|Applebot|Yandex|Baiduspider|PerplexityBot|ClaudeBot|anthropic-ai|GPTBot|OAI-SearchBot|ChatGPT-User|Google-Extended|facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot).*"
+        }
+      ],
+      "destination": "https://service.bhumivera.com/api/seo-prerender/impact/:slug*"
+    },
+    {
+      "source": "/guides/:slug*",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Googlebot|Bingbot|Slurp|DuckDuckBot|Bravebot|Brave|Applebot|Yandex|Baiduspider|PerplexityBot|ClaudeBot|anthropic-ai|GPTBot|OAI-SearchBot|ChatGPT-User|Google-Extended|facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot).*"
+        }
+      ],
+      "destination": "https://service.bhumivera.com/api/seo-prerender/guides/:slug*"
+    },
+    {
+      "source": "/legal/:slug*",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Googlebot|Bingbot|Slurp|DuckDuckBot|Bravebot|Brave|Applebot|Yandex|Baiduspider|PerplexityBot|ClaudeBot|anthropic-ai|GPTBot|OAI-SearchBot|ChatGPT-User|Google-Extended|facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot).*"
+        }
+      ],
+      "destination": "https://service.bhumivera.com/api/seo-prerender/legal/:slug*"
+    },
+    {
+      "source": "/(about|science|bhumivera-science|shop|products|collections|impact|community|lab|provenance-engine|provenance|somatic-registry|verify|genuinity|ewarranty|verify-product|warranty|purchase-protection|contact|support-center|sell-on-bhumivera|affiliate|compare|flash-sales|order-tracking)",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Googlebot|Bingbot|Slurp|DuckDuckBot|Bravebot|Brave|Applebot|Yandex|Baiduspider|PerplexityBot|ClaudeBot|anthropic-ai|GPTBot|OAI-SearchBot|ChatGPT-User|Google-Extended|facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot).*"
+        }
+      ],
+      "destination": "https://service.bhumivera.com/api/seo-prerender/$1"
     },
     {
       "source": "/((?!api|assets|images|.*\\..*).*)",

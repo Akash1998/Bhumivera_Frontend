@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { ArrowLeft, ArrowRight, BadgePercent, Check, Clock3, Copy, Gift, LoaderCircle, ShoppingBag, Tag } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
+import SEO from '../components/SEO';
 import { coupons as couponsApi } from '../services/api';
 
 const formatPrice = value => `₹${(Number(value) || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
@@ -52,6 +53,11 @@ export default function FlashSales() {
 
   return (
     <main className="min-h-[80svh] bg-[#070a0e] px-4 py-8 text-[#e2e8f0] sm:px-6 sm:py-12 selection:bg-[#d4af37]/30 selection:text-white">
+      <SEO
+        title="Privileged Patron Offers & Flash Sales | Bhumivera"
+        description="Explore official Bhumivera coupon offers, regimen privileges, and seasonal flash sales across our 6 flagship 100% active-disclosed botanical formulations."
+        route="/flash-sales"
+      />
       <div className="mx-auto max-w-6xl">
         <Link to="/shop" className="btn-silver-luxury inline-flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold text-[#cbd5e1] transition">
           <ArrowLeft size={15}/> Back to shopping

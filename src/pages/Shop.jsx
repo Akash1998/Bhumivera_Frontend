@@ -8,6 +8,10 @@ import {
   Heart,
   X,
   FlaskConical,
+  ArrowRight,
+  ShieldCheck,
+  Leaf,
+  BookOpen,
 } from 'lucide-react';
 import ActiveComboShowcase from '../components/ActiveComboShowcase';
 import { products as productsApi } from '../services/api';
@@ -23,6 +27,49 @@ import {
   FALLBACK_CATALOG_PRODUCTS,
   BHUMIVERA_6_PRODUCTS,
 } from '../data/bhumiveraUniqueData';
+
+const SEARCH_STOP_WORDS = new Set([
+  'with', 'for', 'and', 'the', 'best', 'in', 'by', 'of', 'to', 'from', 'a', 'an', 'on', 'my', 'all', 'india',
+]);
+
+const normalizeSearchText = (raw = '') =>
+  String(raw || '')
+    .toLowerCase()
+    .replace(/niacidamine|niacinimide|nicotinamide|vitamin\s*b3/g, 'niacinamide')
+    .replace(/hyaluronic|hyluronic|sodium\s*hyaluronate/g, 'hyaluronic acid')
+    .replace(/facewash|face-wash/g, 'face wash')
+    .replace(/seabuckthorn|sea-buckthorn|seabuck\s*thorn/g, 'sea buckthorn')
+    .replace(/aloevera|aleovera/g, 'aloe vera')
+    .replace(/shikhakai/g, 'shikakai')
+    .replace(/bringna|bhringraj/g, 'bhringraj')
+    .replace(/ritta|reetha|soapnut/g, 'reetha')
+    .replace(/haridra|turmeric/g, 'haridra turmeric')
+    .replace(/manjistha|rubia\s*cordifolia/g, 'manjistha')
+    .replace(/panchtulsi|panch\s*tulsi|seven\s*tulsi|7\s*tulsi/g, 'tulsi')
+    .trim();
+
+const CATEGORY_SEO_MAP = {
+  'luxury-facial-cleansers': {
+    title: 'Luxury Botanical Facial Cleansers — Sea Buckthorn & Activated Charcoal Face Washes | Bhumivera',
+    description:
+      'Shop Bhumivera pH 5.3–5.5 Sulfate-Free Luxury Facial Cleansers: 4% Himalayan Sea Buckthorn Face Wash and 3% Activated Charcoal Face Wash with 5% Glycerin, 0.1% Hyaluronic Acid, 0.1% Niacinamide, Manjistha & Haridra.',
+  },
+  'luxury-hair-care': {
+    title: 'Sulfate-Free Ayurvedic Hair Care — Royal 2-in-1 Botanical Shampoo with Conditioner | Bhumivera',
+    description:
+      'Shop Bhumivera Royal Botanical 2-in-1 Luxury Shampoo with Conditioner (200 ML): 100mg standardized 8-herb complex with 25mg Reetha, 20mg Amla, 10mg Rosemary Oil, 10mg Bhringraj, Triphala, Neem, Aloe Vera & Shikakai.',
+  },
+  'artisanal-ayurvedic-cleansing-bars': {
+    title: 'Artisanal Ayurvedic Cleansing Bars — Charcoal & Aloe-Neem-Tulsi Handmade Soaps | Bhumivera',
+    description:
+      'Shop Bhumivera 100 GM Handmade Ayurvedic Luxury Bathing Bars: Charcoal Deep Cleansing Bar with Aloe Vera and Soothing Bar with Aloe Vera, Neem & Sacred Tulsi.',
+  },
+  'luxury-ayurvedic-wellness-immunity-drops': {
+    title: 'Kalpvriksh Satva 7-Tulsi Drops — 90% Concentrated Seven-Tulsi Adaptogen | Bhumivera',
+    description:
+      'Shop Bhumivera Kalpvriksh Satva Tulsi (30 ML): 9.0ml per 10ml concentrated liquid extract of 7 distinct Tulsi varieties (Van, Sweet, Marua, Bisva, Kala, Rama & Lemon Tulsi).',
+  },
+};
 
 const ProductCard = ({ product, index, simulation, sampleActivityEnabled }) => {
   const { addToCart } = useCart() || {};
@@ -40,7 +87,7 @@ const ProductCard = ({ product, index, simulation, sampleActivityEnabled }) => {
     FALLBACK_CATALOG_PRODUCTS[index % FALLBACK_CATALOG_PRODUCTS.length].image_url;
 
   return (
-    <div className="group relative flex flex-col two-tone-card border border-[#D4AF37]/20 rounded-2xl sm:rounded-[2rem] overflow-hidden hover:border-[#D4AF37]/60 hover:shadow-2xl transition-all duration-300">
+    <div className="group relative flex flex-col two-tone-card border border-[#D4AF37]/25 rounded-2xl sm:rounded-[2rem] overflow-hidden hover:border-[#D4AF37]/70 hover:shadow-2xl transition-all duration-300">
       <div className="relative aspect-square sm:aspect-[4/3] overflow-hidden bg-[#102219]">
         <Link to={`/product/${product.slug || prodId}`} className="block w-full h-full">
           <img
@@ -50,7 +97,7 @@ const ProductCard = ({ product, index, simulation, sampleActivityEnabled }) => {
             loading="lazy"
             decoding="async"
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-            alt={`${product.name} - ${product.primaryBotanicals || product.phLevel || 'Bhumivera Organics Luxury Botanical Formula'}`}
+            alt={`${product.name} - ${product.active_ingredients || product.primaryBotanicals || product.phLevel || 'Bhumivera Organics Luxury Botanical Formula'}`}
             onError={event => {
               event.currentTarget.onerror = null;
               event.currentTarget.src = FALLBACK_CATALOG_PRODUCTS[index % FALLBACK_CATALOG_PRODUCTS.length].image_url;
@@ -167,6 +214,12 @@ export default function Shop() {
   }, [searchParams]);
 
   useEffect(() => {
+    if (categorySlug) {
+      setSelectedCategory(categorySlug);
+    }
+  }, [categorySlug]);
+
+  useEffect(() => {
     let active = true;
     scarcitySimulator.getPopularToday()
       .then(({ data }) => {
@@ -232,79 +285,131 @@ export default function Shop() {
   }, []);
 
   const filteredProducts = useMemo(() => {
-    const list = products.filter((p) => {
-      const q = searchTerm.toLowerCase().trim();
-      const normalizedQ = q.replace(/seabuckthorn/g, 'sea buckthorn');
-      const closedQ = q.replace(/sea\s+buckthorn/g, 'seabuckthorn');
-      const matchSearch =
-        !q ||
-        p.name?.toLowerCase().includes(q) ||
-        p.name?.toLowerCase().includes(normalizedQ) ||
-        p.name?.toLowerCase().includes(closedQ) ||
-        p.slug?.toLowerCase().includes(q.replace(/\s+/g, '-')) ||
-        p.subtitle?.toLowerCase().includes(q) ||
-        p.short_description?.toLowerCase().includes(q) ||
-        p.description?.toLowerCase().includes(q) ||
-        p.active_ingredients?.toLowerCase().includes(q) ||
-        p.search_keywords?.toLowerCase().includes(q) ||
-        p.tags?.toLowerCase().includes(q) ||
-        p.category?.toLowerCase().includes(q) ||
-        p.category_name?.toLowerCase().includes(q);
+    const qRaw = searchTerm.toLowerCase().trim();
+    const normalizedQ = normalizeSearchText(qRaw);
+    const queryTokens = normalizedQ
+      .split(/[^a-z0-9.]+/)
+      .filter((t) => t.length >= 2 && !SEARCH_STOP_WORDS.has(t));
+    const nonBrandTokens = queryTokens.filter((t) => t !== 'bhumivera' && t !== 'organics');
 
-      const matchCategory = (() => {
-        if (!selectedCategory || selectedCategory === 'all') return true;
-        const sel = selectedCategory.toLowerCase().trim();
-        const pCat = (p.category || '').toLowerCase();
-        const pCatName = (p.category_name || '').toLowerCase();
-        const pCatId = String(p.category_id || '');
+    const scoredList = products
+      .map((p) => {
+        const matchCategory = (() => {
+          if (!selectedCategory || selectedCategory === 'all') return true;
+          const sel = selectedCategory.toLowerCase().trim();
+          const pCat = (p.category || '').toLowerCase();
+          const pCatName = (p.category_name || '').toLowerCase();
+          const pCatId = String(p.category_id || '');
 
-        if (pCatId === selectedCategory) return true;
-        if (pCat.includes(sel) || pCatName.includes(sel) || sel.includes(pCat) || sel.includes(pCatName)) return true;
+          if (pCatId === selectedCategory) return true;
+          if (pCat.includes(sel) || pCatName.includes(sel) || sel.includes(pCat) || sel.includes(pCatName)) return true;
 
-        if (sel.includes('facial') || sel.includes('cleanser')) {
-          return pCat.includes('facial') || pCatName.includes('facial') || pCat.includes('cleanser') || pCatName.includes('cleanser');
+          if (sel.includes('facial') || sel.includes('cleanser')) {
+            return pCat.includes('facial') || pCatName.includes('facial') || pCat.includes('cleanser') || pCatName.includes('cleanser');
+          }
+          if (sel.includes('hair') || sel.includes('shampoo')) {
+            return pCat.includes('hair') || pCatName.includes('hair') || pCat.includes('shampoo') || pCatName.includes('shampoo');
+          }
+          if (sel.includes('bar') || sel.includes('soap') || sel.includes('cleansing')) {
+            return pCat.includes('bar') || pCatName.includes('bar') || pCat.includes('soap') || pCatName.includes('soap') || pCat.includes('cleansing');
+          }
+          if (sel.includes('wellness') || sel.includes('drop') || sel.includes('immunity') || sel.includes('nabhi') || sel.includes('elixir')) {
+            return pCat.includes('wellness') || pCatName.includes('wellness') || pCat.includes('drop') || pCatName.includes('drop') || pCat.includes('tailam') || pCat.includes('elixir');
+          }
+          return false;
+        })();
+
+        if (!matchCategory) return { product: p, match: false, searchScore: 0 };
+        if (!qRaw) return { product: p, match: true, searchScore: 1 };
+
+        const productCorpus = normalizeSearchText(
+          [
+            p.name,
+            p.subtitle,
+            p.slug,
+            ...(p.legacySlugs || []),
+            p.short_description,
+            p.description,
+            p.active_ingredients,
+            p.primaryBotanicals,
+            p.clinicalActives,
+            p.search_keywords,
+            p.tags,
+            p.category,
+            p.category_name,
+          ].join(' ')
+        );
+
+        let score = 0;
+        if (productCorpus.includes(normalizedQ)) score += 100;
+
+        if (nonBrandTokens.length === 0) {
+          // User searched "bhumivera" or "bhumivera organics" — all Bhumivera products match!
+          score += 50;
+        } else {
+          let matchedTokens = 0;
+          for (const token of nonBrandTokens) {
+            if (normalizeSearchText(p.name).includes(token)) {
+              score += 35;
+              matchedTokens += 1;
+            } else if (normalizeSearchText(`${p.subtitle || ''} ${p.active_ingredients || ''}`).includes(token)) {
+              score += 25;
+              matchedTokens += 1;
+            } else if (productCorpus.includes(token)) {
+              score += 12;
+              matchedTokens += 1;
+            }
+          }
+          // If user searched "bhumivera facewash", rank Face Washes #1 but still show other Bhumivera products if query includes "bhumivera"
+          if (matchedTokens === 0 && queryTokens.includes('bhumivera')) {
+            score = 5;
+          } else if (matchedTokens === 0) {
+            return { product: p, match: false, searchScore: 0 };
+          }
         }
-        if (sel.includes('hair') || sel.includes('shampoo')) {
-          return pCat.includes('hair') || pCatName.includes('hair') || pCat.includes('shampoo') || pCatName.includes('shampoo');
-        }
-        if (sel.includes('bar') || sel.includes('soap') || sel.includes('cleansing')) {
-          return pCat.includes('bar') || pCatName.includes('bar') || pCat.includes('soap') || pCatName.includes('soap') || pCat.includes('cleansing');
-        }
-        if (sel.includes('wellness') || sel.includes('drop') || sel.includes('immunity') || sel.includes('nabhi') || sel.includes('elixir')) {
-          return pCat.includes('wellness') || pCatName.includes('wellness') || pCat.includes('drop') || pCatName.includes('drop') || pCat.includes('tailam') || pCat.includes('elixir');
-        }
-        return false;
-      })();
 
-      return matchSearch && matchCategory;
-    });
+        return { product: p, match: score > 0, searchScore: score };
+      })
+      .filter((item) => item.match);
 
-    const sorted = [...list];
-    if (sortBy === 'popular_today') {
+    const sorted = [...scoredList];
+    if (qRaw) {
+      sorted.sort((a, b) => b.searchScore - a.searchScore);
+    } else if (sortBy === 'popular_today') {
       const ranking = new Map(popularToday.map((item, index) => [String(item.id), index]));
       sorted.sort((a, b) => {
-        const rankA = ranking.get(String(a.id || a._id));
-        const rankB = ranking.get(String(b.id || b._id));
+        const rankA = ranking.get(String(a.product.id || a.product._id));
+        const rankB = ranking.get(String(b.product.id || b.product._id));
         if (rankA === undefined && rankB === undefined) return 0;
         if (rankA === undefined) return 1;
         if (rankB === undefined) return -1;
         return rankA - rankB;
       });
     } else if (sortBy === 'price_asc') {
-      sorted.sort((a, b) => Number(a.discount_price || a.price || 0) - Number(b.discount_price || b.price || 0));
+      sorted.sort((a, b) => Number(a.product.discount_price || a.product.price || 0) - Number(b.product.discount_price || b.product.price || 0));
     } else if (sortBy === 'price_desc') {
-      sorted.sort((a, b) => Number(b.discount_price || b.price || 0) - Number(a.discount_price || a.price || 0));
+      sorted.sort((a, b) => Number(b.product.discount_price || b.product.price || 0) - Number(a.product.discount_price || a.product.price || 0));
     } else if (sortBy === 'rating') {
-      sorted.sort((a, b) => Number(b.rating || 0) - Number(a.rating || 0));
+      sorted.sort((a, b) => Number(b.product.rating || 0) - Number(a.product.rating || 0));
     }
-    return sorted;
+    return sorted.map((item) => item.product);
   }, [products, searchTerm, selectedCategory, sortBy, popularToday]);
+
+  const categorySeo = categorySlug ? CATEGORY_SEO_MAP[categorySlug] : null;
+  const pageTitle = categorySeo
+    ? categorySeo.title
+    : searchTerm
+      ? `${searchTerm} — 100% Active Botanical Formulations | Bhumivera`
+      : 'Shop All 6 Flagship Formulations & Regimen Combos | Bhumivera (bhumivera.com)';
+  const pageDescription = categorySeo
+    ? categorySeo.description
+    : 'Shop Bhumivera’s 6 flagship cold-pressed (<28°C), pH 5.0–5.5 botanical formulations with 100% active percentages and milligram-level label disclosure: 4% Himalayan Sea Buckthorn Face Wash, 3% Activated Charcoal Face Wash with Niacinamide & Hyaluronic Acid, Royal 2-in-1 Botanical Shampoo, Handmade Ayurvedic Soaps, and 7-Tulsi Drops.';
 
   return (
     <div className="min-h-screen bg-[#14291F] text-[#FAF7F2] pt-20 sm:pt-28 pb-24 font-sans">
       <SEO
-        title="The Transparent Maison Collection · Products & Combos | Bhumivera"
-        description="Browse Bhumivera products and active combos from the current catalog."
+        title={pageTitle}
+        description={pageDescription}
         route={location.pathname}
       />
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -335,7 +440,7 @@ export default function Shop() {
               <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#D4AF37]" />
               <input
                 type="text"
-                placeholder="Search charcoal, sea buckthorn, reetha..."
+                placeholder="Search sea buckthorn, charcoal, niacinamide, reetha, tulsi..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="w-full bg-[#102219]/85 backdrop-blur-xl border border-[#D4AF37]/25 rounded-xl sm:rounded-full pl-10 pr-10 py-3 sm:py-4 text-xs sm:text-sm text-[#FAF7F2] placeholder-[#9BB0A5] outline-none focus:border-[#D4AF37] shadow-lg transition-colors"
@@ -349,6 +454,26 @@ export default function Shop() {
                   <X size={15} />
                 </button>
               )}
+            </div>
+            {/* Quick Ingredient & Trending Search Chips */}
+            <div className="mt-2.5 flex flex-wrap items-center gap-1.5 text-[10px] font-mono">
+              <span className="text-[#9BB0A5] uppercase tracking-wider mr-1">Popular:</span>
+              {[
+                { label: 'Sea Buckthorn Face Wash', q: 'seabuckthorn face wash' },
+                { label: 'Face Wash with Niacinamide', q: 'facewash with niacinamide' },
+                { label: '3% Charcoal Cleanser', q: 'activated charcoal face wash' },
+                { label: '2-in-1 Rosemary Shampoo', q: 'reetha amla rosemary shampoo' },
+                { label: '7-Tulsi Drops', q: 'kalpvriksh 7 tulsi' },
+              ].map((chip) => (
+                <button
+                  key={chip.q}
+                  type="button"
+                  onClick={() => setSearchTerm(chip.q)}
+                  className="rounded-full border border-[#D4AF37]/30 bg-[#102219]/70 px-2.5 py-0.5 text-[#FCE096] hover:border-[#D4AF37] hover:bg-[#D4AF37]/15 transition"
+                >
+                  {chip.label}
+                </button>
+              ))}
             </div>
           </div>
         </div>
@@ -412,6 +537,127 @@ export default function Shop() {
             />
           ))}
         </div>
+
+        {/* Comprehensive Catalog & Ingredient Cross-Reference Matrix for SEO & Buyers */}
+        <section className="mt-16 rounded-3xl two-tone-card border border-[#D4AF37]/30 p-6 sm:p-10 space-y-8">
+          <div className="border-b border-[#D4AF37]/20 pb-5">
+            <span className="font-sub-gold text-[10px] uppercase tracking-[0.24em] block">
+              The Bhumivera Transparency Standard · Complete Ingredient &amp; Product Index
+            </span>
+            <h2 className="mt-2 font-serif text-2xl sm:text-4xl font-bold text-white">
+              Compare All 6 Flagship Formulations by Active Concentration &amp; Skin Goal
+            </h2>
+            <p className="mt-2 text-xs sm:text-sm text-[#DFD7C4] leading-relaxed max-w-4xl">
+              Every formulation at <a href="https://bhumivera.com" className="text-[#FCE096] underline">bhumivera.com</a> is cold-pressed below 28°C and calibrated to skin- and scalp-identical pH 5.0–5.5 with 100% active percentage and milligram-weight disclosure printed openly on the bottle. Click any product or ingredient below to inspect its complete 1,500+ word formulation monograph, 20x specifications, and laboratory COA.
+            </p>
+          </div>
+
+          <div className="overflow-x-auto rounded-2xl border border-[#D4AF37]/25 bg-[#070a0e]/80">
+            <table className="w-full text-left border-collapse text-xs sm:text-sm">
+              <thead>
+                <tr className="border-b border-[#D4AF37]/30 bg-[#102219] text-[#FCE096] font-mono uppercase text-[11px]">
+                  <th className="p-4">Flagship Product &amp; Canonical Link</th>
+                  <th className="p-4">Volume &amp; Price</th>
+                  <th className="p-4">pH / Calibration</th>
+                  <th className="p-4">Disclosed Active Ingredients &amp; Milligram Potencies</th>
+                  <th className="p-4">Primary Skin / Scalp / Wellness Goal</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/10 text-[#DFD7C4]">
+                <tr>
+                  <td className="p-4 font-bold text-white">
+                    <Link to="/product/himalayan-seabuckthorn-luxury-face-wash" className="text-[#FCE096] hover:underline">
+                      Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash
+                    </Link>
+                  </td>
+                  <td className="p-4 font-mono">100 ML · ₹799</td>
+                  <td className="p-4 font-mono text-emerald-300">pH 5.3 – 5.5</td>
+                  <td className="p-4">4% Sea Buckthorn (Omega-7), 5% Glycerin, 0.1% Hyaluronic Acid, 0.1% Niacinamide, 0.5% Manjistha, 0.5% Haridra, 0.5% Neem, 0.5% Cucumber</td>
+                  <td className="p-4">Cellular radiance, dullness brightening, Omega-7 barrier lipid replenishment &amp; glass-skin glow</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold text-white">
+                    <Link to="/product/activated-charcoal-luxury-face-wash" className="text-[#FCE096] hover:underline">
+                      Bhumivera Activated Charcoal Purifying Luxury Face Wash
+                    </Link>
+                  </td>
+                  <td className="p-4 font-mono">100 ML · ₹699</td>
+                  <td className="p-4 font-mono text-emerald-300">pH 5.4 – 5.5</td>
+                  <td className="p-4">3% Activated Charcoal, 5% Glycerin, 0.1% Hyaluronic Acid, 0.1% Niacinamide, 0.5% Manjistha, 0.5% Haridra, 0.5% Neem, 0.5% Cucumber</td>
+                  <td className="p-4">Deep PM2.5 urban pore detoxification, excess sebum control &amp; non-drying barrier hydration</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold text-white">
+                    <Link to="/product/luxury-2-in-1-botanical-shampoo-conditioner" className="text-[#FCE096] hover:underline">
+                      Bhumivera Royal Botanical 2-in-1 Luxury Shampoo with Conditioner
+                    </Link>
+                  </td>
+                  <td className="p-4 font-mono">200 ML · ₹899</td>
+                  <td className="p-4 font-mono text-emerald-300">pH 5.0 – 5.24</td>
+                  <td className="p-4">25mg Reetha, 20mg Amla, 10mg Rosemary Oil, 10mg Bhringraj, 10mg Triphala, 10mg Neem, 10mg Aloe Vera, 5mg Shikakai</td>
+                  <td className="p-4">Sulfate-free natural saponin scalp cleansing, root fortification &amp; silicone-free cuticle smoothing</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold text-white">
+                    <Link to="/product/artisanal-charcoal-handmade-soap" className="text-[#FCE096] hover:underline">
+                      Bhumivera Charcoal Deep Cleansing Bar (Handmade Ayurvedic Soap)
+                    </Link>
+                  </td>
+                  <td className="p-4 font-mono">100 GM · ₹399</td>
+                  <td className="p-4 font-mono text-emerald-300">Gentle Artisanal Bar</td>
+                  <td className="p-4">Microporous Activated Charcoal, Pure Aloe Vera Inner Fillet &amp; Gentle Ayurvedic Soap Base</td>
+                  <td className="p-4">Daily face &amp; body pore purification, sweat/grime removal &amp; soothing aloe moisture cushion</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold text-white">
+                    <Link to="/product/artisanal-aloe-vera-handmade-soap" className="text-[#FCE096] hover:underline">
+                      Bhumivera Soothing Bar (Aloe Vera, Neem &amp; Tulsi Handmade Soap)
+                    </Link>
+                  </td>
+                  <td className="p-4 font-mono">100 GM · ₹349</td>
+                  <td className="p-4 font-mono text-emerald-300">Gentle Soothing Bar</td>
+                  <td className="p-4">Aloe Vera (Aloe barbadensis), Neem (Azadirachta indica), Sacred Tulsi (Ocimum tenuiflorum) &amp; Ayurvedic Base</td>
+                  <td className="p-4">Calming blemish-prone &amp; sensitive skin, clarifying microbiome care &amp; luminous daily bathing</td>
+                </tr>
+                <tr>
+                  <td className="p-4 font-bold text-white">
+                    <Link to="/product/kalpvriksh-satva-tulsi-7-tulsi-extract" className="text-[#FCE096] hover:underline">
+                      Bhumivera Kalpvriksh Satva Tulsi (7-Tulsi Liquid Extract Drops)
+                    </Link>
+                  </td>
+                  <td className="p-4 font-mono">30 ML · ₹499</td>
+                  <td className="p-4 font-mono text-emerald-300">90% Distillate (9.0ml/10ml)</td>
+                  <td className="p-4">9.0ml per 10ml Mix Blend of 7 Tulsi Varieties: Van, Sweet, Marua, Bisva, Kala, Rama &amp; Lemon Tulsi</td>
+                  <td className="p-4">Inside-out gut-skin-cortisol adaptogen, seasonal respiratory wellness &amp; daily eugenol antioxidant vitality</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-2">
+            <Link to="/science" className="rounded-2xl border border-[#D4AF37]/25 bg-[#070a0e]/70 p-4 hover:border-[#D4AF37] transition flex items-center justify-between">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-[#D4AF37]">Formulation Lab</p>
+                <p className="font-serif text-base font-bold text-white mt-0.5">Sub-28°C Science &amp; pH 5.5 Monograph</p>
+              </div>
+              <ArrowRight size={16} className="text-[#FCE096]" />
+            </Link>
+            <Link to="/guides" className="rounded-2xl border border-[#D4AF37]/25 bg-[#070a0e]/70 p-4 hover:border-[#D4AF37] transition flex items-center justify-between">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-[#D4AF37]">Authority Buying Guides</p>
+                <p className="font-serif text-base font-bold text-white mt-0.5">Face Wash, Niacinamide &amp; Shampoo Guides</p>
+              </div>
+              <BookOpen size={16} className="text-[#FCE096]" />
+            </Link>
+            <Link to="/impact" className="rounded-2xl border border-[#D4AF37]/25 bg-[#070a0e]/70 p-4 hover:border-[#D4AF37] transition flex items-center justify-between">
+              <div>
+                <p className="font-mono text-[10px] uppercase tracking-wider text-[#D4AF37]">Public Stewardship</p>
+                <p className="font-serif text-base font-bold text-white mt-0.5">Ceaser &amp; Smt. Shanti Memorials (/impact)</p>
+              </div>
+              <Leaf size={16} className="text-[#FCE096]" />
+            </Link>
+          </div>
+        </section>
       </div>
     </div>
   );

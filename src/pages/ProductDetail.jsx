@@ -3,6 +3,7 @@ import SEO from '../components/SEO';
 import SEOStructuredData from '../components/SEOStructuredData';
 import LuxuryProductSeoSection from '../components/LuxuryProductSeoSection';
 import ProductDeliveryPromise from '../components/ProductDeliveryPromise';
+import QASection from '../components/QASection';
 import React, { useRef, useState, useEffect } from 'react';
 import { useParams, useLocation, Link } from 'react-router-dom';
 import { motion as Motion, AnimatePresence, useInView } from 'framer-motion';
@@ -170,10 +171,15 @@ export default function ProductDetail() {
       try {
         if (!hasLoadedProduct) setLoading(true);
         let fetchedProduct = null;
+        const normParam = String(id || '').toLowerCase().trim();
         const fallbackProduct = FALLBACK_CATALOG_PRODUCTS.find(
-          product => String(product.id) === String(id) || product.slug === String(id)
+          product => String(product.id) === String(id) || product.slug === normParam
         ) || (BHUMIVERA_6_PRODUCTS || []).find(
-          product => String(product.id) === String(id) || product.slug === String(id)
+          product =>
+            String(product.id) === String(id) ||
+            product.slug === normParam ||
+            (Array.isArray(product.legacySlugs) && product.legacySlugs.includes(normParam)) ||
+            (Array.isArray(product.legacyIds) && product.legacyIds.includes(Number(id)))
         );
         try {
           const prodRes = fallbackProduct?.slug && String(fallbackProduct.id) === String(id)
@@ -233,72 +239,20 @@ export default function ProductDetail() {
                meta_description: sixMatch.meta_description || sixMatch.short_description,
                short_description: sixMatch.short_description,
                full_description: sixMatch.full_description,
+               description: sixMatch.description || fetchedProduct.description || sixMatch.short_description,
                ph_level: sixMatch.ph_level,
                active_ingredients: sixMatch.active_ingredients,
                seoImage: sixMatch.image_url,
                wikipedia_entities: sixMatch.wikipedia_entities,
                conscious_buyer_highlights: sixMatch.conscious_buyer_highlights,
                composition_table: sixMatch.composition_table,
+               exactCompositionTable: sixMatch.exactCompositionTable || sixMatch.composition_table,
+               specifications: { ...(sixMatch.specifications || {}), ...(fetchedProduct.specifications || {}) },
+               related_products: sixMatch.related_products || [],
+               editorialHeading: sixMatch.editorial_heading || sixMatch.name,
+               editorialParagraphs: sixMatch.editorial_paragraphs || [],
                faqs: sixMatch.faqs,
                directAnswerFaqs: sixMatch.faqs,
-             };
-           }
-           if (lowerIdOrName.includes('seabuckthorn') || lowerIdOrName.includes('sea buckthorn')) {
-             fetchedProduct = {
-               ...fetchedProduct,
-               luxuryName: SEABUCKTHORN_FACE_WASH_EXACT.name,
-               seoSlug: SEABUCKTHORN_FACE_WASH_EXACT.slug,
-               luxurySku: SEABUCKTHORN_FACE_WASH_EXACT.sku,
-               mpn: SEABUCKTHORN_FACE_WASH_EXACT.mpn,
-               luxuryCategory: SEABUCKTHORN_FACE_WASH_EXACT.category,
-               seo_title: SEABUCKTHORN_FACE_WASH_EXACT.seo_title,
-               meta_description: SEABUCKTHORN_FACE_WASH_EXACT.meta_description,
-               short_description: SEABUCKTHORN_FACE_WASH_EXACT.short_description,
-               ph_level: SEABUCKTHORN_FACE_WASH_EXACT.ph_level,
-               active_ingredients: SEABUCKTHORN_FACE_WASH_EXACT.active_ingredients,
-               seoImage: SEABUCKTHORN_FACE_WASH_EXACT.image_url,
-               directAnswerFaqs: SEABUCKTHORN_FACE_WASH_EXACT.faqs,
-               exactCompositionTable: SEABUCKTHORN_FACE_WASH_EXACT.composition_table,
-               editorialHeading: SEABUCKTHORN_FACE_WASH_EXACT.editorial_heading,
-               editorialParagraphs: SEABUCKTHORN_FACE_WASH_EXACT.editorial_paragraphs,
-             };
-           } else if (lowerIdOrName.includes('charcoal')) {
-             fetchedProduct = {
-               ...fetchedProduct,
-               luxuryName: CHARCOAL_FACE_WASH_EXACT.name,
-               seoSlug: CHARCOAL_FACE_WASH_EXACT.slug,
-               luxurySku: CHARCOAL_FACE_WASH_EXACT.sku,
-               mpn: CHARCOAL_FACE_WASH_EXACT.mpn,
-               luxuryCategory: CHARCOAL_FACE_WASH_EXACT.category,
-               seo_title: CHARCOAL_FACE_WASH_EXACT.seo_title,
-               meta_description: CHARCOAL_FACE_WASH_EXACT.meta_description,
-               short_description: CHARCOAL_FACE_WASH_EXACT.short_description,
-               ph_level: CHARCOAL_FACE_WASH_EXACT.ph_level,
-               active_ingredients: CHARCOAL_FACE_WASH_EXACT.active_ingredients,
-               seoImage: CHARCOAL_FACE_WASH_EXACT.image_url,
-               directAnswerFaqs: CHARCOAL_FACE_WASH_EXACT.faqs,
-               exactCompositionTable: CHARCOAL_FACE_WASH_EXACT.composition_table,
-               editorialHeading: CHARCOAL_FACE_WASH_EXACT.editorial_heading,
-               editorialParagraphs: CHARCOAL_FACE_WASH_EXACT.editorial_paragraphs,
-             };
-           } else if (lowerIdOrName.includes('shampoo') || lowerIdOrName.includes('2-in-1') || lowerIdOrName.includes('hair')) {
-             fetchedProduct = {
-               ...fetchedProduct,
-               luxuryName: SHAMPOO_2IN1_EXACT.name,
-               seoSlug: SHAMPOO_2IN1_EXACT.slug,
-               luxurySku: SHAMPOO_2IN1_EXACT.sku,
-               mpn: SHAMPOO_2IN1_EXACT.mpn,
-               luxuryCategory: SHAMPOO_2IN1_EXACT.category,
-               seo_title: SHAMPOO_2IN1_EXACT.seo_title,
-               meta_description: SHAMPOO_2IN1_EXACT.meta_description,
-               short_description: SHAMPOO_2IN1_EXACT.short_description,
-               ph_level: SHAMPOO_2IN1_EXACT.ph_level,
-               active_ingredients: SHAMPOO_2IN1_EXACT.active_ingredients,
-               seoImage: SHAMPOO_2IN1_EXACT.image_url,
-               directAnswerFaqs: SHAMPOO_2IN1_EXACT.faqs,
-               exactCompositionTable: SHAMPOO_2IN1_EXACT.composition_table,
-               editorialHeading: SHAMPOO_2IN1_EXACT.editorial_heading,
-               editorialParagraphs: SHAMPOO_2IN1_EXACT.editorial_paragraphs,
              };
            }
            let safeImages = [];
@@ -991,7 +945,7 @@ export default function ProductDetail() {
 
       <div className="relative z-10 mx-auto mt-10 max-w-7xl px-4 md:mt-16 md:px-6">
         <div id="product-information" className="scroll-mt-24 no-scrollbar relative mb-6 flex overflow-x-auto border-b border-[#d4af37]/20 sm:mb-8">
-          {['details', 'formulation', 'specifications', 'reviews'].map((tab) => (
+          {['details', 'formulation', 'specifications', 'qa', 'reviews'].map((tab) => (
             <button
               key={tab}
               onClick={() => setActiveTab(tab)}
@@ -999,7 +953,15 @@ export default function ProductDetail() {
                 activeTab === tab ? 'text-[#fce096]' : 'text-[#94a3b8] hover:text-[#fce096]'
               }`}
             >
-              {tab === 'reviews' ? `Reviews (${reviewCount})` : tab === 'formulation' ? 'Formulation & Actives' : tab}
+              {tab === 'reviews'
+                ? `Reviews (${reviewCount})`
+                : tab === 'formulation'
+                  ? 'Formulation & Actives (10x)'
+                  : tab === 'specifications'
+                    ? `Specifications (${specificationEntries.length})`
+                    : tab === 'qa'
+                      ? `Technical Q&A (${(product.faqs || product.directAnswerFaqs || []).length})`
+                      : 'Monograph & Details'}
               {activeTab === tab && (
                 <Motion.div layoutId="activeTabIndicator" className="absolute bottom-0 left-0 w-full h-0.5 bg-[#d4af37]" />
               )}
@@ -1010,117 +972,125 @@ export default function ProductDetail() {
         <div className="min-h-0">
           <AnimatePresence mode="wait">
             {activeTab === 'details' && (
-              <Motion.div key="details" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid gap-5 lg:grid-cols-[1.2fr_0.8fr]">
-                <article className="rounded-3xl border border-[#d4af37]/25 bg-[linear-gradient(145deg,rgba(26,52,39,0.82),rgba(15,29,21,0.9))] p-6 sm:p-8">
-                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-[#d9bf6e]">01 / The product, plainly</p>
+              <Motion.div key="details" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid gap-6 lg:grid-cols-[1.35fr_0.65fr]">
+                <article className="rounded-3xl border border-[#d4af37]/25 bg-[linear-gradient(145deg,rgba(26,52,39,0.82),rgba(15,29,21,0.9))] p-6 sm:p-8 backdrop-blur-xl">
+                  <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-[#d9bf6e]">01 / Complete Product Monograph &amp; Clinical Overview</p>
                   <h2 className="mt-2 font-serif text-2xl leading-tight text-[#fff9ed] sm:text-3xl">Care with nothing important hidden.</h2>
-                  <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-[#d4ddd5]">{product.description}</p>
+                  <p className="mt-4 whitespace-pre-wrap text-sm leading-7 text-[#d4ddd5]">{product.description || product.short_description}</p>
+                  {product.full_description && (
+                    <div
+                      className="mt-6 pt-6 border-t border-[#d4af37]/20 prose prose-invert max-w-none text-sm leading-7 text-[#d4ddd5] space-y-4 [&_h3]:font-serif [&_h3]:text-xl [&_h3]:text-[#fce096] [&_h3]:mt-6 [&_h3]:mb-2 [&_h4]:font-serif [&_h4]:text-base [&_h4]:text-white [&_a]:text-[#fce096] [&_a]:underline [&_table]:w-full [&_table]:border-collapse [&_th]:bg-[#14291F] [&_th]:p-3 [&_th]:text-left [&_th]:text-xs [&_th]:text-[#fce096] [&_td]:p-3 [&_td]:border-t [&_td]:border-white/10 [&_td]:text-xs [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5"
+                      dangerouslySetInnerHTML={{ __html: product.full_description }}
+                    />
+                  )}
                 </article>
-                <aside className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
-                  {[
-                    { label: 'Designed for', value: product.skinTypeCompatibility || product.primaryBotanicals || 'A considered botanical care ritual' },
-                    { label: 'Formulation detail', value: product.surfactantSystem || product.clinicalActives || product.active_ingredients || 'See the full ingredient ledger for disclosed actives' },
-                    { label: 'Use', value: product.ritualTiming || product.directions || 'Follow the directions printed on the product pack' },
-                    { label: 'Formula standard', value: product.phLevel || product.ph_level || 'Ingredient and product details shown above' },
-                  ].map(item => (
-                    <div key={item.label} className="rounded-2xl border border-white/10 bg-[#0c1a12]/65 p-4 sm:p-5">
-                      <p className="font-mono text-[8px] font-bold uppercase tracking-[0.18em] text-[#d9bf6e]">{item.label}</p>
-                      <p className="mt-2 text-sm leading-6 text-[#edf0e9]">{item.value}</p>
+                <aside className="space-y-4">
+                  <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+                    {[
+                      { label: 'Designed for', value: product.skinTypeCompatibility || product.primaryBotanicals || product.specifications?.['Skin / Hair Type Suitability'] || 'Oily, Combination, Dry, Sensitive & Normal Profiles' },
+                      { label: 'Label-Disclosed Actives', value: product.active_ingredients || product.surfactantSystem || product.clinicalActives || 'See full ingredient ledger for disclosed actives' },
+                      { label: 'Application Ritual', value: product.ritualTiming || product.directions || 'Follow the directions printed on the product pack' },
+                      { label: 'pH & Processing Standard', value: product.phLevel || product.ph_level || 'Sub-28°C Cold-Processed · pH Calibrated' },
+                      { label: 'Batch & Origin', value: `${product.batch_no || 'BATCH-04/26'} · ${product.manufacturer_name || 'Bhumivera Organics India Pvt. Ltd.'}` },
+                    ].map(item => (
+                      <div key={item.label} className="rounded-2xl border border-white/10 bg-[#0c1a12]/70 p-4 sm:p-5 backdrop-blur-lg">
+                        <p className="font-mono text-[8px] font-bold uppercase tracking-[0.18em] text-[#d9bf6e]">{item.label}</p>
+                        <p className="mt-2 text-xs sm:text-sm leading-6 text-[#edf0e9]">{item.value}</p>
+                      </div>
+                    ))}
+                  </div>
+                  {Array.isArray(product.related_products) && product.related_products.length > 0 && (
+                    <div className="rounded-2xl border border-[#d4af37]/30 bg-[#0c1a12]/80 p-5 backdrop-blur-lg">
+                      <p className="font-mono text-[9px] font-bold uppercase tracking-[0.2em] text-[#fce096] mb-3">
+                        Complementary Regimen Pairings
+                      </p>
+                      <div className="space-y-2.5">
+                        {product.related_products.map((rel, idx) => (
+                          <Link
+                            key={idx}
+                            to={`/product/${rel.slug}`}
+                            className="block rounded-xl border border-white/10 bg-[#070a0e]/80 p-3 hover:border-[#d4af37] transition"
+                          >
+                            <span className="font-mono text-[9px] uppercase tracking-wider text-[#d4af37] block">{rel.relation}</span>
+                            <span className="font-serif text-sm font-semibold text-white">{rel.name} →</span>
+                          </Link>
+                        ))}
+                      </div>
                     </div>
-                  ))}
+                  )}
                 </aside>
               </Motion.div>
             )}
 
             {activeTab === 'formulation' && (
-              <Motion.div key="formulation" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-4xl space-y-6">
-                {/* Physical Packaging Formulation Card with Gold/Silver Plate */}
-                <div className="rounded-3xl two-tone-card p-6 md:p-8 border border-[#d4af37]/40 shadow-xl relative overflow-hidden">
+              <Motion.div key="formulation" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-6xl space-y-6">
+                <div className="rounded-3xl two-tone-card p-6 md:p-8 border border-[#d4af37]/40 shadow-xl relative overflow-hidden backdrop-blur-xl">
                   <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#d4af37]/30 pb-4 mb-6">
                     <div>
                       <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#070a0e] text-[#fce096] border border-[#d4af37]/40 font-mono text-[9px] font-bold uppercase tracking-widest">
                         <Sparkles size={12} className="text-[#d4af37]" /> Formulated under the Bhumivera Transparency Standard (Est. 2016 lineage)
                       </span>
                       <h3 className="mt-2 font-serif text-2xl sm:text-3xl text-white">
-                        Milligram-Weight &amp; 100% Active Percentage Disclosure
+                        10x Enhanced Milligram-Weight &amp; Active Phytochemical Breakdown
                       </h3>
                       <p className="mt-1 text-xs text-[#cbd5e1]">
-                        Formulated under the Bhumivera Transparency Standard (Est. 2016 lineage) — cold-pressed under 28°C with exact milligram weights and active percentages printed directly on the packaging.
+                        Every active botanical, humectant, and barrier vitamin is disclosed with its INCI nomenclature, bioactive marker profile, &lt;28°C extraction protocol, harvest corridor, pH stability window, and synergistic mechanism.
                       </p>
                     </div>
                   </div>
 
-                  {/* Active Potency Table */}
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-6">
-                    {String(product.id) === '102' || String(product.name).toLowerCase().includes('charcoal') ? (
-                      <>
-                        {[
-                          { name: 'Charcoal (Activated Bamboo)', potency: '3.0%', note: 'Deep-pore pollutant & oxidized sebum adsorbent' },
-                          { name: 'Botanical Glycerin', potency: '5.0%', note: 'Humectant cushion preventing post-wash dryness' },
-                          { name: 'Haridra (Curcuma longa)', potency: '0.5%', note: 'Antioxidant rhizome brightening & soothing' },
-                          { name: 'Neem (Azadirachta indica)', potency: '0.5%', note: 'Microbiome clarifying botanical active' },
-                          { name: 'Cucumber Extract', potency: '0.5%', note: 'Cooling microcirculation & skin refresher' },
-                          { name: 'Manjistha Extract', potency: '0.5%', note: 'Ayurvedic tone-evening botanical root' },
-                          { name: 'Hyaluronic Acid', potency: '0.1%', note: 'Surface water-binding moisture seal' },
-                          { name: 'Niacinamide (Vitamin B3)', potency: '0.1%', note: 'Pore-refining epidermal co-factor' },
-                          { name: 'Perfume / Aroma', potency: '0.5%', note: 'IFRA-compliant allergen-screened fragrance' },
-                          { name: 'Aqua & Cleanser Base', potency: 'Q.S.', note: 'pH 5.51 balanced soap-free vehicle' },
-                        ].map((ing, idx) => (
-                          <div key={idx} className="p-3.5 rounded-xl bg-[#070a0e]/80 border border-[#d4af37]/30 flex items-start justify-between gap-3 shadow-xs">
+                  {/* Full 10x Active Cards for ALL 6 Products */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    {(product.composition_table || product.exactCompositionTable || []).map((ing, idx) => (
+                      <div key={idx} className="p-4 rounded-2xl bg-[#070a0e]/85 border border-[#d4af37]/30 flex flex-col justify-between gap-3 shadow-sm">
+                        <div>
+                          <div className="flex items-start justify-between gap-3">
                             <div>
-                              <p className="font-semibold text-xs text-white">{ing.name}</p>
-                              <p className="text-[11px] text-[#94a3b8]">{ing.note}</p>
+                              <p className="font-serif font-bold text-sm sm:text-base text-white">{ing.ingredient || ing.active}</p>
+                              <p className="text-[11px] italic text-[#94a3b8]">{ing.botanical || ing.classification}</p>
                             </div>
-                            <span className="font-mono text-xs font-bold text-[#fce096] shrink-0 bg-[#d4af37]/15 border border-[#d4af37]/30 px-2 py-0.5 rounded-md">
-                              {ing.potency}
+                            <span className="font-mono text-xs font-bold text-[#fce096] shrink-0 bg-[#d4af37]/15 border border-[#d4af37]/35 px-2.5 py-1 rounded-lg">
+                              {ing.concentration || ing.potency}
                             </span>
                           </div>
-                        ))}
-                      </>
-                    ) : String(product.id) === '104' || String(product.name).toLowerCase().includes('shampoo') || String(product.name).toLowerCase().includes('hair cleanser') ? (
-                      <>
-                        {[
-                          { name: 'Ritta / Soapnut (Sapindus mukorossi)', potency: '25 mg', note: 'Natural saponin pods lifting residue gently' },
-                          { name: 'Amla (Phyllanthus emblica)', potency: '20 mg', note: 'Vitamin C tannins & root-strengthening' },
-                          { name: 'Triphala (3 Myrobalans)', potency: '10 mg', note: 'Ayurvedic tridoshic scalp conditioning' },
-                          { name: 'Bringna / Bhringraj', potency: '10 mg', note: 'Wedelolactone follicle invigorating active' },
-                          { name: 'Rosemary Essential Oil', potency: '10 mg', note: 'Microcirculation & botanical aroma' },
-                          { name: 'Neem (Azadirachta indica)', potency: '10 mg', note: 'Natural antimicrobial scalp clarifier' },
-                          { name: 'Aleovera (Aloe barbadensis)', potency: '10 mg', note: 'Cuticle soothing acemannan moisture' },
-                          { name: 'Shikakai (Acacia concinna)', potency: '5 mg', note: 'Cuticle-smoothing natural conditioning' },
-                          { name: 'Botanical Shampoo Base', potency: 'Q.S.', note: 'pH 5.24 sulfate-free lather vehicle' },
-                        ].map((ing, idx) => (
-                          <div key={idx} className="p-3.5 rounded-xl bg-[#070a0e]/80 border border-[#d4af37]/30 flex items-start justify-between gap-3 shadow-xs">
-                            <div>
-                              <p className="font-semibold text-xs text-white">{ing.name}</p>
-                              <p className="text-[11px] text-[#94a3b8]">{ing.note}</p>
-                            </div>
-                            <span className="font-mono text-xs font-bold text-[#fce096] shrink-0 bg-[#d4af37]/15 border border-[#d4af37]/30 px-2 py-0.5 rounded-md">
-                              {ing.potency}
-                            </span>
-                          </div>
-                        ))}
-                      </>
-                    ) : (
-                      <>
-                        <div className="p-3.5 rounded-xl bg-[#070a0e]/80 border border-[#d4af37]/30">
-                          <p className="font-mono text-[10px] uppercase font-bold text-[#fce096]">Key Botanicals</p>
-                          <p className="text-xs text-white mt-1">{product.primaryBotanicals || 'Cold-Pressed Himalayan Flora'}</p>
+                          {ing.inci && (
+                            <p className="mt-1.5 font-mono text-[10px] text-[#d4af37]">
+                              INCI: {ing.inci}
+                            </p>
+                          )}
+                          <p className="mt-2 text-xs text-[#cbd5e1] leading-relaxed">
+                            {ing.role || ing.mechanism}
+                          </p>
                         </div>
-                        <div className="p-3.5 rounded-xl bg-[#070a0e]/80 border border-[#d4af37]/30">
-                          <p className="font-mono text-[10px] uppercase font-bold text-[#fce096]">Clinical Actives</p>
-                          <p className="text-xs text-white mt-1">{product.clinicalActives || 'Biomimetic Humectants & Actives'}</p>
+                        <div className="pt-3 border-t border-white/10 space-y-1 text-[11px] text-[#94a3b8]">
+                          {ing.molecular_markers && (
+                            <p><strong className="text-[#fce096]">Bioactive Markers:</strong> {ing.molecular_markers}</p>
+                          )}
+                          {ing.extraction_method && (
+                            <p><strong className="text-[#fce096]">Extraction Protocol:</strong> {ing.extraction_method}</p>
+                          )}
+                          {ing.harvest_corridor && (
+                            <p>
+                              <strong className="text-[#fce096]">Harvest Corridor:</strong>{' '}
+                              <Link to={ing.corridor_url || '/provenance-engine'} className="text-white underline hover:text-[#fce096]">
+                                {ing.harvest_corridor}
+                              </Link>{' '}
+                              ({ing.ph_window || product.ph_level})
+                            </p>
+                          )}
+                          {ing.synergy_partners && (
+                            <p><strong className="text-[#fce096]">Synergy Partners:</strong> {ing.synergy_partners}</p>
+                          )}
+                          {ing.reference_url && (
+                            <p className="pt-1">
+                              <a href={ing.reference_url} target="_blank" rel="noopener noreferrer" className="font-mono text-[10px] text-[#fce096] underline hover:text-white">
+                                Open Scientific / Botanical Reference ↗
+                              </a>
+                            </p>
+                          )}
                         </div>
-                        <div className="p-3.5 rounded-xl bg-[#070a0e]/80 border border-[#d4af37]/30">
-                          <p className="font-mono text-[10px] uppercase font-bold text-[#fce096]">Acid Mantle Calibration</p>
-                          <p className="text-xs text-white mt-1">{product.phLevel || 'pH 5.50 (Skin-Identical)'}</p>
-                        </div>
-                        <div className="p-3.5 rounded-xl bg-[#070a0e]/80 border border-[#d4af37]/30">
-                          <p className="font-mono text-[10px] uppercase font-bold text-[#fce096]">Artisanal Volume</p>
-                          <p className="text-xs text-white mt-1">{product.volume || '100 ml Amber Glass'}</p>
-                        </div>
-                      </>
-                    )}
+                      </div>
+                    ))}
                   </div>
 
                   {/* Directions and Caution (Transcribed directly from bottle) */}
@@ -1130,7 +1100,7 @@ export default function ProductDetail() {
                         <CheckCircle2 size={13} className="text-[#d4af37]" /> Directions For Application
                       </p>
                       <p className="text-xs text-[#cbd5e1] leading-relaxed mt-2">
-                        {product.directions || 'Moisten face and neck, apply a small amount of this facewash, and gently work up a lather using a circular motion. Wash off and pat dry. Use twice daily.'}
+                        {product.directions || 'Follow the step-by-step ritual instructions printed on the physical bottle or monograph above. Conduct a 24-hour inner-forearm patch test prior to first use.'}
                       </p>
                     </div>
 
@@ -1139,7 +1109,7 @@ export default function ProductDetail() {
                         <AlertCircle size={13} className="text-[#d4af37]" /> Storage &amp; Natural Caution
                       </p>
                       <p className="text-xs text-[#cbd5e1] leading-relaxed mt-2">
-                        {product.caution || 'Product contains natural ingredients & may change colour and fragrance, without losing effectiveness. Patch test recommended. Store in a cool and dry place, away from direct sunlight. For external use only.'}
+                        {product.caution || 'Product contains natural botanical ingredients & may change colour and fragrance across seasonal harvests without losing effectiveness. Patch test recommended. Store in a cool and dry place away from direct sunlight.'}
                       </p>
                     </div>
                   </div>
@@ -1149,28 +1119,61 @@ export default function ProductDetail() {
                       <Lock size={14} className="text-[#d4af37]" />
                       <span>100% Sealed Sanitary Custody: Artisanal Personal Care Purity Standard</span>
                     </div>
-                    <Link
-                      to={`/verify?serial=${encodeURIComponent(product.batchCode || 'BV-CH26-8841')}`}
-                      className="btn-gold-luxury inline-flex items-center gap-2 rounded-xl text-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider shadow-sm transition-all"
-                    >
-                      <QrCode size={14} /> Open Full Lab Assay Report
-                    </Link>
+                    <div className="flex flex-wrap gap-2">
+                      <Link
+                        to="/somatic-registry"
+                        className="btn-silver-luxury inline-flex items-center gap-2 rounded-xl text-white px-4 py-2.5 text-xs font-semibold uppercase tracking-wider"
+                      >
+                        Inspect Somatic Label Registry
+                      </Link>
+                      <Link
+                        to={`/verify?serial=${encodeURIComponent(product.batchCode || product.batch_no || 'BV-CH26-8841')}`}
+                        className="btn-gold-luxury inline-flex items-center gap-2 rounded-xl text-white px-5 py-2.5 text-xs font-bold uppercase tracking-wider shadow-sm transition-all"
+                      >
+                        <QrCode size={14} /> Open Full Lab Assay Report
+                      </Link>
+                    </div>
                   </div>
                 </div>
               </Motion.div>
             )}
             
             {activeTab === 'specifications' && (
-              <Motion.div key="specs" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-4xl rounded-3xl two-tone-card border border-[#d4af37]/30 p-6 md:p-8">
-                <h3 className="mb-6 border-b border-[#d4af37]/20 pb-4 font-serif text-2xl text-white">Product specifications</h3>
-                {specificationEntries.length > 0 ? <div className="grid grid-cols-1 gap-x-12 md:grid-cols-2">
-                  {specificationEntries.map(([label, value]) => (
-                    <div key={label} className="flex justify-between py-2 border-b border-[#d4af37]/15 border-dashed">
-                      <span className="text-[#94a3b8] text-xs uppercase tracking-wider">{label.replaceAll('_', ' ')}</span>
-                      <span className="max-w-[60%] text-right text-sm font-medium text-[#fce096]">{typeof value === 'object' ? JSON.stringify(value) : String(value)}</span>
-                    </div>
-                  ))}
-                </div> : <p className="text-sm leading-6 text-[#cbd5e1]">Detailed specifications have not been published for this product yet. Contact us for product-specific questions.</p>}
+              <Motion.div key="specs" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-5xl rounded-3xl two-tone-card border border-[#d4af37]/30 p-6 md:p-8 backdrop-blur-xl">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-6 border-b border-[#d4af37]/20 pb-4">
+                  <div>
+                    <span className="font-mono text-[10px] uppercase tracking-widest text-[#d4af37] block">
+                      20x Enhanced Analytical, Physical, Packaging &amp; Regulatory Specifications
+                    </span>
+                    <h3 className="font-serif text-2xl text-white mt-1">
+                      Complete Technical Specification Dossier ({specificationEntries.length} Verified Parameters)
+                    </h3>
+                  </div>
+                  <Link
+                    to="/provenance-engine"
+                    className="font-mono text-xs text-[#fce096] underline hover:text-white"
+                  >
+                    View Regional Harvest Corridors ↗
+                  </Link>
+                </div>
+                {specificationEntries.length > 0 ? (
+                  <div className="grid grid-cols-1 gap-x-10 gap-y-2 md:grid-cols-2">
+                    {specificationEntries.map(([label, value]) => (
+                      <div key={label} className="flex items-start justify-between gap-4 py-3 border-b border-[#d4af37]/15 border-dashed">
+                        <span className="text-[#94a3b8] text-xs font-mono uppercase tracking-wider">{label.replaceAll('_', ' ')}</span>
+                        <span className="max-w-[62%] text-right text-xs sm:text-sm font-medium text-[#fce096]">{typeof value === 'object' ? JSON.stringify(value) : String(value)}</span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm leading-6 text-[#cbd5e1]">Detailed specifications have not been published for this product yet. Contact us for product-specific questions.</p>
+                )}
+              </Motion.div>
+            )}
+
+            {activeTab === 'qa' && (
+              <Motion.div key="qa" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="max-w-5xl">
+                <QASection productId={product.id} product={product} />
               </Motion.div>
             )}
 
@@ -1433,6 +1436,11 @@ export default function ProductDetail() {
 
       {/* Radical Milligram Disclosure, Transparency Lineage & Direct-Answer FAQ SEO Section */}
       <LuxuryProductSeoSection product={product} />
+
+      {/* Interactive Specialist Q&A Desk */}
+      <section className="max-w-7xl mx-auto my-12 px-4 sm:px-6 relative z-10">
+        <QASection productId={product.id} product={product} />
+      </section>
 
       {canPersonalize && recommendedProducts.length > 0 && (
         <section className="max-w-7xl mx-auto px-6 mt-16 relative z-10">

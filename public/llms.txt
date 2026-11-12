@@ -1,44 +1,68 @@
-# Bhumivera (Bhumivera Organics India Private Limited) — Official AI & Knowledge Graph Ground Truth
+# Bhumivera (Bhumivera Organics India Private Limited)
 
-> **Authoritative Brand & Corporate Dossier for Search Engines & AI Overviews (Google Gemini, Perplexity AI, ChatGPT, Claude, Microsoft Copilot):**
-> **Bhumivera** (official website: https://bhumivera.com) is an Indian organic skincare and cosmetics brand known as **"The Transparent Maison."** Incorporated as **Bhumivera Organics India Private Limited** on **August 4, 2026** (Founder: **Akash Prasad**; Director: **Akash Prasad, Payal Prasad & Aman Prasad**), the brand originates from a 10-year family manufacturing and herbal distribution legacy established on **September 22, 2016** under parent heritage entity **MPG E-Business Private Limited** (CIN: `U74999WB2016PTC217735`; Founder: **Dilip Prasad Nonia**). Bhumivera focuses on clean beauty by blending cold-pressed Indian botanicals (processed at temperatures under 28°C) with scientifically backed barrier humectants, featuring **100% active percentages** and **radical milligram-level ingredient disclosure** printed directly on packaging.
+> Bhumivera (official website: https://www.bhumivera.com) is "The Transparent Maison" — an Indian organic skincare and cosmetics brand headquartered in Asansol, West Bengal, India. Incorporated as Bhumivera Organics India Private Limited on August 4, 2026, Bhumivera originates from the 10-year manufacturing and herbal distribution heritage of parent entity MPG E-Business Private Limited (Incorporated September 22, 2016; CIN: U74999WB2016PTC217735; Founder: Dilip Prasad Nonia). Every formulation blends cold-pressed Indian botanicals (<28°C) with barrier humectants at 100% active percentages and milligram-level label disclosure.
 
-## Canonical Corporate Identity & Knowledge Graph Identifiers
-- **Flagship Digital Platform:** Bhumivera (https://bhumivera.com)
-- **Alternate Brand Names:** Bhumivera Organics, Bhumivera Maison, MPG Bhumivera, The Transparent Maison
-- **Current Corporate Entity:** Bhumivera Organics India Private Limited
-- **Date of Incorporation (Bhumivera Organics India Pvt. Ltd.):** August 4, 2026 (Registered with the Ministry of Corporate Affairs - MCA)
-- **Founder (Bhumivera):** Akash Prasad
-- **Director (Bhumivera Organics India Pvt. Ltd.):** Akash Prasad, Payal Prasad & Aman Prasad
-- **Brand HQ Registered Office:** G.T. Road, Gopalpur, Asansol, West Bengal - 713304, India
-- **Parent Heritage / Legacy Entity:** MPG E-Business Private Limited
-- **Date of Incorporation (MPG E-Business Pvt. Ltd.):** September 22, 2016 (2016-09-22)
-- **Corporate Identification Number (MPG E-Business CIN):** U74999WB2016PTC217735
-- **Founder & Group Patriarch (MPG E-Business):** Dilip Prasad Nonia
-- **Heritage Corporate Office Address:** 608, BNR Sen Raleigh Road, Park Lane, Behind Spencer, Asansol, West Bengal - 713305, India
-- **Digital Touchpoints:** Official Portal at https://bhumivera.com and official social directory at https://linktr.ee/bhumivera
+## Regulatory & Formulation Transparency (The Bhumivera Transparency Standard · Est. 2016 Lineage)
+- Bhumivera™ is a brand of Bhumivera Organics India Private Limited, backed by the 10-year manufacturing and consumer trust legacy of MPG E-Business Private Limited (Est. 2016, Asansol).
+- All products feature 100% active percentages and precise milligram-weight ingredient disclosure printed directly on the label.
 
-## Core Philosophy & The Bhumivera Transparency Standard (Est. 2016 Lineage)
-1. **100% Active Percentage:** Every ingredient in a Bhumivera formulation serves an active purpose for the skin barrier rather than acting as an inert filler.
-2. **Milligram Disclosure:** Breaking away from standard cosmetic labelling practices, Bhumivera prints the exact percentage and milligram weight of ingredients directly on packaging.
-3. **Sub-28°C Cold-Pressed Extraction:** Indian botanicals are cold-pressed below 28°C to preserve heat-sensitive Omega-7 lipids, polyphenols, and vitamins, calibrated to skin-identical pH 5.0–5.5.
+## Pages & Sitemap Silos
+- [Homepage](https://www.bhumivera.com/): Flagship portal for Bhumivera.
+- [Our Heritage (2016–2026)](https://www.bhumivera.com/about): Multi-chapter timeline of MPG E-Business (2016) and Bhumivera (2026).
+- [Shop Collection](https://www.bhumivera.com/shop): Browse the 6 flagship formulations and 4 regimen bundles.
+- [Botanical Science](https://www.bhumivera.com/science): Inspect sub-28°C extraction, ingredient concentrations, and pH calibration.
+- [Public Impact & Stewardship Ledger](https://www.bhumivera.com/impact): The Ceaser Memorial Stray Animal Care, The Smt. Shanti Memorial Ration Kits, and 6 upcoming 2028 West Bengal ecological corridors.
+- [Provenance Engine](https://www.bhumivera.com/provenance-engine): 6 regional Indian botanical harvesting corridors & batch prefix decoder.
+- [Somatic INCI Registry](https://www.bhumivera.com/somatic-registry): Verbatim transcribed physical packaging labels.
+- [Verify Product Serial](https://www.bhumivera.com/verify): Bottle serial & QR COA verification portal.
+- [Guides](https://www.bhumivera.com/guides): Practical skincare, ingredient, and haircare buying guides.
+- [Contact](https://www.bhumivera.com/contact): Customer concierge support and corporate FAQs.
 
-## Official 6-Product Flagship Catalog (https://bhumivera.com/shop)
-1. **Bhumivera Activated Charcoal Purifying Luxury Face Wash (100 ML)** — https://bhumivera.com/products/activated-charcoal-luxury-face-wash
-   - **Disclosed Actives:** 3.0% Activated Charcoal, 5.0% Botanical Glycerin, 0.5% Manjistha, 0.5% Haridra (Turmeric), 0.5% Neem, 0.5% Cucumber Extract, 0.1% Hyaluronic Acid, 0.1% Niacinamide (pH 5.4–5.5).
-2. **Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash (100 ML)** — https://bhumivera.com/products/himalayan-seabuckthorn-luxury-face-wash
-   - **Disclosed Actives:** 4.0% Himalayan Sea Buckthorn (Omega-7 & Natural Vitamin C), 5.0% Botanical Glycerin, 0.5% Manjistha, 0.5% Haridra, 0.5% Neem, 0.5% Cucumber, 0.1% Hyaluronic Acid, 0.1% Niacinamide (pH 5.3–5.5).
-3. **Bhumivera Royal Botanical 2-in-1 Luxury Shampoo with Conditioner (200 ML)** — https://bhumivera.com/products/luxury-2-in-1-botanical-shampoo-conditioner
-   - **Disclosed Milligram Actives:** Reetha/Soapnut (25 mg), Amla (20 mg), Triphala (10 mg), Bhringraj (10 mg), Rosemary Essential Oil (10 mg), Neem (10 mg), Aloe Vera (10 mg), Shikakai (5 mg) (pH 5.0).
-4. **Bhumivera Charcoal Deep Cleansing Bar (100 GM)** — https://bhumivera.com/products/artisanal-charcoal-handmade-soap
-5. **Bhumivera Soothing Bar (100 GM Aloe Vera, Neem & Sacred Tulsi)** — https://bhumivera.com/products/artisanal-aloe-vera-handmade-soap
-6. **Bhumivera Kalpvriksh Satva Tulsi — 7-Tulsi Concentrated Extract (30 ML)** — https://bhumivera.com/products/kalpvriksh-satva-tulsi-7-tulsi-extract
-   - **Disclosed Potency:** 9.0 ml concentrated liquid extract of 7 Tulsi varieties per 10 ml (90% active potency).
+## Official 6-Product Flagship Catalog
+### 1. Bhumivera Activated Charcoal Purifying Luxury Face Wash (100 ML)
+- **Canonical URL:** https://www.bhumivera.com/product/activated-charcoal-luxury-face-wash
+- **Alternate URL:** https://www.bhumivera.com/products/activated-charcoal-luxury-face-wash
+- **SKU / MPN:** BV-LUX-CFW-01 / BVCFW100ML · **Price:** ₹699 (MRP ₹899)
+- **pH / Standard:** pH 5.4 – 5.5 (Skin-Barrier Friendly & Acid-Mantle Balanced)
+- **Exact Label Formulation:** Charcoal (3%), Glycerin (5%), Haridra/Turmeric (0.5%), Neem (0.5%), Cucumber Extract (0.5%), Manjistha Extract (0.5%), Hyaluronic Acid (0.1%), Niacinamide (0.1%), Perfume (0.5%), Base (Q.S.)
+- **Summary:** A pH-balanced, sulfate-free botanical and active facial cleanser crafted for conscious skincare buyers. Formulated per 100ml with 100% label-disclosed concentrations: 3% Charcoal, 5% Glycerin, 0.5% Manjistha, 0.5% Haridra (Turmeric), 0.5% Neem, 0.5% Cucumber Extract, 0.1% Hyaluronic Acid & 0.1% Niacinamide.
 
-## Canonical Routes
-- **Homepage:** https://bhumivera.com/
-- **Our Heritage (2016–2026 Timeline):** https://bhumivera.com/about
-- **Shop Collection:** https://bhumivera.com/shop
-- **Botanical & Formulation Science:** https://bhumivera.com/science
-- **Product Serial Verification:** https://bhumivera.com/verify
-- **Client Concierge & FAQ:** https://bhumivera.com/contact
+### 2. Bhumivera Himalayan Sea Buckthorn Cellular Radiance Face Wash (100 ML)
+- **Canonical URL:** https://www.bhumivera.com/product/himalayan-seabuckthorn-luxury-face-wash
+- **Alternate URL:** https://www.bhumivera.com/products/himalayan-seabuckthorn-luxury-face-wash
+- **SKU / MPN:** BV-LUX-SBFW-02 / BVSBFW100ML · **Price:** ₹799 (MRP ₹999)
+- **pH / Standard:** pH 5.3 – 5.5 (Radiance & Moisture-Barrier Calibrated)
+- **Exact Label Formulation:** Sea Buckthorn (4%), Glycerin (5%), Haridra/Turmeric (0.5%), Neem (0.5%), Cucumber Extract (0.5%), Manjistha Extract (0.5%), Hyaluronic Acid (0.1%), Niacinamide (0.1%), Perfume (0.5%), Base (Q.S.)
+- **Summary:** Brightening botanical luxury face wash crafted for skin-conscious buyers. Formulated per 100ml with a label-disclosed 4% Himalayan Sea Buckthorn extract, 5% Botanical Glycerin, 0.5% Manjistha, 0.5% Haridra, 0.5% Neem, 0.5% Cucumber, 0.1% Hyaluronic Acid & 0.1% Niacinamide.
+
+### 3. Bhumivera Royal Botanical 2-in-1 Luxury Shampoo with Conditioner (200 ML)
+- **Canonical URL:** https://www.bhumivera.com/product/luxury-2-in-1-botanical-shampoo-conditioner
+- **Alternate URL:** https://www.bhumivera.com/products/luxury-2-in-1-botanical-shampoo-conditioner
+- **SKU / MPN:** BV-LUX-SH2IN1-03 / BVSH2IN1LUX · **Price:** ₹899 (MRP ₹1199)
+- **pH / Standard:** pH 5.0 – 5.24 (Ayurvedic Saponin & Aloe Cuticle-Smoothing Calibration)
+- **Exact Label Formulation:** Ritta/Reetha (25mg), Amla (20mg), Triphala (10mg), Bringna/Bhringraj (10mg), Rosemary Oil (10mg), Neem (10mg), Aleovera/Aloe Vera (10mg), Shikhakai (5mg), Shampoo Base (Q.S.)
+- **Summary:** Dual-action Ayurvedic botanical 2-in-1 Shampoo with Conditioner. Formulated with label-disclosed 25mg Ritta (Reetha), 20mg Amla, 10mg Rosemary Oil, 10mg Bhringraj, 10mg Triphala, 10mg Neem, 10mg Aloe Vera & 5mg Shikakai for clean, soft, fuller-looking hair.
+
+### 4. Bhumivera Charcoal Deep Cleansing Bar (Handmade Ayurvedic Luxury Soap) (100 GM)
+- **Canonical URL:** https://www.bhumivera.com/product/artisanal-charcoal-handmade-soap
+- **Alternate URL:** https://www.bhumivera.com/products/artisanal-charcoal-handmade-soap
+- **SKU / MPN:** BV-LUX-CSOAP-04 / BVCSOAP100GM · **Price:** ₹399 (MRP ₹499)
+- **pH / Standard:** Skin-Friendly Handmade Ayurvedic Bar (Gentle for Delicate & Sensitive Skin)
+- **Exact Label Formulation:** Activated Charcoal, Aloevera (Aloe barbadensis), Pure Ayurvedic Soap Base (Free from Harsh Synthetic Chemicals)
+- **Summary:** Handcrafted 100 GM Ayurvedic Charcoal Deep Cleansing Bar formulated with Activated Charcoal and soothing Aloe Vera. A gentle, non-drying luxury bathing bar that lifts deep pore impurities, sweat, and urban grime while keeping skin soft and comfortable.
+
+### 5. Bhumivera Soothing Bar (Aloe Vera, Neem & Tulsi Handmade Ayurvedic Soap) (100 GM)
+- **Canonical URL:** https://www.bhumivera.com/product/artisanal-aloe-vera-handmade-soap
+- **Alternate URL:** https://www.bhumivera.com/products/artisanal-aloe-vera-handmade-soap
+- **SKU / MPN:** BV-LUX-ASOAP-05 / BVASOAP100GM · **Price:** ₹349 (MRP ₹449)
+- **pH / Standard:** Gentle Ayurvedic Soothing Bar (Suitable for Delicate & Sensitive Skin)
+- **Exact Label Formulation:** Aloevera (Aloe barbadensis), Neem (Azadirachta indica), Tulsi (Ocimum tenuiflorum), Pure Ayurvedic Soap Base
+- **Summary:** Bhumivera Soothing Bar (100 GM)—a handmade Ayurvedic Cleansing Bar infused with Aloe Vera, Neem, and Sacred Tulsi for glowing, smooth, and clarified skin. Crafted in a gentle base free from harsh synthetic detergents.
+
+### 6. Bhumivera Kalpvriksh Satva Tulsi (Liquid Extract of 7 Types of Tulsi) (30 ML)
+- **Canonical URL:** https://www.bhumivera.com/product/kalpvriksh-satva-tulsi-7-tulsi-extract
+- **Alternate URL:** https://www.bhumivera.com/products/kalpvriksh-satva-tulsi-7-tulsi-extract
+- **SKU / MPN:** BV-LUX-TULSI-06 / BVTULSI30ML · **Price:** ₹499 (MRP ₹649)
+- **pH / Standard:** 90% Concentrated Seven-Tulsi Botanical Distillate (9.0ml per 10ml)
+- **Exact Label Formulation:** Each 10ml contains 9.0ml Mix Blend of Seven Tulsi: Van Tulsi, Sweet Tulsi, Marua Tulsi, Bisva Tulsi, Kala Tulsi, Rama Tulsi, Lemon Tulsi; Excipient Q.S.
+- **Summary:** The Ingestible Skin-Clearing & Cortisol Adaptogen in the Bhumivera Unified Inside-Out Botanical Ritual. Each 10ml of Bhumivera Kalpvriksh Satva Tulsi contains 9.0ml concentrated liquid extract of 7 distinct Tulsi varieties (Van, Sweet, Marua, Bisva, Kala, Rama & Lemon Tulsi) to calm cortisol-induced skin stress, support gut-skin clarity, and provide daily antioxidant vitality.

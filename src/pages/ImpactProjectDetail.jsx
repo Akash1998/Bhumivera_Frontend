@@ -292,9 +292,15 @@ export default function ImpactProjectDetail() {
   return (
     <main className="min-h-screen bg-[#070a0e] text-[#e2e8f0] pb-24 font-sans selection:bg-[#d4af37]/30 selection:text-white">
       <SEO
-        title={`${project.title} | Bhumivera Community & Impact Dossier`}
-        description={project.tagline}
+        title={`${project.title} (${project.location}) | Bhumivera Public Stewardship & Impact Dossier`}
+        description={`${project.tagline} Verified field location: ${project.location}. Status: ${project.statusBadge}. Inspect unit packages, legal charter, and field roadmap on Bhumivera.`}
+        keywords={`${project.title}, bhumivera impact ${project.slug}, ${project.location} community project, bhumivera stewardship ledger, ${project.shortTitle || ''}`}
         route={`/impact/${project.slug}`}
+        breadcrumbs={[
+          { name: 'Home', url: '/' },
+          { name: 'Public Stewardship & Impact Ledger', url: '/impact' },
+          { name: project.title, url: `/impact/${project.slug}` },
+        ]}
       />
 
       {/* TOP NAVIGATION BREADCRUMB */}
