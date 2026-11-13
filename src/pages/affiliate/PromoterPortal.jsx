@@ -3,7 +3,6 @@ import { AlertCircle, CheckCircle2, Copy, ExternalLink, Gift, IndianRupee, Refre
 import { Link, useNavigate } from 'react-router-dom';
 import { FaFacebookF, FaInstagram, FaYoutube } from 'react-icons/fa';
 import { affiliate as affiliateApi } from '../../services/api';
-import { useAuth } from '../../context/AuthContext';
 
 const INITIAL_FORM = {
   socialPlatform: '',
@@ -21,7 +20,6 @@ const SOCIAL_PLATFORMS = [
 const formatMoney = value => `₹${(Number(value) || 0).toFixed(2)}`;
 
 export default function PromoterPortal() {
-  const { user } = useAuth();
   const navigate = useNavigate();
   const [dashboard, setDashboard] = useState(null);
   const [form, setForm] = useState(INITIAL_FORM);
@@ -133,6 +131,7 @@ export default function PromoterPortal() {
               <p className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/30 bg-black/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FCE096]"><ShieldCheck size={14}/> Creator &amp; promoter account</p>
               <h1 className="mt-4 font-serif text-3xl font-bold text-white sm:text-5xl">Your Bhumivera partner desk</h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-[#C5D8CC]">Apply to join, then track your approved offer, referred orders, and earnings in one place.</p>
+              <p className="mt-3 max-w-2xl border-l-2 border-[#D4AF37]/50 pl-3 font-serif text-sm italic leading-6 text-[#F0D98A]">“Strong partnerships turn trust into shared growth.”</p>
               <div className="mt-6 flex flex-wrap gap-2">
                 {SOCIAL_PLATFORMS.map(({ name, Icon, color }) => (
                   <span key={name} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#07180F]/50 px-3 py-2 text-xs font-semibold text-white">
@@ -151,28 +150,28 @@ export default function PromoterPortal() {
 
         {loading ? <div className={cardClass}>Loading your promoter account…</div> : !partner || (partner.status === 'rejected' && editingApplication) ? (
           <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.8fr)]">
-            <form onSubmit={apply} className="space-y-6 rounded-[1.75rem] border border-[#E3E5D9] bg-[#F8F7F1] p-5 text-[#183729] shadow-[0_24px_70px_rgba(0,0,0,0.24)] sm:p-8">
-              <div className="flex items-start gap-4 border-b border-[#DDE3D8] pb-5">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl bg-[#E8EEDF] text-[#315D43]"><Gift size={21}/></span>
+            <form onSubmit={apply} className="space-y-6 rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#0D261B]/70 p-5 text-[#DFD7C4] shadow-[0_24px_70px_rgba(0,0,0,0.3)] backdrop-blur-xl sm:p-8">
+              <div className="flex items-start gap-4 border-b border-white/10 pb-5">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#F0D98A]"><Gift size={21}/></span>
                 <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#55745D]">Promoter application</p>
-                  <h2 className="mt-1 font-serif text-2xl font-bold text-[#173628] sm:text-3xl">Tell us about your audience</h2>
-                  <p className="mt-2 text-sm leading-6 text-[#64756A]">Share your public profile details. Our team reviews every application before activation.</p>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#D4AF37]">Promoter application</p>
+                  <h2 className="mt-1 font-serif text-2xl font-bold text-white sm:text-3xl">Tell us about your audience</h2>
+                  <p className="mt-2 text-sm leading-6 text-[#B4C7BB]">Share your public profile details. Our team reviews every application before activation.</p>
                 </div>
               </div>
 
-              <div className="rounded-xl border border-[#DCE5D8] bg-white/70 px-4 py-3">
-                <p className="text-[11px] font-semibold uppercase tracking-wider text-[#718074]">Applying with your Bhumivera account</p>
-                <p className="mt-1 break-all text-sm font-semibold text-[#183729]">{user?.email || 'Signed-in account'}</p>
+              <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 backdrop-blur-md">
+                <p className="text-sm font-semibold text-white">Application linked to your signed-in account</p>
+                <p className="mt-1 text-xs leading-5 text-[#9BB0A5]">Your account email is kept private and is not shown in this form.</p>
               </div>
 
               <fieldset>
-                <legend className="text-sm font-bold text-[#234332]">Choose your main platform</legend>
+                <legend className="text-sm font-bold text-white">Choose your main platform</legend>
                 <div className="mt-3 grid gap-3 sm:grid-cols-3">
                   {SOCIAL_PLATFORMS.map(({ name, Icon, color }) => {
                     const selected = form.socialPlatform === name;
                     return (
-                      <label key={name} className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-3 transition ${selected ? 'border-[#3D7651] bg-[#EAF1E7] ring-2 ring-[#3D7651]/15' : 'border-[#DCE3D8] bg-white hover:border-[#9EBAA2]'}`}>
+                      <label key={name} className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-3 transition focus-within:ring-2 focus-within:ring-[#D4AF37]/30 ${selected ? 'border-[#D4AF37]/55 bg-[#D4AF37]/10 ring-2 ring-[#D4AF37]/10' : 'border-white/10 bg-white/[0.035] hover:border-white/25 hover:bg-white/[0.06]'}`}>
                         <input
                           type="radio"
                           name="socialPlatform"
@@ -182,9 +181,9 @@ export default function PromoterPortal() {
                           aria-label={name}
                           className="sr-only"
                         />
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#F2F4EE]">{React.createElement(Icon, { size: 19, style: { color } })}</span>
-                        <span className="text-sm font-semibold text-[#234332]">{name}</span>
-                        {selected && <CheckCircle2 size={17} className="ml-auto text-[#39734D]"/>}
+                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/20">{React.createElement(Icon, { size: 19, style: { color } })}</span>
+                        <span className="text-sm font-semibold text-white">{name}</span>
+                        {selected && <CheckCircle2 size={17} className="ml-auto text-[#F0D98A]"/>}
                       </label>
                     );
                   })}
@@ -192,7 +191,7 @@ export default function PromoterPortal() {
               </fieldset>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                <label htmlFor="promoter-handle" className="space-y-2 text-sm font-semibold text-[#234332]">
+                <label htmlFor="promoter-handle" className="space-y-2 text-sm font-semibold text-[#E7EEE8]">
                   Profile name or handle
                   <input
                     id="promoter-handle"
@@ -202,11 +201,11 @@ export default function PromoterPortal() {
                     onChange={event => setForm(current => ({ ...current, socialHandle: event.target.value }))}
                     placeholder="@yourname"
                     autoComplete="off"
-                    className="w-full rounded-xl border border-[#CFD9CE] bg-white px-4 py-3 text-sm text-[#183729] outline-none transition placeholder:text-[#97A398] focus:border-[#3D7651] focus:ring-4 focus:ring-[#3D7651]/10"
+                    className="w-full rounded-xl border border-white/10 bg-[#07180F]/65 px-4 py-3 text-sm text-white outline-none transition placeholder:text-[#82998D] focus:border-[#D4AF37]/60 focus:ring-4 focus:ring-[#D4AF37]/10"
                   />
-                  <span className="block text-xs font-normal text-[#718074]">Enter it as shown on your profile, including @ if used.</span>
+                  <span className="block text-xs font-normal text-[#9BB0A5]">Enter it as shown on your profile, including @ if used.</span>
                 </label>
-                <label htmlFor="promoter-followers" className="space-y-2 text-sm font-semibold text-[#234332]">
+                <label htmlFor="promoter-followers" className="space-y-2 text-sm font-semibold text-[#E7EEE8]">
                   Approximate followers
                   <input
                     id="promoter-followers"
@@ -218,13 +217,13 @@ export default function PromoterPortal() {
                     value={form.followerCount}
                     onChange={event => setForm(current => ({ ...current, followerCount: event.target.value }))}
                     placeholder="For example, 2500"
-                    className="w-full rounded-xl border border-[#CFD9CE] bg-white px-4 py-3 text-sm text-[#183729] outline-none transition placeholder:text-[#97A398] focus:border-[#3D7651] focus:ring-4 focus:ring-[#3D7651]/10"
+                    className="w-full rounded-xl border border-white/10 bg-[#07180F]/65 px-4 py-3 text-sm text-white outline-none transition placeholder:text-[#82998D] focus:border-[#D4AF37]/60 focus:ring-4 focus:ring-[#D4AF37]/10"
                   />
-                  <span className="block text-xs font-normal text-[#718074]">Enter the number shown on your profile.</span>
+                  <span className="block text-xs font-normal text-[#9BB0A5]">Enter the number shown on your profile.</span>
                 </label>
               </div>
 
-              <label htmlFor="promoter-profile-url" className="block space-y-2 text-sm font-semibold text-[#234332]">
+              <label htmlFor="promoter-profile-url" className="block space-y-2 text-sm font-semibold text-[#E7EEE8]">
                 Public profile link
                 <input
                   id="promoter-profile-url"
@@ -234,44 +233,51 @@ export default function PromoterPortal() {
                   value={form.profileUrl}
                   onChange={event => setForm(current => ({ ...current, profileUrl: event.target.value }))}
                   placeholder={form.socialPlatform === 'YouTube' ? 'https://youtube.com/@yourchannel' : `https://${form.socialPlatform ? form.socialPlatform.toLowerCase() : 'instagram'}.com/yourprofile`}
-                  className="w-full rounded-xl border border-[#CFD9CE] bg-white px-4 py-3 text-sm text-[#183729] outline-none transition placeholder:text-[#97A398] focus:border-[#3D7651] focus:ring-4 focus:ring-[#3D7651]/10"
+                  className="w-full rounded-xl border border-white/10 bg-[#07180F]/65 px-4 py-3 text-sm text-white outline-none transition placeholder:text-[#82998D] focus:border-[#D4AF37]/60 focus:ring-4 focus:ring-[#D4AF37]/10"
                 />
-                <span className="block text-xs font-normal text-[#718074]">Paste the HTTPS link to your profile, not a post or video.</span>
+                <span className="block text-xs font-normal text-[#9BB0A5]">Paste the HTTPS link to your profile, not a post or video.</span>
               </label>
 
-              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-[#D8E1D5] bg-white/70 p-4 text-sm leading-6 text-[#40564A]">
-                <input type="checkbox" checked={ownsProfile} onChange={event => setOwnsProfile(event.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[#39734D]"/>
+              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-4 text-sm leading-6 text-[#C5D8CC]">
+                <input type="checkbox" checked={ownsProfile} onChange={event => setOwnsProfile(event.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[#D4AF37]"/>
                 <span>I confirm that I own or manage this profile and that the details above are accurate.</span>
               </label>
 
-              <div className="flex flex-col gap-3 border-t border-[#DDE3D8] pt-5 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xs leading-5 text-[#718074]">No social password needed. <Link to="/legal/warranty-affiliate-b2b" className="font-semibold text-[#39734D] underline underline-offset-2">Read partner terms</Link>.</p>
-                <button type="submit" disabled={submitting} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#214C35] px-6 py-3 text-sm font-bold text-white transition hover:bg-[#173B29] focus:outline-none focus:ring-4 focus:ring-[#39734D]/25 disabled:cursor-not-allowed disabled:opacity-60">
+              <div className="flex flex-col gap-3 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs leading-5 text-[#9BB0A5]">No social password needed. <Link to="/legal/warranty-affiliate-b2b" className="font-semibold text-[#F0D98A] underline underline-offset-2">Read partner terms</Link>.</p>
+                <button type="submit" disabled={submitting} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#D4AF37] px-6 py-3 text-sm font-bold text-[#102219] transition hover:bg-[#FCE096] focus:outline-none focus:ring-4 focus:ring-[#D4AF37]/25 disabled:cursor-not-allowed disabled:opacity-60">
                   {submitting ? 'Sending application…' : 'Send application for review'} <ExternalLink size={15}/>
                 </button>
               </div>
             </form>
 
-            <aside className="space-y-4 rounded-[1.75rem] border border-[#D4AF37]/20 bg-gradient-to-br from-[#163A29] to-[#0B1C14] p-5 text-[#D7E2DA] shadow-[0_24px_70px_rgba(0,0,0,0.2)] sm:p-6">
+            <aside className="space-y-5 rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#0D261B]/65 p-5 text-[#D7E2DA] shadow-[0_24px_70px_rgba(0,0,0,0.24)] backdrop-blur-xl sm:p-6">
               <div>
                 <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#E4C76A]">Simple and transparent</p>
-                <h3 className="mt-2 font-serif text-2xl font-bold text-white">What happens next?</h3>
+                <h3 className="mt-2 font-serif text-2xl font-bold text-white">Your path to partnership</h3>
               </div>
-              <ol className="space-y-4">
-                {[
-                  ['01', 'You apply', 'Send us your profile link and audience details.'],
-                  ['02', 'We review', 'Our team checks your application manually, usually within 12–24 hours.'],
-                  ['03', 'You get your offer', 'If approved, your promoter link and earnings details appear here.'],
-                ].map(([step, title, description]) => (
-                  <li key={step} className="flex gap-3">
-                    <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#D4AF37]/35 bg-[#D4AF37]/10 text-xs font-bold text-[#FCE096]">{step}</span>
-                    <div><p className="text-sm font-bold text-white">{title}</p><p className="mt-1 text-xs leading-5 text-[#B7C9BD]">{description}</p></div>
-                  </li>
-                ))}
-              </ol>
-              <div className="rounded-xl border border-white/10 bg-black/15 p-4">
-                <p className="text-sm font-semibold text-white">Your privacy matters</p>
-                <p className="mt-1 text-xs leading-5 text-[#B7C9BD]">We do not fetch your social data. Follower count is self-reported, and you should never share your social-media password.</p>
+              <div className="relative">
+                <span aria-hidden="true" className="absolute bottom-7 left-[15px] top-7 w-px bg-gradient-to-b from-[#D4AF37]/65 via-[#D4AF37]/35 to-transparent"/>
+                <ol className="relative space-y-1">
+                  {[
+                    ['01', 'Apply with confidence', 'Share your profile and audience details.'],
+                    ['02', 'Get a thoughtful review', 'Our team reviews applications, usually within 12–24 hours.'],
+                    ['03', 'Share, grow, and earn', 'If approved, your link and transparent earnings appear here.'],
+                  ].map(([step, title, description]) => (
+                    <li key={step} className="relative flex gap-4 py-3">
+                      <span className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#D4AF37]/45 bg-[#123624] text-[10px] font-bold text-[#FCE096] shadow-[0_0_18px_rgba(212,175,55,0.12)]">{step}</span>
+                      <div className="pt-0.5"><p className="text-sm font-bold text-white">{title}</p><p className="mt-1 text-xs leading-5 text-[#B7C9BD]">{description}</p></div>
+                    </li>
+                  ))}
+                </ol>
+              </div>
+              <blockquote className="rounded-2xl border border-[#D4AF37]/20 bg-gradient-to-br from-[#D4AF37]/[0.09] to-transparent p-4">
+                <p className="font-serif text-base italic leading-6 text-[#F7E8AE]">“Success grows when your community trusts what you share.”</p>
+                <footer className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-[#9BB0A5]">The Bhumivera partner spirit</footer>
+              </blockquote>
+              <div className="rounded-xl border border-white/10 bg-black/20 p-4 backdrop-blur-md">
+                <p className="text-sm font-semibold text-white">Clear from the start</p>
+                <p className="mt-1 text-xs leading-5 text-[#B7C9BD]">We do not fetch your social data. Follower count is self-reported; you should never share your social-media password.</p>
               </div>
             </aside>
           </div>

@@ -115,6 +115,7 @@ describe('promoter registration page', () => {
       </HelmetProvider>,
     );
 
+    expect(screen.queryByText('creator@example.com')).toBeNull();
     fireEvent.click(await screen.findByRole('radio', { name: 'Instagram' }));
     fireEvent.change(screen.getByLabelText(/Profile name or handle/), {
       target: { value: '@creator' },
