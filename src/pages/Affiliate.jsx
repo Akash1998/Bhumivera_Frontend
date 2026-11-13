@@ -43,8 +43,8 @@ export default function Affiliate() {
             Collaborate with Bhumivera through transparent ingredient education, real-life skincare demonstrations, and ASCI-compliant botanical storytelling.
           </p>
           <div className="mt-9 flex flex-wrap justify-center gap-4">
-            <Link to="/register" className="btn-gold-luxury px-7 py-3.5 text-white font-bold text-xs uppercase tracking-widest rounded-xl shadow-xl">
-              Create an account to apply
+            <Link to="/promotions" className="btn-gold-luxury px-7 py-3.5 text-white font-bold text-xs uppercase tracking-widest rounded-xl shadow-xl">
+              Apply to the program
             </Link>
             <Link to="/legal/warranty-affiliate-b2b" className="btn-silver-luxury px-7 py-3.5 text-[#cbd5e1] font-semibold text-xs uppercase tracking-widest rounded-xl inline-flex items-center gap-2">
               <Scale size={14} className="text-[#d4af37]" /> Read Affiliate Legal Terms

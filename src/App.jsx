@@ -113,6 +113,7 @@ const Compare = lazyWithRetry(() => import("./pages/Compare.jsx"));
 const AddressBook = lazyWithRetry(() => import("./pages/AddressBook.jsx"));
 const PurchaseProtection = lazyWithRetry(() => import("./pages/PurchaseProtection.jsx"));
 const Affiliate = lazyWithRetry(() => import("./pages/Affiliate.jsx"));
+const Promotions = lazyWithRetry(() => import("./pages/Promotions.jsx"));
 const About = lazyWithRetry(() => import("./pages/About.jsx"));
 const Impact = lazyWithRetry(() => import("./pages/Impact.jsx"));
 const ImpactProjectDetail = lazyWithRetry(() => import("./pages/ImpactProjectDetail.jsx"));
@@ -465,6 +466,7 @@ function AppContent() {
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/address-book" element={<AddressBook />} />
             <Route path="/affiliate" element={<Affiliate />} />
+            <Route path="/promotions" element={<Promotions />} />
 
             {/* 10X Super Inventory, Order Lifecycle, RTO Returns, QR Scanner & Daily SQL Backup Software */}
             <Route path="/scanner" element={<WarehouseScannerPwa />} />

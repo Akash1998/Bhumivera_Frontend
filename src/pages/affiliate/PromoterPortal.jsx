@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { AlertCircle, Copy, ExternalLink, Gift, RefreshCw, ShieldCheck } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { affiliate as affiliateApi } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 
 const INITIAL_FORM = {
   socialPlatform: 'Instagram',
@@ -13,6 +14,7 @@ const INITIAL_FORM = {
 const formatMoney = value => `₹${(Number(value) || 0).toFixed(2)}`;
 
 export default function PromoterPortal() {
+  const { user } = useAuth();
   const [dashboard, setDashboard] = useState(null);
   const [form, setForm] = useState(INITIAL_FORM);
   const [loading, setLoading] = useState(true);
@@ -103,8 +105,12 @@ export default function PromoterPortal() {
             <div>
               <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[#D4AF37]/30 bg-[#0b1c14] text-[#D4AF37]"><Gift size={19}/></span>
               <h2 className="mt-3 font-serif text-2xl font-bold text-white">Apply to become a promoter</h2>
-              <p className="mt-2 text-sm leading-6 text-[#9BB0A5]">Tell us which audience you reach. Applications are reviewed before a referral code or offer is activated.</p>
+              <p className="mt-2 text-sm leading-6 text-[#9BB0A5]">Tell us which audience you reach. We will verify your profile before activating your promoter account or offer.</p>
             </div>
+            <label className="block space-y-1.5 text-xs font-semibold">Application email
+              <input aria-label="Application email" value={user?.email || ''} readOnly className="w-full cursor-not-allowed rounded-lg border border-[#315541] bg-[#0b1c14] px-3 py-2.5 text-sm text-[#9BB0A5]"/>
+              <span className="block text-[11px] font-normal text-[#82998D]">This verified Bhumivera account will own the application and receive its status updates.</span>
+            </label>
             <div className="grid gap-4 sm:grid-cols-2">
               <label className="space-y-1.5 text-xs font-semibold">Platform
                 <select value={form.socialPlatform} onChange={event => setForm(current => ({ ...current, socialPlatform: event.target.value }))} className="w-full rounded-lg border border-[#315541] bg-[#0b1c14] px-3 py-2.5 text-sm text-white">
@@ -127,8 +133,13 @@ export default function PromoterPortal() {
         ) : partner.status === 'pending' ? (
           <section className={`${cardClass} mx-auto max-w-2xl`}>
             <span className="rounded-full border border-amber-400/30 bg-amber-950/30 px-3 py-1 text-[10px] font-bold uppercase text-amber-100">Application under review</span>
-            <h2 className="mt-4 font-serif text-2xl font-bold text-white">Thanks for applying, {partner.social_handle}.</h2>
-            <p className="mt-2 text-sm leading-6 text-[#9BB0A5]">Your platform, audience size, and profile are with our team. A unique code and offer link will appear here after approval.</p>
+            <h2 className="mt-4 font-serif text-2xl font-bold text-white">Thank you for your interest in collaborating with Bhumivera.</h2>
+            <p className="mt-2 text-sm leading-6 text-[#9BB0A5]">You are in the queue while our team verifies your account and profile. We expect to update your activation status within 12–24 hours. Please check this page or the email on your Bhumivera account for our response.</p>
+            <p className="mt-3 text-sm leading-6 text-[#9BB0A5]">Your promoter account is not active yet. The code below is reserved for you and cannot be used until Bhumivera approves the application.</p>
+            {partner.referral_code && <div className="mt-4 rounded-xl border border-[#315541] bg-[#0b1c14] p-4">
+              <p className="text-[10px] font-bold uppercase tracking-wider text-[#9BB0A5]">Reserved promoter code · inactive</p>
+              <p className="mt-1 font-mono text-lg font-bold tracking-widest text-[#FCE096]">{partner.referral_code}</p>
+            </div>}
           </section>
         ) : partner.status === 'rejected' ? (
           <section className={`${cardClass} mx-auto max-w-2xl`}>
