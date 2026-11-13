@@ -82,4 +82,60 @@ describe('promoter registration page', () => {
     expect(screen.getByText(/Reserved promoter code · inactive/i)).toBeTruthy();
     expect(screen.queryByText('Share your offer')).toBeNull();
   });
+
+  it('requires explicit account confirmation before submitting a URL-matched profile', async () => {
+    useAuth.mockReturnValue({ user: { email: 'creator@example.com' }, loading: false });
+    affiliate.getPartnerDashboard
+      .mockResolvedValueOnce({ data: { dashboard: null } })
+      .mockResolvedValueOnce({
+        data: {
+          dashboard: {
+            partner: {
+              status: 'pending',
+              referral_code: 'BV1234567890',
+              social_platform: 'Instagram',
+              social_handle: '@creator',
+              profile_url: 'https://www.instagram.com/creator/',
+              follower_count: 5000,
+            },
+            summary: {},
+          },
+        },
+      });
+    affiliate.applyForPartner.mockResolvedValue({ data: { success: true } });
+
+    render(
+      <HelmetProvider>
+        <MemoryRouter initialEntries={['/promotions']}>
+          <Routes>
+            <Route path="/promotions" element={<Promotions />} />
+            <Route path="/impact" element={<p>Impact page reached</p>} />
+          </Routes>
+        </MemoryRouter>
+      </HelmetProvider>,
+    );
+
+    fireEvent.change(await screen.findByLabelText(/Public profile URL/), {
+      target: { value: 'https://www.instagram.com/creator/' },
+    });
+    fireEvent.change(screen.getByLabelText(/Approx. followers/), {
+      target: { value: '5000' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Review and confirm profile/i }));
+
+    expect(await screen.findByRole('dialog', { name: /Is this your account/i })).toBeTruthy();
+    expect(affiliate.applyForPartner).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByLabelText(/I confirm that I own or manage this social account/i));
+    fireEvent.click(screen.getByRole('button', { name: /Yes, submit my application/i }));
+
+    expect(await screen.findByText('Application received!')).toBeTruthy();
+    expect(affiliate.applyForPartner).toHaveBeenCalledWith({
+      socialPlatform: 'Instagram',
+      socialHandle: '@creator',
+      profileUrl: 'https://www.instagram.com/creator/',
+      followerCount: 5000,
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Explore Bhumivera’s impact/i }));
+    expect(await screen.findByText('Impact page reached')).toBeTruthy();
+  });
 });
