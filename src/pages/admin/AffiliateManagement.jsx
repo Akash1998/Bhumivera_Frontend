@@ -14,12 +14,12 @@ const DEFAULTS = {
   coupon_min_order_amount: 0,
   coupon_valid_days: 30,
   referral_redemption_tiers: [
-    { min_order_amount: 700, referral_amount: 100 },
-    { min_order_amount: 1100, referral_amount: 200 },
+    { min_order_amount: 799, referral_amount: 250 },
   ],
 };
 
 const readData = response => response?.data?.config || response?.data?.data || response?.data || {};
+const money = value => `₹${(Number(value) || 0).toLocaleString('en-IN', { maximumFractionDigits: 2 })}`;
 
 export default function AffiliateManagement() {
   const [config, setConfig] = useState(DEFAULTS);
@@ -27,12 +27,14 @@ export default function AffiliateManagement() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [processingId, setProcessingId] = useState(null);
-  const [loadError, setLoadError] = useState('');
+  const [settingsLoaded, setSettingsLoaded] = useState(false);
+  const [settingsError, setSettingsError] = useState('');
+  const [queueError, setQueueError] = useState('');
+  const [saveError, setSaveError] = useState('');
   const { showToast } = useToast() || {};
 
   const load = useCallback(async (showLoader = true, includeConfig = true) => {
     if (showLoader) setLoading(true);
-    setLoadError('');
     const requests = [
       includeConfig ? affiliateApi.getAdminConfig() : Promise.resolve(null),
       affiliateApi.getAdminReferrals({ limit: 50 }),
@@ -42,19 +44,25 @@ export default function AffiliateManagement() {
     if (includeConfig) {
       if (settingsResult.status === 'fulfilled') {
         setConfig({ ...DEFAULTS, ...readData(settingsResult.value) });
+        setSettingsLoaded(true);
+        setSettingsError('');
       } else {
         const error = settingsResult.reason;
-        errors.push(`Settings: ${error?.normalized?.message || error?.response?.data?.message || error?.message || 'could not load.'}`);
+        const message = error?.normalized?.message || error?.response?.data?.message || error?.message || 'could not load.';
+        setSettingsError(message);
+        errors.push(`Settings: ${message}`);
       }
     }
     if (referralsResult.status === 'fulfilled') {
       setReferrals(referralsResult.value.data?.referrals || []);
+      setQueueError('');
     } else {
       const error = referralsResult.reason;
-      errors.push(`Referral queue: ${error?.normalized?.message || error?.response?.data?.message || error?.message || 'could not load.'}`);
+      const message = error?.normalized?.message || error?.response?.data?.message || error?.message || 'could not load.';
+      setQueueError(message);
+      errors.push(`Referral queue: ${message}`);
     }
     if (errors.length) {
-      setLoadError(errors.join(' '));
       if (showLoader) showToast?.(errors.join(' '), 'error');
     }
     if (showLoader) setLoading(false);
@@ -87,11 +95,13 @@ export default function AffiliateManagement() {
         })),
       });
       setConfig({ ...DEFAULTS, ...readData(response) });
-      setLoadError('');
+      setSettingsLoaded(true);
+      setSettingsError('');
+      setSaveError('');
       showToast?.('Referral rewards saved.', 'success');
     } catch (error) {
       const message = error.normalized?.message || error.response?.data?.message || error.message || 'Could not save referral rewards.';
-      setLoadError(message);
+      setSaveError(message);
       showToast?.(message, 'error');
     } finally {
       setSaving(false);
@@ -134,15 +144,50 @@ export default function AffiliateManagement() {
 
   if (loading) return <p role="status" className="flex items-center gap-2 text-sm text-slate-400"><LoaderCircle size={16} className="animate-spin"/>Loading referral settings…</p>;
 
+  const tiers = Array.isArray(config.referral_redemption_tiers)
+    ? [...config.referral_redemption_tiers].sort((a, b) => Number(a.min_order_amount) - Number(b.min_order_amount))
+    : [];
+  const rewardDescription = config.reward_mode === 'wallet_coupon'
+    ? `Inviter: ${money(config.wallet_reward_amount)} restricted referral balance. New customer: ${money(config.referred_reward_amount)} restricted referral balance.`
+    : config.reward_mode === 'wallet'
+      ? `Inviter: ${money(config.wallet_reward_amount)} spendable wallet balance.`
+      : `Inviter: ${config.coupon_discount_type === 'percentage' ? `${config.coupon_discount_value}% off` : `${money(config.coupon_discount_value)} off`} by coupon.`;
+
   return (
     <div className="max-w-4xl space-y-6 text-slate-100">
       <header>
         <h3 className="text-lg font-semibold text-white">Referral engine</h3>
-        <p className="mt-1 text-sm leading-6 text-slate-400">Review a customer’s verified sign-up. Approve now to issue the configured reward, reject with a reason, or take no action and the referral will auto-approve one hour after the customer verifies their email.</p>
+        <p className="mt-1 text-sm leading-6 text-slate-400">Control referral rewards and review sign-ups. Rewards are issued on approval, or automatically one hour after email verification.</p>
       </header>
-      {loadError && <p role="alert" className="rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">{loadError}</p>}
+      {settingsError && (
+        <p role="alert" className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">
+          <span>Current settings could not be loaded: {settingsError} Saving is disabled until settings load successfully.</span>
+          <button type="button" onClick={() => load()} className="rounded-md border border-rose-200/30 px-3 py-1.5 font-semibold">Retry settings</button>
+        </p>
+      )}
+      {saveError && <p role="alert" className="rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">{saveError}</p>}
+      {queueError && <p role="alert" className="rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">Referral queue could not be loaded: {queueError}</p>}
+
+      {settingsLoaded && (
+        <section aria-label="Current referral reward preview" className="space-y-2 rounded-xl border border-emerald-300/20 bg-emerald-300/[0.05] p-4">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h4 className="font-semibold text-white">Current reward per approved referral</h4>
+            <span className={`rounded-full px-2.5 py-1 text-xs font-semibold ${Number(config.enabled) ? 'bg-emerald-300/10 text-emerald-200' : 'bg-slate-400/10 text-slate-300'}`}>{Number(config.enabled) ? 'Program on' : 'Program off'}</span>
+          </div>
+          <p className="text-sm text-slate-200">{rewardDescription}</p>
+          {config.reward_mode === 'wallet_coupon' && (
+            <>
+              <p className="text-xs leading-relaxed text-slate-400">For each order, the highest minimum subtotal reached sets the maximum referral balance that can be used. Actual use is limited by the customer’s remaining balance and eligible order total. Welcome bonuses are separate.</p>
+              <ul className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-emerald-100">
+                {tiers.map((tier, index) => <li key={`${tier.min_order_amount}-${index}`}>Orders from {money(tier.min_order_amount)}: up to {money(tier.referral_amount)} referral balance</li>)}
+              </ul>
+            </>
+          )}
+        </section>
+      )}
 
       <form onSubmit={save} className="space-y-5 rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
+        <fieldset disabled={!settingsLoaded} className="space-y-5">
         <label className="flex items-start gap-3 text-sm text-white">
           <input type="checkbox" checked={Boolean(Number(config.enabled))} onChange={event => change('enabled', event.target.checked ? 1 : 0)} className="mt-0.5 h-4 w-4 accent-emerald-400"/>
           <span><strong>Referral rewards are on</strong><span className="mt-1 block text-xs text-slate-400">Turn this off to stop issuing new rewards. Existing rewards remain in customer accounts.</span></span>
@@ -169,11 +214,11 @@ export default function AffiliateManagement() {
 
         {config.reward_mode === 'wallet_coupon' && (
           <section className="space-y-3 rounded-lg border border-white/10 p-3">
-            <div><h4 className="text-sm font-semibold text-white">Automatic order redemption</h4><p className="mt-1 text-xs text-slate-400">The highest matching order threshold applies. Redemption is capped by the remaining referral balance and eligible order value.</p></div>
+            <div><h4 className="text-sm font-semibold text-white">Order redemption limits</h4><p className="mt-1 text-xs text-slate-400">The highest minimum cart subtotal reached sets the per-order referral-balance cap. The actual amount is also limited by the customer’s remaining balance and eligible order total. Welcome bonuses are separate.</p></div>
             {config.referral_redemption_tiers.map((tier, index) => (
               <div key={index} className="grid grid-cols-[1fr_1fr_auto] items-end gap-2">
-                <label className="text-xs text-slate-300">Minimum order (₹)<input type="number" min="0" max="1000000" step="0.01" required value={tier.min_order_amount} onChange={event => setConfig(current => ({ ...current, referral_redemption_tiers: current.referral_redemption_tiers.map((item, itemIndex) => itemIndex === index ? { ...item, min_order_amount: event.target.value } : item) }))} className="admin-glass-control mt-1 w-full rounded-lg px-2.5 py-2"/></label>
-                <label className="text-xs text-slate-300">Referral used (₹)<input type="number" min="0.01" max="100000" step="0.01" required value={tier.referral_amount} onChange={event => setConfig(current => ({ ...current, referral_redemption_tiers: current.referral_redemption_tiers.map((item, itemIndex) => itemIndex === index ? { ...item, referral_amount: event.target.value } : item) }))} className="admin-glass-control mt-1 w-full rounded-lg px-2.5 py-2"/></label>
+                <label className="text-xs text-slate-300">Minimum cart subtotal (₹)<input type="number" min="0" max="1000000" step="0.01" required value={tier.min_order_amount} onChange={event => setConfig(current => ({ ...current, referral_redemption_tiers: current.referral_redemption_tiers.map((item, itemIndex) => itemIndex === index ? { ...item, min_order_amount: event.target.value } : item) }))} className="admin-glass-control mt-1 w-full rounded-lg px-2.5 py-2"/></label>
+                <label className="text-xs text-slate-300">Max referral balance per order (₹)<input type="number" min="0.01" max="100000" step="0.01" required value={tier.referral_amount} onChange={event => setConfig(current => ({ ...current, referral_redemption_tiers: current.referral_redemption_tiers.map((item, itemIndex) => itemIndex === index ? { ...item, referral_amount: event.target.value } : item) }))} className="admin-glass-control mt-1 w-full rounded-lg px-2.5 py-2"/></label>
                 <button type="button" aria-label="Remove redemption tier" disabled={config.referral_redemption_tiers.length <= 1} onClick={() => setConfig(current => ({ ...current, referral_redemption_tiers: current.referral_redemption_tiers.filter((_, itemIndex) => itemIndex !== index) }))} className="mb-0.5 rounded-lg border border-rose-300/20 px-3 py-2 text-xs text-rose-200 disabled:opacity-40">Remove</button>
               </div>
             ))}
@@ -200,9 +245,10 @@ export default function AffiliateManagement() {
           </div>
         )}
 
-        <button disabled={saving} type="submit" className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-emerald-400 px-4 py-2 text-sm font-semibold text-[#071a12] disabled:opacity-50">
+        <button disabled={saving || !settingsLoaded} type="submit" className="inline-flex min-h-10 items-center gap-2 rounded-lg bg-emerald-400 px-4 py-2 text-sm font-semibold text-[#071a12] disabled:opacity-50">
           <Save size={15}/>{saving ? 'Saving…' : 'Save referral rewards'}
         </button>
+        </fieldset>
       </form>
 
       <section className="space-y-3">

@@ -35,6 +35,7 @@ export default function Register() {
   const turnstileRef = useRef(null);
 
   const [view, setView] = useState('INIT');
+  const [registrationMethod, setRegistrationMethod] = useState(searchParams.get('email') ? 'email' : 'google');
   const [formData, setFormData] = useState({
     name: '', email: searchParams.get('email') || '', password: '', securityAnswer: '', marketingEmailOptIn: false,
     adPersonalizationOptIn: false, referralCode: ''
@@ -226,7 +227,7 @@ export default function Register() {
       </div>
 
       <div className="w-full max-w-md relative z-10">
-        <div className="auth-luxury__card bg-white/80 backdrop-blur-2xl border border-[#0B2419]/10 rounded-3xl sm:rounded-[3rem] p-6 sm:p-12 shadow-2xl relative overflow-hidden">
+        <div className="auth-luxury__card bg-white/80 backdrop-blur-2xl border border-[#0B2419]/10 rounded-3xl sm:rounded-[3rem] p-6 sm:p-9 shadow-2xl relative overflow-hidden">
           
           {/* Decorative Leaf Accent */}
           <div className="absolute top-0 right-0 p-6 opacity-10 text-[#0B2419]">
@@ -237,65 +238,70 @@ export default function Register() {
             
             {view === 'INIT' && (
               <MotionDiv key="INIT" variants={viewVariants} initial="initial" animate="animate" exit="exit">
-                <div className="text-center mb-8 relative z-10">
-                  <div className="mx-auto mb-4 inline-flex h-[76px] w-[76px] items-center justify-center">
-                    <img src="/logo.webp" alt="Bhumivera tree emblem" width="72" height="72" fetchPriority="high" decoding="async" className="h-[72px] w-[72px] object-contain" />
+                <div className="text-center mb-6 relative z-10">
+                  <div className="mx-auto mb-3 inline-flex h-14 w-14 items-center justify-center">
+                    <img src="/logo.webp" alt="Bhumivera tree emblem" width="56" height="56" fetchPriority="high" decoding="async" className="h-14 w-14 object-contain" />
                   </div>
-                  <h1 className="text-4xl font-serif text-[#0B2419] tracking-tight mb-2">Create Account</h1>
-                  <p className="text-[#0B2419]/60 text-sm italic">Join the Bhumivera Botanical Registry</p>
+                  <h1 className="text-3xl font-serif text-[#0B2419] tracking-tight mb-1">Create account</h1>
+                  <p className="text-[#0B2419]/60 text-sm">Choose how you’d like to register.</p>
                 </div>
 
                 {error && <AlertBox type="error" msg={error} />}
-                <form onSubmit={handleRegisterInit} className="space-y-5 relative z-10">
-                  <InputField icon={<User size={18}/>} type="text" name="name" autoComplete="name" value={formData.name} onChange={handleInputChange} placeholder="Full Name" disabled={loading} />
-                  
-                  <InputField icon={<Mail size={18}/>} type="email" name="email" autoComplete="username" value={formData.email} onChange={handleInputChange} placeholder="Email Address" disabled={loading} />
+                <form onSubmit={handleRegisterInit} className="space-y-4 relative z-10">
+                  <div className="grid grid-cols-2 gap-2 rounded-xl bg-[#F3F9F1] p-1" role="group" aria-label="Registration method">
+                    <button type="button" aria-pressed={registrationMethod === 'google'} onClick={() => { setRegistrationMethod('google'); setError(''); setGoogleSignInError(''); }} disabled={loading} className={`rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors ${registrationMethod === 'google' ? 'bg-white text-[#0B2419] shadow-sm' : 'text-[#0B2419]/60 hover:text-[#0B2419]'}`}>Google</button>
+                    <button type="button" aria-pressed={registrationMethod === 'email'} onClick={() => { setRegistrationMethod('email'); setError(''); setGoogleSignInError(''); }} disabled={loading} className={`rounded-lg px-3 py-2.5 text-sm font-semibold transition-colors ${registrationMethod === 'email' ? 'bg-white text-[#0B2419] shadow-sm' : 'text-[#0B2419]/60 hover:text-[#0B2419]'}`}>Email</button>
+                  </div>
+                  <p className="text-xs leading-relaxed text-[#0B2419]/60">
+                    {registrationMethod === 'google'
+                      ? 'Google verifies your email; that verified address will be used for your account.'
+                      : 'We’ll send a verification code to the email address you enter.'}
+                  </p>
+
+                  {registrationMethod === 'email' && (
+                    <div className="space-y-3">
+                      <InputField icon={<User size={18}/>} type="text" name="name" autoComplete="name" value={formData.name} onChange={handleInputChange} placeholder="Full name" disabled={loading} />
+                      <InputField icon={<Mail size={18}/>} type="email" name="email" autoComplete="email" value={formData.email} onChange={handleInputChange} placeholder="Email address" disabled={loading} />
+                    </div>
+                  )}
 
                   <div>
-                    <label htmlFor="referralCode" className="mb-2 block pl-1 text-[10px] font-bold uppercase tracking-[0.2em] text-[#0B2419]">Referral code <span className="font-normal normal-case tracking-normal text-[#0B2419]/50">Optional</span></label>
+                    <label htmlFor="referralCode" className="mb-1.5 block pl-1 text-xs font-semibold text-[#0B2419]">Referral code <span className="font-normal text-[#0B2419]/50">(optional)</span></label>
                     {referralToken ? (
                       <>
-                        <input id="referralCode" value="Referral link applied" readOnly aria-readonly="true" className="w-full rounded-2xl border border-emerald-700/20 bg-emerald-50 px-4 py-4 text-sm text-emerald-900"/>
-                        <p className="mt-1 pl-1 text-xs text-emerald-800">{referralPreview.loading ? 'Checking referral link…' : referralPreview.valid ? `Referred by ${referralPreview.referrerName}. We’ll attach this referral to your new account; rewards are credited after approval, usually within an hour.` : 'This referral link is invalid or expired. Ask your friend for a current link.'}</p>
+                        <input id="referralCode" value="Referral link applied" readOnly aria-readonly="true" className="w-full rounded-xl border border-emerald-700/20 bg-emerald-50 px-3 py-3 text-sm text-emerald-900"/>
+                        <p className="mt-1 pl-1 text-xs text-emerald-800">{referralPreview.loading ? 'Checking referral link…' : referralPreview.valid ? `Referred by ${referralPreview.referrerName}. Reward is issued after approval, usually within an hour.` : 'This referral link is invalid or expired. Ask your friend for a current link.'}</p>
                       </>
                     ) : (
                       <>
-                        <input id="referralCode" name="referralCode" type="text" autoComplete="off" maxLength={32} value={formData.referralCode} onChange={handleInputChange} placeholder="Enter a friend’s code" disabled={loading} className="w-full rounded-2xl border border-[#0B2419]/10 bg-[#F3F9F1] px-4 py-4 text-sm text-[#0B2419] outline-none focus:border-[#D4AF37] focus:bg-white disabled:opacity-50"/>
-                        {formData.referralCode.trim() && <p aria-live="polite" className={`mt-1 pl-1 text-xs ${referralPreview.valid ? 'text-emerald-800' : 'text-[#d4af37]'}`}>{referralPreview.loading ? 'Checking referral code…' : referralPreview.valid ? `Referred by ${referralPreview.referrerName}. We’ll attach this referral to your new account; rewards are credited after approval, usually within an hour.` : 'Referral code not found. Check the code before continuing.'}</p>}
+                        <input id="referralCode" name="referralCode" type="text" autoComplete="off" maxLength={32} value={formData.referralCode} onChange={handleInputChange} placeholder="Enter a friend’s code" disabled={loading} className="w-full rounded-xl border border-[#0B2419]/10 bg-[#F3F9F1] px-3 py-3 text-sm text-[#0B2419] outline-none focus:border-[#D4AF37] focus:bg-white disabled:opacity-50"/>
+                        {formData.referralCode.trim() && <p aria-live="polite" className={`mt-1 pl-1 text-xs ${referralPreview.valid ? 'text-emerald-800' : 'text-[#d4af37]'}`}>{referralPreview.loading ? 'Checking referral code…' : referralPreview.valid ? `Referred by ${referralPreview.referrerName}. Reward is issued after approval, usually within an hour.` : 'Referral code not found. Check the code before continuing.'}</p>}
                       </>
                     )}
                   </div>
                   
-                  <div className="space-y-3">
-                    <InputField icon={<Lock size={18}/>} type="password" name="password" autoComplete="new-password" value={formData.password} onChange={handleInputChange} placeholder="Password" disabled={loading} />
-                    <div className="px-1" aria-live="polite">
-                      <div className="mb-2 flex items-center justify-between gap-2">
-                        <p className="text-xs font-semibold text-[#0B2419]">Password requirements</p>
-                        <p className={`text-xs font-semibold ${passwordIsValid ? 'text-emerald-700' : 'text-[#d4af37]'}`}>
-                          {passwordStrength}/{passwordChecks.length} complete
-                        </p>
+                  {registrationMethod === 'email' && (
+                    <div className="space-y-2">
+                      <InputField icon={<Lock size={18}/>} type="password" name="password" autoComplete="new-password" value={formData.password} onChange={handleInputChange} placeholder="Password" disabled={loading} />
+                      <div className="px-1" aria-live="polite">
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-xs font-semibold text-[#0B2419]">Password: 8–128 characters</p>
+                          <p className={`text-xs font-semibold ${passwordIsValid ? 'text-emerald-700' : 'text-[#d4af37]'}`}>
+                            {passwordStrength}/{passwordChecks.length} complete
+                          </p>
+                        </div>
+                        <p className="mt-1 text-[11px] text-[#0B2419]/55">Use a unique password you don’t use on other sites.</p>
                       </div>
-                      <ul className="grid gap-1.5 text-xs sm:grid-cols-2">
-                        {passwordChecks.map(check => (
-                          <li key={check.label} className={`flex items-center gap-2 ${check.valid ? 'text-emerald-700' : 'text-[#0B2419]/55'}`}>
-                            <CheckCircle2 size={14} className={check.valid ? 'text-emerald-600' : 'text-[#0B2419]/25'} aria-hidden="true" />
-                            {check.label}
-                          </li>
-                        ))}
-                      </ul>
-                      <p className="mt-2 text-[11px] leading-relaxed text-[#0B2419]/55">
-                        Example format: <span className="font-semibold">RiverLeaf!2026</span> — don’t reuse this example. Use a unique password.
-                      </p>
                     </div>
-                  </div>
+                  )}
 
                   <div className="pt-2">
-                    <label className="block text-[10px] font-bold text-[#0B2419] uppercase tracking-[0.2em] mb-1 pl-1">Account recovery security question <span className="normal-case tracking-normal text-red-700">Required</span></label>
-                    <p className="text-[10px] text-[#d4af37] italic mb-3 pl-1">What is your mother’s maiden name? Keep your answer somewhere safe; it may be used to verify account recovery.</p>
+                    <label className="mb-1 block pl-1 text-xs font-semibold text-[#0B2419]">Account recovery answer <span className="font-normal text-red-700">required</span></label>
+                    <p className="mb-2 pl-1 text-xs text-[#0B2419]/60">What is your mother’s maiden name? Keep the answer safe.</p>
                     <InputField icon={<Key size={18}/>} type="text" name="securityAnswer" autoComplete="off" value={formData.securityAnswer} onChange={handleInputChange} placeholder="Your answer" disabled={loading} required />
                   </div>
 
-                  <label className="flex items-start gap-3 rounded-xl border border-[#0B2419]/10 bg-[#F3F9F1]/70 p-4 text-xs leading-relaxed text-[#0B2419]/75">
+                  <label className="flex items-start gap-3 rounded-xl border border-[#0B2419]/10 bg-[#F3F9F1]/70 p-3 text-xs leading-relaxed text-[#0B2419]/75">
                     <input
                       type="checkbox"
                       checked={formData.marketingEmailOptIn}
@@ -303,10 +309,10 @@ export default function Register() {
                       disabled={loading}
                       className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#0B2419]"
                     />
-                    <span>Send me emails and product updates. This is optional; I can change this preference in my profile at any time. Order and account emails are not affected.</span>
+                    <span>Send me promotional emails and product updates. Optional; account and order emails are unaffected.</span>
                   </label>
 
-                  <label className="flex items-start gap-3 rounded-xl border border-emerald-800/20 bg-emerald-50/70 p-4 text-xs leading-relaxed text-[#0B2419]/75">
+                  <label className="flex items-start gap-3 rounded-xl border border-emerald-800/20 bg-emerald-50/70 p-3 text-xs leading-relaxed text-[#0B2419]/75">
                     <input
                       type="checkbox"
                       checked={formData.adPersonalizationOptIn}
@@ -314,57 +320,55 @@ export default function Register() {
                       disabled={loading}
                       className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#0B2419]"
                     />
-                    <span>
-                      <strong className="block text-[#0B2419]">Optional: personalize Bhumivera product recommendations.</strong>
-                      If I opt in, Bhumivera may use my purchases, saved products, approved reviews, and product views recorded while I am opted in to tailor product recommendations on Bhumivera services. This is separate from promotional email consent and is not required to register. I can withdraw it later in Profile; stored product-view signals will then be deleted. It does not authorize selling this data or sharing it with third-party advertising networks. We do not collect Wi-Fi names, precise location, device fingerprints, or raw IP for recommendations; see the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline">Privacy Notice</Link>.
-                    </span>
+                    <span><strong className="block text-[#0B2419]">Optional: personalized product recommendations</strong>Use your product activity to tailor recommendations. Change this anytime in Profile. See the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline">Privacy Notice</Link>.</span>
                   </label>
 
-                  <label className="flex items-start gap-3 rounded-xl border border-[#0B2419]/10 bg-white p-4 text-xs leading-relaxed text-[#0B2419]/75">
+                  <label className="flex items-start gap-3 rounded-xl border border-[#0B2419]/10 bg-white p-3 text-xs leading-relaxed text-[#0B2419]/75">
                     <input type="checkbox" required checked={termsAccepted} onChange={event => setTermsAccepted(event.target.checked)} disabled={loading} className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#0B2419]"/>
-                    <span>I agree to the <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold underline">Conditions of Use &amp; Sale</Link> and acknowledge the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline">Privacy Notice</Link>. This is required to create an account.</span>
+                    <span>I agree to the <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold underline">Conditions of Use &amp; Sale</Link> and acknowledge the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline">Privacy Notice</Link>. Required.</span>
                   </label>
 
-                  <div className="space-y-2 rounded-xl border border-[#D4AF37]/30 bg-[#FDFBF7] p-4">
-                    <p className="text-xs font-semibold text-[#0B2419]">Create your account with Google</p>
-                    <p className="text-xs leading-relaxed text-[#0B2419]/65">This creates a new Bhumivera account using the verified Google email. It will not sign in to an existing account; if your email is already registered, please use the Sign in page. Your security answer and referral code will be saved with the new account.</p>
-                    {googleSignInError && <AlertBox type="error" msg={googleSignInError} />}
-                    <GoogleSignInButton
-                      onSignIn={handleGoogleRegistration}
-                      onError={error => setGoogleSignInError(error.message || 'Google account creation could not be started.')}
-                      disabled={loading || !termsAccepted || !formData.securityAnswer.trim() || referralPreview.loading}
-                      label="Create account with Google"
-                      loadingLabel="Creating account…"
-                    />
-                  </div>
-
-                  <div className="flex justify-center pt-2">
-                    {TURNSTILE_SITE_KEY ? (
-                      <Turnstile
-                        ref={turnstileRef}
-                        siteKey={TURNSTILE_SITE_KEY}
-                        onSuccess={token => {
-                          setTurnstileToken(token);
-                          setError('');
-                        }}
-                        onExpire={() => {
-                          setTurnstileToken('');
-                          setError('Security verification expired. Please complete the challenge again.');
-                        }}
-                        onError={() => {
-                          setTurnstileToken('');
-                          setError('Security verification could not load. Refresh the page and try again.');
-                        }}
-                        options={{ theme: 'light' }}
+                  {registrationMethod === 'google' ? (
+                    <div className="space-y-2 rounded-xl border border-[#D4AF37]/30 bg-[#FDFBF7] p-3">
+                      {googleSignInError && <AlertBox type="error" msg={googleSignInError} />}
+                      <GoogleSignInButton
+                        onSignIn={handleGoogleRegistration}
+                        onError={error => setGoogleSignInError(error.message || 'Google account creation could not be started.')}
+                        disabled={loading || !termsAccepted || !formData.securityAnswer.trim() || referralPreview.loading}
+                        label="Create account with Google"
+                        loadingLabel="Creating account…"
                       />
-                    ) : (
-                      <p role="alert" className="text-sm text-red-600">
-                        Security verification is not configured. Please contact support.
-                      </p>
-                    )}
-                  </div>
-                  
-                  <SubmitButton loading={loading} text="Initialize Registry" disabled={!turnstileToken} />
+                    </div>
+                  ) : (
+                    <>
+                      <div className="flex justify-center pt-1">
+                        {TURNSTILE_SITE_KEY ? (
+                          <Turnstile
+                            ref={turnstileRef}
+                            siteKey={TURNSTILE_SITE_KEY}
+                            onSuccess={token => {
+                              setTurnstileToken(token);
+                              setError('');
+                            }}
+                            onExpire={() => {
+                              setTurnstileToken('');
+                              setError('Security verification expired. Please complete the challenge again.');
+                            }}
+                            onError={() => {
+                              setTurnstileToken('');
+                              setError('Security verification could not load. Refresh the page and try again.');
+                            }}
+                            options={{ theme: 'light' }}
+                          />
+                        ) : (
+                          <p role="alert" className="text-sm text-red-600">
+                            Security verification is not configured. Please contact support.
+                          </p>
+                        )}
+                      </div>
+                      <SubmitButton loading={loading} text="Create account" disabled={!turnstileToken} />
+                    </>
+                  )}
                 </form>
               </MotionDiv>
             )}
@@ -427,7 +431,7 @@ const InputField = ({ icon, ...props }) => (
     <input 
       required 
       {...props} 
-      className="w-full bg-[#F3F9F1] border border-transparent text-[#0B2419] text-sm rounded-2xl pl-14 pr-5 py-4 focus:outline-none focus:border-[#D4AF37] focus:bg-white focus:ring-4 focus:ring-[#D4AF37]/5 transition-all disabled:opacity-50" 
+      className="w-full bg-[#F3F9F1] border border-transparent text-[#0B2419] text-sm rounded-xl pl-12 pr-4 py-3 focus:outline-none focus:border-[#D4AF37] focus:bg-white focus:ring-4 focus:ring-[#D4AF37]/5 transition-all disabled:opacity-50" 
     />
   </div>
 );

@@ -81,4 +81,37 @@ describe('AffiliateManagement referral engine', () => {
     });
     expect(screen.getByLabelText('Referrer spendable wallet reward (₹)').value).toBe('250');
   });
+
+  it('previews both rewards and the configured order-use limits from saved settings', async () => {
+    affiliate.getAdminConfig.mockResolvedValueOnce({
+      data: {
+        config: {
+          enabled: 1,
+          reward_mode: 'wallet_coupon',
+          wallet_reward_amount: 400,
+          referred_reward_amount: 150,
+          referral_redemption_tiers: [
+            { min_order_amount: 900, referral_amount: 200 },
+            { min_order_amount: 500, referral_amount: 75 },
+          ],
+        },
+      },
+    });
+
+    render(<ToastProvider><AffiliateManagement /></ToastProvider>);
+
+    expect(await screen.findByText(/Inviter: ₹400 restricted referral balance\. New customer: ₹150 restricted referral balance\./)).toBeTruthy();
+    expect(screen.getByText('Orders from ₹500: up to ₹75 referral balance')).toBeTruthy();
+    expect(screen.getByText('Orders from ₹900: up to ₹200 referral balance')).toBeTruthy();
+  });
+
+  it('does not present fallback settings as loaded when the admin settings request fails', async () => {
+    affiliate.getAdminConfig.mockRejectedValueOnce(new Error('settings unavailable'));
+
+    render(<ToastProvider><AffiliateManagement /></ToastProvider>);
+
+    expect(await screen.findByText(/Current settings could not be loaded: settings unavailable/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Save referral rewards' }).disabled).toBe(true);
+    expect(screen.getByRole('button', { name: 'Retry settings' })).toBeTruthy();
+  });
 });

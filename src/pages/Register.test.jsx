@@ -60,4 +60,24 @@ describe('Google account registration', () => {
       adPersonalizationOptIn: false,
     });
   });
+
+  it('uses the verified Google email without asking for another email, and reveals email fields only for email registration', () => {
+    useAuth.mockReturnValue({ register: vi.fn(), verifyEmail: vi.fn(), googleLogin: vi.fn() });
+    affiliate.previewReferral.mockResolvedValue({ data: { valid: false } });
+
+    render(
+      <MemoryRouter initialEntries={['/register']}>
+        <Routes>
+          <Route path="/register" element={<Register />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    expect(screen.queryByPlaceholderText('Email address')).toBeNull();
+    expect(screen.queryByPlaceholderText('Full name')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Email' }));
+    expect(screen.getByPlaceholderText('Email address')).toBeTruthy();
+    expect(screen.getByPlaceholderText('Full name')).toBeTruthy();
+    expect(screen.queryByRole('button', { name: 'Create account with Google' })).toBeNull();
+  });
 });
