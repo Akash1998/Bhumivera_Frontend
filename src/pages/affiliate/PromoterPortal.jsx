@@ -9,6 +9,9 @@ const INITIAL_FORM = {
   socialHandle: '',
   profileUrl: '',
   followerCount: '',
+  followerTier: '',
+  contentNiche: '',
+  collaborationType: '',
 };
 
 const SOCIAL_PLATFORMS = [
@@ -16,6 +19,15 @@ const SOCIAL_PLATFORMS = [
   { name: 'Instagram', Icon: FaInstagram, color: '#E1306C' },
   { name: 'YouTube', Icon: FaYoutube, color: '#FF0000' },
 ];
+
+const AUDIENCE_TIERS = [
+  ['under_1k', 'Under 1,000'],
+  ['1k_10k', '1,000–10,000'],
+  ['10k_50k', '10,001–50,000'],
+  ['50k_plus', '50,001+'],
+];
+
+const CONTENT_NICHES = ['Skincare', 'Haircare', 'Lifestyle', 'Wellness', 'Unboxing'];
 
 const formatMoney = value => `₹${(Number(value) || 0).toFixed(2)}`;
 
@@ -46,6 +58,9 @@ export default function PromoterPortal() {
           socialHandle: data.partner.social_handle || '',
           profileUrl: data.partner.profile_url || '',
           followerCount: String(data.partner.follower_count ?? ''),
+          followerTier: data.partner.follower_tier || '',
+          contentNiche: data.partner.content_niche || '',
+          collaborationType: data.partner.collaboration_type || '',
         });
       }
     } catch (loadError) {
@@ -90,7 +105,7 @@ export default function PromoterPortal() {
     try {
       await affiliateApi.applyForPartner({
         ...form,
-        followerCount: Number(form.followerCount),
+        followerCount: Number(form.followerCount || 0),
       });
       setNotice('Application received. Your reserved promoter code remains inactive while the team reviews your profile.');
       await loadDashboard();
@@ -138,7 +153,6 @@ export default function PromoterPortal() {
                     {React.createElement(Icon, { size: 15, style: { color } })} {name}
                   </span>
                 ))}
-                <span className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/20 bg-[#07180F]/50 px-3 py-2 text-xs font-semibold text-[#FCE096]"><IndianRupee size={14}/> Transparent rupee earnings</span>
               </div>
             </div>
             <button type="button" onClick={loadDashboard} disabled={loading} className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-black/10 px-3 py-2.5 text-xs font-semibold text-white transition hover:border-[#D4AF37]/50 disabled:opacity-50"><RefreshCw size={14} className={loading ? 'animate-spin' : ''}/>Refresh</button>
@@ -205,21 +219,51 @@ export default function PromoterPortal() {
                   />
                   <span className="block text-xs font-normal text-[#9BB0A5]">Enter it as shown on your profile, including @ if used.</span>
                 </label>
-                <label htmlFor="promoter-followers" className="space-y-2 text-sm font-semibold text-[#E7EEE8]">
-                  Approximate followers
-                  <input
-                    id="promoter-followers"
+                <label htmlFor="promoter-follower-tier" className="space-y-2 text-sm font-semibold text-[#E7EEE8]">
+                  Follower / subscriber tier
+                  <select
+                    id="promoter-follower-tier"
                     required
-                    type="number"
-                    min="0"
-                    max="100000000"
-                    step="1"
-                    value={form.followerCount}
-                    onChange={event => setForm(current => ({ ...current, followerCount: event.target.value }))}
-                    placeholder="For example, 2500"
+                    value={form.followerTier}
+                    onChange={event => setForm(current => ({ ...current, followerTier: event.target.value }))}
                     className="w-full rounded-xl border border-white/10 bg-[#07180F]/65 px-4 py-3 text-sm text-white outline-none transition placeholder:text-[#82998D] focus:border-[#D4AF37]/60 focus:ring-4 focus:ring-[#D4AF37]/10"
-                  />
-                  <span className="block text-xs font-normal text-[#9BB0A5]">Enter the number shown on your profile.</span>
+                  >
+                    <option value="">Choose a range</option>
+                    {AUDIENCE_TIERS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                  </select>
+                  <span className="block text-xs font-normal text-[#9BB0A5]">Self-reported. There is no minimum audience size.</span>
+                </label>
+              </div>
+
+              <div className="grid gap-4 sm:grid-cols-2">
+                <label htmlFor="promoter-content-niche" className="space-y-2 text-sm font-semibold text-[#E7EEE8]">
+                  Primary content niche
+                  <select
+                    id="promoter-content-niche"
+                    required
+                    value={form.contentNiche}
+                    onChange={event => setForm(current => ({ ...current, contentNiche: event.target.value }))}
+                    className="w-full rounded-xl border border-white/10 bg-[#07180F]/65 px-4 py-3 text-sm text-white outline-none transition focus:border-[#D4AF37]/60 focus:ring-4 focus:ring-[#D4AF37]/10"
+                  >
+                    <option value="">Choose your niche</option>
+                    {CONTENT_NICHES.map(niche => <option key={niche} value={niche}>{niche}</option>)}
+                  </select>
+                </label>
+                <label htmlFor="promoter-collaboration-type" className="space-y-2 text-sm font-semibold text-[#E7EEE8]">
+                  Preferred collaboration
+                  <select
+                    id="promoter-collaboration-type"
+                    required
+                    value={form.collaborationType}
+                    onChange={event => setForm(current => ({ ...current, collaborationType: event.target.value }))}
+                    className="w-full rounded-xl border border-white/10 bg-[#07180F]/65 px-4 py-3 text-sm text-white outline-none transition focus:border-[#D4AF37]/60 focus:ring-4 focus:ring-[#D4AF37]/10"
+                  >
+                    <option value="">Choose your preference</option>
+                    <option value="product_gifting">Product gifting / barter</option>
+                    <option value="affiliate_commission">Affiliate commission</option>
+                    <option value="both">Both</option>
+                  </select>
+                  <span className="block text-xs font-normal text-[#9BB0A5]">Gifting is selective. No cash-paid UGC fees are offered.</span>
                 </label>
               </div>
 
@@ -304,7 +348,7 @@ export default function PromoterPortal() {
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${partner.status === 'approved' ? 'bg-emerald-900/50 text-emerald-200' : 'bg-amber-900/40 text-amber-100'}`}>{partner.status}</span>
-                  <span className="text-xs text-[#9BB0A5]">{partner.social_platform} · {Number(partner.follower_count).toLocaleString()} followers</span>
+                  <span className="text-xs text-[#9BB0A5]">{partner.social_platform} · {AUDIENCE_TIERS.find(([value]) => value === partner.follower_tier)?.[1] || `${Number(partner.follower_count).toLocaleString()} followers`}</span>
                 </div>
                 <h2 className="mt-3 font-serif text-2xl font-bold text-white">Share your offer</h2>
                 <p className="mt-1 text-sm leading-6 text-[#9BB0A5]">Your audience gets <strong className="text-[#FCE096]">{Number(partner.discount_percent)}% off</strong>. Your profit share is <strong className="text-[#FCE096]">{Number(partner.commission_share_percent)}%</strong> of eligible contribution profit, subject to the retained-margin floor.</p>

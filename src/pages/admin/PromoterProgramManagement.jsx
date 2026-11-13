@@ -26,6 +26,17 @@ const MONEY_SETTINGS = [
 ];
 
 const money = value => `₹${(Number(value) || 0).toFixed(2)}`;
+const AUDIENCE_TIERS = {
+  under_1k: 'Under 1,000',
+  '1k_10k': '1,000–10,000',
+  '10k_50k': '10,001–50,000',
+  '50k_plus': '50,001+',
+};
+const COLLABORATION_TYPES = {
+  product_gifting: 'Product gifting / barter',
+  affiliate_commission: 'Affiliate commission',
+  both: 'Product gifting + affiliate commission',
+};
 
 export default function PromoterProgramManagement() {
   const [config, setConfig] = useState(INITIAL_CONFIG);
@@ -296,7 +307,12 @@ export default function PromoterProgramManagement() {
                 <div className="flex flex-wrap items-start justify-between gap-3">
                   <div>
                     <h3 className="font-semibold text-white">{partner.user_name} <span className="font-normal text-[#9BB0A5]">· {partner.social_platform} / {partner.social_handle}</span></h3>
-                    <p className="mt-1 text-xs text-[#9BB0A5]">{partner.user_email} · {Number(partner.follower_count).toLocaleString()} followers{partner.profile_url ? <> · <a href={partner.profile_url} target="_blank" rel="noreferrer" className="text-[#FCE096] underline">profile</a></> : ''}</p>
+                    <p className="mt-1 text-xs text-[#9BB0A5]">
+                      {partner.user_email} · {AUDIENCE_TIERS[partner.follower_tier] || `${Number(partner.follower_count).toLocaleString()} followers`}
+                      {partner.content_niche ? ` · ${partner.content_niche}` : ''}
+                      {partner.collaboration_type ? ` · ${COLLABORATION_TYPES[partner.collaboration_type] || partner.collaboration_type}` : ''}
+                      {partner.profile_url ? <> · <a href={partner.profile_url} target="_blank" rel="noreferrer" className="text-[#FCE096] underline">profile</a></> : ''}
+                    </p>
                     <p className="mt-1 text-xs text-[#9BB0A5]">Attributed orders: {Number(partner.pending_orders || 0)} pending · Payable {money(partner.payable_amount)} · Paid {money(partner.paid_amount)}</p>
                   </div>
                   <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${partner.status === 'approved' ? 'bg-emerald-900/50 text-emerald-200' : partner.status === 'pending' ? 'bg-amber-900/40 text-amber-100' : 'bg-white/10 text-[#C9C4B8]'}`}>{partner.status}</span>

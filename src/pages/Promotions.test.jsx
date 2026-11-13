@@ -41,7 +41,7 @@ describe('promoter registration page', () => {
       </HelmetProvider>,
     );
 
-    fireEvent.change(screen.getByLabelText(/Email address for your Bhumivera account/), {
+    fireEvent.change(screen.getByLabelText(/Email for your Bhumivera account/), {
       target: { value: 'creator@example.com' },
     });
     fireEvent.click(screen.getByRole('button', { name: /Create and verify account/i }));
@@ -125,8 +125,14 @@ describe('promoter registration page', () => {
     });
     expect(screen.getByRole('radio', { name: 'Instagram' }).checked).toBe(true);
     expect(screen.getByLabelText(/Profile name or handle/).value).toBe('@creator');
-    fireEvent.change(screen.getByLabelText(/Approximate followers/), {
-      target: { value: '5000' },
+    fireEvent.change(screen.getByLabelText(/Follower \/ subscriber tier/), {
+      target: { value: '1k_10k' },
+    });
+    fireEvent.change(screen.getByLabelText(/Primary content niche/), {
+      target: { value: 'Skincare' },
+    });
+    fireEvent.change(screen.getByLabelText(/Preferred collaboration/), {
+      target: { value: 'both' },
     });
     fireEvent.click(screen.getByRole('button', { name: /Send application for review/i }));
 
@@ -140,7 +146,10 @@ describe('promoter registration page', () => {
       socialPlatform: 'Instagram',
       socialHandle: '@creator',
       profileUrl: 'https://www.instagram.com/creator/',
-      followerCount: 5000,
+      followerCount: 0,
+      followerTier: '1k_10k',
+      contentNiche: 'Skincare',
+      collaborationType: 'both',
     });
     fireEvent.click(screen.getByRole('button', { name: /Explore Bhumivera’s impact/i }));
     expect(await screen.findByText('Impact page reached')).toBeTruthy();

@@ -169,6 +169,12 @@ export default function Footer() {
                   <span className="text-[10px] text-[#D4AF37] font-bold font-mono">Join Free</span>
                 </Link>
               </li>
+              <li>
+                <Link to="/promotions" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
+                  <span>Creator &amp; Influencer Program</span>
+                  <span className="text-[10px] text-[#D4AF37] font-bold font-mono">Apply</span>
+                </Link>
+              </li>
             </ul>
           </div>
 
