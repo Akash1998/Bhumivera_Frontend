@@ -24,7 +24,6 @@ const Login = () => {
   const [lockoutSeconds, setLockoutSeconds] = useState(0);
   const [lockoutExpired, setLockoutExpired] = useState(false);
   const [googleSignInError, setGoogleSignInError] = useState('');
-  const [googleTermsAccepted, setGoogleTermsAccepted] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const passkeySupported = isPasskeySupported();
@@ -125,7 +124,7 @@ const Login = () => {
   const handleGoogleLogin = async idToken => {
     setGoogleSignInError('');
     try {
-      const response = await googleLogin(idToken, googleTermsAccepted);
+      const response = await googleLogin(idToken, { mode: 'login' });
       if (response.data?.requires2FA) {
         setEmail(response.data.email || '');
         setMode('PASSWORD');
@@ -248,17 +247,11 @@ const Login = () => {
                   setGoogleSignInError(message);
                   toast.error(message);
                 }}
-                disabled={!googleTermsAccepted}
+                label="Sign in with Google"
               />
-              <label className="flex items-start gap-2 text-[11px] leading-relaxed text-[#0B2419]/70">
-                <input
-                  type="checkbox"
-                  checked={googleTermsAccepted}
-                  onChange={event => setGoogleTermsAccepted(event.target.checked)}
-                  className="mt-0.5 accent-[#0B2419]"
-                />
-                <span>I agree to the <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold underline">Conditions of Use &amp; Sale</Link> and acknowledge the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline">Privacy Notice</Link>. New customers can create an account with Google.</span>
-              </label>
+              <p className="text-[11px] leading-relaxed text-[#0B2419]/70">
+                Use this for an existing Bhumivera account. New here? <Link to="/register" className="font-semibold underline">Create an account</Link> first.
+              </p>
               {googleSignInError && <p role="alert" className="text-xs text-red-700">{googleSignInError}</p>}
               <div className="relative flex items-center justify-center">
                 <div className="w-full border-t border-[#8B9D83]/20" />

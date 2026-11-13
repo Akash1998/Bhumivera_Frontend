@@ -33,7 +33,7 @@ describe('Login route for an existing session', () => {
       vi.clearAllMocks();
     });
 
-    it('requires the Google terms acknowledgement and completes customer login', async () => {
+    it('signs in an existing customer with Google without using account-creation consent', async () => {
       const session = {
         token: 'google-session-token',
         user: { id: 12, email: 'customer@example.com', role: 'customer' },
@@ -50,13 +50,12 @@ describe('Login route for an existing session', () => {
         </MemoryRouter>,
       );
 
-      const googleButton = screen.getByRole('button', { name: 'Continue with Google' });
-      expect(googleButton.disabled).toBe(true);
-      fireEvent.click(screen.getByRole('checkbox'));
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Sign in with Google' }).disabled).toBe(false));
+      const googleButton = screen.getByRole('button', { name: 'Sign in with Google' });
       fireEvent.click(googleButton);
 
       await waitFor(() => expect(screen.getByText('Signed-in profile')).toBeTruthy());
-      expect(googleLogin).toHaveBeenCalledWith('google-id-token', true);
+      expect(googleLogin).toHaveBeenCalledWith('google-id-token', { mode: 'login' });
     });
 
     it('routes Google users with 2FA enabled to the authenticator challenge', async () => {
@@ -74,8 +73,8 @@ describe('Login route for an existing session', () => {
         </MemoryRouter>,
       );
 
-      fireEvent.click(screen.getByRole('checkbox'));
-      fireEvent.click(screen.getByRole('button', { name: 'Continue with Google' }));
+      await waitFor(() => expect(screen.getByRole('button', { name: 'Sign in with Google' }).disabled).toBe(false));
+      fireEvent.click(screen.getByRole('button', { name: 'Sign in with Google' }));
 
       await waitFor(() => expect(screen.getByRole('heading', { name: '2-Factor Authentication' })).toBeTruthy());
       expect(screen.getByPlaceholderText('000000')).toBeTruthy();

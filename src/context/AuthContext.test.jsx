@@ -37,7 +37,7 @@ function AuthState() {
         token: createToken('customer'),
         user: { id: 28, email: 'customer@example.com', role: 'customer' },
       })}>Complete customer login</button>
-      <button type="button" onClick={() => googleLogin('google-id-token', true)}>Google sign-in</button>
+      <button type="button" onClick={() => googleLogin('google-id-token', { mode: 'login' })}>Google sign-in</button>
       <button type="button" onClick={() => logout('customer')}>Logout customer</button>
     </>
   );
@@ -128,7 +128,7 @@ describe('AuthProvider session restoration', () => {
 
     await act(async () => screen.getByRole('button', { name: 'Google sign-in' }).click());
 
-    expect(auth.googleLogin).toHaveBeenCalledWith({ idToken: 'google-id-token', termsAccepted: true });
+    expect(auth.googleLogin).toHaveBeenCalledWith({ idToken: 'google-id-token', mode: 'login' });
     expect(readState().user).toMatchObject({ id: 28, role: 'customer' });
     expect(localStorage.getItem('token')).toBeTruthy();
   });

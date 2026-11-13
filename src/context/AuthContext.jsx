@@ -194,8 +194,8 @@ export const AuthProvider = ({ children }) => {
     completeLogin(r.data);
     return r;
   };
-  const googleLogin = async (idToken, termsAccepted = false) => {
-    const r = await authApi.googleLogin({ idToken, termsAccepted });
+  const googleLogin = async (idToken, options = {}) => {
+    const r = await authApi.googleLogin({ idToken, ...options });
     if (r.status === 202 || r.data?.requires2FA) return r;
     completeLogin(r.data);
     return r;

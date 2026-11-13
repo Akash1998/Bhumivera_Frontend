@@ -42,6 +42,7 @@ data class LoginRequest(val email: String, val password: String)
 data class GoogleLoginRequest(
     val idToken: String,
     val termsAccepted: Boolean,
+    val mode: String = "login",
 )
 
 data class TwoFactorRequest(val email: String, val otp: String)

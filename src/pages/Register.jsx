@@ -8,7 +8,7 @@ import {
 import { Turnstile } from '@marsidev/react-turnstile';
 import { useAuth } from '../context/AuthContext';
 import { affiliate } from '../services/api';
-import { analyzePasswordForAiGuide, triggerAiCopilotAssist } from '../utils/aiCopilotBus';
+import { triggerAiCopilotAssist } from '../utils/aiCopilotBus';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 
 const MotionDiv = motion.div;
@@ -190,18 +190,28 @@ export default function Register() {
     setGoogleSignInError('');
     setLoading(true);
     try {
-      const response = await googleLogin(idToken, termsAccepted);
-      if (response.data?.requires2FA) {
-        navigate('/login', {
-          replace: true,
-          state: { googleTwoFactorEmail: response.data.email },
-        });
-        return;
-      }
+      await googleLogin(idToken, {
+        mode: 'register',
+        termsAccepted,
+        securityAnswer: formData.securityAnswer.trim(),
+        referralToken: referralToken || undefined,
+        referralCode: referralToken ? undefined : formData.referralCode.trim() || undefined,
+        marketingEmailOptIn: formData.marketingEmailOptIn,
+        adPersonalizationOptIn: formData.adPersonalizationOptIn,
+      });
       navigate(returnTo, { replace: true });
     } catch (error) {
-      const message = error.response?.data?.message || error.normalized?.message || error.message || 'Google sign-in failed.';
-      setGoogleSignInError(message);
+      if (error.response?.data?.code === 'ACCOUNT_ALREADY_REGISTERED' ||
+          error.response?.data?.code === 'GOOGLE_ACCOUNT_ALREADY_REGISTERED') {
+        setGoogleSignInError(
+          <span>
+            This Google email already has an account. <Link to="/login" className="font-semibold underline">Sign in instead</Link>.
+          </span>
+        );
+      } else {
+        const message = error.response?.data?.message || error.normalized?.message || error.message || 'Google account creation failed.';
+        setGoogleSignInError(message);
+      }
     } finally {
       setLoading(false);
     }
@@ -236,23 +246,6 @@ export default function Register() {
                 </div>
 
                 {error && <AlertBox type="error" msg={error} />}
-                {googleSignInError && <AlertBox type="error" msg={googleSignInError} />}
-                <label className="mb-4 flex items-start gap-3 rounded-xl border border-[#0B2419]/10 bg-white p-4 text-xs leading-relaxed text-[#0B2419]/75">
-                  <input type="checkbox" required checked={termsAccepted} onChange={event => setTermsAccepted(event.target.checked)} disabled={loading} className="mt-0.5 accent-[#0B2419]"/>
-                  <span>I agree to the <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold underline">Conditions of Use &amp; Sale</Link> and acknowledge the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline">Privacy Notice</Link>.</span>
-                </label>
-                <div className="mb-5">
-                  <GoogleSignInButton
-                    onSignIn={handleGoogleRegistration}
-                    onError={error => setGoogleSignInError(error.message || 'Google sign-in could not be started.')}
-                    disabled={loading || !termsAccepted}
-                  />
-                  <div className="relative mt-5 flex items-center justify-center">
-                    <div className="w-full border-t border-[#8B9D83]/20" />
-                    <span className="absolute bg-white px-3 text-[11px] font-bold uppercase tracking-wider text-[#8B9D83]">or create with email</span>
-                  </div>
-                </div>
-
                 <form onSubmit={handleRegisterInit} className="space-y-5 relative z-10">
                   <InputField icon={<User size={18}/>} type="text" name="name" autoComplete="name" value={formData.name} onChange={handleInputChange} placeholder="Full Name" disabled={loading} />
                   
@@ -263,12 +256,12 @@ export default function Register() {
                     {referralToken ? (
                       <>
                         <input id="referralCode" value="Referral link applied" readOnly aria-readonly="true" className="w-full rounded-2xl border border-emerald-700/20 bg-emerald-50 px-4 py-4 text-sm text-emerald-900"/>
-                        <p className="mt-1 pl-1 text-xs text-emerald-800">{referralPreview.loading ? 'Checking referral link…' : referralPreview.valid ? `Referred by ${referralPreview.referrerName}. Both accounts may earn the configured referral balance after approval.` : 'This referral link is invalid or expired. Ask your friend for a current link.'}</p>
+                        <p className="mt-1 pl-1 text-xs text-emerald-800">{referralPreview.loading ? 'Checking referral link…' : referralPreview.valid ? `Referred by ${referralPreview.referrerName}. We’ll attach this referral to your new account; rewards are credited after approval, usually within an hour.` : 'This referral link is invalid or expired. Ask your friend for a current link.'}</p>
                       </>
                     ) : (
                       <>
                         <input id="referralCode" name="referralCode" type="text" autoComplete="off" maxLength={32} value={formData.referralCode} onChange={handleInputChange} placeholder="Enter a friend’s code" disabled={loading} className="w-full rounded-2xl border border-[#0B2419]/10 bg-[#F3F9F1] px-4 py-4 text-sm text-[#0B2419] outline-none focus:border-[#D4AF37] focus:bg-white disabled:opacity-50"/>
-                        {formData.referralCode.trim() && <p aria-live="polite" className={`mt-1 pl-1 text-xs ${referralPreview.valid ? 'text-emerald-800' : 'text-[#d4af37]'}`}>{referralPreview.loading ? 'Checking referral code…' : referralPreview.valid ? `Referred by ${referralPreview.referrerName}. Both accounts may earn the configured referral balance after approval.` : 'Referral code not found. Check the code before continuing.'}</p>}
+                        {formData.referralCode.trim() && <p aria-live="polite" className={`mt-1 pl-1 text-xs ${referralPreview.valid ? 'text-emerald-800' : 'text-[#d4af37]'}`}>{referralPreview.loading ? 'Checking referral code…' : referralPreview.valid ? `Referred by ${referralPreview.referrerName}. We’ll attach this referral to your new account; rewards are credited after approval, usually within an hour.` : 'Referral code not found. Check the code before continuing.'}</p>}
                       </>
                     )}
                   </div>
@@ -297,9 +290,9 @@ export default function Register() {
                   </div>
 
                   <div className="pt-2">
-                    <label className="block text-[10px] font-bold text-[#0B2419] uppercase tracking-[0.2em] mb-1 pl-1">Security Question</label>
-                    <p className="text-[10px] text-[#d4af37] italic mb-3 pl-1">"What is your mother's maiden name?"</p>
-                    <InputField icon={<Key size={18}/>} type="text" name="securityAnswer" value={formData.securityAnswer} onChange={handleInputChange} placeholder="Your Answer" disabled={loading} />
+                    <label className="block text-[10px] font-bold text-[#0B2419] uppercase tracking-[0.2em] mb-1 pl-1">Account recovery security question <span className="normal-case tracking-normal text-red-700">Required</span></label>
+                    <p className="text-[10px] text-[#d4af37] italic mb-3 pl-1">What is your mother’s maiden name? Keep your answer somewhere safe; it may be used to verify account recovery.</p>
+                    <InputField icon={<Key size={18}/>} type="text" name="securityAnswer" autoComplete="off" value={formData.securityAnswer} onChange={handleInputChange} placeholder="Your answer" disabled={loading} required />
                   </div>
 
                   <label className="flex items-start gap-3 rounded-xl border border-[#0B2419]/10 bg-[#F3F9F1]/70 p-4 text-xs leading-relaxed text-[#0B2419]/75">
@@ -308,7 +301,7 @@ export default function Register() {
                       checked={formData.marketingEmailOptIn}
                       onChange={event => setFormData({ ...formData, marketingEmailOptIn: event.target.checked })}
                       disabled={loading}
-                      className="mt-0.5 accent-[#0B2419]"
+                      className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#0B2419]"
                     />
                     <span>Send me emails and product updates. This is optional; I can change this preference in my profile at any time. Order and account emails are not affected.</span>
                   </label>
@@ -319,13 +312,31 @@ export default function Register() {
                       checked={formData.adPersonalizationOptIn}
                       onChange={event => setFormData({ ...formData, adPersonalizationOptIn: event.target.checked })}
                       disabled={loading}
-                      className="mt-0.5 accent-[#0B2419]"
+                      className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#0B2419]"
                     />
                     <span>
                       <strong className="block text-[#0B2419]">Optional: personalize Bhumivera product recommendations.</strong>
                       If I opt in, Bhumivera may use my purchases, saved products, approved reviews, and product views recorded while I am opted in to tailor product recommendations on Bhumivera services. This is separate from promotional email consent and is not required to register. I can withdraw it later in Profile; stored product-view signals will then be deleted. It does not authorize selling this data or sharing it with third-party advertising networks. We do not collect Wi-Fi names, precise location, device fingerprints, or raw IP for recommendations; see the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline">Privacy Notice</Link>.
                     </span>
                   </label>
+
+                  <label className="flex items-start gap-3 rounded-xl border border-[#0B2419]/10 bg-white p-4 text-xs leading-relaxed text-[#0B2419]/75">
+                    <input type="checkbox" required checked={termsAccepted} onChange={event => setTermsAccepted(event.target.checked)} disabled={loading} className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#0B2419]"/>
+                    <span>I agree to the <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold underline">Conditions of Use &amp; Sale</Link> and acknowledge the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline">Privacy Notice</Link>. This is required to create an account.</span>
+                  </label>
+
+                  <div className="space-y-2 rounded-xl border border-[#D4AF37]/30 bg-[#FDFBF7] p-4">
+                    <p className="text-xs font-semibold text-[#0B2419]">Create your account with Google</p>
+                    <p className="text-xs leading-relaxed text-[#0B2419]/65">This creates a new Bhumivera account using the verified Google email. It will not sign in to an existing account; if your email is already registered, please use the Sign in page. Your security answer and referral code will be saved with the new account.</p>
+                    {googleSignInError && <AlertBox type="error" msg={googleSignInError} />}
+                    <GoogleSignInButton
+                      onSignIn={handleGoogleRegistration}
+                      onError={error => setGoogleSignInError(error.message || 'Google account creation could not be started.')}
+                      disabled={loading || !termsAccepted || !formData.securityAnswer.trim() || referralPreview.loading}
+                      label="Create account with Google"
+                      loadingLabel="Creating account…"
+                    />
+                  </div>
 
                   <div className="flex justify-center pt-2">
                     {TURNSTILE_SITE_KEY ? (
