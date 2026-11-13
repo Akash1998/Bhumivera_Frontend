@@ -1,6 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
-import { AlertCircle, Check, Clipboard, Coins, RefreshCw, Save, ShieldCheck, Users, Wallet } from 'lucide-react';
+import { AlertCircle, Check, Clipboard, Coins, RefreshCw, Save, ShieldCheck, UserPlus, Users, Wallet } from 'lucide-react';
 import { affiliate as affiliateApi } from '../../services/api';
+import PromoterAnalyticsDashboard from './PromoterAnalyticsDashboard';
 
 const INITIAL_CONFIG = {
   default_customer_discount_percent: 15,
@@ -32,8 +33,19 @@ export default function PromoterProgramManagement() {
   const [commissions, setCommissions] = useState([]);
   const [payouts, setPayouts] = useState([]);
   const [payoutReferences, setPayoutReferences] = useState({});
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [newPartner, setNewPartner] = useState({
+    email: '',
+    socialPlatform: 'Instagram',
+    socialHandle: '',
+    profileUrl: '',
+    followerCount: '0',
+    discountPercent: '15',
+    commissionSharePercent: '25',
+  });
   const [loading, setLoading] = useState(true);
   const [savingConfig, setSavingConfig] = useState(false);
+  const [creatingPartner, setCreatingPartner] = useState(false);
   const [busyPartner, setBusyPartner] = useState(null);
   const [busyCommission, setBusyCommission] = useState(null);
   const [error, setError] = useState('');
@@ -75,6 +87,40 @@ export default function PromoterProgramManagement() {
       setError(saveError.response?.data?.message || 'Could not save promoter program settings.');
     } finally {
       setSavingConfig(false);
+    }
+  };
+
+  const addPartner = async event => {
+    event.preventDefault();
+    setCreatingPartner(true);
+    setError('');
+    setNotice('');
+    try {
+      const { data } = await affiliateApi.addAdminPartner({
+        ...newPartner,
+        email: newPartner.email.trim(),
+        socialHandle: newPartner.socialHandle.trim(),
+        profileUrl: newPartner.profileUrl.trim(),
+        followerCount: Number(newPartner.followerCount),
+        discountPercent: Number(newPartner.discountPercent),
+        commissionSharePercent: Number(newPartner.commissionSharePercent),
+      });
+      setNotice(`Promoter added and approved. Share code ${data.partner.referral_code}.`);
+      setNewPartner({
+        email: '',
+        socialPlatform: 'Instagram',
+        socialHandle: '',
+        profileUrl: '',
+        followerCount: '0',
+        discountPercent: String(config.default_customer_discount_percent),
+        commissionSharePercent: String(config.default_commission_share_percent),
+      });
+      setShowAddForm(false);
+      await loadData();
+    } catch (createError) {
+      setError(createError.response?.data?.message || 'Could not add this promoter.');
+    } finally {
+      setCreatingPartner(false);
     }
   };
 
@@ -152,6 +198,8 @@ export default function PromoterProgramManagement() {
       {error && <div role="alert" className="flex items-start gap-2 rounded-xl border border-rose-400/30 bg-rose-950/30 p-3 text-sm text-rose-200"><AlertCircle size={17} className="mt-0.5 shrink-0"/>{error}</div>}
       {notice && <p role="status" className="rounded-xl border border-emerald-400/30 bg-emerald-950/20 p-3 text-sm text-emerald-200">{notice}</p>}
 
+      <PromoterAnalyticsDashboard config={config}/>
+
       <form onSubmit={saveConfig} className={`${panelClass} space-y-4`}>
         <div className="flex items-center gap-2">
           <ShieldCheck className="text-[#D4AF37]" size={18}/>
@@ -183,8 +231,65 @@ export default function PromoterProgramManagement() {
       </form>
 
       <section className={`${panelClass} space-y-4`}>
-        <div className="flex items-center gap-2"><Users className="text-[#D4AF37]" size={18}/><h2 className="font-serif text-lg font-bold text-white">Applications &amp; active promoters</h2><span className="ml-auto rounded-full bg-[#1E3E2F] px-2.5 py-1 text-xs">{partners.length}</span></div>
-        {loading ? <p className="text-sm text-[#9BB0A5]">Loading applications…</p> : partners.length === 0 ? <p className="text-sm text-[#9BB0A5]">No promoter applications yet.</p> : (
+        <div className="flex flex-wrap items-center gap-2">
+          <Users className="text-[#D4AF37]" size={18}/>
+          <h2 className="font-serif text-lg font-bold text-white">Applications &amp; active promoters</h2>
+          <span className="rounded-full bg-[#1E3E2F] px-2.5 py-1 text-xs">{partners.length}</span>
+          <button
+            type="button"
+            onClick={() => {
+              if (!showAddForm) {
+                setNewPartner(current => ({
+                  ...current,
+                  discountPercent: String(config.default_customer_discount_percent),
+                  commissionSharePercent: String(config.default_commission_share_percent),
+                }));
+              }
+              setShowAddForm(open => !open);
+            }}
+            className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-[#D4AF37] px-3 py-2 text-xs font-bold text-[#102219]"
+          >
+            <UserPlus size={14}/>{showAddForm ? 'Close form' : 'Add promoter'}
+          </button>
+        </div>
+        <p className="text-xs leading-5 text-[#9BB0A5]">Add a promoter using their existing customer account, or approve people who apply through the public affiliate page.</p>
+        {showAddForm && (
+          <form onSubmit={addPartner} className="space-y-3 rounded-xl border border-[#315541] bg-[#0b1c14] p-4">
+            <p className="text-sm font-semibold text-white">Create an active promoter</p>
+            <p className="text-xs leading-5 text-[#9BB0A5]">The customer must already have an active Bhumivera account. This will approve them immediately and generate their offer code.</p>
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Account email
+                <input type="email" required maxLength={254} value={newPartner.email} onChange={event => setNewPartner(current => ({ ...current, email: event.target.value }))} className={inputClass} placeholder="creator@example.com"/>
+              </label>
+              <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Social platform
+                <select value={newPartner.socialPlatform} onChange={event => setNewPartner(current => ({ ...current, socialPlatform: event.target.value }))} className={inputClass}>
+                  {['Instagram', 'YouTube', 'Facebook', 'X', 'Other'].map(platform => <option key={platform}>{platform}</option>)}
+                </select>
+              </label>
+              <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Social handle
+                <input required maxLength={120} value={newPartner.socialHandle} onChange={event => setNewPartner(current => ({ ...current, socialHandle: event.target.value }))} className={inputClass} placeholder="@creator"/>
+              </label>
+              <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Profile URL (optional)
+                <input type="url" maxLength={500} value={newPartner.profileUrl} onChange={event => setNewPartner(current => ({ ...current, profileUrl: event.target.value }))} className={inputClass} placeholder="https://..."/>
+              </label>
+              <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Follower count
+                <input type="number" min="0" max="100000000" step="1" value={newPartner.followerCount} onChange={event => setNewPartner(current => ({ ...current, followerCount: event.target.value }))} className={inputClass}/>
+              </label>
+              <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Customer discount %
+                <input type="number" min="0" max="60" step="0.1" value={newPartner.discountPercent} onChange={event => setNewPartner(current => ({ ...current, discountPercent: event.target.value }))} className={inputClass}/>
+              </label>
+              <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Contribution share %
+                <input type="number" min="0" max="100" step="0.1" value={newPartner.commissionSharePercent} onChange={event => setNewPartner(current => ({ ...current, commissionSharePercent: event.target.value }))} className={inputClass}/>
+              </label>
+            </div>
+            <button type="submit" disabled={creatingPartner} className="inline-flex items-center gap-2 rounded-lg bg-emerald-700 px-4 py-2.5 text-xs font-bold text-white disabled:opacity-50">
+              <UserPlus size={14}/>{creatingPartner ? 'Adding promoter…' : 'Create promoter & generate code'}
+            </button>
+          </form>
+        )}
+        {loading ? <p className="text-sm text-[#9BB0A5]">Loading applications…</p> : partners.length === 0 ? (
+          <p className="text-sm text-[#9BB0A5]">No promoters yet. Click <strong className="text-white">Add promoter</strong> to onboard one now, or ask them to sign in and apply on the public affiliate page.</p>
+        ) : (
           <div className="space-y-3">
             {partners.map(partner => (
               <article key={partner.id} className="rounded-xl border border-[#315541] bg-[#0b1c14] p-4">
