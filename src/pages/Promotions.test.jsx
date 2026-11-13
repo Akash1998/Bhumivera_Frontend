@@ -1,18 +1,21 @@
 // @vitest-environment jsdom
 import React from 'react';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { HelmetProvider } from 'react-helmet-async';
 import { MemoryRouter, Route, Routes, useLocation } from 'react-router-dom';
 import Promotions from './Promotions';
 import { useAuth } from '../context/AuthContext';
-import { affiliate } from '../services/api';
+import { affiliate, products } from '../services/api';
 
 vi.mock('../context/AuthContext', () => ({ useAuth: vi.fn() }));
 vi.mock('../services/api', () => ({
   affiliate: {
     getPartnerDashboard: vi.fn(),
     applyForPartner: vi.fn(),
+  },
+  products: {
+    getAllActive: vi.fn(),
   },
 }));
 
@@ -25,6 +28,10 @@ describe('promoter registration page', () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+  });
+
+  beforeEach(() => {
+    products.getAllActive.mockResolvedValue({ data: { data: [] } });
   });
 
   it('carries the entered email and promotions return path into account registration', async () => {
@@ -81,6 +88,38 @@ describe('promoter registration page', () => {
     expect(screen.getByText('BV1234567890')).toBeTruthy();
     expect(screen.getByText(/Reserved promoter code · inactive/i)).toBeTruthy();
     expect(screen.queryByText('Share your offer')).toBeNull();
+  });
+
+  it('uses catalog product photos and omits ingredient-only images from the product gallery', async () => {
+    useAuth.mockReturnValue({ user: null, loading: false });
+    products.getAllActive.mockResolvedValueOnce({
+      data: {
+        data: [
+          {
+            slug: 'luxury-2-in-1-botanical-shampoo-conditioner',
+            images: [{ url: 'https://images.bhumivera.com/shampoo-real.webp', media_type: 'image' }],
+          },
+          {
+            slug: 'artisanal-charcoal-handmade-soap',
+            images: [{ url: 'https://images.bhumivera.com/bhumivera-artisanal-charcoal-handmade-soap.webp', media_type: 'image' }],
+          },
+        ],
+      },
+    });
+
+    render(
+      <HelmetProvider>
+        <MemoryRouter initialEntries={['/promotions']}>
+          <Routes><Route path="/promotions" element={<Promotions />} /></Routes>
+        </MemoryRouter>
+      </HelmetProvider>,
+    );
+
+    const shampoo = await screen.findByAltText('Bhumivera botanical shampoo and conditioner product');
+    expect(shampoo.getAttribute('src')).toBe('https://images.bhumivera.com/shampoo-real.webp');
+    expect(screen.queryByAltText('Bhumivera Activated Charcoal face wash product')).toBeNull();
+    const soap = screen.getByAltText('Bhumivera handmade charcoal cleansing bar');
+    expect(soap.getAttribute('src')).toContain('/images/products/bhumivera-charcoal-cleansing-bar-front.webp');
   });
 
   it('submits manually entered profile details only after ownership confirmation', async () => {
