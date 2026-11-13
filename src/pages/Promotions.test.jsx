@@ -83,7 +83,7 @@ describe('promoter registration page', () => {
     expect(screen.queryByText('Share your offer')).toBeNull();
   });
 
-  it('requires explicit account confirmation before submitting a URL-matched profile', async () => {
+  it('submits manually entered profile details only after ownership confirmation', async () => {
     useAuth.mockReturnValue({ user: { email: 'creator@example.com' }, loading: false });
     affiliate.getPartnerDashboard
       .mockResolvedValueOnce({ data: { dashboard: null } })
@@ -115,18 +115,24 @@ describe('promoter registration page', () => {
       </HelmetProvider>,
     );
 
-    fireEvent.change(await screen.findByLabelText(/Public profile URL/), {
+    fireEvent.click(await screen.findByRole('radio', { name: 'Instagram' }));
+    fireEvent.change(screen.getByLabelText(/Profile name or handle/), {
+      target: { value: '@creator' },
+    });
+    fireEvent.change(screen.getByLabelText(/Public profile link/), {
       target: { value: 'https://www.instagram.com/creator/' },
     });
-    fireEvent.change(screen.getByLabelText(/Approx. followers/), {
+    expect(screen.getByRole('radio', { name: 'Instagram' }).checked).toBe(true);
+    expect(screen.getByLabelText(/Profile name or handle/).value).toBe('@creator');
+    fireEvent.change(screen.getByLabelText(/Approximate followers/), {
       target: { value: '5000' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /Review and confirm profile/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Send application for review/i }));
 
-    expect(await screen.findByRole('dialog', { name: /Is this your account/i })).toBeTruthy();
+    expect((await screen.findByRole('alert')).textContent).toMatch(/confirm that you own or manage this profile/i);
     expect(affiliate.applyForPartner).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByLabelText(/I confirm that I own or manage this social account/i));
-    fireEvent.click(screen.getByRole('button', { name: /Yes, submit my application/i }));
+    fireEvent.click(screen.getByLabelText(/I confirm that I own or manage this profile/i));
+    fireEvent.click(screen.getByRole('button', { name: /Send application for review/i }));
 
     expect(await screen.findByText('Application received!')).toBeTruthy();
     expect(affiliate.applyForPartner).toHaveBeenCalledWith({
