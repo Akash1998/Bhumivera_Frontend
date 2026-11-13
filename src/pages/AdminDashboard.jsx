@@ -123,6 +123,7 @@ const TAB_ICONS = {
   products: Package,
   categories: Boxes,
   'scarcity-simulator': Activity,
+  'referral-engine': Users,
   loyalty: Award,
   affiliate: Users,
   coupons: Gift,
@@ -239,7 +240,7 @@ export default function AdminDashboard() {
     {
       title: 'Growth & Loyalty',
       items: [
-        { id: 'referral-engine', label: 'Brand Ambassador & Referrals' },
+        { id: 'referral-engine', label: 'Promoter & Affiliate Program' },
         { id: 'growth-offers', label: 'Offers & loyalty tools' },
       ],
     },
@@ -275,6 +276,7 @@ export default function AdminDashboard() {
     'products',
     'users',
     'cart-checkout',
+    'referral-engine',
   ];
   const allMenuItems = menuSections.flatMap(section => section.items);
   const quickItems = quickTabs
@@ -293,7 +295,7 @@ export default function AdminDashboard() {
     (['cart-rules', 'min-cart-value', 'coupons'].includes(activeTab)
       ? 'Cart & Checkout'
       : ['affiliate', 'referral-engine'].includes(activeTab)
-        ? 'Brand Ambassador & Referrals'
+        ? 'Promoter & Affiliate Program'
         : GROWTH_SECTION_TABS.includes(activeTab)
           ? 'Growth & Loyalty'
           : 'Dashboard');
