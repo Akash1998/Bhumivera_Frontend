@@ -8,8 +8,24 @@ const formatPrice = value => `₹${(Number(value) || 0).toLocaleString('en-IN', 
 
 const describeOffer = offer => {
   const value = Number(offer.discount_value ?? offer.value) || 0;
-  const type = offer.discount_type || offer.type;
-  return type === 'percentage' ? `${value}% off` : `${formatPrice(value)} off`;
+  const type = String(offer.discount_type || offer.type || '').toLowerCase();
+
+  if (type === 'percentage') return `${value}% off`;
+  if (type === 'free_shipping') return 'Free shipping';
+  if (type === 'fixed' || type === 'amount' || type === 'flat' || value > 0) return `${formatPrice(value)} off`;
+  return 'Special savings';
+};
+
+const explainOffer = offer => {
+  const value = Number(offer.discount_value ?? offer.value) || 0;
+  const type = String(offer.discount_type || offer.type || '').toLowerCase();
+  const minimum = Number(offer.min_order_amount ?? offer.min_order_value) || 0;
+  const maxDiscount = Number(offer.max_discount) || 0;
+  const suffix = type === 'percentage' && maxDiscount > 0 ? ` The discount is capped at ${formatPrice(maxDiscount)} per order.` : '';
+  const threshold = minimum > 0 ? ` This offer applies when your cart reaches ${formatPrice(minimum)} or more.` : ' No minimum order value is required.';
+  const amountText = type === 'percentage' ? `${value}% off your eligible purchase` : value > 0 ? `${formatPrice(value)} off your eligible purchase` : 'a special savings on eligible items';
+
+  return `This code gives you ${amountText}.${threshold}${suffix}`;
 };
 
 export default function FlashSales() {
@@ -70,7 +86,7 @@ export default function FlashSales() {
             <span className="font-headline-gold">Offers</span> <span className="font-headline-silver">Worth Opening.</span>
           </h1>
           <div className="gold-hairline my-4 max-w-xs" />
-          <p className="mt-3 max-w-xl text-sm leading-6 text-[#cbd5e1]">Current privileged coupon offers published by Bhumivera. Choose an offer to take its code straight to checkout.</p>
+          <p className="mt-3 max-w-xl text-sm leading-6 text-[#cbd5e1]">Every active code below is a live Bhumivera promotion. Copy the code, add your essentials to the cart, and apply it at checkout to instantly see the savings before you place the order.</p>
           <div className="mt-6 inline-flex items-center gap-2 rounded-full border border-[#d4af37]/40 bg-[#070a0e] px-3.5 py-1.5 text-[11px] font-semibold text-[#fce096]"><BadgePercent size={15} className="text-[#d4af37]"/> Live offers from our store</div>
         </header>
 
@@ -92,8 +108,6 @@ export default function FlashSales() {
                 : <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
                   {offers.map(offer => {
                     const code = String(offer.code || '');
-                    const minimum = Number(offer.min_order_amount ?? offer.min_order_value) || 0;
-                    const maxDiscount = Number(offer.max_discount) || 0;
                     return <article key={code} className="group relative flex min-h-64 flex-col overflow-hidden rounded-2xl two-tone-card border border-[#d4af37]/25 shadow-lg transition duration-200 hover:-translate-y-1 hover:border-[#d4af37]/60 hover:shadow-2xl">
                       <div className="absolute inset-y-0 left-0 w-1.5 bg-[#d4af37]"/>
                       <div className="flex flex-1 flex-col p-5 pl-6">
@@ -102,7 +116,7 @@ export default function FlashSales() {
                           <span className="rounded-full bg-[#d4af37]/15 border border-[#d4af37]/40 px-3 py-1.5 text-xs font-bold text-[#fce096]">{describeOffer(offer)}</span>
                         </div>
                         <h3 className="mt-4 font-serif text-xl text-white">{offer.description || 'A little something for your order'}</h3>
-                        <p className="mt-2 text-xs leading-5 text-[#cbd5e1]">Use this offer at checkout{minimum > 0 ? ` on orders of ${formatPrice(minimum)} or more` : ''}{maxDiscount > 0 && (offer.discount_type || offer.type) === 'percentage' ? ` · maximum saving ${formatPrice(maxDiscount)}` : ''}.</p>
+                        <p className="mt-2 text-xs leading-5 text-[#cbd5e1]">{explainOffer(offer)}</p>
                         {offer.valid_until && <p className="mt-3 flex items-center gap-1.5 text-[11px] font-medium text-[#94a3b8]"><Clock3 size={13} className="text-[#d4af37]"/>Valid through {new Date(offer.valid_until).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</p>}
                         <div className="mt-auto pt-5">
                           <div className="flex items-center justify-between gap-2 rounded-xl border border-dashed border-[#d4af37]/40 bg-[#070a0e] px-3 py-2">
