@@ -20,6 +20,10 @@ vi.mock('./ToastContext', () => ({
   useToast: () => contextMocks.toast,
 }));
 vi.mock('../services/api', () => ({
+  affiliate: {
+    getProgramConfig: vi.fn().mockResolvedValue({ data: { minimumOrderAmount: 599 } }),
+    getOffer: vi.fn(),
+  },
   cart: { get: vi.fn(), add: vi.fn(), updateQuantity: vi.fn(), remove: vi.fn(), clear: vi.fn() },
   cartRules: { preview: contextMocks.preview },
   products: { getBySlug: vi.fn(), getById: contextMocks.getProduct },

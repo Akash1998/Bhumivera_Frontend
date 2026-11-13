@@ -3,7 +3,7 @@ import React from 'react';
 import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CartProvider, useCart } from './CartContext';
-import { cart, products } from '../services/api';
+import { affiliate, cart, products } from '../services/api';
 import { AI_COPILOT_EVENT } from '../utils/aiCopilotBus';
 
 const mockToast = { success: vi.fn(), error: vi.fn(), info: vi.fn(), warning: vi.fn() };
@@ -22,6 +22,10 @@ vi.mock('../context/ToastContext', () => ({
 }));
 
 vi.mock('../services/api', () => ({
+  affiliate: {
+    getProgramConfig: vi.fn().mockResolvedValue({ data: { minimumOrderAmount: 599 } }),
+    getOffer: vi.fn().mockResolvedValue({ data: { offer: { code: 'BV1234', discountPercent: 15, minimumOrderAmount: 599 } } }),
+  },
   products: { getById: vi.fn() },
   cart: {
     get: vi.fn().mockResolvedValue({ data: { items: [] } }),
@@ -45,12 +49,18 @@ function CartHarness({ productId = 17 }) {
   );
 }
 
+function AffiliateHarness() {
+  const { affiliateCode, affiliateOffer } = useCart();
+  return <output data-testid="promoter-offer">{JSON.stringify({ affiliateCode, affiliateOffer })}</output>;
+}
+
 describe('cart additions with live inventory', () => {
   beforeEach(() => {
     localStorage.clear();
     vi.clearAllMocks();
     authState.isAuthenticated = false;
     authState.user = null;
+    window.history.replaceState({}, '', '/');
   });
 
   afterEach(cleanup);
@@ -175,5 +185,17 @@ describe('cart additions with live inventory', () => {
 
     expect(cart.add).not.toHaveBeenCalled();
     expect(mockToast.error).toHaveBeenCalledWith('Sea Buckthorn Oil is currently out of stock.');
+  });
+
+  it('stores and verifies a promoter code from the shared offer link', async () => {
+    window.history.replaceState({}, '', '/?aff=BV1234');
+    render(<CartProvider><AffiliateHarness /></CartProvider>);
+
+    await waitFor(() => expect(affiliate.getOffer).toHaveBeenCalledWith('BV1234'));
+    await waitFor(() => expect(JSON.parse(screen.getByTestId('promoter-offer').textContent)).toMatchObject({
+      affiliateCode: 'BV1234',
+      affiliateOffer: { discountPercent: 15 },
+    }));
+    expect(JSON.parse(localStorage.getItem('Bhumivera_affiliate_attribution'))).toMatchObject({ code: 'BV1234' });
   });
 });

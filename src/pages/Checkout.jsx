@@ -33,6 +33,13 @@ export default function Checkout() {
     loyalty,
     rulePreview,
     referralReward,
+    affiliateCode,
+    affiliateOffer,
+    affiliateOfferError,
+    affiliateOfferLoading,
+    affiliateDiscount,
+    minimumOrderAmount,
+    removeAffiliateCode,
     applyCoupon: applyCartCoupon,
     removeCoupon: removeCartCoupon,
   } = useCart();
@@ -91,7 +98,8 @@ export default function Checkout() {
 
   const ruleDiscount = Number(rulePreview?.totalDiscount || 0);
   const couponDiscount = Number(appliedCoupon?.discount || 0);
-  const totalDiscount = Math.min(subtotal, ruleDiscount + couponDiscount);
+  const promoterDiscount = Math.min(subtotal, Number(affiliateDiscount) || 0);
+  const totalDiscount = Math.min(subtotal, ruleDiscount + couponDiscount + promoterDiscount);
   const tierDiscount = calculateTierDiscount(
     subtotal,
     totalDiscount,
@@ -128,6 +136,7 @@ export default function Checkout() {
   const loyaltyDiscount = redeemLoyalty ? Math.floor(redeemablePoints / pointsPerRupee) : 0;
 
   const total = Math.max(0, subtotal - totalDiscount - tierDiscount - referralWalletAmount - loyaltyDiscount + shippingCost);
+  const minimumAmountMissing = Math.max(0, Number(minimumOrderAmount || 0) - subtotal + totalDiscount + tierDiscount);
 
   useEffect(() => {
     if (cartItems.length === 0) {
@@ -325,6 +334,18 @@ export default function Checkout() {
   };
 
   const handlePlaceOrder = async () => {
+    if (affiliateOfferLoading) {
+      setError('Please wait while we verify your promoter offer.');
+      return;
+    }
+    if (affiliateCode && affiliateOfferError) {
+      setError('Remove the unavailable promoter code before placing the order.');
+      return;
+    }
+    if (minimumAmountMissing > 0) {
+      setError(`Add ₹${minimumAmountMissing.toFixed(2)} more in merchandise after discounts to meet the ₹${Number(minimumOrderAmount).toFixed(2)} order minimum.`);
+      return;
+    }
     if (!selectedAddressId) {
       setError('Please choose or enter a delivery address.');
       setStep(1);
@@ -339,6 +360,7 @@ export default function Checkout() {
       deliveryType,
       paymentMode,
       couponCode: appliedCoupon?.code || undefined,
+      affiliateCode: affiliateOffer ? affiliateCode : undefined,
       loyaltyPointsToRedeem: redeemLoyalty ? redeemablePoints : 0,
       termsAccepted: true,
     };
@@ -662,9 +684,17 @@ export default function Checkout() {
                     <Link to="/legal/privacy-dpdp" target="_blank" rel="noreferrer" className="font-semibold text-white underline underline-offset-2">Privacy Notice</Link>.
                   </p>
 
+                  {affiliateOffer && (
+                    <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-[#D4AF37]/30 bg-[#1E3E2F] px-3 py-2 text-xs text-[#FCE096]">
+                      <span>{affiliateOffer.discountPercent}% promoter offer applied · {affiliateCode}</span>
+                      <button type="button" onClick={removeAffiliateCode} className="shrink-0 underline underline-offset-2">Remove</button>
+                    </div>
+                  )}
+                  {affiliateOfferError && <p role="status" className="mt-3 rounded-lg border border-rose-500/30 bg-rose-950/30 px-3 py-2 text-xs text-rose-200">{affiliateOfferError}</p>}
+                  {minimumAmountMissing > 0 && <p role="status" className="mt-3 rounded-lg border border-amber-400/30 bg-amber-950/20 px-3 py-2 text-xs leading-5 text-amber-100">Add ₹{minimumAmountMissing.toFixed(2)} more in merchandise after discounts to meet the ₹{Number(minimumOrderAmount).toFixed(2)} minimum.</p>}
                   <button
                     type="button"
-                    disabled={loading}
+                    disabled={loading || minimumAmountMissing > 0}
                     onClick={handlePlaceOrder}
                     className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl btn-gold-luxury py-4 text-xs font-bold uppercase tracking-widest disabled:opacity-50"
                   >
@@ -830,6 +860,12 @@ export default function Checkout() {
                   <div className="flex justify-between text-[#D4AF37] font-medium">
                     <span>Coupon ({appliedCoupon?.code})</span>
                     <span>-₹{couponDiscount.toFixed(2)}</span>
+                  </div>
+                )}
+                {promoterDiscount > 0 && (
+                  <div className="flex justify-between text-[#D4AF37] font-medium">
+                    <span>Promoter Offer ({affiliateOffer?.discountPercent}%) · {affiliateCode}</span>
+                    <span>-₹{promoterDiscount.toFixed(2)}</span>
                   </div>
                 )}
                 {referralWalletAmount > 0 && (

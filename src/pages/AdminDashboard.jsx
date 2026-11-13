@@ -28,6 +28,7 @@ const GrowthOffersHub = lazy(() => import('./admin/GrowthOffersHub.jsx'));
 const CartCheckoutHub = lazy(() => import('./admin/CartCheckoutHub.jsx'));
 const WalletManagement = lazy(() => import('./admin/WalletManagement.jsx'));
 const ReferralEngine = lazy(() => import('./admin/AffiliateManagement.jsx'));
+const AffiliateProgramHub = lazy(() => import('./admin/AffiliateProgramManagement.jsx'));
 const SupportManagement = lazy(() => import('./admin/SupportManagement.jsx'));
 const ContactManagement = lazy(() => import('./admin/ContactManagement.jsx'));
 const SupportAgentManagement = lazy(() => import('./admin/SupportAgentManagement.jsx'));
@@ -99,7 +100,7 @@ const TAB_COMPONENTS = {
   personalization: GrowthOffersHub,
   'lifecycle-offers': GrowthOffersHub,
   affiliate: ReferralEngine,
-  'referral-engine': ReferralEngine,
+  'referral-engine': AffiliateProgramHub,
   'growth-offers': GrowthOffersHub,
   'wallet-management': WalletManagement,
   impact: ImpactManagement,

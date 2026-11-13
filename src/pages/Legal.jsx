@@ -489,9 +489,11 @@ const LEGAL_CLAUSES = {
     },
     {
       num: '5.4',
-      title: '4. Affiliate Partner Program: written agreement requirement',
+      title: '4. Promoter application, attribution & commission calculation',
       body: [
-        'Applying to or browsing the Bhumivera Affiliate / Partner Program page (`/affiliate`) does not automatically appoint you as an agent, employee, or commercial partner. Commission rates, attribution windows, payout schedules, and tax deductions (TDS) apply only when confirmed in a formal written partner agreement or active affiliate dashboard account approved by Bhumivera.',
+        'Applying to or browsing the Bhumivera Affiliate / Partner Program page (`/affiliate`) does not automatically appoint you as an agent, employee, or commercial partner. Only an approved, active account may share a promoter code. The customer discount and contribution-profit share for that account are the rates displayed in its dashboard and may differ by partner.',
+        'A promoter link may store its code in the customer’s browser for up to 30 days. A later valid promoter link replaces the prior code. Self-referrals are not eligible. The commission is calculated from eligible order revenue excluding GST, less current inventory unit costs, the configured fulfilment and RTO reserves, and applicable online payment fees. The promoter’s configured share is capped so Bhumivera retains at least the displayed program margin floor; missing inventory cost data or an order that cannot meet that floor makes the offer ineligible.',
+        'Attributed commissions remain pending until delivery. Cancelled or returned orders are reversed; a reversal after payout may be offset against later approved commissions. Payouts are manually processed and recorded by Bhumivera with a transfer reference. Rates, attribution rules, payout schedules, and tax deductions (including any applicable TDS) are governed by the active dashboard and any written partner agreement; earnings are not guaranteed.',
       ],
     },
     {

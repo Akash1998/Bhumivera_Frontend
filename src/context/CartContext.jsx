@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
 import { useAuth } from "./AuthContext";
 import { useSettings } from "./SettingsContext";
-import { cart as cartApi, cartRules as cartRulesApi, products as productsApi } from "../services/api";
+import { cart as cartApi, cartRules as cartRulesApi, products as productsApi, affiliate as affiliateApi } from "../services/api";
 import { useToast } from './ToastContext';
 import {
   AI_COPILOT_ADD_CART_RETRY_EVENT,
@@ -13,6 +13,17 @@ import { getClientStockError } from "../utils/cartStock";
 const CartContext = createContext();
 const GUEST_CART_KEY = "Bhumivera_guest_cart";
 const PENDING_CART_ADD_KEY = "Bhumivera_pending_cart_add";
+const AFFILIATE_ATTRIBUTION_KEY = "Bhumivera_affiliate_attribution";
+const getStoredAffiliateCode = () => {
+  try {
+    const stored = JSON.parse(localStorage.getItem(AFFILIATE_ATTRIBUTION_KEY) || 'null');
+    if (stored?.code && Number(stored.expiresAt) > Date.now()) return String(stored.code);
+    localStorage.removeItem(AFFILIATE_ATTRIBUTION_KEY);
+  } catch {
+    localStorage.removeItem(AFFILIATE_ATTRIBUTION_KEY);
+  }
+  return '';
+};
 
 export const getCartProductId = product => product?.product_id ?? product?._id ?? product?.id;
 
@@ -94,10 +105,80 @@ export const CartProvider = ({ children }) => {
   const [loyalty, setLoyalty] = useState(null);
   const [abandonment, setAbandonment] = useState(null);
   const [couponStackPolicy, setCouponStackPolicy] = useState('both');
+  const [affiliateCode, setAffiliateCode] = useState(getStoredAffiliateCode);
+  const [affiliateOffer, setAffiliateOffer] = useState(null);
+  const [affiliateOfferError, setAffiliateOfferError] = useState('');
+  const [affiliateOfferLoading, setAffiliateOfferLoading] = useState(false);
+  const [minimumOrderAmount, setMinimumOrderAmount] = useState(599);
   const [rulePreviewLoading, setRulePreviewLoading] = useState(false);
   const [giftCelebration, setGiftCelebration] = useState(null);
   const previousRuleIds = useRef(new Set());
   const skipInitialRulePreview = useRef(true);
+
+  useEffect(() => {
+    const incomingCode = new URLSearchParams(window.location.search).get('aff');
+    if (incomingCode && /^[A-Z0-9_-]{4,32}$/i.test(incomingCode)) {
+      const code = incomingCode.trim().toUpperCase();
+      localStorage.setItem(AFFILIATE_ATTRIBUTION_KEY, JSON.stringify({
+        code,
+        expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
+      }));
+      setAffiliateCode(code);
+    }
+    affiliateApi.getProgramConfig()
+      .then(response => {
+        const minimum = Number(response.data?.minimumOrderAmount);
+        if (Number.isFinite(minimum) && minimum >= 0) setMinimumOrderAmount(minimum);
+      })
+      .catch(error => console.error('[AFFILIATE_CHECKOUT_CONFIG]', error));
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    if (!affiliateCode) {
+      setAffiliateOffer(null);
+      setAffiliateOfferError('');
+      setAffiliateOfferLoading(false);
+      return () => { active = false; };
+    }
+    setAffiliateOfferLoading(true);
+    affiliateApi.getOffer(affiliateCode)
+      .then(response => {
+        if (!active) return;
+        setAffiliateOffer(response.data?.offer || null);
+        setAffiliateOfferError('');
+      })
+      .catch(error => {
+        if (!active) return;
+        setAffiliateOffer(null);
+        setAffiliateOfferError(error.response?.data?.message || 'This promoter offer is unavailable.');
+      })
+      .finally(() => {
+        if (active) setAffiliateOfferLoading(false);
+      });
+    return () => { active = false; };
+  }, [affiliateCode]);
+
+  const applyAffiliateCode = async value => {
+    const code = String(value || '').trim().toUpperCase();
+    if (!/^[A-Z0-9_-]{4,32}$/.test(code)) throw new Error('Enter a valid promoter code.');
+    const response = await affiliateApi.getOffer(code);
+    localStorage.setItem(AFFILIATE_ATTRIBUTION_KEY, JSON.stringify({
+      code,
+      expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
+    }));
+    setAffiliateCode(code);
+    setAffiliateOffer(response.data?.offer || null);
+    setAffiliateOfferError('');
+    setAffiliateOfferLoading(false);
+  };
+
+  const removeAffiliateCode = () => {
+    localStorage.removeItem(AFFILIATE_ATTRIBUTION_KEY);
+    setAffiliateCode('');
+    setAffiliateOffer(null);
+    setAffiliateOfferError('');
+  };
   const { isAuthenticated, user } = useAuth();
   const isCustomerAuthenticated = isAuthenticated &&
     !['admin', 'superadmin', 'warehouse_admin'].includes(user?.role);
@@ -545,6 +626,9 @@ export const CartProvider = ({ children }) => {
   const shippingProgress = freeShippingThreshold > 0
     ? Math.min((getSubtotal() / freeShippingThreshold) * 100, 100)
     : 100;
+  const affiliateDiscount = affiliateOffer
+    ? Math.round((getSubtotal() * Number(affiliateOffer.discountPercent || 0) / 100 + Number.EPSILON) * 100) / 100
+    : 0;
 
   return (
     <CartContext.Provider value={{ 
@@ -570,6 +654,14 @@ export const CartProvider = ({ children }) => {
       giftCelebration,
       referralReward,
       loyalty,
+      affiliateCode,
+      affiliateOffer,
+      affiliateOfferError,
+      affiliateOfferLoading,
+      affiliateDiscount,
+      minimumOrderAmount,
+      applyAffiliateCode,
+      removeAffiliateCode,
       couponStackPolicy,
       rulePreviewLoading,
       abandonment,

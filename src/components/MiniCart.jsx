@@ -74,6 +74,7 @@ export default function MiniCart() {
     cartItems = [], isCartOpen, setIsCartOpen, removeFromCart, updateQuantity,
     getSubtotal, addToCart, clearCart, rulePreview, rulePreviewLoading, cartAddEvent,
     freeShippingThreshold, couponStackPolicy, referralReward, loyalty,
+    affiliateCode, affiliateOffer, affiliateOfferError, affiliateOfferLoading, affiliateDiscount, minimumOrderAmount, removeAffiliateCode,
   } = useCart();
   const { user } = useAuth();
   const userId = user?.id;
@@ -131,17 +132,18 @@ export default function MiniCart() {
       ? appliedCoupon.discount
       : 0
     : 0;
-  const tierDiscount = calculateTierDiscount(subtotal, discount + couponDiscount, loyalty?.currentTier, loyalty?.enabled);
+  const promoDiscount = Math.min(subtotal, Number(affiliateDiscount) || 0);
+  const tierDiscount = calculateTierDiscount(subtotal, discount + couponDiscount + promoDiscount, loyalty?.currentTier, loyalty?.enabled);
   const referralWalletAmount = calculateReferralWalletRedemption(
     referralReward?.balance,
     subtotal,
-    Math.max(0, subtotal - discount - couponDiscount - tierDiscount),
+    Math.max(0, subtotal - discount - couponDiscount - promoDiscount - tierDiscount),
     referralReward?.tiers,
     referralReward?.welcomeBonusBalance
   );
   const pointsRedemption = calculatePointsRedemption(
     loyalty,
-    Math.max(0, subtotal - discount - couponDiscount - tierDiscount - referralWalletAmount)
+    Math.max(0, subtotal - discount - couponDiscount - promoDiscount - tierDiscount - referralWalletAmount)
   );
   const [redeemLoyaltyPoints, setRedeemLoyaltyPoints] = useState(true);
   const loyaltyPointsToRedeem = redeemLoyaltyPoints ? pointsRedemption.points : 0;
@@ -168,9 +170,11 @@ export default function MiniCart() {
     freeShipping: Boolean(rulePreview?.freeShipping || loyaltyFreeShipping || couponFreeShipping),
   });
   const shippingCost = shippingMethod === 'PREMIUM' ? premiumDeliveryCost : standardDeliveryCost;
-  const totalSavings = discount + couponDiscount + tierDiscount + referralWalletAmount + loyaltyDiscount;
+  const totalSavings = discount + couponDiscount + promoDiscount + tierDiscount + referralWalletAmount + loyaltyDiscount;
   const estimatedTotal = Math.max(0, subtotal - totalSavings);
   const finalTotal = Math.max(0, subtotal + shippingCost - totalSavings);
+  const discountedMerchandiseSubtotal = Math.max(0, subtotal - Math.min(subtotal, discount + couponDiscount + promoDiscount + tierDiscount));
+  const minimumAmountMissing = Math.max(0, Number(minimumOrderAmount || 0) - discountedMerchandiseSubtotal);
   const recommendationsToShow = useMemo(() => {
     const cartIds = new Set(cartItems.map(item => String(item.product_id || item.product?.id || item.product?._id || item.id || item._id)));
     (rulePreview?.gifts || []).forEach(gift => {
@@ -457,6 +461,18 @@ export default function MiniCart() {
   };
 
   const continueToPayment = () => {
+    if (affiliateOfferLoading) {
+      toast.error('Please wait while we verify your promoter offer.');
+      return;
+    }
+    if (affiliateCode && affiliateOfferError) {
+      toast.error('Remove the unavailable promoter code before continuing.');
+      return;
+    }
+    if (minimumAmountMissing > 0) {
+      toast.error(`Add ${formatPrice(minimumAmountMissing)} more in merchandise after discounts to meet the ${formatPrice(minimumOrderAmount)} order minimum.`);
+      return;
+    }
     if (!selectedAddress) {
       toast.error('Choose or add a delivery address before continuing.');
       return;
@@ -563,6 +579,18 @@ export default function MiniCart() {
 
   const placeOrder = async event => {
     event.preventDefault();
+    if (affiliateOfferLoading) {
+      toast.error('Please wait while we verify your promoter offer.');
+      return;
+    }
+    if (affiliateCode && affiliateOfferError) {
+      toast.error('Remove the unavailable promoter code before placing the order.');
+      return;
+    }
+    if (minimumAmountMissing > 0) {
+      toast.error(`Add ${formatPrice(minimumAmountMissing)} more in merchandise after discounts to meet the ${formatPrice(minimumOrderAmount)} order minimum.`);
+      return;
+    }
     if (paymentMode === 'COD' && !codEligibility.eligible) {
       toast.error('Cash on delivery is available after 2 orders have been successfully delivered.');
       return;
@@ -586,6 +614,7 @@ export default function MiniCart() {
         addressId: selectedAddress,
         deliveryType: shippingMethod === 'PREMIUM' ? 'express' : 'standard',
         couponCode: appliedCoupon?.code || undefined,
+        affiliateCode: affiliateOffer ? affiliateCode : undefined,
         notes: orderNotes.trim() || undefined,
         termsAccepted: true,
         loyaltyPointsToRedeem,
@@ -928,6 +957,8 @@ export default function MiniCart() {
               {offersOpen && <div className="border-t border-[#244A38] p-3 bg-[#102219]">
                 {Number(referralReward?.balance) > 0 && <p className="mb-3 rounded-lg border border-[#D4AF37]/30 bg-[#1E3E2F] px-3 py-2 text-xs leading-5 text-[#FCE096]">Shopping wallet balance {formatPrice(referralReward.balance)}{referralWalletAmount > 0 ? ` · ${formatPrice(referralWalletAmount)} applied` : ''}</p>}
                 {loyalty?.enabled && <p className="mb-3 rounded-lg border border-[#244A38] bg-[#1E3E2F] px-3 py-2 text-xs leading-5 text-[#DFD7C4]">{loyalty.currentTier?.name || 'Loyalty Member'} · {Number(loyalty.pointsBalance || 0).toLocaleString()} points available</p>}
+                {affiliateOffer && <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-[#D4AF37]/35 bg-[#1E3E2F] px-3 py-2 text-xs text-[#FCE096]"><span><strong>{affiliateOffer.discountPercent}% promoter offer</strong> · {affiliateCode}</span><button type="button" onClick={removeAffiliateCode} className="shrink-0 underline underline-offset-2">Remove</button></div>}
+                {affiliateOfferError && <p role="status" className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-rose-500/30 bg-rose-950/30 px-3 py-2 text-xs text-rose-200">{affiliateOfferError}<button type="button" onClick={removeAffiliateCode} className="underline underline-offset-2">Remove</button></p>}
                 <form onSubmit={validateCoupon} className="flex gap-2">
                   <input value={couponCode} onChange={event => setCouponCode(event.target.value)} aria-label="Coupon code" placeholder="Enter coupon code" className="min-w-0 flex-1 rounded-xl border border-dashed border-[#244A38] bg-[#14291F] text-white px-3 py-2.5 text-xs outline-none focus:border-[#D4AF37]"/>
                   <button disabled={couponBusy || !couponCode.trim()} className="rounded-xl btn-gold-luxury px-4 py-2 text-xs font-bold disabled:opacity-50">{couponBusy ? 'Checking…' : 'Apply'}</button>
@@ -1045,11 +1076,13 @@ export default function MiniCart() {
             >
             {discount > 0 && <div className="flex justify-between text-[#D4AF37]"><span>Cart Offers</span><span>−{formatPrice(discount)}</span></div>}
             {couponDiscount > 0 && <div className="flex justify-between gap-3 font-bold text-[#D4AF37]"><span className="min-w-0 truncate">Coupon{appliedCoupon?.code ? ` · ${appliedCoupon.code}` : ''}</span><span className="shrink-0">−{formatPrice(couponDiscount)}</span></div>}
+            {promoDiscount > 0 && <div className="flex justify-between text-[#D4AF37]"><span>Promoter Offer ({affiliateOffer?.discountPercent}%)</span><span>−{formatPrice(promoDiscount)}</span></div>}
             {tierDiscount > 0 && <div className="flex justify-between text-[#D4AF37]"><span>Membership Tier</span><span>−{formatPrice(tierDiscount)}</span></div>}
             {referralWalletAmount > 0 && <div className="flex justify-between font-semibold text-[#D4AF37]"><span>Shopping Wallet</span><span>−{formatPrice(referralWalletAmount)}</span></div>}
             {loyalty?.enabled && Number(loyalty?.pointsBalance) >= Number(loyalty?.minimumRedemptionPoints) && pointsRedemption.points > 0 && <label className="flex items-center justify-between gap-3 font-semibold text-[#FCE096]"><span className="flex items-center gap-2"><input type="checkbox" checked={redeemLoyaltyPoints} onChange={event => setRedeemLoyaltyPoints(event.target.checked)} className="accent-[#D4AF37]"/>Use {(redeemLoyaltyPoints ? loyaltyPointsToRedeem : pointsRedemption.points).toLocaleString()} loyalty points</span><span>{loyaltyDiscount > 0 ? `−${formatPrice(loyaltyDiscount)}` : 'Not applied'}</span></label>}
             {totalSavings > 0 && <div className="flex items-center justify-between rounded-lg bg-[#1E3E2F] border border-[#D4AF37]/30 px-3 py-2 text-sm font-bold text-[#D4AF37]"><span>Total Savings Applied</span><span className="text-base font-black">−{formatPrice(totalSavings)}</span></div>}
             {checkoutOpen && <div className="flex justify-between text-[#DFD7C4]"><span>{shippingMethod === 'PREMIUM' ? 'Priority Express · 2–4 days' : 'Standard Delivery · 5–7 days'}</span><span>{shippingCost ? formatPrice(shippingCost) : 'Free'}</span></div>}
+            {minimumAmountMissing > 0 && <p role="status" className="rounded-lg border border-amber-400/30 bg-amber-950/20 px-3 py-2 text-[11px] leading-5 text-amber-100">Add {formatPrice(minimumAmountMissing)} more after discounts to meet the {formatPrice(minimumOrderAmount)} minimum.</p>}
             </div>
             <div className={`flex justify-between border-t border-white/10 pt-2 text-sm font-extrabold text-white ${checkoutOpen ? 'mt-2 shrink-0' : ''}`}><span>{checkoutOpen ? 'Final Order Total' : 'Estimated Total'}</span><span className="font-serif text-lg font-bold text-[#D4AF37]">{checkoutOpen ? formatPrice(finalTotal) : formatPrice(estimatedTotal)}</span></div>
           </div>

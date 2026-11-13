@@ -67,8 +67,8 @@ export const MASTER_PILLARS = [
     shortTitle: 'Offers & Coins',
     iconName: 'Gift',
     accentColor: '#F59E0B',
-    badge: '10% Commission',
-    description: 'Active discount coupons, Spin & Win rewards, and Brand Ambassador referral program.',
+    badge: 'Creator partnerships',
+    description: 'Active discount coupons, Spin & Win rewards, customer referrals, and the margin-controlled promoter program.',
   },
   {
     id: 'human_escalation',
@@ -832,9 +832,9 @@ Healthy human facial skin maintains a slightly acidic surface pH between 5.2 and
   {
     id: 'offers_ambassador_program',
     pillarId: 'offers_ambassador',
-    title: 'Brand Ambassador & Affiliate Program (10% Earn)',
-    badge: '10% Lifetime Commission',
-    summary: 'Share your personal referral code, give friends 10% off, and earn 10% spendable wallet credits on every successful purchase.',
+    title: 'Brand Ambassador & Promoter Program',
+    badge: 'Offer rates shown after approval',
+    summary: 'Apply as a creator, then share an approved offer link. The customer discount and promoter profit-share rate are set by Bhumivera. Commissions are calculated from eligible contribution profit after product costs and operating reserves, not as a percentage of the full order value.',
     keywords: [
       'ambassador', 'brand ambassador', 'affiliate', 'refer and earn', 'referral',
       'commission', 'earn money', 'referral code', 'join ambassador'
@@ -847,24 +847,25 @@ Healthy human facial skin maintains a slightly acidic surface pH between 5.2 and
       },
       {
         stepNumber: 2,
-        title: 'Generate Unique Referral Link',
-        description: 'Copy your bespoke invitation link (e.g. bhumivera.com?ref=YOURNAME).',
+        title: 'Get an Approved Promoter Link',
+        description: 'Once approved, copy your personal link from /affiliate. It applies the customer offer and attributes eligible orders to your account.',
       },
       {
         stepNumber: 3,
-        title: 'Earn 10% Store Credits on Every Order',
-        description: 'Friends get an instant 10% discount, and you receive 10% credited directly into your Bhumivera Wallet.',
+        title: 'Track Eligible Commissions',
+        description: 'The dashboard shows attributed orders and commission status. Earnings become payable after delivery and are adjusted if an order is cancelled or returned.',
       },
     ],
     richContent: `
-### ✨ Privileges of Being an Ambassador
-- Real-time earnings dashboard.
-- Early access to seasonal limited-edition botanical harvests.
-- Spendable wallet credits with zero expiration.
+### ✨ Promoter program basics
+- Applications are reviewed before a promoter code is activated.
+- Customer discounts and contribution-profit shares are set per approved partner.
+- Order margins use current inventory unit costs and the program's fulfilment, RTO, and payment-fee reserves.
+- The commission is capped to protect the configured retained-margin floor; it is not guaranteed income.
+- Commissions stay pending until delivery and can be reversed for cancelled or returned orders.
     `,
     directActions: [
       { label: '✨ Join Ambassador Program', actionType: 'NAVIGATE', target: '/affiliate' },
-      { label: '👤 View Referral Dashboard in Profile', actionType: 'NAVIGATE', target: '/profile' },
     ],
     relatedSuggestions: [
       'payments_wallet_and_coins',

@@ -3,11 +3,16 @@ import { DollarSign, TrendingUp, Target, Award, ShieldCheck, Scale, ArrowRight, 
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { AFFILIATE_PAGE_DATA } from '../data/bhumiveraUniqueData';
+import { useAuth } from '../context/AuthContext';
+import PromoterPortal from './affiliate/PromoterPortal';
 
 export default function Affiliate() {
+  const { user } = useAuth();
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  if (user) return <PromoterPortal/>;
 
   return (
     <div className="min-h-screen bg-[#070a0e] font-sans pb-24 text-[#e2e8f0] selection:bg-[#d4af37]/30 selection:text-white">
@@ -38,8 +43,8 @@ export default function Affiliate() {
             Collaborate with Bhumivera through transparent ingredient education, real-life skincare demonstrations, and ASCI-compliant botanical storytelling.
           </p>
           <div className="mt-9 flex flex-wrap justify-center gap-4">
-            <Link to="/contact" className="btn-gold-luxury px-7 py-3.5 text-white font-bold text-xs uppercase tracking-widest rounded-xl shadow-xl">
-              Apply for Written Partner Terms
+            <Link to="/register" className="btn-gold-luxury px-7 py-3.5 text-white font-bold text-xs uppercase tracking-widest rounded-xl shadow-xl">
+              Create an account to apply
             </Link>
             <Link to="/legal/warranty-affiliate-b2b" className="btn-silver-luxury px-7 py-3.5 text-[#cbd5e1] font-semibold text-xs uppercase tracking-widest rounded-xl inline-flex items-center gap-2">
               <Scale size={14} className="text-[#d4af37]" /> Read Affiliate Legal Terms
@@ -52,7 +57,7 @@ export default function Affiliate() {
       <div className="max-w-7xl mx-auto px-4 mt-16">
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {[
-            { icon: DollarSign, title: "Written Commission Terms", desc: "Commercial commission tiers, TDS compliance, and payout schedules are governed by a signed written partner agreement." },
+            { icon: DollarSign, title: "Transparent Partner Earnings", desc: "Approved promoters see attributed orders, margin-qualified commissions, payout status, and their current customer offer in one dashboard." },
             { icon: Award, title: "ASCI & CCPA Compliance", desc: "Partners must use accurate ingredient disclosures, include mandatory #ad/#affiliate tags, and never make medical claims." },
             { icon: Target, title: "Retail Referral Credits", desc: "Existing retail customers can share their personal referral code from their Profile under our Dual-Ledger Referral rules." },
             { icon: TrendingUp, title: "Anti-Fraud & Fair Use", desc: "Self-referrals, brand-keyword ad bidding, coupon hijacking, and synthetic traffic are audited server-side." }

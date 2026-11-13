@@ -678,6 +678,16 @@ export const contact = {
 };
 export const adminManagement = { getAllUsers: () => api.get("/admin/users"), getUserDetails: id => api.get(`/admin/users/${id}`), updateUserStatus: (id, s) => api.patch(`/admin/users/${id}/status`, { status: s }), getAllOrders: () => api.get("/orders/all"), updateOrderStatus: (id, d) => api.put(`/orders/${id}/status`, d) };
 export const affiliate = {
+  getProgramConfig: () => api.get('/affiliate/program-config'),
+  getOffer: code => api.get('/affiliate/offer', { params: { code } }),
+  applyForPartner: data => api.post('/affiliate/partner/apply', data),
+  getPartnerDashboard: () => api.get('/affiliate/partner/me'),
+  getAdminProgramConfig: () => api.get('/affiliate/admin/program-config', { adminAuth: true }),
+  updateAdminProgramConfig: data => api.put('/affiliate/admin/program-config', data, { adminAuth: true }),
+  getAdminPartners: () => api.get('/affiliate/admin/partners', { adminAuth: true }),
+  updateAdminPartner: (id, data) => api.patch(`/affiliate/admin/partners/${id}`, data, { adminAuth: true }),
+  getAdminCommissions: () => api.get('/affiliate/admin/commissions', { adminAuth: true }),
+  payAdminCommission: (id, data) => api.post(`/affiliate/admin/commissions/${id}/payout`, data, { adminAuth: true }),
   previewReferral: params => api.get('/affiliate/referral/preview', { params }),
   getReferralLink: () => api.get('/affiliate/referral/link'),
   getReferralSummary: () => api.get('/affiliate/referral/summary'),
