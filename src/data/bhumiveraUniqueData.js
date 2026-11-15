@@ -1119,7 +1119,7 @@ export const LEGAL_SECTION_PROFILES = {
     slug: 'conditions-of-use',
     code: 'PART I',
     title: 'Conditions of Use & Retail Sale',
-    subtitle: 'Binding Electronic Contract, Patch-Test Duty, GST Pricing & SuperAdmin Cancellation Lock',
+    subtitle: 'Terms for account use, orders, payments, and promotions.',
     statuteBadge: 'Indian Contract Act 1872 · IT Act 2000 Sec. 10A',
     heroImage: '/assets/images/Promo1.webp',
     keyMetrics: [
@@ -1149,8 +1149,8 @@ export const LEGAL_SECTION_PROFILES = {
     id: 'orders',
     slug: 'shipping-hygiene',
     code: 'PART II',
-    title: 'Shipping & Personal-Care Sanitary Custody Standard',
-    subtitle: 'Personal-Care Cosmetics Hygiene Seal Standard & 100% Sealed Virgin Custody',
+    title: 'Orders, Shipping & Product Issues',
+    subtitle: 'Delivery information, cancellation requests, and how to report a product issue.',
     statuteBadge: 'Drugs & Cosmetics Act 1940 · E-Commerce Rules 2020',
     heroImage: '/assets/images/Promo7.webp',
     keyMetrics: [
@@ -1180,8 +1180,8 @@ export const LEGAL_SECTION_PROFILES = {
     id: 'antifraud',
     slug: 'unboxing-antiscam',
     code: 'PART III',
-    title: 'Artisanal Wax-Sealed Custody & Patron Shield',
-    subtitle: 'Warehouse Digital Weight-Scan Logs, Tamper-Evident Seals & Chargeback Forensics',
+    title: 'Account Security, Claims & Reviews',
+    subtitle: 'How we review account concerns, payment disputes, and customer feedback.',
     statuteBadge: 'Bharatiya Sakshya Adhiniyam 2023 Sec. 63 · BNS 2023',
     heroImage: '/assets/images/Promo9.webp',
     keyMetrics: [
@@ -1212,7 +1212,7 @@ export const LEGAL_SECTION_PROFILES = {
     slug: 'wallet-loyalty-referrals',
     code: 'PART IV',
     title: 'Wallet, Loyalty & Referral Terms',
-    subtitle: 'Dual-Ledger Wallet Separation (Refundable Cash vs. Promotional Credits) & Anti-Sybil Rules',
+    subtitle: 'The current terms for loyalty, referral, wallet, and promotional benefits.',
     statuteBadge: 'Indian Contract Act 1872 · Promotional Ledger Governance',
     heroImage: '/assets/images/Promo2.webp',
     keyMetrics: [
@@ -1243,7 +1243,7 @@ export const LEGAL_SECTION_PROFILES = {
     slug: 'warranty-affiliate-b2b',
     code: 'PART V',
     title: 'Warranty, Affiliate & B2B Partner Terms',
-    subtitle: 'Product Serial Verification, ASCI Influencer Disclosures & Written Wholesale Contracts',
+    subtitle: 'Product verification, creator partnerships, and business enquiries.',
     statuteBadge: 'ASCI Guidelines · Trade Marks Act 1999 · CPA 2019',
     heroImage: '/assets/images/Promo4.webp',
     keyMetrics: [
@@ -1274,7 +1274,7 @@ export const LEGAL_SECTION_PROFILES = {
     slug: 'privacy-dpdp',
     code: 'PART VI',
     title: 'Privacy & DPDP Act 2023 Notice',
-    subtitle: 'A clear account of the personal data we use, why we use it, who may receive it, how long we retain it, and how you can exercise your rights.',
+    subtitle: 'How personal information is used, shared, retained, and protected, and how to contact us about it.',
     statuteBadge: 'Digital Personal Data Protection (DPDP) Act 2023 · IT Rules 2011',
     heroImage: '/logo.webp',
     keyMetrics: [
@@ -1288,8 +1288,8 @@ export const LEGAL_SECTION_PROFILES = {
     id: 'ip_disclaimer',
     slug: 'medical-ip-shield',
     code: 'PART VII',
-    title: 'Medical Disclaimer, IP & Liability Shield',
-    subtitle: 'Cosmetic vs. Pharmaceutical Distinction, Trade Dress Copyright & Statutory Liability Cap',
+    title: 'Product Information & Intellectual Property',
+    subtitle: 'Product-use information, cosmetic notices, and intellectual-property terms.',
     statuteBadge: 'Drugs & Cosmetics Act 1940 · Copyright Act 1957 · Trade Marks Act 1999',
     heroImage: '/assets/images/charcoalFace wash.webp',
     keyMetrics: [
@@ -1319,8 +1319,8 @@ export const LEGAL_SECTION_PROFILES = {
     id: 'grievance',
     slug: 'arbitration-grievance',
     code: 'PART VIII',
-    title: 'Arbitration, Jurisdiction & Grievance Officer',
-    subtitle: '3-Tier Customer Care Escalation, Designated Grievance Officer & West Bengal Jurisdiction',
+    title: 'Grievances & Dispute Resolution',
+    subtitle: 'How to raise a concern and the legal routes available to customers.',
     statuteBadge: 'Consumer Protection (E-Commerce) Rules 2020 · Arbitration Act 1996',
     heroImage: '/assets/images/Promo8.webp',
     keyMetrics: [

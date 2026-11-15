@@ -2,16 +2,8 @@ import React, { useEffect, useState, useMemo } from 'react';
 import { Link, useLocation, useParams, useSearchParams } from 'react-router-dom';
 import {
   Scale,
-  ShieldCheck,
-  FileCheck2,
-  Lock,
-  AlertTriangle,
   Search,
   Printer,
-  CheckCircle2,
-  BookOpen,
-  Gavel,
-  ArrowRight,
 } from 'lucide-react';
 import SEO from '../components/SEO';
 import { LEGAL_SECTION_PROFILES } from '../data/bhumiveraUniqueData';
@@ -42,53 +34,14 @@ const SECTION_TO_PATH = {
 
 const SECTIONS = [
   { id: 'terms', code: 'PART I', label: 'Conditions of Use & Sale', count: 16 },
-  { id: 'orders', code: 'PART II', label: 'Orders, Sanitary Virgin Custody & Concierge Care', count: 12 },
-  { id: 'antifraud', code: 'PART III', label: 'Anti-Scam, 360° Unboxing & Chargeback Shield', count: 10 },
+  { id: 'orders', code: 'PART II', label: 'Orders, Delivery & Product-Issue Requests', count: 12 },
+  { id: 'antifraud', code: 'PART III', label: 'Account Security, Claims & Reviews', count: 10 },
   { id: 'referrals', code: 'PART IV', label: 'Wallet, Loyalty, Spin & Referral Governance', count: 10 },
   { id: 'warranty_affiliate', code: 'PART V', label: 'Product Verification, Affiliate & B2B Terms', count: 10 },
   { id: 'privacy', code: 'PART VI', label: 'Privacy Notice & DPDP Act 2023 Governance', count: 11 },
   { id: 'ip_disclaimer', code: 'PART VII', label: 'Medical Disclaimer, IP & Liability Cap', count: 10 },
-  { id: 'grievance', code: 'PART VIII', label: 'Arbitration, Jurisdiction & Grievance Officer', count: 9 },
+  { id: 'grievance', code: 'PART VIII', label: 'Grievance & Customer Support', count: 9 },
   { id: 'all', code: 'MASTER', label: 'View All 88 Clauses (Full Agreement)', count: 88 },
-];
-
-const PROTECTION_MATRIX = [
-  {
-    scenario: 'Delivered Personal Care Custody & Hygiene Standard',
-    policy: '100% Sealed Virgin Unit Custody. Sealed at compounding facility; serialized in small artisanal batches to guarantee absolute purity.',
-    evidence: 'Sealed dispatch weight & warehouse CCTV record.',
-    statute: 'Drugs & Cosmetics Act, 1940; Consumer Protection (E-Commerce) Rules, 2020.',
-  },
-  {
-    scenario: 'Damaged, Leaking, Defective or Wrong Item on Arrival',
-    policy: 'Direct Concierge Review for Verified Patrons with direct refund or spendable store credit.',
-    evidence: 'Mandatory uncut 360° unboxing video showing intact outer AWB & seal + photos within 48 hours of delivery.',
-    statute: 'Consumer Protection Act, 2019; Indian Sale of Goods Act, 1930.',
-  },
-  {
-    scenario: 'Missing Item / Empty Box / Tampered Parcel Claim',
-    policy: 'Evaluated strictly by cross-checking customer’s uncut 360° unboxing video against warehouse digital weight-scan & CCTV packing logs.',
-    evidence: 'Uncut 360° video starting BEFORE breaking outer courier seal + pre-dispatch weight certificate.',
-    statute: 'Section 63, Bharatiya Sakshya Adhiniyam, 2023 (Electronic Evidence).',
-  },
-  {
-    scenario: 'Order Cancellation (Pre-Dispatch Only; Blocked Once Packed or Shipped)',
-    policy: 'Orders may only be cancelled before they are packed and shipped. Once marked packed or shipped, cancellation is locked. Once delivered, all items are 100% non-returnable.',
-    evidence: 'Immutable order state machine & SHA-512 audit ledger.',
-    statute: 'Indian Contract Act, 1872 (Binding Electronic Offer & Acceptance).',
-  },
-  {
-    scenario: 'Referral Rewards, Shopping Rewards & Loyalty Points',
-    policy: 'Promotional, order-only credits; strictly non-cash, non-withdrawable, non-transferable, and subject to server-side tier caps.',
-    evidence: 'Dual-ledger cryptographic wallet & referral audit trail.',
-    statute: 'Indian Contract Act, 1872; Promotional Scheme Governance.',
-  },
-  {
-    scenario: 'False Chargebacks, UPI Fraud, Prank COD or Sybil Multi-Accounts',
-    policy: 'Immediate account termination, forfeiture of promotional balances, recovery of two-way freight/gateway fees, and legal escalation.',
-    evidence: 'Gateway webhook signatures, SHA-512 ledger hashes, carrier POD, and server security logs.',
-    statute: 'Information Technology Act, 2000; Bharatiya Nyaya Sanhita (BNS), 2023.',
-  },
 ];
 
 const LEGAL_CLAUSES = {
@@ -97,15 +50,15 @@ const LEGAL_CLAUSES = {
       num: '1.1',
       title: '1. Who these terms cover & binding electronic contract',
       body: [
-        '“Bhumivera”, “we”, “us” and “our” refer to the Bhumivera-branded e-commerce platform, mobile/web applications, and the operating enterprise (Bhumivera Organics India Private Limited, incorporated on 8 April 2026 [CIN: U20237WB2026PTC295842, RoC-Kolkata II] as the dedicated luxury flagship corporate entity carrying forward the 2016 botanical formulation and retail heritage established under MPG E Business Private Limited, headquartered in Asansol, Purba Bardhaman, West Bengal, India) and/or the seller identified on the relevant product listing, checkout summary, and tax invoice. These Master Conditions of Use & Sale (“Conditions”) constitute a legally binding electronic contract under the Indian Contract Act, 1872 and Section 10A of the Information Technology Act, 2000.',
-        'By accessing, browsing, registering an account, using the AI Client Concierge, participating in any loyalty/referral/spin program, or placing an order on Bhumivera, you unconditionally agree to be bound by all 8 Parts of these Conditions. Product-specific disclosures, checkout breakdowns, and GST tax invoices form an integral part of the transaction record. Where any mandatory statutory consumer protection, product-safety, or data-protection right cannot lawfully be waived, these Conditions operate harmoniously with that statutory right.',
+        '“Bhumivera”, “we”, “us” and “our” refer to the Bhumivera platform and brand. Bhumivera Organics India Private Limited (CIN U20237WB2026PTC295842) was incorporated on August 4, 2026, and was founded by Akash Prasad. Its directors are Akash Prasad, Payal Prasad, and Aman Prasad; its business address is G.T. Road, Gopalpur, Asansol, West Bengal 713304, India. The family-business heritage includes MPG E-Business Private Limited (CIN U74999WB2016PTC217735), incorporated on September 22, 2016, founded by Dilip Prasad Nonia, at 608, BNR Sen Raleigh Road, Park Lane, Behind Spencer, Asansol, West Bengal 713305, India. MPG E-Business Private Limited is identified here as a heritage entity and is not automatically the seller for an order. For a purchase, the seller is the legal entity named on the product listing and order invoice (“Seller”). The Seller’s identity and contact information must be shown before an order is placed. These Conditions apply to use of the platform and purchases where accepted during account creation or checkout.',
+        'These Conditions are read together with the product listing, checkout price and delivery disclosures, and the order invoice. If a term conflicts with a non-waivable right under applicable law, the law prevails. Nothing here makes access to a statutory consumer remedy conditional on first using an internal support process.',
       ],
     },
     {
       num: '1.2',
       title: '2. Eligibility, legal capacity and account security',
       body: [
-        'You must be at least 18 years of age and legally competent to contract under Section 11 of the Indian Contract Act, 1872. A minor may browse or use the platform only under the direct supervision and explicit legal assumption of responsibility by a parent or lawful guardian.',
+        'The account holder and purchaser must be an adult legally competent to contract. A parent or lawful guardian must place and manage any order for a minor. Do not create an account in a minor’s name.',
         'You are solely responsible for maintaining the strict confidentiality of your account password, WebAuthn Passkeys, one-time passwords (OTPs), session tokens, and recovery credentials. Bhumivera personnel and AI systems will NEVER ask for your password or OTP. Any action, order, wallet redemption, or communication authenticated through your account credentials or registered device is legally attributable to you. Notify support@bhumivera.com immediately if you suspect unauthorized access.',
         'You must provide truthful, current, and complete registration, contact, billing, and delivery information (including accurate pin codes and Google Maps coordinates where used). Impersonation, disposable-email farming, multi-account creation to bypass promotional limits, automated scraping, or interference with Cloudflare Turnstile / rate-limiting controls is strictly prohibited and grounds for immediate account termination.',
       ],
@@ -120,10 +73,10 @@ const LEGAL_CLAUSES = {
     },
     {
       num: '1.4',
-      title: '4. Mandatory 24–48 hour patch test & allergen assumption of risk',
+      title: '4. Cosmetic-use guidance and individual reactions',
       body: [
-        'Even pure natural botanicals, essential oils, herbal extracts, and modern dermatological actives (such as Niacinamide or Hyaluronic Acid) can trigger individual skin or scalp sensitivities or allergic reactions. Before first full use of any Bhumivera product, you MUST perform a 24-to-48-hour patch test on a small area of clean skin (such as the inner forearm or behind the ear).',
-        'If redness, itching, burning, rash, or discomfort occurs during the patch test or routine use, rinse immediately with cool water, discontinue use, and consult a qualified physician. By purchasing and using Bhumivera cosmetics, you acknowledge that individual skin compatibility varies and that Bhumivera is not liable for idiosyncratic allergic reactions, sensitivities, or misuse contrary to label instructions.',
+        'Individual reactions to cosmetic ingredients vary. Read the product label and directions before use; where the label recommends it, test a small area first. Stop use and seek qualified medical advice if you experience a reaction.',
+        'Nothing in this notice excludes or limits a remedy or liability that cannot lawfully be excluded, including for a product defect, misleading information, or failure to meet applicable safety requirements.',
       ],
     },
     {
@@ -139,8 +92,8 @@ const LEGAL_CLAUSES = {
       num: '1.6',
       title: '6. Order offer, acceptance & Pre-dispatch cancellation rule',
       body: [
-        'Submitting an order at checkout constitutes a binding offer to purchase the selected merchandise under these Conditions. Order acceptance occurs when our system confirms the order and allocates warehouse inventory. We reserve the right to decline or cancel any order prior to delivery due to stock unavailability, unserviceable pin code, failed security/fraud screening, pricing error, or regulatory restriction, with a full refund of any captured online payment.',
-        'PRE-DISPATCH ORDER CANCELLATION: An order may be cancelled ONLY before it is packed and shipped from the warehouse (while in Pending, Confirmed, or Processing status). Once an order has entered Packed or Shipped status, automated warehouse picking, serial registration, and courier manifest handover are complete, and the order CANNOT be cancelled or recalled. Furthermore, once delivered, all products are strictly non-returnable.',
+        'Submitting an order is an offer to purchase. Order confirmation, stock availability, and any cancellation by the Seller will be communicated through the order channel. If the Seller cancels an order after payment, any amount due back will be returned as required by law.',
+        'You may request cancellation through your account or customer support. Whether an order can still be stopped depends on its fulfilment status. A packed or dispatched order may no longer be cancellable, but this operational limit does not remove any remedy available under applicable law.',
       ],
     },
     {
@@ -148,7 +101,7 @@ const LEGAL_CLAUSES = {
       title: '7. Cash-on-Delivery (COD) governance & refusal countermeasures',
       body: [
         'Cash-on-Delivery (COD) is a privilege extended for customer convenience on eligible pin codes and order values. Placing a COD order creates a binding contractual commitment to accept delivery and tender the exact invoice amount upon courier arrival.',
-        'Habitual refusal of COD parcels at the doorstep, providing fabricated addresses/phone numbers, or placing prank COD orders causes measurable two-way logistics and packaging loss. Bhumivera automatically logs COD refusals; accounts with repeated unjustified COD refusals will have COD privileges permanently revoked, promotional/referral balances forfeited, and may be required to prepay all future orders.',
+        'Please place a COD order only when you intend to receive it. We may restrict COD availability for an account after repeated unexplained refusals or suspected misuse, following a reasonable review. Any restriction will not affect an existing order, an earned cash balance, or a statutory right.',
       ],
     },
     {
@@ -156,16 +109,16 @@ const LEGAL_CLAUSES = {
       title: '8. Coupons, cart promotions, loyalty and dual-ledger wallets',
       body: [
         'Coupons and cart-rule offers are subject to their displayed minimum order value, validity window, customer eligibility, usage limits, and stacking rules enforced server-side at checkout. Promotional codes have zero cash value, cannot be sold or transferred, and cannot be applied retroactively after an order is placed.',
-        'Spendable Bhumivera Wallet funds (originating from approved prepaid order refunds or verified courtesy damage credits) and Restricted Shopping/Referral Rewards are maintained in strictly separate cryptographic ledgers. Spendable Wallet funds may be applied toward eligible purchases on Bhumivera. Restricted Shopping and Referral Rewards are promotional, order-only discount credits: they can NEVER be withdrawn to a bank account, transferred via UPI, encashed, assigned, or used to pay shipping fees or taxes.',
-        'Eligible paid orders earn 10% of eligible net merchandise value in restricted shopping rewards (plus an additional 5% welcome bonus on a customer’s first eligible order), capped at ₹500 per order. Online rewards are credited after payment capture and COD rewards after verified delivery and cash reconciliation. Credits auto-apply only when the cart meets the admin-configured minimum subtotal tier and only up to the configured per-order ceiling.',
+        'Wallet balances and promotional rewards may have different uses and restrictions, which will be shown in the account and at checkout. A promotional credit is not a substitute for a refund or other remedy required by law. Any cash balance or amount due will be handled under the applicable order terms and law.',
+        'Reward rates, caps, eligibility, crediting time, and redemption rules are shown in the applicable offer, account, or checkout before use. If a promotion’s terms differ from a general description here, the specific terms shown with that promotion govern, subject to applicable law.',
       ],
     },
     {
       num: '1.9',
       title: '9. Loyalty matrix: earning, tiers and redemption',
       body: [
-        'The Clientele Privilege (Loyalty) programme is promotional and governed by server-side rates shown at checkout. The baseline earning rate is 0.1 point per ₹1 of eligible net merchandise spend (1 point per ₹10), with 10 points converting to ₹1 of checkout discount, a minimum redemption threshold of 100 points, and a maximum redemption ceiling of 20% of remaining eligible merchandise value. Points have zero cash or monetary value and cannot be withdrawn or transferred.',
-        'Tier qualification is based on lifetime net points earned: Bronze (0+), Silver (500+), Gold (1,000+), and Platinum (5,000+), unlocking 1.0×, 1.25×, 1.5×, and 2.0× base point multipliers respectively, plus configured tier discounts (2% Gold, 3% Platinum), loyalty cashback points (0.5% Gold, 1% Platinum), and tier shipping privileges. Cancelled, refunded, or reversed transactions automatically reverse earned points and adjust lifetime tier qualification.',
+        'The applicable earning rate, point conversion, redemption minimums and limits, tiers, and benefits are shown in the account or checkout when available. Check those details before redeeming; points are promotional unless the offer states otherwise. We will not apply a points adjustment to reduce a refund below an amount required by law.',
+        'Cancelled or refunded orders may result in an adjustment to points or benefits earned from that order under the terms shown when they were earned. We will explain material adjustments and provide a way to ask for review.',
       ],
     },
     {
@@ -180,8 +133,8 @@ const LEGAL_CLAUSES = {
       num: '1.11',
       title: '11. Reviews, photos, videos and user submissions',
       body: [
-        'When you submit a product review, rating, photograph, unboxing video, or support attachment, you warrant that it is your genuine, original work and reflects your honest first-hand experience with the ordered product. You grant Bhumivera a non-exclusive, royalty-free, worldwide license to host, verify, display, format, and reproduce your approved review content across our storefront and marketing channels, subject to your privacy settings and applicable law.',
-        'Do not submit defamatory, obscene, extortionate, competitor-sponsored, fabricated, or unlawful material, or third-party personal data without consent. Bhumivera reserves the right to moderate, verify against confirmed purchase records, or remove any submission that violates these rules.',
+        'Submit only content you have the right to share. We may host and display a review or other content within the service for the purpose for which you submitted it, subject to applicable law. We will seek separate permission before using customer-submitted content in off-platform advertising unless another lawful basis applies.',
+        'We may moderate content that violates law or these rules, but will not remove or suppress a good-faith opinion merely because it is critical. Do not include another person’s personal information without permission.',
       ],
     },
     {
@@ -209,15 +162,15 @@ const LEGAL_CLAUSES = {
       num: '1.15',
       title: '15. Service availability, limitation of liability and changes',
       body: [
-        'While we engineer our platform for high availability and cryptographic integrity, scheduled maintenance, telecom disruptions, or third-party cloud/gateway outages may occasionally interrupt access. To the maximum extent permitted by applicable Indian law, Bhumivera’s aggregate financial liability for any claim arising out of or relating to an order or product shall never exceed the net amount actually paid by the customer for that specific disputed order.',
-        'We may update these Conditions prospectively to reflect legal, regulatory, security, or operational developments. The current version number and effective date are published at the top of this page. Completed orders remain governed by the lawful terms in force at the time of checkout.',
+        'The platform may occasionally be unavailable or affected by third-party service interruptions. Nothing in these Conditions excludes or caps a liability or remedy where applicable law does not permit that exclusion or cap.',
+        'We may update these Conditions when our services or legal obligations change. The version shown on this page applies from its stated update date; material changes to an existing service or program will be communicated where required by law. A change does not retrospectively remove an accrued right.',
       ],
     },
     {
       num: '1.16',
       title: '16. Consumer law compliance & severability',
       body: [
-        'These Conditions are drafted in compliance with the Consumer Protection Act, 2019, the Consumer Protection (E-Commerce) Rules, 2020, the Information Technology Act, 2000, the Digital Personal Data Protection Act, 2023, the Legal Metrology (Packaged Commodities) Rules, 2011, and the Drugs and Cosmetics Act, 1940. If any clause is held partially unenforceable by a court or commission of competent jurisdiction, that clause shall be enforced to the maximum permissible extent and the remaining clauses shall remain in full force and effect.',
+        'These Conditions do not replace applicable consumer, product-safety, data-protection, tax, or other statutory requirements. If a provision cannot lawfully be enforced, it will not limit the remaining provisions or any non-waivable right.',
       ],
     },
   ],
@@ -228,62 +181,60 @@ const LEGAL_CLAUSES = {
       title: '1. Dispatch cutoffs (14:00 IST), delivery estimates and tracking',
       body: [
         'Available delivery tiers (Standard and Premium), shipping charges, free-shipping thresholds, and estimated delivery windows are displayed at checkout. Orders confirmed before 2:00 PM (14:00) IST are scheduled for same-day or next-business-day warehouse processing; orders placed after 2:00 PM IST begin processing the following business day.',
-        'Delivery dates shown on product pages and checkout are good-faith carrier estimates, not guaranteed fixed-date warranties unless explicitly labeled as a guaranteed service. National holidays, monsoon/weather disruptions, state border checks, or courier network delays do not entitle a buyer to punitive damages. Keep your registered phone number reachable for carrier OTP and doorstep coordination.',
+        'Delivery dates shown on product pages and checkout are estimates unless explicitly stated as a guaranteed service. Weather, holidays, or carrier delays may affect delivery. This does not limit any remedy available under applicable law. Keep your registered phone number reachable for carrier coordination.',
       ],
     },
     {
       num: '2.2',
-      title: '2. Strict 100% Non-Returnable Policy & Sealed Virgin Custody Standard',
+      title: '2. Change-of-mind returns and product-issue requests',
       body: [
-        'STRICT 100% NON-RETURNABLE POLICY: Bhumivera formulations—including Face Washes, Shampoos, Hair Cleansers, Night Elixirs, Serums, and Botanical Gels—are intimate, microbial-sensitive personal hygiene and cosmetic products compounded in small artisanal batches of 250 units. In compliance with health and cosmetic safety standards under the Drugs and Cosmetics Act, 1940 and sealed-hygiene custody practices, all sold products are strictly 100% NON-RETURNABLE once shipped or delivered. We do not accept returns under any circumstances to prevent potential cross-contamination.',
-        'Each bottle carries a unique serial number verifiable on our /verify portal to inspect individual batch laboratory assays, calibrated pH, and chemical purity.',
+        'For hygiene reasons, we do not accept change-of-mind returns of sealed personal-care products unless a product listing says otherwise. This does not prevent you from reporting a defective, damaged, leaking, incorrect, missing, materially misdescribed, or otherwise legally eligible item, or limit any remedy required by law.',
+        'Product verification features, where available, provide only the information described on the verification page. They do not replace a customer’s statutory rights or independently certify a product beyond the records expressly shown.',
       ],
     },
     {
       num: '2.3',
-      title: '3. Dedicated Concierge Resolution for Verified Patrons',
+      title: '3. Review process and available remedies',
       body: [
-        'Every loyal patron is protected by our Dedicated Concierge Service. If a parcel arrives with evidence of external transit compromise, leaking through a damaged primary seal, or materially discordant from the tax invoice, our executive concierge reviews the incident directly.',
-        'Upon verification of your claim under Clause 2.4, our concierge team processes direct resolution (including immediate wallet credit or direct payment refund) without requiring return shipping.',
+        'Contact customer support if an order arrives damaged, leaking, incorrect, incomplete, or materially different from its listing. We will review the information and explain the next steps and any remedy available under the order terms and applicable law.',
+        'Depending on the circumstances and applicable law, resolution may include a replacement, repair, refund, or another appropriate remedy. We will tell you if an item needs to be returned and how to do so.',
       ],
     },
     {
       num: '2.4',
-      title: '4. Mandatory 48-hour reporting window & 360° uncut unboxing video requirement',
+      title: '4. Prompt reporting and optional supporting information',
       body: [
-        'To qualify for Concierge Resolution, Wallet Credit, or transit dispute resolution, the customer MUST submit a claim within 48 hours of the courier’s recorded delivery timestamp.',
-        'Every claim for transit damage, leakage, missing item, wrong item, or empty/tampered parcel MUST be accompanied by a continuous, uncut, unedited 360-degree Unboxing Video recorded from start to finish. The video must clearly show: (i) all 6 sides (360°) of the unopened outer shipping box, (ii) the legible courier AWB shipping label and intact tamper-evident seal BEFORE any tape or seal is cut, (iii) the continuous opening of the box in frame without any pause, cut, splice, fast-forward, or camera obstruction, and (iv) the close-up condition of the inner product bottle, cap seal, and batch/serial label.',
-        'Claims submitted after 48 hours of delivery, or claims accompanied only by post-opening photographs without a valid uncut 360° unboxing video (or with a video started after the outer seal was already cut and re-taped), will be respectfully declined as unverifiable post-delivery handling.',
+        'Please report an issue as soon as reasonably possible so we can investigate while order and carrier information is available. Photographs, packaging, labels, or an unedited unboxing video may help, if available, but a missing video or a report made after 48 hours will not by itself waive a right or automatically decide a claim.',
+        'We may ask for information reasonably needed to assess a claim. We will consider the circumstances and available evidence fairly, including where a customer could not record an unboxing video.',
       ],
     },
     {
       num: '2.5',
-      title: '5. Warehouse CCTV, digital weight-scan & barcode serialization proof',
+      title: '5. Records used to review a product or delivery issue',
       body: [
-        'Every Bhumivera order is packed under high-definition overhead warehouse CCTV cameras. Prior to sealing, each item’s barcode/serial is scanned and the final sealed parcel is weighed on calibrated digital scales, with the exact gram weight recorded on the shipping manifest and carrier handover log.',
-        'In the event of any dispute regarding missing items, short shipment, or parcel contents, the warehouse CCTV packing footage and pre-dispatch digital weight-scan record—cross-referenced with the customer’s uncut 360° unboxing video—serve as the primary, conclusive operational evidence.',
+        'We may use order, fulfilment, carrier, and payment records that are available to investigate a reported issue. Records are considered along with the customer’s account and other available evidence; no internal record is conclusive solely because it is held by the Seller.',
       ],
     },
     {
       num: '2.6',
       title: '6. Prepaid order refunds & atomic wallet ledger reconciliation',
       body: [
-        'When an unfulfilled or pre-dispatch cancelled prepaid order is approved for a refund, or when a verified transit-damage claim is resolved via refund, our Atomic Refund & Wallet Restoration Ledger executes within a locked database transaction.',
-        'Any portion of the order paid via Spendable Bhumivera Wallet or Restricted Referral Credit is restored to its respective ledger with a cryptographic SHA-512 audit hash. Any portion captured via online gateway (Razorpay/UPI/Card) is initiated back to the original payment source within 5–7 business days (subject to banking network settlement schedules) or credited to the Spendable Bhumivera Wallet at the customer’s election.',
+        'If a refund is approved or required, we will confirm the amount and refund method. Refunds will be made through the payment method or another method permitted by applicable law and agreed for the case. The time for a payment provider or bank to post the refund may vary; we will share any available transaction reference.',
+        'Any eligible wallet or promotional-credit restoration will be explained separately. Promotional credits are not a substitute for a cash refund where a cash refund is required by law.',
       ],
     },
     {
       num: '2.7',
-      title: '7. Exclusions from Courtesy Protection & warranty',
+      title: '7. Circumstances considered during a product-issue review',
       body: [
-        'Courtesy Protection and warranty coverage do NOT apply to: (a) products damaged due to customer misuse, dropping, exposure to extreme heat/sunlight, or water contamination after delivery; (b) products whose batch number, serial number, or label has been defaced, removed, or tampered with; (c) products purchased from unauthorized third-party resellers or grey-market sellers; (d) normal cosmetic zużycie (consumption) where more than 10% of the bottle has been used; or (e) subjective dissatisfaction with natural herbal scent or skin feel where the product meets its published specification.',
+        'A claim may be affected by evidence of misuse or damage after delivery, alteration, or purchase from an unauthorized seller. We will assess the facts of each case. No exclusion in this section limits a mandatory legal remedy or any express product warranty.',
       ],
     },
     {
       num: '2.8',
       title: '8. Address accuracy, Google Maps pinpoint & failed delivery re-dispatch',
       body: [
-        'Customers are responsible for providing a complete, accurate delivery address, landmark, pin code, and active 10-digit Indian mobile number. If a parcel is returned to origin (RTO) due to an incomplete address, unreachable phone, false courier OTP refusal, or repeated customer unavailability after 3 carrier attempts, Bhumivera may deduct actual two-way carrier freight and packaging charges before crediting any remaining prepaid balance.',
+        'Please provide a complete delivery address and reachable contact details. If a delivery fails or a parcel returns to origin, we will contact you about the next steps. Any charge or deduction will be disclosed, supported by the applicable order terms, and applied only where permitted by law.',
       ],
     },
     {
@@ -295,23 +246,23 @@ const LEGAL_CLAUSES = {
     },
     {
       num: '2.10',
-      title: '10. Product warranty & serial registration scope',
+      title: '10. Product warranty and serial-registration scope',
       body: [
-        'Where a product carries a stated warranty period, coverage is governed by the duration and terms displayed on its product page. The product verification page only checks whether a serial number matches an issued record; it does not activate or extend warranty coverage or override the 48-hour unboxing verification rule.',
+        'Where a product carries a stated warranty period, coverage is governed by the duration and terms displayed on its product page. The product verification page only checks whether a serial number matches an issued record; it does not activate or extend warranty coverage. Optional photos or video do not replace or limit a remedy required by law.',
       ],
     },
     {
       num: '2.11',
       title: '11. Promotional gifts, freebies & bundle adjustments on partial claims',
       body: [
-        'If an order qualified for a free gift, tier discount, or threshold coupon, and a partial cancellation or refund reduces the net retained order value below the qualifying threshold, the value of the retained free gift or threshold discount is proportionally adjusted in the refund calculation.',
+        'If a partial cancellation or refund affects a bundle, gift, coupon, or threshold offer, we will explain any adjustment using the offer terms disclosed when the order was placed. An adjustment will not reduce a refund below an amount required by law.',
       ],
     },
     {
       num: '2.12',
       title: '12. Safe order support communication rules',
       body: [
-        'When contacting support regarding an order, include only your 9-digit Order ID, registered email/phone, description of the issue, and your 360° unboxing video/photos. Never transmit passwords, OTPs, CVV numbers, or UPI PINs.',
+        'When contacting support regarding an order, include your order number, registered email or phone, and a description of the issue. Photos or video may help but are optional. Never transmit passwords, OTPs, CVV numbers, or UPI PINs.',
       ],
     },
   ],
@@ -319,33 +270,32 @@ const LEGAL_CLAUSES = {
   antifraud: [
     {
       num: '3.1',
-      title: '1. Zero-tolerance policy against e-commerce scams & claim abuse',
+      title: '1. Review of suspected fraud or account abuse',
       body: [
-        'Bhumivera enforces a strict zero-tolerance policy against all forms of e-commerce fraud, including but not limited to: “empty-box” claims, “brick/stone-in-box” claims, item tampering (altering genuine botanical liquid), intentional post-delivery damage claims, courier-collusion false non-delivery claims, and abusive serial dispute attempts.',
+        'We may investigate suspected deliberate fraud, account abuse, or tampering using information reasonably relevant to the matter. A customer’s good-faith complaint, request for a remedy, review, payment dispute, or report to a regulator is not by itself evidence of fraud.',
       ],
     },
     {
       num: '3.2',
-      title: '2. Technical specification for valid 360° uncut unboxing videos',
+      title: '2. Optional supporting information for delivery issues',
       body: [
-        'To prevent manipulated video evidence, an unboxing video submitted for any claim must satisfy all of the following forensic criteria: (a) Single continuous take with zero edits, cuts, pauses, jump-cuts, or speed alterations; (b) Clear, well-lit focus on the shipping label (AWB number, barcode, and declared weight) at the start of the video; (c) Full 360-degree rotation of the sealed parcel showing all 6 faces and intact tamper-evident security tape before any blade or scissors touch the box; and (d) Continuous framing of the parcel while opening and extracting the product.',
-        'Videos that begin after the box is already slit open, where the parcel leaves the camera frame during opening, or where metadata/visual inspection reveals splicing or re-taping are invalid and will be rejected.',
+        'Photos, packaging, labels, or an unedited unboxing video may help us understand a delivery issue. They are optional supporting information, not a mandatory condition for contacting us or exercising a legal right. We will consider other reasonably available information if a video is unavailable.',
       ],
     },
     {
       num: '3.3',
-      title: '3. Chargeback fraud, false UPI disputes & bank reversal defense',
+      title: '3. Payment disputes and account review',
       body: [
-        'Filing a false chargeback, unauthorized-transaction dispute, or UPI cyber-cell complaint with a bank or payment gateway after receiving a valid order (or after receiving a concierge resolution) constitutes actionable financial fraud and breach of contract.',
-        'Upon receipt of any disputed chargeback notice, Bhumivera automatically compiles and submits to the payment processor and acquiring bank: (a) the authenticated login/OTP/Passkey session log, (b) IP and device security telemetry, (c) the GST Tax Invoice, (d) warehouse CCTV packing footage and digital weight-scan certificate, and (e) carrier Proof of Delivery (POD) with OTP/signature confirmation. The disputing account is immediately frozen, all wallet/loyalty balances are forfeited, and the customer is liable for the full order amount plus gateway chargeback dispute fees and legal recovery costs.',
+        'Customers may contact their bank, payment provider, or relevant authority about a payment or account concern. We may respond to a payment dispute with relevant transaction and fulfilment information where lawful. We will not treat a good-faith dispute as fraud or automatically impose a fee, seize a cash balance, or waive a customer’s rights.',
+        'Where we have reasonable evidence of deliberate fraud, we may review the account and take proportionate action consistent with applicable law. Any claim for loss or legal costs must be established through the process required by law; it is not automatically owed merely because a dispute was raised.',
       ],
     },
     {
       num: '3.4',
       title: '4. Referral, coupon, spin-the-wheel & Sybil multi-account countermeasures',
       body: [
-        'Our referral, welcome-reward, coupon, and Spin-the-Wheel systems are protected by automated Sybil-detection heuristics. Creating multiple accounts using variations of emails, alias addresses (+tags), disposable mail domains, virtual phone numbers, shared device fingerprints, or identical delivery addresses/UPI VPA handles to farm ₹500 referral credits or welcome bonuses is strictly prohibited.',
-        'Any referral or reward cluster flagged for self-referral, household loop abuse, or synthetic registration is automatically voided and reversed across all linked accounts without notice.',
+        'Creating accounts or transactions to obtain a promotion through impersonation, self-referral, or deliberate circumvention of its published limits is prohibited. A shared device, household, address, or network connection alone does not establish abuse.',
+        'We may review and temporarily pause a disputed promotional credit while checking credible evidence. If a credit is reversed, we will give a reason and a way to ask for review. Earned cash balances and statutory rights are not forfeited by this clause.',
       ],
     },
     {
@@ -357,37 +307,37 @@ const LEGAL_CLAUSES = {
     },
     {
       num: '3.6',
-      title: '6. Extortionate reviews & reputational blackmail defense',
+      title: '6. Reviews, complaints, and public feedback',
       body: [
-        'Threatening to post fabricated 1-star reviews, false social-media allegations, or baseless regulatory complaints in order to extort free products, cash refunds outside policy, or waiver of the 360° unboxing video requirement constitutes unlawful coercion. Bhumivera documents all such communications in our immutable support ledger and reserves the right to reject the demand, publish a factual public response, and pursue legal remedies.',
+        'Customers and creators may publish honest opinions, raise good-faith complaints, request remedies, and contact consumer authorities. We may address knowingly false statements or unlawful threats through appropriate lawful channels, but will not retaliate against a person merely for criticism or for asserting a legal right.',
       ],
     },
     {
       num: '3.7',
       title: '7. Official communication channels & anti-phishing warning',
       body: [
-        'Bhumivera communicates exclusively through our official domain (bhumivera.com), official email (support@bhumivera.com), and published helpline numbers (+91 74309 85647 / +91 83708 04458). We never ask customers to install remote-desktop apps (AnyDesk/TeamViewer), scan QR codes to “receive” a refund, or pay “customs/insurance/spin-claim fees” to external UPI IDs.',
+        'Use the contact details published on the website or your order documents. We will not ask you to disclose a password, UPI PIN, card security code, or one-time passcode to receive a refund. Treat requests to install remote-access software or pay an unrelated third party to release a refund as suspicious.',
       ],
     },
     {
       num: '3.8',
-      title: '8. Evidentiary admissibility of SHA-512 cryptographic ledgers',
+      title: '8. Records used to review a concern',
       body: [
-        'All order state transitions, payment captures, wallet credits/debits, referral approvals, and support escalations on Bhumivera are recorded in relational database tables protected by cryptographic SHA-512 audit hashes and server timestamps. You agree that these computer-generated records constitute authentic, admissible electronic evidence under Section 63 of the Bharatiya Sakshya Adhiniyam, 2023 (formerly Section 65B of the Indian Evidence Act, 1872) in any court, arbitration, or consumer forum.',
+        'We may retain order, payment, support, and account records for business, security, and legal purposes. Any record may be considered with other evidence, subject to the applicable rules of the court, authority, or dispute-resolution body. Nothing in these Conditions predetermines whether evidence is authentic or admissible.',
       ],
     },
     {
       num: '3.9',
-      title: '9. Account suspension, permanent blacklisting & balance forfeiture',
+      title: '9. Account restrictions and review',
       body: [
-        'Where reasonable evidence indicates fraud, tampered unboxing media, abusive chargebacks, COD prank ordering, or harassment of customer-support staff, Bhumivera reserves the right to immediately suspend or permanently blacklist the customer’s account, phone number, email, and delivery address, and to cancel any pending orders and forfeit all promotional, loyalty, and referral balances.',
+        'If there is credible evidence of account compromise, material misuse, or a safety risk, we may restrict or suspend affected features while reviewing the matter. Where practicable, we will explain the reason and provide a contact route for review. Any action will be proportionate and will not remove a cash balance or statutory right except as permitted by law.',
       ],
     },
     {
       num: '3.10',
-      title: '10. Civil recovery & criminal prosecution under Indian law',
+      title: '10. Suspected unlawful conduct',
       body: [
-        'Deliberate defrauding of an e-commerce enterprise—through stolen payment instruments, falsified unboxing evidence, identity theft, or cyber sabotage—will be reported to the National Cyber Crime Reporting Portal (cybercrime.gov.in) and local law enforcement for prosecution under applicable provisions of the Bharatiya Nyaya Sanhita (BNS), 2023 (cheating, forgery, criminal breach of trust) and Sections 43, 66, 66C, and 66D of the Information Technology Act, 2000.',
+        'Where we have credible evidence of conduct that may violate the law, we may preserve relevant information and report it to the appropriate authority as permitted or required by law. Authorities decide whether an offence occurred and what action is appropriate.',
       ],
     },
   ],
@@ -404,14 +354,14 @@ const LEGAL_CLAUSES = {
       num: '4.2',
       title: '2. Verification hold, 1-hour review window & abuse checks',
       body: [
-        'When a referred user completes email/account verification, the referral claim enters a pending verification state. If no administrative rejection occurs and automated abuse checks pass, the system approves the claim 1 hour after verification. Administrators may reject or reverse any referral claim where duplicate device, shared IP/address, disposable email, or self-referral indicators are detected.',
+        'A referral claim may remain pending while account and eligibility checks are completed. A review indicator is not, on its own, proof of abuse. If a claim is declined or reversed, the participant may contact support to request a review.',
       ],
     },
     {
       num: '4.3',
       title: '3. Restricted referral balance vs. spendable Wallet funds',
       body: [
-        'The default approved referral reward is ₹500 of restricted referral balance for the referrer and ₹500 for the referred new customer (subject to current admin-configured rates). Restricted referral funds and shopping rewards are strictly promotional order-discount credits: they are NOT cash, NOT bank deposits, NOT Pre-Paid Instruments (PPI), and CANNOT be withdrawn, cashed out, transferred between accounts, or used to pay shipping or taxes.',
+        'Any referral reward, its value, eligible participant, use, expiry, and redemption limits are those disclosed in the offer when it is presented. A promotional discount is not a cash balance unless the offer or applicable law says otherwise. We will show material restrictions before a participant accepts or earns the offer.',
       ],
     },
     {
@@ -439,7 +389,7 @@ const LEGAL_CLAUSES = {
       num: '4.7',
       title: '7. Clawback and reversal on cancelled or refunded orders',
       body: [
-        'If an order that generated shopping rewards, loyalty points, spin rewards, or referral qualification is subsequently cancelled, refused on COD, or refunded (all personal care items being strictly 100% non-returnable once delivered), all promotional credits and points earned from that order are automatically reversed from the customer’s ledger. If the customer has already redeemed those promotional credits on a subsequent order, the redeemed value may be deducted from any refund due or recorded as a negative promotional adjustment.',
+        'If an order is cancelled or refunded, rewards tied to that order may be adjusted in accordance with the terms shown when the reward was offered. A promotional adjustment will not reduce a refund below the amount required by law.',
       ],
     },
     {
@@ -453,14 +403,14 @@ const LEGAL_CLAUSES = {
       num: '4.9',
       title: '9. Personal tax & statutory compliance on rewards',
       body: [
-        'Any promotional discount or reward received by a participant is a retail trade discount/promotional credit. To the extent any personal income tax or statutory reporting obligation arises for a participant under the Income-tax Act, 1961, it is the sole responsibility of the participant.',
+        'Participants are responsible for understanding their tax obligations. Bhumivera will make any deduction, withholding, or reporting required of it by applicable law; a participant remains responsible for any other obligation that applies to them.',
       ],
     },
     {
       num: '4.10',
       title: '10. Administrative right to modify, pause or terminate programs',
       body: [
-        'Bhumivera reserves the right to modify reward percentages, tier minimums, per-order caps, eligibility rules, or to pause or terminate the Referral, Shopping Reward, Spin, or Loyalty program prospectively at any time via the Executive Admin Suite.',
+        'We may change or end a promotional program prospectively. We will honor rewards already earned under the terms that applied when they were earned, except where an adjustment is required by law or following a substantiated abuse review with an opportunity to ask for reconsideration.',
       ],
     },
   ],
@@ -491,16 +441,18 @@ const LEGAL_CLAUSES = {
       num: '5.4',
       title: '4. Promoter application, attribution & commission calculation',
       body: [
-        'Applying to or browsing the Bhumivera Affiliate / Partner Program page (`/affiliate`) does not automatically appoint you as an agent, employee, or commercial partner. Only an approved, active account may share a promoter code. The customer discount and contribution-profit share for that account are the rates displayed in its dashboard and may differ by partner.',
-        'A promoter link may store its code in the customer’s browser for up to 30 days. A later valid promoter link replaces the prior code. Self-referrals are not eligible. The commission is calculated from eligible order revenue excluding GST, less current inventory unit costs, the configured fulfilment and RTO reserves, and applicable online payment fees. The promoter’s configured share is capped so Bhumivera retains at least the displayed program margin floor; missing inventory cost data or an order that cannot meet that floor makes the offer ineligible.',
-        'Attributed commissions remain pending until delivery. Cancelled or returned orders are reversed; a reversal after payout may be offset against later approved commissions. Payouts are manually processed and recorded by Bhumivera with a transfer reference. Rates, attribution rules, payout schedules, and tax deductions (including any applicable TDS) are governed by the active dashboard and any written partner agreement; earnings are not guaranteed.',
+        'Applying to or browsing the Bhumivera Creator Program page does not appoint you as an agent, employee, or commercial partner. Only an approved, active account may share a promoter code. The customer discount and contribution-profit share for that account are the rates displayed in its dashboard and may differ by partner.',
+        'A promoter code may be stored in a customer’s browser for up to 30 days, and a later valid code may replace it. Self-referrals are not eligible. Commission is calculated on eligible delivered orders using the rate and order-economics method displayed to the creator before participation. The dashboard shows an order-level calculation; product costs may be aggregated and supplier identities or invoices are not disclosed.',
+        'Commissions are subject to the status and adjustment rules shown in the creator’s separate agreement or program terms. Cancelled, refunded, or otherwise ineligible orders may be reversed under those terms. Payout timing, payment method, tax documentation, and any withholding must be stated in the applicable creator agreement before the creator accepts a campaign; earnings are not guaranteed.',
+        'Before a creator accepts a campaign or starts work, the parties must have a written campaign brief or agreement stating the deliverables, compensation and payout timing, attribution and reversal rules, any tax withholding, gifted products or expenses, content usage rights, and campaign dates. Applying does not require a creator to publish content or accept an undisclosed term. Product gifting is campaign-specific; no fixed nature contribution is promised unless a campaign documents it.',
+        'Creators must make truthful, substantiated statements and disclose material connections such as payment, commission, or gifts. A creator may share an honest opinion or raise a good-faith concern. We may seek a correction or end a campaign for a substantiated material breach, but will not use this clause to suppress criticism or prevent a creator from exercising a lawful right.',
       ],
     },
     {
       num: '5.5',
       title: '5. Strict compliance with advertising & cosmetic laws by affiliates',
       body: [
-        'Affiliates and creators must use only approved product descriptions and honest disclosures (including `#ad` or `#affiliate` tags as required by ASCI guidelines and the Central Consumer Protection Authority (CCPA) Guidelines for Prevention of Misleading Advertisements, 2022). Affiliates must NEVER make false medical/drug cures claims or guaranteed clinical promises about Bhumivera cosmetics.',
+        'Creators must clearly disclose material connections such as payment, commission, gifts, or other benefits, using disclosures required by applicable law, advertising guidance, and the platform on which content appears. Product statements must be truthful, supported, and consistent with approved product information. Creators must not make unsupported medical, therapeutic, or guaranteed-result claims.',
       ],
     },
     {
@@ -533,9 +485,9 @@ const LEGAL_CLAUSES = {
     },
     {
       num: '5.10',
-      title: '10. Immediate termination & forfeiture for partner misconduct',
+      title: '10. Ending a creator relationship',
       body: [
-        'Bhumivera may immediately terminate any affiliate or partner relationship and forfeit unpaid commissions if the partner engages in misleading advertising, fake traffic/click-farm fraud, coupon hijacking, or brand disparagement.',
+        'We may pause or end a creator relationship for a material breach after reviewing the available information and, where appropriate, giving notice and an opportunity to respond. Earned and undisputed commissions will be paid under the agreement; a dispute or criticism alone does not forfeit a creator’s payment or legal rights.',
       ],
     },
   ],
@@ -554,7 +506,7 @@ const LEGAL_CLAUSES = {
       num: '6.2',
       title: '2. Technical information, diagnostics and local storage',
       body: [
-        'For security, reliability and troubleshooting, application diagnostics may record the time of a request, method, route without its query string, response status, processing time and a random request identifier. Sanitized server error records and database error fingerprints are retained for up to 30 days; aggregate in-memory request counters expire within 15 minutes. These records help investigate service failures and abuse and are not intended to build advertising profiles.',
+        'We may process technical and diagnostic information, such as device/browser details, security events, request metadata, and error records, to operate the service, troubleshoot failures, and protect accounts. We do not use this information for advertising unless we clearly disclose that use and obtain any consent required by law. We retain it only as long as reasonably needed for those purposes and applicable legal obligations, then delete or de-identify it where practicable.',
         'Our website and browser storage may keep information needed for sign-in, cart continuity, saved preferences, security and essential operation. Your browser controls whether local storage or cookies can be stored, but blocking them may prevent account, checkout or security features from working. Hosting, network-security and payment providers may independently process technical connection data under their own services and policies.',
       ],
     },
@@ -626,7 +578,7 @@ const LEGAL_CLAUSES = {
       num: '6.11',
       title: '11. Children’s data, policy updates and contact',
       body: [
-        'Our account and shopping services are intended for adults. A person under 18 should use them only with a parent or lawful guardian involved. If you believe a child has provided personal data in a way that is not permitted, contact us so we can review the circumstances and take any action required by law. We do not ask children to provide personal information for targeted advertising.',
+        'Our account and shopping services are intended for adults. A parent or lawful guardian must create and manage any account or order needed for a minor. If you believe a minor has provided personal data in a way that is not permitted, contact us so we can review and take any action required by law.',
         'We may revise this Notice when our services, data practices or legal obligations change. The latest version and its effective date will appear on this page. Material changes will be communicated through an appropriate channel where required. For privacy requests or concerns, email support@bhumivera.com from your registered address; never include passwords or OTPs. This Notice is intended to explain our practices, not to limit rights that cannot be waived under applicable law.',
       ],
     },
@@ -677,30 +629,30 @@ const LEGAL_CLAUSES = {
     },
     {
       num: '7.7',
-      title: '7. Strict cap on aggregate liability',
+      title: '7. Liability and statutory remedies',
       body: [
-        'To the fullest extent permitted by applicable law, in no event shall Bhumivera, its founder, directors, officers, employees, or suppliers be liable for any claim, loss, or damage (whether in contract, tort, negligence, or otherwise) in an amount exceeding the actual net purchase price paid by the customer to Bhumivera for the specific product giving rise to the claim.',
+        'Nothing in these Conditions excludes or caps liability, or limits a remedy, where applicable law does not permit that exclusion or cap. This includes any mandatory consumer remedy, product-safety obligation, or liability for conduct that cannot lawfully be disclaimed.',
       ],
     },
     {
       num: '7.8',
-      title: '8. Exclusion of indirect, consequential & punitive damages',
+      title: '8. No blanket exclusion of legally recoverable loss',
       body: [
-        'To the fullest extent permitted by law, Bhumivera shall not be liable for any indirect, incidental, special, punitive, exemplary, or consequential damages, loss of profits, loss of business opportunity, or reputational harm arising out of the use of or inability to use the platform or products.',
+        'Any assessment of loss or damages is governed by applicable law and the facts of the claim. This section does not exclude a category of loss where that exclusion would be unlawful.',
       ],
     },
     {
       num: '7.9',
-      title: '9. Customer indemnification obligation',
+      title: '9. Responsibility for unlawful conduct',
       body: [
-        'You agree to indemnify, defend, and hold harmless Bhumivera and its proprietors, officers, and staff from and against any third-party claims, liabilities, losses, penalties, and reasonable legal fees arising out of: (a) your breach of these Conditions; (b) your submission of fraudulent claims, edited unboxing videos, or false chargebacks; (c) your violation of any law or third-party rights; or (d) your misuse or unauthorized resale of Bhumivera products.',
+        'A person remains responsible for their own unlawful conduct and for losses that a competent authority or court determines they caused. This clause does not require a customer to indemnify the Seller for the Seller’s own conduct or waive any consumer right.',
       ],
     },
     {
       num: '7.10',
       title: '10. Force Majeure',
       body: [
-        'Bhumivera shall not be held in breach or liable for any delay or failure in performance resulting from causes beyond its reasonable control, including acts of God, floods, cyclones, earthquakes, epidemics/pandemics, war, civil commotion, government lockdowns, strikes, carrier network shutdowns, power-grid or internet backbone failures, or cyber-attacks.',
+        'Events beyond reasonable control may delay a service or delivery. We will take reasonable steps to resume performance and communicate material delays. This clause does not waive a refund, cancellation, or other remedy required by law.',
       ],
     },
   ],
@@ -710,29 +662,29 @@ const LEGAL_CLAUSES = {
       num: '8.1',
       title: '1. Mandatory 3-Tier internal escalation & pre-litigation resolution',
       body: [
-        'Before initiating any external proceeding, chargeback, or formal dispute, the customer agrees to give Bhumivera a fair opportunity to resolve the issue through our structured 3-Tier Customer Care & Grievance Escalation process: (a) Tier 1: Submit the query with Order ID and 360° unboxing video/photos via `/contact`, the Order Support Concierge, or support@bhumivera.com; (b) Tier 2: Escalate via our Verified Buyer HMAC Escalation Flow for a specialist callback/email within 12–24 hours; and (c) Tier 3: Escalate to the Designated Grievance Officer below.',
+        'You may contact customer support or the designated grievance officer using the details below. We encourage you to provide an order number if the issue relates to a purchase, but you do not have to complete an internal escalation process before using a consumer forum, bank/payment-provider dispute process, or other remedy available under law. Photos or video may assist a review but are not a prerequisite to raise a grievance.',
       ],
     },
     {
       num: '8.2',
       title: '2. Statutory Grievance Officer & Nodal Entity disclosure',
       body: [
-        'In accordance with the Consumer Protection (E-Commerce) Rules, 2020 and the Information Technology (Intermediary Guidelines and Digital Media Ethics Code) Rules, 2021, the contact details of the enterprise and Grievance Redressal Desk are published below:',
-        '• Brand & Platform: Bhumivera (Operated by RS Enterprises / Bhumivera Maison)\n• Founder & Designated Grievance Officer: Akash Prasad (Grievance & Compliance Desk)\n• Principal Region of Operations: Asansol, Paschim Bardhaman, West Bengal, India\n• Official Grievance Email: support@bhumivera.com (Subject line: “GRIEVANCE - ORDER #[Your Order ID]”)\n• Official Customer Care & WhatsApp Helpline: +91 74309 85647 / +91 83708 04458\n• Operating Hours: Monday to Saturday, 10:00 AM – 7:00 PM IST (excluding national holidays).',
+        'For a grievance, email support@bhumivera.com with “GRIEVANCE” in the subject, or use the Contact page. Include an order number if relevant, but do not send passwords, one-time codes, payment PINs, or card security codes.',
+        'The legal seller and its designated grievance officer’s full name, business address, and contact details must be clearly displayed on the relevant product listing and order documents. These details need to be verified and published by the Seller; the brand contact above is not a substitute for that statutory disclosure.',
       ],
     },
     {
       num: '8.3',
       title: '3. Statutory 48-hour acknowledgement & 30-day resolution timeline',
       body: [
-        'Every genuine written grievance submitted with a valid Order ID and registered email/phone will be acknowledged within 48 hours of receipt with a unique ticket tracking reference and resolved within 30 days from the date of receipt, in full compliance with Rule 4(4) of the Consumer Protection (E-Commerce) Rules, 2020.',
+        'We will acknowledge consumer grievances within 48 hours and seek to redress them within one month, as required by applicable e-commerce rules. Service outages or internal technical issues do not waive a consumer’s rights or extend a statutory deadline.',
       ],
     },
     {
       num: '8.4',
       title: '4. Verification of genuine buyer status to prevent vexatious claims',
       body: [
-        'To protect customer privacy and prevent competitor harassment or automated spam, Bhumivera requires any complainant raising an order-related grievance to verify their Order ID and registered email/10-digit phone number. Anonymous demands, third-party social-media trolls with no purchase record, or complaints refusing to provide the order number and mandatory 360° unboxing video cannot be processed as order claims.',
+        'We may ask for information reasonably necessary to understand a grievance or verify an account before disclosing account-specific information. A missing order number, unboxing video, or purchase record will not by itself prevent us from receiving a complaint or considering other available information.',
       ],
     },
     {
@@ -744,30 +696,30 @@ const LEGAL_CLAUSES = {
     },
     {
       num: '8.6',
-      title: '6. Binding arbitration clause (Arbitration and Conciliation Act, 1996)',
+      title: '6. Dispute resolution',
       body: [
-        'If any dispute, controversy, or claim arising out of or relating to these Conditions or a Bhumivera transaction is not resolved within 30 days through the Grievance Redressal Mechanism above, either party may refer the dispute to binding arbitration under the provisions of the Arbitration and Conciliation Act, 1996 (as amended). The arbitration shall be conducted by a sole arbitrator mutually appointed in accordance with the Act. The seat and venue of arbitration shall be in Paschim Bardhaman (Asansol), West Bengal, India, and the proceedings shall be conducted in the English language.',
+        'We welcome good-faith discussion to resolve concerns. No consumer is required by these Conditions to arbitrate a dispute, waive a right to approach a competent consumer authority, or give up a remedy available under applicable law. Arbitration may be used only where separately and validly agreed by the parties after a dispute arises or where otherwise required by law.',
       ],
     },
     {
       num: '8.7',
-      title: '7. Exclusive territorial jurisdiction of courts in West Bengal, India',
+      title: '7. Governing law and competent forums',
       body: [
-        'Subject to the arbitration clause above and without prejudice to any non-waivable statutory venue right granted to an individual consumer under the Consumer Protection Act, 2019, the competent courts at Asansol / Paschim Bardhaman, West Bengal, India shall have exclusive territorial jurisdiction over all judicial proceedings arising out of or relating to Bhumivera.',
+        'Indian law applies to these Conditions. Any dispute may be taken to a court, consumer commission, regulator, or other forum that has jurisdiction under applicable law. These Conditions do not require a consumer to bring a claim only in Asansol or West Bengal.',
       ],
     },
     {
       num: '8.8',
-      title: '8. Waiver of class actions & consolidated proceedings',
+      title: '8. No waiver of collective or statutory remedies',
       body: [
-        'To the fullest extent permitted by applicable law, all disputes and claims must be brought in the customer’s individual capacity relating to their own verified order, and not as a plaintiff or class member in any purported class, collective, or representative proceeding.',
+        'Nothing in these Conditions prevents a person from using any representative, collective, or other procedure that is available under applicable law.',
       ],
     },
     {
       num: '8.9',
       title: '9. Preservation of non-waivable statutory consumer rights',
       body: [
-        'Nothing in this dispute-resolution section removes or restricts an individual consumer’s mandatory statutory right to approach a competent Consumer Disputes Redressal Commission under the Consumer Protection Act, 2019 after exhausting our internal grievance redressal channel.',
+        'Nothing in these Conditions limits a consumer’s right to approach a competent Consumer Disputes Redressal Commission or another authority under applicable law. Using our internal grievance channel is optional and is not a precondition to that right.',
       ],
     },
   ],
@@ -831,7 +783,7 @@ export default function Legal() {
   return (
     <main className="min-h-screen bg-[#070a0e] px-4 py-10 font-sans text-[#e2e8f0] sm:px-8 sm:py-14 selection:bg-[#d4af37]/30 selection:text-white print:bg-white print:p-0">
       <SEO
-        title={`${activeProfile.title} | Bhumivera Legal & Anti-Fraud Charter`}
+        title={`${activeProfile.title} | Bhumivera Policies & Terms`}
         description={activeProfile.subtitle}
         route={SECTION_TO_PATH[selectedSection] || '/legal'}
       />
@@ -842,10 +794,7 @@ export default function Legal() {
             <div className="p-6 sm:p-9 lg:p-11">
               <div className="flex flex-wrap items-center gap-2">
                 <span className="font-sub-gold inline-flex items-center gap-1.5 rounded-full border border-[#d4af37]/40 bg-[#070a0e] px-3.5 py-1 text-[10px] tracking-[0.2em] text-[#fce096]">
-                  <Scale size={12} className="text-[#d4af37]" /> {activeProfile.code} · Bhumivera Legal Shield
-                </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/5 px-3 py-1 font-mono text-[10px] font-bold uppercase tracking-[0.16em] text-[#cbd5e1]">
-                  <ShieldCheck size={12} className="text-[#d4af37]" /> {activeProfile.statuteBadge}
+                  <Scale size={12} className="text-[#d4af37]" /> {activeProfile.code} · Bhumivera Policies
                 </span>
               </div>
 
@@ -858,31 +807,24 @@ export default function Legal() {
               </p>
 
               <div className="mt-6 flex flex-wrap items-center gap-3 text-[11px] font-semibold text-[#94a3b8]">
-                <span>Effective &amp; Verified: 17 October 2026</span>
-                <span>·</span>
-                <span>Charter Version: 2026-10-17-v4X</span>
+                <span>Updated: 15 November 2026</span>
                 <span>·</span>
                 <button
                   type="button"
                   onClick={() => window.print()}
                   className="btn-silver-luxury inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-[11px] font-bold text-[#cbd5e1] transition"
                 >
-                  <Printer size={13} className="text-[#d4af37]" /> Print / Save Official PDF
+                  <Printer size={13} className="text-[#d4af37]" /> Print / Save
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Domain-Specific Key Metrics Bar */}
-          <div className="grid grid-cols-2 gap-px border-t border-[#d4af37]/20 bg-white/10 text-[11px] sm:grid-cols-4">
-            {activeProfile.keyMetrics.map(([val, label]) => (
-              <div key={label} className="bg-[#070a0e] p-3.5">
-                <p className="font-mono text-xs font-bold uppercase tracking-wider text-[#fce096]">{val}</p>
-                <p className="mt-1 font-medium text-[#cbd5e1]">{label}</p>
-              </div>
-            ))}
-          </div>
         </header>
+
+        <p className="mt-5 rounded-xl border border-amber-300/30 bg-amber-950/20 px-4 py-3 text-xs leading-6 text-amber-100">
+          These policies explain our current practices; they are not a guarantee against disputes and do not limit rights or remedies that cannot lawfully be waived.
+        </p>
 
         {/* 2. STICKY SECTION NAVIGATION (LINKS TO ALL 8 UNIQUE LEGAL ROUTES) */}
         <div className="sticky top-0 z-20 -mx-4 mt-6 border-b border-[#d4af37]/20 bg-[#070a0e]/95 px-4 py-3.5 backdrop-blur-md sm:-mx-8 sm:px-8">
@@ -920,38 +862,7 @@ export default function Legal() {
           </div>
         </div>
 
-        {/* 3. CASE EXAMPLES FOR THIS SPECIFIC LEGAL LINK */}
-        {activeProfile.realLifeExamples && activeProfile.realLifeExamples.length > 0 && (
-          <section className="mt-8">
-            <div className="mb-4 flex items-center justify-between">
-              <span className="font-sub-gold text-[10px] tracking-[0.2em] text-[#fce096] block">
-                Case Examples · {activeProfile.code}
-              </span>
-              <span className="text-xs text-[#94a3b8]">Policy examples</span>
-            </div>
-            <div className="grid gap-6 md:grid-cols-2">
-              {activeProfile.realLifeExamples.map((ex) => (
-                <article
-                  key={ex.caseCode}
-                  className="two-tone-card overflow-hidden rounded-2xl border border-[#d4af37]/25 bg-[#0d1520] shadow-md transition-all hover:border-[#d4af37]/60"
-                >
-                  <div className="p-6">
-                    <span className="rounded bg-[#070a0e] border border-[#d4af37]/35 px-2.5 py-1 font-mono text-[10px] font-bold text-[#fce096]">
-                      {ex.caseCode}
-                    </span>
-                    <h2 className="mt-3 font-serif text-xl font-bold text-white">{ex.title}</h2>
-                    <p className="mt-2 text-xs leading-6 text-[#94a3b8] sm:text-sm">{ex.summary}</p>
-                    <div className="mt-4 rounded-xl border border-[#d4af37]/25 bg-[#070a0e] p-3 text-xs font-medium text-[#cbd5e1]">
-                      <strong className="text-white">Verified Resolution:</strong> <span className="text-[#fce096]">{ex.outcome}</span>
-                    </div>
-                  </div>
-                </article>
-              ))}
-            </div>
-          </section>
-        )}
-
-        {/* 4. DETAILED CLAUSE ARTICLES */}
+        {/* Detailed policy clauses */}
         <div className="mt-8 space-y-10">
           {activeSectionsToRender.length === 0 ? (
             <div className="two-tone-card rounded-xl border border-white/15 bg-[#0d1520] p-8 text-center">
@@ -974,7 +885,7 @@ export default function Legal() {
                 <div className="mb-6 flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-4">
                   <div>
                     <span className="font-sub-gold text-[10px] tracking-[0.2em] text-[#fce096] block">
-                      {sec.code} · BHUMIVERA MASTER LEGAL SUITE
+                      {sec.code} · BHUMIVERA POLICIES
                     </span>
                     <h2 className="mt-1 font-serif text-2xl text-white sm:text-3xl font-bold">{sec.label}</h2>
                   </div>
@@ -1012,42 +923,6 @@ export default function Legal() {
           )}
         </div>
 
-        {/* 5. MASTER PROTECTION MATRIX */}
-        <section className="mt-10 overflow-hidden rounded-2xl border border-[#d4af37]/25 bg-[#0d1520] shadow-md">
-          <div className="border-b border-[#d4af37]/20 bg-[#070a0e] px-5 py-4 sm:px-6 flex flex-wrap items-center justify-between gap-2">
-            <div className="flex items-center gap-2">
-              <Gavel size={16} className="text-[#fce096]" />
-              <h2 className="font-serif text-lg font-bold text-white">
-                Quick Statutory &amp; Anti-Fraud Governance Matrix
-              </h2>
-            </div>
-            <span className="font-sub-gold text-[10px] tracking-wider text-[#fce096]">
-              Binding Operational Rules Across All Orders
-            </span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full text-left text-xs border-collapse">
-              <thead>
-                <tr className="border-b border-white/10 bg-[#070a0e] text-[10px] font-bold uppercase tracking-wider text-[#fce096]">
-                  <th className="py-3 px-4">Scenario / Module</th>
-                  <th className="py-3 px-4">Binding Bhumivera Rule</th>
-                  <th className="py-3 px-4">Required Verification Proof</th>
-                  <th className="py-3 px-4">Governing Legal Basis</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-white/10 text-[#cbd5e1]">
-                {PROTECTION_MATRIX.map(row => (
-                  <tr key={row.scenario} className="hover:bg-white/[0.02] transition-colors">
-                    <td className="py-3.5 px-4 font-semibold text-white">{row.scenario}</td>
-                    <td className="py-3.5 px-4 leading-relaxed">{row.policy}</td>
-                    <td className="py-3.5 px-4 leading-relaxed text-[#fce096] font-medium">{row.evidence}</td>
-                    <td className="py-3.5 px-4 font-mono text-[11px] text-[#94a3b8]">{row.statute}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
       </div>
     </main>
   );

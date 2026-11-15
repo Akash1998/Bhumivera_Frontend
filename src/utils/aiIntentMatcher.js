@@ -405,20 +405,18 @@ export function matchAiIntentWithFuzzy(rawQuery = '', targetLangOverride) {
     };
   }
 
-  // 2. Artisanal Sealed Virgin Custody & Concierge Resolution
+  // 2. Product or delivery issue review
   if (topIntent === 'DAMAGED_ITEM_CREDIT') {
     return {
       intent: 'DAMAGED_ITEM_CREDIT',
       reply: [
-        '🌿 **Bhumivera Artisanal Custody & Strict Non-Returnable Policy**',
-        '*“100% Sealed Virgin Unit Custody — Artisanal Small-Batch Formulations.”*',
-        '**Sealed Virgin Custody (Why No Physical Returns?):**\nBecause our botanical formulations (Activated Bamboo Charcoal Face Wash, Botanical Hair Cleanser, and Sea Buckthorn Face Wash) are intimate personal care cosmetics, each bottle is compounded in small artisanal runs of 250 units and sealed with tamper-evident security to guarantee 100% sterile virgin purity. All items are strictly 100% NON-RETURNABLE once shipped or delivered.',
-        '**Pre-Dispatch Order Cancellation:**\nOrders can be cancelled ONLY before they are packed and shipped from the warehouse (status Pending, Confirmed, or Processing). Once marked Packed or Shipped, orders cannot be cancelled or recalled.',
-        '**Verification & Concierge Resolution (Zero Return Shipping Hassle):**\nEvery bottle carries a serialized QR code verifiable on our /verify portal for calibrated pH (5.51) and spectrophotometric assays. If any parcel exhibits transit compromise upon arrival, submit your continuous 360° unboxing video showing the intact outer AWB label within 48 hours. Zero return shipping hassle — our executive concierge team directly reviews claims for verified patrons and coordinates immediate courtesy resolution or refund.',
+        '**Change-of-mind returns:** Sealed personal-care products are not eligible for change-of-mind returns unless the product listing says otherwise.',
+        '**Product or delivery issue:** If your item is damaged, defective, leaking, incorrect, missing, or materially misdescribed, contact support promptly with your order details. Photos or an unboxing video may help, but are not mandatory to raise a concern. We review requests individually, and no policy limits a remedy required by law.',
+        '**Order cancellation:** You may request cancellation before dispatch. If the order has been packed or dispatched, it may no longer be possible to stop it; contact support if you believe another remedy applies.',
       ].join('\n\n'),
       quickActions: [
-        { id: 'damaged_claim', label: '📹 Submit Unboxing Video Verification', prompt: 'I want to submit an unboxing verification video to concierge' },
-        { id: 'verify_serial', label: '🔬 Verify Bottle Serial & Lab Assay', prompt: 'I want to verify the artisanal serial number and lab assay of my bottle' },
+        { id: 'damaged_claim', label: '🧾 Contact Support About an Order', prompt: 'I need help with a damaged, defective, leaking, incorrect, or missing item' },
+        { id: 'verify_serial', label: '🔬 Verify Product Information', prompt: 'I want to check my product information' },
         { id: 'check_wallet', label: '💰 View My Wallet Balance', prompt: 'What is my current Bhumivera Wallet balance?' },
       ],
     };

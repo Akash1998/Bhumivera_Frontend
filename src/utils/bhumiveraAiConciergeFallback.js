@@ -371,10 +371,9 @@ export function resolveClientSideConciergeFallback(message) {
 
   if (/\b(?:what\s+is\s+(?:your|the)\s+return\s+policy|how\s+do\s+returns?\s+work|can\s+i\s+return|return\s+policy|do\s+you\s+accept\s+returns?|are\s+items\s+returnable)\b/.test(normalizedQuery)) {
     return {
-      reply: `**🌿 Bhumivera Strict Non-Returnable Policy:**\n\n` +
-        `All Bhumivera formulations are intimate, personal care and botanical cosmetics sealed with tamper-evident security. In accordance with cosmetic safety and hygiene standards under the Drugs and Cosmetics Act, **all sold products are strictly 100% NON-RETURNABLE once shipped or delivered**.\n\n` +
-        `• **Pre-Dispatch Order Cancellation:** You can cancel an order **only if it has not yet been packed and shipped** (while in Pending, Confirmed, or Processing status). Once packed or shipped, cancellation is locked.\n` +
-        `• **Damaged in Transit / Defective Parcel:** If your order arrives leaking, damaged, or with an incorrect item, submit an uncut 360° unboxing video within 48 hours to our support desk. We provide direct free replacement or refund without requiring return shipping.`,
+      reply: `**Change-of-mind returns:** Sealed personal-care products are not eligible for change-of-mind returns unless the product listing says otherwise.\n\n` +
+        `• **Product or Delivery Issue:** If your item is damaged, defective, leaking, incorrect, missing, or materially misdescribed, contact support promptly with your order details. Photos or an unboxing video may help but are not mandatory to raise a concern. We review requests individually, and no policy limits a remedy required by law.\n` +
+        `• **Cancellation:** You may request cancellation before dispatch. If the order has been packed or dispatched, it may no longer be possible to stop it; contact support if you believe another remedy applies.`,
       quickActions: supportActions,
     };
   }

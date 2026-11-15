@@ -346,9 +346,9 @@ export default function AdminSettings() {
 
       <div className="admin-glass-panel mt-6 rounded-2xl p-6">
         <h3 className="text-lg font-semibold text-white mb-2">Store Return Policy: 100% Non-Returnable</h3>
-        <p className="mb-4 text-sm text-gray-400">All Bhumivera formulations are intimate personal care cosmetics and are strictly non-returnable across the storefront once delivered. Pre-dispatch cancellations are allowed only before orders are packed and shipped.</p>
+        <p className="mb-4 text-sm text-gray-400">Change-of-mind returns are not available for sealed personal-care products. Product or delivery issue claims must be reviewed individually, and no policy should limit a remedy required by law.</p>
         <div className="rounded-xl border border-amber-500/30 bg-amber-500/10 p-4 text-xs text-amber-200">
-          Customer self-service returns are disabled. Transit damage claims require an uncut 360° unboxing video within 48 hours for direct replacement or refund without physical return.
+          Customer claims must not be rejected solely because a customer lacks an unboxing video or reported after 48 hours. Use available order and customer information to review the issue fairly; follow applicable law for any remedy.
         </div>
       </div>
 

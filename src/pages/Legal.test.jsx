@@ -37,3 +37,32 @@ describe('legal page imagery', () => {
     expect(container.querySelectorAll('img')).toHaveLength(0);
   });
 });
+
+describe('legal customer and creator protections', () => {
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+  });
+
+  it('does not make optional evidence or internal review a condition of raising a product issue', () => {
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    const { container } = renderLegal('/legal/shipping-hygiene');
+    const text = container.textContent.toLowerCase();
+
+    expect(text).toContain('optional supporting information');
+    expect(text).toContain('not by itself waive a right');
+    expect(text).not.toContain('100% non-returnable');
+    expect(text).not.toContain('video requirement');
+  });
+
+  it('requires campaign economics to be agreed in writing and protects good-faith creator speech', () => {
+    vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
+    const { container } = renderLegal('/legal/warranty-affiliate-b2b');
+    const text = container.textContent.toLowerCase();
+
+    expect(text).toContain('compensation and payout timing');
+    expect(text).toContain('before a creator accepts a campaign or starts work');
+    expect(text).toContain('will not use this clause to suppress criticism');
+    expect(text).toContain('earned and undisputed commissions');
+  });
+});

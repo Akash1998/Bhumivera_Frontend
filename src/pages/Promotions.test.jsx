@@ -48,6 +48,7 @@ describe('promoter registration page', () => {
       </HelmetProvider>,
     );
 
+    expect(await screen.findByRole('heading', { name: 'See what each order contributes' })).toBeTruthy();
     fireEvent.change(screen.getByLabelText(/Email for your Bhumivera account/), {
       target: { value: 'creator@example.com' },
     });
@@ -83,7 +84,7 @@ describe('promoter registration page', () => {
       </HelmetProvider>,
     );
 
-    expect(await screen.findByText(/Thank you for your interest in collaborating with Bhumivera/i)).toBeTruthy();
+    expect(await screen.findByText('Your Creator Code Is Reserved')).toBeTruthy();
     expect(screen.getByText(/within 12–24 hours/i)).toBeTruthy();
     expect(screen.getByText('BV1234567890')).toBeTruthy();
     expect(screen.getByText(/Reserved promoter code · inactive/i)).toBeTruthy();
@@ -173,14 +174,17 @@ describe('promoter registration page', () => {
     fireEvent.change(screen.getByLabelText(/Preferred collaboration/), {
       target: { value: 'both' },
     });
-    fireEvent.click(screen.getByRole('button', { name: /Send application for review/i }));
+    fireEvent.change(screen.getByLabelText(/What would a meaningful, long-term partnership look like to you/), {
+      target: { value: 'I want to create honest, useful skincare education with my community over time.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: /Send creator application/i }));
 
     expect((await screen.findByRole('alert')).textContent).toMatch(/confirm that you own or manage this profile/i);
     expect(affiliate.applyForPartner).not.toHaveBeenCalled();
     fireEvent.click(screen.getByLabelText(/I confirm that I own or manage this profile/i));
-    fireEvent.click(screen.getByRole('button', { name: /Send application for review/i }));
+    fireEvent.click(screen.getByRole('button', { name: /Send creator application/i }));
 
-    expect(await screen.findByText('Application received!')).toBeTruthy();
+    expect((await screen.findByRole('status')).textContent).toMatch(/Application received/);
     expect(affiliate.applyForPartner).toHaveBeenCalledWith({
       socialPlatform: 'Instagram',
       socialHandle: '@creator',
@@ -189,8 +193,9 @@ describe('promoter registration page', () => {
       followerTier: '1k_10k',
       contentNiche: 'Skincare',
       collaborationType: 'both',
+      partnershipIntent: 'I want to create honest, useful skincare education with my community over time.',
     });
-    fireEvent.click(screen.getByRole('button', { name: /Explore Bhumivera’s impact/i }));
-    expect(await screen.findByText('Impact page reached')).toBeTruthy();
+    expect(await screen.findByText('Your Creator Code Is Reserved')).toBeTruthy();
+    expect(screen.getByText('BV1234567890')).toBeTruthy();
   });
 });

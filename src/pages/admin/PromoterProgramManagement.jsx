@@ -34,8 +34,8 @@ const AUDIENCE_TIERS = {
 };
 const COLLABORATION_TYPES = {
   product_gifting: 'Product gifting / barter',
-  affiliate_commission: 'Affiliate commission',
-  both: 'Product gifting + affiliate commission',
+  affiliate_commission: 'Affiliate profit sharing (legacy preference)',
+  both: 'Product gifting / barter + affiliate profit sharing',
 };
 
 export default function PromoterProgramManagement() {
@@ -313,6 +313,11 @@ export default function PromoterProgramManagement() {
                       {partner.collaboration_type ? ` · ${COLLABORATION_TYPES[partner.collaboration_type] || partner.collaboration_type}` : ''}
                       {partner.profile_url ? <> · <a href={partner.profile_url} target="_blank" rel="noreferrer" className="text-[#FCE096] underline">profile</a></> : ''}
                     </p>
+                    {partner.partnership_intent && (
+                      <p className="mt-2 max-w-3xl rounded-lg border border-[#315541] bg-black/10 p-3 text-xs leading-5 text-[#C5D8CC]">
+                        <strong className="text-[#FCE096]">Partnership intent:</strong> {partner.partnership_intent}
+                      </p>
+                    )}
                     <p className="mt-1 text-xs text-[#9BB0A5]">Attributed orders: {Number(partner.pending_orders || 0)} pending · Payable {money(partner.payable_amount)} · Paid {money(partner.paid_amount)}</p>
                   </div>
                   <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${partner.status === 'approved' ? 'bg-emerald-900/50 text-emerald-200' : partner.status === 'pending' ? 'bg-amber-900/40 text-amber-100' : 'bg-white/10 text-[#C9C4B8]'}`}>{partner.status}</span>

@@ -8,33 +8,33 @@ import { getProductImageUrl } from '../utils/productImageUrl';
 import PromoterPortal from './affiliate/PromoterPortal';
 
 const STEPS = [
-  ['01', 'Apply', 'Sign in, then share your profile, content niche, and collaboration preference.'],
-  ['02', 'Human review', 'Our team reviews your application. We aim to reply within 12–24 hours.'],
-  ['03', 'Grow together', 'Approved partners receive their affiliate details; product gifting is offered for selected campaigns.'],
+  ['01', 'Share your intent', 'Tell us what you want to teach or build with your community and why this relationship matters to you.'],
+  ['02', 'Find the fit', 'Our team reviews content, audience fit and shared values—not follower count alone.'],
+  ['03', 'Agree, then create', 'Before a campaign, both sides confirm the scope, offer, rate, timing and content rights. Then we learn and grow together.'],
 ];
 
 const COLLABORATIONS = [
   {
     icon: Gift,
-    title: 'Botanical Ritual Exchange',
-    label: 'Product gifting · selected creators',
-    description: 'A curated Bhumivera product may be gifted for an agreed, authentic ritual or unboxing story. No cash UGC fee; campaign terms are shared before you accept.',
+    title: 'Selective product experience',
+    label: 'Gifting · campaign-specific',
+    description: 'A product may be offered when there is a clear shared campaign and genuine product fit. Gifting is selective, never guaranteed, and is not the reason to join.',
     accent: 'text-[#F0D98A]',
   },
   {
     icon: Sparkles,
-    title: 'Community Affiliate',
-    label: 'Personal link · tracked orders',
-    description: 'Approved partners receive a unique audience link or code. Commission settings and referred orders are visible in your promoter desk.',
+    title: 'Shared community growth',
+    label: 'Order-based profit share',
+    description: 'Your agreed customer offer and creator rate are shown in your portal. Each attributed order has a recorded breakdown; actual commission depends on that order’s contribution and status.',
     accent: 'text-emerald-200',
   },
 ];
 
 const PERKS = [
-  ['Curated product seeding', 'Selected creators may receive full-size products for a clearly briefed campaign.'],
-  ['Your own audience offer', 'Approved partners can share a personal code with the discount set by Bhumivera.'],
-  ['First looks at new rituals', 'Early product previews may be available for selected launches and creator matches.'],
-  ['A chance to be featured', 'Standout, permissioned creator stories may be shared on Bhumivera channels.'],
+  ['A visible earnings ledger', 'See the recorded revenue, costs, contribution, creator commission and brand-retained contribution for each order.'],
+  ['A relationship that can evolve', 'Share feedback, learn from your community and shape the next campaign together.'],
+  ['Room for your own voice', 'We ask for honest experience and accurate information—not scripted praise or guaranteed results.'],
+  ['Nature with accountability', 'Invite your audience to verified impact activity; contributions are reported as funded only when collected.'],
 ];
 
 const PRODUCT_SPECS = [
@@ -94,7 +94,7 @@ const FAQS = [
   },
   {
     q: 'What kind of collaboration can I choose?',
-    a: 'You can express interest in product gifting/barter, affiliate commission, or both. Product gifting is selective and not guaranteed. Bhumivera does not currently offer cash-paid UGC fees.',
+    a: 'The current track is an ongoing creator partnership with order-based profit sharing. Product gifting is campaign-specific and not guaranteed. Paid UGC and trial-order reimbursements are not currently open.',
   },
   {
     q: 'Do I have to pay to apply or buy a product?',
@@ -109,8 +109,16 @@ const FAQS = [
     a: 'Only after approval, and only if needed for a campaign. We will request your WhatsApp number and delivery city/pincode separately; they are not required to apply.',
   },
   {
+    q: 'Is this a free-product or one-post program?',
+    a: 'No. We are looking for creators who want to contribute to an ongoing relationship with their community and Bhumivera. Product gifting is selective, never guaranteed, and an application is not a request for a free kit.',
+  },
+  {
     q: 'How are affiliate orders and commissions tracked?',
-    a: 'Your promoter desk shows attributed orders and commission status. Commissions depend on eligible, delivered orders, are adjusted for returns, and are paid manually by Bhumivera.',
+    a: 'Your promoter desk shows the stored order-level calculation: revenue excluding tax, discounts, product cost total, fulfillment and return reserves, payment fee, contribution, your commission and the brand-retained contribution. Commissions depend on eligible, delivered orders; cancellations or returns are reversed and payouts are recorded after manual processing.',
+  },
+  {
+    q: 'Does a fixed part of every order go to nature?',
+    a: 'No fixed percentage is promised. Customers may choose a contribution separately, and we report it as funded only after it is recorded as collected. Creators can help their communities discover verified impact initiatives without making unsupported funding claims.',
   },
   {
     q: 'What should I disclose in a creator post?',
@@ -163,9 +171,9 @@ export default function Promotions() {
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#07140e] px-4 py-8 text-[#DFD7C4] sm:py-12">
       <SEO
-        title="Bhumivera Creator & Promoter Program | Product Gifting and Affiliate Partnerships"
-        description="Join the Bhumivera creator community. No fixed follower minimum; applications are reviewed by our team. Explore selective product gifting and transparent affiliate partnerships."
-        keywords="Bhumivera creator program, skincare creator partnerships India, botanical skincare product gifting, Bhumivera affiliate program, beauty influencer collaboration"
+        title="Bhumivera Creator Partnership | Grow Together"
+        description="Build a long-term Bhumivera creator partnership through honest product education, open order economics and nature-minded community."
+        keywords="Bhumivera creator partnership, skincare creator program India, transparent creator earnings, botanical skincare community"
         route="/promotions"
         ogImage="/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp"
         faqs={FAQS}
@@ -181,26 +189,26 @@ export default function Promotions() {
           <div className="relative grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr]">
             <div>
               <p className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/30 bg-black/20 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FCE096]">
-                <Leaf size={13}/> The Transparent Maison · Creator community
+                <Leaf size={13}/> Creator partnership · built for the long term
               </p>
               <h1 className="mt-5 max-w-3xl font-serif text-4xl font-bold leading-tight text-white sm:text-6xl">
-                Make room for a more <span className="text-[#E8CD75]">botanical</span> kind of story.
+                Not one post and goodbye. <span className="text-[#E8CD75]">Let’s grow together.</span>
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-[#C5D8CC] sm:text-base">
-                Create honest skincare and haircare content with Bhumivera. Choose product gifting, tracked affiliate partnerships, or both—then grow at your own pace.
+                We want creators who care about honest education, a thriving community and a more thoughtful relationship with nature. This is a shared journey—not a free-product exchange or a guaranteed-income promise.
               </p>
               <p className="mt-4 max-w-2xl border-l-2 border-[#D4AF37]/55 pl-4 font-serif text-sm italic leading-6 text-[#F0D98A]">
-                “Trust is the beginning of every lasting collaboration.”
+                “Create with us, learn with us, and grow with your community.”
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
-                {['No fixed follower minimum', 'Human review', 'No application fee'].map(item => (
+                {['No fixed follower minimum', 'Honest intent matters', 'No application fee'].map(item => (
                   <span key={item} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-2 text-xs font-semibold text-[#E7EEE8]">
                     <CheckCircle2 size={14} className="text-[#C4D99A]"/> {item}
                   </span>
                 ))}
               </div>
               <a href="#apply" className="mt-7 inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-bold text-[#102219] transition hover:bg-[#FCE096]">
-                Start your application <ArrowRight size={16}/>
+                Explore the partnership <ArrowRight size={16}/>
               </a>
             </div>
 
@@ -221,8 +229,8 @@ export default function Promotions() {
                 />
                 <div className="mt-4 flex items-center justify-between gap-3">
                   <div>
-                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#D4AF37]">Built on transparent rituals</p>
-                    <p className="mt-1 font-serif text-lg font-bold text-white">Ingredient-led stories</p>
+                    <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-[#D4AF37]">Built on thoughtful rituals</p>
+                    <p className="mt-1 font-serif text-lg font-bold text-white">Stories grounded in use</p>
                   </div>
                   <span className="rounded-full border border-[#D4AF37]/20 bg-[#D4AF37]/[0.07] px-3 py-2 text-[10px] font-semibold text-[#F0D98A]">Est. 2016 lineage</span>
                 </div>
@@ -237,7 +245,7 @@ export default function Promotions() {
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">A clear path, no guesswork</p>
               <h2 id="creator-steps-title" className="mt-2 font-serif text-2xl font-bold text-white sm:text-3xl">How the partnership begins</h2>
             </div>
-            <p className="text-xs text-[#9BB0A5]">Review target: 12–24 hours</p>
+            <p className="text-xs text-[#9BB0A5]">Our review aim: 12–24 hours</p>
           </div>
           <ol className="mt-6 grid gap-4 md:grid-cols-3">
             {STEPS.map(([number, title, description], index) => (
@@ -253,13 +261,16 @@ export default function Promotions() {
 
         <section aria-labelledby="collaboration-title" className="grid gap-5 lg:grid-cols-[0.8fr_1.2fr]">
           <div className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-gradient-to-br from-[#143A29]/80 to-[#0A1D14]/80 p-6 backdrop-blur-xl sm:p-8">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">No paid-post pressure</p>
-            <h2 id="collaboration-title" className="mt-3 font-serif text-3xl font-bold text-white">A thoughtful exchange.</h2>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Current model · shared growth</p>
+            <h2 id="collaboration-title" className="mt-3 font-serif text-3xl font-bold text-white">Build the relationship before the post.</h2>
             <p className="mt-3 text-sm leading-6 text-[#B7C9BD]">
-              Our current creator model pairs selective product gifting with optional affiliate commissions. We do not currently offer cash-paid UGC fees. Every campaign is explained before you decide.
+              Our active track is an ongoing creator partnership with order-based profit sharing. We want to learn with you, support honest product education and build a relationship that can grow beyond one campaign.
             </p>
             <p className="mt-5 rounded-xl border border-white/10 bg-black/20 p-4 text-xs leading-5 text-[#C5D8CC]">
-              Product gifting is selective, not guaranteed. No purchase is needed to apply, and there is no fixed follower threshold.
+              Product gifting is selective and never guaranteed. It is not a reward for applying or the purpose of the partnership. No purchase is needed to apply, and there is no fixed follower threshold.
+            </p>
+            <p className="mt-3 rounded-xl border border-[#D4AF37]/25 bg-[#D4AF37]/[0.06] p-4 text-xs leading-5 text-[#F0D98A]">
+              <strong className="uppercase tracking-wider">Before anything goes live:</strong> You can review your customer offer, approved share rate, campaign scope, timing and content rights. Your portal records the actual calculation for each attributed order.
             </p>
           </div>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -271,6 +282,30 @@ export default function Promotions() {
                 <p className="mt-2 text-xs leading-5 text-[#B7C9BD]">{description}</p>
               </article>
             ))}
+          </div>
+        </section>
+
+        <section aria-labelledby="creator-economics-title" className="rounded-[1.75rem] border border-[#D4AF37]/30 bg-gradient-to-br from-[#143A29]/75 to-[#081A12]/90 p-6 shadow-xl sm:p-8">
+          <div className="max-w-3xl">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">No mystery math</p>
+            <h2 id="creator-economics-title" className="mt-2 font-serif text-2xl font-bold text-white sm:text-3xl">See what each order contributes</h2>
+            <p className="mt-3 text-sm leading-6 text-[#C5D8CC]">There is no guaranteed flat amount per order. Your approved share rate is applied to actual positive contribution, after order-specific taxes, discounts and costs. The creator portal shows each saved input, your commission and the contribution Bhumivera retains before overhead.</p>
+          </div>
+          <div className="mt-5 grid gap-3 md:grid-cols-3">
+            {[
+              ['Contribution', 'Discounted merchandise revenue excluding GST, less product cost, fulfillment, return reserve and applicable payment fees.'],
+              ['Your commission', 'Your agreed rate applied to positive contribution, subject to the disclosed minimum-margin safeguard.'],
+              ['What Bhumivera retains', 'Contribution left after creator commission; it is not company net profit and is not described as an automatic nature donation.'],
+            ].map(([title, description]) => (
+              <article key={title} className="rounded-xl border border-white/10 bg-[#07140e]/60 p-4">
+                <h3 className="text-sm font-bold text-[#F0D98A]">{title}</h3>
+                <p className="mt-2 text-xs leading-5 text-[#C5D8CC]">{description}</p>
+              </article>
+            ))}
+          </div>
+          <div className="mt-4 flex flex-wrap items-center justify-between gap-3 border-t border-white/10 pt-4">
+            <p className="max-w-3xl text-[11px] leading-5 text-[#9BB0A5]">Supplier identities and invoices stay private; the order-level product cost is visible. Commissions are pending until delivery and reversals appear in the ledger.</p>
+            <Link to="/affiliate" className="inline-flex items-center gap-2 text-xs font-bold text-[#F0D98A] hover:text-white">Read the full partnership and calculation terms <ArrowRight size={14}/></Link>
           </div>
         </section>
 
@@ -314,8 +349,8 @@ export default function Promotions() {
 
         <section aria-labelledby="creator-perks-title">
           <div className="text-center">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">For partners, not just posts</p>
-            <h2 id="creator-perks-title" className="mt-2 font-serif text-2xl font-bold text-white sm:text-3xl">Room to create and grow</h2>
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">What makes it a partnership</p>
+            <h2 id="creator-perks-title" className="mt-2 font-serif text-2xl font-bold text-white sm:text-3xl">Clarity, contribution and room to grow</h2>
           </div>
           <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
             {PERKS.map(([title, description], index) => (
@@ -333,10 +368,10 @@ export default function Promotions() {
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Your next small step</p>
             <h2 id="apply-title" className="mt-3 font-serif text-3xl font-bold text-white">Start with your account</h2>
             <p className="mt-3 text-sm leading-6 text-[#B7C9BD]">
-              Sign in or create a verified Bhumivera account. Then tell us your platform, content niche, audience tier, and preferred collaboration.
+              Sign in or create a verified Bhumivera account. Then tell us about your platform, content and audience—and what a meaningful, nature-minded partnership could look like beyond a single post.
             </p>
             <ul className="mt-5 space-y-3 text-xs leading-5 text-[#C5D8CC]">
-              <li className="flex gap-2"><ShieldCheck size={15} className="mt-0.5 shrink-0 text-[#D4AF37]"/>Your application stays pending until our team reviews it.</li>
+              <li className="flex gap-2"><ShieldCheck size={15} className="mt-0.5 shrink-0 text-[#D4AF37]"/>We review intent, audience fit and honesty—not follower count alone.</li>
               <li className="flex gap-2"><Clock3 size={15} className="mt-0.5 shrink-0 text-[#D4AF37]"/>We aim to send an update within 12–24 hours.</li>
               <li className="flex gap-2"><CheckCircle2 size={15} className="mt-0.5 shrink-0 text-[#D4AF37]"/>WhatsApp and delivery city/pincode are requested only after approval if a campaign needs them.</li>
             </ul>
@@ -346,7 +381,7 @@ export default function Promotions() {
             <div className="flex items-start gap-3 rounded-xl border border-[#D4AF37]/20 bg-black/20 p-4">
               <Clock3 size={18} className="mt-0.5 shrink-0 text-[#D4AF37]"/>
               <p className="text-xs leading-5 text-[#C8D5CC]">
-                Your application and promoter code remain inactive until approved. Product gifting is considered separately for selected campaigns.
+                Your application and promoter code remain inactive until approved. After account setup, we will ask for your partnership intent; gifting is selective and considered separately for specific campaigns.
               </p>
             </div>
 
@@ -392,7 +427,7 @@ export default function Promotions() {
             </form>
 
             <p className="mt-5 border-t border-white/10 pt-4 text-xs leading-5 text-[#9BB0A5]">
-              By applying, you agree to follow the <Link to="/legal/warranty-affiliate-b2b" className="font-semibold text-[#F0D98A] underline underline-offset-2">Bhumivera partner terms</Link>. An application is not a promise of acceptance, product gifting, or earnings.
+              By applying, you agree to follow the <Link to="/legal/warranty-affiliate-b2b" className="font-semibold text-[#F0D98A] underline underline-offset-2">Bhumivera partner terms</Link>. An application is not a promise of acceptance, product gifting, paid work, orders, or earnings.
             </p>
           </section>
         </section>

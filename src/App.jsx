@@ -415,8 +415,8 @@ function AppContent() {
             <Route path="/guides" element={<LuxuryGuides />} />
             <Route path="/guides/:slug" element={<LuxuryGuides />} />
             <Route path="/purchase-protection" element={<PurchaseProtection />} />
-            <Route path="/returns-centre" element={<Navigate to="/verify" replace />} />
-            <Route path="/returns" element={<Navigate to="/verify" replace />} />
+            <Route path="/returns-centre" element={<Navigate to="/contact?topic=return" replace />} />
+            <Route path="/returns" element={<Navigate to="/contact?topic=return" replace />} />
             <Route path="/sell-on-bhumivera" element={<SellOnBhumivera />} />
 
             {/* Campaign Inbound Routes */}

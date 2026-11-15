@@ -604,14 +604,14 @@ Every parcel is packed with biodegradable cushioning, verified on a digital scal
   },
 
   // =========================================================================
-  // PILLAR 4: NON-RETURNABLE POLICY & PRE-DISPATCH CANCELLATION
+  // PILLAR 4: RETURNS, PRODUCT ISSUES & PRE-DISPATCH CANCELLATION
   // =========================================================================
   {
     id: 'returns_policy_and_rma',
     pillarId: 'returns_cancellations',
-    title: 'Strict Non-Returnable Policy (100% Non-Returnable Items)',
-    badge: '100% Non-Returnable',
-    summary: 'All Bhumivera formulations are intimate personal care cosmetics sealed with tamper-evident security. Items are strictly non-returnable once delivered.',
+    title: 'Returns and Product-Issue Requests',
+    badge: 'Issue review',
+    summary: 'Change-of-mind returns are not available for sealed personal-care products. Product or delivery issues can be reported to support for review; statutory rights remain unaffected.',
     keywords: [
       'return', 'returns', 'refund', 'replacement', 'exchange', 'rma', 'broken bottle',
       'damaged product', 'leaked', 'wrong item', 'how to return', 'non-returnable', 'can i return'
@@ -619,8 +619,8 @@ Every parcel is packed with biodegradable cushioning, verified on a digital scal
     visualSteps: [
       {
         stepNumber: 1,
-        title: '100% Non-Returnable Standard',
-        description: 'Personal care cosmetics, cleansers, and elixirs cannot be returned once shipped or delivered to uphold absolute microbial safety and purity.',
+        title: 'Change-of-Mind Returns',
+        description: 'Change-of-mind returns are not available for sealed personal-care products unless the product listing says otherwise.',
       },
       {
         stepNumber: 2,
@@ -630,20 +630,18 @@ Every parcel is packed with biodegradable cushioning, verified on a digital scal
       {
         stepNumber: 3,
         title: 'Transit Damage or Wrong Item Claims',
-        description: 'If an item arrives damaged, leaking, or incorrect, share an uncut 360° unboxing video within 48 hours to support for a direct replacement or refund without return shipping.',
+        description: 'If an item arrives damaged, leaking, or incorrect, contact support promptly with your order details. Photos or an unboxing video may help, but are not mandatory to raise a concern.',
       },
     ],
     richContent: `
-### 🛡️ Strict Non-Returnable Policy
-All Bhumivera products are intimate personal care cosmetics (face washes, botanical cleansers, night elixirs, shampoos) compounded in small artisanal batches of 250 units and sealed with tamper-evident virgin security strips. In compliance with cosmetic hygiene standards and the Drugs & Cosmetics Act, **all sold items are 100% NON-RETURNABLE once shipped or delivered**.
+### Change-of-mind returns
+We do not accept change-of-mind returns for sealed personal-care products unless a product listing says otherwise.
 
-### 📦 Pre-Dispatch Cancellation Only
-You can cancel your order **only if it has not yet been packed and shipped** (while in Pending, Confirmed, or Processing status). Once marked Packed or Shipped, fulfillment is locked with the carrier and cannot be cancelled or recalled.
+### Product or delivery issue
+Report defective, damaged, leaking, incorrect, missing, or materially misdescribed items to support promptly. Photos or an unboxing video may help, but are not mandatory to raise a concern. We review requests individually, and no policy limits a remedy required by law.
 
-### 🎥 Damaged in Transit Claims (Zero Return Shipping)
-If a parcel arrives damaged, leaking through a broken seal, or with missing items:
-- Submit an uncut continuous 360° unboxing video within **48 hours of delivery**.
-- Our concierge team coordinates **direct replacement or refund** without requiring return shipping.
+### Order cancellation
+You may request cancellation before dispatch. Once packed or dispatched, it may no longer be possible to stop the order; contact support if you believe another remedy applies.
     `,
     directActions: [
       { label: '👤 Open Customer Support', actionType: 'OPEN_ESCALATION' },
@@ -667,7 +665,7 @@ If a parcel arrives damaged, leaking through a broken seal, or with missing item
 ### 🔒 Pre-Dispatch Order Cancellation Rules
 - **Eligible for Cancellation**: Orders in **Pending**, **Confirmed**, or **Processing** status (before warehouse packaging begins) can be cancelled.
 - **Locked from Cancellation**: Once an order status is updated to **Packed**, **Shipped**, or **Out for Delivery**, automated courier logistics and AWB manifest locks prevent cancellation.
-- **After Delivery**: Because all items are intimate personal care cosmetics, products are **100% non-returnable** after delivery.
+- **After Delivery**: Sealed personal-care products are not eligible for change-of-mind returns. Report defective, damaged, leaking, incorrect, missing, or materially misdescribed items to support for review. A missing video does not by itself waive a legal right.
     `,
     directActions: [
       { label: '👤 Open Customer Support', actionType: 'OPEN_ESCALATION' },

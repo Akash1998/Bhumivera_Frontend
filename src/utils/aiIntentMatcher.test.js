@@ -31,12 +31,12 @@ describe('aiIntentMatcher fuzzy typo tolerance', () => {
     const res1 = matchAiIntentWithFuzzy('my shampoo bottle arrived leaking');
     expect(res1).not.toBeNull();
     expect(res1.intent).toBe('DAMAGED_ITEM_CREDIT');
-    expect(res1.reply).toContain('Zero return shipping hassle');
+    expect(res1.reply).toContain('not mandatory to raise a concern');
 
     const res2 = matchAiIntentWithFuzzy('can i return this facewash');
     expect(res2).not.toBeNull();
     expect(res2.intent).toBe('DAMAGED_ITEM_CREDIT');
-    expect(res2.reply).toContain('Why No Physical Returns?');
+    expect(res2.reply).toContain('Change-of-mind returns');
 
     const res3 = matchAiIntentWithFuzzy('item damadge in courier');
     expect(res3).not.toBeNull();
