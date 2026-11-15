@@ -1,5 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { AlertCircle, CheckCircle2, Copy, ExternalLink, Gift, IndianRupee, RefreshCw, ShieldCheck, Sparkles } from 'lucide-react';
+import {
+  AlertCircle, CheckCircle2, Copy, ExternalLink, Film, Gift,
+  IndianRupee, RefreshCw, ShieldCheck, Sliders, Sparkles, Zap
+} from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { FaFacebookF, FaInstagram, FaYoutube } from 'react-icons/fa';
 import { affiliate as affiliateApi } from '../../services/api';
@@ -29,6 +32,30 @@ const AUDIENCE_TIERS = [
 
 const CONTENT_NICHES = ['Skincare', 'Haircare', 'Lifestyle', 'Wellness', 'Unboxing'];
 
+const REEL_HOOK_SCRIPTS = [
+  {
+    tag: 'Hook #1 · Barrier Repair & Glow',
+    title: 'Why my skin barrier hated harsh cleansers until I switched to 4% Himalayan Sea Buckthorn',
+    script: 'Show texture close-up in natural window light -> lather on damp skin for 10 seconds -> point out zero tightness after rinsing + mention 0.1% Niacinamide & Hyaluronic Acid -> drop your custom code for 10% off + free gift above ₹799.',
+  },
+  {
+    tag: 'Hook #2 · Pore Detox Routine',
+    title: '3% Activated Charcoal + 5% Glycerin: Deep pore detox without stripping natural oils',
+    script: 'Start with post-commute/workout skin -> apply 1 pump of Bhumivera Charcoal Face Wash -> show fresh matte-yet-hydrated finish -> share your promoter code in caption & first comment.',
+  },
+  {
+    tag: 'Hook #3 · Unboxing + QR Authenticity',
+    title: 'Scanning the QR code on my Bhumivera bottle to unlock ₹300 reward credit live',
+    script: 'Film unboxing the gold-accented bottle -> scan the serialized authenticity QR on camera -> show batch lab metrics & ₹300 box gift claim -> invite followers to use your personal discount code.',
+  },
+];
+
+const DEFAULT_MILESTONES = [
+  { ordersRequired: 3, rewardInr: 500, label: '₹500 Bhumivera Luxury Store Gift Card', shareBoost: null },
+  { ordersRequired: 10, rewardInr: 1200, label: '₹1,200 Creator Bonus + Full-Range 6-SKU PR Box', shareBoost: null },
+  { ordersRequired: 25, rewardInr: 2500, label: '₹2,500 VIP Gift Card + 25% Profit-Share Upgrade', shareBoost: 25 },
+];
+
 const formatMoney = value => `₹${(Number(value) || 0).toFixed(2)}`;
 
 export default function PromoterPortal() {
@@ -37,6 +64,7 @@ export default function PromoterPortal() {
   const [form, setForm] = useState(INITIAL_FORM);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+  const [savingPerks, setSavingPerks] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [copied, setCopied] = useState(false);
@@ -44,6 +72,12 @@ export default function PromoterPortal() {
   const [ownsProfile, setOwnsProfile] = useState(false);
   const [celebrating, setCelebrating] = useState(false);
   const [redirectSeconds, setRedirectSeconds] = useState(5);
+
+  const [simOrdersPerMonth, setSimOrdersPerMonth] = useState(15);
+  const [simBasketSp, setSimBasketSp] = useState(950);
+  const [customCodeInput, setCustomCodeInput] = useState('');
+  const [reelUrlInput, setReelUrlInput] = useState('');
+  const [trialOrderIdInput, setTrialOrderIdInput] = useState('');
 
   const loadDashboard = useCallback(async () => {
     setLoading(true);
@@ -62,6 +96,9 @@ export default function PromoterPortal() {
           contentNiche: data.partner.content_niche || '',
           collaborationType: data.partner.collaboration_type || '',
         });
+        setCustomCodeInput(data.partner.referral_code || '');
+        setReelUrlInput(data.partner.reel_submission_url || '');
+        setTrialOrderIdInput(data.partner.trial_order_id ? String(data.partner.trial_order_id) : '');
       }
     } catch (loadError) {
       setError(loadError.response?.data?.message || 'Could not load the promoter portal.');
@@ -87,6 +124,26 @@ export default function PromoterPortal() {
   const shareUrl = useMemo(() => partner?.referral_code
     ? `${window.location.origin}/?aff=${encodeURIComponent(partner.referral_code)}`
     : '', [partner?.referral_code]);
+
+  const simProjection = useMemo(() => {
+    const discPct = Number(partner?.discount_percent ?? 10);
+    const sharePct = Number(partner?.commission_share_percent ?? 20);
+    const fulfill = Number(dashboard?.programConfig?.fulfillment_cost ?? 110);
+    const rto = Number(dashboard?.programConfig?.rto_reserve ?? 40);
+    const netBuyerPaid = simBasketSp * (1 - discPct / 100);
+    const revExGst = netBuyerPaid / 1.12;
+    const estCogs = simBasketSp * 0.34;
+    const contribProfit = Math.max(0, revExGst - estCogs - fulfill - rto - netBuyerPaid * 0.02);
+    const perOrderComm = Math.round(contribProfit * (sharePct / 100));
+    const monthlyCash = perOrderComm * simOrdersPerMonth;
+    const unlockedGiftCards = (simOrdersPerMonth >= 3 ? 500 : 0) + (simOrdersPerMonth >= 10 ? 1200 : 0) + (simOrdersPerMonth >= 25 ? 2500 : 0);
+    return {
+      perOrderComm,
+      monthlyCash,
+      unlockedGiftCards,
+      totalMonthlyValue: monthlyCash + unlockedGiftCards + 300,
+    };
+  }, [partner?.discount_percent, partner?.commission_share_percent, dashboard?.programConfig, simBasketSp, simOrdersPerMonth]);
 
   const apply = async event => {
     event.preventDefault();
@@ -117,6 +174,31 @@ export default function PromoterPortal() {
     }
   };
 
+  const savePartnerPerks = async event => {
+    event.preventDefault();
+    if (!affiliateApi.updatePartnerPerks) return;
+    setSavingPerks(true);
+    setError('');
+    setNotice('');
+    try {
+      const response = await affiliateApi.updatePartnerPerks({
+        customCode: customCodeInput.trim().toUpperCase(),
+        reelUrl: reelUrlInput.trim(),
+        trialOrderId: trialOrderIdInput ? Number(trialOrderIdInput) : null,
+      });
+      if (response.data?.dashboard) {
+        setDashboard(response.data.dashboard);
+      } else {
+        await loadDashboard();
+      }
+      setNotice('Your creator code and Reel cashback submission have been updated.');
+    } catch (perkError) {
+      setError(perkError.response?.data?.message || 'Could not update your creator settings.');
+    } finally {
+      setSavingPerks(false);
+    }
+  };
+
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
@@ -128,256 +210,297 @@ export default function PromoterPortal() {
     }
   };
 
+  const deliveredOrdersCount = Number(dashboard?.summary?.delivered_orders || 0);
+  const giftCardBalance = Number(dashboard?.summary?.gift_card_balance || (partner?.status === 'approved' ? 300 : 0));
+  const milestones = dashboard?.milestones || DEFAULT_MILESTONES.map(m => ({
+    ...m,
+    unlocked: deliveredOrdersCount >= m.ordersRequired,
+    progressPct: Math.min(100, Math.round((deliveredOrdersCount / m.ordersRequired) * 100)),
+    remainingOrders: Math.max(0, m.ordersRequired - deliveredOrdersCount),
+  }));
+
   const cardClass = 'rounded-2xl border border-[#D4AF37]/25 bg-[#102A1E]/95 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.25)] sm:p-7';
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#07180F] px-4 py-8 text-[#DFD7C4] sm:py-12">
-      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_8%_0%,rgba(34,112,74,0.42),transparent_40%),radial-gradient(ellipse_at_90%_8%,rgba(212,175,55,0.16),transparent_32%)]"/>
-        <div className="absolute -left-40 top-96 h-96 w-96 rounded-full bg-emerald-500/10 blur-3xl"/>
-        <div className="absolute -right-36 top-[55rem] h-96 w-96 rounded-full bg-amber-400/10 blur-3xl"/>
-      </div>
       <div className="relative mx-auto max-w-7xl space-y-7">
         <header className="relative overflow-hidden rounded-[2rem] border border-[#D4AF37]/30 bg-gradient-to-br from-[#17422F] via-[#103322] to-[#0B2117] p-6 shadow-[0_30px_90px_rgba(0,0,0,0.28)] sm:p-9">
-          <div aria-hidden="true" className="absolute -right-8 -top-20 h-72 w-72 rounded-full border border-[#D4AF37]/10 bg-[#D4AF37]/[0.04]"/>
-          <div aria-hidden="true" className="absolute right-8 top-12 h-40 w-40 rounded-full border border-white/5"/>
           <div className="relative z-10 flex flex-wrap items-start justify-between gap-5">
             <div className="max-w-3xl">
-              <p className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/30 bg-black/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FCE096]"><ShieldCheck size={14}/> Creator &amp; promoter account</p>
-              <h1 className="mt-4 font-serif text-3xl font-bold text-white sm:text-5xl">Your Bhumivera partner desk</h1>
-              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#C5D8CC]">Apply to join, then track your approved offer, referred orders, and earnings in one place.</p>
-              <p className="mt-3 max-w-2xl border-l-2 border-[#D4AF37]/50 pl-3 font-serif text-sm italic leading-6 text-[#F0D98A]">“Strong partnerships turn trust into shared growth.”</p>
-              <div className="mt-6 flex flex-wrap gap-2">
-                {SOCIAL_PLATFORMS.map(({ name, Icon, color }) => (
-                  <span key={name} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-[#07180F]/50 px-3 py-2 text-xs font-semibold text-white">
-                    {React.createElement(Icon, { size: 15, style: { color } })} {name}
-                  </span>
-                ))}
-              </div>
+              <p className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/30 bg-black/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FCE096]">
+                <ShieldCheck size={14}/> Bhumivera Co-Creator &amp; Partner Desk
+              </p>
+              <h1 className="mt-4 font-serif text-3xl font-bold text-white sm:text-5xl">Share, Collaborate &amp; Unlock Perks</h1>
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#C5D8CC]">
+                Choose your collaboration track: earn recurring profit-share commissions + instant Bhumivera Store Gift Cards, or claim 100% trial order cashback when your Reel goes live.
+              </p>
             </div>
-            <button type="button" onClick={loadDashboard} disabled={loading} className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-black/10 px-3 py-2.5 text-xs font-semibold text-white transition hover:border-[#D4AF37]/50 disabled:opacity-50"><RefreshCw size={14} className={loading ? 'animate-spin' : ''}/>Refresh</button>
+            <button type="button" onClick={loadDashboard} disabled={loading} className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-black/10 px-3 py-2.5 text-xs font-semibold text-white transition hover:border-[#D4AF37]/50 disabled:opacity-50">
+              <RefreshCw size={14} className={loading ? 'animate-spin' : ''}/>Refresh
+            </button>
           </div>
         </header>
+
+        <section className="grid gap-4 md:grid-cols-2">
+          <div className="rounded-2xl border border-[#D4AF37]/35 bg-gradient-to-br from-[#133524] to-[#0b1f15] p-5">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-[#D4AF37]/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-[#FCE096]">
+              <Zap size={12}/> Option 1 · Profit-Share + Gift Card Track
+            </span>
+            <h3 className="mt-3 font-serif text-xl font-bold text-white">20% Profit Share + ₹300 Instant Welcome Gift Card</h3>
+            <p className="mt-1.5 text-xs leading-5 text-[#B7C9BD]">
+              Get a custom code giving your followers <strong>10% off</strong> + free milestone gifts. You receive a <strong>₹300 Bhumivera Gift Card</strong> in your wallet on approval, earn <strong>20%–25% contribution profit share</strong> on every delivered order, and unlock <strong>₹500, ₹1,200 &amp; ₹2,500 milestone bonuses</strong>.
+            </p>
+          </div>
+          <div className="rounded-2xl border border-emerald-400/30 bg-gradient-to-br from-[#102E24] to-[#091A14] p-5">
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-500/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-emerald-200">
+              <Gift size={12}/> Option 2 · 100% Cashback Trial + Barter PR Track
+            </span>
+            <h3 className="mt-3 font-serif text-xl font-bold text-white">100% Order Reimbursement on Reel Publish</h3>
+            <p className="mt-1.5 text-xs leading-5 text-[#B7C9BD]">
+              Order your favorite Bhumivera products using your ₹300 Welcome Gift Card or Creator Trial code. Publish <strong>1 honest review Reel + 2 Stories</strong> tagging <strong>@bhumivera</strong>, submit your Reel link below, and get <strong>100% of your paid amount refunded</strong> + ongoing commissions!
+            </p>
+          </div>
+        </section>
 
         {error && <div role="alert" className="flex items-start gap-2 rounded-xl border border-rose-400/30 bg-rose-950/30 p-3 text-sm text-rose-200"><AlertCircle size={17} className="mt-0.5 shrink-0"/>{error}</div>}
         {notice && <p role="status" className="rounded-xl border border-emerald-400/30 bg-emerald-950/20 p-3 text-sm text-emerald-200">{notice}</p>}
 
         {loading ? <div className={cardClass}>Loading your promoter account…</div> : !partner || (partner.status === 'rejected' && editingApplication) ? (
-          <div className="grid items-start gap-5 lg:grid-cols-[minmax(0,1.55fr)_minmax(280px,0.8fr)]">
-            <form onSubmit={apply} className="space-y-6 rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#0D261B]/70 p-5 text-[#DFD7C4] shadow-[0_24px_70px_rgba(0,0,0,0.3)] backdrop-blur-xl sm:p-8">
-              <div className="flex items-start gap-4 border-b border-white/10 pb-5">
-                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#F0D98A]"><Gift size={21}/></span>
-                <div>
-                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#D4AF37]">Promoter application</p>
-                  <h2 className="mt-1 font-serif text-2xl font-bold text-white sm:text-3xl">Tell us about your audience</h2>
-                  <p className="mt-2 text-sm leading-6 text-[#B4C7BB]">Share your public profile details. Our team reviews every application before activation.</p>
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 backdrop-blur-md">
-                <p className="text-sm font-semibold text-white">Application linked to your signed-in account</p>
-                <p className="mt-1 text-xs leading-5 text-[#9BB0A5]">Your account email is kept private and is not shown in this form.</p>
-              </div>
-
-              <fieldset>
-                <legend className="text-sm font-bold text-white">Choose your main platform</legend>
-                <div className="mt-3 grid gap-3 sm:grid-cols-3">
-                  {SOCIAL_PLATFORMS.map(({ name, Icon, color }) => {
-                    const selected = form.socialPlatform === name;
-                    return (
-                      <label key={name} className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-3 transition focus-within:ring-2 focus-within:ring-[#D4AF37]/30 ${selected ? 'border-[#D4AF37]/55 bg-[#D4AF37]/10 ring-2 ring-[#D4AF37]/10' : 'border-white/10 bg-white/[0.035] hover:border-white/25 hover:bg-white/[0.06]'}`}>
-                        <input
-                          type="radio"
-                          name="socialPlatform"
-                          value={name}
-                          checked={selected}
-                          onChange={event => setForm(current => ({ ...current, socialPlatform: event.target.value }))}
-                          aria-label={name}
-                          className="sr-only"
-                        />
-                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/20">{React.createElement(Icon, { size: 19, style: { color } })}</span>
-                        <span className="text-sm font-semibold text-white">{name}</span>
-                        {selected && <CheckCircle2 size={17} className="ml-auto text-[#F0D98A]"/>}
-                      </label>
-                    );
-                  })}
-                </div>
-              </fieldset>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label htmlFor="promoter-handle" className="space-y-2 text-sm font-semibold text-[#E7EEE8]">
-                  Profile name or handle
-                  <input
-                    id="promoter-handle"
-                    required
-                    maxLength={120}
-                    value={form.socialHandle}
-                    onChange={event => setForm(current => ({ ...current, socialHandle: event.target.value }))}
-                    placeholder="@yourname"
-                    autoComplete="off"
-                    className="w-full rounded-xl border border-white/10 bg-[#07180F]/65 px-4 py-3 text-sm text-white outline-none transition placeholder:text-[#82998D] focus:border-[#D4AF37]/60 focus:ring-4 focus:ring-[#D4AF37]/10"
-                  />
-                  <span className="block text-xs font-normal text-[#9BB0A5]">Enter it as shown on your profile, including @ if used.</span>
-                </label>
-                <label htmlFor="promoter-follower-tier" className="space-y-2 text-sm font-semibold text-[#E7EEE8]">
-                  Follower / subscriber tier
-                  <select
-                    id="promoter-follower-tier"
-                    required
-                    value={form.followerTier}
-                    onChange={event => setForm(current => ({ ...current, followerTier: event.target.value }))}
-                    className="w-full rounded-xl border border-white/10 bg-[#07180F]/65 px-4 py-3 text-sm text-white outline-none transition placeholder:text-[#82998D] focus:border-[#D4AF37]/60 focus:ring-4 focus:ring-[#D4AF37]/10"
-                  >
-                    <option value="">Choose a range</option>
-                    {AUDIENCE_TIERS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
-                  </select>
-                  <span className="block text-xs font-normal text-[#9BB0A5]">Self-reported. There is no minimum audience size.</span>
-                </label>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-2">
-                <label htmlFor="promoter-content-niche" className="space-y-2 text-sm font-semibold text-[#E7EEE8]">
-                  Primary content niche
-                  <select
-                    id="promoter-content-niche"
-                    required
-                    value={form.contentNiche}
-                    onChange={event => setForm(current => ({ ...current, contentNiche: event.target.value }))}
-                    className="w-full rounded-xl border border-white/10 bg-[#07180F]/65 px-4 py-3 text-sm text-white outline-none transition focus:border-[#D4AF37]/60 focus:ring-4 focus:ring-[#D4AF37]/10"
-                  >
-                    <option value="">Choose your niche</option>
-                    {CONTENT_NICHES.map(niche => <option key={niche} value={niche}>{niche}</option>)}
-                  </select>
-                </label>
-                <label htmlFor="promoter-collaboration-type" className="space-y-2 text-sm font-semibold text-[#E7EEE8]">
-                  Preferred collaboration
-                  <select
-                    id="promoter-collaboration-type"
-                    required
-                    value={form.collaborationType}
-                    onChange={event => setForm(current => ({ ...current, collaborationType: event.target.value }))}
-                    className="w-full rounded-xl border border-white/10 bg-[#07180F]/65 px-4 py-3 text-sm text-white outline-none transition focus:border-[#D4AF37]/60 focus:ring-4 focus:ring-[#D4AF37]/10"
-                  >
-                    <option value="">Choose your preference</option>
-                    <option value="product_gifting">Product gifting / barter</option>
-                    <option value="affiliate_commission">Affiliate commission</option>
-                    <option value="both">Both</option>
-                  </select>
-                  <span className="block text-xs font-normal text-[#9BB0A5]">Gifting is selective. No cash-paid UGC fees are offered.</span>
-                </label>
-              </div>
-
-              <label htmlFor="promoter-profile-url" className="block space-y-2 text-sm font-semibold text-[#E7EEE8]">
-                Public profile link
-                <input
-                  id="promoter-profile-url"
-                  required
-                  type="url"
-                  maxLength={500}
-                  value={form.profileUrl}
-                  onChange={event => setForm(current => ({ ...current, profileUrl: event.target.value }))}
-                  placeholder={form.socialPlatform === 'YouTube' ? 'https://youtube.com/@yourchannel' : `https://${form.socialPlatform ? form.socialPlatform.toLowerCase() : 'instagram'}.com/yourprofile`}
-                  className="w-full rounded-xl border border-white/10 bg-[#07180F]/65 px-4 py-3 text-sm text-white outline-none transition placeholder:text-[#82998D] focus:border-[#D4AF37]/60 focus:ring-4 focus:ring-[#D4AF37]/10"
-                />
-                <span className="block text-xs font-normal text-[#9BB0A5]">Paste the HTTPS link to your profile, not a post or video.</span>
-              </label>
-
-              <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-4 text-sm leading-6 text-[#C5D8CC]">
-                <input type="checkbox" checked={ownsProfile} onChange={event => setOwnsProfile(event.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[#D4AF37]"/>
-                <span>I confirm that I own or manage this profile and that the details above are accurate.</span>
-              </label>
-
-              <div className="flex flex-col gap-3 border-t border-white/10 pt-5 sm:flex-row sm:items-center sm:justify-between">
-                <p className="text-xs leading-5 text-[#9BB0A5]">No social password needed. <Link to="/legal/warranty-affiliate-b2b" className="font-semibold text-[#F0D98A] underline underline-offset-2">Read partner terms</Link>.</p>
-                <button type="submit" disabled={submitting} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#D4AF37] px-6 py-3 text-sm font-bold text-[#102219] transition hover:bg-[#FCE096] focus:outline-none focus:ring-4 focus:ring-[#D4AF37]/25 disabled:cursor-not-allowed disabled:opacity-60">
-                  {submitting ? 'Sending application…' : 'Send application for review'} <ExternalLink size={15}/>
-                </button>
-              </div>
-            </form>
-
-            <aside className="space-y-5 rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#0D261B]/65 p-5 text-[#D7E2DA] shadow-[0_24px_70px_rgba(0,0,0,0.24)] backdrop-blur-xl sm:p-6">
+          <form onSubmit={apply} className="space-y-6 rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#0D261B]/70 p-5 text-[#DFD7C4] shadow-[0_24px_70px_rgba(0,0,0,0.3)] backdrop-blur-xl sm:p-8">
+            <div className="flex items-start gap-4 border-b border-white/10 pb-5">
+              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#F0D98A]"><Gift size={21}/></span>
               <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#E4C76A]">Simple and transparent</p>
-                <h3 className="mt-2 font-serif text-2xl font-bold text-white">Your path to partnership</h3>
+                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#D4AF37]">Promoter application</p>
+                <h2 className="mt-1 font-serif text-2xl font-bold text-white sm:text-3xl">Join the Bhumivera Creator Program</h2>
+                <p className="mt-2 text-sm leading-6 text-[#B4C7BB]">Select your platform and preferred collaboration track to unlock your ₹300 Welcome Gift Card and custom promo code.</p>
               </div>
-              <div className="relative">
-                <span aria-hidden="true" className="absolute bottom-7 left-[15px] top-7 w-px bg-gradient-to-b from-[#D4AF37]/65 via-[#D4AF37]/35 to-transparent"/>
-                <ol className="relative space-y-1">
-                  {[
-                    ['01', 'Apply with confidence', 'Share your profile and audience details.'],
-                    ['02', 'Get a thoughtful review', 'Our team reviews applications, usually within 12–24 hours.'],
-                    ['03', 'Share, grow, and earn', 'If approved, your link and transparent earnings appear here.'],
-                  ].map(([step, title, description]) => (
-                    <li key={step} className="relative flex gap-4 py-3">
-                      <span className="z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full border border-[#D4AF37]/45 bg-[#123624] text-[10px] font-bold text-[#FCE096] shadow-[0_0_18px_rgba(212,175,55,0.12)]">{step}</span>
-                      <div className="pt-0.5"><p className="text-sm font-bold text-white">{title}</p><p className="mt-1 text-xs leading-5 text-[#B7C9BD]">{description}</p></div>
-                    </li>
-                  ))}
-                </ol>
+            </div>
+
+            <fieldset>
+              <legend className="text-sm font-bold text-white">Choose your main platform</legend>
+              <div className="mt-3 grid gap-3 sm:grid-cols-3">
+                {SOCIAL_PLATFORMS.map(({ name, Icon, color }) => {
+                  const selected = form.socialPlatform === name;
+                  return (
+                    <label key={name} className={`flex cursor-pointer items-center gap-3 rounded-xl border px-3 py-3 transition ${selected ? 'border-[#D4AF37]/55 bg-[#D4AF37]/10' : 'border-white/10 bg-white/[0.035]'}`}>
+                      <input type="radio" name="socialPlatform" value={name} checked={selected} onChange={event => setForm(current => ({ ...current, socialPlatform: event.target.value }))} aria-label={name} className="sr-only"/>
+                      <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/10 bg-black/20">{React.createElement(Icon, { size: 19, style: { color } })}</span>
+                      <span className="text-sm font-semibold text-white">{name}</span>
+                      {selected && <CheckCircle2 size={17} className="ml-auto text-[#F0D98A]"/>}
+                    </label>
+                  );
+                })}
               </div>
-              <blockquote className="rounded-2xl border border-[#D4AF37]/20 bg-gradient-to-br from-[#D4AF37]/[0.09] to-transparent p-4">
-                <p className="font-serif text-base italic leading-6 text-[#F7E8AE]">“Success grows when your community trusts what you share.”</p>
-                <footer className="mt-2 text-[10px] font-semibold uppercase tracking-wider text-[#9BB0A5]">The Bhumivera partner spirit</footer>
-              </blockquote>
-              <div className="rounded-xl border border-white/10 bg-black/20 p-4 backdrop-blur-md">
-                <p className="text-sm font-semibold text-white">Clear from the start</p>
-                <p className="mt-1 text-xs leading-5 text-[#B7C9BD]">We do not fetch your social data. Follower count is self-reported; you should never share your social-media password.</p>
-              </div>
-            </aside>
-          </div>
+            </fieldset>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label htmlFor="promoter-handle" className="space-y-2 text-sm font-semibold text-[#E7EEE8]">
+                Profile name or handle
+                <input id="promoter-handle" required maxLength={120} value={form.socialHandle} onChange={event => setForm(current => ({ ...current, socialHandle: event.target.value }))} placeholder="@yourname" className="w-full rounded-xl border border-white/10 bg-[#07180F]/65 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/60"/>
+              </label>
+              <label htmlFor="promoter-follower-tier" className="space-y-2 text-sm font-semibold text-[#E7EEE8]">
+                Follower / subscriber tier
+                <select id="promoter-follower-tier" required value={form.followerTier} onChange={event => setForm(current => ({ ...current, followerTier: event.target.value }))} className="w-full rounded-xl border border-white/10 bg-[#07180F]/65 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/60">
+                  <option value="">Choose a range</option>
+                  {AUDIENCE_TIERS.map(([value, label]) => <option key={value} value={value}>{label}</option>)}
+                </select>
+              </label>
+            </div>
+
+            <div className="grid gap-4 sm:grid-cols-2">
+              <label htmlFor="promoter-content-niche" className="space-y-2 text-sm font-semibold text-[#E7EEE8]">
+                Primary content niche
+                <select id="promoter-content-niche" required value={form.contentNiche} onChange={event => setForm(current => ({ ...current, contentNiche: event.target.value }))} className="w-full rounded-xl border border-white/10 bg-[#07180F]/65 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/60">
+                  <option value="">Choose your niche</option>
+                  {CONTENT_NICHES.map(niche => <option key={niche} value={niche}>{niche}</option>)}
+                </select>
+              </label>
+              <label htmlFor="promoter-collaboration-type" className="space-y-2 text-sm font-semibold text-[#E7EEE8]">
+                Preferred collaboration track
+                <select id="promoter-collaboration-type" required value={form.collaborationType} onChange={event => setForm(current => ({ ...current, collaborationType: event.target.value }))} className="w-full rounded-xl border border-white/10 bg-[#07180F]/65 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/60">
+                  <option value="">Choose your track</option>
+                  <option value="both">Option 1 + 2: 20% Profit Share + ₹300 Welcome Gift Card + 100% Reel Cashback</option>
+                  <option value="affiliate_commission">Option 1: 20% Profit Share + Milestone Gift Cards</option>
+                  <option value="product_gifting">Option 2: 100% Reel Cashback Trial + Product Gifting Barter</option>
+                </select>
+              </label>
+            </div>
+
+            <label htmlFor="promoter-profile-url" className="block space-y-2 text-sm font-semibold text-[#E7EEE8]">
+              Public profile link
+              <input id="promoter-profile-url" required type="url" maxLength={500} value={form.profileUrl} onChange={event => setForm(current => ({ ...current, profileUrl: event.target.value }))} placeholder="https://instagram.com/yourprofile" className="w-full rounded-xl border border-white/10 bg-[#07180F]/65 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/60"/>
+            </label>
+
+            <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-4 text-sm leading-6 text-[#C5D8CC]">
+              <input type="checkbox" checked={ownsProfile} onChange={event => setOwnsProfile(event.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[#D4AF37]"/>
+              <span>I confirm that I own or manage this profile and that the details above are accurate.</span>
+            </label>
+
+            <button type="submit" disabled={submitting} className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#D4AF37] px-6 py-3 text-sm font-bold text-[#102219] transition hover:bg-[#FCE096] disabled:opacity-60">
+              {submitting ? 'Sending application…' : 'Send application & reserve ₹300 Gift Card'} <ExternalLink size={15}/>
+            </button>
+          </form>
         ) : partner.status === 'pending' ? (
           <section className={`${cardClass} mx-auto max-w-2xl`}>
             <span className="rounded-full border border-amber-400/30 bg-amber-950/30 px-3 py-1 text-[10px] font-bold uppercase text-amber-100">Application under review</span>
-            <h2 className="mt-4 font-serif text-2xl font-bold text-white">Thank you for your interest in collaborating with Bhumivera.</h2>
-            <p className="mt-2 text-sm leading-6 text-[#9BB0A5]">You are in the queue while our team verifies your account and profile. We expect to update your activation status within 12–24 hours. Please check this page or the email on your Bhumivera account for our response.</p>
-            <p className="mt-3 text-sm leading-6 text-[#9BB0A5]">Your promoter account is not active yet. The code below is reserved for you and cannot be used until Bhumivera approves the application.</p>
+            <h2 className="mt-4 font-serif text-2xl font-bold text-white">Your ₹300 Welcome Gift Card &amp; Code Are Reserved!</h2>
+            <p className="mt-2 text-sm leading-6 text-[#9BB0A5]">Our team reviews applications within 12–24 hours. The moment you are approved, your ₹300 Bhumivera Gift Card will be credited to your wallet and your code below will go live.</p>
             {partner.referral_code && <div className="mt-4 rounded-xl border border-[#315541] bg-[#0b1c14] p-4">
               <p className="text-[10px] font-bold uppercase tracking-wider text-[#9BB0A5]">Reserved promoter code · inactive</p>
               <p className="mt-1 font-mono text-lg font-bold tracking-widest text-[#FCE096]">{partner.referral_code}</p>
             </div>}
-          </section>
-        ) : partner.status === 'rejected' ? (
-          <section className={`${cardClass} mx-auto max-w-2xl`}>
-            <h2 className="font-serif text-2xl font-bold text-white">Application not approved</h2>
-            <p className="mt-2 text-sm leading-6 text-[#9BB0A5]">{partner.admin_notes || 'Please contact our team if you would like clarification.'}</p>
-            <button type="button" onClick={() => setEditingApplication(true)} className="mt-4 rounded-lg bg-[#D4AF37] px-4 py-2.5 text-xs font-bold text-[#102219]">Update and resubmit</button>
           </section>
         ) : (
           <>
             <section className={`${cardClass} grid gap-5 lg:grid-cols-[1.2fr_0.8fr]`}>
               <div>
                 <div className="flex flex-wrap items-center gap-2">
-                  <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${partner.status === 'approved' ? 'bg-emerald-900/50 text-emerald-200' : 'bg-amber-900/40 text-amber-100'}`}>{partner.status}</span>
-                  <span className="text-xs text-[#9BB0A5]">{partner.social_platform} · {AUDIENCE_TIERS.find(([value]) => value === partner.follower_tier)?.[1] || `${Number(partner.follower_count).toLocaleString()} followers`}</span>
+                  <span className="rounded-full bg-emerald-900/50 px-3 py-1 text-[10px] font-bold uppercase text-emerald-200">{partner.status}</span>
+                  <span className="text-xs text-[#9BB0A5]">{partner.social_platform} · {partner.social_handle}</span>
                 </div>
-                <h2 className="mt-3 font-serif text-2xl font-bold text-white">Share your offer</h2>
-                <p className="mt-1 text-sm leading-6 text-[#9BB0A5]">Your audience gets <strong className="text-[#FCE096]">{Number(partner.discount_percent)}% off</strong>. Your profit share is <strong className="text-[#FCE096]">{Number(partner.commission_share_percent)}%</strong> of eligible contribution profit, subject to the retained-margin floor.</p>
-                <p className="mt-1 text-xs text-[#9BB0A5]">Retained-margin floor: {Number(dashboard.programConfig?.minimum_retained_margin_percent ?? 12)}% · target: {Number(dashboard.programConfig?.target_retained_margin_percent ?? 20)}%.</p>
-                {partner.status === 'paused' && <p className="mt-3 rounded-lg border border-amber-400/30 bg-amber-950/20 px-3 py-2 text-xs text-amber-100">Your link is paused and cannot receive new attributed orders.</p>}
-                <div className="mt-4 rounded-xl border border-[#315541] bg-[#0b1c14] p-3">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#9BB0A5]">Promoter code</p>
-                  <p className="mt-1 font-mono text-lg font-bold tracking-widest text-[#FCE096]">{partner.referral_code}</p>
+                <h2 className="mt-3 font-serif text-2xl font-bold text-white">Your Active Creator Code &amp; Offer</h2>
+                <p className="mt-1 text-sm leading-6 text-[#9BB0A5]">
+                  Your audience gets <strong className="text-[#FCE096]">{Number(partner.discount_percent)}% off</strong> + free milestone gifts above ₹799. Your profit share is <strong className="text-[#FCE096]">{Number(partner.commission_share_percent)}%</strong> of contribution profit.
+                </p>
+                <div className="mt-4 rounded-xl border border-[#315541] bg-[#0b1c14] p-4">
+                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#9BB0A5]">Active Promoter Code</p>
+                  <p className="mt-1 font-mono text-2xl font-bold tracking-widest text-[#FCE096]">{partner.referral_code}</p>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <button type="button" onClick={copyLink} className="inline-flex items-center gap-2 rounded-lg bg-[#D4AF37] px-3 py-2 text-xs font-bold text-[#102219]"><Copy size={14}/>{copied ? 'Copied' : 'Copy offer link'}</button>
-                    <a href={shareUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-[#315541] px-3 py-2 text-xs text-white">Preview link <ExternalLink size={13}/></a>
+                    <button type="button" onClick={copyLink} className="inline-flex items-center gap-2 rounded-lg bg-[#D4AF37] px-3.5 py-2 text-xs font-bold text-[#102219]"><Copy size={14}/>{copied ? 'Copied' : 'Copy offer link'}</button>
+                    <a href={shareUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-[#315541] px-3.5 py-2 text-xs text-white">Preview store link <ExternalLink size={13}/></a>
                   </div>
                   <p className="mt-2 break-all text-[11px] text-[#9BB0A5]">{shareUrl}</p>
                 </div>
               </div>
-              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-1">
+
+              <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
                 {[
-                  ['Attributed orders', dashboard.summary?.attributed_orders],
-                  ['Pending delivery', formatMoney(dashboard.summary?.pending_commission)],
-                  ['Ready for payout', formatMoney(dashboard.summary?.payable_commission)],
-                  ['Paid to date', formatMoney(dashboard.summary?.paid_commission)],
-                ].map(([label, value]) => <div key={label} className="rounded-xl border border-[#315541] bg-[#0b1c14] p-4"><div className="flex items-center justify-between text-xs text-[#9BB0A5]"><span>{label}</span></div><p className="mt-2 font-serif text-xl font-bold text-white">{value ?? 0}</p></div>)}
-                {Number(dashboard.summary?.balance_carryover) > 0 && <p className="rounded-lg border border-amber-400/30 bg-amber-950/20 px-3 py-2 text-xs leading-5 text-amber-100">A previous returned order balance of {formatMoney(dashboard.summary.balance_carryover)} will be offset against future commissions.</p>}
+                  ['Gift Card Vault Balance', formatMoney(giftCardBalance)],
+                  ['Delivered / Total Orders', `${deliveredOrdersCount} / ${dashboard.summary?.attributed_orders ?? 0}`],
+                  ['Pending Delivery Commission', formatMoney(dashboard.summary?.pending_commission)],
+                  ['Ready for UPI Payout', formatMoney(dashboard.summary?.payable_commission)],
+                ].map(([label, value]) => (
+                  <div key={label} className="rounded-xl border border-[#315541] bg-[#0b1c14] p-4">
+                    <span className="text-xs text-[#9BB0A5]">{label}</span>
+                    <p className="mt-2 font-serif text-xl font-bold text-[#FCE096]">{value}</p>
+                  </div>
+                ))}
               </div>
             </section>
 
             <section className={cardClass}>
-              <h2 className="font-serif text-xl font-bold text-white">Your attributed orders</h2>
-              <p className="mt-1 text-xs leading-5 text-[#9BB0A5]">Commissions stay pending until delivery. Cancelled or returned orders are reversed; payouts are processed manually by Bhumivera.</p>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Creator Perk &amp; Gift Card Vault</p>
+                  <h2 className="mt-1 font-serif text-xl font-bold text-white">Unlock Free Luxury Gift Cards &amp; 25% Profit Share</h2>
+                </div>
+                <span className="rounded-full border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-3 py-1 text-xs font-bold text-[#FCE096]">
+                  Welcome Perk: ₹300 Gift Card Active
+                </span>
+              </div>
+              <div className="mt-5 grid gap-4 md:grid-cols-3">
+                {milestones.map(m => (
+                  <div key={m.ordersRequired} className={`rounded-xl border p-4 ${m.unlocked ? 'border-emerald-400/50 bg-emerald-950/25' : 'border-[#315541] bg-[#0b1c14]'}`}>
+                    <div className="flex items-center justify-between text-xs">
+                      <span className="font-bold uppercase tracking-wider text-[#D4AF37]">{m.ordersRequired} Delivered Orders</span>
+                      <span className={`rounded-full px-2 py-0.5 text-[10px] font-bold ${m.unlocked ? 'bg-emerald-500/20 text-emerald-200' : 'bg-white/10 text-[#9BB0A5]'}`}>
+                        {m.unlocked ? 'UNLOCKED' : `${m.remainingOrders} more to go`}
+                      </span>
+                    </div>
+                    <p className="mt-2 font-serif text-base font-bold text-white">{m.label}</p>
+                    <div className="mt-3 h-2 w-full overflow-hidden rounded-full bg-black/40">
+                      <div className="h-full bg-gradient-to-r from-[#D4AF37] to-[#FCE096]" style={{ width: `${m.progressPct}%` }}/>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <div className="grid gap-6 lg:grid-cols-2">
+              <section className={cardClass}>
+                <div className="flex items-center gap-2 text-[#D4AF37]">
+                  <Sliders size={18}/>
+                  <h2 className="font-serif text-xl font-bold text-white">Live Creator Earnings Simulator</h2>
+                </div>
+                <p className="mt-1 text-xs text-[#9BB0A5]">Slide to estimate your monthly cash commissions + unlocked Bhumivera Gift Cards.</p>
+                <div className="mt-4 space-y-4">
+                  <label className="block space-y-1 text-xs">
+                    <div className="flex justify-between font-semibold text-white">
+                      <span>Delivered orders per month</span>
+                      <span className="text-[#FCE096]">{simOrdersPerMonth} orders/mo</span>
+                    </div>
+                    <input type="range" min="1" max="50" value={simOrdersPerMonth} onChange={e => setSimOrdersPerMonth(Number(e.target.value))} className="w-full accent-[#D4AF37]"/>
+                  </label>
+                  <label className="block space-y-1 text-xs">
+                    <div className="flex justify-between font-semibold text-white">
+                      <span>Average follower cart size (SP)</span>
+                      <span className="text-[#FCE096]">₹{simBasketSp}</span>
+                    </div>
+                    <input type="range" min="650" max="1650" step="50" value={simBasketSp} onChange={e => setSimBasketSp(Number(e.target.value))} className="w-full accent-[#D4AF37]"/>
+                  </label>
+                  <div className="grid grid-cols-3 gap-2 rounded-xl border border-[#315541] bg-[#0b1c14] p-3 text-center">
+                    <div>
+                      <span className="text-[10px] text-[#9BB0A5]">Cash Commission</span>
+                      <p className="mt-1 font-serif text-lg font-bold text-white">₹{simProjection.monthlyCash}</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-[#9BB0A5]">Milestone Gift Cards</span>
+                      <p className="mt-1 font-serif text-lg font-bold text-[#FCE096]">₹{simProjection.unlockedGiftCards + 300}</p>
+                    </div>
+                    <div>
+                      <span className="text-[10px] text-[#9BB0A5]">Total Monthly Value</span>
+                      <p className="mt-1 font-serif text-lg font-bold text-emerald-300">₹{simProjection.totalMonthlyValue}</p>
+                    </div>
+                  </div>
+                </div>
+              </section>
+
+              <form onSubmit={savePartnerPerks} className={`${cardClass} space-y-4`}>
+                <div className="flex items-center gap-2 text-[#D4AF37]">
+                  <Film size={18}/>
+                  <h2 className="font-serif text-xl font-bold text-white">Custom Vanity Code &amp; 100% Reel Cashback</h2>
+                </div>
+                <p className="text-xs text-[#9BB0A5]">Set a memorable code for your Reels (e.g., <strong>AYEESHA10</strong>) and paste your published Reel link to unlock 100% trial order cashback.</p>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <label className="space-y-1 text-xs font-semibold text-white">
+                    Custom Vanity Promo Code
+                    <input value={customCodeInput} onChange={e => setCustomCodeInput(e.target.value.toUpperCase())} maxLength={20} placeholder="AYEESHA10" className="w-full rounded-lg border border-[#315541] bg-[#0b1c14] px-3 py-2 font-mono text-sm text-[#FCE096]"/>
+                  </label>
+                  <label className="space-y-1 text-xs font-semibold text-white">
+                    Trial Order # (for 100% Cashback)
+                    <input type="number" value={trialOrderIdInput} onChange={e => setTrialOrderIdInput(e.target.value)} placeholder="e.g. 104" className="w-full rounded-lg border border-[#315541] bg-[#0b1c14] px-3 py-2 text-sm text-white"/>
+                  </label>
+                </div>
+                <label className="block space-y-1 text-xs font-semibold text-white">
+                  Published Instagram Reel / YouTube Short Link
+                  <input type="url" value={reelUrlInput} onChange={e => setReelUrlInput(e.target.value)} placeholder="https://www.instagram.com/reel/..." className="w-full rounded-lg border border-[#315541] bg-[#0b1c14] px-3 py-2 text-sm text-white"/>
+                </label>
+                <div className="flex items-center justify-between pt-1">
+                  <span className="text-[11px] text-[#9BB0A5]">Cashback status: <strong className="uppercase text-[#FCE096]">{partner.trial_cashback_status || 'none'}</strong></span>
+                  <button type="submit" disabled={savingPerks} className="rounded-lg bg-[#D4AF37] px-4 py-2 text-xs font-bold text-[#102219] hover:bg-[#FCE096] disabled:opacity-50">
+                    {savingPerks ? 'Saving…' : 'Save Code & Submit Reel'}
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <section className={cardClass}>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Creator Content Playbook</p>
+              <h2 className="mt-1 font-serif text-xl font-bold text-white">3 High-Converting 15-Second Reel Hooks</h2>
+              <div className="mt-4 grid gap-4 md:grid-cols-3">
+                {REEL_HOOK_SCRIPTS.map(hook => (
+                  <div key={hook.tag} className="rounded-xl border border-[#315541] bg-[#0b1c14] p-4">
+                    <span className="text-[10px] font-bold uppercase tracking-wider text-[#FCE096]">{hook.tag}</span>
+                    <h3 className="mt-1.5 font-serif text-sm font-bold text-white">“{hook.title}”</h3>
+                    <p className="mt-2 text-xs leading-5 text-[#9BB0A5]">{hook.script}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className={cardClass}>
+              <h2 className="font-serif text-xl font-bold text-white">Your Attributed Orders</h2>
+              <p className="mt-1 text-xs leading-5 text-[#9BB0A5]">Commissions stay pending until delivery. Cancelled or returned orders are reversed; payouts are processed via UPI/bank transfer.</p>
               <div className="mt-4 overflow-x-auto">
                 <table className="w-full min-w-[640px] text-left text-xs">
                   <thead className="text-[10px] uppercase tracking-wider text-[#9BB0A5]"><tr><th className="py-2">Order</th><th>Order value</th><th>Your commission</th><th>Retained margin</th><th>Status</th><th>Date</th></tr></thead>
@@ -390,56 +513,14 @@ export default function PromoterPortal() {
                       <td><span className="rounded-full bg-white/10 px-2 py-1 capitalize">{row.status}</span></td>
                       <td>{row.created_at ? new Date(row.created_at).toLocaleDateString() : '—'}</td>
                     </tr>)}
-                    {(dashboard.commissions || []).length === 0 && <tr><td colSpan="6" className="py-8 text-center text-[#9BB0A5]">No orders have been attributed yet.</td></tr>}
+                    {(dashboard.commissions || []).length === 0 && <tr><td colSpan="6" className="py-8 text-center text-[#9BB0A5]">No orders have been attributed yet. Share your code above to start unlocking milestones!</td></tr>}
                   </tbody>
                 </table>
               </div>
             </section>
           </>
         )}
-
-        <p className="text-center text-[11px] leading-5 text-[#82998D]">Commission is based on actual inventory unit costs and the order’s final discounts. It is not a guaranteed amount. See the <Link to="/legal/warranty-affiliate-b2b" className="text-[#FCE096] underline">partner terms</Link> for program conditions.</p>
       </div>
-      {celebrating && (
-        <div className="fixed inset-0 z-[110] flex items-center justify-center overflow-hidden bg-[#03110A]/90 p-4 backdrop-blur-md" role="dialog" aria-modal="true" aria-labelledby="application-success-title" aria-live="polite">
-          <style>{`
-            @keyframes promoter-confetti-fall {
-              0% { transform: translate3d(0, -8vh, 0) rotate(0deg); opacity: 0; }
-              10% { opacity: 1; }
-              100% { transform: translate3d(var(--confetti-drift), 110vh, 0) rotate(780deg); opacity: 0; }
-            }
-            .promoter-confetti { animation-name: promoter-confetti-fall; animation-timing-function: cubic-bezier(.2,.7,.35,1); animation-fill-mode: both; }
-            @media (prefers-reduced-motion: reduce) { .promoter-confetti { display: none; } }
-          `}</style>
-          <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
-            {Array.from({ length: 42 }, (_, index) => (
-              <span
-                key={index}
-                className="promoter-confetti absolute top-[-1rem] h-3 w-2 rounded-sm"
-                style={{
-                  left: `${(index * 37) % 100}%`,
-                  backgroundColor: ['#D4AF37', '#FCE096', '#34D399', '#FB7185', '#60A5FA', '#FFFFFF'][index % 6],
-                  animationDuration: `${2.8 + (index % 6) * 0.3}s`,
-                  animationDelay: `${(index % 12) * 0.08}s`,
-                  '--confetti-drift': `${((index % 5) - 2) * 8}vw`,
-                }}
-              />
-            ))}
-          </div>
-          <section className="relative w-full max-w-xl rounded-[2rem] border border-[#D4AF37]/40 bg-gradient-to-br from-[#194832] via-[#103322] to-[#0B1C14] p-6 text-center shadow-[0_30px_100px_rgba(0,0,0,0.5)] sm:p-9">
-            <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl border border-[#D4AF37]/40 bg-[#D4AF37]/15 text-[#FCE096]"><IndianRupee size={30}/></div>
-            <Sparkles aria-hidden="true" className="mx-auto mt-4 text-[#D4AF37]" size={20}/>
-            <h2 id="application-success-title" className="mt-3 font-serif text-3xl font-bold text-white">Application received!</h2>
-            <p className="mt-3 text-sm leading-6 text-[#D3E1D8]">Thank you for your interest in collaborating with Bhumivera. You’re in our verification queue; we aim to update your status within 12–24 hours.</p>
-            {dashboard?.partner?.referral_code && <p className="mt-4 rounded-xl border border-white/10 bg-[#07180F]/55 px-4 py-3 text-xs text-[#C5D8CC]">Your reserved code <strong className="font-mono tracking-widest text-[#FCE096]">{dashboard.partner.referral_code}</strong> is inactive until approval.</p>}
-            <p className="mt-4 text-xs text-[#9BB0A5]">Explore the people and projects behind Bhumivera while you wait.</p>
-            <div className="mt-5 grid gap-2 sm:grid-cols-2">
-              <button type="button" onClick={() => navigate('/impact', { replace: true })} className="rounded-xl bg-[#D4AF37] px-4 py-3 text-xs font-bold text-[#102219] transition hover:bg-[#FCE096]">Explore Bhumivera’s impact</button>
-              <span className="flex items-center justify-center rounded-xl border border-white/15 px-4 py-3 text-xs text-[#C5D8CC]">Redirecting in {redirectSeconds}s…</span>
-            </div>
-          </section>
-        </div>
-      )}
     </main>
   );
 }

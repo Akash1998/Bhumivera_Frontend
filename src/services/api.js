@@ -682,6 +682,7 @@ export const affiliate = {
   getOffer: code => api.get('/affiliate/offer', { params: { code } }),
   applyForPartner: data => api.post('/affiliate/partner/apply', data),
   getPartnerDashboard: () => api.get('/affiliate/partner/me'),
+  updatePartnerPerks: data => api.patch('/affiliate/partner/me/perks', data),
   getAdminProgramConfig: () => api.get('/affiliate/admin/program-config', { adminAuth: true }),
   updateAdminProgramConfig: data => api.put('/affiliate/admin/program-config', data, { adminAuth: true }),
   getAdminAnalytics: params => api.get('/affiliate/admin/analytics', { params, adminAuth: true }),

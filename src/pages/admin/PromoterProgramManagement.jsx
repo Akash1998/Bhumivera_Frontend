@@ -4,13 +4,13 @@ import { affiliate as affiliateApi } from '../../services/api';
 import PromoterAnalyticsDashboard from './PromoterAnalyticsDashboard';
 
 const INITIAL_CONFIG = {
-  default_customer_discount_percent: 15,
-  default_commission_share_percent: 25,
-  fulfillment_cost: 220,
-  rto_reserve: 100,
+  default_customer_discount_percent: 10,
+  default_commission_share_percent: 20,
+  fulfillment_cost: 110,
+  rto_reserve: 40,
   online_payment_fee_percent: 2,
-  minimum_retained_margin_percent: 12,
-  target_retained_margin_percent: 20,
+  minimum_retained_margin_percent: 15,
+  target_retained_margin_percent: 25,
   minimum_order_amount: 599,
 };
 
