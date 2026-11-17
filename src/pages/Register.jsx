@@ -540,9 +540,9 @@ export default function Register() {
         </div>
         
         {view === 'INIT' && (
-          <div className="mt-10 text-center text-sm font-medium text-[#1A1A1A]/60 relative z-10">
+          <div className="mt-10 text-center text-sm font-medium text-[#F3EEE3] relative z-10">
             Already registered?{' '}
-            <Link to="/login" className="text-[#0B2419] font-bold border-b border-[#D4AF37] ml-1">Log In</Link>
+            <Link to="/login" className="text-[#FCE096] font-bold border-b border-[#D4AF37] ml-1 hover:text-white focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FCE096]">Log In</Link>
           </div>
         )}
       </div>
