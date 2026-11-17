@@ -13,6 +13,26 @@ self.addEventListener('install', event => {
 self.addEventListener('message', event => {
   if (event.data?.type === 'SKIP_WAITING') {
     event.waitUntil(self.skipWaiting());
+    return;
+  }
+  if (event.data?.type === 'CLEAR_APP_CACHE') {
+    event.waitUntil(
+      caches.keys()
+        .then(cacheNames => Promise.all(
+          cacheNames
+            .filter(name => name.startsWith(CACHE_PREFIX))
+            .map(name => caches.delete(name))
+        ))
+        .then(results => {
+          event.ports?.[0]?.postMessage({
+            type: 'APP_CACHE_CLEARED',
+            deletedCacheCount: results.filter(Boolean).length,
+          });
+        })
+        .catch(() => {
+          event.ports?.[0]?.postMessage({ type: 'APP_CACHE_CLEAR_FAILED' });
+        })
+    );
   }
 });
 

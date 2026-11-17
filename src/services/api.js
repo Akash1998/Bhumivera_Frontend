@@ -621,6 +621,7 @@ export const systemAdmin = {
   getHealth: () => api.get('/admin/system/health'),
   getLogs: (limit = 100) => api.get('/admin/system/logs', { params: { limit } }),
   setModuleEnabled: (moduleId, enabled) => api.patch(`/admin/system/modules/${moduleId}`, { enabled }),
+  purgeCaches: () => api.post('/admin/system/cache/purge', {}),
 };
 export const newsletter = { subscribe: (email, source = 'site') => api.post('/newsletter/subscribe', { email, source }, { timeout: 5000 }) };
 export const reportClientError = error => {

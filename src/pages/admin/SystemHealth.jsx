@@ -19,6 +19,8 @@ export default function SystemHealth() {
   const [health, setHealth] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState('');
+  const [purgingCache, setPurgingCache] = useState(false);
+  const [cachePurgeResult, setCachePurgeResult] = useState(null);
   const [updatingModule, setUpdatingModule] = useState('');
   const [requestFilter, setRequestFilter] = useState('');
   const [requestSearch, setRequestSearch] = useState('');
@@ -60,6 +62,64 @@ export default function SystemHealth() {
       toast.error(error.normalized?.message || error.response?.data?.message || `Could not ${enabled ? 'resume' : 'pause'} ${module.name}.`);
     } finally {
       setUpdatingModule('');
+    }
+  };
+
+  const clearCurrentBrowserCache = () => new Promise(resolve => {
+    const controller = navigator.serviceWorker?.controller;
+    const Channel = window.MessageChannel || globalThis.MessageChannel;
+    if (!controller || typeof Channel !== 'function') {
+      resolve({ status: 'not_controlled', message: 'This browser has no active app service worker to clear.' });
+      return;
+    }
+
+    const channel = new Channel();
+    const timeout = window.setTimeout(() => {
+      channel.port1.close();
+      resolve({ status: 'failed', message: 'The service worker did not confirm the browser-cache purge.' });
+    }, 5000);
+    channel.port1.onmessage = event => {
+      if (event.data?.type !== 'APP_CACHE_CLEARED' && event.data?.type !== 'APP_CACHE_CLEAR_FAILED') return;
+      window.clearTimeout(timeout);
+      channel.port1.close();
+      resolve(event.data.type === 'APP_CACHE_CLEARED'
+        ? { status: 'cleared', deletedCaches: event.data.deletedCacheCount }
+        : { status: 'failed', message: 'The app-owned browser cache could not be cleared.' });
+    };
+    try {
+      controller.postMessage({ type: 'CLEAR_APP_CACHE' }, [channel.port2]);
+    } catch {
+      window.clearTimeout(timeout);
+      channel.port1.close();
+      resolve({ status: 'failed', message: 'The app-owned browser cache could not be reached.' });
+    }
+  });
+
+  const purgeCaches = async () => {
+    setPurgingCache(true);
+    setCachePurgeResult(null);
+    try {
+      const { data } = await systemAdmin.purgeCaches();
+      const browser = await clearCurrentBrowserCache();
+      const layers = { ...data.layers, browser };
+      const incomplete = data.status !== 'complete' || browser.status !== 'cleared';
+      setCachePurgeResult({
+        status: incomplete ? 'partial' : 'complete',
+        layers,
+        note: data.note,
+      });
+      if (incomplete) {
+        toast.error('Cache purge was partial. Review the layer results below.');
+      } else {
+        toast.success('Cache purge completed. Public caches will refill as requests arrive.');
+      }
+      await loadHealth({ quiet: true });
+    } catch (error) {
+      const message = error.normalized?.message || error.response?.data?.message || 'Cache purge could not be completed.';
+      setCachePurgeResult({ status: 'failed', message });
+      toast.error(message);
+    } finally {
+      setPurgingCache(false);
     }
   };
 
@@ -204,6 +264,62 @@ export default function SystemHealth() {
 
       {health && (
         <>
+          <section className="rounded-xl border border-amber-400/20 bg-white/[0.035] p-4 sm:p-5">
+            <div className="flex flex-wrap items-start justify-between gap-4">
+              <div className="max-w-3xl">
+                <h3 className="font-semibold text-white">Cache cleaner</h3>
+                <p className="mt-1 text-sm leading-6 text-slate-400">
+                  Purges Bhumivera public-response cache, active backend memory caches, the configured Vercel production CDN, and this device’s app offline cache. Cached public content will refill as requests arrive; the first requests may be slower.
+                </p>
+                <p className="mt-2 text-xs leading-5 text-emerald-200">
+                  Does not clear or change logins, sessions, rate limits, database records, carts, saved products, or wishlists. Offline users’ devices and ordinary browser HTTP caches cannot be remotely cleared.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={purgeCaches}
+                disabled={purgingCache}
+                className="inline-flex min-h-10 shrink-0 items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-400/10 px-4 text-sm font-semibold text-amber-100 hover:bg-amber-400/20 disabled:cursor-wait disabled:opacity-60"
+              >
+                <RefreshCw size={15} className={purgingCache ? 'animate-spin' : ''} />
+                {purgingCache ? 'Purging caches…' : 'Deep-clean caches'}
+              </button>
+            </div>
+            {cachePurgeResult && (
+              <div className={`mt-4 rounded-lg border p-3 ${cachePurgeResult.status === 'complete' ? 'border-emerald-500/20 bg-emerald-500/[0.05]' : 'border-amber-400/20 bg-amber-400/[0.04]'}`}>
+                <p role="status" className="text-sm font-semibold text-white">
+                  {cachePurgeResult.status === 'complete' ? 'Cache purge complete' : cachePurgeResult.status === 'partial' ? 'Cache purge partially completed' : 'Cache purge failed'}
+                </p>
+                {cachePurgeResult.layers && (
+                  <ul className="mt-2 grid gap-2 text-xs sm:grid-cols-2">
+                    {[
+                      ['redis', 'Shared Redis public responses'],
+                      ['processMemory', 'Backend memory cache'],
+                      ['backendInstances', 'Active backend cache subscribers'],
+                      ['vercel', 'Vercel production CDN'],
+                      ['browser', 'App offline cache on this device'],
+                    ].map(([key, label]) => {
+                      const layer = cachePurgeResult.layers[key];
+                      return (
+                        <li key={key} className="rounded-md bg-black/10 p-2 text-slate-300">
+                          <strong className="text-white">{label}:</strong> {statusLabel(layer?.status)}
+                          {layer?.deletedEntries !== undefined ? ` · ${layer.deletedEntries} entries removed` : ''}
+                          {layer?.entries !== undefined ? ` · ${layer.entries} in this process removed` : ''}
+                          {layer?.recipients !== undefined ? ` · ${layer.recipients} process(es) notified` : ''}
+                          {layer?.deletedCaches !== undefined ? ` · ${layer.deletedCaches} cache(s) removed` : ''}
+                          {layer?.message ? ` · ${layer.message}` : ''}
+                          {layer?.missing?.length ? ` · Missing: ${layer.missing.join(', ')}` : ''}
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+                {cachePurgeResult.note && <p className="mt-2 text-xs leading-5 text-slate-400">{cachePurgeResult.note}</p>}
+                {cachePurgeResult.message && <p className="mt-2 text-xs text-rose-200">{cachePurgeResult.message}</p>}
+              </div>
+            )}
+          </section>
+
           {health.healthIssues?.length > 0 && (
             <button type="button" onClick={openHealthOverview} className="w-full rounded-xl border border-amber-400/25 bg-amber-400/[0.06] p-4 text-left hover:border-amber-300/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-300">
               <span className="flex items-center gap-2 font-semibold text-amber-100"><AlertTriangle size={16}/> Why health is degraded · click for causes</span>
