@@ -4,7 +4,7 @@ import {
   Gift, MessageSquare, Plus, RefreshCw, Save, Sparkles, Trash2, Users
 } from 'lucide-react';
 import { affiliate as affiliateApi } from '../../services/api';
-import PromoterProgramManagement from './PromoterProgramManagement';
+import PromoCodeCenter from './PromoCodeCenter';
 import AffiliateManagement from './AffiliateManagement';
 
 const DEFAULT_BRIEFS = [
@@ -200,7 +200,7 @@ export default function AffiliateProgramManagement() {
       <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#244A38] bg-[#102219] px-4 py-3 md:px-6">
         <div className="flex flex-wrap gap-2">
           <button type="button" className={tabClass('promoters')} onClick={() => setActivePanel('promoters')}>
-            <Users size={14}/> Influencer &amp; promoter program
+            <Users size={14}/> Promo codes
           </button>
           <button type="button" className={tabClass('referrals')} onClick={() => setActivePanel('referrals')}>
             <Gift size={14}/> Customer referral rewards
@@ -224,7 +224,7 @@ export default function AffiliateProgramManagement() {
         </div>
       </div>
 
-      {activePanel === 'promoters' && <PromoterProgramManagement/>}
+      {activePanel === 'promoters' && <PromoCodeCenter/>}
       {activePanel === 'referrals' && <AffiliateManagement/>}
 
       {activePanel === 'onboarding' && (

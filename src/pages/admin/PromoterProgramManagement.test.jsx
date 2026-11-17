@@ -54,10 +54,13 @@ describe('PromoterProgramManagement', () => {
     });
   });
 
-  it('saves profile-specific rate and notes without sending or changing status', async () => {
+  it('saves creator promo discounts, usage limits, and notes without changing status', async () => {
     render(<PromoterProgramManagement />);
 
+    fireEvent.change(await screen.findByLabelText('Customer promo discount %'), { target: { value: '18' } });
     fireEvent.change(await screen.findByLabelText('Contribution share %'), { target: { value: '30' } });
+    fireEvent.change(screen.getByLabelText(/Total promo uses/), { target: { value: '25' } });
+    fireEvent.change(screen.getByLabelText(/Uses per customer/), { target: { value: '2' } });
     fireEvent.change(screen.getByLabelText('Private admin notes'), {
       target: { value: 'Long-term nature storytelling partner' },
     });
@@ -65,13 +68,15 @@ describe('PromoterProgramManagement', () => {
 
     await waitFor(() => {
       expect(affiliate.updateAdminPartner).toHaveBeenCalledWith(17, {
-        discountPercent: 12,
+        discountPercent: 18,
         commissionSharePercent: 30,
         referralCode: 'CREATOR17',
+        promoUsageLimit: 25,
+        promoPerUserLimit: 2,
         adminNotes: 'Long-term nature storytelling partner',
       });
     });
-    expect((await screen.findByRole('status')).textContent).toMatch(/profile settings saved/);
+    expect((await screen.findByRole('status')).textContent).toMatch(/promo settings saved/);
     expect(screen.getByText('approved', { selector: 'span' })).toBeTruthy();
   });
 });

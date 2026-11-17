@@ -462,7 +462,7 @@ export default function MiniCart() {
 
   const continueToPayment = () => {
     if (affiliateOfferLoading) {
-      toast.error('Please wait while we verify your promoter offer.');
+      toast.error('Please wait while we verify your creator promo code.');
       return;
     }
     if (affiliateCode && affiliateOfferError) {
@@ -580,7 +580,7 @@ export default function MiniCart() {
   const placeOrder = async event => {
     event.preventDefault();
     if (affiliateOfferLoading) {
-      toast.error('Please wait while we verify your promoter offer.');
+      toast.error('Please wait while we verify your creator promo code.');
       return;
     }
     if (affiliateCode && affiliateOfferError) {
@@ -957,7 +957,7 @@ export default function MiniCart() {
               {offersOpen && <div className="border-t border-[#244A38] p-3 bg-[#102219]">
                 {Number(referralReward?.balance) > 0 && <p className="mb-3 rounded-lg border border-[#D4AF37]/30 bg-[#1E3E2F] px-3 py-2 text-xs leading-5 text-[#FCE096]">Shopping wallet balance {formatPrice(referralReward.balance)}{referralWalletAmount > 0 ? ` · ${formatPrice(referralWalletAmount)} applied` : ''}</p>}
                 {loyalty?.enabled && <p className="mb-3 rounded-lg border border-[#244A38] bg-[#1E3E2F] px-3 py-2 text-xs leading-5 text-[#DFD7C4]">{loyalty.currentTier?.name || 'Loyalty Member'} · {Number(loyalty.pointsBalance || 0).toLocaleString()} points available</p>}
-                {affiliateOffer && <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-[#D4AF37]/35 bg-[#1E3E2F] px-3 py-2 text-xs text-[#FCE096]"><span><strong>{affiliateOffer.discountPercent}% promoter offer</strong> · {affiliateCode}</span><button type="button" onClick={removeAffiliateCode} className="shrink-0 underline underline-offset-2">Remove</button></div>}
+                {affiliateOffer && <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-[#D4AF37]/35 bg-[#1E3E2F] px-3 py-2 text-xs text-[#FCE096]"><span><strong>{affiliateOffer.discountPercent}% creator promo</strong> · {affiliateCode}</span><button type="button" onClick={removeAffiliateCode} className="shrink-0 underline underline-offset-2">Remove</button></div>}
                 {affiliateOfferError && <p role="status" className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-rose-500/30 bg-rose-950/30 px-3 py-2 text-xs text-rose-200">{affiliateOfferError}<button type="button" onClick={removeAffiliateCode} className="underline underline-offset-2">Remove</button></p>}
                 <form onSubmit={validateCoupon} className="flex gap-2">
                   <input value={couponCode} onChange={event => setCouponCode(event.target.value)} aria-label="Coupon code" placeholder="Enter coupon code" className="min-w-0 flex-1 rounded-xl border border-dashed border-[#244A38] bg-[#14291F] text-white px-3 py-2.5 text-xs outline-none focus:border-[#D4AF37]"/>
@@ -1076,7 +1076,7 @@ export default function MiniCart() {
             >
             {discount > 0 && <div className="flex justify-between text-[#D4AF37]"><span>Cart Offers</span><span>−{formatPrice(discount)}</span></div>}
             {couponDiscount > 0 && <div className="flex justify-between gap-3 font-bold text-[#D4AF37]"><span className="min-w-0 truncate">Coupon{appliedCoupon?.code ? ` · ${appliedCoupon.code}` : ''}</span><span className="shrink-0">−{formatPrice(couponDiscount)}</span></div>}
-            {promoDiscount > 0 && <div className="flex justify-between text-[#D4AF37]"><span>Promoter Offer ({affiliateOffer?.discountPercent}%)</span><span>−{formatPrice(promoDiscount)}</span></div>}
+            {promoDiscount > 0 && <div className="flex justify-between text-[#D4AF37]"><span>Creator promo ({affiliateOffer?.discountPercent}%)</span><span>−{formatPrice(promoDiscount)}</span></div>}
             {tierDiscount > 0 && <div className="flex justify-between text-[#D4AF37]"><span>Membership Tier</span><span>−{formatPrice(tierDiscount)}</span></div>}
             {referralWalletAmount > 0 && <div className="flex justify-between font-semibold text-[#D4AF37]"><span>Shopping Wallet</span><span>−{formatPrice(referralWalletAmount)}</span></div>}
             {loyalty?.enabled && Number(loyalty?.pointsBalance) >= Number(loyalty?.minimumRedemptionPoints) && pointsRedemption.points > 0 && <label className="flex items-center justify-between gap-3 font-semibold text-[#FCE096]"><span className="flex items-center gap-2"><input type="checkbox" checked={redeemLoyaltyPoints} onChange={event => setRedeemLoyaltyPoints(event.target.checked)} className="accent-[#D4AF37]"/>Use {(redeemLoyaltyPoints ? loyaltyPointsToRedeem : pointsRedemption.points).toLocaleString()} loyalty points</span><span>{loyaltyDiscount > 0 ? `−${formatPrice(loyaltyDiscount)}` : 'Not applied'}</span></label>}

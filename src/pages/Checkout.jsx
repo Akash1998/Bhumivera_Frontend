@@ -335,7 +335,7 @@ export default function Checkout() {
 
   const handlePlaceOrder = async () => {
     if (affiliateOfferLoading) {
-      setError('Please wait while we verify your promoter offer.');
+      setError('Please wait while we verify your creator promo code.');
       return;
     }
     if (affiliateCode && affiliateOfferError) {
@@ -686,7 +686,7 @@ export default function Checkout() {
 
                   {affiliateOffer && (
                     <div className="mt-3 flex items-center justify-between gap-3 rounded-lg border border-[#D4AF37]/30 bg-[#1E3E2F] px-3 py-2 text-xs text-[#FCE096]">
-                      <span>{affiliateOffer.discountPercent}% promoter offer applied · {affiliateCode}</span>
+                      <span>{affiliateOffer.discountPercent}% creator promo applied · {affiliateCode}</span>
                       <button type="button" onClick={removeAffiliateCode} className="shrink-0 underline underline-offset-2">Remove</button>
                     </div>
                   )}
@@ -864,7 +864,7 @@ export default function Checkout() {
                 )}
                 {promoterDiscount > 0 && (
                   <div className="flex justify-between text-[#D4AF37] font-medium">
-                    <span>Promoter Offer ({affiliateOffer?.discountPercent}%) · {affiliateCode}</span>
+                    <span>Creator promo ({affiliateOffer?.discountPercent}%) · {affiliateCode}</span>
                     <span>-₹{promoterDiscount.toFixed(2)}</span>
                   </div>
                 )}

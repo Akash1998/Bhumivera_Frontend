@@ -154,6 +154,9 @@ export default function PromoterPortal() {
   }, [loadDashboard]);
 
   const partner = dashboard?.partner;
+  const promoUsageLimit = Number(partner?.promo_usage_limit) || 0;
+  const promoUsedCount = Number(partner?.promo_used_count) || 0;
+  const promoPerCustomerLimit = Number(partner?.promo_per_user_limit ?? 1);
   const shareUrl = useMemo(() => {
     if (!partner?.referral_code) return '';
     const basePath = selectedDeepLinkPath === '/' ? '/' : selectedDeepLinkPath;
@@ -663,7 +666,7 @@ export default function PromoterPortal() {
                 <div className="mt-4 rounded-xl border border-[#315541] bg-[#0b1c14] p-4">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div>
-                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#9BB0A5]">Active Promoter Code</p>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#9BB0A5]">Active Creator Promo Code</p>
                       <p className="mt-1 font-mono text-2xl font-bold tracking-widest text-[#FCE096]">{partner.referral_code}</p>
                     </div>
                     <label className="text-xs text-[#9BB0A5]">
@@ -685,6 +688,21 @@ export default function PromoterPortal() {
                     <a href={shareUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-[#315541] px-3.5 py-2 text-xs text-white">Preview store link <ExternalLink size={13}/></a>
                   </div>
                   <p className="mt-2 break-all text-[11px] text-[#9BB0A5]">{shareUrl}</p>
+                  <div className="mt-3 rounded-lg border border-[#315541] bg-[#102219] px-3 py-2 text-xs">
+                    <p className="font-semibold text-white">Promo code uses</p>
+                    <p className="mt-1 text-[#9BB0A5]">
+                      {promoUsedCount.toLocaleString()} used
+                      {promoUsageLimit > 0 ? ` of ${promoUsageLimit.toLocaleString()}` : ' · no total limit'}
+                      {promoPerCustomerLimit > 0
+                        ? ` · up to ${promoPerCustomerLimit.toLocaleString()} per customer`
+                        : ' · unlimited per customer'}
+                    </p>
+                    {promoUsageLimit > 0 && (
+                      <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-black/30" role="progressbar" aria-label="Creator promo uses" aria-valuemin={0} aria-valuemax={promoUsageLimit} aria-valuenow={Math.min(promoUsedCount, promoUsageLimit)}>
+                        <div className="h-full rounded-full bg-[#D4AF37]" style={{ width: `${Math.min(100, promoUsedCount * 100 / promoUsageLimit)}%` }}/>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
 
@@ -812,16 +830,16 @@ export default function PromoterPortal() {
                 <form onSubmit={savePartnerPerks} className={`${cardClass} space-y-4`}>
                   <div className="flex items-center gap-2 text-[#D4AF37]">
                     <Film size={18}/>
-                    <h2 className="font-serif text-xl font-bold text-white">Custom Vanity Code</h2>
+                    <h2 className="font-serif text-xl font-bold text-white">My creator promo code</h2>
                   </div>
-                  <p className="text-xs text-[#9BB0A5]">Choose a simple code your community can remember. Your code is a tool for an ongoing relationship—not a substitute for trust.</p>
+                  <p className="text-xs leading-5 text-[#9BB0A5]">Change the code name your community sees. Your approved discount and use limits are managed by Bhumivera and can’t be changed here.</p>
                   <label className="block space-y-1 text-xs font-semibold text-white">
-                    Custom Vanity Promo Code
+                    Promo code name
                     <input value={customCodeInput} onChange={e => setCustomCodeInput(e.target.value.toUpperCase())} maxLength={20} placeholder="AYEESHA10" className="w-full rounded-lg border border-[#315541] bg-[#0b1c14] px-3 py-2 font-mono text-sm text-[#FCE096]"/>
                   </label>
                   <div className="flex items-center justify-between pt-1">
                     <button type="submit" disabled={savingPerks} className="rounded-lg bg-[#D4AF37] px-4 py-2 text-xs font-bold text-[#102219] hover:bg-[#FCE096] disabled:opacity-50">
-                      {savingPerks ? 'Saving…' : 'Save Code'}
+                      {savingPerks ? 'Saving…' : 'Save promo code'}
                     </button>
                   </div>
                 </form>

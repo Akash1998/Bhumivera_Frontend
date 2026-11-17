@@ -171,7 +171,7 @@ export default function PromoterProgramManagement() {
         discountPercent: Number(newPartner.discountPercent),
         commissionSharePercent: Number(newPartner.commissionSharePercent),
       });
-      setNotice(`Promoter added and approved. Share code ${data.partner.referral_code}.`);
+      setNotice(`Creator added and approved. Share promo code ${data.partner.referral_code}.`);
       setNewPartner({
         email: '',
         socialPlatform: 'Instagram',
@@ -218,9 +218,15 @@ export default function PromoterProgramManagement() {
   const savePartner = async partner => {
     const discountPercent = Number(partner.discount_percent ?? config.default_customer_discount_percent);
     const commissionSharePercent = Number(partner.commission_share_percent ?? config.default_commission_share_percent);
+    const promoUsageLimit = partner.promo_usage_limit === '' || partner.promo_usage_limit === null || partner.promo_usage_limit === undefined
+      ? null
+      : Number(partner.promo_usage_limit);
+    const promoPerUserLimit = Number(partner.promo_per_user_limit ?? 1);
     if (!Number.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 60 ||
-        !Number.isFinite(commissionSharePercent) || commissionSharePercent < 0 || commissionSharePercent > 100) {
-      setError('Enter a customer discount from 0–60% and a contribution share from 0–100%.');
+        !Number.isFinite(commissionSharePercent) || commissionSharePercent < 0 || commissionSharePercent > 100 ||
+        (promoUsageLimit !== null && (!Number.isSafeInteger(promoUsageLimit) || promoUsageLimit < 1 || promoUsageLimit > 1000000)) ||
+        !Number.isSafeInteger(promoPerUserLimit) || promoPerUserLimit < 0 || promoPerUserLimit > 1000000) {
+      setError('Enter a customer discount from 0–60%, a contribution share from 0–100%, and whole-number promo use limits.');
       setNotice('');
       return;
     }
@@ -232,12 +238,14 @@ export default function PromoterProgramManagement() {
         discountPercent,
         commissionSharePercent,
         referralCode: partner.referral_code || '',
+        promoUsageLimit,
+        promoPerUserLimit,
         adminNotes: partner.admin_notes || '',
       });
       setPartners(current => current.map(item => (
         item.id === partner.id ? { ...item, ...data.partner } : item
       )));
-      setNotice(`${partner.user_name || 'Promoter'} profile settings saved. Updated rates apply to new eligible orders; existing commission records are unchanged.`);
+      setNotice(`${partner.user_name || 'Creator'} promo settings saved. Changes apply to new eligible orders; existing orders and earnings stay unchanged.`);
     } catch (saveError) {
       setError(saveError.response?.data?.message || 'Could not save this promoter profile.');
     } finally {
@@ -351,7 +359,7 @@ export default function PromoterProgramManagement() {
   const copyWelcomeMessage = async partner => {
     const code = partner.referral_code || 'PENDING';
     const link = `${window.location.origin}/?aff=${encodeURIComponent(code)}`;
-    const msg = `Hi ${partner.user_name || 'there'}, your Bhumivera Creator Partnership (${partner.social_handle}) is ${partner.status}! Your audience code ${code} gives ${Number(partner.discount_percent ?? config.default_customer_discount_percent)}% off at ${link} and earns ${Number(partner.commission_share_percent ?? config.default_commission_share_percent)}% of qualifying order contribution. View your live ledger & briefs at ${window.location.origin}/promotions`;
+    const msg = `Hi ${partner.user_name || 'there'}, your Bhumivera Creator Partnership (${partner.social_handle}) is ${partner.status}! Your creator promo code ${code} gives ${Number(partner.discount_percent ?? config.default_customer_discount_percent)}% off at ${link} and earns ${Number(partner.commission_share_percent ?? config.default_commission_share_percent)}% of qualifying order contribution. View your live ledger & briefs at ${window.location.origin}/promotions`;
     await copyText(msg);
   };
 
@@ -443,7 +451,7 @@ export default function PromoterProgramManagement() {
       <section className={`${panelClass} space-y-4`}>
         <div className="flex flex-wrap items-center gap-2">
           <Users className="text-[#D4AF37]" size={18}/>
-          <h2 className="font-serif text-lg font-bold text-white">Applications &amp; active promoters</h2>
+          <h2 className="font-serif text-lg font-bold text-white">Creator accounts &amp; promo codes</h2>
           <span className="rounded-full bg-[#1E3E2F] px-2.5 py-1 text-xs">{partners.length}</span>
           <button
             type="button"
@@ -459,10 +467,10 @@ export default function PromoterProgramManagement() {
             }}
             className="ml-auto inline-flex items-center gap-1.5 rounded-lg bg-[#D4AF37] px-3 py-2 text-xs font-bold text-[#102219]"
           >
-            <UserPlus size={14}/>{showAddForm ? 'Close form' : 'Add promoter'}
+            <UserPlus size={14}/>{showAddForm ? 'Close form' : 'Add creator'}
           </button>
         </div>
-        <p className="text-xs leading-5 text-[#9BB0A5]">Add a promoter using their existing customer account, or approve people who apply through the public affiliate page.</p>
+        <p className="text-xs leading-5 text-[#9BB0A5]">Manage each creator’s account, customer discount, promo code, and use limits. Promo settings apply in cart and checkout; existing orders and earnings stay unchanged.</p>
 
         {partners.length > 1 && (
           <div className="space-y-3 rounded-xl border border-[#244A38] bg-[#0b1c14] p-3.5">
@@ -545,7 +553,7 @@ export default function PromoterProgramManagement() {
 
         {showAddForm && (
           <form onSubmit={addPartner} className="space-y-3 rounded-xl border border-[#315541] bg-[#0b1c14] p-4">
-            <p className="text-sm font-semibold text-white">Create an active promoter</p>
+            <p className="text-sm font-semibold text-white">Create an active creator account</p>
             <p className="text-xs leading-5 text-[#9BB0A5]">The customer must already have an active Bhumivera account. This will approve them immediately and generate their offer code.</p>
             <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
               <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Account email
@@ -578,8 +586,8 @@ export default function PromoterProgramManagement() {
           </form>
         )}
         <p className="text-xs leading-5 text-[#9BB0A5]">Save rates, promoter codes, and private admin notes per profile without changing its status. Rate changes apply to new eligible orders; existing commission records are not recalculated. Program milestone upgrades remain in effect.</p>
-        {loading ? <p className="text-sm text-[#9BB0A5]">Loading applications…</p> : filteredPartners.length === 0 ? (
-          <p className="text-sm text-[#9BB0A5]">No promoters match the current filter. Click <strong className="text-white">Add promoter</strong> to onboard one now, or ask them to sign in and apply on the public affiliate page.</p>
+        {loading ?         <p className="text-sm text-[#9BB0A5]">Loading creator accounts…</p> : filteredPartners.length === 0 ? (
+            <p className="text-sm text-[#9BB0A5]">No creators match the current filter. Click <strong className="text-white">Add creator</strong> to onboard one now, or ask them to sign in and apply on the public creator page.</p>
         ) : (
           <div className="space-y-3">
             {filteredPartners.map(partner => (
@@ -622,26 +630,37 @@ export default function PromoterProgramManagement() {
                   <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${partner.status === 'approved' ? 'bg-emerald-900/50 text-emerald-200' : partner.status === 'pending' ? 'bg-amber-900/40 text-amber-100' : 'bg-white/10 text-[#C9C4B8]'}`}>{partner.status}</span>
                 </div>
                 <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                  <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Customer discount %
+                  <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Customer promo discount %
                     <input type="number" min="0" max="60" step="0.1" value={partner.discount_percent ?? config.default_customer_discount_percent} onChange={event => updatePartnerField(partner.id, 'discount_percent', event.target.value)} className={inputClass}/>
                   </label>
                   <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Contribution share %
                     <input type="number" min="0" max="100" step="0.1" value={partner.commission_share_percent ?? config.default_commission_share_percent} onChange={event => updatePartnerField(partner.id, 'commission_share_percent', event.target.value)} className={inputClass}/>
                   </label>
-                  <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Promoter code
+                  <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Creator promo code
                     <input value={partner.referral_code || ''} onChange={event => updatePartnerField(partner.id, 'referral_code', event.target.value.toUpperCase())} placeholder="Generated when approved" className={inputClass}/>
+                  </label>
+                  <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Total promo uses <span className="font-normal">(blank = unlimited)</span>
+                    <input type="number" min="1" max="1000000" step="1" value={partner.promo_usage_limit ?? ''} onChange={event => updatePartnerField(partner.id, 'promo_usage_limit', event.target.value)} placeholder="Unlimited" className={inputClass}/>
+                  </label>
+                  <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Uses per customer <span className="font-normal">(0 = unlimited)</span>
+                    <input type="number" min="0" max="1000000" step="1" value={partner.promo_per_user_limit ?? 1} onChange={event => updatePartnerField(partner.id, 'promo_per_user_limit', event.target.value)} className={inputClass}/>
                   </label>
                   <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Private admin notes
                     <textarea rows="2" maxLength="1000" value={partner.admin_notes || ''} onChange={event => updatePartnerField(partner.id, 'admin_notes', event.target.value)} className={`${inputClass} resize-y`}/>
                   </label>
                 </div>
+                <p className="mt-2 text-[11px] text-[#9BB0A5]">
+                  Promo uses: {Number(partner.promo_used_count || 0).toLocaleString()}
+                  {partner.promo_usage_limit ? ` of ${Number(partner.promo_usage_limit).toLocaleString()}` : ' · no total limit'}
+                  {partner.promo_usage_limit ? ` · ${Math.max(0, Number(partner.promo_usage_limit) - Number(partner.promo_used_count || 0)).toLocaleString()} remaining` : ''}
+                </p>
                 <div className="mt-3 flex flex-wrap gap-2">
                   <button type="button" disabled={busyPartner === partner.id} onClick={() => savePartner(partner)} className="inline-flex items-center gap-1.5 rounded-lg bg-[#D4AF37] px-3 py-2 text-xs font-bold text-[#102219] disabled:opacity-50"><Save size={14}/>{busyPartner === partner.id ? 'Saving…' : 'Save changes'}</button>
                   {partner.status !== 'approved' && <button type="button" disabled={busyPartner === partner.id} onClick={() => reviewPartner(partner, 'approved')} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50"><Check size={14}/>Approve</button>}
                   {partner.status !== 'rejected' && <button type="button" disabled={busyPartner === partner.id} onClick={() => reviewPartner(partner, 'rejected')} className="rounded-lg border border-rose-400/30 px-3 py-2 text-xs font-semibold text-rose-200 disabled:opacity-50">Reject</button>}
                   {partner.status === 'approved' && <button type="button" disabled={busyPartner === partner.id} onClick={() => reviewPartner(partner, 'paused')} className="rounded-lg border border-amber-400/30 px-3 py-2 text-xs font-semibold text-amber-100 disabled:opacity-50">Pause</button>}
                   {partner.status === 'paused' && <button type="button" disabled={busyPartner === partner.id} onClick={() => reviewPartner(partner, 'approved')} className="rounded-lg border border-emerald-400/30 px-3 py-2 text-xs font-semibold text-emerald-100 disabled:opacity-50">Resume</button>}
-                  {partner.referral_code && <button type="button" onClick={() => copyText(`${window.location.origin}/?aff=${encodeURIComponent(partner.referral_code)}`)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#315541] px-3 py-2 text-xs text-[#FCE096]"><Clipboard size={13}/>Copy link</button>}
+                  {partner.referral_code && <button type="button" onClick={() => copyText(`${window.location.origin}/?aff=${encodeURIComponent(partner.referral_code)}`)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#315541] px-3 py-2 text-xs text-[#FCE096]"><Clipboard size={13}/>Copy promo link</button>}
                   <button type="button" onClick={() => copyWelcomeMessage(partner)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#315541] px-3 py-2 text-xs text-[#C5D8CC] hover:border-[#D4AF37]"><MessageSquare size={13}/>Copy creator welcome</button>
                 </div>
               </article>

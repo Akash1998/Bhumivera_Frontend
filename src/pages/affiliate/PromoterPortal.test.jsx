@@ -9,6 +9,7 @@ import PromoterPortal from './PromoterPortal';
 vi.mock('../../services/api', () => ({
   affiliate: {
     getPartnerDashboard: vi.fn(),
+    updatePartnerPerks: vi.fn(),
   },
 }));
 
@@ -75,6 +76,43 @@ describe('creator partnership dashboard', () => {
     expect(screen.getByText('−₹222.00')).toBeTruthy();
     expect(screen.getAllByText('Paid UGC & trial reimbursement').length).toBe(2);
     expect(screen.getByText(/Coming soon · not accepting submissions/)).toBeTruthy();
+  });
+
+  it('lets an approved creator change only their promo code name and see its use limit', async () => {
+    const partner = {
+      status: 'approved',
+      social_platform: 'Instagram',
+      social_handle: '@creator',
+      discount_percent: 10,
+      commission_share_percent: 20,
+      referral_code: 'BVCREATOR1',
+      promo_used_count: 7,
+      promo_usage_limit: 50,
+      promo_per_user_limit: 2,
+    };
+    affiliate.getPartnerDashboard.mockResolvedValue({
+      data: { dashboard: { partner, summary: {}, commissions: [], programConfig: {} } },
+    });
+    affiliate.updatePartnerPerks.mockResolvedValue({
+      data: {
+        dashboard: {
+          partner: { ...partner, referral_code: 'NEWCODE' },
+          summary: {},
+          commissions: [],
+          programConfig: {},
+        },
+      },
+    });
+
+    render(<MemoryRouter><PromoterPortal /></MemoryRouter>);
+
+    expect(await screen.findByText('7 used of 50 · up to 2 per customer')).toBeTruthy();
+    fireEvent.change(screen.getByLabelText('Promo code name'), { target: { value: 'NEWCODE' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Save promo code' }));
+
+    expect(affiliate.updatePartnerPerks).toHaveBeenCalledWith({ customCode: 'NEWCODE' });
+    expect(await screen.findByText('Your creator code has been updated.')).toBeTruthy();
+    expect(screen.getByText('NEWCODE')).toBeTruthy();
   });
 
   it('keeps only the current long-term partnership track selectable for new applications', async () => {

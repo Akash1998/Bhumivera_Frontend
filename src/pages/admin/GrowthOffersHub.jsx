@@ -1,6 +1,6 @@
 import { lazy, Suspense, useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Award, FlaskConical, Gift, LoaderCircle, Megaphone, Users } from 'lucide-react';
+import { ArrowRight, Award, FlaskConical, Gift, LoaderCircle, Megaphone, Users } from 'lucide-react';
 
 const LoyaltyMembers = lazy(() => import('./LoyaltyMembers'));
 const FlashSalesManagement = lazy(() => import('./FlashSalesManagement'));
@@ -96,6 +96,23 @@ export default function GrowthOffersHub() {
         <h1 className="mt-2 text-2xl font-bold text-white">Growth & offers</h1>
         <p className="mt-1 max-w-3xl text-sm leading-6 text-slate-400">Pick a group, pick one tool, then follow the short instructions. Only the selected tool opens here.</p>
       </header>
+
+      <button
+        type="button"
+        onClick={() => navigate('/admin/dashboard/referral-engine')}
+        className="group flex w-full flex-wrap items-center justify-between gap-4 rounded-2xl border border-emerald-300/25 bg-gradient-to-r from-emerald-400/10 via-white/[0.03] to-amber-300/10 p-4 text-left transition hover:border-emerald-300/50"
+      >
+        <span className="flex items-start gap-3">
+          <span className="rounded-xl bg-emerald-300/10 p-2.5 text-emerald-200"><Users size={20} aria-hidden="true"/></span>
+          <span>
+            <span className="block text-sm font-bold text-white">Creator promo codes</span>
+            <span className="mt-1 block text-xs leading-5 text-slate-400">Manage creator promos and regular store coupons together in the Affiliate Program.</span>
+          </span>
+        </span>
+        <span className="inline-flex items-center gap-2 rounded-lg bg-emerald-300 px-3 py-2 text-xs font-bold text-slate-950">
+          Open promo center <ArrowRight size={14} className="transition-transform group-hover:translate-x-0.5" aria-hidden="true"/>
+        </span>
+      </button>
 
       <nav aria-label="Growth tool groups" className="grid grid-cols-1 gap-2 sm:grid-cols-3">
         {groups.map(group => {
