@@ -1,5 +1,5 @@
 const CACHE_PREFIX = 'bhumivera-offline-';
-const CACHE_NAME = `${CACHE_PREFIX}shell-v7`;
+const CACHE_NAME = `${CACHE_PREFIX}shell-v8`;
 const SHELL_URLS = ['/', '/index.html', '/manifest.json', '/logo.webp', '/favicon.ico', '/icon-192.png', '/icon-512.png', '/icon-maskable-512.png'];
 const PRIVATE_PATHS = ['/api', '/admin', '/warehouse', '/warehouseadmin', '/admin-login'];
 
@@ -37,6 +37,11 @@ self.addEventListener('fetch', event => {
     url.origin !== self.location.origin ||
     PRIVATE_PATHS.some(path => url.pathname === path || url.pathname.startsWith(`${path}/`))
   ) {
+    return;
+  }
+
+  if (request.mode === 'navigate' && url.pathname.replace(/\/+$/, '') === '/register') {
+    event.respondWith(fetch(request, { cache: 'no-store' }));
     return;
   }
 

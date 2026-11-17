@@ -1,6 +1,24 @@
 {
   "version": 2,
+  "functions": {
+    "api/register-page.js": {
+      "includeFiles": "dist/index.html"
+    }
+  },
   "headers": [
+    {
+      "source": "/register",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "private, no-store, max-age=0, must-revalidate"
+        },
+        {
+          "key": "Pragma",
+          "value": "no-cache"
+        }
+      ]
+    },
     {
       "source": "/((?!api|assets|.*\\..*).*)",
       "headers": [
@@ -152,6 +170,10 @@
     }
   ],
   "rewrites": [
+    {
+      "source": "/register",
+      "destination": "/api/register-page"
+    },
     {
       "source": "/sitemap.xml",
       "destination": "/sitemap.xml"
