@@ -3,7 +3,7 @@ import { Link, useLocation, useNavigate, useSearchParams } from 'react-router-do
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Shield, Lock, Mail, AlertTriangle, User, 
-  Key, CheckCircle2 
+  CheckCircle2, Gift, Check 
 } from 'lucide-react';
 import { Turnstile } from '@marsidev/react-turnstile';
 import { useAuth } from '../context/AuthContext';
@@ -36,8 +36,9 @@ export default function Register() {
 
   const [view, setView] = useState('INIT');
   const [registrationMethod, setRegistrationMethod] = useState(searchParams.get('email') ? 'email' : 'google');
+  const [hasReferral, setHasReferral] = useState(Boolean(referralToken));
   const [formData, setFormData] = useState({
-    name: '', email: searchParams.get('email') || '', password: '', securityAnswer: '', marketingEmailOptIn: false,
+    name: '', email: searchParams.get('email') || '', password: '', marketingEmailOptIn: false,
     adPersonalizationOptIn: false, referralCode: ''
   });
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
@@ -49,6 +50,17 @@ export default function Register() {
   const [successMsg, setSuccessMsg] = useState('');
   const [turnstileToken, setTurnstileToken] = useState('');
   const [googleSignInError, setGoogleSignInError] = useState('');
+
+  const allTicked = Boolean(termsAccepted && formData.marketingEmailOptIn && formData.adPersonalizationOptIn);
+
+  const handleTickAll = (checked) => {
+    setTermsAccepted(checked);
+    setFormData(prev => ({
+      ...prev,
+      marketingEmailOptIn: checked,
+      adPersonalizationOptIn: checked
+    }));
+  };
 
   const TURNSTILE_SITE_KEY = import.meta.env.VITE_TURNSTILE_SITE_KEY?.trim() || '';
 
@@ -123,7 +135,6 @@ export default function Register() {
       });
       return setError(msg);
     }
-    if (!formData.securityAnswer) return setError("Security answer is required for account protection.");
 
     setLoading(true); 
     setError('');
@@ -171,8 +182,7 @@ export default function Register() {
     try {
       await verifyEmail({ 
         email: formData.email, 
-        otp: otpString, 
-        securityAnswer: formData.securityAnswer 
+        otp: otpString
       });
       setSuccessMsg("Identity verified. Initializing your Bhumivera profile...");
       setTimeout(() => navigate(returnTo, { replace: true }), 1500);
@@ -194,7 +204,6 @@ export default function Register() {
       await googleLogin(idToken, {
         mode: 'register',
         termsAccepted,
-        securityAnswer: formData.securityAnswer.trim(),
         referralToken: referralToken || undefined,
         referralCode: referralToken ? undefined : formData.referralCode.trim() || undefined,
         marketingEmailOptIn: formData.marketingEmailOptIn,
@@ -240,7 +249,7 @@ export default function Register() {
               <MotionDiv key="INIT" variants={viewVariants} initial="initial" animate="animate" exit="exit">
                 <div className="text-center mb-6 relative z-10">
                   <div className="mx-auto mb-3 inline-flex h-14 w-14 items-center justify-center">
-                    <img src="/logo.webp" alt="Bhumivera tree emblem" width="56" height="56" fetchPriority="high" decoding="async" className="h-14 w-14 object-contain" />
+                    <img src="/logo.webp" alt="Bhumivera tree emblem" width="56" height="56" fetchpriority="high" decoding="async" className="h-14 w-14 object-contain" />
                   </div>
                   <h1 className="text-3xl font-serif text-[#0B2419] tracking-tight mb-1">Create account</h1>
                   <p className="text-[#0B2419]/60 text-sm">Choose how you’d like to register.</p>
@@ -265,20 +274,96 @@ export default function Register() {
                     </div>
                   )}
 
-                  <div>
-                    <label htmlFor="referralCode" className="mb-1.5 block pl-1 text-xs font-semibold text-[#0B2419]">Referral code <span className="font-normal text-[#0B2419]/50">(optional)</span></label>
-                    {referralToken ? (
-                      <>
-                        <input id="referralCode" value="Referral link applied" readOnly aria-readonly="true" className="w-full rounded-xl border border-emerald-700/20 bg-emerald-50 px-3 py-3 text-sm text-emerald-900"/>
-                        <p className="mt-1 pl-1 text-xs text-emerald-800">{referralPreview.loading ? 'Checking referral link…' : referralPreview.valid ? `Referred by ${referralPreview.referrerName}. Reward is issued after approval, usually within an hour.` : 'This referral link is invalid or expired. Ask your friend for a current link.'}</p>
-                      </>
-                    ) : (
-                      <>
-                        <input id="referralCode" name="referralCode" type="text" autoComplete="off" maxLength={32} value={formData.referralCode} onChange={handleInputChange} placeholder="Enter a friend’s code" disabled={loading} className="w-full rounded-xl border border-[#0B2419]/10 bg-[#F3F9F1] px-3 py-3 text-sm text-[#0B2419] outline-none focus:border-[#D4AF37] focus:bg-white disabled:opacity-50"/>
-                        {formData.referralCode.trim() && <p aria-live="polite" className={`mt-1 pl-1 text-xs ${referralPreview.valid ? 'text-emerald-800' : 'text-[#d4af37]'}`}>{referralPreview.loading ? 'Checking referral code…' : referralPreview.valid ? `Referred by ${referralPreview.referrerName}. Reward is issued after approval, usually within an hour.` : 'Referral code not found. Check the code before continuing.'}</p>}
-                      </>
-                    )}
-                  </div>
+                  {/* Referral Code Prompt & Input */}
+                  {referralToken ? (
+                    <div className="rounded-2xl border border-emerald-700/20 bg-emerald-50/70 p-3.5">
+                      <div className="flex items-center gap-2 text-xs font-semibold text-emerald-900">
+                        <CheckCircle2 size={16} className="text-emerald-700 shrink-0" />
+                        <span>Referral link applied</span>
+                      </div>
+                      <p className="mt-1 pl-6 text-xs text-emerald-800/80">
+                        {referralPreview.loading
+                          ? 'Checking referral link…'
+                          : referralPreview.valid
+                          ? `Referred by ${referralPreview.referrerName}. Reward is issued after approval, usually within an hour.`
+                          : 'This referral link is invalid or expired. Ask your friend for a current link.'}
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="rounded-2xl border border-[#0B2419]/10 bg-[#F3F9F1]/50 p-3.5 transition-all">
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <label className="block text-xs font-semibold text-[#0B2419]">
+                            Referred by a friend?
+                          </label>
+                          <p className="text-[11px] text-[#0B2419]/55">Have a referral invitation code?</p>
+                        </div>
+                        <div className="flex items-center rounded-xl bg-white p-1 border border-[#0B2419]/10 shadow-sm shrink-0" role="group" aria-label="Referral code option">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setHasReferral(false);
+                              setFormData(prev => ({ ...prev, referralCode: '' }));
+                            }}
+                            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                              !hasReferral
+                                ? 'bg-[#0B2419] text-[#D4AF37] shadow-sm'
+                                : 'text-[#0B2419]/60 hover:text-[#0B2419]'
+                            }`}
+                            aria-pressed={!hasReferral}
+                          >
+                            No
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setHasReferral(true)}
+                            className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                              hasReferral
+                                ? 'bg-[#0B2419] text-[#D4AF37] shadow-sm'
+                                : 'text-[#0B2419]/60 hover:text-[#0B2419]'
+                            }`}
+                            aria-pressed={hasReferral}
+                          >
+                            Yes
+                          </button>
+                        </div>
+                      </div>
+
+                      {hasReferral && (
+                        <div className="mt-3 pt-3 border-t border-[#0B2419]/10">
+                          <label htmlFor="referralCode" className="mb-1.5 block text-xs font-semibold text-[#0B2419]">
+                            Enter friend's referral code
+                          </label>
+                          <input
+                            id="referralCode"
+                            name="referralCode"
+                            type="text"
+                            autoComplete="off"
+                            maxLength={32}
+                            value={formData.referralCode}
+                            onChange={handleInputChange}
+                            placeholder="Enter code (e.g. FRIEND2026)"
+                            disabled={loading}
+                            className="w-full rounded-xl border border-[#0B2419]/15 bg-white px-3.5 py-2.5 text-sm uppercase tracking-wider text-[#0B2419] placeholder:normal-case placeholder:tracking-normal outline-none focus:border-[#D4AF37] focus:ring-2 focus:ring-[#D4AF37]/20 disabled:opacity-50"
+                          />
+                          {formData.referralCode.trim() && (
+                            <p
+                              aria-live="polite"
+                              className={`mt-1.5 pl-1 text-xs ${
+                                referralPreview.valid ? 'text-emerald-800 font-medium' : 'text-[#d4af37]'
+                              }`}
+                            >
+                              {referralPreview.loading
+                                ? 'Checking referral code…'
+                                : referralPreview.valid
+                                ? `Referred by ${referralPreview.referrerName}. Reward is issued after approval, usually within an hour.`
+                                : 'Referral code not found. Check the code before continuing.'}
+                            </p>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  )}
                   
                   {registrationMethod === 'email' && (
                     <div className="space-y-2">
@@ -295,38 +380,80 @@ export default function Register() {
                     </div>
                   )}
 
-                  <div className="pt-2">
-                    <label className="mb-1 block pl-1 text-xs font-semibold text-[#0B2419]">Account recovery answer <span className="font-normal text-red-700">required</span></label>
-                    <p className="mb-2 pl-1 text-xs text-[#0B2419]/60">What is your mother’s maiden name? Keep the answer safe.</p>
-                    <InputField icon={<Key size={18}/>} type="text" name="securityAnswer" autoComplete="off" value={formData.securityAnswer} onChange={handleInputChange} placeholder="Your answer" disabled={loading} required />
+                  {/* Consent & Agreements with "Tick All" option */}
+                  <div className="space-y-2.5 pt-1">
+                    {/* Master "Tick All" option */}
+                    <div className="flex items-center justify-between rounded-2xl border-2 border-[#D4AF37]/40 bg-[#FDFBF7] p-3.5 shadow-sm transition-all hover:border-[#D4AF37]">
+                      <label className="flex items-center gap-3 cursor-pointer select-none flex-1">
+                        <input
+                          type="checkbox"
+                          id="tickAllAgreements"
+                          checked={allTicked}
+                          onChange={e => handleTickAll(e.target.checked)}
+                          disabled={loading}
+                          className="h-4 w-4 shrink-0 cursor-pointer accent-[#0B2419] rounded"
+                        />
+                        <div className="flex flex-col">
+                          <span className="text-xs font-bold text-[#0B2419] flex items-center gap-2">
+                            <span>Tick All</span>
+                            <span className="text-[10px] font-semibold uppercase tracking-wider bg-[#0B2419] text-[#D4AF37] px-2 py-0.5 rounded-full">
+                              1-Click Setup
+                            </span>
+                          </span>
+                          <span className="text-[11px] text-[#0B2419]/60 leading-tight mt-0.5">
+                            Accept all terms, policies, and optional member preferences at once.
+                          </span>
+                        </div>
+                      </label>
+                    </div>
+
+                    {/* Individual Checkboxes */}
+                    <div className="space-y-2">
+                      <label className={`flex items-start gap-3 rounded-xl border p-3 text-xs leading-relaxed transition-all cursor-pointer ${
+                        termsAccepted ? 'border-emerald-700/30 bg-emerald-50/40 text-[#0B2419]' : 'border-[#0B2419]/10 bg-white text-[#0B2419]/80'
+                      }`}>
+                        <input
+                          type="checkbox"
+                          required
+                          checked={termsAccepted}
+                          onChange={event => setTermsAccepted(event.target.checked)}
+                          disabled={loading}
+                          className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#0B2419]"
+                        />
+                        <span>
+                          I agree to the <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold underline text-[#0B2419] hover:text-[#D4AF37]">Conditions of Use &amp; Sale</Link> and acknowledge the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline text-[#0B2419] hover:text-[#D4AF37]">Privacy Notice</Link>. <span className="font-semibold text-red-600">(Required)</span>
+                        </span>
+                      </label>
+
+                      <label className="flex items-start gap-3 rounded-xl border border-[#0B2419]/10 bg-[#F3F9F1]/60 p-3 text-xs leading-relaxed text-[#0B2419]/75 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.marketingEmailOptIn}
+                          onChange={event => setFormData({ ...formData, marketingEmailOptIn: event.target.checked })}
+                          disabled={loading}
+                          className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#0B2419]"
+                        />
+                        <span>Send me promotional emails and product updates. <span className="text-[#0B2419]/50">(Optional)</span></span>
+                      </label>
+
+                      <label className="flex items-start gap-3 rounded-xl border border-[#0B2419]/10 bg-[#F3F9F1]/60 p-3 text-xs leading-relaxed text-[#0B2419]/75 cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={formData.adPersonalizationOptIn}
+                          onChange={event => setFormData({ ...formData, adPersonalizationOptIn: event.target.checked })}
+                          disabled={loading}
+                          className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#0B2419]"
+                        />
+                        <span>
+                          Personalized product recommendations based on activity. Change anytime in Profile. See the{' '}
+                          <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline text-[#0B2419] hover:text-[#D4AF37]">
+                            Privacy Notice
+                          </Link>
+                          . <span className="text-[#0B2419]/50">(Optional)</span>
+                        </span>
+                      </label>
+                    </div>
                   </div>
-
-                  <label className="flex items-start gap-3 rounded-xl border border-[#0B2419]/10 bg-[#F3F9F1]/70 p-3 text-xs leading-relaxed text-[#0B2419]/75">
-                    <input
-                      type="checkbox"
-                      checked={formData.marketingEmailOptIn}
-                      onChange={event => setFormData({ ...formData, marketingEmailOptIn: event.target.checked })}
-                      disabled={loading}
-                      className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#0B2419]"
-                    />
-                    <span>Send me promotional emails and product updates. Optional; account and order emails are unaffected.</span>
-                  </label>
-
-                  <label className="flex items-start gap-3 rounded-xl border border-emerald-800/20 bg-emerald-50/70 p-3 text-xs leading-relaxed text-[#0B2419]/75">
-                    <input
-                      type="checkbox"
-                      checked={formData.adPersonalizationOptIn}
-                      onChange={event => setFormData({ ...formData, adPersonalizationOptIn: event.target.checked })}
-                      disabled={loading}
-                      className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#0B2419]"
-                    />
-                    <span><strong className="block text-[#0B2419]">Optional: personalized product recommendations</strong>Use your product activity to tailor recommendations. Change this anytime in Profile. See the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline">Privacy Notice</Link>.</span>
-                  </label>
-
-                  <label className="flex items-start gap-3 rounded-xl border border-[#0B2419]/10 bg-white p-3 text-xs leading-relaxed text-[#0B2419]/75">
-                    <input type="checkbox" required checked={termsAccepted} onChange={event => setTermsAccepted(event.target.checked)} disabled={loading} className="mt-0.5 h-4 w-4 shrink-0 cursor-pointer accent-[#0B2419]"/>
-                    <span>I agree to the <Link to="/legal?section=terms" target="_blank" rel="noreferrer" className="font-semibold underline">Conditions of Use &amp; Sale</Link> and acknowledge the <Link to="/legal?section=privacy" target="_blank" rel="noreferrer" className="font-semibold underline">Privacy Notice</Link>. Required.</span>
-                  </label>
 
                   {registrationMethod === 'google' ? (
                     <div className="space-y-2 rounded-xl border border-[#D4AF37]/30 bg-[#FDFBF7] p-3">
@@ -334,7 +461,7 @@ export default function Register() {
                       <GoogleSignInButton
                         onSignIn={handleGoogleRegistration}
                         onError={error => setGoogleSignInError(error.message || 'Google account creation could not be started.')}
-                        disabled={loading || !termsAccepted || !formData.securityAnswer.trim() || referralPreview.loading}
+                        disabled={loading || !termsAccepted || referralPreview.loading}
                         label="Create account with Google"
                         loadingLabel="Creating account…"
                       />

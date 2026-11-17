@@ -23,7 +23,7 @@ describe('Google account registration', () => {
     vi.clearAllMocks();
   });
 
-  it('submits the security answer, consent, and referral with an explicit registration intent', async () => {
+  it('submits consent and referral with registration intent without mandating a recovery question', async () => {
     const googleLogin = vi.fn().mockResolvedValue({ status: 200, data: {} });
     useAuth.mockReturnValue({ register: vi.fn(), verifyEmail: vi.fn(), googleLogin });
     affiliate.previewReferral.mockResolvedValue({
@@ -42,9 +42,9 @@ describe('Google account registration', () => {
     const createAccountButton = screen.getByRole('button', { name: 'Create account with Google' });
     expect(createAccountButton.disabled).toBe(true);
 
-    fireEvent.change(screen.getByPlaceholderText('Your answer'), {
-      target: { value: 'Willow' },
-    });
+    // Verify recovery question input is not present
+    expect(screen.queryByPlaceholderText('Your answer')).toBeNull();
+
     fireEvent.click(screen.getByRole('checkbox', { name: /I agree to the/i }));
     await waitFor(() => expect(createAccountButton.disabled).toBe(false));
     fireEvent.click(createAccountButton);
@@ -53,12 +53,70 @@ describe('Google account registration', () => {
     expect(googleLogin).toHaveBeenCalledWith('google-id-token', {
       mode: 'register',
       termsAccepted: true,
-      securityAnswer: 'Willow',
       referralToken: 'valid-referral-token',
       referralCode: undefined,
       marketingEmailOptIn: false,
       adPersonalizationOptIn: false,
     });
+  });
+
+  it('selects all terms and preferences when Tick All is checked', async () => {
+    useAuth.mockReturnValue({ register: vi.fn(), verifyEmail: vi.fn(), googleLogin: vi.fn() });
+    affiliate.previewReferral.mockResolvedValue({ data: { valid: false } });
+
+    render(
+      <MemoryRouter initialEntries={['/register']}>
+        <Routes>
+          <Route path="/register" element={<Register />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    const tickAllCheckbox = screen.getByRole('checkbox', { name: /Tick All/i });
+    expect(tickAllCheckbox.checked).toBe(false);
+
+    fireEvent.click(tickAllCheckbox);
+    expect(tickAllCheckbox.checked).toBe(true);
+
+    const termsCheckbox = screen.getByRole('checkbox', { name: /I agree to the/i });
+    const marketingCheckbox = screen.getByRole('checkbox', { name: /Send me promotional emails/i });
+    const personalizationCheckbox = screen.getByRole('checkbox', { name: /Personalized product recommendations/i });
+
+    expect(termsCheckbox.checked).toBe(true);
+    expect(marketingCheckbox.checked).toBe(true);
+    expect(personalizationCheckbox.checked).toBe(true);
+
+    // Unchecking Tick All deselects all
+    fireEvent.click(tickAllCheckbox);
+    expect(termsCheckbox.checked).toBe(false);
+    expect(marketingCheckbox.checked).toBe(false);
+    expect(personalizationCheckbox.checked).toBe(false);
+  });
+
+  it('hides the referral blank space by default and toggles on Yes/No click', () => {
+    useAuth.mockReturnValue({ register: vi.fn(), verifyEmail: vi.fn(), googleLogin: vi.fn() });
+    affiliate.previewReferral.mockResolvedValue({ data: { valid: false } });
+
+    render(
+      <MemoryRouter initialEntries={['/register']}>
+        <Routes>
+          <Route path="/register" element={<Register />} />
+        </Routes>
+      </MemoryRouter>,
+    );
+
+    // Default: referral blank space is not shown
+    expect(screen.queryByPlaceholderText(/Enter code/i)).toBeNull();
+
+    // Click "Yes" to reveal referral input
+    const yesButton = screen.getByRole('button', { name: 'Yes' });
+    fireEvent.click(yesButton);
+    expect(screen.getByPlaceholderText(/Enter code/i)).toBeTruthy();
+
+    // Click "No" to hide referral input
+    const noButton = screen.getByRole('button', { name: 'No' });
+    fireEvent.click(noButton);
+    expect(screen.queryByPlaceholderText(/Enter code/i)).toBeNull();
   });
 
   it('uses the verified Google email without asking for another email, and reveals email fields only for email registration', () => {

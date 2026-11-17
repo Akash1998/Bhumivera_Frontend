@@ -232,7 +232,7 @@ const Login = () => {
         <div className="auth-luxury__card bg-white/85 backdrop-blur-md border border-[#0B2419]/10 rounded-3xl shadow-2xl p-7 md:p-8 overflow-hidden">
           <div className="text-center mb-7">
             <div className="mx-auto mb-4 inline-flex h-[76px] w-[76px] items-center justify-center">
-              <img src="/logo.webp" alt="Bhumivera tree emblem" width="72" height="72" fetchPriority="high" decoding="async" className="h-[72px] w-[72px] object-contain" />
+              <img src="/logo.webp" alt="Bhumivera tree emblem" width="72" height="72" fetchpriority="high" decoding="async" className="h-[72px] w-[72px] object-contain" />
             </div>
             <h1 className="text-3xl font-serif text-[#14251c] tracking-tight">Bhumivera</h1>
             <p className="text-[#0B2419]/60 text-sm mt-2">Natural Purity. Premium Care.</p>
@@ -348,7 +348,7 @@ const Login = () => {
                   </button>
                   <div className="relative my-4 flex items-center justify-center">
                     <div className="w-full border-t border-[#8B9D83]/20"></div>
-                    <span className="bg-[#FDFBF7] px-3 text-[11px] font-bold uppercase tracking-wider text-[#8B9D83]">or</span>
+                    <span className="absolute bg-white px-3 text-[11px] font-bold uppercase tracking-wider text-[#8B9D83]">or</span>
                   </div>
                   {passkeySupported && <button
                     type="button"
@@ -386,7 +386,7 @@ const Login = () => {
                   </button>
                   <div className="relative my-4 flex items-center justify-center">
                     <div className="w-full border-t border-[#8B9D83]/20"></div>
-                    <span className="bg-[#FDFBF7] px-3 text-[11px] font-bold uppercase tracking-wider text-[#8B9D83]">or</span>
+                    <span className="absolute bg-white px-3 text-[11px] font-bold uppercase tracking-wider text-[#8B9D83]">or</span>
                   </div>
                   {passkeySupported && <button
                     type="button"
