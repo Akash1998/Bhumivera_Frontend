@@ -13,9 +13,13 @@ vi.mock('../../services/api', () => ({
 }));
 
 describe('creator partnership dashboard', () => {
-  afterEach(cleanup);
+  afterEach(() => {
+    cleanup();
+    localStorage.removeItem('bhumivera_creator_application_saved');
+  });
 
   it('shows only the collected impact total returned for the creator’s referrals', async () => {
+    localStorage.setItem('bhumivera_creator_application_saved', 'true');
     affiliate.getPartnerDashboard.mockResolvedValue({
       data: {
         dashboard: {
@@ -76,18 +80,16 @@ describe('creator partnership dashboard', () => {
   });
 
   it('keeps only the current long-term partnership track selectable for new applications', async () => {
-    affiliate.getPartnerDashboard.mockResolvedValue({
-      data: { dashboard: null },
-    });
-
     render(<MemoryRouter><PromoterPortal /></MemoryRouter>);
 
     const trackSelect = await screen.findByLabelText('Preferred collaboration track');
     expect(trackSelect.value).toBe('both');
     expect(screen.getByRole('option', { name: /Paid collaboration — Coming soon/ }).disabled).toBe(true);
+    expect(affiliate.getPartnerDashboard).not.toHaveBeenCalled();
   });
 
   it('lets a rejected applicant revise and resubmit their partnership intent', async () => {
+    localStorage.setItem('bhumivera_creator_application_saved', 'true');
     affiliate.getPartnerDashboard.mockResolvedValue({
       data: {
         dashboard: {
@@ -114,6 +116,7 @@ describe('creator partnership dashboard', () => {
   });
 
   it('paginates the complete creator order ledger', async () => {
+    localStorage.setItem('bhumivera_creator_application_saved', 'true');
     const partner = {
       status: 'approved',
       social_platform: 'Instagram',

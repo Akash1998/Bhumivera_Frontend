@@ -40,11 +40,12 @@ const DEFAULT_MILESTONES = [
 ];
 
 const formatMoney = value => `₹${(Number(value) || 0).toFixed(2)}`;
+const SAVED_APPLICATION_KEY = 'bhumivera_creator_application_saved';
 
 export default function PromoterPortal() {
   const [dashboard, setDashboard] = useState(null);
   const [form, setForm] = useState(INITIAL_FORM);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(() => localStorage.getItem(SAVED_APPLICATION_KEY) === 'true');
   const [commissionPage, setCommissionPage] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [savingPerks, setSavingPerks] = useState(false);
@@ -77,14 +78,22 @@ export default function PromoterPortal() {
         });
         setCustomCodeInput(data.partner.referral_code || '');
       }
+      return data;
     } catch (loadError) {
       setError(loadError.response?.data?.message || 'Could not load the promoter portal.');
+      return undefined;
     } finally {
       setLoading(false);
     }
   }, []);
 
-  useEffect(() => { loadDashboard(); }, [loadDashboard]);
+  useEffect(() => {
+    if (localStorage.getItem(SAVED_APPLICATION_KEY) === 'true') {
+      loadDashboard();
+    } else {
+      setLoading(false);
+    }
+  }, [loadDashboard]);
   const partner = dashboard?.partner;
   const shareUrl = useMemo(() => partner?.referral_code
     ? `${window.location.origin}/?aff=${encodeURIComponent(partner.referral_code)}`
@@ -109,12 +118,24 @@ export default function PromoterPortal() {
         ...form,
         followerCount: Number(form.followerCount || 0),
       });
+      localStorage.setItem(SAVED_APPLICATION_KEY, 'true');
       setNotice('Application received. Your reserved promoter code remains inactive while the team reviews your profile.');
       await loadDashboard();
     } catch (applyError) {
       setError(applyError.response?.data?.message || 'Could not submit your application.');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const checkSavedApplication = async () => {
+    setNotice('');
+    const data = await loadDashboard();
+    if (data?.partner) {
+      localStorage.setItem(SAVED_APPLICATION_KEY, 'true');
+    } else if (data === null) {
+      localStorage.removeItem(SAVED_APPLICATION_KEY);
+      setNotice('No saved creator application was found. You can apply using the form.');
     }
   };
 
@@ -229,6 +250,14 @@ export default function PromoterPortal() {
                 <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#D4AF37]">Promoter application</p>
                 <h2 className="mt-1 font-serif text-2xl font-bold text-white sm:text-3xl">Join the Bhumivera Creator Program</h2>
                 <p className="mt-2 text-sm leading-6 text-[#B4C7BB]">Tell us what you want to build with us. We look for thoughtful product educators and community partners—not applications motivated only by receiving free products.</p>
+                <button
+                  type="button"
+                  onClick={checkSavedApplication}
+                  disabled={loading}
+                  className="mt-3 text-xs font-semibold text-[#F0D98A] underline underline-offset-2 disabled:opacity-50"
+                >
+                  Already applied? Check your saved application
+                </button>
               </div>
             </div>
 

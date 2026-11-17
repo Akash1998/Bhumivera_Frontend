@@ -1,10 +1,8 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useRef, useState } from 'react';
 import { ArrowRight, CheckCircle2, Clock3, Gift, Leaf, ShieldCheck, Sparkles } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { useAuth } from '../context/AuthContext';
-import { products as productsApi } from '../services/api';
-import { getProductImageUrl } from '../utils/productImageUrl';
 import PromoterPortal from './affiliate/PromoterPortal';
 
 const STEPS = [
@@ -49,43 +47,24 @@ const PRODUCT_SPECS = [
     slug: 'luxury-2-in-1-botanical-shampoo-conditioner',
     alt: 'Bhumivera botanical shampoo and conditioner product',
     fallbackImage: '/images/products/bhumivera-royal-shampoo-front.webp',
-    unverifiedImage: 'bhumivera-luxury-2-in-1-shampoo-conditioner.webp',
   },
   {
     name: 'Artisanal Cleansing Bar',
     slug: 'artisanal-charcoal-handmade-soap',
     alt: 'Bhumivera handmade charcoal cleansing bar',
     fallbackImage: '/images/products/bhumivera-charcoal-cleansing-bar-front.webp',
-    unverifiedImage: 'bhumivera-artisanal-charcoal-handmade-soap.webp',
   },
   {
     name: 'Seven-Tulsi Drops',
     slug: 'kalpvriksh-satva-tulsi-7-tulsi-extract',
     alt: 'Bhumivera Kalpvriksh Satva Tulsi drops',
     fallbackImage: '/images/products/bhumivera-seven-tulsi-drops-front.webp',
-    unverifiedImage: 'bhumivera-kalpvriksh-satva-tulsi-drops.webp',
   },
 ];
 
-const VERIFIED_FALLBACK_PRODUCTS = PRODUCT_SPECS
+const PROMOTION_PRODUCTS = PRODUCT_SPECS
   .filter(product => product.fallbackImage)
   .map(product => ({ ...product, image: product.fallbackImage }));
-
-const resolveCatalogProducts = rows => PRODUCT_SPECS.flatMap(spec => {
-  const product = rows.find(item => item.slug === spec.slug);
-  const imageList = Array.isArray(product?.images)
-    ? product.images.filter(image => image?.media_type !== 'video')
-    : [];
-  const source = imageList[0] || product?.image_url || product?.image;
-  const sourcePath = typeof source === 'string'
-    ? source
-    : source?.url || source?.image_url || source?.file_path || source?.path || '';
-  if (spec.unverifiedImage && sourcePath.toLowerCase().includes(spec.unverifiedImage)) {
-    return spec.fallbackImage ? [{ ...spec, image: spec.fallbackImage }] : [];
-  }
-  const image = getProductImageUrl(source) || spec.fallbackImage;
-  return image ? [{ ...spec, image }] : [];
-});
 
 const FAQS = [
   {
@@ -131,32 +110,6 @@ export default function Promotions() {
   const navigate = useNavigate();
   const emailInput = useRef(null);
   const [email, setEmail] = useState('');
-  const [productGallery, setProductGallery] = useState(VERIFIED_FALLBACK_PRODUCTS);
-  const [galleryNotice, setGalleryNotice] = useState('');
-
-  useEffect(() => {
-    let active = true;
-    productsApi.getAllActive()
-      .then(response => {
-        const rows = response.data?.data ?? response.data;
-        if (!Array.isArray(rows)) throw new Error('Product catalog returned an invalid response.');
-        const resolvedProducts = resolveCatalogProducts(rows);
-        if (active) {
-          setProductGallery(resolvedProducts.length ? resolvedProducts : VERIFIED_FALLBACK_PRODUCTS);
-          setGalleryNotice(resolvedProducts.length < PRODUCT_SPECS.length
-            ? 'Some product photos are unavailable, so only products with confirmed product photography are shown.'
-            : '');
-        }
-      })
-      .catch(() => {
-        if (active) {
-          setProductGallery(VERIFIED_FALLBACK_PRODUCTS);
-          setGalleryNotice('Live product photos could not be loaded. Showing the verified product photos available on this site.');
-        }
-      });
-    return () => { active = false; };
-  }, []);
-
   if (loading) {
     return <main className="min-h-screen bg-[#07140e] px-4 py-20 text-center text-[#9BB0A5]">Loading your account…</main>;
   }
@@ -216,14 +169,14 @@ export default function Promotions() {
               <div className="absolute inset-5 rounded-[2rem] bg-[#D4AF37]/10 blur-2xl"/>
               <div className="relative overflow-hidden rounded-[1.75rem] border border-white/10 bg-[#0A1D14]/70 p-4 shadow-2xl backdrop-blur-lg">
                 <img
-                  src={productGallery[0]?.image || VERIFIED_FALLBACK_PRODUCTS[0].image}
-                  alt={productGallery[0]?.alt || VERIFIED_FALLBACK_PRODUCTS[0].alt}
+                  src={PROMOTION_PRODUCTS[0].image}
+                  alt={PROMOTION_PRODUCTS[0].alt}
                   width="640"
                   height="640"
                   fetchpriority="high"
                   onError={event => {
                     event.currentTarget.onerror = null;
-                    event.currentTarget.src = VERIFIED_FALLBACK_PRODUCTS[0].image;
+                    event.currentTarget.src = PROMOTION_PRODUCTS[0].image;
                   }}
                   className="aspect-[4/3] w-full rounded-2xl bg-[#10251A] object-contain p-3 sm:p-4"
                 />
@@ -318,15 +271,15 @@ export default function Promotions() {
             <Link to="/science" className="inline-flex items-center gap-2 text-xs font-semibold text-[#F0D98A] hover:text-white">Explore our formulation approach <ArrowRight size={14}/></Link>
           </div>
           <div className={`mx-auto mt-5 grid w-full gap-4 ${
-            productGallery.length >= 5
+            PROMOTION_PRODUCTS.length >= 5
               ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-5'
-              : productGallery.length === 4
+              : PROMOTION_PRODUCTS.length === 4
                 ? 'grid-cols-2 sm:grid-cols-3 lg:grid-cols-4'
-                : productGallery.length === 3
+                : PROMOTION_PRODUCTS.length === 3
                   ? 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
                   : 'max-w-3xl grid-cols-1 sm:grid-cols-2 lg:grid-cols-2'
           }`}>
-            {productGallery.map(product => (
+            {PROMOTION_PRODUCTS.map(product => (
               <article key={product.name} className="flex h-full flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#0D261B]/70 shadow-lg backdrop-blur-lg">
                 <div className="aspect-[4/3] w-full bg-[#10251A] p-3">
                   <img
@@ -343,7 +296,6 @@ export default function Promotions() {
               </article>
             ))}
           </div>
-          {galleryNotice && <p role="status" className="mt-3 text-[11px] leading-5 text-[#82998D]">{galleryNotice}</p>}
           <p className="mt-3 text-[11px] leading-5 text-[#82998D]">Product availability and gifting depend on the campaign. Creator content must reflect verified product information and avoid medical or guaranteed-result claims.</p>
         </section>
 

@@ -412,7 +412,10 @@ export default function ProductManagement() {
         const uploadPromises = uploadFiles.map(async (file, index) => {
           const urlRes = await productsApi.getUploadUrl(file.name, file.type, { notify: false });
           await axios.put(urlRes.data.uploadUrl, file, {
-            headers: { 'Content-Type': file.type },
+            headers: {
+              'Content-Type': file.type,
+              'Cache-Control': 'public, max-age=31536000, immutable',
+            },
             onUploadProgress: (e) => {
               uploadedBytes.current[index] = Math.min(file.size, e.loaded || 0);
               const loaded = uploadedBytes.current.reduce((sum, bytes) => sum + bytes, 0);

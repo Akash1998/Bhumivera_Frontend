@@ -28,6 +28,7 @@ describe('promoter registration page', () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+    localStorage.removeItem('bhumivera_creator_application_saved');
   });
 
   beforeEach(() => {
@@ -49,6 +50,7 @@ describe('promoter registration page', () => {
     );
 
     expect(await screen.findByRole('heading', { name: 'See what each order contributes' })).toBeTruthy();
+    expect(products.getAllActive).not.toHaveBeenCalled();
     fireEvent.change(screen.getByLabelText(/Email for your Bhumivera account/), {
       target: { value: 'creator@example.com' },
     });
@@ -84,6 +86,7 @@ describe('promoter registration page', () => {
       </HelmetProvider>,
     );
 
+    fireEvent.click(await screen.findByRole('button', { name: /already applied\? check your saved application/i }));
     expect(await screen.findByText('Your Creator Code Is Reserved')).toBeTruthy();
     expect(screen.getByText(/within 12–24 hours/i)).toBeTruthy();
     expect(screen.getByText('BV1234567890')).toBeTruthy();
@@ -91,22 +94,8 @@ describe('promoter registration page', () => {
     expect(screen.queryByText('Share your offer')).toBeNull();
   });
 
-  it('uses catalog product photos and omits ingredient-only images from the product gallery', async () => {
+  it('uses bundled product photos without requesting the database-backed catalog', async () => {
     useAuth.mockReturnValue({ user: null, loading: false });
-    products.getAllActive.mockResolvedValueOnce({
-      data: {
-        data: [
-          {
-            slug: 'luxury-2-in-1-botanical-shampoo-conditioner',
-            images: [{ url: 'https://images.bhumivera.com/shampoo-real.webp', media_type: 'image' }],
-          },
-          {
-            slug: 'artisanal-charcoal-handmade-soap',
-            images: [{ url: 'https://images.bhumivera.com/bhumivera-artisanal-charcoal-handmade-soap.webp', media_type: 'image' }],
-          },
-        ],
-      },
-    });
 
     render(
       <HelmetProvider>
@@ -116,32 +105,30 @@ describe('promoter registration page', () => {
       </HelmetProvider>,
     );
 
-    const shampoo = await screen.findByAltText('Bhumivera botanical shampoo and conditioner product');
-    expect(shampoo.getAttribute('src')).toBe('https://images.bhumivera.com/shampoo-real.webp');
-    expect(screen.queryByAltText('Bhumivera Activated Charcoal face wash product')).toBeNull();
+    const shampoo = screen.getByAltText('Bhumivera botanical shampoo and conditioner product');
+    expect(shampoo.getAttribute('src')).toContain('/images/products/bhumivera-royal-shampoo-front.webp');
     const soap = screen.getByAltText('Bhumivera handmade charcoal cleansing bar');
     expect(soap.getAttribute('src')).toContain('/images/products/bhumivera-charcoal-cleansing-bar-front.webp');
+    expect(products.getAllActive).not.toHaveBeenCalled();
   });
 
   it('submits manually entered profile details only after ownership confirmation', async () => {
     useAuth.mockReturnValue({ user: { email: 'creator@example.com' }, loading: false });
-    affiliate.getPartnerDashboard
-      .mockResolvedValueOnce({ data: { dashboard: null } })
-      .mockResolvedValueOnce({
-        data: {
-          dashboard: {
-            partner: {
-              status: 'pending',
-              referral_code: 'BV1234567890',
-              social_platform: 'Instagram',
-              social_handle: '@creator',
-              profile_url: 'https://www.instagram.com/creator/',
-              follower_count: 5000,
-            },
-            summary: {},
+    affiliate.getPartnerDashboard.mockResolvedValue({
+      data: {
+        dashboard: {
+          partner: {
+            status: 'pending',
+            referral_code: 'BV1234567890',
+            social_platform: 'Instagram',
+            social_handle: '@creator',
+            profile_url: 'https://www.instagram.com/creator/',
+            follower_count: 5000,
           },
+          summary: {},
         },
-      });
+      },
+    });
     affiliate.applyForPartner.mockResolvedValue({ data: { success: true } });
 
     render(
@@ -156,6 +143,7 @@ describe('promoter registration page', () => {
     );
 
     expect(screen.queryByText('creator@example.com')).toBeNull();
+    expect(affiliate.getPartnerDashboard).not.toHaveBeenCalled();
     fireEvent.click(await screen.findByRole('radio', { name: 'Instagram' }));
     fireEvent.change(screen.getByLabelText(/Profile name or handle/), {
       target: { value: '@creator' },
@@ -185,6 +173,7 @@ describe('promoter registration page', () => {
     fireEvent.click(screen.getByRole('button', { name: /Send creator application/i }));
 
     expect((await screen.findByRole('status')).textContent).toMatch(/Application received/);
+    expect(affiliate.getPartnerDashboard).toHaveBeenCalledTimes(1);
     expect(affiliate.applyForPartner).toHaveBeenCalledWith({
       socialPlatform: 'Instagram',
       socialHandle: '@creator',
