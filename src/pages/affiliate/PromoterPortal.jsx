@@ -1,7 +1,8 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
-  AlertCircle, CheckCircle2, Copy, ExternalLink, Film, Gift,
-  IndianRupee, RefreshCw, ShieldCheck, Zap
+  AlertCircle, BookOpen, CheckCircle2, Copy, Download, ExternalLink,
+  Film, Gift, IndianRupee, Link2, MessageSquare, RefreshCw,
+  ShieldCheck, Sparkles, Wallet, Zap
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { FaFacebookF, FaInstagram, FaYoutube } from 'react-icons/fa';
@@ -16,6 +17,14 @@ const INITIAL_FORM = {
   contentNiche: '',
   collaborationType: 'both',
   partnershipIntent: '',
+};
+
+const INITIAL_EXTRA = {
+  preferredProducts: '',
+  contentFormats: '',
+  monthlyReachEstimate: '',
+  sampleContentUrl: '',
+  whatsappContact: '',
 };
 
 const SOCIAL_PLATFORMS = [
@@ -33,6 +42,37 @@ const AUDIENCE_TIERS = [
 
 const CONTENT_NICHES = ['Skincare', 'Haircare', 'Lifestyle', 'Wellness', 'Unboxing'];
 
+const INTENT_PROMPTS = [
+  {
+    label: 'Skincare Barrier Education',
+    niche: 'Skincare',
+    text: 'I want to create honest, ingredient-first skincare education with my community—exploring pH 5.5 cleansing, cold-pressed Sea Buckthorn, and realistic multi-week skin routines without overpromising.',
+  },
+  {
+    label: 'Ayurvedic Hair & Scalp Rituals',
+    niche: 'Haircare',
+    text: 'I love sharing practical wash-day routines and traditional Ayurvedic haircare ingredients like Reetha, Amla, and Rosemary Oil so my audience can build healthier scalp habits over time.',
+  },
+  {
+    label: 'Mindful Wellness & Nature Impact',
+    niche: 'Wellness',
+    text: 'My community cares deeply about daily Ayurvedic wellness rituals like Seven-Tulsi drops and verified nature conservation. I want to build a transparent, long-term storytelling partnership.',
+  },
+  {
+    label: 'Honest Texture & Routine Reviews',
+    niche: 'Unboxing',
+    text: 'I focus on detailed, unscripted texture tests, lather demos, and honest pros-and-cons reviews so my followers can make informed botanical self-care choices with full disclosure.',
+  },
+];
+
+const DEEP_LINK_TARGETS = [
+  { label: 'Main Storefront (All Rituals)', path: '/' },
+  { label: 'Sea Buckthorn Face Wash (100ml)', path: '/product/himalayan-seabuckthorn-luxury-face-wash' },
+  { label: 'Botanical 2-in-1 Shampoo (200ml)', path: '/product/luxury-2-in-1-botanical-shampoo-conditioner' },
+  { label: 'Artisanal Charcoal Cleansing Bar (100g)', path: '/product/artisanal-charcoal-handmade-soap' },
+  { label: 'Kalpvriksh Seven-Tulsi Drops (30ml)', path: '/product/kalpvriksh-satva-tulsi-7-tulsi-extract' },
+];
+
 const DEFAULT_MILESTONES = [
   { ordersRequired: 3, rewardInr: 500, label: '₹500 Bhumivera Luxury Store Gift Card', shareBoost: null },
   { ordersRequired: 10, rewardInr: 1200, label: '₹1,200 Creator Bonus + Full-Range 6-SKU PR Box', shareBoost: null },
@@ -44,17 +84,30 @@ const formatMoney = value => `₹${(Number(value) || 0).toFixed(2)}`;
 export default function PromoterPortal() {
   const [dashboard, setDashboard] = useState(null);
   const [form, setForm] = useState(INITIAL_FORM);
+  const [extraForm, setExtraForm] = useState(INITIAL_EXTRA);
+  const [showOptionalDetails, setShowOptionalDetails] = useState(false);
   const [loading, setLoading] = useState(true);
   const [commissionPage, setCommissionPage] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [savingPerks, setSavingPerks] = useState(false);
+  const [savingProfile, setSavingProfile] = useState(false);
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [copied, setCopied] = useState(false);
+  const [copiedCaptionKey, setCopiedCaptionKey] = useState('');
   const [editingApplication, setEditingApplication] = useState(false);
   const [ownsProfile, setOwnsProfile] = useState(false);
+  const [selectedDeepLinkPath, setSelectedDeepLinkPath] = useState('/');
+  const [ledgerStatusFilter, setLedgerStatusFilter] = useState('all');
 
   const [customCodeInput, setCustomCodeInput] = useState('');
+  const [creatorPrefs, setCreatorPrefs] = useState({
+    payoutUpiId: '',
+    whatsappContact: '',
+    preferredProducts: '',
+    contentFormats: '',
+    acknowledgeBrief: false,
+  });
 
   const loadDashboard = useCallback(async (page = 1) => {
     setLoading(true);
@@ -79,6 +132,13 @@ export default function PromoterPortal() {
           partnershipIntent: data.partner.partnership_intent || '',
         });
         setCustomCodeInput(data.partner.referral_code || '');
+        setCreatorPrefs({
+          payoutUpiId: data.partner.payout_upi_id || '',
+          whatsappContact: data.partner.whatsapp_contact || '',
+          preferredProducts: data.partner.preferred_products || '',
+          contentFormats: data.partner.content_formats || '',
+          acknowledgeBrief: Boolean(data.partner.campaign_brief_ack_at),
+        });
       }
       return data;
     } catch (loadError) {
@@ -92,10 +152,50 @@ export default function PromoterPortal() {
   useEffect(() => {
     loadDashboard();
   }, [loadDashboard]);
+
   const partner = dashboard?.partner;
-  const shareUrl = useMemo(() => partner?.referral_code
-    ? `${window.location.origin}/?aff=${encodeURIComponent(partner.referral_code)}`
-    : '', [partner?.referral_code]);
+  const shareUrl = useMemo(() => {
+    if (!partner?.referral_code) return '';
+    const basePath = selectedDeepLinkPath === '/' ? '/' : selectedDeepLinkPath;
+    return `${window.location.origin}${basePath}?aff=${encodeURIComponent(partner.referral_code)}`;
+  }, [partner?.referral_code, selectedDeepLinkPath]);
+
+  const readinessScore = useMemo(() => {
+    const checks = [
+      Boolean(form.socialPlatform),
+      Boolean(form.socialHandle.trim()),
+      Boolean(form.followerTier),
+      Boolean(form.contentNiche),
+      Boolean(form.profileUrl.trim()),
+      form.partnershipIntent.trim().length >= 30,
+      ownsProfile,
+    ];
+    return Math.round((checks.filter(Boolean).length / checks.length) * 100);
+  }, [form, ownsProfile]);
+
+  const socialCaptions = useMemo(() => {
+    if (!partner?.referral_code) return [];
+    const code = partner.referral_code;
+    const pct = Number(partner.discount_percent || 10);
+    const link = `${window.location.origin}/?aff=${encodeURIComponent(code)}`;
+    return [
+      {
+        key: 'instagram',
+        title: 'Instagram Reel / Story Caption',
+        body: `Been testing @bhumivera’s botanical ritual and loving how gentle and transparent the formulation is. Explore the shelf at ${link} and use my code ${code} for ${pct}% off your ritual order. #ad #BhumiveraPartner`,
+      },
+      {
+        key: 'whatsapp',
+        title: 'WhatsApp Community Share',
+        body: `Hey! Sharing my Bhumivera creator link if you want to explore their Sea Buckthorn Face Wash, 2-in-1 Botanical Shampoo, or 7-Tulsi Drops: ${link} — code ${code} gives ${pct}% off at checkout (#BhumiveraPartner).`,
+      },
+      {
+        key: 'youtube',
+        title: 'YouTube Description Box',
+        body: `🌿 Explore Bhumivera Botanical Rituals: ${link}\n✨ Use my creator code ${code} for ${pct}% off eligible orders.\nDisclosure: Affiliate partner link (#ad #BhumiveraPartner) — I earn a share of positive order contribution at no extra cost to you.`,
+      },
+    ];
+  }, [partner?.referral_code, partner?.discount_percent]);
 
   const apply = async event => {
     event.preventDefault();
@@ -112,10 +212,16 @@ export default function PromoterPortal() {
     setError('');
     setNotice('');
     try {
-      await affiliateApi.applyForPartner({
+      const payload = {
         ...form,
         followerCount: Number(form.followerCount || 0),
-      });
+        ...(extraForm.preferredProducts.trim() ? { preferredProducts: extraForm.preferredProducts.trim() } : {}),
+        ...(extraForm.contentFormats.trim() ? { contentFormats: extraForm.contentFormats.trim() } : {}),
+        ...(extraForm.monthlyReachEstimate.trim() ? { monthlyReachEstimate: extraForm.monthlyReachEstimate.trim() } : {}),
+        ...(extraForm.sampleContentUrl.trim() ? { sampleContentUrl: extraForm.sampleContentUrl.trim() } : {}),
+        ...(extraForm.whatsappContact.trim() ? { whatsappContact: extraForm.whatsappContact.trim() } : {}),
+      };
+      await affiliateApi.applyForPartner(payload);
       setNotice('Application received. Your reserved promoter code remains inactive while the team reviews your profile.');
       await loadDashboard();
     } catch (applyError) {
@@ -159,6 +265,27 @@ export default function PromoterPortal() {
     }
   };
 
+  const saveCreatorPreferences = async event => {
+    event.preventDefault();
+    if (!affiliateApi.updatePartnerProfile) return;
+    setSavingProfile(true);
+    setError('');
+    setNotice('');
+    try {
+      const response = await affiliateApi.updatePartnerProfile(creatorPrefs);
+      if (response.data?.dashboard) {
+        setDashboard(response.data.dashboard);
+      } else {
+        await loadDashboard(commissionPage);
+      }
+      setNotice('Your payout and campaign preferences have been saved.');
+    } catch (profileError) {
+      setError(profileError.response?.data?.message || 'Could not save your creator preferences.');
+    } finally {
+      setSavingProfile(false);
+    }
+  };
+
   const copyLink = async () => {
     try {
       await navigator.clipboard.writeText(shareUrl);
@@ -168,6 +295,64 @@ export default function PromoterPortal() {
     } catch {
       setError('Clipboard access is unavailable. Select and copy the link manually.');
     }
+  };
+
+  const copyCaption = async (key, text) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopiedCaptionKey(key);
+      setNotice('Caption template copied to clipboard.');
+      window.setTimeout(() => setCopiedCaptionKey(''), 1800);
+    } catch {
+      setError('Clipboard access is unavailable. Select and copy the caption manually.');
+    }
+  };
+
+  const exportLedgerCsv = () => {
+    const rows = dashboard?.commissions || [];
+    if (!rows.length) return;
+    const headers = [
+      'Order ID',
+      'Subtotal (INR)',
+      'Discount (INR)',
+      'Revenue Ex GST (INR)',
+      'Product Cost (INR)',
+      'Fulfillment (INR)',
+      'RTO Reserve (INR)',
+      'Payment Fee (INR)',
+      'Contribution Profit (INR)',
+      'Creator Share %',
+      'Creator Commission (INR)',
+      'Brand Retained (INR)',
+      'Retained Margin %',
+      'Status',
+    ];
+    const csvLines = [
+      headers.join(','),
+      ...rows.map(r => [
+        r.order_id,
+        Number(r.order_subtotal || 0).toFixed(2),
+        Number(r.discount_amount || 0).toFixed(2),
+        Number(r.revenue_ex_tax || 0).toFixed(2),
+        Number(r.product_cost || 0).toFixed(2),
+        Number(r.fulfillment_cost || 0).toFixed(2),
+        Number(r.rto_reserve || 0).toFixed(2),
+        Number(r.payment_fee || 0).toFixed(2),
+        Number(r.contribution_profit || 0).toFixed(2),
+        Number(r.commission_share_percent || 0).toFixed(2),
+        Number(r.commission_amount || 0).toFixed(2),
+        Number(r.retained_profit || 0).toFixed(2),
+        Number(r.retained_margin_percent || 0).toFixed(2),
+        r.status,
+      ].join(',')),
+    ];
+    const blob = new Blob([csvLines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `bhumivera-creator-ledger-${partner?.referral_code || 'export'}.csv`;
+    link.click();
+    URL.revokeObjectURL(url);
   };
 
   const deliveredOrdersCount = Number(dashboard?.summary?.delivered_orders || 0);
@@ -191,6 +376,12 @@ export default function PromoterPortal() {
     commissionPagination.page * commissionPagination.pageSize,
     commissionPagination.total
   );
+
+  const visibleCommissions = useMemo(() => {
+    const list = dashboard?.commissions || [];
+    if (ledgerStatusFilter === 'all') return list;
+    return list.filter(row => row.status === ledgerStatusFilter);
+  }, [dashboard?.commissions, ledgerStatusFilter]);
 
   const cardClass = 'rounded-2xl border border-[#D4AF37]/25 bg-[#102A1E]/95 p-5 shadow-[0_24px_70px_rgba(0,0,0,0.25)] sm:p-7';
 
@@ -240,20 +431,33 @@ export default function PromoterPortal() {
 
         {loading ? <div className={cardClass}>Loading your promoter account…</div> : !partner || (partner.status === 'rejected' && editingApplication) ? (
           <form onSubmit={apply} className="space-y-6 rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#0D261B]/70 p-5 text-[#DFD7C4] shadow-[0_24px_70px_rgba(0,0,0,0.3)] backdrop-blur-xl sm:p-8">
-            <div className="flex items-start gap-4 border-b border-white/10 pb-5">
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#F0D98A]"><Gift size={21}/></span>
-              <div>
-                <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#D4AF37]">Promoter application</p>
-                <h2 className="mt-1 font-serif text-2xl font-bold text-white sm:text-3xl">Join the Bhumivera Creator Program</h2>
-                <p className="mt-2 text-sm leading-6 text-[#B4C7BB]">Tell us what you want to build with us. We look for thoughtful product educators and community partners—not applications motivated only by receiving free products.</p>
-                <button
-                  type="button"
-                  onClick={checkSavedApplication}
-                  disabled={loading}
-                  className="mt-3 text-xs font-semibold text-[#F0D98A] underline underline-offset-2 disabled:opacity-50"
-                >
-                  Already applied? Check your saved application
-                </button>
+            <div className="flex flex-wrap items-start justify-between gap-4 border-b border-white/10 pb-5">
+              <div className="flex items-start gap-4">
+                <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-2xl border border-[#D4AF37]/20 bg-[#D4AF37]/10 text-[#F0D98A]"><Gift size={21}/></span>
+                <div>
+                  <p className="text-[11px] font-bold uppercase tracking-[0.16em] text-[#D4AF37]">Promoter application</p>
+                  <h2 className="mt-1 font-serif text-2xl font-bold text-white sm:text-3xl">Join the Bhumivera Creator Program</h2>
+                  <p className="mt-2 max-w-2xl text-sm leading-6 text-[#B4C7BB]">Tell us what you want to build with us. We look for thoughtful product educators and community partners—not applications motivated only by receiving free products.</p>
+                  <button
+                    type="button"
+                    onClick={checkSavedApplication}
+                    disabled={loading}
+                    className="mt-3 text-xs font-semibold text-[#F0D98A] underline underline-offset-2 disabled:opacity-50"
+                  >
+                    Already applied? Check your saved application
+                  </button>
+                </div>
+              </div>
+
+              <div className="min-w-[180px] rounded-xl border border-[#D4AF37]/25 bg-[#07180F]/80 p-3">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-[#9BB0A5]">Application readiness</span>
+                  <strong className="font-mono text-[#FCE096]">{readinessScore}%</strong>
+                </div>
+                <div className="mt-2 h-2 w-full overflow-hidden rounded-full bg-black/40">
+                  <div className="h-full bg-gradient-to-r from-[#D4AF37] to-emerald-400 transition-all" style={{ width: `${readinessScore}%` }}/>
+                </div>
+                <p className="mt-1.5 text-[10px] text-[#9BB0A5]">12–24h review turnaround</p>
               </div>
             </div>
 
@@ -310,6 +514,29 @@ export default function PromoterPortal() {
               <input id="promoter-profile-url" required type="url" maxLength={500} value={form.profileUrl} onChange={event => setForm(current => ({ ...current, profileUrl: event.target.value }))} placeholder="https://instagram.com/yourprofile" className="w-full rounded-xl border border-white/10 bg-[#07180F]/65 px-4 py-3 text-sm text-white outline-none focus:border-[#D4AF37]/60"/>
             </label>
 
+            <div className="space-y-2">
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <span className="text-xs font-semibold text-[#FCE096]">Need inspiration? Click a partnership angle to start or customize:</span>
+                <span className="text-[11px] text-[#9BB0A5]">{form.partnershipIntent.length} / 800 characters</span>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                {INTENT_PROMPTS.map(prompt => (
+                  <button
+                    key={prompt.label}
+                    type="button"
+                    onClick={() => setForm(current => ({
+                      ...current,
+                      contentNiche: current.contentNiche || prompt.niche,
+                      partnershipIntent: prompt.text,
+                    }))}
+                    className="rounded-full border border-[#D4AF37]/30 bg-[#07180F]/75 px-3 py-1.5 text-xs font-semibold text-[#FCE096] transition hover:border-[#D4AF37] hover:bg-[#D4AF37]/15"
+                  >
+                    + {prompt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
             <label htmlFor="promoter-partnership-intent" className="block space-y-2 text-sm font-semibold text-[#E7EEE8]">
               What would a meaningful, long-term partnership look like to you?
               <textarea
@@ -325,6 +552,58 @@ export default function PromoterPortal() {
               />
               <span className="block text-xs font-normal leading-5 text-[#9BB0A5]">30–800 characters. We review alignment, honesty and intent—not follower count alone. Product gifting is selective and never guaranteed.</span>
             </label>
+
+            <div className="rounded-xl border border-white/10 bg-[#07180F]/50 p-4">
+              <button
+                type="button"
+                onClick={() => setShowOptionalDetails(open => !open)}
+                className="flex w-full items-center justify-between text-left text-xs font-bold uppercase tracking-wider text-[#FCE096]"
+              >
+                <span>Optional: Product rituals &amp; content format preferences</span>
+                <span>{showOptionalDetails ? 'Hide −' : 'Add preferences +'}</span>
+              </button>
+              {showOptionalDetails && (
+                <div className="mt-4 grid gap-4 sm:grid-cols-2">
+                  <label className="space-y-1.5 text-xs font-semibold text-[#E7EEE8]">
+                    Which Bhumivera products interest you most?
+                    <input
+                      value={extraForm.preferredProducts}
+                      onChange={e => setExtraForm(curr => ({ ...curr, preferredProducts: e.target.value }))}
+                      placeholder="e.g., Sea Buckthorn Face Wash, 7-Tulsi Drops"
+                      className="w-full rounded-lg border border-white/10 bg-[#07180F] px-3 py-2 text-xs text-white outline-none focus:border-[#D4AF37]"
+                    />
+                  </label>
+                  <label className="space-y-1.5 text-xs font-semibold text-[#E7EEE8]">
+                    Preferred content formats
+                    <input
+                      value={extraForm.contentFormats}
+                      onChange={e => setExtraForm(curr => ({ ...curr, contentFormats: e.target.value }))}
+                      placeholder="e.g., Instagram Reels, YouTube Shorts, Routine Vlog"
+                      className="w-full rounded-lg border border-white/10 bg-[#07180F] px-3 py-2 text-xs text-white outline-none focus:border-[#D4AF37]"
+                    />
+                  </label>
+                  <label className="space-y-1.5 text-xs font-semibold text-[#E7EEE8]">
+                    Sample video / post URL (optional)
+                    <input
+                      type="url"
+                      value={extraForm.sampleContentUrl}
+                      onChange={e => setExtraForm(curr => ({ ...curr, sampleContentUrl: e.target.value }))}
+                      placeholder="https://..."
+                      className="w-full rounded-lg border border-white/10 bg-[#07180F] px-3 py-2 text-xs text-white outline-none focus:border-[#D4AF37]"
+                    />
+                  </label>
+                  <label className="space-y-1.5 text-xs font-semibold text-[#E7EEE8]">
+                    Avg. monthly reach or engagement note (optional)
+                    <input
+                      value={extraForm.monthlyReachEstimate}
+                      onChange={e => setExtraForm(curr => ({ ...curr, monthlyReachEstimate: e.target.value }))}
+                      placeholder="e.g., 15k monthly views, active skincare Q&A"
+                      className="w-full rounded-lg border border-white/10 bg-[#07180F] px-3 py-2 text-xs text-white outline-none focus:border-[#D4AF37]"
+                    />
+                  </label>
+                </div>
+              )}
+            </div>
 
             <label className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-white/[0.04] p-4 text-sm leading-6 text-[#C5D8CC]">
               <input type="checkbox" checked={ownsProfile} onChange={event => setOwnsProfile(event.target.checked)} className="mt-1 h-4 w-4 shrink-0 accent-[#D4AF37]"/>
@@ -345,14 +624,29 @@ export default function PromoterPortal() {
             </button>
           </section>
         ) : partner.status === 'pending' ? (
-          <section className={`${cardClass} mx-auto max-w-2xl`}>
-            <span className="rounded-full border border-amber-400/30 bg-amber-950/30 px-3 py-1 text-[10px] font-bold uppercase text-amber-100">Application under review</span>
-            <h2 className="mt-4 font-serif text-2xl font-bold text-white">Your Creator Code Is Reserved</h2>
-            <p className="mt-2 text-sm leading-6 text-[#9BB0A5]">Our team reviews applications within 12–24 hours. We consider your content, audience fit and partnership intent. Your reserved code remains inactive while your profile is under review.</p>
-            {partner.referral_code && <div className="mt-4 rounded-xl border border-[#315541] bg-[#0b1c14] p-4">
+          <section className={`${cardClass} mx-auto max-w-3xl space-y-5`}>
+            <div>
+              <span className="rounded-full border border-amber-400/30 bg-amber-950/30 px-3 py-1 text-[10px] font-bold uppercase text-amber-100">Application under review</span>
+              <h2 className="mt-4 font-serif text-2xl font-bold text-white">Your Creator Code Is Reserved</h2>
+              <p className="mt-2 text-sm leading-6 text-[#9BB0A5]">Our team reviews applications within 12–24 hours. We consider your content, audience fit and partnership intent. Your reserved code remains inactive while your profile is under review.</p>
+            </div>
+            {partner.referral_code && <div className="rounded-xl border border-[#315541] bg-[#0b1c14] p-4">
               <p className="text-[10px] font-bold uppercase tracking-wider text-[#9BB0A5]">Reserved promoter code · inactive</p>
               <p className="mt-1 font-mono text-lg font-bold tracking-widest text-[#FCE096]">{partner.referral_code}</p>
             </div>}
+            <div className="grid gap-3 pt-2 sm:grid-cols-3">
+              {[
+                ['Step 01 · Complete', 'Application & Intent Logged', 'Your profile and reserved code are saved in our creator queue.'],
+                ['Step 02 · In Progress', '12–24h Team Verification', 'Our team reviews your content voice and community alignment.'],
+                ['Step 03 · Next', 'Code Activation & Briefs', 'Once approved, your audience offer link and ledger go live here.'],
+              ].map(([badge, title, desc], idx) => (
+                <div key={title} className={`rounded-xl border p-3.5 text-xs ${idx === 1 ? 'border-[#D4AF37]/50 bg-[#D4AF37]/10' : 'border-[#315541] bg-[#0b1c14]'}`}>
+                  <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4AF37]">{badge}</span>
+                  <h3 className="mt-1 font-serif text-sm font-bold text-white">{title}</h3>
+                  <p className="mt-1 text-[11px] leading-5 text-[#9BB0A5]">{desc}</p>
+                </div>
+              ))}
+            </div>
           </section>
         ) : (
           <>
@@ -367,8 +661,25 @@ export default function PromoterPortal() {
                   Your audience gets the approved <strong className="text-[#FCE096]">{Number(partner.discount_percent)}% offer</strong>. Your rate is <strong className="text-[#FCE096]">{Number(partner.commission_share_percent)}%</strong> of qualifying contribution profit—not the order total. Any checkout gifts or promotions are separate and may change.
                 </p>
                 <div className="mt-4 rounded-xl border border-[#315541] bg-[#0b1c14] p-4">
-                  <p className="text-[10px] font-bold uppercase tracking-wider text-[#9BB0A5]">Active Promoter Code</p>
-                  <p className="mt-1 font-mono text-2xl font-bold tracking-widest text-[#FCE096]">{partner.referral_code}</p>
+                  <div className="flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                      <p className="text-[10px] font-bold uppercase tracking-wider text-[#9BB0A5]">Active Promoter Code</p>
+                      <p className="mt-1 font-mono text-2xl font-bold tracking-widest text-[#FCE096]">{partner.referral_code}</p>
+                    </div>
+                    <label className="text-xs text-[#9BB0A5]">
+                      <span className="block text-[10px] font-bold uppercase tracking-wider text-[#D4AF37]">Destination page</span>
+                      <select
+                        aria-label="Destination page for offer link"
+                        value={selectedDeepLinkPath}
+                        onChange={e => setSelectedDeepLinkPath(e.target.value)}
+                        className="mt-1 rounded-lg border border-[#315541] bg-[#07180F] px-2.5 py-1.5 text-xs text-white outline-none focus:border-[#D4AF37]"
+                      >
+                        {DEEP_LINK_TARGETS.map(target => (
+                          <option key={target.path} value={target.path}>{target.label}</option>
+                        ))}
+                      </select>
+                    </label>
+                  </div>
                   <div className="mt-3 flex flex-wrap gap-2">
                     <button type="button" onClick={copyLink} className="inline-flex items-center gap-2 rounded-lg bg-[#D4AF37] px-3.5 py-2 text-xs font-bold text-[#102219]"><Copy size={14}/>{copied ? 'Copied' : 'Copy offer link'}</button>
                     <a href={shareUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-[#315541] px-3.5 py-2 text-xs text-white">Preview store link <ExternalLink size={13}/></a>
@@ -382,10 +693,40 @@ export default function PromoterPortal() {
                   ['Delivered / Total Orders', `${deliveredOrdersCount} / ${dashboard.summary?.attributed_orders ?? 0}`],
                   ['Pending Delivery Commission', formatMoney(dashboard.summary?.pending_commission)],
                   ['Ready for UPI Payout', formatMoney(dashboard.summary?.payable_commission)],
+                  ['Lifetime Paid Commission', formatMoney(dashboard.summary?.paid_commission)],
                 ].map(([label, value]) => (
                   <div key={label} className="rounded-xl border border-[#315541] bg-[#0b1c14] p-4">
                     <span className="text-xs text-[#9BB0A5]">{label}</span>
                     <p className="mt-2 font-serif text-xl font-bold text-[#FCE096]">{value}</p>
+                  </div>
+                ))}
+              </div>
+            </section>
+
+            <section className={cardClass}>
+              <div className="flex flex-wrap items-center justify-between gap-2">
+                <div>
+                  <p className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
+                    <MessageSquare size={13}/> Creator Share Kit &amp; Caption Studio
+                  </p>
+                  <h2 className="mt-1 font-serif text-xl font-bold text-white">Ready-to-customize social &amp; community templates</h2>
+                  <p className="mt-1 text-xs text-[#9BB0A5]">Pre-filled with your active code ({partner.referral_code}), {Number(partner.discount_percent)}% audience offer, and transparent #ad / #BhumiveraPartner disclosure.</p>
+                </div>
+              </div>
+              <div className="mt-4 grid gap-4 md:grid-cols-3">
+                {socialCaptions.map(item => (
+                  <div key={item.key} className="flex flex-col justify-between rounded-xl border border-[#315541] bg-[#0b1c14] p-4">
+                    <div>
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-[#D4AF37]">{item.title}</span>
+                      <p className="mt-2 whitespace-pre-line text-xs leading-5 text-[#E7EEE8]">{item.body}</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => copyCaption(item.key, item.body)}
+                      className="mt-4 inline-flex items-center justify-center gap-1.5 rounded-lg border border-[#D4AF37]/40 bg-[#D4AF37]/15 px-3 py-2 text-xs font-bold text-[#FCE096] hover:bg-[#D4AF37]/25"
+                    >
+                      <Copy size={13}/> {copiedCaptionKey === item.key ? 'Copied template' : 'Copy template'}
+                    </button>
                   </div>
                 ))}
               </div>
@@ -467,36 +808,81 @@ export default function PromoterPortal() {
                 </p>
               </section>
 
-              <form onSubmit={savePartnerPerks} className={`${cardClass} space-y-4`}>
-                <div className="flex items-center gap-2 text-[#D4AF37]">
-                  <Film size={18}/>
-                  <h2 className="font-serif text-xl font-bold text-white">Custom Vanity Code</h2>
-                </div>
-                <p className="text-xs text-[#9BB0A5]">Choose a simple code your community can remember. Your code is a tool for an ongoing relationship—not a substitute for trust.</p>
-                <label className="block space-y-1 text-xs font-semibold text-white">
-                  Custom Vanity Promo Code
-                  <input value={customCodeInput} onChange={e => setCustomCodeInput(e.target.value.toUpperCase())} maxLength={20} placeholder="AYEESHA10" className="w-full rounded-lg border border-[#315541] bg-[#0b1c14] px-3 py-2 font-mono text-sm text-[#FCE096]"/>
-                </label>
-                <div className="flex items-center justify-between pt-1">
-                  <button type="submit" disabled={savingPerks} className="rounded-lg bg-[#D4AF37] px-4 py-2 text-xs font-bold text-[#102219] hover:bg-[#FCE096] disabled:opacity-50">
-                    {savingPerks ? 'Saving…' : 'Save Code'}
-                  </button>
-                </div>
-              </form>
+              <div className="space-y-6">
+                <form onSubmit={savePartnerPerks} className={`${cardClass} space-y-4`}>
+                  <div className="flex items-center gap-2 text-[#D4AF37]">
+                    <Film size={18}/>
+                    <h2 className="font-serif text-xl font-bold text-white">Custom Vanity Code</h2>
+                  </div>
+                  <p className="text-xs text-[#9BB0A5]">Choose a simple code your community can remember. Your code is a tool for an ongoing relationship—not a substitute for trust.</p>
+                  <label className="block space-y-1 text-xs font-semibold text-white">
+                    Custom Vanity Promo Code
+                    <input value={customCodeInput} onChange={e => setCustomCodeInput(e.target.value.toUpperCase())} maxLength={20} placeholder="AYEESHA10" className="w-full rounded-lg border border-[#315541] bg-[#0b1c14] px-3 py-2 font-mono text-sm text-[#FCE096]"/>
+                  </label>
+                  <div className="flex items-center justify-between pt-1">
+                    <button type="submit" disabled={savingPerks} className="rounded-lg bg-[#D4AF37] px-4 py-2 text-xs font-bold text-[#102219] hover:bg-[#FCE096] disabled:opacity-50">
+                      {savingPerks ? 'Saving…' : 'Save Code'}
+                    </button>
+                  </div>
+                </form>
 
-              <section className={`${cardClass} space-y-3`}>
-                <div className="flex items-center gap-2 text-[#D4AF37]">
-                  <Film size={18}/>
-                  <h2 className="font-serif text-xl font-bold text-white">Paid UGC &amp; trial reimbursement</h2>
-                </div>
-                <span className="inline-flex rounded-full border border-amber-300/30 bg-amber-900/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-100">Coming soon · not accepting submissions</span>
-                <p className="text-xs leading-5 text-[#9BB0A5]">The current active track is ongoing community partnership with order-based profit sharing. This separate paid-content track is not available yet; no fee or usage rights are implied until agreed in writing.</p>
-                {(partner.reel_submission_url || partner.trial_cashback_status && partner.trial_cashback_status !== 'none') && (
-                  <p className="text-[11px] text-[#9BB0A5]">Existing submission status: <strong className="uppercase text-[#FCE096]">{partner.trial_cashback_status || 'submitted'}</strong></p>
-                )}
-                {partner.reel_submission_url && <p className="break-all text-[11px] text-[#9BB0A5]">Previously submitted Reel: {partner.reel_submission_url}</p>}
-                {partner.trial_order_id && <p className="text-[11px] text-[#9BB0A5]">Previously submitted trial order: #{partner.trial_order_id}</p>}
-              </section>
+                <form onSubmit={saveCreatorPreferences} className={`${cardClass} space-y-3`}>
+                  <div className="flex items-center gap-2 text-[#D4AF37]">
+                    <Wallet size={18}/>
+                    <h2 className="font-serif text-xl font-bold text-white">Payout &amp; Campaign Coordination</h2>
+                  </div>
+                  <p className="text-xs text-[#9BB0A5]">Optional: Save your UPI handle for manual commission transfers and your preferred rituals for upcoming campaign briefs.</p>
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <label className="block space-y-1 text-xs font-semibold text-white">
+                      UPI ID / Payout Handle
+                      <input
+                        value={creatorPrefs.payoutUpiId}
+                        onChange={e => setCreatorPrefs(curr => ({ ...curr, payoutUpiId: e.target.value }))}
+                        maxLength={120}
+                        placeholder="yourname@okaxis"
+                        className="w-full rounded-lg border border-[#315541] bg-[#0b1c14] px-3 py-2 text-xs text-white"
+                      />
+                    </label>
+                    <label className="block space-y-1 text-xs font-semibold text-white">
+                      Campaign WhatsApp (Optional)
+                      <input
+                        value={creatorPrefs.whatsappContact}
+                        onChange={e => setCreatorPrefs(curr => ({ ...curr, whatsappContact: e.target.value }))}
+                        maxLength={40}
+                        placeholder="+91 98765 43210"
+                        className="w-full rounded-lg border border-[#315541] bg-[#0b1c14] px-3 py-2 text-xs text-white"
+                      />
+                    </label>
+                  </div>
+                  <label className="block space-y-1 text-xs font-semibold text-white">
+                    Preferred Bhumivera Rituals for Next Brief
+                    <input
+                      value={creatorPrefs.preferredProducts}
+                      onChange={e => setCreatorPrefs(curr => ({ ...curr, preferredProducts: e.target.value }))}
+                      maxLength={300}
+                      placeholder="Sea Buckthorn Face Wash, Botanical 2-in-1 Shampoo"
+                      className="w-full rounded-lg border border-[#315541] bg-[#0b1c14] px-3 py-2 text-xs text-white"
+                    />
+                  </label>
+                  <button type="submit" disabled={savingProfile} className="rounded-lg border border-[#D4AF37]/50 bg-[#D4AF37]/15 px-4 py-2 text-xs font-bold text-[#FCE096] hover:bg-[#D4AF37]/25 disabled:opacity-50">
+                    {savingProfile ? 'Saving preferences…' : 'Save Payout & Campaign Info'}
+                  </button>
+                </form>
+
+                <section className={`${cardClass} space-y-3`}>
+                  <div className="flex items-center gap-2 text-[#D4AF37]">
+                    <Film size={18}/>
+                    <h2 className="font-serif text-xl font-bold text-white">Paid UGC &amp; trial reimbursement</h2>
+                  </div>
+                  <span className="inline-flex rounded-full border border-amber-300/30 bg-amber-900/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-100">Coming soon · not accepting submissions</span>
+                  <p className="text-xs leading-5 text-[#9BB0A5]">The current active track is ongoing community partnership with order-based profit sharing. This separate paid-content track is not available yet; no fee or usage rights are implied until agreed in writing.</p>
+                  {(partner.reel_submission_url || partner.trial_cashback_status && partner.trial_cashback_status !== 'none') && (
+                    <p className="text-[11px] text-[#9BB0A5]">Existing submission status: <strong className="uppercase text-[#FCE096]">{partner.trial_cashback_status || 'submitted'}</strong></p>
+                  )}
+                  {partner.reel_submission_url && <p className="break-all text-[11px] text-[#9BB0A5]">Previously submitted Reel: {partner.reel_submission_url}</p>}
+                  {partner.trial_order_id && <p className="text-[11px] text-[#9BB0A5]">Previously submitted trial order: #{partner.trial_order_id}</p>}
+                </section>
+              </div>
             </div>
 
             <section className={cardClass}>
@@ -517,8 +903,35 @@ export default function PromoterPortal() {
             </section>
 
             <section className={cardClass}>
-              <h2 className="font-serif text-xl font-bold text-white">Open order ledger</h2>
-              <p className="mt-1 text-xs leading-5 text-[#9BB0A5]">Each row shows the stored order economics behind your commission. Pending amounts are not yet payable; cancelled or returned orders are reversed. Payments are made by UPI/bank transfer and recorded here.</p>
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <h2 className="font-serif text-xl font-bold text-white">Open order ledger</h2>
+                  <p className="mt-1 text-xs leading-5 text-[#9BB0A5]">Each row shows the stored order economics behind your commission. Pending amounts are not yet payable; cancelled or returned orders are reversed. Payments are made by UPI/bank transfer and recorded here.</p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2">
+                  <select
+                    aria-label="Filter ledger by status"
+                    value={ledgerStatusFilter}
+                    onChange={e => setLedgerStatusFilter(e.target.value)}
+                    className="rounded-lg border border-[#315541] bg-[#0b1c14] px-3 py-1.5 text-xs text-white"
+                  >
+                    <option value="all">All statuses</option>
+                    <option value="pending">Pending delivery</option>
+                    <option value="approved">Approved (payable)</option>
+                    <option value="paid">Paid</option>
+                    <option value="reversed">Reversed</option>
+                  </select>
+                  {(dashboard.commissions || []).length > 0 && (
+                    <button
+                      type="button"
+                      onClick={exportLedgerCsv}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-[#D4AF37]/40 bg-[#D4AF37]/10 px-3 py-1.5 text-xs font-semibold text-[#FCE096] hover:bg-[#D4AF37]/20"
+                    >
+                      <Download size={13}/> Export CSV
+                    </button>
+                  )}
+                </div>
+              </div>
               <div className="mt-3 flex flex-wrap items-center justify-between gap-3 text-[11px] text-[#9BB0A5]">
                 <span>Showing {firstCommissionNumber}–{lastCommissionNumber} of {commissionPagination.total} attributed orders</span>
                 <div className="flex items-center gap-2">
@@ -531,7 +944,7 @@ export default function PromoterPortal() {
                 <table className="w-full min-w-[760px] text-left text-xs">
                   <thead className="text-[10px] uppercase tracking-wider text-[#9BB0A5]"><tr><th className="py-2">Order</th><th>Merchandise value</th><th>Your commission</th><th>Brand retained contribution*</th><th>Status</th><th>Order split</th></tr></thead>
                   <tbody className="divide-y divide-[#244A38]">
-                    {(dashboard.commissions || []).map(row => {
+                    {visibleCommissions.map(row => {
                       const contribution = Number(row.contribution_profit) || 0;
                       const shareRate = Number(row.commission_share_percent) || 0;
                       const commissionBeforeCap = Math.max(0, contribution * shareRate / 100);
@@ -579,7 +992,7 @@ export default function PromoterPortal() {
                         </React.Fragment>
                       );
                     })}
-                    {(dashboard.commissions || []).length === 0 && <tr><td colSpan="6" className="py-8 text-center text-[#9BB0A5]">No attributed orders yet. Build trust with your community; your actual order calculations will appear here as orders are placed.</td></tr>}
+                    {visibleCommissions.length === 0 && <tr><td colSpan="6" className="py-8 text-center text-[#9BB0A5]">No attributed orders yet. Build trust with your community; your actual order calculations will appear here as orders are placed.</td></tr>}
                   </tbody>
                 </table>
               </div>

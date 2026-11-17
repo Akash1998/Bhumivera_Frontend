@@ -1,7 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { affiliate as affiliateApi } from '../../services/api';
 import { useToast } from '../../context/ToastContext';
-import { LoaderCircle, Save, Users } from 'lucide-react';
+import {
+  Calculator, CheckCircle2, Download, Gift, LoaderCircle,
+  Save, Search, ShieldCheck, Users
+} from 'lucide-react';
 
 const DEFAULTS = {
   enabled: 1,
@@ -27,10 +30,18 @@ export default function AffiliateManagement() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [processingId, setProcessingId] = useState(null);
+  const [bulkProcessing, setBulkProcessing] = useState(false);
   const [settingsLoaded, setSettingsLoaded] = useState(false);
   const [settingsError, setSettingsError] = useState('');
   const [queueError, setQueueError] = useState('');
   const [saveError, setSaveError] = useState('');
+  const [queueSearch, setQueueSearch] = useState('');
+  const [queueStatusFilter, setQueueStatusFilter] = useState('all');
+  const [simCartSubtotal, setSimCartSubtotal] = useState('899');
+  const [simWalletBalance, setSimWalletBalance] = useState('500');
+  const [grantForm, setGrantForm] = useState({ email: '', amount: '', bucket: 'referral', reason: '' });
+  const [granting, setGranting] = useState(false);
+  const [grantNotice, setGrantNotice] = useState('');
   const { showToast } = useToast() || {};
 
   const load = useCallback(async (showLoader = true, includeConfig = true) => {
@@ -128,6 +139,27 @@ export default function AffiliateManagement() {
     }
   };
 
+  const bulkApprovePending = async () => {
+    const pendingIds = referrals.filter(r => r.status === 'pending').map(r => r.claim_id);
+    if (!pendingIds.length) return;
+    setBulkProcessing(true);
+    try {
+      if (affiliateApi.bulkDecideAdminReferrals) {
+        await affiliateApi.bulkDecideAdminReferrals({ claimIds: pendingIds, decision: 'approved' });
+      } else {
+        for (const claimId of pendingIds) {
+          await affiliateApi.decideAdminReferral(claimId, { decision: 'approved', reason: null });
+        }
+      }
+      showToast?.(`Approved ${pendingIds.length} pending referral(s).`, 'success');
+      await load(false, false);
+    } catch (error) {
+      showToast?.(error.normalized?.message || 'Could not bulk approve pending referrals.', 'error');
+    } finally {
+      setBulkProcessing(false);
+    }
+  };
+
   const reissueCoupon = async referral => {
     if (!window.confirm('Disable the old referral coupon and issue a replacement code for the remaining referral balance?')) return;
     setProcessingId(referral.claim_id);
@@ -142,11 +174,110 @@ export default function AffiliateManagement() {
     }
   };
 
+  const submitManualGrant = async event => {
+    event.preventDefault();
+    if (!affiliateApi.issueAdminManualReferralGrant) return;
+    setGranting(true);
+    setGrantNotice('');
+    try {
+      const { data } = await affiliateApi.issueAdminManualReferralGrant({
+        email: grantForm.email.trim(),
+        amount: Number(grantForm.amount),
+        bucket: grantForm.bucket,
+        reason: grantForm.reason.trim(),
+      });
+      setGrantNotice(`Credited ₹${Number(data.grant?.amount || grantForm.amount).toFixed(2)} (${grantForm.bucket}) to ${grantForm.email}.`);
+      setGrantForm({ email: '', amount: '', bucket: 'referral', reason: '' });
+      showToast?.('Manual referral grant issued.', 'success');
+    } catch (err) {
+      showToast?.(err.response?.data?.message || 'Could not issue manual referral grant.', 'error');
+    } finally {
+      setGranting(false);
+    }
+  };
+
+  const tiers = useMemo(() => (
+    Array.isArray(config.referral_redemption_tiers)
+      ? [...config.referral_redemption_tiers].sort((a, b) => Number(a.min_order_amount) - Number(b.min_order_amount))
+      : []
+  ), [config.referral_redemption_tiers]);
+
+  const queueSummary = useMemo(() => {
+    let pending = 0;
+    let approved = 0;
+    let rejected = 0;
+    let inviterCredits = 0;
+    let friendCredits = 0;
+    for (const r of referrals) {
+      if (r.status === 'pending') pending += 1;
+      else if (r.status === 'rejected') rejected += 1;
+      else approved += 1;
+      inviterCredits += Number(r.wallet_amount || 0);
+      friendCredits += Number(r.referred_wallet_amount || 0);
+    }
+    return { total: referrals.length, pending, approved, rejected, inviterCredits, friendCredits };
+  }, [referrals]);
+
+  const filteredReferrals = useMemo(() => {
+    const q = queueSearch.trim().toLowerCase();
+    return referrals.filter(row => {
+      if (queueStatusFilter !== 'all' && row.status !== queueStatusFilter) return false;
+      if (!q) return true;
+      return (
+        String(row.referrer_name || '').toLowerCase().includes(q) ||
+        String(row.referrer_email || '').toLowerCase().includes(q) ||
+        String(row.referred_name || '').toLowerCase().includes(q) ||
+        String(row.referred_email || '').toLowerCase().includes(q) ||
+        String(row.coupon_code || '').toLowerCase().includes(q)
+      );
+    });
+  }, [referrals, queueSearch, queueStatusFilter]);
+
+  const simulatedRedemption = useMemo(() => {
+    const subtotal = Math.max(0, Number(simCartSubtotal) || 0);
+    const balance = Math.max(0, Number(simWalletBalance) || 0);
+    const matchingTier = [...tiers]
+      .reverse()
+      .find(tier => subtotal >= (Number(tier.min_order_amount) || 0));
+    const maxCap = matchingTier ? Number(matchingTier.referral_amount) || 0 : 0;
+    const applied = Math.min(balance, subtotal, maxCap);
+    return {
+      matchingTier,
+      maxCap,
+      applied,
+      netPayable: Math.max(0, subtotal - applied),
+    };
+  }, [simCartSubtotal, simWalletBalance, tiers]);
+
+  const exportReferralsCsv = () => {
+    if (!filteredReferrals.length) return;
+    const headers = ['Claim ID', 'Inviter Name', 'Inviter Email', 'Referred Name', 'Referred Email', 'Status', 'Inviter Credit', 'Friend Credit', 'Coupon Code', 'Verified At'];
+    const lines = [
+      headers.join(','),
+      ...filteredReferrals.map(r => [
+        r.claim_id,
+        `"${String(r.referrer_name || '').replace(/"/g, '""')}"`,
+        r.referrer_email,
+        `"${String(r.referred_name || '').replace(/"/g, '""')}"`,
+        r.referred_email,
+        r.status,
+        Number(r.wallet_amount || 0).toFixed(2),
+        Number(r.referred_wallet_amount || 0).toFixed(2),
+        r.coupon_code || '',
+        r.verified_at || '',
+      ].join(',')),
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'bhumivera-customer-referrals.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
   if (loading) return <p role="status" className="flex items-center gap-2 text-sm text-slate-400"><LoaderCircle size={16} className="animate-spin"/>Loading referral settings…</p>;
 
-  const tiers = Array.isArray(config.referral_redemption_tiers)
-    ? [...config.referral_redemption_tiers].sort((a, b) => Number(a.min_order_amount) - Number(b.min_order_amount))
-    : [];
   const rewardDescription = config.reward_mode === 'wallet_coupon'
     ? `Inviter: ${money(config.wallet_reward_amount)} restricted referral balance. New customer: ${money(config.referred_reward_amount)} restricted referral balance.`
     : config.reward_mode === 'wallet'
@@ -154,7 +285,7 @@ export default function AffiliateManagement() {
       : `Inviter: ${config.coupon_discount_type === 'percentage' ? `${config.coupon_discount_value}% off` : `${money(config.coupon_discount_value)} off`} by coupon.`;
 
   return (
-    <div className="max-w-4xl space-y-6 text-slate-100">
+    <div className="max-w-5xl space-y-6 p-4 text-slate-100 md:p-6">
       <header>
         <h3 className="text-lg font-semibold text-white">Referral engine</h3>
         <p className="mt-1 text-sm leading-6 text-slate-400">Control referral rewards and review sign-ups. Rewards are issued on approval, or automatically one hour after email verification.</p>
@@ -167,6 +298,31 @@ export default function AffiliateManagement() {
       )}
       {saveError && <p role="alert" className="rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">{saveError}</p>}
       {queueError && <p role="alert" className="rounded-lg border border-rose-400/30 bg-rose-400/10 px-3 py-2 text-sm text-rose-200">Referral queue could not be loaded: {queueError}</p>}
+
+      {referrals.length > 0 && (
+        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Verified Claims</span>
+            <p className="mt-1 text-xl font-bold text-white">{queueSummary.total}</p>
+            <span className="text-[11px] text-emerald-300">{queueSummary.approved} approved · {queueSummary.pending} pending</span>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Pending Review</span>
+            <p className="mt-1 text-xl font-bold text-amber-200">{queueSummary.pending}</p>
+            <span className="text-[11px] text-slate-400">Auto-approves 60m post-verify</span>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Inviter Credits Issued</span>
+            <p className="mt-1 text-xl font-bold text-emerald-200">{money(queueSummary.inviterCredits)}</p>
+            <span className="text-[11px] text-slate-400">In loaded queue</span>
+          </div>
+          <div className="rounded-xl border border-white/10 bg-white/[0.03] p-3.5">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">New Customer Credits</span>
+            <p className="mt-1 text-xl font-bold text-emerald-200">{money(queueSummary.friendCredits)}</p>
+            <span className="text-[11px] text-slate-400">Order-only welcome credits</span>
+          </div>
+        </div>
+      )}
 
       {settingsLoaded && (
         <section aria-label="Current referral reward preview" className="space-y-2 rounded-xl border border-emerald-300/20 bg-emerald-300/[0.05] p-4">
@@ -251,18 +407,95 @@ export default function AffiliateManagement() {
         </fieldset>
       </form>
 
+      {config.reward_mode === 'wallet_coupon' && (
+        <section className="rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
+          <div className="flex items-center gap-2">
+            <Calculator size={16} className="text-emerald-300"/>
+            <h4 className="text-sm font-semibold text-white">Customer Checkout Redemption Simulator</h4>
+          </div>
+          <p className="mt-1 text-xs text-slate-400">Preview how much restricted referral wallet balance auto-applies for a given cart subtotal under the tiers above.</p>
+          <div className="mt-3 grid gap-3 sm:grid-cols-3">
+            <label className="text-xs text-slate-300">
+              Sample Cart Subtotal (₹)
+              <input type="number" min="0" value={simCartSubtotal} onChange={e => setSimCartSubtotal(e.target.value)} className="admin-glass-control mt-1 w-full rounded-lg px-3 py-2 text-sm text-white"/>
+            </label>
+            <label className="text-xs text-slate-300">
+              Customer Referral Balance (₹)
+              <input type="number" min="0" value={simWalletBalance} onChange={e => setSimWalletBalance(e.target.value)} className="admin-glass-control mt-1 w-full rounded-lg px-3 py-2 text-sm text-white"/>
+            </label>
+            <div className="flex flex-col justify-center rounded-lg border border-emerald-400/20 bg-emerald-950/20 p-3 text-xs">
+              <span className="text-slate-400">Auto-Applied Referral Discount:</span>
+              <strong className="mt-0.5 text-base text-emerald-300">−{money(simulatedRedemption.applied)}</strong>
+              <span className="text-[11px] text-slate-400">Customer pays {money(simulatedRedemption.netPayable)}</span>
+            </div>
+          </div>
+        </section>
+      )}
+
+      {affiliateApi.issueAdminManualReferralGrant && (
+        <form onSubmit={submitManualGrant} className="space-y-3 rounded-xl border border-white/10 bg-white/[0.03] p-4 sm:p-5">
+          <div className="flex items-center gap-2">
+            <Gift size={16} className="text-emerald-300"/>
+            <h4 className="text-sm font-semibold text-white">Issue Manual Referral / Goodwill Credit</h4>
+          </div>
+          {grantNotice && <p className="rounded-lg border border-emerald-400/30 bg-emerald-950/20 p-2.5 text-xs text-emerald-200">{grantNotice}</p>}
+          <div className="grid gap-3 sm:grid-cols-4">
+            <input required type="email" value={grantForm.email} onChange={e => setGrantForm(c => ({ ...c, email: e.target.value }))} placeholder="Customer email" className="admin-glass-control rounded-lg px-3 py-2 text-xs text-white"/>
+            <input required type="number" min="1" max="100000" step="0.01" value={grantForm.amount} onChange={e => setGrantForm(c => ({ ...c, amount: e.target.value }))} placeholder="Amount (₹)" className="admin-glass-control rounded-lg px-3 py-2 text-xs text-white"/>
+            <select value={grantForm.bucket} onChange={e => setGrantForm(c => ({ ...c, bucket: e.target.value }))} className="admin-glass-control rounded-lg px-3 py-2 text-xs text-white">
+              <option value="referral">Order-only referral balance</option>
+              <option value="cash">Spendable cash wallet</option>
+            </select>
+            <input required minLength={5} value={grantForm.reason} onChange={e => setGrantForm(c => ({ ...c, reason: e.target.value }))} placeholder="Audit reason (min 5 chars)" className="admin-glass-control rounded-lg px-3 py-2 text-xs text-white"/>
+          </div>
+          <button type="submit" disabled={granting} className="rounded-lg border border-emerald-400/40 bg-emerald-400/15 px-3.5 py-2 text-xs font-semibold text-emerald-200 hover:bg-emerald-400/25 disabled:opacity-50">
+            {granting ? 'Issuing credit…' : 'Issue Audited Credit'}
+          </button>
+        </form>
+      )}
+
       <section className="space-y-3">
-        <header className="flex items-center gap-2">
-          <Users size={17} className="text-emerald-300"/>
-          <h3 className="font-semibold text-white">Referral review queue</h3>
-          <span className="text-xs text-slate-500">Refreshes every 15 seconds</span>
+        <header className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <Users size={17} className="text-emerald-300"/>
+            <h3 className="font-semibold text-white">Referral review queue</h3>
+            <span className="text-xs text-slate-500">Refreshes every 15 seconds</span>
+          </div>
+          {referrals.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <label className="flex items-center gap-1.5 rounded-lg border border-white/15 bg-white/[0.03] px-2.5 py-1.5 text-xs text-slate-400">
+                <Search size={13}/>
+                <input
+                  value={queueSearch}
+                  onChange={e => setQueueSearch(e.target.value)}
+                  placeholder="Search inviter or friend…"
+                  className="bg-transparent text-xs text-white outline-none"
+                />
+              </label>
+              <select value={queueStatusFilter} onChange={e => setQueueStatusFilter(e.target.value)} className="rounded-lg border border-white/15 bg-slate-900 px-2.5 py-1.5 text-xs text-white">
+                <option value="all">All statuses</option>
+                <option value="pending">Pending review</option>
+                <option value="approved">Approved</option>
+                <option value="auto_approved">Auto-approved</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              {queueSummary.pending > 1 && (
+                <button type="button" disabled={bulkProcessing} onClick={bulkApprovePending} className="rounded-lg bg-emerald-400 px-3 py-1.5 text-xs font-semibold text-slate-950 disabled:opacity-50">
+                  {bulkProcessing ? 'Approving…' : `Approve All Pending (${queueSummary.pending})`}
+                </button>
+              )}
+              <button type="button" onClick={exportReferralsCsv} className="inline-flex items-center gap-1 rounded-lg border border-white/15 px-2.5 py-1.5 text-xs text-slate-200">
+                <Download size={13}/> Export CSV
+              </button>
+            </div>
+          )}
         </header>
-        {referrals.length === 0 ? <p className="rounded-xl border border-white/10 p-4 text-sm text-slate-400">No one has joined through a referral yet.</p> : (
+        {filteredReferrals.length === 0 ? <p className="rounded-xl border border-white/10 p-4 text-sm text-slate-400">No one has joined through a referral yet.</p> : (
           <div className="overflow-x-auto rounded-xl border border-white/10">
             <table className="w-full min-w-[620px] text-left text-sm">
               <thead className="bg-white/[0.04] text-xs text-slate-400"><tr><th className="p-3">Invited by</th><th className="p-3">Verified customer</th><th className="p-3">Status</th><th className="p-3">Reward / action</th></tr></thead>
               <tbody className="divide-y divide-white/10">
-                {referrals.map(row => <tr key={row.claim_id}>
+                {filteredReferrals.map(row => <tr key={row.claim_id}>
                   <td className="p-3"><span className="block text-white">{row.referrer_name}</span><span className="text-xs text-slate-500">{row.referrer_email}</span></td>
                   <td className="p-3"><span className="block text-white">{row.referred_name}</span><span className="text-xs text-slate-500">{row.referred_email}</span><span className="mt-1 block text-[11px] text-slate-500">Verified {new Date(row.verified_at).toLocaleString()}</span></td>
                   <td className="p-3">

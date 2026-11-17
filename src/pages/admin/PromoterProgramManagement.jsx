@@ -1,5 +1,9 @@
-import React, { useCallback, useEffect, useState } from 'react';
-import { AlertCircle, Check, Clipboard, Coins, RefreshCw, Save, ShieldCheck, UserPlus, Users, Wallet } from 'lucide-react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import {
+  AlertCircle, Check, CheckSquare, Clipboard, Coins, Download,
+  Filter, MessageSquare, RefreshCw, Save, Search, ShieldCheck,
+  UserPlus, Users, Wallet
+} from 'lucide-react';
 import { affiliate as affiliateApi } from '../../services/api';
 import PromoterAnalyticsDashboard from './PromoterAnalyticsDashboard';
 
@@ -62,6 +66,22 @@ export default function PromoterProgramManagement() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
 
+  // 20x Filter, Search, Sort & Bulk State
+  const [partnerSearch, setPartnerSearch] = useState('');
+  const [partnerStatusFilter, setPartnerStatusFilter] = useState('all');
+  const [partnerPlatformFilter, setPartnerPlatformFilter] = useState('all');
+  const [partnerSort, setPartnerSort] = useState('pending_first');
+  const [selectedPartnerIds, setSelectedPartnerIds] = useState([]);
+  const [bulkBusy, setBulkBusy] = useState(false);
+  const [bulkRateDiscount, setBulkRateDiscount] = useState('');
+  const [bulkRateShare, setBulkRateShare] = useState('');
+
+  const [commissionFilter, setCommissionFilter] = useState('all');
+  const [commissionSearch, setCommissionSearch] = useState('');
+  const [selectedCommissionIds, setSelectedCommissionIds] = useState([]);
+  const [batchPayoutReference, setBatchPayoutReference] = useState('');
+  const [batchPaying, setBatchPaying] = useState(false);
+
   const loadData = useCallback(async () => {
     setLoading(true);
     setError('');
@@ -83,6 +103,41 @@ export default function PromoterProgramManagement() {
   }, []);
 
   useEffect(() => { loadData(); }, [loadData]);
+
+  const filteredPartners = useMemo(() => {
+    const q = partnerSearch.trim().toLowerCase();
+    const list = partners.filter(partner => {
+      if (partnerStatusFilter !== 'all' && partner.status !== partnerStatusFilter) return false;
+      if (partnerPlatformFilter !== 'all' && partner.social_platform !== partnerPlatformFilter) return false;
+      if (!q) return true;
+      return (
+        String(partner.user_name || '').toLowerCase().includes(q) ||
+        String(partner.user_email || '').toLowerCase().includes(q) ||
+        String(partner.social_handle || '').toLowerCase().includes(q) ||
+        String(partner.referral_code || '').toLowerCase().includes(q) ||
+        String(partner.content_niche || '').toLowerCase().includes(q)
+      );
+    });
+    return [...list].sort((a, b) => {
+      if (partnerSort === 'payable_desc') return (Number(b.payable_amount) || 0) - (Number(a.payable_amount) || 0);
+      if (partnerSort === 'followers_desc') return (Number(b.follower_count) || 0) - (Number(a.follower_count) || 0);
+      if (partnerSort === 'paid_desc') return (Number(b.paid_amount) || 0) - (Number(a.paid_amount) || 0);
+      return (b.status === 'pending' ? 1 : 0) - (a.status === 'pending' ? 1 : 0);
+    });
+  }, [partners, partnerSearch, partnerStatusFilter, partnerPlatformFilter, partnerSort]);
+
+  const filteredCommissions = useMemo(() => {
+    const q = commissionSearch.trim().toLowerCase();
+    return commissions.filter(c => {
+      if (commissionFilter !== 'all' && c.status !== commissionFilter) return false;
+      if (!q) return true;
+      return (
+        String(c.order_id || '').includes(q) ||
+        String(c.promoter_name || '').toLowerCase().includes(q) ||
+        String(c.referral_code || '').toLowerCase().includes(q)
+      );
+    });
+  }, [commissions, commissionFilter, commissionSearch]);
 
   const saveConfig = async event => {
     event.preventDefault();
@@ -190,6 +245,47 @@ export default function PromoterProgramManagement() {
     }
   };
 
+  const runBulkPartnerAction = async ({ status, applyRates = false }) => {
+    if (!selectedPartnerIds.length) {
+      setError('Select at least one promoter checkbox first.');
+      return;
+    }
+    setBulkBusy(true);
+    setError('');
+    setNotice('');
+    try {
+      const payload = {
+        partnerIds: selectedPartnerIds,
+        ...(status ? { status } : {}),
+        ...(applyRates && bulkRateDiscount !== '' ? { discountPercent: Number(bulkRateDiscount) } : {}),
+        ...(applyRates && bulkRateShare !== '' ? { commissionSharePercent: Number(bulkRateShare) } : {}),
+      };
+      if (affiliateApi.bulkUpdateAdminPartners) {
+        await affiliateApi.bulkUpdateAdminPartners(payload);
+      } else {
+        for (const id of selectedPartnerIds) {
+          const existing = partners.find(p => p.id === id);
+          if (existing) {
+            await affiliateApi.updateAdminPartner(id, {
+              ...(status ? { status } : {}),
+              discountPercent: applyRates && bulkRateDiscount !== '' ? Number(bulkRateDiscount) : Number(existing.discount_percent ?? config.default_customer_discount_percent),
+              commissionSharePercent: applyRates && bulkRateShare !== '' ? Number(bulkRateShare) : Number(existing.commission_share_percent ?? config.default_commission_share_percent),
+              referralCode: existing.referral_code || undefined,
+              adminNotes: existing.admin_notes || '',
+            });
+          }
+        }
+      }
+      setNotice(`Updated ${selectedPartnerIds.length} promoter profile(s).`);
+      setSelectedPartnerIds([]);
+      await loadData();
+    } catch (bulkErr) {
+      setError(bulkErr.response?.data?.message || 'Could not complete bulk promoter update.');
+    } finally {
+      setBulkBusy(false);
+    }
+  };
+
   const recordPayout = async commission => {
     const reference = String(payoutReferences[commission.id] || '').trim();
     if (reference.length < 3) {
@@ -211,6 +307,38 @@ export default function PromoterProgramManagement() {
     }
   };
 
+  const runBatchPayout = async () => {
+    const reference = batchPayoutReference.trim();
+    if (!selectedCommissionIds.length || reference.length < 3) {
+      setError('Select approved commissions and enter a transfer reference of at least 3 characters.');
+      return;
+    }
+    setBatchPaying(true);
+    setError('');
+    setNotice('');
+    try {
+      if (affiliateApi.bulkPayAdminCommissions) {
+        const { data } = await affiliateApi.bulkPayAdminCommissions({
+          commissionIds: selectedCommissionIds,
+          reference,
+        });
+        setNotice(`Batch payout recorded for ${data.paidCount || selectedCommissionIds.length} commission(s).`);
+      } else {
+        for (const id of selectedCommissionIds) {
+          await affiliateApi.payAdminCommission(id, { reference });
+        }
+        setNotice(`Batch payout recorded for ${selectedCommissionIds.length} commission(s).`);
+      }
+      setSelectedCommissionIds([]);
+      setBatchPayoutReference('');
+      await loadData();
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not complete batch commission payout.');
+    } finally {
+      setBatchPaying(false);
+    }
+  };
+
   const copyText = async value => {
     try {
       await navigator.clipboard.writeText(value);
@@ -218,6 +346,47 @@ export default function PromoterProgramManagement() {
     } catch {
       setError('Clipboard access was unavailable. Select and copy the value manually.');
     }
+  };
+
+  const copyWelcomeMessage = async partner => {
+    const code = partner.referral_code || 'PENDING';
+    const link = `${window.location.origin}/?aff=${encodeURIComponent(code)}`;
+    const msg = `Hi ${partner.user_name || 'there'}, your Bhumivera Creator Partnership (${partner.social_handle}) is ${partner.status}! Your audience code ${code} gives ${Number(partner.discount_percent ?? config.default_customer_discount_percent)}% off at ${link} and earns ${Number(partner.commission_share_percent ?? config.default_commission_share_percent)}% of qualifying order contribution. View your live ledger & briefs at ${window.location.origin}/promotions`;
+    await copyText(msg);
+  };
+
+  const exportCommissionsCsv = () => {
+    if (!filteredCommissions.length) return;
+    const headers = ['Commission ID', 'Order ID', 'Promoter', 'Code', 'Revenue Ex GST', 'Product Cost', 'Commission Amount', 'Retained Margin %', 'Status'];
+    const lines = [
+      headers.join(','),
+      ...filteredCommissions.map(c => [
+        c.id,
+        c.order_id,
+        `"${String(c.promoter_name || '').replace(/"/g, '""')}"`,
+        c.referral_code,
+        Number(c.revenue_ex_tax || 0).toFixed(2),
+        Number(c.product_cost || 0).toFixed(2),
+        Number(c.commission_amount || 0).toFixed(2),
+        Number(c.retained_margin_percent || 0).toFixed(2),
+        c.status,
+      ].join(',')),
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'bhumivera-promoter-commissions.csv';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const togglePartnerSelect = id => {
+    setSelectedPartnerIds(curr => curr.includes(id) ? curr.filter(item => item !== id) : [...curr, id]);
+  };
+
+  const toggleCommissionSelect = id => {
+    setSelectedCommissionIds(curr => curr.includes(id) ? curr.filter(item => item !== id) : [...curr, id]);
   };
 
   const panelClass = 'rounded-2xl border border-[#244A38] bg-[#102219] p-5 shadow-lg';
@@ -294,6 +463,86 @@ export default function PromoterProgramManagement() {
           </button>
         </div>
         <p className="text-xs leading-5 text-[#9BB0A5]">Add a promoter using their existing customer account, or approve people who apply through the public affiliate page.</p>
+
+        {partners.length > 1 && (
+          <div className="space-y-3 rounded-xl border border-[#244A38] bg-[#0b1c14] p-3.5">
+            <div className="grid gap-2.5 sm:grid-cols-2 lg:grid-cols-4">
+              <label className="flex items-center gap-2 rounded-lg border border-[#315541] bg-[#102219] px-3 py-1.5 text-xs text-[#9BB0A5]">
+                <Search size={14}/>
+                <input
+                  value={partnerSearch}
+                  onChange={e => setPartnerSearch(e.target.value)}
+                  placeholder="Search name, @handle, email, code…"
+                  className="w-full bg-transparent text-xs text-white outline-none"
+                />
+              </label>
+              <select value={partnerStatusFilter} onChange={e => setPartnerStatusFilter(e.target.value)} className="rounded-lg border border-[#315541] bg-[#102219] px-3 py-1.5 text-xs text-white">
+                <option value="all">All statuses ({partners.length})</option>
+                <option value="pending">Pending review</option>
+                <option value="approved">Approved</option>
+                <option value="paused">Paused</option>
+                <option value="rejected">Rejected</option>
+              </select>
+              <select value={partnerPlatformFilter} onChange={e => setPartnerPlatformFilter(e.target.value)} className="rounded-lg border border-[#315541] bg-[#102219] px-3 py-1.5 text-xs text-white">
+                <option value="all">All platforms</option>
+                {['Instagram', 'YouTube', 'Facebook', 'X', 'Other'].map(p => <option key={p} value={p}>{p}</option>)}
+              </select>
+              <select value={partnerSort} onChange={e => setPartnerSort(e.target.value)} className="rounded-lg border border-[#315541] bg-[#102219] px-3 py-1.5 text-xs text-white">
+                <option value="pending_first">Sort: Pending review first</option>
+                <option value="payable_desc">Sort: Highest payable balance</option>
+                <option value="paid_desc">Sort: Highest lifetime paid</option>
+                <option value="followers_desc">Sort: Highest followers</option>
+              </select>
+            </div>
+
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-[#244A38] pt-2.5 text-xs">
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setSelectedPartnerIds(selectedPartnerIds.length === filteredPartners.length ? [] : filteredPartners.map(p => p.id))}
+                  className="inline-flex items-center gap-1 rounded border border-[#315541] px-2.5 py-1 text-[11px] text-[#FCE096]"
+                >
+                  <CheckSquare size={12}/> {selectedPartnerIds.length === filteredPartners.length && filteredPartners.length > 0 ? 'Clear selection' : `Select visible (${filteredPartners.length})`}
+                </button>
+                {selectedPartnerIds.length > 0 && (
+                  <>
+                    <button type="button" disabled={bulkBusy} onClick={() => runBulkPartnerAction({ status: 'approved' })} className="rounded bg-emerald-700 px-2.5 py-1 text-[11px] font-bold text-white">
+                      Bulk Approve ({selectedPartnerIds.length})
+                    </button>
+                    <button type="button" disabled={bulkBusy} onClick={() => runBulkPartnerAction({ status: 'paused' })} className="rounded border border-amber-400/30 px-2.5 py-1 text-[11px] text-amber-100">
+                      Bulk Pause
+                    </button>
+                    <input
+                      type="number"
+                      min="0"
+                      max="60"
+                      step="0.5"
+                      value={bulkRateDiscount}
+                      onChange={e => setBulkRateDiscount(e.target.value)}
+                      placeholder="Disc %"
+                      className="w-20 rounded border border-[#315541] bg-[#102219] px-2 py-1 text-[11px] text-white"
+                    />
+                    <input
+                      type="number"
+                      min="0"
+                      max="100"
+                      step="0.5"
+                      value={bulkRateShare}
+                      onChange={e => setBulkRateShare(e.target.value)}
+                      placeholder="Share %"
+                      className="w-20 rounded border border-[#315541] bg-[#102219] px-2 py-1 text-[11px] text-white"
+                    />
+                    <button type="button" disabled={bulkBusy} onClick={() => runBulkPartnerAction({ applyRates: true })} className="rounded bg-[#D4AF37] px-2.5 py-1 text-[11px] font-bold text-[#102219]">
+                      Apply Rates
+                    </button>
+                  </>
+                )}
+              </div>
+              <span className="text-[11px] text-[#9BB0A5]">Showing {filteredPartners.length} of {partners.length} promoters</span>
+            </div>
+          </div>
+        )}
+
         {showAddForm && (
           <form onSubmit={addPartner} className="space-y-3 rounded-xl border border-[#315541] bg-[#0b1c14] p-4">
             <p className="text-sm font-semibold text-white">Create an active promoter</p>
@@ -329,27 +578,46 @@ export default function PromoterProgramManagement() {
           </form>
         )}
         <p className="text-xs leading-5 text-[#9BB0A5]">Save rates, promoter codes, and private admin notes per profile without changing its status. Rate changes apply to new eligible orders; existing commission records are not recalculated. Program milestone upgrades remain in effect.</p>
-        {loading ? <p className="text-sm text-[#9BB0A5]">Loading applications…</p> : partners.length === 0 ? (
-          <p className="text-sm text-[#9BB0A5]">No promoters yet. Click <strong className="text-white">Add promoter</strong> to onboard one now, or ask them to sign in and apply on the public affiliate page.</p>
+        {loading ? <p className="text-sm text-[#9BB0A5]">Loading applications…</p> : filteredPartners.length === 0 ? (
+          <p className="text-sm text-[#9BB0A5]">No promoters match the current filter. Click <strong className="text-white">Add promoter</strong> to onboard one now, or ask them to sign in and apply on the public affiliate page.</p>
         ) : (
           <div className="space-y-3">
-            {partners.map(partner => (
+            {filteredPartners.map(partner => (
               <article key={partner.id} className="rounded-xl border border-[#315541] bg-[#0b1c14] p-4">
                 <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
-                    <h3 className="font-semibold text-white">{partner.user_name} <span className="font-normal text-[#9BB0A5]">· {partner.social_platform} / {partner.social_handle}</span></h3>
-                    <p className="mt-1 text-xs text-[#9BB0A5]">
-                      {partner.user_email} · {AUDIENCE_TIERS[partner.follower_tier] || `${Number(partner.follower_count).toLocaleString()} followers`}
-                      {partner.content_niche ? ` · ${partner.content_niche}` : ''}
-                      {partner.collaboration_type ? ` · ${COLLABORATION_TYPES[partner.collaboration_type] || partner.collaboration_type}` : ''}
-                      {partner.profile_url ? <> · <a href={partner.profile_url} target="_blank" rel="noreferrer" className="text-[#FCE096] underline">profile</a></> : ''}
-                    </p>
-                    {partner.partnership_intent && (
-                      <p className="mt-2 max-w-3xl rounded-lg border border-[#315541] bg-black/10 p-3 text-xs leading-5 text-[#C5D8CC]">
-                        <strong className="text-[#FCE096]">Partnership intent:</strong> {partner.partnership_intent}
-                      </p>
+                  <div className="flex items-start gap-3">
+                    {partners.length > 1 && (
+                      <input
+                        type="checkbox"
+                        aria-label={`Select promoter ${partner.user_name || partner.id}`}
+                        checked={selectedPartnerIds.includes(partner.id)}
+                        onChange={() => togglePartnerSelect(partner.id)}
+                        className="mt-1 h-4 w-4 accent-[#D4AF37]"
+                      />
                     )}
-                    <p className="mt-1 text-xs text-[#9BB0A5]">Attributed orders: {Number(partner.pending_orders || 0)} pending · Payable {money(partner.payable_amount)} · Paid {money(partner.paid_amount)}</p>
+                    <div>
+                      <h3 className="font-semibold text-white">{partner.user_name} <span className="font-normal text-[#9BB0A5]">· {partner.social_platform} / {partner.social_handle}</span></h3>
+                      <p className="mt-1 text-xs text-[#9BB0A5]">
+                        {partner.user_email} · {AUDIENCE_TIERS[partner.follower_tier] || `${Number(partner.follower_count).toLocaleString()} followers`}
+                        {partner.content_niche ? ` · ${partner.content_niche}` : ''}
+                        {partner.collaboration_type ? ` · ${COLLABORATION_TYPES[partner.collaboration_type] || partner.collaboration_type}` : ''}
+                        {partner.profile_url ? <> · <a href={partner.profile_url} target="_blank" rel="noreferrer" className="text-[#FCE096] underline">profile</a></> : ''}
+                      </p>
+                      {partner.partnership_intent && (
+                        <p className="mt-2 max-w-3xl rounded-lg border border-[#315541] bg-black/10 p-3 text-xs leading-5 text-[#C5D8CC]">
+                          <strong className="text-[#FCE096]">Partnership intent:</strong> {partner.partnership_intent}
+                        </p>
+                      )}
+                      {(partner.preferred_products || partner.content_formats || partner.payout_upi_id || partner.whatsapp_contact) && (
+                        <div className="mt-2 flex flex-wrap gap-2 text-[11px] text-[#9BB0A5]">
+                          {partner.preferred_products && <span className="rounded border border-[#244A38] bg-[#102219] px-2 py-0.5">Products: <strong className="text-white">{partner.preferred_products}</strong></span>}
+                          {partner.content_formats && <span className="rounded border border-[#244A38] bg-[#102219] px-2 py-0.5">Formats: <strong className="text-white">{partner.content_formats}</strong></span>}
+                          {partner.payout_upi_id && <span className="rounded border border-[#244A38] bg-[#102219] px-2 py-0.5">UPI: <strong className="text-[#FCE096]">{partner.payout_upi_id}</strong></span>}
+                          {partner.whatsapp_contact && <span className="rounded border border-[#244A38] bg-[#102219] px-2 py-0.5">WhatsApp: <strong className="text-white">{partner.whatsapp_contact}</strong></span>}
+                        </div>
+                      )}
+                      <p className="mt-1 text-xs text-[#9BB0A5]">Attributed orders: {Number(partner.pending_orders || 0)} pending · Payable {money(partner.payable_amount)} · Paid {money(partner.paid_amount)}</p>
+                    </div>
                   </div>
                   <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase ${partner.status === 'approved' ? 'bg-emerald-900/50 text-emerald-200' : partner.status === 'pending' ? 'bg-amber-900/40 text-amber-100' : 'bg-white/10 text-[#C9C4B8]'}`}>{partner.status}</span>
                 </div>
@@ -374,6 +642,7 @@ export default function PromoterProgramManagement() {
                   {partner.status === 'approved' && <button type="button" disabled={busyPartner === partner.id} onClick={() => reviewPartner(partner, 'paused')} className="rounded-lg border border-amber-400/30 px-3 py-2 text-xs font-semibold text-amber-100 disabled:opacity-50">Pause</button>}
                   {partner.status === 'paused' && <button type="button" disabled={busyPartner === partner.id} onClick={() => reviewPartner(partner, 'approved')} className="rounded-lg border border-emerald-400/30 px-3 py-2 text-xs font-semibold text-emerald-100 disabled:opacity-50">Resume</button>}
                   {partner.referral_code && <button type="button" onClick={() => copyText(`${window.location.origin}/?aff=${encodeURIComponent(partner.referral_code)}`)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#315541] px-3 py-2 text-xs text-[#FCE096]"><Clipboard size={13}/>Copy link</button>}
+                  <button type="button" onClick={() => copyWelcomeMessage(partner)} className="inline-flex items-center gap-1.5 rounded-lg border border-[#315541] px-3 py-2 text-xs text-[#C5D8CC] hover:border-[#D4AF37]"><MessageSquare size={13}/>Copy creator welcome</button>
                 </div>
               </article>
             ))}
@@ -382,14 +651,67 @@ export default function PromoterProgramManagement() {
       </section>
 
       <section className={`${panelClass} space-y-4`}>
-        <div className="flex items-center gap-2"><Coins className="text-[#D4AF37]" size={18}/><h2 className="font-serif text-lg font-bold text-white">Commission ledger</h2></div>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div className="flex items-center gap-2"><Coins className="text-[#D4AF37]" size={18}/><h2 className="font-serif text-lg font-bold text-white">Commission ledger</h2></div>
+          {commissions.length > 0 && (
+            <div className="flex flex-wrap items-center gap-2">
+              <input
+                value={commissionSearch}
+                onChange={e => setCommissionSearch(e.target.value)}
+                placeholder="Search order # or promoter…"
+                className="rounded-lg border border-[#315541] bg-[#0b1c14] px-3 py-1.5 text-xs text-white outline-none"
+              />
+              <select value={commissionFilter} onChange={e => setCommissionFilter(e.target.value)} className="rounded-lg border border-[#315541] bg-[#0b1c14] px-3 py-1.5 text-xs text-white">
+                <option value="all">All statuses</option>
+                <option value="approved">Approved (Payable)</option>
+                <option value="pending">Pending Delivery</option>
+                <option value="paid">Paid</option>
+                <option value="reversed">Reversed</option>
+              </select>
+              <button type="button" onClick={exportCommissionsCsv} className="inline-flex items-center gap-1 rounded-lg border border-[#315541] px-3 py-1.5 text-xs font-semibold text-[#FCE096]">
+                <Download size={13}/> Export CSV
+              </button>
+            </div>
+          )}
+        </div>
         <p className="text-xs leading-5 text-[#9BB0A5]">Orders remain pending until delivered. Cancelled or returned orders reverse the commission. Record a payout only after you have sent the payment; each commission can be paid once.</p>
-        {commissions.length === 0 ? <p className="text-sm text-[#9BB0A5]">No attributed orders yet.</p> : <div className="overflow-x-auto">
+
+        {selectedCommissionIds.length > 0 && (
+          <div className="flex flex-wrap items-center gap-2 rounded-xl border border-[#D4AF37]/40 bg-[#0b1c14] p-3 text-xs">
+            <span className="font-semibold text-[#FCE096]">{selectedCommissionIds.length} approved commission(s) selected</span>
+            <input
+              value={batchPayoutReference}
+              onChange={e => setBatchPayoutReference(e.target.value)}
+              placeholder="Batch UPI / bank reference"
+              className="rounded border border-[#315541] bg-[#102219] px-3 py-1.5 text-xs text-white"
+            />
+            <button type="button" disabled={batchPaying} onClick={runBatchPayout} className="rounded bg-[#D4AF37] px-3 py-1.5 font-bold text-[#102219]">
+              {batchPaying ? 'Settling…' : 'Settle Selected Batch'}
+            </button>
+          </div>
+        )}
+
+        {filteredCommissions.length === 0 ? <p className="text-sm text-[#9BB0A5]">No attributed orders yet.</p> : <div className="overflow-x-auto">
           <table className="w-full min-w-[820px] text-left text-xs">
             <thead className="text-[10px] uppercase tracking-wider text-[#9BB0A5]"><tr><th className="py-2">Order / promoter</th><th>Revenue ex GST</th><th>Product cost</th><th>Commission</th><th>Retained margin</th><th>Status / payout</th></tr></thead>
             <tbody className="divide-y divide-[#244A38]">
-              {commissions.map(commission => <tr key={commission.id}>
-                <td className="py-3"><strong className="text-white">#{commission.order_id}</strong><span className="block text-[#9BB0A5]">{commission.promoter_name} · {commission.referral_code}</span></td>
+              {filteredCommissions.map(commission => <tr key={commission.id}>
+                <td className="py-3">
+                  <div className="flex items-start gap-2">
+                    {commission.status === 'approved' && (
+                      <input
+                        type="checkbox"
+                        checked={selectedCommissionIds.includes(commission.id)}
+                        onChange={() => toggleCommissionSelect(commission.id)}
+                        className="mt-0.5 h-3.5 w-3.5 accent-[#D4AF37]"
+                      />
+                    )}
+                    <div>
+                      <strong className="text-white">#{commission.order_id}</strong>
+                      <span className="block text-[#9BB0A5]">{commission.promoter_name} · {commission.referral_code}</span>
+                    </div>
+                  </div>
+                </td>
                 <td>{money(commission.revenue_ex_tax)}</td><td>{money(commission.product_cost)}</td>
                 <td className="font-bold text-[#FCE096]">{money(commission.commission_amount)}</td>
                 <td><span className={Number(commission.retained_margin_percent) >= Number(config.target_retained_margin_percent) ? 'text-emerald-200' : 'text-amber-100'}>{Number(commission.retained_margin_percent).toFixed(2)}%</span><span className="block text-[10px] text-[#9BB0A5]">{Number(commission.retained_margin_percent) >= Number(config.target_retained_margin_percent) ? 'On target' : 'Above floor, below target'}</span></td>

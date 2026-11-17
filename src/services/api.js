@@ -679,11 +679,13 @@ export const contact = {
 };
 export const adminManagement = { getAllUsers: () => api.get("/admin/users"), getUserDetails: id => api.get(`/admin/users/${id}`), updateUserStatus: (id, s) => api.patch(`/admin/users/${id}/status`, { status: s }), getAllOrders: () => api.get("/orders/all"), updateOrderStatus: (id, d) => api.put(`/orders/${id}/status`, d) };
 export const affiliate = {
+  getPromotionsShowcase: () => api.get('/affiliate/promotions-showcase', { notify: false }),
   getProgramConfig: () => api.get('/affiliate/program-config'),
   getOffer: code => api.get('/affiliate/offer', { params: { code } }),
   applyForPartner: data => api.post('/affiliate/partner/apply', data),
   getPartnerDashboard: params => api.get('/affiliate/partner/me', { params }),
   updatePartnerPerks: data => api.patch('/affiliate/partner/me/perks', data),
+  updatePartnerProfile: data => api.patch('/affiliate/partner/me/profile', data),
   getAdminProgramConfig: () => api.get('/affiliate/admin/program-config', { adminAuth: true }),
   updateAdminProgramConfig: data => api.put('/affiliate/admin/program-config', data, { adminAuth: true }),
   getAdminAnalytics: params => api.get('/affiliate/admin/analytics', { params, adminAuth: true }),
@@ -693,15 +695,23 @@ export const affiliate = {
   getAdminPartners: () => api.get('/affiliate/admin/partners', { adminAuth: true }),
   addAdminPartner: data => api.post('/affiliate/admin/partners', data, { adminAuth: true }),
   updateAdminPartner: (id, data) => api.patch(`/affiliate/admin/partners/${id}`, data, { adminAuth: true }),
+  bulkUpdateAdminPartners: data => api.post('/affiliate/admin/partners/bulk-update', data, { adminAuth: true }),
   getAdminCommissions: () => api.get('/affiliate/admin/commissions', { adminAuth: true }),
   payAdminCommission: (id, data) => api.post(`/affiliate/admin/commissions/${id}/payout`, data, { adminAuth: true }),
+  bulkPayAdminCommissions: data => api.post('/affiliate/admin/commissions/bulk-payout', data, { adminAuth: true }),
+  getAdminCampaignBriefs: () => api.get('/affiliate/admin/campaign-briefs', { adminAuth: true }),
+  saveAdminCampaignBrief: data => api.post('/affiliate/admin/campaign-briefs', data, { adminAuth: true }),
+  deleteAdminCampaignBrief: id => api.delete(`/affiliate/admin/campaign-briefs/${id}`, { adminAuth: true }),
   previewReferral: params => api.get('/affiliate/referral/preview', { params }),
   getReferralLink: () => api.get('/affiliate/referral/link'),
   getReferralSummary: () => api.get('/affiliate/referral/summary'),
   getAdminConfig: () => api.get('/affiliate/admin/config', { adminAuth: true }),
   updateAdminConfig: data => api.put('/affiliate/admin/config', data, { adminAuth: true }),
   getAdminReferrals: params => api.get('/affiliate/admin/referrals', { params, adminAuth: true }),
+  getAdminReferralStats: () => api.get('/affiliate/admin/referrals/stats', { adminAuth: true }),
   decideAdminReferral: (claimId, data) => api.patch(`/affiliate/admin/referrals/${claimId}/decision`, data, { adminAuth: true }),
+  bulkDecideAdminReferrals: data => api.post('/affiliate/admin/referrals/bulk-decision', data, { adminAuth: true }),
+  issueAdminManualReferralGrant: data => api.post('/affiliate/admin/referrals/manual-grant', data, { adminAuth: true }),
   reissueAdminReferralCoupon: claimId => api.post(`/affiliate/admin/referrals/${claimId}/reissue-coupon`, {}, { adminAuth: true }),
 };
 export const adminWallet = {

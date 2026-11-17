@@ -5,10 +5,12 @@ import {
   Calculator,
   CheckCircle2,
   Coins,
+  Download,
   Plus,
   RefreshCw,
   Search,
   ShoppingBag,
+  Sparkles,
   Trash2,
   Users,
   Wallet,
@@ -157,6 +159,50 @@ export default function PromoterAnalyticsDashboard({ config }) {
   const textInputClass = 'w-full rounded-lg border border-[#315541] bg-[#0b1c14] px-3 py-2 text-sm text-white outline-none focus:border-[#D4AF37]';
   const tableClass = 'w-full min-w-[760px] text-left text-xs';
 
+  const exportPartnersAnalyticsCsv = () => {
+    if (!partners.length) return;
+    const headers = ['Promoter', 'Email', 'Code', 'Status', 'Discount %', 'Share %', 'Customers', 'Orders', 'Sales After Discount', 'Pending Commission', 'Payable Now', 'Lifetime Paid'];
+    const lines = [
+      headers.join(','),
+      ...partners.map(p => [
+        `"${String(p.user_name || '').replace(/"/g, '""')}"`,
+        p.user_email,
+        p.referral_code || '',
+        p.status,
+        p.discount_percent,
+        p.commission_share_percent,
+        Number(p.referred_customers || 0),
+        Number(p.attributed_orders || 0),
+        Number(p.discounted_merchandise_sales || 0).toFixed(2),
+        Number(p.pending_commission || 0).toFixed(2),
+        Number(p.payable_amount || 0).toFixed(2),
+        Number(p.lifetime_paid_amount || 0).toFixed(2),
+      ].join(',')),
+    ];
+    const blob = new Blob([lines.join('\n')], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `bhumivera-promoter-analytics-${period}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const applyBasketPreset = count => {
+    if (!eligibleProducts.length) return;
+    const chosen = eligibleProducts.slice(0, Math.min(count, eligibleProducts.length)).map((p, idx) => ({
+      productId: String(p.id),
+      quantity: count === 1 && Number(p.selling_price) < 600 ? '2' : '1',
+    }));
+    setScenario(curr => ({
+      ...curr,
+      referredPeople: curr.referredPeople || '250',
+      salesTarget: curr.salesTarget || '25000',
+      conversionPercent: curr.conversionPercent || '4',
+      basket: chosen,
+    }));
+  };
+
   const runScenario = async event => {
     event.preventDefault();
     setScenarioLoading(true);
@@ -218,7 +264,15 @@ export default function PromoterAnalyticsDashboard({ config }) {
             <div className="flex items-center gap-2"><BarChart3 className="text-[#D4AF37]" size={18}/><h2 className="font-serif text-lg font-bold text-white">Promoter performance</h2></div>
             <p className="mt-1 text-xs text-[#9BB0A5]">Actual attributed orders, buyer accounts, commission status, and recorded transfers. A referred customer appears after an affiliate-coded order; anonymous link visits are not customer records. No sample activity is included.</p>
           </div>
-          <div className="flex items-center gap-2">{periodControl}<button type="button" onClick={loadAnalytics} disabled={loading} aria-label="Refresh promoter analytics" className="rounded-lg border border-[#315541] p-2 text-white disabled:opacity-50"><RefreshCw size={14} className={loading ? 'animate-spin' : ''}/></button></div>
+          <div className="flex flex-wrap items-center gap-2">
+            {periodControl}
+            {partners.length > 0 && (
+              <button type="button" onClick={exportPartnersAnalyticsCsv} className="inline-flex items-center gap-1 rounded-lg border border-[#315541] px-3 py-2 text-xs font-semibold text-[#FCE096]">
+                <Download size={13}/> Export CSV
+              </button>
+            )}
+            <button type="button" onClick={loadAnalytics} disabled={loading} aria-label="Refresh promoter analytics" className="rounded-lg border border-[#315541] p-2 text-white disabled:opacity-50"><RefreshCw size={14} className={loading ? 'animate-spin' : ''}/></button>
+          </div>
         </div>
         {error && <div role="alert" className="flex gap-2 rounded-lg border border-rose-400/30 bg-rose-950/30 p-3 text-xs text-rose-200"><AlertCircle size={15}/>{error}</div>}
         {loading && !analytics ? <p className="py-8 text-center text-sm text-[#9BB0A5]">Loading real promoter activity…</p> : (
@@ -395,7 +449,17 @@ export default function PromoterAnalyticsDashboard({ config }) {
       </section>
 
       <section className="space-y-4 rounded-2xl border border-[#244A38] bg-[#102219] p-5">
-        <div className="flex items-center gap-2"><Calculator className="text-[#D4AF37]" size={18}/><h2 className="font-serif text-lg font-bold text-white">Earnings scenario calculator</h2></div>
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2"><Calculator className="text-[#D4AF37]" size={18}/><h2 className="font-serif text-lg font-bold text-white">Earnings scenario calculator</h2></div>
+          {eligibleProducts.length > 0 && (
+            <div className="flex flex-wrap items-center gap-1.5 text-xs">
+              <span className="text-[10px] font-bold uppercase text-[#9BB0A5]">Quick presets:</span>
+              <button type="button" onClick={() => applyBasketPreset(1)} className="rounded border border-[#315541] px-2.5 py-1 text-[11px] text-[#FCE096]">1-SKU Basket</button>
+              <button type="button" onClick={() => applyBasketPreset(2)} className="rounded border border-[#315541] px-2.5 py-1 text-[11px] text-[#FCE096]">2-SKU Ritual Duo</button>
+              <button type="button" onClick={() => applyBasketPreset(3)} className="rounded border border-[#315541] px-2.5 py-1 text-[11px] text-[#FCE096]">3-SKU Full Regimen</button>
+            </div>
+          )}
+        </div>
         <p className="text-xs leading-5 text-[#9BB0A5]">Use real active products and their inventory costs to estimate a basket. Choose either a total sales target or an assumed conversion rate; the panel does not invent a conversion rate or add demo activity.</p>
         <form onSubmit={runScenario} className="space-y-4">
           <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
