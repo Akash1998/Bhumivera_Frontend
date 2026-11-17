@@ -51,7 +51,7 @@ describe('promoter registration page', () => {
     expect(await screen.findByRole('heading', { name: 'See what each order contributes' })).toBeTruthy();
     expect(products.getAllActive).not.toHaveBeenCalled();
     expect(screen.queryByLabelText(/Email for your Bhumivera account/)).toBeNull();
-    fireEvent.click(screen.getByRole('link', { name: 'Register' }));
+    fireEvent.click(screen.getByRole('link', { name: 'Create account' }));
 
     await waitFor(() => expect(screen.getByTestId('location').textContent).toContain('"pathname":"/register"'));
     expect(screen.getByTestId('location').textContent).not.toContain('email');
@@ -72,10 +72,31 @@ describe('promoter registration page', () => {
       </HelmetProvider>,
     );
 
-    fireEvent.click(await screen.findByRole('link', { name: 'Already have an account' }));
+    fireEvent.click(await screen.findByRole('link', { name: /Already have an account/ }));
 
     await waitFor(() => expect(screen.getByTestId('location').textContent).toContain('"pathname":"/login"'));
     expect(screen.getByTestId('location').textContent).toContain('"from":"/promotions"');
+  });
+
+  it('puts the application shortcut before optional details and lets mobile visitors expand them', async () => {
+    useAuth.mockReturnValue({ user: null, loading: false });
+
+    render(
+      <HelmetProvider>
+        <MemoryRouter initialEntries={['/promotions#apply']}>
+          <Routes><Route path="/promotions" element={<Promotions />} /></Routes>
+        </MemoryRouter>
+      </HelmetProvider>,
+    );
+
+    expect(screen.getByRole('region', { name: 'Register or sign in to apply' })).toBeTruthy();
+    const detailsToggle = screen.getByRole('button', { name: /Explore partnership details/ });
+    expect(detailsToggle.getAttribute('aria-expanded')).toBe('false');
+
+    fireEvent.click(detailsToggle);
+
+    expect(detailsToggle.getAttribute('aria-expanded')).toBe('true');
+    expect(screen.getByRole('heading', { name: 'How the partnership begins' })).toBeTruthy();
   });
 
   it('starts the creator compass at zero and updates as principles are selected', async () => {

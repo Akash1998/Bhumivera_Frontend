@@ -1,6 +1,6 @@
 import React, { useMemo, useState } from 'react';
 import {
-  ArrowRight, Award, BookOpen, Calculator, CheckCircle2, Clock3,
+  ArrowRight, Award, BookOpen, Calculator, CheckCircle2, ChevronDown, Clock3,
   Copy, Gift, HeartHandshake, Leaf, ShieldCheck, Sparkles, TrendingUp
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -209,6 +209,7 @@ export default function Promotions() {
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [faqCategory, setFaqCategory] = useState('All');
   const [checkedFit, setCheckedFit] = useState(() => FIT_CHECKS.map(() => false));
+  const [showPartnershipDetails, setShowPartnershipDetails] = useState(false);
 
   const sanitizedCode = useMemo(() => {
     const cleaned = String(previewHandle || '')
@@ -319,7 +320,7 @@ export default function Promotions() {
         <div className="absolute -right-36 top-[42rem] h-[30rem] w-[30rem] rounded-full bg-[#D4AF37]/[0.07] blur-[120px]"/>
       </div>
 
-      <div className="relative mx-auto max-w-7xl space-y-8">
+      <div className="relative mx-auto max-w-7xl space-y-5 sm:space-y-8">
         <header className="relative overflow-hidden rounded-[2rem] border border-[#D4AF37]/25 bg-gradient-to-br from-[#143A29]/95 via-[#0D261B]/90 to-[#081A12]/95 p-6 shadow-[0_30px_90px_rgba(0,0,0,0.3)] backdrop-blur-xl sm:p-10">
           <div aria-hidden="true" className="absolute -right-12 -top-20 h-72 w-72 rounded-full border border-[#D4AF37]/10 bg-[#D4AF37]/[0.03]"/>
           <div className="relative grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr]">
@@ -347,7 +348,7 @@ export default function Promotions() {
                 <a href="#apply" className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-bold text-[#102219] transition hover:bg-[#FCE096]">
                   Explore the partnership <ArrowRight size={16}/>
                 </a>
-                <a href="#interactive-calculator" className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-[#D4AF37]/35 bg-black/20 px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#FCE096] transition hover:border-[#D4AF37] hover:bg-white/[0.04]">
+                <a href="#interactive-calculator" onClick={() => setShowPartnershipDetails(true)} className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-[#D4AF37]/35 bg-black/20 px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#FCE096] transition hover:border-[#D4AF37] hover:bg-white/[0.04]">
                   <Calculator size={15}/> Try Earnings &amp; Milestone Explorer
                 </a>
               </div>
@@ -408,6 +409,81 @@ export default function Promotions() {
           </div>
         </header>
 
+        <section id="apply" aria-labelledby="apply-title" className="scroll-mt-5 grid items-stretch gap-4 lg:grid-cols-2 lg:gap-5">
+          <div className="hidden rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#0D261B]/65 p-6 backdrop-blur-xl lg:block lg:p-8">
+            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Your next small step</p>
+            <h2 id="apply-title" className="mt-3 font-serif text-3xl font-bold text-white">Start with your account</h2>
+            <p className="mt-3 text-sm leading-6 text-[#B7C9BD]">
+              Sign in or create a verified Bhumivera account. Then tell us about your platform, content and audience—and what a meaningful, nature-minded partnership could look like beyond a single post.
+            </p>
+            <ul className="mt-5 space-y-3 text-xs leading-5 text-[#C5D8CC]">
+              <li className="flex gap-2"><ShieldCheck size={15} className="mt-0.5 shrink-0 text-[#D4AF37]"/>We review intent, audience fit and honesty—not follower count alone.</li>
+              <li className="flex gap-2"><Clock3 size={15} className="mt-0.5 shrink-0 text-[#D4AF37]"/>We aim to send an update within 12–24 hours.</li>
+              <li className="flex gap-2"><CheckCircle2 size={15} className="mt-0.5 shrink-0 text-[#D4AF37]"/>WhatsApp and delivery city/pincode are requested only after approval if a campaign needs them.</li>
+              <li className="flex gap-2"><BookOpen size={15} className="mt-0.5 shrink-0 text-[#D4AF37]"/>Once signed in, our guided form includes prompt starters to help you articulate your partnership vision in under 2 minutes.</li>
+            </ul>
+          </div>
+
+          <section className="flex flex-col justify-between rounded-[1.5rem] border border-[#D4AF37]/30 bg-gradient-to-br from-[#102A1E]/95 to-[#0A1D14]/95 p-5 shadow-2xl sm:rounded-[1.75rem] sm:p-9 lg:min-h-[25rem] lg:p-10" aria-label="Register or sign in to apply">
+            <div>
+              <div className="flex items-start gap-3 rounded-xl border border-[#D4AF37]/20 bg-black/20 p-3.5 sm:gap-4 sm:rounded-2xl sm:p-6">
+                <Clock3 size={18} className="mt-0.5 shrink-0 text-[#D4AF37] sm:h-[21px] sm:w-[21px]"/>
+                <p className="text-xs leading-5 text-[#C8D5CC] sm:text-sm sm:leading-6">
+                  Your application and promoter code remain inactive until approved. Gifting is selective and considered separately for specific campaigns.
+                </p>
+              </div>
+
+              <div className="mt-5 sm:mt-8">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Your next small step</p>
+                <h2 className="mt-1.5 font-serif text-2xl font-bold text-white sm:mt-2 sm:text-3xl">Start your creator application</h2>
+                <p className="mt-2 text-xs leading-5 text-[#B7C9BD] sm:mt-3 sm:text-sm sm:leading-6">
+                  Create or sign in to a verified account, then complete the guided application in about 2 minutes.
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 grid gap-2 sm:mt-8 sm:grid-cols-2 sm:gap-3">
+              <Link
+                to="/register"
+                state={accountState}
+                className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#D4AF37] px-4 py-3 text-sm font-bold text-[#102219] shadow-lg shadow-black/20 transition hover:bg-[#FCE096] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FCE096] sm:min-h-16 sm:px-5 sm:py-4 sm:text-base"
+              >
+                Create account <ArrowRight size={17}/>
+              </Link>
+              <Link
+                to="/login"
+                state={accountState}
+                className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/20 px-4 py-3 text-sm font-bold text-white transition hover:border-[#D4AF37]/60 hover:bg-white/[0.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FCE096] sm:min-h-16 sm:px-4 sm:py-4 sm:text-base"
+              >
+                Already have an account? Sign in
+              </Link>
+            </div>
+
+            <p className="mt-4 border-t border-white/10 pt-3 text-[10px] leading-4 text-[#9BB0A5] sm:mt-7 sm:pt-5 sm:text-xs sm:leading-6">
+              No application fee or follower minimum. An application is not a promise of acceptance, product gifting, paid work, orders, or earnings. See the <Link to="/legal/warranty-affiliate-b2b" className="font-semibold text-[#F0D98A] underline underline-offset-2">partner terms</Link>.
+            </p>
+          </section>
+        </section>
+
+        <button
+          type="button"
+          id="partnership-details"
+          aria-expanded={showPartnershipDetails}
+          aria-controls="partnership-details-content"
+          onClick={() => setShowPartnershipDetails(open => !open)}
+          className="flex w-full items-center justify-between gap-4 rounded-xl border border-white/10 bg-[#0D261B]/70 px-4 py-3 text-left transition hover:border-[#D4AF37]/35 focus-visible:outline focus-visible:outline-2 focus-visible:outline-[#FCE096] lg:hidden"
+        >
+          <span>
+            <span className="block text-sm font-semibold text-white">Explore partnership details</span>
+            <span className="mt-1 block text-[11px] text-[#9BB0A5]">Stages, earnings, products and FAQs</span>
+          </span>
+          <ChevronDown size={18} className={`shrink-0 text-[#F0D98A] transition-transform ${showPartnershipDetails ? 'rotate-180' : ''}`}/>
+        </button>
+
+        <div
+          id="partnership-details-content"
+          className={`${showPartnershipDetails ? 'block' : 'hidden'} space-y-5 sm:space-y-8 lg:block`}
+        >
         <section aria-labelledby="creator-steps-title" className="rounded-[1.75rem] border border-white/10 bg-[#0D261B]/65 p-5 shadow-xl backdrop-blur-xl sm:p-7">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -774,62 +850,6 @@ export default function Promotions() {
           </div>
         </section>
 
-        <section id="apply" aria-labelledby="apply-title" className="scroll-mt-8 grid items-stretch gap-5 lg:grid-cols-2">
-          <div className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#0D261B]/65 p-6 backdrop-blur-xl sm:p-8">
-            <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Your next small step</p>
-            <h2 id="apply-title" className="mt-3 font-serif text-3xl font-bold text-white">Start with your account</h2>
-            <p className="mt-3 text-sm leading-6 text-[#B7C9BD]">
-              Sign in or create a verified Bhumivera account. Then tell us about your platform, content and audience—and what a meaningful, nature-minded partnership could look like beyond a single post.
-            </p>
-            <ul className="mt-5 space-y-3 text-xs leading-5 text-[#C5D8CC]">
-              <li className="flex gap-2"><ShieldCheck size={15} className="mt-0.5 shrink-0 text-[#D4AF37]"/>We review intent, audience fit and honesty—not follower count alone.</li>
-              <li className="flex gap-2"><Clock3 size={15} className="mt-0.5 shrink-0 text-[#D4AF37]"/>We aim to send an update within 12–24 hours.</li>
-              <li className="flex gap-2"><CheckCircle2 size={15} className="mt-0.5 shrink-0 text-[#D4AF37]"/>WhatsApp and delivery city/pincode are requested only after approval if a campaign needs them.</li>
-              <li className="flex gap-2"><BookOpen size={15} className="mt-0.5 shrink-0 text-[#D4AF37]"/>Once signed in, our guided form includes prompt starters to help you articulate your partnership vision in under 2 minutes.</li>
-            </ul>
-          </div>
-
-          <section className="flex min-h-[25rem] flex-col justify-between rounded-[1.75rem] border border-[#D4AF37]/25 bg-gradient-to-br from-[#102A1E]/95 to-[#0A1D14]/95 p-6 shadow-2xl backdrop-blur-xl sm:p-9 lg:p-10" aria-label="Register or sign in to apply">
-            <div>
-              <div className="flex items-start gap-4 rounded-2xl border border-[#D4AF37]/20 bg-black/20 p-5 sm:p-6">
-                <Clock3 size={21} className="mt-0.5 shrink-0 text-[#D4AF37]"/>
-                <p className="text-sm leading-6 text-[#C8D5CC]">
-                  Your application and promoter code remain inactive until approved. After account setup, we will ask for your partnership intent; gifting is selective and considered separately for specific campaigns.
-                </p>
-              </div>
-
-              <div className="mt-8">
-                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Ready when you are</p>
-                <h3 className="mt-2 font-serif text-2xl font-bold text-white sm:text-3xl">Start your creator application</h3>
-                <p className="mt-3 text-sm leading-6 text-[#B7C9BD]">
-                  Register or sign in to continue to the partnership application.
-                </p>
-              </div>
-            </div>
-
-            <div className="mt-8 grid gap-3 sm:grid-cols-2">
-              <Link
-                to="/register"
-                state={accountState}
-                className="inline-flex min-h-16 items-center justify-center gap-2 rounded-xl bg-[#D4AF37] px-5 py-4 text-base font-bold text-[#102219] shadow-lg shadow-black/20 transition hover:bg-[#FCE096] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FCE096]"
-              >
-                Register <ArrowRight size={18}/>
-              </Link>
-              <Link
-                to="/login"
-                state={accountState}
-                className="inline-flex min-h-16 items-center justify-center whitespace-nowrap rounded-xl border border-white/20 px-3 py-4 text-sm font-bold text-white transition hover:border-[#D4AF37]/60 hover:bg-white/[0.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FCE096] sm:px-4 sm:text-base"
-              >
-                Already have an account
-              </Link>
-            </div>
-
-            <p className="mt-7 border-t border-white/10 pt-5 text-xs leading-6 text-[#9BB0A5]">
-              By applying, you agree to follow the <Link to="/legal/warranty-affiliate-b2b" className="font-semibold text-[#F0D98A] underline underline-offset-2">Bhumivera partner terms</Link>. An application is not a promise of acceptance, product gifting, paid work, orders, or earnings.
-            </p>
-          </section>
-        </section>
-
         <section aria-labelledby="creator-faq-title" className="rounded-[1.75rem] border border-white/10 bg-[#0D261B]/60 p-5 backdrop-blur-xl sm:p-8">
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
@@ -865,6 +885,7 @@ export default function Promotions() {
             ))}
           </div>
         </section>
+        </div>
 
         <p className="pb-6 text-center text-[11px] leading-5 text-[#82998D]">
           A partnership is built on honest recommendations. Follow applicable advertising disclosures and the <Link to="/legal/warranty-affiliate-b2b" className="text-[#F0D98A] underline underline-offset-2">Bhumivera partner terms</Link>.
