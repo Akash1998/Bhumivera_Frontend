@@ -78,6 +78,30 @@ describe('promoter registration page', () => {
     expect(screen.getByTestId('location').textContent).toContain('"from":"/promotions"');
   });
 
+  it('starts the creator compass at zero and updates as principles are selected', async () => {
+    useAuth.mockReturnValue({ user: null, loading: false });
+
+    render(
+      <HelmetProvider>
+        <MemoryRouter initialEntries={['/promotions']}>
+          <Routes><Route path="/promotions" element={<Promotions />} /></Routes>
+        </MemoryRouter>
+      </HelmetProvider>,
+    );
+
+    const checkboxes = screen.getAllByRole('checkbox');
+    const score = screen.getByRole('progressbar', { name: 'Creator alignment score' });
+    expect(checkboxes).toHaveLength(4);
+    expect(checkboxes.every(checkbox => !checkbox.checked)).toBe(true);
+    expect(score.getAttribute('aria-valuenow')).toBe('0');
+    expect(screen.getByText('A quick reflection')).toBeTruthy();
+
+    fireEvent.click(checkboxes[0]);
+
+    expect(score.getAttribute('aria-valuenow')).toBe('1');
+    expect(screen.getByText('1 of 4 principles resonate')).toBeTruthy();
+  });
+
   it('loads pending applicants and shows their inactive reserved code', async () => {
     useAuth.mockReturnValue({ user: { email: 'creator@example.com' }, loading: false });
     affiliate.getPartnerDashboard.mockResolvedValue({

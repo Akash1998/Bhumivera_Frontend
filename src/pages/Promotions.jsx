@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   ArrowRight, Award, BookOpen, Calculator, CheckCircle2, Clock3,
-  Copy, Gift, HeartHandshake, Leaf, ShieldCheck, Sparkles, TrendingUp, Users
+  Copy, Gift, HeartHandshake, Leaf, ShieldCheck, Sparkles, TrendingUp
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
@@ -208,7 +208,7 @@ export default function Promotions() {
   const [simulatedOrders, setSimulatedOrders] = useState(10);
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [faqCategory, setFaqCategory] = useState('All');
-  const [checkedFit, setCheckedFit] = useState([true, true, true, true]);
+  const [checkedFit, setCheckedFit] = useState(() => FIT_CHECKS.map(() => false));
 
   const sanitizedCode = useMemo(() => {
     const cleaned = String(previewHandle || '')
@@ -267,6 +267,24 @@ export default function Promotions() {
   ), [faqCategory]);
 
   const fitScore = checkedFit.filter(Boolean).length;
+  const fitProgress = (fitScore / FIT_CHECKS.length) * 100;
+  const fitFeedback = fitScore === 0
+    ? {
+      label: 'A quick reflection',
+      title: 'What matters in the way you create?',
+      message: 'Choose the principles that feel true to you. There is no pass or fail—this is a moment to reflect before you apply.',
+    }
+    : fitScore === FIT_CHECKS.length
+      ? {
+        label: 'All four principles resonate',
+        title: 'Your values sound aligned',
+        message: 'That is a thoughtful starting point. Our team reviews every application individually; this check is not an approval decision.',
+      }
+      : {
+        label: `${fitScore} of ${FIT_CHECKS.length} principles resonate`,
+        title: 'You’re finding your fit',
+        message: 'A strong partnership starts with shared standards, not audience size. Select the principles that reflect how you work.',
+      };
 
   if (loading) {
     return <main className="min-h-screen bg-[#07140e] px-4 py-20 text-center text-[#9BB0A5]">Loading your account…</main>;
@@ -678,54 +696,80 @@ export default function Promotions() {
           </div>
         </section>
 
-        <section aria-labelledby="creator-fit-check-title" className="rounded-[1.75rem] border border-white/10 bg-[#0D261B]/65 p-6 backdrop-blur-xl sm:p-8">
-          <div className="grid items-center gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+        <section aria-labelledby="creator-fit-check-title" className="relative overflow-hidden rounded-[1.75rem] border border-[#D4AF37]/20 bg-gradient-to-br from-[#0D261B] via-[#0A1E15] to-[#07140e] p-6 shadow-[0_28px_90px_rgba(0,0,0,0.22)] sm:p-8">
+          <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-28 h-72 w-72 rounded-full border border-[#D4AF37]/10 bg-[#D4AF37]/[0.035] blur-2xl"/>
+          <div className="relative grid items-center gap-7 lg:grid-cols-[1.15fr_0.85fr]">
             <div>
-              <p className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
-                <HeartHandshake size={14}/> 30-Second Alignment Check
+              <p className="inline-flex items-center gap-1.5 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/[0.07] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
+                <HeartHandshake size={14}/> 30-second creator compass
               </p>
-              <h2 id="creator-fit-check-title" className="mt-2 font-serif text-2xl font-bold text-white sm:text-3xl">
+              <h2 id="creator-fit-check-title" className="mt-3 font-serif text-2xl font-bold text-white sm:text-3xl">
                 See if the Bhumivera Creator Partnership fits your style
               </h2>
-              <p className="mt-2 text-xs leading-6 text-[#B7C9BD]">
+              <p className="mt-2 max-w-2xl text-xs leading-6 text-[#B7C9BD]">
                 Whether you have 800 engaged followers or 80,000, our team looks for these four creator principles when reviewing applications.
               </p>
-              <div className="mt-4 space-y-2.5">
-                {FIT_CHECKS.map((statement, idx) => (
-                  <label key={statement} className="flex cursor-pointer items-start gap-3 rounded-xl border border-white/10 bg-black/20 p-3.5 text-xs leading-5 text-[#E7EEE8] transition hover:border-[#D4AF37]/40">
-                    <input
-                      type="checkbox"
-                      checked={Boolean(checkedFit[idx])}
-                      onChange={e => setCheckedFit(curr => curr.map((v, i) => i === idx ? e.target.checked : v))}
-                      className="mt-0.5 h-4 w-4 shrink-0 accent-[#D4AF37]"
-                    />
-                    <span>{statement}</span>
-                  </label>
-                ))}
+              <div className="mt-5 space-y-2.5">
+                {FIT_CHECKS.map((statement, idx) => {
+                  const checked = Boolean(checkedFit[idx]);
+                  return (
+                    <label
+                      key={statement}
+                      className={`group flex cursor-pointer items-center gap-3 rounded-xl border p-3.5 text-xs leading-5 transition duration-200 focus-within:ring-2 focus-within:ring-[#FCE096]/70 ${
+                        checked
+                          ? 'border-[#D4AF37]/55 bg-[#D4AF37]/[0.08] text-white shadow-[inset_0_0_24px_rgba(212,175,55,0.04)]'
+                          : 'border-white/10 bg-black/20 text-[#C5D8CC] hover:border-[#D4AF37]/35 hover:bg-white/[0.035]'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={e => setCheckedFit(curr => curr.map((value, i) => i === idx ? e.target.checked : value))}
+                        className="peer sr-only"
+                      />
+                      <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border font-mono text-[10px] font-bold transition ${
+                        checked
+                          ? 'border-[#D4AF37]/50 bg-[#D4AF37]/15 text-[#FCE096]'
+                          : 'border-white/10 bg-black/20 text-[#82998D] group-hover:border-[#D4AF37]/30'
+                      }`}>
+                        {checked ? <CheckCircle2 size={16}/> : `0${idx + 1}`}
+                      </span>
+                      <span className="flex-1">{statement}</span>
+                      <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full transition ${
+                        checked ? 'bg-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.7)]' : 'bg-white/10'
+                      }`}/>
+                    </label>
+                  );
+                })}
               </div>
             </div>
 
-            <div className="rounded-2xl border border-[#D4AF37]/30 bg-[#07140e]/85 p-6 text-center">
-              <span className="inline-flex h-12 w-12 items-center justify-center rounded-2xl border border-[#D4AF37]/35 bg-[#D4AF37]/15 text-[#FCE096]">
-                <Users size={22}/>
-              </span>
-              <p className="mt-3 text-xs font-bold uppercase tracking-wider text-[#D4AF37]">
-                Alignment Score: {fitScore} / {FIT_CHECKS.length}
-              </p>
-              <h3 className="mt-2 font-serif text-xl font-bold text-white">
-                {fitScore === FIT_CHECKS.length
-                  ? 'You’re a strong values match for Bhumivera'
-                  : 'Explore our values before applying'}
-              </h3>
-              <p className="mt-2 text-xs leading-5 text-[#AFC2B5]">
-                Create or sign in to your Bhumivera account below to submit your 2-minute creator application and reserve your custom audience code.
-              </p>
+            <div className="rounded-2xl border border-[#D4AF37]/25 bg-[#06130D]/75 p-5 text-center shadow-inner sm:p-7">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#9BB0A5]">Your creator compass</p>
+              <div
+                role="progressbar"
+                aria-label="Creator alignment score"
+                aria-valuemin={0}
+                aria-valuemax={FIT_CHECKS.length}
+                aria-valuenow={fitScore}
+                className="mx-auto mt-4 flex h-32 w-32 items-center justify-center rounded-full p-[5px] transition-[background] duration-500"
+                style={{ background: `conic-gradient(#D4AF37 ${fitProgress}%, rgba(255,255,255,0.09) ${fitProgress}% 100%)` }}
+              >
+                <div className="flex h-full w-full flex-col items-center justify-center rounded-full border border-white/[0.06] bg-[#07140e]">
+                  <span className="font-serif text-4xl font-bold leading-none text-white">{fitScore}</span>
+                  <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#82998D]">of {FIT_CHECKS.length}</span>
+                </div>
+              </div>
+              <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.16em] text-[#D4AF37]">{fitFeedback.label}</p>
+              <h3 className="mt-2 font-serif text-xl font-bold text-white">{fitFeedback.title}</h3>
+              <p className="mx-auto mt-2 max-w-sm text-xs leading-5 text-[#AFC2B5]">{fitFeedback.message}</p>
               <a
                 href="#apply"
-                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#D4AF37] px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#102219] transition hover:bg-[#FCE096]"
+                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#D4AF37] px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#102219] transition hover:-translate-y-0.5 hover:bg-[#FCE096] hover:shadow-[0_8px_24px_rgba(212,175,55,0.18)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FCE096]"
               >
                 Continue to Application <ArrowRight size={15}/>
               </a>
+              <p className="mt-3 text-[10px] leading-4 text-[#82998D]">A reflection tool—not a pass/fail test or approval decision.</p>
             </div>
           </div>
         </section>
