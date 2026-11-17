@@ -1,5 +1,12 @@
 {
   "version": 2,
+  "redirects": [
+    {
+      "source": "/promotions",
+      "destination": "/promotions/dashboard",
+      "permanent": true
+    }
+  ],
   "functions": {
     "api/register-page.js": {
       "includeFiles": "dist/index.html"
@@ -270,6 +277,17 @@
         }
       ],
       "destination": "https://service.bhumivera.com/api/seo-prerender/legal/:slug*"
+    },
+    {
+      "source": "/promotions/dashboard",
+      "has": [
+        {
+          "type": "header",
+          "key": "user-agent",
+          "value": ".*(Googlebot|Bingbot|Slurp|DuckDuckBot|Bravebot|Brave|Applebot|Yandex|Baiduspider|PerplexityBot|ClaudeBot|anthropic-ai|GPTBot|OAI-SearchBot|ChatGPT-User|Google-Extended|facebookexternalhit|WhatsApp|Twitterbot|LinkedInBot).*"
+        }
+      ],
+      "destination": "https://service.bhumivera.com/api/seo-prerender/promotions/dashboard"
     },
     {
       "source": "/(about|science|bhumivera-science|shop|products|collections|impact|community|lab|provenance-engine|provenance|somatic-registry|verify|genuinity|ewarranty|verify-product|warranty|purchase-protection|contact|support-center|sell-on-bhumivera|affiliate|promotions|compare|flash-sales|order-tracking)",

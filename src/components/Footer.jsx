@@ -170,7 +170,7 @@ export default function Footer() {
                 </Link>
               </li>
               <li>
-                <Link to="/promotions" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
+                <Link to="/promotions/dashboard" className="transition-colors hover:text-[#D4AF37] flex items-center justify-between group">
                   <span>Creator &amp; Influencer Program</span>
                   <span className="text-[10px] text-[#D4AF37] font-bold font-mono">Apply</span>
                 </Link>

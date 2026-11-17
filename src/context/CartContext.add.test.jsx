@@ -1,6 +1,6 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { act, cleanup, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { CartProvider, useCart } from './CartContext';
 import { affiliate, cart, products } from '../services/api';
@@ -50,8 +50,13 @@ function CartHarness({ productId = 17 }) {
 }
 
 function AffiliateHarness() {
-  const { affiliateCode, affiliateOffer } = useCart();
-  return <output data-testid="promoter-offer">{JSON.stringify({ affiliateCode, affiliateOffer })}</output>;
+  const { affiliateCode, affiliateOffer, applyAffiliateCode } = useCart();
+  return (
+    <>
+      <output data-testid="promoter-offer">{JSON.stringify({ affiliateCode, affiliateOffer })}</output>
+      <button type="button" onClick={() => { void applyAffiliateCode('bv1234'); }}>Apply creator code</button>
+    </>
+  );
 }
 
 describe('cart additions with live inventory', () => {
@@ -190,6 +195,18 @@ describe('cart additions with live inventory', () => {
   it('stores and verifies a promoter code from the shared offer link', async () => {
     window.history.replaceState({}, '', '/?aff=BV1234');
     render(<CartProvider><AffiliateHarness /></CartProvider>);
+
+    await waitFor(() => expect(affiliate.getOffer).toHaveBeenCalledWith('BV1234'));
+    await waitFor(() => expect(JSON.parse(screen.getByTestId('promoter-offer').textContent)).toMatchObject({
+      affiliateCode: 'BV1234',
+      affiliateOffer: { discountPercent: 15 },
+    }));
+    expect(JSON.parse(localStorage.getItem('Bhumivera_affiliate_attribution'))).toMatchObject({ code: 'BV1234' });
+  });
+
+  it('stores and verifies a creator code entered manually at checkout', async () => {
+    render(<CartProvider><AffiliateHarness /></CartProvider>);
+    fireEvent.click(screen.getByRole('button', { name: 'Apply creator code' }));
 
     await waitFor(() => expect(affiliate.getOffer).toHaveBeenCalledWith('BV1234'));
     await waitFor(() => expect(JSON.parse(screen.getByTestId('promoter-offer').textContent)).toMatchObject({

@@ -12,6 +12,7 @@ import { getProductImageUrl } from '../utils/productImageUrl';
 import { getCartGiftProgress } from '../utils/cartGiftProgress';
 import { calculateDeliveryCosts, PREMIUM_DELIVERY_SURCHARGE, PREMIUM_DELIVERY_THRESHOLD } from '../utils/shippingOptions';
 import { calculateReferralWalletRedemption, calculateTierDiscount } from '../utils/walletRedemption';
+import { resolveCheckoutPromo } from '../utils/resolveCheckoutPromo';
 
 let razorpayScriptPromise;
 const loadRazorpayScript = () => {
@@ -74,7 +75,7 @@ export default function MiniCart() {
     cartItems = [], isCartOpen, setIsCartOpen, removeFromCart, updateQuantity,
     getSubtotal, addToCart, clearCart, rulePreview, rulePreviewLoading, cartAddEvent,
     freeShippingThreshold, couponStackPolicy, referralReward, loyalty,
-    affiliateCode, affiliateOffer, affiliateOfferError, affiliateOfferLoading, affiliateDiscount, minimumOrderAmount, removeAffiliateCode,
+    affiliateCode, affiliateOffer, affiliateOfferError, affiliateOfferLoading, affiliateDiscount, minimumOrderAmount, applyAffiliateCode, removeAffiliateCode,
   } = useCart();
   const { user } = useAuth();
   const userId = user?.id;
@@ -92,6 +93,7 @@ export default function MiniCart() {
   const [offersOpen, setOffersOpen] = useState(true);
   const [couponCode, setCouponCode] = useState('');
   const [couponMessage, setCouponMessage] = useState('');
+  const [couponMessageTone, setCouponMessageTone] = useState('info');
   const [couponBusy, setCouponBusy] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [checkoutStep, setCheckoutStep] = useState(0);
@@ -405,13 +407,28 @@ export default function MiniCart() {
     }
     setCouponBusy(true);
     setCouponMessage('');
+    setCouponMessageTone('info');
     try {
-      const response = await couponsApi.validate(code, subtotal);
+      const result = await resolveCheckoutPromo({
+        code,
+        validateCoupon: cleanCode => couponsApi.validate(cleanCode, subtotal),
+        applyAffiliateCode,
+      });
+      if (result.type === 'creator') {
+        setCouponCode('');
+        setCouponMessage(`Creator code ${code} applied — ${Number(result.offer?.discountPercent) || 0}% off.`);
+        setCouponMessageTone('success');
+        toast.success('Creator promo applied to your order.');
+        return;
+      }
+
+      const response = result.response;
       const data = response.data?.data || response.data || {};
       if (data.rewardType === 'referral_wallet') {
         setAppliedCoupon(null);
         setCouponCode('');
         setCouponMessage('Referral credit is applied automatically when your order meets an eligible tier.');
+        setCouponMessageTone('success');
         return;
       }
       const appliedDiscount = Number(data.discount) || 0;
@@ -426,9 +443,11 @@ export default function MiniCart() {
         : couponStacks
         ? `Coupon applied — saving ${formatPrice(appliedDiscount)}.`
         : 'Coupon is valid, but cart rewards take priority under the current stacking policy.');
+      setCouponMessageTone('success');
     } catch (error) {
       setAppliedCoupon(null);
       setCouponMessage(error.response?.data?.message || 'This coupon could not be applied.');
+      setCouponMessageTone('error');
     } finally {
       setCouponBusy(false);
     }
@@ -960,10 +979,10 @@ export default function MiniCart() {
                 {affiliateOffer && <div className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-[#D4AF37]/35 bg-[#1E3E2F] px-3 py-2 text-xs text-[#FCE096]"><span><strong>{affiliateOffer.discountPercent}% creator promo</strong> · {affiliateCode}</span><button type="button" onClick={removeAffiliateCode} className="shrink-0 underline underline-offset-2">Remove</button></div>}
                 {affiliateOfferError && <p role="status" className="mb-3 flex items-center justify-between gap-3 rounded-lg border border-rose-500/30 bg-rose-950/30 px-3 py-2 text-xs text-rose-200">{affiliateOfferError}<button type="button" onClick={removeAffiliateCode} className="underline underline-offset-2">Remove</button></p>}
                 <form onSubmit={validateCoupon} className="flex gap-2">
-                  <input value={couponCode} onChange={event => setCouponCode(event.target.value)} aria-label="Coupon code" placeholder="Enter coupon code" className="min-w-0 flex-1 rounded-xl border border-dashed border-[#244A38] bg-[#14291F] text-white px-3 py-2.5 text-xs outline-none focus:border-[#D4AF37]"/>
+                  <input value={couponCode} onChange={event => setCouponCode(event.target.value)} aria-label="Coupon code or creator code" placeholder="Store coupon or creator code" className="min-w-0 flex-1 rounded-xl border border-dashed border-[#244A38] bg-[#14291F] text-white px-3 py-2.5 text-xs outline-none focus:border-[#D4AF37]"/>
                   <button disabled={couponBusy || !couponCode.trim()} className="rounded-xl btn-gold-luxury px-4 py-2 text-xs font-bold disabled:opacity-50">{couponBusy ? 'Checking…' : 'Apply'}</button>
                 </form>
-                {couponMessage && <p role="status" className={`mt-2 text-xs ${appliedCoupon && couponDiscount > 0 ? 'text-[#D4AF37]' : appliedCoupon ? 'text-[#FCE096]' : 'text-rose-400'}`}>{couponMessage}</p>}
+                {couponMessage && <p role="status" className={`mt-2 text-xs ${couponMessageTone === 'error' ? 'text-rose-400' : 'text-[#FCE096]'}`}>{couponMessage}</p>}
                 {offersToShow.length > 0 && <div className="mt-3 space-y-2">
                 {offersToShow.map((offer, index) => {
                   const minimum = Number(offer.min_order_amount ?? offer.min_order_value) || 0;

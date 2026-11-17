@@ -293,7 +293,7 @@ export default function Promotions() {
 
   if (user) return <PromoterPortal />;
 
-  const accountState = { from: '/promotions' };
+  const accountState = { from: '/promotions/dashboard' };
 
   const copyPreviewUrl = async () => {
     try {
@@ -311,7 +311,7 @@ export default function Promotions() {
         title="Bhumivera Creator Partnership | Grow Together"
         description="Build a long-term Bhumivera creator partnership through honest product education, open order economics and nature-minded community."
         keywords="Bhumivera creator partnership, skincare creator program India, transparent creator earnings, botanical skincare community"
-        route="/promotions"
+        route="/promotions/dashboard"
         ogImage="/images/products/bhumivera-seabuckthorn-luxury-face-wash.webp"
         faqs={FAQS}
       />

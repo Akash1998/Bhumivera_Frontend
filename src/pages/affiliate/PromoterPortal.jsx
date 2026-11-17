@@ -94,6 +94,7 @@ export default function PromoterPortal() {
   const [error, setError] = useState('');
   const [notice, setNotice] = useState('');
   const [copied, setCopied] = useState(false);
+  const [copiedCode, setCopiedCode] = useState(false);
   const [copiedCaptionKey, setCopiedCaptionKey] = useState('');
   const [editingApplication, setEditingApplication] = useState(false);
   const [ownsProfile, setOwnsProfile] = useState(false);
@@ -231,6 +232,17 @@ export default function PromoterPortal() {
       setError(applyError.response?.data?.message || 'Could not submit your application.');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const copyCode = async () => {
+    try {
+      await navigator.clipboard.writeText(partner?.referral_code || '');
+      setCopiedCode(true);
+      setNotice('Your creator code has been copied.');
+      window.setTimeout(() => setCopiedCode(false), 1800);
+    } catch {
+      setError('Clipboard access is unavailable. Select and copy the code manually.');
     }
   };
 
@@ -397,9 +409,13 @@ export default function PromoterPortal() {
               <p className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/30 bg-black/10 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FCE096]">
                 <ShieldCheck size={14}/> Bhumivera Co-Creator &amp; Partner Desk
               </p>
-              <h1 className="mt-4 font-serif text-3xl font-bold text-white sm:text-5xl">Build trust. Share value. Grow together.</h1>
+              <h1 className="mt-4 font-serif text-3xl font-bold text-white sm:text-5xl">
+                {partner?.status === 'approved' ? 'Your Creator Dashboard' : 'Build trust. Share value. Grow together.'}
+              </h1>
               <p className="mt-3 max-w-2xl text-sm leading-6 text-[#C5D8CC]">
-                This is a relationship, not a one-post transaction. We want creators who care about honest product education, a thriving community and a more thoughtful relationship with nature—and who want to grow with us over time.
+                {partner?.status === 'approved'
+                  ? `Welcome back, ${partner.social_handle || 'creator'}. Manage your offer, share your link, and follow every recorded order and payout from one place.`
+                  : 'This is a relationship, not a one-post transaction. We want creators who care about honest product education, a thriving community and a more thoughtful relationship with nature—and who want to grow with us over time.'}
               </p>
             </div>
             <button type="button" onClick={() => loadDashboard(commissionPage)} disabled={loading} className="inline-flex items-center gap-2 rounded-xl border border-white/15 bg-black/10 px-3 py-2.5 text-xs font-semibold text-white transition hover:border-[#D4AF37]/50 disabled:opacity-50">
@@ -428,6 +444,23 @@ export default function PromoterPortal() {
             </p>
           </div>
         </section>
+
+        {partner?.status === 'approved' && (
+          <nav aria-label="Creator dashboard sections" className="flex gap-2 overflow-x-auto rounded-xl border border-white/10 bg-[#0B2117] p-2">
+            {[
+              ['Overview', '#creator-overview'],
+              ['Share kit', '#creator-share-kit'],
+              ['Milestones', '#creator-milestones'],
+              ['Earnings', '#creator-earnings'],
+              ['Manage code', '#creator-code'],
+              ['Account settings', '#creator-settings'],
+            ].map(([label, target]) => (
+              <a key={target} href={target} className="shrink-0 rounded-lg border border-[#315541] px-3 py-2 text-xs font-semibold text-[#DFD7C4] transition hover:border-[#D4AF37]/60 hover:text-[#FCE096]">
+                {label}
+              </a>
+            ))}
+          </nav>
+        )}
 
         {error && <div role="alert" className="flex items-start gap-2 rounded-xl border border-rose-400/30 bg-rose-950/30 p-3 text-sm text-rose-200"><AlertCircle size={17} className="mt-0.5 shrink-0"/>{error}</div>}
         {notice && <p role="status" className="rounded-xl border border-emerald-400/30 bg-emerald-950/20 p-3 text-sm text-emerald-200">{notice}</p>}
@@ -653,7 +686,7 @@ export default function PromoterPortal() {
           </section>
         ) : (
           <>
-            <section className={`${cardClass} grid gap-5 lg:grid-cols-[1.2fr_0.8fr]`}>
+            <section id="creator-overview" className={`${cardClass} grid gap-5 lg:grid-cols-[1.2fr_0.8fr]`}>
               <div>
                 <div className="flex flex-wrap items-center gap-2">
                   <span className="rounded-full bg-emerald-900/50 px-3 py-1 text-[10px] font-bold uppercase text-emerald-200">{partner.status}</span>
@@ -684,6 +717,9 @@ export default function PromoterPortal() {
                     </label>
                   </div>
                   <div className="mt-3 flex flex-wrap gap-2">
+                    <button type="button" onClick={copyCode} className="inline-flex items-center gap-2 rounded-lg border border-[#315541] px-3.5 py-2 text-xs text-white">
+                      <Copy size={14}/>{copiedCode ? 'Code copied' : 'Copy code'}
+                    </button>
                     <button type="button" onClick={copyLink} className="inline-flex items-center gap-2 rounded-lg bg-[#D4AF37] px-3.5 py-2 text-xs font-bold text-[#102219]"><Copy size={14}/>{copied ? 'Copied' : 'Copy offer link'}</button>
                     <a href={shareUrl} target="_blank" rel="noreferrer" className="inline-flex items-center gap-2 rounded-lg border border-[#315541] px-3.5 py-2 text-xs text-white">Preview store link <ExternalLink size={13}/></a>
                   </div>
@@ -708,7 +744,7 @@ export default function PromoterPortal() {
 
               <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-2">
                 {[
-                  ['Delivered / Total Orders', `${deliveredOrdersCount} / ${dashboard.summary?.attributed_orders ?? 0}`],
+                  ['Delivered / Total Orders', `${deliveredOrdersCount} / ${promoUsedCount}`],
                   ['Pending Delivery Commission', formatMoney(dashboard.summary?.pending_commission)],
                   ['Ready for UPI Payout', formatMoney(dashboard.summary?.payable_commission)],
                   ['Lifetime Paid Commission', formatMoney(dashboard.summary?.paid_commission)],
@@ -721,7 +757,21 @@ export default function PromoterPortal() {
               </div>
             </section>
 
-            <section className={cardClass}>
+            {promoUsedCount === 0 && (
+              <section className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-[#D4AF37]/30 bg-[#D4AF37]/[0.07] p-5">
+                <div className="max-w-3xl">
+                  <h2 className="font-serif text-lg font-bold text-white">Your creator code is live and ready to share</h2>
+                  <p className="mt-1 text-xs leading-5 text-[#B7C9BD]">
+                    Share your offer link or code with customers. Eligible orders will appear in your ledger after checkout; orders from your own account are not eligible.
+                  </p>
+                </div>
+                <button type="button" onClick={copyLink} className="inline-flex items-center gap-2 rounded-lg bg-[#D4AF37] px-4 py-2.5 text-xs font-bold text-[#102219]">
+                  <Copy size={14}/>{copied ? 'Copied' : 'Copy offer link'}
+                </button>
+              </section>
+            )}
+
+            <section id="creator-share-kit" className={cardClass}>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
@@ -770,7 +820,7 @@ export default function PromoterPortal() {
               </div>
             </section>
 
-            <section className={cardClass}>
+            <section id="creator-milestones" className={cardClass}>
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div>
                   <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Creator Milestones</p>
@@ -827,7 +877,7 @@ export default function PromoterPortal() {
               </section>
 
               <div className="space-y-6">
-                <form onSubmit={savePartnerPerks} className={`${cardClass} space-y-4`}>
+                <form id="creator-code" onSubmit={savePartnerPerks} className={`${cardClass} space-y-4`}>
                   <div className="flex items-center gap-2 text-[#D4AF37]">
                     <Film size={18}/>
                     <h2 className="font-serif text-xl font-bold text-white">My creator promo code</h2>
@@ -844,7 +894,7 @@ export default function PromoterPortal() {
                   </div>
                 </form>
 
-                <form onSubmit={saveCreatorPreferences} className={`${cardClass} space-y-3`}>
+                <form id="creator-settings" onSubmit={saveCreatorPreferences} className={`${cardClass} space-y-3`}>
                   <div className="flex items-center gap-2 text-[#D4AF37]">
                     <Wallet size={18}/>
                     <h2 className="font-serif text-xl font-bold text-white">Payout &amp; Campaign Coordination</h2>
@@ -920,7 +970,7 @@ export default function PromoterPortal() {
               </div>
             </section>
 
-            <section className={cardClass}>
+            <section id="creator-earnings" className={cardClass}>
               <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <h2 className="font-serif text-xl font-bold text-white">Open order ledger</h2>

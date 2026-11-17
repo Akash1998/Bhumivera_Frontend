@@ -22,6 +22,7 @@ import { haptics } from '../utils/haptics';
 import { getProductImageUrl } from '../utils/productImageUrl';
 import { calculateReferralWalletRedemption, calculateTierDiscount } from '../utils/walletRedemption';
 import { getCurrentCoordinates, reverseGeocodeCoordinates } from '../utils/geolocation';
+import { resolveCheckoutPromo } from '../utils/resolveCheckoutPromo';
 
 export default function Checkout() {
   const {
@@ -40,6 +41,7 @@ export default function Checkout() {
     affiliateDiscount,
     minimumOrderAmount,
     removeAffiliateCode,
+    applyAffiliateCode,
     applyCoupon: applyCartCoupon,
     removeCoupon: removeCartCoupon,
   } = useCart();
@@ -296,7 +298,19 @@ export default function Checkout() {
     setError(null);
     setCouponMessage('');
     try {
-      const res = await couponApi.validate(clean, subtotal, { paymentMode, items: cartItems });
+      const result = await resolveCheckoutPromo({
+        code: clean,
+        validateCoupon: code => couponApi.validate(code, subtotal, { paymentMode, items: cartItems }),
+        applyAffiliateCode,
+      });
+      if (result.type === 'creator') {
+        setPromoInput('');
+        setCouponMessage(`Creator code ${clean} applied — ${Number(result.offer?.discountPercent) || 0}% off.`);
+        haptics.notificationSuccess();
+        return;
+      }
+
+      const res = result.response;
       const payload = res.data?.data || res.data;
       const discountAmt = Number(payload?.discountAmount ?? payload?.discount ?? 0);
       const rewardType = payload?.coupon?.reward_type || (payload?.freeShipping ? 'free_shipping' : 'standard');
@@ -760,7 +774,7 @@ export default function Checkout() {
                       type="text"
                       value={promoInput}
                       onChange={(e) => setPromoInput(e.target.value.toUpperCase())}
-                      placeholder="ENTER CODE"
+                      placeholder="STORE COUPON OR CREATOR CODE"
                       className="flex-1 rounded-xl border border-[#244A38] bg-[#14291F] px-3 py-2 text-xs font-mono uppercase text-white focus:border-[#D4AF37] focus:outline-none"
                     />
                     <button

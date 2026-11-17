@@ -107,6 +107,8 @@ describe('creator partnership dashboard', () => {
     render(<MemoryRouter><PromoterPortal /></MemoryRouter>);
 
     expect(await screen.findByText('7 used of 50 · up to 2 per customer')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Your Creator Dashboard' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Manage code' }).getAttribute('href')).toBe('#creator-code');
     fireEvent.change(screen.getByLabelText('Promo code name'), { target: { value: 'NEWCODE' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save promo code' }));
 

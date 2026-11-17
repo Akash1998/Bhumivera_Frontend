@@ -55,7 +55,7 @@ describe('promoter registration page', () => {
 
     await waitFor(() => expect(screen.getByTestId('location').textContent).toContain('"pathname":"/register"'));
     expect(screen.getByTestId('location').textContent).not.toContain('email');
-    expect(screen.getByTestId('location').textContent).toContain('"from":"/promotions"');
+    expect(screen.getByTestId('location').textContent).toContain('"from":"/promotions/dashboard"');
   });
 
   it('provides an existing-account link with the promotions return path', async () => {
@@ -75,7 +75,7 @@ describe('promoter registration page', () => {
     fireEvent.click(await screen.findByRole('link', { name: /Already have an account/ }));
 
     await waitFor(() => expect(screen.getByTestId('location').textContent).toContain('"pathname":"/login"'));
-    expect(screen.getByTestId('location').textContent).toContain('"from":"/promotions"');
+    expect(screen.getByTestId('location').textContent).toContain('"from":"/promotions/dashboard"');
   });
 
   it('shows the creator fit check before the application and keeps optional details collapsible', async () => {

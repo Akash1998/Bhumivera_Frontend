@@ -168,9 +168,11 @@ export const CartProvider = ({ children }) => {
       expiresAt: Date.now() + 30 * 24 * 60 * 60 * 1000,
     }));
     setAffiliateCode(code);
-    setAffiliateOffer(response.data?.offer || null);
+    const offer = response.data?.offer || null;
+    setAffiliateOffer(offer);
     setAffiliateOfferError('');
     setAffiliateOfferLoading(false);
+    return offer;
   };
 
   const removeAffiliateCode = () => {

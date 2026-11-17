@@ -123,19 +123,19 @@ export default function AffiliateProgramManagement() {
         id: 'executive_invite',
         title: 'Option 1 · Warm Executive Creator Onboarding Invite (Email / DM)',
         badge: '3-Step Official Onboarding',
-        text: `Hi ${name},\n\nWe’ve been following your ${niche.toLowerCase()} content on ${platform} (${handle}) and love your honest, educational approach with your community.\n\nWe’d love to invite you to join the Bhumivera Co-Creator & Brand Partner Program. Here is how our 3-step onboarding works:\n\n1. Register at https://www.bhumivera.com/promotions — sign in or create your verified Bhumivera account and submit your 2-minute creator profile.\n2. 12–24 Hour Team Verification — our curation team reviews your profile and activates your reserved creator code.\n3. Campaign Brief & Code Activation — once approved, we share your campaign brief, ${discount}% audience offer code, and ${share}% contribution profit-share ledger.\n\nWhenever you’re ready, you can explore the program and apply here: https://www.bhumivera.com/promotions\n\nWarm regards,\nBhumivera Partnerships Team\nBhumivera Organics India Private Limited`,
+        text: `Hi ${name},\n\nWe’ve been following your ${niche.toLowerCase()} content on ${platform} (${handle}) and love your honest, educational approach with your community.\n\nWe’d love to invite you to join the Bhumivera Co-Creator & Brand Partner Program. Here is how our 3-step onboarding works:\n\n1. Register at https://www.bhumivera.com/promotions/dashboard — sign in or create your verified Bhumivera account and submit your 2-minute creator profile.\n2. 12–24 Hour Team Verification — our curation team reviews your profile and activates your reserved creator code.\n3. Campaign Brief & Code Activation — once approved, we share your campaign brief, ${discount}% audience offer code, and ${share}% contribution profit-share ledger.\n\nWhenever you’re ready, you can explore the program and apply here: https://www.bhumivera.com/promotions/dashboard#apply\n\nWarm regards,\nBhumivera Partnerships Team\nBhumivera Organics India Private Limited`,
       },
       {
         id: 'quick_dm',
         title: 'Option 2 · Fast Instagram / WhatsApp Creator DM',
         badge: 'High-Response Short DM',
-        text: `Hi ${name}! Loved your recent ${niche.toLowerCase()} posts on ${handle} 🌿 We’re onboarding select creators for long-term partnerships at Bhumivera.\n\nIt’s a simple 3-step process:\n1️⃣ Apply in 2 mins at https://www.bhumivera.com/promotions\n2️⃣ Our team verifies your profile within 12–24 hours\n3️⃣ We share your campaign brief, ${discount}% community code & open-book earnings portal\n\nWould love to have you apply at https://www.bhumivera.com/promotions ✨`,
+        text: `Hi ${name}! Loved your recent ${niche.toLowerCase()} posts on ${handle} 🌿 We’re onboarding select creators for long-term partnerships at Bhumivera.\n\nIt’s a simple 3-step process:\n1️⃣ Apply in 2 mins at https://www.bhumivera.com/promotions/dashboard#apply\n2️⃣ Our team verifies your profile within 12–24 hours\n3️⃣ We share your campaign brief, ${discount}% community code & open-book earnings portal\n\nWould love to have you apply at https://www.bhumivera.com/promotions/dashboard#apply ✨`,
       },
       {
         id: 'approved_welcome',
         title: 'Option 3 · Post-Approval Welcome & Campaign Kickoff',
         badge: 'Send After Approving',
-        text: `Hi ${name},\n\nWelcome to the Bhumivera Creator Partnership! Your application for ${handle} has been approved.\n\n• Your Active Audience Code: ${code} (${discount}% off for your community)\n• Your Direct Storefront Link: https://www.bhumivera.com/?aff=${code}\n• Your Contribution Profit Share: ${share}% of qualifying order contribution\n• Your Creator Desk & Ledger: https://www.bhumivera.com/promotions\n\nSign in to your Creator Desk to copy ready-to-post captions, review product talking points, and track every attributed order in real time.\n\nLet’s grow together,\nBhumivera Partnerships Team`,
+        text: `Hi ${name},\n\nWelcome to the Bhumivera Creator Partnership! Your application for ${handle} has been approved.\n\n• Your Active Audience Code: ${code} (${discount}% off for your community)\n• Your Direct Storefront Link: https://www.bhumivera.com/?aff=${code}\n• Your Contribution Profit Share: ${share}% of qualifying order contribution\n• Your Creator Desk & Ledger: https://www.bhumivera.com/promotions/dashboard\n\nSign in to your Creator Desk to copy ready-to-post captions, review product talking points, and track every attributed order in real time.\n\nLet’s grow together,\nBhumivera Partnerships Team`,
       },
     ];
   }, [inviteVars]);
@@ -214,12 +214,12 @@ export default function AffiliateProgramManagement() {
         </div>
         <div className="flex items-center gap-2 text-xs">
           <a
-            href="/promotions"
+            href="/promotions/dashboard"
             target="_blank"
             rel="noreferrer"
             className="inline-flex items-center gap-1.5 rounded-lg border border-[#315541] bg-[#0b1c14] px-3 py-1.5 text-xs font-semibold text-[#FCE096] hover:border-[#D4AF37]"
           >
-            Open /promotions live page <ExternalLink size={12}/>
+            Open /promotions/dashboard live page <ExternalLink size={12}/>
           </a>
         </div>
       </div>
@@ -233,7 +233,7 @@ export default function AffiliateProgramManagement() {
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Creator Acquisition &amp; Activation</p>
             <h2 className="mt-1 font-serif text-2xl font-bold text-white">3-Step Creator Onboarding Message Studio</h2>
             <p className="mt-2 max-w-3xl text-xs leading-6 text-[#9BB0A5]">
-              Generate personalized outreach invites and approval messages guiding creators through Bhumivera’s 3-step workflow: (1) Register at bhumivera.com/promotions, (2) 12–24h team verification, and (3) Campaign detail sharing &amp; code activation.
+              Generate personalized outreach invites and approval messages guiding creators through Bhumivera’s 3-step workflow: (1) Register at bhumivera.com/promotions/dashboard, (2) 12–24h team verification, and (3) Campaign detail sharing &amp; code activation.
             </p>
             <div className="mt-4 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
               <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">
@@ -311,7 +311,7 @@ export default function AffiliateProgramManagement() {
               <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Product Education Standards</p>
               <h2 className="mt-1 font-serif text-2xl font-bold text-white">Creator Campaign Briefs &amp; Talking Points</h2>
               <p className="mt-1 max-w-3xl text-xs leading-6 text-[#9BB0A5]">
-                Manage the product storytelling briefs, substantiated ingredient potencies, and ASCI/FTC disclosure rules shown to creators on /promotions.
+                Manage the product storytelling briefs, substantiated ingredient potencies, and ASCI/FTC disclosure rules shown to creators on /promotions/dashboard.
               </p>
             </div>
             <button type="button" onClick={loadBriefs} disabled={briefsLoading} className="inline-flex items-center gap-1.5 rounded-lg border border-[#315541] px-3 py-2 text-xs font-semibold text-white">

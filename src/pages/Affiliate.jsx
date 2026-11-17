@@ -64,7 +64,7 @@ export default function Affiliate() {
             We want to build with creators who care about honest education, meaningful community and a more thoughtful relationship with nature. This is a shared journey—not a free-product exchange or a guaranteed-income promise.
           </p>
           <div className="mt-8 flex flex-wrap justify-center gap-3">
-            <Link to="/promotions" className="inline-flex items-center gap-2 rounded-xl bg-[#d4af37] px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-[#102219] transition hover:bg-[#fce096]">
+            <Link to="/promotions/dashboard#apply" className="inline-flex items-center gap-2 rounded-xl bg-[#d4af37] px-6 py-3.5 text-xs font-bold uppercase tracking-wider text-[#102219] transition hover:bg-[#fce096]">
               Explore the partnership <ArrowRight size={15}/>
             </Link>
             <Link to="/legal/warranty-affiliate-b2b" className="inline-flex items-center gap-2 rounded-xl border border-white/15 px-6 py-3.5 text-xs font-semibold uppercase tracking-wider text-[#e2e8f0] transition hover:border-[#d4af37]/60">
@@ -179,7 +179,7 @@ export default function Affiliate() {
           <p className="mt-2 max-w-2xl text-sm leading-6 text-[#cbd5e1]">Share your perspective and what you hope to contribute. We review for fit, honesty and intent; there is no follower minimum and no fee to apply.</p>
         </div>
         <div className="flex shrink-0 flex-wrap gap-3">
-          <Link to="/promotions" className="inline-flex items-center gap-2 rounded-xl bg-[#d4af37] px-5 py-3 text-xs font-bold text-[#102219] hover:bg-[#fce096]">Start an application <ArrowRight size={14}/></Link>
+          <Link to="/promotions/dashboard#apply" className="inline-flex items-center gap-2 rounded-xl bg-[#d4af37] px-5 py-3 text-xs font-bold text-[#102219] hover:bg-[#fce096]">Start an application <ArrowRight size={14}/></Link>
           <Link to="/legal/warranty-affiliate-b2b" className="inline-flex items-center gap-2 rounded-xl border border-white/15 px-5 py-3 text-xs font-semibold text-white hover:border-[#d4af37]/50"><Scale size={14}/> Partner terms</Link>
         </div>
       </section>

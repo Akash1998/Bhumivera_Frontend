@@ -359,7 +359,7 @@ export default function PromoterProgramManagement() {
   const copyWelcomeMessage = async partner => {
     const code = partner.referral_code || 'PENDING';
     const link = `${window.location.origin}/?aff=${encodeURIComponent(code)}`;
-    const msg = `Hi ${partner.user_name || 'there'}, your Bhumivera Creator Partnership (${partner.social_handle}) is ${partner.status}! Your creator promo code ${code} gives ${Number(partner.discount_percent ?? config.default_customer_discount_percent)}% off at ${link} and earns ${Number(partner.commission_share_percent ?? config.default_commission_share_percent)}% of qualifying order contribution. View your live ledger & briefs at ${window.location.origin}/promotions`;
+    const msg = `Hi ${partner.user_name || 'there'}, your Bhumivera Creator Partnership (${partner.social_handle}) is ${partner.status}! Your creator promo code ${code} gives ${Number(partner.discount_percent ?? config.default_customer_discount_percent)}% off at ${link} and earns ${Number(partner.commission_share_percent ?? config.default_commission_share_percent)}% of qualifying order contribution. View your live ledger & briefs at ${window.location.origin}/promotions/dashboard`;
     await copyText(msg);
   };
 

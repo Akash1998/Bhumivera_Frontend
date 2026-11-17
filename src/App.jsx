@@ -19,6 +19,16 @@ import "./index.css";
 
 const CHUNK_RELOAD_KEY = 'page-chunk-reload-attempted';
 
+function PromotionsRedirect() {
+  const location = useLocation();
+  return (
+    <Navigate
+      to={{ pathname: '/promotions/dashboard', search: location.search, hash: location.hash }}
+      replace
+    />
+  );
+}
+
 const reloadLatestBuild = () => {
   window.sessionStorage.setItem(CHUNK_RELOAD_KEY, 'true');
   const latestUrl = new URL(window.location.href);
@@ -466,7 +476,8 @@ function AppContent() {
             <Route path="/wishlist" element={<Wishlist />} />
             <Route path="/address-book" element={<AddressBook />} />
             <Route path="/affiliate" element={<Affiliate />} />
-            <Route path="/promotions" element={<Promotions />} />
+            <Route path="/promotions" element={<PromotionsRedirect />} />
+            <Route path="/promotions/dashboard" element={<Promotions />} />
 
             {/* 10X Super Inventory, Order Lifecycle, RTO Returns, QR Scanner & Daily SQL Backup Software */}
             <Route path="/scanner" element={<WarehouseScannerPwa />} />

@@ -357,7 +357,7 @@ export function resolveClientSideConciergeFallback(message) {
 
   if (/\b(ambassador|affiliate|referral program)\b/.test(normalizedQuery)) {
     return {
-      reply: 'For the Bhumivera Brand Ambassador Program, visit the [promoter application page](/promotions) and sign in or create a verified Bhumivera account to apply.',
+      reply: 'For the Bhumivera Brand Ambassador Program, visit the [creator dashboard](/promotions/dashboard) and sign in or create a verified Bhumivera account to apply.',
       quickActions: supportActions,
     };
   }
