@@ -306,7 +306,7 @@ export default function Promotions() {
   };
 
   return (
-    <main className="relative min-h-screen overflow-hidden bg-[#07140e] px-4 py-8 text-[#DFD7C4] sm:py-12">
+    <main className="relative min-h-screen overflow-hidden bg-[#07140e] px-2 py-6 text-[#DFD7C4] sm:px-4 sm:py-12">
       <SEO
         title="Bhumivera Creator Partnership | Grow Together"
         description="Build a long-term Bhumivera creator partnership through honest product education, open order economics and nature-minded community."
@@ -321,32 +321,32 @@ export default function Promotions() {
       </div>
 
       <div className="relative mx-auto max-w-7xl space-y-5 sm:space-y-8">
-        <header className="relative overflow-hidden rounded-[2rem] border border-[#D4AF37]/25 bg-gradient-to-br from-[#143A29]/95 via-[#0D261B]/90 to-[#081A12]/95 p-6 shadow-[0_30px_90px_rgba(0,0,0,0.3)] backdrop-blur-xl sm:p-10">
+        <header className="relative overflow-hidden rounded-[2rem] border border-[#D4AF37]/25 bg-gradient-to-br from-[#143A29]/95 via-[#0D261B]/90 to-[#081A12]/95 p-4 shadow-[0_30px_90px_rgba(0,0,0,0.3)] backdrop-blur-xl sm:p-10">
           <div aria-hidden="true" className="absolute -right-12 -top-20 h-72 w-72 rounded-full border border-[#D4AF37]/10 bg-[#D4AF37]/[0.03]"/>
           <div className="relative grid items-center gap-8 lg:grid-cols-[1.2fr_0.8fr]">
             <div>
               <p className="inline-flex items-center gap-2 rounded-full border border-[#D4AF37]/30 bg-black/20 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#FCE096]">
-                <Leaf size={13}/> Creator partnership · built for the long term
+                <Leaf size={13}/> For thoughtful creators · built to grow
               </p>
               <h1 className="mt-5 max-w-3xl font-serif text-4xl font-bold leading-tight text-white sm:text-6xl">
-                Not one post and goodbye. <span className="text-[#E8CD75]">Let’s grow together.</span>
+                Your voice can build <span className="text-[#E8CD75]">something bigger than a post.</span>
               </h1>
               <p className="mt-4 max-w-2xl text-sm leading-7 text-[#C5D8CC] sm:text-base">
-                We want creators who care about honest education, a thriving community and a more thoughtful relationship with nature. This is a shared journey—not a free-product exchange or a guaranteed-income promise.
+                Bring your honest point of view. We bring clear campaign terms, thoughtful product education and a partnership designed to grow with your community. Start with a free, 2-minute application—no follower minimum.
               </p>
               <p className="mt-4 max-w-2xl border-l-2 border-[#D4AF37]/55 pl-4 font-serif text-sm italic leading-6 text-[#F0D98A]">
                 “Create with us, learn with us, and grow with your community.”
               </p>
               <div className="mt-6 flex flex-wrap gap-2">
-                {['No fixed follower minimum', '12–24h human curation review', 'Open-book order ledger', 'No application fee'].map(item => (
+                {['No follower minimum', 'Free 2-minute application', 'Human-reviewed', 'Transparent order ledger'].map(item => (
                   <span key={item} className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-black/20 px-3 py-2 text-xs font-semibold text-[#E7EEE8]">
                     <CheckCircle2 size={14} className="text-[#C4D99A]"/> {item}
                   </span>
                 ))}
               </div>
               <div className="mt-7 flex flex-wrap items-center gap-3">
-                <a href="#apply" className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-bold text-[#102219] transition hover:bg-[#FCE096]">
-                  Explore the partnership <ArrowRight size={16}/>
+                <a href="#apply" className="inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#D4AF37] px-5 py-3 text-sm font-bold text-[#102219] transition hover:-translate-y-0.5 hover:bg-[#FCE096] hover:shadow-[0_8px_24px_rgba(212,175,55,0.18)]">
+                  Start my application <ArrowRight size={16}/>
                 </a>
                 <a href="#interactive-calculator" onClick={() => setShowPartnershipDetails(true)} className="inline-flex min-h-12 items-center gap-2 rounded-xl border border-[#D4AF37]/35 bg-black/20 px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#FCE096] transition hover:border-[#D4AF37] hover:bg-white/[0.04]">
                   <Calculator size={15}/> Try Earnings &amp; Milestone Explorer
@@ -409,10 +409,88 @@ export default function Promotions() {
           </div>
         </header>
 
-        <section id="apply" aria-labelledby="apply-title" className="scroll-mt-5 grid items-stretch gap-4 lg:grid-cols-2 lg:gap-5">
+        <section aria-labelledby="creator-fit-check-title" className="relative overflow-hidden rounded-[1.5rem] border border-[#D4AF37]/20 bg-gradient-to-br from-[#0D261B] via-[#0A1E15] to-[#07140e] p-3 shadow-[0_28px_90px_rgba(0,0,0,0.22)] sm:rounded-[1.75rem] sm:p-8">
+          <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-28 h-72 w-72 rounded-full border border-[#D4AF37]/10 bg-[#D4AF37]/[0.035] blur-2xl"/>
+          <div className="relative grid items-center gap-5 lg:grid-cols-[1.15fr_0.85fr] lg:gap-7">
+            <div>
+              <p className="inline-flex items-center gap-1.5 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/[0.07] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
+                <HeartHandshake size={14}/> 30-second creator compass
+              </p>
+              <h2 id="creator-fit-check-title" className="mt-3 font-serif text-2xl font-bold text-white sm:text-3xl">
+                See if the Bhumivera Creator Partnership fits your style
+              </h2>
+              <p className="mt-2 max-w-2xl text-xs leading-6 text-[#B7C9BD]">
+                Choose the principles that feel like you. This is a private reflection—not a test, and your score is not part of the application.
+              </p>
+              <div className="mt-4 space-y-2 sm:mt-5 sm:space-y-2.5">
+                {FIT_CHECKS.map((statement, idx) => {
+                  const checked = Boolean(checkedFit[idx]);
+                  return (
+                    <label
+                      key={statement}
+                      className={`group flex cursor-pointer items-center gap-3 rounded-xl border p-3 text-xs leading-5 transition duration-200 focus-within:ring-2 focus-within:ring-[#FCE096]/70 sm:p-3.5 ${
+                        checked
+                          ? 'border-[#D4AF37]/55 bg-[#D4AF37]/[0.08] text-white shadow-[inset_0_0_24px_rgba(212,175,55,0.04)]'
+                          : 'border-white/10 bg-black/20 text-[#C5D8CC] hover:border-[#D4AF37]/35 hover:bg-white/[0.035]'
+                      }`}
+                    >
+                      <input
+                        type="checkbox"
+                        checked={checked}
+                        onChange={e => setCheckedFit(curr => curr.map((value, i) => i === idx ? e.target.checked : value))}
+                        className="peer sr-only"
+                      />
+                      <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border font-mono text-[10px] font-bold transition ${
+                        checked
+                          ? 'border-[#D4AF37]/50 bg-[#D4AF37]/15 text-[#FCE096]'
+                          : 'border-white/10 bg-black/20 text-[#82998D] group-hover:border-[#D4AF37]/30'
+                      }`}>
+                        {checked ? <CheckCircle2 size={16}/> : `0${idx + 1}`}
+                      </span>
+                      <span className="flex-1">{statement}</span>
+                      <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full transition ${
+                        checked ? 'bg-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.7)]' : 'bg-white/10'
+                      }`}/>
+                    </label>
+                  );
+                })}
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[#D4AF37]/25 bg-[#06130D]/75 p-3 text-center shadow-inner sm:p-7">
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#9BB0A5]">Your creator compass</p>
+              <div
+                role="progressbar"
+                aria-label="Creator alignment score"
+                aria-valuemin={0}
+                aria-valuemax={FIT_CHECKS.length}
+                aria-valuenow={fitScore}
+                className="mx-auto mt-3 flex h-24 w-24 items-center justify-center rounded-full p-[5px] transition-[background] duration-500 sm:mt-4 sm:h-32 sm:w-32"
+                style={{ background: `conic-gradient(#D4AF37 ${fitProgress}%, rgba(255,255,255,0.09) ${fitProgress}% 100%)` }}
+              >
+                <div className="flex h-full w-full flex-col items-center justify-center rounded-full border border-white/[0.06] bg-[#07140e]">
+                  <span className="font-serif text-3xl font-bold leading-none text-white sm:text-4xl">{fitScore}</span>
+                  <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#82998D]">of {FIT_CHECKS.length}</span>
+                </div>
+              </div>
+              <p className="mt-3 text-[10px] font-bold uppercase tracking-[0.16em] text-[#D4AF37] sm:mt-4">{fitFeedback.label}</p>
+              <h3 className="mt-2 font-serif text-xl font-bold text-white">{fitFeedback.title}</h3>
+              <p className="mx-auto mt-2 max-w-sm text-xs leading-5 text-[#AFC2B5]">{fitFeedback.message}</p>
+              <a
+                href="#apply"
+                className="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#D4AF37] px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-[#102219] transition hover:-translate-y-0.5 hover:bg-[#FCE096] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FCE096]"
+              >
+                Continue to application <ArrowRight size={14}/>
+              </a>
+              <p className="mt-2 text-[10px] leading-4 text-[#82998D]">No pass/fail score—your answers stay here.</p>
+            </div>
+          </div>
+        </section>
+
+        <section id="apply" aria-labelledby="apply-title" className="scroll-mt-5 grid items-stretch gap-3 lg:grid-cols-2 lg:gap-5">
           <div className="hidden rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#0D261B]/65 p-6 backdrop-blur-xl lg:block lg:p-8">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Your next small step</p>
-            <h2 id="apply-title" className="mt-3 font-serif text-3xl font-bold text-white">Start with your account</h2>
+            <h2 id="apply-details-title" className="mt-3 font-serif text-3xl font-bold text-white">Start with your account</h2>
             <p className="mt-3 text-sm leading-6 text-[#B7C9BD]">
               Sign in or create a verified Bhumivera account. Then tell us about your platform, content and audience—and what a meaningful, nature-minded partnership could look like beyond a single post.
             </p>
@@ -424,20 +502,20 @@ export default function Promotions() {
             </ul>
           </div>
 
-          <section className="flex flex-col justify-between rounded-[1.5rem] border border-[#D4AF37]/30 bg-gradient-to-br from-[#102A1E]/95 to-[#0A1D14]/95 p-5 shadow-2xl sm:rounded-[1.75rem] sm:p-9 lg:min-h-[25rem] lg:p-10" aria-label="Register or sign in to apply">
+          <section className="flex flex-col justify-between rounded-[1.5rem] border border-[#D4AF37]/30 bg-gradient-to-br from-[#102A1E]/95 to-[#0A1D14]/95 p-3 shadow-2xl sm:rounded-[1.75rem] sm:p-9 lg:min-h-[25rem] lg:p-10" aria-label="Register or sign in to apply">
             <div>
-              <div className="flex items-start gap-3 rounded-xl border border-[#D4AF37]/20 bg-black/20 p-3.5 sm:gap-4 sm:rounded-2xl sm:p-6">
+              <div className="flex items-start gap-3 rounded-xl border border-[#D4AF37]/20 bg-black/20 p-3 sm:gap-4 sm:rounded-2xl sm:p-6">
                 <Clock3 size={18} className="mt-0.5 shrink-0 text-[#D4AF37] sm:h-[21px] sm:w-[21px]"/>
                 <p className="text-xs leading-5 text-[#C8D5CC] sm:text-sm sm:leading-6">
-                  Your application and promoter code remain inactive until approved. Gifting is selective and considered separately for specific campaigns.
+                  Every application is reviewed by our team. If there’s a fit, you’ll agree on the campaign scope before sharing anything.
                 </p>
               </div>
 
               <div className="mt-5 sm:mt-8">
                 <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Your next small step</p>
-                <h2 className="mt-1.5 font-serif text-2xl font-bold text-white sm:mt-2 sm:text-3xl">Start your creator application</h2>
+                <h2 id="apply-title" className="mt-1.5 font-serif text-2xl font-bold text-white sm:mt-2 sm:text-3xl">Let’s hear your story</h2>
                 <p className="mt-2 text-xs leading-5 text-[#B7C9BD] sm:mt-3 sm:text-sm sm:leading-6">
-                  Create or sign in to a verified account, then complete the guided application in about 2 minutes.
+                  Create or sign in to a verified account, then tell us what you’d love to build with your community. It takes about 2 minutes.
                 </p>
               </div>
             </div>
@@ -458,6 +536,8 @@ export default function Promotions() {
                 Already have an account? Sign in
               </Link>
             </div>
+
+            <p className="mt-3 text-center text-[10px] font-semibold text-[#F0D98A]">No application fee · No purchase required · No follower minimum</p>
 
             <p className="mt-4 border-t border-white/10 pt-3 text-[10px] leading-4 text-[#9BB0A5] sm:mt-7 sm:pt-5 sm:text-xs sm:leading-6">
               No application fee or follower minimum. An application is not a promise of acceptance, product gifting, paid work, orders, or earnings. See the <Link to="/legal/warranty-affiliate-b2b" className="font-semibold text-[#F0D98A] underline underline-offset-2">partner terms</Link>.
@@ -769,84 +849,6 @@ export default function Promotions() {
                 <p className="mt-2 text-xs leading-5 text-[#AFC2B5]">{description}</p>
               </article>
             ))}
-          </div>
-        </section>
-
-        <section aria-labelledby="creator-fit-check-title" className="relative overflow-hidden rounded-[1.75rem] border border-[#D4AF37]/20 bg-gradient-to-br from-[#0D261B] via-[#0A1E15] to-[#07140e] p-6 shadow-[0_28px_90px_rgba(0,0,0,0.22)] sm:p-8">
-          <div aria-hidden="true" className="pointer-events-none absolute -right-20 -top-28 h-72 w-72 rounded-full border border-[#D4AF37]/10 bg-[#D4AF37]/[0.035] blur-2xl"/>
-          <div className="relative grid items-center gap-7 lg:grid-cols-[1.15fr_0.85fr]">
-            <div>
-              <p className="inline-flex items-center gap-1.5 rounded-full border border-[#D4AF37]/25 bg-[#D4AF37]/[0.07] px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">
-                <HeartHandshake size={14}/> 30-second creator compass
-              </p>
-              <h2 id="creator-fit-check-title" className="mt-3 font-serif text-2xl font-bold text-white sm:text-3xl">
-                See if the Bhumivera Creator Partnership fits your style
-              </h2>
-              <p className="mt-2 max-w-2xl text-xs leading-6 text-[#B7C9BD]">
-                Whether you have 800 engaged followers or 80,000, our team looks for these four creator principles when reviewing applications.
-              </p>
-              <div className="mt-5 space-y-2.5">
-                {FIT_CHECKS.map((statement, idx) => {
-                  const checked = Boolean(checkedFit[idx]);
-                  return (
-                    <label
-                      key={statement}
-                      className={`group flex cursor-pointer items-center gap-3 rounded-xl border p-3.5 text-xs leading-5 transition duration-200 focus-within:ring-2 focus-within:ring-[#FCE096]/70 ${
-                        checked
-                          ? 'border-[#D4AF37]/55 bg-[#D4AF37]/[0.08] text-white shadow-[inset_0_0_24px_rgba(212,175,55,0.04)]'
-                          : 'border-white/10 bg-black/20 text-[#C5D8CC] hover:border-[#D4AF37]/35 hover:bg-white/[0.035]'
-                      }`}
-                    >
-                      <input
-                        type="checkbox"
-                        checked={checked}
-                        onChange={e => setCheckedFit(curr => curr.map((value, i) => i === idx ? e.target.checked : value))}
-                        className="peer sr-only"
-                      />
-                      <span className={`flex h-7 w-7 shrink-0 items-center justify-center rounded-lg border font-mono text-[10px] font-bold transition ${
-                        checked
-                          ? 'border-[#D4AF37]/50 bg-[#D4AF37]/15 text-[#FCE096]'
-                          : 'border-white/10 bg-black/20 text-[#82998D] group-hover:border-[#D4AF37]/30'
-                      }`}>
-                        {checked ? <CheckCircle2 size={16}/> : `0${idx + 1}`}
-                      </span>
-                      <span className="flex-1">{statement}</span>
-                      <span aria-hidden="true" className={`h-2 w-2 shrink-0 rounded-full transition ${
-                        checked ? 'bg-[#D4AF37] shadow-[0_0_12px_rgba(212,175,55,0.7)]' : 'bg-white/10'
-                      }`}/>
-                    </label>
-                  );
-                })}
-              </div>
-            </div>
-
-            <div className="rounded-2xl border border-[#D4AF37]/25 bg-[#06130D]/75 p-5 text-center shadow-inner sm:p-7">
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#9BB0A5]">Your creator compass</p>
-              <div
-                role="progressbar"
-                aria-label="Creator alignment score"
-                aria-valuemin={0}
-                aria-valuemax={FIT_CHECKS.length}
-                aria-valuenow={fitScore}
-                className="mx-auto mt-4 flex h-32 w-32 items-center justify-center rounded-full p-[5px] transition-[background] duration-500"
-                style={{ background: `conic-gradient(#D4AF37 ${fitProgress}%, rgba(255,255,255,0.09) ${fitProgress}% 100%)` }}
-              >
-                <div className="flex h-full w-full flex-col items-center justify-center rounded-full border border-white/[0.06] bg-[#07140e]">
-                  <span className="font-serif text-4xl font-bold leading-none text-white">{fitScore}</span>
-                  <span className="mt-1 text-[10px] font-bold uppercase tracking-[0.18em] text-[#82998D]">of {FIT_CHECKS.length}</span>
-                </div>
-              </div>
-              <p className="mt-4 text-[10px] font-bold uppercase tracking-[0.16em] text-[#D4AF37]">{fitFeedback.label}</p>
-              <h3 className="mt-2 font-serif text-xl font-bold text-white">{fitFeedback.title}</h3>
-              <p className="mx-auto mt-2 max-w-sm text-xs leading-5 text-[#AFC2B5]">{fitFeedback.message}</p>
-              <a
-                href="#apply"
-                className="mt-5 inline-flex w-full items-center justify-center gap-2 rounded-xl bg-[#D4AF37] px-5 py-3 text-xs font-bold uppercase tracking-wider text-[#102219] transition hover:-translate-y-0.5 hover:bg-[#FCE096] hover:shadow-[0_8px_24px_rgba(212,175,55,0.18)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FCE096]"
-              >
-                Continue to Application <ArrowRight size={15}/>
-              </a>
-              <p className="mt-3 text-[10px] leading-4 text-[#82998D]">A reflection tool—not a pass/fail test or approval decision.</p>
-            </div>
           </div>
         </section>
 

@@ -78,10 +78,10 @@ describe('promoter registration page', () => {
     expect(screen.getByTestId('location').textContent).toContain('"from":"/promotions"');
   });
 
-  it('puts the application shortcut before optional details and lets mobile visitors expand them', async () => {
+  it('shows the creator fit check before the application and keeps optional details collapsible', async () => {
     useAuth.mockReturnValue({ user: null, loading: false });
 
-    render(
+    const { container } = render(
       <HelmetProvider>
         <MemoryRouter initialEntries={['/promotions#apply']}>
           <Routes><Route path="/promotions" element={<Promotions />} /></Routes>
@@ -90,6 +90,10 @@ describe('promoter registration page', () => {
     );
 
     expect(screen.getByRole('region', { name: 'Register or sign in to apply' })).toBeTruthy();
+    expect(Array.from(container.querySelectorAll('#creator-fit-check-title, #apply'), element => element.id))
+      .toEqual(['creator-fit-check-title', 'apply']);
+    expect(screen.getByRole('link', { name: 'Start my application' }).getAttribute('href')).toBe('#apply');
+    expect(screen.getByRole('link', { name: /Continue to application/ })).toBeTruthy();
     const detailsToggle = screen.getByRole('button', { name: /Explore partnership details/ });
     expect(detailsToggle.getAttribute('aria-expanded')).toBe('false');
 
