@@ -35,7 +35,7 @@ describe('promoter registration page', () => {
     products.getAllActive.mockResolvedValue({ data: { data: [] } });
   });
 
-  it('carries the entered email and promotions return path into account registration', async () => {
+  it('offers a simple registration link without asking for an email on promotions', async () => {
     useAuth.mockReturnValue({ user: null, loading: false });
 
     render(
@@ -51,13 +51,31 @@ describe('promoter registration page', () => {
 
     expect(await screen.findByRole('heading', { name: 'See what each order contributes' })).toBeTruthy();
     expect(products.getAllActive).not.toHaveBeenCalled();
-    fireEvent.change(screen.getByLabelText(/Email for your Bhumivera account/), {
-      target: { value: 'creator@example.com' },
-    });
-    fireEvent.click(screen.getByRole('button', { name: /Create and verify account/i }));
+    expect(screen.queryByLabelText(/Email for your Bhumivera account/)).toBeNull();
+    fireEvent.click(screen.getByRole('link', { name: 'Register' }));
 
     await waitFor(() => expect(screen.getByTestId('location').textContent).toContain('"pathname":"/register"'));
-    expect(screen.getByTestId('location').textContent).toContain('creator%40example.com');
+    expect(screen.getByTestId('location').textContent).not.toContain('email');
+    expect(screen.getByTestId('location').textContent).toContain('"from":"/promotions"');
+  });
+
+  it('provides an existing-account link with the promotions return path', async () => {
+    useAuth.mockReturnValue({ user: null, loading: false });
+
+    render(
+      <HelmetProvider>
+        <MemoryRouter initialEntries={['/promotions']}>
+          <Routes>
+            <Route path="/promotions" element={<Promotions />} />
+            <Route path="/login" element={<LocationSnapshot />} />
+          </Routes>
+        </MemoryRouter>
+      </HelmetProvider>,
+    );
+
+    fireEvent.click(await screen.findByRole('link', { name: 'Already have an account' }));
+
+    await waitFor(() => expect(screen.getByTestId('location').textContent).toContain('"pathname":"/login"'));
     expect(screen.getByTestId('location').textContent).toContain('"from":"/promotions"');
   });
 

@@ -160,6 +160,36 @@ export default function PromoterProgramManagement() {
     }
   };
 
+  const savePartner = async partner => {
+    const discountPercent = Number(partner.discount_percent ?? config.default_customer_discount_percent);
+    const commissionSharePercent = Number(partner.commission_share_percent ?? config.default_commission_share_percent);
+    if (!Number.isFinite(discountPercent) || discountPercent < 0 || discountPercent > 60 ||
+        !Number.isFinite(commissionSharePercent) || commissionSharePercent < 0 || commissionSharePercent > 100) {
+      setError('Enter a customer discount from 0–60% and a contribution share from 0–100%.');
+      setNotice('');
+      return;
+    }
+    setBusyPartner(partner.id);
+    setError('');
+    setNotice('');
+    try {
+      const { data } = await affiliateApi.updateAdminPartner(partner.id, {
+        discountPercent,
+        commissionSharePercent,
+        referralCode: partner.referral_code || '',
+        adminNotes: partner.admin_notes || '',
+      });
+      setPartners(current => current.map(item => (
+        item.id === partner.id ? { ...item, ...data.partner } : item
+      )));
+      setNotice(`${partner.user_name || 'Promoter'} profile settings saved. Updated rates apply to new eligible orders; existing commission records are unchanged.`);
+    } catch (saveError) {
+      setError(saveError.response?.data?.message || 'Could not save this promoter profile.');
+    } finally {
+      setBusyPartner(null);
+    }
+  };
+
   const recordPayout = async commission => {
     const reference = String(payoutReferences[commission.id] || '').trim();
     if (reference.length < 3) {
@@ -298,6 +328,7 @@ export default function PromoterProgramManagement() {
             </button>
           </form>
         )}
+        <p className="text-xs leading-5 text-[#9BB0A5]">Save rates, promoter codes, and private admin notes per profile without changing its status. Rate changes apply to new eligible orders; existing commission records are not recalculated. Program milestone upgrades remain in effect.</p>
         {loading ? <p className="text-sm text-[#9BB0A5]">Loading applications…</p> : partners.length === 0 ? (
           <p className="text-sm text-[#9BB0A5]">No promoters yet. Click <strong className="text-white">Add promoter</strong> to onboard one now, or ask them to sign in and apply on the public affiliate page.</p>
         ) : (
@@ -332,11 +363,12 @@ export default function PromoterProgramManagement() {
                   <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Promoter code
                     <input value={partner.referral_code || ''} onChange={event => updatePartnerField(partner.id, 'referral_code', event.target.value.toUpperCase())} placeholder="Generated when approved" className={inputClass}/>
                   </label>
-                  <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Admin note
-                    <input value={partner.admin_notes || ''} onChange={event => updatePartnerField(partner.id, 'admin_notes', event.target.value)} className={inputClass}/>
+                  <label className="space-y-1 text-[10px] font-semibold text-[#9BB0A5]">Private admin notes
+                    <textarea rows="2" maxLength="1000" value={partner.admin_notes || ''} onChange={event => updatePartnerField(partner.id, 'admin_notes', event.target.value)} className={`${inputClass} resize-y`}/>
                   </label>
                 </div>
                 <div className="mt-3 flex flex-wrap gap-2">
+                  <button type="button" disabled={busyPartner === partner.id} onClick={() => savePartner(partner)} className="inline-flex items-center gap-1.5 rounded-lg bg-[#D4AF37] px-3 py-2 text-xs font-bold text-[#102219] disabled:opacity-50"><Save size={14}/>{busyPartner === partner.id ? 'Saving…' : 'Save changes'}</button>
                   {partner.status !== 'approved' && <button type="button" disabled={busyPartner === partner.id} onClick={() => reviewPartner(partner, 'approved')} className="inline-flex items-center gap-1.5 rounded-lg bg-emerald-700 px-3 py-2 text-xs font-bold text-white disabled:opacity-50"><Check size={14}/>Approve</button>}
                   {partner.status !== 'rejected' && <button type="button" disabled={busyPartner === partner.id} onClick={() => reviewPartner(partner, 'rejected')} className="rounded-lg border border-rose-400/30 px-3 py-2 text-xs font-semibold text-rose-200 disabled:opacity-50">Reject</button>}
                   {partner.status === 'approved' && <button type="button" disabled={busyPartner === partner.id} onClick={() => reviewPartner(partner, 'paused')} className="rounded-lg border border-amber-400/30 px-3 py-2 text-xs font-semibold text-amber-100 disabled:opacity-50">Pause</button>}

@@ -1,6 +1,6 @@
-import React, { useRef, useState } from 'react';
+import React from 'react';
 import { ArrowRight, CheckCircle2, Clock3, Gift, Leaf, ShieldCheck, Sparkles } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import SEO from '../components/SEO';
 import { useAuth } from '../context/AuthContext';
 import PromoterPortal from './affiliate/PromoterPortal';
@@ -107,18 +107,12 @@ const FAQS = [
 
 export default function Promotions() {
   const { user, loading } = useAuth();
-  const navigate = useNavigate();
-  const emailInput = useRef(null);
-  const [email, setEmail] = useState('');
   if (loading) {
     return <main className="min-h-screen bg-[#07140e] px-4 py-20 text-center text-[#9BB0A5]">Loading your account…</main>;
   }
 
   if (user) return <PromoterPortal />;
 
-  const registrationPath = email.trim()
-    ? `/register?email=${encodeURIComponent(email.trim())}`
-    : '/register';
   const accountState = { from: '/promotions' };
 
   return (
@@ -315,7 +309,7 @@ export default function Promotions() {
           </div>
         </section>
 
-        <section id="apply" aria-labelledby="apply-title" className="scroll-mt-8 grid items-start gap-5 lg:grid-cols-[0.8fr_1.2fr]">
+        <section id="apply" aria-labelledby="apply-title" className="scroll-mt-8 grid items-stretch gap-5 lg:grid-cols-2">
           <div className="rounded-[1.75rem] border border-[#D4AF37]/20 bg-[#0D261B]/65 p-6 backdrop-blur-xl sm:p-8">
             <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Your next small step</p>
             <h2 id="apply-title" className="mt-3 font-serif text-3xl font-bold text-white">Start with your account</h2>
@@ -329,56 +323,42 @@ export default function Promotions() {
             </ul>
           </div>
 
-          <section className="rounded-[1.75rem] border border-white/10 bg-[#102A1E]/70 p-5 shadow-2xl backdrop-blur-xl sm:p-8" aria-label="Create or sign in to apply">
-            <div className="flex items-start gap-3 rounded-xl border border-[#D4AF37]/20 bg-black/20 p-4">
-              <Clock3 size={18} className="mt-0.5 shrink-0 text-[#D4AF37]"/>
-              <p className="text-xs leading-5 text-[#C8D5CC]">
-                Your application and promoter code remain inactive until approved. After account setup, we will ask for your partnership intent; gifting is selective and considered separately for specific campaigns.
-              </p>
+          <section className="flex min-h-[25rem] flex-col justify-between rounded-[1.75rem] border border-[#D4AF37]/25 bg-gradient-to-br from-[#102A1E]/95 to-[#0A1D14]/95 p-6 shadow-2xl backdrop-blur-xl sm:p-9 lg:p-10" aria-label="Register or sign in to apply">
+            <div>
+              <div className="flex items-start gap-4 rounded-2xl border border-[#D4AF37]/20 bg-black/20 p-5 sm:p-6">
+                <Clock3 size={21} className="mt-0.5 shrink-0 text-[#D4AF37]"/>
+                <p className="text-sm leading-6 text-[#C8D5CC]">
+                  Your application and promoter code remain inactive until approved. After account setup, we will ask for your partnership intent; gifting is selective and considered separately for specific campaigns.
+                </p>
+              </div>
+
+              <div className="mt-8">
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-[#D4AF37]">Ready when you are</p>
+                <h3 className="mt-2 font-serif text-2xl font-bold text-white sm:text-3xl">Start your creator application</h3>
+                <p className="mt-3 text-sm leading-6 text-[#B7C9BD]">
+                  Register or sign in to continue to the partnership application.
+                </p>
+              </div>
             </div>
 
-            <form
-              className="mt-6 space-y-4"
-              onSubmit={event => {
-                event.preventDefault();
-                navigate(registrationPath, { state: accountState });
-              }}
-            >
-              <label htmlFor="promotions-email" className="block space-y-2 text-sm font-semibold text-[#E7EEE8]">
-                Email for your Bhumivera account
-                <input
-                  id="promotions-email"
-                  ref={emailInput}
-                  required
-                  type="email"
-                  autoComplete="email"
-                  maxLength={254}
-                  value={email}
-                  onChange={event => setEmail(event.target.value)}
-                  placeholder="you@example.com"
-                  className="w-full rounded-xl border border-white/10 bg-[#07140e]/80 px-4 py-3 text-sm text-white outline-none transition placeholder:text-[#82998D] focus:border-[#D4AF37] focus:ring-4 focus:ring-[#D4AF37]/10"
-                />
-                <span className="block text-xs font-normal leading-5 text-[#9BB0A5]">We use the verified account to keep your application and status together.</span>
-              </label>
+            <div className="mt-8 grid gap-3 sm:grid-cols-2">
+              <Link
+                to="/register"
+                state={accountState}
+                className="inline-flex min-h-16 items-center justify-center gap-2 rounded-xl bg-[#D4AF37] px-5 py-4 text-base font-bold text-[#102219] shadow-lg shadow-black/20 transition hover:bg-[#FCE096] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FCE096]"
+              >
+                Register <ArrowRight size={18}/>
+              </Link>
+              <Link
+                to="/login"
+                state={accountState}
+                className="inline-flex min-h-16 items-center justify-center whitespace-nowrap rounded-xl border border-white/20 px-3 py-4 text-sm font-bold text-white transition hover:border-[#D4AF37]/60 hover:bg-white/[0.04] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#FCE096] sm:px-4 sm:text-base"
+              >
+                Already have an account
+              </Link>
+            </div>
 
-              <div className="grid gap-3 sm:grid-cols-2">
-                <button type="submit" className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl bg-[#D4AF37] px-4 py-3 text-sm font-bold text-[#102219] transition hover:bg-[#FCE096]">
-                  Create and verify account <ArrowRight size={15}/>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    if (!emailInput.current?.reportValidity()) return;
-                    navigate('/login', { state: { ...accountState, email: email.trim() } });
-                  }}
-                  className="inline-flex min-h-12 items-center justify-center rounded-xl border border-white/15 px-4 py-3 text-sm font-bold text-white transition hover:border-[#D4AF37]/60 hover:bg-white/[0.04]"
-                >
-                  I already have an account
-                </button>
-              </div>
-            </form>
-
-            <p className="mt-5 border-t border-white/10 pt-4 text-xs leading-5 text-[#9BB0A5]">
+            <p className="mt-7 border-t border-white/10 pt-5 text-xs leading-6 text-[#9BB0A5]">
               By applying, you agree to follow the <Link to="/legal/warranty-affiliate-b2b" className="font-semibold text-[#F0D98A] underline underline-offset-2">Bhumivera partner terms</Link>. An application is not a promise of acceptance, product gifting, paid work, orders, or earnings.
             </p>
           </section>
