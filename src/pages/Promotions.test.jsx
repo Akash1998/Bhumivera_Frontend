@@ -28,7 +28,6 @@ describe('promoter registration page', () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
-    localStorage.removeItem('bhumivera_creator_application_saved');
   });
 
   beforeEach(() => {
@@ -79,7 +78,7 @@ describe('promoter registration page', () => {
     expect(screen.getByTestId('location').textContent).toContain('"from":"/promotions"');
   });
 
-  it('shows pending applicants the verification wait notice and an inactive reserved code', async () => {
+  it('loads pending applicants and shows their inactive reserved code', async () => {
     useAuth.mockReturnValue({ user: { email: 'creator@example.com' }, loading: false });
     affiliate.getPartnerDashboard.mockResolvedValue({
       data: {
@@ -104,12 +103,12 @@ describe('promoter registration page', () => {
       </HelmetProvider>,
     );
 
-    fireEvent.click(await screen.findByRole('button', { name: /already applied\? check your saved application/i }));
     expect(await screen.findByText('Your Creator Code Is Reserved')).toBeTruthy();
     expect(screen.getByText(/within 12–24 hours/i)).toBeTruthy();
     expect(screen.getByText('BV1234567890')).toBeTruthy();
     expect(screen.getByText(/Reserved promoter code · inactive/i)).toBeTruthy();
     expect(screen.queryByText('Share your offer')).toBeNull();
+    expect(affiliate.getPartnerDashboard).toHaveBeenCalledTimes(1);
   });
 
   it('uses bundled product photos without requesting the database-backed catalog', async () => {
@@ -132,21 +131,23 @@ describe('promoter registration page', () => {
 
   it('submits manually entered profile details only after ownership confirmation', async () => {
     useAuth.mockReturnValue({ user: { email: 'creator@example.com' }, loading: false });
-    affiliate.getPartnerDashboard.mockResolvedValue({
-      data: {
-        dashboard: {
-          partner: {
-            status: 'pending',
-            referral_code: 'BV1234567890',
-            social_platform: 'Instagram',
-            social_handle: '@creator',
-            profile_url: 'https://www.instagram.com/creator/',
-            follower_count: 5000,
+    affiliate.getPartnerDashboard
+      .mockResolvedValueOnce({ data: { dashboard: null } })
+      .mockResolvedValueOnce({
+        data: {
+          dashboard: {
+            partner: {
+              status: 'pending',
+              referral_code: 'BV1234567890',
+              social_platform: 'Instagram',
+              social_handle: '@creator',
+              profile_url: 'https://www.instagram.com/creator/',
+              follower_count: 5000,
+            },
+            summary: {},
           },
-          summary: {},
         },
-      },
-    });
+      });
     affiliate.applyForPartner.mockResolvedValue({ data: { success: true } });
 
     render(
@@ -161,7 +162,6 @@ describe('promoter registration page', () => {
     );
 
     expect(screen.queryByText('creator@example.com')).toBeNull();
-    expect(affiliate.getPartnerDashboard).not.toHaveBeenCalled();
     fireEvent.click(await screen.findByRole('radio', { name: 'Instagram' }));
     fireEvent.change(screen.getByLabelText(/Profile name or handle/), {
       target: { value: '@creator' },
@@ -191,7 +191,7 @@ describe('promoter registration page', () => {
     fireEvent.click(screen.getByRole('button', { name: /Send creator application/i }));
 
     expect((await screen.findByRole('status')).textContent).toMatch(/Application received/);
-    expect(affiliate.getPartnerDashboard).toHaveBeenCalledTimes(1);
+    expect(affiliate.getPartnerDashboard).toHaveBeenCalledTimes(2);
     expect(affiliate.applyForPartner).toHaveBeenCalledWith({
       socialPlatform: 'Instagram',
       socialHandle: '@creator',

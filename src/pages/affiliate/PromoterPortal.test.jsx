@@ -15,11 +15,9 @@ vi.mock('../../services/api', () => ({
 describe('creator partnership dashboard', () => {
   afterEach(() => {
     cleanup();
-    localStorage.removeItem('bhumivera_creator_application_saved');
   });
 
   it('shows only the collected impact total returned for the creator’s referrals', async () => {
-    localStorage.setItem('bhumivera_creator_application_saved', 'true');
     affiliate.getPartnerDashboard.mockResolvedValue({
       data: {
         dashboard: {
@@ -80,16 +78,64 @@ describe('creator partnership dashboard', () => {
   });
 
   it('keeps only the current long-term partnership track selectable for new applications', async () => {
+    affiliate.getPartnerDashboard.mockResolvedValue({
+      data: { dashboard: null },
+    });
+
     render(<MemoryRouter><PromoterPortal /></MemoryRouter>);
 
     const trackSelect = await screen.findByLabelText('Preferred collaboration track');
     expect(trackSelect.value).toBe('both');
     expect(screen.getByRole('option', { name: /Paid collaboration — Coming soon/ }).disabled).toBe(true);
-    expect(affiliate.getPartnerDashboard).not.toHaveBeenCalled();
+    expect(affiliate.getPartnerDashboard).toHaveBeenCalledTimes(1);
+  });
+
+  it('loads a saved application from the account without relying on browser storage', async () => {
+    affiliate.getPartnerDashboard.mockResolvedValue({
+      data: {
+        dashboard: {
+          partner: {
+            status: 'pending',
+            referral_code: 'BV1234567890',
+          },
+          summary: {},
+        },
+      },
+    });
+
+    render(<MemoryRouter><PromoterPortal /></MemoryRouter>);
+
+    expect(await screen.findByText('Your Creator Code Is Reserved')).toBeTruthy();
+    expect(affiliate.getPartnerDashboard).toHaveBeenCalledTimes(1);
+  });
+
+  it('reports no saved application only after a successful account lookup', async () => {
+    affiliate.getPartnerDashboard.mockResolvedValue({
+      data: { dashboard: null },
+    });
+
+    render(<MemoryRouter><PromoterPortal /></MemoryRouter>);
+
+    fireEvent.click(await screen.findByRole('button', { name: /already applied\? check your saved application/i }));
+
+    expect((await screen.findByRole('status')).textContent).toContain(
+      'No saved creator application was found. You can apply using the form.',
+    );
+    expect(affiliate.getPartnerDashboard).toHaveBeenCalledTimes(2);
+  });
+
+  it('shows lookup failures instead of claiming no application exists', async () => {
+    affiliate.getPartnerDashboard.mockRejectedValue({
+      response: { data: { message: 'Please sign in again.' } },
+    });
+
+    render(<MemoryRouter><PromoterPortal /></MemoryRouter>);
+
+    expect((await screen.findByRole('alert')).textContent).toContain('Please sign in again.');
+    expect(screen.queryByRole('status')).toBeNull();
   });
 
   it('lets a rejected applicant revise and resubmit their partnership intent', async () => {
-    localStorage.setItem('bhumivera_creator_application_saved', 'true');
     affiliate.getPartnerDashboard.mockResolvedValue({
       data: {
         dashboard: {
@@ -116,7 +162,6 @@ describe('creator partnership dashboard', () => {
   });
 
   it('paginates the complete creator order ledger', async () => {
-    localStorage.setItem('bhumivera_creator_application_saved', 'true');
     const partner = {
       status: 'approved',
       social_platform: 'Instagram',

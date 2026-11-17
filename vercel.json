@@ -272,7 +272,7 @@
       "destination": "https://service.bhumivera.com/api/seo-prerender/legal/:slug*"
     },
     {
-      "source": "/(about|science|bhumivera-science|shop|products|collections|impact|community|lab|provenance-engine|provenance|somatic-registry|verify|genuinity|ewarranty|verify-product|warranty|purchase-protection|contact|support-center|sell-on-bhumivera|affiliate|compare|flash-sales|order-tracking)",
+      "source": "/(about|science|bhumivera-science|shop|products|collections|impact|community|lab|provenance-engine|provenance|somatic-registry|verify|genuinity|ewarranty|verify-product|warranty|purchase-protection|contact|support-center|sell-on-bhumivera|affiliate|promotions|compare|flash-sales|order-tracking)",
       "has": [
         {
           "type": "header",

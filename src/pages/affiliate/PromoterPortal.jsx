@@ -40,12 +40,11 @@ const DEFAULT_MILESTONES = [
 ];
 
 const formatMoney = value => `₹${(Number(value) || 0).toFixed(2)}`;
-const SAVED_APPLICATION_KEY = 'bhumivera_creator_application_saved';
 
 export default function PromoterPortal() {
   const [dashboard, setDashboard] = useState(null);
   const [form, setForm] = useState(INITIAL_FORM);
-  const [loading, setLoading] = useState(() => localStorage.getItem(SAVED_APPLICATION_KEY) === 'true');
+  const [loading, setLoading] = useState(true);
   const [commissionPage, setCommissionPage] = useState(1);
   const [submitting, setSubmitting] = useState(false);
   const [savingPerks, setSavingPerks] = useState(false);
@@ -62,7 +61,10 @@ export default function PromoterPortal() {
     setError('');
     try {
       const response = await affiliateApi.getPartnerDashboard({ commissionPage: page });
-      const data = response.data?.dashboard || null;
+      const data = response.data?.dashboard;
+      if (data === undefined || (data !== null && (typeof data !== 'object' || Array.isArray(data)))) {
+        throw new Error('The promoter account response was incomplete. Please try again.');
+      }
       setDashboard(data);
       setCommissionPage(Number(data?.commissionPagination?.page) || page);
       if (data?.partner) {
@@ -88,11 +90,7 @@ export default function PromoterPortal() {
   }, []);
 
   useEffect(() => {
-    if (localStorage.getItem(SAVED_APPLICATION_KEY) === 'true') {
-      loadDashboard();
-    } else {
-      setLoading(false);
-    }
+    loadDashboard();
   }, [loadDashboard]);
   const partner = dashboard?.partner;
   const shareUrl = useMemo(() => partner?.referral_code
@@ -118,7 +116,6 @@ export default function PromoterPortal() {
         ...form,
         followerCount: Number(form.followerCount || 0),
       });
-      localStorage.setItem(SAVED_APPLICATION_KEY, 'true');
       setNotice('Application received. Your reserved promoter code remains inactive while the team reviews your profile.');
       await loadDashboard();
     } catch (applyError) {
@@ -132,9 +129,8 @@ export default function PromoterPortal() {
     setNotice('');
     const data = await loadDashboard();
     if (data?.partner) {
-      localStorage.setItem(SAVED_APPLICATION_KEY, 'true');
+      setNotice('Your saved application has been loaded below.');
     } else if (data === null) {
-      localStorage.removeItem(SAVED_APPLICATION_KEY);
       setNotice('No saved creator application was found. You can apply using the form.');
     }
   };
