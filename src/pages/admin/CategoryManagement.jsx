@@ -32,7 +32,10 @@ export default function CategoryManagement() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalMode, setModalMode] = useState('category'); // 'category' or 'subcategory'
   const [editingItem, setEditingItem] = useState(null);
-  const [form, setForm] = useState({ name: '', slug: '', description: '', category_id: '', is_active: 1, image_url: '' });
+  const [form, setForm] = useState({
+    name: '', slug: '', description: '', meta_title: '', meta_description: '',
+    category_id: '', is_active: 1, image_url: '',
+  });
   const [isProcessing, setIsProcessing] = useState(false);
   const [auditEvents, setAuditEvents] = useState([]);
   const [auditLoading, setAuditLoading] = useState(true);
@@ -90,8 +93,8 @@ export default function CategoryManagement() {
         setExpandedRows(initialExpandState);
       }
     } catch (err) {
-      console.error("Taxonomy Sync Error:", err);
-      showToast?.('Critical failure syncing taxonomy matrix.', 'error');
+      console.error("Category loading error:", err);
+      showToast?.('Could not load categories. Please try again.', 'error');
     } finally {
       setLoading(false);
     }
@@ -133,9 +136,10 @@ export default function CategoryManagement() {
   }, [subcategories]);
 
   const getMissingSeoFields = item => [
-    ['name', 'Name'],
     ['slug', 'Slug'],
-    ['description', 'Description'],
+    ['description', 'Page description'],
+    ['meta_title', 'SEO title'],
+    ['meta_description', 'Search preview'],
   ].filter(([key]) => !String(item?.[key] || '').trim()).map(([, label]) => label);
 
   const taxonomyMetrics = useMemo(() => {
@@ -183,7 +187,7 @@ export default function CategoryManagement() {
   // --- DATA EXPORT PROTOCOL ---
   const exportTaxonomyCSV = () => {
     
-    const headers = ['access Level', 'ID', 'Name', 'Slug', 'Parent ID', 'Missing SEO fields', 'Created At'];
+    const headers = ['Type', 'ID', 'Name', 'Slug', 'Parent ID', 'Missing SEO fields', 'Created At'];
     const rows = [];
 
     categories.forEach(cat => {
@@ -192,7 +196,7 @@ export default function CategoryManagement() {
       
       const subs = getSubcategories(catId);
       subs.forEach(sub => {
-        rows.push(['Sub-access', sub.id || sub._id, sub.name, sub.slug, catId, getMissingSeoFields(sub).join('; ') || 'None', sub.created_at || 'N/A']);
+        rows.push(['Subcategory', sub.id || sub._id, sub.name, sub.slug, catId, getMissingSeoFields(sub).join('; ') || 'None', sub.created_at || 'N/A']);
       });
     });
 
@@ -205,7 +209,7 @@ export default function CategoryManagement() {
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `Bhumivera_taxonomy_matrix_${new Date().toISOString().split('T')[0]}.csv`);
+    link.setAttribute('download', `Bhumivera_categories_seo_${new Date().toISOString().split('T')[0]}.csv`);
     link.style.visibility = 'hidden';
     document.body.appendChild(link);
     link.click();
@@ -221,13 +225,18 @@ export default function CategoryManagement() {
         name: item.name || '',
         slug: item.slug || '',
         description: item.description || '',
+        meta_title: item.meta_title || '',
+        meta_description: item.meta_description || '',
         category_id: item.category_id || parentId || '',
         is_active: item.is_active !== undefined ? item.is_active : 1,
         image_url: item.image_url || ''
       });
     } else {
       setEditingItem(null);
-      setForm({ name: '', slug: '', description: '', category_id: parentId || '', is_active: 1, image_url: '' });
+      setForm({
+        name: '', slug: '', description: '', meta_title: '', meta_description: '',
+        category_id: parentId || '', is_active: 1, image_url: '',
+      });
     }
     setIsModalOpen(true);
   };
@@ -236,41 +245,127 @@ export default function CategoryManagement() {
     setForm(prev => ({ 
       ...prev, 
       name, 
-      slug: toSlug(name),
+      slug: editingItem ? prev.slug : toSlug(name),
     }));
   };
 
-  const handleAutoOptimizeAllSeo = async () => {
+  const handleGenerateSeoDraft = async () => {
+    if (!form.name.trim()) {
+      showToast?.('Enter a category name first.', 'error');
+      return;
+    }
+
     setIsProcessing(true);
     try {
-      for (const cat of categories) {
-        const catId = cat.id || cat._id;
-        const slug = cat.slug || toSlug(cat.name);
-        await api.put(`/categories/${catId}`, {
-          name: cat.name,
-          slug,
-          description: cat.description || '',
-          image_url: cat.image_url || '',
-          is_active: cat.is_active !== undefined ? cat.is_active : 1,
-        });
+      const selectedParent = categories.find(
+        category => String(category.id || category._id) === String(form.category_id)
+      );
+      const { data } = await api.post('/ai/generate-taxonomy-seo', {
+        items: [{
+          id: 'draft',
+          type: modalMode,
+          name: form.name.trim(),
+          parentName: selectedParent?.name || '',
+          slug: form.slug,
+          description: form.description,
+        }],
+      }, { adminAuth: true, notify: false });
+      const generated = data?.items?.[0];
+      if (!generated) throw new Error('Gemini did not return SEO fields. Please try again.');
+      setForm(previous => ({
+        ...previous,
+        slug: previous.slug || generated.slug,
+        description: generated.description,
+        meta_title: generated.meta_title,
+        meta_description: generated.meta_description,
+      }));
+      showToast?.(`SEO draft generated with ${data.model || 'Gemini'}. Review it before saving.`, 'success');
+    } catch (error) {
+      showToast?.(error.response?.data?.message || error.message || 'Gemini SEO generation failed.', 'error');
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleAutoOptimizeAllSeo = async () => {
+    const items = [
+      ...categories.map(category => ({
+        ...category,
+        id: String(category.id || category._id),
+        type: 'category',
+      })),
+      ...subcategories.map(subcategory => ({
+        ...subcategory,
+        id: String(subcategory.id || subcategory._id),
+        type: 'subcategory',
+        parentName: subcategory.category_name || categories.find(category =>
+          String(category.id || category._id) === String(
+            typeof subcategory.category_id === 'object'
+              ? subcategory.category_id.id || subcategory.category_id._id
+              : subcategory.category_id
+          )
+        )?.name || '',
+      })),
+    ].filter(item => getMissingSeoFields(item).length > 0);
+
+    if (items.length === 0) {
+      showToast?.('All categories and subcategories already have SEO fields.', 'success');
+      return;
+    }
+
+    setIsProcessing(true);
+    let updatedCount = 0;
+    try {
+      for (let offset = 0; offset < items.length; offset += 8) {
+        const batch = items.slice(offset, offset + 8);
+        const { data } = await api.post('/ai/generate-taxonomy-seo', {
+          items: batch.map(item => ({
+            id: item.id,
+            type: item.type,
+            name: item.name,
+            parentName: item.parentName || '',
+            slug: item.slug || '',
+            description: item.description || '',
+          })),
+        }, { adminAuth: true, notify: false });
+        if (!Array.isArray(data?.items) || data.items.length !== batch.length) {
+          throw new Error('Gemini returned an incomplete SEO batch.');
+        }
+
+        const generatedById = new Map(data.items.map(item => [String(item.id), item]));
+        for (const item of batch) {
+          const generated = generatedById.get(item.id);
+          if (!generated) throw new Error(`Gemini did not return SEO for "${item.name}".`);
+          const entityId = item.id;
+          const parentId = typeof item.category_id === 'object'
+            ? item.category_id.id || item.category_id._id
+            : item.category_id;
+          const payload = {
+            name: item.name,
+            slug: item.slug || generated.slug,
+            description: item.description || generated.description,
+            meta_title: item.meta_title || generated.meta_title,
+            meta_description: item.meta_description || generated.meta_description,
+          };
+
+          if (item.type === 'category') {
+            payload.image_url = item.image_url || '';
+            payload.is_active = item.is_active !== undefined ? item.is_active : 1;
+            await api.put(`/categories/${entityId}`, payload, { adminAuth: true, notify: false });
+          } else {
+            payload.category_id = parentId;
+            await api.put(`/subcategories/${entityId}`, payload, { adminAuth: true, notify: false });
+          }
+          updatedCount += 1;
+        }
       }
 
-      for (const sub of subcategories) {
-        const subId = sub.id || sub._id;
-        await api.put(`/subcategories/${subId}`, {
-          name: sub.name,
-          slug: sub.slug || toSlug(sub.name),
-          description: sub.description || '',
-          category_id: sub.category_id,
-        });
-      }
-
-      showToast?.('Category and subcategory slugs updated. Descriptions were not changed.', 'success');
-      await fetchTaxonomy();
-      fetchAuditHistory();
+      showToast?.(`Generated SEO for ${updatedCount} categories and subcategories.`, 'success');
+      await Promise.all([fetchTaxonomy(), fetchAuditHistory()]);
     } catch (err) {
-      console.error('Auto SEO Optimization error:', err);
-      showToast?.(err.response?.data?.message || 'Could not update all category slugs.', 'error');
+      console.error('Category SEO generation error:', err);
+      const progress = updatedCount ? ` Saved ${updatedCount} item(s) before the error.` : '';
+      showToast?.(`${err.response?.data?.message || err.message || 'Gemini SEO generation failed.'}${progress}`, 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -285,17 +380,17 @@ export default function CategoryManagement() {
 
       if (editingItem) {
         await api.put(`${endpoint}/${editingItem.id || editingItem._id}`, payload);
-        showToast?.(`${modalMode === 'category' ? 'Cluster' : 'Sub-access'} synchronized`, 'success');
+        showToast?.(`${modalMode === 'category' ? 'Category' : 'Subcategory'} saved.`, 'success');
       } else {
         await api.post(endpoint, payload);
-        showToast?.(`${modalMode === 'category' ? 'Cluster' : 'Sub-access'} deployed to matrix`, 'success');
+        showToast?.(`${modalMode === 'category' ? 'Category' : 'Subcategory'} added.`, 'success');
       }
       setIsModalOpen(false);
       fetchTaxonomy();
       if (modalMode === 'category') fetchAuditHistory();
     } catch (err) {
       console.error("Mutation Error:", err);
-      showToast?.('Taxonomy mutation failed due to core integrity fault.', 'error');
+      showToast?.(err.response?.data?.message || 'Could not save this category.', 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -305,9 +400,9 @@ export default function CategoryManagement() {
     const isCategory = mode === 'category';
     
     if (!skipConfirm) {
-      const warning = isCategory 
-        ? 'CRITICAL WARNING: Purging a Master Cluster will irrevocably orphan all attached Sub-accesss and associated products. Execute purge?' 
-        : 'Purge this Sub-access from the taxonomy matrix?';
+      const warning = isCategory
+        ? 'Delete this category? Products and subcategories may still refer to it.'
+        : 'Delete this subcategory?';
         
       if (!window.confirm(warning)) return;
     }
@@ -315,18 +410,18 @@ export default function CategoryManagement() {
     try {
       const endpoint = isCategory ? `/categories/${id}` : `/subcategories/${id}`;
       await api.delete(endpoint);
-      showToast?.('Entity purged from active memory', 'success');
+      showToast?.('Category deleted.', 'success');
       fetchTaxonomy();
       if (isCategory) fetchAuditHistory();
     } catch (err) {
-      console.error("Purge Error:", err);
-      showToast?.('Purge protocol failed.', 'error');
+      console.error("Category deletion error:", err);
+      showToast?.(err.response?.data?.message || 'Could not delete this category.', 'error');
     }
   };
 
   const handleBulkDelete = async () => {
     if (selectedaccesss.length === 0) return;
-    if (!window.confirm(`Execute mass purge on ${selectedaccesss.length} accesss? This action is irreversible.`)) return;
+    if (!window.confirm(`Delete ${selectedaccesss.length} selected categories or subcategories?`)) return;
 
     setIsProcessing(true);
     try {
@@ -339,7 +434,7 @@ export default function CategoryManagement() {
       }
       setSelectedaccesss([]);
     } catch {
-      showToast?.('Bulk purge encountered an error.', 'error');
+      showToast?.('Could not delete all selected categories.', 'error');
     } finally {
       setIsProcessing(false);
     }
@@ -353,8 +448,8 @@ export default function CategoryManagement() {
           <div className="w-16 h-16 rounded-2xl bg-slate-800 flex items-center justify-center mb-4 border border-slate-700 shadow-inner">
             <Eye size={24} className="text-slate-500" />
           </div>
-          <h3 className="text-lg font-black text-white tracking-tight mb-2">Telemetry Inspector</h3>
-          <p className="text-xs text-slate-500 font-mono">Select any access from the matrix to analyze its localized data payload, SEO health, and relational mapping.</p>
+          <h3 className="text-lg font-black text-white tracking-tight mb-2">Category details</h3>
+          <p className="text-xs text-slate-400">Choose a category or subcategory to review its URL and search preview fields.</p>
         </div>
       );
     }
@@ -364,9 +459,9 @@ export default function CategoryManagement() {
       <div className="h-full flex flex-col bg-[#10241f]/55 backdrop-blur-xl border-l border-slate-800/80 overflow-y-auto animate-in slide-in-from-right-4 duration-300">
         <div className="p-5 border-b border-slate-800 bg-[#081b15]/65 backdrop-blur-xl sticky top-0 z-10 flex justify-between items-start">
           <div>
-            <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest mb-3 border ${isMaster ? 'bg-purple-500/10 text-purple-400 border-purple-500/20' : 'bg-blue-500/10 text-blue-400 border-blue-500/20'}`}>
+            <div className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[8px] font-black uppercase tracking-widest mb-3 border ${isMaster ? 'bg-emerald-500/10 text-emerald-300 border-emerald-500/20' : 'bg-amber-400/10 text-amber-200 border-amber-400/20'}`}>
               {isMaster ? <Layers size={10}/> : <Component size={10}/>}
-              {isMaster ? 'Master Cluster' : 'Sub-access Entity'}
+              {isMaster ? 'Category' : 'Subcategory'}
             </div>
             <h2 className="text-2xl font-black text-white tracking-tight break-all">{activeInspectoraccess.name}</h2>
             <p className="text-[10px] text-slate-500 font-mono mt-1 flex items-center gap-1">
@@ -384,8 +479,13 @@ export default function CategoryManagement() {
               <Activity size={12} /> SEO fields
             </h4>
             <div className="space-y-3">
-              {['Name', 'Slug', 'Description'].map(field => {
-                const hasValue = Boolean(String(activeInspectoraccess[field.toLowerCase()] || '').trim());
+              {[
+                ['Slug', 'slug'],
+                ['Page description', 'description'],
+                ['SEO title', 'meta_title'],
+                ['Search preview', 'meta_description'],
+              ].map(([field, key]) => {
+                const hasValue = Boolean(String(activeInspectoraccess[key] || '').trim());
                 return (
                   <div key={field} className="flex justify-between items-center text-xs">
                     <span className="text-slate-400">{field}</span>
@@ -401,11 +501,11 @@ export default function CategoryManagement() {
           {/* Details Card */}
           <div className="p-4 bg-[#081b15]/55 backdrop-blur-xl rounded-2xl border border-slate-800">
             <h4 className="text-[10px] font-black uppercase tracking-widest text-slate-500 mb-4 flex items-center gap-2">
-              <Database size={12} /> Data Payload
+              <Database size={12} /> Category information
             </h4>
             <div className="space-y-4">
               <div>
-                <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest block mb-1">Routing Slug</span>
+                <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest block mb-1">URL</span>
                 <div className="bg-[#10241f]/85 backdrop-blur-xl p-2 rounded border border-slate-800 font-mono text-xs text-cyan-400 break-all select-all">
                   /shop/{isMaster ? activeInspectoraccess.slug : `parent/${activeInspectoraccess.slug}`}
                 </div>
@@ -420,8 +520,8 @@ export default function CategoryManagement() {
                 <div>
                   <span className="text-[9px] font-black text-slate-600 uppercase tracking-widest block mb-1">Linked Entities</span>
                   <div className="flex gap-2">
-                    <span className="px-2 py-1 bg-blue-500/10 text-blue-400 border border-blue-500/20 rounded font-mono text-xs">
-                      {getSubcategories(activeInspectoraccess.id || activeInspectoraccess._id).length} Sub-accesss
+                    <span className="px-2 py-1 bg-amber-400/10 text-amber-200 border border-amber-400/20 rounded font-mono text-xs">
+                      {getSubcategories(activeInspectoraccess.id || activeInspectoraccess._id).length} subcategories
                     </span>
                   </div>
                 </div>
@@ -444,7 +544,7 @@ export default function CategoryManagement() {
               }}
               className="flex-1 py-2.5 bg-rose-500/10 hover:bg-rose-500/20 border border-rose-500/30 text-rose-400 text-xs font-bold rounded-xl transition-all flex items-center justify-center gap-2"
             >
-              <Trash2 size={14} /> Purge
+              <Trash2 size={14} /> Delete
             </button>
           </div>
         </div>
@@ -457,15 +557,15 @@ export default function CategoryManagement() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[70vh] space-y-6">
         <div className="relative">
-          <div className="w-20 h-20 border-4 border-purple-500/20 rounded-full"></div>
-          <div className="w-20 h-20 border-4 border-purple-500 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
+          <div className="w-20 h-20 border-4 border-emerald-500/20 rounded-full"></div>
+          <div className="w-20 h-20 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin absolute top-0 left-0"></div>
           <div className="absolute inset-0 flex items-center justify-center">
-            <FolderTree size={20} className="text-purple-400 animate-pulse" />
+            <FolderTree size={20} className="text-emerald-300 animate-pulse" />
           </div>
         </div>
         <div className="text-center">
-          <h3 className="text-white font-black uppercase tracking-widest text-sm mb-1">Booting Taxonomy Engine</h3>
-          <p className="text-slate-500 font-mono text-[10px] uppercase tracking-[0.2em] animate-pulse">Syncing matrix relationships...</p>
+          <h3 className="text-white font-black uppercase tracking-widest text-sm mb-1">Loading categories</h3>
+          <p className="text-slate-400 text-xs animate-pulse">Loading category and subcategory details…</p>
         </div>
       </div>
     );
@@ -474,22 +574,22 @@ export default function CategoryManagement() {
   return (
     <div className="relative flex h-full flex-col overflow-hidden text-slate-300 font-sans animate-in fade-in duration-500">
       {/* Background Ambience */}
-      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-purple-600/5 blur-[120px] rounded-full pointer-events-none" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-blue-600/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-emerald-600/5 blur-[120px] rounded-full pointer-events-none" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] bg-amber-500/5 blur-[120px] rounded-full pointer-events-none" />
 
       {/* --- COMMAND HEADER --- */}
       <div className="px-6 py-5 border-b border-slate-800/80 bg-[#081b15]/45 backdrop-blur-xl z-10 flex-shrink-0">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="flex items-center gap-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.3)]">
+            <div className="w-12 h-12 bg-gradient-to-br from-emerald-500 to-amber-400 rounded-2xl flex items-center justify-center shadow-[0_0_20px_rgba(212,175,55,0.2)]">
               <FolderTree size={24} className="text-white" />
             </div>
             <div>
               <h1 className="text-2xl font-black text-white uppercase tracking-tight leading-none">
-                Taxonomy <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-blue-400">Matrix</span>
+                Categories <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-300 to-amber-200">&amp; SEO</span>
               </h1>
               <p className="text-slate-500 font-mono text-[10px] uppercase tracking-widest mt-1.5 flex items-center gap-2">
-                <ShieldAlert size={10} className="text-purple-500" /> Deep Hierarchical Control System
+                <ShieldAlert size={10} className="text-emerald-300" /> Manage categories, URLs, and search previews
               </p>
             </div>
           </div>
@@ -505,15 +605,15 @@ export default function CategoryManagement() {
               </div>
               <div className="w-px h-6 bg-slate-800"></div>
               <div className="flex flex-col">
-                <span className="text-[8px] font-black uppercase text-slate-500 tracking-widest">Total accesss</span>
-                <span className="text-sm font-black text-blue-400 font-mono leading-none">{taxonomyMetrics.totalaccesss}</span>
+                <span className="text-[8px] font-black uppercase text-slate-500 tracking-widest">Total entries</span>
+                <span className="text-sm font-black text-amber-200 font-mono leading-none">{taxonomyMetrics.totalaccesss}</span>
               </div>
             </div>
 
-            <button onClick={fetchTaxonomy} className="p-3 bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 text-slate-400 rounded-xl hover:bg-slate-800 hover:text-white transition-all shadow-sm">
+            <button onClick={fetchTaxonomy} className="p-3 bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 text-slate-300 rounded-xl hover:border-emerald-500/50 hover:text-white transition-all shadow-sm" aria-label="Refresh categories">
               <RefreshCw size={16} className={loading ? 'animate-spin' : ''} />
             </button>
-            <button onClick={exportTaxonomyCSV} className="p-3 bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 text-slate-400 rounded-xl hover:bg-slate-800 hover:text-cyan-400 transition-all shadow-sm group relative">
+            <button onClick={exportTaxonomyCSV} className="p-3 bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 text-slate-300 rounded-xl hover:border-amber-300/50 hover:text-amber-200 transition-all shadow-sm group relative" aria-label="Export category data as CSV">
               <Download size={16} />
               <span className="absolute -bottom-8 left-1/2 -translate-x-1/2 bg-slate-800 text-[9px] font-bold text-white px-2 py-1 rounded opacity-0 group-hover:opacity-100 whitespace-nowrap transition-opacity pointer-events-none">Export CSV</span>
             </button>
@@ -524,17 +624,17 @@ export default function CategoryManagement() {
               onClick={handleAutoOptimizeAllSeo}
               disabled={isProcessing}
               className="flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all shadow-[0_0_20px_rgba(16,185,129,0.3)] disabled:opacity-50"
-              title="Generate URL slugs from existing category names"
+              title="Use Gemini to fill missing slugs and search metadata"
             >
               <Zap size={14} className="text-yellow-300" />
-              Generate missing slugs
+              Generate missing SEO
             </button>
 
-            <button onClick={() => openModal('subcategory')} className="flex items-center gap-2 px-4 py-3 bg-blue-500/10 border border-blue-500/30 text-blue-400 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-blue-500 hover:text-white transition-all shadow-[0_0_15px_rgba(59,130,246,0.1)]">
-              <Plus size={14} /> Sub-access
+            <button onClick={() => openModal('subcategory')} className="flex items-center gap-2 px-4 py-3 bg-amber-400/10 border border-amber-300/30 text-amber-200 font-black uppercase text-[10px] tracking-widest rounded-xl hover:bg-amber-300 hover:text-[#14251c] transition-all">
+              <Plus size={14} /> Add subcategory
             </button>
-            <button onClick={() => openModal('category')} className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-purple-600 to-blue-600 text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:from-purple-500 hover:to-blue-500 transition-all shadow-[0_0_20px_rgba(168,85,247,0.3)]">
-              <Layers size={14} /> Deploy Cluster
+            <button onClick={() => openModal('category')} className="flex items-center gap-2 px-5 py-3 bg-gradient-to-r from-emerald-700 to-emerald-600 text-white font-black uppercase text-[10px] tracking-widest rounded-xl hover:from-emerald-600 hover:to-emerald-500 transition-all shadow-[0_0_18px_rgba(16,185,129,0.18)]">
+              <Layers size={14} /> Add category
             </button>
           </div>
         </div>
@@ -546,31 +646,31 @@ export default function CategoryManagement() {
           <div className="relative flex-1 max-w-sm">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
             <input 
-              type="text" placeholder="Search matrix accesss by name or slug..." 
+              type="text" placeholder="Search categories by name or slug..."
               value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 focus:border-purple-500/50 rounded-lg py-2 pl-9 pr-4 text-white text-xs outline-none transition-all"
+              className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 focus:border-emerald-500/60 rounded-lg py-2 pl-9 pr-4 text-white text-xs outline-none transition-all"
             />
           </div>
           <div className="relative max-w-[200px]">
             <Filter className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={14} />
             <select
               value={filterMode} onChange={(e) => setFilterMode(e.target.value)}
-              className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 text-xs text-white rounded-lg pl-9 pr-8 py-2 focus:outline-none focus:border-purple-500/50 appearance-none cursor-pointer"
+              className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 text-xs text-white rounded-lg pl-9 pr-8 py-2 focus:outline-none focus:border-emerald-500/60 appearance-none cursor-pointer"
             >
-              <option value="all">Global Matrix (All)</option>
-              <option value="missing_seo">SEO Deficient Only</option>
-              <option value="master_only">Master Clusters Only</option>
+              <option value="all">All categories</option>
+              <option value="missing_seo">Missing SEO fields</option>
+              <option value="master_only">Categories only</option>
             </select>
           </div>
         </div>
 
         {/* Bulk Actions Context Menu */}
         <div className={`flex items-center gap-3 transition-all duration-300 ${selectedaccesss.length > 0 ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}`}>
-          <span className="text-[10px] font-black text-purple-400 bg-purple-500/10 px-2 py-1 rounded border border-purple-500/20 font-mono">
+          <span className="text-[10px] font-black text-emerald-200 bg-emerald-500/10 px-2 py-1 rounded border border-emerald-500/20 font-mono">
             {selectedaccesss.length} SELECTED
           </span>
           <button onClick={handleBulkDelete} disabled={isProcessing} className="flex items-center gap-1.5 px-3 py-1.5 bg-rose-500/10 border border-rose-500/30 text-rose-400 hover:bg-rose-500 hover:text-white rounded-lg text-xs font-bold transition-all disabled:opacity-50">
-            <Trash2 size={14} /> Mass Purge
+            <Trash2 size={14} /> Delete selected
           </button>
         </div>
       </div>
@@ -583,13 +683,13 @@ export default function CategoryManagement() {
           {/* Header Row */}
           <div className="grid grid-cols-12 bg-[#081b15]/90 backdrop-blur-xl border-b border-slate-800/80 p-3 text-[9px] font-black uppercase text-slate-500 tracking-widest sticky top-0 z-10 pr-6">
             <div className="col-span-5 pl-2 flex items-center gap-3">
-              <button onClick={selectAllaccesss} className="w-4 h-4 rounded border border-slate-700 bg-[#10241f]/85 backdrop-blur-xl flex items-center justify-center hover:border-purple-500 transition-colors">
-                {selectedaccesss.length > 0 && <div className="w-2 h-2 bg-purple-500 rounded-sm" />}
+              <button onClick={selectAllaccesss} className="w-4 h-4 rounded border border-slate-700 bg-[#10241f]/85 backdrop-blur-xl flex items-center justify-center hover:border-emerald-400 transition-colors">
+                {selectedaccesss.length > 0 && <div className="w-2 h-2 bg-emerald-400 rounded-sm" />}
               </button>
-              Hierarchy access
+              Category structure
             </div>
             <div className="col-span-4">SEO fields / Slug</div>
-            <div className="col-span-3 text-right">Telemetry</div>
+            <div className="col-span-3 text-right">Details</div>
           </div>
 
           {/* Tree Data */}
@@ -597,7 +697,7 @@ export default function CategoryManagement() {
             {filteredData.master.length === 0 ? (
               <div className="flex flex-col items-center justify-center h-40 text-slate-500 space-y-2">
                 <FolderTree size={24} className="opacity-50" />
-                <span className="font-bold text-xs uppercase tracking-widest">Matrix empty or filtered out.</span>
+                <span className="font-bold text-xs">No categories match this search.</span>
               </div>
             ) : (
               filteredData.master.map(category => {
@@ -613,13 +713,13 @@ export default function CategoryManagement() {
                     {/* Master Row */}
                     <div className={`grid grid-cols-12 items-center p-2.5 transition-colors ${isInspecting ? 'bg-slate-800/80' : 'hover:bg-slate-800/40'}`}>
                       <div className="col-span-5 flex items-center gap-3 pl-1">
-                        <button onClick={() => toggleaccessSelection(catId)} className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? 'border-purple-500 bg-purple-500/20 text-purple-400' : 'border-slate-700 bg-[#10241f]/85 backdrop-blur-xl'}`}>
+                        <button onClick={() => toggleaccessSelection(catId)} className={`w-4 h-4 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${isSelected ? 'border-emerald-400 bg-emerald-500/20 text-emerald-300' : 'border-slate-700 bg-[#10241f]/85 backdrop-blur-xl'}`}>
                           {isSelected && <CheckCircle size={10} />}
                         </button>
                         <button onClick={() => toggleRow(catId)} className={`p-1 rounded transition-colors ${subs.length > 0 ? 'text-slate-400 hover:bg-slate-700 hover:text-white' : 'opacity-20 cursor-default'}`}>
                           {isExpanded ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
                         </button>
-                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-500/10 to-blue-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400 flex-shrink-0">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500/10 to-amber-400/10 border border-emerald-500/20 flex items-center justify-center text-emerald-300 flex-shrink-0">
                           <Layers size={14} />
                         </div>
                         <div className="min-w-0">
@@ -636,18 +736,18 @@ export default function CategoryManagement() {
                       </div>
 
                       <div className="col-span-3 flex items-center justify-end gap-2 pr-2">
-                        <button onClick={() => setActiveInspectoraccess({...category, isMaster: true})} className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${isInspecting ? 'bg-purple-500 text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]' : 'bg-slate-800 text-slate-400 hover:bg-slate-700 hover:text-white'}`}>
+                        <button onClick={() => setActiveInspectoraccess({...category, isMaster: true})} className={`px-3 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${isInspecting ? 'bg-emerald-600 text-white' : 'bg-slate-800 text-slate-300 hover:bg-slate-700 hover:text-white'}`}>
                           Inspect
                         </button>
                       </div>
                     </div>
 
-                    {/* Sub accesss */}
+                    {/* Subcategories */}
                     <div className={`overflow-hidden transition-all duration-300 ${isExpanded ? 'max-h-[1000px] opacity-100' : 'max-h-0 opacity-0'}`}>
                       <div className="bg-[#081b15]/55 backdrop-blur-xl border-t border-slate-800/50">
                         {subs.length === 0 ? (
                           <div className="py-4 pl-16 text-[10px] text-slate-500 font-mono uppercase tracking-widest flex items-center gap-2">
-                            <Info size={12} className="text-amber-500" /> Empty Cluster. No sub-accesss deployed.
+                            <Info size={12} className="text-amber-300" /> No subcategories yet.
                           </div>
                         ) : (
                           subs.map((sub, index) => {
@@ -664,10 +764,10 @@ export default function CategoryManagement() {
                                 <div className="absolute left-[38px] top-1/2 w-4 h-px bg-slate-800"></div>
 
                                 <div className="col-span-5 flex items-center gap-3 pl-[58px]">
-                                  <button onClick={() => toggleaccessSelection(subId)} className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center flex-shrink-0 transition-colors ${isSubSelected ? 'border-blue-500 bg-blue-500/20 text-blue-400' : 'border-slate-700 bg-[#10241f]/85 backdrop-blur-xl'}`}>
+                                  <button onClick={() => toggleaccessSelection(subId)} className={`w-3.5 h-3.5 rounded-sm border flex items-center justify-center flex-shrink-0 transition-colors ${isSubSelected ? 'border-amber-300 bg-amber-400/20 text-amber-200' : 'border-slate-700 bg-[#10241f]/85 backdrop-blur-xl'}`}>
                                     {isSubSelected && <CheckCircle size={8} className="stroke-[3]" />}
                                   </button>
-                                  <div className="w-6 h-6 rounded-md bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 flex items-center justify-center text-blue-500 flex-shrink-0">
+                                  <div className="w-6 h-6 rounded-md bg-[#10241f]/85 backdrop-blur-xl border border-slate-800 flex items-center justify-center text-amber-200 flex-shrink-0">
                                     <Component size={10} />
                                   </div>
                                   <p className="text-xs font-semibold text-slate-300 truncate">{sub.name}</p>
@@ -681,7 +781,7 @@ export default function CategoryManagement() {
                                 </div>
 
                                 <div className="col-span-3 flex justify-end pr-2">
-                                  <button onClick={() => setActiveInspectoraccess({...sub, isMaster: false})} className={`px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-widest transition-all ${isSubInspecting ? 'bg-blue-500 text-white shadow-[0_0_10px_rgba(59,130,246,0.4)]' : 'text-slate-500 hover:bg-slate-800 hover:text-white'}`}>
+                                  <button onClick={() => setActiveInspectoraccess({...sub, isMaster: false})} className={`px-2 py-1 rounded-md text-[9px] font-bold uppercase tracking-widest transition-all ${isSubInspecting ? 'bg-amber-500 text-[#14251c]' : 'text-slate-400 hover:bg-slate-800 hover:text-white'}`}>
                                     Inspect
                                   </button>
                                 </div>
@@ -751,18 +851,18 @@ export default function CategoryManagement() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#081b15]/90 backdrop-blur-xl/90 backdrop-blur-md animate-in fade-in duration-200">
           <div className="bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 w-full max-w-2xl max-h-[90dvh] rounded-3xl shadow-[0_0_50px_rgba(0,0,0,0.5)] overflow-hidden flex flex-col animate-in zoom-in-95 duration-300">
             
-            <div className="relative h-1 w-full bg-gradient-to-r from-purple-500 to-blue-500"></div>
+            <div className="relative h-1 w-full bg-gradient-to-r from-emerald-500 to-amber-300"></div>
 
             <div className="p-6 border-b border-slate-800/80 flex justify-between items-start bg-[#081b15]/55 backdrop-blur-xl shrink-0">
               <div className="flex items-center gap-4">
-                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${modalMode === 'category' ? 'bg-purple-500/10 border-purple-500/30 text-purple-400' : 'bg-blue-500/10 border-blue-500/30 text-blue-400'}`}>
+                <div className={`w-12 h-12 rounded-2xl flex items-center justify-center border ${modalMode === 'category' ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' : 'bg-amber-400/10 border-amber-400/30 text-amber-200'}`}>
                   {modalMode === 'category' ? <Layers size={24} /> : <Component size={24} />}
                 </div>
                 <div>
                   <h2 className="text-2xl font-black text-white uppercase tracking-tight">
-                    {editingItem ? 'Reconfigure' : 'Initialize'} <span className={modalMode === 'category' ? 'text-purple-400' : 'text-blue-400'}>{modalMode === 'category' ? 'Cluster' : 'Sub-access'}</span>
+                    {editingItem ? 'Edit' : 'Add'} <span className={modalMode === 'category' ? 'text-emerald-300' : 'text-amber-200'}>{modalMode === 'category' ? 'category' : 'subcategory'}</span>
                   </h2>
-                  <p className="text-[10px] font-mono text-slate-500 uppercase tracking-widest mt-1">Taxonomy Routing Variables</p>
+                  <p className="text-xs text-slate-400 mt-1">Set the name, URL, and search preview fields.</p>
                 </div>
               </div>
               <button onClick={() => setIsModalOpen(false)} className="text-slate-500 hover:text-white bg-slate-800 hover:bg-rose-500/20 p-2 rounded-xl transition-colors">
@@ -775,15 +875,15 @@ export default function CategoryManagement() {
                 
                 {/* Mode Specific Logic */}
                 {modalMode === 'subcategory' && (
-                  <div className="bg-blue-500/5 border border-blue-500/20 p-4 rounded-xl">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-blue-400 flex items-center gap-2 mb-3">
-                      <LinkIcon size={12} /> Parent Cluster Linkage
+                  <div className="bg-amber-300/5 border border-amber-300/20 p-4 rounded-xl">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-amber-200 flex items-center gap-2 mb-3">
+                      <LinkIcon size={12} /> Parent category
                     </label>
                     <select 
                       required value={form.category_id} onChange={e => setForm({...form, category_id: e.target.value})}
-                      className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 rounded-lg p-3 text-sm text-white font-bold outline-none focus:border-blue-500 appearance-none cursor-pointer"
+                      className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-700 rounded-lg p-3 text-sm text-white font-bold outline-none focus:border-amber-300 appearance-none cursor-pointer"
                     >
-                      <option value="">Select Target Parent Matrix...</option>
+                      <option value="">Choose a parent category…</option>
                       {categories.map(c => <option key={c.id || c._id} value={c.id || c._id}>{c.name}</option>)}
                     </select>
                   </div>
@@ -792,15 +892,15 @@ export default function CategoryManagement() {
                 {/* Core Routing */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">Display Designation</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-300 block mb-2">Category or subcategory name</label>
                     <input 
-                      required type="text" placeholder="e.g. Core Processors"
+                      required type="text" placeholder="e.g. Facial cleansers"
                       value={form.name} onChange={e => handleAutoSlug(e.target.value)}
-                      className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl p-3.5 text-sm text-white font-bold outline-none focus:border-purple-500/50 transition-colors"
+                      className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl p-3.5 text-sm text-white font-bold outline-none focus:border-emerald-500/50 transition-colors"
                     />
                   </div>
                   <div>
-                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-400 block mb-2">URL Slug (System ID)</label>
+                    <label className="text-[10px] font-black uppercase tracking-widest text-slate-300 block mb-2">URL slug</label>
                     <div className="relative">
                       <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 font-mono text-xs">/</span>
                       <input 
@@ -816,7 +916,7 @@ export default function CategoryManagement() {
                 <div>
                   <div className="flex justify-between items-end mb-2">
                     <div className="flex items-center gap-3">
-                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Description</label>
+                      <label className="text-[10px] font-black uppercase tracking-widest text-slate-400">Page description</label>
                       <button
                         type="button"
                         onClick={() => setForm(prev => ({ ...prev, slug: prev.slug || toSlug(prev.name) }))}
@@ -835,6 +935,55 @@ export default function CategoryManagement() {
                     className="w-full bg-[#081b15]/90 backdrop-blur-xl border border-slate-800 rounded-xl p-3.5 text-sm text-slate-300 resize-none outline-none focus:border-emerald-500/50 transition-colors"
                   />
                   <p className="text-[9px] text-slate-600 mt-1 font-mono">Saved with this category and shown wherever the catalog uses it.</p>
+                </div>
+
+                <div className="space-y-4 rounded-2xl border border-emerald-500/20 bg-emerald-500/[0.04] p-4">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <h3 className="text-sm font-bold text-white">Search preview</h3>
+                      <p className="mt-1 text-[10px] text-slate-400">These fields are used for search and social previews.</p>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={handleGenerateSeoDraft}
+                      disabled={isProcessing || !form.name.trim()}
+                      className="inline-flex items-center gap-2 rounded-lg border border-emerald-400/30 bg-emerald-400/10 px-3 py-2 text-[10px] font-bold text-emerald-200 transition hover:bg-emerald-400/20 disabled:opacity-50"
+                    >
+                      {isProcessing ? <RefreshCw size={13} className="animate-spin" /> : <Sparkles size={13} />}
+                      Generate SEO draft
+                    </button>
+                  </div>
+                  <div>
+                    <label className="mb-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      SEO title
+                      <span className={form.meta_title.length > 60 ? 'text-amber-300' : 'text-slate-500'}>
+                        {form.meta_title.length}/60
+                      </span>
+                    </label>
+                    <input
+                      maxLength={60}
+                      value={form.meta_title}
+                      onChange={event => setForm({ ...form, meta_title: event.target.value })}
+                      className="w-full rounded-xl border border-slate-700 bg-[#081b15]/90 p-3 text-sm text-white outline-none transition focus:border-emerald-500"
+                      placeholder="Category name | Bhumivera"
+                    />
+                  </div>
+                  <div>
+                    <label className="mb-2 flex items-center justify-between text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                      Meta description
+                      <span className={form.meta_description.length > 160 ? 'text-amber-300' : 'text-slate-500'}>
+                        {form.meta_description.length}/160
+                      </span>
+                    </label>
+                    <textarea
+                      rows={3}
+                      maxLength={160}
+                      value={form.meta_description}
+                      onChange={event => setForm({ ...form, meta_description: event.target.value })}
+                      className="w-full resize-y rounded-xl border border-slate-700 bg-[#081b15]/90 p-3 text-sm text-slate-300 outline-none transition focus:border-emerald-500"
+                      placeholder="A clear, accurate description for search results."
+                    />
+                  </div>
                 </div>
 
                 {/* Active Toggle */}
@@ -858,7 +1007,7 @@ export default function CategoryManagement() {
                 <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-slate-400 text-xs font-bold rounded-xl hover:bg-slate-800 hover:text-white transition-colors">
                   Cancel
                 </button>
-                <button type="submit" disabled={isProcessing} className={`px-8 py-3 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg flex items-center gap-2 ${modalMode === 'category' ? 'bg-purple-600 hover:bg-purple-500 shadow-[0_0_20px_rgba(168,85,247,0.3)]' : 'bg-blue-600 hover:bg-blue-500 shadow-[0_0_20px_rgba(59,130,246,0.3)]'} disabled:opacity-50`}>
+                <button type="submit" disabled={isProcessing} className={`px-8 py-3 text-white text-xs font-black uppercase tracking-widest rounded-xl transition-all shadow-lg flex items-center gap-2 ${modalMode === 'category' ? 'bg-emerald-700 hover:bg-emerald-600' : 'bg-amber-500 hover:bg-amber-400 text-[#14251c]'} disabled:opacity-50`}>
                   {isProcessing ? <RefreshCw size={16} className="animate-spin" /> : <ShieldAlert size={16} />}
                   {isProcessing ? 'Saving...' : editingItem ? 'Save Changes' : `Save ${modalMode === 'category' ? 'Category' : 'Subcategory'}`}
                 </button>

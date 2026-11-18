@@ -14,7 +14,7 @@ import {
   BookOpen,
 } from 'lucide-react';
 import ActiveComboShowcase from '../components/ActiveComboShowcase';
-import { products as productsApi } from '../services/api';
+import { products as productsApi, categories as categoriesApi } from '../services/api';
 import { scarcitySimulator } from '../services/api';
 import { useCart } from '../context/CartContext';
 import { useWishlist } from '../context/WishlistContext';
@@ -200,6 +200,7 @@ export default function Shop() {
   const { slug: categorySlug } = useParams();
   const location = useLocation();
   const [products, setProducts] = useState(BHUMIVERA_6_PRODUCTS || []);
+  const [categories, setCategories] = useState([]);
   const [searchTerm, setSearchTerm] = useState(searchParams.get('q') || searchParams.get('search') || '');
   const [selectedCategory, setSelectedCategory] = useState(categorySlug || searchParams.get('category') || 'all');
   const [sortBy, setSortBy] = useState('popular_today');
@@ -278,6 +279,21 @@ export default function Shop() {
         if (active) {
           setProducts(BHUMIVERA_6_PRODUCTS || []);
         }
+      });
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    categoriesApi.getAll()
+      .then(({ data }) => {
+        const rows = data?.data || data?.categories || data;
+        if (active && Array.isArray(rows)) setCategories(rows);
+      })
+      .catch(error => {
+        if (active) console.warn('[CATEGORY_SEO_LOAD_ERROR]', error.message);
       });
     return () => {
       active = false;
@@ -395,15 +411,20 @@ export default function Shop() {
     return sorted.map((item) => item.product);
   }, [products, searchTerm, selectedCategory, sortBy, popularToday]);
 
+  const categoryRecord = categorySlug
+    ? categories.find(category => String(category.slug || '').toLowerCase() === categorySlug.toLowerCase())
+    : null;
   const categorySeo = categorySlug ? CATEGORY_SEO_MAP[categorySlug] : null;
-  const pageTitle = categorySeo
-    ? categorySeo.title
-    : searchTerm
+  const pageTitle = categoryRecord?.meta_title
+    || categorySeo?.title
+    || (categoryRecord?.name ? `${categoryRecord.name} | Bhumivera` : null)
+    || (searchTerm
       ? `${searchTerm} — 100% Active Botanical Formulations | Bhumivera`
-      : 'Shop All 6 Flagship Formulations & Regimen Combos | Bhumivera (bhumivera.com)';
-  const pageDescription = categorySeo
-    ? categorySeo.description
-    : 'Shop Bhumivera’s 6 flagship cold-pressed (<28°C), pH 5.0–5.5 botanical formulations with 100% active percentages and milligram-level label disclosure: 4% Himalayan Sea Buckthorn Face Wash, 3% Activated Charcoal Face Wash with Niacinamide & Hyaluronic Acid, Royal 2-in-1 Botanical Shampoo, Handmade Ayurvedic Soaps, and 7-Tulsi Drops.';
+      : 'Shop All 6 Flagship Formulations & Regimen Combos | Bhumivera (bhumivera.com)');
+  const pageDescription = categoryRecord?.meta_description
+    || categoryRecord?.description
+    || categorySeo?.description
+    || 'Shop Bhumivera’s 6 flagship cold-pressed (<28°C), pH 5.0–5.5 botanical formulations with 100% active percentages and milligram-level label disclosure: 4% Himalayan Sea Buckthorn Face Wash, 3% Activated Charcoal Face Wash with Niacinamide & Hyaluronic Acid, Royal 2-in-1 Botanical Shampoo, Handmade Ayurvedic Soaps, and 7-Tulsi Drops.';
 
   return (
     <div className="min-h-screen bg-[#14291F] text-[#FAF7F2] pt-20 sm:pt-28 pb-24 font-sans">

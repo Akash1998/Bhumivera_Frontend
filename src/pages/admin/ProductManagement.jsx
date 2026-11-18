@@ -194,19 +194,20 @@ export default function ProductManagement() {
         brand: form.brand,
         specifications,
       }, { adminAuth: true, notify: false });
-      const { description, meta_title, meta_description, tags } = res.data?.data || {};
-      if (![description, meta_title, meta_description, tags].every(value => typeof value === 'string' && value.trim())) {
-        throw new Error('AI returned incomplete content. Please try again.');
+      const { slug, description, meta_title, meta_description, tags } = res.data?.data || {};
+      if (![slug, description, meta_title, meta_description, tags].every(value => typeof value === 'string' && value.trim())) {
+        throw new Error('Gemini returned incomplete content. Please try again.');
       }
       
       setForm(prev => ({
         ...prev,
+        slug: prev.slug.trim() ? prev.slug : slug,
         description,
         meta_title,
         meta_description,
         tags
       }));
-      showToast?.('AI filled the description and SEO fields. Review the generated copy before saving.', 'success');
+      showToast?.(`SEO content generated with ${res.data?.model || 'Gemini'}. Review it before saving.`, 'success');
     } catch (error) {
       showToast?.(error.normalized?.message || error.response?.data?.message || error.message || 'AI content generation failed.', 'error');
     } finally {
@@ -821,7 +822,7 @@ export default function ProductManagement() {
                           {productType === 'combo' ? 'Combo Set Name' : 'Product Name'}
                         </label>
                         <button type="button" onClick={handleAIEnhance} disabled={isGeneratingAI || !form.name.trim()} className="text-[10px] text-emerald-400 font-bold uppercase flex items-center gap-1 hover:text-emerald-300 disabled:opacity-50 disabled:cursor-not-allowed">
-                          {isGeneratingAI ? <><RefreshCw size={12} className="animate-spin" /> Generating…</> : '✨ Generate Editorial Copy'}
+                          {isGeneratingAI ? <><RefreshCw size={12} className="animate-spin" /> Generating…</> : '✨ Generate product copy + SEO'}
                         </button>
                       </div>
                       <input required value={form.name} onChange={e=>setForm({...form, name:e.target.value})} className="w-full bg-[#10241f]/85 backdrop-blur-xl border border-slate-700 focus:border-emerald-500 rounded-xl p-3 text-sm text-white outline-none transition-colors" placeholder={productType === 'combo' ? 'e.g. Daily Botanical Radiance Regimen Set (3 Formulations)' : 'Use the exact approved product name and product type.'} />
