@@ -291,12 +291,14 @@ export default function CategoryManagement() {
     const items = [
       ...categories.map(category => ({
         ...category,
-        id: String(category.id || category._id),
+        id: `category:${category.id || category._id}`,
+        entityId: category.id || category._id,
         type: 'category',
       })),
       ...subcategories.map(subcategory => ({
         ...subcategory,
-        id: String(subcategory.id || subcategory._id),
+        id: `subcategory:${subcategory.id || subcategory._id}`,
+        entityId: subcategory.id || subcategory._id,
         type: 'subcategory',
         parentName: subcategory.category_name || categories.find(category =>
           String(category.id || category._id) === String(
@@ -336,7 +338,6 @@ export default function CategoryManagement() {
         for (const item of batch) {
           const generated = generatedById.get(item.id);
           if (!generated) throw new Error(`Gemini did not return SEO for "${item.name}".`);
-          const entityId = item.id;
           const parentId = typeof item.category_id === 'object'
             ? item.category_id.id || item.category_id._id
             : item.category_id;
@@ -351,10 +352,10 @@ export default function CategoryManagement() {
           if (item.type === 'category') {
             payload.image_url = item.image_url || '';
             payload.is_active = item.is_active !== undefined ? item.is_active : 1;
-            await api.put(`/categories/${entityId}`, payload, { adminAuth: true, notify: false });
+            await api.put(`/categories/${item.entityId}`, payload, { adminAuth: true, notify: false });
           } else {
             payload.category_id = parentId;
-            await api.put(`/subcategories/${entityId}`, payload, { adminAuth: true, notify: false });
+            await api.put(`/subcategories/${item.entityId}`, payload, { adminAuth: true, notify: false });
           }
           updatedCount += 1;
         }
