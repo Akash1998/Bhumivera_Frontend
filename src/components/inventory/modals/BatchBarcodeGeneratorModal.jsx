@@ -70,7 +70,7 @@ function wrapSvgText(value, maxLength, maxLines = 2) {
   return lines;
 }
 
-function buildLabeledQrSvg(qrDataUrl, { name, sku, price, payload }) {
+function buildLabeledQrSvg(qrDataUrl, { name, sku, price }) {
   if (!qrDataUrl) return '';
   const qrSvgSource = decodeURIComponent(qrDataUrl.slice(qrDataUrl.indexOf(',') + 1));
   const qrDocument = new DOMParser().parseFromString(qrSvgSource, 'image/svg+xml');
@@ -80,12 +80,8 @@ function buildLabeledQrSvg(qrDataUrl, { name, sku, price, payload }) {
   }
 
   const nameLines = wrapSvgText(name, 44);
-  const payloadLines = wrapSvgText(payload, 50);
   const nameText = nameLines.map((line, index) =>
     `<text x="540" y="${1070 + index * 46}" text-anchor="middle" font-family="Arial,sans-serif" font-size="38" font-weight="700" fill="#111">${escapeSvgText(line)}</text>`
-  ).join('');
-  const payloadText = payloadLines.map((line, index) =>
-    `<text x="540" y="${1240 + index * 34}" text-anchor="middle" font-family="monospace" font-size="24" fill="#334155">${escapeSvgText(line)}</text>`
   ).join('');
 
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1340" viewBox="0 0 1080 1340">
@@ -95,8 +91,6 @@ function buildLabeledQrSvg(qrDataUrl, { name, sku, price, payload }) {
     <svg x="40" y="20" width="1000" height="1000" viewBox="${escapeSvgText(qrSvg.getAttribute('viewBox') || '0 0 1080 1080')}" shape-rendering="crispEdges">${qrSvg.innerHTML}</svg>
     ${nameText}
     <text x="540" y="1180" text-anchor="middle" font-family="monospace" font-size="30" font-weight="700" fill="#334155">${escapeSvgText(sku)} · ₹${escapeSvgText(price)}</text>
-    ${payloadText}
-    <text x="540" y="1310" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" fill="#64748b">BHUMIVERA · Scan to verify</text>
   </svg>`;
 }
 
@@ -322,8 +316,8 @@ export default function BatchBarcodeGeneratorModal({
   const previewPayload = previewProduct ? qrMapBySku[previewSku]?.payload : scannablePayload;
   const safeDownloadSku = previewSku.replace(/[^a-z0-9._-]+/gi, '-') || 'bhumivera-product';
   const labeledQrSvg = useMemo(
-    () => buildLabeledQrSvg(previewQr, { name: previewName, sku: previewSku, price: previewPrice, payload: previewPayload }),
-    [previewQr, previewName, previewSku, previewPrice, previewPayload],
+    () => buildLabeledQrSvg(previewQr, { name: previewName, sku: previewSku, price: previewPrice }),
+    [previewQr, previewName, previewSku, previewPrice],
   );
   const downloadQrUrl = labeledQrSvg
     ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(labeledQrSvg)}`
