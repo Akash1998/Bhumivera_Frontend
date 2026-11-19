@@ -39,6 +39,67 @@ async function buildHighResolutionQr(payload) {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
 }
 
+function escapeSvgText(value) {
+  return String(value ?? '').replace(/[&<>"']/g, character => ({
+    '&': '&amp;',
+    '<': '&lt;',
+    '>': '&gt;',
+    '"': '&quot;',
+    "'": '&apos;',
+  })[character]);
+}
+
+function wrapSvgText(value, maxLength, maxLines = 2) {
+  const words = String(value || '').trim().split(/\s+/).filter(Boolean);
+  const lines = [];
+  let line = '';
+
+  words.forEach(word => {
+    if (line && `${line} ${word}`.length > maxLength) {
+      lines.push(line);
+      line = word;
+    } else {
+      line = line ? `${line} ${word}` : word;
+    }
+  });
+  if (line) lines.push(line);
+  if (lines.length > maxLines) {
+    lines.length = maxLines;
+    lines[maxLines - 1] = `${lines[maxLines - 1].slice(0, maxLength - 1)}…`;
+  }
+  return lines;
+}
+
+function buildLabeledQrSvg(qrDataUrl, { name, sku, price, payload }) {
+  if (!qrDataUrl) return '';
+  const qrSvgSource = decodeURIComponent(qrDataUrl.slice(qrDataUrl.indexOf(',') + 1));
+  const qrDocument = new DOMParser().parseFromString(qrSvgSource, 'image/svg+xml');
+  const qrSvg = qrDocument.documentElement;
+  if (qrSvg.localName !== 'svg' || qrDocument.querySelector('parsererror')) {
+    throw new Error('Could not prepare the high-quality QR download.');
+  }
+
+  const nameLines = wrapSvgText(name, 44);
+  const payloadLines = wrapSvgText(payload, 50);
+  const nameText = nameLines.map((line, index) =>
+    `<text x="540" y="${1070 + index * 46}" text-anchor="middle" font-family="Arial,sans-serif" font-size="38" font-weight="700" fill="#111">${escapeSvgText(line)}</text>`
+  ).join('');
+  const payloadText = payloadLines.map((line, index) =>
+    `<text x="540" y="${1240 + index * 34}" text-anchor="middle" font-family="monospace" font-size="24" fill="#334155">${escapeSvgText(line)}</text>`
+  ).join('');
+
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1340" viewBox="0 0 1080 1340">
+    <title>Bhumivera product QR — ${escapeSvgText(name)}</title>
+    <desc>High-quality product QR with name, SKU, price, and scan payload.</desc>
+    <rect width="1080" height="1340" fill="#fff"/>
+    <svg x="40" y="20" width="1000" height="1000" viewBox="${escapeSvgText(qrSvg.getAttribute('viewBox') || '0 0 1080 1080')}" shape-rendering="crispEdges">${qrSvg.innerHTML}</svg>
+    ${nameText}
+    <text x="540" y="1180" text-anchor="middle" font-family="monospace" font-size="30" font-weight="700" fill="#334155">${escapeSvgText(sku)} · ₹${escapeSvgText(price)}</text>
+    ${payloadText}
+    <text x="540" y="1310" text-anchor="middle" font-family="Arial,sans-serif" font-size="20" fill="#64748b">BHUMIVERA · Scan to verify</text>
+  </svg>`;
+}
+
 /**
  * Fits the requested batch on one A4 sheet, maximizing QR size within that constraint.
  */
@@ -253,8 +314,6 @@ export default function BatchBarcodeGeneratorModal({
     return computeOptimalA4QrLayout(printQuantity, showCompactTag);
   }, [printQuantity, showCompactTag]);
 
-  if (!isOpen) return null;
-
   const previewProduct = generationMode === 'all-products' ? activeAllProducts[0] : null;
   const previewSku = String(previewProduct?.sku || customSku || 'BV-PRODUCT').trim().toUpperCase();
   const previewQr = previewProduct ? qrMapBySku[previewSku]?.url : singleQrDataUrl;
@@ -262,6 +321,15 @@ export default function BatchBarcodeGeneratorModal({
   const previewPrice = previewProduct?.price || previewProduct?.sellingPrice || previewProduct?.mrp || sellingPrice;
   const previewPayload = previewProduct ? qrMapBySku[previewSku]?.payload : scannablePayload;
   const safeDownloadSku = previewSku.replace(/[^a-z0-9._-]+/gi, '-') || 'bhumivera-product';
+  const labeledQrSvg = useMemo(
+    () => buildLabeledQrSvg(previewQr, { name: previewName, sku: previewSku, price: previewPrice, payload: previewPayload }),
+    [previewQr, previewName, previewSku, previewPrice, previewPayload],
+  );
+  const downloadQrUrl = labeledQrSvg
+    ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(labeledQrSvg)}`
+    : '';
+
+  if (!isOpen) return null;
 
   const handleToggleProductSelection = prod => {
     const key = String(prod.id || prod.metaId || prod.sku);
@@ -932,7 +1000,7 @@ export default function BatchBarcodeGeneratorModal({
                   : `Print ${printQuantity} Product QRs on A4 (${a4Layout.qrSizeMm}mm)`}
               </button>
               <a
-                href={previewQr || undefined}
+                href={downloadQrUrl || undefined}
                 download={`${safeDownloadSku}-qr.svg`}
                 aria-disabled={!previewQr}
                 className={`w-full py-2.5 border font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 ${

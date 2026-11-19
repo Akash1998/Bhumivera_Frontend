@@ -37,5 +37,8 @@ describe('A4 QR print layout', () => {
     expect(downloadLink.getAttribute('download')).toBe('BV-PRODUCT-qr.svg');
     expect(svg).toContain('width="1080"');
     expect(svg).toContain('shape-rendering="crispEdges"');
+    expect(svg).toContain('Bhumivera Formulation');
+    expect(svg).toContain('BV-QR:BV-PRODUCT');
+    expect(svg).toContain('₹299');
   });
 });
