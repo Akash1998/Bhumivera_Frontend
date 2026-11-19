@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import SEO, { GLOBAL_CORPORATE_FAQS } from '../components/SEO';
-import ActiveComboShowcase from '../components/ActiveComboShowcase';
 import { HOME_HERO_IMAGE } from '../data/homeVisualAssets';
 
 const tiles = [
@@ -199,8 +198,6 @@ export default function PremiumHome() {
             </Link>
           ))}
         </div>
-
-        <ActiveComboShowcase variant="home" />
 
         {/* GENUINE BOTTLE SERIAL & QR VERIFICATION CALLOUT */}
         <div id="live-batch-coa" className="mt-8 sm:mt-12 rounded-2xl sm:rounded-3xl border border-[#D4AF37]/45 bg-gradient-to-br from-[#102219] via-[#0d1c14] to-[#070a0e] p-4 sm:p-9 shadow-2xl">
