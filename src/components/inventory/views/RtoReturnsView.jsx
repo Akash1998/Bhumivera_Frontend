@@ -128,10 +128,11 @@ export default function RtoReturnsView({
                       <td className="px-4 py-3 text-right">
                         <button
                           onClick={() => onOpenReturnQc(order)}
-                          className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-xs font-black uppercase tracking-wider transition shadow-sm"
+                          disabled={isProcessed}
+                          className="inline-flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-lg text-xs font-black uppercase tracking-wider transition shadow-sm disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:from-emerald-600 disabled:hover:to-teal-600"
                         >
-                          <RotateCcw className="w-3.5 h-3.5" />
-                          {isProcessed ? 'Re-inspect' : 'QC Unbox'}
+                          {isProcessed ? <CheckCircle2 className="w-3.5 h-3.5" /> : <RotateCcw className="w-3.5 h-3.5" />}
+                          {isProcessed ? 'QC Complete' : 'QC Unbox'}
                         </button>
                       </td>
                     </tr>
