@@ -27,53 +27,58 @@ export function buildStandaloneProductQr(sku, batchNo = '') {
   return `BV-QR:${cleanSku}`;
 }
 
+async function buildHighResolutionQr(payload) {
+  const svg = await QRCode.toString(payload, {
+    type: 'svg',
+    width: 1080,
+    margin: 2,
+    color: { dark: '#000000', light: '#FFFFFF' },
+    errorCorrectionLevel: 'M',
+  });
+  return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+}
+
 /**
- * A4 layout prioritizes large, scannable QR codes and uses additional pages when needed.
+ * Fits the requested batch on one A4 sheet, maximizing QR size within that constraint.
  */
 export function computeOptimalA4QrLayout(requestedCount = 24, showLabel = true) {
   const totalCount = Math.max(1, Math.min(500, Math.trunc(Number(requestedCount) || 24)));
   const printableWidthMm = 202;
   const printableHeightMm = 289;
+  const pagePaddingMm = 1;
+  const gapMm = 1;
+  const labelAllowanceMm = showLabel ? 8 : 2;
+  let bestLayout = null;
 
-  let cols = 3;
-  let rows = 4;
-  if (totalCount === 1) {
-    cols = 1;
-    rows = 1;
-  } else if (totalCount <= 2) {
-    cols = 2;
-    rows = 1;
-  } else if (totalCount <= 4) {
-    cols = 2;
-    rows = 2;
-  } else if (totalCount <= 6) {
-    cols = 3;
-    rows = 2;
+  for (let cols = 1; cols <= totalCount; cols += 1) {
+    const rows = Math.ceil(totalCount / cols);
+    const cellWidthMm = (printableWidthMm - pagePaddingMm - (cols - 1) * gapMm) / cols;
+    const cellHeightMm = (printableHeightMm - pagePaddingMm - (rows - 1) * gapMm) / rows;
+    const qrSizeMm = Math.max(1, Math.min(38, Math.floor(Math.min(cellWidthMm - 1, cellHeightMm - labelAllowanceMm))));
+    const capacity = cols * rows;
+    const shapeDifference = Math.abs(cellWidthMm - (cellHeightMm - labelAllowanceMm));
+
+    if (
+      !bestLayout ||
+      qrSizeMm > bestLayout.qrSizeMm ||
+      (qrSizeMm === bestLayout.qrSizeMm && capacity < bestLayout.capacity) ||
+      (qrSizeMm === bestLayout.qrSizeMm && capacity === bestLayout.capacity && shapeDifference < bestLayout.shapeDifference)
+    ) {
+      bestLayout = { cols, rows, cellWidthMm, cellHeightMm, qrSizeMm, capacity, shapeDifference };
+    }
   }
-
-  const perPage = cols * rows;
-  const totalPages = Math.ceil(totalCount / perPage);
-  const gapMm = 2;
-
-  const cellWidthMm = Number(((printableWidthMm - 2 - (cols - 1) * gapMm) / cols).toFixed(1));
-  const cellHeightMm = Number(((printableHeightMm - 2 - (rows - 1) * gapMm) / rows).toFixed(1));
-
-  const labelAllowanceMm = showLabel ? 7 : 2;
-  const maxFitQrMm = Math.min(cellWidthMm - 2, cellHeightMm - labelAllowanceMm);
-  const qrSizeMm = Math.max(24, Math.min(72, Math.floor(maxFitQrMm)));
 
   return {
     totalCount,
-    cols,
-    rows,
-    perPage,
-    totalPages,
+    cols: bestLayout.cols,
+    rows: bestLayout.rows,
+    perPage: totalCount,
+    totalPages: 1,
     gapMm,
-    cellWidthMm,
-    cellHeightMm,
-    qrSizeMm,
-    minQrMm: 24,
-    maxQrMm: 72,
+    cellWidthMm: Number(bestLayout.cellWidthMm.toFixed(1)),
+    cellHeightMm: Number(bestLayout.cellHeightMm.toFixed(1)),
+    qrSizeMm: bestLayout.qrSizeMm,
+    maxQrMm: 38,
     showLabel: Boolean(showLabel),
   };
 }
@@ -100,7 +105,7 @@ export default function BatchBarcodeGeneratorModal({
 
   // A4 auto-sizing vs thermal roll media
   const [mediaType, setMediaType] = useState('a4-auto'); // 'a4-auto' | 'thermal-50x25' | 'compact-38x25' | 'pallet-4x6'
-  const [showCompactTag, setShowCompactTag] = useState(true); // 1-line product name + SKU under QR so staff can paste on right product
+  const [showCompactTag, setShowCompactTag] = useState(true); // Two-line product name + SKU under QR
   const [includeBatchInQr, setIncludeBatchInQr] = useState(false); // Standalone SKU QR by default for fastest scan
   const [printQuantity, setPrintQuantity] = useState(10);
 
@@ -184,12 +189,7 @@ export default function BatchBarcodeGeneratorModal({
         const sku = String(item.sku || `SKU-${item.id}`).trim().toUpperCase();
         const payload = buildStandaloneProductQr(sku, includeBatchInQr ? item.batchNo : '');
         try {
-          const url = await QRCode.toDataURL(payload, {
-            width: 360,
-            margin: 2,
-            color: { dark: '#000000', light: '#FFFFFF' },
-            errorCorrectionLevel: 'M',
-          });
+          const url = await buildHighResolutionQr(payload);
           entries[sku] = { url, payload };
         } catch {
           // ignore individual failure
@@ -231,12 +231,7 @@ export default function BatchBarcodeGeneratorModal({
     let active = true;
     if (!scannablePayload) return;
 
-    QRCode.toDataURL(scannablePayload, {
-      width: 420,
-      margin: 2,
-      color: { dark: '#000000', light: '#FFFFFF' },
-      errorCorrectionLevel: 'M',
-    })
+    buildHighResolutionQr(scannablePayload)
       .then(url => {
         if (active) setSingleQrDataUrl(url);
       })
@@ -441,18 +436,22 @@ export default function BatchBarcodeGeneratorModal({
         }
         .qr-caption-name {
           margin-top: 0.5mm;
-          font-size: 5.5pt;
+          max-width: 100%;
+          font-size: 5pt;
           font-weight: 800;
           color: #0f172a;
           text-align: center;
-          max-width: ${layout.qrSizeMm}mm;
-          white-space: nowrap;
+          line-height: 1.05;
+          display: -webkit-box;
+          -webkit-box-orient: vertical;
+          -webkit-line-clamp: 2;
+          overflow-wrap: anywhere;
           overflow: hidden;
-          text-overflow: ellipsis;
+          max-height: 2.1em;
         }
         .qr-caption-sku {
-          max-width: ${layout.qrSizeMm}mm;
-          font-size: 5pt;
+          max-width: 100%;
+          font-size: 4.5pt;
           font-family: monospace;
           font-weight: 700;
           color: #334155;
@@ -752,7 +751,7 @@ export default function BatchBarcodeGeneratorModal({
                     onChange={e => setMediaType(e.target.value)}
                     className="w-full bg-[#0c261b] border border-emerald-500/40 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none"
                   >
-                    <option value="a4-auto">A4 Paper — Smart Auto-Size Grid (24mm–38mm Mobile Scannable)</option>
+                    <option value="a4-auto">A4 Paper — One-Page QR Grid (up to 38mm)</option>
                     <option value="thermal-50x25">Thermal Sticker Roll (50mm × 25mm)</option>
                     <option value="compact-38x25">Compact Sticker Roll (38mm × 25mm)</option>
                     <option value="pallet-4x6">Master Carton / Pallet (4&quot; × 6&quot;)</option>
@@ -786,9 +785,9 @@ export default function BatchBarcodeGeneratorModal({
                     { count: 12, label: '12 QRs (2 per Product)' },
                     { count: 15, label: '15 QRs' },
                     { count: 20, label: '20 QRs' },
-                    { count: 24, label: '24 QRs (2 A4 pages)' },
-                    { count: 35, label: '35 QRs (3 A4 pages)' },
-                    { count: 48, label: '48 QRs (4 A4 pages)' },
+                    { count: 24, label: '24 QRs (1 A4 page)' },
+                    { count: 35, label: '35 QRs (1 A4 page)' },
+                    { count: 48, label: '48 QRs (1 A4 page)' },
                   ].map(preset => (
                     <button
                       key={preset.count}
@@ -816,7 +815,7 @@ export default function BatchBarcodeGeneratorModal({
                 <div className="pr-2">
                   <div className="text-xs font-black text-emerald-300">Show Product Name &amp; SKU Tag</div>
                   <p className="text-[10px] text-slate-300">
-                    Prints 1-line product name under each QR so you can paste each QR on the matching product.
+                    Prints the product name in up to two compact lines under each QR.
                   </p>
                 </div>
                 <input
@@ -884,7 +883,7 @@ export default function BatchBarcodeGeneratorModal({
               </div>
               {showCompactTag && (
                 <div className="mt-1.5 text-center max-w-full">
-                  <div className="text-[10px] font-black text-slate-900 truncate">
+                  <div className="line-clamp-2 break-words text-[10px] font-black text-slate-900">
                     {(customName || 'Bhumivera Formulation').replace(/\(.*?\)/g, '').trim()}
                   </div>
                   <div className="text-[9px] font-mono font-bold text-slate-700">
@@ -903,11 +902,11 @@ export default function BatchBarcodeGeneratorModal({
                 <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" /> Smart A4 Size Guarantee:
               </div>
               <p className="text-[10px] text-slate-300 leading-normal">
-                Printing <b>{printQuantity}</b> QR codes automatically formats an A4 grid of{' '}
+                Printing <b>{printQuantity}</b> QR codes on one A4 page in a{' '}
                 <b>
                   {a4Layout.cols} columns × {a4Layout.rows} rows
                 </b>{' '}
-                with each QR code sized to exactly <b>{a4Layout.qrSizeMm}mm × {a4Layout.qrSizeMm}mm</b>. Larger batches use additional pages to keep each code easy to scan.
+                with each QR code sized to exactly <b>{a4Layout.qrSizeMm}mm × {a4Layout.qrSizeMm}mm</b>. The QR artwork is vector-based for sharp printing.
               </p>
             </div>
 

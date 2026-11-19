@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { computeOptimalA4QrLayout } from './BatchBarcodeGeneratorModal';
 
 describe('A4 QR print layout', () => {
-  it('uses the full page for a single QR instead of placing it in a small grid cell', () => {
+  it('uses one A4 page and keeps a single QR within its physical size cap', () => {
     const layout = computeOptimalA4QrLayout(1);
 
     expect(layout).toMatchObject({
@@ -10,17 +10,17 @@ describe('A4 QR print layout', () => {
       rows: 1,
       perPage: 1,
       totalPages: 1,
-      qrSizeMm: 72,
+      qrSizeMm: 38,
     });
   });
 
-  it('keeps larger batches scannable by using additional pages', () => {
-    const twelveCodes = computeOptimalA4QrLayout(12);
-    const thirteenCodes = computeOptimalA4QrLayout(13);
+  it('fits a large batch on one page and maximizes QR size for that grid', () => {
+    const layout = computeOptimalA4QrLayout(72);
 
-    expect(twelveCodes).toMatchObject({ cols: 3, rows: 4, perPage: 12, totalPages: 1 });
-    expect(twelveCodes.qrSizeMm).toBeGreaterThan(38);
-    expect(thirteenCodes).toMatchObject({ perPage: 12, totalPages: 2 });
-    expect(thirteenCodes.qrSizeMm).toBe(twelveCodes.qrSizeMm);
+    expect(layout.totalPages).toBe(1);
+    expect(layout.perPage).toBe(72);
+    expect(layout.cols * layout.rows).toBeGreaterThanOrEqual(72);
+    expect(layout.qrSizeMm).toBeLessThanOrEqual(38);
+    expect(layout.qrSizeMm).toBeGreaterThan(20);
   });
 });
