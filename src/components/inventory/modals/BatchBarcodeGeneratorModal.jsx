@@ -81,17 +81,47 @@ function buildLabeledQrSvg(qrDataUrl, { name, sku, price }) {
 
   const nameLines = wrapSvgText(name, 44);
   const nameText = nameLines.map((line, index) =>
-    `<text x="540" y="${1070 + index * 46}" text-anchor="middle" font-family="Arial,sans-serif" font-size="38" font-weight="700" fill="#111">${escapeSvgText(line)}</text>`
+    `<text x="2176" y="${4435 + index * 148}" text-anchor="middle" font-family="Arial,sans-serif" font-size="112" font-weight="700" fill="#111">${escapeSvgText(line)}</text>`
   ).join('');
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="1080" height="1340" viewBox="0 0 1080 1340">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="4352" height="4896" viewBox="0 0 4352 4896">
     <title>Bhumivera product QR — ${escapeSvgText(name)}</title>
-    <desc>High-quality product QR with name, SKU, price, and scan payload.</desc>
-    <rect width="1080" height="1340" fill="#fff"/>
-    <svg x="40" y="20" width="1000" height="1000" viewBox="${escapeSvgText(qrSvg.getAttribute('viewBox') || '0 0 1080 1080')}" shape-rendering="crispEdges">${qrSvg.innerHTML}</svg>
+    <desc>4K product QR with product details and a dashed cutting border.</desc>
+    <rect width="4352" height="4896" fill="#fff"/>
+    <svg x="128" y="128" width="4096" height="4096" viewBox="${escapeSvgText(qrSvg.getAttribute('viewBox') || '0 0 1080 1080')}" shape-rendering="crispEdges">${qrSvg.innerHTML}</svg>
+    <rect x="32" y="32" width="4288" height="4832" rx="8" fill="none" stroke="#64748b" stroke-width="4" stroke-dasharray="18 14"/>
     ${nameText}
-    <text x="540" y="1180" text-anchor="middle" font-family="monospace" font-size="30" font-weight="700" fill="#334155">${escapeSvgText(sku)} · ₹${escapeSvgText(price)}</text>
+    <text x="2176" y="4770" text-anchor="middle" font-family="monospace" font-size="82" font-weight="700" fill="#334155">${escapeSvgText(sku)} · ₹${escapeSvgText(price)}</text>
   </svg>`;
+}
+
+function renderQrSvgAsPng(svg) {
+  return new Promise((resolve, reject) => {
+    const image = new Image();
+    image.onload = () => {
+      const canvas = document.createElement('canvas');
+      canvas.width = 4352;
+      canvas.height = 4896;
+      const context = canvas.getContext('2d');
+      if (!context) {
+        reject(new Error('Your browser could not create the 4K QR image.'));
+        return;
+      }
+
+      context.imageSmoothingEnabled = false;
+      context.fillStyle = '#fff';
+      context.fillRect(0, 0, canvas.width, canvas.height);
+      context.drawImage(image, 0, 0, canvas.width, canvas.height);
+
+      try {
+        resolve(canvas.toDataURL('image/png'));
+      } catch (error) {
+        reject(new Error(`Your browser could not export the 4K QR image: ${error.message}`));
+      }
+    };
+    image.onerror = () => reject(new Error('Could not render the QR image for download.'));
+    image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
+  });
 }
 
 /**
@@ -169,6 +199,8 @@ export default function BatchBarcodeGeneratorModal({
   const [selectedProductMap, setSelectedProductMap] = useState({});
   const [qrMapBySku, setQrMapBySku] = useState({});
   const [singleQrDataUrl, setSingleQrDataUrl] = useState('');
+  const [downloadQrUrl, setDownloadQrUrl] = useState('');
+  const [downloadError, setDownloadError] = useState('');
   const [copiedCode, setCopiedCode] = useState(false);
 
   // Set default dates
@@ -319,9 +351,26 @@ export default function BatchBarcodeGeneratorModal({
     () => buildLabeledQrSvg(previewQr, { name: previewName, sku: previewSku, price: previewPrice }),
     [previewQr, previewName, previewSku, previewPrice],
   );
-  const downloadQrUrl = labeledQrSvg
-    ? `data:image/svg+xml;charset=utf-8,${encodeURIComponent(labeledQrSvg)}`
-    : '';
+
+  useEffect(() => {
+    let active = true;
+    setDownloadQrUrl('');
+    setDownloadError('');
+    if (!labeledQrSvg) return undefined;
+
+    renderQrSvgAsPng(labeledQrSvg).then(
+      dataUrl => {
+        if (active) setDownloadQrUrl(dataUrl);
+      },
+      error => {
+        if (active) setDownloadError(error.message);
+      },
+    );
+
+    return () => {
+      active = false;
+    };
+  }, [labeledQrSvg]);
 
   if (!isOpen) return null;
 
@@ -995,17 +1044,18 @@ export default function BatchBarcodeGeneratorModal({
               </button>
               <a
                 href={downloadQrUrl || undefined}
-                download={`${safeDownloadSku}-qr.svg`}
-                aria-disabled={!previewQr}
+                download={`${safeDownloadSku}-qr-4k.png`}
+                aria-disabled={!downloadQrUrl}
                 className={`w-full py-2.5 border font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 ${
-                  previewQr
+                  downloadQrUrl
                     ? 'bg-emerald-950/60 hover:bg-emerald-900 text-emerald-200 border-emerald-500/40'
                     : 'pointer-events-none opacity-50 bg-slate-800 text-slate-400 border-slate-600'
                 }`}
               >
                 <Download className="w-4 h-4" />
-                Download Highest-Quality QR (SVG)
+                Download 4K QR with Cut Border (PNG)
               </a>
+              {downloadError && <p role="alert" className="text-xs text-red-300">{downloadError}</p>}
               <button
                 type="button"
                 onClick={onClose}
