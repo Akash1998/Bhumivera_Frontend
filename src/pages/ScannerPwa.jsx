@@ -180,7 +180,6 @@ export default function ScannerPwa() {
   const [orderInput, setOrderInput] = useState('');
   const [activeOrder, setActiveOrder] = useState(() => readActivePackingState(readSession()?.staff?.username)?.order || null);
   const [scanProgress, setScanProgress] = useState(() => readActivePackingState(readSession()?.staff?.username)?.progress || {});
-  const [selectedCombo, setSelectedCombo] = useState(null);
   const [pendingScans, setPendingScans] = useState(() => readPendingScans(readSession()?.staff?.username));
   const [batch, setBatch] = useState(() => readPackedBatch(readSession()?.staff?.username));
   const [notice, setNotice] = useState(null);
@@ -201,6 +200,7 @@ export default function ScannerPwa() {
       const group = groups.get(key) || {
         key,
         name: item.name || 'Product',
+        comboName: item.comboName || '',
         quantity: 0,
         scanned: 0,
       };
@@ -426,7 +426,6 @@ export default function ScannerPwa() {
     if (staffUsername) localStorage.removeItem(getActiveOrderKey(staffUsername));
     setActiveOrder(null);
     setScanProgress({});
-    setSelectedCombo(null);
     setCameraOpen(false);
   }, [staffUsername]);
 
@@ -521,7 +520,6 @@ export default function ScannerPwa() {
       }));
       setActiveOrder(order);
       setScanProgress(progress);
-      setSelectedCombo(null);
       setOrderInput('');
       if (!manifestError) {
         setNotice({ type: 'success', text: `Order #${order.orderNumber || order.id} loaded. Scan only the products shown.` });
@@ -540,48 +538,7 @@ export default function ScannerPwa() {
 
   const handleProductScan = useCallback(rawCode => {
     const cleanCode = normalizeProductCode(rawCode);
-    const comboItem = orderItems.find(item =>
-      item.comboSku && String(item.comboSku).trim().toLowerCase() === cleanCode.toLowerCase()
-    );
-    if (comboItem) {
-      const components = Array.isArray(comboItem.comboComponents) ? comboItem.comboComponents : [];
-      if (components.length === 0) {
-        setNotice({ type: 'error', text: `The contents of ${comboItem.comboName || 'this combo'} could not be loaded. Refresh the order manifest before packing.` });
-        return false;
-      }
-      const baseline = {};
-      const unavailableComponent = components.find(component => {
-        const available = orderItems
-          .filter(item => item.comboSku === comboItem.comboSku && matchesOrderItem(component.sku, item))
-          .reduce((sum, item) => {
-            const progress = scanProgress[String(item.orderItemId)];
-            return sum + Math.max(0, (Number(item.quantity) || 1) - (progress?.codes.length || 0));
-          }, 0);
-        baseline[component.sku] = orderItems
-          .filter(item => item.comboSku === comboItem.comboSku && matchesOrderItem(component.sku, item))
-          .reduce((sum, item) => sum + (scanProgress[String(item.orderItemId)]?.codes.length || 0), 0);
-        return available < (Number(component.quantity) || 1);
-      });
-      if (unavailableComponent) {
-        setNotice({ type: 'error', text: `${unavailableComponent.name} does not have enough remaining units for another ${comboItem.comboName || 'combo'}.` });
-        return false;
-      }
-      setSelectedCombo({
-        sku: comboItem.comboSku,
-        name: comboItem.comboName || comboItem.name,
-        components,
-        baseline,
-      });
-      setNotice({
-        type: 'success',
-        text: `${comboItem.comboName || 'Combo'} selected. Contents: ${components.map(component => `${component.name} ×${component.quantity}`).join(', ')}. Now scan each product’s existing QR.`,
-      });
-      return true;
-    }
-
-    const matchingItems = orderItems.filter(item =>
-      (!selectedCombo || item.comboSku === selectedCombo.sku) && matchesOrderItem(cleanCode, item)
-    );
+    const matchingItems = orderItems.filter(item => matchesOrderItem(cleanCode, item));
     const targetItem = matchingItems.find(item => {
       const progress = scanProgress[String(item.orderItemId)];
       const quantity = Number(item.quantity) || 1;
@@ -628,22 +585,13 @@ export default function ScannerPwa() {
     if (nextScannedUnits >= expectedUnits) {
       setCameraOpen(false);
     }
-    const comboComplete = selectedCombo?.components.every(component => {
-      const scanned = orderItems
-        .filter(item => item.comboSku === selectedCombo.sku && matchesOrderItem(component.sku, item))
-        .reduce((sum, item) => sum + (nextProgress[String(item.orderItemId)]?.codes.length || 0), 0);
-      return scanned >= (selectedCombo.baseline[component.sku] || 0) + (Number(component.quantity) || 1);
-    });
-    if (comboComplete) setSelectedCombo(null);
     setNotice({
       type: 'success',
-      text: comboComplete
-        ? `${targetItem.name}: ${current.codes.length + 1}/${current.quantity} scanned. ${selectedCombo.name} contents verified.`
-        : `${targetItem.name}: ${current.codes.length + 1}/${current.quantity} scanned. Saved on this phone.`,
+      text: `${targetItem.name}: ${current.codes.length + 1}/${current.quantity} scanned. Saved on this phone.`,
     });
     if (navigator.onLine) syncPendingScans();
     return true;
-  }, [activeOrder, expectedUnits, orderItems, scanProgress, selectedCombo, staffUsername, syncPendingScans]);
+  }, [activeOrder, expectedUnits, orderItems, scanProgress, staffUsername, syncPendingScans]);
 
   handleProductScanRef.current = handleProductScan;
 
@@ -886,16 +834,12 @@ export default function ScannerPwa() {
             {cameraMode === 'product' && (
               <div className="border-b border-emerald-300/20 bg-[#0b1812] px-4 py-3 text-center">
                 <p className="text-[9px] font-black uppercase tracking-[0.18em] text-emerald-300">
-                  {selectedCombo ? 'Verify selected combo contents' : 'Next suggested · any remaining product can be scanned'}
+                  Scan any listed product QR
                 </p>
                 <p className="mt-1 truncate text-sm font-bold text-white">
-                  {selectedCombo?.name || nextGroup?.name || 'All items scanned'}
+                  {nextGroup?.name || 'All items scanned'}
                 </p>
-                {selectedCombo ? (
-                  <p className="mt-1 text-xs leading-5 text-emerald-100">
-                    Scan: {selectedCombo.components.map(component => `${component.name} ×${component.quantity}`).join(', ')}
-                  </p>
-                ) : nextGroup && (
+                {nextGroup && (
                   <p className="mt-0.5 text-xs font-mono text-emerald-100">
                     ×{nextGroup.quantity - nextGroup.scanned} remaining
                   </p>
@@ -919,7 +863,7 @@ export default function ScannerPwa() {
             <p className="p-3 text-center text-xs leading-5 text-slate-300">
               {cameraMode === 'order'
                 ? 'Scan the fulfillment QR to load the order. Progress syncs to Inventory Software when online.'
-                : 'Scan a combo QR first to view its contents, then scan each included product’s existing QR. Scans verify packing only; stock is deducted when the order is placed.'}
+                : 'For combo orders, scan the existing QR/barcode on each listed product; no combo QR is needed. Scans verify packing only, while stock is deducted when the order is placed.'}
             </p>
           </section>
         )}
@@ -1044,6 +988,7 @@ export default function ScannerPwa() {
                   >
                     <div className="min-w-0">
                       <p className="truncate text-sm font-semibold text-white" title={group.name}>{group.name}</p>
+                      {group.comboName && <p className="mt-0.5 truncate text-[9px] font-semibold text-emerald-300/80">Part of {group.comboName}</p>}
                       <p className="mt-0.5 text-[10px] font-mono text-slate-400">{group.scanned}/{group.quantity} scanned</p>
                     </div>
                     <span className="shrink-0 rounded-full bg-white/10 px-2.5 py-1 text-sm font-black text-emerald-100">

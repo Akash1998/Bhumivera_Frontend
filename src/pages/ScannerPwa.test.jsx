@@ -186,11 +186,7 @@ describe('fulfillment scanner PWA', () => {
     expect(screen.getByText('Aloe Vera Soap')).toBeTruthy();
   });
 
-  it('scans a combo QR first, then verifies each existing component QR', async () => {
-    const comboComponents = [
-      { sku: 'SKU-1', name: 'Charcoal Face Wash', quantity: 1 },
-      { sku: 'SKU-2', name: 'Aloe Vera Soap', quantity: 1 },
-    ];
+  it('lists combo components by product name and verifies each existing item QR without a combo QR', async () => {
     api.get.mockResolvedValueOnce({
       data: {
         success: true,
@@ -199,24 +195,10 @@ describe('fulfillment scanner PWA', () => {
           orderNumber: 'ORD-99',
           status: 'confirmed',
           items: [
-            {
-              orderItemId: 901,
-              name: 'Creator Combo — Charcoal Face Wash',
-              sku: 'SKU-1',
-              quantity: 1,
-              comboSku: 'BV-CREATOR-COMBO',
-              comboName: 'Creator Combo',
-              comboComponents,
-            },
-            {
-              orderItemId: 902,
-              name: 'Creator Combo — Aloe Vera Soap',
-              sku: 'SKU-2',
-              quantity: 1,
-              comboSku: 'BV-CREATOR-COMBO',
-              comboName: 'Creator Combo',
-              comboComponents,
-            },
+            { orderItemId: 901, name: 'Charcoal Face Wash', sku: 'SKU-1', quantity: 1, comboName: 'Creator Combo' },
+            { orderItemId: 902, name: 'Aloe Vera Soap', sku: 'SKU-2', quantity: 1, comboName: 'Creator Combo' },
+            { orderItemId: 903, name: 'Shampoo', sku: 'SKU-3', quantity: 1, comboName: 'Creator Combo' },
+            { orderItemId: 904, name: 'Aloe Vera Moisturiser', sku: 'SKU-4', quantity: 1, comboName: 'Creator Combo' },
           ],
         },
       },
@@ -227,23 +209,25 @@ describe('fulfillment scanner PWA', () => {
     fireEvent.change(screen.getByPlaceholderText('Order number'), { target: { value: '99' } });
     fireEvent.click(screen.getByRole('button', { name: 'Load' }));
     await screen.findByText(/Order #ORD-99 loaded/i);
+    for (const productName of ['Charcoal Face Wash', 'Aloe Vera Soap', 'Shampoo', 'Aloe Vera Moisturiser']) {
+      expect(screen.getByText(productName)).toBeTruthy();
+    }
+    expect(screen.getAllByText('Part of Creator Combo')).toHaveLength(4);
+
     fireEvent.click(screen.getByRole('button', { name: 'Scan Now' }));
     await waitFor(() => expect(scannerMock.onResult).toBeTruthy());
-
-    scannerMock.onResult('BV-QR:BV-CREATOR-COMBO');
-    await screen.findByText(/Creator Combo selected\. Contents: Charcoal Face Wash ×1, Aloe Vera Soap ×1/i);
-    expect(api.post).not.toHaveBeenCalledWith(
-      '/inventory-software/fulfillment/pwa-scan',
-      expect.anything(),
-      expect.anything(),
-    );
-
-    scannerMock.onResult('BV-QR:SKU-1');
-    await screen.findByText(/Creator Combo — Charcoal Face Wash: 1\/1 scanned\. Saved on this phone\./i);
-    scannerMock.onResult('BV-QR:SKU-2');
-    await screen.findByText(/Creator Combo contents verified/i);
+    expect(screen.getByText(/no combo QR is needed/i)).toBeTruthy();
+    for (const [index, sku] of ['SKU-1', 'SKU-2', 'SKU-3', 'SKU-4'].entries()) {
+      scannerMock.onResult(`BV-QR:${sku}`);
+      await screen.findByText(new RegExp(`1/1 scanned\\. Saved on this phone\\.`));
+      expect(api.post).toHaveBeenCalledWith(
+        '/inventory-software/fulfillment/pwa-scan',
+        expect.objectContaining({ orderItemId: 901 + index, scannedCode: sku }),
+        expect.anything(),
+      );
+    }
     expect(api.post.mock.calls.filter(([path]) => path.endsWith('/fulfillment/pwa-scan')).map(([, payload]) => payload.orderItemId))
-      .toEqual([901, 902]);
+      .toEqual([901, 902, 903, 904]);
   });
 
   it('groups duplicate products, accepts out-of-order scans, and uses one scanner action', async () => {

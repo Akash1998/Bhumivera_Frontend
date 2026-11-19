@@ -258,7 +258,13 @@ export default function BatchBarcodeGeneratorModal({
   useEffect(() => {
     if (!isOpen) return;
 
-    if (initialProduct) {
+    const comboComponentProducts = initialProduct?.isBundle
+      ? getComboComponentProducts(initialProduct, catalog)
+      : [];
+    if (initialProduct?.isBundle) {
+      setGenerationMode('all-products');
+      setPrintQuantity(Math.max(1, comboComponentProducts.length));
+    } else if (initialProduct) {
       setGenerationMode('single-product');
       setSelectedProductId(String(initialProduct.id || initialProduct.metaId || ''));
       setCustomSku(initialProduct.sku || '');
@@ -291,8 +297,9 @@ export default function BatchBarcodeGeneratorModal({
     // Initialize all non-bundle products (or first 6+ products) as selected for All-Products mode
     if (catalog && catalog.length > 0) {
       const coreProducts = catalog.filter(p => !p.isBundle);
+      const targetProducts = initialProduct?.isBundle ? comboComponentProducts : coreProducts;
       const nextMap = {};
-      coreProducts.forEach(p => {
+      targetProducts.forEach(p => {
         const key = String(p.id || p.metaId || p.sku);
         nextMap[key] = true;
       });
@@ -416,6 +423,23 @@ export default function BatchBarcodeGeneratorModal({
   if (!isOpen) return null;
 
   const handleToggleProductSelection = prod => {
+    if (prod.isBundle) {
+      const components = getComboComponentProducts(prod, catalog);
+      if (components.length === 0) return;
+      setSelectedProductMap(previous => {
+        const next = { ...previous };
+        const allSelected = components.every(component =>
+          Boolean(next[String(component.id || component.metaId || component.sku)])
+        );
+        components.forEach(component => {
+          const key = String(component.id || component.metaId || component.sku);
+          if (allSelected) delete next[key];
+          else next[key] = true;
+        });
+        return next;
+      });
+      return;
+    }
     const key = String(prod.id || prod.metaId || prod.sku);
     setSelectedProductMap(prev => ({
       ...prev,
@@ -782,6 +806,11 @@ export default function BatchBarcodeGeneratorModal({
           <div className="lg:col-span-7 space-y-4">
             {generationMode === 'all-products' ? (
               <div className="space-y-3">
+                {initialProduct?.isBundle && (
+                  <p role="status" className="rounded-lg border border-emerald-400/30 bg-emerald-950/30 px-3 py-2 text-xs leading-5 text-emerald-100">
+                    No combo QR is needed. Pack this combo by scanning each included product’s existing QR: {getComboComponentLabels(initialProduct, catalog).join(', ') || 'component products'}.
+                  </p>
+                )}
                 <div className="flex items-center justify-between">
                   <label className="text-xs font-black uppercase text-emerald-300 flex items-center gap-1.5">
                     <Layers className="w-3.5 h-3.5 text-emerald-400" /> Unique Standalone QR for Each Product ({activeAllProducts.length} Selected)
@@ -791,7 +820,7 @@ export default function BatchBarcodeGeneratorModal({
                       type="button"
                       onClick={() => {
                         const all = {};
-                        catalog.forEach(p => {
+                        catalog.filter(p => !p.isBundle).forEach(p => {
                           all[String(p.id || p.metaId || p.sku)] = true;
                         });
                         setSelectedProductMap(all);
@@ -821,9 +850,14 @@ export default function BatchBarcodeGeneratorModal({
                   {catalog.map(prod => {
                     const key = String(prod.id || prod.metaId || prod.sku);
                     const componentProducts = prod.isBundle ? getComboComponentProducts(prod, catalog) : [];
-                    const checked = Boolean(selectedProductMap[key]);
+                    const checked = prod.isBundle
+                      ? componentProducts.length > 0 && componentProducts.every(component =>
+                        Boolean(selectedProductMap[String(component.id || component.metaId || component.sku)])
+                      )
+                      : Boolean(selectedProductMap[key]);
                     const sku = String(prod.sku || `SKU-${prod.id}`).toUpperCase();
-                    const qrEntry = qrMapBySku[sku];
+                    const qrProduct = prod.isBundle ? componentProducts[0] : prod;
+                    const qrEntry = qrMapBySku[String(qrProduct?.sku || sku).toUpperCase()];
                     return (
                       <div
                         key={key}
@@ -849,7 +883,7 @@ export default function BatchBarcodeGeneratorModal({
                           <div className="text-xs font-bold text-white truncate">{prod.name}</div>
                           <div className="text-[10px] font-mono text-emerald-300 truncate">
                             {prod.isBundle
-                              ? `Combo QR${componentProducts.length ? ` • Contains: ${getComboComponentLabels(prod, catalog).join(', ')}` : ''}`
+                              ? `Component QR labels (${componentProducts.length} existing products)`
                               : `${qrEntry?.payload || `BV-QR:${sku}`} • ₹${prod.price}`}
                           </div>
                         </div>
@@ -1062,7 +1096,7 @@ export default function BatchBarcodeGeneratorModal({
               {selectedQrProduct?.isBundle && (
                 <p role={comboPreviewComponents.length ? 'status' : 'alert'} className="mt-2 max-w-full rounded border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[9px] font-semibold leading-4 text-emerald-950">
                   {comboPreviewComponents.length
-                    ? `Combo QR — contents: ${comboContents}. Scan this QR first, then scan each included product QR during fulfillment.`
+                    ? `No combo QR is needed. Scan each component’s existing product QR: ${comboContents}.`
                     : 'Combo contents could not be matched to inventory SKUs. Refresh inventory and try again.'}
                 </p>
               )}

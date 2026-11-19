@@ -33,7 +33,7 @@ describe('A4 QR print layout', () => {
     expect(layout.qrSizeMm).toBeGreaterThan(20);
   });
 
-  it('keeps the combo QR and prints its contents on the label', async () => {
+  it('uses the existing product QR labels for a combo instead of a combo QR', async () => {
     let renderedSvg = '';
     const canvasContext = {
       imageSmoothingEnabled: true,
@@ -48,7 +48,7 @@ describe('A4 QR print layout', () => {
       }
     });
     vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(canvasContext);
-    vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue('data:image/png;base64,combo-qr');
+    vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue('data:image/png;base64,component-qr');
     const combo = {
       id: 20,
       productId: 200,
@@ -75,12 +75,14 @@ describe('A4 QR print layout', () => {
       />,
     );
 
-    expect(await screen.findByText(/Combo QR — contents: Face Wash, Soap/i)).toBeTruthy();
+    expect(await screen.findByText(/No combo QR is needed\. Pack this combo by scanning each included product’s existing QR: Face Wash, Soap/i)).toBeTruthy();
+    expect(screen.getByText(/Unique Standalone QR for Each Product \(2 Selected\)/i)).toBeTruthy();
     const downloadLink = await screen.findByRole('link', { name: /download 4k qr with cut border/i });
-    await waitFor(() => expect(downloadLink.getAttribute('href')).toBe('data:image/png;base64,combo-qr'));
-    expect(downloadLink.getAttribute('download')).toBe('BV-CREATOR-COMBO-qr-4k.png');
-    expect(renderedSvg).toContain('BV-CREATOR-COMBO');
-    expect(renderedSvg).toContain('Face Wash, Soap');
+    await waitFor(() => expect(downloadLink.getAttribute('href')).toBe('data:image/png;base64,component-qr'));
+    expect(downloadLink.getAttribute('download')).toBe('BV-FACEWASH-qr-4k.png');
+    expect(renderedSvg).toContain('BV-FACEWASH');
+    expect(renderedSvg).not.toContain('BV-CREATOR-COMBO');
+    expect(renderedSvg).toContain('Face Wash');
   });
 
   it('offers the preview QR as a 4K PNG with a dashed cutting border', async () => {
