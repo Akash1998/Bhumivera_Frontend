@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   CheckCircle2,
   Copy,
+  Download,
   Sparkles,
   Grid,
   Sliders,
@@ -253,6 +254,14 @@ export default function BatchBarcodeGeneratorModal({
   }, [printQuantity, showCompactTag]);
 
   if (!isOpen) return null;
+
+  const previewProduct = generationMode === 'all-products' ? activeAllProducts[0] : null;
+  const previewSku = String(previewProduct?.sku || customSku || 'BV-PRODUCT').trim().toUpperCase();
+  const previewQr = previewProduct ? qrMapBySku[previewSku]?.url : singleQrDataUrl;
+  const previewName = previewProduct?.name || customName || 'Bhumivera Formulation';
+  const previewPrice = previewProduct?.price || previewProduct?.sellingPrice || previewProduct?.mrp || sellingPrice;
+  const previewPayload = previewProduct ? qrMapBySku[previewSku]?.payload : scannablePayload;
+  const safeDownloadSku = previewSku.replace(/[^a-z0-9._-]+/gi, '-') || 'bhumivera-product';
 
   const handleToggleProductSelection = prod => {
     const key = String(prod.id || prod.metaId || prod.sku);
@@ -875,8 +884,8 @@ export default function BatchBarcodeGeneratorModal({
 
             <div className="bg-white text-black p-4 rounded-xl shadow-2xl border-2 border-emerald-500 w-full max-w-[260px] flex flex-col items-center justify-center text-center">
               <div className="w-44 h-44 flex items-center justify-center p-1 bg-white">
-                {singleQrDataUrl ? (
-                  <img src={singleQrDataUrl} alt="Standalone Product QR" className="w-full h-full object-contain" />
+                {previewQr ? (
+                  <img src={previewQr} alt={`Standalone Product QR for ${previewSku}`} className="w-full h-full object-contain" />
                 ) : (
                   <div className="w-full h-full flex items-center justify-center text-xs font-mono">Generating QR...</div>
                 )}
@@ -884,15 +893,15 @@ export default function BatchBarcodeGeneratorModal({
               {showCompactTag && (
                 <div className="mt-1.5 text-center max-w-full">
                   <div className="line-clamp-2 break-words text-[10px] font-black text-slate-900">
-                    {(customName || 'Bhumivera Formulation').replace(/\(.*?\)/g, '').trim()}
+                    {previewName.replace(/\(.*?\)/g, '').trim()}
                   </div>
                   <div className="text-[9px] font-mono font-bold text-slate-700">
-                    {customSku} • ₹{sellingPrice}
+                    {previewSku} • ₹{previewPrice}
                   </div>
                 </div>
               )}
               <div className="mt-1.5 text-[9px] font-mono font-bold text-emerald-900 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-300 truncate max-w-full">
-                {scannablePayload}
+                {previewPayload}
               </div>
             </div>
 
@@ -922,6 +931,19 @@ export default function BatchBarcodeGeneratorModal({
                   ? `Print ${printQuantity} Unique Product QRs on A4 (${a4Layout.qrSizeMm}mm)`
                   : `Print ${printQuantity} Product QRs on A4 (${a4Layout.qrSizeMm}mm)`}
               </button>
+              <a
+                href={previewQr || undefined}
+                download={`${safeDownloadSku}-qr.svg`}
+                aria-disabled={!previewQr}
+                className={`w-full py-2.5 border font-bold text-xs rounded-xl transition flex items-center justify-center gap-2 ${
+                  previewQr
+                    ? 'bg-emerald-950/60 hover:bg-emerald-900 text-emerald-200 border-emerald-500/40'
+                    : 'pointer-events-none opacity-50 bg-slate-800 text-slate-400 border-slate-600'
+                }`}
+              >
+                <Download className="w-4 h-4" />
+                Download Highest-Quality QR (SVG)
+              </a>
               <button
                 type="button"
                 onClick={onClose}
