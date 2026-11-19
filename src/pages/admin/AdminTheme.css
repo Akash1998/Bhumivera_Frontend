@@ -17,6 +17,41 @@
     linear-gradient(135deg, #071a12 0%, #0b2419 52%, #0a1c16 100%) !important;
 }
 
+.inventory-workspace {
+  height: 100vh;
+  height: 100dvh;
+  min-height: 0;
+}
+
+@media (max-width: 900px) {
+  .inventory-workspace > aside {
+    width: 13rem;
+  }
+
+  .inventory-workspace > div > header {
+    height: auto;
+    min-height: 4rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    padding-top: 0.5rem;
+    padding-bottom: 0.5rem;
+  }
+
+  .inventory-workspace > div > header > div:first-child,
+  .inventory-workspace > div > header > div:last-child {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .inventory-workspace > div > header > div:first-child {
+    flex: 1 1 100%;
+  }
+
+  .inventory-workspace > div > main {
+    padding: 1rem;
+  }
+}
+
 .inventory-shell [class~="bg-white"],
 .inventory-shell [class~="bg-slate-50"],
 .inventory-shell [class~="bg-slate-100"],

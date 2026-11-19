@@ -28,61 +28,39 @@ export function buildStandaloneProductQr(sku, batchNo = '') {
 }
 
 /**
- * Smart A4 Auto-Sizing Layout Engine (210mm x 297mm portrait, printable area 194mm x 281mm).
- * Automatically adjusts grid columns, rows, and QR code physical size (in mm) for any
- * requested count (e.g., 6, 10, 20, 24, 35, 48, etc.) while strictly clamping QR matrix
- * size between 24mm (minimum for instant mobile scan) and 38mm (maximum so it never looks oversized).
+ * A4 layout prioritizes large, scannable QR codes and uses additional pages when needed.
  */
 export function computeOptimalA4QrLayout(requestedCount = 24, showLabel = true) {
   const totalCount = Math.max(1, Math.min(500, Math.trunc(Number(requestedCount) || 24)));
-  const printableWidthMm = 194;
-  const printableHeightMm = 281;
+  const printableWidthMm = 202;
+  const printableHeightMm = 289;
 
-  let cols = 4;
-  let rows = 6;
-
-  if (totalCount <= 4) {
+  let cols = 3;
+  let rows = 4;
+  if (totalCount === 1) {
+    cols = 1;
+    rows = 1;
+  } else if (totalCount <= 2) {
     cols = 2;
-    rows = 3;
+    rows = 1;
+  } else if (totalCount <= 4) {
+    cols = 2;
+    rows = 2;
   } else if (totalCount <= 6) {
     cols = 3;
-    rows = 3;
-  } else if (totalCount <= 10) {
-    cols = 3;
-    rows = 4;
-  } else if (totalCount <= 12) {
-    cols = 3;
-    rows = 4;
-  } else if (totalCount <= 16) {
-    cols = 4;
-    rows = 4;
-  } else if (totalCount <= 20) {
-    cols = 4;
-    rows = 5;
-  } else if (totalCount <= 24) {
-    cols = 4;
-    rows = 6;
-  } else if (totalCount <= 30) {
-    cols = 5;
-    rows = 6;
-  } else if (totalCount <= 35) {
-    cols = 5;
-    rows = 7;
-  } else {
-    cols = 6;
-    rows = 8;
+    rows = 2;
   }
 
   const perPage = cols * rows;
   const totalPages = Math.ceil(totalCount / perPage);
-  const gapMm = cols >= 5 ? 2.5 : 3.5;
+  const gapMm = 2;
 
-  const cellWidthMm = Number(((printableWidthMm - (cols - 1) * gapMm) / cols).toFixed(1));
-  const cellHeightMm = Number(((printableHeightMm - (rows - 1) * gapMm) / rows).toFixed(1));
+  const cellWidthMm = Number(((printableWidthMm - 2 - (cols - 1) * gapMm) / cols).toFixed(1));
+  const cellHeightMm = Number(((printableHeightMm - 2 - (rows - 1) * gapMm) / rows).toFixed(1));
 
-  const labelAllowanceMm = showLabel ? 10 : 3;
-  const maxFitQrMm = Math.min(cellWidthMm - 5, cellHeightMm - labelAllowanceMm);
-  const qrSizeMm = Math.max(24, Math.min(38, Math.floor(maxFitQrMm)));
+  const labelAllowanceMm = showLabel ? 7 : 2;
+  const maxFitQrMm = Math.min(cellWidthMm - 2, cellHeightMm - labelAllowanceMm);
+  const qrSizeMm = Math.max(24, Math.min(72, Math.floor(maxFitQrMm)));
 
   return {
     totalCount,
@@ -95,7 +73,7 @@ export function computeOptimalA4QrLayout(requestedCount = 24, showLabel = true) 
     cellHeightMm,
     qrSizeMm,
     minQrMm: 24,
-    maxQrMm: 38,
+    maxQrMm: 72,
     showLabel: Boolean(showLabel),
   };
 }
@@ -373,7 +351,7 @@ export default function BatchBarcodeGeneratorModal({
                   showCompactTag
                     ? `
                   <div class="qr-caption-name">${escapeHtml(st.name.replace(/\(.*?\)/g, '').trim())}</div>
-                  <div class="qr-caption-sku">${escapeHtml(st.sku)} • ₹${escapeHtml(st.price)}</div>
+                  <div class="qr-caption-sku">${escapeHtml(st.sku)} · ₹${escapeHtml(st.price)}</div>
                 `
                     : ''
                 }
@@ -427,8 +405,8 @@ export default function BatchBarcodeGeneratorModal({
         body { background: #fff; color: #000; padding: 0; }
 
         .a4-auto-page {
-          width: 194mm;
-          height: 281mm;
+          width: 202mm;
+          height: 289mm;
           margin: 0 auto;
           page-break-after: always;
           page-break-inside: avoid;
@@ -436,7 +414,7 @@ export default function BatchBarcodeGeneratorModal({
           grid-template-columns: repeat(${layout.cols}, 1fr);
           grid-template-rows: repeat(${layout.rows}, 1fr);
           gap: ${layout.gapMm}mm;
-          padding: 1mm;
+          padding: 0.5mm;
           align-items: stretch;
         }
         .a4-auto-page:last-child {
@@ -449,7 +427,7 @@ export default function BatchBarcodeGeneratorModal({
           justify-content: center;
           border: 1px dashed #cbd5e1;
           border-radius: 2.5mm;
-          padding: 2mm;
+          padding: 1mm;
           overflow: hidden;
           background: #fff;
         }
@@ -462,23 +440,27 @@ export default function BatchBarcodeGeneratorModal({
           display: block;
         }
         .qr-caption-name {
-          margin-top: 1.2mm;
-          font-size: 7.5pt;
+          margin-top: 0.5mm;
+          font-size: 5.5pt;
           font-weight: 800;
           color: #0f172a;
           text-align: center;
-          max-width: 96%;
+          max-width: ${layout.qrSizeMm}mm;
           white-space: nowrap;
           overflow: hidden;
           text-overflow: ellipsis;
         }
         .qr-caption-sku {
-          font-size: 6.8pt;
+          max-width: ${layout.qrSizeMm}mm;
+          font-size: 5pt;
           font-family: monospace;
           font-weight: 700;
           color: #334155;
           text-align: center;
-          margin-top: 0.4mm;
+          margin-top: 0.2mm;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .sticker-50x25-pure {
@@ -527,7 +509,7 @@ export default function BatchBarcodeGeneratorModal({
         @media print {
           @page {
             size: A4 portrait;
-            margin: 8mm;
+            margin: 4mm;
           }
           body {
             -webkit-print-color-adjust: exact;
@@ -804,9 +786,9 @@ export default function BatchBarcodeGeneratorModal({
                     { count: 12, label: '12 QRs (2 per Product)' },
                     { count: 15, label: '15 QRs' },
                     { count: 20, label: '20 QRs' },
-                    { count: 24, label: '24 QRs (Full 4×6)' },
-                    { count: 35, label: '35 QRs (Full 5×7)' },
-                    { count: 48, label: '48 QRs (Full 6×8)' },
+                    { count: 24, label: '24 QRs (2 A4 pages)' },
+                    { count: 35, label: '35 QRs (3 A4 pages)' },
+                    { count: 48, label: '48 QRs (4 A4 pages)' },
                   ].map(preset => (
                     <button
                       key={preset.count}
@@ -925,7 +907,7 @@ export default function BatchBarcodeGeneratorModal({
                 <b>
                   {a4Layout.cols} columns × {a4Layout.rows} rows
                 </b>{' '}
-                with each QR code sized to exactly <b>{a4Layout.qrSizeMm}mm × {a4Layout.qrSizeMm}mm</b> — never too small for mobile cameras and never oversized.
+                with each QR code sized to exactly <b>{a4Layout.qrSizeMm}mm × {a4Layout.qrSizeMm}mm</b>. Larger batches use additional pages to keep each code easy to scan.
               </p>
             </div>
 

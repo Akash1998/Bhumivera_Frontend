@@ -1687,7 +1687,7 @@ export default function InventorySoftware() {
   // ==========================================================================
   if (!authToken) {
     return (
-      <div className="admin-theme inventory-shell min-h-screen bg-[#071a12] text-slate-100 flex items-center justify-center p-4 relative overflow-hidden">
+      <div className="admin-theme inventory-shell min-h-[100dvh] bg-[#071a12] text-slate-100 flex items-center justify-center p-4 relative overflow-x-hidden overflow-y-auto">
         <div className="absolute -top-40 -left-40 w-96 h-96 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute -bottom-40 -right-40 w-96 h-96 bg-amber-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -1868,7 +1868,7 @@ export default function InventorySoftware() {
   ];
 
   return (
-    <div className="admin-theme inventory-shell h-screen w-full overflow-hidden flex bg-slate-100 text-slate-900 font-sans text-[13px]">
+    <div className="admin-theme inventory-shell inventory-workspace h-[100dvh] min-h-0 w-full overflow-hidden flex bg-slate-100 text-slate-900 font-sans text-[13px]">
       {/* LEFT SIDEBAR */}
       <aside className="w-64 bg-[#071a12] text-slate-300 flex flex-col border-r border-slate-800 shrink-0 select-none">
         <div className="px-5 py-4 border-b border-slate-800/80 flex items-center gap-3">
