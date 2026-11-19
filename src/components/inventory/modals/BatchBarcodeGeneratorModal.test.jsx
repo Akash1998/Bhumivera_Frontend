@@ -1,10 +1,11 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { cleanup, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import BatchBarcodeGeneratorModal, { computeOptimalA4QrLayout } from './BatchBarcodeGeneratorModal';
 
 afterEach(() => {
+  cleanup();
   vi.restoreAllMocks();
   vi.unstubAllGlobals();
 });
@@ -30,6 +31,56 @@ describe('A4 QR print layout', () => {
     expect(layout.cols * layout.rows).toBeGreaterThanOrEqual(72);
     expect(layout.qrSizeMm).toBeLessThanOrEqual(38);
     expect(layout.qrSizeMm).toBeGreaterThan(20);
+  });
+
+  it('keeps the combo QR and prints its contents on the label', async () => {
+    let renderedSvg = '';
+    const canvasContext = {
+      imageSmoothingEnabled: true,
+      fillStyle: '',
+      fillRect: vi.fn(),
+      drawImage: vi.fn(),
+    };
+    vi.stubGlobal('Image', class {
+      set src(value) {
+        renderedSvg = decodeURIComponent(value.split(',').slice(1).join(','));
+        this.onload();
+      }
+    });
+    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(canvasContext);
+    vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue('data:image/png;base64,combo-qr');
+    const combo = {
+      id: 20,
+      productId: 200,
+      sku: 'BV-CREATOR-COMBO',
+      name: 'Creator Face & Body Combo',
+      isBundle: true,
+      comboComponents: [
+        { product_id: 101, quantity: 1 },
+        { product_id: 102, quantity: 1 },
+      ],
+    };
+    const catalog = [
+      combo,
+      { id: 1, productId: 101, sku: 'BV-FACEWASH', name: 'Face Wash', price: 249 },
+      { id: 2, productId: 102, sku: 'BV-SOAP', name: 'Soap', price: 129 },
+    ];
+
+    render(
+      <BatchBarcodeGeneratorModal
+        isOpen
+        onClose={() => {}}
+        catalog={catalog}
+        initialProduct={combo}
+      />,
+    );
+
+    expect(await screen.findByText(/Combo QR — contents: Face Wash, Soap/i)).toBeTruthy();
+    const downloadLink = await screen.findByRole('link', { name: /download 4k qr with cut border/i });
+    await waitFor(() => expect(downloadLink.getAttribute('href')).toBe('data:image/png;base64,combo-qr'));
+    expect(downloadLink.getAttribute('download')).toBe('BV-CREATOR-COMBO-qr-4k.png');
+    expect(renderedSvg).toContain('BV-CREATOR-COMBO');
+    expect(renderedSvg).toContain('Face Wash, Soap');
   });
 
   it('offers the preview QR as a 4K PNG with a dashed cutting border', async () => {
@@ -59,7 +110,7 @@ describe('A4 QR print layout', () => {
     await waitFor(() => expect(downloadLink.getAttribute('href')).toBe('data:image/png;base64,4k-qr'));
 
     expect(downloadLink.getAttribute('download')).toBe('BV-PRODUCT-qr-4k.png');
-    expect(canvasDimensions).toEqual({ width: 4352, height: 4896 });
+    expect(canvasDimensions).toEqual({ width: 4352, height: 5120 });
     expect(renderedSvg).toContain('width="4096" height="4096"');
     expect(renderedSvg).toContain('stroke-dasharray="18 14"');
     expect(renderedSvg).toContain('shape-rendering="crispEdges"');

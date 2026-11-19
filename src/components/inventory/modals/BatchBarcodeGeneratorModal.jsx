@@ -70,7 +70,7 @@ function wrapSvgText(value, maxLength, maxLines = 2) {
   return lines;
 }
 
-function buildLabeledQrSvg(qrDataUrl, { name, sku, price }) {
+function buildLabeledQrSvg(qrDataUrl, { name, sku, price, comboContents = '' }) {
   if (!qrDataUrl) return '';
   const qrSvgSource = decodeURIComponent(qrDataUrl.slice(qrDataUrl.indexOf(',') + 1));
   const qrDocument = new DOMParser().parseFromString(qrSvgSource, 'image/svg+xml');
@@ -83,15 +83,19 @@ function buildLabeledQrSvg(qrDataUrl, { name, sku, price }) {
   const nameText = nameLines.map((line, index) =>
     `<text x="2176" y="${4435 + index * 148}" text-anchor="middle" font-family="Arial,sans-serif" font-size="112" font-weight="700" fill="#111">${escapeSvgText(line)}</text>`
   ).join('');
+  const contentsText = wrapSvgText(comboContents, 76).map((line, index) =>
+    `<text x="2176" y="${4880 + index * 62}" text-anchor="middle" font-family="Arial,sans-serif" font-size="46" font-weight="600" fill="#334155">${escapeSvgText(line)}</text>`
+  ).join('');
 
-  return `<svg xmlns="http://www.w3.org/2000/svg" width="4352" height="4896" viewBox="0 0 4352 4896">
+  return `<svg xmlns="http://www.w3.org/2000/svg" width="4352" height="5120" viewBox="0 0 4352 5120">
     <title>Bhumivera product QR — ${escapeSvgText(name)}</title>
     <desc>4K product QR with product details and a dashed cutting border.</desc>
-    <rect width="4352" height="4896" fill="#fff"/>
+    <rect width="4352" height="5120" fill="#fff"/>
     <svg x="128" y="128" width="4096" height="4096" viewBox="${escapeSvgText(qrSvg.getAttribute('viewBox') || '0 0 1080 1080')}" shape-rendering="crispEdges">${qrSvg.innerHTML}</svg>
-    <rect x="32" y="32" width="4288" height="4832" rx="8" fill="none" stroke="#64748b" stroke-width="4" stroke-dasharray="18 14"/>
+    <rect x="32" y="32" width="4288" height="5056" rx="8" fill="none" stroke="#64748b" stroke-width="4" stroke-dasharray="18 14"/>
     ${nameText}
     <text x="2176" y="4770" text-anchor="middle" font-family="monospace" font-size="82" font-weight="700" fill="#334155">${escapeSvgText(sku)} · ₹${escapeSvgText(price)}</text>
+    ${contentsText}
   </svg>`;
 }
 
@@ -101,7 +105,7 @@ function renderQrSvgAsPng(svg) {
     image.onload = () => {
       const canvas = document.createElement('canvas');
       canvas.width = 4352;
-      canvas.height = 4896;
+      canvas.height = 5120;
       const context = canvas.getContext('2d');
       if (!context) {
         reject(new Error('Your browser could not create the 4K QR image.'));
@@ -122,6 +126,37 @@ function renderQrSvgAsPng(svg) {
     image.onerror = () => reject(new Error('Could not render the QR image for download.'));
     image.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
   });
+}
+
+function getComboComponentProducts(combo, catalog) {
+  const components = Array.isArray(combo?.comboComponents) ? combo.comboComponents : [];
+  return components
+    .map(component => {
+      const componentId = component.product_id ?? component.id;
+      const componentSlug = String(component.slug || '').trim();
+      return catalog.find(product =>
+        (componentId != null && String(product.productId ?? product.id ?? product.metaId) === String(componentId)) ||
+        (componentSlug && String(product.slug || '').trim() === componentSlug)
+      );
+    })
+    .filter((product, index, products) =>
+      product && products.findIndex(candidate => String(candidate.id || candidate.metaId || candidate.sku) === String(product.id || product.metaId || product.sku)) === index
+    );
+}
+
+function getComboComponentLabels(combo, catalog) {
+    const components = Array.isArray(combo?.comboComponents) ? combo.comboComponents : [];
+    return components.map(component => {
+      const componentId = component.product_id ?? component.id;
+      const componentSlug = String(component.slug || '').trim();
+      const product = catalog.find(item =>
+        (componentId != null && String(item.productId ?? item.id ?? item.metaId) === String(componentId)) ||
+        (componentSlug && String(item.slug || '').trim() === componentSlug)
+      );
+      if (!product) return '';
+      const quantity = Math.max(1, Number(component.quantity) || 1);
+      return `${product.name}${quantity > 1 ? ` ×${quantity}` : ''}`;
+    }).filter(Boolean);
 }
 
 /**
@@ -256,9 +291,8 @@ export default function BatchBarcodeGeneratorModal({
     // Initialize all non-bundle products (or first 6+ products) as selected for All-Products mode
     if (catalog && catalog.length > 0) {
       const coreProducts = catalog.filter(p => !p.isBundle);
-      const targetList = coreProducts.length > 0 ? coreProducts : catalog;
       const nextMap = {};
-      targetList.forEach(p => {
+      coreProducts.forEach(p => {
         const key = String(p.id || p.metaId || p.sku);
         nextMap[key] = true;
       });
@@ -346,10 +380,17 @@ export default function BatchBarcodeGeneratorModal({
   const previewName = previewProduct?.name || customName || 'Bhumivera Formulation';
   const previewPrice = previewProduct?.price || previewProduct?.sellingPrice || previewProduct?.mrp || sellingPrice;
   const previewPayload = previewProduct ? qrMapBySku[previewSku]?.payload : scannablePayload;
+  const selectedQrProduct = previewProduct || catalog.find(product =>
+    String(product.id || product.metaId || '') === String(selectedProductId)
+  ) || initialProduct;
+  const comboPreviewComponents = selectedQrProduct?.isBundle
+    ? getComboComponentProducts(selectedQrProduct, catalog)
+    : [];
+  const comboContents = getComboComponentLabels(selectedQrProduct, catalog).join(', ');
   const safeDownloadSku = previewSku.replace(/[^a-z0-9._-]+/gi, '-') || 'bhumivera-product';
   const labeledQrSvg = useMemo(
-    () => buildLabeledQrSvg(previewQr, { name: previewName, sku: previewSku, price: previewPrice }),
-    [previewQr, previewName, previewSku, previewPrice],
+    () => buildLabeledQrSvg(previewQr, { name: previewName, sku: previewSku, price: previewPrice, comboContents }),
+    [previewQr, previewName, previewSku, previewPrice, comboContents],
   );
 
   useEffect(() => {
@@ -713,8 +754,9 @@ export default function BatchBarcodeGeneratorModal({
             </button>
             <button
               type="button"
+              disabled={Boolean(initialProduct?.isBundle)}
               onClick={() => setGenerationMode('single-product')}
-              className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition border ${
+              className={`px-3.5 py-2 rounded-xl text-xs font-black uppercase tracking-wider flex items-center gap-1.5 transition border disabled:cursor-not-allowed disabled:opacity-40 ${
                 generationMode === 'single-product'
                   ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white border-emerald-400 shadow-md'
                   : 'bg-[#071711] text-slate-300 border-emerald-500/30 hover:text-white'
@@ -778,6 +820,7 @@ export default function BatchBarcodeGeneratorModal({
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-h-[250px] overflow-y-auto pr-1">
                   {catalog.map(prod => {
                     const key = String(prod.id || prod.metaId || prod.sku);
+                    const componentProducts = prod.isBundle ? getComboComponentProducts(prod, catalog) : [];
                     const checked = Boolean(selectedProductMap[key]);
                     const sku = String(prod.sku || `SKU-${prod.id}`).toUpperCase();
                     const qrEntry = qrMapBySku[sku];
@@ -805,7 +848,9 @@ export default function BatchBarcodeGeneratorModal({
                         <div className="min-w-0 flex-1">
                           <div className="text-xs font-bold text-white truncate">{prod.name}</div>
                           <div className="text-[10px] font-mono text-emerald-300 truncate">
-                            {qrEntry?.payload || `BV-QR:${sku}`} • ₹{prod.price}
+                            {prod.isBundle
+                              ? `Combo QR${componentProducts.length ? ` • Contains: ${getComboComponentLabels(prod, catalog).join(', ')}` : ''}`
+                              : `${qrEntry?.payload || `BV-QR:${sku}`} • ₹${prod.price}`}
                           </div>
                         </div>
                       </div>
@@ -825,7 +870,7 @@ export default function BatchBarcodeGeneratorModal({
                     onChange={e => handleSelectProduct(e.target.value)}
                     className="w-full bg-[#071711] border border-emerald-500/40 rounded-xl px-3 py-2 text-xs font-bold text-white focus:outline-none focus:border-emerald-400"
                   >
-                    {catalog.map(item => (
+                    {catalog.filter(item => !item.isBundle).map(item => (
                       <option key={item.id || item.metaId} value={String(item.id || item.metaId)}>
                         {item.name} ({item.sku || 'NO-SKU'}) — ₹{item.price} — Stock: {item.availableStock ?? item.physicalStock ?? item.qty ?? 0}
                       </option>
@@ -1014,6 +1059,13 @@ export default function BatchBarcodeGeneratorModal({
               <div className="mt-1.5 text-[9px] font-mono font-bold text-emerald-900 bg-emerald-50 px-2.5 py-0.5 rounded border border-emerald-300 truncate max-w-full">
                 {previewPayload}
               </div>
+              {selectedQrProduct?.isBundle && (
+                <p role={comboPreviewComponents.length ? 'status' : 'alert'} className="mt-2 max-w-full rounded border border-emerald-300 bg-emerald-50 px-2.5 py-1 text-[9px] font-semibold leading-4 text-emerald-950">
+                  {comboPreviewComponents.length
+                    ? `Combo QR — contents: ${comboContents}. Scan this QR first, then scan each included product QR during fulfillment.`
+                    : 'Combo contents could not be matched to inventory SKUs. Refresh inventory and try again.'}
+                </p>
+              )}
             </div>
 
             {/* Smart A4 Auto-Sizing Summary Card */}
