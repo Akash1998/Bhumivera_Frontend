@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import QRCode from 'qrcode';
+import * as XLSX from 'xlsx';
 import api from '../services/api';
 import { filterLifecycleOrders, localOrderDate, matchesOrderStatus } from '../utils/inventoryOrderFilters';
 import './admin/AdminTheme.css';

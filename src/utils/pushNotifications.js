@@ -64,13 +64,11 @@ export const registerPushNotifications = async ({
     }
     if (permission.receive !== 'granted') return false;
 
-    // Only register with Firebase if Firebase configuration is present
-    if (nativePushConfigured) {
-      try {
-        await PushNotifications.register();
-      } catch (regError) {
-        console.warn('[PUSH_REGISTRATION_OPTIONAL]', regError);
-      }
+    // Register push token with the native plugin
+    try {
+      await PushNotifications.register();
+    } catch (regError) {
+      console.warn('[PUSH_REGISTRATION_OPTIONAL]', regError);
     }
     return true;
   })();
@@ -83,6 +81,9 @@ export const registerPushNotifications = async ({
 
 const runNativePushSetup = async (userToken, requestPermission) => {
   if (typeof window === 'undefined' || !window.Capacitor?.isNativePlatform?.()) {
+    return false;
+  }
+  if (!nativePushConfigured) {
     return false;
   }
 

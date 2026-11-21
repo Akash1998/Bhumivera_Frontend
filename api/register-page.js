@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import process from 'node:process';
 
 export default async function registerPage(req, res) {
   res.setHeader('Cache-Control', 'private, no-store, no-cache, max-age=0, must-revalidate');

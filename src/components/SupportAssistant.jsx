@@ -2777,8 +2777,8 @@ function ConciergeVideoVisualizer({
     }
   };
 
-  // Static visual mode (all video animations removed across platform)
-  if (true || videoFailed || !videoSrc) {
+  // Static visual mode when video is unavailable or failed
+  if (videoFailed || !videoSrc) {
     return (
       <div className="space-y-1">
         {Fallback && <Fallback />}
