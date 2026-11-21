@@ -1,8 +1,8 @@
 // @vitest-environment jsdom
 import React from 'react';
-import { cleanup, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import BatchBarcodeGeneratorModal, { computeOptimalA4QrLayout } from './BatchBarcodeGeneratorModal';
+import BatchBarcodeGeneratorModal, { computeQrSheetLayout } from './BatchBarcodeGeneratorModal';
 
 afterEach(() => {
   cleanup();
@@ -10,115 +10,68 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-describe('A4 QR print layout', () => {
-  it('uses one A4 page and keeps a single QR within its physical size cap', () => {
-    const layout = computeOptimalA4QrLayout(1);
-
-    expect(layout).toMatchObject({
-      cols: 1,
-      rows: 1,
-      perPage: 1,
-      totalPages: 1,
-      qrSizeMm: 38,
+describe('print-ready QR sheet layout', () => {
+  it('fits exact 19 mm square QRs on A4 and A3 sheets', () => {
+    expect(computeQrSheetLayout()).toMatchObject({
+      cols: 10,
+      rows: 14,
+      capacity: 140,
+      qrSizeMm: 19,
+    });
+    expect(computeQrSheetLayout(297, 420)).toMatchObject({
+      cols: 14,
+      rows: 20,
+      capacity: 280,
+      qrSizeMm: 19,
     });
   });
 
-  it('fits a large batch on one page and maximizes QR size for that grid', () => {
-    const layout = computeOptimalA4QrLayout(72);
+  it('recalculates the full-page count after selecting A3 or changing custom paper length', () => {
+    render(
+      <BatchBarcodeGeneratorModal
+        isOpen
+        onClose={() => {}}
+        initialProduct={{ id: 1, sku: 'BV-PRODUCT', name: 'Test product' }}
+      />,
+    );
 
-    expect(layout.totalPages).toBe(1);
-    expect(layout.perPage).toBe(72);
-    expect(layout.cols * layout.rows).toBeGreaterThanOrEqual(72);
-    expect(layout.qrSizeMm).toBeLessThanOrEqual(38);
-    expect(layout.qrSizeMm).toBeGreaterThan(20);
+    fireEvent.change(screen.getByLabelText('Paper Size'), { target: { value: 'a3' } });
+    expect(screen.getByText(/280 QRs per page \(14 columns × 20 rows\)/)).toBeTruthy();
+
+    fireEvent.change(screen.getByLabelText('Paper Length (mm)'), { target: { value: '500' } });
+    expect(screen.getByText(/336 QRs per page \(14 columns × 24 rows\)/)).toBeTruthy();
   });
 
-  it('uses the existing product QR labels for a combo instead of a combo QR', async () => {
-    let renderedSvg = '';
-    const canvasContext = {
-      imageSmoothingEnabled: true,
-      fillStyle: '',
-      fillRect: vi.fn(),
-      drawImage: vi.fn(),
+  it('opens a vector-only, caption-free print sheet at exact paper and QR dimensions', async () => {
+    const popupDocument = {
+      write: vi.fn(),
+      close: vi.fn(),
     };
-    vi.stubGlobal('Image', class {
-      set src(value) {
-        renderedSvg = decodeURIComponent(value.split(',').slice(1).join(','));
-        this.onload();
-      }
-    });
-    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockReturnValue(canvasContext);
-    vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue('data:image/png;base64,component-qr');
-    const combo = {
-      id: 20,
-      productId: 200,
-      sku: 'BV-CREATOR-COMBO',
-      name: 'Creator Face & Body Combo',
-      isBundle: true,
-      comboComponents: [
-        { product_id: 101, quantity: 1 },
-        { product_id: 102, quantity: 1 },
-      ],
-    };
-    const catalog = [
-      combo,
-      { id: 1, productId: 101, sku: 'BV-FACEWASH', name: 'Face Wash', price: 249 },
-      { id: 2, productId: 102, sku: 'BV-SOAP', name: 'Soap', price: 129 },
-    ];
+    vi.spyOn(window, 'open').mockReturnValue({ document: popupDocument });
 
     render(
       <BatchBarcodeGeneratorModal
         isOpen
         onClose={() => {}}
-        catalog={catalog}
-        initialProduct={combo}
+        initialProduct={{ id: 1, sku: 'BV-PRODUCT', name: 'Test product' }}
       />,
     );
-
-    expect(await screen.findByText(/No combo QR is needed\. Pack this combo by scanning each included product’s existing QR: Face Wash, Soap/i)).toBeTruthy();
-    expect(screen.getByText(/Unique Standalone QR for Each Product \(2 Selected\)/i)).toBeTruthy();
-    const downloadLink = await screen.findByRole('link', { name: /download 4k qr with cut border/i });
-    await waitFor(() => expect(downloadLink.getAttribute('href')).toBe('data:image/png;base64,component-qr'));
-    expect(downloadLink.getAttribute('download')).toBe('BV-FACEWASH-qr-4k.png');
-    expect(renderedSvg).toContain('BV-FACEWASH');
-    expect(renderedSvg).not.toContain('BV-CREATOR-COMBO');
-    expect(renderedSvg).toContain('Face Wash');
-  });
-
-  it('offers the preview QR as a 4K PNG with a dashed cutting border', async () => {
-    let renderedSvg = '';
-    let canvasDimensions;
-    const canvasContext = {
-      imageSmoothingEnabled: true,
-      fillStyle: '',
-      fillRect: vi.fn(),
-      drawImage: vi.fn(),
-    };
-    vi.stubGlobal('Image', class {
-      set src(value) {
-        renderedSvg = decodeURIComponent(value.split(',').slice(1).join(','));
-        this.onload();
-      }
+    await waitFor(() => {
+      expect(document.querySelector('img')?.getAttribute('src')).toMatch(/^data:image\/svg\+xml/);
     });
-    vi.spyOn(HTMLCanvasElement.prototype, 'getContext').mockImplementation(function getContext() {
-      canvasDimensions = { width: this.width, height: this.height };
-      return canvasContext;
-    });
-    vi.spyOn(HTMLCanvasElement.prototype, 'toDataURL').mockReturnValue('data:image/png;base64,4k-qr');
+    const qrDataUrl = document.querySelector('img').getAttribute('src');
+    const qrSvg = decodeURIComponent(qrDataUrl.slice(qrDataUrl.indexOf(',') + 1));
+    expect(qrSvg).toContain('width="8192"');
+    expect(qrSvg).toContain('shape-rendering="crispEdges"');
+    fireEvent.click(screen.getByRole('button', { name: /generate full-page hq pdf/i }));
 
-    render(<BatchBarcodeGeneratorModal isOpen onClose={() => {}} />);
-
-    const downloadLink = await screen.findByRole('link', { name: /download 4k qr with cut border/i });
-    await waitFor(() => expect(downloadLink.getAttribute('href')).toBe('data:image/png;base64,4k-qr'));
-
-    expect(downloadLink.getAttribute('download')).toBe('BV-PRODUCT-qr-4k.png');
-    expect(canvasDimensions).toEqual({ width: 4352, height: 5120 });
-    expect(renderedSvg).toContain('width="4096" height="4096"');
-    expect(renderedSvg).toContain('stroke-dasharray="18 14"');
-    expect(renderedSvg).toContain('shape-rendering="crispEdges"');
-    expect(renderedSvg).toContain('Bhumivera Formulation');
-    expect(renderedSvg).not.toContain('BV-QR:BV-PRODUCT');
-    expect(renderedSvg).not.toContain('Scan to verify');
-    expect(renderedSvg).toContain('₹299');
+    const printHtml = popupDocument.write.mock.calls[0][0];
+    expect(printHtml).toContain('@page { size: 210mm 297mm; margin: 0; }');
+    expect(printHtml).toContain('grid-template-columns: repeat(10, 19mm)');
+    expect(printHtml).toContain('grid-template-rows: repeat(14, 19mm)');
+    expect(printHtml).toMatch(/<main class="qr-sheet">\s*<img src="data:image\/svg\+xml/);
+    expect(printHtml).not.toContain('Test product');
+    expect(printHtml).not.toContain('qr-caption');
+    expect(popupDocument.close).toHaveBeenCalledOnce();
   });
 });
