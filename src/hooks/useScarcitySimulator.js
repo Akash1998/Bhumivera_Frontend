@@ -14,17 +14,21 @@ export default function useScarcitySimulator(productIds = []) {
 
   useEffect(() => {
     let active = true;
-    const load = async () => {
+    let requestInFlight = false;
+    const load = async (showLoading = false) => {
+      if (requestInFlight) return;
+      requestInFlight = true;
       const requestedIds = idsKey ? idsKey.split(',') : [];
       if (requestedIds.length === 0) {
         setProducts({});
         setEnabled(false);
         setSampleActivityEnabled(false);
         setLoading(false);
+        requestInFlight = false;
         return;
       }
 
-      setLoading(true);
+      if (showLoading) setLoading(true);
       try {
         const chunks = [];
         for (let index = 0; index < requestedIds.length; index += 100) {
@@ -45,16 +49,21 @@ export default function useScarcitySimulator(productIds = []) {
           setError('');
         }
       } finally {
-        if (active) setLoading(false);
+        requestInFlight = false;
+        if (active && showLoading) setLoading(false);
       }
     };
-    void load();
+    void load(true);
     const handleFocus = () => {
-      if (!document.hidden) load();
+      if (!document.hidden) void load();
     };
+    const refreshTimer = window.setInterval(() => {
+      if (!document.hidden) void load();
+    }, 15000);
     window.addEventListener('focus', handleFocus);
     return () => {
       active = false;
+      window.clearInterval(refreshTimer);
       window.removeEventListener('focus', handleFocus);
     };
   }, [idsKey]);

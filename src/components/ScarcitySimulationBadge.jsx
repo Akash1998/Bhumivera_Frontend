@@ -370,8 +370,8 @@ export default function ScarcitySimulationBadge({
             Recent verified dispatches
           </p>
           <ul className="mt-1.5 space-y-1">
-            {snapshot.sampleActivity.slice(0, 3).map(activity => (
-              <li key={`${activity.buyer}-${activity.time}`} className="flex items-center gap-1.5 text-slate-300">
+            {snapshot.sampleActivity.slice(0, 3).map((activity, index) => (
+              <li key={`${activity.buyer}-${activity.city}-${activity.time}-${index}`} className="flex items-center gap-1.5 text-slate-300">
                 <span className="h-1 w-1 rounded-full bg-[#D4AF37]" />
                 <span>
                   {activity.buyer} · {productName || 'Botanical formulation'} · {activity.city} · {activity.time}
