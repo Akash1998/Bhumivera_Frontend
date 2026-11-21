@@ -18,6 +18,10 @@ vi.mock('../context/CartContext', () => ({
   useCart: () => ({ addToCart: mockAddToCart }),
 }));
 
+vi.mock('../context/WishlistContext', () => ({
+  useWishlist: () => ({ isWishlisted: () => false, toggleWishlist: vi.fn() }),
+}));
+
 function renderBundlePage(slug = 'admin-created-combo') {
   return render(
     <HelmetProvider>
@@ -82,16 +86,43 @@ describe('regimen bundle catalog resolution', () => {
     await act(async () => addButton.click());
 
     expect(products.getBySlug).toHaveBeenCalledWith('admin-created-combo');
-    expect(screen.getByRole('heading', { name: 'Admin-created combo' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Admin-created combo', level: 1 })).toBeTruthy();
     expect(screen.getByRole('img', { name: 'Admin-created combo' }).getAttribute('src'))
       .toMatch(/\/products\/creators-combo\.webp$/);
     expect(screen.getByText('Current Product Name')).toBeTruthy();
-    expect(screen.getByText('₹250')).toBeTruthy();
+    expect(screen.getAllByText('₹250').length).toBeGreaterThan(0);
     expect(screen.getByText('₹80')).toBeTruthy();
     expect(mockAddToCart).toHaveBeenCalledWith(
       expect.objectContaining({ id: 19, sku: 'CUSTOM-COMBO-01', quantity: 12 }),
       1
     );
+  });
+
+  it('opens the combo image viewer and supports zoom controls', async () => {
+    products.getBySlug.mockResolvedValue({
+      data: {
+        data: {
+          id: 19,
+          name: 'Admin-created combo',
+          slug: 'admin-created-combo',
+          image_url: 'products/creators-combo.webp',
+          quantity: 12,
+          price: 300,
+          specifications: {
+            is_combo: true,
+            combo_items: [{ product_id: 8, slug: 'admin-selected-product' }],
+          },
+        },
+      },
+    });
+
+    renderBundlePage();
+    const zoomButton = await screen.findByRole('button', { name: 'Open combo image zoom' });
+    await act(async () => zoomButton.click());
+
+    expect(await screen.findByRole('dialog', { name: 'Admin-created combo image viewer' })).toBeTruthy();
+    await act(async () => screen.getByRole('button', { name: 'Zoom in' }).click());
+    expect(screen.getByRole('button', { name: 'Reset image zoom' }).textContent).toBe('125%');
   });
 
   it('does not invent a purchasable product or stock when catalog resolution fails', async () => {
